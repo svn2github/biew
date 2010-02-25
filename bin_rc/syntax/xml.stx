@@ -1,0 +1,16 @@
+;
+; XML syntax definition for beye project
+;
+#nosmart
+
+[General]
+Name=XML syntax
+WSet=
+
+[Context]
+  <Comments>
+    base=<!...>
+  <Keywords>
+    base=<...>
+  <Constants>
+    base=&...\x3B
