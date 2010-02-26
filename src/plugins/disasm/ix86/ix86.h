@@ -176,6 +176,7 @@ typedef void (__FASTCALL__*ix86_method)(char *encode_str,ix86Param *);
 #define IX86_P8		IX86_CPU1286
 
 #define K64_ATHLON	0x00000000UL
+#define K64_GEODE	0x00000000UL
 #define K64_FAM9	0x00000001UL
 #define K64_FAM10	0x00000002UL
 #define K64_FAM11	0x00000003UL
@@ -232,6 +233,7 @@ typedef void (__FASTCALL__*ix86_method)(char *encode_str,ix86Param *);
 #define IX86_K6		(IX86_AMD|IX86_CPU586)
 #define IX86_3DNOW	(IX86_AMD|IX86_CPU686|INSN_MMX)
 #define IX86_ATHLON	(IX86_AMD|IX86_CPU786|INSN_MMX)
+#define IX86_GEODE	IX86_ATHLON
 #define IX86_UNKAMD	(IX86_AMD|IX86_CPU886|INSN_MMX)
 
 #define IX86_CYRIX486		(IX86_CYRIX|IX86_CPU486)

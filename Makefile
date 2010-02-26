@@ -27,7 +27,7 @@ clean:
 
 distclean:
 	$(DO_MAKE)
-	rm -f config.h config.mak
+	rm -f config.h config.mak config.log
 
 uninstall:
 	$(DO_IMAKE)

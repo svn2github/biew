@@ -935,6 +935,22 @@
 ³ All cpus (except model 1) support fxsave / fxrestore instructions       ³
 ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³                   %BK7 (Geode) instruction mnemonics%b                      ³
+ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ CPU! ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³ dmint      [0F_39]            Enter debug management mode               ³
+³ icebp      [F1]               Call debug exception handler              ³
+³ mov        [0F_24/r]          Move from test register                   ³
+³ mov        [0F_26/r]          Move to test register                     ³
+ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ 3DNowV! ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³ pfrcpv     [0F_0F/rm/86]      Packed F32 reciprocal approximation.      ³
+³ pfrsqrtv   [0F_0F/rm/87]      Packed F32 reciprocal square-root approx. ³
+ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ Unsupported opcodes by beye  ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³ rdm        [0F_3A]            Leave debug Management mode               ³
+³ rsdc       [0F_79/r]          Restore segment register and descriptor   ³
+³ smint      [0F_38]            Enter system management mode              ³
+³ svdc       [0F_78/r]          Save segment register and descriptor      ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 ³                    %BPentium III instruction mnemonics%b                    ³
 ³ %IThis processor is based on the%i %BPentium Pro%b %Iand%i %BPentium II%b %Iprocessors%i   ³
 ³ %Iarchitectures and introduces SSE extensions of the IA instruction set%i   ³

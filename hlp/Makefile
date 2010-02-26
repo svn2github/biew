@@ -25,6 +25,7 @@ install:
 
 clean:
 	$(DO_MAKE)
+	rm -f beye.hlp
 
 distclean:
 	$(DO_MAKE)

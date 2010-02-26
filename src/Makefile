@@ -154,34 +154,5 @@ ifeq ($(INSTALL),)
 	@exit 1
 endif
 	$(INSTALL) -D -m 755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/$(TARGET)
-	$(INSTALL) -D -c -m 644 doc/beye.1 $(DESTDIR)$(PREFIX)/man/man1/beye.1
-	$(INSTALL) -D -c -m 644 bin_rc/beye.hlp $(DESTDIR)$(DATADIR)/beye.hlp
-	mkdir --parents $(DESTDIR)$(DATADIR)/skn
-	$(INSTALL) -D -c -m 644 bin_rc/skn/*.skn $(DESTDIR)$(DATADIR)/skn
-	mkdir --parents $(DESTDIR)$(DATADIR)/syntax
-	$(INSTALL) -D -c -m 644 bin_rc/syntax/*.stx $(DESTDIR)$(DATADIR)/syntax
-	mkdir --parents $(DESTDIR)$(DATADIR)/xlt/russian
-	$(INSTALL) -D -c -m 644 bin_rc/xlt/russian/*.xlt $(DESTDIR)$(DATADIR)/xlt/russian
-	$(INSTALL) -D -c -m 644 bin_rc/xlt/*.xlt bin_rc/xlt/readme $(DESTDIR)$(DATADIR)/xlt
 uninstall:
 	$(RM) $(DESTDIR)$(PREFIX)/bin/$(TARGET)
-	$(RM) $(DESTDIR)$(DATADIR)/skn/*
-	rmdir -p --ignore-fail-on-non-empty $(DESTDIR)$(DATADIR)/skn
-	$(RM) $(DESTDIR)$(DATADIR)/syntax/*
-	rmdir -p --ignore-fail-on-non-empty $(DESTDIR)$(DATADIR)/syntax
-	$(RM) $(DESTDIR)$(DATADIR)/xlt/russian/*
-	rmdir -p --ignore-fail-on-non-empty $(DESTDIR)$(DATADIR)/xlt/russian
-	$(RM) $(DESTDIR)$(DATADIR)/xlt/*
-	rmdir -p --ignore-fail-on-non-empty $(DESTDIR)$(DATADIR)/xlt
-	$(RM) $(DESTDIR)$(DATADIR)/*
-	rmdir -p --ignore-fail-on-non-empty $(DESTDIR)$(DATADIR)
-
-help:
-	$(DO_HELP)
-	$(RM) -f hlp/beyehlp
-	$(RM) -f hlp/lzss
-	$(LN) ../tools/beyehlp/beyehlp hlp/beyehlp
-	$(LN) ../tools/lzss/lzss hlp/lzss
-	($(CD) ./hlp && ./beyehlp beyehlp.prj && $(CD) .. )
-	$(RM) -f ./bin_rc/beye.hlp
-	$(CP) ./hlp/beye.hlp ./bin_rc
