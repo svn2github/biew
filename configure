@@ -227,6 +227,7 @@ machine=x86_64
 fi
 echo "#define __DEFAULT_DISASM 0" >>config.h
 x86 && echo "#define CAN_COMPILE_X86_GAS 1">>config.h
+is_generic_cpu=$(echo $machine | grep generic)
 
 disable ppack
 echocheck "pragma pack"
