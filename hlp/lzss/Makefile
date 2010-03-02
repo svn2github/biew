@@ -18,13 +18,10 @@
 ##############################################################################
 #  Main configure section of this makefile                                   #
 ##############################################################################
-HOST_CFLAGS=
-HOST_LDFLAGS=
-
 include ../../config.mak
 
-CFLAGS = $(CDEFOS) $(CDEFSYS) $(HOST_CFLAGS)
-LDFLAGS = $(OSLDEF) $(HOST_LDFLAGS)
+CFLAGS = $(HOST_CFLAGS)
+LDFLAGS = $(HOST_LDFLAGS)
 
 ###########################################################################
 # TARGET: put name of executable image here                               #

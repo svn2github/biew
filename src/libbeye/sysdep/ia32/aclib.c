@@ -21,6 +21,7 @@
  * @since       2001
  * @note        Development, fixes and improvements
 **/
+#include "config.h"
 #include <stddef.h>
 #include <string.h>
 #include "libbeye/sysdep/ia32/fastcopy.h"

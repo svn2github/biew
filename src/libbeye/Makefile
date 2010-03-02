@@ -1,7 +1,7 @@
 include ../../config.mak
 
 CFLAGS = -I.. $(HOST_CFLAGS)
-LDFLAGS = $(OSLDEF) $(HOST_LDFLAGS)
+LDFLAGS = $(HOST_LDFLAGS)
 
 LIBNAME = $(LIBPREFIX)beye.$(LIBEXT)
 

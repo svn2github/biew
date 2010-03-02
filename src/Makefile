@@ -14,9 +14,6 @@
 # This software is redistributable under the licence given in the file       #
 # "Licence" distributed in the BEYE archive.                                 #
 ##############################################################################
-HOST_CFLAGS=
-HOST_LDFLAGS=
-
 include ../config.mak
 
 SUBDIRS=libbeye
@@ -25,7 +22,7 @@ DO_MAKE = @ for i in $(SUBDIRS); do $(MAKE) -C $$i $@ || exit; done
 DO_ALL  = @ for i in $(SUBDIRS); do $(MAKE) -C $$i all || exit; done
 
 CFLAGS = -I../hlp $(HOST_CFLAGS)
-LDFLAGS = $(OSLDEF) $(HOST_LDFLAGS)
+LDFLAGS = $(HOST_LDFLAGS)
 
 ###########################################################################
 # TARGET: put name of executable image here                               #
@@ -137,7 +134,7 @@ distclean: clean
 	$(DO_MAKE)
 
 $(TARGET): $(OBJS)
-	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 %.o : %.c
 	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
