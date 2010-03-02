@@ -45,7 +45,6 @@ distclean:
 clean:
 	$(RM) $(OBJS)
 	$(RM) $(TARGET)
-	$(RM) beye.map
 
 cleansys:
 	$(RM) lib/sysdep/$(MACHINE)/$(HOST)/*.o

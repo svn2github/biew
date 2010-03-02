@@ -48,10 +48,10 @@ $(LIBNAME):     $(OBJS) $(AOBJS)
 all:    $(LIBNAME)
 
 clean:
-	rm -f *.o *.a *~
+	rm -f $(OBJS) *.a *~
 
-distclean:
-	rm -f Makefile.bak *.o *.a *~ .depend
+distclean: clean
+	rm -f Makefile.bak .depend
 
 dep:    depend
 

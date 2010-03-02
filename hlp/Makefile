@@ -28,7 +28,7 @@ clean:
 	$(DO_MAKE)
 	rm -f beye.hlp
 
-distclean:
+distclean: clean
 	$(DO_MAKE)
 	rm -f config.h config.mak
 
