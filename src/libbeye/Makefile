@@ -1,6 +1,6 @@
 include ../../config.mak
 
-CFLAGS = -I.. $(CDEFOS) $(CDEFSYS) $(HOST_CFLAGS)
+CFLAGS = -I.. $(HOST_CFLAGS)
 LDFLAGS = $(OSLDEF) $(HOST_LDFLAGS)
 
 LIBNAME = $(LIBPREFIX)beye.$(LIBEXT)
@@ -13,21 +13,21 @@ SRCS= bbio.c \
       twin.c \
       sysdep/$(MACHINE)/aclib.c \
       sysdep/$(MACHINE)/cpu_info.c \
-      sysdep/$(MACHINE)/$(HOST)/fileio.c \
-      sysdep/$(MACHINE)/$(HOST)/keyboard.c \
-      sysdep/$(MACHINE)/$(HOST)/mmfio.c \
-      sysdep/$(MACHINE)/$(HOST)/mouse.c \
-      sysdep/$(MACHINE)/$(HOST)/misc.c \
-      sysdep/$(MACHINE)/$(HOST)/nls.c \
-      sysdep/$(MACHINE)/$(HOST)/os_dep.c \
-      sysdep/$(MACHINE)/$(HOST)/timer.c \
-      sysdep/$(MACHINE)/$(HOST)/vio.c
+      osdep/$(HOST)/fileio.c \
+      osdep/$(HOST)/keyboard.c \
+      osdep/$(HOST)/mmfio.c \
+      osdep/$(HOST)/mouse.c \
+      osdep/$(HOST)/misc.c \
+      osdep/$(HOST)/nls.c \
+      osdep/$(HOST)/os_dep.c \
+      osdep/$(HOST)/timer.c \
+      osdep/$(HOST)/vio.c
 
 
 ifeq ($(HOST),qnx)
 ASMS = \
-      sysdep/$(MACHINE)/$(HOST)/3rto3s.o\
-      sysdep/$(MACHINE)/$(HOST)/3sto3r.o
+      osdep/$(HOST)/3rto3s.asm\
+      osdep/$(HOST)/3sto3r.asm
 endif
 
 OBJS=$(SRCS:.c=.o)

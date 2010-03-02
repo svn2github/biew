@@ -17,10 +17,12 @@
 #ifndef __TSTRINGS__H
 #define __TSTRINGS__H
 
+#include "../version.h"
+
 /** @def BEYE_VERSION
     Ver.SubVer.ExtraVer-ReleaseLevel.Test_FixPak_Level
   */
-#define BEYE_VERSION "1.0.0"
+#define BEYE_VERSION VERSION
 
 extern const char   msgUndef[];
 extern const char   msgFatalError[];
@@ -48,7 +50,7 @@ extern const char * msgFindOpt2[];
 #if defined(__WIN32__) && defined(_MSC_VER)
   #define BEYE_VER_MSG          " Binary EYE v "BEYE_VERSION"-i386.Win32 Build: " __DATE__ " "
 #else
-  #define BEYE_VER_MSG          " Binary EYE v "BEYE_VERSION"-"__CPU_NAME__"."__OS_NAME__" Build: "__DATE__" "
+  #define BEYE_VER_MSG          " Binary EYE v "BEYE_VERSION"-"HOST" Build: "__DATE__" "
 #endif
 
 extern const char UNDEFINE[];

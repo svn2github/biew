@@ -21,6 +21,7 @@ endif
 	$(MAKE) -C $@
 
 install:
+	$(INSTALL) -D -b -c -m 644 beye.hlp $(DESTDIR)$(DATADIR)/beye.hlp
 	$(DO_IMAKE)
 
 clean:
@@ -32,6 +33,7 @@ distclean:
 	rm -f config.h config.mak
 
 uninstall:
+	rm -f $(DESTDIR)$(DATADIR)/*
 	$(DO_IMAKE)
 
 dep:
@@ -39,5 +41,3 @@ dep:
 
 help:
 	(beyehlp/beyehlp lzss/lzss beyehlp.prj)
-	$(RM) -f ../bin_rc/beye.hlp
-	$(CP) beye.hlp ../bin_rc

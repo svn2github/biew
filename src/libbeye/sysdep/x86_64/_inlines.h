@@ -158,7 +158,7 @@ __inline static void __FASTCALL__ __XchgB__(tUInt8 *_val1, tUInt8 *_val2)
 
 extern void (__FASTCALL__ *InterleaveBuffers_ptr)(tUInt32 limit,
                                     void *destbuffer,
-                                    const void *evenbuffer, 
+                                    const void *evenbuffer,
                                     const void *oddbuffer);
 #ifdef InterleaveBuffers
 #undef InterleaveBuffers

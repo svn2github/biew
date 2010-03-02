@@ -18,6 +18,8 @@
 #ifndef __BEYELIB_H
 #define __BEYELIB_H 1
 
+#include "config.h"
+
 typedef enum { False = 0, True = 1 }tBool; /**< This is the data type used to represent boolean objects */
 
 #ifndef __NORECURSIVE
@@ -26,7 +28,7 @@ typedef enum { False = 0, True = 1 }tBool; /**< This is the data type used to re
 #endif
 
 #ifndef __OS_DEP_H
-#include "libbeye/sysdep/__os_dep.h"
+#include "libbeye/osdep/__os_dep.h"
 #endif
 
 #ifndef __HRD_INF_H
@@ -272,7 +274,3 @@ extern unsigned long __FASTCALL__ la_FindNearest(linearArray *obj, const void *k
 #endif
 
 #endif
-
-
-
-

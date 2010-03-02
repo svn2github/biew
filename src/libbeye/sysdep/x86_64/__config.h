@@ -18,7 +18,7 @@
 #ifndef ____CONFIG_H
 #define ____CONFIG_H 1
 
-#include "libbeye/sysdep/ia16/endian.h"
+#include "libbeye/sysdep/ia32/endian.h"
 #include "libbeye/sysdep/x86_64/stdint.h"
 
 #endif

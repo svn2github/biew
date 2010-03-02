@@ -14,19 +14,23 @@
  * @since       1999
  * @note        Development, fixes and improvements
 **/
-#include "libbeye/libbeye.h"
-#if __WORDSIZE == 16
- #if defined( __MSDOS__ ) || defined ( __OS2__ ) || defined ( __WINDOWS__ )
-   #include "libbeye/sysdep/ia16/dos/kbd_code.h"
- #else
-   #error Unknown operationg system for IA-16 architecture
- #endif
+#ifdef __beos__
+#include "libbeye/osdep/beos/kbd_code.h"
+#elif defined(__dos__)
+#include "libbeye/osdep/dos/kbd_code.h"
+#elif defined(__dos4gw__)
+#include "libbeye/osdep/dos4gw/kbd_code.h"
+#elif defined(__linux__)
+#include "libbeye/osdep/linux/kbd_code.h"
+#elif defined(__os2__)
+#include "libbeye/osdep/os2/kbd_code.h"
+#elif defined(__qnx__)
+#include "libbeye/osdep/qnx/kbd_code.h"
+#elif defined(__qnxnto__)
+#include "libbeye/osdep/qnxnto/kbd_code.h"
+#elif defined(__WIN32__)
+#include "libbeye/osdep/win32/kbd_code.h"
 #else
-  #if defined(__WIN32__) && defined(_MSC_VER)
-    #define __OS_KEYBOARD <libbeye/sysdep/ia32/win32/kbd_code.h>
-  #else
-    #define __OS_KEYBOARD <libbeye/sysdep/__MACHINE__/__OS__/kbd_code.h>
-  #endif
-  #include __OS_KEYBOARD
+#include "libbeye/osdep/unix/kbd_code.h"
 #endif
 

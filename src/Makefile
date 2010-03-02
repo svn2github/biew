@@ -24,7 +24,7 @@ SUBDIRS=libbeye
 DO_MAKE = @ for i in $(SUBDIRS); do $(MAKE) -C $$i $@ || exit; done
 DO_ALL  = @ for i in $(SUBDIRS); do $(MAKE) -C $$i all || exit; done
 
-CFLAGS = -I../hlp $(CDEFOS) $(CDEFSYS) $(HOST_CFLAGS)
+CFLAGS = -I../hlp $(HOST_CFLAGS)
 LDFLAGS = $(OSLDEF) $(HOST_LDFLAGS)
 
 ###########################################################################
@@ -132,12 +132,9 @@ clean:
 	$(DO_MAKE)
 	$(RM) $(OBJS)
 	$(RM) $(TARGET)
-	$(RM) beye.map
-	$(RM) *.err
 
 distclean: clean
 	$(DO_MAKE)
-	$(RM) config.log config.mak
 
 $(TARGET): $(OBJS)
 	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)

@@ -21,6 +21,8 @@
  * @since       2009
  * @note        Development, fixes and improvements
 **/
+#include "config.h"
+
 #include <stddef.h>
 #include <string.h>
 #include "libbeye/sysdep/x86_64/fastcopy.h"
@@ -99,11 +101,7 @@ static void GetCpuCaps( void ) {}
 #undef HAVE_3DNOW
 #undef HAVE_SSE
 #define RENAME(a) a ## _C
-#ifdef __MSDOS__
-#include "libbeye/sysdep/x86_64/aclib_~1.c"
-#else
 #include "libbeye/sysdep/x86_64/aclib_template.c"
-#endif
 
 //MMX versions
 #undef RENAME
@@ -111,11 +109,7 @@ static void GetCpuCaps( void ) {}
 #undef HAVE_MMX2
 #undef HAVE_3DNOW
 #define RENAME(a) a ## _MMX
-#ifdef __MSDOS__
-#include "libbeye/sysdep/x86_64/aclib_~1.c"
-#else
 #include "libbeye/sysdep/x86_64/aclib_template.c"
-#endif
 
 #if 0 /* TODO: better detection of gas possibilities */
 //MMX2 versions
@@ -124,11 +118,7 @@ static void GetCpuCaps( void ) {}
 #define HAVE_MMX2
 #undef HAVE_3DNOW
 #define RENAME(a) a ## _MMX2
-#ifdef __MSDOS__
-#include "libbeye/sysdep/x86_64/aclib_~1.c"
-#else
 #include "libbeye/sysdep/x86_64/aclib_template.c"
-#endif
 
 //3DNOW versions
 #undef RENAME
@@ -136,11 +126,7 @@ static void GetCpuCaps( void ) {}
 #undef HAVE_MMX2
 #define HAVE_3DNOW
 #define RENAME(a) a ## _3DNow
-#ifdef __MSDOS__
-#include "libbeye/sysdep/x86_64/aclib_~1.c"
-#else
 #include "libbeye/sysdep/x86_64/aclib_template.c"
-#endif
 #endif
 
 #endif // CAN_COMPILE_X86_ASM
@@ -194,7 +180,7 @@ static void __FASTCALL__ init_InterleaveBuffers(tUInt32 limit,
 
 void (__FASTCALL__ *InterleaveBuffers_ptr)(tUInt32 limit,
 				    void *destbuffer,
-				    const void *evenbuffer, 
+				    const void *evenbuffer,
 				    const void *oddbuffer) = init_InterleaveBuffers;
 
 static void __FASTCALL__ init_CharsToShorts(tUInt32 limit,

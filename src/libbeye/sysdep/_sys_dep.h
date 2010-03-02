@@ -17,19 +17,15 @@
 #ifndef __SYS_DEP_H
 #define __SYS_DEP_H 1
 
-#ifdef __TSC__
-   #include "libbeye/sysdep/ia16/__config.h"
-   #include "libbeye/sysdep/ia16/_inlines.h"
+#if defined(__i386__)
+#include "libbeye/sysdep/ia32/__config.h"
+#include "libbeye/sysdep/ia32/_inlines.h"
+#elif defined(__x86_64__)
+#include "libbeye/sysdep/x86_64/__config.h"
+#include "libbeye/sysdep/x86_64/_inlines.h"
 #else
-  #if defined(__WIN32__) && defined(_MSC_VER)
-    #include "libbeye/sysdep/ia32/__config.h"
-    #include "libbeye/sysdep/ia32/_inlines.h"
-  #else
-    #define _INLINES <libbeye/sysdep/__MACHINE__/_inlines.h>
-    #define __CONFIG <libbeye/sysdep/__MACHINE__/__config.h>
-    #include __CONFIG
-    #include _INLINES
-  #endif
+#include "libbeye/sysdep/generic/__config.h"
+#include "libbeye/sysdep/generic/_inlines.h"
 #endif
 
 #ifdef __cplusplus

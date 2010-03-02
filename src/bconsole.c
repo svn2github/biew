@@ -17,6 +17,7 @@
  * @date        02.11.2007
  * @note        Added "ungotstring" function to enable inline assemblers
 **/
+#include "libbeye/kbd_code.h"
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
@@ -33,7 +34,6 @@
 #include "search.h"
 #include "bconsole.h"
 #include "libbeye/pmalloc.h"
-#include "libbeye/kbd_code.h"
 
 extern TWindow * ErrorWnd;
 
