@@ -7,7 +7,8 @@ init_functions
 ENABLED_LIST=(
     "gomp|use GNU OpenMP (requires gcc-4.3+)",
     "fastcall|use regparm method on x86 systems",
-    "fastmemcpy|use 3dnow/sse/mmx optimized memcpy()",
+    "fastmemcpy|use SIMD optimized memcpy()",
+    "mouse|build mouse support on *nix systems",
     "iconv|build iconv support",
 )
 
@@ -45,7 +46,7 @@ SYSTYPES_LIST=(
     "ldconfig|use this LDCONFIG to install PROGRAM|ldconfig",
     "install|use this INSTALL to install PROGRAM|install",
     "pkg_config|use this PKG-CONFIG to configure PROGRAM|pkg-config",
-    "ar|use this AR to build beyelib|ar",
+    "ar|use this AR to build beyelib|ar -r",
     "ranlib|use RANLIB to build indexes on builib|ranlib",
     "rm|use RM program to cleanup files|rm",
     "ln|use LN program to make soft link|ln",
@@ -164,8 +165,9 @@ test $($pkg_config --version 2>/dev/null) || die "no pkg-config found"
 #############################################################################
 test_optimizations config.mak config.h
 
-test -n "$profile"	&& disable fastcall
-print_config __USE config.h config.mak fastcall
+enabled "$profile"	&& disable fastcall
+print_config USE_ config.h config.mak fastcall
+print_config USE_ config.h config.mak fastmemcpy
 
 # Checking for GOMP
 enabled gomp && check_ldflags -fopenmp || disable gomp
@@ -277,7 +279,7 @@ app_cflags="-D__DISABLE_MMF"
 app_libs="-ltermlib -lunix -lphoton3r.lib"
 fi
 if qnxnto ; then
-app_cflags="-D__QNX6__ -D_VT100_ -D__DISABLE_MMF"
+app_cflags="-D__QNX6__ -D__DISABLE_MMF"
 app_libs="-lncurses"
 fi
 if linux ; then
@@ -308,7 +310,7 @@ done
 print_config HAVE_ config.h config.mak iconv
 fi
 
-require2 mouse gpm.h Gpm_GetEvent -lgpm
+enabled mouse && require2 mouse gpm.h Gpm_GetEvent -lgpm
 print_config HAVE_ config.h config.mak mouse
 
 ./version.sh
@@ -320,7 +322,7 @@ cat >> config.h << EOF
 #define HOST "$host"
 /* Defined to some form of __attribute__ ((...)) if the compiler supports
    a different, more efficient calling convention.  */
-#if defined ( __USE_FASTCALL ) && defined ( ARCH_X86 )
+#if defined ( USE_FASTCALL ) && defined ( __i386__ )
 /*# define internal_function __attribute__ ((regparm (3), stdcall))*/
 # define __FASTCALL__ __attribute__ ((regparm (3)))
 #else
@@ -341,6 +343,7 @@ LN=$ln
 CD=$cd
 CP=$cp
 INSTALL=$install
+PROGNAME=$prog_alias
 LIBEXT=$libext
 LIBPREFIX=$libprefix
 PREFIX=$prefix

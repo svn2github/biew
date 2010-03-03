@@ -80,24 +80,6 @@ __inline static tUInt64 __ByteSwapLL(tUInt64 x)\
 #define ByteSwapLL(x) __ByteSwapLL(x)
 #endif
 
-                /** Translates byte via table lookup
-                  * @return         byte readed from table \e t at offset \e i
-                  * @param t        pointer to 256-byte memory block from which will be readed byte
-                  * @param i        index of memory block where byte is to be readed
-                **/
-#ifndef __Xlat__
-#define __Xlat__(t,i) (t[i])
-#endif
-                /** Compares two 4-byte numbers.
-                  * @return         -1 if v1 < v2; +1 if v1 > v2 and 0 if v1 == v2
-                  * @param _val1    specified first number to be compared
-                  * @param _val2    specified second number to be compared
-                **/
-#ifndef __CmpLong__
-#define __CmpLong__(_val1,_val2)\
-        ((_val1) < (_val2) ? -1 : (_val1) > (_val2) ? 1 : 0)
-#endif
-
                 /** Exchanges two bytes in memory.
                   * @return         none
                   * @param _val1    specified pointer to the first byte to be exchanged

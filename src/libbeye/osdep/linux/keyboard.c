@@ -249,7 +249,7 @@ static mevent mouse = {0, 0, 0, 0};
 static void __FASTCALL__ pushEvent(unsigned _event)
 {
     unsigned event=_event;
-#if defined (_VT100_) && defined(HAVE_ICONV)
+#if defined(HAVE_ICONV)
     if(is_unicode) {
 	static unsigned char utf_buff[8];
 	static unsigned utf_ptr=0;

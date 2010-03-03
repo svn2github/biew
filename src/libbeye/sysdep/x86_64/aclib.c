@@ -34,7 +34,7 @@
 
 //#define STATISTICS
 
-#ifdef	CAN_COMPILE_X86_GAS
+#if defined( CAN_COMPILE_X86_GAS ) && defined( USE_FASTMEMCPY )
 #define CAN_COMPILE_X86_ASM
 #endif
 

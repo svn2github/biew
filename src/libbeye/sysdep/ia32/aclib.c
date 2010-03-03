@@ -27,7 +27,8 @@
 #include "libbeye/sysdep/ia32/fastcopy.h"
 #include "libbeye/sysdep/ia32/stdint.h"
 #include "libbeye/sysdep/ia32/_inlines.h"
-#ifdef	CAN_COMPILE_X86_GAS
+
+#if defined( CAN_COMPILE_X86_GAS ) && defined( USE_FASTMEMCPY )
 #define CAN_COMPILE_X86_ASM
 #endif
 

@@ -32,7 +32,7 @@ TARGET = beyehlp
 ##########################################################################
 
 INCS = -I. -I../../src
-LIBS = -L../../src/libbeye -lbeye $(OS_LIBS)
+LIBS = -L../../src/libbeye -lbeye $(EXTRALIBS)
 OBJS =\
 beyehlp.o
 all: $(TARGET)

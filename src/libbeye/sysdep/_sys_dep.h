@@ -39,6 +39,28 @@ extern "C" {
 #define min(a,b)    (((a) < (b)) ? (a) : (b)) /** Returns the lesser of the two values a and b. */
 #endif
 
+
+                /** Translates byte via table lookup
+                  * @return         byte readed from table \e t at offset \e i
+                  * @param t        pointer to 256-byte memory block from which will be readed byte
+                  * @param i        index of memory block where byte is to be readed
+                **/
+__inline static tUInt8 __FASTCALL__ __CONSTFUNC__ __Xlat__(const tUInt8 *_table, tUInt8 _idx)
+{
+ return _table[_idx];
+}
+#define __Xlat__ __Xlat__
+
+                /** Compares two long numbers.
+                  * @return         -1 if v1 < v2; +1 if v1 > v2 and 0 if v1 == v2
+                  * @param _val1    specified first number to be compared
+                  * @param _val2    specified second number to be compared
+                **/
+#ifndef __CmpLong__
+#define __CmpLong__(_val1,_val2)\
+        ((_val1) < (_val2) ? -1 : (_val1) > (_val2) ? 1 : 0)
+#endif
+
                    /** Converts all alphabetic characters in buffer to upper case.
                      * @return                none
                      * @param buff            buffer to be converted

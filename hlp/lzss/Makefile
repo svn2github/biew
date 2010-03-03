@@ -33,7 +33,7 @@ TARGET = lzss
 ##########################################################################
 
 INCS = -I. -I../../src
-LIBS = -L../../src/libbeye -lbeye $(OS_LIBS)
+LIBS = -L../../src/libbeye -lbeye $(EXTRALIBS)
 OBJS =\
 lzss.o
 all: $(TARGET)

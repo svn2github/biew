@@ -27,14 +27,14 @@ LDFLAGS = $(HOST_LDFLAGS)
 ###########################################################################
 # TARGET: put name of executable image here                               #
 ###########################################################################
-TARGET = beye
-BEYELIB = ./libbeye/$(LIBPREFIX)$(TARGET).$(LIBEXT)
+TARGET = $(PROGNAME)
+BEYELIB = ./libbeye/$(LIBPREFIX)beye.$(LIBEXT)
 ##########################################################################
 #                Please not modify contents below                        #
 ##########################################################################
 
 INCS = -I.
-LIBS = -L./libbeye -l$(TARGET) $(OS_LIBS)
+LIBS = -L./libbeye -lbeye $(EXTRALIBS)
 SRCS = \
 addendum.c\
 bconsole.c\

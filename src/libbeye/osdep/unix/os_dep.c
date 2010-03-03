@@ -168,12 +168,10 @@ void __FASTCALL__ __init_sys(void)
 	for (i = 0; termtab[i].name != NULL && strcasecmp(t, termtab[i].name); i++);
     terminal = &termtab[i];
 
-#ifdef _VT100_
     if (terminal->type == TERM_UNKNOWN) {
-        printm("Sorry, I can't handle terminal type '%s'.\nIf you are sure it is vt100 compatible, try setting TERM to vt100:\n\n$ TERM=vt100 beye filename\n\nIf you will not succeed, use slang/curses version of BEYE.\n\n", t);
+        printm("Sorry, I can't handle terminal type '%s'.\nIf you are sure it is vt100 compatible, try setting TERM to vt100:\n\n$ TERM=vt100 beye filename\n", t);
         exit(2);
     }
-#endif
 	
     if (i == 5) output_7 = 1;	/* beterm is (B)roken (E)vil (TERM)inal */
 
