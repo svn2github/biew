@@ -251,8 +251,8 @@ void MainLoop( void )
              PaintTitle();
              break;
     case KE_SHIFT_F(6): SelectSysInfo(); break;
-    case KE_F(7): nfp = Search(False); ch = KE_JUSTFIND; break;
-    case KE_SHIFT_F(7) : nfp = Search(True); ch = KE_JUSTFIND; break;
+    case KE_F(7): nfp = Search(false); ch = KE_JUSTFIND; break;
+    case KE_SHIFT_F(7) : nfp = Search(true); ch = KE_JUSTFIND; break;
     case KE_F(8):  if(detectedFormat->showHdr) nfp = detectedFormat->showHdr();
                    else if(IsNewExe()) nfp = mzTable.showHdr();
                    break;

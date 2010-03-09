@@ -36,84 +36,84 @@
 /** New EXE header */
 typedef struct tagNEHEADER
 {
- tUInt8   neSignature[2];               /**< 'NE' */
- tUInt8   neLinkerVersion;
- tUInt8   neLinkerRevision;
- tUInt16  neOffsetEntryTable;
- tUInt16  neLengthEntryTable;
- tUInt32  neChecksum;
- tUInt16  neContestEXE;
- tUInt16  neAutoDataSegmentCount;
- tUInt16  neHeapSize;
- tUInt16  neStackSize;
- tUInt32  neCSIPvalue;
- tUInt32  neSSSPvalue;
- tUInt16  neSegmentTableCount;
- tUInt16  neModuleReferenceTableCount;
- tUInt16  neLengthNonResidentNameTable;
- tUInt16  neOffsetSegmentTable;
- tUInt16  neOffsetResourceTable;
- tUInt16  neOffsetResidentNameTable;
- tUInt16  neOffsetModuleReferenceTable;
- tUInt16  neOffsetImportTable;
- tUInt32  neOffsetNonResidentNameTable;
- tUInt16  neMoveableEntryPointCount;
- tUInt16  neLogicalSectorShiftCount;
- tUInt16  neResourceSegmentCount;
- tUInt8   neOperatingSystem;
- tUInt8   neFlagsOther;
+ uint8_t   neSignature[2];               /**< 'NE' */
+ uint8_t   neLinkerVersion;
+ uint8_t   neLinkerRevision;
+ uint16_t  neOffsetEntryTable;
+ uint16_t  neLengthEntryTable;
+ uint32_t  neChecksum;
+ uint16_t  neContestEXE;
+ uint16_t  neAutoDataSegmentCount;
+ uint16_t  neHeapSize;
+ uint16_t  neStackSize;
+ uint32_t  neCSIPvalue;
+ uint32_t  neSSSPvalue;
+ uint16_t  neSegmentTableCount;
+ uint16_t  neModuleReferenceTableCount;
+ uint16_t  neLengthNonResidentNameTable;
+ uint16_t  neOffsetSegmentTable;
+ uint16_t  neOffsetResourceTable;
+ uint16_t  neOffsetResidentNameTable;
+ uint16_t  neOffsetModuleReferenceTable;
+ uint16_t  neOffsetImportTable;
+ uint32_t  neOffsetNonResidentNameTable;
+ uint16_t  neMoveableEntryPointCount;
+ uint16_t  neLogicalSectorShiftCount;
+ uint16_t  neResourceSegmentCount;
+ uint8_t   neOperatingSystem;
+ uint8_t   neFlagsOther;
  /* os depended 64 bytes struct */
- tUInt16  neOffsetFastLoadArea;
- tUInt16  neLengthFastLoadArea;
- tUInt16  neReserved;
- tUInt16  neWindowsVersion;
+ uint16_t  neOffsetFastLoadArea;
+ uint16_t  neLengthFastLoadArea;
+ uint16_t  neReserved;
+ uint16_t  neWindowsVersion;
 
 }NEHEADER;
 
 typedef struct tagSEGDEF
 {
-  tUInt16 sdOffset;
-  tUInt16 sdLength;
-  tUInt16 sdFlags;
-  tUInt16 sdMinMemory;
+  uint16_t sdOffset;
+  uint16_t sdLength;
+  uint16_t sdFlags;
+  uint16_t sdMinMemory;
 }SEGDEF;
 
-extern int ReadSegDef(SEGDEF *,tUInt16 numseg);
+extern int ReadSegDef(SEGDEF *,uint16_t numseg);
 
 typedef struct tagENTRY
 {
- tUInt8  eFlags;
- tUInt8  eFixed; /**< 1 - fixed 0 - moveable */
- /* tUInt16 eInt3F; */
- tUInt8  eSegNum;
- tUInt16 eSegOff;
+ uint8_t  eFlags;
+ uint8_t  eFixed; /**< 1 - fixed 0 - moveable */
+ /* uint16_t eInt3F; */
+ uint8_t  eSegNum;
+ uint16_t eSegOff;
 }ENTRY;
 
 typedef struct tagNAMEINFO
 {
-  tUInt16 rnOffset;
-  tUInt16 rnLength;
-  tUInt16 rnFlags;
-  tUInt16 rnID;
-  tUInt16 rnHandle;
-  tUInt16 rnUsage;
+  uint16_t rnOffset;
+  uint16_t rnLength;
+  uint16_t rnFlags;
+  uint16_t rnID;
+  uint16_t rnHandle;
+  uint16_t rnUsage;
 } NAMEINFO;
 
-extern int ReadEntry(ENTRY *,tUInt16 entnum);
+extern int ReadEntry(ENTRY *,uint16_t entnum);
 
 typedef struct tagRELOC_NE
 {
-  tUInt8  AddrType;
-  tUInt8  Type;
-  tUInt16 RefOff;
-  tUInt16 idx;
-  tUInt16 ordinal;
+  uint8_t  AddrType;
+  uint8_t  Type;
+  uint16_t RefOff;
+  uint16_t idx;
+  uint16_t ordinal;
 }RELOC_NE;
 
 extern const char * __FASTCALL__ GetPMWinAPI(unsigned flag);
 extern const char * __nedata[];
 extern unsigned __FASTCALL__ GetNamCountNE(BGLOBAL,__filesize_t);
-extern tBool __FASTCALL__ RNamesReadItems(BGLOBAL,memArray *,unsigned,__filesize_t);
+extern bool __FASTCALL__ RNamesReadItems(BGLOBAL,memArray *,unsigned,__filesize_t);
 
 
 #ifdef __HAVE_PRAGMA_PACK__

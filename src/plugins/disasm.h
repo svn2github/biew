@@ -48,7 +48,7 @@
 #define DISASM_DEFAULT		0  /**< indicates unspecified disassembler: format default */
 
 
-typedef tBool (__FASTCALL__ *DisasmAction)( void );
+typedef bool (__FASTCALL__ *DisasmAction)( void );
 typedef unsigned char * MBuffer;
 
 /*

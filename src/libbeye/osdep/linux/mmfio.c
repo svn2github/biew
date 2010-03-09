@@ -95,10 +95,10 @@ mmfHandle          __FASTCALL__ __mmfOpen(const char *fname,int mode)
   return NULL;
 }
 
-tBool              __FASTCALL__ __mmfFlush(mmfHandle mh)
+bool              __FASTCALL__ __mmfFlush(mmfHandle mh)
 {
   struct mmfRecord *mrec = (struct mmfRecord *)mh;
-  return msync(mrec->addr,mrec->length,MS_SYNC) ? False : True;
+  return msync(mrec->addr,mrec->length,MS_SYNC) ? false : true;
 }
 
 mmfHandle       __FASTCALL__ __mmfSync(mmfHandle mh)
@@ -124,39 +124,39 @@ mmfHandle       __FASTCALL__ __mmfSync(mmfHandle mh)
   return mrec;
 }
 
-tBool              __FASTCALL__ __mmfProtect(mmfHandle mh,int flags)
+bool              __FASTCALL__ __mmfProtect(mmfHandle mh,int flags)
 {
   struct mmfRecord *mrec = (struct mmfRecord *)mh;
   mrec->mode = flags;
-  return mprotect(mrec->addr,mrec->length,mk_prot(flags)) ? False : True;
+  return mprotect(mrec->addr,mrec->length,mk_prot(flags)) ? false : true;
 }
 
-tBool              __FASTCALL__ __mmfResize(mmfHandle mh,long size)
+bool              __FASTCALL__ __mmfResize(mmfHandle mh,long size)
 {
   struct mmfRecord *mrec = (struct mmfRecord *)mh;
   void *new_addr;
-  tBool can_continue = False;
+  bool can_continue = false;
   if(mrec->length > size) /* truncate */
   {
-    if((new_addr = mremap(mrec->addr,mrec->length,size,MREMAP_MAYMOVE)) != (void *)-1) can_continue = True;
+    if((new_addr = mremap(mrec->addr,mrec->length,size,MREMAP_MAYMOVE)) != (void *)-1) can_continue = true;
     if(can_continue)
-      can_continue = __OsChSize(mrec->fhandle,size) != -1 ? True : False;
+      can_continue = __OsChSize(mrec->fhandle,size) != -1 ? true : false;
   }
   else /* expand */
   {
-    if(__OsChSize(mrec->fhandle,size) != -1) can_continue = True;
+    if(__OsChSize(mrec->fhandle,size) != -1) can_continue = true;
     if(can_continue)
-      can_continue = (new_addr = mremap(mrec->addr,mrec->length,size,MREMAP_MAYMOVE)) != (void *)-1 ? True : False;
+      can_continue = (new_addr = mremap(mrec->addr,mrec->length,size,MREMAP_MAYMOVE)) != (void *)-1 ? true : false;
   }
   if(can_continue)
   {
       mrec->addr = new_addr;
       mrec->length = size;
-      return True;
+      return true;
   }
   else /* Attempt to unroll transaction back */
     __OsChSize(mrec->fhandle,mrec->length);
-  return False;
+  return false;
 }
 
 void               __FASTCALL__ __mmfClose(mmfHandle mh)
@@ -177,6 +177,6 @@ long              __FASTCALL__ __mmfSize(mmfHandle mh)
   return ((struct mmfRecord *)mh)->length;
 }
 
-tBool             __FASTCALL__ __mmfIsWorkable( void ) { return True; }
+bool             __FASTCALL__ __mmfIsWorkable( void ) { return true; }
 
 #endif

@@ -34,7 +34,7 @@ static __filesize_t __FASTCALL__ ShowSysHeader( void )
 {
  int keycode;
  TWindow *hwnd;
- tBool charun;
+ bool charun;
  __fileoff_t fpos;
  fpos = BMGetCurrFilePos();
  hwnd = CrtDlgWndnls(" DOS Device Driver Header ",57,13);
@@ -51,14 +51,14 @@ static __filesize_t __FASTCALL__ ShowSysHeader( void )
           "  [%c]  Non IBM Block-Device\n"
           "  [%c]  Support IOCTL\n"
           "  Device is                %s\n"
-         ,GetBool(drv.ddAttribute & 0x0001)
-         ,GetBool(drv.ddAttribute & 0x0002)
-         ,GetBool(drv.ddAttribute & 0x0004)
-         ,GetBool(drv.ddAttribute & 0x0008)
-         ,GetBool(drv.ddAttribute & 0x0040)
-         ,GetBool(drv.ddAttribute & 0x0800)
-         ,GetBool(drv.ddAttribute & 0x2000)
-         ,GetBool(drv.ddAttribute & 0x4000)
+         ,Gebool(drv.ddAttribute & 0x0001)
+         ,Gebool(drv.ddAttribute & 0x0002)
+         ,Gebool(drv.ddAttribute & 0x0004)
+         ,Gebool(drv.ddAttribute & 0x0008)
+         ,Gebool(drv.ddAttribute & 0x0040)
+         ,Gebool(drv.ddAttribute & 0x0800)
+         ,Gebool(drv.ddAttribute & 0x2000)
+         ,Gebool(drv.ddAttribute & 0x4000)
          ,(drv.ddAttribute & 0x8000 ? "CHARACTERS" : "BLOCKS"));
  twSetColorAttr(dialog_cset.entry);
  twPrintF(">STRATEGY routine offset  = %04hXH bytes [Enter]",drv.ddStrategyOff);
@@ -80,15 +80,15 @@ static __filesize_t __FASTCALL__ ShowSysHeader( void )
 }
 
 
-static tBool  __FASTCALL__ dossys_check_fmt( void )
+static bool  __FASTCALL__ dossys_check_fmt( void )
 {
   unsigned char id[4];
-  tBool ret = False;
+  bool ret = false;
   bmReadBufferEx(id,sizeof(id),0,BM_SEEK_SET);
   if(id[0] == 0xFF && id[1] == 0xFF && id[2] == 0xFF && id[3] == 0xFF)
   {
      bmReadBufferEx((void  *)&drv,sizeof(DOSDRIVER),4,BM_SEEK_SET);
-     ret = True;
+     ret = true;
   }
   return ret;
 }
@@ -97,11 +97,11 @@ static void __FASTCALL__ dossys_init_fmt( void ) {}
 static void __FASTCALL__ dossys_destroy_fmt(void) {}
 static int  __FASTCALL__ dossys_platform( void) { return DISASM_CPU_IX86; }
 
-static tBool __FASTCALL__ dossys_AddressResolv(char *addr,__filesize_t cfpos)
+static bool __FASTCALL__ dossys_AddressResolv(char *addr,__filesize_t cfpos)
 {
-  tBool bret = True;
+  bool bret = true;
   if(cfpos < sizeof(DOSDRIVER)+4) sprintf(addr,"SYSH:%s",Get4Digit(cfpos));
-  else bret = False;
+  else bret = false;
   return bret;
 }
 

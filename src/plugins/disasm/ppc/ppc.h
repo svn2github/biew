@@ -22,8 +22,8 @@ typedef struct s_ppc_arg {
 
 typedef struct s_ppc_opcode {
     const char *name;
-    tUInt32	bits;
-    tUInt32	mask;
+    uint32_t	bits;
+    uint32_t	mask;
     unsigned long flags;
     ppc_arg	args[6];
 }ppc_opcode;

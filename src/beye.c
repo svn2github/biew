@@ -52,7 +52,7 @@ unsigned ListFileCount;
 static char **ListFile;
 static char *LastOpenFileName;
 __filesize_t LastOffset;
-static tBool UseIniFile=True;
+static bool UseIniFile=true;
 char beye_help_name[FILENAME_MAX+1] = "";
 char beye_skin_name[FILENAME_MAX+1] = "";
 char beye_syntax_name[FILENAME_MAX+1] = "";
@@ -63,10 +63,10 @@ static char beye_ini_ver[32];
 unsigned long beye_vioIniFlags = 0L;
 unsigned long beye_twinIniFlags = 0L;
 unsigned long beye_kbdFlags = 0L;
-tBool iniSettingsAnywhere = False;
-tBool fioUseMMF = False;
-tBool iniPreserveTime = False;
-tBool iniUseExtProgs = False;
+bool iniSettingsAnywhere = false;
+bool fioUseMMF = false;
+bool iniPreserveTime = false;
+bool iniUseExtProgs = false;
 __filesize_t headshift = 0L;
 char *ini_name;
 
@@ -160,7 +160,7 @@ static size_t LastMode = sizeof(mainModeTable)/sizeof(REGISTRY_BIN *)+10;
 
 static unsigned defMainModeSel = 0;
 
-tBool SelectMode( void )
+bool SelectMode( void )
 {
   const char *modeName[sizeof(mainModeTable)/sizeof(REGISTRY_MODE *)];
   size_t i,nModes;
@@ -175,9 +175,9 @@ tBool SelectMode( void )
     activeMode = mainModeTable[retval];
     if(activeMode->init) activeMode->init();
     defMainModeSel = retval;
-    return True;
+    return true;
   }
-  return False;
+  return false;
 }
 
 static void __NEAR__ __FASTCALL__ init_modes( hIniProfile *ini )
@@ -327,7 +327,7 @@ static void __NEAR__ __FASTCALL__ ParseCmdLine( void )
 		new_file_size = strtoul(ArgVector[++i],NULL,10);
 #endif
 		break;
-       case 6: UseIniFile = False; break;
+       case 6: UseIniFile = false; break;
        case 7: ListFileCount = 0; return;
        default: ListFile[ListFileCount++] = ArgVector[i];
      }
@@ -335,13 +335,13 @@ static void __NEAR__ __FASTCALL__ ParseCmdLine( void )
   if(ListFileCount) ArgVector[1] = ListFile[0];
 }
 
-static tBool __NEAR__ __FASTCALL__ LoadInfo( void )
+static bool __NEAR__ __FASTCALL__ LoadInfo( void )
 {
    MakeShortName();
    if(new_file_size != FILESIZE_MAX)
    {
        bhandle_t handle;
-       if(__IsFileExists(ArgVector[1]) == False) handle = __OsCreate(ArgVector[1]);
+       if(__IsFileExists(ArgVector[1]) == false) handle = __OsCreate(ArgVector[1]);
        else
        {
          handle = __OsOpen(ArgVector[1],FO_READWRITE | SO_DENYNONE);
@@ -355,10 +355,10 @@ static tBool __NEAR__ __FASTCALL__ LoadInfo( void )
        else
        {
           errnoMessageBox(OPEN_FAIL,NULL,errno);
-          return False;
+          return false;
        }
    }
-   if(BMOpen(ArgVector[1]) != 0) return False;
+   if(BMOpen(ArgVector[1]) != 0) return false;
    if(beye_mode != UINT_MAX)
    {
      defMainModeSel = beye_mode;
@@ -373,7 +373,7 @@ static tBool __NEAR__ __FASTCALL__ LoadInfo( void )
        activeMode = mainModeTable[defMainModeSel];
      }
    }
- return True;
+ return true;
 }
 
 static void __NEAR__ __FASTCALL__ __detectBinFmt( void )
@@ -420,13 +420,13 @@ static void MyAtExit( void )
   __term_sys();
 }
 
-tBool isValidIniArgs( void )
+bool isValidIniArgs( void )
 {
-  return iniSettingsAnywhere ? True :
+  return iniSettingsAnywhere ? true :
          ArgVector[1] ?
 	 strcmp(ArgVector[1],LastOpenFileName) == 0 ?
 	 beye_mode != UINT_MAX && beye_mode != LastMode ?
-	 False : True : False : False;
+	 false : true : false : false;
 }
 
 static hIniProfile * __NEAR__ __FASTCALL__ load_ini_info( void )
@@ -473,14 +473,14 @@ static hIniProfile * __NEAR__ __FASTCALL__ load_ini_info( void )
   beyeReadProfileString(ini,"Beye","Setup","MouseSens","yes",tmp,sizeof(tmp));
   if(stricmp(tmp,"yes") == 0) beye_kbdFlags = KBD_NONSTOP_ON_MOUSE_PRESS;
   beyeReadProfileString(ini,"Beye","Setup","IniSettingsAnywhere","no",tmp,sizeof(tmp));
-  if(stricmp(tmp,"yes") == 0) iniSettingsAnywhere = True;
+  if(stricmp(tmp,"yes") == 0) iniSettingsAnywhere = true;
   beyeReadProfileString(ini,"Beye","Setup","FioUseMMF","no",tmp,sizeof(tmp));
-  if(stricmp(tmp,"yes") == 0) fioUseMMF = True;
-  if(!__mmfIsWorkable()) fioUseMMF = False;
+  if(stricmp(tmp,"yes") == 0) fioUseMMF = true;
+  if(!__mmfIsWorkable()) fioUseMMF = false;
   beyeReadProfileString(ini,"Beye","Setup","PreserveTimeStamp","no",tmp,sizeof(tmp));
-  if(stricmp(tmp,"yes") == 0) iniPreserveTime = True;
+  if(stricmp(tmp,"yes") == 0) iniPreserveTime = true;
   beyeReadProfileString(ini,"Beye","Setup","UseExternalProgs","no",tmp,sizeof(tmp));
-  if(stricmp(tmp,"yes") == 0) iniUseExtProgs = True;
+  if(stricmp(tmp,"yes") == 0) iniUseExtProgs = true;
   beyeReadProfileString(ini,"Beye","Setup","Codepage","CP866",beye_codepage,sizeof(beye_codepage));
   return ini;
 }
@@ -534,7 +534,7 @@ static void __NEAR__ __FASTCALL__ save_ini_info( void )
 }
 
 static FTime ftim;
-static tBool ftim_ok = False;
+static bool ftim_ok = false;
 
 static void __FASTCALL__ ShowUsage(void) {
     unsigned evt,i,nln,h,y;
@@ -569,7 +569,7 @@ static void __FASTCALL__ ShowUsage(void) {
 int main( int argc, char *argv[] )
 {
  hIniProfile *ini;
- tBool skin_err;
+ bool skin_err;
  int retval;
 #ifndef NDEBUG
 #ifdef RLIMIT_CORE
@@ -665,10 +665,10 @@ int main( int argc, char *argv[] )
  return retval;
 }
 
-tBool NewSource( void )
+bool NewSource( void )
 {
   int i;
-  tBool ret;
+  bool ret;
   unsigned j,freq;
   static int prev_file;
   char ** nlsListFile;
@@ -706,7 +706,7 @@ tBool NewSource( void )
       MakeShortName();
       __detectBinFmt();
       if(activeMode->init) activeMode->init();
-      ret = True;
+      ret = true;
     }
     else
     {
@@ -719,7 +719,7 @@ tBool NewSource( void )
        MakeShortName();
        __detectBinFmt();
        if(activeMode->init) activeMode->init();
-       ret = False;
+       ret = false;
     }
   }
   return ret;
@@ -738,7 +738,7 @@ unsigned __FASTCALL__ beyeReadProfileString(hIniProfile *ini,
                     : 1;
 }
 
-tBool __FASTCALL__ beyeWriteProfileString(hIniProfile *ini,
+bool __FASTCALL__ beyeWriteProfileString(hIniProfile *ini,
                                           const char *section,
                                           const char *subsection,
                                           const char *item,

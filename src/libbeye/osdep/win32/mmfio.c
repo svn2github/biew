@@ -80,7 +80,7 @@ typedef unsigned long long ADRSIZE;
 
 typedef struct
 {
-    tUInt32   ulFlags;
+    uint32_t   ulFlags;
     HANDLE    fhandle;
     void *    pData;
     ADRSIZE   ulSize;
@@ -308,10 +308,10 @@ mmfHandle          __FASTCALL__ __mmfOpen(const char *fname,int mode)
     return pMMF;
 }
 
-tBool              __FASTCALL__ __mmfFlush(mmfHandle mh)
+bool              __FASTCALL__ __mmfFlush(mmfHandle mh)
 {
   PMMF mrec = (PMMF)mh;
-  return DosUpdateMMF(mrec,mrec->ulSize) ? True : False;
+  return DosUpdateMMF(mrec,mrec->ulSize) ? true : false;
 }
 
 mmfHandle     __FASTCALL__ __mmfSync(mmfHandle mh)
@@ -331,36 +331,36 @@ mmfHandle     __FASTCALL__ __mmfSync(mmfHandle mh)
   return mrec;
 }
 
-tBool              __FASTCALL__ __mmfProtect(mmfHandle mh,int flags)
+bool              __FASTCALL__ __mmfProtect(mmfHandle mh,int flags)
 {
   PMMF mrec = (PMMF)mh;
   mrec->ulFlags = flags | MMF_USEDENTRY;
-  return True;
+  return true;
 }
 
-tBool              __FASTCALL__ __mmfResize(mmfHandle mh,long size)
+bool              __FASTCALL__ __mmfResize(mmfHandle mh,long size)
 {
   PMMF mrec = (PMMF)mh;
   ADRSIZE old_length;
-  tBool can_continue = False;
+  bool can_continue = false;
   old_length = mrec->ulSize;
   DosUpdateMMF(mrec,min((ADRSIZE)size,mrec->ulSize));
   if(mrec->ulSize > (ADRSIZE)size) /* truncate */
   {
-    if(!DosReallocMMF(mrec,size)) can_continue = True;
+    if(!DosReallocMMF(mrec,size)) can_continue = true;
     if(can_continue)
-      can_continue = __OsChSize(mrec->fhandle,size) != -1 ? True : False;
+      can_continue = __OsChSize(mrec->fhandle,size) != -1 ? true : false;
   }
   else /* expand */
   {
-    if(__OsChSize(mrec->fhandle,size) != -1) can_continue = True;
+    if(__OsChSize(mrec->fhandle,size) != -1) can_continue = true;
     if(can_continue)
-      can_continue = !DosReallocMMF(mrec,size) ? True : False;
+      can_continue = !DosReallocMMF(mrec,size) ? true : false;
   }
-  if(can_continue) return True;
+  if(can_continue) return true;
   else /* Attempt to unroll transaction back */
     __OsChSize(mrec->fhandle,old_length);
-  return False;
+  return false;
 }
 
 void               __FASTCALL__ __mmfClose(mmfHandle mh)
@@ -391,7 +391,7 @@ long              __FASTCALL__ __mmfSize(mmfHandle mh)
   return ((PMMF)mh)->ulSize;
 }
 
-tBool             __FASTCALL__ __mmfIsWorkable( void ) { return True; }
+bool             __FASTCALL__ __mmfIsWorkable( void ) { return true; }
 #else
 /*
    WARNING! This implementation of program logic is not fully compatible
@@ -480,10 +480,10 @@ mmfHandle          __FASTCALL__ __mmfOpen(const char *fname,int mode)
   return NULL;
 }
 
-tBool              __FASTCALL__ __mmfFlush(mmfHandle mh)
+bool              __FASTCALL__ __mmfFlush(mmfHandle mh)
 {
   struct mmfRecord *mrec = (struct mmfRecord *)mh;
-  return FlushViewOfFile(mrec->addr,mrec->length) ? True : False;
+  return FlushViewOfFile(mrec->addr,mrec->length) ? true : false;
 }
 
 mmfHandle     __FASTCALL__ __mmfSync(mmfHandle mh)
@@ -512,15 +512,15 @@ mmfHandle     __FASTCALL__ __mmfSync(mmfHandle mh)
   return NULL;
 }
 
-tBool              __FASTCALL__ __mmfProtect(mmfHandle mh,int flags)
+bool              __FASTCALL__ __mmfProtect(mmfHandle mh,int flags)
 {
   DWORD oldProt;
   struct mmfRecord *mrec = (struct mmfRecord *)mh;
   mrec->mode = flags;
-  return VirtualProtect(mrec->addr,mrec->length,mk_prot(flags),&oldProt) ? True : False;
+  return VirtualProtect(mrec->addr,mrec->length,mk_prot(flags),&oldProt) ? true : false;
 }
 
-tBool              __FASTCALL__ __mmfResize(mmfHandle mh,long size)
+bool              __FASTCALL__ __mmfResize(mmfHandle mh,long size)
 {
   /** @bug  This implementation does not change size of file.
             Sorry! It is not possible under win32 without changing logic of
@@ -535,12 +535,12 @@ tBool              __FASTCALL__ __mmfResize(mmfHandle mh,long size)
   if(mrec->fmapping)
   {
     if((mrec->addr = MapViewOfFile(mrec->fmapping,mk_access(mrec->mode),0L,0L,mrec->length)) != NULL)
-                                                                    return True;
+                                                                    return true;
     CloseHandle(mrec->fmapping);
   }
   __OsClose(mrec->fhandle);
   PFree(mrec);
-  return False;
+  return false;
 }
 
 void               __FASTCALL__ __mmfClose(mmfHandle mh)
@@ -562,6 +562,6 @@ long              __FASTCALL__ __mmfSize(mmfHandle mh)
   return ((struct mmfRecord *)mh)->length;
 }
 
-tBool             __FASTCALL__ __mmfIsWorkable( void ) { return True; }
+bool             __FASTCALL__ __mmfIsWorkable( void ) { return true; }
 #endif
 #endif

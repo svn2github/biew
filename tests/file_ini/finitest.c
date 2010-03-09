@@ -14,7 +14,7 @@
 char **ArgVector;
 unsigned ArgCount;
 
-static tBool __FASTCALL__ MyProc(IniInfo * info)
+static bool __FASTCALL__ MyProc(IniInfo * info)
 {
   printf("[ %s ] < %s > %s = %s\n"
          ,info->section

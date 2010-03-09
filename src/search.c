@@ -41,10 +41,10 @@ unsigned beyeSearchFlg = SF_NONE;
 
 __filesize_t FoundTextSt = 0,FoundTextEnd = 0;
 
-tBool __found;
+bool __found;
 
 void __FASTCALL__ fillBoyerMooreCache(int *cache, const char *pattern,
-                                      unsigned pattern_len, tBool case_sens)
+                                      unsigned pattern_len, bool case_sens)
 {
   size_t iptr;
   memset(cache,0,(UCHAR_MAX+1)*sizeof(int));
@@ -63,7 +63,7 @@ void __FASTCALL__ fillBoyerMooreCache(int *cache, const char *pattern,
 
                    /** Performs single search (without templates) within file.
                      * @return                address of found sequence
-                     *                        if global variable __found is True
+                     *                        if global variable __found is true
                      *                        otherwise:
                      *                        0L - if sequence is not found
                      *                        FILESIZE_MAX - if sequence can not be
@@ -98,7 +98,7 @@ static __filesize_t __NEAR__ __FASTCALL__  ___lfind(const char *sfrom,
   unsigned proc,pproc,pmult,bio_opt=0,symb_size;
   int direct,icache[UCHAR_MAX+1];
   const int *cache;
-  tBool cond;
+  bool cond;
   unsigned char __search_len;
   unsigned char ch,ch1;
   char cbuff[MAX_SEARCH_SIZE];
@@ -106,7 +106,7 @@ static __filesize_t __NEAR__ __FASTCALL__  ___lfind(const char *sfrom,
   /*
    * Cache initialization for adapted Boyer-Moore search algorithm
   */
-  __found = False;
+  __found = false;
   orig_start = start;
   retval = 0;
   if(!scache)
@@ -121,7 +121,7 @@ static __filesize_t __NEAR__ __FASTCALL__  ___lfind(const char *sfrom,
   tsize = flen;
   pmult = 100;
   if(tsize > FILESIZE_MAX/100) { tsize /= 100; pmult = 1; }
-  cond = False;
+  cond = false;
   pproc = proc = 0;
   /* seek to the last character of pattern by direction */
   start += beyeFlg & SF_REVERSE ? 0 : (pattern_size-1)*symb_size;
@@ -158,7 +158,7 @@ static __filesize_t __NEAR__ __FASTCALL__  ___lfind(const char *sfrom,
       memcpy(nbuff,&sfrom[start],symb_size);
     else
       BMReadBufferEx(nbuff,symb_size,start,BM_SEEK_SET);
-    if((activeMode->flags & __MF_TEXT) == __MF_TEXT) activeMode->convert_cp(nbuff,symb_size,False);
+    if((activeMode->flags & __MF_TEXT) == __MF_TEXT) activeMode->convert_cp(nbuff,symb_size,false);
     ch = nbuff[0];
     if(!(beyeFlg & SF_CASESENS)) ch = toupper(ch);
     if(cache[ch])
@@ -172,10 +172,10 @@ static __filesize_t __NEAR__ __FASTCALL__  ___lfind(const char *sfrom,
         else
           BMReadBufferEx((void *)fbuff,pattern_size*symb_size,findptr,BM_SEEK_SET);
         if((activeMode->flags & __MF_TEXT) == __MF_TEXT)
-             __search_len = activeMode->convert_cp((char *)fbuff,pattern_size*symb_size,False);
+             __search_len = activeMode->convert_cp((char *)fbuff,pattern_size*symb_size,false);
         else __search_len = pattern_size;
         if(!(beyeFlg & SF_CASESENS)) memupr((void *)fbuff,__search_len);
-        if(memcmp(fbuff,cbuff,__search_len) == 0) cond = True;
+        if(memcmp(fbuff,cbuff,__search_len) == 0) cond = true;
         else
         {
           if(flags & __LF_NOSEEK) break;
@@ -187,7 +187,7 @@ static __filesize_t __NEAR__ __FASTCALL__  ___lfind(const char *sfrom,
           }
         }
       }
-      else { findptr = start; cond = True; }
+      else { findptr = start; cond = true; }
       if((beyeFlg & SF_WORDONLY) && cond)
       {
         if(start && !(flags & __LF_NOLEFT))
@@ -196,7 +196,7 @@ static __filesize_t __NEAR__ __FASTCALL__  ___lfind(const char *sfrom,
             memcpy(nbuff,&sfrom[findptr-symb_size],symb_size);
           else
             BMReadBufferEx(nbuff,symb_size,findptr - symb_size,BM_SEEK_SET);
-          if((activeMode->flags & __MF_TEXT) == __MF_TEXT) activeMode->convert_cp(nbuff,symb_size,False);
+          if((activeMode->flags & __MF_TEXT) == __MF_TEXT) activeMode->convert_cp(nbuff,symb_size,false);
           ch = nbuff[0];
         }
         else      ch = ' ';
@@ -206,14 +206,14 @@ static __filesize_t __NEAR__ __FASTCALL__  ___lfind(const char *sfrom,
             memcpy(nbuff,&sfrom[findptr + (pattern_size*symb_size)],symb_size);
           else
             BMReadBufferEx(nbuff,symb_size,findptr + (pattern_size*symb_size),BM_SEEK_SET);
-          if((activeMode->flags & __MF_TEXT) == __MF_TEXT) activeMode->convert_cp(nbuff,symb_size,False);
+          if((activeMode->flags & __MF_TEXT) == __MF_TEXT) activeMode->convert_cp(nbuff,symb_size,false);
           ch1 = nbuff[0];
         }
         else      ch1 = ' ';
-        if(!(isseparate(ch) && isseparate(ch1))) cond = False;
+        if(!(isseparate(ch) && isseparate(ch1))) cond = false;
       }
     }
-    if(cond) { __found = True; retval = findptr; break; }
+    if(cond) { __found = true; retval = findptr; break; }
     if(flags & __LF_NOSEEK) break;
   }
   if(!sfrom) bioSetOptimization(BMbioHandle(),bio_opt);
@@ -233,8 +233,8 @@ static __filesize_t __NEAR__ __FASTCALL__  ___adv_find(const char *sfrom,
   __filesize_t stable_found;
   unsigned i, orig_i, last_search_len;
   unsigned orig_slen, t_count, flags;
-  tBool is_tmpl, has_question;
-  tBool always_prcnt;
+  bool is_tmpl, has_question;
+  bool always_prcnt;
   unsigned orig_direct;
   char cbuff[MAX_SEARCH_SIZE];
   char firstc;
@@ -246,11 +246,11 @@ static __filesize_t __NEAR__ __FASTCALL__  ___adv_find(const char *sfrom,
   orig_direct = beyeFlg & SF_REVERSE;
   _found = 0L;
   restart:
-  always_prcnt = False;
+  always_prcnt = false;
   i = 0;
   prev_found = start;
   flags = __LF_NORMAL;
-  has_question = False;
+  has_question = false;
   stable_found = FILESIZE_MAX;
   while(1)
   {
@@ -296,9 +296,9 @@ static __filesize_t __NEAR__ __FASTCALL__  ___adv_find(const char *sfrom,
       }
       else
       {
-        __found = True;
+        __found = true;
         _found = prev_found;
-        always_prcnt = True;
+        always_prcnt = true;
       }
     }
     flags = __LF_NORMAL; /* reseting flags immediately after search */
@@ -316,7 +316,7 @@ static __filesize_t __NEAR__ __FASTCALL__  ___adv_find(const char *sfrom,
        {
          case '?': while(cbuff[i] == '?') { t_count++; i++; }
                    flags = __LF_NOSEEK | __LF_NOLEFT;
-                   has_question = True;
+                   has_question = true;
                    goto still;
          case '*': while(cbuff[i] == '*') i++;
                    pattern_size = orig_slen-i;
@@ -405,15 +405,15 @@ static void __NEAR__ __FASTCALL__ SearchPaint(TWindow *wdlg,int flags,
  twSetColorAttr(dialog_cset.group.active);
  if(sf_flags & SF_ASHEX) twSetColorAttr(dialog_cset.group.disabled);
  else twSetColorAttr(dialog_cset.group.active);
- twGotoXY(4,4); twPutChar(GetBool(sf_flags & SF_CASESENS));
+ twGotoXY(4,4); twPutChar(Gebool(sf_flags & SF_CASESENS));
  twSetColorAttr(dialog_cset.group.active);
- twGotoXY(4,5); twPutChar(GetBool(sf_flags & SF_WORDONLY));
- twGotoXY(4,6); twPutChar(GetBool(sf_flags & SF_REVERSE));
- twGotoXY(46,4); twPutChar(GetBool(sf_flags & SF_ASHEX));
+ twGotoXY(4,5); twPutChar(Gebool(sf_flags & SF_WORDONLY));
+ twGotoXY(4,6); twPutChar(Gebool(sf_flags & SF_REVERSE));
+ twGotoXY(46,4); twPutChar(Gebool(sf_flags & SF_ASHEX));
  twSetColorAttr((!(flags & SD_ALLFEATURES) || sf_flags & SF_ASHEX)?dialog_cset.group.disabled:dialog_cset.group.active); 
- twGotoXY(46,5); twPutChar(GetBool(sf_flags & SF_WILDCARDS));
+ twGotoXY(46,5); twPutChar(Gebool(sf_flags & SF_WILDCARDS));
  twSetColorAttr(!((flags & SD_ALLFEATURES) && activeMode->search_engine)?dialog_cset.group.disabled:dialog_cset.group.active); 
- twGotoXY(46,6); twPutChar(GetBool(sf_flags & SF_PLUGINS));
+ twGotoXY(46,6); twPutChar(Gebool(sf_flags & SF_PLUGINS));
  twSetColorAttr(dialog_cset.main);
  twUseWin(using);
 }
@@ -456,7 +456,7 @@ static void drawSearchPrompt( void )
    __drawSinglePrompt(searchtxt);
 }
 
-tBool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
+bool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
                                 unsigned char *searchlen,
                                 unsigned * sf_flags)
 {
@@ -465,7 +465,7 @@ tBool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
   tRelCoord X1,Y1,X2,Y2;
   unsigned x[2] = { 0, 0 };
   int rret, active;
-  tBool ret;
+  bool ret;
   int update;
   char attr[2] = { __ESS_FILLER_7BIT | __ESS_WANTRETURN | __ESS_ENABLEINSERT | __ESS_NON_C_STR,
                    __ESS_WANTRETURN | __ESS_ASHEX | __ESS_NON_C_STR };
@@ -498,7 +498,7 @@ tBool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
     ExpandHex(ebuff[1],(unsigned char *)searchbuff,*searchlen,0);
   }
   rret = 2;
-  ret = True;
+  ret = true;
   SearchPaint(hwnd,_flags,*sf_flags);
   update = 1;
   while(1)
@@ -515,9 +515,9 @@ tBool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
     update = 1;
     switch(ch)
     {
-       case KE_ENTER    : if(searchlen) { rret = 1; ret = True; } else { rret = 0; ret = False; } break;
+       case KE_ENTER    : if(searchlen) { rret = 1; ret = true; } else { rret = 0; ret = false; } break;
        case KE_F(10)    :
-       case KE_ESCAPE   : rret = 0; ret = False; break;
+       case KE_ESCAPE   : rret = 0; ret = false; break;
        case KE_F(2)     : if(!(*sf_flags&SF_ASHEX)) *sf_flags ^= SF_CASESENS;
                           update = 0;
                           break;
@@ -549,7 +549,7 @@ tBool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
     if(rret != 2) break;
     twUseWin(hwnd);
     if(!active) { *searchlen = mlen[0]; memcpy(searchbuff,ebuff[0],mlen[0]); }
-    else  { *searchlen = mlen[1] / 3; CompressHex((unsigned char *)searchbuff,ebuff[1],*searchlen,True); }
+    else  { *searchlen = mlen[1] / 3; CompressHex((unsigned char *)searchbuff,ebuff[1],*searchlen,true); }
     if(searchlen) memcpy(ebuff[0],searchbuff,*searchlen);
     else     ebuff[0][0] = '\0';
     mlen[0] = *searchlen;
@@ -571,14 +571,14 @@ tBool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
 
 extern TWindow * ErrorWnd;
 
-__filesize_t __FASTCALL__ Search( tBool is_continue )
+__filesize_t __FASTCALL__ Search( bool is_continue )
 {
   __filesize_t found;
   __filesize_t fmem,lmem,slen, flen;
-  tBool ret;
+  bool ret;
   fmem = BMGetCurrFilePos();
   flen = BMGetFLength();
-  ret = is_continue ? True :
+  ret = is_continue ? true :
         SearchDialog(SD_ALLFEATURES,(char *)search_buff,&search_len,&beyeSearchFlg);
   if(ret && search_len)
   {
@@ -592,7 +592,7 @@ __filesize_t __FASTCALL__ Search( tBool is_continue )
       if((beyeSearchFlg & SF_REVERSE) && lmem) lmem-=cp_symb_size;
       else if(lmem < flen) lmem+=cp_symb_size;
     }
-    __found = False;
+    __found = false;
     found = (beyeSearchFlg & SF_PLUGINS) && activeMode->search_engine ?
        activeMode->search_engine(prcntswnd,lmem,&slen,beyeSearchFlg,
                                  is_continue,&__found):

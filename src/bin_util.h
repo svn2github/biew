@@ -32,18 +32,18 @@ extern "C" {
 
 #if __BYTE_ORDER == __LITTLE_ENDIAN
 #define  FMT_WORD(cval,is_big)\
- (tUInt16)((tBool)is_big ? ByteSwapS(*(tUInt16 *)(tUInt8 *)cval) : *(tUInt16 *)(tUInt8 *)cval)
+ (uint16_t)((bool)is_big ? ByteSwapS(*(uint16_t *)(uint8_t *)cval) : *(uint16_t *)(uint8_t *)cval)
 #define  FMT_DWORD(cval,is_big)\
- (tUInt32)((tBool)is_big ? ByteSwapL(*(tUInt32 *)(tUInt8 *)cval) : *(tUInt32 *)(tUInt8 *)cval)
+ (uint32_t)((bool)is_big ? ByteSwapL(*(uint32_t *)(uint8_t *)cval) : *(uint32_t *)(uint8_t *)cval)
 #define  FMT_QWORD(cval,is_big)\
- (tUInt64)((tBool)is_big ? ByteSwapLL(*(tUInt64 *)(tUInt8 *)cval) : *(tUInt64 *)(tUInt8 *)cval)
+ (uint64_t)((bool)is_big ? ByteSwapLL(*(uint64_t *)(uint8_t *)cval) : *(uint64_t *)(uint8_t *)cval)
 #else
 #define  FMT_WORD(cval,is_big)\
- (tUInt16)(!(tBool)is_big ? ByteSwapS(*(tUInt16 *)(tUInt8 *)cval) : *(tUInt16 *)(tUInt8 *)cval)
+ (uint16_t)(!(bool)is_big ? ByteSwapS(*(uint16_t *)(uint8_t *)cval) : *(uint16_t *)(uint8_t *)cval)
 #define  FMT_DWORD(cval,is_big)\
- (tUInt32)(!(tBool)is_big ? ByteSwapL(*(tUInt32 *)(tUInt8 *)cval) : *(tUInt32 *)(tUInt8 *)cval)
+ (uint32_t)(!(bool)is_big ? ByteSwapL(*(uint32_t *)(uint8_t *)cval) : *(uint32_t *)(uint8_t *)cval)
 #define  FMT_QWORD(cval,is_big)\
- (tUInt64)(!(tBool)is_big ? ByteSwapLL(*(tUInt64 *)(tUInt8 *)cval) : *(tUInt64 *)(tUInt8 *)cval)
+ (uint64_t)(!(bool)is_big ? ByteSwapLL(*(uint64_t *)(uint8_t *)cval) : *(uint64_t *)(uint8_t *)cval)
 #endif
 
 struct PubName
@@ -63,32 +63,32 @@ typedef void (__FASTCALL__ *ReadPubNameList)(BGLOBAL fmt_chahe,void (__FASTCALL_
 
 extern void  __FASTCALL__ fmtSetState(int state);
 extern tCompare __FASTCALL__ fmtComparePubNames(const void __HUGE__ *v1,const void __HUGE__ *v2);
-extern tBool __FASTCALL__ fmtFindPubName(BGLOBAL fmt_cache,char *buff,unsigned cb_buff,
+extern bool __FASTCALL__ fmtFindPubName(BGLOBAL fmt_cache,char *buff,unsigned cb_buff,
                                          __filesize_t pa,
                                          ReadPubNameList fmtReadPubNameList,
                                          ReadPubName fmtReadPubName);
 extern __filesize_t __FASTCALL__ fmtGetPubSym(BGLOBAL fmt_cache,char *str,unsigned cb_str,
                                       unsigned *func_class,__filesize_t pa,
-                                      tBool as_prev,
+                                      bool as_prev,
                                       ReadPubNameList fmtReadPubNameList,
                                       ReadPubName fmtReadPubName);
 
 typedef unsigned      (__FASTCALL__ * GetNumItems)(BGLOBAL handle);
-typedef tBool         (__FASTCALL__ * ReadItems)(BGLOBAL handle,memArray * names,unsigned nnames);
+typedef bool         (__FASTCALL__ * ReadItems)(BGLOBAL handle,memArray * names,unsigned nnames);
 typedef __filesize_t  (__FASTCALL__ * CalcEntry)(unsigned,int dispmsg);
 extern  int           __FASTCALL__ fmtShowList( GetNumItems gni,ReadItems ri,const char * title,int flags,unsigned * ordinal);
 
 /** Reads user defined name at given offset!
 **/
-extern tBool __FASTCALL__ udnFindName(__filesize_t pa,char *buff, unsigned cb_buff);
+extern bool __FASTCALL__ udnFindName(__filesize_t pa,char *buff, unsigned cb_buff);
 
 /** Display select box to select user defined name and returns its offset.
 **/
-extern tBool __FASTCALL__ udnSelectName(__filesize_t *off);
+extern bool __FASTCALL__ udnSelectName(__filesize_t *off);
 
 /** Shows menu with operations for user defined names!
 **/
-extern tBool __FASTCALL__ udnUserNames( void );
+extern bool __FASTCALL__ udnUserNames( void );
 
 extern void __FASTCALL__ udnInit( hIniProfile *ini );
 extern void __FASTCALL__ udnTerm( hIniProfile *ini );

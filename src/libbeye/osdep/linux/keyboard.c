@@ -63,7 +63,7 @@ static int gpmhandle;
 static volatile int shift_status = 0,	/**< status of shift keys */
 		    console_restart = 0,
 		    keypressed[KEYNUM];	/**< indicates whether key is down */
-static tBool mouse_status = True;
+static bool mouse_status = true;
 static struct termios sattr, tattr;	/**< terminal attributes */
 int in_fd;
 
@@ -353,7 +353,7 @@ void __FASTCALL__ ReadNextEvent(void)
 
 	    do { get(c); } while (c == 0xe0);
 	    if (c == 0xe1) get(c);
-	    if (c == 0xC6) { break_status = True; if(rawkb_mode) { rawkb_buf[0]=c; rawkb_len=1; rawkb_mode=0; } return; } /* CTRL+BREAK check */
+	    if (c == 0xC6) { break_status = true; if(rawkb_mode) { rawkb_buf[0]=c; rawkb_len=1; rawkb_mode=0; } return; } /* CTRL+BREAK check */
 	    if (c) {
 		if(rawkb_mode) { rawkb_buf[0]=c; rawkb_len=1; }
 		keypressed[c & (KEYNUM - 1)] = c & KEYNUM ? 0 : 1;
@@ -420,7 +420,7 @@ void __FASTCALL__ ReadNextEvent(void)
 		case KE_STATUS_ALT	: if(!rawkb_mode) {set_s(KS_ALT); } else { rawkb_mode=0; return; }
 		case KE_STATUS_SHIFT	: if(!rawkb_mode) {set_s(KS_SHIFT); } else { rawkb_mode=0; return; }
 		case KE_STATUS_CONTROL	: if(!rawkb_mode) {set_s(KS_CTRL); } else { rawkb_mode=0; return; }
-		case 0			: break_status = True; break;
+		case 0			: break_status = true; break;
 		case KE_ENTER2		: key = KE_ENTER; break;
 		case KE_BKSPACE2	: key = KE_BKSPACE; break;
 		case KE_C_O		: key = KE_CTL_(O); break;
@@ -543,12 +543,12 @@ int __FASTCALL__ __kbdGetKey (unsigned long flg)
     return key | s;
 }
 
-tBool __FASTCALL__ __MsGetState(void)
+bool __FASTCALL__ __MsGetState(void)
 {
     return mouse_status;
 }
 
-void __FASTCALL__ __MsSetState(tBool ms_visible)
+void __FASTCALL__ __MsSetState(bool ms_visible)
 {
     mouse_status = ms_visible;
 }

@@ -32,7 +32,7 @@ extern TWindow *MainWnd,*HelpWnd,*TitleWnd,*CritErrWnd;
 
 extern void         __FASTCALL__ initBConsole( unsigned long vio_flg,unsigned long twin_flg );
 extern void         __FASTCALL__ termBConsole( void );
-extern tBool        __FASTCALL__ IsKbdTerminate( void );
+extern bool        __FASTCALL__ IsKbdTerminate( void );
 extern void         __FASTCALL__ CleanKbdTermSig( void );
 
 typedef void (__FASTCALL__ * pagefunc)(TWindow *win,const void **__obj,unsigned i__obj,unsigned total_obj);
@@ -97,15 +97,15 @@ extern int          __FASTCALL__ PageBox(unsigned width,unsigned height,const vo
 extern void         __FASTCALL__ MemOutBox(const char *user_msg);
 extern TWindow *    __FASTCALL__ PleaseWaitWnd( void );
 
-extern tBool        __FASTCALL__ Get2DigitDlg(const char *title,const char *text,unsigned char *xx);
+extern bool        __FASTCALL__ Get2DigitDlg(const char *title,const char *text,unsigned char *xx);
 #if __WORDSIZE >= 32
-extern tBool        __FASTCALL__ Get16DigitDlg(const char *title,const char *text,char attr,
+extern bool        __FASTCALL__ Get16DigitDlg(const char *title,const char *text,char attr,
 						unsigned long long int *xx);
 #else
-extern tBool        __FASTCALL__ Get8DigitDlg(const char *title,const char *text,char attr,
+extern bool        __FASTCALL__ Get8DigitDlg(const char *title,const char *text,char attr,
 						unsigned long *xx);
 #endif
-extern tBool        __FASTCALL__ GetStringDlg(char * buff,const char * title,const char *subtitle,
+extern bool        __FASTCALL__ GetStringDlg(char * buff,const char * title,const char *subtitle,
                                      const char *prompt);
 
 #define GJDLG_ABSOLUTE  0x00000000UL
@@ -114,7 +114,7 @@ extern tBool        __FASTCALL__ GetStringDlg(char * buff,const char * title,con
 #define GJDLG_VIRTUAL   0x00000003UL
 #define GJDLG_PERCENTS  0x00000004UL
 
-extern tBool        __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags);
+extern bool        __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags);
 
 #define FSDLG_BINMODE   0x00000000UL
 #define FSDLG_ASMMODE   0x00000001UL
@@ -127,12 +127,12 @@ extern tBool        __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *
 #define FSDLG_BTNSMASK  0x00000003UL /**< 0=8bit 1=16bit 2=32bit 3=64bit */
 #define FSDLG_USEBITNS  0x40000000UL
 
-extern tBool        __FASTCALL__ GetFStoreDlg(const char *title,char *fname,
+extern bool        __FASTCALL__ GetFStoreDlg(const char *title,char *fname,
                                      unsigned long *flags,
                                      __filesize_t *start,
                                      __filesize_t *end,
                                      const char *prompt);
-extern tBool        __FASTCALL__ GetInsDelBlkDlg(const char *title,__filesize_t *start,
+extern bool        __FASTCALL__ GetInsDelBlkDlg(const char *title,__filesize_t *start,
                                         __fileoff_t *size);
 
 #define LB_SELECTIVE 0x01U
@@ -151,19 +151,19 @@ extern int         __FASTCALL__ SelListBox(const char ** names,unsigned nlist,co
 
 extern TWindow *    __FASTCALL__ PercentWnd(const char *text,const char *title);
 
-                           /** return True - if can continue
-                                     False -  if user want terminate process */
-extern tBool        __FASTCALL__ ShowPercentInWnd(TWindow *prcntwnd,unsigned n);
+                           /** return true - if can continue
+                                     false -  if user want terminate process */
+extern bool        __FASTCALL__ ShowPercentInWnd(TWindow *prcntwnd,unsigned n);
 
 extern int          __FASTCALL__ GetEvent(void (*)(void),int (*)(void),TWindow *);
 extern void         __FASTCALL__ PostEvent(int kbdcode);
 
-extern tBool __FASTCALL__ _lb_searchtext(const char *str,const char *tmpl,
+extern bool __FASTCALL__ _lb_searchtext(const char *str,const char *tmpl,
                                          unsigned searchlen,const int *cache,
                                          unsigned flg);
 extern void __FASTCALL__ __drawSinglePrompt(const char *prmt[]);
 
-extern tBool __FASTCALL__ ungotstring(char *string);
+extern bool __FASTCALL__ ungotstring(char *string);
 
 #ifdef __cplusplus
 }

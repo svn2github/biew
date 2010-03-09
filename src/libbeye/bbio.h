@@ -66,7 +66,7 @@ typedef struct tagvfb
  char *          MBuffer;   /**< NULL - not buffered i/o */
  unsigned        MBufLen;   /**< length data, actually contains in buffer */
  unsigned        MBufSize;  /**< real size of buffer */
- tBool           updated;   /**< True if buffer contains data, that not pesent in file */
+ bool           updated;   /**< true if buffer contains data, that not pesent in file */
 }vfb;
 
 /** Memory mapped buffer structure */
@@ -83,14 +83,14 @@ typedef struct tagBFILE
  char *          FileName;  /**< Real file name of opened file */
  unsigned        openmode;  /**< mode,that OsOpen this file */
  int             optimize;  /**< seek optimization */
- tBool           is_mmf;    /**< indicates that 'mmb' is used */
- tBool           primary_mmf; /**< If this is set then we have not duplicated handle */
+ bool           is_mmf;    /**< indicates that 'mmb' is used */
+ bool           primary_mmf; /**< If this is set then we have not duplicated handle */
  union                      /**< cache subsystem */
  {
     vfb          vfb;       /**< buffered file */
     mmb *        mmb;       /**< Pointer to memory mapped file. We must have pointer, but not object!!! It for bioDupEx */
  }b;
- tBool           is_eof;    /**< Indicates EOF for buffering streams */
+ bool           is_eof;    /**< Indicates EOF for buffering streams */
 }BFILE;
 
 extern struct tagBFILE bNull; /**< Stream associated with STDERR */
@@ -114,27 +114,27 @@ extern struct tagBFILE bNull; /**< Stream associated with STDERR */
 BGLOBAL               __FASTCALL__ bioOpen(const char * fname,unsigned openmode,unsigned buffSize,unsigned optimization);
 
                    /** Changes size of opened file.
-                     * @return                True if operation was succesfully performed
+                     * @return                true if operation was succesfully performed
                      * @param bioFile         handle of opened stream
                      * @param newsize         new size of file in bytes
                      * @warning               If file is truncated, the data from
                      *                        the new end of file to the original
                      *                        end of the file are lost.
                     **/
-tBool                 __FASTCALL__ bioChSize(BGLOBAL bioFile,__filesize_t newsize);
+bool                 __FASTCALL__ bioChSize(BGLOBAL bioFile,__filesize_t newsize);
 
                    /** Closes opened stream.
-                     * @return                True if operation was succesfully performed
+                     * @return                true if operation was succesfully performed
                      * @param bioFile         handle of opened stream
                      * @see                   bioOpen
                     **/
-tBool                 __FASTCALL__ bioClose(BGLOBAL bioFile);
+bool                 __FASTCALL__ bioClose(BGLOBAL bioFile);
 
                    /** Determines whether a opened stream has reached the End of File.
-                     * @return                True if EOF has reached
+                     * @return                true if EOF has reached
                      * @param bioFile         handle of opened stream
                     **/
-tBool                 __FASTCALL__ bioEOF(BGLOBAL bioHandle);
+bool                 __FASTCALL__ bioEOF(BGLOBAL bioHandle);
 
                    /** Returns the length (in bytes) of file associated with opened stream.
                      * @return                file length
@@ -143,7 +143,7 @@ tBool                 __FASTCALL__ bioEOF(BGLOBAL bioHandle);
 __filesize_t         __FASTCALL__ bioFLength(BGLOBAL bioFile);
 
                    /** Flushes buffer onto disk.
-                     * @return                True if operation was succesfully performed
+                     * @return                true if operation was succesfully performed
                      * @param bioFile         handle of opened stream
                      * @note                  This operation performs automatically
                      *                        when bioClose is called and
@@ -152,7 +152,7 @@ __filesize_t         __FASTCALL__ bioFLength(BGLOBAL bioFile);
                      *                        file position is out of buffer.
                      * @see                   bioReRead
                     **/
-tBool                 __FASTCALL__ bioFlush(BGLOBAL bioFile);
+bool                 __FASTCALL__ bioFlush(BGLOBAL bioFile);
 
                    /** Reads one byte from stream.
                      * @return                Readed byte
@@ -161,7 +161,7 @@ tBool                 __FASTCALL__ bioFlush(BGLOBAL bioFile);
                      *                        incremented after operation.
                      * @see                   bioWriteByte bioReadWord bioReadDWord bioReadBuffer
                     **/
-tUInt8               __FASTCALL__ bioReadByte(BGLOBAL bioFile);
+uint8_t               __FASTCALL__ bioReadByte(BGLOBAL bioFile);
 
                    /** Reads two bytes from stream.
                      * @return                Readed word
@@ -170,7 +170,7 @@ tUInt8               __FASTCALL__ bioReadByte(BGLOBAL bioFile);
                      *                        incremented after operation.
                      * @see                   bioWriteWord bioReadByte bioReadDWord bioReadBuffer
                     **/
-tUInt16              __FASTCALL__ bioReadWord(BGLOBAL bioFile);
+uint16_t              __FASTCALL__ bioReadWord(BGLOBAL bioFile);
 
                    /** Reads four bytes from stream.
                      * @return                Readed double word
@@ -179,7 +179,7 @@ tUInt16              __FASTCALL__ bioReadWord(BGLOBAL bioFile);
                      *                        incremented after operation.
                      * @see                   bioWriteDWord bioReadByte bioReadWord bioReadBuffer
                     **/
-tUInt32              __FASTCALL__ bioReadDWord(BGLOBAL bioFile);
+uint32_t              __FASTCALL__ bioReadDWord(BGLOBAL bioFile);
 
                    /** Reads 8 bytes from stream.
                      * @return                Readed double word
@@ -188,10 +188,10 @@ tUInt32              __FASTCALL__ bioReadDWord(BGLOBAL bioFile);
                      *                        incremented after operation.
                      * @see                   bioWriteDWord bioReadByte bioReadWord bioReadBuffer
                     **/
-tUInt64              __FASTCALL__ bioReadQWord(BGLOBAL bioFile);
+uint64_t              __FASTCALL__ bioReadQWord(BGLOBAL bioFile);
 
                    /** Reads specified number of bytes from stream.
-                     * @return                True if operation was succesfully performed
+                     * @return                true if operation was succesfully performed
                      * @param bioFile         handle of opened stream
                      * @param buffer          specifies buffer, where readed information will be stored
                      * @param cbBuffer        specifies size of buffer
@@ -199,23 +199,23 @@ tUInt64              __FASTCALL__ bioReadQWord(BGLOBAL bioFile);
                      *                        position by the number of bytes read.
                      * @see                   bioWriteBuffer bioReadByte bioReadWord bioReadByte
                     **/
-tBool                 __FASTCALL__ bioReadBuffer(BGLOBAL bioFile,void * buffer,unsigned cbBuffer);
+bool                 __FASTCALL__ bioReadBuffer(BGLOBAL bioFile,void * buffer,unsigned cbBuffer);
 
                    /** Rereads opened file from disk.
-                     * @return                True if operation was succesfully performed
+                     * @return                true if operation was succesfully performed
                      * @param bioFile         handle of opened stream
                      * @see                   bioFlush
                     **/
-tBool                 __FASTCALL__ bioReRead(BGLOBAL bioFile);
+bool                 __FASTCALL__ bioReRead(BGLOBAL bioFile);
 
                    /** Positions logical file pointer at the specified position.
-                     * @return                True if operation was succesfully performed
+                     * @return                true if operation was succesfully performed
                      * @param bioFile         handle of opened stream
                      * @param offset          specifies new offset of file pointer
                      * @param origin          specifies reference location from which offset will be computed
                      * @see                   bioTell BIO_SEEK_SET BIO_SEEK_CUR BIO_SEEK_END
                     **/
-tBool                 __FASTCALL__ bioSeek(BGLOBAL bioFile,__fileoff_t offset,int origin);
+bool                 __FASTCALL__ bioSeek(BGLOBAL bioFile,__fileoff_t offset,int origin);
 
                    /** Returns current optimization of buffering.
                      * @return                optimization (BIO_OPT_*)
@@ -239,47 +239,47 @@ unsigned              __FASTCALL__ bioSetOptimization(BGLOBAL bioFile,unsigned f
 __filesize_t         __FASTCALL__ bioTell(BGLOBAL bioFile);
 
                    /** Writes one byte to stream.
-                     * @return                True if operation was succesfully performed
+                     * @return                true if operation was succesfully performed
                      * @param bioFile         handle of opened stream
                      * @param bVal            Byte to be written
                      * @note                  Logical file position is
                      *                        incremented after operation.
                      * @see                   bioReadByte bioWriteWord bioWriteWord bioWriteBuffer
                     **/
-tBool                 __FASTCALL__ bioWriteByte(BGLOBAL bioFile,tUInt8 bVal);
+bool                 __FASTCALL__ bioWriteByte(BGLOBAL bioFile,uint8_t bVal);
 
                    /** Writes two bytes to stream.
-                     * @return                True if operation was succesfully performed
+                     * @return                true if operation was succesfully performed
                      * @param bioFile         handle of opened stream
                      * @param wVal            Word to be written
                      * @note                  Logical file position is
                      *                        incremented after operation.
                      * @see                   bioReadWord bioWriteWord bioWriteWord bioWriteBuffer
                     **/
-tBool                 __FASTCALL__ bioWriteWord(BGLOBAL bioFile,tUInt16 wVal);
+bool                 __FASTCALL__ bioWriteWord(BGLOBAL bioFile,uint16_t wVal);
 
                    /** Writes four bytes to stream.
-                     * @return                True if operation was succesfully performed
+                     * @return                true if operation was succesfully performed
                      * @param bioFile         handle of opened stream
                      * @param dwVal           Double word to be written
                      * @note                  Logical file position is
                      *                        incremented after operation.
                      * @see                   bioReadDWord bioWriteWord bioWriteWord bioWriteBuffer
                     **/
-tBool                 __FASTCALL__ bioWriteDWord(BGLOBAL bioFile,tUInt32 dwVal);
+bool                 __FASTCALL__ bioWriteDWord(BGLOBAL bioFile,uint32_t dwVal);
 
                    /** Writes 8 bytes to stream.
-                     * @return                True if operation was succesfully performed
+                     * @return                true if operation was succesfully performed
                      * @param bioFile         handle of opened stream
                      * @param dwVal           Double word to be written
                      * @note                  Logical file position is
                      *                        incremented after operation.
                      * @see                   bioReadDWord bioWriteWord bioWriteWord bioWriteBuffer
                     **/
-tBool                 __FASTCALL__ bioWriteQWord(BGLOBAL bioFile,tUInt64 dwVal);
+bool                 __FASTCALL__ bioWriteQWord(BGLOBAL bioFile,uint64_t dwVal);
 
                    /** Writes specified number of bytes opened to stream.
-                     * @return                True if operation was succesfully performed
+                     * @return                true if operation was succesfully performed
                      * @param bioFile         handle of opened stream
                      * @param buffer          specifies buffer to be written
                      * @param cbBuffer        specifies size of buffer
@@ -287,7 +287,7 @@ tBool                 __FASTCALL__ bioWriteQWord(BGLOBAL bioFile,tUInt64 dwVal);
                      *                        position by the number of bytes writed.
                      * @see                   bioReadBuffer bioWriteWord bioWriteWord bioByte
                     **/
-tBool                 __FASTCALL__ bioWriteBuffer(BGLOBAL bioFile,const void * buffer,unsigned cbBuffer);
+bool                 __FASTCALL__ bioWriteBuffer(BGLOBAL bioFile,const void * buffer,unsigned cbBuffer);
 
                    /** Returns name of file associated with opened stream.
                      * @return                name of file

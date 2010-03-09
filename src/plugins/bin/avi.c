@@ -97,14 +97,14 @@ typedef struct {
 /* Chunk id to use for extra chunks for padding. */
 #define ckidAVIPADDING          mmioFOURCC('J', 'U', 'N', 'K')
 
-static tBool  __FASTCALL__ avi_check_fmt( void )
+static bool  __FASTCALL__ avi_check_fmt( void )
 {
     unsigned long id;
     id=bmReadDWordEx(8,SEEKF_START);
     if(	bmReadDWordEx(0,SEEKF_START)==mmioFOURCC('R','I','F','F') &&
 	(id==mmioFOURCC('A','V','I',' ') || id==mmioFOURCC('O','N','2',' ')))
-	return True;
-    return False;
+	return true;
+    return false;
 }
 
 static void __FASTCALL__ avi_init_fmt( void ) {}

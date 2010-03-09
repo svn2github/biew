@@ -21,8 +21,8 @@
 #include "libbeye/file_ini.h"
 #endif
 
-extern tBool hexAddressResolv;
-extern tBool __FASTCALL__ hexAddressResolution( void );
+extern bool hexAddressResolv;
+extern bool __FASTCALL__ hexAddressResolution( void );
 extern void  __FASTCALL__ ReadIniAResolv( hIniProfile *ini );
 extern void  __FASTCALL__ WriteIniAResolv( hIniProfile *ini );
 

@@ -46,15 +46,15 @@ static inline void winInternalError( void ) {};
 #else
 static inline void winInternalError( void ) { (void)0xFFFFFFFF; };
 #endif
-static tBool __NEAR__ __FASTCALL__ test_win(TWindow *win)
+static bool __NEAR__ __FASTCALL__ test_win(TWindow *win)
 {
- tBool ret;
+ bool ret;
  ret = *((void **)(win->body.chars + win->wsize)) == win->body.chars &&
        *((void **)(win->body.oem_pg + win->wsize)) == win->body.oem_pg &&
        *((void **)(win->body.attrs + win->wsize)) == win->body.attrs &&
        *((void **)(win->saved.chars + win->wsize)) == win->saved.chars &&
        *((void **)(win->saved.oem_pg + win->wsize)) == win->saved.oem_pg &&
-       *((void **)(win->saved.attrs + win->wsize)) == win->saved.attrs ? True : False;
+       *((void **)(win->saved.attrs + win->wsize)) == win->saved.attrs ? true : false;
  return ret;
 }
 #define CHECK_WINS(x) { if(!test_win(x)) winInternalError(); }
@@ -69,10 +69,10 @@ static tBool __NEAR__ __FASTCALL__ test_win(TWindow *win)
 TWindow *active;
 
 static void __NEAR__ __FASTCALL__ __NORETURN__ winerr(const char *str) { printm("\n\nInternal twin library error: %s\n",str); _exit(EXIT_FAILURE); }
-static void __NEAR__ __FASTCALL__ wputc_oem(char ch,char oempg,char color,tBool update);
+static void __NEAR__ __FASTCALL__ wputc_oem(char ch,char oempg,char color,bool update);
 static void __NEAR__ __FASTCALL__ paint_internal(void);
 
-#define wputc(ch,color,update) wputc_oem((char)ch,(char)0,(char)color,(tBool)update)
+#define wputc(ch,color,update) wputc_oem((char)ch,(char)0,(char)color,(bool)update)
 
 static TWindow *head = NULL;
 static TWindow *cursorwin = NULL;
@@ -120,10 +120,10 @@ static unsigned long twin_flags = 0L;
    (tAbsCoord)y < win->wheight-1 :\
    (tAbsCoord)y < win->wheight)
 
-static tBool __NEAR__ __FASTCALL__ isOverlapped(TWindow *win)
+static bool __NEAR__ __FASTCALL__ isOverlapped(TWindow *win)
 {
   TWindow *iter;
-  tBool ret = False;
+  bool ret = false;
   iter = head;
   while( iter && iter != win )
   {
@@ -132,7 +132,7 @@ static tBool __NEAR__ __FASTCALL__ isOverlapped(TWindow *win)
       if(!((iter->Y2 <= win->Y1) || (iter->Y1 >= win->Y2) ||
            (iter->X2 <= win->X1) || (iter->X1 >= win->X2)))
       {
-        ret = True;
+        ret = true;
         break;
       }
     }
@@ -531,20 +531,20 @@ void __FASTCALL__ twCvtWinCoords(TWindow *win,tRelCoord x, tRelCoord y,tAbsCoord
   *ya = win->Y1+y;
 }
 
-tBool __FASTCALL__ twCvtScreenCoords(TWindow *win,tAbsCoord x, tAbsCoord y,tRelCoord *xr,tRelCoord *yr)
+bool __FASTCALL__ twCvtScreenCoords(TWindow *win,tAbsCoord x, tAbsCoord y,tRelCoord *xr,tRelCoord *yr)
 {
   *xr = x - win->X1;
   *yr = y - win->Y1;
   if(win->flags & TWS_FRAMEABLE) { (*xr)--; (*yr)--; }
-  return IS_VALID_XY(win,*xr,*yr) ? True : False;
+  return IS_VALID_XY(win,*xr,*yr) ? true : false;
 }
 
-tBool __FASTCALL__ twIsPieceVisible(TWindow *win,tRelCoord x, tRelCoord y)
+bool __FASTCALL__ twIsPieceVisible(TWindow *win,tRelCoord x, tRelCoord y)
 {
   TWindow *over;
   if(win->flags & TWS_FRAMEABLE) { x++; y++; }
   __FIND_OVER(over,win,win->X1+x,win->Y1+y);
-  return over ? True : False;
+  return over ? true : false;
 }
 
 static void __NEAR__ __FASTCALL__ iGotoXY(tRelCoord x,tRelCoord y)
@@ -766,8 +766,8 @@ static void __NEAR__ __FASTCALL__ updatescreencharfrombuff(TWindow *win,
     }
     else
     {
-      tBool ms_vis;
-      tBool is_hidden = False;
+      bool ms_vis;
+      bool is_hidden = false;
       if(accel)
       {
         accel->chars[aidx] = buff->chars[idx];
@@ -790,15 +790,15 @@ static void __NEAR__ __FASTCALL__ updatescreencharfrombuff(TWindow *win,
                __MsGetPos(&mx,&my);
                if(mx == outx && my == outy)
                {
-                 is_hidden = True;
-                 __MsSetState(False);
+                 is_hidden = true;
+                 __MsSetState(false);
                }
             }
             it.chars = &buff->chars[idx];
             it.oem_pg = &buff->oem_pg[idx];
             it.attrs = &buff->attrs[idx];
             __vioWriteBuff(outx,outy,&it,1);
-            if(is_hidden) __MsSetState(True);
+            if(is_hidden) __MsSetState(true);
           }
           CHECK_WINS(win);
         }
@@ -855,8 +855,8 @@ static void __NEAR__ __FASTCALL__ updatewinmemcharfromscreen(TWindow *win,tRelCo
     }
     else
     {
-      tBool ms_vis;
-      tBool is_hidden = False;
+      bool ms_vis;
+      bool is_hidden = false;
       if(accel)
       {
         win->saved.chars[idx] = accel->chars[aidx];
@@ -877,15 +877,15 @@ static void __NEAR__ __FASTCALL__ updatewinmemcharfromscreen(TWindow *win,tRelCo
              __MsGetPos(&mx,&my);
              if(mx == inx && my == iny)
              {
-               is_hidden = True;
-               __MsSetState(False);
+               is_hidden = true;
+               __MsSetState(false);
              }
           }
           it.chars = &win->saved.chars[idx];
           it.oem_pg = &win->saved.oem_pg[idx];
           it.attrs = &win->saved.attrs[idx];
           __vioReadBuff(inx,iny,&it,2);
-          if(is_hidden) __MsSetState(True);
+          if(is_hidden) __MsSetState(true);
         }
         CHECK_WINS(win);
       }
@@ -898,8 +898,8 @@ static void __NEAR__ __FASTCALL__ screen2win(TWindow *win)
   tvioBuff it;
   unsigned i,lwidth,idx;
   tAbsCoord inx;
-  tBool ms_vis;
-  tBool is_hidden = False;
+  bool ms_vis;
+  bool is_hidden = false;
   inx = win->X1;
   lwidth = win->wwidth;
   if(inx + lwidth > tvioWidth) lwidth = tvioWidth > inx ? tvioWidth - inx : 0;
@@ -912,8 +912,8 @@ static void __NEAR__ __FASTCALL__ screen2win(TWindow *win)
       __MsGetPos(&mx,&my);
       if(mx >= inx && mx <= win->X2 && my >= win->Y1 && my <= win->Y2)
       {
-        is_hidden = True;
-        __MsSetState(False);
+        is_hidden = true;
+        __MsSetState(false);
       }
     }
     if(win->wwidth == tvioWidth && !win->X1)
@@ -937,7 +937,7 @@ static void __NEAR__ __FASTCALL__ screen2win(TWindow *win)
         else break;
       }
     }
-    if(is_hidden) __MsSetState(True);
+    if(is_hidden) __MsSetState(true);
   }
   CHECK_WINS(win);
 }
@@ -947,8 +947,8 @@ void __FASTCALL__ twSnapShot(TWindow *win) /**< for snapshot */
   tvioBuff it;
   unsigned i,lwidth,idx;
   tAbsCoord inx;
-  tBool ms_vis;
-  tBool is_hidden = False;
+  bool ms_vis;
+  bool is_hidden = false;
   inx = win->X1;
   lwidth = win->wwidth;
   if(inx + lwidth > tvioWidth) lwidth = tvioWidth > inx ? tvioWidth - inx : 0;
@@ -961,8 +961,8 @@ void __FASTCALL__ twSnapShot(TWindow *win) /**< for snapshot */
       __MsGetPos(&mx,&my);
       if(mx >= inx && mx <= win->X2 && my >= win->Y1 && my <= win->Y2)
       {
-        is_hidden = True;
-        __MsSetState(False);
+        is_hidden = true;
+        __MsSetState(false);
       }
     }
     for(i = 0;i < win->wheight;i++)
@@ -979,7 +979,7 @@ void __FASTCALL__ twSnapShot(TWindow *win) /**< for snapshot */
       }
       else break;
     }
-    if(is_hidden) __MsSetState(True);
+    if(is_hidden) __MsSetState(true);
   }
   CHECK_WINS(win);
 }
@@ -1000,7 +1000,7 @@ static void __NEAR__ __FASTCALL__ savedwin2screen(TWindow *win)
   t_vchar chars[__TVIO_MAXSCREENWIDTH];
   t_vchar oem_pg[__TVIO_MAXSCREENWIDTH];
   ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
-  tBool ms_vis, is_hidden = False, is_top;
+  bool ms_vis, is_hidden = false, is_top;
   accel.chars = chars;
   accel.oem_pg = oem_pg;
   accel.attrs = attrs;
@@ -1013,8 +1013,8 @@ static void __NEAR__ __FASTCALL__ savedwin2screen(TWindow *win)
       __MsGetPos(&mx,&my);
       if(mx >= win->X1 && mx <= win->X2 && my >= win->Y1 && my <= win->Y2)
       {
-        is_hidden = True;
-        __MsSetState(False);
+        is_hidden = true;
+        __MsSetState(false);
       }
     }
     is_top = __TOPMOST(win);
@@ -1046,12 +1046,12 @@ static void __NEAR__ __FASTCALL__ savedwin2screen(TWindow *win)
             __vioWriteBuff(outx,outy,&accel,nwidth);
       }
     }
-    if(is_hidden) __MsSetState(True);
+    if(is_hidden) __MsSetState(true);
     CHECK_WINS(win);
   }
 }
 
-static void __NEAR__ __FASTCALL__ updatescreen(TWindow *win,tBool full_area)
+static void __NEAR__ __FASTCALL__ updatescreen(TWindow *win,bool full_area)
 {
   unsigned i,j, tidx;
   tAbsCoord xs,xe,ys,ye,cx,rw;
@@ -1060,7 +1060,7 @@ static void __NEAR__ __FASTCALL__ updatescreen(TWindow *win,tBool full_area)
   t_vchar chars[__TVIO_MAXSCREENWIDTH];
   t_vchar oem_pg[__TVIO_MAXSCREENWIDTH];
   ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
-  tBool ms_vis, is_hidden = False, is_top;
+  bool ms_vis, is_hidden = false, is_top;
   accel.chars = chars;
   accel.oem_pg = oem_pg;
   accel.attrs = attrs;
@@ -1081,8 +1081,8 @@ static void __NEAR__ __FASTCALL__ updatescreen(TWindow *win,tBool full_area)
       __MsGetPos(&mx,&my);
       if(mx >= xs && mx <= xe && my >= ys && my <= ye)
       {
-        is_hidden = True;
-        __MsSetState(False);
+        is_hidden = true;
+        __MsSetState(false);
       }
     }
     is_top = __TOPMOST(win);
@@ -1125,7 +1125,7 @@ static void __NEAR__ __FASTCALL__ updatescreen(TWindow *win,tBool full_area)
         }
       }
     }
-    if(is_hidden) __MsSetState(True);
+    if(is_hidden) __MsSetState(true);
     CHECK_WINS(win);
   }
 }
@@ -1138,7 +1138,7 @@ static void __NEAR__ __FASTCALL__ updatescreenpiece(TWindow *win,tRelCoord stx,t
   t_vchar chars[__TVIO_MAXSCREENWIDTH];
   t_vchar oem_pg[__TVIO_MAXSCREENWIDTH];
   ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
-  tBool ms_vis, is_hidden = False, is_top;
+  bool ms_vis, is_hidden = false, is_top;
   accel.chars = chars;
   accel.oem_pg = oem_pg;
   accel.attrs = attrs;
@@ -1150,8 +1150,8 @@ static void __NEAR__ __FASTCALL__ updatescreenpiece(TWindow *win,tRelCoord stx,t
     line = win->Y1+y-1;
     if(ms_vis && my == line)
     {
-      is_hidden = True;
-      __MsSetState(False);
+      is_hidden = true;
+      __MsSetState(false);
     }
     _stx = min(stx,win->wwidth);
     _endx = min(endx,win->wwidth);
@@ -1178,7 +1178,7 @@ static void __NEAR__ __FASTCALL__ updatescreenpiece(TWindow *win,tRelCoord stx,t
         __vioWriteBuff(outx,line,&it,rw);
       }
     }
-    if(is_hidden) __MsSetState(True);
+    if(is_hidden) __MsSetState(true);
     CHECK_WINS(win);
   }
 }
@@ -1190,7 +1190,7 @@ static void __NEAR__ __FASTCALL__ updatewinmem(TWindow *win)
   t_vchar chars[__TVIO_MAXSCREENWIDTH];
   t_vchar oem_pg[__TVIO_MAXSCREENWIDTH];
   ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
-  tBool ms_vis, is_hidden = False, is_top;  
+  bool ms_vis, is_hidden = false, is_top;  
   accel.chars = chars;
   accel.oem_pg = oem_pg;
   accel.attrs = attrs;
@@ -1203,8 +1203,8 @@ static void __NEAR__ __FASTCALL__ updatewinmem(TWindow *win)
       __MsGetPos(&mx,&my);
       if(mx >= win->X1 && mx <= win->X2 && my >= win->Y1 && my <= win->Y2)
       {
-        is_hidden = True;
-        __MsSetState(False);
+        is_hidden = true;
+        __MsSetState(false);
       }
     }
     is_top = __TOPMOST(win);
@@ -1239,7 +1239,7 @@ static void __NEAR__ __FASTCALL__ updatewinmem(TWindow *win)
              updatewinmemcharfromscreen(win,j,i,&accel);
       }
     }
-    if(is_hidden) __MsSetState(True);
+    if(is_hidden) __MsSetState(true);
   }
 }
 
@@ -1299,41 +1299,41 @@ static void __NEAR__ __FASTCALL__ __draw_frame( tRelCoord xs, tRelCoord ys, tRel
  iGotoXY(xs,ys);
  csel = up ? up == 1 ? lt : bl : cfr;
  oem_ch = frame[0];
- wputc_oem(frm[0],DO_OEM_PG(oem_ch),csel,False);
+ wputc_oem(frm[0],DO_OEM_PG(oem_ch),csel,false);
  for(i = xs+1;i < xe; i++)
  {
    iGotoXY(i,ys);
    oem_ch = frame[1];
-   wputc_oem(frm[1],DO_OEM_PG(oem_ch),csel,False);
+   wputc_oem(frm[1],DO_OEM_PG(oem_ch),csel,false);
  }
  iGotoXY(xe,ys);
  oem_ch = frame[2];
- wputc_oem(frm[2],DO_OEM_PG(oem_ch),up ? gr : cfr,False);
+ wputc_oem(frm[2],DO_OEM_PG(oem_ch),up ? gr : cfr,false);
  for(i = ys+1;i < ye;i++)
  {
    iGotoXY(xs,i);
    oem_ch = frame[3];
-   wputc_oem(frm[3],DO_OEM_PG(oem_ch),csel,True);
+   wputc_oem(frm[3],DO_OEM_PG(oem_ch),csel,true);
  }
  csel = up ? up == 1 ? bl : lt : cfr;
  for(i = ys+1;i < ye;i++)
  {
    iGotoXY(xe,i);
    oem_ch = frame[4];
-   wputc_oem(frm[4],DO_OEM_PG(oem_ch),csel,True);
+   wputc_oem(frm[4],DO_OEM_PG(oem_ch),csel,true);
  }
  iGotoXY(xs,ye);
  oem_ch = frame[5];
- wputc_oem(frm[5],DO_OEM_PG(oem_ch),up ? gr : cfr,False);
+ wputc_oem(frm[5],DO_OEM_PG(oem_ch),up ? gr : cfr,false);
  for(i = xs+1;i < xe; i++)
  {
    iGotoXY(i,ye);
    oem_ch = frame[6];
-   wputc_oem(frm[6],DO_OEM_PG(oem_ch),csel,False);
+   wputc_oem(frm[6],DO_OEM_PG(oem_ch),csel,false);
  }
  iGotoXY(xe,ye);
  oem_ch = frame[7];
- wputc_oem(frm[7],DO_OEM_PG(oem_ch),csel,False);
+ wputc_oem(frm[7],DO_OEM_PG(oem_ch),csel,false);
  active->cur_x = sx;
  active->cur_y = sy;
 
@@ -1358,7 +1358,7 @@ static void __NEAR__ __FASTCALL__ make_frame( void )
    for(i = 0;i < slen;i++)
    {
       iGotoXY(stx+i,1);
-      wputc(active->Title[i],active->title.system,False);
+      wputc(active->Title[i],active->title.system,false);
    }
  }
  if(active->Footer)
@@ -1371,7 +1371,7 @@ static void __NEAR__ __FASTCALL__ make_frame( void )
    for(i = 0;i < slen;i++)
    {
       iGotoXY(stx+i,h);
-      wputc(active->Footer[i],active->footer.system,False);
+      wputc(active->Footer[i],active->footer.system,false);
    }
  }
  updatescreenpiece(active,0,active->wwidth,1);
@@ -1466,7 +1466,7 @@ void __FASTCALL__ twShowWin(TWindow* w)
     __unlistwin(w);
     __ATHEAD(w);
     updatewinmem(w);
-    updatescreen(w,True);
+    updatescreen(w,true);
     if((w->flags & TWS_CURSORABLE) == TWS_CURSORABLE)
     {
       cursorwin = w;
@@ -1483,7 +1483,7 @@ void __FASTCALL__ twShowWinOnTop(TWindow* w)
   __unlistwin(w);
   __ATHEAD(w);
   screen2win(w);
-  updatescreen(w,True);
+  updatescreen(w,true);
   if((w->flags & TWS_CURSORABLE) == TWS_CURSORABLE)
   {
     cursorwin = w;
@@ -1499,7 +1499,7 @@ void __FASTCALL__ twShowWinBeneath(TWindow* w,TWindow *prev)
   __unlistwin(w);
   __ATWIN(w,prev);
   updatewinmem(w);
-  updatescreen(w,True);
+  updatescreen(w,true);
 }
 
 void __FASTCALL__ twHideWin(TWindow *w)
@@ -1592,7 +1592,7 @@ void __FASTCALL__ twResizeWin(TWindow *win,tAbsCoord width,tAbsCoord height)
   size_t from,to,size,i,loop,start,idx;
   tAbsCoord oldw,oldh;
   tRelCoord x,y;
-  tBool vis;
+  bool vis;
   x = twWhereX();
   y = twWhereY();
   vis = (win->iflags & IFLG_VISIBLE) == IFLG_VISIBLE;
@@ -1833,7 +1833,7 @@ tRelCoord __FASTCALL__ twWhereY( void )
   return (active->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE ? active->cur_y : active->cur_y+1;
 }
 
-static void __NEAR__ __FASTCALL__ wputc_oem(char ch,char oempg,char color,tBool update)
+static void __NEAR__ __FASTCALL__ wputc_oem(char ch,char oempg,char color,bool update)
 {
   unsigned idx;
   idx = active->cur_x + active->cur_y*active->wwidth;
@@ -1857,9 +1857,9 @@ void __FASTCALL__ twPutChar(char ch)
        as_oem = ch;
        __nls_OemToOsdep((unsigned char *)&ch,1);
        if(!NLS_IS_OEMPG(as_oem)) as_oem = 0;
-       wputc_oem(ch,as_oem,active->text.system,True);
+       wputc_oem(ch,as_oem,active->text.system,true);
     }
-    else wputc(ch,active->text.system,True);
+    else wputc(ch,active->text.system,true);
     active->cur_x++;
   }
 }
@@ -2063,14 +2063,14 @@ void __FASTCALL__ twRefreshPiece(TWindow *win,tRelCoord stx,tRelCoord endx,tRelC
 void __FASTCALL__ twRefreshWin(TWindow *win)
 {
   win->iflags |= IFLG_ENABLED;
-  updatescreen(win,(win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE ? False : True);
+  updatescreen(win,(win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE ? false : true);
   paint_cursor();
 }
 
 void __FASTCALL__ twRefreshFullWin(TWindow *win)
 {
   win->iflags |= IFLG_ENABLED;
-  updatescreen(win,True);
+  updatescreen(win,true);
   paint_cursor();
 }
 

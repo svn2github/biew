@@ -25,44 +25,44 @@
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
-static int __NEAR__ __FASTCALL__ GetFullBin(tUIntMax value,char * buff)
+static int __NEAR__ __FASTCALL__ GetFullBin(uintmax_t value,char * buff)
 {
  char byte,*b;
- tBool started = False;
+ bool started = false;
  buff[0] = 0;
 #if __WORDSIZE >= 32
  byte = (value >> 60) & 0x0F;
- if(byte) { b = GetBinary(byte); strcat(buff,&b[4]); started = True; }
+ if(byte) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
  byte = (value >> 56) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = True; }
+ if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
  byte = (value >> 52) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = True; }
+ if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
  byte = (value >> 48) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = True; }
+ if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
  byte = (value >> 44) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = True; }
+ if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
  byte = (value >> 40) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = True; }
+ if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
  byte = (value >> 36) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = True; }
+ if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
  byte = (value >> 32) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = True; }
+ if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
  byte = (value >> 28) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = True; }
+ if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
 #else
  byte = (value >> 28) & 0x0F;
- if(byte) { b = GetBinary(byte); strcat(buff,&b[4]); started = True; }
+ if(byte) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
 #endif
  byte = (value >> 24) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = True; }
+ if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
  byte = (value >> 20) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = True; }
+ if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
  byte = (value >> 16) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = True; }
+ if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
  byte = (value >> 12) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = True; }
+ if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
  byte = (value >> 8) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = True; }
+ if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
  byte = (value >> 4) & 0x0F;
  if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); }
  byte = value & 0x0F;
@@ -70,7 +70,7 @@ static int __NEAR__ __FASTCALL__ GetFullBin(tUIntMax value,char * buff)
  return strlen(buff);
 }
 
-static int __NEAR__ __FASTCALL__ Dig2Str(tUIntMax value,char * buff,int action)
+static int __NEAR__ __FASTCALL__ Dig2Str(uintmax_t value,char * buff,int action)
 {
 #if __WORDSIZE >= 32
  if(action == 0) return strlen(ulltoa(value,buff,16));
@@ -90,7 +90,7 @@ static int __NEAR__ __FASTCALL__ Dig2Str(tUIntMax value,char * buff,int action)
  return 0;
 }
 
-static tUIntMax __NEAR__ __FASTCALL__ Str2Dig(char * buff,int action)
+static uintmax_t __NEAR__ __FASTCALL__ Str2Dig(char * buff,int action)
 {
 #if __WORDSIZE >= 32
  if(action == 0) return strtoull(buff,NULL,16);
@@ -108,7 +108,7 @@ static tUIntMax __NEAR__ __FASTCALL__ Str2Dig(char * buff,int action)
  return 0;
 }
 
-static void __NEAR__ __FASTCALL__ DCStaticPaint(TWindow * wdlg,char * wbuff,tIntMax digit,unsigned *mlen)
+static void __NEAR__ __FASTCALL__ DCStaticPaint(TWindow * wdlg,char * wbuff,intmax_t digit,unsigned *mlen)
 {
  int rlen;
  tAbsCoord x1,y1,x2,y2;
@@ -145,9 +145,9 @@ static void DigConv( void )
  int i,active,oactive,_lastbyte;
  unsigned attr,stx = 0,rlen,w;
  char wbuff[68];
- tBool redraw;
+ bool redraw;
  char * legal[5];
- tUIntMax digit;
+ uintmax_t digit;
  char decleg[13],oleg[9],bleg[3];
  memcpy(decleg,legalchars,12);
  decleg[12] = '\0';
@@ -221,7 +221,7 @@ static void DigConv( void )
    if((char)_lastbyte == '-' || (char)_lastbyte == '+') goto NextCh;
    if(_lastbyte == KE_ESCAPE || _lastbyte == KE_F(10)) break;
    digit = Str2Dig(wbuff,active);
-   redraw = False;
+   redraw = false;
    switch(_lastbyte)
    {
      case KE_TAB        : active++; break;
@@ -230,7 +230,7 @@ static void DigConv( void )
      case KE_RIGHTARROW : break;
      case KE_UPARROW    : active -= 2; break;
      case KE_DOWNARROW  : active += 2; break;
-     default: redraw = True; break;
+     default: redraw = true; break;
    }
    if(active < 0) active = 4;
    if(active > 4) active = 0;

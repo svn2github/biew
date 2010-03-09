@@ -28,10 +28,10 @@
 #include "libbeye/libbeye.h"
 #include "libbeye/pmalloc.h"
 
-tBool DumpMode = False;
-tBool EditMode = False;
+bool DumpMode = false;
+bool EditMode = false;
 
-int __FASTCALL__ GetBool(tBool _bool) { return _bool ? TWC_CHECK_CHAR : TWC_DEF_FILLER; }
+int __FASTCALL__ Gebool(bool _bool) { return _bool ? TWC_CHECK_CHAR : TWC_DEF_FILLER; }
 
 void FFreeArr(void ** arr,unsigned n)
 {
@@ -63,7 +63,7 @@ char * __FASTCALL__ GetBinary(char val)
   s[1] = legs[((unsigned char)val) & 0x0F];\
 }
 
-char * __FASTCALL__ Get2Digit(tUInt8 val)
+char * __FASTCALL__ Get2Digit(uint8_t val)
 {
   static char str[3] = "  ";
   const char *legs = &legalchars[2];
@@ -71,7 +71,7 @@ char * __FASTCALL__ Get2Digit(tUInt8 val)
   return str;
 }
 
-char * __FASTCALL__ Get2SignDig(tInt8 val)
+char * __FASTCALL__ Get2SignDig(int8_t val)
 {
   static char str[4] = "   ";
   const char *legs = &legalchars[2];
@@ -81,7 +81,7 @@ char * __FASTCALL__ Get2SignDig(tInt8 val)
   return str;
 }
 
-char * __FASTCALL__ Get4Digit(tUInt16 val)
+char * __FASTCALL__ Get4Digit(uint16_t val)
 {
   static char rstr[5] = "    ";
   const char *legs = &legalchars[2];
@@ -92,7 +92,7 @@ char * __FASTCALL__ Get4Digit(tUInt16 val)
   return rstr;
 }
 
-char * __FASTCALL__ Get4SignDig(tInt16 val)
+char * __FASTCALL__ Get4SignDig(int16_t val)
 {
   static char rstr[6] = "     ";
   const char *legs = &legalchars[2];
@@ -105,7 +105,7 @@ char * __FASTCALL__ Get4SignDig(tInt16 val)
   return rstr;
 }
 
-char * __FASTCALL__ Get8Digit(tUInt32 val)
+char * __FASTCALL__ Get8Digit(uint32_t val)
 {
   static char rstr[9] = "        ";
   const char *legs = &legalchars[2];
@@ -120,7 +120,7 @@ char * __FASTCALL__ Get8Digit(tUInt32 val)
   return rstr;
 }
 
-char * __FASTCALL__ Get8SignDig(tInt32 val)
+char * __FASTCALL__ Get8SignDig(int32_t val)
 {
   static char rstr[10] = "         ";
   const char *legs = &legalchars[2];
@@ -138,7 +138,7 @@ char * __FASTCALL__ Get8SignDig(tInt32 val)
 }
 
 #ifdef INT64_C
-char * __FASTCALL__ Get16Digit(tUInt64 val)
+char * __FASTCALL__ Get16Digit(uint64_t val)
 {
   static char rstr[17] = "                ";
   const char *legs = &legalchars[2];
@@ -161,7 +161,7 @@ char * __FASTCALL__ Get16Digit(tUInt64 val)
   return rstr;
 }
 
-char * __FASTCALL__ Get16SignDig(tInt64 val)
+char * __FASTCALL__ Get16SignDig(int64_t val)
 {
   static char rstr[18] = "                 ";
   const char *legs = &legalchars[2];
@@ -186,7 +186,7 @@ char * __FASTCALL__ Get16SignDig(tInt64 val)
   return rstr;
 }
 #else
-char * __FASTCALL__ Get16Digit(tUInt32 low,tUInt32 high)
+char * __FASTCALL__ Get16Digit(uint32_t low,uint32_t high)
 {
   static char rstr[17] = "                ";
   const char *legs = &legalchars[2];
@@ -208,7 +208,7 @@ char * __FASTCALL__ Get16Digit(tUInt32 low,tUInt32 high)
   return rstr;
 }
 
-char * __FASTCALL__ Get16SignDig(tInt32 low,tInt32 high)
+char * __FASTCALL__ Get16SignDig(int32_t low,int32_t high)
 {
   static char rstr[18] = "                 ";
   const char *legs = &legalchars[2];
@@ -238,7 +238,7 @@ static char __NEAR__ __FASTCALL__ GetHexAnalog(char val)
   return val >= '0' && val <= '9' ? val-'0' : ((toupper(val)-'A'+10)) & 0x0F;
 }
 
-void __FASTCALL__ CompressHex(unsigned char * dest,const char * src,unsigned sizedest,tBool usespace)
+void __FASTCALL__ CompressHex(unsigned char * dest,const char * src,unsigned sizedest,bool usespace)
 {
   unsigned i,j;
   for(i = j = 0;j < sizedest;j++)
@@ -249,7 +249,7 @@ void __FASTCALL__ CompressHex(unsigned char * dest,const char * src,unsigned siz
   }
 }
 
-memArray * __FASTCALL__ ma_Build( int nitems, tBool interact )
+memArray * __FASTCALL__ ma_Build( int nitems, bool interact )
 {
   memArray * ret;
   ret = PMalloc(sizeof(memArray));
@@ -285,7 +285,7 @@ void  __FASTCALL__ ma_Destroy(memArray *obj)
 
 #define LST_STEP 16
 
-tBool  __FASTCALL__ ma_AddData(memArray *obj,const void *udata,unsigned len,tBool interact)
+bool  __FASTCALL__ ma_AddData(memArray *obj,const void *udata,unsigned len,bool interact)
 {
   char *new_item;
   if(obj->nSize > UINT_MAX - (LST_STEP+1)) return 0;
@@ -306,7 +306,7 @@ tBool  __FASTCALL__ ma_AddData(memArray *obj,const void *udata,unsigned len,tBoo
   {
     memcpy(new_item,udata,len);
     obj->data[obj->nItems++] = new_item;
-    return True;
+    return true;
   }
   else
   {
@@ -316,10 +316,10 @@ tBool  __FASTCALL__ ma_AddData(memArray *obj,const void *udata,unsigned len,tBoo
       MemOutBox("Building list");
     }
   }
-  return False;
+  return false;
 }
 
-tBool __FASTCALL__ ma_AddString(memArray *obj,const char *udata,tBool interact)
+bool __FASTCALL__ ma_AddString(memArray *obj,const char *udata,bool interact)
 {
   return ma_AddData(obj,udata,strlen(udata)+1,interact);
 }

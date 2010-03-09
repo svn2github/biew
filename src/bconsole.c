@@ -95,25 +95,25 @@ static int __NEAR__ __FASTCALL__ getkey(int hard, void (*func)(void))
 			    NULL);
 }
 
-static tBool __NEAR__ __FASTCALL__ ungotkey(int keycode)
+static bool __NEAR__ __FASTCALL__ ungotkey(int keycode)
 {
-  tBool ret = False;
+  bool ret = false;
   if(KB_freq < sizeof(KB_Buff)/sizeof(int))
   {
     KB_Buff[KB_freq++] = keycode;
-    ret = True;
+    ret = true;
   }
   return ret;
 }
 
-tBool __FASTCALL__ ungotstring(char *string)
+bool __FASTCALL__ ungotstring(char *string)
 {
   int pos;
   for (pos = strlen(string)-1; pos>=0; pos--) {
-    if (ungotkey(string[pos]) == False)
-      return False;
+    if (ungotkey(string[pos]) == false)
+      return false;
   }
-  return True;
+  return true;
 }
 
 int __FASTCALL__ xeditstring(char *s,const char *legal,unsigned maxlength, void (*func)(void))
@@ -125,7 +125,7 @@ int __FASTCALL__ xeditstring(char *s,const char *legal,unsigned maxlength, void 
 #define isFirstD(pos) (isSpace(pos-1))
 #define isSecondD(pos) (isSpace(pos+1))
 
-static tBool insert = True;
+static bool insert = true;
 
 int __FASTCALL__ eeditstring(char *s,const char *legal, unsigned *maxlength,unsigned _y,unsigned *stx,unsigned attr,char *undo, void (*func)(void))
 {
@@ -135,7 +135,7 @@ int __FASTCALL__ eeditstring(char *s,const char *legal, unsigned *maxlength,unsi
  unsigned y = attr & __ESS_HARDEDIT ? _y : 1;
  int lastkey,func_getkeys;
  char ashex = attr & __ESS_ASHEX;
- tBool freq = (attr & __ESS_HARDEDIT) == __ESS_HARDEDIT;
+ bool freq = (attr & __ESS_HARDEDIT) == __ESS_HARDEDIT;
  if(stx) pos = *stx;
  if(!(attr & __ESS_HARDEDIT))
    twSetCursorType(attr & __ESS_ENABLEINSERT ? insert ? TW_CUR_NORM : TW_CUR_SOLID : TW_CUR_NORM);
@@ -241,7 +241,7 @@ int __FASTCALL__ eeditstring(char *s,const char *legal, unsigned *maxlength,unsi
    case KE_INS :   if(attr & __ESS_ENABLEINSERT &&
                       !(attr & __ESS_HARDEDIT) &&
                       !ashex)
-                            insert = insert ? False : True;
+                            insert = insert ? false : true;
                     twSetCursorType(attr & __ESS_ENABLEINSERT ? insert ? TW_CUR_NORM : TW_CUR_SOLID : TW_CUR_NORM);
                     break;
    case KE_ENTER  : break;
@@ -252,7 +252,7 @@ int __FASTCALL__ eeditstring(char *s,const char *legal, unsigned *maxlength,unsi
                   if ( legal == 0 || strchr(legal, c) != NULL )
                   {
                     attr &= ~__ESS_NOREDRAW;
-                    if(!freq && !(attr & __ESS_WANTRETURN)) { freq = True; s[0] = 0; len = pos = 0; ungotkey(c); break; }
+                    if(!freq && !(attr & __ESS_WANTRETURN)) { freq = true; s[0] = 0; len = pos = 0; ungotkey(c); break; }
                     if(pos < *maxlength)
                     {
                      if(insert)
@@ -283,7 +283,7 @@ int __FASTCALL__ eeditstring(char *s,const char *legal, unsigned *maxlength,unsi
                   }
                   break;
   } /* switch */
-  if(!freq) freq = True;
+  if(!freq) freq = true;
   if(!(attr & __ESS_HARDEDIT)) s[len] = 0;
   if(ashex)
     if(!isFirstD(pos))
@@ -317,7 +317,7 @@ struct percent_data
   time_t   _time;
   time_t   prev_time;
   unsigned _percents;
-  tBool    is_first;
+  bool    is_first;
 };
 
 static long __FASTCALL__ PercentWndCallBack(TWindow *it,unsigned event, unsigned long param, void *data)
@@ -367,21 +367,21 @@ TWindow *__FASTCALL__ PercentWnd(const char *text,const char *title)
   {
      my_data->_time = my_data->prev_time = sttime;
      my_data->_percents = 0;
-     my_data->is_first = True;
+     my_data->is_first = true;
   }
   return ret;
 }
 
-tBool __FASTCALL__ ShowPercentInWnd(TWindow *pw,unsigned percents)
+bool __FASTCALL__ ShowPercentInWnd(TWindow *pw,unsigned percents)
 {
   TWindow *usd;
   unsigned cells,remaind, prev_prcnt = 0;
   time_t sttime =0,curtime,deltat, prev_time = 0;
   struct tm *tm;
   struct percent_data* my_data;
-  tBool is_first = True;
+  bool is_first = true;
   char outb[50];
-  tBool ret;
+  bool ret;
   usd = twUsedWin();
   twUseWin(pw);
   my_data = twGetUsrData(pw);
@@ -415,7 +415,7 @@ tBool __FASTCALL__ ShowPercentInWnd(TWindow *pw,unsigned percents)
   if(my_data)
   {
     my_data->_percents = percents;
-    my_data->is_first = False;
+    my_data->is_first = false;
     my_data->prev_time = curtime;
   }
   twUseWin(usd);
@@ -437,7 +437,7 @@ void __FASTCALL__ CloseWnd(TWindow *w)
    twDestroyWin(w);
 }
 
-static TWindow * __NEAR__ __FASTCALL__ _CreateWindowDD(const char * title,tAbsCoord x2,tAbsCoord y2,tBool is_nls)
+static TWindow * __NEAR__ __FASTCALL__ _CreateWindowDD(const char * title,tAbsCoord x2,tAbsCoord y2,bool is_nls)
 {
  TWindow *win;
  unsigned flags;
@@ -456,11 +456,11 @@ static TWindow * __NEAR__ __FASTCALL__ _CreateWindowDD(const char * title,tAbsCo
  return win;
 }
 
-#define _CreateWindowDDnls(title,x2,y2) (_CreateWindowDD(title,x2,y2,True))
+#define _CreateWindowDDnls(title,x2,y2) (_CreateWindowDD(title,x2,y2,true))
 
 TWindow * __FASTCALL__ CrtDlgWnd(const char * title,tAbsCoord width,tAbsCoord height )
 {
-  return _CreateWindowDD(title,width,height,False);
+  return _CreateWindowDD(title,width,height,false);
 }
 
 TWindow * __FASTCALL__ CrtDlgWndnls(const char * title,tAbsCoord width,tAbsCoord height )
@@ -468,7 +468,7 @@ TWindow * __FASTCALL__ CrtDlgWndnls(const char * title,tAbsCoord width,tAbsCoord
   return _CreateWindowDDnls(title,width,height);
 }
 
-static TWindow * __NEAR__ __FASTCALL__ _CrtMnuWindowDD(const char *title,tAbsCoord x1, tAbsCoord y1, tAbsCoord x2,tAbsCoord y2,tBool is_nls)
+static TWindow * __NEAR__ __FASTCALL__ _CrtMnuWindowDD(const char *title,tAbsCoord x1, tAbsCoord y1, tAbsCoord x2,tAbsCoord y2,bool is_nls)
 {
  TWindow *win;
  unsigned flags;
@@ -486,25 +486,25 @@ static TWindow * __NEAR__ __FASTCALL__ _CrtMnuWindowDD(const char *title,tAbsCoo
 
 TWindow * __FASTCALL__ CrtMnuWnd(const char * title,tAbsCoord x1, tAbsCoord y1,tAbsCoord x2,tAbsCoord y2)
 {
-  return _CrtMnuWindowDD(title,x1,y1,x2,y2,False);
+  return _CrtMnuWindowDD(title,x1,y1,x2,y2,false);
 }
 
 TWindow * __FASTCALL__ CrtMnuWndnls(const char * title,tAbsCoord x1, tAbsCoord y1,tAbsCoord x2,tAbsCoord y2)
 {
-  return _CrtMnuWindowDD(title,x1,y1,x2,y2,True);
+  return _CrtMnuWindowDD(title,x1,y1,x2,y2,true);
 }
 
 TWindow * __FASTCALL__ CrtLstWnd(const char * title,tAbsCoord x2,tAbsCoord y2)
 {
-  return _CrtMnuWindowDD(title,0,0,x2,y2,False);
+  return _CrtMnuWindowDD(title,0,0,x2,y2,false);
 }
 
 TWindow * __FASTCALL__ CrtLstWndnls(const char * title,tAbsCoord x2,tAbsCoord y2)
 {
-  return _CrtMnuWindowDD(title,0,0,x2,y2,True);
+  return _CrtMnuWindowDD(title,0,0,x2,y2,true);
 }
 
-static TWindow * __NEAR__ __FASTCALL__ _CreateHlpWnd(const char * title,tAbsCoord x2,tAbsCoord y2,tBool is_nls)
+static TWindow * __NEAR__ __FASTCALL__ _CreateHlpWnd(const char * title,tAbsCoord x2,tAbsCoord y2,bool is_nls)
 {
  TWindow *win;
  unsigned flags;
@@ -522,12 +522,12 @@ static TWindow * __NEAR__ __FASTCALL__ _CreateHlpWnd(const char * title,tAbsCoor
 
 TWindow * __FASTCALL__ CrtHlpWnd(const char * title,tAbsCoord x2,tAbsCoord y2)
 {
-  return _CreateHlpWnd(title,x2,y2,False);
+  return _CreateHlpWnd(title,x2,y2,false);
 }
 
 TWindow * __FASTCALL__ CrtHlpWndnls(const char * title,tAbsCoord x2,tAbsCoord y2)
 {
-  return _CreateHlpWnd(title,x2,y2,True);
+  return _CreateHlpWnd(title,x2,y2,true);
 }
 
 TWindow * __FASTCALL__ CreateEditor(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsCoord Y2,unsigned flags)
@@ -605,8 +605,8 @@ void __FASTCALL__ errnoMessageBox(const char *text,const char *title,int __errno
 
 static void __NEAR__ __FASTCALL__ PaintLine(unsigned i,const char *name,
                                             unsigned width,unsigned mord_width,
-                                            tBool isOrdinal,
-                                            tBool useAcc,tBool is_hl)
+                                            bool isOrdinal,
+                                            bool useAcc,bool is_hl)
 {
   size_t namelen;
   char buffer[__TVIO_MAXSCREENWIDTH + 1];
@@ -678,7 +678,7 @@ static void __NEAR__ __FASTCALL__ Paint(TWindow *win,const char ** names,
                                         unsigned nlist,unsigned start,
                                         unsigned height,unsigned width,
                                         unsigned mord_width, 
-                                        tBool isOrdinal,tBool useAcc,
+                                        bool isOrdinal,bool useAcc,
                                         unsigned cursor)
 {
  unsigned i, pos = 0;
@@ -708,9 +708,9 @@ static void __NEAR__ __FASTCALL__ Paint(TWindow *win,const char ** names,
 
 static char byNam;
 
-tBool __FASTCALL__ _lb_searchtext(const char *str,const char *tmpl,unsigned searchlen,const int *cache, unsigned flg)
+bool __FASTCALL__ _lb_searchtext(const char *str,const char *tmpl,unsigned searchlen,const int *cache, unsigned flg)
 {
-  return strFind(str, strlen(str), tmpl, searchlen, cache, flg) ? True : False;
+  return strFind(str, strlen(str), tmpl, searchlen, cache, flg) ? true : false;
 }
 
 static tCompare __FASTCALL__ listcompare(const void __HUGE__ *v1,const void __HUGE__ *v2)
@@ -748,9 +748,9 @@ static int __NEAR__ __FASTCALL__ __ListBox(const char ** names,unsigned nlist,un
  unsigned i,j,width,height,mwidth = strlen(title);
  unsigned mordstr_width, mord_width;
  int ret,start,ostart,cursor,ocursor,scursor;
- tBool isOrdinal,sf;
+ bool isOrdinal,sf;
  if(!names || !nlist) return -1;
- isOrdinal = True;
+ isOrdinal = true;
  scursor = -1;
  i = 0;
  if((assel & LB_USEACC) == LB_USEACC)
@@ -776,7 +776,7 @@ static int __NEAR__ __FASTCALL__ __ListBox(const char ** names,unsigned nlist,un
      }
    }
  }
- if(names[0]) if(!strrchr(names[0],LB_ORD_DELIMITER)) isOrdinal = False;
+ if(names[0]) if(!strrchr(names[0],LB_ORD_DELIMITER)) isOrdinal = false;
  mordstr_width = mord_width = 0;
  if(!isOrdinal) 
    for(i = 0;i < nlist;i++) 
@@ -824,9 +824,9 @@ static int __NEAR__ __FASTCALL__ __ListBox(const char ** names,unsigned nlist,un
  if((assel & LB_SELECTIVE) == LB_SELECTIVE)
  {
    twSetColorAttr(menu_cset.item.focused);
-   PaintLine((unsigned)cursor,names[cursor + start],width,mord_width,isOrdinal,(assel & LB_USEACC) == LB_USEACC,True);
+   PaintLine((unsigned)cursor,names[cursor + start],width,mord_width,isOrdinal,(assel & LB_USEACC) == LB_USEACC,true);
  }
- sf = False;
+ sf = false;
  for(;;)
  {
    unsigned ch;
@@ -896,7 +896,7 @@ static int __NEAR__ __FASTCALL__ __ListBox(const char ** names,unsigned nlist,un
 
                {
                   int direct, cache[UCHAR_MAX+1];
-                  tBool found;
+                  bool found;
                   int ii,endsearch,startsearch;
                   searchtxt[searchlen] = 0;
                   endsearch = sflg & SF_REVERSE ? -1 : (int)nlist;
@@ -912,7 +912,7 @@ static int __NEAR__ __FASTCALL__ __ListBox(const char ** names,unsigned nlist,un
                   {
                     sflg & SF_REVERSE ? startsearch-- : startsearch++;
                   }
-                  found = False;
+                  found = false;
                   fillBoyerMooreCache(cache, searchtxt, searchlen, sflg & SF_CASESENS);
                   for(ii = startsearch;ii != endsearch;ii+=direct)
                   {
@@ -925,7 +925,7 @@ static int __NEAR__ __FASTCALL__ __ListBox(const char ** names,unsigned nlist,un
                         ostart = start - 1;
                         if((assel & LB_SELECTIVE) == LB_SELECTIVE)
                                     cursor = scursor - start;
-                        found = True;
+                        found = true;
                         break;
                      }
 		    }
@@ -966,22 +966,22 @@ static int __NEAR__ __FASTCALL__ __ListBox(const char ** names,unsigned nlist,un
    {
      ostart = start;
      Paint(wlist,names,nlist,(unsigned)start,height,mwidth,mord_width,isOrdinal,(assel & LB_USEACC) == LB_USEACC,(unsigned)cursor);
-     sf = True;
+     sf = true;
    }
    if((cursor != ocursor || sf) && (assel & LB_SELECTIVE) == LB_SELECTIVE)
    {
      twSetColorAttr(menu_cset.item.active);
-     PaintLine((unsigned)ocursor,names[ocursor + start],width,mord_width,isOrdinal,(assel & LB_USEACC) == LB_USEACC,False);
+     PaintLine((unsigned)ocursor,names[ocursor + start],width,mord_width,isOrdinal,(assel & LB_USEACC) == LB_USEACC,false);
      twSetColorAttr(menu_cset.item.focused);
-     PaintLine((unsigned)cursor,names[cursor + start],width,mord_width,isOrdinal,(assel & LB_USEACC) == LB_USEACC,True);
+     PaintLine((unsigned)cursor,names[cursor + start],width,mord_width,isOrdinal,(assel & LB_USEACC) == LB_USEACC,true);
      ocursor = cursor;
-     sf = False;
+     sf = false;
    }
    if(scursor != -1)
    {
      twSetColorAttr(menu_cset.highlight);
      if(scursor >= start && (unsigned)scursor < start + height)
-         PaintLine((unsigned)(scursor - start),names[scursor],width,mord_width,isOrdinal,(assel & LB_USEACC) == LB_USEACC,True);
+         PaintLine((unsigned)(scursor - start),names[scursor],width,mord_width,isOrdinal,(assel & LB_USEACC) == LB_USEACC,true);
    }
  }
  Done:
@@ -1025,7 +1025,7 @@ int __FASTCALL__ PageBox(unsigned width,unsigned height,const void ** __obj,unsi
  TWindow * wlist;
  int start,ostart,ret;
  if(height>tvioHeight-2) height=tvioHeight-2;
- wlist = _CreateWindowDD(0,width-1,height,True);
+ wlist = _CreateWindowDD(0,width-1,height,true);
  ostart = start = 0;
  (*func)(wlist,__obj,(unsigned)start,nobj);
  for(;;)

@@ -46,7 +46,7 @@ tCompare __FASTCALL__ fmtComparePubNames(const void __HUGE__ *v1,const void __HU
   return __CmpLong__(pnam1->pa,pnam2->pa);
 }
 
-tBool __FASTCALL__ fmtFindPubName(BGLOBAL fmt_cache,char *buff,unsigned cb_buff,
+bool __FASTCALL__ fmtFindPubName(BGLOBAL fmt_cache,char *buff,unsigned cb_buff,
                    __filesize_t pa,
                    ReadPubNameList fmt_readlist,
                    ReadPubName fmt_readpub)
@@ -58,13 +58,13 @@ tBool __FASTCALL__ fmtFindPubName(BGLOBAL fmt_cache,char *buff,unsigned cb_buff,
   if(ret)
   {
     (*fmt_readpub)(fmt_cache,ret,buff,cb_buff);
-    return True;
+    return true;
   }
   return udnFindName(pa,buff,cb_buff);
 }
 
 __filesize_t __FASTCALL__ fmtGetPubSym(BGLOBAL fmt_cache,char *str,unsigned cb_str,
-                           unsigned *func_class,__filesize_t pa,tBool as_prev,
+                           unsigned *func_class,__filesize_t pa,bool as_prev,
                            ReadPubNameList fmt_readlist,
                            ReadPubName fmt_readpub)
 {
@@ -130,7 +130,7 @@ static BGLOBAL __NEAR__ __FASTCALL__ ReopenSeek(__filesize_t dist)
 int __FASTCALL__ fmtShowList( GetNumItems gni,ReadItems ri,const char * title,int flags,unsigned * ordinal)
 {
  int ret;
- tBool bval;
+ bool bval;
  BGLOBAL handle;
  unsigned nnames;
  memArray * obj;
@@ -138,7 +138,7 @@ int __FASTCALL__ fmtShowList( GetNumItems gni,ReadItems ri,const char * title,in
  ret = -1;
  if((handle = ReopenSeek(0)) == &bNull) return ret;
  nnames = gni ? (*gni)(handle) : (unsigned)-1;
- if(!(obj = ma_Build(nnames,True))) goto exit;
+ if(!(obj = ma_Build(nnames,true))) goto exit;
  w = PleaseWaitWnd();
  bval = (*ri)(handle,obj,nnames);
  CloseWnd(w);
@@ -181,10 +181,10 @@ static tCompare __FASTCALL__ udn_compare(const void __HUGE__ *e1,const void __HU
 }
 
 static linearArray *udn_list=NULL;
-static tBool udn_modified=False;
+static bool udn_modified=false;
 static char udn_fname[4096];
 
-static tBool __FASTCALL__ udnAddItem( void ) {
+static bool __FASTCALL__ udnAddItem( void ) {
     __filesize_t off;
     udn item,*prev;
     char ud_name[256],prompt[256];
@@ -210,10 +210,10 @@ static tBool __FASTCALL__ udnAddItem( void ) {
 	    }
 	    la_Sort(udn_list,udn_compare);
 	}
-	udn_modified=True;
-	return True;
+	udn_modified=true;
+	return true;
     }
-    return False;
+    return false;
 }
 
 static unsigned __FASTCALL__ udnGetNumItems(BGLOBAL handle) {
@@ -221,7 +221,7 @@ static unsigned __FASTCALL__ udnGetNumItems(BGLOBAL handle) {
     return udn_list->nItems;
 }
 
-static tBool    __FASTCALL__ udnReadItems(BGLOBAL handle,memArray * names,unsigned nnames)
+static bool    __FASTCALL__ udnReadItems(BGLOBAL handle,memArray * names,unsigned nnames)
 {
     char stmp[256];
     unsigned i;
@@ -230,12 +230,12 @@ static tBool    __FASTCALL__ udnReadItems(BGLOBAL handle,memArray * names,unsign
 	sprintf(stmp,"%-40s %08lX"
 		,((udn *)udn_list->data)[i].name
 		,(unsigned long)((udn *)udn_list->data)[i].offset);
-	if(!ma_AddString(names,stmp,True)) break;
+	if(!ma_AddString(names,stmp,true)) break;
     }
-    return True;
+    return true;
 }
 
-static tBool __FASTCALL__ udnDeleteItem( void ) {
+static bool __FASTCALL__ udnDeleteItem( void ) {
   int rval=-1;
   if(udn_list) {
     rval = fmtShowList(udnGetNumItems,udnReadItems,
@@ -244,14 +244,14 @@ static tBool __FASTCALL__ udnDeleteItem( void ) {
     if(rval!=-1) {
 	la_DeleteData(udn_list,rval);
 	la_Sort(udn_list,udn_compare);
-	udn_modified=True;
+	udn_modified=true;
     }
   }
   else ErrMessageBox("UDN list is empty!",NULL);
-  return rval==-1?False:True;
+  return rval==-1?false:true;
 }
 
-tBool __FASTCALL__ udnSelectName(__filesize_t *off) {
+bool __FASTCALL__ udnSelectName(__filesize_t *off) {
   int rval=-1;
   if(udn_list) {
     rval = fmtShowList(udnGetNumItems,udnReadItems,
@@ -260,10 +260,10 @@ tBool __FASTCALL__ udnSelectName(__filesize_t *off) {
     if(rval!=-1) *off = ((udn *)udn_list->data)[rval].offset;
   }
   else ErrMessageBox("UDN list is empty!",NULL);
-  return rval==-1?False:True;
+  return rval==-1?false:true;
 }
 
-tBool __FASTCALL__ udnFindName(__filesize_t pa,char *buff, unsigned cb_buff) {
+bool __FASTCALL__ udnFindName(__filesize_t pa,char *buff, unsigned cb_buff) {
     udn *item;
     udn key;
     if(udn_list) {
@@ -273,13 +273,13 @@ tBool __FASTCALL__ udnFindName(__filesize_t pa,char *buff, unsigned cb_buff) {
 	if(item) {
 	    strncpy(buff,item->name,cb_buff);
 	    buff[cb_buff-1]='\0';
-	    return True;
+	    return true;
 	}
     }
-    return False;
+    return false;
 }
 
-tBool __FASTCALL__ __udnSaveList( void )
+bool __FASTCALL__ __udnSaveList( void )
 {
     unsigned i;
     if(udn_list) {
@@ -295,8 +295,8 @@ tBool __FASTCALL__ __udnSaveList( void )
 		,((udn *)udn_list->data)[i].offset
 		,((udn *)udn_list->data)[i].name);
 	    fclose(out);
-	    udn_modified=False;
-	    return True;
+	    udn_modified=false;
+	    return true;
 	}
 	else {
 	    char stmp[256];
@@ -304,20 +304,20 @@ tBool __FASTCALL__ __udnSaveList( void )
 	    ErrMessageBox(udn_fname,stmp);
 	}
     }
-    return False;
+    return false;
 }
 
 
-tBool __FASTCALL__ udnSaveList( void ) {
+bool __FASTCALL__ udnSaveList( void ) {
     if(GetStringDlg(udn_fname," Please enter file name: "," [ENTER] - Proceed ",NAME_MSG))
     {
 	if(udn_list)	return __udnSaveList();
 	else		ErrMessageBox("UDN list is empty!",NULL);
     }
-    return False;
+    return false;
 }
 
-tBool __FASTCALL__  __udnLoadList( void ) {
+bool __FASTCALL__  __udnLoadList( void ) {
     unsigned i;
     udn item;
     FILE *in;
@@ -335,7 +335,7 @@ tBool __FASTCALL__  __udnLoadList( void ) {
 		    char stmp[256];
 		    sprintf(stmp,"Can't recognize line: %u",i);
 		    ErrMessageBox(stmp,NULL);
-		    return True;
+		    return true;
 		}
 		*brk='\0';
 		sscanf(buff,"%016llX",&item.offset);
@@ -351,23 +351,23 @@ tBool __FASTCALL__  __udnLoadList( void ) {
 	    }
 	    fclose(in);
 	    if(udn_list) la_Sort(udn_list,udn_compare);
-	    return True;
+	    return true;
 	}
 	else {
 	    char stmp[256];
 	    sprintf(stmp,"Can't open file: %s\n",strerror(errno));
 	    ErrMessageBox(udn_fname,stmp);
     }
-    return False;
+    return false;
 }
 
-tBool __FASTCALL__ udnLoadList( void ) {
+bool __FASTCALL__ udnLoadList( void ) {
     if(GetStringDlg(udn_fname," Please enter file name: "," [ENTER] - Proceed ",NAME_MSG))
     {
 	if(udn_list)	return __udnLoadList();
 	else		ErrMessageBox("UDN list is empty!",NULL);
     }
-    return False;
+    return false;
 }
 
 static const char *udn_operations[] =
@@ -377,7 +377,7 @@ static const char *udn_operations[] =
     "~Load list from file",
     "~Save list to file"
 };
-typedef tBool (__FASTCALL__ *udnFunc)( void );
+typedef bool (__FASTCALL__ *udnFunc)( void );
 
 static udnFunc udn_funcs[] =
 {
@@ -387,7 +387,7 @@ static udnFunc udn_funcs[] =
     udnSaveList
 };
 
-tBool __FASTCALL__ udnUserNames( void ) {
+bool __FASTCALL__ udnUserNames( void ) {
   unsigned nModes;
   int i;
   nModes = sizeof(udn_operations)/sizeof(char *);
@@ -402,7 +402,7 @@ tBool __FASTCALL__ udnUserNames( void ) {
      CloseWnd(w);
      return ret;
   }
-  return False;
+  return false;
 }
 
 void __FASTCALL__ udnInit( hIniProfile *ini ) {

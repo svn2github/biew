@@ -215,7 +215,7 @@ typedef struct tag_HelpCSet
 
 extern HelpCSet help_cset;
 
-extern tBool   csetReadIniFile(const char *pal_name);
+extern bool   csetReadIniFile(const char *pal_name);
 
 #ifdef __cplusplus
 }

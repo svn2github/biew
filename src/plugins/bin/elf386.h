@@ -339,9 +339,9 @@
     which contains the symbol binding and symbol type.  The STB_ and STT_
     defines identify the binding and type. */
 
-#define ELF_ST_BIND(val)		(((tUInt8)(val)) >> 4)
-#define ELF_ST_TYPE(val)		(((tUInt8)(val)) & 0xF)
-#define ELF_ST_INFO(bind,type)		((((tUInt8)(bind)) << 4) + ((((tUInt8)type)) & 0xF))
+#define ELF_ST_BIND(val)		(((uint8_t)(val)) >> 4)
+#define ELF_ST_TYPE(val)		(((uint8_t)(val)) & 0xF)
+#define ELF_ST_INFO(bind,type)		((((uint8_t)(bind)) << 4) + ((((uint8_t)type)) & 0xF))
 
 #define STN_UNDEF	0		/**< undefined symbol index */
 
@@ -480,158 +480,158 @@
 
 
 typedef struct {
-  tUInt8	e_ident[16];		/**< ELF "magic number" */
-  tUInt8	e_type[2];		/**< Identifies object file type */
-  tUInt8	e_machine[2];		/**< Specifies required architecture */
-  tUInt8	e_version[4];		/**< Identifies object file version */
-  tUInt8	e_entry[4];		/**< Entry point virtual address */
-  tUInt8	e_phoff[4];		/**< Program header table file offset */
-  tUInt8	e_shoff[4];		/**< Section header table file offset */
-  tUInt8	e_flags[4];		/**< Processor-specific flags */
-  tUInt8	e_ehsize[2];		/**< ELF header size in bytes */
-  tUInt8	e_phentsize[2];		/**< Program header table entry size */
-  tUInt8	e_phnum[2];		/**< Program header table entry count */
-  tUInt8	e_shentsize[2];		/**< Section header table entry size */
-  tUInt8	e_shnum[2];		/**< Section header table entry count */
-  tUInt8	e_shstrndx[2];		/**< Section header string table index */
+  uint8_t	e_ident[16];		/**< ELF "magic number" */
+  uint8_t	e_type[2];		/**< Identifies object file type */
+  uint8_t	e_machine[2];		/**< Specifies required architecture */
+  uint8_t	e_version[4];		/**< Identifies object file version */
+  uint8_t	e_entry[4];		/**< Entry point virtual address */
+  uint8_t	e_phoff[4];		/**< Program header table file offset */
+  uint8_t	e_shoff[4];		/**< Section header table file offset */
+  uint8_t	e_flags[4];		/**< Processor-specific flags */
+  uint8_t	e_ehsize[2];		/**< ELF header size in bytes */
+  uint8_t	e_phentsize[2];		/**< Program header table entry size */
+  uint8_t	e_phnum[2];		/**< Program header table entry count */
+  uint8_t	e_shentsize[2];		/**< Section header table entry size */
+  uint8_t	e_shnum[2];		/**< Section header table entry count */
+  uint8_t	e_shstrndx[2];		/**< Section header string table index */
 } Elf386_External_Ehdr;
 
 typedef struct {
-  tUInt8	e_ident[16];		/**< ELF "magic number" */
-  tUInt8	e_type[2];		/**< Identifies object file type */
-  tUInt8	e_machine[2];		/**< Specifies required architecture */
-  tUInt8	e_version[4];		/**< Identifies object file version */
-  tUInt8	e_entry[8];		/**< Entry point virtual address */
-  tUInt8	e_phoff[8];		/**< Program header table file offset */
-  tUInt8	e_shoff[8];		/**< Section header table file offset */
-  tUInt8	e_flags[4];		/**< Processor-specific flags */
-  tUInt8	e_ehsize[2];		/**< ELF header size in bytes */
-  tUInt8	e_phentsize[2];		/**< Program header table entry size */
-  tUInt8	e_phnum[2];		/**< Program header table entry count */
-  tUInt8	e_shentsize[2];		/**< Section header table entry size */
-  tUInt8	e_shnum[2];		/**< Section header table entry count */
-  tUInt8	e_shstrndx[2];		/**< Section header string table index */
+  uint8_t	e_ident[16];		/**< ELF "magic number" */
+  uint8_t	e_type[2];		/**< Identifies object file type */
+  uint8_t	e_machine[2];		/**< Specifies required architecture */
+  uint8_t	e_version[4];		/**< Identifies object file version */
+  uint8_t	e_entry[8];		/**< Entry point virtual address */
+  uint8_t	e_phoff[8];		/**< Program header table file offset */
+  uint8_t	e_shoff[8];		/**< Section header table file offset */
+  uint8_t	e_flags[4];		/**< Processor-specific flags */
+  uint8_t	e_ehsize[2];		/**< ELF header size in bytes */
+  uint8_t	e_phentsize[2];		/**< Program header table entry size */
+  uint8_t	e_phnum[2];		/**< Program header table entry count */
+  uint8_t	e_shentsize[2];		/**< Section header table entry size */
+  uint8_t	e_shnum[2];		/**< Section header table entry count */
+  uint8_t	e_shstrndx[2];		/**< Section header string table index */
 } Elf64_External_Ehdr;
 
 /** Program header */
 
 typedef struct {
-  tUInt8	p_type[4];		/**< Identifies program segment type */
-  tUInt8	p_offset[4];		/**< Segment file offset */
-  tUInt8	p_vaddr[4];		/**< Segment virtual address */
-  tUInt8	p_paddr[4];		/**< Segment physical address (ignored on SystemV) */
-  tUInt8	p_filesz[4];		/**< Segment size in file */
-  tUInt8	p_memsz[4];		/**< Segment size in memory */
-  tUInt8	p_flags[4];		/**< Segment flags */
-  tUInt8	p_align[4];		/**< Segment alignment, file & memory */
+  uint8_t	p_type[4];		/**< Identifies program segment type */
+  uint8_t	p_offset[4];		/**< Segment file offset */
+  uint8_t	p_vaddr[4];		/**< Segment virtual address */
+  uint8_t	p_paddr[4];		/**< Segment physical address (ignored on SystemV) */
+  uint8_t	p_filesz[4];		/**< Segment size in file */
+  uint8_t	p_memsz[4];		/**< Segment size in memory */
+  uint8_t	p_flags[4];		/**< Segment flags */
+  uint8_t	p_align[4];		/**< Segment alignment, file & memory */
 } Elf386_External_Phdr;
 
 typedef struct {
-  tUInt8	p_type[4];		/**< Identifies program segment type */
-  tUInt8	p_flags[4];		/**< Segment flags */
-  tUInt8	p_offset[8];		/**< Segment file offset */
-  tUInt8	p_vaddr[8];		/**< Segment virtual address */
-  tUInt8	p_paddr[8];		/**< Segment physical address (ignored on SystemV)*/
-  tUInt8	p_filesz[8];		/**< Segment size in file */
-  tUInt8	p_memsz[8];		/**< Segment size in memory */
-  tUInt8	p_align[8];		/**< Segment alignment, file & memory */
+  uint8_t	p_type[4];		/**< Identifies program segment type */
+  uint8_t	p_flags[4];		/**< Segment flags */
+  uint8_t	p_offset[8];		/**< Segment file offset */
+  uint8_t	p_vaddr[8];		/**< Segment virtual address */
+  uint8_t	p_paddr[8];		/**< Segment physical address (ignored on SystemV)*/
+  uint8_t	p_filesz[8];		/**< Segment size in file */
+  uint8_t	p_memsz[8];		/**< Segment size in memory */
+  uint8_t	p_align[8];		/**< Segment alignment, file & memory */
 } Elf64_External_Phdr;
 
 /** Section header */
 
 typedef struct {
-  tUInt8	sh_name[4];		/**< Section name, index in string tbl */
-  tUInt8	sh_type[4];		/**< Type of section */
-  tUInt8	sh_flags[4];		/**< Miscellaneous section attributes */
-  tUInt8	sh_addr[4];		/**< Section virtual addr at execution */
-  tUInt8	sh_offset[4];		/**< Section file offset */
-  tUInt8	sh_size[4];		/**< Size of section in bytes */
-  tUInt8	sh_link[4];		/**< Index of another section */
-  tUInt8	sh_info[4];		/**< Additional section information */
-  tUInt8	sh_addralign[4];	/**< Section alignment */
-  tUInt8	sh_entsize[4];		/**< Entry size if section holds table */
+  uint8_t	sh_name[4];		/**< Section name, index in string tbl */
+  uint8_t	sh_type[4];		/**< Type of section */
+  uint8_t	sh_flags[4];		/**< Miscellaneous section attributes */
+  uint8_t	sh_addr[4];		/**< Section virtual addr at execution */
+  uint8_t	sh_offset[4];		/**< Section file offset */
+  uint8_t	sh_size[4];		/**< Size of section in bytes */
+  uint8_t	sh_link[4];		/**< Index of another section */
+  uint8_t	sh_info[4];		/**< Additional section information */
+  uint8_t	sh_addralign[4];	/**< Section alignment */
+  uint8_t	sh_entsize[4];		/**< Entry size if section holds table */
 } Elf386_External_Shdr;
 
 typedef struct {
-  tUInt8	sh_name[4];		/**< Section name, index in string tbl */
-  tUInt8	sh_type[4];		/**< Type of section */
-  tUInt8	sh_flags[8];		/**< Miscellaneous section attributes */
-  tUInt8	sh_addr[8];		/**< Section virtual addr at execution */
-  tUInt8	sh_offset[8];		/**< Section file offset */
-  tUInt8	sh_size[8];		/**< Size of section in bytes */
-  tUInt8	sh_link[4];		/**< Index of another section */
-  tUInt8	sh_info[4];		/**< Additional section information */
-  tUInt8	sh_addralign[8];	/**< Section alignment */
-  tUInt8	sh_entsize[8];		/**< Entry size if section holds table */
+  uint8_t	sh_name[4];		/**< Section name, index in string tbl */
+  uint8_t	sh_type[4];		/**< Type of section */
+  uint8_t	sh_flags[8];		/**< Miscellaneous section attributes */
+  uint8_t	sh_addr[8];		/**< Section virtual addr at execution */
+  uint8_t	sh_offset[8];		/**< Section file offset */
+  uint8_t	sh_size[8];		/**< Size of section in bytes */
+  uint8_t	sh_link[4];		/**< Index of another section */
+  uint8_t	sh_info[4];		/**< Additional section information */
+  uint8_t	sh_addralign[8];	/**< Section alignment */
+  uint8_t	sh_entsize[8];		/**< Entry size if section holds table */
 } Elf64_External_Shdr;
 
 /** Symbol table entry */
 
 typedef struct {
-  tUInt8	st_name[4];		/**< Symbol name, index in string tbl */
-  tUInt8	st_value[4];		/**< Value of the symbol */
-  tUInt8	st_size[4];		/**< Associated symbol size */
-  tUInt8	st_info[1];		/**< Type and binding attributes */
-  tUInt8	st_other[1];		/**< No defined meaning, 0 */
-  tUInt8	st_shndx[2];		/**< Associated section index */
+  uint8_t	st_name[4];		/**< Symbol name, index in string tbl */
+  uint8_t	st_value[4];		/**< Value of the symbol */
+  uint8_t	st_size[4];		/**< Associated symbol size */
+  uint8_t	st_info[1];		/**< Type and binding attributes */
+  uint8_t	st_other[1];		/**< No defined meaning, 0 */
+  uint8_t	st_shndx[2];		/**< Associated section index */
 } Elf386_External_Sym;
 
 typedef struct {
-  tUInt8	st_name[4];		/**< Symbol name, index in string tbl */
-  tUInt8	st_info[1];		/**< Type and binding attributes */
-  tUInt8	st_other[1];		/**< No defined meaning, 0 */
-  tUInt8	st_shndx[2];		/**< Associated section index */
-  tUInt8	st_value[8];		/**< Value of the symbol */
-  tUInt8	st_size[8];		/**< Associated symbol size */
+  uint8_t	st_name[4];		/**< Symbol name, index in string tbl */
+  uint8_t	st_info[1];		/**< Type and binding attributes */
+  uint8_t	st_other[1];		/**< No defined meaning, 0 */
+  uint8_t	st_shndx[2];		/**< Associated section index */
+  uint8_t	st_value[8];		/**< Value of the symbol */
+  uint8_t	st_size[8];		/**< Associated symbol size */
 } Elf64_External_Sym;
 
 /** Note segments */
 
 typedef struct {
-  tUInt8	namesz[4];		/**< Size of entry's owner string */
-  tUInt8	descsz[4];		/**< Size of the note descriptor */
-  tUInt8	type[4];		/**< Interpretation of the descriptor */
-  tInt8	name[1];		/**< Start of the name+desc data */
+  uint8_t	namesz[4];		/**< Size of entry's owner string */
+  uint8_t	descsz[4];		/**< Size of the note descriptor */
+  uint8_t	type[4];		/**< Interpretation of the descriptor */
+  int8_t	name[1];		/**< Start of the name+desc data */
 } Elf_External_Note;
 
 /** Relocation Entries */
 typedef struct {
-  tUInt8	r_offset[4];	/**< Location at which to apply the action */
-  tUInt8	r_info[4];	/**< index and type of relocation */
+  uint8_t	r_offset[4];	/**< Location at which to apply the action */
+  uint8_t	r_info[4];	/**< index and type of relocation */
 } Elf386_External_Rel;
 
 typedef struct {
-  tUInt8	r_offset[4];	/**< Location at which to apply the action */
-  tUInt8	r_info[4];	/**< index and type of relocation */
-  tUInt8	r_addend[4];	/**< Constant addend used to compute value */
+  uint8_t	r_offset[4];	/**< Location at which to apply the action */
+  uint8_t	r_info[4];	/**< index and type of relocation */
+  uint8_t	r_addend[4];	/**< Constant addend used to compute value */
 } Elf386_External_Rela;
 
 typedef struct {
-  tUInt8	r_offset[8];	/**< Location at which to apply the action */
-  tUInt8	r_info[8];	/**< index and type of relocation */
+  uint8_t	r_offset[8];	/**< Location at which to apply the action */
+  uint8_t	r_info[8];	/**< index and type of relocation */
 } Elf64_External_Rel;
 
 typedef struct {
-  tUInt8	r_offset[8];	/**< Location at which to apply the action */
-  tUInt8	r_info[8];	/**< index and type of relocation */
-  tUInt8	r_addend[8];	/**< Constant addend used to compute value */
+  uint8_t	r_offset[8];	/**< Location at which to apply the action */
+  uint8_t	r_info[8];	/**< index and type of relocation */
+  uint8_t	r_addend[8];	/**< Constant addend used to compute value */
 } Elf64_External_Rela;
 
 /** dynamic section structure */
 
 typedef struct {
-  tUInt8	d_tag[4];		/**< entry tag value */
+  uint8_t	d_tag[4];		/**< entry tag value */
   union {
-    tUInt8	d_val[4];
-    tUInt8	d_ptr[4];
+    uint8_t	d_val[4];
+    uint8_t	d_ptr[4];
   } d_un;
 } Elf386_External_Dyn;
 
 typedef struct {
-  tUInt8	d_tag[8];		/**< entry tag value */
+  uint8_t	d_tag[8];		/**< entry tag value */
   union {
-    tUInt8	d_val[8];
-    tUInt8	d_ptr[8];
+    uint8_t	d_val[8];
+    uint8_t	d_ptr[8];
   } d_un;
 } Elf64_External_Dyn;
 
@@ -642,47 +642,47 @@ typedef struct {
 /** This structure appears in a SHT_GNU_verdef section.  */
 
 typedef struct {
-  tUInt8		vd_version[2];
-  tUInt8		vd_flags[2];
-  tUInt8		vd_ndx[2];
-  tUInt8		vd_cnt[2];
-  tUInt8		vd_hash[4];
-  tUInt8		vd_aux[4];
-  tUInt8		vd_next[4];
+  uint8_t		vd_version[2];
+  uint8_t		vd_flags[2];
+  uint8_t		vd_ndx[2];
+  uint8_t		vd_cnt[2];
+  uint8_t		vd_hash[4];
+  uint8_t		vd_aux[4];
+  uint8_t		vd_next[4];
 } Elf_External_Verdef;
 
 /** This structure appears in a SHT_GNU_verdef section.  */
 
 typedef struct {
-  tUInt8		vda_name[4];
-  tUInt8		vda_next[4];
+  uint8_t		vda_name[4];
+  uint8_t		vda_next[4];
 } Elf_External_Verdaux;
 
 /** This structure appears in a SHT_GNU_verneed section.  */
 
 typedef struct {
-  tUInt8		vn_version[2];
-  tUInt8		vn_cnt[2];
-  tUInt8		vn_file[4];
-  tUInt8		vn_aux[4];
-  tUInt8		vn_next[4];
+  uint8_t		vn_version[2];
+  uint8_t		vn_cnt[2];
+  uint8_t		vn_file[4];
+  uint8_t		vn_aux[4];
+  uint8_t		vn_next[4];
 } Elf_External_Verneed;
 
 /** This structure appears in a SHT_GNU_verneed section.  */
 
 typedef struct {
-  tUInt8		vna_hash[4];
-  tUInt8		vna_flags[2];
-  tUInt8		vna_other[2];
-  tUInt8		vna_name[4];
-  tUInt8		vna_next[4];
+  uint8_t		vna_hash[4];
+  uint8_t		vna_flags[2];
+  uint8_t		vna_other[2];
+  uint8_t		vna_name[4];
+  uint8_t		vna_next[4];
 } Elf_External_Vernaux;
 
 /** This structure appears in a SHT_GNU_versym section.  This is not a
    standard ELF structure; ELF just uses Elf386_Half.  */
 
 typedef struct {
-  tUInt8		vs_vers[2];
+  uint8_t		vs_vers[2];
 } Elf_External_Versym;
 
 /** Auxiliary vector.  */
@@ -696,10 +696,10 @@ typedef struct {
 
 typedef struct
 {
-  tInt32 a_type;		/**< Entry type */
+  int32_t a_type;		/**< Entry type */
   union
     {
-      tInt32 a_val;		/**< Integer value */
+      int32_t a_val;		/**< Integer value */
       void *a_ptr;		/**< Pointer value */
       void (*a_fcn) (void);	/**< Function pointer value */
     } a_un;
@@ -707,10 +707,10 @@ typedef struct
 
 typedef struct
 {
-  tInt32 a_type;		/**< Entry type */
+  int32_t a_type;		/**< Entry type */
   union
     {
-      tInt32 a_val;		/**< Integer value */
+      int32_t a_val;		/**< Integer value */
       void *a_ptr;		/**< Pointer value */
       void (*a_fcn) (void);	/**< Function pointer value */
     } a_un;
@@ -1045,13 +1045,13 @@ typedef union
 {
   struct
     {
-      tUInt8 gt_current_g_value[4];	/**< -G value used for compilation */
-      tUInt8 gt_unused[4];		/**< Not used */
+      uint8_t gt_current_g_value[4];	/**< -G value used for compilation */
+      uint8_t gt_unused[4];		/**< Not used */
     } gt_header;        	   	/**< First entry in section */
   struct
     {
-      tUInt8 gt_g_value[4];		/**< If this value were used for -G */
-      tUInt8 gt_bytes[4];		/**< This many bytes would be used */
+      uint8_t gt_g_value[4];		/**< If this value were used for -G */
+      uint8_t gt_bytes[4];		/**< This many bytes would be used */
     } gt_entry;				/**< Subsequent entries in section */
 } Elf386_gptab;
 
@@ -1059,9 +1059,9 @@ typedef union
 
 typedef struct
 {
-  tUInt8	ri_gprmask[4];		/**< General registers used */
-  tUInt8	ri_cprmask[4][4];	/**< Coprocessor registers used */
-  tUInt8	ri_gp_value[4];		/**< $gp register value */
+  uint8_t	ri_gprmask[4];		/**< General registers used */
+  uint8_t	ri_cprmask[4][4];	/**< Coprocessor registers used */
+  uint8_t	ri_gp_value[4];		/**< $gp register value */
 } Elf386_RegInfo;
 
 /** MIPS relocs.  */
@@ -1116,11 +1116,11 @@ typedef struct
 
 typedef struct
 {
-  tUInt8	l_name[4];		/**< Name (string table index) */
-  tUInt8	l_time_stamp[4];	/**< Timestamp */
-  tUInt8	l_checksum[4];		/**< Checksum */
-  tUInt8	l_version[4];		/**< Interface version */
-  tUInt8	l_flags[4];		/**< Flags */
+  uint8_t	l_name[4];		/**< Name (string table index) */
+  uint8_t	l_time_stamp[4];	/**< Timestamp */
+  uint8_t	l_checksum[4];		/**< Checksum */
+  uint8_t	l_version[4];		/**< Interface version */
+  uint8_t	l_flags[4];		/**< Flags */
 } Elf386_Lib;
 
 /** Legal values for l_flags.  */

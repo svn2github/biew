@@ -46,7 +46,7 @@ extern void drawHelpListPrompt( void );
 #define HPROP_REVERSE               0x10
 #define HPROP_LINK                  0x20
 
-unsigned __FASTCALL__ hlpFillBuffer(tvioBuff * dest,unsigned int alen,const char * str,unsigned int len,unsigned int shift,unsigned *n_tabs,tBool is_hl)
+unsigned __FASTCALL__ hlpFillBuffer(tvioBuff * dest,unsigned int alen,const char * str,unsigned int len,unsigned int shift,unsigned *n_tabs,bool is_hl)
 {
   t_vchar ch;
   ColorAttr defcol;
@@ -129,7 +129,7 @@ unsigned __FASTCALL__ hlpFillBuffer(tvioBuff * dest,unsigned int alen,const char
   return k;
 }
 
-void __FASTCALL__ hlpPaintLine(TWindow *win,unsigned i,const char *name,tBool is_hl)
+void __FASTCALL__ hlpPaintLine(TWindow *win,unsigned i,const char *name,bool is_hl)
 {
   tvioBuff it;
   unsigned rlen;
@@ -213,7 +213,7 @@ static int __NEAR__ __FASTCALL__ __hlpListBox(char * * names,unsigned nlist,cons
 
                {
                   int direct,ii;
-                  tBool found;
+                  bool found;
                   int endsearch,startsearch,cache[UCHAR_MAX];
                   searchtxt[searchlen] = 0;
                   endsearch = sflg & SF_REVERSE ? -1 : (int)nlist;
@@ -227,7 +227,7 @@ static int __NEAR__ __FASTCALL__ __hlpListBox(char * * names,unsigned nlist,cons
                   {
                     sflg & SF_REVERSE ? startsearch-- : startsearch++;
                   }
-                  found = False;
+                  found = false;
                   fillBoyerMooreCache(cache,searchtxt,searchlen, sflg & SF_CASESENS);
                   for(ii = startsearch;ii != endsearch;ii+=direct)
                   {
@@ -236,7 +236,7 @@ static int __NEAR__ __FASTCALL__ __hlpListBox(char * * names,unsigned nlist,cons
                         start = scursor = ii;
                         if((unsigned)start > nlist - height) start = nlist - height;
                         ostart = start - 1;
-                        found = True;
+                        found = true;
                         break;
                      }
                   }
@@ -263,7 +263,7 @@ static int __NEAR__ __FASTCALL__ __hlpListBox(char * * names,unsigned nlist,cons
    if(scursor >= 0)
    {
      twSetColorAttr(menu_cset.highlight);
-     if(scursor >= start && (unsigned)scursor < start + height) hlpPaintLine(wlist,scursor - start,names[scursor],True);
+     if(scursor >= start && (unsigned)scursor < start + height) hlpPaintLine(wlist,scursor - start,names[scursor],true);
    }
  }
  CloseWnd(wlist);
@@ -274,17 +274,17 @@ static int __NEAR__ __FASTCALL__ __hlpListBox(char * * names,unsigned nlist,cons
 static BGLOBAL bHelp = &bNull;
 static BEYE_HELP_ITEM bhi;
 
-tBool __FASTCALL__ hlpOpen( tBool interact )
+bool __FASTCALL__ hlpOpen( bool interact )
 {
   char *help_name;
   char hlp_id[sizeof(BEYE_HELP_VER)];
-  if(bHelp != &bNull) return False; /*means: help file is already opened */
+  if(bHelp != &bNull) return false; /*means: help file is already opened */
   help_name = beyeGetHelpName();
   bHelp = beyeOpenRO(help_name,BBIO_SMALL_CACHE_SIZE);
   if(bHelp == &bNull)
   {
     if(interact) errnoMessageBox("Can't open help file",NULL,errno);
-    return False;
+    return false;
   }
   bioSetOptimization(bHelp,BIO_OPT_RANDOM);
   bioSeek(bHelp,0L,SEEK_SET);
@@ -297,9 +297,9 @@ tBool __FASTCALL__ hlpOpen( tBool interact )
     }
     bioClose(bHelp);
     bHelp = &bNull;
-    return False;
+    return false;
   }
-  return True;
+  return true;
 }
 
 void __FASTCALL__ hlpClose( void )
@@ -311,7 +311,7 @@ void __FASTCALL__ hlpClose( void )
   }
 }
 
-static tBool __FASTCALL__ find_item(unsigned long item_id)
+static bool __FASTCALL__ find_item(unsigned long item_id)
 {
   unsigned long i,nsize,lval;
   char sout[HLP_SLONG_LEN];
@@ -322,9 +322,9 @@ static tBool __FASTCALL__ find_item(unsigned long item_id)
   {
     bioReadBuffer(bHelp,&bhi,sizeof(BEYE_HELP_ITEM));
     lval = strtoul(bhi.item_id,NULL,16);
-    if(lval == item_id) return True;
+    if(lval == item_id) return true;
   }
-  return False;
+  return false;
 }
 
 unsigned long   __FASTCALL__ hlpGetItemSize(unsigned long item_id)
@@ -335,10 +335,10 @@ unsigned long   __FASTCALL__ hlpGetItemSize(unsigned long item_id)
   return ret;
 }
 
-tBool   __FASTCALL__ hlpLoadItem(unsigned long item_id, void __HUGE__* buffer)
+bool   __FASTCALL__ hlpLoadItem(unsigned long item_id, void __HUGE__* buffer)
 {
   unsigned long hlp_off,hlp_size;
-  tBool ret = False;
+  bool ret = false;
   if(bHelp != &bNull)
   {
     if(find_item(item_id))
@@ -349,7 +349,7 @@ tBool   __FASTCALL__ hlpLoadItem(unsigned long item_id, void __HUGE__* buffer)
       {
         MemOutBox("Help uncompression");
       }
-      else ret = True;
+      else ret = true;
     }
     else ErrMessageBox("Load: Item not found",NULL);
   }
@@ -388,7 +388,7 @@ void __FASTCALL__ hlpDisplay( unsigned long item_id )
   char __HUGE__ *data = 0;
   char *title;
   unsigned long data_size,nstr;
-  if(!hlpOpen(True)) return;
+  if(!hlpOpen(true)) return;
   data_size = hlpGetItemSize(item_id);
   if(!data_size) goto hlp_bye;
   data = PHMalloc(data_size+1);

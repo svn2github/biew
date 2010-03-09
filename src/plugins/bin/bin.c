@@ -20,7 +20,7 @@
 #include "reg_form.h"
 #include "plugins/disasm.h"
 
-static tBool  __FASTCALL__ bin_check_fmt( void ) { return True; }
+static bool  __FASTCALL__ bin_check_fmt( void ) { return true; }
 static void __FASTCALL__ bin_init_fmt( void ) {}
 static void __FASTCALL__ bin_destroy_fmt(void) {}
 static int  __FASTCALL__ bin_platform( void) { return DISASM_DEFAULT; }

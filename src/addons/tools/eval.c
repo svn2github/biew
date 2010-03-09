@@ -98,7 +98,7 @@ static struct operator verbs[] = {
 #define EVAL_STACK_SIZE 256
 
 static char   *op_stack;                        /** Operator stack       */
-static tIntMax*arg_stack;                       /** Argument stack       */
+static intmax_t*arg_stack;                       /** Argument stack       */
 static char   *token;                           /** Token buffer         */
 static int    op_sptr,                          /** op_stack pointer     */
               arg_sptr,                         /** arg_stack pointer    */
@@ -106,7 +106,7 @@ static int    op_sptr,                          /** op_stack pointer     */
               state;                            /** 0 = Awaiting expression
                                                      1 = Awaiting operator
                                                 */
-int                     evaluate(char *, tIntMax *,int *);
+int                     evaluate(char *, intmax_t *,int *);
 
 /*
 **  Originally published as part of the MicroFirm Function Library
@@ -137,8 +137,8 @@ static char * __NEAR__ __FASTCALL__ rmallws(char *str)
 static int __NEAR__ __FASTCALL__ do_op(void);
 static int __NEAR__ __FASTCALL__ do_paren(void);
 static void __NEAR__ __FASTCALL__ push_op(char);
-static void __NEAR__ __FASTCALL__ push_arg(tIntMax);
-static int __NEAR__ __FASTCALL__ pop_arg(tIntMax *);
+static void __NEAR__ __FASTCALL__ push_arg(intmax_t);
+static int __NEAR__ __FASTCALL__ pop_arg(intmax_t *);
 static int __NEAR__ __FASTCALL__ pop_op(int *);
 static char *__NEAR__ __FASTCALL__ get_exp(char *);
 static struct operator * __NEAR__ __FASTCALL__ get_op(char *);
@@ -152,7 +152,7 @@ static int __NEAR__ __FASTCALL__ getTOSprec(void);
 int main(int argc, char *argv[])
 {
       int retval,base;
-      tIntMax val;
+      intmax_t val;
       char sout[100];
       if(argc < 2)
       {
@@ -204,15 +204,15 @@ int main(int argc, char *argv[])
 /*                                                                      */
 /************************************************************************/
 
-int evaluate(char *line, tIntMax *val,int *result_base)
+int evaluate(char *line, intmax_t *val,int *result_base)
 {
-      tIntMax arg;
+      intmax_t arg;
       char *ptr = line, *str, *endptr;
       int ercode;
       int retval;
       struct operator *op;
       op_stack = PMalloc(EVAL_STACK_SIZE*sizeof(char));
-      arg_stack = PMalloc(EVAL_STACK_SIZE*sizeof(tIntMax));
+      arg_stack = PMalloc(EVAL_STACK_SIZE*sizeof(intmax_t));
       token = PMalloc(EVAL_STACK_SIZE*sizeof(char));
       if((!op_stack) || (!arg_stack) || (!token))
       {
@@ -377,7 +377,7 @@ int evaluate(char *line, tIntMax *val,int *result_base)
 
 static int __NEAR__ __FASTCALL__ do_op(void)
 {
-      tIntMax arg1, arg2;
+      intmax_t arg1, arg2;
       int op;
 
       if (S_ERROR == pop_op(&op))
@@ -469,12 +469,12 @@ static void __NEAR__ __FASTCALL__ push_op(char op)
       op_stack[op_sptr++] = op;
 }
 
-static void __NEAR__ __FASTCALL__ push_arg(tIntMax arg)
+static void __NEAR__ __FASTCALL__ push_arg(intmax_t arg)
 {
       arg_stack[arg_sptr++] = arg;
 }
 
-static int __NEAR__ __FASTCALL__ pop_arg(tIntMax *arg)
+static int __NEAR__ __FASTCALL__ pop_arg(intmax_t *arg)
 {
       *arg = arg_stack[--arg_sptr];
       return 0 > arg_sptr ? S_ERROR : SUCCESS;
@@ -607,7 +607,7 @@ static void CalculatorFunc(void)
    else
      if(ret == KE_ENTER)
      {
-       tIntMax val;
+       intmax_t val;
        int _ret,base;
        _ret = evaluate(estr,&val,&base);
        if(_ret != SUCCESS)

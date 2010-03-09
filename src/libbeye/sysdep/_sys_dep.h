@@ -18,13 +18,10 @@
 #define __SYS_DEP_H 1
 
 #if defined(__i386__)
-#include "libbeye/sysdep/ia32/__config.h"
 #include "libbeye/sysdep/ia32/_inlines.h"
 #elif defined(__x86_64__)
-#include "libbeye/sysdep/x86_64/__config.h"
 #include "libbeye/sysdep/x86_64/_inlines.h"
 #else
-#include "libbeye/sysdep/generic/__config.h"
 #include "libbeye/sysdep/generic/_inlines.h"
 #endif
 
@@ -45,7 +42,7 @@ extern "C" {
                   * @param t        pointer to 256-byte memory block from which will be readed byte
                   * @param i        index of memory block where byte is to be readed
                 **/
-__inline static tUInt8 __FASTCALL__ __CONSTFUNC__ __Xlat__(const tUInt8 *_table, tUInt8 _idx)
+__inline static uint8_t __FASTCALL__ __CONSTFUNC__ __Xlat__(const uint8_t *_table, uint8_t _idx)
 {
  return _table[_idx];
 }

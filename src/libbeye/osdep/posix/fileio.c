@@ -187,28 +187,28 @@ __fileoff_t __FASTCALL__ __OsTell(bhandle_t handle)
   return __OsSeek(handle,0L,SEEKF_CUR);
 }
 
-tBool __FASTCALL__ __IsFileExists(const char *name)
+bool __FASTCALL__ __IsFileExists(const char *name)
 {
   return access(name,F_OK) == 0;
 }
 
-tBool      __FASTCALL__ __OsGetFTime(const char *name,FTime *data)
+bool      __FASTCALL__ __OsGetFTime(const char *name,FTime *data)
 {
-  tBool ret = False;
+  bool ret = false;
   struct stat statbuf;
   if(!stat(name,&statbuf))
   {
     data->acctime = statbuf.st_atime;
     data->modtime = statbuf.st_mtime;
-    ret = True;
+    ret = true;
   }
   return ret;
 }
 
-tBool      __FASTCALL__ __OsSetFTime(const char *name,const FTime *data)
+bool      __FASTCALL__ __OsSetFTime(const char *name,const FTime *data)
 {
   struct utimbuf ubuf;
   ubuf.actime = data->acctime;
   ubuf.modtime= data->modtime;
-  return utime(name,&ubuf) ? False : True;
+  return utime(name,&ubuf) ? false : true;
 }

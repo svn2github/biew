@@ -25,10 +25,10 @@
 
 #include "libbeye/libbeye.h"
 
-static tBool ms_visible = False;
+static bool ms_visible = false;
 tAbsCoord win32_mx = 0,win32_my = 0;
 int win32_mbuttons = 0;
-extern tBool hInputTrigger;
+extern bool hInputTrigger;
 extern void __FASTCALL__ win32_readNextMessage( void );
 
 int __FASTCALL__ __init_mouse( void )
@@ -47,12 +47,12 @@ void __FASTCALL__ __term_mouse( void )
   SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE),ENABLE_MOUSE_INPUT);
 }
 
-tBool __FASTCALL__ __MsGetState( void )
+bool __FASTCALL__ __MsGetState( void )
 {
   return ms_visible;
 }
 
-void __FASTCALL__ __MsSetState( tBool state )
+void __FASTCALL__ __MsSetState( bool state )
 {
   ms_visible = state;
 }

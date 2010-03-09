@@ -28,12 +28,12 @@
 #include "libbeye/kbd_code.h"
 #include "libbeye/twin.h"
 
-tBool __FASTCALL__ Get2DigitDlg(const char *title,const char * text,unsigned char *xx)
+bool __FASTCALL__ Get2DigitDlg(const char *title,const char * text,unsigned char *xx)
 {
  tAbsCoord x1,y1,x2,y2;
  tRelCoord X1,Y1,X2,Y2;
  TWindow * hwnd,*ewnd,*using;
- tBool ret;
+ bool ret;
  int retval;
  char str[3] = "";
  using = twUsedWin();
@@ -55,9 +55,9 @@ tBool __FASTCALL__ Get2DigitDlg(const char *title,const char * text,unsigned cha
  while(1)
  {
    retval = xeditstring(str,&legalchars[2],2,NULL);
-   if(retval == KE_ESCAPE || retval == KE_F(10)) { ret = False; break; }
+   if(retval == KE_ESCAPE || retval == KE_F(10)) { ret = false; break; }
    else
-     if(retval == KE_ENTER) { ret = True; break; }
+     if(retval == KE_ENTER) { ret = true; break; }
  }
  CloseWnd(ewnd);
  CloseWnd(hwnd);
@@ -71,7 +71,7 @@ tBool __FASTCALL__ Get2DigitDlg(const char *title,const char * text,unsigned cha
 #define SIGN    0x01
 #define DECIMAL 0x02
 
-tBool __FASTCALL__ Get8DigitDlg(const char *title,const char *text,char attr,unsigned long *xx)
+bool __FASTCALL__ Get8DigitDlg(const char *title,const char *text,char attr,unsigned long *xx)
 {
  tAbsCoord x1,y1,x2,y2;
  tRelCoord X1,Y1,X2,Y2;
@@ -79,7 +79,7 @@ tBool __FASTCALL__ Get8DigitDlg(const char *title,const char *text,char attr,uns
  TWindow * hwnd,*ewnd,*using;
  char base = attr & DECIMAL ? 10 : 16;
  char len  = attr & DECIMAL ? 10 : 8;
- tBool ret;
+ bool ret;
  char decleg[13];
  char str[12] = "";
  char * legals;
@@ -111,9 +111,9 @@ tBool __FASTCALL__ Get8DigitDlg(const char *title,const char *text,char attr,uns
  while(1)
  {
    key = xeditstring(str,legals,len,NULL);
-   if(key == KE_ESCAPE || key == KE_F(10)) { ret = False; break; }
+   if(key == KE_ESCAPE || key == KE_F(10)) { ret = false; break; }
    else
-     if(key == KE_ENTER) { ret = True; break; }
+     if(key == KE_ENTER) { ret = true; break; }
  }
  CloseWnd(ewnd);
  CloseWnd(hwnd);
@@ -123,7 +123,7 @@ tBool __FASTCALL__ Get8DigitDlg(const char *title,const char *text,char attr,uns
 }
 
 #if __WORDSIZE >= 32
-tBool        __FASTCALL__ Get16DigitDlg(const char *title,const char *text,char attr,
+bool        __FASTCALL__ Get16DigitDlg(const char *title,const char *text,char attr,
 					unsigned long long int *xx)
 {
  tAbsCoord x1,y1,x2,y2;
@@ -132,7 +132,7 @@ tBool        __FASTCALL__ Get16DigitDlg(const char *title,const char *text,char 
  TWindow * hwnd,*ewnd,*using;
  char base = attr & DECIMAL ? 10 : 16;
  char len  = attr & DECIMAL ? 20 : 16;
- tBool ret;
+ bool ret;
  char decleg[13];
  char str[20] = "";
  char * legals;
@@ -164,9 +164,9 @@ tBool        __FASTCALL__ Get16DigitDlg(const char *title,const char *text,char 
  while(1)
  {
    key = xeditstring(str,legals,len,NULL);
-   if(key == KE_ESCAPE || key == KE_F(10)) { ret = False; break; }
+   if(key == KE_ESCAPE || key == KE_F(10)) { ret = false; break; }
    else
-     if(key == KE_ENTER) { ret = True; break; }
+     if(key == KE_ENTER) { ret = true; break; }
  }
  CloseWnd(ewnd);
  CloseWnd(hwnd);
@@ -210,14 +210,14 @@ static void drawJumpPrompt( void )
 }
 
 
-tBool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
+bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
 {
  tAbsCoord x1,y1,x2,y2;
  tRelCoord X1,Y1,X2,Y2;
  int key;
  TWindow * hwnd,*ewnd,*using;
  unsigned len = HA_LEN-1,stx = 0;
- tBool ret,update;
+ bool ret,update;
  static char str[21] = "";
  char * legals;
  char declegals[13];
@@ -247,21 +247,21 @@ tBool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
  twUseWin(ewnd);
  legals = *flags == GJDLG_RELATIVE ? legalchars : &legalchars[2];
  paintJumpDlg(hwnd,*flags);
- update = True;
+ update = true;
  while(1)
  {
    attr = __ESS_NOTUPDATELEN | __ESS_WANTRETURN | __ESS_ENABLEINSERT;
    if(!update) attr |= __ESS_NOREDRAW;
    key = eeditstring(str,legals,&len,1,&stx,
                      attr,NULL,drawJumpPrompt);
-   if(key == KE_ESCAPE || key == KE_F(10)) { ret = False; break; }
+   if(key == KE_ESCAPE || key == KE_F(10)) { ret = false; break; }
    else
-     if(key == KE_ENTER) { ret = True; break; }
-   update = True;
+     if(key == KE_ENTER) { ret = true; break; }
+   update = true;
    switch(key)
    {
       case KE_F(1):  hlpDisplay(6);
-                     update = False;
+                     update = false;
                      break;
       case KE_F(5):  if(udnSelectName(addr)) {
 			if(BMFileFlags&BMFF_USE64) sprintf(str,"%016llX",*addr);
@@ -273,11 +273,11 @@ tBool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
                      legals = (*flags) == GJDLG_RELATIVE ||
                               (*flags) == GJDLG_REL_EOF ? legalchars :
                               (*flags) == GJDLG_PERCENTS ? declegals : &legalchars[2];
-                     update = False;
+                     update = false;
                      break;
       case KE_LEFTARROW:
       case KE_RIGHTARROW:
-                     update = False;
+                     update = false;
                      break;
       default:       break;
    }
@@ -302,12 +302,12 @@ tBool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
  return ret;
 }
 
-tBool __FASTCALL__ GetStringDlg(char * buff,const char * title,const char *subtitle,const char *prompt)
+bool __FASTCALL__ GetStringDlg(char * buff,const char * title,const char *subtitle,const char *prompt)
 {
   tAbsCoord x1,y1,x2,y2;
   tRelCoord X1,Y1,X2,Y2;
   int key;
-  tBool ret;
+  bool ret;
   TWindow * wdlg,*ewnd;
   char estr[81];
   wdlg = CrtDlgWndnls(title,78,2);
@@ -330,9 +330,9 @@ tBool __FASTCALL__ GetStringDlg(char * buff,const char * title,const char *subti
   while(1)
   {
    key = xeditstring(estr,NULL,76,NULL);
-   if(key == KE_ESCAPE || key == KE_F(10)) { ret = False; break; }
+   if(key == KE_ESCAPE || key == KE_F(10)) { ret = false; break; }
    else
-     if(key == KE_ENTER) { ret = True; break; }
+     if(key == KE_ENTER) { ret = true; break; }
   }
   if(ret) strcpy(buff,estr);
   CloseWnd(ewnd);
@@ -448,7 +448,7 @@ static void drawFSPrompt( void )
    __drawSinglePrompt(fs_txt);
 }
 
-tBool __FASTCALL__ GetFStoreDlg(const char *title,char * fname,unsigned long * flags,
+bool __FASTCALL__ GetFStoreDlg(const char *title,char * fname,unsigned long * flags,
                    __filesize_t * start,__filesize_t * end,
                    const char *prompt)
 {
@@ -457,7 +457,7 @@ tBool __FASTCALL__ GetFStoreDlg(const char *title,char * fname,unsigned long * f
  TWindow *wdlg = CrtDlgWndnls(title,78,8);
  TWindow *ewnd[3];
  int i,active,oactive,_lastbyte, neditors;
- tBool redraw;
+ bool redraw;
  unsigned attr,stx = 0;
 #if __WORDSIZE >= 32
  char startdig[19],enddig[19];
@@ -519,7 +519,7 @@ tBool __FASTCALL__ GetFStoreDlg(const char *title,char * fname,unsigned long * f
  FFStaticPaint(wdlg,fname,startdig,enddig,*flags);
  active = 0;
  oactive = 1;
- redraw = True;
+ redraw = true;
  neditors--;
  while(1)
  {
@@ -536,13 +536,13 @@ tBool __FASTCALL__ GetFStoreDlg(const char *title,char * fname,unsigned long * f
    _lastbyte = eeditstring(wbuff[active],legal[active],&mlen[active],1,&stx,attr,NULL,drawFSPrompt);
    if(_lastbyte == KE_ESCAPE || _lastbyte == KE_ENTER || _lastbyte == KE_F(10))
                                                                           break;
-   redraw = True;
+   redraw = true;
    switch(_lastbyte)
    {
      case KE_TAB         : active++; break;
      case KE_SHIFT_TAB   : active--; break;
      case KE_LEFTARROW   :
-     case KE_RIGHTARROW  : redraw = False; break;
+     case KE_RIGHTARROW  : redraw = false; break;
      case KE_F(2)        : if((*flags) & FSDLG_USEMODES) *flags ^= FSDLG_ASMMODE;
                            else
                             if((*flags) & FSDLG_USEBITNS)
@@ -601,7 +601,7 @@ static void __NEAR__ __FASTCALL__ FFStaticPaintInsDel(TWindow * wdlg,char * st,c
     twUseWin(using);
 }
 
-tBool __FASTCALL__ GetInsDelBlkDlg(const char *title,__filesize_t * start,__fileoff_t * size)
+bool __FASTCALL__ GetInsDelBlkDlg(const char *title,__filesize_t * start,__fileoff_t * size)
 {
  tAbsCoord x1,y1,x2,y2;
  tRelCoord X1,Y1,XX1,YY1,XX2,YY2;
@@ -609,7 +609,7 @@ tBool __FASTCALL__ GetInsDelBlkDlg(const char *title,__filesize_t * start,__file
  TWindow * ewnd[2];
  int i,active,oactive,_lastbyte;
  unsigned stx = 0,attr;
- tBool redraw;
+ bool redraw;
  char startdig[11],enddig[11];
  char * legal[2] = { &legalchars[2], legalchars };
 #if __WORDSIZE >= 32
@@ -658,7 +658,7 @@ tBool __FASTCALL__ GetInsDelBlkDlg(const char *title,__filesize_t * start,__file
  FFStaticPaintInsDel(wdlg,startdig,enddig);
  active = 0;
  oactive = 1;
- redraw = True;
+ redraw = true;
  while(1)
  {
    if(active != oactive)
@@ -674,13 +674,13 @@ tBool __FASTCALL__ GetInsDelBlkDlg(const char *title,__filesize_t * start,__file
    _lastbyte = eeditstring(wbuff[active],legal[active],&mlen[active],1,&stx,attr,NULL,NULL);
    if(_lastbyte == KE_ESCAPE || _lastbyte == KE_ENTER || _lastbyte == KE_F(10))
                                                                          break;
-   redraw = True;
+   redraw = true;
    switch(_lastbyte)
    {
      case KE_TAB        : active++; break;
      case KE_SHIFT_TAB  : active--; break;
      case KE_LEFTARROW  :
-     case KE_RIGHTARROW : redraw = False; break;
+     case KE_RIGHTARROW : redraw = false; break;
      default: break;
    }
    if(active != oactive) active = active > 1 ? 0 : 1;

@@ -38,8 +38,8 @@ struct tagBFILE bNull =
   NULL,
   0,
   0,
-  False,
-  False,
+  false,
+  false,
   {
    {
      NULL_HANDLE,
@@ -47,10 +47,10 @@ struct tagBFILE bNull =
      NULL,
      0,
      0,
-     True
+     true
    }
   },
-  False
+  false
 };
 
 /* notes: all function with prefix=>__ assume, that buffer present */
@@ -65,17 +65,17 @@ struct tagBFILE bNull =
                (__filesize_t)pos >= ((BFILE *)obj)->b.vfb.FBufStart +\
                ((BFILE *)obj)->b.vfb.MBufLen) && !((BFILE *)obj)->is_mmf)
 
-static tBool __NEAR__ __FASTCALL__ __fill(BFILE  *obj,__fileoff_t pos)
+static bool __NEAR__ __FASTCALL__ __fill(BFILE  *obj,__fileoff_t pos)
 {
   void * mbuff;
   __filesize_t remaind;
-  tBool ret;
+  bool ret;
   if(pos < 0) pos = 0;
   if((__filesize_t)pos > obj->FLength)
   {
      pos = obj->FLength;
      obj->b.vfb.MBufLen = 0;
-     ret = False;
+     ret = false;
   }
   else
   {
@@ -90,24 +90,24 @@ static tBool __NEAR__ __FASTCALL__ __fill(BFILE  *obj,__fileoff_t pos)
   return ret;
 }
 
-static tBool __NEAR__ __FASTCALL__ __flush(BFILE  *obj)
+static bool __NEAR__ __FASTCALL__ __flush(BFILE  *obj)
 {
   void * mbuff;
-  tBool ret;
-  ret = True;
+  bool ret;
+  ret = true;
   if(!obj->b.vfb.updated)
   {
     mbuff = MK_FPTR(obj->b.vfb.MBuffer);
     __OsSeek(obj->b.vfb.handle,obj->b.vfb.FBufStart,SEEKF_START);
     if(obj->b.vfb.MBufLen) ret = (unsigned)__OsWrite(obj->b.vfb.handle,mbuff,obj->b.vfb.MBufLen) == obj->b.vfb.MBufLen;
-    if(ret)                obj->b.vfb.updated = True;
+    if(ret)                obj->b.vfb.updated = true;
   }
   return ret;
 }
 
 #define CHK_EOF(obj,pos)\
 {\
- ((BFILE *)obj)->is_eof = False;\
+ ((BFILE *)obj)->is_eof = false;\
   /* Accessing memory after mmf[FLength-1] causes GPF in MMF mode */\
   /* so we must add special checks for it but no for read-write mode */\
   /* Special case: FLength == 0. When file is being created pos == FLength.*/\
@@ -115,14 +115,14 @@ static tBool __NEAR__ __FASTCALL__ __flush(BFILE  *obj)
     && (__filesize_t)pos >= (__filesize_t)obj->FLength)\
  {\
     pos = ((BFILE *)obj)->FLength-1;\
-    ret = False;\
-    ((BFILE *)obj)->is_eof = True;\
+    ret = false;\
+    ((BFILE *)obj)->is_eof = true;\
  }\
 }
 
 #define SEEK_FPTR(ret,obj,pos,origin)\
 {\
- ret = True;\
+ ret = true;\
  switch((int)origin)\
  {\
     case BIO_SEEK_SET: break;\
@@ -132,9 +132,9 @@ static tBool __NEAR__ __FASTCALL__ __flush(BFILE  *obj)
  CHK_EOF(obj,pos)\
 }
 
-static tBool __NEAR__ __FASTCALL__ __seek(BFILE  *obj,__fileoff_t pos,int origin)
+static bool __NEAR__ __FASTCALL__ __seek(BFILE  *obj,__fileoff_t pos,int origin)
 {
- tBool ret,rret;
+ bool ret,rret;
  SEEK_FPTR(ret,obj,pos,origin);
  obj->FilePos = pos;
  if(__isOutOfBuffer(obj,pos))
@@ -167,16 +167,16 @@ static tBool __NEAR__ __FASTCALL__ __seek(BFILE  *obj,__fileoff_t pos,int origin
  return ret;
 }
 
-static tBool founderr;
+static bool founderr;
 
 static unsigned char __NEAR__ __FASTCALL__ __getc(BFILE  *obj)
 {
   char * buff = MK_FPTR(obj->b.vfb.MBuffer);
   unsigned buffpos;
-  tBool ret;
+  bool ret;
   unsigned char ch;
-  ret = True;
-  founderr = False;
+  ret = true;
+  founderr = false;
   if(__isOutOfContents(obj,obj->FilePos)) ret = __seek(obj,obj->FilePos,SEEKF_START);
   ch = -1;
   if(obj->b.vfb.MBufLen && ret && obj->FilePos <= obj->FLength)
@@ -189,32 +189,32 @@ static unsigned char __NEAR__ __FASTCALL__ __getc(BFILE  *obj)
   else 
   {
     errno = EACCES;
-    ret = False; 
+    ret = false; 
   }
-  if(ret == False) founderr = True;
+  if(ret == false) founderr = true;
   return ch;
 }
 
-static tBool __NEAR__ __FASTCALL__ __putc(BFILE  *obj,unsigned char ch)
+static bool __NEAR__ __FASTCALL__ __putc(BFILE  *obj,unsigned char ch)
 {
   char *  buff;
   unsigned buffpos;
-  tBool ret;
+  bool ret;
   if(IS_WRITEABLE(obj->openmode))
   {
-    ret = True;
+    ret = true;
     buff = MK_FPTR(obj->b.vfb.MBuffer);
     if(__isOutOfBuffer(obj,obj->FilePos)) __seek(obj,obj->FilePos,SEEKF_START);
     buffpos = (unsigned)(obj->FilePos - obj->b.vfb.FBufStart);
     buff[buffpos++] = ch;
-    obj->b.vfb.updated = False;
+    obj->b.vfb.updated = false;
     if(obj->b.vfb.MBufLen < buffpos)
       if(obj->b.vfb.MBufLen < obj->b.vfb.MBufSize) obj->b.vfb.MBufLen = buffpos;
     if(obj->FLength <= obj->b.vfb.FBufStart + buffpos)
       obj->FLength = obj->b.vfb.FBufStart + buffpos;
     obj->FilePos++;
   }
-  else { errno = EACCES; ret = False; }
+  else { errno = EACCES; ret = false; }
   return ret;
 }
 
@@ -244,19 +244,19 @@ fprintf(stderr,
 }
 #endif
 
-static tBool __NEAR__ __FASTCALL__ __getbuff(BFILE  *obj,char * buff,unsigned cbBuff)
+static bool __NEAR__ __FASTCALL__ __getbuff(BFILE  *obj,char * buff,unsigned cbBuff)
 {
   unsigned diffsize;
   unsigned MBufStart,MBufRem;
   int optimize = obj->optimize;
-  tBool ret = True;
+  bool ret = true;
   if(obj->is_mmf)
   {
-    tUInt32 size = min(cbBuff,obj->FLength - obj->FilePos);
+    uint32_t size = min(cbBuff,obj->FLength - obj->FilePos);
     CHK_EOF(obj,obj->FilePos);
     if(size && ret)
     {
-      memcpy(buff,((tUInt8 *)obj->b.mmb->mmf_addr) + obj->FilePos,size);
+      memcpy(buff,((uint8_t *)obj->b.mmb->mmf_addr) + obj->FilePos,size);
       obj->FilePos += size;
     }
   }
@@ -278,7 +278,7 @@ static tBool __NEAR__ __FASTCALL__ __getbuff(BFILE  *obj,char * buff,unsigned cb
       if(!MBufRem)
       {
          errno = E2BIG; /* fault: internal error */
-         ret = False;
+         ret = false;
          break;
       }
       diffsize = min(MBufRem,cbBuff);
@@ -293,27 +293,27 @@ static tBool __NEAR__ __FASTCALL__ __getbuff(BFILE  *obj,char * buff,unsigned cb
   return ret;
 }
 
-static tBool __NEAR__ __FASTCALL__ __putbuff(BFILE  *obj,const char * buff,unsigned cbBuff)
+static bool __NEAR__ __FASTCALL__ __putbuff(BFILE  *obj,const char * buff,unsigned cbBuff)
 {
   unsigned diffsize;
   unsigned MBufStart,MBufRem;
   int optimize = obj->optimize;
-  tBool ret = True;
+  bool ret = true;
   if(IS_WRITEABLE(obj->openmode))
   {
     if(obj->is_mmf)
     {
-      tUInt32 size = min(cbBuff,obj->FLength - obj->FilePos);
+      uint32_t size = min(cbBuff,obj->FLength - obj->FilePos);
       if(size)
       {
-        memcpy(((tUInt8 *)obj->b.mmb->mmf_addr) + obj->FilePos,buff,size);
+        memcpy(((uint8_t *)obj->b.mmb->mmf_addr) + obj->FilePos,buff,size);
         obj->FilePos += size;
       }
     }
     else
     {
       obj->optimize = (optimize & ~BIO_OPT_DIRMASK) | BIO_OPT_DB;
-      ret = True;
+      ret = true;
       while(cbBuff)
       {
         MBufStart = (unsigned)(obj->FilePos - obj->b.vfb.FBufStart);
@@ -328,12 +328,12 @@ static tBool __NEAR__ __FASTCALL__ __putbuff(BFILE  *obj,const char * buff,unsig
         if(!MBufRem)
         {
            errno = E2BIG; /* fault: internal error */
-           ret = False;
+           ret = false;
            break;
         }
         diffsize = min(MBufRem,cbBuff);
         memcpy(&obj->b.vfb.MBuffer[MBufStart],buff,diffsize);
-        obj->b.vfb.updated = False;
+        obj->b.vfb.updated = false;
         if(obj->b.vfb.MBufLen < MBufStart + diffsize) obj->b.vfb.MBufLen = MBufStart + diffsize;
         if(obj->FLength < obj->FilePos + diffsize) obj->FLength = obj->FilePos + diffsize;
         obj->FilePos += diffsize;
@@ -343,7 +343,7 @@ static tBool __NEAR__ __FASTCALL__ __putbuff(BFILE  *obj,const char * buff,unsig
       obj->optimize = optimize;
     }
   }
-  else { errno = EACCES; ret = False; }
+  else { errno = EACCES; ret = false; }
   return ret;
 }
 
@@ -373,8 +373,8 @@ BGLOBAL  __FASTCALL__ bioOpen(const char * fname,unsigned openmode,unsigned bSiz
         {
           bFile->b.mmb->mmf_addr = __mmfAddress(bFile->b.mmb->mmf);
           bFile->FLength = __mmfSize(bFile->b.mmb->mmf);
-          bFile->primary_mmf = True;
-          bFile->is_mmf = True;
+          bFile->primary_mmf = true;
+          bFile->is_mmf = true;
 	  bFile->b.vfb.MBuffer = NULL; /* [dBorca] be consistent with IS_CACHE_VALID */
         }
         else PFREE(bFile->b.mmb);
@@ -393,8 +393,8 @@ BGLOBAL  __FASTCALL__ bioOpen(const char * fname,unsigned openmode,unsigned bSiz
      bFile->b.vfb.handle = handle;
      bFile->optimize = optimization;
      bFile->b.vfb.FBufStart = 0L;
-     bFile->b.vfb.updated  = True;
-     bFile->is_mmf = False;
+     bFile->b.vfb.updated  = true;
+     bFile->is_mmf = false;
      bFile->FLength = __FileLength(bFile->b.vfb.handle);
      len = bSize;
      if(bSize == UINT_MAX) len = (unsigned)bFile->FLength;
@@ -421,7 +421,7 @@ BGLOBAL  __FASTCALL__ bioOpen(const char * fname,unsigned openmode,unsigned bSiz
  return ret;
 }
 
-tBool  __FASTCALL__ bioClose(BGLOBAL handle)
+bool  __FASTCALL__ bioClose(BGLOBAL handle)
 {
   BFILE * bFile = MK_FPTR(handle);
   if(bFile->is_mmf)
@@ -444,13 +444,13 @@ tBool  __FASTCALL__ bioClose(BGLOBAL handle)
   }
   PFREE(bFile->FileName);
   PFREE(handle);
-  return True;
+  return true;
 }
 
-tBool   __FASTCALL__ bioSeek(BGLOBAL bioFile,__fileoff_t pos,int orig)
+bool   __FASTCALL__ bioSeek(BGLOBAL bioFile,__fileoff_t pos,int orig)
 {
  BFILE  *obj =MK_FPTR(bioFile);
- tBool ret;
+ bool ret;
  if(IS_CACHE_VALID(obj)) ret = __seek(obj,pos,orig);
  else
  {
@@ -462,7 +462,7 @@ tBool   __FASTCALL__ bioSeek(BGLOBAL bioFile,__fileoff_t pos,int orig)
    else
    {
      ret = __OsSeek(obj->b.vfb.handle,pos,orig) != 0;
-     if(pos == 0L && orig == SEEKF_START) ret = True;
+     if(pos == 0L && orig == SEEKF_START) ret = true;
    }
  }
  return ret;
@@ -474,69 +474,69 @@ __filesize_t  __FASTCALL__ bioTell(BGLOBAL bioFile)
   return (IS_CACHE_VALID(obj) || obj->is_mmf) ? obj->FilePos : (__filesize_t)__OsTell(obj->b.vfb.handle);
 }
 
-tUInt8 __FASTCALL__ bioReadByte(BGLOBAL bioFile)
+uint8_t __FASTCALL__ bioReadByte(BGLOBAL bioFile)
 {
   BFILE  *obj = MK_FPTR(bioFile);
-  tUInt8 ret;
+  uint8_t ret;
   if(IS_CACHE_VALID(obj) && !obj->is_mmf) {
     ret = __getc(obj);
   }
   else {
     if(obj->is_mmf)
     {
-      tUInt8 rval;
-      rval = ret = ((tUInt8 *)obj->b.mmb->mmf_addr)[obj->FilePos];
+      uint8_t rval;
+      rval = ret = ((uint8_t *)obj->b.mmb->mmf_addr)[obj->FilePos];
       if(obj->FilePos < obj->FLength) obj->FilePos++;
       CHK_EOF(obj,obj->FilePos);
       ret = rval;
     }
     else {
-      if(__OsRead(obj->b.vfb.handle,&ret,sizeof(tUInt8)) != sizeof(tUInt8)) ret = -1;
+      if(__OsRead(obj->b.vfb.handle,&ret,sizeof(uint8_t)) != sizeof(uint8_t)) ret = -1;
     }
   }
   return ret;
 }
 
-tUInt16 __FASTCALL__ bioReadWord(BGLOBAL bioFile)
+uint16_t __FASTCALL__ bioReadWord(BGLOBAL bioFile)
 {
   BFILE  *obj = MK_FPTR(bioFile);
-  tUInt16 ret;
+  uint16_t ret;
   if(IS_CACHE_VALID(obj) || obj->is_mmf)
   {
-    if(!__getbuff(obj,(void *)&ret,sizeof(tUInt16))) ret = -1;
+    if(!__getbuff(obj,(void *)&ret,sizeof(uint16_t))) ret = -1;
   }
   else
-    if(__OsRead(obj->b.vfb.handle,&ret,sizeof(tUInt16)) != sizeof(tUInt16)) ret = -1;
+    if(__OsRead(obj->b.vfb.handle,&ret,sizeof(uint16_t)) != sizeof(uint16_t)) ret = -1;
   return ret;
 }
 
-tUInt32 __FASTCALL__ bioReadDWord(BGLOBAL bioFile)
+uint32_t __FASTCALL__ bioReadDWord(BGLOBAL bioFile)
 {
   BFILE  *obj = MK_FPTR(bioFile);
-  tUInt32 ret;
+  uint32_t ret;
   if(IS_CACHE_VALID(obj) || obj->is_mmf)
   {
-    if(!__getbuff(obj,(void *)&ret,sizeof(tUInt32))) ret = -1;
+    if(!__getbuff(obj,(void *)&ret,sizeof(uint32_t))) ret = -1;
   }
   else
-    if(__OsRead(obj->b.vfb.handle,&ret,sizeof(tUInt32)) != sizeof(tUInt32)) ret = -1;
+    if(__OsRead(obj->b.vfb.handle,&ret,sizeof(uint32_t)) != sizeof(uint32_t)) ret = -1;
   return ret;
 }
 
-tUInt64 __FASTCALL__ bioReadQWord(BGLOBAL bioFile)
+uint64_t __FASTCALL__ bioReadQWord(BGLOBAL bioFile)
 {
   BFILE  *obj = MK_FPTR(bioFile);
-  tUInt64 ret;
+  uint64_t ret;
   if(IS_CACHE_VALID(obj) || obj->is_mmf)
   {
-    if(!__getbuff(obj,(void *)&ret,sizeof(tUInt64))) ret = -1;
+    if(!__getbuff(obj,(void *)&ret,sizeof(uint64_t))) ret = -1;
   }
   else
-    if(__OsRead(obj->b.vfb.handle,&ret,sizeof(tUInt64)) != sizeof(tUInt64)) ret = -1;
+    if(__OsRead(obj->b.vfb.handle,&ret,sizeof(uint64_t)) != sizeof(uint64_t)) ret = -1;
   return ret;
 }
 
-tBool __FASTCALL__  bioReadBuffer(BGLOBAL bioFile,void * buffer,unsigned cbBuffer)
+bool __FASTCALL__  bioReadBuffer(BGLOBAL bioFile,void * buffer,unsigned cbBuffer)
 {
   BFILE  *obj = MK_FPTR(bioFile);
   return IS_CACHE_VALID(obj) || obj->is_mmf ?
@@ -544,41 +544,41 @@ tBool __FASTCALL__  bioReadBuffer(BGLOBAL bioFile,void * buffer,unsigned cbBuffe
             ((unsigned)__OsRead(obj->b.vfb.handle,buffer,cbBuffer)) == cbBuffer;
 }
 
-tBool __FASTCALL__  bioWriteByte(BGLOBAL bioFile,tUInt8 bVal)
+bool __FASTCALL__  bioWriteByte(BGLOBAL bioFile,uint8_t bVal)
 {
   BFILE  *obj = MK_FPTR(bioFile);
-  tBool ret = True;
+  bool ret = true;
   if(IS_CACHE_VALID(obj)) ret = __putc(obj,bVal);
   else
-    ret = __OsWrite(obj->b.vfb.handle,&bVal,sizeof(tUInt8)) == sizeof(tUInt8);
+    ret = __OsWrite(obj->b.vfb.handle,&bVal,sizeof(uint8_t)) == sizeof(uint8_t);
   return ret;
 }
 
-tBool __FASTCALL__  bioWriteWord(BGLOBAL bioFile,tUInt16 wVal)
+bool __FASTCALL__  bioWriteWord(BGLOBAL bioFile,uint16_t wVal)
 {
   BFILE  *obj = MK_FPTR(bioFile);
   return IS_CACHE_VALID(obj) ?
-             __putbuff(obj,(void *)&wVal,sizeof(tUInt16)) :
-             __OsWrite(obj->b.vfb.handle,&wVal,sizeof(tUInt16)) == sizeof(tUInt16);
+             __putbuff(obj,(void *)&wVal,sizeof(uint16_t)) :
+             __OsWrite(obj->b.vfb.handle,&wVal,sizeof(uint16_t)) == sizeof(uint16_t);
 }
 
-tBool __FASTCALL__  bioWriteDWord(BGLOBAL bioFile,tUInt32 dwVal)
+bool __FASTCALL__  bioWriteDWord(BGLOBAL bioFile,uint32_t dwVal)
 {
   BFILE  *obj = MK_FPTR(bioFile);
   return IS_CACHE_VALID(obj) ?
-             __putbuff(obj,(void *)&dwVal,sizeof(tUInt32)) :
-             __OsWrite(obj->b.vfb.handle,&dwVal,sizeof(tUInt32)) == sizeof(tUInt32);
+             __putbuff(obj,(void *)&dwVal,sizeof(uint32_t)) :
+             __OsWrite(obj->b.vfb.handle,&dwVal,sizeof(uint32_t)) == sizeof(uint32_t);
 }
 
-tBool __FASTCALL__  bioWriteQWord(BGLOBAL bioFile,tUInt64 dwVal)
+bool __FASTCALL__  bioWriteQWord(BGLOBAL bioFile,uint64_t dwVal)
 {
   BFILE  *obj = MK_FPTR(bioFile);
   return IS_CACHE_VALID(obj) ?
-             __putbuff(obj,(void *)&dwVal,sizeof(tUInt64)) :
-             __OsWrite(obj->b.vfb.handle,&dwVal,sizeof(tUInt64)) == sizeof(tUInt64);
+             __putbuff(obj,(void *)&dwVal,sizeof(uint64_t)) :
+             __OsWrite(obj->b.vfb.handle,&dwVal,sizeof(uint64_t)) == sizeof(uint64_t);
 }
 
-tBool __FASTCALL__  bioWriteBuffer(BGLOBAL bioFile,const void * buffer,unsigned cbBuffer)
+bool __FASTCALL__  bioWriteBuffer(BGLOBAL bioFile,const void * buffer,unsigned cbBuffer)
 {
   BFILE  *obj = MK_FPTR(bioFile);
   return IS_CACHE_VALID(obj) ?
@@ -586,17 +586,17 @@ tBool __FASTCALL__  bioWriteBuffer(BGLOBAL bioFile,const void * buffer,unsigned 
              ((unsigned)__OsWrite(obj->b.vfb.handle,buffer,cbBuffer)) == cbBuffer;
 }
 
-tBool __FASTCALL__  bioFlush(BGLOBAL bioFile)
+bool __FASTCALL__  bioFlush(BGLOBAL bioFile)
 {
   BFILE  * obj = MK_FPTR(bioFile);
-  return IS_CACHE_VALID(obj) ? __flush(obj) : obj->is_mmf ? __mmfFlush(obj->b.mmb->mmf) : True;
+  return IS_CACHE_VALID(obj) ? __flush(obj) : obj->is_mmf ? __mmfFlush(obj->b.mmb->mmf) : true;
 }
 
-tBool __FASTCALL__  bioReRead(BGLOBAL bioFile)
+bool __FASTCALL__  bioReRead(BGLOBAL bioFile)
 {
   __filesize_t fpos;
   BFILE  * obj = MK_FPTR(bioFile);
-  tBool ret = True;
+  bool ret = true;
   if(obj->is_mmf)
   {
     obj->b.mmb->mmf = __mmfSync(obj->b.mmb->mmf);
@@ -625,13 +625,13 @@ __filesize_t  __FASTCALL__  bioFLength(BGLOBAL bioFile)
   return bFile->FLength;
 }
 
-tBool __FASTCALL__  bioChSize(BGLOBAL bioFile,__filesize_t newsize)
+bool __FASTCALL__  bioChSize(BGLOBAL bioFile,__filesize_t newsize)
 {
     __filesize_t length, fillsize;
     char * buf;
     BFILE  *obj = MK_FPTR(bioFile);
     unsigned  bufsize, numtowrite;
-    tBool ret;
+    bool ret;
     if(obj->is_mmf)
     {
       if((ret=__mmfResize(obj->b.mmb->mmf,newsize)))
@@ -651,23 +651,23 @@ tBool __FASTCALL__  bioChSize(BGLOBAL bioFile,__filesize_t newsize)
         obj->FLength = newsize;
         if(obj->b.vfb.FBufStart > obj->FLength) { obj->b.vfb.FBufStart = obj->FLength; obj->b.vfb.MBufLen = 0; }
         if(obj->b.vfb.FBufStart + obj->b.vfb.MBufLen > obj->FLength) obj->b.vfb.MBufLen = (unsigned)(obj->FLength - obj->b.vfb.FBufStart);
-        ret = ret ? False : True;
+        ret = ret ? false : true;
       }
       else
       {
         fillsize=newsize-length;  /* increase size */
-        ret = False;
+        ret = false;
         bufsize = obj->b.vfb.MBuffer ? obj->b.vfb.MBufSize : 8192;
         bufsize = (unsigned) min(fillsize,bufsize);
         if((buf = PMalloc(bufsize)) != NULL)
         {
-          ret = True;
+          ret = true;
           memset(buf, 0, bufsize);   /* write zeros to pad file */
           bioSeek(bioFile,0L,SEEKF_END);
           do
           {
             numtowrite = (unsigned)min(bufsize,fillsize);
-            if(!bioWriteBuffer(bioFile, (void * )buf, numtowrite)) { ret = False; break; }
+            if(!bioWriteBuffer(bioFile, (void * )buf, numtowrite)) { ret = false; break; }
             fillsize-=numtowrite;
           } while(fillsize);
           PFREE(buf);
@@ -747,7 +747,7 @@ BGLOBAL __FASTCALL__ bioDupEx(BGLOBAL bioFile,unsigned buff_Size)
    {
      bFile->b.mmb = fromFile->b.mmb;
      bFile->FilePos = fromFile->FilePos;
-     bFile->primary_mmf = False;
+     bFile->primary_mmf = false;
    }
    else
    {
@@ -803,10 +803,10 @@ BGLOBAL __FASTCALL__ bioDup(BGLOBAL bHandle)
   return bioDupEx(bHandle,fromFile->b.vfb.MBufSize);
 }
 
-tBool __FASTCALL__ bioEOF(BGLOBAL bHandle)
+bool __FASTCALL__ bioEOF(BGLOBAL bHandle)
 {
   BFILE  *obj = MK_FPTR(bHandle);
-  tBool retval;
+  bool retval;
   if(IS_CACHE_VALID(obj) || obj->is_mmf) retval = obj->is_eof;
   else                                   retval = (__filesize_t)__OsTell(obj->b.vfb.handle) >= obj->FLength;
   return retval;

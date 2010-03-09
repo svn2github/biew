@@ -33,10 +33,10 @@ extern char beye_codepage[];
 extern unsigned long beye_vioIniFlags;
 extern unsigned long beye_twinIniFlags;
 extern unsigned long beye_kbdFlags;
-extern tBool iniSettingsAnywhere;
-extern tBool fioUseMMF;
-extern tBool iniPreserveTime;
-extern tBool iniUseExtProgs;
+extern bool iniSettingsAnywhere;
+extern bool fioUseMMF;
+extern bool iniPreserveTime;
+extern bool iniUseExtProgs;
 
 #ifdef __QNX4__
 extern int photon,bit7;
@@ -108,7 +108,7 @@ static const char * cp_list[] =
   "CP869 - IBM PC Greek-2",
 };
 
-static tBool __FASTCALL__ select_codepage( void )
+static bool __FASTCALL__ select_codepage( void )
 {
   unsigned nModes;
   int i;
@@ -123,9 +123,9 @@ static tBool __FASTCALL__ select_codepage( void )
     len = p-cp_list[i];
     memcpy(beye_codepage,cp_list[i],len);
     beye_codepage[len] = '\0';
-    return True;
+    return true;
   }
-  return False;
+  return false;
 }
 
 static void drawSetupPrompt( void )
@@ -141,40 +141,40 @@ static void __NEAR__ __FASTCALL__ setup_paint( TWindow *twin )
   twSetColorAttr(dialog_cset.group.active);
   twGotoXY(2,9);
   twPrintF(" [%c] - Direct console access "
-           ,GetBool((beye_vioIniFlags & __TVIO_FLG_DIRECT_CONSOLE_ACCESS) == __TVIO_FLG_DIRECT_CONSOLE_ACCESS));
+           ,Gebool((beye_vioIniFlags & __TVIO_FLG_DIRECT_CONSOLE_ACCESS) == __TVIO_FLG_DIRECT_CONSOLE_ACCESS));
   twGotoXY(2,10);
   twPrintF(" [%c] - Mouse sensitivity     "
-           ,GetBool((beye_kbdFlags & KBD_NONSTOP_ON_MOUSE_PRESS) == KBD_NONSTOP_ON_MOUSE_PRESS));
+           ,Gebool((beye_kbdFlags & KBD_NONSTOP_ON_MOUSE_PRESS) == KBD_NONSTOP_ON_MOUSE_PRESS));
   twGotoXY(2,11);
   twPrintF(" [%c] - Force mono            "
-           ,GetBool((beye_twinIniFlags & TWIF_FORCEMONO) == TWIF_FORCEMONO));
+           ,Gebool((beye_twinIniFlags & TWIF_FORCEMONO) == TWIF_FORCEMONO));
   twGotoXY(2,12);
 #ifdef __QNX4__
   if(photon)
   {
     twSetColorAttr(dialog_cset.group.disabled);
     twPrintF(" [%c] - Force 7-bit output    "
-            ,GetBool(bit7));
+            ,Gebool(bit7));
     twSetColorAttr(dialog_cset.group.active);
   }
   else 
 #endif
   twPrintF(" [%c] - Force 7-bit output    "
-           ,GetBool((beye_vioIniFlags & __TVIO_FLG_USE_7BIT) == __TVIO_FLG_USE_7BIT));
+           ,Gebool((beye_vioIniFlags & __TVIO_FLG_USE_7BIT) == __TVIO_FLG_USE_7BIT));
   twGotoXY(32,9);
   twPrintF(" [%c] - Apply plugin settings to all files     "
-           ,GetBool(iniSettingsAnywhere));
+           ,Gebool(iniSettingsAnywhere));
   twGotoXY(32,10);
   if(!__mmfIsWorkable()) twSetColorAttr(dialog_cset.group.disabled);
   twPrintF(" [%c] - Use MMF                                "
-           ,GetBool(fioUseMMF));
+           ,Gebool(fioUseMMF));
   twSetColorAttr(dialog_cset.group.active);
   twGotoXY(32,11);
   twPrintF(" [%c] - Preserve timestamp                     "
-           ,GetBool(iniPreserveTime));
+           ,Gebool(iniPreserveTime));
   twGotoXY(32,12);
   twPrintF(" [%c] - Enable usage of external programs      "
-           ,GetBool(iniUseExtProgs));
+           ,Gebool(iniUseExtProgs));
   twSetColorAttr(dialog_cset.main);
   twGotoXY(50,7); twPutS(beye_codepage);
   twUseWin(usd);
@@ -241,7 +241,7 @@ void Setup(void)
   while(1)
   {
    if(active==3) {
-	if(select_codepage() == True) setup_paint(wdlg);
+	if(select_codepage() == true) setup_paint(wdlg);
 	ret = KE_TAB;
    }
    else ret = xeditstring(estr[active],NULL,sizeof(estr[active]),drawSetupPrompt);
@@ -265,13 +265,13 @@ void Setup(void)
                     break;
      case KE_F(5):  beye_vioIniFlags ^= __TVIO_FLG_USE_7BIT;
                     break;
-     case KE_F(6):  iniSettingsAnywhere = iniSettingsAnywhere ? False : True;
+     case KE_F(6):  iniSettingsAnywhere = iniSettingsAnywhere ? false : true;
                     break;
-     case KE_F(7):  if(__mmfIsWorkable()) fioUseMMF = fioUseMMF ? False : True;
+     case KE_F(7):  if(__mmfIsWorkable()) fioUseMMF = fioUseMMF ? false : true;
                     break;
-     case KE_F(8):  iniPreserveTime = iniPreserveTime ? False : True;
+     case KE_F(8):  iniPreserveTime = iniPreserveTime ? false : true;
                     break;
-     case KE_F(9):  iniUseExtProgs = iniUseExtProgs ? False : True;
+     case KE_F(9):  iniUseExtProgs = iniUseExtProgs ? false : true;
                     break;
      default: continue;
    }

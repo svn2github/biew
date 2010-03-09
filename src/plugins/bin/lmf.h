@@ -33,15 +33,15 @@
 	
 typedef struct tag_lmf_header	/* This preceeds each record defined below */
 {
-	tInt8 rec_type,
+	int8_t rec_type,
 		zero1;
-	tUInt16 data_nbytes,
+	uint16_t data_nbytes,
 		spare;
 } lmf_header;
 
 typedef struct tag_lmf_definition	/* Must be first record in load file */
 {
-	tUInt16 version_no,
+	uint16_t version_no,
 		cflags,
 		cpu,
 		fpu,
@@ -50,7 +50,7 @@ typedef struct tag_lmf_definition	/* Must be first record in load file */
 		heap_index,
 		argv_index,
 		zero1[4];
-	tUInt32 code_offset,
+	uint32_t code_offset,
 		stack_nbytes,
 		heap_nbytes,
 		flat_offset,	/* Must be zero if not set _PCF_FLAT in cflags	(AG) */
@@ -62,8 +62,8 @@ typedef struct tag_lmf_definition	/* Must be first record in load file */
 
 typedef struct tag_lmf_data	/* Code or data record to load into memory */
 {
-	tUInt16 index;
-	tUInt32 offset;
+	uint16_t index;
+	uint32_t offset;
 	/* Variable length field of n bytes starts here */
 	/* Data to load in         ^^^ n is a length of loading data
 	   segment numbered        n = lmf_header.data_nbytes of this record
@@ -72,8 +72,8 @@ typedef struct tag_lmf_data	/* Code or data record to load into memory */
 
 typedef struct tag_lmf_resource
 {
-	tUInt16 resource_type;   /* 0 - usage messages */
-	tUInt16 zero[3];
+	uint16_t resource_type;   /* 0 - usage messages */
+	uint16_t zero[3];
 } lmf_resource;
 
 /*	Record types

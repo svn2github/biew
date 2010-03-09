@@ -419,10 +419,10 @@ static const char * AVRCoreNames[] =
   "          "
 };
 
-static tBool __FASTCALL__ AVRAsmRef( void )
+static bool __FASTCALL__ AVRAsmRef( void )
 {
   hlpDisplay(20020);
-  return False;
+  return false;
 }
 
 static void __FASTCALL__ AVRHelpAsm( void )
@@ -433,7 +433,7 @@ static void __FASTCALL__ AVRHelpAsm( void )
   unsigned long nstrs;
   TWindow * hwnd;
 
-  if(!hlpOpen(True)) return;
+  if(!hlpOpen(true)) return;
 
   size = (unsigned)hlpGetItemSize(20021);
   if (!size) goto avrhlp_bye;

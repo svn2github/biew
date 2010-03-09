@@ -148,10 +148,10 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x,tAbsCoord y,const tvioBuff *buff,un
 #if 1
 /* I've found bugs in OS/2 on large arrays */
 /* But Max Alekseyev <relf@os2.ru> swears that this block is working with Watcom */
-  tUInt16 *resbuff, small_buffer[__TVIO_MAXSCREENWIDTH];
+  uint16_t *resbuff, small_buffer[__TVIO_MAXSCREENWIDTH];
   if(len > tvioWidth)
   {
-    if(!(resbuff = malloc(sizeof(tUInt16)*len)))
+    if(!(resbuff = malloc(sizeof(uint16_t)*len)))
     {
       printm("Memory allocation failed: %s\nExiting..", strerror(errno));
       exit(EXIT_FAILURE);
@@ -162,7 +162,7 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x,tAbsCoord y,const tvioBuff *buff,un
   VioWrtCellStr((void *)resbuff,len<<1,y,x,0);
   if(resbuff != small_buffer) free(resbuff);
 #else
-  tUInt16 small_buffer[__TVIO_MAXSCREENWIDTH];
+  uint16_t small_buffer[__TVIO_MAXSCREENWIDTH];
   size_t i,remaind;
   i = 0;
   while(len)
@@ -183,10 +183,10 @@ void __FASTCALL__ __vioReadBuff(tAbsCoord x,tAbsCoord y,tvioBuff *buff,unsigned 
 /* I've found bugs in OS/2 on large arrays */
 /* But Max Alekseyev <relf@os2.ru> swears that this block is working with Watcom */
   size_t i,rsize;
-  tUInt16 *resbuff, small_buffer[__TVIO_MAXSCREENWIDTH];
+  uint16_t *resbuff, small_buffer[__TVIO_MAXSCREENWIDTH];
   if(len > tvioWidth)
   {
-    if(!(resbuff = malloc(sizeof(tUInt16)*len)))
+    if(!(resbuff = malloc(sizeof(uint16_t)*len)))
     {
       printm("Memory allocation failed: %s\nExiting..", strerror(errno));
       exit(EXIT_FAILURE);
@@ -197,13 +197,13 @@ void __FASTCALL__ __vioReadBuff(tAbsCoord x,tAbsCoord y,tvioBuff *buff,unsigned 
   VioReadCellStr((void *)resbuff,(USHORT *)&rsize,y,x,0);
   for(i = 0;i < len;i++)
   {
-    buff->attrs[i] = ((tUInt8 *)resbuff)[i+i+1];
-    buff->chars[i] = ((tUInt8 *)resbuff)[i+i];
+    buff->attrs[i] = ((uint8_t *)resbuff)[i+i+1];
+    buff->chars[i] = ((uint8_t *)resbuff)[i+i];
   }
   if(resbuff != small_buffer) free(resbuff);
 #else
   size_t i,j,remaind,rsize,idx;
-  tUInt16 small_buffer[__TVIO_MAXSCREENWIDTH];
+  uint16_t small_buffer[__TVIO_MAXSCREENWIDTH];
   j = 0;
   while(len)
   {
@@ -213,8 +213,8 @@ void __FASTCALL__ __vioReadBuff(tAbsCoord x,tAbsCoord y,tvioBuff *buff,unsigned 
     for(i = 0;i < len;i++)
     {
       idx = j*tvioWidth+i;
-      buff->attrs[idx] = ((tUInt8 *)small_buffer)[i+i+1];
-      buff->chars[idx] = ((tUInt8 *)small_buffer)[i+i];
+      buff->attrs[idx] = ((uint8_t *)small_buffer)[i+i+1];
+      buff->chars[idx] = ((uint8_t *)small_buffer)[i+i];
     }
     len -= remaind;
     j++;

@@ -68,7 +68,7 @@ static __filesize_t __FASTCALL__ rdoff2_Help( void )
   return BMGetCurrFilePos();
 }
 
-static tBool __FASTCALL__ rdoff2_check_fmt( void )
+static bool __FASTCALL__ rdoff2_check_fmt( void )
 {
   char rbuff[6];
   bmReadBufferEx(rbuff,sizeof(rbuff),0L,BM_SEEK_SET);

@@ -49,22 +49,22 @@ void __FASTCALL__ __OsYield( void )
   __dpmi_yield();
 };
 
-static tBool __c__break = 0;
+static bool __c__break = 0;
 static int   __c_hits = 0;
 
-tBool __FASTCALL__ __OsGetCBreak( void )
+bool __FASTCALL__ __OsGetCBreak( void )
 {
   if(!__c__break)
   {
     __c_hits += _go32_was_ctrl_break_hit();
     if(__c_hits > 1) exit(EXIT_FAILURE);
     else
-     if(__c_hits > 0) __c__break = True;
+     if(__c_hits > 0) __c__break = true;
   }
   return __c__break;
 }
 
-void __FASTCALL__ __OsSetCBreak( tBool state )
+void __FASTCALL__ __OsSetCBreak( bool state )
 {
   __c__break = state;
   __c_hits = 0;

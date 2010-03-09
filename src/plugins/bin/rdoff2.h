@@ -28,9 +28,9 @@
 /** RDOFF v2 fixed header */
 typedef struct tag_rdoff2_Header
 {
-  tUInt8  id[6]; /**< RDOFF2 or RDOFF\02 */
-  tUInt32 image_len;
-  tUInt32 header_len;
+  uint8_t  id[6]; /**< RDOFF2 or RDOFF\02 */
+  uint32_t image_len;
+  uint32_t header_len;
 }rdoff2_Header;
 
 

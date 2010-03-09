@@ -28,77 +28,77 @@
 /* Portable EXE header */
 typedef struct tagPEHEADER
 {
-  tUInt8    peSignature[4];        /**< 'PE\00\00' */
-  tUInt16   peCPUType;
-  tUInt16   peObjects;
-  tUInt32   peTimeDataStamp;
-  tUInt32   peCOFFSymTabOffset;
-  tUInt32   peCOFFNumOfSyms;
-  tUInt16   peNTHdrSize;
-  tUInt16   peFlags;
-  tUInt16   peMagic; /* 0x10B - normal exe; 0x20b - PE32+; 0x107 - rom */
-  tUInt8    peLMajor;
-  tUInt8    peLMinor;
-  tUInt32   peSizeOfText;
-  tUInt32   peSizeOfData;
-  tUInt32   peSizeOfBSS;
-  tUInt32   peEntryPointRVA;
-  tUInt32   peBaseOfCode;
+  uint8_t    peSignature[4];        /**< 'PE\00\00' */
+  uint16_t   peCPUType;
+  uint16_t   peObjects;
+  uint32_t   peTimeDataStamp;
+  uint32_t   peCOFFSymTabOffset;
+  uint32_t   peCOFFNumOfSyms;
+  uint16_t   peNTHdrSize;
+  uint16_t   peFlags;
+  uint16_t   peMagic; /* 0x10B - normal exe; 0x20b - PE32+; 0x107 - rom */
+  uint8_t    peLMajor;
+  uint8_t    peLMinor;
+  uint32_t   peSizeOfText;
+  uint32_t   peSizeOfData;
+  uint32_t   peSizeOfBSS;
+  uint32_t   peEntryPointRVA;
+  uint32_t   peBaseOfCode;
 }PEHEADER;
 
 typedef struct tagPE32HEADER {
-  tUInt32   peBaseOfData; /* missing in PE32+ */
-  tUInt32   peImageBase;
-  tUInt32   peObjectAlign;
-  tUInt32   peFileAlign;
-  tUInt16   peOSMajor;
-  tUInt16   peOSMinor;
-  tUInt16   peUserMajor;
-  tUInt16   peUserMinor;
-  tUInt16   peSubSystMajor;
-  tUInt16   peSubSystMinor;
-  tUInt32   peReserv9;
-  tUInt32   peImageSize;
-  tUInt32   peHeaderSize;
-  tUInt32   peFileChecksum;
-  tUInt16   peSubSystem;
-  tUInt16   peDLLFlags;
-  tUInt32   peStackReserveSize;
-  tUInt32   peStackCommitSize;
-  tUInt32   peHeapReserveSize;
-  tUInt32   peHeapCommitSize;
-  tUInt32   peReserv10;
-  tUInt32   peDirSize;
+  uint32_t   peBaseOfData; /* missing in PE32+ */
+  uint32_t   peImageBase;
+  uint32_t   peObjectAlign;
+  uint32_t   peFileAlign;
+  uint16_t   peOSMajor;
+  uint16_t   peOSMinor;
+  uint16_t   peUserMajor;
+  uint16_t   peUserMinor;
+  uint16_t   peSubSystMajor;
+  uint16_t   peSubSystMinor;
+  uint32_t   peReserv9;
+  uint32_t   peImageSize;
+  uint32_t   peHeaderSize;
+  uint32_t   peFileChecksum;
+  uint16_t   peSubSystem;
+  uint16_t   peDLLFlags;
+  uint32_t   peStackReserveSize;
+  uint32_t   peStackCommitSize;
+  uint32_t   peHeapReserveSize;
+  uint32_t   peHeapCommitSize;
+  uint32_t   peReserv10;
+  uint32_t   peDirSize;
 }PE32HEADER;
 
 typedef struct tagPE32P_HEADER {
-  tUInt64   peImageBase;
-  tUInt32   peObjectAlign;
-  tUInt32   peFileAlign;
-  tUInt16   peOSMajor;
-  tUInt16   peOSMinor;
-  tUInt16   peUserMajor;
-  tUInt16   peUserMinor;
-  tUInt16   peSubSystMajor;
-  tUInt16   peSubSystMinor;
-  tUInt32   peReserv9;
-  tUInt32   peImageSize;
-  tUInt32   peHeaderSize;
-  tUInt32   peFileChecksum;
-  tUInt16   peSubSystem;
-  tUInt16   peDLLFlags;
-  tUInt64   peStackReserveSize;
-  tUInt64   peStackCommitSize;
-  tUInt64   peHeapReserveSize;
-  tUInt64   peHeapCommitSize;
-  tUInt32   peReserv10;
-  tUInt32   peDirSize;
+  uint64_t   peImageBase;
+  uint32_t   peObjectAlign;
+  uint32_t   peFileAlign;
+  uint16_t   peOSMajor;
+  uint16_t   peOSMinor;
+  uint16_t   peUserMajor;
+  uint16_t   peUserMinor;
+  uint16_t   peSubSystMajor;
+  uint16_t   peSubSystMinor;
+  uint32_t   peReserv9;
+  uint32_t   peImageSize;
+  uint32_t   peHeaderSize;
+  uint32_t   peFileChecksum;
+  uint16_t   peSubSystem;
+  uint16_t   peDLLFlags;
+  uint64_t   peStackReserveSize;
+  uint64_t   peStackCommitSize;
+  uint64_t   peHeapReserveSize;
+  uint64_t   peHeapCommitSize;
+  uint32_t   peReserv10;
+  uint32_t   peDirSize;
 }PE32P_HEADER;
 
 typedef struct tagPERVA
 {
-  tUInt32 rva;
-  tUInt32 size;
+  uint32_t rva;
+  uint32_t size;
 } PERVA;
 
 #define PE_EXPORT           0
@@ -120,47 +120,47 @@ typedef struct tagPERVA
 
 typedef struct tagPE_ADDR
 {
-  tUInt32 rva;
-  tUInt32 phys;
+  uint32_t rva;
+  uint32_t phys;
 } PE_ADDR;
 
 typedef struct tagExportTablePE
 {
-  tUInt32 etFlags;
-  tUInt32 etDateTime;
-  tUInt16 etMajVer;
-  tUInt16 etMinVer;
-  tUInt32 etNameRVA;
-  tUInt32 etOrdinalBase;
-  tUInt32 etNumEATEntries;
-  tUInt32 etNumNamePtrs;
-  tUInt32 etAddressTableRVA;
-  tUInt32 etNamePtrTableRVA;
-  tUInt32 etOrdinalTableRVA;
+  uint32_t etFlags;
+  uint32_t etDateTime;
+  uint16_t etMajVer;
+  uint16_t etMinVer;
+  uint32_t etNameRVA;
+  uint32_t etOrdinalBase;
+  uint32_t etNumEATEntries;
+  uint32_t etNumNamePtrs;
+  uint32_t etAddressTableRVA;
+  uint32_t etNamePtrTableRVA;
+  uint32_t etOrdinalTableRVA;
 }ExportTablePE;
 
 typedef struct tagImportDirPE
 {
-  tUInt32 idFlags;
-  tUInt32 idDateTime;
-  tUInt16 idMajVer;
-  tUInt16 idMinVer;
-  tUInt32 idNameRVA;
-  tUInt32 idLookupTableRVA;
+  uint32_t idFlags;
+  uint32_t idDateTime;
+  uint16_t idMajVer;
+  uint16_t idMinVer;
+  uint32_t idNameRVA;
+  uint32_t idLookupTableRVA;
 }ImportDirPE;
 
 typedef struct tagPE_OBJECT
 {
-  tInt8   oName[8];
-  tUInt32 oVirtualSize;
-  tUInt32 oRVA;
-  tUInt32 oPhysicalSize;
-  tUInt32 oPhysicalOffset;
-  tUInt32 oRelocPtr;
-  tUInt32 oLineNumbPtr;
-  tUInt16 oNReloc;
-  tUInt16 oNLineNumb;
-  tUInt32 oFlags;
+  int8_t   oName[8];
+  uint32_t oVirtualSize;
+  uint32_t oRVA;
+  uint32_t oPhysicalSize;
+  uint32_t oPhysicalOffset;
+  uint32_t oRelocPtr;
+  uint32_t oLineNumbPtr;
+  uint16_t oNReloc;
+  uint16_t oNLineNumb;
+  uint32_t oFlags;
 }PE_OBJECT;
 
 #ifdef __HAVE_PRAGMA_PACK__

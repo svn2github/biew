@@ -20,9 +20,12 @@
 
 #include "config.h"
 
-typedef enum { False = 0, True = 1 }tBool; /**< This is the data type used to represent boolean objects */
-
 #ifndef __NORECURSIVE
+
+#ifndef __CONFIG_H
+#include "libbeye/sysdep/__config.h"
+#endif
+
 #ifndef __SYS_DEP_H
 #include "libbeye/sysdep/_sys_dep.h"
 #endif
@@ -108,12 +111,12 @@ extern unsigned long __FASTCALL__ HLFindNearest(const void *key,
                                      func_compare fcompare);
 
                    /** Tests wether character is a separator
-                     * @return                True if given character is separator
+                     * @return                true if given character is separator
                      * @param ch              character to be tested
                      * @note                  returns true if character is space
                      *                        or punctuator
                     **/
-extern tBool  __FASTCALL__ isseparate(int ch);
+extern bool  __FASTCALL__ isseparate(int ch);
 
 /** ASCIIZ string extended support */
 

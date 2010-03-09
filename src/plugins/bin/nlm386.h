@@ -25,10 +25,10 @@
 #pragma pack(1)
 #endif
 
-typedef tUInt32 file_ptr;
-typedef tUInt32 bfd_size_type;
-typedef tUInt32 bfd_vma;
-typedef tUInt32 PTR;
+typedef uint32_t file_ptr;
+typedef uint32_t bfd_size_type;
+typedef uint32_t bfd_vma;
+typedef uint32_t PTR;
 #define NLM_SIGNATURE "NetWare Loadable Module\x1a"
 #define NLM_SIGNATURE_SIZE 24
 #define NLM_MODULE_NAME_SIZE 14
@@ -41,9 +41,9 @@ typedef tUInt32 PTR;
 
 typedef struct nlm_internal_fixed_header
 {
-  tInt8        nlm_signature[NLM_SIGNATURE_SIZE];
-  tInt32       nlm_version;
-  tInt8        nlm_moduleName[NLM_MODULE_NAME_SIZE];
+  int8_t        nlm_signature[NLM_SIGNATURE_SIZE];
+  int32_t       nlm_version;
+  int8_t        nlm_moduleName[NLM_MODULE_NAME_SIZE];
   file_ptr      nlm_codeImageOffset;
   bfd_size_type nlm_codeImageSize;
   file_ptr      nlm_dataImageOffset;
@@ -52,63 +52,63 @@ typedef struct nlm_internal_fixed_header
   file_ptr      nlm_customDataOffset;
   bfd_size_type nlm_customDataSize;
   file_ptr      nlm_moduleDependencyOffset;
-  tInt32       nlm_numberOfModuleDependencies;
+  int32_t       nlm_numberOfModuleDependencies;
   file_ptr      nlm_relocationFixupOffset;
-  tInt32       nlm_numberOfRelocationFixups;
+  int32_t       nlm_numberOfRelocationFixups;
   file_ptr      nlm_externalReferencesOffset;
-  tInt32       nlm_numberOfExternalReferences;
+  int32_t       nlm_numberOfExternalReferences;
   file_ptr      nlm_publicsOffset;
-  tInt32       nlm_numberOfPublics;
+  int32_t       nlm_numberOfPublics;
   file_ptr      nlm_debugInfoOffset;
-  tInt32       nlm_numberOfDebugRecords;
+  int32_t       nlm_numberOfDebugRecords;
   file_ptr      nlm_codeStartOffset;
   file_ptr      nlm_exitProcedureOffset;
   file_ptr      nlm_checkUnloadProcedureOffset;
-  tInt32       nlm_moduleType;
-  tInt32       nlm_flags;
+  int32_t       nlm_moduleType;
+  int32_t       nlm_flags;
 } Nlm_Internal_Fixed_Header;
 
 typedef struct nlm_internal_variable_header
 {
-  tUInt8        descriptionLength;
-  tInt8         descriptionText[NLM_MAX_DESCRIPTION_LENGTH + 1];
-  tInt32        stackSize;
-  tInt32        reserved; /**< should contain zero */
-  tInt8         oldThreadName[NLM_OLD_THREAD_NAME_LENGTH]; /**< " LONG" */
-  tUInt8        screenNameLength;
-  tInt8         screenName[NLM_MAX_SCREEN_NAME_LENGTH + 1];
-  tUInt8        threadNameLength;
-  tInt8         threadName[NLM_MAX_THREAD_NAME_LENGTH + 1];
+  uint8_t        descriptionLength;
+  int8_t         descriptionText[NLM_MAX_DESCRIPTION_LENGTH + 1];
+  int32_t        stackSize;
+  int32_t        reserved; /**< should contain zero */
+  int8_t         oldThreadName[NLM_OLD_THREAD_NAME_LENGTH]; /**< " LONG" */
+  uint8_t        screenNameLength;
+  int8_t         screenName[NLM_MAX_SCREEN_NAME_LENGTH + 1];
+  uint8_t        threadNameLength;
+  int8_t         threadName[NLM_MAX_THREAD_NAME_LENGTH + 1];
 } Nlm_Internal_Variable_Header;
 
 /** The header is recognized by "VeRsIoN#" in the stamp field. */
 typedef struct nlm_internal_version_header
 {
-  tInt8          stamp[8];
-  tInt32         majorVersion;
-  tInt32         minorVersion;
-  tInt32         revision;
-  tInt32         year;
-  tInt32         month;
-  tInt32         day;
+  int8_t          stamp[8];
+  int32_t         majorVersion;
+  int32_t         minorVersion;
+  int32_t         revision;
+  int32_t         year;
+  int32_t         month;
+  int32_t         day;
 } Nlm_Internal_Version_Header;
 
 /** The header is recognized by "CoPyRiGhT=" in the stamp field. */
 typedef struct nlm_internal_copyright_header
 {
-  tInt8         stamp[10];
-  tUInt8        copyrightMessageLength;
-  tInt8         copyrightMessage[NLM_MAX_COPYRIGHT_MESSAGE_LENGTH];
+  int8_t         stamp[10];
+  uint8_t        copyrightMessageLength;
+  int8_t         copyrightMessage[NLM_MAX_COPYRIGHT_MESSAGE_LENGTH];
 } Nlm_Internal_Copyright_Header;
 
 /** The header is recognized by "MeSsAgEs" in the stamp field. */
 typedef struct nlm_internal_extended_header
 {
-  tInt8        stamp[8];
-  tInt32       languageID;
+  int8_t        stamp[8];
+  int32_t       languageID;
   file_ptr      messageFileOffset;
   bfd_size_type messageFileLength;
-  tInt32       messageCount;
+  int32_t       messageCount;
   file_ptr      helpFileOffset;
   bfd_size_type helpFileLength;
   file_ptr      RPCDataOffset;
@@ -118,17 +118,17 @@ typedef struct nlm_internal_extended_header
   file_ptr      sharedDataOffset;
   bfd_size_type sharedDataLength;
   file_ptr      sharedRelocationFixupOffset;
-  tInt32       sharedRelocationFixupCount;
+  int32_t       sharedRelocationFixupCount;
   file_ptr      sharedExternalReferenceOffset;
-  tInt32       sharedExternalReferenceCount;
+  int32_t       sharedExternalReferenceCount;
   file_ptr      sharedPublicsOffset;
-  tInt32       sharedPublicsCount;
+  int32_t       sharedPublicsCount;
   file_ptr      sharedDebugRecordOffset;
-  tInt32       sharedDebugRecordCount;
+  int32_t       sharedDebugRecordCount;
   bfd_vma       SharedInitializationOffset;
   bfd_vma       SharedExitProcedureOffset;
-  tInt32       productID;
-  tInt32       reserved[6];
+  int32_t       productID;
+  int32_t       reserved[6];
 } Nlm_Internal_Extended_Header;
 
 /** The format of a custom header as stored internally is different
@@ -137,11 +137,11 @@ typedef struct nlm_internal_extended_header
 /** The header is recognized by "CuStHeAd" in the stamp field. */
 typedef struct nlm_internal_custom_header
 {
-  tInt8        stamp[8];
+  int8_t        stamp[8];
   bfd_size_type hdrLength;
   file_ptr      dataOffset;
   bfd_size_type dataLength;
-  tInt8        dataStamp[8];
+  int8_t        dataStamp[8];
   PTR           hdr;
 } Nlm_Internal_Custom_Header;
 
@@ -151,7 +151,7 @@ typedef struct nlm_internal_custom_header
 /** The header is recognized by "CyGnUsEx" in the stamp field. */
 typedef struct nlm_internal_cygnus_ext_header
 {
-  tInt8        stamp[8];
+  int8_t        stamp[8];
   file_ptr      offset;  /**< File location of debugging information.  */
   bfd_size_type length;   /**< Length of debugging information.  */
 } Nlm_Internal_Cygnus_Ext_Header;
@@ -174,16 +174,16 @@ typedef struct nlm_internal_cygnus_ext_header
 */
 
 
-typedef tUInt32	Nlm32_Addr;	/**< Unsigned program address */
-typedef tUInt32	Nlm32_Off;	/**< Unsigned file offset */
-typedef tInt32		Nlm32_Sword;	/**< Signed large integer */
-typedef tUInt32	Nlm32_Word;	/**< Unsigned large integer */
-typedef tUInt16	Nlm32_Half;	/**< Unsigned medium integer */
-typedef tUInt8		Nlm32_Char;	/**< Unsigned tiny integer */
+typedef uint32_t	Nlm32_Addr;	/**< Unsigned program address */
+typedef uint32_t	Nlm32_Off;	/**< Unsigned file offset */
+typedef int32_t		Nlm32_Sword;	/**< Signed large integer */
+typedef uint32_t	Nlm32_Word;	/**< Unsigned large integer */
+typedef uint16_t	Nlm32_Half;	/**< Unsigned medium integer */
+typedef uint8_t		Nlm32_Char;	/**< Unsigned tiny integer */
 
-typedef tInt32		Nlm64_Sword;
-typedef tUInt32	Nlm64_Word;
-typedef tUInt16	Nlm64_Half;
+typedef int32_t		Nlm64_Sword;
+typedef uint32_t	Nlm64_Word;
+typedef uint16_t	Nlm64_Half;
 
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()

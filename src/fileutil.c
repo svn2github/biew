@@ -36,9 +36,9 @@
 #include "libbeye/twin.h"
 #include "libbeye/kbd_code.h"
 
-extern tBool fioUseMMF;
+extern bool fioUseMMF;
 
-static tBool ChSize( void )
+static bool ChSize( void )
 {
  __fileoff_t psize,tile = 0;
 #if __WORDSIZE >= 32
@@ -53,7 +53,7 @@ static tBool ChSize( void )
     psize += tile;
     if(psize > 0)
     {
-       tBool ret;
+       bool ret;
        int my_errno = 0;
        char *fname = BMName();
        BGLOBAL bHandle;
@@ -62,22 +62,22 @@ static tBool ChSize( void )
        {
          err:
          errnoMessageBox(RESIZE_FAIL,NULL,my_errno);
-         return False;
+         return false;
        }
        ret = bioChSize(bHandle,psize);
        my_errno = errno;
        bioClose(bHandle);
-       if(ret == False) goto err;
+       if(ret == false) goto err;
        BMReRead();
        return ret;
     }
     else ErrMessageBox("Invalid new length",NULL);
   }
  }
- return False;
+ return false;
 }
 
-static tBool __NEAR__ __FASTCALL__ InsBlock(BGLOBAL bHandle,__filesize_t start,__fileoff_t psize)
+static bool __NEAR__ __FASTCALL__ InsBlock(BGLOBAL bHandle,__filesize_t start,__fileoff_t psize)
 {
    char *buffer;
    __filesize_t tile,oflen,flen,crpos,cwpos;
@@ -91,7 +91,7 @@ static tBool __NEAR__ __FASTCALL__ InsBlock(BGLOBAL bHandle,__filesize_t start,_
    {
      ErrMessageBox(EXPAND_FAIL,NULL);
      PFREE(buffer);
-     return False;
+     return false;
    }
    crpos = oflen-min(tile,51200U);
    cwpos = flen-min(tile,51200U);
@@ -119,10 +119,10 @@ static tBool __NEAR__ __FASTCALL__ InsBlock(BGLOBAL bHandle,__filesize_t start,_
      cwpos += numtowrite;
    }
    PFREE(buffer);
-   return True;
+   return true;
 }
 
-static tBool __NEAR__ __FASTCALL__ DelBlock(BGLOBAL bHandle,__filesize_t start,__fileoff_t psize)
+static bool __NEAR__ __FASTCALL__ DelBlock(BGLOBAL bHandle,__filesize_t start,__fileoff_t psize)
 {
    char *buffer;
    __filesize_t tile,oflen,crpos,cwpos;
@@ -130,7 +130,7 @@ static tBool __NEAR__ __FASTCALL__ DelBlock(BGLOBAL bHandle,__filesize_t start,_
    oflen = bioFLength(bHandle);
    tile = oflen - start;
    buffer = PMalloc(51200U);
-   if(!buffer) return False;
+   if(!buffer) return false;
    crpos = start-psize; /** psize is negative value */
    cwpos = start;
    while(tile)
@@ -150,14 +150,14 @@ static tBool __NEAR__ __FASTCALL__ DelBlock(BGLOBAL bHandle,__filesize_t start,_
      ErrMessageBox(TRUNC_FAIL,NULL);
      PFREE(buffer);
    }
-   return True;
+   return true;
 }
 
-static tBool InsDelBlock( void )
+static bool InsDelBlock( void )
 {
  __filesize_t start;
  static __fileoff_t psize;
- tBool ret = False;
+ bool ret = false;
  start = BMGetCurrFilePos();
  if(GetInsDelBlkDlg(" Insert or delete block to/from file ",&start,&psize))
  {
@@ -287,7 +287,7 @@ static void __make_dump_name(const char *end)
  strcpy(p,end);
 }
 
-static tBool FStore( void )
+static bool FStore( void )
 {
  unsigned long flags;
  char *tmp_buff;
@@ -296,10 +296,10 @@ static tBool FStore( void )
  if(!tmp_buff)
  {
        MemOutBox("temporary buffer initialization");
-       return False;
+       return false;
  }
  flags = FSDLG_USEMODES | FSDLG_BINMODE | FSDLG_COMMENT;
- DumpMode = True;
+ DumpMode = true;
  ff_startpos = BMGetCurrFilePos();
  if(!ff_len) ff_len = BMGetFLength() - ff_startpos;
  __make_dump_name(".$$$");
@@ -320,7 +320,7 @@ static tBool FStore( void )
      __filesize_t wsize,crpos,pwsize,awsize;
      unsigned rem;
      wsize = endpos - ff_startpos;
-     if(__IsFileExists(ff_fname) == False) handle = __OsCreate(ff_fname);
+     if(__IsFileExists(ff_fname) == false) handle = __OsCreate(ff_fname);
      else
      {
        handle = __OsOpen(ff_fname,FO_READWRITE | SO_DENYNONE);
@@ -352,7 +352,7 @@ static tBool FStore( void )
           bioClose(_bioHandle);
           goto Exit;
         }
-        real_size = activeMode->convert_cp ? activeMode->convert_cp((char *)tmp_buff,rem,True) : rem;
+        real_size = activeMode->convert_cp ? activeMode->convert_cp((char *)tmp_buff,rem,true) : rem;
         if(!bioWriteBuffer(_bioHandle,tmp_buff,real_size))
         {
           errnoMessageBox(WRITE_FAIL,NULL,errno);
@@ -381,7 +381,7 @@ static tBool FStore( void )
      __filesize_t func_pa,stop;
      unsigned func_class;
      __filesize_t awsize,pwsize;
-     tBool has_string;
+     bool has_string;
 
      __filesize_t obj_start,obj_end;
      int obj_class,obj_bitness;
@@ -443,7 +443,7 @@ static tBool FStore( void )
        if(detectedFormat->GetPubSym)
        {
          func_pa = detectedFormat->GetPubSym(func_name,sizeof(func_name),
-                                             &func_class,ff_startpos,True);
+                                             &func_class,ff_startpos,true);
          func_name[sizeof(func_name)-1] = 0;
          if(func_pa)
          {
@@ -456,14 +456,14 @@ static tBool FStore( void )
             }
          }
          func_pa = detectedFormat->GetPubSym(func_name,sizeof(func_name),
-                                             &func_class,ff_startpos,False);
+                                             &func_class,ff_startpos,false);
          func_name[sizeof(func_name)-1] = 0;
        }
      }
      prcnt_counter = oprcnt_counter = 0;
      awsize = endpos - ff_startpos;
      pwsize = 0;
-     has_string = False;
+     has_string = false;
      while(1)
      {
       DisasmRet dret;
@@ -509,7 +509,7 @@ static tBool FStore( void )
                               ,func_pa);
                   ff_startpos = func_pa;
                   func_pa = detectedFormat->GetPubSym(func_name,sizeof(func_name),
-                                                    &func_class,ff_startpos,False);
+                                                    &func_class,ff_startpos,false);
                   func_name[sizeof(func_name)-1] = 0;
                   if(func_pa == ff_startpos)
                   {
@@ -537,7 +537,7 @@ static tBool FStore( void )
                           ,GET_FUNC_CLASS(func_class)
                           ,func_name);
               func_pa = detectedFormat->GetPubSym(func_name,sizeof(func_name),
-                                                  &func_class,ff_startpos,False);
+                                                  &func_class,ff_startpos,false);
               func_name[sizeof(func_name)-1] = 0;
 	      not_silly++;
               if(not_silly > 100)
@@ -582,7 +582,7 @@ static tBool FStore( void )
          {
            sprintf(&data_dis[strlen(data_dis)],"'%s'",coll_str);
            dret.codelen = cstr_idx;
-           has_string = True;
+           has_string = true;
          }
          else
          {
@@ -595,7 +595,7 @@ static tBool FStore( void )
               else
                 sprintf(&data_dis[strlen(data_dis)],"%02Xh,",codebuff[ifreq]);
               data_len++;
-              has_string = False;
+              has_string = false;
            }
            dret.codelen = data_len;
          }
@@ -691,16 +691,16 @@ static tBool FStore( void )
   else  ErrMessageBox("Start position > end position!",NULL);
  }
  PFREE(tmp_buff);
- DumpMode = False;
- return False;
+ DumpMode = false;
+ return false;
 }
 
-static tBool FRestore( void )
+static bool FRestore( void )
 {
  __filesize_t endpos,cpos;
  unsigned long flags;
- tBool ret;
- ret = False;
+ bool ret;
+ ret = false;
  flags = FSDLG_NOMODES;
  __make_dump_name(".$$$");
  if(GetFStoreDlg(" Restore information from file ",ff_fname,&flags,&ff_startpos,&ff_len,FILE_PRMT))
@@ -729,7 +729,7 @@ static tBool FRestore( void )
      {
         err:
         errnoMessageBox(OPEN_FAIL,NULL,errno);
-        return False;
+        return false;
      }
      cpos = BMGetCurrFilePos();
      wsize = endpos - ff_startpos;
@@ -739,7 +739,7 @@ static tBool FRestore( void )
      if(!tmp_buff)
      {
        MemOutBox("temporary buffer initialization");
-       return False;
+       return false;
      }
      fname = BMName();
      bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
@@ -752,14 +752,14 @@ static tBool FRestore( void )
          {
            errnoMessageBox(READ_FAIL,NULL,errno);
            __OsClose(handle);
-           ret = False;
+           ret = false;
            goto bye;
          }
          bioSeek(bHandle,cwpos,BIO_SEEK_SET);
          if(!bioWriteBuffer(bHandle,tmp_buff,remaind))
          {
            errnoMessageBox(WRITE_FAIL,NULL,errno);
-           ret = False;
+           ret = false;
            goto bye;
          }
          wsize -= remaind;
@@ -773,7 +773,7 @@ static tBool FRestore( void )
      PFREE(tmp_buff);
      __OsClose(handle);
      BMSeek(cpos,BM_SEEK_SET);
-     ret = True;
+     ret = true;
    }
    else ErrMessageBox("Start position > end position!",NULL);
  }
@@ -821,13 +821,13 @@ static void __NEAR__ __FASTCALL__ CryptFunc(char * buff,unsigned len,char *pass)
   pass[passlen-1] = ch;
 }
 
-static tBool CryptBlock( void )
+static bool CryptBlock( void )
 {
  __filesize_t endpos,cpos;
  unsigned long flags;
  char pass[81];
- tBool ret;
- ret = False;
+ bool ret;
+ ret = false;
  ff_startpos = BMGetCurrFilePos();
  if(!ff_len) ff_len = BMGetFLength() - ff_startpos;
  pass[0] = 0;
@@ -840,7 +840,7 @@ static tBool CryptBlock( void )
    lval = endpos - ff_startpos;
    endpos = lval > flen ? flen + ff_startpos : endpos;
    endpos = endpos > BMGetFLength() ? BMGetFLength() : endpos;
-   if(!pass[0]) { ErrMessageBox("Password can't be empty",NULL); return False; }
+   if(!pass[0]) { ErrMessageBox("Password can't be empty",NULL); return false; }
    if(endpos > ff_startpos)
    {
      __filesize_t wsize,cwpos;
@@ -855,7 +855,7 @@ static tBool CryptBlock( void )
      if(!tmp_buff)
      {
        MemOutBox("temporary buffer initialization");
-       return False;
+       return false;
      }
      fname = BMName();
      bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
@@ -868,7 +868,7 @@ static tBool CryptBlock( void )
          if(!bioReadBuffer(bHandle,tmp_buff,remaind))
          {
            errnoMessageBox(READ_FAIL,NULL,errno);
-           ret = False;
+           ret = false;
            goto bye;
          }
          CryptFunc(tmp_buff,remaind,pass);
@@ -876,7 +876,7 @@ static tBool CryptBlock( void )
          if(!(bioWriteBuffer(bHandle,tmp_buff,remaind)))
          {
            errnoMessageBox(WRITE_FAIL,NULL,errno);
-           ret = False;
+           ret = false;
            goto bye;
          }
          wsize -= remaind;
@@ -888,7 +888,7 @@ static tBool CryptBlock( void )
      }
      PFREE(tmp_buff);
      BMSeek(cpos,BM_SEEK_SET);
-     ret = True;
+     ret = true;
    }
    else ErrMessageBox("Start position > end position!",NULL);
  }
@@ -921,25 +921,25 @@ static void __NEAR__ __FASTCALL__ EndianifyBlock(char * buff,unsigned len, int t
       default:
 
 #ifdef INT64_C
-      case 3: *((tUInt64 *)buff) = ByteSwapLL(*((tUInt64 *)buff));
+      case 3: *((uint64_t *)buff) = ByteSwapLL(*((uint64_t *)buff));
               break;
 #endif
 
-      case 2: *((tUInt32 *)buff) = ByteSwapL(*((tUInt32 *)buff));
+      case 2: *((uint32_t *)buff) = ByteSwapL(*((uint32_t *)buff));
               break;
       case 1:
-              *((tUInt16 *)buff) = ByteSwapS(*((tUInt16 *)buff));
+              *((uint16_t *)buff) = ByteSwapS(*((uint16_t *)buff));
               break;
     }
   }
 }
 
-static tBool ReverseBlock( void )
+static bool ReverseBlock( void )
 {
  __filesize_t endpos,cpos;
  unsigned long flags;
- tBool ret;
- ret = False;
+ bool ret;
+ ret = false;
  ff_startpos = BMGetCurrFilePos();
  if(!ff_len) ff_len = BMGetFLength() - ff_startpos;
  flags = FSDLG_USEBITNS;
@@ -965,7 +965,7 @@ static tBool ReverseBlock( void )
      if(!tmp_buff)
      {
        MemOutBox("temporary buffer initialization");
-       return False;
+       return false;
      }
      fname = BMName();
      bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
@@ -978,7 +978,7 @@ static tBool ReverseBlock( void )
          if(!bioReadBuffer(bHandle,tmp_buff,remaind))
          {
            errnoMessageBox(READ_FAIL,NULL,errno);
-           ret = False;
+           ret = false;
            goto bye;
          }
          EndianifyBlock(tmp_buff,remaind, flags & FSDLG_BTNSMASK);
@@ -986,7 +986,7 @@ static tBool ReverseBlock( void )
          if(!(bioWriteBuffer(bHandle,tmp_buff,remaind)))
          {
            errnoMessageBox(WRITE_FAIL,NULL,errno);
-           ret = False;
+           ret = false;
            goto bye;
          }
          wsize -= remaind;
@@ -998,7 +998,7 @@ static tBool ReverseBlock( void )
      }
      PFREE(tmp_buff);
      BMSeek(cpos,BM_SEEK_SET);
-     ret = True;
+     ret = true;
    }
    else ErrMessageBox("Start position > end position!",NULL);
  }
@@ -1015,13 +1015,13 @@ static void __NEAR__ __FASTCALL__ TranslateBlock(char * buff,unsigned len, const
 }
 
 
-static tBool XLatBlock( void )
+static bool XLatBlock( void )
 {
  unsigned char xlt[256];
  __filesize_t endpos,cpos;
  unsigned long flags;
- tBool ret;
- ret = False;
+ bool ret;
+ ret = false;
  ff_startpos = BMGetCurrFilePos();
  if(!ff_len) ff_len = BMGetFLength() - ff_startpos;
  flags = FSDLG_NOMODES;
@@ -1053,20 +1053,20 @@ static tBool XLatBlock( void )
      if(xHandle == &bNull)
      {
        ErrMessageBox("Can't open xlat file", NULL);
-       return False;
+       return false;
      }
      if(bioFLength(xHandle) != 320)
      {
        ErrMessageBox("Size of xlat file is not 320 bytes", NULL);
        bioClose(xHandle);
-       return False;
+       return false;
      }
      bioReadBuffer(xHandle,xlt, 16);
      if(memcmp(xlt, "Beye Xlat Table.", 16) != 0)
      {
        ErrMessageBox("It seems that xlat file is corrupt", NULL);
        bioClose(xHandle);
-       return False;
+       return false;
      }
      bioSeek(xHandle, 0x40, SEEKF_START);
      bioReadBuffer(xHandle, xlt, 256);
@@ -1075,7 +1075,7 @@ static tBool XLatBlock( void )
      if(!tmp_buff)
      {
        MemOutBox("temporary buffer initialization");
-       return False;
+       return false;
      }
      fname = BMName();
      bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
@@ -1088,7 +1088,7 @@ static tBool XLatBlock( void )
          if(!bioReadBuffer(bHandle,tmp_buff,remaind))
          {
            errnoMessageBox(READ_FAIL,NULL,errno);
-           ret = False;
+           ret = false;
            goto bye;
          }
          TranslateBlock(tmp_buff,remaind, xlt);
@@ -1096,7 +1096,7 @@ static tBool XLatBlock( void )
          if(!(bioWriteBuffer(bHandle,tmp_buff,remaind)))
          {
            errnoMessageBox(WRITE_FAIL,NULL,errno);
-           ret = False;
+           ret = false;
            goto bye;
          }
          wsize -= remaind;
@@ -1108,7 +1108,7 @@ static tBool XLatBlock( void )
      }
      PFREE(tmp_buff);
      BMSeek(cpos,BM_SEEK_SET);
-     ret = True;
+     ret = true;
    }
    else ErrMessageBox("Start position > end position!",NULL);
  }
@@ -1117,7 +1117,7 @@ static tBool XLatBlock( void )
 
 extern char shortname[];
 
-static tBool FileInfo( void )
+static bool FileInfo( void )
 {
   TWindow* wnd;
   struct stat statbuf;
@@ -1225,7 +1225,7 @@ static tBool FileInfo( void )
   }
   while(!(evt == KE_ESCAPE || evt == KE_F(10)));
   CloseWnd(wnd);
-  return False;
+  return false;
 }
 
 static const char * fu_names[] =
@@ -1240,7 +1240,7 @@ static const char * fu_names[] =
   "~Xlat block..."
 };
 
-typedef tBool (*FileFunc)( void );
+typedef bool (*FileFunc)( void );
 
 static FileFunc fu_funcs[] =
 {
@@ -1254,11 +1254,11 @@ static FileFunc fu_funcs[] =
   XLatBlock
 };
 
-tBool FileUtils( void )
+bool FileUtils( void )
 {
   size_t nUtils;
   int retval;
-  tBool ret;
+  bool ret;
   static unsigned def_sel = 0;
   nUtils = sizeof(fu_names)/sizeof(char *);
   retval = SelBoxA(fu_names,nUtils," File utilities: ",def_sel);
@@ -1271,5 +1271,5 @@ tBool FileUtils( void )
      def_sel = retval;
      return ret;
   }
-  return False;
+  return false;
 }

@@ -149,11 +149,11 @@ struct tag_elfVAMap
 #define ELF_ADDR(cval) ELF_XWORD(cval)
 #define ELF_OFF(cval) ELF_XWORD(cval)
 
-static tBool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
+static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
 static void __FASTCALL__ elf_ReadPubNameList(BGLOBAL handle,void (__FASTCALL__ *mem_out)(const char *));
 static __filesize_t __FASTCALL__ elfVA2PA(__filesize_t va);
 static __filesize_t __FASTCALL__ elfPA2VA(__filesize_t pa);
-static tBool IsSectionsPresent;
+static bool IsSectionsPresent;
 
 static __filesize_t __NEAR__ __FASTCALL__ findPHEntry(unsigned long type,unsigned *nitems)
 {
@@ -185,7 +185,7 @@ static __filesize_t __NEAR__ __FASTCALL__ findPHDynEntry(unsigned long type,
 {
   unsigned i;
   __filesize_t fpos;
-  tBool is_found = False;
+  bool is_found = false;
   ElfXX_External_Dyn dyntab;
   fpos = bmGetCurrFilePos();
   bmSeek(dynptr,SEEKF_START);
@@ -194,7 +194,7 @@ static __filesize_t __NEAR__ __FASTCALL__ findPHDynEntry(unsigned long type,
     bmReadBufferEx(&dyntab,ELF_EDYN_SIZE(),dynptr,SEEKF_START);
     if(bmEOF()) break;
     dynptr += ELF_EDYN_SIZE();
-    if(ELF_XWORD(ELF_EDYN(dyntab,d_tag)) == type) { is_found = True; break; }
+    if(ELF_XWORD(ELF_EDYN(dyntab,d_tag)) == type) { is_found = true; break; }
   }    
   bmSeek(fpos,SEEKF_START);
   return is_found ? ELF_XWORD(ELF_EDYN(dyntab,d_un.d_ptr)) : 0L;
@@ -328,7 +328,7 @@ static __filesize_t __FASTCALL__ elfPA2VA(__filesize_t pa)
   return ret;
 }
 
-static tBool __FASTCALL__ elfLowMemFunc( unsigned long need_mem )
+static bool __FASTCALL__ elfLowMemFunc( unsigned long need_mem )
 {
   UNUSED(need_mem);
   if(!fmtActiveState)
@@ -337,10 +337,10 @@ static tBool __FASTCALL__ elfLowMemFunc( unsigned long need_mem )
     {
        la_Destroy(PubNames);
        PubNames = NULL;
-       return True;
+       return true;
     }
   }
-  return False;
+  return false;
 }
 
 static void __NEAR__ __FASTCALL__ elf386_readnametable(__filesize_t off,char *buf,unsigned blen)
@@ -698,7 +698,7 @@ static const char * __NEAR__ __FASTCALL__ elf_encode_p_type(long p_type)
    }
 }
 
-static tBool __FASTCALL__ __elfReadPrgHdr(BGLOBAL handle,memArray *obj,unsigned nnames)
+static bool __FASTCALL__ __elfReadPrgHdr(BGLOBAL handle,memArray *obj,unsigned nnames)
 {
  size_t i;
   bioSeek(handle,ELF_OFF(ELF_EHDR(elf,e_phoff)),SEEKF_START);
@@ -723,9 +723,9 @@ static tBool __FASTCALL__ __elfReadPrgHdr(BGLOBAL handle,memArray *obj,unsigned 
                 (ELF_WORD(ELF_PHDR(phdr,p_flags)) & PF_R) == PF_R ? 'R' : ' ',
                 (unsigned long)ELF_OFF(ELF_PHDR(phdr,p_align))
           );
-   if(!ma_AddString(obj,stmp,True)) break;
+   if(!ma_AddString(obj,stmp,true)) break;
   }
-  return True;
+  return true;
 }
 
 static const char * __NEAR__ __FASTCALL__ elf_encode_sh_type(long sh_type)
@@ -756,7 +756,7 @@ static const char * __NEAR__ __FASTCALL__ elf_encode_sh_type(long sh_type)
    }
 }
 
-static tBool __FASTCALL__ __elfReadSecHdr(BGLOBAL handle,memArray *obj,unsigned nnames)
+static bool __FASTCALL__ __elfReadSecHdr(BGLOBAL handle,memArray *obj,unsigned nnames)
 {
  size_t i;
   bioSeek(handle,ELF_OFF(ELF_EHDR(elf,e_shoff)),SEEKF_START);
@@ -781,14 +781,14 @@ static tBool __FASTCALL__ __elfReadSecHdr(BGLOBAL handle,memArray *obj,unsigned 
                 (unsigned long)ELF_ADDR(ELF_SHDR(shdr,sh_addr)),
                 (unsigned long)ELF_OFF(ELF_SHDR(shdr,sh_offset)),
                 (unsigned long)ELF_XWORD(ELF_SHDR(shdr,sh_size)),
-                (tUInt16)ELF_WORD(ELF_SHDR(shdr,sh_link)),
-                (tUInt16)ELF_WORD(ELF_SHDR(shdr,sh_info)),
-                (tUInt16)ELF_XWORD(ELF_SHDR(shdr,sh_addralign)),
-                (tUInt16)ELF_XWORD(ELF_SHDR(shdr,sh_entsize))
+                (uint16_t)ELF_WORD(ELF_SHDR(shdr,sh_link)),
+                (uint16_t)ELF_WORD(ELF_SHDR(shdr,sh_info)),
+                (uint16_t)ELF_XWORD(ELF_SHDR(shdr,sh_addralign)),
+                (uint16_t)ELF_XWORD(ELF_SHDR(shdr,sh_entsize))
           );
-    if(!ma_AddString(obj,stmp,True)) break;
+    if(!ma_AddString(obj,stmp,true)) break;
   }
-  return True;
+  return true;
 }
 
 static const char * __NEAR__ __FASTCALL__ elf_SymTabType(char type)
@@ -836,7 +836,7 @@ static const char * __NEAR__ __FASTCALL__ elf_SymTabShNdx(unsigned idx)
   }
 }
 
-static tBool __NEAR__ __FASTCALL__ ELF_IS_SECTION_PHYSICAL(unsigned sec_num)
+static bool __NEAR__ __FASTCALL__ ELF_IS_SECTION_PHYSICAL(unsigned sec_num)
 {
   return !(sec_num == SHN_UNDEF || sec_num == SHN_LOPROC ||
            sec_num == SHN_HIPROC || sec_num == SHN_ABS ||
@@ -849,7 +849,7 @@ static unsigned __FASTCALL__ __elfGetNumSymTab( BGLOBAL handle )
   return __elfNumSymTab;
 }
 
-static tBool __FASTCALL__ __elfReadSymTab(BGLOBAL handle,memArray *obj,unsigned nsym)
+static bool __FASTCALL__ __elfReadSymTab(BGLOBAL handle,memArray *obj,unsigned nsym)
 {
  size_t i,tlen;
  char text[37];
@@ -886,12 +886,12 @@ static tBool __FASTCALL__ __elfReadSymTab(BGLOBAL handle,memArray *obj,unsigned 
                ,elf_SymTabBind(ELF_SYM(sym,st_info[0]))
                ,elf_SymTabShNdx(ELF_HALF(ELF_SYM(sym,st_shndx)))
                );
-   if(!ma_AddString(obj,stmp,True)) break;
+   if(!ma_AddString(obj,stmp,true)) break;
   }
-  return True;
+  return true;
 }
 
-static tBool __NEAR__ __FASTCALL__ __elfReadDynTab(BGLOBAL handle,memArray *obj, unsigned ntbl,__filesize_t entsize)
+static bool __NEAR__ __FASTCALL__ __elfReadDynTab(BGLOBAL handle,memArray *obj, unsigned ntbl,__filesize_t entsize)
 {
  size_t i;
  char sout[80];
@@ -920,10 +920,10 @@ static tBool __NEAR__ __FASTCALL__ __elfReadDynTab(BGLOBAL handle,memArray *obj,
     sprintf(&stmp[strlen(stmp)]," vma=%016llXH",(unsigned long long)ELF_XWORD(ELF_EDYN(pdyn,d_un.d_val)));
    else
     sprintf(&stmp[strlen(stmp)]," vma=%08lXH",(unsigned long)ELF_XWORD(ELF_EDYN(pdyn,d_un.d_val)));
-   if(!ma_AddString(obj,stmp,True)) break;
+   if(!ma_AddString(obj,stmp,true)) break;
    bioSeek(handle,fp,SEEKF_START);
   }
-  return True;
+  return true;
 }
 
 static unsigned __FASTCALL__ Elf386PrgHdrNumItems(BGLOBAL handle)
@@ -975,7 +975,7 @@ static __filesize_t __FASTCALL__ ShowSecHdrElf(void)
   return fpos;
 }
 
-static __filesize_t __calcSymEntry(BGLOBAL handle,__filesize_t num,tBool display_msg)
+static __filesize_t __calcSymEntry(BGLOBAL handle,__filesize_t num,bool display_msg)
 {
    ElfXX_External_Sym it;
    ElfXX_External_Shdr sec;
@@ -1021,7 +1021,7 @@ static __filesize_t __NEAR__ __FASTCALL__ displayELFsymtab( void )
   if(ret != -1)
   {
     __filesize_t ea;
-    ea = __calcSymEntry(bmbioHandle(),ret,True);
+    ea = __calcSymEntry(bmbioHandle(),ret,true);
     fpos = ea ? ea : fpos;
   }
   return fpos;
@@ -1037,7 +1037,7 @@ static __filesize_t __NEAR__ __FASTCALL__ displayELFdyntab(__filesize_t dynptr,
   unsigned ndyn;
   fpos = BMGetCurrFilePos();
   ndyn = (unsigned)nitem;
-  if(!(obj = ma_Build(ndyn,True))) return fpos;
+  if(!(obj = ma_Build(ndyn,true))) return fpos;
   handle = elfcache;
   bioSeek(handle,dynptr,SEEK_SET);
   if(__elfReadDynTab(handle,obj,ndyn,entsize))
@@ -1489,14 +1489,14 @@ static Elf_Reloc __HUGE__ * __NEAR__ __FASTCALL__ __found_ElfRel(__filesize_t of
   return la_Find(CurrElfChain,&key,compare_elf_reloc);
 }
 
-static tBool __NEAR__ __FASTCALL__ __readRelocName(Elf_Reloc __HUGE__ *erl, char *buff, size_t cbBuff)
+static bool __NEAR__ __FASTCALL__ __readRelocName(Elf_Reloc __HUGE__ *erl, char *buff, size_t cbBuff)
 {
   __filesize_t r_sym;
   ElfXX_External_Shdr shdr;
   ElfXX_External_Sym sym;
   BGLOBAL handle = elfcache;
   __filesize_t fp;
-  tBool ret = True;
+  bool ret = true;
   r_sym = is_64bit?ELF64_R_SYM(erl->info):ELF32_R_SYM(erl->info);
   fp = bioTell(handle);
   if(IsSectionsPresent) /* Section headers are present */
@@ -1557,8 +1557,8 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_arm(char *str,
 							__filesize_t defval)
 {
   unsigned long retval = RAPREF_DONE;
-  tUInt32 r_type;
-  tBool ret=False, use_addend = False;
+  uint32_t r_type;
+  bool ret=false, use_addend = false;
   char buff[300];
   UNUSED(codelen);
   UNUSED(defval);
@@ -1581,7 +1581,7 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_arm(char *str,
                    if(buff[0] && ret)
                    {
 		     strcat(str,buff);
-		     use_addend = True;
+		     use_addend = true;
 		   }
                    else retval = RAPREF_NONE;
 		   break;
@@ -1593,14 +1593,14 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_arm(char *str,
                    {
 		     strcat(str,buff);
 		     /* strcat(str,"-.here"); <- it's commented for readability */
-		     use_addend = True;
+		     use_addend = true;
 		   }
                    else retval = RAPREF_NONE;
 		   break;
     case R_ARM_PLT32: /* PLT[offset] + addendum - this */
                    strcat(str,"PLT-");
                    strcat(str,Get8Digit(erl->offset));
-		   use_addend = True;
+		   use_addend = true;
 		   break;
     case R_ARM_GLOB_DAT:  /* symbol */
     case R_ARM_JUMP_SLOT:  /* symbol */
@@ -1613,7 +1613,7 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_arm(char *str,
                    {
   		     strcat(str,buff);
 		     strcat(str,"-GOT");
-		     use_addend = True;
+		     use_addend = true;
 		   }
                    else retval = RAPREF_NONE;
 		   break;
@@ -1633,8 +1633,8 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_i386(char *str,
 							__filesize_t defval)
 {
   unsigned long retval = RAPREF_DONE;
-  tUInt32 r_type;
-  tBool ret=False, use_addend = False;
+  uint32_t r_type;
+  bool ret=false, use_addend = false;
   char buff[300];
   UNUSED(codelen);
   UNUSED(defval);
@@ -1655,7 +1655,7 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_i386(char *str,
                    if(buff[0] && ret)
                    {
 		     strcat(str,buff);
-		     use_addend = True;
+		     use_addend = true;
 		   }
                    else retval = RAPREF_NONE;
 		   break;
@@ -1667,19 +1667,19 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_i386(char *str,
                    {
 		     strcat(str,buff);
 		     /* strcat(str,"-.here"); <- it's commented for readability */
-		     use_addend = True;
+		     use_addend = true;
 		   }
                    else retval = RAPREF_NONE;
 		   break;
     case R_386_GOT32: /* GOT[offset] + addendum - this */
                    strcat(str,"GOT-");
                    strcat(str,Get8Digit(erl->offset));
-		   use_addend = True;
+		   use_addend = true;
 		   break;
     case R_386_PLT32: /* PLT[offset] + addendum - this */
                    strcat(str,"PLT-");
                    strcat(str,Get8Digit(erl->offset));
-		   use_addend = True;
+		   use_addend = true;
 		   break;
     case R_386_GLOB_DAT:  /* symbol */
     case R_386_JMP_SLOT:  /* symbol */
@@ -1692,13 +1692,13 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_i386(char *str,
                    {
   		     strcat(str,buff);
 		     strcat(str,"-GOT");
-		     use_addend = True;
+		     use_addend = true;
 		   }
                    else retval = RAPREF_NONE;
 		   break;
     case R_386_GOTPC: /* GOT + addendum - this */
 		   strcat(str,"GOT-.here");
-		   use_addend = True;
+		   use_addend = true;
 		   break;
   }
   if(erl->addend && use_addend && ret &&
@@ -1716,8 +1716,8 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_x86_64(char *str,
 							__filesize_t defval)
 {
   unsigned long retval = RAPREF_DONE;
-  tUInt32 r_type;
-  tBool ret=False, use_addend = False;
+  uint32_t r_type;
+  bool ret=false, use_addend = false;
   char buff[300];
   UNUSED(codelen);
   UNUSED(defval);
@@ -1739,7 +1739,7 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_x86_64(char *str,
                    if(buff[0] && ret)
                    {
 		     strcat(str,buff);
-		     use_addend = True;
+		     use_addend = true;
 		   }
                    else retval = RAPREF_NONE;
 		   break;
@@ -1752,31 +1752,31 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_x86_64(char *str,
                    {
 		     strcat(str,buff);
 		     /* strcat(str,"-.here"); <- it's commented for readability */
-		     use_addend = True;
+		     use_addend = true;
 		   }
                    else retval = RAPREF_NONE;
 		   break;
     case R_X86_64_GOT32:
                    strcat(str,"GOT-");
                    strcat(str,Get8Digit(erl->offset));
-		   use_addend = True;
+		   use_addend = true;
 		   break;
     case R_X86_64_GOT64:
     case R_X86_64_GOTPC64:
     case R_X86_64_GOTPLT64: /* GOT[offset] + addendum - this */
                    strcat(str,"GOT-");
                    strcat(str,Get16Digit(erl->offset));
-		   use_addend = True;
+		   use_addend = true;
 		   break;
     case R_X86_64_PLT32:
                    strcat(str,"PLT-");
                    strcat(str,Get8Digit(erl->offset));
-		   use_addend = True;
+		   use_addend = true;
 		   break;
     case R_X86_64_PLTOFF64: /* PLT[offset] + addendum - this */
                    strcat(str,"PLT-");
                    strcat(str,Get16Digit(erl->offset));
-		   use_addend = True;
+		   use_addend = true;
 		   break;
     case R_X86_64_GLOB_DAT:  /* symbol */
     case R_X86_64_JUMP_SLOT:  /* symbol */
@@ -1789,13 +1789,13 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_x86_64(char *str,
                    {
   		     strcat(str,buff);
 		     strcat(str,"-GOT");
-		     use_addend = True;
+		     use_addend = true;
 		   }
                    else retval = RAPREF_NONE;
 		   break;
     case R_X86_64_GOTPCREL64: /* GOT + addendum - this */
 		   strcat(str,"GOT-.here");
-		   use_addend = True;
+		   use_addend = true;
 		   break;
   }
   if(erl->addend && use_addend && ret &&
@@ -1813,8 +1813,8 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_ppc(char *str,
 							__filesize_t defval)
 {
   unsigned long retval = RAPREF_DONE;
-  tUInt32 r_type;
-  tBool ret=False, use_addend = False;
+  uint32_t r_type;
+  bool ret=false, use_addend = false;
   char buff[300];
   UNUSED(codelen);
   UNUSED(defval);
@@ -1844,7 +1844,7 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_ppc(char *str,
                    if(buff[0] && ret)
                    {
 		     strcat(str,buff);
-		     use_addend = True;
+		     use_addend = true;
 		   }
                    else retval = RAPREF_NONE;
 		   break;
@@ -1863,7 +1863,7 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_ppc(char *str,
                    {
 		     strcat(str,buff);
 		     /* strcat(str,"-.here"); <- it's commented for readability */
-		     use_addend = True;
+		     use_addend = true;
 		   }
                    else retval = RAPREF_NONE;
 		   break;
@@ -1872,7 +1872,7 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_ppc(char *str,
     case R_PPC_GOT16_HA:
 		   strcat(str,"GOT-");
 		strcat(str,Get8Digit(erl->offset));
-		   use_addend = True;
+		   use_addend = true;
 		   break;
     case R_PPC_PLT16_LO:
     case R_PPC_PLT16_HI:
@@ -1880,12 +1880,12 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_ppc(char *str,
     case R_PPC_PLT32:
                    strcat(str,"PLT-");
                    strcat(str,Get8Digit(erl->offset));
-		   use_addend = True;
+		   use_addend = true;
 		   break;
     case R_PPC64_PLT64: /* PLT[offset] + addendum - this */
                    strcat(str,"PLT-");
                    strcat(str,Get16Digit(erl->offset));
-		   use_addend = True;
+		   use_addend = true;
 		   break;
     case R_PPC_GLOB_DAT:  /* symbol */
     case R_PPC_JMP_SLOT:  /* symbol */
@@ -1925,26 +1925,26 @@ static void __NEAR__ __FASTCALL__ displayELFdyninfo(__filesize_t f_off,unsigned 
   ElfXX_External_Dyn dyntab;
   __filesize_t curroff,stroff;
   unsigned i;
-  tBool is_add;
+  bool is_add;
   memArray * obj;
   char stmp[80];
   stroff = 0;
   stroff = elfVA2PA(findPHDynEntry(DT_STRTAB,f_off,nitems));
   if(!stroff) { NotifyBox(" String information not found!",NULL); return; }
   bmSeek(f_off,SEEKF_START);
-  if(!(obj = ma_Build(0,True))) return;
+  if(!(obj = ma_Build(0,true))) return;
   strcpy(stmp,S_INTERPRETER);
   curroff = findPHEntry(PT_INTERP, &i);
   if(curroff) bmReadBufferEx(&stmp[sizeof(S_INTERPRETER) - 1],sizeof(stmp)-sizeof(S_INTERPRETER)-1,
                              curroff,SEEKF_START);
-  if(!ma_AddString(obj,stmp,True)) goto dyn_end;
+  if(!ma_AddString(obj,stmp,true)) goto dyn_end;
   bmSeek(f_off,SEEKF_START);
   for(i = 0;i < nitems;i++)
   {
     bmReadBufferEx(&dyntab,sizeof(dyntab),f_off,SEEKF_START);
     if(bmEOF()) break;
     f_off += ELF_EDYN_SIZE();
-    is_add = True;
+    is_add = true;
     switch(ELF_XWORD(ELF_EDYN(dyntab,d_tag)))
     {
       case DT_NULL: goto dyn_end;
@@ -1966,9 +1966,9 @@ static void __NEAR__ __FASTCALL__ displayELFdyninfo(__filesize_t f_off,unsigned 
                       bmReadBufferEx(&stmp[strlen(stmp)],70,ELF_XWORD(ELF_EDYN(dyntab,d_un.d_ptr)) + stroff,SEEKF_START);
                     }
                     break;
-       default:     is_add = False; break;
+       default:     is_add = false; break;
     }
-    if(is_add) if(!ma_AddString(obj,stmp,True)) break;
+    if(is_add) if(!ma_AddString(obj,stmp,true)) break;
   }
   dyn_end:
   ma_Display(obj," Dynamic linking information ",LB_SORTABLE,-1);
@@ -2050,7 +2050,7 @@ static unsigned long __FASTCALL__ AppendELFRef(char *str,__filesize_t ulShift,in
   return flags & APREF_TRY_LABEL ? ret ? RAPREF_DONE : RAPREF_NONE : ret;
 }
 
-static tBool __FASTCALL__ IsELF32( void )
+static bool __FASTCALL__ IsELF32( void )
 {
   char id[4];
   bmReadBufferEx(id,sizeof(id),0,SEEKF_START);
@@ -2058,14 +2058,14 @@ static tBool __FASTCALL__ IsELF32( void )
 //  [0] == EI_MAG0 && id[1] == EI_MAG1 && id[2] == 'L' && id[3] == 'F';
 }
 
-static void __FASTCALL__ __elfReadSegments(linearArray **to, tBool is_virt )
+static void __FASTCALL__ __elfReadSegments(linearArray **to, bool is_virt )
 {
  ElfXX_External_Phdr phdr;
  ElfXX_External_Shdr shdr;
  struct tag_elfVAMap vamap;
  __filesize_t fp;
  unsigned va_map_count;
- tBool test;
+ bool test;
  size_t i;
    /* We'll try to build section headers first
       since they is used in calculations of objects.
@@ -2160,8 +2160,8 @@ static void __FASTCALL__ ELFinit( void )
                        ELF_OFF(ELF_EHDR(elf,e_shoff)) < fs &&
                        ELF_OFF(ELF_EHDR(elf,e_shoff)) +
                        ELF_HALF(ELF_EHDR(elf,e_shnum))*ELF_HALF(ELF_EHDR(elf,e_shentsize)) <= fs;
-   __elfReadSegments(&va_map_virt,True);
-   __elfReadSegments(&va_map_phys,False);
+   __elfReadSegments(&va_map_virt,true);
+   __elfReadSegments(&va_map_phys,false);
    /** Find min value of virtual address */
    if(va_map_virt)
    for(i = 0; i < va_map_virt->nItems;i++)
@@ -2204,11 +2204,11 @@ static __filesize_t __FASTCALL__ ELFHelp( void )
   return BMGetCurrFilePos();
 }
 
-static tBool __FASTCALL__ ELFAddrResolv(char *addr,__filesize_t cfpos)
+static bool __FASTCALL__ ELFAddrResolv(char *addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
-  tBool bret = True;
+  bool bret = true;
   __filesize_t res;
   if(cfpos < ELF_EHDR_SIZE())
   {
@@ -2221,7 +2221,7 @@ static tBool __FASTCALL__ ELFAddrResolv(char *addr,__filesize_t cfpos)
       addr[0] = '.';
       strcpy(&addr[1],Get8Digit(res));
     }
-    else bret = False;
+    else bret = false;
   return bret;
 }
 
@@ -2233,7 +2233,7 @@ static tCompare __FASTCALL__ compare_pubnames(const void __HUGE__ *v1,const void
   return __CmpLong__(pnam1->pa,pnam2->pa);
 }
 
-static tBool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
+static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
   struct PubName *ret,key;
   key.pa = pa;
@@ -2243,7 +2243,7 @@ static tBool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__fil
     active_shtbl = ret->addinfo;
     elf386_readnametableex(ret->nameoff,buff,cb_buff);
     buff[cb_buff-1] = 0;
-    return True;
+    return true;
   }
   return udnFindName(pa,buff,cb_buff);
 }
@@ -2296,7 +2296,7 @@ static void __FASTCALL__ elf_ReadPubNameList(BGLOBAL handle,void (__FASTCALL__ *
       if(ELF_IS_SECTION_PHYSICAL(ELF_HALF(ELF_SYM(sym,st_shndx))) &&
          ELF_ST_TYPE(ELF_SYM(sym,st_info[0])) != STT_SECTION)
       {
-        epn.pa = __calcSymEntry(handle,i,False);
+        epn.pa = __calcSymEntry(handle,i,false);
         epn.nameoff = ELF_WORD(ELF_SYM(sym,st_name));
         epn.addinfo = __elfSymShTbl;
         epn.attr = ELF_SYM(sym,st_info[0]);
@@ -2317,7 +2317,7 @@ static void __FASTCALL__ elf_ReadPubName(BGLOBAL b_cache,const struct PubName *i
 }
 
 static __filesize_t __FASTCALL__ elfGetPubSym(char *str,unsigned cb_str,unsigned *func_class,
-                           __filesize_t pa,tBool as_prev)
+                           __filesize_t pa,bool as_prev)
 {
    return fmtGetPubSym(elfcache,str,cb_str,func_class,pa,as_prev,
                        elf_ReadPubNameList,

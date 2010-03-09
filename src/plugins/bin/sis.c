@@ -54,17 +54,17 @@ struct SisHeader
     unsigned long  ComponentNamePointer;
 };
 
-static tBool  __FASTCALL__ sis_check_fmt( void )
+static bool  __FASTCALL__ sis_check_fmt( void )
 {
     unsigned long id1,id2,id3;
     bmSeek(0,BM_SEEK_SET);
     id1=bmReadDWordEx(0,BM_SEEK_SET);
     id2=bmReadDWordEx(4,BM_SEEK_SET);
     id3=bmReadDWordEx(8,BM_SEEK_SET);
-    if((id2==0x10003A12 || id2==0x1000006D) && id3==0x10000419) return True;
+    if((id2==0x10003A12 || id2==0x1000006D) && id3==0x10000419) return true;
     /* try s60 3rd */
-    if(id1==0x10201A7A) return True;
-    return False;
+    if(id1==0x10201A7A) return true;
+    return false;
 }
 static void __FASTCALL__ sis_init_fmt( void ) {}
 static void __FASTCALL__ sis_destroy_fmt(void) {}

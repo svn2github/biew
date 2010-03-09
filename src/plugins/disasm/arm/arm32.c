@@ -362,7 +362,7 @@ extern const char * arm_reg_name[];
     p=strchr(msk,ch);\
     if(p) {\
 	READ_IMM32(ch);\
-	has = True;\
+	has = true;\
 	a = val;\
     }\
 }
@@ -385,7 +385,7 @@ extern const char * arm_reg_name[];
 	if(prev) strcat(dret->str,","); prev=1;\
 	if(amode) strcat(dret->str,"[");\
 	strcat(dret->str,arm_reg_name[val&0xF]);\
-	if(has_W==True && a_W) strcat(dret->str,"!");\
+	if(has_W==true && a_W) strcat(dret->str,"!");\
     }\
 }
 
@@ -413,18 +413,18 @@ extern const char * arm_reg_name[];
 }
 
 void __FASTCALL__ arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
-					tUInt32 opcode, unsigned flags,unsigned index)
+					uint32_t opcode, unsigned flags,unsigned index)
 {
     unsigned i,idx,val,prev,bracket;
     const char *msk=opcode_table[index].mask;
     char *p;
     unsigned a_I,a_P,a_U,a_N,a_W;
-    tBool has_I,has_P,has_U,has_N,has_W;
+    bool has_I,has_P,has_U,has_N,has_W;
     UNUSED(flags);
     prev=0;
     bracket=0;
     a_I=a_P=a_U=a_N=a_W=0;
-    has_I=has_P=has_U=has_N=has_W=False;
+    has_I=has_P=has_U=has_N=has_W=false;
     /* some common tests */
     GET_ADDR_MODE('I',has_I,a_I);
     GET_ADDR_MODE('P',has_P,a_P);
@@ -448,7 +448,7 @@ void __FASTCALL__ arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
 
     p=strchr(msk,'o');
     if(p) {
-	tInt32 tbuff;
+	int32_t tbuff;
 	unsigned hh=0;
 	p=strchr(msk,'H');
 	if(p)
@@ -473,7 +473,7 @@ void __FASTCALL__ arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
     if(p) {
 	READ_IMM32('<');
 	if(prev) strcat(dret->str,",");
-	if(has_I == True && a_I) {
+	if(has_I == true && a_I) {
 	    strcat(dret->str,"#");
 	    strcat(dret->str,Get2Digit(val&0xFF));
 	    strcat(dret->str,",");
@@ -519,7 +519,7 @@ void __FASTCALL__ arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
     p=strchr(msk,'a');
     if(p) {
 	READ_IMM32('a');
-	if(has_I == True && a_I) {
+	if(has_I == true && a_I) {
 	    unsigned idx=(val>>4)&0x07;
 	    const char *pfx=NULL;
 	    switch(idx) {
@@ -533,7 +533,7 @@ void __FASTCALL__ arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
 		case 6:
 		case 7: pfx="ROR"; break;
 	    }
-	    if(prev) strcat(dret->str,has_U==True&&a_U?"+":"-");
+	    if(prev) strcat(dret->str,has_U==true&&a_U?"+":"-");
 	    strcat(dret->str,arm_reg_name[val&0xF]);
 	    strcat(dret->str,",");
 	    strcat(dret->str,pfx);
@@ -550,8 +550,8 @@ void __FASTCALL__ arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
     p=strchr(msk,'A');
     if(p) {
 	READ_IMM32('A');
-	if(prev) strcat(dret->str,has_U==True&&a_U?"+":"-");
-	if(has_N == True && a_N) {
+	if(prev) strcat(dret->str,has_U==true&&a_U?"+":"-");
+	if(has_N == true && a_N) {
 	    strcat(dret->str,Get2Digit(val&0xFF));
 	}
 	else {
@@ -589,7 +589,7 @@ void __FASTCALL__ arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
 }
 
 void __FASTCALL__ arm32Disassembler(DisasmRet *dret,__filesize_t ulShift,
-					tUInt32 opcode, unsigned flags)
+					uint32_t opcode, unsigned flags)
 {
     int done;
     unsigned i,ix,n,idx,val;

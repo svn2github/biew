@@ -46,9 +46,9 @@ extern int DisasmCurrLine;
 
 char codeguid_image[] = "=>[X]";
 
-tBool __FASTCALL__ initCodeGuider( void )
+bool __FASTCALL__ initCodeGuider( void )
 {
-  tBool ret = False;
+  bool ret = false;
   BackAddr = PMalloc(sizeof(__filesize_t)*BACK_ADDR_SIZE);
   if(BackAddr)
   {
@@ -58,7 +58,7 @@ tBool __FASTCALL__ initCodeGuider( void )
     {
       GoLineNums = PMalloc(sizeof(unsigned int)*GO_ADDR_SIZE);
       if(!GoLineNums) { PFree(BackAddr); PFree(GoAddr); }
-      else ret = True;
+      else ret = true;
     }
   }
   return ret;
@@ -80,7 +80,7 @@ static char __FASTCALL__ gidGetAddressKey( unsigned index )
 {
   int i,j;
   char key;
-  tBool found;
+  bool found;
   __filesize_t addr1,addr2;
   key = 0;
   addr1 = GoAddr[index];
@@ -89,12 +89,12 @@ static char __FASTCALL__ gidGetAddressKey( unsigned index )
     addr2 = GoAddr[i];
     if (addr2 == addr1) break;
     /* check for presence addr2 above */
-    found = False;
+    found = false;
     for (j = 0;j < i;j++)
     {
       if (GoAddr[j] == addr2)
       {
-        found = True;
+        found = true;
         break;
       }
     }
@@ -106,7 +106,7 @@ static char __FASTCALL__ gidGetAddressKey( unsigned index )
 static int __FASTCALL__ gidGetKeyIndex( char key )
 {
   int res,i,j,index;
-  tBool found;
+  bool found;
   __filesize_t addr;
   if (key > 'Z') key = key - 'z' + 'Z';
   key = key > '9' ? key - 'A' + 10 : key - '0';
@@ -116,12 +116,12 @@ static int __FASTCALL__ gidGetKeyIndex( char key )
   {
     addr = GoAddr[i];
     /* check for presence addr above */
-    found = False;
+    found = false;
     for (j = 0;j < i;j++)
     {
       if (GoAddr[j] == addr)
       {
-        found = True;
+        found = true;
         break;
       }
     }
@@ -177,7 +177,7 @@ void __FASTCALL__ GidResetGoAddress( int keycode )
        else GoAddrPtr = -1;
 }
 
-extern tBool DisasmPrepareMode;
+extern bool DisasmPrepareMode;
 
 void __FASTCALL__ GidAddGoAddress(char *str,__filesize_t addr)
 {
@@ -257,7 +257,7 @@ __filesize_t __FASTCALL__ GidGetGoAddress(unsigned keycode)
   return ret;
 }
 
-char * __FASTCALL__ GidEncodeAddress(__filesize_t cfpos,tBool AddressDetail)
+char * __FASTCALL__ GidEncodeAddress(__filesize_t cfpos,bool AddressDetail)
 {
   static char addr[11];
 #if __WORDSIZE >= 32

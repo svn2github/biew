@@ -28,7 +28,7 @@ static tCompare __FASTCALL__ comp_class(const void __HUGE__ *e1,const void __HUG
   return stricmp(t1->name, t2->name);
 }
 
-tBool __FASTCALL__ twcRegisterClass(const char *name, unsigned flags, twClassFunc method)
+bool __FASTCALL__ twcRegisterClass(const char *name, unsigned flags, twClassFunc method)
 {
   TwClass newest;
   TwClass *exists = twcFindClass(name);
@@ -46,14 +46,14 @@ tBool __FASTCALL__ twcRegisterClass(const char *name, unsigned flags, twClassFun
           if(!la_AddData(class_set,&newest, NULL))
           {
             free(newest.name);
-            return False;
+            return false;
           }
           la_Sort(class_set, comp_class);
-          return True;
+          return true;
         }
      }
   }
-  return False;
+  return false;
 }
 
 static void __FASTCALL__ del_class(void __HUGE__ *it)

@@ -44,11 +44,11 @@ static BGLOBAL ne_cache3 = &bNull;
 
 static __filesize_t __NEAR__ __FASTCALL__ CalcEntryPointNE( unsigned,unsigned );
 static void __FASTCALL__ ne_ReadPubNameList(BGLOBAL handle,void (__FASTCALL__ *mem_out)(const char *));
-static tBool  __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
-static void __FASTCALL__ rd_ImpName(char *buff,int blen,unsigned idx,tBool useasoff);
+static bool  __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
+static void __FASTCALL__ rd_ImpName(char *buff,int blen,unsigned idx,bool useasoff);
 static __filesize_t __FASTCALL__ nePA2VA(__filesize_t pa);
 
-static tBool __FASTCALL__ neLowMemFunc( unsigned long need_mem )
+static bool __FASTCALL__ neLowMemFunc( unsigned long need_mem )
 {
   UNUSED(need_mem);
   if(!fmtActiveState)
@@ -57,10 +57,10 @@ static tBool __FASTCALL__ neLowMemFunc( unsigned long need_mem )
     {
        la_Destroy(PubNames);
        PubNames = NULL;
-       return True;
+       return true;
     }
   }
-  return False;
+  return false;
 }
 
 const char * __nedata[] =
@@ -132,17 +132,17 @@ static void __NEAR__ PaintNewHeaderNE_1( void )
            ,ne.neChecksum
            ,ne.neContestEXE
            ,__nedata[ne.neContestEXE & 0x03]
-           ,GetBool( ne.neContestEXE & 0x0004 )
-           ,GetBool( ne.neContestEXE & 0x0008 )
-           ,GetBool( ne.neContestEXE & 0x0010 )
-           ,GetBool( ne.neContestEXE & 0x0020 )
-           ,GetBool( ne.neContestEXE & 0x0040 )
-           ,GetBool( ne.neContestEXE & 0x0040 )
+           ,Gebool( ne.neContestEXE & 0x0004 )
+           ,Gebool( ne.neContestEXE & 0x0008 )
+           ,Gebool( ne.neContestEXE & 0x0010 )
+           ,Gebool( ne.neContestEXE & 0x0020 )
+           ,Gebool( ne.neContestEXE & 0x0040 )
+           ,Gebool( ne.neContestEXE & 0x0040 )
            ,GetPMWinAPI(ne.neContestEXE)
-           ,GetBool( ne.neContestEXE & 0x0800 )
-           ,GetBool( ne.neContestEXE & 0x2000 )
-           ,GetBool( ne.neContestEXE & 0x4000 )
-           ,GetBool( ne.neContestEXE & 0x8000 )
+           ,Gebool( ne.neContestEXE & 0x0800 )
+           ,Gebool( ne.neContestEXE & 0x2000 )
+           ,Gebool( ne.neContestEXE & 0x4000 )
+           ,Gebool( ne.neContestEXE & 0x8000 )
            ,ne.neAutoDataSegmentCount
            ,ne.neHeapSize
            ,ne.neStackSize
@@ -185,10 +185,10 @@ static void __NEAR__ PaintNewHeaderNE_2( void )
            ,ne.neLogicalSectorShiftCount
            ,ne.neResourceSegmentCount
            ,__getNEType(ne.neOperatingSystem)
-           ,GetBool(ne.neFlagsOther & 0x01)
-           ,GetBool(ne.neFlagsOther & 0x02)
-           ,GetBool(ne.neFlagsOther & 0x02)
-           ,GetBool(ne.neFlagsOther & 0x80));
+           ,Gebool(ne.neFlagsOther & 0x01)
+           ,Gebool(ne.neFlagsOther & 0x02)
+           ,Gebool(ne.neFlagsOther & 0x02)
+           ,Gebool(ne.neFlagsOther & 0x80));
   if(ne.neOperatingSystem == 2)
   {
 	/* Correction by Olivier Mengu\u00e9*/
@@ -306,19 +306,19 @@ static void __FASTCALL__ SegPaintNE(TWindow * win,const void ** names,unsigned s
           ,nam[start]->sdLength ? nam[start]->sdLength : (unsigned short)0xFFFF
           ,nam[start]->sdMinMemory ? nam[start]->sdMinMemory : (unsigned short)0xFFFF
           ,(flags & 0x0001) ? "DATA" : "CODE"
-          ,GetBool((flags & 0x0002) == 0x0002)
-          ,GetBool((flags & 0x0004) == 0x0004)
+          ,Gebool((flags & 0x0002) == 0x0002)
+          ,Gebool((flags & 0x0004) == 0x0004)
           ,(flags & 0x0010) ? "MOVEABLE" : "FIXED"
           ,(flags & 0x0020) ? "PURE" : "IMPURE"
           ,(flags & 0x0040) ? "PRELOAD" : "LOADONCALL"
           ,(flags & 0x0080) ? (flags & 0x0001) ? "READONLY" : "EXECUTEONLY" : (flags & 0x0001) ? "READWRITE" : "DEBUGABLE"
-          ,GetBool((flags & 0x0100) == 0x0100)
+          ,Gebool((flags & 0x0100) == 0x0100)
           ,(flags & 0x0200) ? (flags & 0x0001) ? "EXPAND DOWN" : "CONFORMING" : (flags & 0x0001) ? "EXPAND UP" : "NOCONFORMING"
           ,(unsigned)(((flags & 0x0C00) >> 10) & 0x03)
           ,(flags & 0x1000) ? "DISCARDABLE" : "NONDISCARDABLE"
           ,(flags & 0x2000) ? 32 : 16
-          ,GetBool((flags & 0x4000) == 0x0400)
-          ,GetBool((flags & 0x8000) == 0x0800));
+          ,Gebool((flags & 0x4000) == 0x0400)
+          ,Gebool((flags & 0x8000) == 0x0800));
  twRefreshFullWin(win);
 }
 
@@ -338,10 +338,10 @@ static void __FASTCALL__ EntPaintNE(TWindow * win,const void ** names,unsigned s
  twRefreshFullWin(win);
 }
 
-static tBool __FASTCALL__ __ReadModRefNamesNE(BGLOBAL handle,memArray * obj)
+static bool __FASTCALL__ __ReadModRefNamesNE(BGLOBAL handle,memArray * obj)
 {
  unsigned i;
- tUIntFast16 offTable;
+ uint_fast16_t offTable;
  bioSeek(handle,ne.neOffsetModuleReferenceTable + headshift,SEEKF_START);
  for(i = 0;i < ne.neModuleReferenceTableCount;i++)
  {
@@ -358,9 +358,9 @@ static tBool __FASTCALL__ __ReadModRefNamesNE(BGLOBAL handle,memArray * obj)
    bioReadBuffer(handle,stmp,length);
    stmp[length] = 0;
    bioSeek(handle,fp,SEEKF_START);
-   if(!ma_AddString(obj,stmp,True)) break;
+   if(!ma_AddString(obj,stmp,true)) break;
  }
- return True;
+ return true;
 }
 
 static void __FASTCALL__ ShowProcListNE(int);
@@ -369,7 +369,7 @@ static __filesize_t __FASTCALL__ ShowModRefNE( void )
 {
  BGLOBAL handle;
  int ret;
- tBool bval;
+ bool bval;
  unsigned nnames;
  __filesize_t fret;
  memArray * obj;
@@ -378,7 +378,7 @@ static __filesize_t __FASTCALL__ ShowModRefNE( void )
  handle = ne_cache;
  bioSeek(handle,0L,SEEK_SET);
  if(!(nnames = ne.neModuleReferenceTableCount)) { NotifyBox(NOT_ENTRY,MOD_REFER); return fret; }
- if(!(obj = ma_Build(nnames,True))) goto exit;
+ if(!(obj = ma_Build(nnames,true))) goto exit;
  w = PleaseWaitWnd();
  bval = __ReadModRefNamesNE(handle,obj);
  CloseWnd(w);
@@ -399,22 +399,22 @@ static __filesize_t __FASTCALL__ ShowModRefNE( void )
  return fret;
 }
 
-static tBool __NEAR__ __FASTCALL__ isPresent(memArray *arr,unsigned nentry,char *template)
+static bool __NEAR__ __FASTCALL__ isPresent(memArray *arr,unsigned nentry,char *template)
 {
    unsigned i;
-   tBool ret = False;
+   bool ret = false;
    if(nentry)
    {
      for(i = 0;i < nentry;i++)
      {
-       if(strcmp((const char *)arr->data[i],template) == 0) { ret = True; break; }
+       if(strcmp((const char *)arr->data[i],template) == 0) { ret = true; break; }
      }
    }
    return ret;
 }
 
 
-static tBool __FASTCALL__ __ReadProcListNE(BGLOBAL handle,memArray * obj,int modno)
+static bool __FASTCALL__ __ReadProcListNE(BGLOBAL handle,memArray * obj,int modno)
 {
   unsigned i,count;
   char buff[256];
@@ -429,7 +429,7 @@ static tBool __FASTCALL__ __ReadProcListNE(BGLOBAL handle,memArray * obj,int mod
     if(tsd.sdLength && tsd.sdOffset && tsd.sdFlags & 0x0100)
     {
       __filesize_t spos;
-      tUIntFast16 j,nrelocs;
+      uint_fast16_t j,nrelocs;
       RELOC_NE rne;
       spos = bioTell(handle);
       bioSeek(handle,((__fileoff_t)(tsd.sdOffset) << ne.neLogicalSectorShiftCount) + tsd.sdLength,SEEKF_START);
@@ -445,12 +445,12 @@ static tBool __FASTCALL__ __ReadProcListNE(BGLOBAL handle,memArray * obj,int mod
            }
            else
            {
-              rd_ImpName(buff,sizeof(buff),rne.ordinal,True);
+              rd_ImpName(buff,sizeof(buff),rne.ordinal,true);
            }
            if(!isPresent(obj,count,buff))
            {
              if(IsKbdTerminate()) goto exit;
-             if(!ma_AddString(obj,buff,True)) goto exit;
+             if(!ma_AddString(obj,buff,true)) goto exit;
            }
          }
       }
@@ -458,26 +458,26 @@ static tBool __FASTCALL__ __ReadProcListNE(BGLOBAL handle,memArray * obj,int mod
     }
   }
   exit:
-  return True;
+  return true;
 }
 
 static void __FASTCALL__ ShowProcListNE( int modno )
 {
  BGLOBAL handle;
  char ptitle[80],name[50];
- tBool __bool;
+ bool __bool;
  memArray* obj;
  TWindow *w;
  handle = ne_cache;
  bioSeek(handle,0L,SEEK_SET);
  w = PleaseWaitWnd();
- if(!(obj = ma_Build(0,True))) return;
+ if(!(obj = ma_Build(0,true))) return;
  __bool = __ReadProcListNE(handle,obj,modno);
  CloseWnd(w);
  if(__bool)
  {
      if(!obj->nItems)  { NotifyBox(NOT_ENTRY,MOD_REFER); return; }
-     rd_ImpName(name,sizeof(name),modno+1,False);
+     rd_ImpName(name,sizeof(name),modno+1,false);
      sprintf(ptitle,"%s%s ",IMPPROC_TABLE,name);
      ma_Display(obj,ptitle,LB_SORTABLE,-1);
  }
@@ -490,7 +490,7 @@ static long RNRprevshift = 0;
 static unsigned __FASTCALL__ RNameReadFull(BGLOBAL handle,char * names,unsigned nindex,unsigned long offset)
 {
  unsigned char length;
- tUIntFast16 Ordinal;
+ uint_fast16_t Ordinal;
  unsigned i;
  if(RNRprevind == (nindex - 1) && RNRprevshift)  bioSeek(handle,RNRprevshift,SEEKF_START);
  else
@@ -521,7 +521,7 @@ static unsigned __FASTCALL__ NResNameReadFull(BGLOBAL handle,char * names,unsign
   return RNameReadFull(handle,names,nindex,ne.neOffsetNonResidentNameTable);
 }
 #endif
-tBool __FASTCALL__ RNamesReadItems(BGLOBAL handle,memArray * obj,unsigned nnames,__filesize_t offset)
+bool __FASTCALL__ RNamesReadItems(BGLOBAL handle,memArray * obj,unsigned nnames,__filesize_t offset)
 {
  unsigned char length;
  unsigned Ordinal;
@@ -535,22 +535,22 @@ tBool __FASTCALL__ RNamesReadItems(BGLOBAL handle,memArray * obj,unsigned nnames
    bioReadBuffer(handle,stmp,length);
    Ordinal = bioReadWord(handle);
    sprintf(&stmp[length],"%c%-5u",LB_ORD_DELIMITER, Ordinal);
-   if(!ma_AddString(obj,stmp,True)) break;
+   if(!ma_AddString(obj,stmp,true)) break;
  }
- return True;
+ return true;
 }
 
-static tBool __FASTCALL__ NERNamesReadItems(BGLOBAL handle,memArray * names,unsigned nnames)
+static bool __FASTCALL__ NERNamesReadItems(BGLOBAL handle,memArray * names,unsigned nnames)
 {
    return RNamesReadItems(handle,names,nnames,ne.neOffsetResidentNameTable + headshift);
 }
 
-static tBool __FASTCALL__ NENRNamesReadItems(BGLOBAL handle,memArray * names,unsigned nnames)
+static bool __FASTCALL__ NENRNamesReadItems(BGLOBAL handle,memArray * names,unsigned nnames)
 {
    return RNamesReadItems(handle,names,nnames,ne.neOffsetNonResidentNameTable);
 }
 
-static tBool __NEAR__ __FASTCALL__ __ReadSegTableNE(BGLOBAL handle,memArray * obj,unsigned nnames)
+static bool __NEAR__ __FASTCALL__ __ReadSegTableNE(BGLOBAL handle,memArray * obj,unsigned nnames)
 {
  unsigned i;
  for(i = 0;i < nnames;i++)
@@ -558,9 +558,9 @@ static tBool __NEAR__ __FASTCALL__ __ReadSegTableNE(BGLOBAL handle,memArray * ob
    SEGDEF sd;
    if(IsKbdTerminate() || bioEOF(handle)) break;
    bioReadBuffer(handle,&sd,sizeof(SEGDEF));
-   if(!ma_AddData(obj,&sd,sizeof(SEGDEF),True)) break;
+   if(!ma_AddData(obj,&sd,sizeof(SEGDEF),true)) break;
  }
- return True;
+ return true;
 }
 
 unsigned __FASTCALL__ GetNamCountNE(BGLOBAL handle,__filesize_t offset )
@@ -622,7 +622,7 @@ static void __NEAR__ __FASTCALL__ SkipEntryItemNE(BGLOBAL handle,unsigned char e
  }
 }
 
-static tBool __FASTCALL__ ReadEntryNE(ENTRY * obj,unsigned entnum)
+static bool __FASTCALL__ ReadEntryNE(ENTRY * obj,unsigned entnum)
 {
  BGLOBAL handle;
  unsigned i,j;
@@ -640,22 +640,22 @@ static tBool __FASTCALL__ ReadEntryNE(ENTRY * obj,unsigned entnum)
        if(i == entnum - 1)
        {
          ReadEntryItemNE(handle,(ENTRY *)obj,etype);
-         return True;
+         return true;
        }
        else SkipEntryItemNE(handle,etype);
      }
   }
-  return False;
+  return false;
 }
 
-static tBool __FASTCALL__ ReadSegDefNE(SEGDEF * obj,unsigned segnum)
+static bool __FASTCALL__ ReadSegDefNE(SEGDEF * obj,unsigned segnum)
 {
  BGLOBAL handle;
   handle = ne_cache3;
-  if(segnum > ne.neSegmentTableCount || !segnum) return False;
+  if(segnum > ne.neSegmentTableCount || !segnum) return false;
   bioSeek(handle,(__fileoff_t)headshift + ne.neOffsetSegmentTable + (segnum - 1)*sizeof(SEGDEF),BM_SEEK_SET);
   bioReadBuffer(handle,(void *)obj,sizeof(SEGDEF));
-  return True;
+  return true;
 }
 
 static __filesize_t __NEAR__ __FASTCALL__ CalcEntryPointNE( unsigned segnum, unsigned offset )
@@ -667,7 +667,7 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcEntryPointNE( unsigned segnum, uns
   return shift;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ CalcEntryNE(unsigned ord,tBool dispmsg)
+static __filesize_t __NEAR__ __FASTCALL__ CalcEntryNE(unsigned ord,bool dispmsg)
 {
   ENTRY entr;
   SEGDEF segd;
@@ -701,7 +701,7 @@ static __filesize_t __FASTCALL__ ShowSegDefNE( void )
  nnames = ne.neSegmentTableCount;
  fpos = BMGetCurrFilePos();
  if(!nnames) { NotifyBox(NOT_ENTRY," Segment Definition "); return fpos; }
- if(!(obj = ma_Build(nnames,True))) return fpos;
+ if(!(obj = ma_Build(nnames,true))) return fpos;
  handle = ne_cache;
  bioSeek(handle,(__fileoff_t)headshift + ne.neOffsetSegmentTable,SEEK_SET);
  if(__ReadSegTableNE(handle,obj,nnames))
@@ -717,7 +717,7 @@ static __filesize_t __FASTCALL__ ShowSegDefNE( void )
  return fpos;
 }
 
-static tBool __NEAR__ __FASTCALL__ __ReadEntryTableNE(BGLOBAL handle,memArray * obj)
+static bool __NEAR__ __FASTCALL__ __ReadEntryTableNE(BGLOBAL handle,memArray * obj)
 {
  unsigned i;
  unsigned char j,nentry;
@@ -733,10 +733,10 @@ static tBool __NEAR__ __FASTCALL__ __ReadEntryTableNE(BGLOBAL handle,memArray * 
      ENTRY ent;
      if(IsKbdTerminate()) break;
      ReadEntryItemNE(handle,&ent,etype);
-     if(!ma_AddData(obj,&ent,sizeof(ENTRY),True)) break;
+     if(!ma_AddData(obj,&ent,sizeof(ENTRY),true)) break;
    }
  }
- return True;
+ return true;
 }
 
 static unsigned __FASTCALL__ GetEntryCountNE( void )
@@ -771,14 +771,14 @@ static __filesize_t __FASTCALL__ ShowEntriesNE( void )
  nnames = GetEntryCountNE();
  fpos = BMGetCurrFilePos();
  if(!nnames) { NotifyBox(NOT_ENTRY," Entries "); return fpos; }
- if(!(obj = ma_Build(nnames,True))) return fpos;
+ if(!(obj = ma_Build(nnames,true))) return fpos;
  handle = ne_cache;
  bioSeek(handle,(__fileoff_t)headshift + ne.neOffsetEntryTable,SEEK_SET);
  if(__ReadEntryTableNE(handle,obj))
  {
   int i;
     i = PageBox(50,6,(const void **)obj->data,obj->nItems,EntPaintNE) + 1;
-    if(i > 0)  fpos = CalcEntryNE(i,True);
+    if(i > 0)  fpos = CalcEntryNE(i,true);
  }
  ma_Destroy(obj);
  return fpos;
@@ -829,10 +829,10 @@ static char * __NEAR__ __FASTCALL__ GetResourceIDNE(BGLOBAL handle,unsigned rid,
  return buff;
 }
 
-static tBool __NEAR__ __FASTCALL__ __ReadResourceGroupNE(BGLOBAL handle,memArray *obj,unsigned nitems,long * addr)
+static bool __NEAR__ __FASTCALL__ __ReadResourceGroupNE(BGLOBAL handle,memArray *obj,unsigned nitems,long * addr)
 {
  unsigned i,j;
- tUIntFast16 rcAlign,rTypeID,rcount;
+ uint_fast16_t rcAlign,rTypeID,rcount;
  unsigned long BegResTab;
  char buff[81];
  BegResTab = bioTell(handle);
@@ -851,7 +851,7 @@ static tBool __NEAR__ __FASTCALL__ __ReadResourceGroupNE(BGLOBAL handle,memArray
       else             sprintf(buff,"< Ordinal type: %04hXH >",rTypeID);
     }
     else  sprintf(buff,"\"%s\"",GetResourceIDNE(handle,rTypeID,BegResTab));
-    if(!ma_AddString(obj,buff,True)) break;
+    if(!ma_AddString(obj,buff,true)) break;
     for(j = 0;j < rcount;j++)
     {
       NAMEINFO nam;
@@ -866,17 +866,17 @@ static tBool __NEAR__ __FASTCALL__ __ReadResourceGroupNE(BGLOBAL handle,memArray
                    ((nam.rnFlags & 0x0020) ? "PURE"     : "IMPURE"),
                    ((nam.rnFlags & 0x0040) ? "PRELOAD"  : "LOADONCALL")
                    );
-      if(!ma_AddString(obj,stmp,True)) goto exit;
+      if(!ma_AddString(obj,stmp,true)) goto exit;
     }
     i--;
  }
  exit:
- return True;
+ return true;
 }
 
 static unsigned int __NEAR__ __FASTCALL__ GetResourceGroupCountNE(BGLOBAL handle)
 {
- tUIntFast16 rcount, rTypeID;
+ uint_fast16_t rcount, rTypeID;
  int count = 0;
  __filesize_t pos;
  if(ne.neOffsetResourceTable == ne.neOffsetResidentNameTable) return 0;
@@ -909,7 +909,7 @@ static __filesize_t __FASTCALL__ ShowResourcesNE( void )
  handle = ne_cache;
  bioSeek(handle,(__fileoff_t)headshift + ne.neOffsetResourceTable,SEEK_SET);
  if(!(nrgroup = GetResourceGroupCountNE(handle))) { NotifyBox(NOT_ENTRY," Resources "); return fpos; }
- if(!(rgroup = ma_Build(nrgroup,True))) goto exit;
+ if(!(rgroup = ma_Build(nrgroup,true))) goto exit;
  if(!(raddr  = PMalloc(nrgroup*sizeof(long)))) return fpos;
  if(__ReadResourceGroupNE(handle,rgroup,nrgroup,raddr))
  {
@@ -933,7 +933,7 @@ static __filesize_t __FASTCALL__ ShowResNamNE( void )
                     LB_SELECTIVE | LB_SORTABLE,&ordinal);
   if(ret != -1)
   {
-    fpos = CalcEntryNE(ordinal,True);
+    fpos = CalcEntryNE(ordinal,true);
   }
   return fpos;
 }
@@ -950,22 +950,22 @@ static __filesize_t __FASTCALL__ ShowNResNmNE( void )
                       LB_SELECTIVE | LB_SORTABLE,&ordinal);
     if(ret != -1)
     {
-      fpos = CalcEntryNE(ordinal,True);
+      fpos = CalcEntryNE(ordinal,true);
     }
   }
   return fpos;
 }
 
-static tBool __FASTCALL__ IsNEFormat( void )
+static bool __FASTCALL__ IsNEFormat( void )
 {
    char id[2];
    headshift = IsNewExe();
    if(headshift)
    {
      bmReadBufferEx(id,sizeof(id),headshift,SEEKF_START);
-     if(id[0] == 'N' && id[1] == 'E') return True;
+     if(id[0] == 'N' && id[1] == 'E') return true;
    }
-   return False;
+   return false;
 }
 
 /***************************************************************************/
@@ -1121,7 +1121,7 @@ static unsigned __NEAR__ __FASTCALL__ __findSpecType(__filesize_t sstart,__files
    return ret;
 }
 
-static void __NEAR__ __FASTCALL__ rdImpNameNELX(char *buff,int blen,unsigned idx,tBool useasoff,__filesize_t OffTable)
+static void __NEAR__ __FASTCALL__ rdImpNameNELX(char *buff,int blen,unsigned idx,bool useasoff,__filesize_t OffTable)
 {
   unsigned char len;
   __filesize_t name_off;
@@ -1144,7 +1144,7 @@ static void __NEAR__ __FASTCALL__ rdImpNameNELX(char *buff,int blen,unsigned idx
   buff[len] = 0;
 }
 
-static void __FASTCALL__ rd_ImpName(char *buff,int blen,unsigned idx,tBool useasoff)
+static void __FASTCALL__ rd_ImpName(char *buff,int blen,unsigned idx,bool useasoff)
 {
   rdImpNameNELX(buff,blen,idx,useasoff,headshift + ne.neOffsetImportTable);
 }
@@ -1155,7 +1155,7 @@ static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrNE(char *str,RELOC_NE *rn
   const char *pref;
   __filesize_t retrf;
   char reflen;
-  tBool need_virt;
+  bool need_virt;
   reflen = 0;
   pref = "";
   retrf = RAPREF_NONE;
@@ -1179,7 +1179,7 @@ static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrNE(char *str,RELOC_NE *rn
     if((rne->Type & 3) == 1) sprintf(&str[strlen(str)],"@%hu",rne->ordinal);
     else
     {
-      rd_ImpName(buff,sizeof(buff),rne->ordinal,True);
+      rd_ImpName(buff,sizeof(buff),rne->ordinal,true);
       strcat(str,buff);
     }
   }
@@ -1189,7 +1189,7 @@ static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrNE(char *str,RELOC_NE *rn
      if(rne->idx == 0x00FF && rne->AddrType != 2)
      {
        __filesize_t ea;
-       ea = CalcEntryNE(rne->ordinal,False);
+       ea = CalcEntryNE(rne->ordinal,false);
        if(FindPubName(buff,sizeof(buff),ea))
           sprintf(&str[strlen(str)],"%s",buff);
        else 
@@ -1293,49 +1293,49 @@ static unsigned long __FASTCALL__ AppendNERef(char *str,__filesize_t ulShift,int
   return RAPREF_NONE;
 }
 
-/** return False if unsuccess True otherwise */
-static tBool __NEAR__ __FASTCALL__ ReadPubNames(BGLOBAL handle,__filesize_t offset,void (__FASTCALL__ *mem_out)(const char *))
+/** return false if unsuccess true otherwise */
+static bool __NEAR__ __FASTCALL__ ReadPubNames(BGLOBAL handle,__filesize_t offset,void (__FASTCALL__ *mem_out)(const char *))
 {
  struct PubName pnam;
  ENTRY ent;
  unsigned ord,i = 0;
  __filesize_t noff;
- tBool ret;
- if(!offset) return False;
- ret = True;
+ bool ret;
+ if(!offset) return false;
+ ret = true;
  bioSeek(handle,offset,SEEKF_START);
  while(1)
  {
    unsigned char l;
    noff = bioTell(handle);
    l = bioReadByte(handle);
-   if(l == 0 || bioEOF(handle)) { ret = True; break; }
+   if(l == 0 || bioEOF(handle)) { ret = true; break; }
    bioSeek(handle,l,SEEKF_CUR);
    ord = bioReadWord(handle);
    if(ord)
    {
      if(ReadEntryNE(&ent,ord))
      {
-       pnam.pa = CalcEntryNE(ord,False);
+       pnam.pa = CalcEntryNE(ord,false);
        pnam.nameoff = noff;
        pnam.attr = SC_GLOBAL;
      }
      else
      {
-       ret = False;
+       ret = false;
        break;
      }
      if(pnam.pa)
      {
        if(!la_AddData(PubNames,&pnam,mem_out))
        {
-         ret = False;
+         ret = false;
          break;
        }
      }
    }
    i++;
-   if(i > 0xFFFD || bioEOF(handle)) { ret = False; break; }
+   if(i > 0xFFFD || bioEOF(handle)) { ret = false; break; }
  }
  return ret;
 }
@@ -1351,7 +1351,7 @@ static void __FASTCALL__ ne_ReadPubName(BGLOBAL b_cache,const struct PubName *it
       buff[rlen] = 0;
 }
 
-static tBool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
+static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
   return fmtFindPubName(ne_cache2,buff,cb_buff,pa,
                         ne_ReadPubNameList,
@@ -1404,7 +1404,7 @@ static __filesize_t __FASTCALL__ NEHelp( void )
 static __filesize_t __FASTCALL__ neVA2PA(__filesize_t va)
 {
   SEGDEF nesd;
-  tUIntFast16 seg,off;
+  uint_fast16_t seg,off;
   seg = (va >> 16) & 0xFFFFU;
   off = va & 0xFFFFU;
   if(!ReadSegDefNE(&nesd,seg)) return 0L;
@@ -1438,7 +1438,7 @@ static __filesize_t __FASTCALL__ nePA2VA(__filesize_t pa)
 }
 
 static __filesize_t __FASTCALL__ neGetPubSym(char *str,unsigned cb_str,unsigned *func_class,
-                          __filesize_t pa,tBool as_prev)
+                          __filesize_t pa,bool as_prev)
 {
   return fmtGetPubSym(ne_cache,str,cb_str,func_class,pa,as_prev,
                       ne_ReadPubNameList,
@@ -1451,7 +1451,7 @@ static unsigned __FASTCALL__ neGetObjAttr(__filesize_t pa,char *name,unsigned cb
   __filesize_t currseg_st;
   unsigned i,segcount = ne.neSegmentTableCount,ret;
   unsigned bio_opt;
-  tBool found;
+  bool found;
   UNUSED(cb_name);
   *start = 0;
   *end = bmGetFLength();
@@ -1462,7 +1462,7 @@ static unsigned __FASTCALL__ neGetObjAttr(__filesize_t pa,char *name,unsigned cb
   bio_opt = bioGetOptimization(bmbioHandle());
   bioSetOptimization(bmbioHandle(),bio_opt | BIO_OPT_DB);
   bmSeek((__fileoff_t)headshift + ne.neOffsetSegmentTable,SEEK_SET);
-  found = False;
+  found = false;
   for(i = 0;i < segcount;i++)
   {
     SEGDEF nesd_c;
@@ -1473,7 +1473,7 @@ static unsigned __FASTCALL__ neGetObjAttr(__filesize_t pa,char *name,unsigned cb
     {
       *start = *end;
       *end = currseg_st;
-      found = True;
+      found = true;
       ret = i;
       break;
     }
@@ -1484,7 +1484,7 @@ static unsigned __FASTCALL__ neGetObjAttr(__filesize_t pa,char *name,unsigned cb
       *_class = nesd_c.sdFlags & 0x01 ? OC_DATA : OC_CODE;
       *bitness = nesd_c.sdFlags & 0x2000 ? DAB_USE32 : DAB_USE16;
       ret = i+1;
-      found = True;
+      found = true;
       break;
     }
     *start = currseg_st;
@@ -1512,12 +1512,12 @@ static int __FASTCALL__ bitnessNE(__filesize_t pa)
   return bitness;
 }
 
-static tBool __FASTCALL__ neAddressResolv(char *addr,__filesize_t cfpos)
+static bool __FASTCALL__ neAddressResolv(char *addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
-  tBool bret = True;
-  tUInt32 res;
+  bool bret = true;
+  uint32_t res;
   if(cfpos >= headshift && cfpos < headshift + sizeof(NEHEADER))
   {
      strcpy(addr,"NEH :");
@@ -1543,7 +1543,7 @@ static tBool __FASTCALL__ neAddressResolv(char *addr,__filesize_t cfpos)
       addr[0] = '.';
       strcpy(&addr[1],Get8Digit(res));
     }
-    else bret = False;
+    else bret = false;
   return bret;
 }
 

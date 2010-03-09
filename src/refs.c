@@ -25,7 +25,7 @@
 extern REGISTRY_BIN binTable;
 unsigned long __FASTCALL__ AppendAsmRef(char *str,__filesize_t ulShift,int mode,char codelen,__filesize_t r_sh)
 {
-  static tBool warn_displayed = False;
+  static bool warn_displayed = false;
   unsigned long ret = RAPREF_NONE;
   if(detectedFormat->bind) ret = detectedFormat->bind(str,ulShift,mode,codelen,r_sh);
   else
@@ -33,7 +33,7 @@ unsigned long __FASTCALL__ AppendAsmRef(char *str,__filesize_t ulShift,int mode,
     if(detectedFormat != &binTable && !warn_displayed)
     {
       WarnMessageBox("Sorry! Reference resolving for this format is still not supported",NULL);
-      warn_displayed = True;
+      warn_displayed = true;
     }
   }
   return ret;

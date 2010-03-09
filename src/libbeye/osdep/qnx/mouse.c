@@ -54,7 +54,7 @@ int __FASTCALL__ __init_mouse(void)
 	term_mouse_on();
 	term_mouse_flags(MFL,MFL);
 	term_mouse_handler(&_mouse_handler);
-	_mouse_state=True;
+	_mouse_state=true;
 	if(!photon)
 		_mouse_show();
 	term_state.mouse_cursor=0;
@@ -151,18 +151,18 @@ int _mouse_handler(unsigned *key,struct mouse_event *me)
 	return 0;
 }
 
-tBool __FASTCALL__ __MsGetState(void)
+bool __FASTCALL__ __MsGetState(void)
 {
 	return _mouse_state;
 }
 
-void __FASTCALL__ __MsSetState(tBool is_visible)
+void __FASTCALL__ __MsSetState(bool is_visible)
 {
 	if(!photon)
 	{
-		if(is_visible==False&&_mouse_state==True)
+		if(is_visible==false&&_mouse_state==true)
 			_mouse_hide();
-		if(_mouse_state==False&&is_visible==True)
+		if(_mouse_state==false&&is_visible==true)
 			_mouse_show();
 	}
 	_mouse_state=is_visible;

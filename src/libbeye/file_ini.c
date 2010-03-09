@@ -54,7 +54,7 @@ static unsigned char CaseSens = 2; /**< 2 - case 1 - upper 0 - lower */
 static FiUserFunc proc;
 static pVar FirstVar = NULL;
 FiHandler ActiveFile = 0;
-tBool ifSmarting = True;
+bool ifSmarting = true;
 const char *fi_Debug_Str = NULL;
 
 /**************************************************************\
@@ -682,7 +682,7 @@ unsigned int  __FASTCALL__ FiGetLocalNumberOfItems( FiHandler h,int nSection, in
 #endif
 
 #define FiOpenComment ';'
-tBool  FiAllWantInput = False;
+bool  FiAllWantInput = false;
 
 char * __FASTCALL__ FiGetNextString(FiHandler h, char * str,unsigned int size,char *original)
 {
@@ -810,9 +810,9 @@ const char * __FASTCALL__ FiExpandVariables(const char * var)
  return ret;
 }
 
-tBool __FASTCALL__ FiExpandAllVar(const char * value,char * store)
+bool __FASTCALL__ FiExpandAllVar(const char * value,char * store)
 {
-  tBool ret;
+  bool ret;
   if(ifSmarting && strchr(value,'%'))
   {
     char tmp[FI_MAXSTRLEN+1];
@@ -846,12 +846,12 @@ tBool __FASTCALL__ FiExpandAllVar(const char * value,char * store)
     }
     store[buffer_ptr] = '\0';
     if( npercent%2 ) FiAErrorCL(__FI_OPENVAR);
-    ret = True;
+    ret = true;
   }
   else
   {
     strcpy(store,value);
-    ret = False;
+    ret = false;
   }
   return ret;
 }
@@ -919,13 +919,13 @@ void __FASTCALL__ FiRemoveVariables(const char * var)
 
 /*************** END of List Var Section ***************/
 
-tBool __FASTCALL__ FiGetConditionStd( const char *condstr)
+bool __FASTCALL__ FiGetConditionStd( const char *condstr)
 {
   char * var,*user_ass;
   char * real_ass;
   const char *rvar;
   STRING str;
-  tBool ret;
+  bool ret;
   char cond[3];
 
   str.iptr = 0;
@@ -945,7 +945,7 @@ tBool __FASTCALL__ FiGetConditionStd( const char *condstr)
   FiExpandAllVar(var,user_ass);
   PFREE(var);
   if(str.str[str.iptr]) FiAErrorCL(__FI_BADCHAR);
-  ret = False;
+  ret = false;
   if(strcmp(cond,"==") == 0)  ret = (strcmp(user_ass,rvar) == 0);
   else
    if(strcmp(cond,"!=") == 0)  ret = (strcmp(user_ass,rvar) != 0);
@@ -956,12 +956,12 @@ tBool __FASTCALL__ FiGetConditionStd( const char *condstr)
   return ret;
 }
 
-tBool __FASTCALL__ FiCommandProcessorStd( const char * cmd )
+bool __FASTCALL__ FiCommandProcessorStd( const char * cmd )
 {
  char *word,*a,*v;
  const char *fdeb_save;
  STRING str;
- static tBool cond_ret = True;
+ static bool cond_ret = true;
  str.iptr = 0;
  str.str = cmd;
  word = __FiCNLegWord(&str,&iniLegalSet[1]);
@@ -1032,14 +1032,14 @@ tBool __FASTCALL__ FiCommandProcessorStd( const char * cmd )
  if(strcmp(word,"smart") == 0)
  {
    if(str.str[str.iptr]) FiAErrorCL(__FI_BADCHAR);
-   ifSmarting = True;
+   ifSmarting = true;
    goto Exit_CP;
  }
  else
  if(strcmp(word,"nosmart") == 0)
  {
    if(str.str[str.iptr]) FiAErrorCL(__FI_BADCHAR);
-   ifSmarting = False;
+   ifSmarting = false;
    goto Exit_CP;
  }
  else
@@ -1075,13 +1075,13 @@ tBool __FASTCALL__ FiCommandProcessorStd( const char * cmd )
  {
    char *sstore;
    unsigned int nsave;
-   tBool Condition,BeenElse;
+   bool Condition,BeenElse;
    int nLabel;
    sstore = __FiCMaxStr();
    nsave = FinCurrString[FiFilePtr - 1];
    cond_ret = Condition = (*FiGetCondition)(&cmd[str.iptr]);
    nLabel = 1;
-   BeenElse = False;
+   BeenElse = false;
    while(!bioEOF(ActiveFile))
    {
      FiGetNextString(ActiveFile,sstore,FI_MAXSTRLEN,NULL);
@@ -1112,8 +1112,8 @@ tBool __FASTCALL__ FiCommandProcessorStd( const char * cmd )
        if(strcmp(v,"else") == 0 && nLabel == 1)
        {
            if( BeenElse ) FiAErrorCL(__FI_ELSESTAT);
-           if( nLabel == 1 ) cond_ret = Condition = (Condition ? False : True);
-           if( nLabel == 1 ) BeenElse = True;
+           if( nLabel == 1 ) cond_ret = Condition = (Condition ? false : true);
+           if( nLabel == 1 ) BeenElse = true;
            PFREE(v);
            PFREE(a);
            continue;
@@ -1122,7 +1122,7 @@ tBool __FASTCALL__ FiCommandProcessorStd( const char * cmd )
        {
            if( BeenElse ) FiAErrorCL(__FI_ELIFSTAT);
            if( nLabel == 1 ) cond_ret = Condition = (*FiGetCondition)(&a[cStr.iptr]);
-           if( nLabel == 1 ) BeenElse = True;
+           if( nLabel == 1 ) BeenElse = true;
            PFREE(v);
            PFREE(a);
            continue;
@@ -1145,7 +1145,7 @@ tBool __FASTCALL__ FiCommandProcessorStd( const char * cmd )
 static  char * curr_sect = NULL;
 static  char * curr_subsect = NULL;
 
-tBool __FASTCALL__ FiStringProcessorStd(char * curr_str)
+bool __FASTCALL__ FiStringProcessorStd(char * curr_str)
 {
   char *item,*val;
     if(FiisCommand(curr_str))
@@ -1153,7 +1153,7 @@ tBool __FASTCALL__ FiStringProcessorStd(char * curr_str)
       item = __FiCCmd(curr_str);
       (*FiCommandProcessor)(item);
       PFREE(item);
-      return False;
+      return false;
     }
     else
     if(FiisSection(curr_str))
@@ -1161,24 +1161,24 @@ tBool __FASTCALL__ FiStringProcessorStd(char * curr_str)
       if(curr_sect) PFREE(curr_sect);
       if(curr_subsect) PFREE(curr_subsect);
       curr_sect = __FiCSection(curr_str);
-      return False;
+      return false;
     }
     else
     if(FiisSubSection(curr_str))
     {
       if(curr_subsect) PFREE(curr_subsect);
       curr_subsect = __FiCSubSection(curr_str);
-      return False;
+      return false;
     }
     else
     if(FiisItem(curr_str))
     {
       char buffer[FI_MAXSTRLEN+1];
-      tBool retval;
+      bool retval;
       IniInfo info;
       FiExpandAllVar(curr_str,buffer);
       item = __FiCItem(buffer);
-      retval = False;
+      retval = false;
       if(item[0])
       {
        val = __FiCValue(buffer);
@@ -1195,7 +1195,7 @@ tBool __FASTCALL__ FiStringProcessorStd(char * curr_str)
       PFREE(item);
       return retval;
     }
-  return False;
+  return false;
 }
 
 void __FASTCALL__ FiFileProcessorStd(const char * filename)
@@ -1203,7 +1203,7 @@ void __FASTCALL__ FiFileProcessorStd(const char * filename)
   char * work_str, * ondelete;
   FiHandler h;
   FiHandler oldh;
-  tBool done;
+  bool done;
   oldh = ActiveFile;
   h = FiOpen(filename);
   ActiveFile = h;
@@ -1241,7 +1241,7 @@ static void __FASTCALL__ hlFiFileProcessorStd(hIniProfile *ini)
 {
   char * work_str, * ondelete;
   FiHandler oldh;
-  tBool done;
+  bool done;
   oldh = ActiveFile;
   ActiveFile = ini->handler;
   work_str = __FiCMaxStr();
@@ -1276,9 +1276,9 @@ void __FASTCALL__ hlFiProgress(hIniProfile *ini,FiUserFunc usrproc)
 }
 
 void  (__FASTCALL__ *FiFileProcessor)(const char *fname) = FiFileProcessorStd;
-tBool (__FASTCALL__ *FiStringProcessor)(char * curr_str) = FiStringProcessorStd;
-tBool (__FASTCALL__ *FiCommandProcessor)(const char * cmd) = FiCommandProcessorStd;
-tBool (__FASTCALL__ *FiGetCondition)( const char *condstr) = FiGetConditionStd;
+bool (__FASTCALL__ *FiStringProcessor)(char * curr_str) = FiStringProcessorStd;
+bool (__FASTCALL__ *FiCommandProcessor)(const char * cmd) = FiCommandProcessorStd;
+bool (__FASTCALL__ *FiGetCondition)( const char *condstr) = FiGetConditionStd;
 
 /*****************************************************************\
 *                      High level support                          *
@@ -1312,7 +1312,7 @@ static tCompare __FASTCALL__ __full_compare_cache(const void __HUGE__ *v1,const 
 }
 #define __compare_cache __full_compare_cache
 
-static tBool __NEAR__ __FASTCALL__ __addCache(const char *section,const char *subsection,
+static bool __NEAR__ __FASTCALL__ __addCache(const char *section,const char *subsection,
                                const char *item,const char *value)
 {
   void __HUGE__ *found;
@@ -1323,13 +1323,13 @@ static tBool __NEAR__ __FASTCALL__ __addCache(const char *section,const char *su
   if(!(found =la_Find((linearArray *)opening->cache,&ic,__full_compare_cache)))
   {
       ic.item = PMalloc(strlen(section)+1);
-      if(!ic.item) { opening->flags &= ~HINI_FULLCACHED; return True; }
+      if(!ic.item) { opening->flags &= ~HINI_FULLCACHED; return true; }
       strcpy(ic.item,section);
       if(!(ic.v.leaf = la_Build(0,sizeof(ini_cache),0)))
       {
          PFree(ic.item);
          opening->flags &= ~HINI_FULLCACHED;
-         return True;
+         return true;
       }
       ic.flags = 0;
       if(!(la_AddData((linearArray *)opening->cache,&ic,NULL)))
@@ -1337,7 +1337,7 @@ static tBool __NEAR__ __FASTCALL__ __addCache(const char *section,const char *su
         PFree(ic.item);
         la_Destroy(ic.v.leaf);
         opening->flags &= ~HINI_FULLCACHED;
-        return True;
+        return true;
       }
       opening->flags |= HINI_UPDATED;
       la_Sort((linearArray *)opening->cache,__compare_cache);
@@ -1352,13 +1352,13 @@ static tBool __NEAR__ __FASTCALL__ __addCache(const char *section,const char *su
       if(!(found=la_Find(it->v.leaf,&ic,__full_compare_cache)))
       {
         ic.item = PMalloc(strlen(subsection)+1);
-        if(!ic.item) { opening->flags &= ~HINI_FULLCACHED; return True; }
+        if(!ic.item) { opening->flags &= ~HINI_FULLCACHED; return true; }
         strcpy(ic.item,subsection);
         if(!(ic.v.leaf = la_Build(0,sizeof(ini_cache),0)))
         {
            PFree(ic.item);
            opening->flags &= ~HINI_FULLCACHED;
-           return True;
+           return true;
         }
         ic.flags = 0;
         if(!(la_AddData(it->v.leaf,&ic,NULL)))
@@ -1366,7 +1366,7 @@ static tBool __NEAR__ __FASTCALL__ __addCache(const char *section,const char *su
           PFree(ic.item);
           la_Destroy(ic.v.leaf);
           opening->flags &= ~HINI_FULLCACHED;
-          return True;
+          return true;
         }
         opening->flags |= HINI_UPDATED;
         la_Sort(it->v.leaf,__compare_cache);
@@ -1382,17 +1382,17 @@ static tBool __NEAR__ __FASTCALL__ __addCache(const char *section,const char *su
         if(!(found=la_Find(it->v.leaf,&ic,__full_compare_cache)))
         {
           ic.item = PMalloc(strlen(item)+1);
-          if(!ic.item) { opening->flags &= ~HINI_FULLCACHED; return True; }
+          if(!ic.item) { opening->flags &= ~HINI_FULLCACHED; return true; }
           strcpy(ic.item,item);
           ic.v.value = PMalloc(strlen(value)+1);
-          if(!ic.v.value) { PFree(ic.item); opening->flags &= ~HINI_FULLCACHED; return True; }
+          if(!ic.v.value) { PFree(ic.item); opening->flags &= ~HINI_FULLCACHED; return true; }
           strcpy(ic.v.value,value);
           if(!(la_AddData(it->v.leaf,&ic,NULL)))
           {
             PFree(ic.item);
             PFree(ic.v.value);
             opening->flags &= ~HINI_FULLCACHED;
-            return True;
+            return true;
           }
           opening->flags |= HINI_UPDATED;
           la_Sort(it->v.leaf,__compare_cache);
@@ -1408,7 +1408,7 @@ static tBool __NEAR__ __FASTCALL__ __addCache(const char *section,const char *su
              if(!newval)
              {
                opening->flags &= ~HINI_FULLCACHED;
-               return True;
+               return true;
              }
              strcpy(newval,value);
              oldval = it->v.value;
@@ -1419,10 +1419,10 @@ static tBool __NEAR__ __FASTCALL__ __addCache(const char *section,const char *su
         }
       }
   }
-  return False;
+  return false;
 }
 
-static tBool __FASTCALL__ __buildCache(IniInfo *ini)
+static bool __FASTCALL__ __buildCache(IniInfo *ini)
 {
   return __addCache(ini->section,ini->subsection,
                     ini->item,ini->value);
@@ -1489,7 +1489,7 @@ static bhandle_t __NEAR__ __FASTCALL__ make_temp(const char *path,char *name_ptr
   return handle;
 }
 
-static tBool __FASTCALL__ MyCallback(IniInfo * ini)
+static bool __FASTCALL__ MyCallback(IniInfo * ini)
 {
   int cond;
   cond = 0;
@@ -1500,9 +1500,9 @@ static tBool __FASTCALL__ MyCallback(IniInfo * ini)
   {
     ret = min(strlen(ini->value),buf_len);
     strncpy(buf_ptr,ini->value,buf_len);
-    return True;
+    return true;
   }
-  return False;
+  return false;
 }
 
 static int __NEAR__ __FASTCALL__ out_sect(FILE * handle,const char *section)
@@ -1539,12 +1539,12 @@ static void __NEAR__ __FASTCALL__ out_item(FILE * handle,unsigned nled,const cha
   }
 }
 
-hIniProfile * __FASTCALL__ iniOpenFile(const char *fname,tBool *has_error)
+hIniProfile * __FASTCALL__ iniOpenFile(const char *fname,bool *has_error)
 {
   hIniProfile *_ret;
   unsigned fname_size;
   _ret = PMalloc(sizeof(hIniProfile));
-  if(has_error) *has_error = True;
+  if(has_error) *has_error = true;
   if(_ret)
   {
     fname_size = strlen(fname)+1;
@@ -1571,7 +1571,7 @@ hIniProfile * __FASTCALL__ iniOpenFile(const char *fname,tBool *has_error)
   return _ret;
 }
 
-static tBool __NEAR__ __FASTCALL__ __flushCache(hIniProfile *ini);
+static bool __NEAR__ __FASTCALL__ __flushCache(hIniProfile *ini);
 
 void __FASTCALL__ iniCloseFile(hIniProfile *ini)
 {
@@ -1605,8 +1605,8 @@ unsigned __FASTCALL__ iniReadProfileString(hIniProfile *ini,const char *section,
    {
      if(ini->handler != &bNull)
      {
-       tBool v_found;
-       v_found = False;
+       bool v_found;
+       v_found = false;
        if(ini->cache)
        {
           ini_cache ic;
@@ -1628,7 +1628,7 @@ unsigned __FASTCALL__ iniReadProfileString(hIniProfile *ini,const char *section,
                   fi = (ini_cache __HUGE__ *)foundv;
                   strncpy(buffer,fi->v.value,cbBuffer);
                   ret = min(strlen(fi->v.value),cbBuffer);
-                  v_found = True;
+                  v_found = true;
                }
             }
           }
@@ -1653,7 +1653,7 @@ static FILE * __NEAR__ __FASTCALL__ __makeIni(hIniProfile *ini)
   return hout;
 }
 
-static tBool __NEAR__ __FASTCALL__ __createIni(hIniProfile *ini,
+static bool __NEAR__ __FASTCALL__ __createIni(hIniProfile *ini,
                                 const char *_section,
                                 const char *_subsection,
                                 const char *_item,
@@ -1661,10 +1661,10 @@ static tBool __NEAR__ __FASTCALL__ __createIni(hIniProfile *ini,
 {
   FILE *hout;
   unsigned nled;
-  tBool _ret;
+  bool _ret;
   hout = __makeIni(ini);
-  _ret = True;
-  if(hout == NULL) _ret = False;
+  _ret = true;
+  if(hout == NULL) _ret = false;
   else
   {
      nled = 0;
@@ -1685,7 +1685,7 @@ static tBool __NEAR__ __FASTCALL__ __createIni(hIniProfile *ini,
   return _ret;
 }
 
-static tBool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
+static bool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
                                                const char *_section,
                                                const char *_subsection,
                                                const char *_item,
@@ -1697,24 +1697,24 @@ static tBool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
    char *original;
    unsigned nled,prev_val_size;
    bhandle_t hsrc;
-   tBool _ret,need_write,s_ok,ss_ok,i_ok,done,sb_ok,ssb_ok,written,Cond,if_on;
+   bool _ret,need_write,s_ok,ss_ok,i_ok,done,sb_ok,ssb_ok,written,Cond,if_on;
    /* test for no change of value */
    prev_val_size = strlen(_value)+2;
    prev_val = PMalloc(prev_val_size);
-   need_write = True;
-   if(!ini) return False;
+   need_write = true;
+   if(!ini) return false;
    if(prev_val && ini->handler != &bNull)
    {
      const char *def_val;
      if(strcmp(_value,"y") == 0) def_val = "n";
      else                       def_val = "y";
      iniReadProfileString(ini,_section,_subsection,_item,def_val,prev_val,prev_val_size);
-     if(strcmp(prev_val,_value) == 0) need_write = False;
+     if(strcmp(prev_val,_value) == 0) need_write = false;
      PFree(prev_val);
    }
-   if(!need_write) return True;
+   if(!need_write) return true;
    tmpname = PMalloc((strlen(ini->fname)+1)*2);
-   if(!tmpname) return False;
+   if(!tmpname) return false;
    if(ini->handler == &bNull) /* if file does not exist make it. */
    {
      _ret = __createIni(ini,_section,_subsection,_item,_value);
@@ -1724,10 +1724,10 @@ static tBool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
    bioSeek(ini->handler,0L,BIO_SEEK_SET);
    ActiveFile = ini->handler;
    hsrc = make_temp(ini->fname,tmpname);
-   if(hsrc == NULL_HANDLE) { _ret = False; goto Exit_WS; }
+   if(hsrc == NULL_HANDLE) { _ret = false; goto Exit_WS; }
    __OsClose(hsrc);
    tmphandle = fopen(tmpname,"wt");
-   if(tmphandle == NULL) { _ret = False; goto Exit_WS; }
+   if(tmphandle == NULL) { _ret = false; goto Exit_WS; }
    fprintf(tmphandle,HINI_HEADER);
    workstr = __FiCMaxStr();
    wstr2 = __FiCMaxStr();
@@ -1739,18 +1739,18 @@ static tBool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
      if(workstr) PFREE(workstr);
      if(wstr2) PFREE(wstr2);
      if(original) PFREE(original);
-     _ret = False;
+     _ret = false;
      goto Exit_WS;
    }
-   sb_ok = ssb_ok = s_ok = ss_ok = i_ok = done = False;
+   sb_ok = ssb_ok = s_ok = ss_ok = i_ok = done = false;
    nled = 0;
-   if(!_section) { s_ok = sb_ok = True; if(!_subsection) ss_ok = ssb_ok = True; }
+   if(!_section) { s_ok = sb_ok = true; if(!_subsection) ss_ok = ssb_ok = true; }
    wstr2[0] = 1;
-   Cond = True;
-   if_on = False;
+   Cond = true;
+   if_on = false;
    while(1)
    {
-     written = False;
+     written = false;
      FiGetNextString(ini->handler,workstr,FI_MAXSTRLEN,original);
      if(workstr[0] == 0) break;
      if(FiisCommand(workstr))
@@ -1760,8 +1760,8 @@ static tBool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
        if(strncmp(cstr,"if",2) == 0 ||
           strncmp(cstr,"elif",4) == 0 ||
           strncmp(cstr,"else",4) == 0 )
-       if_on = True;
-       if(strncmp(cstr,"endif",5) == 0) if_on = False;
+       if_on = true;
+       if(strncmp(cstr,"endif",5) == 0) if_on = false;
        PFREE(cstr);
      }
      if(Cond)
@@ -1773,13 +1773,13 @@ static tBool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
             FiGetSectionName(workstr,wstr2);
             if(strcmp(_section,wstr2) == 0)
             {
-              s_ok = sb_ok = True;
+              s_ok = sb_ok = true;
               nled = 2;
               ss_ok = ssb_ok = !_subsection;
             }
-            else s_ok = False;
+            else s_ok = false;
           }
-          else s_ok = False;
+          else s_ok = false;
        }
        else
        if(FiisSubSection(workstr))
@@ -1789,28 +1789,28 @@ static tBool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
             FiGetSubSectionName(workstr,wstr2);
             if(strcmp(_subsection,wstr2) == 0)
             {
-              ss_ok = ssb_ok = True;
+              ss_ok = ssb_ok = true;
               nled = 4;
             }
-            else ss_ok = False;
+            else ss_ok = false;
           }
-          else ss_ok = False;
+          else ss_ok = false;
        }
        else
        if(FiisItem(workstr))
        {
           FiGetItemName(workstr,wstr2);
-          if(strcmp(_item,wstr2) == 0) i_ok = True;
+          if(strcmp(_item,wstr2) == 0) i_ok = true;
           if(i_ok && s_ok && ss_ok)
           {
             if(!done || if_on)
             {
                out_item(tmphandle,nled,_item,_value);
-               written = True;
-               done = True;
+               written = true;
+               done = true;
             }
           }
-          else i_ok = False;
+          else i_ok = false;
       }
       /**********************************************/
       if(sb_ok && !s_ok)
@@ -1819,8 +1819,8 @@ static tBool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
           {
             if(!ssb_ok && !ss_ok && _subsection) { nled += 2; out_subsect(tmphandle,_subsection); }
             out_item(tmphandle,nled,_item,_value);
-            written = False;
-            done = True;
+            written = false;
+            done = true;
           }
       }
       if(s_ok && ssb_ok && !ss_ok)
@@ -1828,8 +1828,8 @@ static tBool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
          if(!done)
          {
              out_item(tmphandle,nled,_item,_value);
-             written = False;
-             done = True;
+             written = false;
+             done = true;
          }
       }
     }
@@ -1843,7 +1843,7 @@ static tBool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
         nled = out_sect(tmphandle,_section);
         if(_subsection)
         {
-          ssb_ok = True;
+          ssb_ok = true;
           nled+=out_subsect(tmphandle,_subsection);
         }
      }
@@ -1852,7 +1852,7 @@ static tBool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
         nled+=out_subsect(tmphandle,_subsection);
      }
      out_item(tmphandle,nled,_item,_value);
-     done = True;
+     done = true;
    }
    fclose(tmphandle);
    FiClose(ini->handler);
@@ -1862,7 +1862,7 @@ static tBool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
    PFREE(workstr);
    PFREE(wstr2);
    PFREE(original);
-   _ret = True;
+   _ret = true;
    Exit_WS:
    PFREE(tmpname);
    return _ret;
@@ -1905,13 +1905,13 @@ static void __NEAR__ __FASTCALL__ __flushPartialCache(hIniProfile *ini)
 }
 
 
-tBool __FASTCALL__ iniWriteProfileString(hIniProfile *ini, const char *_section,
+bool __FASTCALL__ iniWriteProfileString(hIniProfile *ini, const char *_section,
                                          const char *_subsection,
                                          const char *_item, const char *_value)
 {
-   tBool _ret;
+   bool _ret;
    opening = ini;
-   _ret = False;
+   _ret = false;
    if(ini->cache)
    {
      if((ini->flags & HINI_FULLCACHED) != HINI_FULLCACHED) goto flush_it;
@@ -1962,16 +1962,16 @@ static void __FASTCALL__ flush_sect(void __HUGE__ *data)
   la_ForEach(it->v.leaf,flush_subsect);
 }
 
-static tBool __NEAR__ __FASTCALL__ __flushCache(hIniProfile *ini)
+static bool __NEAR__ __FASTCALL__ __flushCache(hIniProfile *ini)
 {
   if((ini->flags & HINI_UPDATED) == HINI_UPDATED && ini->cache)
   {
     if(ini->handler != &bNull) FiClose(ini->handler);
     flush_handler = __makeIni(ini);
-    if(!flush_handler) return True;
+    if(!flush_handler) return true;
     la_ForEach((linearArray *)ini->cache,flush_sect);
     fclose(flush_handler);
     ini->handler = FiOpen(ini->fname);
   }
-  return False;
+  return false;
 }

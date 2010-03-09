@@ -30,8 +30,8 @@ tAbsCoord tvioWidth,tvioHeight;
 unsigned tvioNumColors;
 static HANDLE hOut;
 static unsigned long vio_flags;
-extern tBool  win32_use_ansi;
-static tBool is_winnt;
+extern bool  win32_use_ansi;
+static bool is_winnt;
 extern OSVERSIONINFO win32_verinfo;
 /* Added by Olivier Mengu\u00e9 */
 /* Backup of console state, to restore it at exit */
@@ -86,10 +86,10 @@ void __FASTCALL__ __term_vio( void )
 void __FASTCALL__ __vioRereadState( void )
 {
   CONSOLE_SCREEN_BUFFER_INFO csbinfo;
-  win32_use_ansi = False;
+  win32_use_ansi = false;
   switch(GetConsoleOutputCP())
   {
-     case 1251:  win32_use_ansi = True; break;
+     case 1251:  win32_use_ansi = true; break;
      default:    break;
   }
   GetConsoleScreenBufferInfo(hOut,&csbinfo);

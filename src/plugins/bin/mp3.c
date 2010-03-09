@@ -415,7 +415,7 @@ static int Xing_test(char *hdr,int *scale,int *lsf,int *srate,long *nframes,long
     return is_xing;
 }
 #include <stdio.h>
-static tBool  __FASTCALL__ mp3_check_fmt( void )
+static bool  __FASTCALL__ mp3_check_fmt( void )
 {
     unsigned i;
     unsigned long off;
@@ -433,22 +433,22 @@ static tBool  __FASTCALL__ mp3_check_fmt( void )
 	bmSeek(len+10,BM_SEEK_SET);
 	find_next_mp3_hdr(hdr);
 //	Xing_test(hdr,&scale,&lsf,&srate,&nframes,&nbytes);
-	if(mp_decode_mp3_header(hdr,&fmt,&mp3_brate,&mp3_samplerate,&mp3_channels) > 0)	return True;
+	if(mp_decode_mp3_header(hdr,&fmt,&mp3_brate,&mp3_samplerate,&mp3_channels) > 0)	return true;
     }
     else
     {
-	if(mp_decode_mp3_header(hdr,NULL,NULL,NULL,NULL) < 0) return False;
+	if(mp_decode_mp3_header(hdr,NULL,NULL,NULL,NULL) < 0) return false;
 	find_next_mp3_hdr(hdr);
-	if(bmEOF()) return False;
+	if(bmEOF()) return false;
 	for(i=0;i<5;i++)
 	{
-	    if((long)(off=mp_decode_mp3_header(hdr,&fmt,&mp3_brate,&mp3_samplerate,&mp3_channels)) < 0) return False;
+	    if((long)(off=mp_decode_mp3_header(hdr,&fmt,&mp3_brate,&mp3_samplerate,&mp3_channels)) < 0) return false;
 	    bmSeek(off,BM_SEEK_CUR);
-	    if(bmEOF()) return False;
+	    if(bmEOF()) return false;
 
 	}
     }
-    return True;
+    return true;
 }
 
 static __filesize_t __FASTCALL__ Show_MP3_Header( void )

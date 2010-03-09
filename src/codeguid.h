@@ -31,9 +31,9 @@ extern void              __FASTCALL__ GidResetGoAddress( int keycode );
 extern void              __FASTCALL__ GidAddGoAddress(char *str,__filesize_t addr);
 extern void              __FASTCALL__ GidAddBackAddress( void );
 extern __filesize_t      __FASTCALL__ GidGetGoAddress(unsigned keycode);
-extern char *            __FASTCALL__ GidEncodeAddress(__filesize_t cfpos,tBool aresolv);
+extern char *            __FASTCALL__ GidEncodeAddress(__filesize_t cfpos,bool aresolv);
 
-extern tBool             __FASTCALL__ initCodeGuider( void );
+extern bool             __FASTCALL__ initCodeGuider( void );
 extern void              __FASTCALL__ termCodeGuider( void );
 
 #ifdef __cplusplus

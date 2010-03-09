@@ -47,10 +47,10 @@ extern  unsigned        _MaxReallocHugeSegments;
 static LowMemCallBack *lmstack = NULL;
 unsigned               lmcount = 0;
 
-tBool    __FASTCALL__ PMRegLowMemCallBack(LowMemCallBack func)
+bool    __FASTCALL__ PMRegLowMemCallBack(LowMemCallBack func)
 {
   void *new_ptr;
-  tBool ret = False;
+  bool ret = false;
   if(lmcount < UINT_MAX)
   {
     if(!lmstack) new_ptr = malloc(sizeof(LowMemCallBack));
@@ -58,16 +58,16 @@ tBool    __FASTCALL__ PMRegLowMemCallBack(LowMemCallBack func)
     if(!new_ptr) return 0;
     lmstack = new_ptr;
     lmstack[lmcount++] = func;
-    ret = True;
+    ret = true;
   }
   return ret;
 }
 
-tBool  __FASTCALL__ PMUnregLowMemCallBack(LowMemCallBack func)
+bool  __FASTCALL__ PMUnregLowMemCallBack(LowMemCallBack func)
 {
   void *new_ptr;
   unsigned i,fidx;
-  tBool ret;
+  bool ret;
   fidx = UINT_MAX;
   for(i = 0;i < lmcount;i++)
   {
@@ -77,13 +77,13 @@ tBool  __FASTCALL__ PMUnregLowMemCallBack(LowMemCallBack func)
       break;
     }
   }
-  ret = False;
+  ret = false;
   if(fidx != UINT_MAX)
   {
     memmove(&lmstack[fidx],&lmstack[fidx+1],lmcount-(fidx+1));
     new_ptr = realloc(lmstack,(lmcount--)*sizeof(LowMemCallBack));
     if(new_ptr) lmstack = new_ptr;
-    ret = True;
+    ret = true;
   }
   return ret;
 }

@@ -252,7 +252,7 @@ static tCompare __FASTCALL__ compare_mz(const void __HUGE__ *e1,const void __HUG
   return ret;
 }
 
-static tBool __NEAR__ __FASTCALL__ isMZReferenced(__filesize_t shift,char len)
+static bool __NEAR__ __FASTCALL__ isMZReferenced(__filesize_t shift,char len)
 {
   if(mz.mzRelocationCount)
   {
@@ -265,7 +265,7 @@ static tBool __NEAR__ __FASTCALL__ isMZReferenced(__filesize_t shift,char len)
        return HLFind(&shift,CurrMZChain,CurrMZCount,sizeof(long),compare_mz) != 0;
      }
   }
-  return False;
+  return false;
 }
 static unsigned long __FASTCALL__ AppendMZRef(char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
@@ -283,7 +283,7 @@ static unsigned long __FASTCALL__ AppendMZRef(char *str,__filesize_t ulShift,int
   if(!DumpMode && !EditMode && (flags & APREF_TRY_LABEL) && codelen == 4)
   {
     r_sh += (((__filesize_t)mz.mzHeaderSize) << 4);
-    if(udnFindName(r_sh,stmp,sizeof(stmp))==True) strcat(str,stmp);
+    if(udnFindName(r_sh,stmp,sizeof(stmp))==true) strcat(str,stmp);
     else strcat(str,Get8Digit(r_sh));
     GidAddGoAddress(str,r_sh);
     ret = RAPREF_DONE;
@@ -291,17 +291,17 @@ static unsigned long __FASTCALL__ AppendMZRef(char *str,__filesize_t ulShift,int
   return ret;
 }
 
-static tBool  __FASTCALL__ mz_check_fmt( void )
+static bool  __FASTCALL__ mz_check_fmt( void )
 {
   unsigned char id[2];
-  tBool ret = False;
+  bool ret = false;
   bmReadBufferEx(id,sizeof(id),0,BM_SEEK_SET);
   if((id[0] == 'M' && id[1] == 'Z') ||
      (id[0] == 'Z' && id[1] == 'M'))
   {
     bmReadBufferEx((void  *)&mz,sizeof(MZHEADER),2,BM_SEEK_SET);
     HeadSize = ((unsigned long)mz.mzHeaderSize) << 4;
-    ret = True;
+    ret = true;
   }
   return ret;
 }
@@ -311,9 +311,9 @@ static void __FASTCALL__ mz_init_fmt( void ) {}
 static void __FASTCALL__ mz_destroy_fmt(void) {}
 static int  __FASTCALL__ mz_platform( void) { return DISASM_CPU_IX86; }
 
-static tBool __FASTCALL__ mzAddressResolv(char *addr,__filesize_t cfpos)
+static bool __FASTCALL__ mzAddressResolv(char *addr,__filesize_t cfpos)
 {
-  tBool bret = True;
+  bool bret = true;
   if(cfpos < sizeof(MZHEADER)+2) sprintf(addr,"MZH :%s",Get4Digit(cfpos));
   else
     if(cfpos >= sizeof(MZHEADER)+2 && cfpos < sizeof(MZHEADER)+2+(mz.mzRelocationCount<<2))
@@ -326,7 +326,7 @@ static tBool __FASTCALL__ mzAddressResolv(char *addr,__filesize_t cfpos)
        addr[0] = '.';
        strcpy(&addr[1],Get8Digit(mzPA2VA(cfpos)));
      }
-     else bret = False;
+     else bret = false;
   return bret;
 }
 

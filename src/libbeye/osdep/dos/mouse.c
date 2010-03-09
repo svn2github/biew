@@ -20,8 +20,8 @@
 
 #include "libbeye/libbeye.h"
 
-static tBool ms_visible = False;
-static tBool ms_inited = False;
+static bool ms_visible = false;
+static bool ms_inited = false;
 
 int __FASTCALL__ __init_mouse( void )
 {
@@ -37,21 +37,21 @@ int __FASTCALL__ __init_mouse( void )
   inreg.x.cx = tvioWidth / 2;
   inreg.x.dx = tvioHeight / 2;
   int86(0x33,&inreg,&outreg);
-  ms_inited = True;
+  ms_inited = true;
   return ret;
 }
 
 void __FASTCALL__ __term_mouse( void )
 {
-  if(ms_visible) __MsSetState(False);
+  if(ms_visible) __MsSetState(false);
 }
 
-tBool __FASTCALL__ __MsGetState( void )
+bool __FASTCALL__ __MsGetState( void )
 {
   return ms_visible;
 }
 
-void __FASTCALL__ __MsSetState( tBool is_visible )
+void __FASTCALL__ __MsSetState( bool is_visible )
 {
   union REGS inreg;
   if(ms_inited)

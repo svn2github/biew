@@ -403,9 +403,9 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
     if(detectedFormat->GetPubSym)
     {
 	prev_pa = detectedFormat->GetPubSym(prev_func,sizeof(prev_func),
-					    &func_class,ulShift,True);
+					    &func_class,ulShift,true);
         next_pa = detectedFormat->GetPubSym(prev_func,sizeof(prev_func),
-                                            &func_class,ulShift,False);
+                                            &func_class,ulShift,false);
     }
     else next_pa=prev_pa=0;
     if(!next_pa) next_pa=bmGetFLength();
@@ -592,10 +592,10 @@ static void  __FASTCALL__ javaHelpAsm( void )
   hlpDisplay(20030);
 }
 
-static tBool  __FASTCALL__ javaAsmHelp( void )
+static bool  __FASTCALL__ javaAsmHelp( void )
 {
   hlpDisplay(20031);
-  return False;
+  return false;
 }
 
 static int    __FASTCALL__ javaMaxInsnLen( void ) { return 13; }

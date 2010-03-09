@@ -77,14 +77,14 @@ static char *        disCodeBuffer = NULL,*disCodeBuf2 = NULL;
 static char *        disCodeBufPredict = NULL;
 static int           disMaxCodeLen;
 
-tBool DisasmPrepareMode = False;
+bool DisasmPrepareMode = false;
 
 char *   dis_comments;
 unsigned dis_severity;
 
 static void __NEAR__ __FASTCALL__ disAcceptActions( void );
 
-static tBool __FASTCALL__ disSelect_Disasm( void )
+static bool __FASTCALL__ disSelect_Disasm( void )
 {
   const char *modeName[sizeof(mainDisasmTable)/sizeof(REGISTRY_DISASM *)];
   size_t i,nModes;
@@ -99,9 +99,9 @@ static tBool __FASTCALL__ disSelect_Disasm( void )
     activeDisasm = mainDisasmTable[retval];
     DefDisasmSel = retval;
     disAcceptActions();
-    return True;
+    return true;
   }
-  return False;
+  return false;
 }
 
 static void __FASTCALL__ FillPrevAsmPage(__filesize_t bound,unsigned predist)
@@ -121,7 +121,7 @@ static void __FASTCALL__ FillPrevAsmPage(__filesize_t bound,unsigned predist)
   addrdet = hexAddressResolv;
   hexAddressResolv = 0;
   disNeedRef = 0;
-  DisasmPrepareMode = True;
+  DisasmPrepareMode = true;
   for(j = 0;;j++)
   {
     DisasmRet dret;
@@ -140,7 +140,7 @@ static void __FASTCALL__ FillPrevAsmPage(__filesize_t bound,unsigned predist)
   PrevStrCount = j < height ? j : height;
   LastPrevLen = PrevStrCount ? bound - PrevStrLenAddr[PrevStrCount - 1] : 0;
   disNeedRef = showref;
-  DisasmPrepareMode = False;
+  DisasmPrepareMode = false;
   hexAddressResolv = addrdet;
 }
 
@@ -215,10 +215,10 @@ static unsigned __FASTCALL__ drawAsm( unsigned keycode, unsigned textshift )
    addrdet = hexAddressResolv;
    disNeedRef = hexAddressResolv = 0;
    BMReadBufferEx(disCodeBuffer,disMaxCodeLen,cfpos,BM_SEEK_SET);
-   DisasmPrepareMode = True;
+   DisasmPrepareMode = true;
    dret = Disassembler(cfpos,(void *)disCodeBuffer,__DISF_SIZEONLY);
    if(cfpos + dret.codelen != amocpos && cfpos && amocpos) keycode = KE_SUPERKEY;
-   DisasmPrepareMode = False;
+   DisasmPrepareMode = false;
    disNeedRef = showref;
    hexAddressResolv = addrdet;
  }
@@ -401,19 +401,19 @@ static const char *refsdepth_names[] =
    "Reference ~prediction (mostly full)"
 };
 
-static tBool __FASTCALL__ disReferenceResolving( void )
+static bool __FASTCALL__ disReferenceResolving( void )
 {
   size_t nModes;
   int retval;
-  tBool ret;
+  bool ret;
   nModes = sizeof(refsdepth_names)/sizeof(char *);
   retval = SelBoxA(refsdepth_names,nModes," Reference resolving depth: ",disNeedRef);
   if(retval != -1)
   {
     disNeedRef = retval;
-    ret = True;
+    ret = true;
   }
-  else ret = False;
+  else ret = false;
   if(detectedFormat->set_state)
     detectedFormat->set_state(disNeedRef ? PS_ACTIVE : PS_INACTIVE);
   return ret;
@@ -426,7 +426,7 @@ static const char *panmod_names[] =
    "~Wide"
 };
 
-static tBool __FASTCALL__ disSelectPanelMode( void )
+static bool __FASTCALL__ disSelectPanelMode( void )
 {
   unsigned nModes;
   int i;
@@ -435,9 +435,9 @@ static tBool __FASTCALL__ disSelectPanelMode( void )
   if(i != -1)
   {
     disPanelMode = i;
-    return True;
+    return true;
   }
-  return False;
+  return false;
 }
 
 static const char *hilight_names[] =
@@ -447,7 +447,7 @@ static const char *hilight_names[] =
    "~Alt Highlight"
 };
 
-static tBool __FASTCALL__ disSelectHiLight( void )
+static bool __FASTCALL__ disSelectHiLight( void )
 {
   unsigned nModes;
   int i;
@@ -456,21 +456,21 @@ static tBool __FASTCALL__ disSelectHiLight( void )
   if(i != -1)
   {
     HiLight = i;
-    return True;
+    return true;
   }
-  return False;
+  return false;
 }
 
-static tBool __FASTCALL__ disDetect( void ) { return True; }
+static bool __FASTCALL__ disDetect( void ) { return true; }
 
-static tBool __FASTCALL__ DefAsmAction(int _lastbyte,int start)
+static bool __FASTCALL__ DefAsmAction(int _lastbyte,int start)
 {
  int _index;
- tBool redraw,dox;
+ bool redraw,dox;
  char xx;
-  redraw = True;
+  redraw = true;
   xx = edit_x / 2;
-  dox = True;
+  dox = true;
   _index = start + xx;
    switch(_lastbyte)
    {
@@ -480,7 +480,7 @@ static tBool __FASTCALL__ DefAsmAction(int _lastbyte,int start)
      case KE_F(7)   : EditorMem.buff[_index] ^= edit_XX; break;
      case KE_F(8)   : EditorMem.buff[_index]  = edit_XX; break;
      case KE_F(9)   : EditorMem.buff[_index] = EditorMem.save[_index]; break;
-     default        : redraw = edit_defaction(_lastbyte); dox = False; break;
+     default        : redraw = edit_defaction(_lastbyte); dox = false; break;
    }
   if(dox) { xx++; edit_x = xx*2; }
   return redraw;
@@ -545,7 +545,7 @@ static int __NEAR__ __FASTCALL__ FullAsmEdit(TWindow * ewnd)
  __filesize_t flen;
  unsigned max_buff_size = disMaxCodeLen*tvioHeight;
  tAbsCoord height = twGetClientHeight(MainWnd);
- tBool redraw = False;
+ bool redraw = false;
  char outstr[__TVIO_MAXSCREENWIDTH],owork[__TVIO_MAXSCREENWIDTH];
 
  flen = BMGetFLength();
@@ -558,7 +558,7 @@ static int __NEAR__ __FASTCALL__ FullAsmEdit(TWindow * ewnd)
  memset(EditorMem.alen,TWC_DEF_FILLER,height);
 
  DisasmScreen(ewnd,edit_cp,flen,0,height,start);
- PaintETitle(0,True);
+ PaintETitle(0,true);
  start = 0;
  twShowWin(ewnd);
  twSetCursorType(TW_CUR_NORM);
@@ -572,7 +572,7 @@ static int __NEAR__ __FASTCALL__ FullAsmEdit(TWindow * ewnd)
    if(!redraw) flags |= __ESS_NOREDRAW;
    _lastbyte = eeditstring(outstr,&legalchars[2],&len,(unsigned)(edit_y + 1),(unsigned *)&edit_x,
                           flags,owork,NULL);
-   CompressHex(&EditorMem.buff[start],outstr,EditorMem.alen[edit_y],False);
+   CompressHex(&EditorMem.buff[start],outstr,EditorMem.alen[edit_y],false);
    switch(_lastbyte)
    {
      case KE_CTL_F(4):
@@ -648,7 +648,7 @@ static int __NEAR__ __FASTCALL__ FullAsmEdit(TWindow * ewnd)
      EditorMem.alen[edit_y] = dret.codelen;
      DisasmScreen(ewnd,edit_cp,flen,0,height,0);
    }
-   PaintETitle(start + edit_x/2,True);
+   PaintETitle(start + edit_x/2,true);
    CheckXYBounds();
    start = edit_y ? Summ(EditorMem.alen,edit_y) : 0;
  }
@@ -666,13 +666,13 @@ static void __FASTCALL__ disEdit( void )
  ewnd = WindowOpen(len_64+1,2,disMaxCodeLen*2+len_64+1,tvioHeight-1,TWS_CURSORABLE);
  twSetColorAttr(browser_cset.edit.main); twClearWin();
  edit_x = edit_y = 0;
- EditMode = EditMode ? False : True;
+ EditMode = EditMode ? false : true;
  if(editInitBuffs(disMaxCodeLen,NULL,0))
  {
    FullAsmEdit(ewnd);
    editDestroyBuffs();
  }
- EditMode = EditMode ? False : True;
+ EditMode = EditMode ? false : true;
  CloseWnd(ewnd);
  PaintTitle();
 }
@@ -772,7 +772,7 @@ static unsigned __FASTCALL__ disCharSize( void ) { return 1; }
 
 static __filesize_t __FASTCALL__ disSearch(TWindow *pwnd, __filesize_t start,
                                             __filesize_t *slen, unsigned flags,
-                                            tBool is_continue, tBool *is_found)
+                                            bool is_continue, bool *is_found)
 {
   DisasmRet dret;
   __filesize_t tsize, retval, flen, dfpos, cfpos, sfpos; /* If search have no result */
@@ -783,7 +783,7 @@ static __filesize_t __FASTCALL__ disSearch(TWindow *pwnd, __filesize_t start,
   flen = BMGetFLength();
   retval = FILESIZE_MAX;
   disSearchBuff  = PMalloc(1002+DISCOM_SIZE);
-  DumpMode = True;
+  DumpMode = true;
   if(!disSearchBuff)
   {
      MemOutBox("Disassembler search initialization");
@@ -837,7 +837,7 @@ static __filesize_t __FASTCALL__ disSearch(TWindow *pwnd, __filesize_t start,
     strcat(disSearchBuff, dis_comments);
     if(strFind(disSearchBuff, strlen(disSearchBuff), search_buff, search_len, cache, flags))
     {
-      *is_found = True;
+      *is_found = true;
       retval = dfpos;
       *slen = dret.codelen;
       break;
@@ -846,7 +846,7 @@ static __filesize_t __FASTCALL__ disSearch(TWindow *pwnd, __filesize_t start,
   PFREE(disSearchBuff);
   bye:
   BMSeek(sfpos, SEEK_SET);
-  DumpMode = False;
+  DumpMode = false;
   return retval;
 }
 
@@ -938,14 +938,14 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
   if(ulShift >= BMGetFLength()-codelen)
   {
      char sout[75];
-     static tBool displayed = False;
+     static bool displayed = false;
      if(!displayed)
      {
        strncpy(sout,str,sizeof(sout)-1);
        sout[sizeof(sout)-1] = 0;
        if(!strlen(sout)) strcpy(sout,"disAppendDigits");
        ErrMessageBox(sout," Internal disassembler error detected ");
-       displayed = True;
+       displayed = true;
        COREDUMP();
      }
   }
@@ -963,19 +963,19 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
 	(type & DISARG_IDXDISP) || (type & DISARG_RIP)) &&
 	disNeedRef >= NEEDREF_PREDICT)    /* Only when reference prediction is on */
     {
-      tUInt64 _defval;
+      uint64_t _defval;
       unsigned fld_len=1;
       switch(dig_type)
       {
         default:
-        case DISARG_BYTE: _defval = *(tUInt8 *)defval;  fld_len=1; break;
-        case DISARG_CHAR: _defval = *(tInt8 *)defval;   fld_len=1; break;
-        case DISARG_WORD: _defval = *(tUInt16 *)defval; fld_len=2; break;
-        case DISARG_SHORT:_defval = *(tInt16 *)defval;  fld_len=2; break;
-        case DISARG_DWORD:_defval = *(tUInt32 *)defval; fld_len=4; break;
-        case DISARG_LONG: _defval = *(tInt32 *)defval;  fld_len=4; break;
-        case DISARG_QWORD:_defval = *(tUInt64 *)defval; fld_len=8; break;
-        case DISARG_LLONG:_defval = *(tInt64 *)defval;  fld_len=8; break;
+        case DISARG_BYTE: _defval = *(uint8_t *)defval;  fld_len=1; break;
+        case DISARG_CHAR: _defval = *(int8_t *)defval;   fld_len=1; break;
+        case DISARG_WORD: _defval = *(uint16_t *)defval; fld_len=2; break;
+        case DISARG_SHORT:_defval = *(int16_t *)defval;  fld_len=2; break;
+        case DISARG_DWORD:_defval = *(uint32_t *)defval; fld_len=4; break;
+        case DISARG_LONG: _defval = *(int32_t *)defval;  fld_len=4; break;
+        case DISARG_QWORD:_defval = *(uint64_t *)defval; fld_len=8; break;
+        case DISARG_LLONG:_defval = *(int64_t *)defval;  fld_len=8; break;
       }
       if(_defval)         /* Do not perform operation on NULL */
       {
@@ -1000,7 +1000,7 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
           if(detectedFormat->GetPubSym)
           {
             psym = detectedFormat->GetPubSym(&comments[2],sizeof(comments)-2,
-                                             &_class,pa,False);
+                                             &_class,pa,false);
             if(psym != pa) comments[0] = 0;
             else
             {
@@ -1043,9 +1043,9 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
      {
       case DISARG_LLONG:
 #ifdef INT64_C
-			 appstr = Get16SignDig(*(tInt64 *)defval);
+			 appstr = Get16SignDig(*(int64_t *)defval);
 #else
-			 appstr = Get16SignDig(((tInt32 *)defval)[0],((tInt32 *)defval)[1]);
+			 appstr = Get16SignDig(((int32_t *)defval)[0],((int32_t *)defval)[1]);
 #endif
                          if(type & DISARG_IMM &&
                             disNeedRef >= NEEDREF_PREDICT &&
@@ -1068,7 +1068,7 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
                                             ,((unsigned char *)defval)[6]
                                             ,((unsigned char *)defval)[7]);
                          break;
-      case DISARG_LONG:  appstr = Get8SignDig(*(tInt32 *)defval);
+      case DISARG_LONG:  appstr = Get8SignDig(*(int32_t *)defval);
                          if(type & DISARG_IMM &&
                             disNeedRef >= NEEDREF_PREDICT &&
                             dis_severity < DISCOMSEV_STRING &&
@@ -1082,7 +1082,7 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
                                             ,((unsigned char *)defval)[2]
                                             ,((unsigned char *)defval)[3]);
                          break;
-      case DISARG_SHORT: appstr = Get4SignDig(*(tInt16 *)defval);
+      case DISARG_SHORT: appstr = Get4SignDig(*(int16_t *)defval);
                          if(type & DISARG_IMM &&
                             disNeedRef >= NEEDREF_PREDICT &&
                             dis_severity < DISCOMSEV_STRING &&
@@ -1106,7 +1106,7 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
                             isprint(*(unsigned char *)defval))
                             sprintf(comments,"'%c'",*(unsigned char *)defval);
                          break;
-      case DISARG_WORD:  appstr = Get4Digit(*(tUInt16 *)defval);
+      case DISARG_WORD:  appstr = Get4Digit(*(uint16_t *)defval);
                          if(type & DISARG_IMM &&
                             disNeedRef >= NEEDREF_PREDICT &&
                             dis_severity < DISCOMSEV_STRING &&
@@ -1117,7 +1117,7 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
                                             ,((unsigned char *)defval)[1]);
                          break;
       default:
-      case DISARG_DWORD: appstr = Get8Digit(*(tUInt32 *)defval);
+      case DISARG_DWORD: appstr = Get8Digit(*(uint32_t *)defval);
                          if(type & DISARG_IMM &&
                             disNeedRef >= NEEDREF_PREDICT &&
                             dis_severity < DISCOMSEV_STRING &&
@@ -1133,9 +1133,9 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
                          break;
       case DISARG_QWORD:
 #ifdef INT64_C
-			 appstr = Get16Digit(*(tUInt64 *)defval);
+			 appstr = Get16Digit(*(uint64_t *)defval);
 #else
-			 appstr = Get16Digit(((tUInt32 *)defval)[0],((tUInt32 *)defval)[1]);
+			 appstr = Get16Digit(((uint32_t *)defval)[0],((uint32_t *)defval)[1]);
 #endif
                          if(type & DISARG_IMM &&
                             disNeedRef >= NEEDREF_PREDICT &&
@@ -1195,14 +1195,14 @@ int __FASTCALL__ disAppendFAddr(char * str,__fileoff_t ulShift,__fileoff_t disti
   if(ulShift >= (__fileoff_t)BMGetFLength()-codelen)
   {
      char sout[75];
-     static tBool displayed = False;
+     static bool displayed = false;
      if(!displayed)
      {
        strncpy(sout,str,sizeof(sout)-1);
        sout[sizeof(sout)-1] = 0;
        if(!strlen(sout)) strcpy(sout,"disAppendFAddr");
        ErrMessageBox(sout," Internal disassembler error detected ");
-       displayed = True;
+       displayed = true;
        COREDUMP();
      }
   }

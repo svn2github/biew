@@ -24,7 +24,7 @@
 
 static HMOU mouHandle;
 static int mou_btns;
-static tBool ms_visible = False;
+static bool ms_visible = false;
 static USHORT mouStatus;
 
 int __FASTCALL__ __init_mouse( void )
@@ -43,30 +43,30 @@ int __FASTCALL__ __init_mouse( void )
 
 void __FASTCALL__ __term_mouse( void )
 {
-  __MsSetState(False);
+  __MsSetState(false);
   MouSetDevStatus(&mouStatus,mouHandle);
   if(mouHandle) MouClose(mouHandle);
   mouHandle = 0;
 }
 
-tBool __FASTCALL__ __MsGetState( void )
+bool __FASTCALL__ __MsGetState( void )
 {
   return ms_visible;
 }
 
-void __FASTCALL__ __MsSetState( tBool state )
+void __FASTCALL__ __MsSetState( bool state )
 {
   switch(state)
   {
-    case True:
+    case true:
      if(!ms_visible)
      {
        MouDrawPtr(mouHandle);
-       ms_visible=True;
+       ms_visible=true;
      }
      break;
     default:
-    case False:
+    case false:
     {
       NOPTRRECT mrect;
       if(ms_visible)
@@ -75,7 +75,7 @@ void __FASTCALL__ __MsSetState( tBool state )
         mrect.cCol = tvioWidth - 1;
         mrect.cRow = tvioHeight - 1;
         MouRemovePtr(&mrect,mouHandle);
-        ms_visible=False;
+        ms_visible=false;
       }
     }
   }

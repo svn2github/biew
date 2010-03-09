@@ -80,11 +80,11 @@ typedef struct tagIniInfo
 }IniInfo;
 
                    /** Pointer to a user supplied function that receive readed record from ini file.
-                     * @return                For continue of scaning - False
-                                              For terminating scaning - True (means: all done)
+                     * @return                For continue of scaning - false
+                                              For terminating scaning - true (means: all done)
                      * @param info            pointers to current record from inni file
                     **/
-typedef tBool      (__FASTCALL__ *FiUserFunc)(IniInfo * info);
+typedef bool      (__FASTCALL__ *FiUserFunc)(IniInfo * info);
 
 /******************************************************\
 * You can exchange all this pointers to self routines  *
@@ -100,9 +100,9 @@ typedef tBool      (__FASTCALL__ *FiUserFunc)(IniInfo * info);
 
 extern  int    (__FASTCALL__ *FiError)(int nError,int row,const char *addinfo); /**< Default error handler */
 extern  void   (__FASTCALL__ *FiFileProcessor)(const char *fname); /**< Default file processor */
-extern  tBool  (__FASTCALL__ *FiStringProcessor)(char * curr_str); /**< Default string processor */
-extern  tBool  (__FASTCALL__ *FiCommandProcessor)(const char * cmd); /**< Default command processor */
-extern  tBool  (__FASTCALL__ *FiGetCondition)(const char * cond);    /**< Default processor of conditions */
+extern  bool  (__FASTCALL__ *FiStringProcessor)(char * curr_str); /**< Default string processor */
+extern  bool  (__FASTCALL__ *FiCommandProcessor)(const char * cmd); /**< Default command processor */
+extern  bool  (__FASTCALL__ *FiGetCondition)(const char * cond);    /**< Default processor of conditions */
 
 #define FI_MAXSTRLEN 255 /**< Specifies maximal length of string, that can be readed from ini file */
 
@@ -111,7 +111,7 @@ extern  tBool  (__FASTCALL__ *FiGetCondition)(const char * cond);    /**< Defaul
                      * @param nError          Specifies error number
                     **/
 extern const char *  __FASTCALL__ FiDecodeError(int nError);
-extern tBool         FiAllWantInput ; /**< Flags indicating, that all input exclude commentaries, i.e. carriage return and line feed and space characters will be returned */
+extern bool         FiAllWantInput ; /**< Flags indicating, that all input exclude commentaries, i.e. carriage return and line feed and space characters will be returned */
 extern char *        FiUserMessage;   /**< Pointer to user defined message string */
 extern char          FiOpenComment;   /**< Character to be used as opening comment. @note comment always start with FiOpenComment symbol and termonated at end of line */
 
@@ -167,10 +167,10 @@ unsigned int  __FASTCALL__ FiGetLocalNumberOfSubSections( FiHandler h, int nSect
 unsigned int  __FASTCALL__ FiGetTotalNumberOfItems( FiHandler h);
 unsigned int  __FASTCALL__ FiGetLocalNumberOfItems( FiHandler h,int nSection , int nSubSection);
 
-tBool         __FASTCALL__ FiisSection( const char * str );
-tBool         __FASTCALL__ FiisSubSection( const char * str );
-tBool         __FASTCALL__ FiisItem( const char * str);
-tBool         __FASTCALL__ FiisCommand( const char * str);
+bool         __FASTCALL__ FiisSection( const char * str );
+bool         __FASTCALL__ FiisSubSection( const char * str );
+bool         __FASTCALL__ FiisItem( const char * str);
+bool         __FASTCALL__ FiisCommand( const char * str);
 
 unsigned int  __FASTCALL__ FiGetLengthSection( const char * src );
 unsigned int  __FASTCALL__ FiGetLengthSubSection( const char * src );
@@ -185,8 +185,8 @@ char *        __FASTCALL__ FiGetValueOfItem(const char * src, char * store);
 char *        __FASTCALL__ FiGetCommandString(const char * src, char * store);
 
 void          __FASTCALL__ FiFileProcessorStd( const char * filename );
-tBool         __FASTCALL__ FiStringProcessorStd( char * string );
-tBool         __FASTCALL__ FiCommandProcessorStd( const char * cmd );
+bool         __FASTCALL__ FiStringProcessorStd( char * string );
+bool         __FASTCALL__ FiCommandProcessorStd( const char * cmd );
 
 /**
     WORD processor
@@ -222,11 +222,11 @@ pVar            __FASTCALL__ FiConstructVar(const char *v,const char *a);
 void            __FASTCALL__ FiDeleteVar(pVar pp);
 void            __FASTCALL__ FiDeleteAllVar( void );
 const char    * __FASTCALL__ FiExpandVariables(const char * var);
-tBool           __FASTCALL__ FiExpandAllVar(const char * value,char * store);
+bool           __FASTCALL__ FiExpandAllVar(const char * value,char * store);
 void            __FASTCALL__ FiAddVariables(const char * var,const char * associate);
 void            __FASTCALL__ FiRemoveVariables(const char * var);
 
-tBool           __FASTCALL__ FiGetConditionStd( const char *condstr);
+bool           __FASTCALL__ FiGetConditionStd( const char *condstr);
 
 /**
     High level routines (similar to MS WIN SDK)
@@ -256,7 +256,7 @@ extern void __FASTCALL__ hlFiProgress(hIniProfile *ini,FiUserFunc usrproc);
                      *                        non NULL value.
                      * @see                   iniCloseFile
                     **/
-extern hIniProfile*    __FASTCALL__ iniOpenFile(const char *fname,tBool *has_error);
+extern hIniProfile*    __FASTCALL__ iniOpenFile(const char *fname,bool *has_error);
 
                    /** Closes ini file stream.
                      * @return                none
@@ -288,7 +288,7 @@ extern unsigned __FASTCALL__ iniReadProfileString(hIniProfile *ini,
                                      unsigned cbBuffer);
 
                    /** Writes given item to ini file.
-                     * @return                True if operation performed successfully
+                     * @return                true if operation performed successfully
                      * @param ini             handle of opened stream
                      * @param section         specifies section name
                      * @param subsection      specifies subsection name
@@ -296,7 +296,7 @@ extern unsigned __FASTCALL__ iniReadProfileString(hIniProfile *ini,
                      * @param value           specifies value of item
                      * @see                   iniReadProfileString
                     **/
-extern tBool __FASTCALL__ iniWriteProfileString(hIniProfile *ini,
+extern bool __FASTCALL__ iniWriteProfileString(hIniProfile *ini,
                                      const char *section,
                                      const char *subsection,
                                      const char *item,

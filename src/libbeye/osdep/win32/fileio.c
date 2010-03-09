@@ -205,16 +205,16 @@ __fileoff_t __FASTCALL__ __FileLength(bhandle_t handle)
 
 __fileoff_t __FASTCALL__ __OsTell(bhandle_t handle) { return __OsSeek(handle,0L,SEEKF_CUR); }
 
-tBool __FASTCALL__ __IsFileExists(const char *name)
+bool __FASTCALL__ __IsFileExists(const char *name)
 {
    bhandle_t handle = __OsOpen(name,FO_READONLY | SO_DENYNONE);
    if(handle != NULL_HANDLE) __OsClose(handle);
    return handle != NULL_HANDLE;
 }
 
-tBool      __FASTCALL__ __OsGetFTime(const char *name,FTime *data)
+bool      __FASTCALL__ __OsGetFTime(const char *name,FTime *data)
 {
-  tBool ret = False;
+  bool ret = false;
   FILETIME ct,at,mt;
   bhandle_t handle;
    handle = __OsOpen(name,FO_READONLY);
@@ -247,7 +247,7 @@ tBool      __FASTCALL__ __OsGetFTime(const char *name,FTime *data)
        tm.tm_mon  = ((fd>>5)&0x0f)-1; /* 0 = January */
        tm.tm_year = (fd>>9)+80;
        data->modtime = mktime(&tm);
-       ret = True;
+       ret = true;
      }
      else set_errno(GetLastError());
      __OsClose(handle);
@@ -255,9 +255,9 @@ tBool      __FASTCALL__ __OsGetFTime(const char *name,FTime *data)
    return ret;
 }
 
-tBool      __FASTCALL__ __OsSetFTime(const char *name,const FTime *data)
+bool      __FASTCALL__ __OsSetFTime(const char *name,const FTime *data)
 {
-  tBool ret = False;
+  bool ret = false;
   FILETIME at,mt;
   bhandle_t handle;
    handle = __OsOpen(name,FO_READWRITE);
@@ -291,7 +291,7 @@ tBool      __FASTCALL__ __OsSetFTime(const char *name,const FTime *data)
          fd = tm->tm_mday+((tm->tm_mon+1)<<5)+((tm->tm_year-80)<<9);
          DosDateTimeToFileTime(fd,ft,&mt);
 
-         if(SetFileTime((HANDLE)handle,NULL,&at,&mt)) ret = True;
+         if(SetFileTime((HANDLE)handle,NULL,&at,&mt)) ret = true;
          else set_errno(GetLastError());
        }
      }

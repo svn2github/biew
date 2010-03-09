@@ -62,12 +62,12 @@ typedef struct tag_beye_help
 #define HLPC_REVERSE_OFF           0x15
 #define HLPC_LINK_OFF              0x16
 
-extern tBool           __FASTCALL__ hlpOpen( tBool interactive );
+extern bool           __FASTCALL__ hlpOpen( bool interactive );
 extern void            __FASTCALL__ hlpClose( void );
                        /** Return uncompressed size of help item
                           0 - if error occured */
 extern unsigned long   __FASTCALL__ hlpGetItemSize(unsigned long item_id);
-extern tBool           __FASTCALL__ hlpLoadItem(unsigned long item_id, void __HUGE__* buffer);
+extern bool           __FASTCALL__ hlpLoadItem(unsigned long item_id, void __HUGE__* buffer);
                        /** Fully-functionallity utility for displaying help */
 extern void            __FASTCALL__ hlpDisplay(unsigned long id);
 
@@ -79,10 +79,10 @@ extern char **         __FASTCALL__ hlpPointStrings(char __HUGE__ *data,unsigned
 extern unsigned        __FASTCALL__ hlpFillBuffer(tvioBuff * dest,unsigned int cw_dest,
                                      const char * str,unsigned int cb_str,
                                      unsigned int shift,unsigned *n_tabs,
-                                     tBool is_hl);
+                                     bool is_hl);
                        /** Paints line of help */
 extern void            __FASTCALL__ hlpPaintLine(TWindow *win,unsigned y,const char *str,
-                                    tBool is_hl);
+                                    bool is_hl);
 
 #ifdef __cplusplus
 }

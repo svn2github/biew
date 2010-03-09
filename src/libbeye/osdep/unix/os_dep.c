@@ -51,7 +51,7 @@ static const char rcs_id[] = "$Id: os_dep.c,v 1.10 2009/09/03 16:57:40 nickols_k
 #define DATADIR	PREFIX"/share/beye"
 #endif
 
-tBool break_status = False;	/**< CTRL+BREAK flag */
+bool break_status = false;	/**< CTRL+BREAK flag */
 
 termdesc *terminal = NULL;
 
@@ -125,7 +125,7 @@ char * __FASTCALL__ __get_rc_dir(const char *progname)
 }
 
 
-tBool __FASTCALL__ __OsGetCBreak(void)
+bool __FASTCALL__ __OsGetCBreak(void)
 {
 #ifndef	__ENABLE_SIGIO
     ReadNextEvent();
@@ -133,7 +133,7 @@ tBool __FASTCALL__ __OsGetCBreak(void)
     return break_status;
 }
 
-void  __FASTCALL__ __OsSetCBreak(tBool state)
+void  __FASTCALL__ __OsSetCBreak(bool state)
 {
     break_status = state;
 }

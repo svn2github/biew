@@ -583,11 +583,11 @@ TWindow *         __FASTCALL__ twGetWinAtPos(tAbsCoord x, tAbsCoord y);
 
                    /** Checks visibility of window piece.
                      * @param x,y          specify coordinates of the location.
-                     * @return             True if specified window is visible
+                     * @return             true if specified window is visible
                      *                     in specified location (Is not obscured).
                      * @see                twGetWinPos
                     **/
-tBool             __FASTCALL__ twIsPieceVisible(TWindow *win,tRelCoord x, tRelCoord y);
+bool             __FASTCALL__ twIsPieceVisible(TWindow *win,tRelCoord x, tRelCoord y);
 
                    /** Converts window-relative coordinates to absolute screen coordinates
                      * @param win          handle of window
@@ -602,10 +602,10 @@ void              __FASTCALL__ twCvtWinCoords(TWindow *win,tRelCoord x, tRelCoor
                      * @param win          handle of window
                      * @param x,y          specify screen coordinates.
                      * @param xr,yr        specify pointers to the relative coordinates.
-                     * @return             True if successful, False otherwise.
+                     * @return             true if successful, false otherwise.
                      * @see                twCvtWinCoord
                     **/
-tBool            __FASTCALL__ twCvtScreenCoords(TWindow *win,tAbsCoord x, tAbsCoord y,tRelCoord *xr,tRelCoord *yr);
+bool            __FASTCALL__ twCvtScreenCoords(TWindow *win,tAbsCoord x, tAbsCoord y,tRelCoord *xr,tRelCoord *yr);
 
                    /** Clears the current window window with default filler.
                      * @return             none

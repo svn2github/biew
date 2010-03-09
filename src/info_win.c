@@ -562,9 +562,9 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
   if(detectedFormat->GetPubSym)
   {
      prev_func_pa = detectedFormat->GetPubSym(prev_func,sizeof(prev_func),
-                                              &func_class,ctrl_pos,True);
+                                              &func_class,ctrl_pos,true);
      next_func_pa = detectedFormat->GetPubSym(next_func,sizeof(next_func),
-                                              &func_class,ctrl_pos,False);
+                                              &func_class,ctrl_pos,false);
   }
   prev_func[sizeof(prev_func)-1] = next_func[sizeof(next_func)-1] = '\0';
   if(detectedFormat->GetObjAttr)

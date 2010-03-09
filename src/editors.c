@@ -42,7 +42,7 @@ void ExtHelp( void )
  twUseWin(using);
 }
 
-void __FASTCALL__ PaintETitle( int shift,tBool use_shift )
+void __FASTCALL__ PaintETitle( int shift,bool use_shift )
 {
   TWindow * using = twUsedWin();
   unsigned eidx;
@@ -78,7 +78,7 @@ void __FASTCALL__ PaintETitle( int shift,tBool use_shift )
   twUseWin(using);
 }
 
-tBool __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size)
+bool __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size)
 {
  __filesize_t flen,cfp,ssize;
  unsigned i,msize;
@@ -92,7 +92,7 @@ tBool __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned siz
    if(EditorMem.save) PFREE(EditorMem.save);
    if(EditorMem.alen) PFREE(EditorMem.alen);
    MemOutBox("Editor initialization");
-   return False;
+   return false;
  }
  memset(EditorMem.buff,TWC_DEF_FILLER,msize);
  memset(EditorMem.save,TWC_DEF_FILLER,msize);
@@ -118,7 +118,7 @@ tBool __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned siz
     EditorMem.alen[i] = ssize >= width ? width : ssize;
     ssize -= min(ssize,width);
  }
- return True;
+ return true;
 }
 
 void __FASTCALL__ editDestroyBuffs( void )
@@ -171,10 +171,10 @@ void __FASTCALL__ editSaveContest( void )
   BMReRead();
 }
 
-tBool __FASTCALL__ edit_defaction(int _lastbyte)
+bool __FASTCALL__ edit_defaction(int _lastbyte)
 {
- tBool redraw;
-  redraw = False;
+ bool redraw;
+  redraw = false;
    switch(_lastbyte)
    {
      case KE_UPARROW  : edit_y--; break;
@@ -185,14 +185,14 @@ tBool __FASTCALL__ edit_defaction(int _lastbyte)
      case KE_F(3)     :
                       Get2DigitDlg(INIT_MASK,INPUT_MASK,&edit_XX);
                       break;
-     default: redraw = True; break;
+     default: redraw = true; break;
    }
  return redraw;
 }
 
-tBool __FASTCALL__ editDefAction(int _lastbyte)
+bool __FASTCALL__ editDefAction(int _lastbyte)
 {
- tBool redraw = True;
+ bool redraw = true;
  int eidx;
  eidx = edit_y*EditorMem.width+edit_x;
    switch(_lastbyte)
@@ -216,10 +216,10 @@ int __FASTCALL__ FullEdit(TWindow * txtwnd,void (*save_func)(unsigned char *,uns
  unsigned int _lastbyte;
  unsigned flags;
  tAbsCoord height = twGetClientHeight(MainWnd);
- tBool redraw;
+ bool redraw;
  char attr = __ESS_HARDEDIT | __ESS_WANTRETURN;
  twSetColorAttr(browser_cset.edit.main);
- __MsSetState(False);
+ __MsSetState(false);
  for(i = 0;i < height;i++)
  {
    for(j = 0;j < EditorMem.alen[i];j++)
@@ -234,11 +234,11 @@ int __FASTCALL__ FullEdit(TWindow * txtwnd,void (*save_func)(unsigned char *,uns
       twGotoXY(EditorMem.alen[i] + 1,i + 1); twClrEOL();
    }
  }
- __MsSetState(True);
+ __MsSetState(true);
  PaintETitle(edit_y*EditorMem.width + edit_x,0);
  twShowWin(twUsedWin());
  twSetCursorType(TW_CUR_NORM);
- redraw = True;
+ redraw = true;
  if(txtwnd)
  {
    char work[__TVIO_MAXSCREENWIDTH];

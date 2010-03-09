@@ -47,7 +47,7 @@ extern "C" {
 #include "libbeye/sysdep/ia32/fastcopy.h"
 
                 /** Changes byte order in 16-bit number */
-__inline static tUInt16 __FASTCALL__ __CONSTFUNC__ ByteSwapS(tUInt16 _val)
+__inline static uint16_t __FASTCALL__ __CONSTFUNC__ ByteSwapS(uint16_t _val)
 {
   __asm("xchgb %b0,%h0"	:
         "=q" (_val)	:
@@ -57,7 +57,7 @@ __inline static tUInt16 __FASTCALL__ __CONSTFUNC__ ByteSwapS(tUInt16 _val)
 #define ByteSwapS ByteSwapS
 
                 /** Changes byte order in 32-bit number */
-__inline static tUInt32 __FASTCALL__ __CONSTFUNC__ ByteSwapL(tUInt32 _val)
+__inline static uint32_t __FASTCALL__ __CONSTFUNC__ ByteSwapL(uint32_t _val)
 {
 #if __CPU__ > 386
  __asm("bswap	%0"	:
@@ -74,13 +74,13 @@ __inline static tUInt32 __FASTCALL__ __CONSTFUNC__ ByteSwapL(tUInt32 _val)
 #define ByteSwapL ByteSwapL
 
                 /** Changes byte order in 64-bit number */
-__inline static tUInt64 __FASTCALL__ __CONSTFUNC__ ByteSwapLL(tUInt64 x)
+__inline static uint64_t __FASTCALL__ __CONSTFUNC__ ByteSwapLL(uint64_t x)
 {
   register union { __extension__ unsigned long long int __ll;
           unsigned long int __l[2]; } __x;
   asm("xchgl	%0,%1":
       "=r"(__x.__l[0]),"=r"(__x.__l[1]):
-      "0"(ByteSwapL((tUInt32)x)),"1"(ByteSwapL((tUInt32)(x>>32))));
+      "0"(ByteSwapL((uint32_t)x)),"1"(ByteSwapL((uint32_t)(x>>32))));
   return __x.__ll;
 }
 #define ByteSwapLL ByteSwapLL
@@ -93,7 +93,7 @@ __inline static tUInt64 __FASTCALL__ __CONSTFUNC__ ByteSwapLL(tUInt64 x)
                                     it is work with different number, rather than
                                     changing byte order within given number.
                  **/
-__inline static void __FASTCALL__ __XchgB__(tUInt8 *_val1, tUInt8 *_val2)
+__inline static void __FASTCALL__ __XchgB__(uint8_t *_val1, uint8_t *_val2)
 {
  register char _tmp;
  __asm("xchgb	%b1,(%2)":
@@ -104,7 +104,7 @@ __inline static void __FASTCALL__ __XchgB__(tUInt8 *_val1, tUInt8 *_val2)
 }
 #define __XchgB__ __XchgB__
 
-extern void (__FASTCALL__ *InterleaveBuffers_ptr)(tUInt32 limit,
+extern void (__FASTCALL__ *InterleaveBuffers_ptr)(uint32_t limit,
                                     void *destbuffer,
                                     const void *evenbuffer, 
                                     const void *oddbuffer);
@@ -115,7 +115,7 @@ extern void (__FASTCALL__ *InterleaveBuffers_ptr)(tUInt32 limit,
 #define __INTERLEAVE_BUFFERS InterleaveBuffers
 
 
-extern void (__FASTCALL__ *CharsToShorts_ptr)(tUInt32 limit,
+extern void (__FASTCALL__ *CharsToShorts_ptr)(uint32_t limit,
                                              void *destbuffer,
                                              const void *evenbuffer);
 #ifdef CharsToShorts
@@ -124,7 +124,7 @@ extern void (__FASTCALL__ *CharsToShorts_ptr)(tUInt32 limit,
 #define CharsToShorts(a,b,c) (*CharsToShorts_ptr)(a,b,c)
 #define __CHARS_TO_SHORTS CharsToShorts
 
-extern void (__FASTCALL__ *ShortsToChars_ptr)(tUInt32 limit,
+extern void (__FASTCALL__ *ShortsToChars_ptr)(uint32_t limit,
                                      void * destbuffer, const void * srcbuffer);
 
 #ifdef ShortsToChars

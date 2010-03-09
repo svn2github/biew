@@ -205,7 +205,7 @@ static struct {
 static mevent mouse = {0, 0, 0, 0};
 
 static int	shift_status = 0;	/**< status of shift keys */
-static tBool	mouse_status = True;	/**< mouse state */
+static bool	mouse_status = true;	/**< mouse state */
 
 static void __FASTCALL__ pushEvent(unsigned _event)
 {
@@ -246,7 +246,7 @@ static void __FASTCALL__ pushEvent(unsigned _event)
 	    keybuf.current++;
 	}
     } else {
-	break_status = True;
+	break_status = true;
     }
 }
 
@@ -415,12 +415,12 @@ int __FASTCALL__ __kbdGetKey(unsigned long flg)
 
 */
 
-tBool __FASTCALL__ __MsGetState(void)
+bool __FASTCALL__ __MsGetState(void)
 {
     return mouse_status;
 }
 
-void __FASTCALL__ __MsSetState(tBool ms_visible)
+void __FASTCALL__ __MsSetState(bool ms_visible)
 {
     mouse_status = ms_visible;
 }

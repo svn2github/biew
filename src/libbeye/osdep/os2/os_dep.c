@@ -36,7 +36,7 @@ static char rbuff[FILENAME_MAX+1];
 static char rbuff2[FILENAME_MAX+1];
 static char _home_dir_name[FILENAME_MAX + 1];
 
-static tBool __c__break = False;
+static bool __c__break = false;
 
 HEV beyeSem;
 
@@ -57,7 +57,7 @@ static ULONG APIENTRY MyExceptionHandler(PEXCEPTIONREPORTRECORD p1,
     case XCPT_SIGNAL_INTR:
     case XCPT_SIGNAL_BREAK:
                              if(__c__break) exit(EXIT_FAILURE);
-                             else __c__break = True;
+                             else __c__break = true;
                              return XCPT_CONTINUE_EXECUTION;
     default: break;
   }
@@ -97,12 +97,12 @@ void __FASTCALL__ __term_sys( void )
 #endif
 }
 
-tBool __FASTCALL__ __OsGetCBreak( void )
+bool __FASTCALL__ __OsGetCBreak( void )
 {
   return __c__break;
 }
 
-void  __FASTCALL__ __OsSetCBreak( tBool state )
+void  __FASTCALL__ __OsSetCBreak( bool state )
 {
   __c__break = state;
 }

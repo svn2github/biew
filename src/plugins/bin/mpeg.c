@@ -56,9 +56,9 @@
   0x000001FF		- prog_stream_dir
 */
 
-static tBool  __FASTCALL__ mpeg_check_fmt( void )
+static bool  __FASTCALL__ mpeg_check_fmt( void )
 {
-    return False;
+    return false;
 }
 
 static void __FASTCALL__ mpeg_init_fmt( void ) {}

@@ -29,10 +29,10 @@
 
 #define MKTAG(a, b, c, d) (a | (b << 8) | (c << 16) | (d << 24))
 
-static tBool  __FASTCALL__ rm_check_fmt( void )
+static bool  __FASTCALL__ rm_check_fmt( void )
 {
-    if(bmReadDWordEx(0,BM_SEEK_SET)==MKTAG('.', 'R', 'M', 'F')) return True;
-    return False;
+    if(bmReadDWordEx(0,BM_SEEK_SET)==MKTAG('.', 'R', 'M', 'F')) return true;
+    return false;
 }
 
 static __filesize_t __FASTCALL__ Show_RM_Header( void )

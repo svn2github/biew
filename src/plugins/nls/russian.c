@@ -72,7 +72,7 @@ static unsigned cp_mode = TXT_CURRCP;
 static unsigned char cp_symb_len = 1;
 
 #if 0
-static const tUInt16 cp866_2_Unicode[] =
+static const uint16_t cp866_2_Unicode[] =
 {
   0x0000, 0x0001, 0x0002, 0x0003, 0x0004, 0x0005, 0x0006, 0x0007, /*0x00*/
   0x0008, 0x0009, 0x000A, 0x000B, 0x000C, 0x000D, 0x000E, 0x000F,
@@ -133,7 +133,7 @@ static const unsigned char uni_draw[] =
 0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f, /*0xF0*/
 };
 
-static void __NEAR__ __FASTCALL__ txt_cvt_unicode(unsigned char * str,int size,tBool big_endian)
+static void __NEAR__ __FASTCALL__ txt_cvt_unicode(unsigned char * str,int size,bool big_endian)
 {
   int i;
   unsigned high_byte,low_byte;
@@ -372,7 +372,7 @@ static void __NEAR__ __FASTCALL__ Translit7Bit(char *str,int size)
   }
 }
 
-static unsigned __FASTCALL__ ru_convert_buffer(char *buff,unsigned size, tBool use_fs_nls)
+static unsigned __FASTCALL__ ru_convert_buffer(char *buff,unsigned size, bool use_fs_nls)
 {
   switch(cp_mode)
   {
@@ -405,7 +405,7 @@ static unsigned __FASTCALL__ ru_convert_buffer(char *buff,unsigned size, tBool u
 
 static unsigned __FASTCALL__ ru_get_symbol_size( void ) { return cp_symb_len; }
 
-static tBool __FASTCALL__ ru_select_table( void )
+static bool __FASTCALL__ ru_select_table( void )
 {
   unsigned nModes;
   int i;
@@ -416,9 +416,9 @@ static tBool __FASTCALL__ ru_select_table( void )
     cp_mode = i;
     if(cp_mode == TXT_UNICODE || cp_mode == TXT_BIG_UNICODE) cp_symb_len = 2;
     else                                                     cp_symb_len = 1;
-    return True;
+    return true;
   }
-  return False;
+  return false;
 }
 
 static void __FASTCALL__ ru_read_ini( hIniProfile *ini )

@@ -298,24 +298,24 @@ static void * RENAME(fast_memset)(void * to, int val, size_t len)
 #undef REGMM_SIZE
 #endif
 #define REGMM_SIZE 16
-static void __FASTCALL__ RENAME(InterleaveBuffers)(tUInt32 limit,
+static void __FASTCALL__ RENAME(InterleaveBuffers)(uint32_t limit,
 				    void *destbuffer,
 				    const void *evenbuffer,
 				    const void *oddbuffer)
 {
   register char *destbuffptr;
   register const char *oddptr, *evenptr;
-  register tUInt32 freq;
+  register uint32_t freq;
   destbuffptr = (char *)destbuffer;
   evenptr = (const char *)evenbuffer;
   oddptr = (const char *)oddbuffer;
   freq = 0;
   if(limit>REGMM_SIZE*4-1)
   {
-      register tUInt64 delta, nlimit, step;
+      register uint64_t delta, nlimit, step;
       step = REGMM_SIZE*2;
       /* Try to align buffers on boundary of REGMM_SIZE */
-      delta = ((tUInt64)evenptr)&(REGMM_SIZE-1);
+      delta = ((uint64_t)evenptr)&(REGMM_SIZE-1);
       if(delta) delta=REGMM_SIZE-delta;
       nlimit=(limit-delta)/step;
       freq=delta+(nlimit*step);
@@ -354,22 +354,22 @@ static void __FASTCALL__ RENAME(InterleaveBuffers)(tUInt32 limit,
   }
 }
 
-static void __FASTCALL__ RENAME(CharsToShorts)(tUInt32 limit,
+static void __FASTCALL__ RENAME(CharsToShorts)(uint32_t limit,
 					     void *destbuffer,
 					     const void *evenbuffer)
 {
   register char *destbuffptr;
   register const char *evenptr;
-  register tUInt32 freq;
+  register uint32_t freq;
   destbuffptr = (char *)destbuffer;
   evenptr = (const char *)evenbuffer;
   freq = 0;
   if(limit>REGMM_SIZE*4-1)
   {
-      register tUInt64 delta, nlimit, step;
+      register uint64_t delta, nlimit, step;
       step = REGMM_SIZE*2;
       /* Try to align buffer on boundary of REGMM_SIZE */
-      delta = ((tUInt64)evenptr)&(REGMM_SIZE-1);
+      delta = ((uint64_t)evenptr)&(REGMM_SIZE-1);
       if(delta) delta=REGMM_SIZE-delta;
       nlimit=(limit-delta)/step;
       freq=delta+(nlimit*step);
@@ -409,21 +409,21 @@ static void __FASTCALL__ RENAME(CharsToShorts)(tUInt32 limit,
   }
 }
 
-static void __FASTCALL__ RENAME(ShortsToChars)(tUInt32 limit,
+static void __FASTCALL__ RENAME(ShortsToChars)(uint32_t limit,
 				     void * destbuffer, const void * srcbuffer)
 {
   register char *destbuffptr;
   register const char *srcptr;
-  register tUInt32 freq;
+  register uint32_t freq;
   destbuffptr = (char *)destbuffer;
   srcptr = (const char *)srcbuffer;
   freq = 0;
   if(limit>REGMM_SIZE*4-1)
   {
-      tUInt64 delta, nlimit, step;
+      uint64_t delta, nlimit, step;
       step = REGMM_SIZE*2;
       /* Try to align buffers on boundary of REGMM_SIZE */
-      delta=((tUInt64)destbuffptr)&(REGMM_SIZE-1);
+      delta=((uint64_t)destbuffptr)&(REGMM_SIZE-1);
       if(delta) delta=REGMM_SIZE-delta;
       nlimit=(limit-delta)/step;
       freq=delta+(nlimit*step);

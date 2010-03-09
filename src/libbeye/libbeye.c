@@ -27,7 +27,7 @@
 #endif
 #include "libbeye/pmalloc.h"
 
-tBool __FASTCALL__ isseparate(int ch) { return (isspace(ch) || ispunct(ch)); }
+bool __FASTCALL__ isseparate(int ch) { return (isspace(ch) || ispunct(ch)); }
 
 void      __FASTCALL__ __nls_PrepareOEMForTVio(tvioBuff *it,unsigned size)
 {

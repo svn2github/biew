@@ -47,21 +47,21 @@
 
 typedef struct ClassFile_s
 {
-    tUInt32	magic;
-    tUInt16	minor;
-    tUInt16	major;
-    tUInt16	constant_pool_count;
+    uint32_t	magic;
+    uint16_t	minor;
+    uint16_t	major;
+    uint16_t	constant_pool_count;
     /* constant_pool[] */
-    tUInt16	access_flags;
-    tUInt16	this_class;
-    tUInt16	super_class;
-    tUInt16	interfaces_count;
+    uint16_t	access_flags;
+    uint16_t	this_class;
+    uint16_t	super_class;
+    uint16_t	interfaces_count;
 /*    u2 interfaces[interfaces_count]; */
-    tUInt16	fields_count;
+    uint16_t	fields_count;
 /*    field_info fields[fields_count]; */
-    tUInt16	methods_count;
+    uint16_t	methods_count;
 /*    method_info methods[methods_count]; */
-    tUInt16	attributes_count;
+    uint16_t	attributes_count;
 /*    attribute_info attributes[attributes_count]; */
 /* private data: */
     __filesize_t header_length;
@@ -81,7 +81,7 @@ ClassFile_t jvm_header;
 static BGLOBAL jvm_cache;
 static BGLOBAL pool_cache;
 
-static tBool  __FASTCALL__ jvm_check_fmt( void )
+static bool  __FASTCALL__ jvm_check_fmt( void )
 {
   unsigned char id[4];
   bmReadBufferEx(id,sizeof(id),0,BM_SEEK_SET);
@@ -200,7 +200,7 @@ static void __NEAR__ __FASTCALL__ skip_fields(unsigned nitems,int attr)
     }
 }
 
-static tBool __FASTCALL__ jvm_read_interfaces(BGLOBAL handle,memArray * names,unsigned nnames)
+static bool __FASTCALL__ jvm_read_interfaces(BGLOBAL handle,memArray * names,unsigned nnames)
 {
     unsigned i;
     __filesize_t fpos;
@@ -213,10 +213,10 @@ static tBool __FASTCALL__ jvm_read_interfaces(BGLOBAL handle,memArray * names,un
 	fpos=bioTell(handle);
 	id=FMT_WORD(&id,1);
 	get_class_name(handle,id,str,sizeof(str));
-	if(!ma_AddString(names,str,True)) break;
+	if(!ma_AddString(names,str,true)) break;
 	bioSeek(handle,fpos,BM_SEEK_SET);
     }
-    return True;
+    return true;
 }
 
 static unsigned __FASTCALL__ jvm_get_num_interfaces(BGLOBAL handle)
@@ -236,7 +236,7 @@ static __filesize_t __FASTCALL__ ShowInterfaces(void)
   return fpos;
 }
 
-static tBool __FASTCALL__ jvm_read_attributes(BGLOBAL handle,memArray * names,unsigned nnames)
+static bool __FASTCALL__ jvm_read_attributes(BGLOBAL handle,memArray * names,unsigned nnames)
 {
     unsigned i;
     __filesize_t fpos;
@@ -251,10 +251,10 @@ static tBool __FASTCALL__ jvm_read_attributes(BGLOBAL handle,memArray * names,un
 	len=bioReadDWord(handle);
 	len=FMT_DWORD(&len,1);
 	sprintf(sout,"%08lXH %s",len,str);
-	if(!ma_AddString(names,sout,True)) break;
+	if(!ma_AddString(names,sout,true)) break;
 	bioSeek(handle,len,BM_SEEK_CUR);
     }
-    return True;
+    return true;
 }
 
 static unsigned __FASTCALL__ jvm_get_num_attributes(BGLOBAL handle)
@@ -295,7 +295,7 @@ static __filesize_t __FASTCALL__ ShowAttributes(void)
     return __ShowAttributes(" length   attributes ");
 }
 
-static tBool __FASTCALL__ jvm_read_methods(BGLOBAL handle,memArray * names,unsigned nnames)
+static bool __FASTCALL__ jvm_read_methods(BGLOBAL handle,memArray * names,unsigned nnames)
 {
     unsigned i;
     __filesize_t fpos;
@@ -315,9 +315,9 @@ static tBool __FASTCALL__ jvm_read_methods(BGLOBAL handle,memArray * names,unsig
 	acount=FMT_WORD(&sval,1);
 	skip_attributes(handle,acount);
 	sprintf(sout,"%04XH %04XH %s %s",acount,flg,str,str2);
-	if(!ma_AddString(names,sout,True)) break;
+	if(!ma_AddString(names,sout,true)) break;
     }
-    return True;
+    return true;
 }
 
 static unsigned __FASTCALL__ jvm_get_num_methods(BGLOBAL handle)
@@ -369,7 +369,7 @@ static __filesize_t __FASTCALL__ ShowMethods(void)
 }
 
 
-static tBool __FASTCALL__ jvm_read_fields(BGLOBAL handle,memArray * names,unsigned nnames)
+static bool __FASTCALL__ jvm_read_fields(BGLOBAL handle,memArray * names,unsigned nnames)
 {
     unsigned i;
     __filesize_t fpos;
@@ -389,9 +389,9 @@ static tBool __FASTCALL__ jvm_read_fields(BGLOBAL handle,memArray * names,unsign
 	acount=FMT_WORD(&sval,1);
 	skip_attributes(handle,acount);
 	sprintf(sout,"%04XH %04XH %s %s",acount,flg,str,str2);
-	if(!ma_AddString(names,sout,True)) break;
+	if(!ma_AddString(names,sout,true)) break;
     }
-    return True;
+    return true;
 }
 
 static unsigned __FASTCALL__ jvm_get_num_fields(BGLOBAL handle)
@@ -442,7 +442,7 @@ static __filesize_t __FASTCALL__ ShowFields(void)
   return fpos;
 }
 
-static tBool __FASTCALL__ jvm_read_pool(BGLOBAL handle,memArray * names,unsigned nnames)
+static bool __FASTCALL__ jvm_read_pool(BGLOBAL handle,memArray * names,unsigned nnames)
 {
     __filesize_t fpos;
     unsigned long lval,lval2;
@@ -515,9 +515,9 @@ static tBool __FASTCALL__ jvm_read_pool(BGLOBAL handle,memArray * names,unsigned
 			i=nnames;
 			break;
 	}
-	if(!ma_AddString(names,sout,True)) break;
+	if(!ma_AddString(names,sout,true)) break;
     }
-    return True;
+    return true;
 }
 
 static unsigned __FASTCALL__ jvm_get_num_pools(BGLOBAL handle)
@@ -658,9 +658,9 @@ static __filesize_t __FASTCALL__ jvm_PA2VA(__filesize_t pa)
   return pa >= jvm_header.code_offset ? pa - jvm_header.code_offset : 0L;
 }
 
-static tBool __FASTCALL__ jvm_AddressResolv(char *addr,__filesize_t cfpos)
+static bool __FASTCALL__ jvm_AddressResolv(char *addr,__filesize_t cfpos)
 {
-  tBool bret = True;
+  bool bret = true;
   if(cfpos >= jvm_header.methods_offset)
   {
     addr[0]='.';
@@ -774,7 +774,7 @@ static void __FASTCALL__ jvm_ReadPubNameList(BGLOBAL handle,void (__FASTCALL__ *
 }
 
 static __filesize_t __FASTCALL__ jvm_GetPubSym(char *str,unsigned cb_str,unsigned *func_class,
-                           __filesize_t pa,tBool as_prev)
+                           __filesize_t pa,bool as_prev)
 {
   return fmtGetPubSym(bmbioHandle(),str,cb_str,func_class,pa,as_prev,
                       jvm_ReadPubNameList,

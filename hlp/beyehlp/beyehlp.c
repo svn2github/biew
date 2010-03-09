@@ -117,7 +117,7 @@ void hlpCompile(const char *srcfile)
   fclose(out);
 }
 
-tBool __FASTCALL__ MyCallBack(IniInfo *ini)
+bool __FASTCALL__ MyCallBack(IniInfo *ini)
 {
   if(strcmp(ini->section,"ITEMS") == 0)
   {
@@ -142,10 +142,10 @@ tBool __FASTCALL__ MyCallBack(IniInfo *ini)
        }
      }
   }
-  return False;
+  return false;
 }
 
-tBool __FASTCALL__ MyCallOut(IniInfo *ini)
+bool __FASTCALL__ MyCallOut(IniInfo *ini)
 {
   if(strcmp(ini->section,"ITEMS") == 0)
   {
@@ -207,7 +207,7 @@ tBool __FASTCALL__ MyCallOut(IniInfo *ini)
         items_freq++;
      }
   }
-  return False;
+  return false;
 }
 
 static void my_atexit( void ) { __term_sys(); }

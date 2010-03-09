@@ -85,7 +85,7 @@ hexView hexViewer[] =
 };
 
 
-tBool hexAddressResolv = False;
+bool hexAddressResolv = false;
 
 static unsigned __FASTCALL__ drawHex( unsigned keycode,unsigned textshift )
 {
@@ -191,7 +191,7 @@ static void __FASTCALL__ __NEAR__ __checkWidthCorr(void)
   if(virtWidthCorr>(unsigned)hexViewer[hmode].width()-1) virtWidthCorr=hexViewer[hmode].width()-1;
 }
 
-static tBool __FASTCALL__ hexSelectMode( void )
+static bool __FASTCALL__ hexSelectMode( void )
 {
   const char *names[sizeof(hexViewer)/sizeof(hexView)];
   size_t i,nModes;
@@ -203,9 +203,9 @@ static tBool __FASTCALL__ hexSelectMode( void )
   {
     hmode = retval;
     __checkWidthCorr();
-    return True;
+    return true;
   }
-  return False;
+  return false;
 }
 
 static const char *nendian[] =
@@ -215,7 +215,7 @@ static const char *nendian[] =
   "~Big"
 };
 
-static tBool __FASTCALL__ hexSelectEndian( void )
+static bool __FASTCALL__ hexSelectEndian( void )
 {
   size_t nModes;
   int retval;
@@ -224,9 +224,9 @@ static tBool __FASTCALL__ hexSelectEndian( void )
   if(retval != -1)
   {
     hendian = retval;
-    return True;
+    return true;
   }
-  return False;
+  return false;
 }
 
 static const char *aresolv[] =
@@ -235,7 +235,7 @@ static const char *aresolv[] =
   "~Local (local offset within blocks and virtual addresses)"
 };
 
-tBool __FASTCALL__ hexAddressResolution( void )
+bool __FASTCALL__ hexAddressResolution( void )
 {
   unsigned nModes;
   int i;
@@ -243,13 +243,13 @@ tBool __FASTCALL__ hexAddressResolution( void )
   i = SelBoxA(aresolv,nModes," Select address resolving: ",(unsigned)hexAddressResolv);
   if(i != -1)
   {
-    hexAddressResolv = i ? True : False;
-    return True;
+    hexAddressResolv = i ? true : false;
+    return true;
   }
-  return False;
+  return false;
 }
 
-static tBool __FASTCALL__ hexDetect( void ) { return True; }
+static bool __FASTCALL__ hexDetect( void ) { return true; }
 
 static int __NEAR__ __FASTCALL__ FullHexEdit(TWindow * txtwnd)
 {
@@ -260,7 +260,7 @@ static int __NEAR__ __FASTCALL__ FullHexEdit(TWindow * txtwnd)
  tAbsCoord height = twGetClientHeight(txtwnd);
  tAbsCoord width = twGetClientWidth(txtwnd);
  char work[__TVIO_MAXSCREENWIDTH],owork[__TVIO_MAXSCREENWIDTH];
- tBool redraw;
+ bool redraw;
  {
    TWindow * using = twUsedWin();
    twUseWin(txtwnd);
@@ -295,7 +295,7 @@ static int __NEAR__ __FASTCALL__ FullHexEdit(TWindow * txtwnd)
      twClrEOL();
    }
  }
- redraw = True;
+ redraw = true;
  PaintETitle(edit_y*EditorMem.width + edit_x,0);
  twShowWin(twUsedWin());
  twSetCursorType(TW_CUR_NORM);
@@ -312,7 +312,7 @@ static int __NEAR__ __FASTCALL__ FullHexEdit(TWindow * txtwnd)
    _lastbyte = eeditstring(work,&legalchars[2],&mlen,(unsigned)(edit_y + 1),(unsigned *)&edit_x,
                           flags,owork,NULL);
    edit_x/=3;
-   CompressHex(&EditorMem.buff[eidx],work,mlen/3,True);
+   CompressHex(&EditorMem.buff[eidx],work,mlen/3,true);
    switch(_lastbyte)
    {
      case KE_F(1)   : ExtHelp(); continue;
@@ -340,7 +340,7 @@ static int __NEAR__ __FASTCALL__ FullHexEdit(TWindow * txtwnd)
 static void __FASTCALL__ EditHex( void )
 {
  TWindow * ewnd[2];
- tBool has_show[2];
+ bool has_show[2];
  int active = 0,oactive = 0;
  unsigned bound;
  tAbsCoord width = twGetClientWidth(MainWnd);
@@ -352,7 +352,7 @@ static void __FASTCALL__ EditHex( void )
  ewnd[1] = WindowOpen(bound+1,2,width,tvioHeight-1,TWS_CURSORABLE);
  twSetColorAttr(browser_cset.edit.main); twClearWin();
  drawEditPrompt();
- has_show[0] = has_show[1] = False;
+ has_show[0] = has_show[1] = false;
  if(editInitBuffs(hexViewer[hmode].width()-virtWidthCorr,NULL,0))
  {
    edit_x = edit_y = 0;
@@ -368,7 +368,7 @@ static void __FASTCALL__ EditHex( void )
      twUseWin(ewnd[active]);
      if(!active) _lastbyte = FullHexEdit(MainWnd);
      else        _lastbyte = FullEdit(MainWnd,NULL);
-     has_show[active] = True;
+     has_show[active] = true;
      if(_lastbyte == KE_TAB) active = active ? 0 : 1;
      else break;
    }
@@ -423,16 +423,16 @@ static void __FASTCALL__ hexSaveIni( hIniProfile * ini)
 
 static unsigned __FASTCALL__ hexCharSize( void ) { return 1; }
 
-static tBool __FASTCALL__ hexIncVirtWidth( void )
+static bool __FASTCALL__ hexIncVirtWidth( void )
 {
-  if(virtWidthCorr) { virtWidthCorr--; return True; }
-  return False;
+  if(virtWidthCorr) { virtWidthCorr--; return true; }
+  return false;
 }
 
-static tBool __FASTCALL__ hexDecVirtWidth( void )
+static bool __FASTCALL__ hexDecVirtWidth( void )
 {
-  if(virtWidthCorr < (unsigned)hexViewer[hmode].width()-1) { virtWidthCorr++; return True; }
-  return False;
+  if(virtWidthCorr < (unsigned)hexViewer[hmode].width()-1) { virtWidthCorr++; return true; }
+  return false;
 }
 
 REGISTRY_MODE hexMode =

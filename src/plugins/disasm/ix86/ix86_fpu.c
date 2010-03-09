@@ -68,7 +68,7 @@ static char * __NEAR__ __FASTCALL__ __UniFPUfunc(char * str,const char * cmd,cha
  char mod = ( DisP->RealCmd[1] & 0xC0 ) >> 6;
  char reg = DisP->RealCmd[1] & 0x07;
  char *modrm;
- modrm = ix86_getModRM(True,mod,reg,DisP);
+ modrm = ix86_getModRM(true,mod,reg,DisP);
  SetNameTabD(str,cmd,opsize,DisP);
  if(!direct)  MakeST(str,0)
  else         strcat(str,modrm);
@@ -83,7 +83,7 @@ static char * __NEAR__ __FASTCALL__ __MemFPUfunc(char * str,const char * cmd,cha
  char mod = ( DisP->RealCmd[1] & 0xC0 ) >> 6;
  char reg = DisP->RealCmd[1] & 0x07;
  char *modrm;
- modrm = ix86_getModRM(True,mod,reg,DisP);
+ modrm = ix86_getModRM(true,mod,reg,DisP);
  SetNameTabD(str,cmd,opsize,DisP);
  strcat(str,modrm);
  return str;

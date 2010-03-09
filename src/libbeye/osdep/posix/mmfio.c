@@ -30,11 +30,11 @@ mmfHandle          __FASTCALL__ __mmfOpen(const char *fname,int mode)
   return NULL;
 }
 
-tBool              __FASTCALL__ __mmfFlush(mmfHandle mh)
+bool              __FASTCALL__ __mmfFlush(mmfHandle mh)
 {
   UNUSED(mh);
   errno = ENOSYS;
-  return False;
+  return false;
 }
 
 mmfHandle     __FASTCALL__ __mmfSync(mmfHandle mh)
@@ -43,20 +43,20 @@ mmfHandle     __FASTCALL__ __mmfSync(mmfHandle mh)
   return NULL;
 }
 
-tBool          __FASTCALL__ __mmfProtect(mmfHandle mh,int flags)
+bool          __FASTCALL__ __mmfProtect(mmfHandle mh,int flags)
 {
   UNUSED(mh);
   UNUSED(flags);
   errno = ENOSYS;
-  return False;
+  return false;
 }
 
-tBool              __FASTCALL__ __mmfResize(mmfHandle mh,long size)
+bool              __FASTCALL__ __mmfResize(mmfHandle mh,long size)
 {
   UNUSED(mh);
   UNUSED(size);
   errno = ENOSYS;
-  return False;
+  return false;
 }
 
 void               __FASTCALL__ __mmfClose(mmfHandle mh)
@@ -77,4 +77,4 @@ long              __FASTCALL__ __mmfSize(mmfHandle mh)
   return 0L;
 }
 
-tBool             __FASTCALL__ __mmfIsWorkable( void ) { return False; }
+bool             __FASTCALL__ __mmfIsWorkable( void ) { return false; }

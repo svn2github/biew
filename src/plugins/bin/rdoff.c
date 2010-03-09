@@ -48,13 +48,13 @@ static linearArray *rdoffImpNames = NULL;
 
 static void __NEAR__ __FASTCALL__ ReadImpNameList(BGLOBAL handle,void (__FASTCALL__ *mem_out)(const char *));
 static void __FASTCALL__ rdoff_ReadPubNameList(BGLOBAL handle,void (__FASTCALL__ *mem_out)(const char *));
-static tBool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
+static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
 
 static tCompare __FASTCALL__ compare_impnames(const void __HUGE__ *v1,const void __HUGE__ *v2);
 
-static tBool __FASTCALL__ rdoffLowMemFunc( unsigned long need_mem )
+static bool __FASTCALL__ rdoffLowMemFunc( unsigned long need_mem )
 {
-  tBool ret = False;
+  bool ret = false;
   UNUSED(need_mem);
   if(!fmtActiveState)
   {
@@ -62,19 +62,19 @@ static tBool __FASTCALL__ rdoffLowMemFunc( unsigned long need_mem )
     {
        la_Destroy(PubNames);
        PubNames = NULL;
-       ret = True;
+       ret = true;
     }
     if(rdoffImpNames)
     {
        la_Destroy(rdoffImpNames);
        rdoffImpNames = NULL;
-       ret = True;
+       ret = true;
     }
     if(rdoffReloc)
     {
        la_Destroy(rdoffReloc);
        rdoffReloc = NULL;
-       ret = True;
+       ret = true;
     }
   }
   return ret;
@@ -87,12 +87,12 @@ static __filesize_t __FASTCALL__ rdoff_Help( void )
 }
 
 /** return 0 if error */
-static tBool __NEAR__ __FASTCALL__ rdoff_skiprec(unsigned char type)
+static bool __NEAR__ __FASTCALL__ rdoff_skiprec(unsigned char type)
 {
   unsigned i;
-  tBool ret;
+  bool ret;
   unsigned char nulch;
-  ret = True;
+  ret = true;
   switch(type)
   {
     case 1: /** reloc record */
@@ -126,7 +126,7 @@ static tBool __NEAR__ __FASTCALL__ rdoff_skiprec(unsigned char type)
             break;
     default: /** unknown ??? */
             ErrMessageBox("Broken RDOFF file",NULL);
-            ret = False;
+            ret = false;
             break;
   }
   return ret;
@@ -143,13 +143,13 @@ static __filesize_t __FASTCALL__ rdoff_ShowExport( void )
   __filesize_t abs_off;
   memArray * rdoff_et;
   fpos = BMGetCurrFilePos();
-  if(!(rdoff_et = ma_Build(0,True))) return fpos;
+  if(!(rdoff_et = ma_Build(0,true))) return fpos;
   bmSeek(10,BM_SEEK_SET);
   while(bmGetCurrFilePos() < rdoff_hdrlen + 5)
   {
-    tBool is_eof;
+    bool is_eof;
     rec = bmReadByte();
-    is_eof = False;
+    is_eof = false;
     if(rec == 3)
     {
       char ch;
@@ -166,7 +166,7 @@ static __filesize_t __FASTCALL__ rdoff_ShowExport( void )
       abs_off = segno == 0 ? cs_start : segno == 1 ? ds_start : FILESIZE_MAX;
       if(abs_off < FILESIZE_MAX) abs_off += segoff;
       sprintf(sout,"%-50s offset=%08lXH",str,(unsigned long)abs_off);
-      if(!ma_AddString(rdoff_et,sout,True) || is_eof) break;
+      if(!ma_AddString(rdoff_et,sout,true) || is_eof) break;
     }
     else
     {
@@ -205,9 +205,9 @@ static __filesize_t __FASTCALL__ rdoff_FindExport(const char *name )
   ret = 0L;
   while(bmGetCurrFilePos() < rdoff_hdrlen + 5)
   {
-    tBool is_eof;
+    bool is_eof;
     rec = bmReadByte();
-    is_eof = False;
+    is_eof = false;
     if(rec == 3)
     {
       char ch;
@@ -247,13 +247,13 @@ static __filesize_t __FASTCALL__ rdoff_ShowModRef( void )
   char str[129];
   memArray * rdoff_mr;
   fpos = BMGetCurrFilePos();
-  if(!(rdoff_mr = ma_Build(0,True))) return fpos;
+  if(!(rdoff_mr = ma_Build(0,true))) return fpos;
   bmSeek(10,BM_SEEK_SET);
   while(bmGetCurrFilePos() < rdoff_hdrlen + 5)
   {
-    tBool is_eof;
+    bool is_eof;
     rec = bmReadByte();
-    is_eof = False;
+    is_eof = false;
     if(rec == 4)
     {
       char ch;
@@ -265,7 +265,7 @@ static __filesize_t __FASTCALL__ rdoff_ShowModRef( void )
         if(!ch || is_eof) break;
       }
       str[i] = 0;
-      if(!ma_AddString(rdoff_mr,str,True) || is_eof) break;
+      if(!ma_AddString(rdoff_mr,str,true) || is_eof) break;
     }
     else
     {
@@ -288,13 +288,13 @@ static __filesize_t __FASTCALL__ rdoff_ShowImport( void )
   char str[33];
   memArray * rdoff_it;
   fpos = BMGetCurrFilePos();
-  if(!(rdoff_it = ma_Build(0,True))) return fpos;
+  if(!(rdoff_it = ma_Build(0,true))) return fpos;
   bmSeek(10,BM_SEEK_SET);
   while(bmGetCurrFilePos() < rdoff_hdrlen + 5)
   {
-    tBool is_eof;
+    bool is_eof;
     rec = bmReadByte();
-    is_eof = False;
+    is_eof = false;
     if(rec == 2)
     {
       char ch;
@@ -307,7 +307,7 @@ static __filesize_t __FASTCALL__ rdoff_ShowImport( void )
         if(!ch || is_eof) break;
       }
       str[i] = 0;
-      if(!ma_AddString(rdoff_it,str,True) || is_eof) break;
+      if(!ma_AddString(rdoff_it,str,true) || is_eof) break;
     }
     else
     {
@@ -549,7 +549,7 @@ static unsigned long __FASTCALL__ rdoff_AppendRef(char *str,__filesize_t ulShift
   return ret;
 }
 
-static tBool __FASTCALL__ rdoff_check_fmt( void )
+static bool __FASTCALL__ rdoff_check_fmt( void )
 {
   char rbuff[6];
   bmReadBufferEx(rbuff,sizeof(rbuff),0L,BM_SEEK_SET);
@@ -592,7 +592,7 @@ static void __FASTCALL__ rdoff_ReadPubName(BGLOBAL b_cache,const struct PubName 
     }
 }
 
-static tBool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
+static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
   BGLOBAL b_cache;
   b_cache = bmbioHandle();
@@ -613,9 +613,9 @@ static void __FASTCALL__ rdoff_ReadPubNameList(BGLOBAL handle,void (__FASTCALL__
  bmSeek(10,BM_SEEK_SET);
  while(bmGetCurrFilePos() < rdoff_hdrlen + 5)
  {
-    tBool is_eof;
+    bool is_eof;
     rec = bmReadByte();
-    is_eof = False;
+    is_eof = false;
     if(rec == 3)
     {
       char ch;
@@ -662,9 +662,9 @@ static void __NEAR__ __FASTCALL__ ReadImpNameList(BGLOBAL handle,void (__FASTCAL
  bmSeek(10,BM_SEEK_SET);
  while(bmGetCurrFilePos() < rdoff_hdrlen + 5)
  {
-    tBool is_eof;
+    bool is_eof;
     rec = bmReadByte();
-    is_eof = False;
+    is_eof = false;
     if(rec == 2)
     {
       char ch;
@@ -695,7 +695,7 @@ static int __FASTCALL__ rdoff_bitness(__filesize_t pa)
 }
 
 static __filesize_t __FASTCALL__ rdoffGetPubSym(char *str,unsigned cb_str,unsigned *func_class,
-                           __filesize_t pa,tBool as_prev)
+                           __filesize_t pa,bool as_prev)
 {
   BGLOBAL b_cache;
   b_cache = bmbioHandle();
@@ -766,12 +766,12 @@ static __filesize_t __FASTCALL__ rdoffPA2VA(__filesize_t pa)
   return pa > cs_start ? pa - cs_start : 0L;
 }
 
-static tBool __FASTCALL__ rdoff_AddressResolv(char *addr,__filesize_t cfpos)
+static bool __FASTCALL__ rdoff_AddressResolv(char *addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
- tBool bret = True;
- tUInt32 res;
+ bool bret = true;
+ uint32_t res;
  if(cfpos < cs_start)
  {
     strcpy(addr,"RDFH:");
@@ -783,7 +783,7 @@ static tBool __FASTCALL__ rdoff_AddressResolv(char *addr,__filesize_t cfpos)
      addr[0] = '.';
      strcpy(&addr[1],Get8Digit(res));
    }
-   else bret = False;
+   else bret = false;
   return bret;
 }
 

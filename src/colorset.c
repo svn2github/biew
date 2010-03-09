@@ -47,28 +47,28 @@ namedColorDef named_color_def[16] =
    { "White",        White        }
 };
 
-static Color __FASTCALL__ getColorByName(const char *name,Color defval,tBool *has_err)
+static Color __FASTCALL__ getColorByName(const char *name,Color defval,bool *has_err)
 {
   unsigned i;
   for(i = 0;i < sizeof(named_color_def)/sizeof(namedColorDef);i++)
   {
     if(strcmp(name,named_color_def[i].name) == 0)
     {
-      *has_err = False;
+      *has_err = false;
       return named_color_def[i].color;
     }
   }
   strncpy(last_skin_error,name,sizeof(last_skin_error));
   last_skin_error[sizeof(last_skin_error)-1] = 0;
-  *has_err = True;
+  *has_err = true;
   return defval;
 }
 
-static ColorAttr __NEAR__ __FASTCALL__ getColorPairByName(const char *name, ColorAttr defval,tBool* has_err)
+static ColorAttr __NEAR__ __FASTCALL__ getColorPairByName(const char *name, ColorAttr defval,bool* has_err)
 {
   char wstr[80];
   char *p;
-  tBool he;
+  bool he;
   unsigned i,j,len;
   ColorAttr retval;
   Color fore,back;
@@ -78,7 +78,7 @@ static ColorAttr __NEAR__ __FASTCALL__ getColorPairByName(const char *name, Colo
   p = strchr(wstr,':');
   if(!p)
   {
-    *has_err = True;
+    *has_err = true;
     strcpy(last_skin_error,"':' is missing");
     return defval;
   }
@@ -91,13 +91,13 @@ static ColorAttr __NEAR__ __FASTCALL__ getColorPairByName(const char *name, Colo
   return retval;
 }
 
-static tBool __NEAR__ __FASTCALL__ readColorPair(hIniProfile *ini,const char *section,
+static bool __NEAR__ __FASTCALL__ readColorPair(hIniProfile *ini,const char *section,
                                    const char *subsection,
                                    const char *item,
                                    ColorAttr *value)
 {
   char cstr[80],cval[80];
-  tBool has_err;
+  bool has_err;
   sprintf(cval,"%s:%s"
           ,named_color_def[BACK_COLOR(*value) & 0x0F].name
           ,named_color_def[FORE_COLOR(*value) & 0x0F].name);
@@ -106,27 +106,27 @@ static tBool __NEAR__ __FASTCALL__ readColorPair(hIniProfile *ini,const char *se
   return has_err;
 }
 
-static tBool __NEAR__ __FASTCALL__ readButton(hIniProfile *ini,const char *section,
+static bool __NEAR__ __FASTCALL__ readButton(hIniProfile *ini,const char *section,
                                               const char *subsection,
                                               ButtonCSet *to)
 {
-  tBool has_err;
+  bool has_err;
   has_err = readColorPair(ini,section,subsection,"Active",&to->active);
   has_err |= readColorPair(ini,section,subsection,"Focused",&to->focused);
   has_err |= readColorPair(ini,section,subsection,"Disabled",&to->disabled);
   return has_err;
 }
 
-tBool csetReadIniFile(const char *ini_name)
+bool csetReadIniFile(const char *ini_name)
 {
   hIniProfile *cset;
   char cstr[80],cval[80],csec[80];
   unsigned value,i,j;
-  tBool has_err,cur_err;
-  has_err = False;
+  bool has_err,cur_err;
+  has_err = false;
   cset = iniOpenFile(ini_name,&has_err);
   last_skin_error[0] = 0;
-  if(has_err) return False; /** return no error, because ini_name was not found or unavailable */
+  if(has_err) return false; /** return no error, because ini_name was not found or unavailable */
   iniReadProfileString(cset,"Skin info","","Name","Unnamed",beye_scheme_name,256);
   for(i = 0;i < 16;i++)
   {

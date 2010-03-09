@@ -37,7 +37,7 @@ static const char *width_names[] =
    "~Quad word"
 };
 
-static tBool __FASTCALL__ nulSelect_width( void )
+static bool __FASTCALL__ nulSelect_width( void )
 {
   unsigned nModes;
   int i;
@@ -46,9 +46,9 @@ static tBool __FASTCALL__ nulSelect_width( void )
   if(i != -1)
   {
     nulWidth = i;
-    return True;
+    return true;
   }
-  return False;
+  return false;
 }
 
 static char *outstr;

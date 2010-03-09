@@ -121,17 +121,17 @@ extern int       __FASTCALL__ __init_mouse( void );
 extern void      __FASTCALL__ __term_mouse( void );
 
                    /** Returns mouse cursor visibility.
-                     * @return                True if mouse cursor is in visible state
+                     * @return                true if mouse cursor is in visible state
                      * @see                   __MsGetPos __MsGetBtns __MsSetState
                     **/
-extern tBool     __FASTCALL__ __MsGetState( void );
+extern bool     __FASTCALL__ __MsGetState( void );
 
                    /** Sets mouse cursor visibility.
                      * @return                none
                      * @param is_visible      Indicates visibility of mouse cursor
                      * @see                   __MsGetState
                     **/
-extern void      __FASTCALL__ __MsSetState( tBool is_visible );
+extern void      __FASTCALL__ __MsSetState( bool is_visible );
 
                    /** Returns mouse position in screen coordinates.
                      * @return                none
@@ -149,8 +149,8 @@ extern int       __FASTCALL__ __MsGetBtns( void );
 
 /* VIDEO subsystem handling */
 
-typedef tUInt8 ColorAttr; /**< This is the data type used to represent attributes of color */
-typedef tUInt8 t_vchar;   /**< This is the data type used to represent video character */
+typedef uint8_t ColorAttr; /**< This is the data type used to represent attributes of color */
+typedef uint8_t t_vchar;   /**< This is the data type used to represent video character */
 
 /** Internal structure of video buffer */
 typedef struct tag_tvioBuff
@@ -292,13 +292,13 @@ extern void      __FASTCALL__ __term_sys( void );
 extern void      __FASTCALL__ __OsYield( void );
 
                    /** Gets ctrl-break signal
-                     * @return                True if occured; False - otherwise
+                     * @return                true if occured; false - otherwise
                      * @note                  Function does not differ soft and
                      *                        hard c-break.
                      * @warning               After getting signal by program
                                               semaphore is not being cleaned.
                     **/
-extern tBool     __FASTCALL__ __OsGetCBreak( void );
+extern bool     __FASTCALL__ __OsGetCBreak( void );
 
                    /** Sets control-break signal
                      * @return                none
@@ -307,7 +307,7 @@ extern tBool     __FASTCALL__ __OsGetCBreak( void );
                      * @note                  Function does not differ soft and
                      *                        hard c-break.
                     **/
-extern void      __FASTCALL__ __OsSetCBreak( tBool state );
+extern void      __FASTCALL__ __OsSetCBreak( bool state );
 
                    /** Builds OS specific name of home directory
                      * @return                Slash terminated path to home directory
@@ -353,13 +353,13 @@ extern unsigned  __FASTCALL__ __OsSetTimerCallBack(unsigned ms,timer_callback *f
 extern void      __FASTCALL__ __OsRestoreTimer(void);
 
 #if __WORDSIZE >= 32
-#define __fileoff_t  tInt64
-#define __filesize_t tUInt64
+#define __fileoff_t  int64_t
+#define __filesize_t uint64_t
 #define FILEOFF_MAX INT64_MAX
 #define FILESIZE_MAX UINT64_MAX
 #else
-#define __fileoff_t  tInt32
-#define __filesize_t tUInt32
+#define __fileoff_t  int32_t
+#define __filesize_t uint32_t
 #define FILEOFF_MAX LONG_MAX
 #define FILESIZE_MAX ULONG_MAX
 #endif
@@ -433,10 +433,10 @@ extern int       __FASTCALL__ __OsDelete(const char *name);
 extern bhandle_t __FASTCALL__ __OsOpen(const char *name,int mode);
 
                    /** Checks whether the specified file exists
-                     * @return                True if specified file is exists
+                     * @return                true if specified file is exists
                      * @param name            file being checked
                     **/
-extern tBool  __FASTCALL__    __IsFileExists(const char *name);
+extern bool  __FASTCALL__    __IsFileExists(const char *name);
 
                    /** Returns length of file in bytes
                      * @return                length of file if successful; 0 - otherwise
@@ -516,20 +516,20 @@ typedef struct tagFTime
    unsigned long modtime; /**< constains modification time */
 }FTime;
                    /** Gets last access and modification time for given file.
-                     * @return                True if success False otherwise
+                     * @return                true if success false otherwise
                      * @param name            specified name of file
                      * @param data            pointer to memory where information will be stored
                      * @see                   __OsSetFTime
                     **/
-extern tBool      __FASTCALL__ __OsGetFTime(const char *name,FTime *data);
+extern bool      __FASTCALL__ __OsGetFTime(const char *name,FTime *data);
 
                    /** Sets last access and modification time for given file.
-                     * @return                True if success False otherwise
+                     * @return                true if success false otherwise
                      * @param name            specified name of file
                      * @param data            pointer to memory where information is stored
                      * @see                   __OsGetFTime
                     **/
-extern tBool      __FASTCALL__ __OsSetFTime(const char *name,const FTime *data);
+extern bool      __FASTCALL__ __OsSetFTime(const char *name,const FTime *data);
 
 /*
    First edition of Memory Mapped File Support (For modern OS).
@@ -550,11 +550,11 @@ typedef void * mmfHandle;
 mmfHandle          __FASTCALL__ __mmfOpen(const char *fname,int mode);
 
                    /** Flushes memory mapped file to the physical file.
-                     * @return                True if successful, False otherwise
+                     * @return                true if successful, false otherwise
                      * @param mh              handle of opened stream
                      * @see                   __mmfOpen __mmfClose __mmfSync
                     **/
-tBool              __FASTCALL__ __mmfFlush(mmfHandle mh);
+bool              __FASTCALL__ __mmfFlush(mmfHandle mh);
 
                    /** Synchronizes memory mapped file with the physical file.
                      * @param mh              handle of opened stream
@@ -570,15 +570,15 @@ tBool              __FASTCALL__ __mmfFlush(mmfHandle mh);
 mmfHandle          __FASTCALL__ __mmfSync(mmfHandle mh);
 
                    /** Changes access to the memory mapping of file.
-                     * @return                True if successful, False otherwise
+                     * @return                true if successful, false otherwise
                      * @param mh              handle of opened stream
                      * @param flags           combination of FO_* and SO_* flags
                      * @see                   __mmfOpen __mmfClose
                     **/
-tBool              __FASTCALL__ __mmfProtect(mmfHandle mh,int flags);
+bool              __FASTCALL__ __mmfProtect(mmfHandle mh,int flags);
 
                    /** Changes size of existed file mapping.
-                     * @return                True if successful, False otherwise
+                     * @return                true if successful, false otherwise
                      * @param mh              handle of opened stream
                      * @param size            new size of mapping in bytes
                      * @note                  May be not supported by some OS.
@@ -587,7 +587,7 @@ tBool              __FASTCALL__ __mmfProtect(mmfHandle mh,int flags);
                      *                        end of the file are lost.
                      * @see                   __mmfOpen __mmfClose __mmfProtect
                     **/
-tBool              __FASTCALL__ __mmfResize(mmfHandle mh,long size);
+bool              __FASTCALL__ __mmfResize(mmfHandle mh,long size);
 
                    /** Closes existed file mapping.
                      * @return                None
@@ -611,9 +611,9 @@ void *             __FASTCALL__ __mmfAddress(mmfHandle mh);
 long              __FASTCALL__ __mmfSize(mmfHandle mh);
 
                    /** Returns workability of MMF subsystem.
-                     * @return                True if mmf is workable on given OS
+                     * @return                true if mmf is workable on given OS
                     **/
-tBool             __FASTCALL__ __mmfIsWorkable( void );
+bool             __FASTCALL__ __mmfIsWorkable( void );
 
 /* National Language Support */
 

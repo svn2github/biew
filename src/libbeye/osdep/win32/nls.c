@@ -21,7 +21,7 @@
 
 #include "libbeye/libbeye.h"
 
-tBool win32_use_ansi;
+bool win32_use_ansi;
 
 void __FASTCALL__ __nls_OemToOsdep(unsigned char *buff,unsigned len)
 {

@@ -44,14 +44,14 @@
 #ifndef external_exec
 struct external_exec
 {
-  tUInt8 e_info[4];		/**< magic number and stuff		*/
-  tUInt8 e_text[BYTES_IN_WORD]; /**< length of text section in bytes	*/
-  tUInt8 e_data[BYTES_IN_WORD]; /**< length of data section in bytes	*/
-  tUInt8 e_bss[BYTES_IN_WORD]; /**< length of bss area in bytes 		*/
-  tUInt8 e_syms[BYTES_IN_WORD]; /**< length of symbol table in bytes 	*/
-  tUInt8 e_entry[BYTES_IN_WORD]; /**< start address 			*/
-  tUInt8 e_trsize[BYTES_IN_WORD]; /**< length of text relocation info	*/
-  tUInt8 e_drsize[BYTES_IN_WORD]; /**< length of data relocation info 	*/
+  uint8_t e_info[4];		/**< magic number and stuff		*/
+  uint8_t e_text[BYTES_IN_WORD]; /**< length of text section in bytes	*/
+  uint8_t e_data[BYTES_IN_WORD]; /**< length of data section in bytes	*/
+  uint8_t e_bss[BYTES_IN_WORD]; /**< length of bss area in bytes 		*/
+  uint8_t e_syms[BYTES_IN_WORD]; /**< length of symbol table in bytes 	*/
+  uint8_t e_entry[BYTES_IN_WORD]; /**< start address 			*/
+  uint8_t e_trsize[BYTES_IN_WORD]; /**< length of text relocation info	*/
+  uint8_t e_drsize[BYTES_IN_WORD]; /**< length of data relocation info 	*/
 };
 
 #define	EXEC_BYTES_SIZE	(4 + BYTES_IN_WORD * 7)
@@ -272,21 +272,21 @@ struct external_exec
 /** Symbols */
 #ifndef external_nlist
 struct external_nlist {
-  tUInt8 e_strx[BYTES_IN_WORD];	/**< index into string table of name */
-  tUInt8 e_type[1];			/**< type of symbol */
-  tUInt8 e_other[1];			/**< misc info (usually empty) */
-  tUInt8 e_desc[2];			/**< description field */
-  tUInt8 e_value[BYTES_IN_WORD];	/**< value of symbol */
+  uint8_t e_strx[BYTES_IN_WORD];	/**< index into string table of name */
+  uint8_t e_type[1];			/**< type of symbol */
+  uint8_t e_other[1];			/**< misc info (usually empty) */
+  uint8_t e_desc[2];			/**< description field */
+  uint8_t e_value[BYTES_IN_WORD];	/**< value of symbol */
 };
 #define EXTERNAL_NLIST_SIZE (BYTES_IN_WORD+4+BYTES_IN_WORD)
 #endif
 
 struct internal_nlist {
-  tUInt32  n_strx;			/**< index into string table of name */
-  tUInt8   n_type;			/**< type of symbol */
-  tUInt8   n_other;		        /**< misc info (usually empty) */
-  tUInt16  n_desc;		        /**< description field */
-  tUInt32  n_value;			/**< value of symbol */
+  uint32_t  n_strx;			/**< index into string table of name */
+  uint8_t   n_type;			/**< type of symbol */
+  uint8_t   n_other;		        /**< misc info (usually empty) */
+  uint16_t  n_desc;		        /**< description field */
+  uint32_t  n_value;			/**< value of symbol */
 };
 
 /** The n_type field is the symbol type, containing:  */
@@ -363,9 +363,9 @@ struct internal_nlist {
    Likewise, the data-relocation section applies to the data section.  */
 
 struct reloc_std_external {
-  tUInt8 r_address[BYTES_IN_WORD];	/**< offset of of data to relocate 	*/
-  tUInt8 r_index[3];	/**< symbol table index of symbol 	*/
-  tUInt8 r_type[1];	/**< relocation type			*/
+  uint8_t r_address[BYTES_IN_WORD];	/**< offset of of data to relocate 	*/
+  uint8_t r_index[3];	/**< symbol table index of symbol 	*/
+  uint8_t r_type[1];	/**< relocation type			*/
 };
 
 #define	RELOC_STD_BITS_PCREL_BIG	((unsigned int) 0x80)
@@ -394,10 +394,10 @@ struct reloc_std_external {
 /** EXTENDED RELOCS  */
 
 struct reloc_ext_external {
-  tUInt8 r_address[BYTES_IN_WORD];	/**< offset of of data to relocate 	*/
-  tUInt8 r_index[3];	/**< symbol table index of symbol 	*/
-  tUInt8 r_type[1];	/**< relocation type			*/
-  tUInt8 r_addend[BYTES_IN_WORD];	/**< datum addend				*/
+  uint8_t r_address[BYTES_IN_WORD];	/**< offset of of data to relocate 	*/
+  uint8_t r_index[3];	/**< symbol table index of symbol 	*/
+  uint8_t r_type[1];	/**< relocation type			*/
+  uint8_t r_addend[BYTES_IN_WORD];	/**< datum addend				*/
 };
 
 #define	RELOC_EXT_BITS_EXTERN_BIG	((unsigned int) 0x80)

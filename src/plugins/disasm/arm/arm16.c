@@ -161,7 +161,7 @@ extern const char *armCCnames[16];
 	prev=1;\
     }
 
-static void __FASTCALL__ arm16EncodeTail(DisasmRet *dret,tUInt16 opcode,__filesize_t ulShift,const char *msk,long flags)
+static void __FASTCALL__ arm16EncodeTail(DisasmRet *dret,uint16_t opcode,__filesize_t ulShift,const char *msk,long flags)
 {
     unsigned i,idx,val,prev,bracket;
     int s,d,m,n;
@@ -224,7 +224,7 @@ static void __FASTCALL__ arm16EncodeTail(DisasmRet *dret,tUInt16 opcode,__filesi
     p=strchr(msk,'o');
     if(p)
     {
-	tUInt32 tbuff;
+	uint32_t tbuff;
 	unsigned hh=0;
 	p=strchr(msk,'H');
 	if(p)
@@ -267,7 +267,7 @@ static void __FASTCALL__ arm16EncodeTail(DisasmRet *dret,tUInt16 opcode,__filesi
 }
 
 void __FASTCALL__ arm16Disassembler(DisasmRet *dret,__filesize_t ulShift,
-					tUInt16 opcode, unsigned flags)
+					uint16_t opcode, unsigned flags)
 {
     int done;
     unsigned i,n;

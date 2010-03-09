@@ -90,24 +90,24 @@ extern void             __FASTCALL__ PHFree(void __HUGE__ * ptr);
 #define PHFREE(ptr)     { PHFree(ptr); ptr = 0; }
 
                    /** Pointer to a user supplied function that freed unneeded memory.
-                     * @return                True if part of required memory is free.
+                     * @return                true if part of required memory is free.
                      * @param need_mem        specifies size of needed memory
                     **/
-typedef tBool   (__FASTCALL__ *LowMemCallBack)(unsigned long need_mem);
+typedef bool   (__FASTCALL__ *LowMemCallBack)(unsigned long need_mem);
 
                    /** Registers user-defined callback.
-                     * @return                True if foperation performed successfully
+                     * @return                true if foperation performed successfully
                      * @param func            specifies user-defined callback function
                      * @see                   PMUnregLowMemCallBack
                     **/
-extern tBool    __FASTCALL__ PMRegLowMemCallBack(LowMemCallBack func);
+extern bool    __FASTCALL__ PMRegLowMemCallBack(LowMemCallBack func);
 
                    /** Unregisters user-defined callback.
-                     * @return                True if foperation performed successfully
+                     * @return                true if foperation performed successfully
                      * @param func            specifies user-defined callback function
                      * @see                   PMRegLowMemCallBack
                     **/
-extern tBool    __FASTCALL__ PMUnregLowMemCallBack(LowMemCallBack func);
+extern bool    __FASTCALL__ PMUnregLowMemCallBack(LowMemCallBack func);
 
 #ifdef __cplusplus
 }

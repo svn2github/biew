@@ -172,14 +172,14 @@ const char *wtag_find_name(unsigned short wtag)
     return "Unknown";
 }
 
-static tBool  __FASTCALL__ wav_check_fmt( void )
+static bool  __FASTCALL__ wav_check_fmt( void )
 {
     unsigned long id;
     id=bmReadDWordEx(8,SEEKF_START);
     if(	bmReadDWordEx(0,SEEKF_START)==mmioFOURCC('R','I','F','F') &&
 	id==mmioFOURCC('W','A','V','E'))
-	return True;
-    return False;
+	return true;
+    return false;
 }
 
 static void __FASTCALL__ wav_init_fmt( void ) {}

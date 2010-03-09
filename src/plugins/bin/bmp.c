@@ -27,11 +27,11 @@
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
 
-static tBool  __FASTCALL__ bmp_check_fmt( void )
+static bool  __FASTCALL__ bmp_check_fmt( void )
 {
     if(	bmReadByteEx(0,BM_SEEK_SET) == 'B' &&
-	bmReadByteEx(1,BM_SEEK_SET) == 'M') return True;
-    return False;
+	bmReadByteEx(1,BM_SEEK_SET) == 'M') return true;
+    return false;
 }
 static void __FASTCALL__ bmp_init_fmt( void ) {}
 static void __FASTCALL__ bmp_destroy_fmt(void) {}

@@ -26,7 +26,7 @@ void __FASTCALL__ __init_keyboard( const char *user_cp )
 {
    if((__ms_nbtns = __init_mouse()) != INT_MAX)
    {
-     __MsSetState(True);
+     __MsSetState(true);
    }
 }
 
@@ -34,7 +34,7 @@ void __FASTCALL__ __term_keyboard( void )
 {
   if(__ms_nbtns != INT_MAX)
   {
-    __MsSetState(False);
+    __MsSetState(false);
     __term_mouse();
   }
 }

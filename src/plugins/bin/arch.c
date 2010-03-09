@@ -76,7 +76,7 @@ static __filesize_t __FASTCALL__ ShowARCHHeader( void )
   return fpos;
 }
 
-static tBool __NEAR__ __FASTCALL__ archReadModList(memArray *obj,unsigned nnames,__filesize_t *addr)
+static bool __NEAR__ __FASTCALL__ archReadModList(memArray *obj,unsigned nnames,__filesize_t *addr)
 {
   __filesize_t foff,flen;
   unsigned i;
@@ -84,7 +84,7 @@ static tBool __NEAR__ __FASTCALL__ archReadModList(memArray *obj,unsigned nnames
   flen = bmGetFLength();
   for(i = 0;i < nnames;i++)
   {
-    tBool is_eof;
+    bool is_eof;
     /**
        Some archives sometimes have big and sometimes little endian.
        Here is a horrible attempt to determine it.
@@ -95,10 +95,10 @@ static tBool __NEAR__ __FASTCALL__ archReadModList(memArray *obj,unsigned nnames
     bmReadBufferEx(stmp,sizeof(ar_sub_hdr),foff,BM_SEEK_SET);
     is_eof = bmEOF();
     stmp[sizeof(ar_sub_hdr)-2] = 0;
-    if(!ma_AddString(obj,is_eof ? CORRUPT_BIN_MSG : stmp,True)) break;
+    if(!ma_AddString(obj,is_eof ? CORRUPT_BIN_MSG : stmp,true)) break;
     if(is_eof) break;
   }
-  return True;
+  return true;
 }
 
 static __filesize_t __FASTCALL__ archModLst( void )
@@ -122,7 +122,7 @@ static __filesize_t __FASTCALL__ archModLst( void )
       Here is a horrible attempt to determine it.
    */
    if(!(nnames%4)) nnames/=sizeof(unsigned long);
-   if(!(obj = ma_Build(nnames,True))) return fpos;
+   if(!(obj = ma_Build(nnames,true))) return fpos;
    if(!(addr = PMalloc(sizeof(unsigned long)*nnames))) goto exit;
    bmReadBufferEx(addr,sizeof(unsigned long)*nnames,sizeof(ar_hdr)+sizeof(unsigned long),BM_SEEK_SET);
    if(archReadModList(obj,nnames,addr))
@@ -146,7 +146,7 @@ static __filesize_t __FASTCALL__ archModLst( void )
    return fpos;
 }
 
-static tBool __FASTCALL__ IsArch( void )
+static bool __FASTCALL__ IsArch( void )
 {
   char str[16];
   bmReadBufferEx(str,sizeof(str),0,BM_SEEK_SET);
@@ -162,17 +162,17 @@ static void __FASTCALL__ ArchDestroy( void )
 {
 }
 
-static tBool __FASTCALL__ archAddrResolv(char *addr,__filesize_t cfpos)
+static bool __FASTCALL__ archAddrResolv(char *addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
-  tBool bret = True;
+  bool bret = true;
   if(cfpos < sizeof(ar_hdr))
   {
     strcpy(addr,"arch.h:");
     strcpy(&addr[7],Get2Digit(cfpos));
   }
-  else bret = False;
+  else bret = false;
   return bret;
 }
 

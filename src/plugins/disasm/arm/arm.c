@@ -47,14 +47,14 @@ static DisasmRet __FASTCALL__ armDisassembler(__filesize_t ulShift,
     ret.codelen = armBitness==DAB_USE32?4:2;
     if(armBitness==DAB_USE32)
     {
-	tUInt32 opcode32;
-	opcode32=armBigEndian?be2me_32(*((tUInt32 *)buffer)):le2me_32(*((tUInt32 *)buffer));
+	uint32_t opcode32;
+	opcode32=armBigEndian?be2me_32(*((uint32_t *)buffer)):le2me_32(*((uint32_t *)buffer));
 	arm32Disassembler(&ret,ulShift,opcode32,flags);
     }
     else
     {
-	tUInt16 opcode16;
-	opcode16=armBigEndian?be2me_16(*((tUInt16 *)buffer)):le2me_16(*((tUInt16 *)buffer));
+	uint16_t opcode16;
+	opcode16=armBigEndian?be2me_16(*((uint16_t *)buffer)):le2me_16(*((uint16_t *)buffer));
 	arm16Disassembler(&ret,ulShift,opcode16,flags);
     }
   }
@@ -66,10 +66,10 @@ static DisasmRet __FASTCALL__ armDisassembler(__filesize_t ulShift,
   return ret;
 }
 
-static tBool __FASTCALL__ armAsmRef( void )
+static bool __FASTCALL__ armAsmRef( void )
 {
   hlpDisplay(20040);
-  return False;
+  return false;
 }
 
 static void __FASTCALL__ armHelpAsm( void )
@@ -79,7 +79,7 @@ static void __FASTCALL__ armHelpAsm( void )
  unsigned size,i,evt;
  unsigned long nstrs;
  TWindow * hwnd;
- if(!hlpOpen(True)) return;
+ if(!hlpOpen(true)) return;
  size = (unsigned)hlpGetItemSize(20041);
  if(!size) goto armhlp_bye;
  msgAsmText = PMalloc(size+1);
@@ -210,7 +210,7 @@ static const char *arm_bitness_names[] =
    "~Full-32"
 };
 
-static tBool __FASTCALL__ armSelect_bitness( void )
+static bool __FASTCALL__ armSelect_bitness( void )
 {
   unsigned nModes;
   int i;
@@ -219,9 +219,9 @@ static tBool __FASTCALL__ armSelect_bitness( void )
   if(i != -1)
   {
     armBitness = ((i==0)?DAB_USE16:DAB_USE32);
-    return True;
+    return true;
   }
-  return False;
+  return false;
 }
 
 static const char *arm_endian_names[] =
@@ -230,7 +230,7 @@ static const char *arm_endian_names[] =
    "~Big endian"
 };
 
-static tBool __FASTCALL__ armSelect_endian( void )
+static bool __FASTCALL__ armSelect_endian( void )
 {
   unsigned nModes;
   int i;
@@ -239,9 +239,9 @@ static tBool __FASTCALL__ armSelect_endian( void )
   if(i != -1)
   {
     armBigEndian = i;
-    return True;
+    return true;
   }
-  return False;
+  return false;
 }
 
 REGISTRY_DISASM ARM_Disasm =

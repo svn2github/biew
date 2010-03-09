@@ -4553,11 +4553,11 @@ char ix86_segpref[4] = "";
 const unsigned char leave_insns[] = { 0x07, 0x17, 0x1F, 0x58, 0x59, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F, 0x61, 0x90, 0xC9 };
 
 
-static tBool is_listed(unsigned char insn,const unsigned char *list,size_t listsize)
+static bool is_listed(unsigned char insn,const unsigned char *list,size_t listsize)
 {
   size_t i;
-  for(i = 0;i < listsize;i++) if(insn == list[i]) return True;
-  return False;
+  for(i = 0;i < listsize;i++) if(insn == list[i]) return true;
+  return false;
 }
 
 /*
@@ -4579,7 +4579,7 @@ static void ix86_gettype(DisasmRet *dret,ix86Param *_DisP)
 {
  MBuffer insn;
  char ua,ud,up,has_lock,has_rep,has_seg;
- tBool has_vex;
+ bool has_vex;
  insn = &_DisP->RealCmd[0];
  dret->pro_clone = __INSNT_ORDINAL;
  has_vex = has_lock = has_rep = has_seg = 0;
@@ -4742,14 +4742,14 @@ static void ix86_gettype(DisasmRet *dret,ix86Param *_DisP)
      {
         /* Attempt determine leave insn */
         size_t i;
-        tBool leave_cond = False, ret_reached = False;
+        bool leave_cond = false, ret_reached = false;
         for(i = 0;i < (PREDICT_DEPTH-1)*MAX_IX86_INSN_LEN;i++)
         {
           /*
              RETURN insn can not be reached first because it directly checked
              above. Therefore 'leave_cond' variable will computed correctly.
           */
-          if((insn[i] & 0xF6) == 0xC2) { ret_reached = True; break; }
+          if((insn[i] & 0xF6) == 0xC2) { ret_reached = true; break; }
           leave_cond = is_listed(insn[i],leave_insns,sizeof(leave_insns));
           if(!leave_cond)
           {
@@ -4760,19 +4760,19 @@ static void ix86_gettype(DisasmRet *dret,ix86Param *_DisP)
                (insn[i] == 0x0F && insn[i+1] == 0x77)    /* emms */
               )
             {
-              leave_cond = True;
+              leave_cond = true;
               i++;
             }
             else
             if(insn[i] == 0x83 && (insn[i+1] == 0xC4 || insn[i+1] == 0xEC))
             { /* sub/add esp, short_num */
-              leave_cond = True;
+              leave_cond = true;
               i += 2;
             }
             else
             if(insn[i] == 0x81 && (insn[i+1] == 0xC4 || insn[i+1] == 0xEC))
             { /* sub/add esp, long_num */
-              leave_cond = True;
+              leave_cond = true;
               i += (_DisP->mode&MOD_WIDE_DATA) ? 5 : 3;
             }
           }
@@ -4855,7 +4855,7 @@ static DisasmRet __FASTCALL__ ix86Disassembler(__filesize_t ulShift,
  ix86Param DisP;
  unsigned char ua,ud,up;
  char has_lock,has_rep,has_seg;
- tBool has_vex,has_rex,has_xop;
+ bool has_vex,has_rex,has_xop;
 
  memset(&DisP,0,sizeof(DisP));
  memset(&Ret,0,sizeof(Ret));
@@ -5352,10 +5352,10 @@ static ColorAttr  __FASTCALL__ ix86GetOpcodeColor(unsigned long clone)
 }
 
 
-static tBool __FASTCALL__ x86AsmRef( void )
+static bool __FASTCALL__ x86AsmRef( void )
 {
   hlpDisplay(20000);
-  return False;
+  return false;
 }
 
 static void __FASTCALL__ ix86HelpAsm( void )
@@ -5365,7 +5365,7 @@ static void __FASTCALL__ ix86HelpAsm( void )
  unsigned size,i,evt;
  unsigned long nstrs;
  TWindow * hwnd;
- if(!hlpOpen(True)) return;
+ if(!hlpOpen(true)) return;
 #ifdef IX86_64
  size = (unsigned)hlpGetItemSize(x86_Bitness == DAB_USE64 ? 20002:20001);
 #else
@@ -5476,7 +5476,7 @@ static const char *use_names[] =
    "~Auto"
 };
 
-static tBool __FASTCALL__ x86Select_Bitness( void )
+static bool __FASTCALL__ x86Select_Bitness( void )
 {
   unsigned nModes;
   int i;
@@ -5487,10 +5487,10 @@ static tBool __FASTCALL__ x86Select_Bitness( void )
   {
     if(i == 3) i = DAB_AUTO;
     BITNESS = x86_Bitness = i;
-    return True;
+    return true;
   }
   else if(BITNESS == 3) BITNESS = x86_Bitness = DAB_AUTO;
-  return False;
+  return false;
 }
 
 static int __FASTCALL__ ix86MaxInsnLen( void ) { return MAX_IX86_INSN_LEN; }
@@ -5552,7 +5552,7 @@ static signed int active_assembler = -1;
 #ifndef HAVE_PCLOSE
 #define pclose(fp) fclose(fp)
 #endif
-extern tBool iniUseExtProgs;
+extern bool iniUseExtProgs;
 static void __FASTCALL__ ix86Init( void )
 {
   ix86_voidstr = PMalloc(1000);
@@ -5574,7 +5574,7 @@ static void __FASTCALL__ ix86Init( void )
 #ifdef HAVE_POPEN
   //Assembler initialization
   //Look for an available assembler
-  if (active_assembler == -1 && iniUseExtProgs==True) //Execute this only once
+  if (active_assembler == -1 && iniUseExtProgs==true) //Execute this only once
   {
     int i;
     for (i = 0; assemblers[i].detect_command; i++)

@@ -142,14 +142,14 @@ static void __NEAR__ PaintNewHeaderLX_1(void)
            ,(unsigned short)(lxe.lx.lxModuleVersion >> 16),(unsigned)(unsigned short)(lxe.lx.lxModuleVersion)
            ,lxe.lx.lxModuleFlags
            ,__nedata[lxe.lx.lxModuleFlags & 0x0000003]
-           ,GetBool((lxe.lx.lxModuleFlags & 0x00000004L) == 0x00000004L)
-           ,GetBool((lxe.lx.lxModuleFlags & 0x00000010L) == 0x00000010L)
-           ,GetBool((lxe.lx.lxModuleFlags & 0x00000020L) == 0x00000020L)
+           ,Gebool((lxe.lx.lxModuleFlags & 0x00000004L) == 0x00000004L)
+           ,Gebool((lxe.lx.lxModuleFlags & 0x00000010L) == 0x00000010L)
+           ,Gebool((lxe.lx.lxModuleFlags & 0x00000020L) == 0x00000020L)
            ,GetPMWinAPI((unsigned)(lxe.lx.lxModuleFlags))
-           ,GetBool((lxe.lx.lxModuleFlags & 0x00002000L) == 0x00002000L)
+           ,Gebool((lxe.lx.lxModuleFlags & 0x00002000L) == 0x00002000L)
            ,__getOSModType(((lxe.lx.lxModuleFlags & 0x00038000L) >> 15) & 0x07)
-           ,GetBool((lxe.lx.lxModuleFlags & 0x00080000L) == 0x00080000L)
-           ,GetBool((lxe.lx.lxModuleFlags & 0x40000000L) == 0x40000000L)
+           ,Gebool((lxe.lx.lxModuleFlags & 0x00080000L) == 0x00080000L)
+           ,Gebool((lxe.lx.lxModuleFlags & 0x40000000L) == 0x40000000L)
            ,lxe.lx.lxPageCount
            ,lxe.lx.lxEIPObjectNumbers
            ,lxe.lx.lxEIP
@@ -301,7 +301,7 @@ unsigned __FASTCALL__ LXNRNamesNumItems(BGLOBAL handle)
   return GetNamCountNE(handle,lxe.lx.lxNonResidentNameTableOffset);
 }
 
-tBool __FASTCALL__ LXRNamesReadItems(BGLOBAL handle,memArray * obj,unsigned nnames)
+bool __FASTCALL__ LXRNamesReadItems(BGLOBAL handle,memArray * obj,unsigned nnames)
 {
    return RNamesReadItems(handle,obj,nnames,lxe.lx.lxResidentNameTableOffset + headshift);
 }
@@ -325,7 +325,7 @@ static unsigned __FASTCALL__ LXImpNamesNumItems(BGLOBAL handle)
   return count;
 }
 
-static tBool __FASTCALL__ LXImpNamesReadItems(BGLOBAL handle,memArray * obj,unsigned nnames)
+static bool __FASTCALL__ LXImpNamesReadItems(BGLOBAL handle,memArray * obj,unsigned nnames)
 {
  unsigned i;
  unsigned char byte;
@@ -337,13 +337,13 @@ static tBool __FASTCALL__ LXImpNamesReadItems(BGLOBAL handle,memArray * obj,unsi
    if(IsKbdTerminate() || bioEOF(handle)) break;
    bioReadBuffer(handle,nam,byte);
    nam[byte] = 0;
-   if(!ma_AddString(obj,nam,True)) break;
+   if(!ma_AddString(obj,nam,true)) break;
  }
- return True;
+ return true;
 }
 
 
-tBool __FASTCALL__ LXNRNamesReadItems(BGLOBAL handle,memArray * obj,unsigned nnames)
+bool __FASTCALL__ LXNRNamesReadItems(BGLOBAL handle,memArray * obj,unsigned nnames)
 {
    return RNamesReadItems(handle,obj,nnames,lxe.lx.lxNonResidentNameTableOffset);
 }
@@ -360,7 +360,7 @@ static unsigned __FASTCALL__ LXNRNamesReadFullName(BGLOBAL handle,char * names,u
    return RNameReadFull(handle,names,index,lxe.lx.lxNonResidentNameTableOffset);
 }
 #endif
-static tBool __FASTCALL__  __ReadModRefNamesLX(BGLOBAL handle,memArray * obj,unsigned nnames)
+static bool __FASTCALL__  __ReadModRefNamesLX(BGLOBAL handle,memArray * obj,unsigned nnames)
 {
  unsigned i;
  unsigned char byte;
@@ -372,9 +372,9 @@ static tBool __FASTCALL__  __ReadModRefNamesLX(BGLOBAL handle,memArray * obj,uns
    if(IsKbdTerminate() || bioEOF(handle)) break;
    bioReadBuffer(handle,nam,byte);
    nam[byte] = 0;
-   if(!ma_AddString(obj,nam,True)) break;
+   if(!ma_AddString(obj,nam,true)) break;
  }
- return True;
+ return true;
 }
 
 static void __NEAR__ __FASTCALL__ objpaintLX(const LX_OBJECT *nam)
@@ -404,22 +404,22 @@ static void __NEAR__ __FASTCALL__ objpaintLX(const LX_OBJECT *nam)
           ,nam->o32_size
           ,nam->o32_base
           ,nam->o32_flags
-          ,GetBool((nam->o32_flags & 0x00000001L) == 0x00000001L)
-          ,GetBool((nam->o32_flags & 0x00000002L) == 0x00000002L)
-          ,GetBool((nam->o32_flags & 0x00000004L) == 0x00000004L)
-          ,GetBool((nam->o32_flags & 0x00000008L) == 0x00000008L)
-          ,GetBool((nam->o32_flags & 0x00000010L) == 0x00000010L)
-          ,GetBool((nam->o32_flags & 0x00000020L) == 0x00000020L)
-          ,GetBool((nam->o32_flags & 0x00000040L) == 0x00000040L)
-          ,GetBool((nam->o32_flags & 0x00000080L) == 0x00000080L)
-          ,GetBool((nam->o32_flags & 0x00000100L) == 0x00000100L)
-          ,GetBool((nam->o32_flags & 0x00000200L) == 0x00000200L)
-          ,GetBool((nam->o32_flags & 0x00000400L) == 0x00000400L)
-          ,GetBool((nam->o32_flags & 0x00001000L) == 0x00001000L)
-          ,GetBool((nam->o32_flags & 0x00002000L) == 0x00002000L)
-          ,GetBool((nam->o32_flags & 0x00004000L) == 0x00004000L)
-          ,GetBool((nam->o32_flags & 0x00008000L) == 0x00008000L)
-          ,GetBool((nam->o32_flags & 0x00010000L) == 0x00010000L)
+          ,Gebool((nam->o32_flags & 0x00000001L) == 0x00000001L)
+          ,Gebool((nam->o32_flags & 0x00000002L) == 0x00000002L)
+          ,Gebool((nam->o32_flags & 0x00000004L) == 0x00000004L)
+          ,Gebool((nam->o32_flags & 0x00000008L) == 0x00000008L)
+          ,Gebool((nam->o32_flags & 0x00000010L) == 0x00000010L)
+          ,Gebool((nam->o32_flags & 0x00000020L) == 0x00000020L)
+          ,Gebool((nam->o32_flags & 0x00000040L) == 0x00000040L)
+          ,Gebool((nam->o32_flags & 0x00000080L) == 0x00000080L)
+          ,Gebool((nam->o32_flags & 0x00000100L) == 0x00000100L)
+          ,Gebool((nam->o32_flags & 0x00000200L) == 0x00000200L)
+          ,Gebool((nam->o32_flags & 0x00000400L) == 0x00000400L)
+          ,Gebool((nam->o32_flags & 0x00001000L) == 0x00001000L)
+          ,Gebool((nam->o32_flags & 0x00002000L) == 0x00002000L)
+          ,Gebool((nam->o32_flags & 0x00004000L) == 0x00004000L)
+          ,Gebool((nam->o32_flags & 0x00008000L) == 0x00008000L)
+          ,Gebool((nam->o32_flags & 0x00010000L) == 0x00010000L)
           ,nam->o32_pagemap
           ,nam->o32_mapsize);
 }
@@ -438,7 +438,7 @@ static void __FASTCALL__ ObjPaintLX(TWindow * win,const void ** names,unsigned s
  twRefreshFullWin(win);
 }
 
-static tBool __NEAR__ __FASTCALL__ __ReadObjectsLX(BGLOBAL handle,memArray * obj,unsigned n)
+static bool __NEAR__ __FASTCALL__ __ReadObjectsLX(BGLOBAL handle,memArray * obj,unsigned n)
 {
  size_t i;
   for(i = 0;i < n;i++)
@@ -446,23 +446,23 @@ static tBool __NEAR__ __FASTCALL__ __ReadObjectsLX(BGLOBAL handle,memArray * obj
     LX_OBJECT lxo;
     if(IsKbdTerminate() || bioEOF(handle)) break;
     bioReadBuffer(handle,&lxo,sizeof(LX_OBJECT));
-    if(!ma_AddData(obj,&lxo,sizeof(LX_OBJECT),True)) break;
+    if(!ma_AddData(obj,&lxo,sizeof(LX_OBJECT),true)) break;
   }
-  return True;
+  return true;
 }
 
-static tBool __NEAR__ __FASTCALL__ __ReadEntriesLX(BGLOBAL handle,memArray *obj)
+static bool __NEAR__ __FASTCALL__ __ReadEntriesLX(BGLOBAL handle,memArray *obj)
 {
  unsigned i;
  unsigned char j;
  unsigned char cnt,type;
- tUIntFast16 numobj = 0;
+ uint_fast16_t numobj = 0;
  LX_ENTRY _lxe;
  i = 0;
  while(1)
  {
-   tBool is_eof;
-   is_eof = False;
+   bool is_eof;
+   is_eof = false;
    cnt = bioReadByte(handle);
    type = bioReadByte(handle);
    if(!cnt) break;
@@ -489,12 +489,12 @@ static tBool __NEAR__ __FASTCALL__ __ReadEntriesLX(BGLOBAL handle,memArray *obj)
        _lxe.entry.e32_flags = bioReadByte(handle);
        bioReadBuffer(handle,&_lxe.entry.e32_variant,size);
      }
-     if(!ma_AddData(obj,&_lxe,sizeof(LX_ENTRY),True)) goto exit;
+     if(!ma_AddData(obj,&_lxe,sizeof(LX_ENTRY),true)) goto exit;
    }
    if(is_eof) break;
  }
  exit:
- return True;
+ return true;
 }
 
 static void __FASTCALL__ lxReadPageDesc(BGLOBAL handle,LX_MAP_TABLE *mt,unsigned long pageidx)
@@ -617,25 +617,25 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcEntryLX(const LX_ENTRY *lxent)
   return ret;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ CalcEntryBungleLX(unsigned ordinal,tBool dispmsg)
+static __filesize_t __NEAR__ __FASTCALL__ CalcEntryBungleLX(unsigned ordinal,bool dispmsg)
 {
   BGLOBAL handle;
-  tBool found;
+  bool found;
   unsigned i;
   unsigned char j;
   unsigned char cnt,type;
-  tUIntFast16 numobj = 0;
+  uint_fast16_t numobj = 0;
   LX_ENTRY lxent;
   __filesize_t ret;
   ret = BMGetCurrFilePos();
   handle = lx_cache;
   bioSeek(handle,lxe.lx.lxEntryTableOffset + headshift,SEEK_SET);
   i = 0;
-  found = False;
+  found = false;
   while(1)
   {
-   tBool is_eof;
-   is_eof = False;
+   bool is_eof;
+   is_eof = false;
    cnt = bioReadByte(handle);
    type = bioReadByte(handle);
    if(!cnt) break;
@@ -657,7 +657,7 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcEntryBungleLX(unsigned ordinal,tBo
      if(i == ordinal - 1)
      {
        lxent.b32_type = type;
-       found = True;
+       found = true;
        if(size)
        {
          lxent.b32_obj = numobj;
@@ -687,7 +687,7 @@ __filesize_t __FASTCALL__ ShowObjectsLX( void )
  fpos = BMGetCurrFilePos();
  nnames = (unsigned)lxe.lx.lxObjectCount;
  if(!nnames) { NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
- if(!(obj = ma_Build(nnames,True))) return fpos;
+ if(!(obj = ma_Build(nnames,true))) return fpos;
  handle = lx_cache;
  bioSeek(handle,lxe.lx.lxObjectTableOffset + headshift,SEEK_SET);
  if(__ReadObjectsLX(handle,obj,nnames))
@@ -764,8 +764,8 @@ static void __NEAR__ __FASTCALL__ entrypaintLX(const LX_ENTRY *nam)
      twPrintF("   [%c] Exported Entry\n"
               "   [%c] Used Shared Data\n"
               "   %02XH - parameter word count mask\n"
-              ,GetBool((nam->entry.e32_flags & 0x01) == 0x01)
-              ,GetBool((nam->entry.e32_flags & 0x02) == 0x02)
+              ,Gebool((nam->entry.e32_flags & 0x01) == 0x01)
+              ,Gebool((nam->entry.e32_flags & 0x02) == 0x02)
               ,(int)(nam->entry.e32_flags >> 2));
    }
    else
@@ -773,7 +773,7 @@ static void __NEAR__ __FASTCALL__ entrypaintLX(const LX_ENTRY *nam)
      twPrintF("\n"
               "   [%c] Import by ordinal\n"
               "\n"
-              ,GetBool((nam->entry.e32_flags & 0x01) == 0x01));
+              ,Gebool((nam->entry.e32_flags & 0x01) == 0x01));
    }
    if(nam->b32_type == 1)
    {
@@ -834,7 +834,7 @@ static void __FASTCALL__ PaintEntriesLX(TWindow * win,const void ** names,unsign
  twRefreshFullWin(win);
 }
 
-static tBool __FASTCALL__ __ReadMapTblLX(BGLOBAL handle,memArray * obj,unsigned n)
+static bool __FASTCALL__ __ReadMapTblLX(BGLOBAL handle,memArray * obj,unsigned n)
 {
   size_t i;
   for(i = 0;i < n;i++)
@@ -848,12 +848,12 @@ static tBool __FASTCALL__ __ReadMapTblLX(BGLOBAL handle,memArray * obj,unsigned 
                  mt.o32_pagesize,
                  mt.o32_pageflags,
                  (const char *)lxeGetMapAttr(mt.o32_pageflags));
-    if(!ma_AddString(obj,(const char *)stmp,True)) break;
+    if(!ma_AddString(obj,(const char *)stmp,true)) break;
   }
-  return True;
+  return true;
 }
 #if 0
-static tBool __NEAR__ __FASTCALL__ __ReadIterTblLX(BGLOBAL handle,memArray * obj,unsigned n)
+static bool __NEAR__ __FASTCALL__ __ReadIterTblLX(BGLOBAL handle,memArray * obj,unsigned n)
 {
  int i;
   for(i = 0;i < n;i++)
@@ -861,9 +861,9 @@ static tBool __NEAR__ __FASTCALL__ __ReadIterTblLX(BGLOBAL handle,memArray * obj
     LX_ITER lxi;
     if(IsKbdTerminate() || bioEOF(handle)) break;
     bioReadBuffer(handle,&lxi,sizeof(LX_ITER));
-    if(!ma_AddData(obj,&lxi,sizeof(LX_ITER),True)) break;
+    if(!ma_AddData(obj,&lxi,sizeof(LX_ITER),true)) break;
   }
-  return True;
+  return true;
 }
 #endif
 static unsigned __FASTCALL__ lxGetPageCount(BGLOBAL handle)
@@ -895,7 +895,7 @@ __filesize_t __FASTCALL__ ShowEntriesLX( void )
  if(!lxe.lx.lxEntryTableOffset) { NotifyBox(NOT_ENTRY," Entry Table "); return fpos; }
  handle = lx_cache;
  bioSeek(handle,lxe.lx.lxEntryTableOffset + headshift,SEEK_SET);
- if(!(obj = ma_Build(0,True))) goto exit;
+ if(!(obj = ma_Build(0,true))) goto exit;
  if(__ReadEntriesLX(handle,obj))
  {
     int ret;
@@ -935,7 +935,7 @@ const char * ResourceGrNamesLX[] =
   "DBCS font drive"
 };
 
-static tBool __NEAR__ __FASTCALL__ __ReadResourceGroupLX(BGLOBAL handle,memArray *obj,unsigned nitems,long * addr)
+static bool __NEAR__ __FASTCALL__ __ReadResourceGroupLX(BGLOBAL handle,memArray *obj,unsigned nitems,long * addr)
 {
  unsigned i;
  LXResource lxr;
@@ -951,9 +951,9 @@ static tBool __NEAR__ __FASTCALL__ __ReadResourceGroupLX(BGLOBAL handle,memArray
     sprintf(&stmp[strlen(stmp)]," obj=%04hXH.%08lXH"
                                ,lxr.object
                                ,(unsigned long)lxr.offset);
-    if(!ma_AddString(obj,stmp,True)) break;
+    if(!ma_AddString(obj,stmp,true)) break;
  }
- return True;
+ return true;
 }
 
 static __filesize_t __FASTCALL__ ShowResourceLX( void )
@@ -968,7 +968,7 @@ static __filesize_t __FASTCALL__ ShowResourceLX( void )
  bioSeek(handle,(__fileoff_t)headshift + lxe.lx.lxResourceTableOffset,SEEK_SET);
  nrgroup = (unsigned)lxe.lx.lxNumberResourceTableEntries;
  if(!nrgroup) { NotifyBox(NOT_ENTRY," Resources "); return fpos; }
- if(!(obj = ma_Build(nrgroup,True))) goto exit;
+ if(!(obj = ma_Build(nrgroup,true))) goto exit;
  if(!(raddr  = PMalloc(nrgroup*sizeof(long)))) return fpos;
  if(__ReadResourceGroupLX(handle,obj,nrgroup,raddr))
  {
@@ -1000,7 +1000,7 @@ static __filesize_t __FASTCALL__ ShowResNamLX( void )
                     LB_SELECTIVE | LB_SORTABLE,&ordinal);
   if(ret != -1)
   {
-    fpos = CalcEntryBungleLX(ordinal,True);
+    fpos = CalcEntryBungleLX(ordinal,true);
   }
   return fpos;
 }
@@ -1017,7 +1017,7 @@ static __filesize_t __FASTCALL__ ShowNResNmLX( void )
                       LB_SELECTIVE | LB_SORTABLE,&ordinal);
     if(ret != -1)
     {
-      fpos = CalcEntryBungleLX(ordinal,True);
+      fpos = CalcEntryBungleLX(ordinal,true);
     }
   }
   return fpos;
@@ -1030,13 +1030,13 @@ __filesize_t __FASTCALL__ ShowImpProcLXLE( void )
   return BMGetCurrFilePos();
 }
 
-static tBool __FASTCALL__ isLX( void )
+static bool __FASTCALL__ isLX( void )
 {
    char id[4];
    headshift = IsNewExe();
    bmReadBufferEx(id,sizeof(id),headshift,SEEKF_START);
-   if(id[0] == 'L' && id[1] == 'X' && id[2] == 0 && id[3] == 0) return True;
-   return False;
+   if(id[0] == 'L' && id[1] == 'X' && id[2] == 0 && id[3] == 0) return true;
+   return false;
 }
 
 static void __FASTCALL__ LXinit( void )
@@ -1169,12 +1169,12 @@ static int __FASTCALL__ lxBitness(__filesize_t pa)
   return ret;
 }
 
-static tBool __FASTCALL__ lxAddressResolv(char *addr,__filesize_t cfpos)
+static bool __FASTCALL__ lxAddressResolv(char *addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
-  tBool bret = True;
-  tUInt32 res;
+  bool bret = true;
+  uint32_t res;
   if(cfpos >= headshift && cfpos < headshift + sizeof(LXHEADER))
   {
     strcpy(addr,"LXH :");
@@ -1200,7 +1200,7 @@ static tBool __FASTCALL__ lxAddressResolv(char *addr,__filesize_t cfpos)
      addr[0] = '.';
      strcpy(&addr[1],Get8Digit(res));
    }
-   else bret = False;
+   else bret = false;
   return bret;
 }
 

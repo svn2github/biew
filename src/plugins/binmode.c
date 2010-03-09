@@ -49,7 +49,7 @@ static const char * mod_names[] =
 };
 static unsigned bin_mode = MOD_PLAIN; /**< points to currently selected mode text mode */
 
-static tBool __FASTCALL__ binSelectMode( void )
+static bool __FASTCALL__ binSelectMode( void )
 {
   unsigned nModes;
   int i;
@@ -58,9 +58,9 @@ static tBool __FASTCALL__ binSelectMode( void )
   if(i != -1)
   {
     bin_mode = i;
-    return True;
+    return true;
   }
-  return False;
+  return false;
 }
 
 static unsigned __FASTCALL__ drawBinary( unsigned keycode,unsigned tshift )
@@ -152,7 +152,7 @@ static unsigned long __FASTCALL__ binPrevLineWidth( void ) { return (twGetClient
 static unsigned long __FASTCALL__ binCurrLineWidth( void ) { return (twGetClientWidth(MainWnd)-virtWidthCorr)*(bin_mode==MOD_PLAIN?1:2); }
 static const char *  __FASTCALL__ binMiscKeyName( void ) { return "Modify"; }
 
-static tBool __FASTCALL__ binDetect( void ) { return True; }
+static bool __FASTCALL__ binDetect( void ) { return true; }
 
 static void save_video(unsigned char *buff,unsigned size)
 {
@@ -181,7 +181,7 @@ static void save_video(unsigned char *buff,unsigned size)
 static void __FASTCALL__ EditBin( void )
 {
  TWindow *ewin;
- tBool inited;
+ bool inited;
  if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,NULL); return; }
  ewin = WindowOpen(1,2,tvioWidth-virtWidthCorr,tvioHeight-1,TWS_CURSORABLE);
  twSetColorAttr(browser_cset.edit.main); twClearWin();
@@ -209,7 +209,7 @@ static void __FASTCALL__ EditBin( void )
     else
     {
 	MemOutBox("Editor initialization");
-	inited=False;
+	inited=false;
     }
  }
  if(inited)
@@ -247,16 +247,16 @@ static void __FASTCALL__ binSaveIni( hIniProfile *ini )
 
 static unsigned __FASTCALL__ binCharSize( void ) { return bin_mode==MOD_PLAIN?1:2; }
 
-static tBool __FASTCALL__ binIncVirtWidth( void )
+static bool __FASTCALL__ binIncVirtWidth( void )
 {
-  if(virtWidthCorr) { virtWidthCorr--; return True; }
-  return False;
+  if(virtWidthCorr) { virtWidthCorr--; return true; }
+  return false;
 }
 
-static tBool __FASTCALL__ binDecVirtWidth( void )
+static bool __FASTCALL__ binDecVirtWidth( void )
 {
-  if(virtWidthCorr < tvioWidth-1) { virtWidthCorr++; return True; }
-  return False;
+  if(virtWidthCorr < tvioWidth-1) { virtWidthCorr++; return true; }
+  return false;
 }
 
 REGISTRY_MODE binMode =

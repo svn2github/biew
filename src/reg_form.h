@@ -31,7 +31,7 @@
 #endif
 
 typedef __filesize_t  (__FASTCALL__ *BinFunc)( void );
-typedef tBool         (__FASTCALL__ *ModFunc)( void );
+typedef bool         (__FASTCALL__ *ModFunc)( void );
 
 #define APREF_NORMAL      0x0000 /**< Append references in short form if it really present in binary */
 #define APREF_USE_TYPE    0x0001 /**< Append references in detail form if it really present in binary */
@@ -100,7 +100,7 @@ typedef struct tag_REGISTRY_BIN
   const char * name;                            /**< name of binary format */
   const char * prompt[10];                      /**< on ALT-Fx selection */
   BinFunc   action[10];                         /**< action on ALT-Fx selection */
-  tBool   (__FASTCALL__ *check_format)( void ); /**< Checks format */
+  bool   (__FASTCALL__ *check_format)( void ); /**< Checks format */
   void    (__FASTCALL__ *init)( void );         /**< Inits plugin (if check o'k) (constructor) */
   void    (__FASTCALL__ *destroy)( void );      /**< Destroys plugin (destructor) */
   BinFunc   showHdr;                            /**< if not an MZ style format */
@@ -128,9 +128,9 @@ typedef struct tag_REGISTRY_BIN
   int     (__FASTCALL__ *query_endian)(__filesize_t);
 
                          /** For displaying offset within struct in left address column.
-                           * @return         False if string is not modified.
+                           * @return         false if string is not modified.
                           **/
-  tBool   (__FASTCALL__ *AddressResolving)(char *,__filesize_t);
+  bool   (__FASTCALL__ *AddressResolving)(char *,__filesize_t);
 
                          /** Converts virtual address to physical (means file offset).
                            * @param va       indicates virtual address to be converted
@@ -159,7 +159,7 @@ typedef struct tag_REGISTRY_BIN
                            *                  which is found in given direction
                           **/
   __filesize_t (__FASTCALL__ *GetPubSym)(char *str,unsigned cb_str,unsigned *_class,
-                             __filesize_t pa,tBool as_prev);
+                             __filesize_t pa,bool as_prev);
 
                          /** Determines attributes of object at given physical file address.
                            * @param pa        indicates physical file offset of object
@@ -185,11 +185,11 @@ typedef struct tag_REGISTRY_BIN
                          /** Prepares internal buffers for work file structures.
                            * @param start     indicates start position in the file, that is required for disassembler
                            * @param end       indicates end position in the file, that is required for disassembler
-                           * return           False if success, True if an error
+                           * return           false if success, true if an error
                            *                  is occured (sample: out of memory)
                            * @note            It is called before GetPubSym and GetObjAttr
                           **/
-  tBool         (__FASTCALL__ *prepare_structs)(__filesize_t start,__filesize_t end);
+  bool         (__FASTCALL__ *prepare_structs)(__filesize_t start,__filesize_t end);
                          /** Cleans internal buffers after stopping of structural disassembler */
   void          (__FASTCALL__ *drop_structs)( void );
 }REGISTRY_BIN;
@@ -212,7 +212,7 @@ typedef struct tag_REGISTRY_MODE
   const char *  name;
   const char *  prompt[10];                   /**< on Ctrl-Fx selection */
   ModFunc       action[10];                   /**< action on Ctrl-Fx selection */
-  tBool         (__FASTCALL__ *detect)(void); /**< detects possibility to assign this mode as default mode for openned file. */
+  bool         (__FASTCALL__ *detect)(void); /**< detects possibility to assign this mode as default mode for openned file. */
   unsigned       flags;                       /**< see __MF_* constants */
 
                          /** Paints the file on the screen.
@@ -229,7 +229,7 @@ typedef struct tag_REGISTRY_MODE
                                               system but not screen.
                            * @return          new size of blocks after conversation
                           **/
-  unsigned      (__FASTCALL__ *convert_cp)(char *str,unsigned len, tBool use_fs_nls);
+  unsigned      (__FASTCALL__ *convert_cp)(char *str,unsigned len, bool use_fs_nls);
 
   unsigned      (__FASTCALL__ *get_symbol_size)( void ); /**< Returns symbol size in bytes for selected NLS codepage */
   const char *  (__FASTCALL__ *misckey_name)( void );    /**< F4 key name */
@@ -250,14 +250,14 @@ typedef struct tag_REGISTRY_MODE
                            * @param flags     indicates flags (SF_* family) of search.
                            * @param is_continue indicates initialization of search
                            *                  If set then search should be continued
-                           * @param is_found  on output must contain True if result is really found
+                           * @param is_found  on output must contain true if result is really found
                            * @return          offset of found sequence or ULONG(LONG)_MAX if not found
                           **/
-__filesize_t (__FASTCALL__ *search_engine)(TWindow *pwnd, __filesize_t start, __filesize_t *slen, unsigned flags, tBool is_continue, tBool *is_found);
+__filesize_t (__FASTCALL__ *search_engine)(TWindow *pwnd, __filesize_t start, __filesize_t *slen, unsigned flags, bool is_continue, bool *is_found);
 }REGISTRY_MODE;
 
 extern REGISTRY_MODE *activeMode;
-extern tBool SelectMode( void );
+extern bool SelectMode( void );
 extern void QuickSelectMode( void );
 
 typedef struct tag_REGISTRY_TOOL

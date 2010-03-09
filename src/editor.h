@@ -41,15 +41,15 @@ extern unsigned char edit_XX;
 extern __fileoff_t edit_cp;
 
 
-extern void   __FASTCALL__ PaintETitle( int shift,tBool use_shift );
+extern void   __FASTCALL__ PaintETitle( int shift,bool use_shift );
 extern void   __FASTCALL__ CheckBounds( void );
 extern void   __FASTCALL__ CheckYBounds( void );
 extern void   __FASTCALL__ CheckXYBounds( void );
-extern tBool  __FASTCALL__ edit_defaction(int _lastbyte);
+extern bool  __FASTCALL__ edit_defaction(int _lastbyte);
 extern void   __FASTCALL__ editSaveContest( void );
-extern tBool  __FASTCALL__ editDefAction(int _lastbyte);
+extern bool  __FASTCALL__ editDefAction(int _lastbyte);
 extern int    __FASTCALL__ FullEdit(TWindow * txtwnd,void (*save)(unsigned char *,unsigned));
-extern tBool  __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size);
+extern bool  __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size);
 extern void   __FASTCALL__ editDestroyBuffs( void );
 
 

@@ -27,10 +27,10 @@
 
 typedef struct tagDOSDRIVER
 {
-  tUInt16 ddAttribute;
-  tUInt16 ddStrategyOff;
-  tUInt16 ddInterruptOff;
-  tUInt8  ddName[8];
+  uint16_t ddAttribute;
+  uint16_t ddStrategyOff;
+  uint16_t ddInterruptOff;
+  uint8_t  ddName[8];
 }DOSDRIVER;
 
 #ifdef __HAVE_PRAGMA_PACK__

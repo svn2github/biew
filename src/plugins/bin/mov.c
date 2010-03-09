@@ -46,13 +46,13 @@ static __filesize_t __FASTCALL__ mov_find_chunk(__filesize_t off,unsigned long i
 }
 
 
-static tBool  __FASTCALL__ mov_check_fmt( void )
+static bool  __FASTCALL__ mov_check_fmt( void )
 {
     __filesize_t moov,mdat;
     moov=mov_find_chunk(0,MOV_FOURCC('m','o','o','v'));
     mdat=mov_find_chunk(0,MOV_FOURCC('m','d','a','t'));
-    if(moov != -1 && mdat != -1) return True;
-    return False;
+    if(moov != -1 && mdat != -1) return true;
+    return false;
 }
 
 static void __FASTCALL__ mov_init_fmt( void ) {}

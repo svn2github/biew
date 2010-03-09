@@ -65,15 +65,15 @@ struct E32ImageHeader
     unsigned short iCpuIdentifier;
 };
 
-static tBool  __FASTCALL__ sisx_check_fmt( void )
+static bool  __FASTCALL__ sisx_check_fmt( void )
 {
     unsigned char sign[4];
     unsigned long id;
     bmSeek(0,BM_SEEK_SET);
     id=bmReadDWord();
     bmReadBufferEx(sign,sizeof(sign),16L,BM_SEEK_SET);
-    if((id&0x10000000UL)==0x10000000UL && memcmp(sign,"EPOC",4)==0) return True;
-    return False;
+    if((id&0x10000000UL)==0x10000000UL && memcmp(sign,"EPOC",4)==0) return true;
+    return false;
 }
 static void __FASTCALL__ sisx_init_fmt( void ) {}
 static void __FASTCALL__ sisx_destroy_fmt(void) {}

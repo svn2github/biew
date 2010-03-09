@@ -41,7 +41,7 @@
 static char _ini_name[FILENAME_MAX+1];
 static char _rc_dir_name[FILENAME_MAX+1];
 static char _home_dir_name[FILENAME_MAX + 1];
-static tBool break_status;
+static bool break_status;
 static int chid=0;
 static timer_t t=0;
 static struct sigevent evp;
@@ -106,12 +106,12 @@ void __FASTCALL__ __OsYield(void)
 	MsgReceive(chid,&pulse,sizeof(struct _pulse),NULL);
 }
 
-tBool __FASTCALL__ __OsGetCBreak(void)
+bool __FASTCALL__ __OsGetCBreak(void)
 {
 	return break_status;
 }
 
-void __FASTCALL__ __OsSetCBreak(tBool state)
+void __FASTCALL__ __OsSetCBreak(bool state)
 {
 	break_status=state;
 }

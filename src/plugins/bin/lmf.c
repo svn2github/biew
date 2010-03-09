@@ -42,23 +42,23 @@ typedef struct		/* LMF file frame */
 	lmf_header header;		/* Header of frame */
 	lmf_data data;			/* Data info */
 	lmf_resource res;		/* Resource info */
-	tUInt32 file_pos;		/* Frame header file position */
+	uint32_t file_pos;		/* Frame header file position */
 } lmf_headers_list;
 
 typedef struct		/* Extra definition */
 {
 	lmf_definition def;		/* Standard definition */
-	tUInt32 seg[MAXSEG];	/* Segments lengthes list */
+	uint32_t seg[MAXSEG];	/* Segments lengthes list */
 } lmf_xdef;
 
 static lmf_headers_list *hl;
 static lmf_xdef xdef;
 static int xdef_len=0;
 static unsigned seg_num=0;
-static tUInt32 reccnt;
-static tUInt32 recmax;
-static tUInt32 reclast;
-static tUInt32 segbase[MAXSEG];
+static uint32_t reccnt;
+static uint32_t recmax;
+static uint32_t reclast;
+static uint32_t segbase[MAXSEG];
 
 char *lmftypes[]={
 	"definition",
@@ -83,47 +83,47 @@ static void __FASTCALL__ failed_lmf(void)
 #define DATSIZE sizeof(lmf_data)
 #define HDRSIZE sizeof(lmf_header)
 
-static tBool __FASTCALL__ lmf_check_fmt(void)
+static bool __FASTCALL__ lmf_check_fmt(void)
 {
-	tInt32 i,j,p=0;
+	int32_t i,j,p=0;
 /*	lmf_data d;*/
 	lmf_header h;
-	if(!bmReadBufferEx(&h,sizeof h,0,BM_SEEK_SET)) return False;
+	if(!bmReadBufferEx(&h,sizeof h,0,BM_SEEK_SET)) return false;
 	/* Test a first heder */
 	if(h.rec_type!=_LMF_DEFINITION_REC||h.zero1!=0||/*h.spare!=0||*/
 		h.data_nbytes<DEFSIZE+2*sizeof(long)||
-		(h.data_nbytes-DEFSIZE)%4!=0) return False;
+		(h.data_nbytes-DEFSIZE)%4!=0) return false;
 	i=j=(h.data_nbytes-DEFSIZE)/4;
 	xdef_len=h.data_nbytes;
-	if(!bmReadBufferEx(&xdef,min(sizeof(lmf_xdef),h.data_nbytes),6,BM_SEEK_SET)) return False;
+	if(!bmReadBufferEx(&xdef,min(sizeof(lmf_xdef),h.data_nbytes),6,BM_SEEK_SET)) return false;
 	/* Test a definition record */
 	if(DEF.version_no!=400||DEF.code_index>i||DEF.stack_index>i||
 		DEF.heap_index>i||DEF.argv_index>i||DEF.zero2!=0)
-		return False;
+		return false;
 	if(DEF.cpu%100!=86||(DEF.fpu!=0&&DEF.fpu%100!=87))
-		return False;
-	if(DEF.cflags&_PCF_FLAT&&DEF.flat_offset==0) return False;
-	if(DEF.stack_nbytes==0) return False;
+		return false;
+	if(DEF.cflags&_PCF_FLAT&&DEF.flat_offset==0) return false;
+	if(DEF.stack_nbytes==0) return false;
 	for(i=0;i<4;i++)
-		if(DEF.zero1[i]!=0) return False;
+		if(DEF.zero1[i]!=0) return false;
 	while(1)
 	{
 		/* Test other headers */
 		p+=HDRSIZE+h.data_nbytes;
-		if(!bmReadBufferEx(&h,sizeof h,p,BM_SEEK_SET)) return False;
+		if(!bmReadBufferEx(&h,sizeof h,p,BM_SEEK_SET)) return false;
 		if(h.rec_type==_LMF_DEFINITION_REC||h.data_nbytes==0||
-			h.zero1!=0/*||h.spare!=0*/) return False;
+			h.zero1!=0/*||h.spare!=0*/) return false;
 		if(h.rec_type==_LMF_EOF_REC) break;
 	}
-	return True;
+	return true;
 }
 
 #define failed_lmf {failed_lmf();return;}
 
 static void __FASTCALL__ lmf_init_fmt(void)
 {
-	tUInt32 i,l;
-	tInt32 pos=0;
+	uint32_t i,l;
+	int32_t pos=0;
 	hl=PMalloc(MINREC*sizeof(lmf_headers_list));
 	if(hl==NULL) return;
 	recmax=MINREC;
@@ -200,7 +200,7 @@ static int __FASTCALL__ lmf_bitness(__filesize_t pa)
 	else return DAB_USE16;
 }
 
-static tBool __FASTCALL__ lmf_AddressResolv(char *addr,__filesize_t cfpos)
+static bool __FASTCALL__ lmf_AddressResolv(char *addr,__filesize_t cfpos)
 {
 	unsigned i;
  /* Since this function is used in references resolving of disassembler
@@ -239,7 +239,7 @@ static tBool __FASTCALL__ lmf_AddressResolv(char *addr,__filesize_t cfpos)
 							sprintf(addr,"D:%06X",(cfpos-hl[i].file_pos+
 								hl[i].data.offset-HDRSIZE-
 								DATSIZE));*/
-					return False;
+					return false;
 					break;
 				case _LMF_FIXUP_80X87_REC:
 					sprintf(addr,"F87:%s",
@@ -258,12 +258,12 @@ static tBool __FASTCALL__ lmf_AddressResolv(char *addr,__filesize_t cfpos)
 						Get4Digit(cfpos-hl[i].file_pos-HDRSIZE));
 					break;
 				default:
-					return False;
+					return false;
 				}
-			return True;
+			return true;
 		}
 	}
-	return False;
+	return false;
 }
 
 static __filesize_t __FASTCALL__ lmf_va2pa(__filesize_t va)
@@ -325,7 +325,7 @@ static __filesize_t __FASTCALL__ lmf_pa2va(__filesize_t pa)
 	return addr;
 }
 
-static tBool __FASTCALL__ lmf_ReadSecHdr(BGLOBAL handle,memArray *obj,unsigned nnames)
+static bool __FASTCALL__ lmf_ReadSecHdr(BGLOBAL handle,memArray *obj,unsigned nnames)
 {
 	unsigned i;
 	char tmp[30];
@@ -377,9 +377,9 @@ static tBool __FASTCALL__ lmf_ReadSecHdr(BGLOBAL handle,memArray *obj,unsigned n
 				(hl[i].header.rec_type<10)?
 					lmftypes[hl[i].header.rec_type]:lmftypes[10]);
 		}
-		if(!ma_AddString(obj,stmp,True)) break;
+		if(!ma_AddString(obj,stmp,true)) break;
 	}
-	return True;
+	return true;
 }
 
 static unsigned __FASTCALL__ lmf_SecHdrNumItems(BGLOBAL handle)

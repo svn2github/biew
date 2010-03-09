@@ -27,19 +27,19 @@
 
 typedef struct tagMZHEADER
 {
- tUInt16 mzPartLastPage;
- tUInt16 mzPageCount;
- tUInt16 mzRelocationCount;
- tUInt16 mzHeaderSize;
- tUInt16 mzMinMem;
- tUInt16 mzMaxMem;
- tUInt16 mzRelocationSS;
- tUInt16 mzExeSP;
- tUInt16 mzCheckSumm;
- tUInt16 mzExeIP;
- tUInt16 mzRelocationCS;
- tUInt16 mzTableOffset;
- tUInt16 mzOverlayNumber;
+ uint16_t mzPartLastPage;
+ uint16_t mzPageCount;
+ uint16_t mzRelocationCount;
+ uint16_t mzHeaderSize;
+ uint16_t mzMinMem;
+ uint16_t mzMaxMem;
+ uint16_t mzRelocationSS;
+ uint16_t mzExeSP;
+ uint16_t mzCheckSumm;
+ uint16_t mzExeIP;
+ uint16_t mzRelocationCS;
+ uint16_t mzTableOffset;
+ uint16_t mzOverlayNumber;
 }MZHEADER;
 
 #ifdef __HAVE_PRAGMA_PACK__

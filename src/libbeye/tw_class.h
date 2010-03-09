@@ -48,12 +48,12 @@ typedef struct tagTwClass
 }TwClass;
 
                    /** Registers new class
-                     * @return                True if successful
+                     * @return                true if successful
                      * @param name            indicates symbolic name of class
                      * @param flags           indicates __CS_* flags family
                      * @param method          indicates callback routine
                     **/
-tBool __FASTCALL__ twcRegisterClass(const char *name, unsigned flags, twClassFunc method);
+bool __FASTCALL__ twcRegisterClass(const char *name, unsigned flags, twClassFunc method);
 
                    /** Destroys set of classes
                      * @return                none

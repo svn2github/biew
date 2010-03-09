@@ -84,7 +84,7 @@ static char *escape=NULL;
 #define MAX_STRLEN 1000 /**< defines maximal length of string */
 #define is_legal_word_char(ch) ((int)word_set[(unsigned char)ch])
 
-static tBool __FASTCALL__ testLeadingEscape(__fileoff_t cpos) {
+static bool __FASTCALL__ testLeadingEscape(__fileoff_t cpos) {
 	char tmps[MAX_STRLEN];
 	__fileoff_t epos = BMGetCurrFilePos(),spos;
 	unsigned escl = strlen(escape);
@@ -278,7 +278,7 @@ static void unfmt_str(unsigned char *str)
    *dest=0;
 }
 
-static tBool __FASTCALL__ txtFiUserFunc1(IniInfo * info)
+static bool __FASTCALL__ txtFiUserFunc1(IniInfo * info)
 {
   char *p;
   if(strcmp(info->section,"Extensions")==0)
@@ -290,7 +290,7 @@ static tBool __FASTCALL__ txtFiUserFunc1(IniInfo * info)
 	    if(strcmp(p,info->item)==0)
 	    {
 		strcpy(detected_syntax_name,info->value);
-		return True;
+		return true;
 	    }
 	}
   }
@@ -305,7 +305,7 @@ static tBool __FASTCALL__ txtFiUserFunc1(IniInfo * info)
 	if(memcmp(p,info->item,strlen(info->item))==0)
 	{
 	    strcpy(detected_syntax_name,info->value);
-	    return True;
+	    return true;
 	}
   }
   if(strcmp(info->section,"Context")==0)
@@ -315,7 +315,7 @@ static tBool __FASTCALL__ txtFiUserFunc1(IniInfo * info)
 	int found,softmode;
 	off = atol(info->item);
 	p = strstr(info->value,"-->");
-	if(!p) { ErrMessageBox("Missing separator in main context definition",NULL); return True; }
+	if(!p) { ErrMessageBox("Missing separator in main context definition",NULL); return true; }
 	*p=0;
 	softmode=0;
 	if(strcmp(info->subsection,"Soft")==0) softmode=1;
@@ -339,13 +339,13 @@ static tBool __FASTCALL__ txtFiUserFunc1(IniInfo * info)
 	if(found)
 	{
 	    strcpy(detected_syntax_name,p+3);
-	    return True;
+	    return true;
 	}
   }
-  return False;
+  return false;
 }
 
-static Color __NEAR__ __FASTCALL__ getCtxColorByName(const char *subsection,const char *item,Color cdef,tBool *err)
+static Color __NEAR__ __FASTCALL__ getCtxColorByName(const char *subsection,const char *item,Color cdef,bool *err)
 {
     PrgWordCSet *cset;
     *err=0;
@@ -368,7 +368,7 @@ static Color __NEAR__ __FASTCALL__ getCtxColorByName(const char *subsection,cons
     return cdef;
 }
 
-static Color __NEAR__ __FASTCALL__ getKwdColorByName(const char *item,Color cdef,tBool *err)
+static Color __NEAR__ __FASTCALL__ getKwdColorByName(const char *item,Color cdef,bool *err)
 {
     *err=0;
     if(strcmp(item,"base")==0) return prog_cset.keywords.base;
@@ -380,7 +380,7 @@ static Color __NEAR__ __FASTCALL__ getKwdColorByName(const char *item,Color cdef
     return cdef;
 }
 
-static Color __NEAR__ __FASTCALL__ getOpColorByName(const char *item,Color cdef,tBool *err)
+static Color __NEAR__ __FASTCALL__ getOpColorByName(const char *item,Color cdef,bool *err)
 {
     *err=0;
     if(strcmp(item,"base")==0) return prog_cset.operators.base;
@@ -394,12 +394,12 @@ static Color __NEAR__ __FASTCALL__ getOpColorByName(const char *item,Color cdef,
 
 extern char last_skin_error[];
 static char *last_syntax_err="";
-static tBool __FASTCALL__ txtFiUserFunc2(IniInfo * info)
+static bool __FASTCALL__ txtFiUserFunc2(IniInfo * info)
 {
   char *p;
-  tBool err;
+  bool err;
   Color cdef=FORE_COLOR(text_cset.normal);
-  err=False;
+  err=false;
   if(strcmp(info->section,"General")==0)
   {
      if(strcmp(info->item,"Name")==0)
@@ -432,7 +432,7 @@ static tBool __FASTCALL__ txtFiUserFunc2(IniInfo * info)
        else syntax_hl.context=realloc(syntax_hl.context,sizeof(context_hl_t)*(syntax_hl.context_num+1));
        syntax_hl.context[syntax_hl.context_num].color=col;
        p=strstr(info->value,"...");
-       if(!p) { last_syntax_err="Missing separator in context definition"; return True; }
+       if(!p) { last_syntax_err="Missing separator in context definition"; return true; }
        *p=0;
        p+=3;
        unfmt_str(info->value);
@@ -471,12 +471,12 @@ static tBool __FASTCALL__ txtFiUserFunc2(IniInfo * info)
      if(!err)
      {
        unfmt_str(info->value);
-       if(strlen(info->value)>1) { last_syntax_err="Too long operator has been found"; return True; }
+       if(strlen(info->value)>1) { last_syntax_err="Too long operator has been found"; return true; }
        syntax_hl.op_hash[(unsigned char)info->value[0]]=LOGFB_TO_PHYS(col,BACK_COLOR(text_cset.normal));
      }
      else last_syntax_err=last_skin_error;
   }
-  return err?True:False;
+  return err?true:false;
 }
 
 static tCompare __FASTCALL__ cmp_ctx(const void __HUGE__ *e1,const void __HUGE__ *e2)
@@ -604,7 +604,7 @@ static BGLOBAL txtHandle = &bNull; /**< Own handle of BBIO stream. (For speed). 
 
 static TSTR *tlines,*ptlines;
 static unsigned int maxstrlen = MAX_STRLEN; /**< contains maximal length of string which can be displayed without wrapping */
-static tBool wmode; /**< Wrap mode flag */
+static bool wmode; /**< Wrap mode flag */
 static unsigned long PrevPageSize,CurrPageSize,PrevStrLen,CurrStrLen;
 
 unsigned strmaxlen = 0; /**< contains size of largest string on currently displayed page. (It for KE_END key) */
@@ -644,7 +644,7 @@ static unsigned char __NEAR__ __FASTCALL__ nlsReadByte(__filesize_t cp)
  sym_size = activeNLS->get_symbol_size();
  bioSeek(txtHandle,cp,SEEK_SET);
  bioReadBuffer(txtHandle,nls_buff,sym_size);
- activeNLS->convert_buffer(nls_buff,sym_size,True);
+ activeNLS->convert_buffer(nls_buff,sym_size,true);
  return (unsigned char)nls_buff[0];
 }
 
@@ -976,7 +976,7 @@ static void __NEAR__ __FASTCALL__ drawBound(int x,int y,char ch)
   twSetColorAttr(browser_cset.main);
 }
 
-static unsigned __FASTCALL__ txtConvertBuffer(char *_buff,unsigned size,tBool use_fs_nls)
+static unsigned __FASTCALL__ txtConvertBuffer(char *_buff,unsigned size,bool use_fs_nls)
 {
   return activeNLS->convert_buffer(_buff,size,use_fs_nls);
 }
@@ -1033,7 +1033,7 @@ static unsigned __FASTCALL__ drawText( unsigned keycode , unsigned shift )
           unsigned n_tabs,b_ptr,b_lim;
           len = min(MAX_STRLEN,FoundTextSt > tlines[i].st ? (int)(FoundTextSt-tlines[i].st):0);
           BMReadBufferEx((void *)buff,len,tlines[i].st,BM_SEEK_SET);
-          len = txtConvertBuffer(buff,len,False);
+          len = txtConvertBuffer(buff,len,false);
           for(b_lim=len,b_ptr = 0;b_ptr < len;b_ptr+=2,b_lim-=2)
           {
             shift = Tab2Space(NULL,UINT_MAX,&buff[b_ptr],b_lim,0,&n_tabs,0L);
@@ -1066,7 +1066,7 @@ static unsigned __FASTCALL__ drawText( unsigned keycode , unsigned shift )
     if(len > rshift)
     {
         BMReadBufferEx((void *)buff,size,tlines[i].st + rshift,BM_SEEK_SET);
-        rsize = size = txtConvertBuffer(buff,size,False);
+        rsize = size = txtConvertBuffer(buff,size,false);
         if(bin_mode != MOD_BINARY)
         {
              rsize = size = Tab2Space(&it,__TVIO_MAXSCREENWIDTH,buff,size,shift,NULL,tlines[i].st);
@@ -1124,14 +1124,14 @@ static unsigned long __FASTCALL__ txtCurrPageSize( void ) { return CurrPageSize;
 static unsigned long __FASTCALL__ txtPrevLineWidth( void ) { return PrevStrLen; }
 static unsigned long __FASTCALL__ txtCurrLineWidth( void ) { return CurrStrLen; }
 static const char *  __FASTCALL__ txtMiscKeyName( void ) { return wmode ? "Unwrap" : "Wrap  "; }
-static void          __FASTCALL__ txtMiscKeyAction( void ) { wmode = wmode ? False : True; }
+static void          __FASTCALL__ txtMiscKeyAction( void ) { wmode = wmode ? false : true; }
 
-static tBool __FASTCALL__ txtSelectCP( void )
+static bool __FASTCALL__ txtSelectCP( void )
 {
   return activeNLS->select_table();
 }
 
-static tBool __FASTCALL__ txtSelectMode( void )
+static bool __FASTCALL__ txtSelectMode( void )
 {
   unsigned nModes;
   int i;
@@ -1140,9 +1140,9 @@ static tBool __FASTCALL__ txtSelectMode( void )
   if(i != -1)
   {
     bin_mode = i;
-    return True;
+    return true;
   }
-  return False;
+  return false;
 }
 
 static const char *hilight_names[] =
@@ -1150,7 +1150,7 @@ static const char *hilight_names[] =
    "~Mono",
    "~Highlight"
 };
-static tBool __FASTCALL__ txtSelectHiLight( void )
+static bool __FASTCALL__ txtSelectHiLight( void )
 {
   unsigned nModes;
   int i;
@@ -1159,13 +1159,13 @@ static tBool __FASTCALL__ txtSelectHiLight( void )
   if(i != -1)
   {
     HiLight = i;
-    return True;
+    return true;
   }
-  return False;
+  return false;
 }
 
 
-static tBool __FASTCALL__ txtSelectNLS( void )
+static bool __FASTCALL__ txtSelectNLS( void )
 {
   const char *modeName[sizeof(nls_set)/sizeof(REGISTRY_NLS *)];
   size_t i,nModes;
@@ -1180,21 +1180,21 @@ static tBool __FASTCALL__ txtSelectNLS( void )
     activeNLS = nls_set[retval];
     if(activeNLS->init) activeNLS->init();
     defNLSSet = retval;
-    return True;
+    return true;
   }
-  return False;
+  return false;
 }
 
 
-static tBool __NEAR__ __FASTCALL__ isBinByte(unsigned char ch)
+static bool __NEAR__ __FASTCALL__ isBinByte(unsigned char ch)
 {
   return ch < 32 && !isspace(ch & 0xFF) && ch != 0x08 && ch != 0x1A;
 }
 
-static tBool __FASTCALL__ txtDetect( void )
+static bool __FASTCALL__ txtDetect( void )
 {
   size_t maxl,i;
-  tBool bin = False;
+  bool bin = false;
   __filesize_t flen,fpos;
   maxl = 1000;
   flen = BMGetFLength();
@@ -1204,11 +1204,11 @@ static tBool __FASTCALL__ txtDetect( void )
   {
    char ch;
    ch = BMReadByteEx(i,BM_SEEK_SET);
-   if((bin=isBinByte(ch))!=False) break;
+   if((bin=isBinByte(ch))!=false) break;
   }
-  if(bin==False) bin_mode = MOD_PLAIN;
+  if(bin==false) bin_mode = MOD_PLAIN;
   BMSeek(fpos,BM_SEEK_SET);
-  return bin == False;
+  return bin == false;
 }
 
 static void __FASTCALL__ txtReadIni( hIniProfile *ini )
@@ -1228,7 +1228,7 @@ static void __FASTCALL__ txtReadIni( hIniProfile *ini )
     if(bin_mode > MOD_MAXMODE) bin_mode = 0;
     beyeReadProfileString(ini,"Beye","Browser","MiscMode","0",tmps,sizeof(tmps));
     w_m = (int)strtoul(tmps,NULL,10);
-    wmode = w_m ? True : False;
+    wmode = w_m ? true : false;
     beyeReadProfileString(ini,"Beye","Browser","SubSubMode9","0",tmps,sizeof(tmps));
     HiLight = (int)strtoul(tmps,NULL,10);
     if(HiLight > 1) HiLight = 1;
@@ -1265,13 +1265,13 @@ static void __FASTCALL__ txtInit( void )
    if(txtDetect()) txtReadSyntaxes();
 }
 
-static tBool __FASTCALL__ txtShowType( void )
+static bool __FASTCALL__ txtShowType( void )
 {
     char *type;
     if(syntax_hl.name) type=syntax_hl.name;
     else type="Unknown";
     TMessageBox(type," Detected text type: ");
-    return False;
+    return false;
 }
 
 static void __FASTCALL__ txtTerm( void )

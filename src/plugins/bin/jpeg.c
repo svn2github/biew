@@ -27,14 +27,14 @@
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
 
-static tBool  __FASTCALL__ jpeg_check_fmt( void )
+static bool  __FASTCALL__ jpeg_check_fmt( void )
 {
     unsigned long val;
     unsigned char id[4];
     val=bmReadDWordEx(0,BM_SEEK_SET);
     bmReadBufferEx(id,4,6,BM_SEEK_SET);
-    if(val==0xE0FFD8FF && memcmp(id,"JFIF",4)==0) return True;
-    return False;
+    if(val==0xE0FFD8FF && memcmp(id,"JFIF",4)==0) return true;
+    return false;
 }
 
 static void __FASTCALL__ jpeg_init_fmt( void ) {}

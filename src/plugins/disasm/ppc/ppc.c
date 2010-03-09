@@ -61,7 +61,7 @@ static const char *vprs[] =
   "v24","v25","v26","v27","v28","v29","v30","v31"
 };
 
-static void ppc_Encode_args(char *ostr,tUInt32 opcode,
+static void ppc_Encode_args(char *ostr,uint32_t opcode,
 			__fileoff_t ulShift,
 			unsigned long flags,
 			const ppc_arg *args) {
@@ -1396,9 +1396,9 @@ static const ppc_opcode ppc_table[] =
 };
 
 #if 0
-static tUInt32 __FASTCALL__ biswap_32(tUInt32 code) {
+static uint32_t __FASTCALL__ biswap_32(uint32_t code) {
    unsigned i;
-   tUInt32 rval=0x00;
+   uint32_t rval=0x00;
    for(i=0;i<32;i++) if((code&(1<<i))==(1<<i)) rval = rval | (1<<(31-i));
    return rval;
 }
@@ -1417,21 +1417,21 @@ static DisasmRet __FASTCALL__ ppcDisassembler(__filesize_t ulShift,
     DisasmRet dret;
     int done;
     unsigned ix,n;
-    tUInt32 opcode;
+    uint32_t opcode;
     memset(&dret,0,sizeof(DisasmRet));
     if(detectedFormat->query_bitness) ppcBitness = detectedFormat->query_bitness(ulShift);
     if(detectedFormat->query_endian) ppcBigEndian = detectedFormat->query_endian(ulShift)==DAE_BIG?1:0;
-    opcode=ppcBigEndian?be2me_32(*((tUInt32 *)buffer)):le2me_32(*((tUInt32 *)buffer));
+    opcode=ppcBigEndian?be2me_32(*((uint32_t *)buffer)):le2me_32(*((uint32_t *)buffer));
     n = sizeof(ppc_table)/sizeof(ppc_opcode);
     done=0;
     dret.str = outstr;
     dret.codelen = 4;
     if(flags == __DISF_NORMAL) {
-    tUInt32 ppc_fmask;
+    uint32_t ppc_fmask;
     ppc_fmask=ppcDialect?PPC_SPE:PPC_VEC;
     for(ix=0;ix<n;ix++)
     {
-	tUInt32 mask,bits,ppc_flgs;
+	uint32_t mask,bits,ppc_flgs;
 	mask=ppc_table[ix].mask;
 	bits=ppc_table[ix].bits;
 	ppc_flgs=ppc_table[ix].flags;
@@ -1465,10 +1465,10 @@ static DisasmRet __FASTCALL__ ppcDisassembler(__filesize_t ulShift,
     return dret;
 }
 
-static tBool __FASTCALL__ ppcAsmRef( void )
+static bool __FASTCALL__ ppcAsmRef( void )
 {
   hlpDisplay(20050);
-  return False;
+  return false;
 }
 
 static void __FASTCALL__ ppcHelpAsm( void )
@@ -1478,7 +1478,7 @@ static void __FASTCALL__ ppcHelpAsm( void )
  unsigned size,i,evt;
  unsigned long nstrs;
  TWindow * hwnd;
- if(!hlpOpen(True)) return;
+ if(!hlpOpen(true)) return;
  size = (unsigned)hlpGetItemSize(20051);
  if(!size) goto ppchlp_bye;
  msgAsmText = PMalloc(size+1);
@@ -1568,7 +1568,7 @@ static const char *ppc_bitness_names[] =
    "Use~64"
 };
 
-static tBool __FASTCALL__ ppcSelect_bitness( void )
+static bool __FASTCALL__ ppcSelect_bitness( void )
 {
   unsigned nModes;
   int i;
@@ -1577,9 +1577,9 @@ static tBool __FASTCALL__ ppcSelect_bitness( void )
   if(i != -1)
   {
     ppcBitness = ((i==0)?DAB_USE32:DAB_USE64);
-    return True;
+    return true;
   }
-  return False;
+  return false;
 }
 
 static const char *ppc_endian_names[] =
@@ -1588,7 +1588,7 @@ static const char *ppc_endian_names[] =
    "~Big endian"
 };
 
-static tBool __FASTCALL__ ppcSelect_endian( void )
+static bool __FASTCALL__ ppcSelect_endian( void )
 {
   unsigned nModes;
   int i;
@@ -1597,9 +1597,9 @@ static tBool __FASTCALL__ ppcSelect_endian( void )
   if(i != -1)
   {
     ppcBigEndian = i;
-    return True;
+    return true;
   }
-  return False;
+  return false;
 }
 
 static const char *ppc_dialect_names[] =
@@ -1608,7 +1608,7 @@ static const char *ppc_dialect_names[] =
    "~SPE (embedded cpu)"
 };
 
-static tBool __FASTCALL__ ppcSelectDialect( void )
+static bool __FASTCALL__ ppcSelectDialect( void )
 {
   unsigned nModes;
   int i;
@@ -1617,9 +1617,9 @@ static tBool __FASTCALL__ ppcSelectDialect( void )
   if(i != -1)
   {
     ppcDialect = i;
-    return True;
+    return true;
   }
-  return False;
+  return false;
 }
 
 static void      __FASTCALL__ ppcInit( void )

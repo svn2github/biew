@@ -59,20 +59,20 @@ extern "C" {
                 /** Changes byte order in 32-bit number */
 #ifndef ByteSwapL
 #define ByteSwapL(_val)\
-  (((tUInt32)_val << 24) | (((tUInt32)_val & 0xFF00) << 8) |\
-  (((tUInt32)_val & 0xFF0000L) >> 8) | ((tUInt32)_val >> 24))
+  (((uint32_t)_val << 24) | (((uint32_t)_val & 0xFF00) << 8) |\
+  (((uint32_t)_val & 0xFF0000L) >> 8) | ((uint32_t)_val >> 24))
 #endif
                 /** Changes byte order in 16-bit number */
 #ifndef ByteSwapS
 #define ByteSwapS(_val)\
-  (((tUInt16)_val << 8) | ((tUInt16)_val >> 8))
+  (((uint16_t)_val << 8) | ((uint16_t)_val >> 8))
 #endif
 
                 /** Changes byte order in 64-bit number */
 #ifndef ByteSwapLL
-__inline static tUInt64 __ByteSwapLL(tUInt64 x)\
-{ union { tUInt64 __ll;		     		\
-	  tUInt32 __l[2]; } __w, __r;		\
+__inline static uint64_t __ByteSwapLL(uint64_t x)\
+{ union { uint64_t __ll;		     		\
+	  uint32_t __l[2]; } __w, __r;		\
 	 __w.__ll = (x);			\
 	 __r.__l[0] = ByteSwapL (__w.__l[1]);	\
 	 __r.__l[1] = ByteSwapL (__w.__l[0]);	\
@@ -91,10 +91,10 @@ __inline static tUInt64 __ByteSwapLL(tUInt64 x)\
 #ifndef __XchgB__
 #define __XchgB__(_val1,_val2)\
     {\
-      register tUInt8 _charv;\
-      _charv = *((tUInt8 *)_val2);\
-      *((tUInt8 *)_val2) = *((tUInt8 *)_val1);\
-      *((tUInt8 *)_val1) = _charv;\
+      register uint8_t _charv;\
+      _charv = *((uint8_t *)_val2);\
+      *((uint8_t *)_val2) = *((uint8_t *)_val1);\
+      *((uint8_t *)_val1) = _charv;\
     }
 #endif
 

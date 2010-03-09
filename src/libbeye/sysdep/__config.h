@@ -17,12 +17,8 @@
 #ifndef __CONFIG_H
 #define __CONFIG_H 1
 
-#if defined(__i386__)
-#include "libbeye/sysdep/ia32/__config.h"
-#elif defined(__x86_64__)
-#include "libbeye/sysdep/x86_64/__config.h"
-#else
-#include "libbeye/sysdep/generic/__config.h"
-#endif
+#include <stdbool.h>
+#include <stdint.h>
+#include <endian.h>
 
 #endif

@@ -39,7 +39,7 @@ static __filesize_t __FASTCALL__ ShowNewHeaderLE( void )
   return ShowNewHeaderLX();
 }
 
-static tBool __FASTCALL__ __ReadMapTblLE(BGLOBAL handle,memArray * obj,unsigned n)
+static bool __FASTCALL__ __ReadMapTblLE(BGLOBAL handle,memArray * obj,unsigned n)
 {
  size_t i;
   bioSeek(handle,lxe.le.leObjectPageMapTableOffset + headshift,SEEKF_START);
@@ -50,9 +50,9 @@ static tBool __FASTCALL__ __ReadMapTblLE(BGLOBAL handle,memArray * obj,unsigned 
     if(IsKbdTerminate() || bioEOF(handle)) break;
     bioReadBuffer(handle,&lep,sizeof(LE_PAGE));
     sprintf(stmp,"#=%08lXH Flags: %04hX = %s",(long)lep.number,lep.flags,lxeGetMapAttr(lep.flags));
-    if(!ma_AddString(obj,stmp,True)) break;
+    if(!ma_AddString(obj,stmp,true)) break;
   }
-  return True;
+  return true;
 }
 
 static __filesize_t __NEAR__ __FASTCALL__ __calcPageEntryLE(LE_PAGE *mt,unsigned long idx)
@@ -70,20 +70,20 @@ static __filesize_t __NEAR__ __FASTCALL__ __calcPageEntryLE(LE_PAGE *mt,unsigned
 __filesize_t __FASTCALL__ CalcPageEntryLE(unsigned long pageidx)
 {
   BGLOBAL handle;
-  tBool found;
+  bool found;
   unsigned i;
   LE_PAGE mt;
   if(!pageidx) return -1;
   handle = lx_cache;
   bioSeek(handle,lxe.le.leObjectPageMapTableOffset + headshift,SEEK_SET);
-  found = False;
+  found = false;
   for(i = 0;i < lxe.le.lePageCount;i++)
   {
     bioReadBuffer(handle,(void *)&mt,sizeof(LE_PAGE));
     if(bioEOF(handle)) break;
     if(mt.number == pageidx)
     {
-      found = True;
+      found = true;
       break;
     }
   }
@@ -110,19 +110,19 @@ __filesize_t __FASTCALL__ CalcEntryPointLE(unsigned long objnum,__filesize_t _of
   ret = -1;
   for(i = 0;i < lo.o32_mapsize;i++)
   {
-    tBool is_eof;
-    is_eof = False;
+    bool is_eof;
+    is_eof = false;
     if(_offset >= start && _offset < start + lxe.le.lePageSize)
     {
-      tBool found;
+      bool found;
       bioSeek(handle,pageoff,SEEKF_START);
       pidx = i + lo.o32_pagemap;
-      found = False;
+      found = false;
       for(j = 0;j < lxe.le.lePageCount;j++)
       {
         bioReadBuffer(handle,(void *)&mt,sizeof(LE_PAGE));
         if((is_eof = bioEOF(handle)) != 0) break;
-        if(mt.number == pidx) { found = True; break; }
+        if(mt.number == pidx) { found = true; break; }
       }
       if(found) ret = __calcPageEntryLE((void *)&mt,pidx - 1) + _offset - start;
       else      ret = BMGetCurrFilePos();
@@ -153,21 +153,21 @@ __filesize_t __FASTCALL__ CalcEntryLE(const LX_ENTRY *lxent)
   return ret;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,tBool dispmsg)
+static __filesize_t __NEAR__ __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,bool dispmsg)
 {
   BGLOBAL handle;
-  tBool found;
+  bool found;
   unsigned i;
   unsigned char j;
   unsigned char cnt,type;
-  tUIntFast16 numobj = 0;
+  uint_fast16_t numobj = 0;
   LX_ENTRY lxent;
   __filesize_t ret;
   ret = BMGetCurrFilePos();
   handle = lx_cache;
   bioSeek(handle,lxe.le.leEntryTableOffset + headshift,SEEK_SET);
   i = 0;
-  found = False;
+  found = false;
   while(1)
   {
    cnt = bioReadByte(handle);
@@ -190,7 +190,7 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,tBo
      if(i == ordinal - 1)
      {
        lxent.b32_type = type;
-       found = True;
+       found = true;
        if(size)
        {
          lxent.b32_obj = numobj;
@@ -240,7 +240,7 @@ static __filesize_t __FASTCALL__ ShowResNamLE( void )
                     LB_SELECTIVE | LB_SORTABLE,&ordinal);
   if(ret != -1)
   {
-    fpos = CalcEntryBungleLE(ordinal,True);
+    fpos = CalcEntryBungleLE(ordinal,true);
   }
   return fpos;
 }
@@ -257,22 +257,22 @@ static __filesize_t __FASTCALL__ ShowNResNmLE( void )
                       LB_SELECTIVE | LB_SORTABLE,&ordinal);
     if(ret != -1)
     {
-      fpos = CalcEntryBungleLE(ordinal,True);
+      fpos = CalcEntryBungleLE(ordinal,true);
     }
   }
   return fpos;
 }
 
-static tBool __FASTCALL__ isLE( void )
+static bool __FASTCALL__ isLE( void )
 {
    char id[2];
    headshift = IsNewExe();
    if(headshift)
    {
      bmReadBufferEx(id,sizeof(id),headshift,SEEKF_START);
-     if(id[0] == 'L' && id[1] == 'E') return True;
+     if(id[0] == 'L' && id[1] == 'E') return true;
    }
-   return False;
+   return false;
 }
 
 static void __FASTCALL__ LEinit( void )
@@ -297,11 +297,11 @@ static __filesize_t __FASTCALL__ LEHelp( void )
   return BMGetCurrFilePos();
 }
 
-static tBool __FASTCALL__ leAddressResolv(char *addr,__filesize_t cfpos)
+static bool __FASTCALL__ leAddressResolv(char *addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
-  tBool bret = True;
+  bool bret = true;
   if(cfpos >= headshift && cfpos < headshift + sizeof(LEHEADER))
   {
      strcpy(addr,"LEH :");
@@ -321,7 +321,7 @@ static tBool __FASTCALL__ leAddressResolv(char *addr,__filesize_t cfpos)
     strcpy(addr,"LEPD:");
     strcpy(&addr[5],Get4Digit(cfpos - headshift - lxe.le.leObjectPageMapTableOffset));
   }
-  else bret = False;
+  else bret = false;
   return bret;
 }
 

@@ -31,12 +31,12 @@
 
 static oldPharLap oph;
 
-static tBool __FASTCALL__ IsOldPharLap( void )
+static bool __FASTCALL__ IsOldPharLap( void )
 {
    char sign[2];
    bmReadBufferEx(sign,2,0,SEEKF_START);
-   if(sign[0] == 'M' && sign[1] == 'P') return True;
-   return False;
+   if(sign[0] == 'M' && sign[1] == 'P') return true;
+   return false;
 }
 
 static __filesize_t __FASTCALL__ ShowOPharLapHeader( void )
@@ -93,17 +93,17 @@ static void __FASTCALL__ OPharLapDestroy( void )
 {
 }
 
-static tBool __FASTCALL__ OldPharLapAddrResolv(char *addr,__filesize_t cfpos)
+static bool __FASTCALL__ OldPharLapAddrResolv(char *addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
-  tBool bret = True;
+  bool bret = true;
   if(cfpos < sizeof(oldPharLap))
   {
     strcpy(addr,"oplhdr:");
     strcpy(&addr[7],Get2Digit(cfpos));
   }
-  else bret = False;
+  else bret = false;
   return bret;
 }
 

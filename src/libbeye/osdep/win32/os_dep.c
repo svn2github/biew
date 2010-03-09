@@ -40,7 +40,7 @@ static char rbuff[FILENAME_MAX+1];
 static char rbuff2[FILENAME_MAX+1];
 static char _home_dir_name[FILENAME_MAX + 1];
 
-static tBool __c__break = False;
+static bool __c__break = false;
 
 #if defined( _MSC_VER ) || __GNUC_MINOR__ >= 95
 static BOOL WINAPI MyHandler( DWORD type )
@@ -53,25 +53,25 @@ static BOOL MyHandler( DWORD type )
      case CTRL_C_EVENT:
      case CTRL_BREAK_EVENT:
                          if(__c__break)  exit(EXIT_FAILURE);
-                         else __c__break = True;
-                         return True;
+                         else __c__break = true;
+                         return true;
      default:
                          return FALSE;
   }
 }
 
-tBool __FASTCALL__ __OsGetCBreak( void )
+bool __FASTCALL__ __OsGetCBreak( void )
 {
   return __c__break;
 }
 
-void __FASTCALL__ __OsSetCBreak( tBool state )
+void __FASTCALL__ __OsSetCBreak( bool state )
 {
   __c__break = state;
 }
 
 extern HANDLE hIn;
-extern tBool hInputTrigger;
+extern bool hInputTrigger;
 #if !(defined( __DISABLE_MMF ) || defined( __DISABLE_LOWLEVEL_MMF))
 extern LONG CALLBACK PageFaultHandler(LPEXCEPTION_POINTERS);
 LPTOP_LEVEL_EXCEPTION_FILTER PrevPageFaultHandler;

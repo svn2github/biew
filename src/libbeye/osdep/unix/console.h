@@ -120,7 +120,7 @@ typedef struct {
 } termdesc;
 
 extern int on_console, output_7, transparent, do_nls;
-extern tBool break_status;
+extern bool break_status;
 extern termdesc *terminal;
 
 extern void __FASTCALL__ ReadNextEvent(void);

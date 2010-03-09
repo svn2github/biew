@@ -125,7 +125,7 @@ static void __FASTCALL__ PLSegPaint(TWindow * win,const void ** names,unsigned s
  twRefreshFullWin(win);
 }
 
-static tBool __FASTCALL__ __PLReadSegInfo(BGLOBAL handle,memArray * obj,unsigned nnames)
+static bool __FASTCALL__ __PLReadSegInfo(BGLOBAL handle,memArray * obj,unsigned nnames)
 {
  unsigned i;
  for(i = 0;i < nnames;i++)
@@ -133,9 +133,9 @@ static tBool __FASTCALL__ __PLReadSegInfo(BGLOBAL handle,memArray * obj,unsigned
    PLSegInfo plsi;
    if(IsKbdTerminate() || bioEOF(handle)) break;
    bioReadBuffer(handle,&plsi,sizeof(PLSegInfo));
-   if(!ma_AddData(obj,&plsi,sizeof(PLSegInfo),True)) break;
+   if(!ma_AddData(obj,&plsi,sizeof(PLSegInfo),true)) break;
  }
- return True;
+ return true;
 }
 
 static __filesize_t __FASTCALL__ PharLapSegInfo( void )
@@ -148,7 +148,7 @@ static __filesize_t __FASTCALL__ PharLapSegInfo( void )
  else                                           nnames = 0;
  fpos = BMGetCurrFilePos();
  if(!nnames) { NotifyBox(NOT_ENTRY," Segment Info table "); return fpos; }
- if(!(obj = ma_Build(nnames,True))) return fpos;
+ if(!(obj = ma_Build(nnames,true))) return fpos;
  handle = pl_cache;
  bioSeek(handle,nph.plSegInfoOffset,SEEK_SET);
  if(__PLReadSegInfo(handle,obj,nnames))
@@ -203,7 +203,7 @@ static void __FASTCALL__ PLRunTimePaint(TWindow * win,const void ** names,unsign
  twRefreshFullWin(win);
 }
 
-static tBool __FASTCALL__ __PLReadRunTime(BGLOBAL handle,memArray * obj,unsigned nnames)
+static bool __FASTCALL__ __PLReadRunTime(BGLOBAL handle,memArray * obj,unsigned nnames)
 {
  unsigned i;
  for(i = 0;i < nnames;i++)
@@ -211,9 +211,9 @@ static tBool __FASTCALL__ __PLReadRunTime(BGLOBAL handle,memArray * obj,unsigned
    PLRunTimeParms plrtp;
    if(IsKbdTerminate() || bioEOF(handle)) break;
    bioReadBuffer(handle,&plrtp,sizeof(PLRunTimeParms));
-   if(!ma_AddData(obj,&plrtp,sizeof(PLRunTimeParms),True)) break;
+   if(!ma_AddData(obj,&plrtp,sizeof(PLRunTimeParms),true)) break;
  }
- return True;
+ return true;
 }
 
 static __filesize_t __FASTCALL__ PharLapRunTimeParms( void )
@@ -226,7 +226,7 @@ static __filesize_t __FASTCALL__ PharLapRunTimeParms( void )
  else                                          nnames = 0;
  fpos = BMGetCurrFilePos();
  if(!nnames) { NotifyBox(NOT_ENTRY," Run-time parameters "); return fpos; }
- if(!(obj = ma_Build(nnames,True))) return fpos;
+ if(!(obj = ma_Build(nnames,true))) return fpos;
  handle = pl_cache;
  bioSeek(handle,nph.plRunTimeParms,SEEK_SET);
  if(__PLReadRunTime(handle,obj,nnames))
@@ -242,12 +242,12 @@ static __filesize_t __FASTCALL__ PharLapRunTimeParms( void )
  return fpos;
 }
 
-static tBool __FASTCALL__ IsPharLap( void )
+static bool __FASTCALL__ IsPharLap( void )
 {
    char sign[2];
    bmReadBufferEx(sign,2,0,BM_SEEK_SET);
-   if(sign[0] == 'P' && (sign[1] == '2' || sign[1] == '3')) return True;
-   return False;
+   if(sign[0] == 'P' && (sign[1] == '2' || sign[1] == '3')) return true;
+   return false;
 }
 
 static void __FASTCALL__ PharLapInit( void )
@@ -265,17 +265,17 @@ static void __FASTCALL__ PharLapDestroy( void )
   if(pl_cache != &bNull && pl_cache != main_handle) bioClose(pl_cache);
 }
 
-static tBool __FASTCALL__ PharLapAddrResolv(char *addr,__filesize_t cfpos)
+static bool __FASTCALL__ PharLapAddrResolv(char *addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
-  tBool bret = True;
+  bool bret = true;
   if(cfpos < sizeof(newPharLap))
   {
     strcpy(addr,"nplhdr:");
     strcpy(&addr[7],Get2Digit(cfpos));
   }
-  else bret = False;
+  else bret = false;
   return bret;
 }
 

@@ -17,10 +17,10 @@
 extern void __FASTCALL__ arm16Init(void);
 extern void __FASTCALL__ arm16Term(void);
 extern void __FASTCALL__ arm16Disassembler(DisasmRet *dret,__filesize_t ulShift,
-						tUInt16 opcode, unsigned flags);
+						uint16_t opcode, unsigned flags);
 extern void __FASTCALL__ arm32Init(void);
 extern void __FASTCALL__ arm32Term(void);
 extern void __FASTCALL__ arm32Disassembler(DisasmRet *dret,__filesize_t ulShift,
-						tUInt32 opcode, unsigned flags);
+						uint32_t opcode, unsigned flags);
 
 #endif

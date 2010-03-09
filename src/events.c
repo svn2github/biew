@@ -24,14 +24,14 @@
 static int KB_Buff[64];
 static size_t KB_freq = 0;
 
-tBool  __FASTCALL__ IsKbdTerminate( void )
+bool  __FASTCALL__ IsKbdTerminate( void )
 {
   return __OsGetCBreak( );
 }
 
 void __FASTCALL__ CleanKbdTermSig( void )
 {
-  __OsSetCBreak(False);
+  __OsSetCBreak(false);
 }
 
 static tAbsCoord mx,my;

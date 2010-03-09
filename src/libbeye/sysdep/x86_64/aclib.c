@@ -25,8 +25,8 @@
 
 #include <stddef.h>
 #include <string.h>
+#include <stdint.h>
 #include "libbeye/sysdep/x86_64/fastcopy.h"
-#include "libbeye/sysdep/x86_64/stdint.h"
 #include "libbeye/sysdep/x86_64/_inlines.h"
 #define BLOCK_SIZE 4096
 #define CONFUSION_FACTOR 0
@@ -161,7 +161,7 @@ static void * init_fast_memset(void * to, int filler, size_t len)
 }
 void *(*fast_memset_ptr)(void * to, int filler, size_t len) = init_fast_memset;
 
-static void __FASTCALL__ init_InterleaveBuffers(tUInt32 limit,
+static void __FASTCALL__ init_InterleaveBuffers(uint32_t limit,
 				    void *destbuffer,
 				    const void *evenbuffer, 
 				    const void *oddbuffer)
@@ -178,12 +178,12 @@ static void __FASTCALL__ init_InterleaveBuffers(tUInt32 limit,
 	(*InterleaveBuffers_ptr)(limit,destbuffer,evenbuffer,oddbuffer);
 }
 
-void (__FASTCALL__ *InterleaveBuffers_ptr)(tUInt32 limit,
+void (__FASTCALL__ *InterleaveBuffers_ptr)(uint32_t limit,
 				    void *destbuffer,
 				    const void *evenbuffer,
 				    const void *oddbuffer) = init_InterleaveBuffers;
 
-static void __FASTCALL__ init_CharsToShorts(tUInt32 limit,
+static void __FASTCALL__ init_CharsToShorts(uint32_t limit,
 					     void *destbuffer,
 					     const void *evenbuffer)
 {
@@ -199,11 +199,11 @@ static void __FASTCALL__ init_CharsToShorts(tUInt32 limit,
 	(*CharsToShorts_ptr)(limit,destbuffer,evenbuffer);
 }
 
-void (__FASTCALL__ *CharsToShorts_ptr)(tUInt32 limit,
+void (__FASTCALL__ *CharsToShorts_ptr)(uint32_t limit,
 					     void *destbuffer,
 					     const void *evenbuffer) = init_CharsToShorts;
 
-static void __FASTCALL__ init_ShortsToChars(tUInt32 limit,
+static void __FASTCALL__ init_ShortsToChars(uint32_t limit,
 					     void *destbuffer,
 					     const void *evenbuffer)
 {
@@ -219,6 +219,6 @@ static void __FASTCALL__ init_ShortsToChars(tUInt32 limit,
 	(*ShortsToChars_ptr)(limit,destbuffer,evenbuffer);
 }
 
-void (__FASTCALL__ *ShortsToChars_ptr)(tUInt32 limit,
+void (__FASTCALL__ *ShortsToChars_ptr)(uint32_t limit,
 					     void *destbuffer,
 					     const void *evenbuffer) = init_ShortsToChars;

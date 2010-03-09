@@ -53,9 +53,9 @@ static unsigned long __NEAR__ __FASTCALL__ __get_perf(perf_func fnc,unsigned n_i
   /* align pointer on 16-byte boundary */
 
 #if __WORDSIZE == 64
-  if((tUInt64)ctrl_arr & 15) ctrl_arr += 16-((tUInt64)ctrl_arr&15);
+  if((uint64_t)ctrl_arr & 15) ctrl_arr += 16-((uint64_t)ctrl_arr&15);
 #else
-  if((tUInt32)ctrl_arr & 15) ctrl_arr += 16-((tUInt32)ctrl_arr&15);
+  if((uint32_t)ctrl_arr & 15) ctrl_arr += 16-((uint32_t)ctrl_arr&15);
 #endif
 
   memset(ctrl_arr,0,sizeof(ctrl_arr));
@@ -104,10 +104,10 @@ void __FillCPUInfo(char *buff,unsigned cbBuff,void (*percent_callback)(int))
   unsigned short long_mod;
   char cpu_name[10],fpu_name[10];
   char cpu_oemname[13],cache_info[80];
-  tBool is_amd = False,is_cyrix = False, is_intel = False, is_umc = False, 
-        is_nexgen = False, is_centaur = False, is_rise = False,
-        is_transmeta = False, is_sis = False, is_nsc = False,
-	is_htt=False,is_core_smp_legacy=False;
+  bool is_amd = false,is_cyrix = false, is_intel = false, is_umc = false, 
+        is_nexgen = false, is_centaur = false, is_rise = false,
+        is_transmeta = false, is_sis = false, is_nsc = false,
+	is_htt=false,is_core_smp_legacy=false;
   strcpy(cache_info,"n/a\n");
   fulltype = __cpu_type();
   cpu_class = fulltype & CPU_CLONE;
@@ -202,7 +202,7 @@ void __FillCPUInfo(char *buff,unsigned cbBuff,void (*percent_callback)(int))
           {
             unsigned long __erx[4];
             unsigned char L2_test;
-            tBool is_celeron = False,is_xeon = False;
+            bool is_celeron = false,is_xeon = false;
    
 	    model |= extmodel << 4;
             __erx[0] = 2;
@@ -213,9 +213,9 @@ void __FillCPUInfo(char *buff,unsigned cbBuff,void (*percent_callback)(int))
               for(j = 0;j < 4;j++)
               {
                 L2_test = (__erx[i] >> (j*8)) & 0xFF;
-                if(L2_test == 0x40) { is_celeron = True; break; }
+                if(L2_test == 0x40) { is_celeron = true; break; }
                 if((L2_test & 0x4F) >= 0x44 || (L2_test & 0x8F) >= 0x84)
-                                    { is_xeon = True; break; }
+                                    { is_xeon = true; break; }
               }
             switch(model)
             {

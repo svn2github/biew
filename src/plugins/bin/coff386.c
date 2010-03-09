@@ -33,14 +33,14 @@
 #include "libbeye/kbd_code.h"
 #include "libbeye/pmalloc.h"
 
-#define COFF_WORD(cval)  ((tUInt16)(*(const tUInt16 *)(const tUInt8 *)cval))
-#define COFF_DWORD(cval) ((tUInt32)(*(const tUInt32 *)(const tUInt8 *)cval))
+#define COFF_WORD(cval)  ((uint16_t)(*(const uint16_t *)(const uint8_t *)cval))
+#define COFF_DWORD(cval) ((uint32_t)(*(const uint32_t *)(const uint8_t *)cval))
 
 
 static struct external_filehdr coff386hdr;
 static AOUTHDR coff386ahdr;
 static SCNHDR *coff386so;
-static tUIntFast16 nsections;
+static uint_fast16_t nsections;
 static BGLOBAL coff_cache;
 static __filesize_t strings_ptr;
 
@@ -50,7 +50,7 @@ static void __FASTCALL__ coff_ReadPubName(BGLOBAL b_cache,const struct PubName *
 static unsigned __FASTCALL__ coff386_GetObjAttr(__filesize_t pa,char *name,unsigned cb_name,
                              __filesize_t *start,__filesize_t *end,int *_class,int *bitness);
 
-static tBool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
+static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
   return fmtFindPubName(coff_cache,buff,cb_buff,pa,
                         coff_ReadPubNameList,
@@ -78,7 +78,7 @@ static void __NEAR__ __FASTCALL__ coffReadLongName(BGLOBAL handle,__filesize_t o
 
 static __filesize_t __FASTCALL__ coff386_VA2PA(__filesize_t va)
 {
-  tUIntFast16 i;
+  uint_fast16_t i;
   for(i = 0;i < nsections;i++)
   {
     if(va >= COFF_DWORD(coff386so[i].s_vaddr) && va <= COFF_DWORD(coff386so[i].s_vaddr)+COFF_DWORD(coff386so[i].s_size))
@@ -91,7 +91,7 @@ static __filesize_t __FASTCALL__ coff386_VA2PA(__filesize_t va)
 
 static __filesize_t __FASTCALL__ coff386_PA2VA(__filesize_t pa)
 {
-  tUIntFast16 i;
+  uint_fast16_t i;
   for(i = 0;i < nsections;i++)
   {
     if(pa >= COFF_DWORD(coff386so[i].s_scnptr) && pa <= COFF_DWORD(coff386so[i].s_scnptr)+COFF_DWORD(coff386so[i].s_size))
@@ -138,14 +138,14 @@ static void __FASTCALL__ coffObjPaint(TWindow * win,const void ** names,unsigned
           ,COFF_WORD(objs->s_nreloc)
           ,COFF_WORD(objs->s_nlnno)
           ,COFF_DWORD(objs->s_flags)
-          ,GetBool((COFF_DWORD(objs->s_flags) & STYP_TEXT) == STYP_TEXT)
-          ,GetBool((COFF_DWORD(objs->s_flags) & STYP_DATA) == STYP_DATA)
-          ,GetBool((COFF_DWORD(objs->s_flags) & STYP_BSS) == STYP_BSS)
+          ,Gebool((COFF_DWORD(objs->s_flags) & STYP_TEXT) == STYP_TEXT)
+          ,Gebool((COFF_DWORD(objs->s_flags) & STYP_DATA) == STYP_DATA)
+          ,Gebool((COFF_DWORD(objs->s_flags) & STYP_BSS) == STYP_BSS)
           );
  twRefreshFullWin(win);
 }
 
-static tBool __NEAR__ __FASTCALL__ __coffReadObjects(BGLOBAL handle,memArray * obj,unsigned n)
+static bool __NEAR__ __FASTCALL__ __coffReadObjects(BGLOBAL handle,memArray * obj,unsigned n)
 {
  size_t i;
   for(i = 0;i < n;i++)
@@ -153,9 +153,9 @@ static tBool __NEAR__ __FASTCALL__ __coffReadObjects(BGLOBAL handle,memArray * o
     SCNHDR po;
     if(IsKbdTerminate() || bioEOF(handle)) break;
     bioReadBuffer(handle,&po,sizeof(SCNHDR));
-    if(!ma_AddData(obj,&po,sizeof(SCNHDR),True)) break;
+    if(!ma_AddData(obj,&po,sizeof(SCNHDR),true)) break;
   }
-  return True;
+  return true;
 }
 
 static __filesize_t __FASTCALL__ coffShowObjects( void )
@@ -167,7 +167,7 @@ static __filesize_t __FASTCALL__ coffShowObjects( void )
  fpos = BMGetCurrFilePos();
  nnames = COFF_WORD(coff386hdr.f_nscns);
  if(!nnames) { NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
- if(!(obj = ma_Build(nnames,True))) return fpos;
+ if(!(obj = ma_Build(nnames,true))) return fpos;
  handle = coff_cache;
  off = sizeof(coff386hdr);
  if(COFF_WORD(coff386hdr.f_opthdr)) off += COFF_WORD(coff386hdr.f_opthdr);
@@ -225,11 +225,11 @@ static __filesize_t __FASTCALL__ ShowCoff386Header( void )
            ,COFF_DWORD(coff386hdr.f_nsyms)
            ,COFF_WORD(coff386hdr.f_opthdr)
            ,COFF_WORD(coff386hdr.f_flags)
-           ,GetBool((COFF_WORD(coff386hdr.f_flags) & F_RELFLG) == F_RELFLG)
-           ,GetBool((COFF_WORD(coff386hdr.f_flags) & F_EXEC) == F_EXEC)
-           ,GetBool((COFF_WORD(coff386hdr.f_flags) & F_LNNO) == F_LNNO)
-           ,GetBool((COFF_WORD(coff386hdr.f_flags) & F_LSYMS) == F_LSYMS)
-           ,GetBool((COFF_WORD(coff386hdr.f_flags) & F_AR32WR) == F_AR32WR));
+           ,Gebool((COFF_WORD(coff386hdr.f_flags) & F_RELFLG) == F_RELFLG)
+           ,Gebool((COFF_WORD(coff386hdr.f_flags) & F_EXEC) == F_EXEC)
+           ,Gebool((COFF_WORD(coff386hdr.f_flags) & F_LNNO) == F_LNNO)
+           ,Gebool((COFF_WORD(coff386hdr.f_flags) & F_LSYMS) == F_LSYMS)
+           ,Gebool((COFF_WORD(coff386hdr.f_flags) & F_AR32WR) == F_AR32WR));
   twSetColorAttr(dialog_cset.entry);
   twPrintF("Entry point                 = %08lXH (VA=%08lXH)"
            ,entry,v_entry);
@@ -319,7 +319,7 @@ static unsigned __FASTCALL__ coffSymTabNumItems(BGLOBAL handle)
   return (unsigned)COFF_DWORD(coff386hdr.f_nsyms);
 }
 
-static tBool  __FASTCALL__ coffSymTabReadItems(BGLOBAL handle,memArray * obj,unsigned nnames)
+static bool  __FASTCALL__ coffSymTabReadItems(BGLOBAL handle,memArray * obj,unsigned nnames)
 {
  unsigned i;
  unsigned length;
@@ -347,15 +347,15 @@ static tBool  __FASTCALL__ coffSymTabReadItems(BGLOBAL handle,memArray * obj,uns
            ,(unsigned long)COFF_DWORD(cse.e_value)
            ,coffEncodeClass(cse.e_sclass[0])
            ,coffEncodeType(COFF_WORD(cse.e_type)));
-   if(!ma_AddString(obj,stmp,True)) break;
+   if(!ma_AddString(obj,stmp,true)) break;
  }
- return True;
+ return true;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ CalcEntryCoff(unsigned long idx,tBool display_msg)
+static __filesize_t __NEAR__ __FASTCALL__ CalcEntryCoff(unsigned long idx,bool display_msg)
 {
   struct external_syment cse;
-  tUIntFast16 sec_num;
+  uint_fast16_t sec_num;
   __filesize_t fpos;
   fpos = 0L;
   bmSeek(COFF_DWORD(coff386hdr.f_symptr)+idx*sizeof(struct external_syment),BM_SEEK_SET);
@@ -385,7 +385,7 @@ static __filesize_t __FASTCALL__ coffShowSymTab( void )
                     LB_SELECTIVE,NULL);
   if(ret != -1)
   {
-    fpos = CalcEntryCoff(ret,True);
+    fpos = CalcEntryCoff(ret,true);
   }
   return fpos;
 }
@@ -427,8 +427,8 @@ static void __NEAR__ __FASTCALL__ BuildRelocCoff386( void )
   twUseWin(usd);
   for(segcount = 0;segcount < COFF_WORD(coff386hdr.f_nscns);segcount++)
   {
-    tBool is_eof;
-    is_eof = False;
+    bool is_eof;
+    is_eof = false;
     bmSeek(COFF_DWORD(coff386so[segcount].s_relptr),BM_SEEK_SET);
     nr = COFF_WORD(coff386so[segcount].s_nreloc);
     for(j = 0;j < nr;j++)
@@ -448,13 +448,13 @@ static void __NEAR__ __FASTCALL__ BuildRelocCoff386( void )
   CloseWnd(w);
 }
 
-static tBool  __NEAR__ __FASTCALL__ coffSymTabReadItemsIdx(BGLOBAL handle,unsigned long idx,
+static bool  __NEAR__ __FASTCALL__ coffSymTabReadItemsIdx(BGLOBAL handle,unsigned long idx,
                                             char *name,unsigned cb_name,
                                             unsigned *secnum,
                                             __filesize_t *offset)
 {
  struct external_syment cse;
- if(idx >= COFF_DWORD(coff386hdr.f_nsyms)) return False;
+ if(idx >= COFF_DWORD(coff386hdr.f_nsyms)) return false;
  bioSeek(handle,COFF_DWORD(coff386hdr.f_symptr) + idx*sizeof(struct external_syment),SEEKF_START);
  bioReadBuffer(handle,&cse,sizeof(struct external_syment));
  if(COFF_DWORD(cse.e.e.e_zeroes) == 0L &&
@@ -467,22 +467,22 @@ static tBool  __NEAR__ __FASTCALL__ coffSymTabReadItemsIdx(BGLOBAL handle,unsign
  }
  *secnum = COFF_WORD(cse.e_scnum);
  *offset = COFF_DWORD(cse.e_value);
- return True;
+ return true;
 }
 
 static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrCoff386(char *str,RELOC_COFF386 *rne,int flags)
 {
   __filesize_t offset,retval,s,e;
   unsigned long val;
-  tUIntFast16 secnum=0;
-  tBool is_idx,val_assigned;
+  uint_fast16_t secnum=0;
+  bool is_idx,val_assigned;
   int c,b;
   char name[256],pubname[256],secname[256];
   retval = RAPREF_DONE;
   val = bmReadDWordEx(rne->offset,BM_SEEK_SET);
   /* rne->nameoff it's only pointer to name descriptor */
   is_idx = coffSymTabReadItemsIdx(coff_cache,rne->nameoff,name,sizeof(name),&secnum,&offset);
-  val_assigned = False;
+  val_assigned = false;
   if(is_idx)
   {
     if(!offset && secnum)
@@ -494,7 +494,7 @@ static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrCoff386(char *str,RELOC_C
       if(FindPubName(pubname,sizeof(pubname),COFF_DWORD(coff386so[secnum-1].s_scnptr) + val))
       {
         strcat(str,pubname);
-        val_assigned = True;
+        val_assigned = true;
       }
       else goto def_val;
     }
@@ -519,7 +519,7 @@ static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrCoff386(char *str,RELOC_C
      strcat(str,"-");
      strcat(str,secname);
   }
-  e = CalcEntryCoff(rne->nameoff,False);
+  e = CalcEntryCoff(rne->nameoff,false);
   if(!DumpMode && !EditMode && e && (flags & APREF_TRY_LABEL) == APREF_TRY_LABEL)
                                                   GidAddGoAddress(str,e);
   return retval;
@@ -552,9 +552,9 @@ static unsigned long __FASTCALL__ coff386_AppendRef(char *str,__filesize_t ulShi
   return flags & APREF_TRY_LABEL ? ret ? RAPREF_DONE : RAPREF_NONE : ret;
 }
 
-static tBool __FASTCALL__ coff386_check_fmt( void )
+static bool __FASTCALL__ coff386_check_fmt( void )
 {
-  tUIntFast16 id;
+  uint_fast16_t id;
   id = bmReadWordEx(0,SEEKF_START);
   return !(I386BADMAG(id));
 }
@@ -563,7 +563,7 @@ static void __FASTCALL__ coff386_init_fmt( void )
 {
   BGLOBAL main_handle;
   __filesize_t s_off = sizeof(coff386hdr);
-  tUIntFast16 i;
+  uint_fast16_t i;
   bmReadBufferEx(&coff386hdr,sizeof(struct external_filehdr),0,SEEKF_START);
   if(COFF_WORD(coff386hdr.f_opthdr)) bmReadBuffer(&coff386ahdr,sizeof(AOUTHDR));
   nsections = COFF_WORD(coff386hdr.f_nscns);
@@ -598,12 +598,12 @@ static int __FASTCALL__ coff386_bitness(__filesize_t off)
   return DAB_USE32;
 }
 
-static tBool __FASTCALL__ coff386_AddrResolv(char *addr,__filesize_t cfpos)
+static bool __FASTCALL__ coff386_AddrResolv(char *addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
-  tBool bret = True;
-  tUInt32 res;
+  bool bret = true;
+  uint32_t res;
   if(cfpos < sizeof(struct external_filehdr))
   {
     strcpy(addr,"coffih:");
@@ -615,7 +615,7 @@ static tBool __FASTCALL__ coff386_AddrResolv(char *addr,__filesize_t cfpos)
       addr[0] = '.';
       strcpy(&addr[1],Get8Digit(res));
     }
-    else bret = False;
+    else bret = false;
   return bret;
 }
 
@@ -650,7 +650,7 @@ static void __FASTCALL__ coff_ReadPubNameList(BGLOBAL handle,
  {
    struct external_syment cse;
    __filesize_t where;
-   tUIntFast16 sec_num;
+   uint_fast16_t sec_num;
    where = bioTell(handle);
    bioReadBuffer(handle,&cse,sizeof(struct external_syment));
    sec_num = COFF_WORD(cse.e_scnum);
@@ -681,7 +681,7 @@ static void __FASTCALL__ coff_ReadPubNameList(BGLOBAL handle,
 }
 
 static __filesize_t __FASTCALL__ coff386_GetPubSym(char *str,unsigned cb_str,unsigned *func_class,
-                          __filesize_t pa,tBool as_prev)
+                          __filesize_t pa,bool as_prev)
 {
   return fmtGetPubSym(coff_cache,str,cb_str,func_class,pa,as_prev,
                       coff_ReadPubNameList,
@@ -692,7 +692,7 @@ static unsigned __FASTCALL__ coff386_GetObjAttr(__filesize_t pa,char *name,unsig
                             __filesize_t *start,__filesize_t *end,int *_class,int *bitness)
 {
   unsigned ret;
-  tUIntFast16 i;
+  uint_fast16_t i;
   *start = 0;
   *end = bmGetFLength();
   *_class = OC_NOOBJECT;

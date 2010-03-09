@@ -54,7 +54,7 @@ static int shiftkeys = 0;
 #endif
 
 HANDLE hIn;
-tBool hInputTrigger = False;
+bool hInputTrigger = false;
 extern OSVERSIONINFO win32_verinfo;
 static int is_win9x;
 extern void __FASTCALL__ win32_readNextMessage( void );
@@ -77,7 +77,7 @@ void __FASTCALL__ win32_readNextMessage( void )
   int vkeycode,keycode;
   INPUT_RECORD ir;
   DWORD nread;
-  hInputTrigger=False;
+  hInputTrigger=false;
 
   PeekConsoleInput( hIn, &ir, 1, &nread );
   if( nread )
@@ -155,7 +155,7 @@ void __FASTCALL__ __init_keyboard( const char *user_cp )
              win32_verinfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS;
   if((__mou_nbtns = __init_mouse()) != INT_MAX)
   {
-    __MsSetState(True);
+    __MsSetState(true);
   }
 }
 
@@ -163,7 +163,7 @@ void __FASTCALL__ __term_keyboard( void )
 {
   if(__mou_nbtns != INT_MAX)
   {
-    __MsSetState(False);
+    __MsSetState(false);
     __term_mouse();
   }
 }

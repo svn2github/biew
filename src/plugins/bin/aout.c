@@ -111,7 +111,7 @@ static __filesize_t __FASTCALL__ ShowAOutHeader( void )
   return fpos;
 }
 
-static tBool __FASTCALL__ __aout_check_fmt( tUInt32 id )
+static bool __FASTCALL__ __aout_check_fmt( uint32_t id )
 {
   int a32,a64;
   a32=!(N_BADMAG(id));
@@ -120,9 +120,9 @@ static tBool __FASTCALL__ __aout_check_fmt( tUInt32 id )
   return a32 || a64 || N_MAGIC(id)==CMAGIC;
 }
 
-static tBool __FASTCALL__ aout_check_fmt( void )
+static bool __FASTCALL__ aout_check_fmt( void )
 {
-  tUInt32 id;
+  uint32_t id;
   id = bmReadDWordEx(0,SEEKF_START);
   if(__aout_check_fmt(id)) return 1;
   id=be2me_32(id);
@@ -145,17 +145,17 @@ static int __FASTCALL__ aout_endian(__filesize_t off)
    return is_msbf?DAE_BIG:DAE_LITTLE;
 }
 
-static tBool __FASTCALL__ aout_AddrResolv(char *addr,__filesize_t fpos)
+static bool __FASTCALL__ aout_AddrResolv(char *addr,__filesize_t fpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
-  tBool bret = True;
+  bool bret = true;
   if(fpos < sizeof(struct external_exec))
   {
     strcpy(addr,"a.outh:");
     strcpy(&addr[7],Get2Digit(fpos));
   }
-  else bret = False;
+  else bret = false;
   return bret;
 }
 
