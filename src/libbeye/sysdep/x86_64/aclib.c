@@ -94,14 +94,14 @@ static void GetCpuCaps( void ) {}
 #endif
 
 
-#ifdef CAN_COMPILE_X86_ASM
-
 #undef HAVE_MMX
 #undef HAVE_MMX2
 #undef HAVE_3DNOW
 #undef HAVE_SSE
 #define RENAME(a) a ## _C
 #include "libbeye/sysdep/x86_64/aclib_template.c"
+
+#ifdef CAN_COMPILE_X86_ASM
 
 //MMX versions
 #undef RENAME
