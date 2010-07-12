@@ -214,7 +214,11 @@ esac
 
 echocheck "C compiler version"
 echores $cc_version
+disable gcc44_workaround
 case $cc_version in
+    4.[4-9]|4.[4-9].[0-9])
+      enable gcc44_workaround
+      ;;
   [0-2]|[0-2].[0-9]|[0-2].[0-9].[0-9])
     die "Please upgrade your gcc upto gcc-3.0 at least"
     ;;
