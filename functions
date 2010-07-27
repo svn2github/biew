@@ -1461,8 +1461,10 @@ check_pkg(){
     package=$2
     answer="no"
     echocheck $name
-    $pkg_config --exists $package
-    test "$?" -ne 0 && disable $name
+    enable $name
+    $pkg_config $package --exists
+    pkg_status="x$?"
+    test $pkg_status != "x0" && disable $name
     if enabled $name ; then
 	version=`echo $($pkg_config $package --modversion)`
 	log "found version: $version of $package"
