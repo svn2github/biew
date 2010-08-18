@@ -571,7 +571,7 @@ unsigned          __FASTCALL__ twGetClientWidth(TWindow *win);
                     **/
 unsigned          __FASTCALL__ twGetClientHeight(TWindow *win);
 
-                   /** Returns handle of the window currently displayed at the absolute position x and y.
+                   /** Returns handle of the window currently displayed at the screen position x and y.
                      * @param x,y          specify coordinates of the location.
                      * @return             Handle for the window displayed at the
                      *                     specified position if a window is
@@ -589,14 +589,14 @@ TWindow *         __FASTCALL__ twGetWinAtPos(tAbsCoord x, tAbsCoord y);
                     **/
 bool             __FASTCALL__ twIsPieceVisible(TWindow *win,tRelCoord x, tRelCoord y);
 
-                   /** Converts window-relative coordinates to absolute screen coordinates
+                   /** Converts window-relative coordinates to screen coordinates
                      * @param win          handle of window
                      * @param x,y          specify the relative coordinates.
-                     * @param xa,ya        specify pointers to the absolute coordinates.
+                     * @param xs,ys        specify the screen coordinates.
                      * @return             none
                      * @see                twCvtScreenCoord
                     **/
-void              __FASTCALL__ twCvtWinCoords(TWindow *win,tRelCoord x, tRelCoord y,tAbsCoord *xa,tAbsCoord *ya);
+void              __FASTCALL__ twCvtWinCoords(TWindow *win,tRelCoord x, tRelCoord y,tAbsCoord *xs,tAbsCoord *ys);
 
                    /** Converts screen-relative coordinates to relative window coordinates
                      * @param win          handle of window

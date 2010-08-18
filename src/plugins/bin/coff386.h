@@ -253,7 +253,7 @@ union external_auxent {
    or one of the following: */
 
 #define N_UNDEF	((int16_t)0)	/**< undefined symbol */
-#define N_ABS	((int16_t)-1)	/**< value of symbol is absolute */
+#define N_ABS	((int16_t)-1)	/**< value of symbol is unsigned */
 #define N_DEBUG	((int16_t)-2)	/**< debugging symbol -- value is meaningless */
 #define N_TV	((int16_t)-3)	/**< indicates symbol needs preload transfer vector */
 #define P_TV	((int16_t)-4)	/**< indicates symbol needs postload transfer vector*/
@@ -342,7 +342,7 @@ struct external_reloc {
 #define RELSZ sizeof(RELOC)
 
 #define RELOC_REL32	20	/**< 32-bit PC-relative address */
-#define RELOC_ADDR32	6	/**< 32-bit absolute address */
+#define RELOC_ADDR32	6	/**< 32-bit full address */
 
 #define DEFAULT_DATA_SECTION_ALIGNMENT 4
 #define DEFAULT_BSS_SECTION_ALIGNMENT 4

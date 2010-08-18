@@ -108,7 +108,7 @@ extern bool        __FASTCALL__ Get8DigitDlg(const char *title,const char *text,
 extern bool        __FASTCALL__ GetStringDlg(char * buff,const char * title,const char *subtitle,
                                      const char *prompt);
 
-#define GJDLG_ABSOLUTE  0x00000000UL
+#define GJDLG_FILE_TOP  0x00000000UL
 #define GJDLG_RELATIVE  0x00000001UL
 #define GJDLG_REL_EOF   0x00000002UL
 #define GJDLG_VIRTUAL   0x00000003UL

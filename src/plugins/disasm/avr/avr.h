@@ -94,7 +94,7 @@
    i - immediate value
    l - signed pc relative offset from -64 to 63
    L - signed pc relative offset from -2048 to 2047
-   h - absolute code address (call, jmp)
+   h - full code address (call, jmp)
    S - immediate value from 0 to 7 (S = s << 4)
    ? - use this opcode entry if no parameters, else use next opcode entry
 

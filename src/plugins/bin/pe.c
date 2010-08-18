@@ -1045,7 +1045,7 @@ static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE __H
      switch(rpe->import.type)
      {
           default:
-          case 0: /** ABSOLUTE, fixup is skipped */
+          case 0: /** FULL, fixup is skipped */
                   pe_how = "(";
                   point_to = value;
                   break;

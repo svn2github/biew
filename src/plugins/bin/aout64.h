@@ -292,7 +292,7 @@ struct internal_nlist {
 /** The n_type field is the symbol type, containing:  */
 
 #define N_UNDF	0	/**< Undefined symbol */
-#define N_ABS 	2	/**< Absolute symbol -- defined at particular addr */
+#define N_ABS 	2	/**< Abs symbol -- defined at particular addr */
 #define N_TEXT 	4	/**< Text sym -- defined at offset in text seg */
 #define N_DATA 	6	/**< Data sym -- defined at offset in data seg */
 #define N_BSS 	8	/**< BSS  sym -- defined at offset in zero'd seg */
@@ -320,7 +320,7 @@ struct internal_nlist {
    in that it can satisfy undefined external references.  */
 
 /** These appear as input to LD, in a .o file.  */
-#define	N_SETA	0x14		/**< Absolute set element symbol */
+#define	N_SETA	0x14		/**< Abs set element symbol */
 #define	N_SETT	0x16		/**< Text set element symbol */
 #define	N_SETD	0x18		/**< Data set element symbol */
 #define	N_SETB	0x1A		/**< Bss set element symbol */
@@ -340,7 +340,7 @@ struct internal_nlist {
    available slots.  The value of a N_WEAKU symbol is 0.  The values
    of the other types are the definitions.  */
 #define N_WEAKU	0x0d		/**< Weak undefined symbol.  */
-#define N_WEAKA 0x0e		/**< Weak absolute symbol.  */
+#define N_WEAKA 0x0e		/**< Weak abs symbol.  */
 #define N_WEAKT 0x0f		/**< Weak text symbol.  */
 #define N_WEAKD 0x10		/**< Weak data symbol.  */
 #define N_WEAKB 0x11		/**< Weak bss symbol.  */

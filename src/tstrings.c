@@ -139,8 +139,6 @@ const char FATAL_ERROR[]=      " *** FATAL ERROR *** : ";
 
 const char ISR_JUMP[]=         " Jump to ISR ";
 const char INT_NUMBER[]=       " Interrupt number : ";
-const char GO_ABS_SHIFT[]=     " Go to absolute offset ";
-const char GO_REL_SHIFT[]=     " Go to relative offset ";
 const char TYPE_SHIFT[]=       "Enter new offsets : ";
 const char DIG_EVALUTOR[]=     " Digital evaluator (hexadecimal) ";
 const char DIG_OPERATORS[]=    " Known Operators - ()+-*/% ~|&^ ";

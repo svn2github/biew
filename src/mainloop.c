@@ -212,7 +212,7 @@ void MainLoop( void )
     case KE_F(5):
            {
              static __filesize_t shift = 0;
-	     static unsigned long flags = GJDLG_ABSOLUTE;
+	     static unsigned long flags = GJDLG_FILE_TOP;
              if(GetJumpDlg(&shift,&flags))
              {
                switch(flags&0xFF)
@@ -221,7 +221,7 @@ void MainLoop( void )
                  case GJDLG_PERCENTS: shift=shift>100?100:shift;
                                       nfp = BMGetFLength()*shift/100;
                                       break;
-                 case GJDLG_ABSOLUTE: nfp = shift;
+                 case GJDLG_FILE_TOP: nfp = shift;
                                       break;
                  case GJDLG_RELATIVE: nfp += (long)shift;
                                       break;

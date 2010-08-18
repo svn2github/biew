@@ -182,7 +182,7 @@ static void __NEAR__ __FASTCALL__ paintJumpDlg(TWindow *wdlg,unsigned long flags
   usd = twUsedWin();
   twUseWin(wdlg);
   twSetColorAttr(dialog_cset.group.active);
-  twGotoXY(4,2); twPutChar(flags == GJDLG_ABSOLUTE ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
+  twGotoXY(4,2); twPutChar(flags == GJDLG_FILE_TOP ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
   twGotoXY(4,3); twPutChar(flags == GJDLG_RELATIVE ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
   twGotoXY(4,4); twPutChar(flags == GJDLG_REL_EOF  ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
   twGotoXY(4,5); twPutChar(flags == GJDLG_VIRTUAL  ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
@@ -229,11 +229,11 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
  twGetWinPos(hwnd,&x1,&y1,&x2,&y2);
  twGotoXY(2,1); twPutS("Enter offset :");
  twSetColorAttr(dialog_cset.group.active);
- twGotoXY(2,2); twPutS(" ( ) - Absolute       ");
- twGotoXY(2,3); twPutS(" ( ) - Relative       ");
- twGotoXY(2,4); twPutS(" ( ) - Relatively EOF ");
- twGotoXY(2,5); twPutS(" ( ) - Virtual        ");
- twGotoXY(2,6); twPutS(" ( ) - Percents       ");
+ twGotoXY(2,2); twPutS(" ( ) - From top of file ");
+ twGotoXY(2,3); twPutS(" ( ) - From current pos ");
+ twGotoXY(2,4); twPutS(" ( ) - Relatively EOF   ");
+ twGotoXY(2,5); twPutS(" ( ) - Virtual          ");
+ twGotoXY(2,6); twPutS(" ( ) - Percents         ");
  twSetColorAttr(dialog_cset.main);
  X1 = x1;
  Y1 = y1;

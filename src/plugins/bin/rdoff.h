@@ -38,7 +38,7 @@ typedef struct tag_RDOFF_RELOC
   uint8_t  is_rel; /**< is relative fixup */
   uint16_t segto;  /**< logical # of segment or ext. reference
                             i.e. max external refers = 65536-2 */
-  uint32_t offset; /**< absolute offset within file */
+  uint32_t offset; /**< offset from start of file */
 }RDOFF_RELOC;
 
 #ifdef __HAVE_PRAGMA_PACK__

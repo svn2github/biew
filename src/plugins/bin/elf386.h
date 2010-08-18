@@ -368,7 +368,7 @@
 #define SHN_LORESERVE	0xFF00U		/**< Begin range of reserved indices */
 #define SHN_LOPROC	0xFF00U		/**< Begin range of appl-specific */
 #define SHN_HIPROC	0xFF1FU		/**< End range of appl-specific */
-#define SHN_ABS		0xFFF1U		/**< Associated symbol is absolute */
+#define SHN_ABS		0xFFF1U		/**< Associated symbol is full */
 #define SHN_COMMON	0xFFF2U		/**< Associated symbol is in common */
 #define SHN_HIRESERVE	0xFFFFU		/**< End range of reserved indices */
 

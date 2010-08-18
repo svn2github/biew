@@ -58,8 +58,6 @@ extern const char FATAL_ERROR[];
 
 extern const char ISR_JUMP[];
 extern const char INT_NUMBER[];
-extern const char GO_ABS_SHIFT[];
-extern const char GO_REL_SHIFT[];
 extern const char TYPE_SHIFT[];
 extern const char DIG_EVALUTOR[];
 extern const char DIG_OPERATORS[];

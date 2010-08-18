@@ -158,7 +158,7 @@
 ³                   mov  ecx, [r13+00] ; r13 addressing limitations       ³
 ³                                                                         ³
 ³           USE64;  49 8B %U04 25%u 12 34 56 78                               ³
-³                   mov  rax, [+78563412] ; using absolute 32-bit address ³
+³                   mov  rax, [+78563412] ; using full 32-bit address     ³
 ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
 ³ %IREX%i decoding:                                                           ³
 ³ REX uses the range from 40H upto 4FH codes:                             ³
