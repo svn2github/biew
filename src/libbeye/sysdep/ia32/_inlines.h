@@ -33,10 +33,8 @@
 #define hfree free         /**< For ia32 platform is alias of huge free */
 #define HMemCpy memcpy     /**< For ia32 platform is alias of huge memcpy */
 
-#ifdef __ENABLE_FASTCALL
-#define __FASTCALL__ __attribute__ (( __regparm__(3) )) /**< Fastcall modifier for ia32 , Note: gcc is not ready to speedup with __stdcall__ */
-#else
-#define __FASTCALL__
+#ifndef __FASTCALL__
+#define __FASTCALL__       /**< defined in config.h */
 #endif
 #define __NORETURN__ __attribute__ (( __noreturn__ ))                 /**< Noreturn modifier for ia32 */
 #define __CONSTFUNC__ __attribute__ (( __const__ ))                   /**< Modifier of contant function for ia32 */

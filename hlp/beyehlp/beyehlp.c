@@ -14,6 +14,7 @@
  * @since       1999
  * @note        Development, fixes and improvements
 **/
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -168,7 +169,7 @@ bool __FASTCALL__ MyCallOut(IniInfo *ini)
         strcat(tmp_buff,TEMPFNAME);
         if(system(tmp_buff))
         {
-          perror("Error ocurred while processing");
+          fprintf(stderr,"Error %s ocurred while processing: %s",strerror(errno),tmp_buff);
           exit(EXIT_FAILURE);
         }
         bIn = bioOpen(TEMPFNAME,FO_READONLY | SO_DENYNONE,BBIO_CACHE_SIZE,BIO_OPT_DB);
@@ -229,7 +230,10 @@ int main( int argc, char *argv[] )
   atexit(my_atexit);
   __init_sys();
   archiver=argv[1];
-  printf("Using %s as project\n", argv[2]);
+  printf("Using %s as archiver\n"
+	"Using %s as project\n"
+	, argv[1]
+	, argv[2]);
   FiProgress(argv[2],MyCallBack);
   memset(&bhi,0,sizeof(BEYE_HELP_ITEM));
   if(__IsFileExists(outfname)) if(__OsDelete(outfname)) { fprintf(stderr,"Can not delete %s\n",argv[2]); return -1; }

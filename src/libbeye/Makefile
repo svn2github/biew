@@ -3,7 +3,7 @@ include ../../config.mak
 CFLAGS = -I.. $(HOST_CFLAGS)
 LDFLAGS = $(HOST_LDFLAGS)
 
-LIBNAME = $(LIBPREFIX)beye.$(LIBEXT)
+LIBNAME = $(LIBPREFIX)beye.a
 
 SRCS= bbio.c \
       file_ini.c \

@@ -19,6 +19,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#ifdef HAVE_ENDIAN_H
 #include <endian.h>
+#endif
 
 #endif

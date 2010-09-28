@@ -33,15 +33,15 @@ TARGET = beyehlp
 
 INCS = -I. -I../../src
 LIBS = -L../../src/libbeye -lbeye $(EXTRALIBS)
-OBJS =\
-beyehlp.o
+OBJS = beyehlp.o
 all: $(TARGET)
 help: $(TARGET)
 
-distclean:
 clean:
 	$(RM) $(OBJS)
-	$(RM) $(TARGET)
+	$(RM) $(TARGET)$(EXESUF)
+
+distclean: clean
 
 cleansys:
 	$(RM) lib/sysdep/$(MACHINE)/$(HOST)/*.o

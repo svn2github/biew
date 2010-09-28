@@ -34,15 +34,15 @@ TARGET = lzss
 
 INCS = -I. -I../../src
 LIBS = -L../../src/libbeye -lbeye $(EXTRALIBS)
-OBJS =\
-lzss.o
+OBJS = lzss.o
 all: $(TARGET)
 help: $(TARGET)
 
-distclean:
 clean:
 	$(RM) $(OBJS)
-	$(RM) $(TARGET)
+	$(RM) $(TARGET)$(EXESUF)
+
+distclean: clean
 
 cleansys:
 	$(RM) lib/sysdep/$(MACHINE)/$(HOST)/*.o

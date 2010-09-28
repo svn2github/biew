@@ -2,6 +2,7 @@
 
 include ../config.mak
 
+sep := $(if $(filter win32 os2 dos, $(HOST)),\\,/)
 SUBDIRS = lzss beyehlp
 
 DO_MAKE = @ for i in $(SUBDIRS); do $(MAKE) -C $$i $@ || exit; done
@@ -28,7 +29,7 @@ clean:
 	$(DO_MAKE)
 	rm -f beye.hlp
 
-distclean: clean
+distclean:
 	$(DO_MAKE)
 	rm -f config.h config.mak
 
@@ -40,4 +41,4 @@ dep:
 	$(DO_MAKE)
 
 help:
-	(beyehlp/beyehlp lzss/lzss beyehlp.prj)
+	(.$(sep)beyehlp$(sep)beyehlp$(EXESUF) .$(sep)lzss$(sep)lzss$(EXESUF) beyehlp.prj)

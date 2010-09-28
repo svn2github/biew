@@ -1057,17 +1057,17 @@ fi
 $config_sub sun4 >/dev/null 2>&1 || echores "cannot run $config_sub"
 build=`$config_sub $build`
 echores "$build"
-build_cpu=`echo $build | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\1/'`
-build_vendor=`echo $build | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\2/'`
-build_os=`echo $build | sed 's/^\([^-]*\)-\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
+build_cpu=`echo $build | cut -d '-' -f 1`
+build_vendor=`echo $build | cut -d '-' -f 2`
+build_os=`echo $build | cut -d '-' -f 3`
 echocheck "host system type"
 if test -z "$host" ; then
 host=$build
 fi
 host=`$config_sub $host`
-host_cpu=`echo $host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\1/'`
-host_vendor=`echo $host | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\2/'`
-host_os=`echo $host | sed 's/^\([^-]*\)-\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
+host_cpu=`echo $host | cut -d '-' -f 1`
+host_vendor=`echo $host | cut -d '-' -f 2`
+host_os=`echo $host | cut -d '-' -f 3`
 echores "$host"
 
 # Printout architecture

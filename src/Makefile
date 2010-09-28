@@ -128,7 +128,7 @@ endif
 clean:
 	$(DO_MAKE)
 	$(RM) $(OBJS)
-	$(RM) $(TARGET)
+	$(RM) $(TARGET)$(EXESUF)
 
 distclean: clean
 	$(DO_MAKE)
