@@ -31,6 +31,7 @@ clean:
 
 distclean:
 	$(DO_MAKE)
+	rm -f beye.hlp
 	rm -f config.h config.mak
 
 uninstall:
