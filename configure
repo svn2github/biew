@@ -28,6 +28,7 @@ PATH_LIST=(
     "bindir|user executables|\$exec_prefix/bin",
     "libdir|object code libraries|\$exec_prefix/lib",
     "datadir|read-only architecture-independent data|\$prefix/share/beye",
+    "docdir|read-only documentation directory|\$prefix/doc/beye",
     "mandir|read-only configuration files|\$prefix/share/man1"
 )
 
@@ -376,6 +377,7 @@ LIBEXT=$libext
 LIBPREFIX=$libprefix
 PREFIX=$prefix
 DATADIR=$datadir
+DOCDIR=$docdir
 LIBDIR=$libdir
 MANDIR=$mandir
 DESTDIR=$DESTDIR

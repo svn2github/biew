@@ -1,6 +1,6 @@
 # Main makefile of the project
 
-INSTALLABLE_SUBDIRS = bin_rc man src hlp
+INSTALLABLE_SUBDIRS = bin_rc doc man src hlp
 SUBDIRS = $(INSTALLABLE_SUBDIRS)
 
 DO_MAKE = @ for i in $(SUBDIRS); do $(MAKE) -C $$i $@ || exit; done

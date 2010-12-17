@@ -86,14 +86,14 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc doc/beye_en.txt doc/beye_ru.txt doc/unix.txt doc/release.txt
+%doc doc/beye.txt doc/ru/beye.txt doc/unix.txt doc/release.txt
 
 %{bindir}/%{name}
 %{datadir}/%{name}/*
 %{mandir}/man?/%{name}.1*
 
 %changelog
-* 27 feb 2010 Nickols_K <nickols_k@mail.ru> beye-1.0.0
+* Sat Feb 27 2010 Nickols_K <nickols_k@mail.ru> beye-1.0.0
 - add crossbuild support
 * Sun Jan 6 2002 konst <konst@linuxassembly.org> 5.3.2-1
 - build from the original source archive
