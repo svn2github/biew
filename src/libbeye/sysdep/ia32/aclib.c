@@ -153,7 +153,7 @@ static void GetCpuCaps( void ) {}
 #endif
 
 #endif
-static void * init_fast_memcpy(void * to, const void * from, size_t len)
+static any_t* init_fast_memcpy(any_t* to, const any_t* from, size_t len)
 {
 #ifdef CAN_COMPILE_X86_ASM
 	/* ordered per speed fastest first */
@@ -166,9 +166,9 @@ static void * init_fast_memcpy(void * to, const void * from, size_t len)
 	fast_memcpy_ptr = memcpy;
 	return (*fast_memcpy_ptr)(to,from,len);
 }
-void *(*fast_memcpy_ptr)(void * to, const void * from, size_t len) = init_fast_memcpy;
+any_t*(*fast_memcpy_ptr)(any_t* to, const any_t* from, size_t len) = init_fast_memcpy;
 
-static void * init_fast_memset(void * to, int filler, size_t len)
+static any_t* init_fast_memset(any_t* to, int filler, size_t len)
 {
 #ifdef CAN_COMPILE_X86_ASM
 	/* ordered per speed fastest first */
@@ -181,12 +181,12 @@ static void * init_fast_memset(void * to, int filler, size_t len)
 	fast_memset_ptr = memset;
 	return (*fast_memset_ptr)(to,filler,len);
 }
-void *(*fast_memset_ptr)(void * to, int filler, size_t len) = init_fast_memset;
+any_t*(*fast_memset_ptr)(any_t* to, int filler, size_t len) = init_fast_memset;
 
 static void __FASTCALL__ init_InterleaveBuffers(uint32_t limit,
-				    void *destbuffer,
-				    const void *evenbuffer, 
-				    const void *oddbuffer)
+				    any_t*destbuffer,
+				    const any_t*evenbuffer, 
+				    const any_t*oddbuffer)
 {
 #ifdef CAN_COMPILE_X86_ASM
 	/* ordered per speed fastest first */
@@ -201,13 +201,13 @@ static void __FASTCALL__ init_InterleaveBuffers(uint32_t limit,
 }
 
 void (__FASTCALL__ *InterleaveBuffers_ptr)(uint32_t limit,
-				    void *destbuffer,
-				    const void *evenbuffer, 
-				    const void *oddbuffer) = init_InterleaveBuffers;
+				    any_t*destbuffer,
+				    const any_t*evenbuffer, 
+				    const any_t*oddbuffer) = init_InterleaveBuffers;
 
 static void __FASTCALL__ init_CharsToShorts(uint32_t limit,
-					     void *destbuffer,
-					     const void *evenbuffer)
+					     any_t*destbuffer,
+					     const any_t*evenbuffer)
 {
 #ifdef CAN_COMPILE_X86_ASM
 	/* ordered per speed fastest first */
@@ -222,12 +222,12 @@ static void __FASTCALL__ init_CharsToShorts(uint32_t limit,
 }
 
 void (__FASTCALL__ *CharsToShorts_ptr)(uint32_t limit,
-					     void *destbuffer,
-					     const void *evenbuffer) = init_CharsToShorts;
+					     any_t*destbuffer,
+					     const any_t*evenbuffer) = init_CharsToShorts;
 
 static void __FASTCALL__ init_ShortsToChars(uint32_t limit,
-					     void *destbuffer,
-					     const void *evenbuffer)
+					     any_t*destbuffer,
+					     const any_t*evenbuffer)
 {
 #ifdef CAN_COMPILE_X86_ASM
 	/* ordered per speed fastest first */
@@ -242,5 +242,5 @@ static void __FASTCALL__ init_ShortsToChars(uint32_t limit,
 }
 
 void (__FASTCALL__ *ShortsToChars_ptr)(uint32_t limit,
-					     void *destbuffer,
-					     const void *evenbuffer) = init_ShortsToChars;
+					     any_t*destbuffer,
+					     const any_t*evenbuffer) = init_ShortsToChars;

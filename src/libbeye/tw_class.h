@@ -35,7 +35,7 @@ extern "C" {
                      * @param event_data      indicates data of event
                     **/
 typedef long (__FASTCALL__ *twClassFunc)(TWindow *win,unsigned event,
-                                  unsigned long event_param, void *event_data);
+                                  unsigned long event_param, any_t*event_data);
 
 #define __CS_ORDINAL 0x0000 /**< Indicates ordinal type of callback function */
 

@@ -34,7 +34,7 @@ extern "C" {
                      *                        functions for freeing unneeded memory.
                      * @see                   PRealloc PFree
                     **/
-extern void *           __FASTCALL__ PMalloc(size_t obj_size);
+extern any_t*           __FASTCALL__ PMalloc(size_t obj_size);
 
                    /** Reallocates memory object with new size.
                      * @return                Pointer to reallocated object or NULL if error occured
@@ -47,7 +47,7 @@ extern void *           __FASTCALL__ PMalloc(size_t obj_size);
                      *                        for freeing unneeded memory.
                      * @see                   PMalloc PFree
                     **/
-extern void *           __FASTCALL__ PRealloc(void *ptr,size_t obj_size);
+extern any_t*           __FASTCALL__ PRealloc(any_t*ptr,size_t obj_size);
 
                    /** Frees memory object.
                      * @return                Pointer to reallocated object or NULL if error occured
@@ -58,7 +58,7 @@ extern void *           __FASTCALL__ PRealloc(void *ptr,size_t obj_size);
                      *                        be preserved.
                      * @see                   PMalloc PRealloc
                     **/
-extern void             __FASTCALL__ PFree(void *ptr);
+extern void             __FASTCALL__ PFree(any_t*ptr);
 
                    /** Huge version of PMalloc.
                      * @note                  For 16-bit application it works with

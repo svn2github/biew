@@ -71,8 +71,8 @@ void __FASTCALL__ __vioRereadState( void )
   reg.h.ah = 0x0F;
   int386(0x10,&reg,&reg);
   tvioNumColors = 16;
-  tvw = (void *)0x044A;
-  tvh = (void *)0x0484;
+  tvw = (any_t*)0x044A;
+  tvh = (any_t*)0x0484;
   tvioWidth = *tvw;
   tvioHeight = (*tvh)+1;
   switch(reg.h.al)

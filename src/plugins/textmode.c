@@ -1032,7 +1032,7 @@ static unsigned __FASTCALL__ drawText( unsigned keycode , unsigned shift )
         {
           unsigned n_tabs,b_ptr,b_lim;
           len = min(MAX_STRLEN,FoundTextSt > tlines[i].st ? (int)(FoundTextSt-tlines[i].st):0);
-          BMReadBufferEx((void *)buff,len,tlines[i].st,BM_SEEK_SET);
+          BMReadBufferEx((any_t*)buff,len,tlines[i].st,BM_SEEK_SET);
           len = txtConvertBuffer(buff,len,false);
           for(b_lim=len,b_ptr = 0;b_ptr < len;b_ptr+=2,b_lim-=2)
           {
@@ -1065,7 +1065,7 @@ static unsigned __FASTCALL__ drawText( unsigned keycode , unsigned shift )
     rsize = size = len - rshift;
     if(len > rshift)
     {
-        BMReadBufferEx((void *)buff,size,tlines[i].st + rshift,BM_SEEK_SET);
+        BMReadBufferEx((any_t*)buff,size,tlines[i].st + rshift,BM_SEEK_SET);
         rsize = size = txtConvertBuffer(buff,size,false);
         if(bin_mode != MOD_BINARY)
         {

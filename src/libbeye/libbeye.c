@@ -41,14 +41,14 @@ void      __FASTCALL__ __nls_PrepareOEMForTVio(tvioBuff *it,unsigned size)
   __nls_OemToOsdep(it->chars,size);
 }
 
-void __FASTCALL__ memupr(void *ptr,unsigned n)
+void __FASTCALL__ memupr(any_t*ptr,unsigned n)
 {
    unsigned i;
    for(i = 0;i < n;i++)
    ((char *)ptr)[i] = toupper(((char *)ptr)[i]);
 }
 
-void __FASTCALL__ memlwr(void *ptr,unsigned n)
+void __FASTCALL__ memlwr(any_t*ptr,unsigned n)
 {
    unsigned i;
    for(i = 0;i < n;i++)
@@ -529,7 +529,7 @@ void __FASTCALL__ HQSort(void __HUGE__ *base0,unsigned long num, unsigned width,
   for (min = base; (hi = min += qsz) < max; )
   {
     while (qcmp(hi -= qsz, min) > 0)
-      /* void */;
+      /* any_t*/;
     if ((hi += qsz) != min) {
       for (lo = min + qsz; --lo >= min; )
       {
@@ -542,7 +542,7 @@ void __FASTCALL__ HQSort(void __HUGE__ *base0,unsigned long num, unsigned width,
   }
 }
 
-void __HUGE__ * __FASTCALL__ HLFind(const void *key,void __HUGE__ *base,unsigned long nelem,unsigned width,
+void __HUGE__ * __FASTCALL__ HLFind(const any_t*key,void __HUGE__ *base,unsigned long nelem,unsigned width,
                                     func_compare compare)
 {
   unsigned long iter,start,end;
@@ -569,7 +569,7 @@ void __HUGE__ * __FASTCALL__ HLFind(const void *key,void __HUGE__ *base,unsigned
   return NULL;
 }
 
-unsigned long __FASTCALL__ HLFindNearest(const void *key,void __HUGE__ *base,unsigned long nelem,
+unsigned long __FASTCALL__ HLFindNearest(const any_t*key,void __HUGE__ *base,unsigned long nelem,
                             unsigned width,
                             func_compare compare)
 {
@@ -678,13 +678,13 @@ void  __FASTCALL__ la_Destroy(linearArray *obj)
 
 #define LST_STEP 16
 
-void __HUGE__*  __FASTCALL__ la_AddData(linearArray *obj,const void *udata,void (__FASTCALL__ *mem_out)(const char *))
+void __HUGE__*  __FASTCALL__ la_AddData(linearArray *obj,const any_t*udata,void (__FASTCALL__ *mem_out)(const char *))
 {
   void __HUGE__*to;
   if(obj->nSize > ULONG_MAX - (LST_STEP+1)) return 0;
   if(obj->nItems + 1 > obj->nSize)
   {
-    void *ptr;
+    any_t*ptr;
     if(!obj->data) ptr = PHMalloc((obj->nSize+LST_STEP)*obj->itemSize);
     else           ptr = PHRealloc(obj->data,obj->itemSize*(obj->nSize+LST_STEP));
     if(ptr)
@@ -721,7 +721,7 @@ void         __FASTCALL__ la_Sort(linearArray *obj,func_compare compare)
       HQSort(obj->data,obj->nItems,obj->itemSize,compare);
 }
 
-void __HUGE__ *__FASTCALL__ la_Find(linearArray * obj,const void *key,
+void __HUGE__ *__FASTCALL__ la_Find(linearArray * obj,const any_t*key,
                                     func_compare compare)
 {
   void __HUGE__ * ret = NULL;
@@ -731,7 +731,7 @@ void __HUGE__ *__FASTCALL__ la_Find(linearArray * obj,const void *key,
   return ret;
 }
 
-unsigned long __FASTCALL__ la_FindNearest(linearArray *obj,const void *key,
+unsigned long __FASTCALL__ la_FindNearest(linearArray *obj,const any_t*key,
                                           func_compare compare)
 {
   unsigned long ret = 0L;

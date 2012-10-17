@@ -65,10 +65,10 @@ void               __FASTCALL__ __mmfClose(mmfHandle mh)
   errno = ENOSYS;
 }
 
-void *             __FASTCALL__ __mmfAddress(mmfHandle mh)
+any_t*             __FASTCALL__ __mmfAddress(mmfHandle mh)
 {
   UNUSED(mh);
-  return (void *)-1;
+  return (any_t*)-1;
 }
 
 long              __FASTCALL__ __mmfSize(mmfHandle mh)

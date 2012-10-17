@@ -81,7 +81,7 @@ static unsigned char frames_dumb[0x30] =
 static char *screen_cp;
 static unsigned is_unicode=0;
 
-static void *nls_handle;
+static any_t*nls_handle;
 
 
 #define twrite(x)	write(out_fd, (x), strlen(x))
@@ -277,11 +277,11 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x, tAbsCoord y, const tvioBuff *buff,
 		dpb += strlen(ptr);
 	    }
 	    if(is_unicode) {
-		unsigned len=1;
-		char *destb=nls_recode2screen_cp(nls_handle,&c,&len);
-		memcpy(dpb,destb,len);
+		unsigned _len=1;
+		char *destb=nls_recode2screen_cp(nls_handle,&c,&_len);
+		memcpy(dpb,destb,_len);
 		free(destb);
-		dpb+=len;
+		dpb+=_len;
 	    }
 	    else {
 		*dpb=c; dpb++;

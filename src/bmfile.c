@@ -99,13 +99,13 @@ uint64_t  __FASTCALL__ BMReadQWordEx(__fileoff_t pos,int RELATION)
  return bioReadQWord(bm_file_handle);
 }
 
-bool __FASTCALL__ BMReadBufferEx(void * buffer,unsigned len,__fileoff_t pos,int RELATION)
+bool __FASTCALL__ BMReadBufferEx(any_t* buffer,unsigned len,__fileoff_t pos,int RELATION)
 {
  bioSeek(bm_file_handle,pos,RELATION);
  return bioReadBuffer(bm_file_handle,buffer,len);
 }
 
-bool __FASTCALL__ BMWriteBuff(void * buff,unsigned len)
+bool __FASTCALL__ BMWriteBuff(any_t* buff,unsigned len)
 {
   bool ret;
   ret = bioWriteBuffer(bm_file_handle,buff,len);
@@ -137,7 +137,7 @@ bool __FASTCALL__ BMWriteQWordEx(__fileoff_t pos,int RELATION,uint64_t dword)
   return bioWriteQWord(bm_file_handle,dword);
 }
 
-bool  __FASTCALL__ BMWriteBuffEx(__fileoff_t pos,int RELATION,void * buff,unsigned len)
+bool  __FASTCALL__ BMWriteBuffEx(__fileoff_t pos,int RELATION,any_t* buff,unsigned len)
 {
   bioSeek(bm_file_handle,pos,RELATION);
   return bioWriteBuffer(bm_file_handle,buff,len);
@@ -167,13 +167,13 @@ uint64_t __FASTCALL__ bmReadQWordEx(__fileoff_t pos,int RELATION)
  return bioReadQWord(sc_bm_file_handle);
 }
 
-bool __FASTCALL__ bmReadBufferEx(void * buffer,unsigned len,__fileoff_t pos,int RELATION)
+bool __FASTCALL__ bmReadBufferEx(any_t* buffer,unsigned len,__fileoff_t pos,int RELATION)
 {
  bioSeek(sc_bm_file_handle,pos,RELATION);
  return bioReadBuffer(sc_bm_file_handle,buffer,len);
 }
 
-bool __FASTCALL__ bmWriteBuff(void * buff,unsigned len)
+bool __FASTCALL__ bmWriteBuff(any_t* buff,unsigned len)
 {
   bool ret;
   ret = bioWriteBuffer(sc_bm_file_handle,buff,len);
@@ -205,7 +205,7 @@ bool __FASTCALL__ bmWriteQWordEx(__fileoff_t pos,int RELATION,uint64_t dword)
   return bioWriteQWord(sc_bm_file_handle,dword);
 }
 
-bool  __FASTCALL__ bmWriteBuffEx(__fileoff_t pos,int RELATION,void * buff,unsigned len)
+bool  __FASTCALL__ bmWriteBuffEx(__fileoff_t pos,int RELATION,any_t* buff,unsigned len)
 {
   bioSeek(sc_bm_file_handle,pos,RELATION);
   return bioWriteBuffer(sc_bm_file_handle,buff,len);

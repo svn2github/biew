@@ -90,12 +90,12 @@ int __FASTCALL__ __OsTruncFile(bhandle_t handle, __filesize_t newsize)
   return ftruncate(handle,newsize);
 }
 
-int __FASTCALL__ __OsRead(bhandle_t handle, void *buff, unsigned count)
+int __FASTCALL__ __OsRead(bhandle_t handle, any_t*buff, unsigned count)
 {
   return read(handle,buff,count);
 }
 
-int __FASTCALL__ __OsWrite(bhandle_t handle,const void *buffer, unsigned count)
+int __FASTCALL__ __OsWrite(bhandle_t handle,const any_t*buffer, unsigned count)
 {
   return write(handle,buffer,count);
 }

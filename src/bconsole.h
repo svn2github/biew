@@ -35,7 +35,7 @@ extern void         __FASTCALL__ termBConsole( void );
 extern bool        __FASTCALL__ IsKbdTerminate( void );
 extern void         __FASTCALL__ CleanKbdTermSig( void );
 
-typedef void (__FASTCALL__ * pagefunc)(TWindow *win,const void **__obj,unsigned i__obj,unsigned total_obj);
+typedef void (__FASTCALL__ * pagefunc)(TWindow *win,const any_t**__obj,unsigned i__obj,unsigned total_obj);
 
 extern void         __FASTCALL__ CloseWnd(TWindow *w);
 extern TWindow *    __FASTCALL__ CrtDlgWnd(const char *,tAbsCoord,tAbsCoord);
@@ -92,7 +92,7 @@ extern void         __FASTCALL__ errnoMessageBox(const char * text,const char * 
 extern void         __FASTCALL__ ListBox(const char ** names,unsigned nlist,const char * title);
 extern void         __FASTCALL__ TMessageBox(const char * text,const char * title);
 extern void         __FASTCALL__ NotifyBox(const char * text,const char * title);
-extern int          __FASTCALL__ PageBox(unsigned width,unsigned height,const void ** __obj,
+extern int          __FASTCALL__ PageBox(unsigned width,unsigned height,const any_t** __obj,
                                  unsigned nobj,pagefunc func);
 extern void         __FASTCALL__ MemOutBox(const char *user_msg);
 extern TWindow *    __FASTCALL__ PleaseWaitWnd( void );

@@ -134,7 +134,7 @@ static __filesize_t __NEAR__ __FASTCALL__  ___lfind(const char *sfrom,
   }
   start = (start/symb_size)*symb_size; /** align on symbol boundary */
   memcpy(cbuff,pattern,pattern_size);
-  if(!(beyeFlg & SF_CASESENS)) memupr((void *)cbuff,pattern_size);
+  if(!(beyeFlg & SF_CASESENS)) memupr((any_t*)cbuff,pattern_size);
   for(cpos = start;start != endscan;start = direct == 1 ? start + pattern_size*symb_size : start - (pattern_size*symb_size),cpos=start)
   {
     /* If search direction is forward then start point at the end of pattern */
@@ -170,11 +170,11 @@ static __filesize_t __NEAR__ __FASTCALL__  ___lfind(const char *sfrom,
         if(sfrom)
           memcpy(fbuff,&sfrom[findptr],pattern_size*symb_size);
         else
-          BMReadBufferEx((void *)fbuff,pattern_size*symb_size,findptr,BM_SEEK_SET);
+          BMReadBufferEx((any_t*)fbuff,pattern_size*symb_size,findptr,BM_SEEK_SET);
         if((activeMode->flags & __MF_TEXT) == __MF_TEXT)
              __search_len = activeMode->convert_cp((char *)fbuff,pattern_size*symb_size,false);
         else __search_len = pattern_size;
-        if(!(beyeFlg & SF_CASESENS)) memupr((void *)fbuff,__search_len);
+        if(!(beyeFlg & SF_CASESENS)) memupr((any_t*)fbuff,__search_len);
         if(memcmp(fbuff,cbuff,__search_len) == 0) cond = true;
         else
         {
@@ -369,7 +369,7 @@ exit:
 #define __adv_find(start, slen) ___adv_find(NULL, 0, start, slen, NULL, search_buff, search_len, beyeSearchFlg)
 
 char * __FASTCALL__ strFind(const char *str, unsigned str_len,
-                            const void *sbuff, unsigned sbuflen,
+                            const any_t*sbuff, unsigned sbuflen,
                             const int *cache, unsigned flg)
 {
  __filesize_t slen;

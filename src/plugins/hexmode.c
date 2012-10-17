@@ -156,7 +156,7 @@ static unsigned __FASTCALL__ drawHex( unsigned keycode,unsigned textshift )
           len += dlen + 1;
           if(hmode == 1) if(freq == 3) { freq = -1; len++; }
        }
-       BMReadBufferEx((void *)&outstr[width - scrHWidth],rwidth*__inc,sindex,BM_SEEK_SET);
+       BMReadBufferEx((any_t*)&outstr[width - scrHWidth],rwidth*__inc,sindex,BM_SEEK_SET);
        xmin = tvioWidth-scrHWidth;
        twDirectWrite(1,i + 1,outstr,xmin);
        if(isHOnLine(sindex,scrHWidth))

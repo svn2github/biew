@@ -26,12 +26,12 @@
 #endif
 
 /* The lack of this function declaration on some systems and may cause segfault */
-extern void *mremap (void *__addr, size_t __old_len, size_t __new_len,
+extern any_t*mremap (any_t*__addr, size_t __old_len, size_t __new_len,
 		     int __flags, ...);
 
 struct mmfRecord
 {
-  void *    addr;
+  any_t*    addr;
   long      length;
   bhandle_t fhandle;
   int       mode;
@@ -73,13 +73,13 @@ mmfHandle          __FASTCALL__ __mmfOpen(const char *fname,int mode)
     if(mret)
     {
       __fileoff_t length;
-      void *addr;
+      any_t*addr;
       length = __FileLength(fhandle);
       if(length <= PTRDIFF_MAX)
       {
 	addr = mmap(NULL,length,mk_prot(mode),
                   mk_flags(mode),(int)fhandle,0L);
-	if(addr != (void *)-1)
+	if(addr != (any_t*)-1)
 	{
 	    mret->fhandle = fhandle;
 	    mret->addr    = addr;
@@ -105,11 +105,11 @@ mmfHandle       __FASTCALL__ __mmfSync(mmfHandle mh)
 {
   struct mmfRecord *mrec = (struct mmfRecord *)mh;
   long length;
-  void * new_addr;
+  any_t* new_addr;
   length = __FileLength(mrec->fhandle);
   msync(mrec->addr,min(length,mrec->length),MS_SYNC);
   if(length!=mrec->length) {
-    if((new_addr = mremap(mrec->addr,mrec->length,length,0)) != (void *)-1)
+    if((new_addr = mremap(mrec->addr,mrec->length,length,0)) != (any_t*)-1)
     {
 	mrec->length = length;
 	mrec->addr = new_addr;
@@ -134,11 +134,11 @@ bool              __FASTCALL__ __mmfProtect(mmfHandle mh,int flags)
 bool              __FASTCALL__ __mmfResize(mmfHandle mh,long size)
 {
   struct mmfRecord *mrec = (struct mmfRecord *)mh;
-  void *new_addr;
+  any_t*new_addr;
   bool can_continue = false;
   if(mrec->length > size) /* truncate */
   {
-    if((new_addr = mremap(mrec->addr,mrec->length,size,MREMAP_MAYMOVE)) != (void *)-1) can_continue = true;
+    if((new_addr = mremap(mrec->addr,mrec->length,size,MREMAP_MAYMOVE)) != (any_t*)-1) can_continue = true;
     if(can_continue)
       can_continue = __OsChSize(mrec->fhandle,size) != -1 ? true : false;
   }
@@ -146,7 +146,7 @@ bool              __FASTCALL__ __mmfResize(mmfHandle mh,long size)
   {
     if(__OsChSize(mrec->fhandle,size) != -1) can_continue = true;
     if(can_continue)
-      can_continue = (new_addr = mremap(mrec->addr,mrec->length,size,MREMAP_MAYMOVE)) != (void *)-1 ? true : false;
+      can_continue = (new_addr = mremap(mrec->addr,mrec->length,size,MREMAP_MAYMOVE)) != (any_t*)-1 ? true : false;
   }
   if(can_continue)
   {
@@ -167,7 +167,7 @@ void               __FASTCALL__ __mmfClose(mmfHandle mh)
   PFree(mrec);
 }
 
-void *             __FASTCALL__ __mmfAddress(mmfHandle mh)
+any_t*             __FASTCALL__ __mmfAddress(mmfHandle mh)
 {
   return ((struct mmfRecord *)mh)->addr;
 }

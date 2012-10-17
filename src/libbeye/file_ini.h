@@ -239,7 +239,7 @@ typedef struct tag_iniProfile
 {
    FiHandler     handler;
    char *        fname;
-   void *        cache;
+   any_t*        cache;
    unsigned      flags;
 }hIniProfile;
 

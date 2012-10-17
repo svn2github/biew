@@ -49,7 +49,7 @@ unsigned               lmcount = 0;
 
 bool    __FASTCALL__ PMRegLowMemCallBack(LowMemCallBack func)
 {
-  void *new_ptr;
+  any_t*new_ptr;
   bool ret = false;
   if(lmcount < UINT_MAX)
   {
@@ -65,7 +65,7 @@ bool    __FASTCALL__ PMRegLowMemCallBack(LowMemCallBack func)
 
 bool  __FASTCALL__ PMUnregLowMemCallBack(LowMemCallBack func)
 {
-  void *new_ptr;
+  any_t*new_ptr;
   unsigned i,fidx;
   bool ret;
   fidx = UINT_MAX;
@@ -88,9 +88,9 @@ bool  __FASTCALL__ PMUnregLowMemCallBack(LowMemCallBack func)
   return ret;
 }
 
-void *           __FASTCALL__ PMalloc(size_t obj_size)
+any_t*           __FASTCALL__ PMalloc(size_t obj_size)
 {
-  void *ret;
+  any_t*ret;
   unsigned i;
   ret = malloc(obj_size);
   if(!ret)
@@ -107,9 +107,9 @@ void *           __FASTCALL__ PMalloc(size_t obj_size)
   return ret;
 }
 
-void *           __FASTCALL__ PRealloc(void *ptr,size_t obj_size)
+any_t*           __FASTCALL__ PRealloc(any_t*ptr,size_t obj_size)
 {
-  void *ret;
+  any_t*ret;
   unsigned i;
   ret = realloc(ptr,obj_size);
   if(!ret)
@@ -126,7 +126,7 @@ void *           __FASTCALL__ PRealloc(void *ptr,size_t obj_size)
   return ret;
 }
 
-void             __FASTCALL__ PFree(void *ptr)
+void             __FASTCALL__ PFree(any_t*ptr)
 {
   free(ptr);
 }

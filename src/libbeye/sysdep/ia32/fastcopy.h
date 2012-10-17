@@ -5,12 +5,12 @@
 #include <stddef.h>
 #include <string.h>
 
-extern void * (*fast_memcpy_ptr)(void * to, const void * from, size_t len);
+extern any_t* (*fast_memcpy_ptr)(any_t* to, const any_t* from, size_t len);
 #ifdef memcpy
 #undef memcpy
 #endif
 #define memcpy(a,b,c) (*fast_memcpy_ptr)(a,b,c)
-extern void * (*fast_memset_ptr)(void * to, int filler, size_t len);
+extern any_t* (*fast_memset_ptr)(any_t* to, int filler, size_t len);
 #ifdef memset
 #undef memset
 #endif

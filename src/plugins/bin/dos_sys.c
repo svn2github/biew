@@ -87,7 +87,7 @@ static bool  __FASTCALL__ dossys_check_fmt( void )
   bmReadBufferEx(id,sizeof(id),0,BM_SEEK_SET);
   if(id[0] == 0xFF && id[1] == 0xFF && id[2] == 0xFF && id[3] == 0xFF)
   {
-     bmReadBufferEx((void  *)&drv,sizeof(DOSDRIVER),4,BM_SEEK_SET);
+     bmReadBufferEx((any_t*)&drv,sizeof(DOSDRIVER),4,BM_SEEK_SET);
      ret = true;
   }
   return ret;

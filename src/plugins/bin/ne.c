@@ -217,7 +217,7 @@ static void (__NEAR__ * nephead[])( void ) =
   PaintNewHeaderNE_2
 };
 
-static void __FASTCALL__ PaintNewHeaderNE(TWindow * win,const void **ptr,unsigned npage,unsigned tpage)
+static void __FASTCALL__ PaintNewHeaderNE(TWindow * win,const any_t**ptr,unsigned npage,unsigned tpage)
 {
   char text[80];
   UNUSED(ptr);
@@ -270,7 +270,7 @@ static void __NEAR__ __FASTCALL__ paintdummyentryNE( void )
     twPrintF("   Entry point not present ( Dummy bungle )");
 }
 
-static void __FASTCALL__ SegPaintNE(TWindow * win,const void ** names,unsigned start,unsigned nlist)
+static void __FASTCALL__ SegPaintNE(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
 {
  char buffer[81];
  const SEGDEF ** nam = (const SEGDEF **)names;
@@ -322,7 +322,7 @@ static void __FASTCALL__ SegPaintNE(TWindow * win,const void ** names,unsigned s
  twRefreshFullWin(win);
 }
 
-static void __FASTCALL__ EntPaintNE(TWindow * win,const void ** names,unsigned start,unsigned nlist)
+static void __FASTCALL__ EntPaintNE(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
 {
  char buffer[81];
  const ENTRY ** nam = (const ENTRY **)names;
@@ -503,7 +503,7 @@ static unsigned __FASTCALL__ RNameReadFull(BGLOBAL handle,char * names,unsigned 
    }
  }
  length = bioReadByte(handle);
- bioReadBuffer(handle,(void *)names,length);
+ bioReadBuffer(handle,(any_t*)names,length);
  names[length] = 0;
  Ordinal = bioReadWord(handle);
  RNRprevind = nindex;
@@ -654,7 +654,7 @@ static bool __FASTCALL__ ReadSegDefNE(SEGDEF * obj,unsigned segnum)
   handle = ne_cache3;
   if(segnum > ne.neSegmentTableCount || !segnum) return false;
   bioSeek(handle,(__fileoff_t)headshift + ne.neOffsetSegmentTable + (segnum - 1)*sizeof(SEGDEF),BM_SEEK_SET);
-  bioReadBuffer(handle,(void *)obj,sizeof(SEGDEF));
+  bioReadBuffer(handle,(any_t*)obj,sizeof(SEGDEF));
   return true;
 }
 
@@ -707,7 +707,7 @@ static __filesize_t __FASTCALL__ ShowSegDefNE( void )
  if(__ReadSegTableNE(handle,obj,nnames))
  {
     int i;
-    i = PageBox(65,17,(const void **)obj->data,obj->nItems,SegPaintNE) + 1;
+    i = PageBox(65,17,(const any_t**)obj->data,obj->nItems,SegPaintNE) + 1;
     if(i > 0)
     {
       fpos = ((__filesize_t)((const SEGDEF *)obj->data[i-1])->sdOffset)<<ne.neLogicalSectorShiftCount;
@@ -777,7 +777,7 @@ static __filesize_t __FASTCALL__ ShowEntriesNE( void )
  if(__ReadEntryTableNE(handle,obj))
  {
   int i;
-    i = PageBox(50,6,(const void **)obj->data,obj->nItems,EntPaintNE) + 1;
+    i = PageBox(50,6,(const any_t**)obj->data,obj->nItems,EntPaintNE) + 1;
     if(i > 0)  fpos = CalcEntryNE(i,true);
  }
  ma_Destroy(obj);
@@ -1272,7 +1272,7 @@ static unsigned long __FASTCALL__ AppendNERef(char *str,__filesize_t ulShift,int
             {
               rne->idx    = __findSpecType(CurrSegmentStart,CurrSegmentLength,i + 1,ulShift,codelen,2,rne->idx);
             }
-            return BuildReferStrNE(str,(void *)rne,flags,ulShift);
+            return BuildReferStrNE(str,(any_t*)rne,flags,ulShift);
          }
          else
          {

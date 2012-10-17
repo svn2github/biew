@@ -159,7 +159,7 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x,tAbsCoord y,const tvioBuff *buff,un
   }
   else resbuff = small_buffer;
   __INTERLEAVE_BUFFERS(len, resbuff, buff->chars, buff->attrs);
-  VioWrtCellStr((void *)resbuff,len<<1,y,x,0);
+  VioWrtCellStr((any_t*)resbuff,len<<1,y,x,0);
   if(resbuff != small_buffer) free(resbuff);
 #else
   uint16_t small_buffer[__TVIO_MAXSCREENWIDTH];
@@ -169,7 +169,7 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x,tAbsCoord y,const tvioBuff *buff,un
   {
     remaind = min(tvioWidth,len);
     __INTERLEAVE_BUFFERS(remaind, small_buffer, &buff->chars[i], &buff->attrs[i]);
-    VioWrtCellStr((void *)small_buffer,remaind<<1,y,x,0);
+    VioWrtCellStr((any_t*)small_buffer,remaind<<1,y,x,0);
     len -= remaind;
     i += tvioWidth;
     y++;
@@ -194,7 +194,7 @@ void __FASTCALL__ __vioReadBuff(tAbsCoord x,tAbsCoord y,tvioBuff *buff,unsigned 
   }
   else resbuff = small_buffer;
   rsize = len << 1;
-  VioReadCellStr((void *)resbuff,(USHORT *)&rsize,y,x,0);
+  VioReadCellStr((any_t*)resbuff,(USHORT *)&rsize,y,x,0);
   for(i = 0;i < len;i++)
   {
     buff->attrs[i] = ((uint8_t *)resbuff)[i+i+1];
@@ -209,7 +209,7 @@ void __FASTCALL__ __vioReadBuff(tAbsCoord x,tAbsCoord y,tvioBuff *buff,unsigned 
   {
     remaind = min(tvioWidth,len);
     rsize = remaind << 1;
-    VioReadCellStr((void *)small_buffer,(USHORT *)&rsize,y+j,x,0);
+    VioReadCellStr((any_t*)small_buffer,(USHORT *)&rsize,y+j,x,0);
     for(i = 0;i < len;i++)
     {
       idx = j*tvioWidth+i;

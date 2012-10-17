@@ -49,12 +49,12 @@ static inline void winInternalError( void ) { (void)0xFFFFFFFF; };
 static bool __NEAR__ __FASTCALL__ test_win(TWindow *win)
 {
  bool ret;
- ret = *((void **)(win->body.chars + win->wsize)) == win->body.chars &&
-       *((void **)(win->body.oem_pg + win->wsize)) == win->body.oem_pg &&
-       *((void **)(win->body.attrs + win->wsize)) == win->body.attrs &&
-       *((void **)(win->saved.chars + win->wsize)) == win->saved.chars &&
-       *((void **)(win->saved.oem_pg + win->wsize)) == win->saved.oem_pg &&
-       *((void **)(win->saved.attrs + win->wsize)) == win->saved.attrs ? true : false;
+ ret = *((any_t**)(win->body.chars + win->wsize)) == win->body.chars &&
+       *((any_t**)(win->body.oem_pg + win->wsize)) == win->body.oem_pg &&
+       *((any_t**)(win->body.attrs + win->wsize)) == win->body.attrs &&
+       *((any_t**)(win->saved.chars + win->wsize)) == win->saved.chars &&
+       *((any_t**)(win->saved.oem_pg + win->wsize)) == win->saved.oem_pg &&
+       *((any_t**)(win->saved.attrs + win->wsize)) == win->saved.attrs ? true : false;
  return ret;
 }
 #define CHECK_WINS(x) { if(!test_win(x)) winInternalError(); }
@@ -642,7 +642,7 @@ static TWindow * __NEAR__ __FASTCALL__ makewin(tAbsCoord x1, tAbsCoord y1, tAbsC
     win->wheight = height;
     if(!(win->body.chars = PMalloc(size*sizeof(t_vchar)
 #ifndef NDEBUG
-                                   +sizeof(void *)
+                                   +sizeof(any_t*)
 #endif
       )))
     {
@@ -652,7 +652,7 @@ static TWindow * __NEAR__ __FASTCALL__ makewin(tAbsCoord x1, tAbsCoord y1, tAbsC
     }
     if(!(win->body.oem_pg = PMalloc(size*sizeof(t_vchar)
 #ifndef NDEBUG
-                                   +sizeof(void *)
+                                   +sizeof(any_t*)
 #endif
       )))
     {
@@ -662,7 +662,7 @@ static TWindow * __NEAR__ __FASTCALL__ makewin(tAbsCoord x1, tAbsCoord y1, tAbsC
     }
     if(!(win->body.attrs = PMalloc(size*sizeof(ColorAttr)
 #ifndef NDEBUG
-                                   +sizeof(void *)
+                                   +sizeof(any_t*)
 #endif
       )))
     {
@@ -672,7 +672,7 @@ static TWindow * __NEAR__ __FASTCALL__ makewin(tAbsCoord x1, tAbsCoord y1, tAbsC
     }
     if(!(win->saved.chars = PMalloc(size*sizeof(t_vchar)
 #ifndef NDEBUG
-                                   +sizeof(void *)
+                                   +sizeof(any_t*)
 #endif
       )))
     {
@@ -682,7 +682,7 @@ static TWindow * __NEAR__ __FASTCALL__ makewin(tAbsCoord x1, tAbsCoord y1, tAbsC
     }
     if(!(win->saved.oem_pg = PMalloc(size*sizeof(t_vchar)
 #ifndef NDEBUG
-                                   +sizeof(void *)
+                                   +sizeof(any_t*)
 #endif
       )))
     {
@@ -692,7 +692,7 @@ static TWindow * __NEAR__ __FASTCALL__ makewin(tAbsCoord x1, tAbsCoord y1, tAbsC
     }
     if(!(win->saved.attrs = PMalloc(size*sizeof(ColorAttr)
 #ifndef NDEBUG
-                                   +sizeof(void *)
+                                   +sizeof(any_t*)
 #endif
       )))
     {
@@ -700,12 +700,12 @@ static TWindow * __NEAR__ __FASTCALL__ makewin(tAbsCoord x1, tAbsCoord y1, tAbsC
       goto bye4;
     }
 #ifndef NDEBUG
-    *((void **)(win->body.chars + size)) = win->body.chars;
-    *((void **)(win->saved.chars + size)) = win->saved.chars;
-    *((void **)(win->body.oem_pg + size)) = win->body.oem_pg;
-    *((void **)(win->saved.oem_pg + size)) = win->saved.oem_pg;
-    *((void **)(win->body.attrs + size)) = win->body.attrs;
-    *((void **)(win->saved.attrs + size)) = win->saved.attrs;
+    *((any_t**)(win->body.chars + size)) = win->body.chars;
+    *((any_t**)(win->saved.chars + size)) = win->saved.chars;
+    *((any_t**)(win->body.oem_pg + size)) = win->body.oem_pg;
+    *((any_t**)(win->saved.oem_pg + size)) = win->saved.oem_pg;
+    *((any_t**)(win->body.attrs + size)) = win->body.attrs;
+    *((any_t**)(win->saved.attrs + size)) = win->saved.attrs;
 #endif
     win->X1 = x1;
     win->Y1 = y1;
@@ -1265,7 +1265,7 @@ static tRelCoord __NEAR__ __FASTCALL__ calc_title_off(tTitleMode mode,unsigned w
 #define DO_OEM_PG(ch) ((active->flags & TWS_NLSOEM) == TWS_NLSOEM ? NLS_IS_OEMPG(ch) ? ch : 0 : 0)
 
 static void __NEAR__ __FASTCALL__ __draw_frame( tRelCoord xs, tRelCoord ys, tRelCoord xe, tRelCoord ye,
-                                   const void *_frame, DefColor color)
+                                   const any_t*_frame, DefColor color)
 {
  unsigned i;
  ColorAttr cfr,csel;
@@ -1601,7 +1601,7 @@ void __FASTCALL__ twResizeWin(TWindow *win,tAbsCoord width,tAbsCoord height)
   size = width*height;
   if(!(newbody.chars = PMalloc(size*sizeof(t_vchar)
 #ifndef NDEBUG
-                               +sizeof(void *)
+                               +sizeof(any_t*)
 #endif
     )))
   {
@@ -1610,7 +1610,7 @@ void __FASTCALL__ twResizeWin(TWindow *win,tAbsCoord width,tAbsCoord height)
   }
   if(!(newbody.oem_pg = PMalloc(size*sizeof(t_vchar)
 #ifndef NDEBUG
-                               +sizeof(void *)
+                               +sizeof(any_t*)
 #endif
     )))
   {
@@ -1620,7 +1620,7 @@ void __FASTCALL__ twResizeWin(TWindow *win,tAbsCoord width,tAbsCoord height)
   }
   if(!(newbody.attrs = PMalloc(size*sizeof(ColorAttr)
 #ifndef NDEBUG
-                               +sizeof(void *)
+                               +sizeof(any_t*)
 #endif
     )))
   {
@@ -1628,9 +1628,9 @@ void __FASTCALL__ twResizeWin(TWindow *win,tAbsCoord width,tAbsCoord height)
     goto bye1;
   }
 #ifndef NDEBUG
-  *((void **)(newbody.chars + size)) = newbody.chars;
-  *((void **)(newbody.oem_pg + size)) = newbody.oem_pg;
-  *((void **)(newbody.attrs + size)) = newbody.attrs;
+  *((any_t**)(newbody.chars + size)) = newbody.chars;
+  *((any_t**)(newbody.oem_pg + size)) = newbody.oem_pg;
+  *((any_t**)(newbody.attrs + size)) = newbody.attrs;
 #endif
   oldw = win->wwidth;
   oldh = win->wheight;
@@ -1677,12 +1677,12 @@ void __FASTCALL__ twResizeWin(TWindow *win,tAbsCoord width,tAbsCoord height)
   win->wheight = height;
   if(!(win->saved.chars = PMalloc(win->wsize*sizeof(t_vchar)
 #ifndef NDEBUG
-                               +sizeof(void *)
+                               +sizeof(any_t*)
 #endif
     )))  goto bye0;
   if(!(win->saved.oem_pg = PMalloc(win->wsize*sizeof(t_vchar)
 #ifndef NDEBUG
-                               +sizeof(void *)
+                               +sizeof(any_t*)
 #endif
     )))
   {
@@ -1692,7 +1692,7 @@ void __FASTCALL__ twResizeWin(TWindow *win,tAbsCoord width,tAbsCoord height)
   }
   if(!(win->saved.attrs = PMalloc(win->wsize*sizeof(ColorAttr)
 #ifndef NDEBUG
-                               +sizeof(void *)
+                               +sizeof(any_t*)
 #endif
     )))
   {
@@ -1703,9 +1703,9 @@ void __FASTCALL__ twResizeWin(TWindow *win,tAbsCoord width,tAbsCoord height)
   PFREE(win->body.oem_pg);
   PFREE(win->body.attrs);
 #ifndef NDEBUG
-  *((void **)(win->saved.chars + win->wsize)) = win->saved.chars;
-  *((void **)(win->saved.oem_pg + win->wsize)) = win->saved.oem_pg;
-  *((void **)(win->saved.attrs + win->wsize)) = win->saved.attrs;
+  *((any_t**)(win->saved.chars + win->wsize)) = win->saved.chars;
+  *((any_t**)(win->saved.oem_pg + win->wsize)) = win->saved.oem_pg;
+  *((any_t**)(win->saved.attrs + win->wsize)) = win->saved.attrs;
 #endif
   win->body = newbody;
   win->X2 = win->X1 + width;
@@ -1956,7 +1956,7 @@ int __FASTCALL__ twPrintF(const char *fmt,...)
   return ret;
 }
 
-int __FASTCALL__ twDirectWrite(tRelCoord x, tRelCoord y,const void *str,unsigned len)
+int __FASTCALL__ twDirectWrite(tRelCoord x, tRelCoord y,const any_t*str,unsigned len)
 {
   unsigned i,rlen,ioff;
   const char *__nls = NULL,*__oem = NULL;
@@ -1993,7 +1993,7 @@ int __FASTCALL__ twDirectWrite(tRelCoord x, tRelCoord y,const void *str,unsigned
 
 void __FASTCALL__ twWriteBuffer(TWindow *win,tRelCoord x,tRelCoord y,const tvioBuff *buff,unsigned len)
 {
-  const void *pbuff;
+  const any_t*pbuff;
   unsigned rlen,i,loop_len;
   char nbuff[__TVIO_MAXSCREENWIDTH];
   rlen = (unsigned)x+len > win->wwidth ? win->wwidth-(unsigned)x+1 : len;
@@ -2074,11 +2074,11 @@ void __FASTCALL__ twRefreshFullWin(TWindow *win)
   paint_cursor();
 }
 
-void * __FASTCALL__ twGetUsrData(TWindow *win) { return win->usrData; }
+any_t* __FASTCALL__ twGetUsrData(TWindow *win) { return win->usrData; }
 
-void * __FASTCALL__ twSetUsrData(TWindow *win,void *data)
+any_t* __FASTCALL__ twSetUsrData(TWindow *win,any_t*data)
 {
-  void *ret;
+  any_t*ret;
   ret = win->usrData;
   win->usrData = data;
   return ret;
@@ -2204,7 +2204,7 @@ void __FASTCALL__ twScrollWinRt(TWindow *win,tRelCoord xpos, unsigned npos)
   }
 }
 
-long __FASTCALL__ twinSendMessage(TWindow *win,unsigned event,unsigned long event_param, void *event_data)
+long __FASTCALL__ twinSendMessage(TWindow *win,unsigned event,unsigned long event_param, any_t*event_data)
 {
     if(win->method) return ((twClassFunc)(win->method))(win,event,event_param,event_data);
     return 0L;

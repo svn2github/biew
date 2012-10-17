@@ -76,14 +76,14 @@ void __FASTCALL__ termCodeGuider( void )
       for removing difference keys for same locations of jump
    */
 
-static char __FASTCALL__ gidGetAddressKey( unsigned index )
+static char __FASTCALL__ gidGetAddressKey( unsigned _index )
 {
   int i,j;
   char key;
   bool found;
   __filesize_t addr1,addr2;
   key = 0;
-  addr1 = GoAddr[index];
+  addr1 = GoAddr[_index];
   for (i = 0;i <= GoAddrPtr;i++)
   {
     addr2 = GoAddr[i];
@@ -105,13 +105,13 @@ static char __FASTCALL__ gidGetAddressKey( unsigned index )
 
 static int __FASTCALL__ gidGetKeyIndex( char key )
 {
-  int res,i,j,index;
+  int res,i,j,_index;
   bool found;
   __filesize_t addr;
   if (key > 'Z') key = key - 'z' + 'Z';
   key = key > '9' ? key - 'A' + 10 : key - '0';
   res = GoAddrPtr + 1;
-  index = 0;
+  _index = 0;
   for (i = 0;i <= GoAddrPtr;i++)
   {
     addr = GoAddr[i];
@@ -125,8 +125,8 @@ static int __FASTCALL__ gidGetKeyIndex( char key )
         break;
       }
     }
-    if (i > 0 && !found) index++;
-    if (index == key)
+    if (i > 0 && !found) _index++;
+    if (_index == key)
     {
       res = i;
       break;

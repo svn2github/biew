@@ -19,11 +19,12 @@
 %define prefix	/usr
 %define bindir	%{prefix}/bin
 %define datadir	%{prefix}/share
+%define docdir	%{prefix}/doc
 %define mandir	%{datadir}/man
 
 Name:		%{name}
 Version:	%{version}
-Release:	%{release}
+Release:	%{release}_%_target_os
 Prefix:		%{prefix}
 Summary:	console hex viewer/editor and disassembler
 Copyright:	GPL
@@ -74,8 +75,8 @@ export PKG_CONFIG_PATH=%{pkg_config_path}
 DESTDIR=$RPM_BUILD_ROOT CC=%{gcc} ./configure --prefix=%{prefix} --host=%{host}
 make
 
-./configure --prefix=%{prefix}
-make
+#./configure --prefix=%{prefix}
+#make
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -86,11 +87,14 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-%doc doc/beye.txt doc/ru/beye.txt doc/unix.txt doc/release.txt
-
+%attr(0755,root,root) %{bindir}/%{name}
+%{docdir}/%{name}/beye.txt
+%{docdir}/%{name}/ru/beye.txt
+%{docdir}/%{name}/unix.txt
+%{docdir}/%{name}/release.txt
 %{bindir}/%{name}
 %{datadir}/%{name}/*
-%{mandir}/man?/%{name}.1*
+%{mandir}/man1/%{name}.1
 
 %changelog
 * Sat Feb 27 2010 Nickols_K <nickols_k@mail.ru> beye-1.0.0

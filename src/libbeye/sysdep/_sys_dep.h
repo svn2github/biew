@@ -64,7 +64,7 @@ __inline static uint8_t __FASTCALL__ __CONSTFUNC__ __Xlat__(const uint8_t *_tabl
                      * @param cbBuff          size of buffer
                      * @see                   memlwr
                     **/
-extern void __FASTCALL__ memupr(void *buffer,unsigned cb_buffer);
+extern void __FASTCALL__ memupr(any_t*buffer,unsigned cb_buffer);
 
                    /** Converts all alphabetic characters in buffer to lower case.
                      * @return                none
@@ -72,7 +72,7 @@ extern void __FASTCALL__ memupr(void *buffer,unsigned cb_buffer);
                      * @param cbBuff          size of buffer
                      * @see                   memlwr
                     **/
-extern void __FASTCALL__ memlwr(void *buffer,unsigned cb_buffer);
+extern void __FASTCALL__ memlwr(any_t*buffer,unsigned cb_buffer);
 
 #if defined(__GLIBC__) || defined (__UNIX__)
 #define strupr(s) memupr(s,strlen(s)) /**< C library of *nix systems lacks strupr function */

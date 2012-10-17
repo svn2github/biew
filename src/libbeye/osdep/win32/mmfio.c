@@ -82,7 +82,7 @@ typedef struct
 {
     uint32_t   ulFlags;
     HANDLE    fhandle;
-    void *    pData;
+    any_t*    pData;
     ADRSIZE   ulSize;
 } MMFENTRY;
 
@@ -94,7 +94,7 @@ MMFENTRY mmfTable[MMF_MAX];
 
 /* Local functions implementation */
 
-static PMMF __FASTCALL__ Locate(void *addr)
+static PMMF __FASTCALL__ Locate(any_t*addr)
 {
     unsigned i;
     for(i = 0; i < MMF_MAX; i++)
@@ -136,11 +136,11 @@ LONG CALLBACK apiPageFaultHandler(LPEXCEPTION_POINTERS excpt)
     if(per->ExceptionCode == EXCEPTION_ACCESS_VIOLATION)
     {
         PMMF     pMMF   = 0;
-        void *   pPage  = 0;
+        any_t*   pPage  = 0;
         ULONG ulSize = PAG_SIZE;
-        if(!(pMMF = Locate((void *)per->ExceptionInformation[1])))
+        if(!(pMMF = Locate((any_t*)per->ExceptionInformation[1])))
             return EXCEPTION_CONTINUE_SEARCH;
-        pPage = (void *)((ADRSIZE)per->ExceptionInformation[1] & PAG_MASK);
+        pPage = (any_t*)((ADRSIZE)per->ExceptionInformation[1] & PAG_MASK);
 
         /* Query affected page flags */
         if(VirtualQuery(pPage, &mbi, sizeof(MEMORY_BASIC_INFORMATION)) != 
@@ -242,7 +242,7 @@ static int __FASTCALL__ DosUpdateMMF(PMMF pMMF,ADRSIZE length)
 
 static int __FASTCALL__ DosReallocMMF(PMMF pMMF,ADRSIZE new_length)
 {
-    void *  newData = 0;
+    any_t*  newData = 0;
     /*
        Since Win32 does not have VirtualRealloc we must perform this stupid
        operation. But it help us to avoid rereading information from disk.
@@ -267,7 +267,7 @@ mmfHandle          __FASTCALL__ __mmfOpen(const char *fname,int mode)
 {
   ADRSIZE    flength;
   bhandle_t  fhandle;
-  void * pData = 0;
+  any_t* pData = 0;
   PMMF   pMMF  = 0;
 
 /* Locate free entry in table */
@@ -381,7 +381,7 @@ void               __FASTCALL__ __mmfClose(mmfHandle mh)
     mrec->ulSize    = 0;
 }
 
-void *             __FASTCALL__ __mmfAddress(mmfHandle mh)
+any_t*             __FASTCALL__ __mmfAddress(mmfHandle mh)
 {
   return ((PMMF)mh)->pData;
 }
@@ -415,7 +415,7 @@ bool             __FASTCALL__ __mmfIsWorkable( void ) { return true; }
 
 struct mmfRecord
 {
-   void *    addr;
+   any_t*    addr;
    long      length;
    bhandle_t fhandle;
    int       mode;
@@ -456,7 +456,7 @@ mmfHandle          __FASTCALL__ __mmfOpen(const char *fname,int mode)
       if(mret)
       {
         HANDLE fmapping;
-        void *addr;
+        any_t*addr;
         fmapping = CreateFileMapping((HANDLE)fhandle,NULL,mk_prot(mode),0L,length,NULL);
         if(fmapping)
         {
@@ -552,7 +552,7 @@ void               __FASTCALL__ __mmfClose(mmfHandle mh)
   PFree(mrec);
 }
 
-void *             __FASTCALL__ __mmfAddress(mmfHandle mh)
+any_t*             __FASTCALL__ __mmfAddress(mmfHandle mh)
 {
   return ((struct mmfRecord *)mh)->addr;
 }

@@ -61,21 +61,21 @@ static inline uint8_t	__FASTCALL__ BMReadByte( void ) { return bioReadByte(bm_fi
 static inline uint16_t	__FASTCALL__ BMReadWord( void ) { return bioReadWord(bm_file_handle); }
 static inline uint32_t	__FASTCALL__ BMReadDWord( void ) { return bioReadDWord(bm_file_handle); }
 static inline uint64_t	__FASTCALL__ BMReadQWord( void ) { return bioReadQWord(bm_file_handle); }
-static inline bool	__FASTCALL__ BMReadBuffer(void  * buffer,unsigned len) { return bioReadBuffer(bm_file_handle,buffer,len); }
+static inline bool	__FASTCALL__ BMReadBuffer(any_t* buffer,unsigned len) { return bioReadBuffer(bm_file_handle,buffer,len); }
 uint8_t        __FASTCALL__ BMReadByteEx(__fileoff_t pos,int RELATION);
 uint16_t       __FASTCALL__ BMReadWordEx(__fileoff_t pos,int RELATION);
 uint32_t       __FASTCALL__ BMReadDWordEx(__fileoff_t pos,int RELATION);
 uint64_t       __FASTCALL__ BMReadQWordEx(__fileoff_t pos,int RELATION);
-bool         __FASTCALL__ BMReadBufferEx(void  * buffer,unsigned len,__fileoff_t pos,int RELATION);
+bool         __FASTCALL__ BMReadBufferEx(any_t* buffer,unsigned len,__fileoff_t pos,int RELATION);
 static inline bool	__FASTCALL__ BMWriteByte(uint8_t byte) { return bioWriteByte(bm_file_handle,byte); }
 static inline bool	__FASTCALL__ BMWriteWord(uint16_t word) { return bioWriteWord(bm_file_handle,word); }
 static inline bool	__FASTCALL__ BMWriteDWord(uint32_t dword) { return bioWriteDWord(bm_file_handle,dword); }
 static inline bool	__FASTCALL__ BMWriteQWord(uint64_t qword) { return bioWriteQWord(bm_file_handle,qword); }
-bool		__FASTCALL__ BMWriteBuff(void* buff,unsigned len);
+bool		__FASTCALL__ BMWriteBuff(any_t* buff,unsigned len);
 bool		__FASTCALL__ BMWriteByteEx(__fileoff_t pos,int RELATION,uint8_t byte);
 bool		__FASTCALL__ BMWriteWordEx(__fileoff_t pos,int RELATION,uint16_t word);
 bool		__FASTCALL__ BMWriteDWordEx(__fileoff_t pos,int RELATION,uint32_t dword);
-bool		__FASTCALL__ BMWriteBuffEx(__fileoff_t pos,int RELATION,void  * buff,unsigned len);
+bool		__FASTCALL__ BMWriteBuffEx(__fileoff_t pos,int RELATION,any_t* buff,unsigned len);
 
 /** Below analogs with using small cache size */
 
@@ -86,12 +86,12 @@ static inline uint8_t	__FASTCALL__ bmReadByte( void ) { return bioReadByte(sc_bm
 static inline uint16_t	__FASTCALL__ bmReadWord( void ) { return bioReadWord(sc_bm_file_handle); }
 static inline uint32_t	__FASTCALL__ bmReadDWord( void ) { return bioReadDWord(sc_bm_file_handle); }
 static inline uint64_t	__FASTCALL__ bmReadQWord( void ) { return bioReadQWord(sc_bm_file_handle); }
-static inline bool	__FASTCALL__ bmReadBuffer(void  * buffer,unsigned len) { return bioReadBuffer(sc_bm_file_handle,buffer,len); }
+static inline bool	__FASTCALL__ bmReadBuffer(any_t* buffer,unsigned len) { return bioReadBuffer(sc_bm_file_handle,buffer,len); }
 uint8_t        __FASTCALL__ bmReadByteEx(__fileoff_t pos,int RELATION);
 uint16_t       __FASTCALL__ bmReadWordEx(__fileoff_t pos,int RELATION);
 uint32_t       __FASTCALL__ bmReadDWordEx(__fileoff_t pos,int RELATION);
 uint64_t       __FASTCALL__ bmReadQWordEx(__fileoff_t pos,int RELATION);
-bool         __FASTCALL__ bmReadBufferEx(void  * buffer,unsigned len,__fileoff_t pos,int RELATION);
+bool         __FASTCALL__ bmReadBufferEx(any_t* buffer,unsigned len,__fileoff_t pos,int RELATION);
 static inline bhandle_t	__FASTCALL__ bmHandle( void ) { return bioHandle(sc_bm_file_handle); }
 static inline BGLOBAL	__FASTCALL__ bmbioHandle( void ) { return sc_bm_file_handle; }
 static inline char *	__FASTCALL__ bmName( void ) { return bioFileName(sc_bm_file_handle); }
@@ -103,12 +103,12 @@ static inline bool	__FASTCALL__ bmWriteByte(uint8_t byte) { return bioWriteByte(
 static inline bool	__FASTCALL__ bmWriteWord(uint16_t word) { return bioWriteWord(sc_bm_file_handle,word); }
 static inline bool	__FASTCALL__ bmWriteDWord(uint32_t dword) { return bioWriteDWord(sc_bm_file_handle,dword); }
 static inline bool	__FASTCALL__ bmWriteQWord(uint64_t qword) { return bioWriteQWord(sc_bm_file_handle,qword); }
-bool          __FASTCALL__ bmWriteBuff(void  * buff,unsigned len);
+bool          __FASTCALL__ bmWriteBuff(any_t* buff,unsigned len);
 bool          __FASTCALL__ bmWriteByteEx(__fileoff_t pos,int RELATION,uint8_t byte);
 bool          __FASTCALL__ bmWriteWordEx(__fileoff_t pos,int RELATION,uint16_t word);
 bool          __FASTCALL__ bmWriteDWordEx(__fileoff_t pos,int RELATION,uint32_t dword);
 bool          __FASTCALL__ bmWriteQWordEx(__fileoff_t pos,int RELATION,uint64_t dword);
-bool          __FASTCALL__ bmWriteBuffEx(__fileoff_t pos,int RELATION,void  * buff,unsigned len);
+bool          __FASTCALL__ bmWriteBuffEx(__fileoff_t pos,int RELATION,any_t* buff,unsigned len);
 
 #ifdef __cplusplus
 }

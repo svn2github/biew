@@ -1173,7 +1173,7 @@ add_cflags "-fprofile-arcs -ftest-coverage"
 add_extralibs "-lgcov"
 fi
 else
-  is_in_cflags "-O3" || add_cflags "-O3"
+  is_in_cflags "-O2" || add_cflags "-O2"
   mips   || check_cflags "-pipe"
   x86_32 && check_cflags "-fomit-frame-pointer"
 # -fomit-frame-pointer is not needed for x86_64

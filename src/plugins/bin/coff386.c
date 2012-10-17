@@ -103,7 +103,7 @@ static __filesize_t __FASTCALL__ coff386_PA2VA(__filesize_t pa)
 }
 
 
-static void __FASTCALL__ coffObjPaint(TWindow * win,const void ** names,unsigned start,unsigned nlist)
+static void __FASTCALL__ coffObjPaint(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
 {
  char buffer[81];
  const SCNHDR ** obj = (const SCNHDR **)names;
@@ -175,7 +175,7 @@ static __filesize_t __FASTCALL__ coffShowObjects( void )
  if(__coffReadObjects(handle,obj,nnames))
  {
   int ret;
-    ret = PageBox(70,13,(const void **)obj->data,obj->nItems,coffObjPaint);
+    ret = PageBox(70,13,(const any_t**)obj->data,obj->nItems,coffObjPaint);
     if(ret != -1)  fpos = COFF_DWORD(((SCNHDR *)obj->data[ret])->s_scnptr);
  }
  ma_Destroy(obj);

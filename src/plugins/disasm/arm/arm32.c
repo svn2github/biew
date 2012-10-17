@@ -413,10 +413,10 @@ extern const char * arm_reg_name[];
 }
 
 void __FASTCALL__ arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
-					uint32_t opcode, unsigned flags,unsigned index)
+					uint32_t opcode, unsigned flags,unsigned _index)
 {
     unsigned i,idx,val,prev,bracket;
-    const char *msk=opcode_table[index].mask;
+    const char *msk=opcode_table[_index].mask;
     char *p;
     unsigned a_I,a_P,a_U,a_N,a_W;
     bool has_I,has_P,has_U,has_N,has_W;
@@ -480,7 +480,7 @@ void __FASTCALL__ arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
 	    strcat(dret->str,Get2Digit((val>>8)&0xF));
 	}
 	else {
-	    unsigned idx=(val>>4)&0x07;
+	    idx=(val>>4)&0x07;
 	    const char *pfx=NULL;
 	    switch(idx) {
 		default:
@@ -520,7 +520,7 @@ void __FASTCALL__ arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
     if(p) {
 	READ_IMM32('a');
 	if(has_I == true && a_I) {
-	    unsigned idx=(val>>4)&0x07;
+	    idx=(val>>4)&0x07;
 	    const char *pfx=NULL;
 	    switch(idx) {
 		default:

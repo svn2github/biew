@@ -127,7 +127,7 @@ static void __FASTCALL__ FillPrevAsmPage(__filesize_t bound,unsigned predist)
     DisasmRet dret;
        addr = distin + totallen;
        BMReadBufferEx(disCodeBuffer,disMaxCodeLen,addr,BM_SEEK_SET);
-       dret = Disassembler(distin,(void *)disCodeBuffer,__DISF_SIZEONLY);
+       dret = Disassembler(distin,(any_t*)disCodeBuffer,__DISF_SIZEONLY);
        if(addr >= bound) break;
        totallen += dret.codelen;
        if(j < height) PrevStrLenAddr[j] = addr;
@@ -216,7 +216,7 @@ static unsigned __FASTCALL__ drawAsm( unsigned keycode, unsigned textshift )
    disNeedRef = hexAddressResolv = 0;
    BMReadBufferEx(disCodeBuffer,disMaxCodeLen,cfpos,BM_SEEK_SET);
    DisasmPrepareMode = true;
-   dret = Disassembler(cfpos,(void *)disCodeBuffer,__DISF_SIZEONLY);
+   dret = Disassembler(cfpos,(any_t*)disCodeBuffer,__DISF_SIZEONLY);
    if(cfpos + dret.codelen != amocpos && cfpos && amocpos) keycode = KE_SUPERKEY;
    DisasmPrepareMode = false;
    disNeedRef = showref;
@@ -270,8 +270,8 @@ static unsigned __FASTCALL__ drawAsm( unsigned keycode, unsigned textshift )
      {
        len = cfpos + disMaxCodeLen < flen ? disMaxCodeLen : (int)(flen - cfpos);
        memset(disCodeBuffer,0,disMaxCodeLen);
-       BMReadBufferEx((void *)disCodeBuffer,len,cfpos,BM_SEEK_SET);
-       dret = Disassembler(cfpos,(void *)disCodeBuffer,__DISF_NORMAL);
+       BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,BM_SEEK_SET);
+       dret = Disassembler(cfpos,(any_t*)disCodeBuffer,__DISF_NORMAL);
        if(i == 0) CurrStrLen = dret.codelen;
        CurrStrLenBuff[i] = dret.codelen;
        twSetColorAttr(browser_cset.main);
@@ -553,7 +553,7 @@ static int __NEAR__ __FASTCALL__ FullAsmEdit(TWindow * ewnd)
  start = 0;
 
  rlen = (__filesize_t)edit_cp + max_buff_size < flen ? max_buff_size : (unsigned)(flen - edit_cp);
- BMReadBufferEx((void *)EditorMem.buff,rlen,edit_cp,BM_SEEK_SET);
+ BMReadBufferEx((any_t*)EditorMem.buff,rlen,edit_cp,BM_SEEK_SET);
  memcpy(EditorMem.save,EditorMem.buff,max_buff_size);
  memset(EditorMem.alen,TWC_DEF_FILLER,height);
 
@@ -628,7 +628,7 @@ static int __NEAR__ __FASTCALL__ FullAsmEdit(TWindow * ewnd)
                          if((bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE)) != &bNull)
                          {
                            bioSeek(bHandle,edit_cp,BIO_SEEK_SET);
-                           if(!bioWriteBuffer(bHandle,(void *)EditorMem.buff,rlen))
+                           if(!bioWriteBuffer(bHandle,(any_t*)EditorMem.buff,rlen))
                               errnoMessageBox(WRITE_FAIL,NULL,errno);
                            bioClose(bHandle);
                            BMReRead();
@@ -817,8 +817,8 @@ static __filesize_t __FASTCALL__ disSearch(TWindow *pwnd, __filesize_t start,
          len = cfpos + disMaxCodeLen < flen ? disMaxCodeLen : (int)(flen - cfpos);
          memset(disCodeBuffer,0,disMaxCodeLen);
          dfpos = cfpos;
-         BMReadBufferEx((void *)disCodeBuffer,len,cfpos,BM_SEEK_SET);
-         dret = Disassembler(cfpos,(void *)disCodeBuffer,__DISF_NORMAL);
+         BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,BM_SEEK_SET);
+         dret = Disassembler(cfpos,(any_t*)disCodeBuffer,__DISF_NORMAL);
          cfpos -= lw;
        }
        else break;
@@ -828,8 +828,8 @@ static __filesize_t __FASTCALL__ disSearch(TWindow *pwnd, __filesize_t start,
          len = cfpos + disMaxCodeLen < flen ? disMaxCodeLen : (int)(flen - cfpos);
          memset(disCodeBuffer,0,disMaxCodeLen);
          dfpos = cfpos;
-         BMReadBufferEx((void *)disCodeBuffer,len,cfpos,BM_SEEK_SET);
-         dret = Disassembler(cfpos,(void *)disCodeBuffer,__DISF_NORMAL);
+         BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,BM_SEEK_SET);
+         dret = Disassembler(cfpos,(any_t*)disCodeBuffer,__DISF_NORMAL);
          cfpos += dret.codelen;
          if(cfpos >= flen) break;
     }
@@ -926,7 +926,7 @@ void  __FASTCALL__ disSetModifier(char *str,const char *modf)
 }
 
 int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
-                     char codelen,void *defval,unsigned type)
+                     char codelen,any_t*defval,unsigned type)
 {
  unsigned long app;
  char comments[DISCOM_SIZE];
@@ -1013,21 +1013,21 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
         comments[0] = 0;
         if(dis_severity < DISCOMSEV_STRPTR)
         {
-          size_t index;
+          size_t _index;
           unsigned char rch;
-          index = 0;
+          _index = 0;
           strcat(comments,"->\"");
-          for(index = 3;index < sizeof(comments)-5;index++)
+          for(_index = 3;_index < sizeof(comments)-5;_index++)
           {
-            bmSeek(pa+index-3,BM_SEEK_SET);
+            bmSeek(pa+_index-3,BM_SEEK_SET);
             rch = bmReadByte();
-            if(isprint(rch)) comments[index] = rch;
+            if(isprint(rch)) comments[_index] = rch;
             else break;
           }
           if(!comments[3]) comments[0] = 0;
           else
           {
-            comments[index++] = '"'; comments[index] = 0;
+            comments[_index++] = '"'; comments[_index] = 0;
             dis_severity = DISCOMSEV_STRPTR;
             strcpy(dis_comments,comments);
           }

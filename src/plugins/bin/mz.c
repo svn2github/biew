@@ -223,8 +223,8 @@ static void __NEAR__ __FASTCALL__ BuildMZChain( void )
     unsigned off,seg,j;
     __filesize_t ptr;
     void __HUGE__ * tptr;
-    if(!CurrMZChain) tptr = PHMalloc(sizeof(void *));
-    else             tptr = PHRealloc(CurrMZChain,(CurrMZCount + 1)*sizeof(void *));
+    if(!CurrMZChain) tptr = PHMalloc(sizeof(any_t*));
+    else             tptr = PHRealloc(CurrMZChain,(CurrMZCount + 1)*sizeof(any_t*));
     if(!tptr) break;
     CurrMZChain = tptr;
     j = mz.mzTableOffset + i*4;
@@ -234,7 +234,7 @@ static void __NEAR__ __FASTCALL__ BuildMZChain( void )
     ptr = (((long)seg) << 4) + off + (((long)mz.mzHeaderSize) << 4);
     CurrMZChain[CurrMZCount++] = ptr;
   }
-  HQSort(CurrMZChain,CurrMZCount,sizeof(void *),compare_ptr);
+  HQSort(CurrMZChain,CurrMZCount,sizeof(any_t*),compare_ptr);
   bmSeek(fpos,BM_SEEK_SET);
   CloseWnd(w);
 }
@@ -299,7 +299,7 @@ static bool  __FASTCALL__ mz_check_fmt( void )
   if((id[0] == 'M' && id[1] == 'Z') ||
      (id[0] == 'Z' && id[1] == 'M'))
   {
-    bmReadBufferEx((void  *)&mz,sizeof(MZHEADER),2,BM_SEEK_SET);
+    bmReadBufferEx((any_t*)&mz,sizeof(MZHEADER),2,BM_SEEK_SET);
     HeadSize = ((unsigned long)mz.mzHeaderSize) << 4;
     ret = true;
   }

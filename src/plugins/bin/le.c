@@ -79,7 +79,7 @@ __filesize_t __FASTCALL__ CalcPageEntryLE(unsigned long pageidx)
   found = false;
   for(i = 0;i < lxe.le.lePageCount;i++)
   {
-    bioReadBuffer(handle,(void *)&mt,sizeof(LE_PAGE));
+    bioReadBuffer(handle,(any_t*)&mt,sizeof(LE_PAGE));
     if(bioEOF(handle)) break;
     if(mt.number == pageidx)
     {
@@ -87,7 +87,7 @@ __filesize_t __FASTCALL__ CalcPageEntryLE(unsigned long pageidx)
       break;
     }
   }
-  if(found) return __calcPageEntryLE((void *)&mt,pageidx - 1);
+  if(found) return __calcPageEntryLE((any_t*)&mt,pageidx - 1);
   else      return BMGetCurrFilePos();
 }
 
@@ -102,7 +102,7 @@ __filesize_t __FASTCALL__ CalcEntryPointLE(unsigned long objnum,__filesize_t _of
   handle = lx_cache;
   bioSeek(handle,lxe.le.leObjectTableOffset + headshift,SEEK_SET);
   bioSeek(handle,sizeof(LX_OBJECT)*(objnum - 1),SEEKF_CUR);
-  bioReadBuffer(handle,(void *)&lo,sizeof(LX_OBJECT));
+  bioReadBuffer(handle,(any_t*)&lo,sizeof(LX_OBJECT));
 /*  if((lo.o32_flags & 0x00002000L) == 0x00002000L) USE16 = 0;
   else                                            USE16 = 0xFF; */
   pageoff = lxe.le.leObjectPageMapTableOffset + headshift;
@@ -120,11 +120,11 @@ __filesize_t __FASTCALL__ CalcEntryPointLE(unsigned long objnum,__filesize_t _of
       found = false;
       for(j = 0;j < lxe.le.lePageCount;j++)
       {
-        bioReadBuffer(handle,(void *)&mt,sizeof(LE_PAGE));
+        bioReadBuffer(handle,(any_t*)&mt,sizeof(LE_PAGE));
         if((is_eof = bioEOF(handle)) != 0) break;
         if(mt.number == pidx) { found = true; break; }
       }
-      if(found) ret = __calcPageEntryLE((void *)&mt,pidx - 1) + _offset - start;
+      if(found) ret = __calcPageEntryLE((any_t*)&mt,pidx - 1) + _offset - start;
       else      ret = BMGetCurrFilePos();
       break;
     }
@@ -195,7 +195,7 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,boo
        {
          lxent.b32_obj = numobj;
          lxent.entry.e32_flags = bioReadByte(handle);
-         bioReadBuffer(handle,(void *)&lxent.entry.e32_variant,size);
+         bioReadBuffer(handle,(any_t*)&lxent.entry.e32_variant,size);
        }
        break;
      }

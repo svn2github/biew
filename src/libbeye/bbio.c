@@ -67,7 +67,7 @@ struct tagBFILE bNull =
 
 static bool __NEAR__ __FASTCALL__ __fill(BFILE  *obj,__fileoff_t pos)
 {
-  void * mbuff;
+  any_t* mbuff;
   __filesize_t remaind;
   bool ret;
   if(pos < 0) pos = 0;
@@ -92,7 +92,7 @@ static bool __NEAR__ __FASTCALL__ __fill(BFILE  *obj,__fileoff_t pos)
 
 static bool __NEAR__ __FASTCALL__ __flush(BFILE  *obj)
 {
-  void * mbuff;
+  any_t* mbuff;
   bool ret;
   ret = true;
   if(!obj->b.vfb.updated)
@@ -503,7 +503,7 @@ uint16_t __FASTCALL__ bioReadWord(BGLOBAL bioFile)
   uint16_t ret;
   if(IS_CACHE_VALID(obj) || obj->is_mmf)
   {
-    if(!__getbuff(obj,(void *)&ret,sizeof(uint16_t))) ret = -1;
+    if(!__getbuff(obj,(any_t*)&ret,sizeof(uint16_t))) ret = -1;
   }
   else
     if(__OsRead(obj->b.vfb.handle,&ret,sizeof(uint16_t)) != sizeof(uint16_t)) ret = -1;
@@ -516,7 +516,7 @@ uint32_t __FASTCALL__ bioReadDWord(BGLOBAL bioFile)
   uint32_t ret;
   if(IS_CACHE_VALID(obj) || obj->is_mmf)
   {
-    if(!__getbuff(obj,(void *)&ret,sizeof(uint32_t))) ret = -1;
+    if(!__getbuff(obj,(any_t*)&ret,sizeof(uint32_t))) ret = -1;
   }
   else
     if(__OsRead(obj->b.vfb.handle,&ret,sizeof(uint32_t)) != sizeof(uint32_t)) ret = -1;
@@ -529,14 +529,14 @@ uint64_t __FASTCALL__ bioReadQWord(BGLOBAL bioFile)
   uint64_t ret;
   if(IS_CACHE_VALID(obj) || obj->is_mmf)
   {
-    if(!__getbuff(obj,(void *)&ret,sizeof(uint64_t))) ret = -1;
+    if(!__getbuff(obj,(any_t*)&ret,sizeof(uint64_t))) ret = -1;
   }
   else
     if(__OsRead(obj->b.vfb.handle,&ret,sizeof(uint64_t)) != sizeof(uint64_t)) ret = -1;
   return ret;
 }
 
-bool __FASTCALL__  bioReadBuffer(BGLOBAL bioFile,void * buffer,unsigned cbBuffer)
+bool __FASTCALL__  bioReadBuffer(BGLOBAL bioFile,any_t* buffer,unsigned cbBuffer)
 {
   BFILE  *obj = MK_FPTR(bioFile);
   return IS_CACHE_VALID(obj) || obj->is_mmf ?
@@ -558,7 +558,7 @@ bool __FASTCALL__  bioWriteWord(BGLOBAL bioFile,uint16_t wVal)
 {
   BFILE  *obj = MK_FPTR(bioFile);
   return IS_CACHE_VALID(obj) ?
-             __putbuff(obj,(void *)&wVal,sizeof(uint16_t)) :
+             __putbuff(obj,(any_t*)&wVal,sizeof(uint16_t)) :
              __OsWrite(obj->b.vfb.handle,&wVal,sizeof(uint16_t)) == sizeof(uint16_t);
 }
 
@@ -566,7 +566,7 @@ bool __FASTCALL__  bioWriteDWord(BGLOBAL bioFile,uint32_t dwVal)
 {
   BFILE  *obj = MK_FPTR(bioFile);
   return IS_CACHE_VALID(obj) ?
-             __putbuff(obj,(void *)&dwVal,sizeof(uint32_t)) :
+             __putbuff(obj,(any_t*)&dwVal,sizeof(uint32_t)) :
              __OsWrite(obj->b.vfb.handle,&dwVal,sizeof(uint32_t)) == sizeof(uint32_t);
 }
 
@@ -574,11 +574,11 @@ bool __FASTCALL__  bioWriteQWord(BGLOBAL bioFile,uint64_t dwVal)
 {
   BFILE  *obj = MK_FPTR(bioFile);
   return IS_CACHE_VALID(obj) ?
-             __putbuff(obj,(void *)&dwVal,sizeof(uint64_t)) :
+             __putbuff(obj,(any_t*)&dwVal,sizeof(uint64_t)) :
              __OsWrite(obj->b.vfb.handle,&dwVal,sizeof(uint64_t)) == sizeof(uint64_t);
 }
 
-bool __FASTCALL__  bioWriteBuffer(BGLOBAL bioFile,const void * buffer,unsigned cbBuffer)
+bool __FASTCALL__  bioWriteBuffer(BGLOBAL bioFile,const any_t* buffer,unsigned cbBuffer)
 {
   BFILE  *obj = MK_FPTR(bioFile);
   return IS_CACHE_VALID(obj) ?
@@ -667,7 +667,7 @@ bool __FASTCALL__  bioChSize(BGLOBAL bioFile,__filesize_t newsize)
           do
           {
             numtowrite = (unsigned)min(bufsize,fillsize);
-            if(!bioWriteBuffer(bioFile, (void * )buf, numtowrite)) { ret = false; break; }
+            if(!bioWriteBuffer(bioFile, (any_t* )buf, numtowrite)) { ret = false; break; }
             fillsize-=numtowrite;
           } while(fillsize);
           PFREE(buf);
@@ -705,7 +705,7 @@ char * __FASTCALL__ bioFileName(BGLOBAL bioFile)
   return obj->FileName;
 }
 
-void * __FASTCALL__ bioBuffer(BGLOBAL bioFile)
+any_t* __FASTCALL__ bioBuffer(BGLOBAL bioFile)
 {
   BFILE *obj = MK_FPTR(bioFile);
   return obj->is_mmf ? obj->b.mmb->mmf_addr : obj->b.vfb.MBuffer;

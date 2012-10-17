@@ -103,9 +103,9 @@ __inline static void __FASTCALL__ __XchgB__(uint8_t *_val1, uint8_t *_val2)
 #define __XchgB__ __XchgB__
 
 extern void (__FASTCALL__ *InterleaveBuffers_ptr)(uint32_t limit,
-                                    void *destbuffer,
-                                    const void *evenbuffer, 
-                                    const void *oddbuffer);
+                                    any_t*destbuffer,
+                                    const any_t*evenbuffer, 
+                                    const any_t*oddbuffer);
 #ifdef InterleaveBuffers
 #undef InterleaveBuffers
 #endif
@@ -114,8 +114,8 @@ extern void (__FASTCALL__ *InterleaveBuffers_ptr)(uint32_t limit,
 
 
 extern void (__FASTCALL__ *CharsToShorts_ptr)(uint32_t limit,
-                                             void *destbuffer,
-                                             const void *evenbuffer);
+                                             any_t*destbuffer,
+                                             const any_t*evenbuffer);
 #ifdef CharsToShorts
 #undef CharsToShorts
 #endif
@@ -123,7 +123,7 @@ extern void (__FASTCALL__ *CharsToShorts_ptr)(uint32_t limit,
 #define __CHARS_TO_SHORTS CharsToShorts
 
 extern void (__FASTCALL__ *ShortsToChars_ptr)(uint32_t limit,
-                                     void * destbuffer, const void * srcbuffer);
+                                     any_t* destbuffer, const any_t* srcbuffer);
 
 #ifdef ShortsToChars
 #undef ShortsToChars

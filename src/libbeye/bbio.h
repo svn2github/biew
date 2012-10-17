@@ -52,7 +52,7 @@
 #define BIO_SEEK_CUR     SEEKF_CUR   /**< specifies reference location from current position of file */
 #define BIO_SEEK_END     SEEKF_END   /**< specifies reference location from end of file */
 
-typedef void * BGLOBAL;       /**< This is the data type used to represent buffered stream objects */
+typedef any_t* BGLOBAL;       /**< This is the data type used to represent buffered stream objects */
 
 /*
    This struct is ordered as it documented in Athlon manual
@@ -73,7 +73,7 @@ typedef struct tagvfb
 typedef struct tagmmb
 {
  mmfHandle       mmf;       /**< If OS support MMF contains handle of memory-mapped file */
- void *          mmf_addr;  /**< If OS support MMF contains base address of memory where file is mapped */
+ any_t*          mmf_addr;  /**< If OS support MMF contains base address of memory where file is mapped */
 }mmb;
 
 typedef struct tagBFILE
@@ -199,7 +199,7 @@ uint64_t              __FASTCALL__ bioReadQWord(BGLOBAL bioFile);
                      *                        position by the number of bytes read.
                      * @see                   bioWriteBuffer bioReadByte bioReadWord bioReadByte
                     **/
-bool                 __FASTCALL__ bioReadBuffer(BGLOBAL bioFile,void * buffer,unsigned cbBuffer);
+bool                 __FASTCALL__ bioReadBuffer(BGLOBAL bioFile,any_t* buffer,unsigned cbBuffer);
 
                    /** Rereads opened file from disk.
                      * @return                true if operation was succesfully performed
@@ -287,7 +287,7 @@ bool                 __FASTCALL__ bioWriteQWord(BGLOBAL bioFile,uint64_t dwVal);
                      *                        position by the number of bytes writed.
                      * @see                   bioReadBuffer bioWriteWord bioWriteWord bioByte
                     **/
-bool                 __FASTCALL__ bioWriteBuffer(BGLOBAL bioFile,const void * buffer,unsigned cbBuffer);
+bool                 __FASTCALL__ bioWriteBuffer(BGLOBAL bioFile,const any_t* buffer,unsigned cbBuffer);
 
                    /** Returns name of file associated with opened stream.
                      * @return                name of file
@@ -329,7 +329,7 @@ bhandle_t             __FASTCALL__ bioHandle(BGLOBAL bioFile);
                      *                        access to file cache.
                      * @see                   bioBuffLen bioBuffPos
                     **/
-void *                __FASTCALL__ bioBuffer(BGLOBAL bioFile);
+any_t*                __FASTCALL__ bioBuffer(BGLOBAL bioFile);
 
                    /** Returns length of opened stream buffer.
                      * @return                length of buffer

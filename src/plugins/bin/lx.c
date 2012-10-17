@@ -254,7 +254,7 @@ static void (__NEAR__ * lxphead[])( void ) =
   PaintNewHeaderLX_3
 };
 
-static void __FASTCALL__ PaintNewHeaderLX(TWindow * win,const void **ptr,unsigned npage,unsigned tpage)
+static void __FASTCALL__ PaintNewHeaderLX(TWindow * win,const any_t**ptr,unsigned npage,unsigned tpage)
 {
   char text[80];
   UNUSED(ptr);
@@ -424,7 +424,7 @@ static void __NEAR__ __FASTCALL__ objpaintLX(const LX_OBJECT *nam)
           ,nam->o32_mapsize);
 }
 
-static void __FASTCALL__ ObjPaintLX(TWindow * win,const void ** names,unsigned start,unsigned nlist)
+static void __FASTCALL__ ObjPaintLX(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
 {
  char buffer[81];
  const LX_OBJECT ** nam = (const LX_OBJECT **)names;
@@ -501,7 +501,7 @@ static void __FASTCALL__ lxReadPageDesc(BGLOBAL handle,LX_MAP_TABLE *mt,unsigned
 {
   bioSeek(handle,headshift+lxe.lx.lxObjectPageTableOffset+
           sizeof(LX_MAP_TABLE)*(pageidx - 1),SEEK_SET);
-  bioReadBuffer(handle,(void *)mt,sizeof(LX_MAP_TABLE));
+  bioReadBuffer(handle,(any_t*)mt,sizeof(LX_MAP_TABLE));
 }
 
 static __filesize_t __NEAR__ __FASTCALL__ __calcPageEntry(LX_MAP_TABLE *mt)
@@ -532,7 +532,7 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcPageEntry(unsigned long pageidx)
   if(!pageidx) return -1;
   handle = lx_cache;
   lxReadPageDesc(handle,&mt,pageidx);
-  return __calcPageEntry((void *)&mt);
+  return __calcPageEntry((any_t*)&mt);
 }
 
 static __filesize_t __NEAR__ __FASTCALL__ CalcEntryPointLX(unsigned long objnum,__filesize_t _offset)
@@ -545,11 +545,11 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcEntryPointLX(unsigned long objnum,
   handle = lx_cache;
   bioSeek(handle,lxe.lx.lxObjectTableOffset + headshift,SEEK_SET);
   bioSeek(handle,sizeof(LX_OBJECT)*(objnum - 1),SEEKF_CUR);
-  bioReadBuffer(handle,(void *)&lo,sizeof(LX_OBJECT));
+  bioReadBuffer(handle,(any_t*)&lo,sizeof(LX_OBJECT));
   i = _offset / lxe.lx.lxPageSize;
   diff = _offset - i*lxe.lx.lxPageSize;
   lxReadPageDesc(handle,&mt,i+lo.o32_pagemap);
-  return __calcPageEntry((void *)&mt) + diff;
+  return __calcPageEntry((any_t*)&mt) + diff;
 }
 
 static void __FASTCALL__ ReadLXLEImpMod(__filesize_t offtable,unsigned num,char *str)
@@ -566,7 +566,7 @@ static void __FASTCALL__ ReadLXLEImpMod(__filesize_t offtable,unsigned num,char 
     bioSeek(handle,len,SEEKF_CUR);
   }
   len = bioReadByte(handle);
-  bioReadBuffer(handle,(void *)buff,len);
+  bioReadBuffer(handle,(any_t*)buff,len);
   buff[len] = 0;
   strcat(str,buff);
 }
@@ -579,7 +579,7 @@ static void __FASTCALL__ ReadLXLEImpName(__filesize_t offtable,unsigned num,char
   handle = lx_cache;
   bioSeek(handle,offtable+num,SEEK_SET);
   len = bioReadByte(handle);
-  bioReadBuffer(handle,(void *)buff,len);
+  bioReadBuffer(handle,(any_t*)buff,len);
   buff[len] = 0;
   strcat(str,buff);
 }
@@ -662,7 +662,7 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcEntryBungleLX(unsigned ordinal,boo
        {
          lxent.b32_obj = numobj;
          lxent.entry.e32_flags = bioReadByte(handle);
-         bioReadBuffer(handle,(void *)&lxent.entry.e32_variant,size);
+         bioReadBuffer(handle,(any_t*)&lxent.entry.e32_variant,size);
          is_eof = bioEOF(handle);
        }
        break;
@@ -693,7 +693,7 @@ __filesize_t __FASTCALL__ ShowObjectsLX( void )
  if(__ReadObjectsLX(handle,obj,nnames))
  {
   int ret;
-    ret = PageBox(70,20,(const void **)obj->data,obj->nItems,ObjPaintLX);
+    ret = PageBox(70,20,(const any_t**)obj->data,obj->nItems,ObjPaintLX);
     if(ret != -1)  fpos = LXType == FILE_LX ? CalcPageEntry(((LX_OBJECT *)obj->data[ret])->o32_pagemap) : CalcPageEntryLE(((const LX_OBJECT *)obj->data[ret])->o32_pagemap);
  }
  ma_Destroy(obj);
@@ -807,7 +807,7 @@ static void __NEAR__ __FASTCALL__ entrypaintLX(const LX_ENTRY *nam)
    }
 }
 #if 0
-static void __FASTCALL__ IterPaintLX(TWindow * win,const void ** names,unsigned start,unsigned nlist)
+static void __FASTCALL__ IterPaintLX(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
 {
  char buffer[81];
  const LX_ITER ** nam = (const LX_ITER **)names;
@@ -820,7 +820,7 @@ static void __FASTCALL__ IterPaintLX(TWindow * win,const void ** names,unsigned 
  twRefreshFullWin(win);
 }
 #endif
-static void __FASTCALL__ PaintEntriesLX(TWindow * win,const void ** names,unsigned start,unsigned nlist)
+static void __FASTCALL__ PaintEntriesLX(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
 {
  char buffer[81];
  const LX_ENTRY ** nam = (const LX_ENTRY **)names;
@@ -900,7 +900,7 @@ __filesize_t __FASTCALL__ ShowEntriesLX( void )
  {
     int ret;
     if(!obj->nItems) { NotifyBox(NOT_ENTRY," Entry Table "); goto bye; }
-    ret = PageBox(70,8,(const void **)obj->data,obj->nItems,PaintEntriesLX);
+    ret = PageBox(70,8,(const any_t**)obj->data,obj->nItems,PaintEntriesLX);
     if(ret != -1)  fpos = LXType == FILE_LX ? CalcEntryLX(obj->data[ret]) : CalcEntryLE(obj->data[ret]);
  }
  bye:
@@ -1074,7 +1074,7 @@ static __filesize_t __FASTCALL__ lxVA2PA(__filesize_t va)
   pa = oidx = 0; /* means: error */
   for(i = 0;i < lxe.lx.lxObjectCount;i++)
   {
-    bioReadBuffer(handle,(void *)&lo,sizeof(LX_OBJECT));
+    bioReadBuffer(handle,(any_t*)&lo,sizeof(LX_OBJECT));
     if(lo.o32_base <= va && va < lo.o32_base + lo.o32_size)
     {
       oidx = i+1;
@@ -1088,7 +1088,7 @@ static __filesize_t __FASTCALL__ lxVA2PA(__filesize_t va)
     i = rva / lxe.lx.lxPageSize;
     diff = rva - i*lxe.lx.lxPageSize;
     lxReadPageDesc(handle,&mt,i+lo.o32_pagemap);
-    pa = __calcPageEntry((void *)&mt) + diff;
+    pa = __calcPageEntry((any_t*)&mt) + diff;
   }
   return pa;
 }
@@ -1120,7 +1120,7 @@ static __filesize_t __FASTCALL__ lxPA2VA(__filesize_t pa)
     bioSeek(handle,lxe.lx.lxObjectTableOffset + headshift,SEEK_SET);
     for(i = 0;i < lxe.lx.lxObjectCount;i++)
     {
-      bioReadBuffer(handle,(void *)&lo,sizeof(LX_OBJECT));
+      bioReadBuffer(handle,(any_t*)&lo,sizeof(LX_OBJECT));
       if(lo.o32_pagemap <= pidx && pidx < lo.o32_pagemap + lo.o32_mapsize)
       {
         va = lo.o32_base + rva;
@@ -1158,7 +1158,7 @@ static int __FASTCALL__ lxBitness(__filesize_t pa)
     bioSeek(handle,lxe.lx.lxObjectTableOffset + headshift,SEEK_SET);
     for(i = 0;i < lxe.lx.lxObjectCount;i++)
     {
-      bioReadBuffer(handle,(void *)&lo,sizeof(LX_OBJECT));
+      bioReadBuffer(handle,(any_t*)&lo,sizeof(LX_OBJECT));
       if(lo.o32_pagemap <= pidx && pidx < lo.o32_pagemap + lo.o32_mapsize)
       {
         ret = (lo.o32_flags & 0x00002000L) == 0x00002000L ? DAB_USE32 : DAB_USE16;

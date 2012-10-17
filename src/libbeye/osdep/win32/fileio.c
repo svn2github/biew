@@ -164,7 +164,7 @@ int __FASTCALL__ __OsTruncFile(bhandle_t handle, __filesize_t newsize)
   return ret;
 }
 
-int __FASTCALL__  __OsRead(bhandle_t handle, void *buff, unsigned size)
+int __FASTCALL__  __OsRead(bhandle_t handle, any_t*buff, unsigned size)
 {
   DWORD ret = size;
   if(ReadFile((HANDLE)handle,buff,size,&ret,NULL) == 0)
@@ -175,7 +175,7 @@ int __FASTCALL__  __OsRead(bhandle_t handle, void *buff, unsigned size)
   return ret;
 }
 
-int __FASTCALL__  __OsWrite(bhandle_t handle,const void *buff, unsigned size)
+int __FASTCALL__  __OsWrite(bhandle_t handle,const any_t*buff, unsigned size)
 {
   DWORD ret = size;
   if(WriteFile((HANDLE)handle,buff,size,&ret,NULL) == 0)

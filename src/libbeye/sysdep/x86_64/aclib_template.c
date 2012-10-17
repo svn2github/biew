@@ -85,9 +85,9 @@ __asm__ __volatile__(\
 #define MIN_LEN 257ULL
 #define CL_SIZE 256ULL /*always align on 256 byte boundary */
 
-static inline void * RENAME(fast_memcpy)(void * to, const void * from, size_t len)
+static inline any_t* RENAME(fast_memcpy)(any_t* to, const any_t* from, size_t len)
 {
-	void *retval;
+	any_t*retval;
 	const unsigned char *cfrom=from;
 	unsigned char *tto=to;
 	size_t i=0;
@@ -246,9 +246,9 @@ __asm__ __volatile__(\
 
 #define XMMREG_SIZE 16
 /* Fast memory set. See comments for fast_memcpy */
-static void * RENAME(fast_memset)(void * to, int val, size_t len)
+static any_t* RENAME(fast_memset)(any_t* to, int val, size_t len)
 {
-	void *retval;
+	any_t*retval;
 	size_t i;
 	unsigned char mm_reg[XMMREG_SIZE], *pmm_reg;
 	unsigned char *tto=to;
@@ -299,9 +299,9 @@ static void * RENAME(fast_memset)(void * to, int val, size_t len)
 #endif
 #define REGMM_SIZE 16
 static void __FASTCALL__ RENAME(InterleaveBuffers)(uint32_t limit,
-				    void *destbuffer,
-				    const void *evenbuffer,
-				    const void *oddbuffer)
+				    any_t*destbuffer,
+				    const any_t*evenbuffer,
+				    const any_t*oddbuffer)
 {
   register char *destbuffptr;
   register const char *oddptr, *evenptr;
@@ -355,8 +355,8 @@ static void __FASTCALL__ RENAME(InterleaveBuffers)(uint32_t limit,
 }
 
 static void __FASTCALL__ RENAME(CharsToShorts)(uint32_t limit,
-					     void *destbuffer,
-					     const void *evenbuffer)
+					     any_t*destbuffer,
+					     const any_t*evenbuffer)
 {
   register char *destbuffptr;
   register const char *evenptr;
@@ -410,7 +410,7 @@ static void __FASTCALL__ RENAME(CharsToShorts)(uint32_t limit,
 }
 
 static void __FASTCALL__ RENAME(ShortsToChars)(uint32_t limit,
-				     void * destbuffer, const void * srcbuffer)
+				     any_t* destbuffer, const any_t* srcbuffer)
 {
   register char *destbuffptr;
   register const char *srcptr;

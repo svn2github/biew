@@ -59,7 +59,7 @@ extern bool        __FASTCALL__ SearchDialog(int dlg_flags,
                                            string or NULL if not found.
                     **/
 extern char *       __FASTCALL__ strFind(const char *str, unsigned str_len, 
-                                         const void * sbuff, unsigned sbuflen,
+                                         const any_t* sbuff, unsigned sbuflen,
                                          const int *cache, unsigned flags);
 
                    /** Fills cache for Boyer-Moore search

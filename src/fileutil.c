@@ -549,7 +549,7 @@ static bool FStore( void )
           }
        }
        memset(codebuff,0,sizeof(codebuff));
-       BMReadBufferEx((void *)codebuff,MaxInsnLen,ff_startpos,BM_SEEK_SET);
+       BMReadBufferEx((any_t*)codebuff,MaxInsnLen,ff_startpos,BM_SEEK_SET);
        if(obj_class == OC_CODE)
          dret = Disassembler(ff_startpos,codebuff,__DISF_NORMAL);
        else /** Data object */
@@ -722,7 +722,7 @@ static bool FRestore( void )
    {
      __filesize_t wsize,cwpos;
      unsigned remaind;
-     void *tmp_buff;
+     any_t*tmp_buff;
      handle = __OsOpen(ff_fname,FO_READONLY | SO_DENYNONE);
      if(handle == NULL_HANDLE) handle = __OsOpen(ff_fname,FO_READONLY | SO_COMPAT);
      if(handle == NULL_HANDLE)
@@ -847,7 +847,7 @@ static bool CryptBlock( void )
      unsigned remaind;
      char *fname;
      BGLOBAL bHandle;
-     void *tmp_buff;
+     any_t*tmp_buff;
      cpos = BMGetCurrFilePos();
      wsize = endpos - ff_startpos;
      cwpos = ff_startpos;
@@ -957,7 +957,7 @@ static bool ReverseBlock( void )
      unsigned remaind;
      char *fname;
      BGLOBAL bHandle;
-     void *tmp_buff;
+     any_t*tmp_buff;
      cpos = BMGetCurrFilePos();
      wsize = endpos - ff_startpos;
      cwpos = ff_startpos;
@@ -1044,7 +1044,7 @@ static bool XLatBlock( void )
      unsigned remaind;
      char *fname;
      BGLOBAL bHandle, xHandle;
-     void *tmp_buff;
+     any_t*tmp_buff;
      cpos = BMGetCurrFilePos();
      wsize = endpos - ff_startpos;
      cwpos = ff_startpos;

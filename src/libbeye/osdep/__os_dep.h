@@ -365,7 +365,7 @@ extern void      __FASTCALL__ __OsRestoreTimer(void);
 #endif
 
 #if __WORDSIZE >= 64
-typedef void* bhandle_t;
+typedef any_t* bhandle_t;
 #else
 typedef int   bhandle_t;
 #endif
@@ -494,7 +494,7 @@ extern int       __FASTCALL__ __OsRename(const char *oldname,const char *newname
                      *                        on specified number of bytes.
                      * @see                   __OsWrite
                     **/
-extern int       __FASTCALL__ __OsRead(bhandle_t handle,void *buff,unsigned size);
+extern int       __FASTCALL__ __OsRead(bhandle_t handle,any_t*buff,unsigned size);
 
                    /** Writes specified number of bytes to file
                      * @return                number actually writed bytes if successful; -1 on error
@@ -507,7 +507,7 @@ extern int       __FASTCALL__ __OsRead(bhandle_t handle,void *buff,unsigned size
                      *                        on specified number of bytes.
                      * @see                   __OsRead
                     **/
-extern int       __FASTCALL__ __OsWrite(bhandle_t handle,const void *buff,unsigned size);
+extern int       __FASTCALL__ __OsWrite(bhandle_t handle,const any_t*buff,unsigned size);
 
 /** Structure for storing and setting file time information */
 typedef struct tagFTime
@@ -539,7 +539,7 @@ extern bool      __FASTCALL__ __OsSetFTime(const char *name,const FTime *data);
    operations.
 */
 
-typedef void * mmfHandle;
+typedef any_t* mmfHandle;
 
                    /** Opens existed file and mapped it into memory.
                      * @return                handle of opened stream if successful, NULL otherwise
@@ -601,7 +601,7 @@ void               __FASTCALL__ __mmfClose(mmfHandle mh);
                      * @param mh              handle of stream to be closed
                      * @see                   __mmfOpen
                     **/
-void *             __FASTCALL__ __mmfAddress(mmfHandle mh);
+any_t*             __FASTCALL__ __mmfAddress(mmfHandle mh);
 
                    /** Returns size of opened MMF stream.
                      * @return                Length in bytes of opened MMF stream

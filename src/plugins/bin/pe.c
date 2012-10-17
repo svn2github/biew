@@ -326,13 +326,13 @@ static void __NEAR__ PaintNewHeaderPE_2( void )
   }
 }
 
-static void (__NEAR__ * const pephead[])(void) = /* [dBorca] the table is const, not the void */
+static void (__NEAR__ * const pephead[])(void) = /* [dBorca] the table is const, not the any_t*/
 {
     PaintNewHeaderPE_1,
     PaintNewHeaderPE_2
 };
 
-static void __FASTCALL__ PaintNewHeaderPE(TWindow * win,const void **ptr,unsigned npage,unsigned tpage)
+static void __FASTCALL__ PaintNewHeaderPE(TWindow * win,const any_t**ptr,unsigned npage,unsigned tpage)
 {
   char text[80];
   UNUSED(ptr);
@@ -358,7 +358,7 @@ static __filesize_t __FASTCALL__ ShowNewHeaderPE( void )
  return fpos;
 }
 
-static void __FASTCALL__ ObjPaintPE(TWindow * win,const void ** names,unsigned start,unsigned nlist)
+static void __FASTCALL__ ObjPaintPE(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
 {
  char buffer[81];
  const PE_OBJECT ** nam = (const PE_OBJECT **)names;
@@ -472,7 +472,7 @@ static __filesize_t __FASTCALL__ ShowObjectsPE( void )
  if(__ReadObjectsPE(handle,obj,nnames))
  {
   int ret;
-    ret = PageBox(70,19,(const void **)obj->data,obj->nItems,ObjPaintPE);
+    ret = PageBox(70,19,(const any_t**)obj->data,obj->nItems,ObjPaintPE);
     if(ret != -1)  fpos = CalcPEObjectEntry(((PE_OBJECT *)obj->data[ret])->oPhysicalOffset);
  }
  ma_Destroy(obj);
@@ -710,7 +710,7 @@ static unsigned __FASTCALL__ PEExportNumItems(BGLOBAL handle)
   if(!peDir[PE_EXPORT].rva) return 0;
   addr = RVA2Phys(peDir[PE_EXPORT].rva);
   bioSeek(handle,addr,SEEKF_START);
-  bioReadBuffer(handle,(void *)&et,sizeof(et));
+  bioReadBuffer(handle,(any_t*)&et,sizeof(et));
   return (unsigned)(et.etNumEATEntries);
 }
 
@@ -745,7 +745,7 @@ static __filesize_t __FASTCALL__ ShowExpNamPE( void )
   {
     addr = RVA2Phys(peDir[PE_EXPORT].rva);
     bmSeek(addr,SEEKF_START);
-    bmReadBuffer((void *)&et,sizeof(et));
+    bmReadBuffer((any_t*)&et,sizeof(et));
     if(et.etNameRVA)
     {
       char sftime[80];

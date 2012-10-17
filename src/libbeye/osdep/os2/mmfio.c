@@ -70,7 +70,7 @@ MMFENTRY mmfTable[MMF_MAX];
 
 /* Local functions implementation */
 
-static PMMF __FASTCALL__ Locate(void *addr)
+static PMMF __FASTCALL__ Locate(any_t*addr)
 {
     int i;
     for(i = 0; i < MMF_MAX; i++)
@@ -123,7 +123,7 @@ ULONG __FASTCALL__ PageFaultHandler(PEXCEPTIONREPORTRECORD p1,
         ULONG  ulFlag = 0;
         ULONG  ulSize = PAG_SIZE;
 
-        if(!(pMMF = Locate((void *)p1->ExceptionInfo[1])))
+        if(!(pMMF = Locate((any_t*)p1->ExceptionInfo[1])))
             return XCPT_CONTINUE_SEARCH;
 
         pPage = (PVOID)(p1->ExceptionInfo[1] & PAG_MASK);
@@ -364,7 +364,7 @@ void               __FASTCALL__ __mmfClose(mmfHandle mh)
     mrec->ulSize    = 0;
 }
 
-void *             __FASTCALL__ __mmfAddress(mmfHandle mh)
+any_t*             __FASTCALL__ __mmfAddress(mmfHandle mh)
 {
   return ((PMMF)mh)->pData;
 }

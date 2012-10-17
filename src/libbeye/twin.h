@@ -225,12 +225,12 @@ typedef struct tagTWindow
                               /*                   6---7---8 */
   unsigned long  iflags;      /**< contains internal flags of window state */
   struct tagTWindow *next;    /**< pointer to next window in list */
-  void *         usrData;     /**< user data pointer */
+  any_t*         usrData;     /**< user data pointer */
   tvioBuff       body;        /**< Buffer containing image of window frame */
   tvioBuff       saved;       /**< Buffer containing saved image under window */
   char *         Title;       /**< Caption of window */
   char *         Footer;      /**< Footer of window */
-  void *         method;      /**< Class callback */
+  any_t*         method;      /**< Class callback */
   unsigned       class_flags; /**< Class flags */
   unsigned       wsize;       /**< Size of buffers in bytes */
   unsigned       wwidth;      /**< width of window */
@@ -264,7 +264,7 @@ typedef struct tagTWindow
                      * @param event_data      command related data
                      * @see                   twcRegisterClass
                     **/
-long __FASTCALL__ twinSendMessage(TWindow *win,unsigned event,unsigned long event_param, void *event_data);
+long __FASTCALL__ twinSendMessage(TWindow *win,unsigned event,unsigned long event_param, any_t*event_data);
 
                    /** Draws frame of given type in active window
                      * @return                none
@@ -523,7 +523,7 @@ void              __FASTCALL__ twRefreshFullWin(TWindow *win);
                      *                     in window then NULL is returned.
                      * @see                twSetUsrData
                     **/
-void *            __FASTCALL__ twGetUsrData(TWindow *win);
+any_t*            __FASTCALL__ twGetUsrData(TWindow *win);
 
                    /** Saves pointer to the user data in window.
                      * @param win          handle of window.
@@ -533,7 +533,7 @@ void *            __FASTCALL__ twGetUsrData(TWindow *win);
                      *                     data is overwrited.
                      * @see                twGetUsrData
                     **/
-void *            __FASTCALL__ twSetUsrData(TWindow *win,void *data);
+any_t*            __FASTCALL__ twSetUsrData(TWindow *win,any_t*data);
 
                    /** Returns screen position of window.
                      * @param win          handle of window.
@@ -932,7 +932,7 @@ int               __FASTCALL__ twPutS(const char *str);
                      *                    it will be clipped.
                      * @see               twGetChar twPutChar twPrintF twPutS twWriteBuffer
                     **/
-int               __FASTCALL__ twDirectWrite(tRelCoord x,tRelCoord y,const void *buff,unsigned len);
+int               __FASTCALL__ twDirectWrite(tRelCoord x,tRelCoord y,const any_t*buff,unsigned len);
 
                    /** Provides formatted output directly to the active window at current cursor position.
                      * @param fmt         specifies formatted string

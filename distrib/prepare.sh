@@ -37,7 +37,7 @@ echo "$dest_rpm has been built OK"
 
 rpm2tgz() {
 target_arch=$1
-cd $rpm_home/$target_arch
+cd 
 echo `pwd`
 mkdir tmp
 local srpm="$PACKAGE-$version-1_linux.$target_arch.rpm"
@@ -46,7 +46,7 @@ local stgz="$PACKAGE-$version-1_linux.$target_arch.tgz"
 cd tmp
 tar c usr | gzip -9 >$stgz
 mv $stgz $destdir
-mv $srpm $destdir
+mv $rpm_home/$target_arch/$srpm $destdir
 cd ..
 rm -rf tmp
 cd $srcdir

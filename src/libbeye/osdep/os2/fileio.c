@@ -173,7 +173,7 @@ int __FASTCALL__ __OsTruncFile(bhandle_t handle, __filesize_t size)
   return rc;
 }
 
-int __FASTCALL__ __OsRead(bhandle_t handle, void *buff,unsigned size)
+int __FASTCALL__ __OsRead(bhandle_t handle, any_t*buff,unsigned size)
 {
   ULONG ret;
   unsigned long rc;
@@ -186,7 +186,7 @@ int __FASTCALL__ __OsRead(bhandle_t handle, void *buff,unsigned size)
   return ret;
 }
 
-int __FASTCALL__ __OsWrite(bhandle_t handle,const void *buff,unsigned size)
+int __FASTCALL__ __OsWrite(bhandle_t handle,const any_t*buff,unsigned size)
 {
   ULONG ret;
   unsigned long rc;

@@ -166,7 +166,7 @@ void __FASTCALL__ editSaveContest( void )
       return;
   }
   bioSeek(bHandle,edit_cp,BIO_SEEK_SET);
-  if(!bioWriteBuffer(bHandle,(void *)EditorMem.buff,EditorMem.size)) goto err;
+  if(!bioWriteBuffer(bHandle,(any_t*)EditorMem.buff,EditorMem.size)) goto err;
   bioClose(bHandle);
   BMReRead();
 }

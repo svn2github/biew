@@ -42,7 +42,7 @@ unsigned rawkb_mode=0;
 int rawkb_escape;
 
 #ifdef HAVE_ICONV
-static void *nls_handle;
+static any_t*nls_handle;
 static int is_unicode=0;
 #endif
 
@@ -495,7 +495,7 @@ void __FASTCALL__ __init_keyboard(const char *user_cp)
 
 #ifdef	__ENABLE_SIGIO
     /* everything is ready, start to receive SIGIO */
-    signal(SIGIO, (void *)(int) ReadNextEvent);
+    signal(SIGIO, (any_t*)(int) ReadNextEvent);
 #endif
 
 }

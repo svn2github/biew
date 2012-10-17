@@ -151,7 +151,7 @@ char *nls_get_screen_cp(void)
     return to_cp;
 }
 
-void* nls_init(const char *to_cp,const char *src_cp) {
+any_t* nls_init(const char *to_cp,const char *src_cp) {
 #ifdef HAVE_ICONV
     iconv_t ic;
     errno=0;
@@ -165,13 +165,13 @@ void* nls_init(const char *to_cp,const char *src_cp) {
 #endif
 }
 
-void nls_term(void* ic) {
+void nls_term(any_t* ic) {
 #ifdef HAVE_ICONV
  iconv_close(ic);
 #endif
 }
 
-char *nls_recode2screen_cp(void* ic,const char *srcb,unsigned* len)
+char *nls_recode2screen_cp(any_t* ic,const char *srcb,unsigned* len)
 {
     char *obuff;
 #ifdef HAVE_ICONV
@@ -214,7 +214,7 @@ char *nls_recode2screen_cp(void* ic,const char *srcb,unsigned* len)
     return obuff;
 }
 
-int nls_test(void* ic,const char *srcb,unsigned* len)
+int nls_test(any_t* ic,const char *srcb,unsigned* len)
 {
 #ifdef HAVE_ICONV
     if(ic)

@@ -191,7 +191,7 @@ extern void   __FASTCALL__ disSetModifier(char *str,const char *modf);
     strcat(outstr,"]");
 **/
 extern int __FASTCALL__  disAppendDigits(char *str,__filesize_t ulShift,int flags,
-                              char codelen,void *defval,unsigned type);
+                              char codelen,any_t*defval,unsigned type);
 
 #define DISADR_SHORT   0x00
 #define DISADR_NEAR16  0x01

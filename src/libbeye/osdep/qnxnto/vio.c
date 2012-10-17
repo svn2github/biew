@@ -315,7 +315,7 @@ void static RestoreGTables()
 	fflush(stdout);
 }
 
-static void *so_handle;
+static any_t*so_handle;
 
 int ph_ig;
 struct _Ph_ctrl *(*p_PhAttach)(char const*,PhChannelParms_t const*);

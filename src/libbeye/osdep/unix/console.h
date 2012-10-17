@@ -142,8 +142,8 @@ typedef struct {
 	void (*terminate)(void);
 	void (*update)(void);
 
-	void (*ReadBuf)(int, int, void *, unsigned);
-	void (*WriteBuf)(int, int, void *, unsigned);
+	void (*ReadBuf)(int, int, any_t*, unsigned);
+	void (*WriteBuf)(int, int, any_t*, unsigned);
 
 	int (*GetCursorType)(void);
 	void (*SetCursorType)(int);
@@ -173,10 +173,10 @@ extern Console console;
 #define	__vioSetCursorType	console.SetCursorType
 */
 
-extern void* nls_init(const char *to,const char *from);
-extern void  nls_term(void*);
+extern any_t* nls_init(const char *to,const char *from);
+extern void  nls_term(any_t*);
 extern char *nls_get_screen_cp(void);
-extern char *nls_recode2screen_cp(void*,const char *srcb,unsigned* len);
-extern int   nls_test(void* ic,const char *srcb,unsigned* len);
+extern char *nls_recode2screen_cp(any_t*,const char *srcb,unsigned* len);
+extern int   nls_test(any_t* ic,const char *srcb,unsigned* len);
 
 #endif	/* __CONSOLE_H */

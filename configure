@@ -29,7 +29,7 @@ PATH_LIST=(
     "libdir|object code libraries|\$exec_prefix/lib",
     "datadir|read-only architecture-independent data|\$prefix/share/beye",
     "docdir|read-only documentation directory|\$prefix/doc/beye",
-    "mandir|read-only configuration files|\$prefix/share/man1"
+    "mandir|read-only configuration files|\$prefix/share/man"
 )
 
 PROGNAME_LIST=(
@@ -178,7 +178,7 @@ print_config HAVE_ config.h config.mak gomp
 #enabled gomp && check_cflags -ftree-parallelize-loops=4
 #####################################################
 add_cflags "-Werror-implicit-function-declaration"
-check_cflags "-Wextra"
+check_cflags "-W -Wall -Wextra -Wshadow"
 
 echocheck CFLAGS
 echores   $CFLAGS
@@ -194,7 +194,7 @@ echores   $extralibs
 ######################
 # MAIN TESTS GO HERE #
 ######################
-add_cflags "-I$srcdir"
+add_cflags "-I$srcdir -W -Wall -Wextra -Wshadow"
 
 ###
 ###
@@ -356,6 +356,11 @@ cat >> config.h << EOF
 #else
 # define __FASTCALL__
 #endif
+
+typedef void any_t;
+
+/* Removes warning about unused arguments */
+# define UNUSED(x) ((any_t)(x))
 EOF
 
 echo "Creating config.mak"

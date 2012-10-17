@@ -1560,7 +1560,7 @@ hIniProfile * __FASTCALL__ iniOpenFile(const char *fname,bool *has_error)
   }
   opening = _ret;
   _ret->flags |= HINI_FULLCACHED;
-  _ret->cache = (void *)la_Build(0,sizeof(ini_cache),NULL);
+  _ret->cache = (any_t*)la_Build(0,sizeof(ini_cache),NULL);
   if(_ret->cache)
   {
     hlFiProgress(_ret,__buildCache);

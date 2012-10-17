@@ -103,7 +103,7 @@ static __filesize_t __FASTCALL__ ShowPharLapHeader( void )
   return fpos;
 }
 
-static void __FASTCALL__ PLSegPaint(TWindow * win,const void ** names,unsigned start,unsigned nlist)
+static void __FASTCALL__ PLSegPaint(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
 {
  char buffer[81];
  const PLSegInfo ** nam = (const PLSegInfo **)names;
@@ -154,7 +154,7 @@ static __filesize_t __FASTCALL__ PharLapSegInfo( void )
  if(__PLReadSegInfo(handle,obj,nnames))
  {
     int i;
-    i = PageBox(50,4,(const void **)obj->data,obj->nItems,PLSegPaint) + 1;
+    i = PageBox(50,4,(const any_t**)obj->data,obj->nItems,PLSegPaint) + 1;
     if(i > 0)
     {
       fpos = ((__filesize_t)((PLSegInfo *)obj->data[i - 1])->siBaseOff)+nph.plImageOffset;
@@ -164,7 +164,7 @@ static __filesize_t __FASTCALL__ PharLapSegInfo( void )
  return fpos;
 }
 
-static void __FASTCALL__ PLRunTimePaint(TWindow * win,const void ** names,unsigned start,unsigned nlist)
+static void __FASTCALL__ PLRunTimePaint(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
 {
  char buffer[81];
  char sign[3];
@@ -232,7 +232,7 @@ static __filesize_t __FASTCALL__ PharLapRunTimeParms( void )
  if(__PLReadRunTime(handle,obj,nnames))
  {
     int i;
-    i = PageBox(50,11,(const void **)obj->data,obj->nItems,PLRunTimePaint) + 1;
+    i = PageBox(50,11,(const any_t**)obj->data,obj->nItems,PLRunTimePaint) + 1;
     if(i > 0)
     {
       fpos = nph.plRunTimeParms+i*sizeof(PLRunTimeParms);

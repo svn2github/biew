@@ -42,9 +42,9 @@ extern __filesize_t lastbyte;
 extern char * ini_name;
 
 extern int   __FASTCALL__ Gebool(bool _bool);
-extern void **            FAllocPtrPtr(unsigned num);
-extern void *             FAllocPtr(unsigned size);
-extern void               FFreeArr(void **arr,unsigned n);
+extern any_t**            FAllocPtrPtr(unsigned num);
+extern any_t*             FAllocPtr(unsigned size);
+extern void               FFreeArr(any_t**arr,unsigned n);
 extern void               CriticalExit(int code);
 
 extern void               init_addons(void);
@@ -138,14 +138,14 @@ extern void __FASTCALL__ HiLightSearch(TWindow *out,__filesize_t cfp,tRelCoord m
 
 typedef struct tag_memArray
 {
-  void **  data;
+  any_t**  data;
   unsigned nItems;
   unsigned nSize;
 }memArray;
 
 extern memArray *__FASTCALL__ ma_Build( int maxitems, bool interact );
 extern bool     __FASTCALL__ ma_AddString(memArray *obj,const char *data,bool interact);
-extern bool     __FASTCALL__ ma_AddData(memArray *obj,const void *data,unsigned size,bool interact);
+extern bool     __FASTCALL__ ma_AddData(memArray *obj,const any_t*data,unsigned size,bool interact);
 extern void      __FASTCALL__ ma_Destroy(memArray *obj);
 extern int       __FASTCALL__ ma_Display(memArray *obj,const char *title,int flg,unsigned defsel);
 

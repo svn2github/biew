@@ -56,7 +56,7 @@ static struct {
 #ifdef HAVE_ICONV
 static char *screen_cp;
 static unsigned is_unicode=0;
-static void *nls_handle;
+static any_t*nls_handle;
 #endif
 
 #include <errno.h>

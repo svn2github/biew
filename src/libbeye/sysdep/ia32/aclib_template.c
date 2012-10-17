@@ -93,9 +93,9 @@ __asm__ __volatile__(\
 #endif
 
 
-static void * RENAME(fast_memcpy)(void * to, const void * from, size_t len)
+static any_t* RENAME(fast_memcpy)(any_t* to, const any_t* from, size_t len)
 {
-	void *retval;
+	any_t*retval;
 	size_t i;
 	retval = to;
 #ifndef HAVE_MMX1
@@ -176,9 +176,9 @@ __asm__ __volatile__(\
 }
 
 /* Fast memory set. See comments for fast_memcpy */
-static void * RENAME(fast_memset)(void * to, int val, size_t len)
+static any_t* RENAME(fast_memset)(any_t* to, int val, size_t len)
 {
-	void *retval;
+	any_t*retval;
 	size_t i;
 	unsigned char mm_reg[MMREG_SIZE], *pmm_reg;
 
@@ -242,9 +242,9 @@ static void * RENAME(fast_memset)(void * to, int val, size_t len)
 #endif
 #define REGMM_SIZE 8 /* In the future it can be safety replaced with 16 for SSE2 */
 static void __FASTCALL__ RENAME(InterleaveBuffers)(uint32_t limit,
-				    void *destbuffer,
-				    const void *evenbuffer, 
-				    const void *oddbuffer)
+				    any_t*destbuffer,
+				    const any_t*evenbuffer, 
+				    const any_t*oddbuffer)
 {
 #ifdef HAVE_MMX
   register char *destbuffptr;
@@ -316,8 +316,8 @@ static void __FASTCALL__ RENAME(InterleaveBuffers)(uint32_t limit,
 }
 
 static void __FASTCALL__ RENAME(CharsToShorts)(uint32_t limit,
-					     void *destbuffer,
-					     const void *evenbuffer)
+					     any_t*destbuffer,
+					     const any_t*evenbuffer)
 {
 #ifdef HAVE_MMX
   register char *destbuffptr;
@@ -388,7 +388,7 @@ static void __FASTCALL__ RENAME(CharsToShorts)(uint32_t limit,
 }
 
 static void __FASTCALL__ RENAME(ShortsToChars)(uint32_t limit,
-				     void * destbuffer, const void * srcbuffer)
+				     any_t* destbuffer, const any_t* srcbuffer)
 {
 #ifdef HAVE_MMX
   register char *destbuffptr;

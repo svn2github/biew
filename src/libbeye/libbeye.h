@@ -45,7 +45,6 @@ extern "C" {
 #endif
 
 #define TESTFLAG(x,y) (((x) & (y)) == (y)) /**< Test y bits in x */
-#define UNUSED(x) ((void)(x)) /**< Removes warning about unused arguments */
 
 typedef int tCompare; /**< This is the data type used to represent comparition results */
 
@@ -87,7 +86,7 @@ extern void  __FASTCALL__ HQSort(void __HUGE__ *base, unsigned long num, unsigne
                      *                        functions is guarantee of stable work
                      * @see                   HQSort HLFindNearest
                     **/
-extern void __HUGE__ * __FASTCALL__ HLFind(const void *key,
+extern void __HUGE__ * __FASTCALL__ HLFind(const any_t*key,
                                      void __HUGE__ *base,
                                      unsigned long nelem,unsigned width,
                                      func_compare fcompare);
@@ -105,7 +104,7 @@ extern void __HUGE__ * __FASTCALL__ HLFind(const void *key,
                      *                        functions is guarantee of stable work
                      * @see                   HQSort HLFind
                     **/
-extern unsigned long __FASTCALL__ HLFindNearest(const void *key,
+extern unsigned long __FASTCALL__ HLFindNearest(const any_t*key,
                                      void __HUGE__ *base,
                                      unsigned long nelem,unsigned width,
                                      func_compare fcompare);
@@ -195,7 +194,7 @@ extern linearArray *__FASTCALL__ la_Build( unsigned long maxitems,unsigned size_
                      * @param mem_out         specifies user-defined function to be called when low-memory. May be NULL.
                      * @see                   la_Build la_Find
                     **/
-extern void __HUGE__*__FASTCALL__ la_AddData(linearArray *obj,const void *data,void (__FASTCALL__ *mem_out)(const char *));
+extern void __HUGE__*__FASTCALL__ la_AddData(linearArray *obj,const any_t*data,void (__FASTCALL__ *mem_out)(const char *));
 
                    /** Removes given element from linear array
                      * @param obj             specifies linear array where element will be removed
@@ -257,7 +256,7 @@ extern void         __FASTCALL__ la_Sort(linearArray *obj,func_compare fcompare)
                      *                        functions is guarantee of stable work
                      * @see                   la_Sort la_FindNearest
                     **/
-extern void __HUGE__ *__FASTCALL__ la_Find(linearArray *obj,const void *key,
+extern void __HUGE__ *__FASTCALL__ la_Find(linearArray *obj,const any_t*key,
                                            func_compare fcompare);
 
                    /** Performs a quick search on a sorted linear array of nearest element.
@@ -269,7 +268,7 @@ extern void __HUGE__ *__FASTCALL__ la_Find(linearArray *obj,const void *key,
                      * @note                  Based on HLFindNearest function
                      * @see                   HQSort HLFind
                     **/
-extern unsigned long __FASTCALL__ la_FindNearest(linearArray *obj, const void *key,
+extern unsigned long __FASTCALL__ la_FindNearest(linearArray *obj, const any_t*key,
                                            func_compare fcompare);
 
 #ifdef __cplusplus

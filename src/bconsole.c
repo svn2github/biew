@@ -320,7 +320,7 @@ struct percent_data
   bool    is_first;
 };
 
-static long __FASTCALL__ PercentWndCallBack(TWindow *it,unsigned event, unsigned long param, void *data)
+static long __FASTCALL__ PercentWndCallBack(TWindow *it,unsigned event, unsigned long param, any_t*data)
 {
   struct percent_data *my_data;
   UNUSED(param);
@@ -1020,7 +1020,7 @@ int __FASTCALL__ SelBoxA(const char ** names,unsigned nlist,const char * title,u
   return __ListBox(names,nlist,defsel,title,LB_SELECTIVE | LB_USEACC);
 }
 
-int __FASTCALL__ PageBox(unsigned width,unsigned height,const void ** __obj,unsigned nobj,pagefunc func)
+int __FASTCALL__ PageBox(unsigned width,unsigned height,const any_t** __obj,unsigned nobj,pagefunc func)
 {
  TWindow * wlist;
  int start,ostart,ret;
