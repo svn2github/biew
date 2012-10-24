@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <time.h>
 #include "libbeye/sysdep/__config.h"
 #if __WORDSIZE == 16
 #include <malloc.h>
@@ -88,23 +89,33 @@ bool  __FASTCALL__ PMUnregLowMemCallBack(LowMemCallBack func)
   return ret;
 }
 
+static int inited=1;
+static unsigned rnd_limit;
+void __FASTCALL__ PMallocInit(unsigned _rnd_limit)
+{
+    if(inited) {
+	srand(time(NULL));
+	rnd_limit=_rnd_limit;
+	inited=0;
+    }
+}
+
 any_t*           __FASTCALL__ PMalloc(size_t obj_size)
 {
-  any_t*ret;
-  unsigned i;
-  ret = malloc(obj_size);
-  if(!ret)
-  {
-    for(i = 0;i < lmcount;i++)
-    {
-      if(lmstack[i](obj_size))
-      {
-        ret = malloc(obj_size);
-        if(ret) break;
-      }
+    any_t*ret,*rnd_buff=NULL;
+    unsigned i;
+    if(!inited) rnd_buff=malloc(rand()%rnd_limit);
+    ret = malloc(obj_size);
+    if(!inited) { inited=1; free(rnd_buff); }
+    if(!ret) {
+	for(i = 0;i < lmcount;i++) {
+	    if(lmstack[i](obj_size)) {
+		ret = malloc(obj_size);
+		if(ret) break;
+	    }
+	}
     }
-  }
-  return ret;
+    return ret;
 }
 
 any_t*           __FASTCALL__ PRealloc(any_t*ptr,size_t obj_size)

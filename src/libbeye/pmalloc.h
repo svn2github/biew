@@ -27,6 +27,13 @@
 extern "C" {
 #endif
 
+                   /** Initializes memory manager.
+                     * @param mode            upper limit of random generator
+                     * @note                  Randomizing memory objects makes
+                     *                        memory exploits harder
+                    **/
+extern void __FASTCALL__ PMallocInit(unsigned rnd_limit);
+
                    /** Allocates memory object with given size.
                      * @return                Pointer to allocated object or NULL if error occured
                      * @param obj_size        specifies required size of object in bytes

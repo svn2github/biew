@@ -583,6 +583,7 @@ int main( int argc, char *argv[] )
   }
 #endif
 #endif
+ PMallocInit(1000);
  ArgCount = argc;
  ArgVector = argv;
  __init_sys();
