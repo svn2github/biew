@@ -29,8 +29,8 @@ extern "C" {
 
                    /** Initializes memory manager.
                      * @param mode            upper limit of random generator
-                     * @note                  Randomizing memory objects makes
-                     *                        memory exploits harder
+                     * @note                  Pseudo-randomizing memory objects
+                     *                        makes memory exploits harder
                     **/
 extern void __FASTCALL__ PMallocInit(unsigned rnd_limit);
 
