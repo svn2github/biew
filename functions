@@ -1176,6 +1176,8 @@ else
   is_in_cflags "-O2" || add_cflags "-O2"
   mips   || check_cflags "-pipe"
   x86_32 && check_cflags "-fomit-frame-pointer"
+# modern glibc provides much better optimized versions of built-in functions
+  x86_64 && add_cflags " -fno-builtin-function"
 # -fomit-frame-pointer is not needed for x86_64
 fi
 # -ffast-math produces incorrect output in 64-bit mode on x86_64 cpus. Tested with many gcc-4.x series
