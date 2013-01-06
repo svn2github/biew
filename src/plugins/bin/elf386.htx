@@ -1,4 +1,4 @@
- ELF introduction 
+ ELF introduction
    Appeared with UNIX SVR4 and used on many systems, including Solaris
 SunOS, Irix, and Linux. Many embedded systems also use ELF.
    The ELF Specification  is  one  chapter  of  the  Portable  Formats
@@ -15,7 +15,7 @@ extend across multiple operating environments. This should reduce  the
 number of different interface implementations,  thereby  reducing  the
 need for recoding and recompiling code.
 
-                %BFunction keys%b
+		%BFunction keys%b
 
 %IAltF1%i   -  Display this screen
 %IAltF2%i   -  Display dynamic information section
@@ -24,8 +24,8 @@ need for recoding and recompiling code.
 %IAltF9%i   -  Display section headers
 %IAltF10%i  -  Display program headers
 
-                %BAddress Resolving%b
+		%BAddress Resolving%b
 
 %IELFhdr:xx%i - Current file position is ELF header
-            %Uxxxx%u - local offset within ELF header
+	    %Uxxxx%u - local offset within ELF header
 %I.xxxxxxxx%i - Virtual address

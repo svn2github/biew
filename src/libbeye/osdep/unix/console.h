@@ -121,7 +121,7 @@ typedef struct {
 
 extern int on_console, output_7, transparent, do_nls;
 extern bool break_status;
-extern termdesc *terminal;
+extern const termdesc* terminal;
 
 extern void __FASTCALL__ ReadNextEvent(void);
 

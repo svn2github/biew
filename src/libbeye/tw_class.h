@@ -22,59 +22,52 @@
 #error Never use this header file directly. Use twin.h instead
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-                   /** Defines class callback routine type
-                     * @return                0L if no action performed
-                     *                        not 0 depends from event
-                     * @param win             indicates handle of window for which
-                     *                        event handler is called
-                     * @param event           indicates event type
-                     * @param event_param     indicates parameters of event
-                     * @param event_data      indicates data of event
-                    **/
+		   /** Defines class callback routine type
+		     * @return                0L if no action performed
+		     *                        not 0 depends from event
+		     * @param win             indicates handle of window for which
+		     *                        event handler is called
+		     * @param event           indicates event type
+		     * @param event_param     indicates parameters of event
+		     * @param event_data      indicates data of event
+		    **/
 typedef long (__FASTCALL__ *twClassFunc)(TWindow *win,unsigned event,
-                                  unsigned long event_param, any_t*event_data);
+				  unsigned long event_param, any_t*event_data);
 
 #define __CS_ORDINAL 0x0000 /**< Indicates ordinal type of callback function */
 
 /** Internal structure of text window class */
 typedef struct tagTwClass
 {
-  char       *name;     /**< name of class */
+  char*       name;     /**< name of class */
   twClassFunc method;   /**< callback routine */
   unsigned    flags;    /**< flags */
 }TwClass;
 
-                   /** Registers new class
-                     * @return                true if successful
-                     * @param name            indicates symbolic name of class
-                     * @param flags           indicates __CS_* flags family
-                     * @param method          indicates callback routine
-                    **/
+		   /** Registers new class
+		     * @return                true if successful
+		     * @param name            indicates symbolic name of class
+		     * @param flags           indicates __CS_* flags family
+		     * @param method          indicates callback routine
+		    **/
 bool __FASTCALL__ twcRegisterClass(const char *name, unsigned flags, twClassFunc method);
 
-                   /** Destroys set of classes
-                     * @return                none
-                     * @param note            Do not call it directly. It is
-                                              automatically called by library.
-                     * @param warning         Library don't contain
-                                              DeregisterClass function from
-                                              safety reasons.
-                    **/
+		   /** Destroys set of classes
+		     * @return                none
+		     * @param note            Do not call it directly. It is
+					      automatically called by library.
+		     * @param warning         Library don't contain
+					      DeregisterClass function from
+					      safety reasons.
+		    **/
 void __FASTCALL__ twcDestroyClassSet(void);
 
-                   /** Finds class descriptor
-                     * @return                pointer to class descriptor or
-                     *                        NULL if error occured
-                     * @param name            indicates symbolic name of class
-                    **/
+		   /** Finds class descriptor
+		     * @return                pointer to class descriptor or
+		     *                        NULL if error occured
+		     * @param name            indicates symbolic name of class
+		    **/
 TwClass * __FASTCALL__ twcFindClass(const char *name);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
 

@@ -33,13 +33,13 @@
 /********************** FILE HEADER **********************/
 
 struct external_filehdr {
-        uint8_t f_magic[2];       /**< magic number                 */
-        uint8_t f_nscns[2];       /**< number of sections           */
-        uint8_t f_timdat[4];      /**< time & date stamp            */
-        uint8_t f_symptr[4];      /**< file pointer to symtab       */
-        uint8_t f_nsyms[4];       /**< number of symtab entries     */
-        uint8_t f_opthdr[2];      /**< sizeof(optional hdr)         */
-        uint8_t f_flags[2];       /**< flags                        */
+	uint8_t f_magic[2];       /**< magic number                 */
+	uint8_t f_nscns[2];       /**< number of sections           */
+	uint8_t f_timdat[4];      /**< time & date stamp            */
+	uint8_t f_symptr[4];      /**< file pointer to symtab       */
+	uint8_t f_nsyms[4];       /**< number of symtab entries     */
+	uint8_t f_opthdr[2];      /**< sizeof(optional hdr)         */
+	uint8_t f_flags[2];       /**< flags                        */
 };
 
 #define F_RELFLG        (0x0001) /**< relocation info stripped from file */
@@ -58,9 +58,9 @@ struct external_filehdr {
 #define LYNXCOFFMAGIC   0415
 
 #define I386BADMAG(x) (((x) != I386MAGIC) \
-                       && (x) != I386AIXMAGIC \
-                       && (x) != I386PTXMAGIC \
-                       && (x) != LYNXCOFFMAGIC)
+		       && (x) != I386AIXMAGIC \
+		       && (x) != I386PTXMAGIC \
+		       && (x) != LYNXCOFFMAGIC)
 
 #define FILHDR  struct external_filehdr
 #define FILHSZ  20
@@ -112,16 +112,16 @@ typedef struct gnu_aout {
 
 
 struct external_scnhdr {
-        uint8_t   s_name[8];      /**< section name                 */
-        uint8_t   s_paddr[4];     /**< physical address, aliased s_nlib */
-        uint8_t   s_vaddr[4];     /**< virtual address              */
-        uint8_t   s_size[4];      /**< section size                 */
-        uint8_t   s_scnptr[4];    /**< file ptr to raw data for section */
-        uint8_t   s_relptr[4];    /**< file ptr to relocation       */
-        uint8_t   s_lnnoptr[4];   /**< file ptr to line numbers     */
-        uint8_t   s_nreloc[2];    /**< number of relocation entries */
-        uint8_t   s_nlnno[2];     /**< number of line number entries*/
-        uint8_t   s_flags[4];     /**< flags                        */
+	uint8_t   s_name[8];      /**< section name                 */
+	uint8_t   s_paddr[4];     /**< physical address, aliased s_nlib */
+	uint8_t   s_vaddr[4];     /**< virtual address              */
+	uint8_t   s_size[4];      /**< section size                 */
+	uint8_t   s_scnptr[4];    /**< file ptr to raw data for section */
+	uint8_t   s_relptr[4];    /**< file ptr to relocation       */
+	uint8_t   s_lnnoptr[4];   /**< file ptr to line numbers     */
+	uint8_t   s_nreloc[2];    /**< number of relocation entries */
+	uint8_t   s_nlnno[2];     /**< number of line number entries*/
+	uint8_t   s_flags[4];     /**< flags                        */
 };
 
 #define STYP_TEXT      0x0020
@@ -148,11 +148,11 @@ struct external_scnhdr {
  * symbol table index of the function name.
  */
 struct external_lineno {
-        union {
-                uint8_t l_symndx[4];      /**< function name symbol index, iff l_lnno == 0*/
-                uint8_t l_paddr[4];       /**< (physical) address of line number    */
-        } l_addr;
-        uint8_t l_lnno[2];        /**< line number          */
+	union {
+		uint8_t l_symndx[4];      /**< function name symbol index, iff l_lnno == 0*/
+		uint8_t l_paddr[4];       /**< (physical) address of line number    */
+	} l_addr;
+	uint8_t l_lnno[2];        /**< line number          */
 };
 
 
@@ -188,49 +188,49 @@ struct external_syment
 #define __N_TSHIFT        (2)
 
 union external_auxent {
-        struct {
-                uint8_t x_tagndx[4];      /**< str, un, or enum tag indx */
-                union {
-                        struct {
-                            uint8_t  x_lnno[2]; /**< declaration line number */
-                            uint8_t  x_size[2]; /**< str/union/array size */
-                        } x_lnsz;
-                        uint8_t x_fsize[4];       /**< size of function */
-                } x_misc;
-                union {
-                        struct {                /**< if ISFCN, tag, or .bb */
-                            uint8_t x_lnnoptr[4]; /**< ptr to fcn line # */
-                            uint8_t x_endndx[4];  /**< entry ndx past block end */
-                        } x_fcn;
-                        struct {                /**< if ISARY, up to 4 dimen. */
-                            uint8_t x_dimen[E_DIMNUM][2];
-                        } x_ary;
-                } x_fcnary;
-                uint8_t x_tvndx[2];               /**< tv index */
-        } x_sym;
+	struct {
+		uint8_t x_tagndx[4];      /**< str, un, or enum tag indx */
+		union {
+			struct {
+			    uint8_t  x_lnno[2]; /**< declaration line number */
+			    uint8_t  x_size[2]; /**< str/union/array size */
+			} x_lnsz;
+			uint8_t x_fsize[4];       /**< size of function */
+		} x_misc;
+		union {
+			struct {                /**< if ISFCN, tag, or .bb */
+			    uint8_t x_lnnoptr[4]; /**< ptr to fcn line # */
+			    uint8_t x_endndx[4];  /**< entry ndx past block end */
+			} x_fcn;
+			struct {                /**< if ISARY, up to 4 dimen. */
+			    uint8_t x_dimen[E_DIMNUM][2];
+			} x_ary;
+		} x_fcnary;
+		uint8_t x_tvndx[2];               /**< tv index */
+	} x_sym;
 
-        union {
-                uint8_t x_fname[E_FILNMLEN];
-                struct {
-                        uint8_t x_zeroes[4];
-                        uint8_t x_offset[4];
-                } x_n;
-        } x_file;
+	union {
+		uint8_t x_fname[E_FILNMLEN];
+		struct {
+			uint8_t x_zeroes[4];
+			uint8_t x_offset[4];
+		} x_n;
+	} x_file;
 
-        struct {
-                uint8_t x_scnlen[4];      /**< section length */
-                uint8_t x_nreloc[2];      /**< # relocation entries */
-                uint8_t x_nlinno[2];      /**< # line numbers */
-                uint8_t x_checksum[4];    /**< section COMDAT checksum */
-                uint8_t x_associated[2];  /**< COMDAT associated section index */
-                uint8_t x_comdat[1];      /**< COMDAT selection number */
-        } x_scn;
+	struct {
+		uint8_t x_scnlen[4];      /**< section length */
+		uint8_t x_nreloc[2];      /**< # relocation entries */
+		uint8_t x_nlinno[2];      /**< # line numbers */
+		uint8_t x_checksum[4];    /**< section COMDAT checksum */
+		uint8_t x_associated[2];  /**< COMDAT associated section index */
+		uint8_t x_comdat[1];      /**< COMDAT selection number */
+	} x_scn;
 
-        struct {
-                uint8_t x_tvfill[4];      /**< tv fill value */
-                uint8_t x_tvlen[2];       /**< length of .tv */
-                uint8_t x_tvran[2][2];    /**< tv range */
-        } x_tv;         /**< info about .tv section (in auxent of symbol .tv)) */
+	struct {
+		uint8_t x_tvfill[4];      /**< tv fill value */
+		uint8_t x_tvlen[2];       /**< length of .tv */
+		uint8_t x_tvran[2][2];    /**< tv range */
+	} x_tv;         /**< info about .tv section (in auxent of symbol .tv)) */
 
 
 };

@@ -21,10 +21,6 @@
 #include "libbeye/twin.h"
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 struct tag_emem
 {
   unsigned char *buff;
@@ -51,10 +47,5 @@ extern bool  __FASTCALL__ editDefAction(int _lastbyte);
 extern int    __FASTCALL__ FullEdit(TWindow * txtwnd,void (*save)(unsigned char *,unsigned));
 extern bool  __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size);
 extern void   __FASTCALL__ editDestroyBuffs( void );
-
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

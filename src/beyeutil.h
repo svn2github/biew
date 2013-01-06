@@ -17,9 +17,7 @@
 #ifndef __BEYEUTIL__H
 #define __BEYEUTIL__H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <limits>
 
 #ifndef __TWIN_H
 #include "libbeye/twin.h"
@@ -53,7 +51,7 @@ extern void               SelectTool( void );
 extern void               init_sysinfo( void );
 extern void               term_sysinfo( void );
 extern void               SelectSysInfo( void );
-                          /** return true if LastOpenFile == Current open file */
+			  /** return true if LastOpenFile == Current open file */
 extern bool              isValidIniArgs( void );
 
 extern bool              NewSource( void );
@@ -66,7 +64,7 @@ extern char * __FASTCALL__ Get4Digit(uint16_t);
 extern char * __FASTCALL__ Get4SignDig(int16_t);
 extern char * __FASTCALL__ Get8Digit(uint32_t);
 extern char * __FASTCALL__ Get8SignDig(int32_t);
-#ifdef INT64_C
+#if __WORDSIZE >= 32
 extern char * __FASTCALL__ Get16Digit(uint64_t);
 extern char * __FASTCALL__ Get16SignDig(int64_t);
 #else
@@ -97,22 +95,22 @@ extern void   About( void );
 
 extern __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos);
 
-#define RAPREF_NONE            0  /**< means reference is not appended */
-#define RAPREF_DONE    UINT32_MAX /**< means reference is appended */
+#define RAPREF_NONE    0  /**< means reference is not appended */
+#define RAPREF_DONE    std::numeric_limits<int32_t>::max() /**< means reference is appended */
 
-                   /** Appends disassembler reference to string.
-                     * @param str          string buffer for append to
-                     * @param ulShift      physical address of field, that required of binding
-                     * @param mode         see reg_form.h for detail
-                     * @param codelen      length of field, that required binding
-                     * @param r_shift      used only if APPREF_TRY_LABEL mode is set, contains real value of field, that required binding
-                     * @return             one of RAPREF_* constants or physical
-                                           offset of target which is applied to
-                                           fixing field.
-                    **/
+		   /** Appends disassembler reference to string.
+		     * @param str          string buffer for append to
+		     * @param ulShift      physical address of field, that required of binding
+		     * @param mode         see reg_form.h for detail
+		     * @param codelen      length of field, that required binding
+		     * @param r_shift      used only if APPREF_TRY_LABEL mode is set, contains real value of field, that required binding
+		     * @return             one of RAPREF_* constants or physical
+					   offset of target which is applied to
+					   fixing field.
+		    **/
 extern unsigned long __FASTCALL__ AppendAsmRef(char *str,__filesize_t ulShift,
-                                               int mode,char codelen,
-                                               __filesize_t r_shift);
+					       int mode,char codelen,
+					       __filesize_t r_shift);
 
 
 extern void  ShowSysInfo( void );
@@ -132,7 +130,7 @@ typedef union tag_HLInfo
 }HLInfo;
 
 extern void __FASTCALL__ HiLightSearch(TWindow *out,__filesize_t cfp,tRelCoord minx,
-                          tRelCoord maxx,tRelCoord y,HLInfo *buff,unsigned flags);
+			  tRelCoord maxx,tRelCoord y,HLInfo *buff,unsigned flags);
 
 /** Class memory array */
 
@@ -150,21 +148,17 @@ extern void      __FASTCALL__ ma_Destroy(memArray *obj);
 extern int       __FASTCALL__ ma_Display(memArray *obj,const char *title,int flg,unsigned defsel);
 
 extern unsigned __FASTCALL__ beyeReadProfileString(hIniProfile *ini,
-                                      const char *section,
-                                      const char *subsection,
-                                      const char *_item,
-                                      const char *def_value,
-                                      char *buffer,
-                                      unsigned cbBuffer);
+				      const char *section,
+				      const char *subsection,
+				      const char *_item,
+				      const char *def_value,
+				      char *buffer,
+				      unsigned cbBuffer);
 
 extern bool __FASTCALL__ beyeWriteProfileString(hIniProfile *ini,
-                                                 const char *section,
-                                                 const char *subsection,
-                                                 const char *item,
-                                                 const char *value);
-
-#ifdef __cplusplus
-}
-#endif
+						 const char *section,
+						 const char *subsection,
+						 const char *item,
+						 const char *value);
 
 #endif

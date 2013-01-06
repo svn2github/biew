@@ -17,17 +17,13 @@
 #ifndef __SEARCH__H
 #define __SEARCH__H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-                   /** Main search routine
-                     * @param is_continue  indicates initialization of search
-                                           If set then search should be continued
-                                           search dialog will displayed otherwise
-                     * @return             new offset on successful search and
-                                           current offset otherwise
-                    **/
+		   /** Main search routine
+		     * @param is_continue  indicates initialization of search
+					   If set then search should be continued
+					   search dialog will displayed otherwise
+		     * @return             new offset on successful search and
+					   current offset otherwise
+		    **/
 extern __filesize_t __FASTCALL__ Search( bool is_continue );
 
 #define SD_SIMPLE       0x0000   /**< indicates simple search dialog to be displayed */
@@ -43,37 +39,37 @@ extern __filesize_t __FASTCALL__ Search( bool is_continue );
 
 #define MAX_SEARCH_SIZE 76
 extern bool        __FASTCALL__ SearchDialog(int dlg_flags,
-                                              char *searchbuff,
-                                              unsigned char *searchlen,
-                                              unsigned *search_flags);
+					      char *searchbuff,
+					      unsigned char *searchlen,
+					      unsigned *search_flags);
 
-                   /** Performs seacrh of given sequence in the string
-                     * @param str          indicates string where search must be performed
-                     * @param str_len      indicates length string where search must be performed
-                     * @param sbuff        indicates searching sequence
-                     * @param sbuflen      indicates length of sequence to be found
-                     * @param cache        indicates Boyer-Moore cache
-                     * @param flags        indicates SF_* flags
-                     * @return             address of first occurence of 
-                                           of searching sequence in the
-                                           string or NULL if not found.
-                    **/
-extern char *       __FASTCALL__ strFind(const char *str, unsigned str_len, 
-                                         const any_t* sbuff, unsigned sbuflen,
-                                         const int *cache, unsigned flags);
+		   /** Performs seacrh of given sequence in the string
+		     * @param str          indicates string where search must be performed
+		     * @param str_len      indicates length string where search must be performed
+		     * @param sbuff        indicates searching sequence
+		     * @param sbuflen      indicates length of sequence to be found
+		     * @param cache        indicates Boyer-Moore cache
+		     * @param flags        indicates SF_* flags
+		     * @return             address of first occurence of
+					   of searching sequence in the
+					   string or NULL if not found.
+		    **/
+extern char *       __FASTCALL__ strFind(const char *str, unsigned str_len,
+					 const any_t* sbuff, unsigned sbuflen,
+					 const int *cache, unsigned flags);
 
-                   /** Fills cache for Boyer-Moore search
-                     * @param cache        indicates cache to be filled
-                                           Should have size of 256 elements.
-                     * @param pattern      indicates search pattern
-                     * @param pattern_len  indicates length of search pattern
-                     * @param case_sens    indicates case sensitivity of search
-                     * @return             none
-                    **/
+		   /** Fills cache for Boyer-Moore search
+		     * @param cache        indicates cache to be filled
+					   Should have size of 256 elements.
+		     * @param pattern      indicates search pattern
+		     * @param pattern_len  indicates length of search pattern
+		     * @param case_sens    indicates case sensitivity of search
+		     * @return             none
+		    **/
 void                __FASTCALL__ fillBoyerMooreCache(int *cache,
-                                         const char *pattern,
-                                         unsigned pattern_len,
-                                         bool case_sens);
+					 const char *pattern,
+					 unsigned pattern_len,
+					 bool case_sens);
 
 extern unsigned char search_buff[MAX_SEARCH_SIZE];
 extern unsigned char search_len;
@@ -81,9 +77,5 @@ extern unsigned beyeSearchFlg;
 
 extern __filesize_t FoundTextSt; /**< Indicates start of found text */
 extern __filesize_t FoundTextEnd;/**< Indicates end of found text */
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

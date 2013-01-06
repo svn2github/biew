@@ -44,17 +44,17 @@ extern "C" {
 
 #include "libbeye/sysdep/ia32/fastcopy.h"
 
-                /** Changes byte order in 16-bit number */
+		/** Changes byte order in 16-bit number */
 __inline static uint16_t __FASTCALL__ __CONSTFUNC__ ByteSwapS(uint16_t _val)
 {
   __asm("xchgb %b0,%h0"	:
-        "=q" (_val)	:
-        "0" (_val));
+	"=q" (_val)	:
+	"0" (_val));
     return _val;
 }
 #define ByteSwapS ByteSwapS
 
-                /** Changes byte order in 32-bit number */
+		/** Changes byte order in 32-bit number */
 __inline static uint32_t __FASTCALL__ __CONSTFUNC__ ByteSwapL(uint32_t _val)
 {
 #if __CPU__ > 386
@@ -71,11 +71,11 @@ __inline static uint32_t __FASTCALL__ __CONSTFUNC__ ByteSwapL(uint32_t _val)
 }
 #define ByteSwapL ByteSwapL
 
-                /** Changes byte order in 64-bit number */
+		/** Changes byte order in 64-bit number */
 __inline static uint64_t __FASTCALL__ __CONSTFUNC__ ByteSwapLL(uint64_t x)
 {
   register union { __extension__ unsigned long long int __ll;
-          unsigned long int __l[2]; } __x;
+	  unsigned long int __l[2]; } __x;
   asm("xchgl	%0,%1":
       "=r"(__x.__l[0]),"=r"(__x.__l[1]):
       "0"(ByteSwapL((uint32_t)x)),"1"(ByteSwapL((uint32_t)(x>>32))));
@@ -83,14 +83,14 @@ __inline static uint64_t __FASTCALL__ __CONSTFUNC__ ByteSwapLL(uint64_t x)
 }
 #define ByteSwapLL ByteSwapLL
 
-                /** Exchanges two bytes in memory.
-                  * @return         none
-                  * @param _val1    specified pointer to the first byte to be exchanged
-                  * @param _val2    specified pointer to the second byte to be exchanged
-                  * @note           Main difference from ByteSwap function family -
-                                    it is work with different number, rather than
-                                    changing byte order within given number.
-                 **/
+		/** Exchanges two bytes in memory.
+		  * @return         none
+		  * @param _val1    specified pointer to the first byte to be exchanged
+		  * @param _val2    specified pointer to the second byte to be exchanged
+		  * @note           Main difference from ByteSwap function family -
+				    it is work with different number, rather than
+				    changing byte order within given number.
+		 **/
 __inline static void __FASTCALL__ __XchgB__(uint8_t *_val1, uint8_t *_val2)
 {
  register char _tmp;
@@ -103,9 +103,9 @@ __inline static void __FASTCALL__ __XchgB__(uint8_t *_val1, uint8_t *_val2)
 #define __XchgB__ __XchgB__
 
 extern void (__FASTCALL__ *InterleaveBuffers_ptr)(uint32_t limit,
-                                    any_t*destbuffer,
-                                    const any_t*evenbuffer, 
-                                    const any_t*oddbuffer);
+				    any_t*destbuffer,
+				    const any_t*evenbuffer,
+				    const any_t*oddbuffer);
 #ifdef InterleaveBuffers
 #undef InterleaveBuffers
 #endif
@@ -114,8 +114,8 @@ extern void (__FASTCALL__ *InterleaveBuffers_ptr)(uint32_t limit,
 
 
 extern void (__FASTCALL__ *CharsToShorts_ptr)(uint32_t limit,
-                                             any_t*destbuffer,
-                                             const any_t*evenbuffer);
+					     any_t*destbuffer,
+					     const any_t*evenbuffer);
 #ifdef CharsToShorts
 #undef CharsToShorts
 #endif
@@ -123,7 +123,7 @@ extern void (__FASTCALL__ *CharsToShorts_ptr)(uint32_t limit,
 #define __CHARS_TO_SHORTS CharsToShorts
 
 extern void (__FASTCALL__ *ShortsToChars_ptr)(uint32_t limit,
-                                     any_t* destbuffer, const any_t* srcbuffer);
+				     any_t* destbuffer, const any_t* srcbuffer);
 
 #ifdef ShortsToChars
 #undef ShortsToChars

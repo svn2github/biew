@@ -64,10 +64,6 @@
 #define __FI_SUBSECTION 2 /**< required string is subsection */
 #define __FI_ITEM       3 /**< required string is item */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef BGLOBAL FiHandler; /**< This is the data type used to represent ini stream objects */
 
 /** Contains information about current record in ini file */
@@ -79,11 +75,11 @@ typedef struct tagIniInfo
   const char * value;        /**< value of item */
 }IniInfo;
 
-                   /** Pointer to a user supplied function that receive readed record from ini file.
-                     * @return                For continue of scaning - false
-                                              For terminating scaning - true (means: all done)
-                     * @param info            pointers to current record from inni file
-                    **/
+		   /** Pointer to a user supplied function that receive readed record from ini file.
+		     * @return                For continue of scaning - false
+					      For terminating scaning - true (means: all done)
+		     * @param info            pointers to current record from inni file
+		    **/
 typedef bool      (__FASTCALL__ *FiUserFunc)(IniInfo * info);
 
 /******************************************************\
@@ -106,28 +102,28 @@ extern  bool  (__FASTCALL__ *FiGetCondition)(const char * cond);    /**< Default
 
 #define FI_MAXSTRLEN 255 /**< Specifies maximal length of string, that can be readed from ini file */
 
-                   /** Decodes error of ini library and return it string equivalent.
-                     * @return                String, that described error
-                     * @param nError          Specifies error number
-                    **/
+		   /** Decodes error of ini library and return it string equivalent.
+		     * @return                String, that described error
+		     * @param nError          Specifies error number
+		    **/
 extern const char *  __FASTCALL__ FiDecodeError(int nError);
 extern bool         FiAllWantInput ; /**< Flags indicating, that all input exclude commentaries, i.e. carriage return and line feed and space characters will be returned */
 extern char *        FiUserMessage;   /**< Pointer to user defined message string */
 extern char          FiOpenComment;   /**< Character to be used as opening comment. @note comment always start with FiOpenComment symbol and termonated at end of line */
 
-                   /** Creates file with error description.
-                     * @return                none
-                     * @param nError          Specifies error number
-                     * @param row             Specifies row at which error occured
-                     * @see                   FiAErrorCL
-                    **/
+		   /** Creates file with error description.
+		     * @return                none
+		     * @param nError          Specifies error number
+		     * @param row             Specifies row at which error occured
+		     * @see                   FiAErrorCL
+		    **/
 void         __FASTCALL__ FiAError(int nError,int row,const char *addinfo);
 
-                   /** Creates file with error description and treated error as occured at current line.
-                     * @return                none
-                     * @param nError          Specifies error number
-                     * @see                   FiAError
-                    **/
+		   /** Creates file with error description and treated error as occured at current line.
+		     * @return                none
+		     * @param nError          Specifies error number
+		     * @see                   FiAError
+		    **/
 void         __FASTCALL__ FiAErrorCL(int nError); /**< error in curent line */
 
 /********************************************************************\
@@ -139,17 +135,17 @@ void         __FASTCALL__ FiAErrorCL(int nError); /**< error in curent line */
 * will be done. Unknown instruction and hotkeys should be ignored.   *
 \********************************************************************/
 
-                   /** Performs ini-file scanning.
-                     * @return                none
-                     * @param filename        Specifies name of file to be processed
-                     * @param fuser           Specifies user-defined callback function
-                     * @note                  Before calling user-defined function
-                     *                        all internal variables will be expanded,
-                     *                        and command processor will be done.
-                     *                        Unknown instruction and hotkeys should
-                     *                        be ignored.
-                     * @see                   FiUserFunc
-                    **/
+		   /** Performs ini-file scanning.
+		     * @return                none
+		     * @param filename        Specifies name of file to be processed
+		     * @param fuser           Specifies user-defined callback function
+		     * @note                  Before calling user-defined function
+		     *                        all internal variables will be expanded,
+		     *                        and command processor will be done.
+		     *                        Unknown instruction and hotkeys should
+		     *                        be ignored.
+		     * @see                   FiUserFunc
+		    **/
 void          __FASTCALL__ FiProgress(const char * filename,FiUserFunc fuser);
 
 /******************************************************************\
@@ -238,7 +234,7 @@ bool           __FASTCALL__ FiGetConditionStd( const char *condstr);
 typedef struct tag_iniProfile
 {
    FiHandler     handler;
-   char *        fname;
+   char*         fname;
    any_t*        cache;
    unsigned      flags;
 }hIniProfile;
@@ -247,64 +243,60 @@ typedef struct tag_iniProfile
 extern void __FASTCALL__ hlFiProgress(hIniProfile *ini,FiUserFunc usrproc);
 
 /* For public use */
-                   /** Opens ini file for using with iniReadProfileString and iniWriteProfileString functions.
-                     * @return                handle of opened stream
-                     * @param filename        Specifies name of file to be open
-                     * @param has_error       Pointer to the memory where will be stored error if occured
-                     * @warning               You must not call any other function
-                     *                        If error occured and has_error assigned
-                     *                        non NULL value.
-                     * @see                   iniCloseFile
-                    **/
+		   /** Opens ini file for using with iniReadProfileString and iniWriteProfileString functions.
+		     * @return                handle of opened stream
+		     * @param filename        Specifies name of file to be open
+		     * @param has_error       Pointer to the memory where will be stored error if occured
+		     * @warning               You must not call any other function
+		     *                        If error occured and has_error assigned
+		     *                        non NULL value.
+		     * @see                   iniCloseFile
+		    **/
 extern hIniProfile*    __FASTCALL__ iniOpenFile(const char *fname,bool *has_error);
 
-                   /** Closes ini file stream.
-                     * @return                none
-                     * @param ini             handle of opened stream
-                     * @see                   iniOpenFile
-                    **/
+		   /** Closes ini file stream.
+		     * @return                none
+		     * @param ini             handle of opened stream
+		     * @see                   iniOpenFile
+		    **/
 extern void            __FASTCALL__ iniCloseFile(hIniProfile *ini);
 
-                   /** Performs search of given item in ini file and reads it value if found.
-                     * @return                length of readed value
-                     * @param ini             handle of opened stream
-                     * @param section         specifies section name
-                     * @param subsection      specifies subsection name
-                     * @param _item           specifies item name
-                     * @param def_value       specifies default return value
-                     * @param buffer          specifies buffer where will be stored readed value
-                     * @param cbBuffer        specifies size of buffer.
-                     * @note                  if given item is not present in
-                     *                        ini file, then default value will
-                     *                        returned.
-                     * @see                   iniWriteProfileString
-                    **/
+		   /** Performs search of given item in ini file and reads it value if found.
+		     * @return                length of readed value
+		     * @param ini             handle of opened stream
+		     * @param section         specifies section name
+		     * @param subsection      specifies subsection name
+		     * @param _item           specifies item name
+		     * @param def_value       specifies default return value
+		     * @param buffer          specifies buffer where will be stored readed value
+		     * @param cbBuffer        specifies size of buffer.
+		     * @note                  if given item is not present in
+		     *                        ini file, then default value will
+		     *                        returned.
+		     * @see                   iniWriteProfileString
+		    **/
 extern unsigned __FASTCALL__ iniReadProfileString(hIniProfile *ini,
-                                     const char *section,
-                                     const char *subsection,
-                                     const char *_item,
-                                     const char *def_value,
-                                     char *buffer,
-                                     unsigned cbBuffer);
+				     const char *section,
+				     const char *subsection,
+				     const char *_item,
+				     const char *def_value,
+				     char *buffer,
+				     unsigned cbBuffer);
 
-                   /** Writes given item to ini file.
-                     * @return                true if operation performed successfully
-                     * @param ini             handle of opened stream
-                     * @param section         specifies section name
-                     * @param subsection      specifies subsection name
-                     * @param item            specifies item name
-                     * @param value           specifies value of item
-                     * @see                   iniReadProfileString
-                    **/
+		   /** Writes given item to ini file.
+		     * @return                true if operation performed successfully
+		     * @param ini             handle of opened stream
+		     * @param section         specifies section name
+		     * @param subsection      specifies subsection name
+		     * @param item            specifies item name
+		     * @param value           specifies value of item
+		     * @see                   iniReadProfileString
+		    **/
 extern bool __FASTCALL__ iniWriteProfileString(hIniProfile *ini,
-                                     const char *section,
-                                     const char *subsection,
-                                     const char *item,
-                                     const char *value);
-
-#ifdef __cplusplus
-}
-#endif
+				     const char *section,
+				     const char *subsection,
+				     const char *item,
+				     const char *value);
 
 #endif
 

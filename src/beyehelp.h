@@ -17,10 +17,6 @@
 #ifndef __BEYEHELP__H
 #define __BEYEHELP__H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifndef __TWIN_H
 #include "libbeye/twin.h"
 #endif
@@ -64,28 +60,24 @@ typedef struct tag_beye_help
 
 extern bool           __FASTCALL__ hlpOpen( bool interactive );
 extern void            __FASTCALL__ hlpClose( void );
-                       /** Return uncompressed size of help item
-                          0 - if error occured */
+		       /** Return uncompressed size of help item
+			  0 - if error occured */
 extern unsigned long   __FASTCALL__ hlpGetItemSize(unsigned long item_id);
 extern bool           __FASTCALL__ hlpLoadItem(unsigned long item_id, void __HUGE__* buffer);
-                       /** Fully-functionallity utility for displaying help */
+		       /** Fully-functionallity utility for displaying help */
 extern void            __FASTCALL__ hlpDisplay(unsigned long id);
 
-                       /** Returns array of char pointers.
-                          Title always is data[0] */
+		       /** Returns array of char pointers.
+			  Title always is data[0] */
 extern char **         __FASTCALL__ hlpPointStrings(char __HUGE__ *data,unsigned long data_size,
-                                       unsigned long *nstr);
-                       /** Filles buffer as video memory from string */
+				       unsigned long *nstr);
+		       /** Filles buffer as video memory from string */
 extern unsigned        __FASTCALL__ hlpFillBuffer(tvioBuff * dest,unsigned int cw_dest,
-                                     const char * str,unsigned int cb_str,
-                                     unsigned int shift,unsigned *n_tabs,
-                                     bool is_hl);
-                       /** Paints line of help */
+				     const char * str,unsigned int cb_str,
+				     unsigned int shift,unsigned *n_tabs,
+				     bool is_hl);
+		       /** Paints line of help */
 extern void            __FASTCALL__ hlpPaintLine(TWindow *win,unsigned y,const char *str,
-                                    bool is_hl);
-
-#ifdef __cplusplus
-}
-#endif
+				    bool is_hl);
 
 #endif

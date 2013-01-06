@@ -17,15 +17,7 @@
 #ifndef __SETUP__H
 #define __SETUP__H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 extern char *     beyeGetHelpName( void );
 extern void       Setup( void );
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

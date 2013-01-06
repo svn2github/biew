@@ -30,7 +30,7 @@
 
 /*	LMF structure defenitions
  */
-	
+
 typedef struct tag_lmf_header	/* This preceeds each record defined below */
 {
 	int8_t rec_type,
@@ -81,7 +81,7 @@ typedef struct tag_lmf_resource
 
 #define _LMF_DEFINITION_REC     0
 #define _LMF_COMMENT_REC        1
-                            /* ^^^ Never seen this record.		(AG)  */
+			    /* ^^^ Never seen this record.		(AG)  */
 #define _LMF_DATA_REC           2
 #define _LMF_FIXUP_SEG_REC      3
 #define _LMF_FIXUP_80X87_REC    4
@@ -89,9 +89,9 @@ typedef struct tag_lmf_resource
 #define _LMF_RESOURCE_REC       6
 #define _LMF_ENDDATA_REC        7
 #define _LMF_FIXUP_LINEAR_REC   8
-                            /* ^^^ Never seen this record.		(AG)  */
+			    /* ^^^ Never seen this record.		(AG)  */
 #define _LMF_PHRESOURCE			9	/* A widget resource for photon apps */
-                            /* ^^^ Never seen this record.		(AG)  */
+			    /* ^^^ Never seen this record.		(AG)  */
 
 /*	Bit defitions for lh_code_flags
  */

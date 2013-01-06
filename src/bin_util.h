@@ -18,10 +18,6 @@
 #ifndef __BIN_UTIL__H
 #define __BIN_UTIL__H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifndef __BBIO_H
 #include "libbeye/bbio.h"
 #endif
@@ -58,20 +54,20 @@ extern linearArray *PubNames;
 extern unsigned fmtActiveState;
 
 typedef void (__FASTCALL__ *ReadPubName)(BGLOBAL b_cache,const struct PubName *it,
-                            char *buff,unsigned cb_buff);
+			    char *buff,unsigned cb_buff);
 typedef void (__FASTCALL__ *ReadPubNameList)(BGLOBAL fmt_chahe,void (__FASTCALL__ *mem_out)(const char *));
 
 extern void  __FASTCALL__ fmtSetState(int state);
 extern tCompare __FASTCALL__ fmtComparePubNames(const void __HUGE__ *v1,const void __HUGE__ *v2);
 extern bool __FASTCALL__ fmtFindPubName(BGLOBAL fmt_cache,char *buff,unsigned cb_buff,
-                                         __filesize_t pa,
-                                         ReadPubNameList fmtReadPubNameList,
-                                         ReadPubName fmtReadPubName);
+					 __filesize_t pa,
+					 ReadPubNameList fmtReadPubNameList,
+					 ReadPubName fmtReadPubName);
 extern __filesize_t __FASTCALL__ fmtGetPubSym(BGLOBAL fmt_cache,char *str,unsigned cb_str,
-                                      unsigned *func_class,__filesize_t pa,
-                                      bool as_prev,
-                                      ReadPubNameList fmtReadPubNameList,
-                                      ReadPubName fmtReadPubName);
+				      unsigned *func_class,__filesize_t pa,
+				      bool as_prev,
+				      ReadPubNameList fmtReadPubNameList,
+				      ReadPubName fmtReadPubName);
 
 typedef unsigned      (__FASTCALL__ * GetNumItems)(BGLOBAL handle);
 typedef bool         (__FASTCALL__ * ReadItems)(BGLOBAL handle,memArray * names,unsigned nnames);
@@ -92,8 +88,5 @@ extern bool __FASTCALL__ udnUserNames( void );
 
 extern void __FASTCALL__ udnInit( hIniProfile *ini );
 extern void __FASTCALL__ udnTerm( hIniProfile *ini );
-#ifdef __cplusplus
-}
-#endif
 
 #endif

@@ -17,7 +17,7 @@
 #ifndef ___INLINES_H
 #define ___INLINES_H 1
 
-#ifdef __clpusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -56,19 +56,19 @@ extern "C" {
 #define __CONSTFUNC__      /**< Impossible for definition on generic platform modifier of constant function */
 #endif
 
-                /** Changes byte order in 32-bit number */
+		/** Changes byte order in 32-bit number */
 #ifndef ByteSwapL
 #define ByteSwapL(_val)\
   (((uint32_t)_val << 24) | (((uint32_t)_val & 0xFF00) << 8) |\
   (((uint32_t)_val & 0xFF0000L) >> 8) | ((uint32_t)_val >> 24))
 #endif
-                /** Changes byte order in 16-bit number */
+		/** Changes byte order in 16-bit number */
 #ifndef ByteSwapS
 #define ByteSwapS(_val)\
   (((uint16_t)_val << 8) | ((uint16_t)_val >> 8))
 #endif
 
-                /** Changes byte order in 64-bit number */
+		/** Changes byte order in 64-bit number */
 #ifndef ByteSwapLL
 __inline static uint64_t __ByteSwapLL(uint64_t x)\
 { union { uint64_t __ll;		     		\
@@ -80,14 +80,14 @@ __inline static uint64_t __ByteSwapLL(uint64_t x)\
 #define ByteSwapLL(x) __ByteSwapLL(x)
 #endif
 
-                /** Exchanges two bytes in memory.
-                  * @return         none
-                  * @param _val1    specified pointer to the first byte to be exchanged
-                  * @param _val2    specified pointer to the second byte to be exchanged
-                  * @note           Main difference from ByteSwap function family -
-                                    it is work with different number, rather than
-                                    changing byte order within given number.
-                 **/
+		/** Exchanges two bytes in memory.
+		  * @return         none
+		  * @param _val1    specified pointer to the first byte to be exchanged
+		  * @param _val2    specified pointer to the second byte to be exchanged
+		  * @note           Main difference from ByteSwap function family -
+				    it is work with different number, rather than
+				    changing byte order within given number.
+		 **/
 #ifndef __XchgB__
 #define __XchgB__(_val1,_val2)\
     {\
@@ -98,14 +98,14 @@ __inline static uint64_t __ByteSwapLL(uint64_t x)\
     }
 #endif
 
-                /** Performs interleaving of two buffers into destinition one.
-                  * @return         none
-                  * @param limit    specified size of evenbuffer and oddbuffer
-                  * @param destbuffer specified pointer to the destinition buffer
-                                    where result will be placed.
-                  * @param evenbuffer specified source buffer with even bytes.
-                  * @param offbuffer specified source buffer with odd bytes.
-                 **/
+		/** Performs interleaving of two buffers into destinition one.
+		  * @return         none
+		  * @param limit    specified size of evenbuffer and oddbuffer
+		  * @param destbuffer specified pointer to the destinition buffer
+				    where result will be placed.
+		  * @param evenbuffer specified source buffer with even bytes.
+		  * @param offbuffer specified source buffer with odd bytes.
+		 **/
 #ifndef __INTERLEAVE_BUFFERS
 #define __INTERLEAVE_BUFFERS(limit, destbuffer, evenbuffer, oddbuffer)\
 {\
@@ -118,16 +118,16 @@ __inline static uint64_t __ByteSwapLL(uint64_t x)\
 }
 #endif
 
-                /** Performs conversation string of characters to zero extended
-                    string of short values.
-                  * @return         none
-                  * @param limit    specified size of evenbuffer and oddbuffer
-                  * @param destbuffer specified pointer to the destinition buffer
-                                    where result will be placed.
-                  * @param evenbuffer specified source buffer with even bytes.
-                  * @param zerofiller specified pointer to zero filled memory,
-                                    which must have size of MMREG_SIZE.
-                 **/
+		/** Performs conversation string of characters to zero extended
+		    string of short values.
+		  * @return         none
+		  * @param limit    specified size of evenbuffer and oddbuffer
+		  * @param destbuffer specified pointer to the destinition buffer
+				    where result will be placed.
+		  * @param evenbuffer specified source buffer with even bytes.
+		  * @param zerofiller specified pointer to zero filled memory,
+				    which must have size of MMREG_SIZE.
+		 **/
 #ifndef __CHARS_TO_SHORTS
 #define __CHARS_TO_SHORTS(limit, destbuffer, evenbuffer)\
 {\
@@ -140,14 +140,14 @@ __inline static uint64_t __ByteSwapLL(uint64_t x)\
 }
 #endif
 
-                /** Performs conversation string of zero extended short values
-                    to string of characters.
-                  * @return         none
-                  * @param limit    specified size of evenbuffer and oddbuffer
-                  * @param destbuffer specified pointer to the destinition buffer
-                                    where result will be placed.
-                  * @param srcbuffer specified source buffer to be converted.
-                 **/
+		/** Performs conversation string of zero extended short values
+		    to string of characters.
+		  * @return         none
+		  * @param limit    specified size of evenbuffer and oddbuffer
+		  * @param destbuffer specified pointer to the destinition buffer
+				    where result will be placed.
+		  * @param srcbuffer specified source buffer to be converted.
+		 **/
 #ifndef __SHORTS_TO_CHARS
 #define __SHORTS_TO_CHARS(limit, destbuffer, srcbuffer)\
 {\

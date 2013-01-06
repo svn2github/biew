@@ -66,7 +66,7 @@ struct external_exec
 
 #define N_BADMAG64(x)	  (N_MAGIC(x) != OMAGIC64	\
 			&& N_MAGIC(x) != NMAGIC64	\
-  			&& N_MAGIC(x) != ZMAGIC64)
+			&& N_MAGIC(x) != ZMAGIC64)
 
 #define OMAGIC 0x0107		/**< ...object file or impure executable.  */
 #define NMAGIC 0x0108		/**< Code indicating pure executable.  */
@@ -83,8 +83,8 @@ struct external_exec
 # ifndef N_BADMAG
 #  define N_BADMAG(x)	  (N_MAGIC(x) != OMAGIC	\
 			&& N_MAGIC(x) != NMAGIC	\
-  			&& N_MAGIC(x) != ZMAGIC \
-		        && N_MAGIC(x) != QMAGIC)
+			&& N_MAGIC(x) != ZMAGIC \
+			&& N_MAGIC(x) != QMAGIC)
 # endif /* N_BADMAG */
 
 #endif

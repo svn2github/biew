@@ -94,15 +94,15 @@ typedef struct tagix86Param
   unsigned char REX;
 /*
   VEX is C4, C5 opcodes
-                   Byte 0         Byte 1             Byte 2
+		   Byte 0         Byte 1             Byte 2
   (Bit Position) 7        0   7 6 5 4        0   7 6    3 2 1 0
 		+----------+ +-----+----------+ +-+------+-+---+
   3-byte VEX C4 | 11000100 | |R X B|  m-mmmm  | |W| vvvv |L| pp|
-                +----------+ +-----+----------+ +-+------+-+---+
-                 7        0   7 6   3 2 1 0
+		+----------+ +-----+----------+ +-+------+-+---+
+		 7        0   7 6   3 2 1 0
 		+----------+ +-+-----+-+---+
   2-byte VEX C5 | 11000101 | |R| vvvv|L| pp|
-                +----------+ +-+-----+-+---+
+		+----------+ +-+-----+-+---+
 
    R: REX.R in 1's complement (inverted) form
       1: Same as REX.R=0 (must be 1 in 32-bit mode)
@@ -121,15 +121,15 @@ typedef struct tagix86Param
      00010: implied 0F 38 leading opcode bytes
      00011: implied 0F 3A leading opcode bytes
      00100-11111: Reserved for future use (will #UD)
-   vvvv: a register specifier (in 1's complement form) or 1111 if unused.			   					      
+   vvvv: a register specifier (in 1's complement form) or 1111 if unused.
    L: Vector Length
-        0: scalar or 128-bit vector
-        1: 256-bit vector
+	0: scalar or 128-bit vector
+	1: 256-bit vector
    pp: opcode extension providing equivalent functionality of a SIMD prefix
-        00: None
-        01: 66
-        10: F3
-        11: F2
+	00: None
+	01: 66
+	10: F3
+	11: F2
 */
   unsigned char VEX_m;
   unsigned char VEX_vlp;

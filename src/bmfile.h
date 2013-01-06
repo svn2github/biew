@@ -17,10 +17,6 @@
 #ifndef __BMFILE_INC
 #define __BMFILE_INC
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifndef __BBIO_H
 #include "libbeye/bbio.h"
 #endif
@@ -55,7 +51,7 @@ static inline char *		__FASTCALL__ BMName( void ) { return bioFileName(bm_file_h
 static inline __filesize_t	__FASTCALL__ BMGetCurrFilePos( void ) { return bioTell(bm_file_handle); }
 static inline __filesize_t	__FASTCALL__ BMGetFLength( void ) { return bioFLength(bm_file_handle); }
 static inline bool	__FASTCALL__ BMEOF( void ) { return bioEOF(bm_file_handle); }
-static inline void	__FASTCALL__ BMSeek(__fileoff_t pos,int RELATION) { bioSeek(bm_file_handle,pos,RELATION); } 
+static inline void	__FASTCALL__ BMSeek(__fileoff_t pos,int RELATION) { bioSeek(bm_file_handle,pos,RELATION); }
 static inline void	__FASTCALL__ BMReRead( void )  { bioReRead(bm_file_handle); }
 static inline uint8_t	__FASTCALL__ BMReadByte( void ) { return bioReadByte(bm_file_handle); }
 static inline uint16_t	__FASTCALL__ BMReadWord( void ) { return bioReadWord(bm_file_handle); }
@@ -109,9 +105,5 @@ bool          __FASTCALL__ bmWriteWordEx(__fileoff_t pos,int RELATION,uint16_t w
 bool          __FASTCALL__ bmWriteDWordEx(__fileoff_t pos,int RELATION,uint32_t dword);
 bool          __FASTCALL__ bmWriteQWordEx(__fileoff_t pos,int RELATION,uint64_t dword);
 bool          __FASTCALL__ bmWriteBuffEx(__fileoff_t pos,int RELATION,any_t* buff,unsigned len);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

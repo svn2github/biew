@@ -210,17 +210,17 @@ typedef struct e32_entry
     uint8_t       e32_flags;      /**< Entry point flags */
     union entrykind
     {
-        offset          e32_offset;     /**< 16-bit/32-bit offset entry */
-        struct callgate
-        {
-            uint16_t offset;      /**< Offset in segment */
-            uint16_t callgate;    /**< Callgate selector */
-        }e32_callgate;   /**< 286 (16-bit) call gate */
-        struct fwd
-        {
-            uint16_t  modord;     /**< Module ordinal number */
-            uint32_t  value;      /**< Proc name offset or ordinal */
-        }e32_fwd;        /**< Forwarder */
+	offset          e32_offset;     /**< 16-bit/32-bit offset entry */
+	struct callgate
+	{
+	    uint16_t offset;      /**< Offset in segment */
+	    uint16_t callgate;    /**< Callgate selector */
+	}e32_callgate;   /**< 286 (16-bit) call gate */
+	struct fwd
+	{
+	    uint16_t  modord;     /**< Module ordinal number */
+	    uint32_t  value;      /**< Proc name offset or ordinal */
+	}e32_fwd;        /**< Forwarder */
     }e32_variant;    /**< Entry variant */
 }e32_ENTRY;
 

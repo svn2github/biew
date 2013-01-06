@@ -21,10 +21,6 @@
 #include "_sys_dep.h"
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 extern char codeguid_image[];
 
 extern void              __FASTCALL__ GidResetGoAddress( int keycode );
@@ -35,9 +31,5 @@ extern char *            __FASTCALL__ GidEncodeAddress(__filesize_t cfpos,bool a
 
 extern bool             __FASTCALL__ initCodeGuider( void );
 extern void              __FASTCALL__ termCodeGuider( void );
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

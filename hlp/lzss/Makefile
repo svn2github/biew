@@ -20,8 +20,8 @@
 ##############################################################################
 include ../../config.mak
 
-CFLAGS = $(HOST_CFLAGS)
-LDFLAGS = $(HOST_LDFLAGS)
+CXXFLAGS = $(HOST_CFLAGS)
+LDXXFLAGS = $(HOST_LDFLAGS)
 
 ###########################################################################
 # TARGET: put name of executable image here                               #
@@ -48,9 +48,9 @@ cleansys:
 	$(RM) lib/sysdep/$(MACHINE)/$(HOST)/*.o
 
 $(TARGET): $(OBJS)
-	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+	$(CXX) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
-%.o : %.c
-	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
+%.o : %.cpp
+	$(CXX) $(CXXFLAGS) $(INCS) -c $< -o $@
 
-lzss.o:                        lzss.c
+lzss.o:                        lzss.cpp

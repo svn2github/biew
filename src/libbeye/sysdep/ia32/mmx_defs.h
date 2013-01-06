@@ -10,7 +10,7 @@
     of memory copying on PentMMX, Celeron-1 and P2 upto 12% versus
     standard (non MMX-optimized) version.
     Note: on K6-2+ it speedups memory copying upto 25% and
-          on K7 and P3 about 500% (5 times). */
+	  on K7 and P3 about 500% (5 times). */
 #define HAVE_MMX1
 #endif
 
@@ -31,15 +31,15 @@
 #undef PAVGB
 #ifdef HAVE_3DNOW
 #define PREFETCH  "prefetch"
-#define PREFETCHW "prefetchw" 
+#define PREFETCHW "prefetchw"
 #define PAVGB	  "pavgusb"
 #elif defined ( HAVE_MMX2 )
 #define PREFETCH "prefetchnta"
-#define PREFETCHW "prefetcht0" 
+#define PREFETCHW "prefetcht0"
 #define PAVGB	  "pavgb"
 #else
 #define PREFETCH "/nop"
-#define PREFETCHW "/nop" 
+#define PREFETCHW "/nop"
 #endif
 
 #undef EMMS

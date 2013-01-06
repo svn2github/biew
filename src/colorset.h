@@ -21,10 +21,6 @@
 #include "libbeye/twin.h"
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct tag_namedColorDef
 {
   const char  *name;
@@ -216,9 +212,5 @@ typedef struct tag_HelpCSet
 extern HelpCSet help_cset;
 
 extern bool   csetReadIniFile(const char *pal_name);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

@@ -21,8 +21,8 @@ SUBDIRS=libbeye
 DO_MAKE = @ for i in $(SUBDIRS); do $(MAKE) -C $$i $@ || exit; done
 DO_ALL  = @ for i in $(SUBDIRS); do $(MAKE) -C $$i all || exit; done
 
-CFLAGS = -I../hlp $(HOST_CFLAGS)
-LDFLAGS = $(HOST_LDFLAGS)
+CXXFLAGS = -I../hlp $(HOST_CFLAGS)
+LDXXFLAGS = $(HOST_LDFLAGS)
 
 ###########################################################################
 # TARGET: put name of executable image here                               #
@@ -36,78 +36,78 @@ BEYELIB = ./libbeye/$(LIBPREFIX)beye.$(LIBEXT)
 INCS = -I.
 LIBS = -L./libbeye -lbeye $(EXTRALIBS)
 SRCS = \
-addendum.c\
-bconsole.c\
-beye.c\
-beyehelp.c\
-beyeutil.c\
-bin_util.c\
-bmfile.c\
-codeguid.c\
-colorset.c\
-dialogs.c\
-editors.c\
-events.c\
-fileutil.c\
-info_win.c\
-mainloop.c\
-refs.c\
-search.c\
-setup.c\
-sysinfo.c\
-tstrings.c\
-addons/sys/ascii.c\
-addons/sys/consinfo.c\
-addons/sys/cpu_perf.c\
-addons/sys/inview.c\
-addons/tools/dig_conv.c\
-addons/tools/eval.c\
-plugins/bin/aout.c\
-plugins/bin/arch.c\
-plugins/bin/asf.c\
-plugins/bin/avi.c\
-plugins/bin/bin.c\
-plugins/bin/bmp.c\
-plugins/bin/coff386.c\
-plugins/bin/dos_sys.c\
-plugins/bin/elf386.c\
-plugins/bin/jpeg.c\
-plugins/bin/jvmclass.c\
-plugins/bin/le.c\
-plugins/bin/lmf.c\
-plugins/bin/lx.c\
-plugins/bin/mov.c\
-plugins/bin/mp3.c\
-plugins/bin/mpeg.c\
-plugins/bin/mz.c\
-plugins/bin/ne.c\
-plugins/bin/nlm386.c\
-plugins/bin/opharlap.c\
-plugins/bin/pe.c\
-plugins/bin/pharlap.c\
-plugins/bin/rdoff.c\
-plugins/bin/rdoff2.c\
-plugins/bin/realmedia.c\
-plugins/bin/sis.c\
-plugins/bin/sisx.c\
-plugins/bin/wav.c\
-plugins/binmode.c\
-plugins/disasm.c\
-plugins/hexmode.c\
-plugins/textmode.c\
-plugins/nls/russian.c\
-plugins/disasm/null_da.c\
-plugins/disasm/arm/arm.c\
-plugins/disasm/arm/arm16.c\
-plugins/disasm/arm/arm32.c\
-plugins/disasm/avr/avr.c\
-plugins/disasm/ppc/ppc.c\
-plugins/disasm/java/java.c\
-plugins/disasm/ix86/ix86.c\
-plugins/disasm/ix86/ix86_fpu.c\
-plugins/disasm/ix86/ix86_fun.c
+addendum.cpp\
+bconsole.cpp\
+beye.cpp\
+beyehelp.cpp\
+beyeutil.cpp\
+bin_util.cpp\
+bmfile.cpp\
+codeguid.cpp\
+colorset.cpp\
+dialogs.cpp\
+editors.cpp\
+events.cpp\
+fileutil.cpp\
+info_win.cpp\
+mainloop.cpp\
+refs.cpp\
+search.cpp\
+setup.cpp\
+sysinfo.cpp\
+tstrings.cpp\
+addons/sys/ascii.cpp\
+addons/sys/consinfo.cpp\
+addons/sys/cpu_perf.cpp\
+addons/sys/inview.cpp\
+addons/tools/dig_conv.cpp\
+addons/tools/eval.cpp\
+plugins/bin/aout.cpp\
+plugins/bin/arch.cpp\
+plugins/bin/asf.cpp\
+plugins/bin/avi.cpp\
+plugins/bin/bin.cpp\
+plugins/bin/bmp.cpp\
+plugins/bin/coff386.cpp\
+plugins/bin/dos_sys.cpp\
+plugins/bin/elf386.cpp\
+plugins/bin/jpeg.cpp\
+plugins/bin/jvmclass.cpp\
+plugins/bin/le.cpp\
+plugins/bin/lmf.cpp\
+plugins/bin/lx.cpp\
+plugins/bin/mov.cpp\
+plugins/bin/mp3.cpp\
+plugins/bin/mpeg.cpp\
+plugins/bin/mz.cpp\
+plugins/bin/ne.cpp\
+plugins/bin/nlm386.cpp\
+plugins/bin/opharlap.cpp\
+plugins/bin/pe.cpp\
+plugins/bin/pharlap.cpp\
+plugins/bin/rdoff.cpp\
+plugins/bin/rdoff2.cpp\
+plugins/bin/realmedia.cpp\
+plugins/bin/sis.cpp\
+plugins/bin/sisx.cpp\
+plugins/bin/wav.cpp\
+plugins/binmode.cpp\
+plugins/disasm.cpp\
+plugins/hexmode.cpp\
+plugins/textmode.cpp\
+plugins/nls/russian.cpp\
+plugins/disasm/null_da.cpp\
+plugins/disasm/arm/arm.cpp\
+plugins/disasm/arm/arm16.cpp\
+plugins/disasm/arm/arm32.cpp\
+plugins/disasm/avr/avr.cpp\
+plugins/disasm/ppc/ppc.cpp\
+plugins/disasm/java/java.cpp\
+plugins/disasm/ix86/ix86.cpp\
+plugins/disasm/ix86/ix86_fpu.cpp\
+plugins/disasm/ix86/ix86_fun.cpp
 
-OBJS=$(SRCS:.c=.o)
+OBJS=$(SRCS:.cpp=.o)
 
 HLP_SUBDIRS=tools/beyehlp tools/lzss
 DO_HELP = @ for i in $(HLP_SUBDIRS); do $(MAKE) -C $$i $@ || exit; done
@@ -134,10 +134,10 @@ distclean: clean
 	$(DO_MAKE)
 
 $(TARGET): $(OBJS)
-	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+	$(CXX) $(LDXXFLAGS) -o $@ $(OBJS) $(LIBS)
 
-%.o : %.c
-	$(CC) $(CFLAGS) $(INCS) -c $< -o $@
+%.o : %.cpp
+	$(CXX) $(CXXFLAGS) $(INCS) -c $< -o $@
 
 install:
 ifeq ($(INSTALL),)

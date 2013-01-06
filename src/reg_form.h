@@ -26,10 +26,6 @@
 #include "libbeye/twin.h"
 #endif
 
-#ifdef __cplusplus
-#define extern "C" {
-#endif
-
 typedef __filesize_t  (__FASTCALL__ *BinFunc)( void );
 typedef bool         (__FASTCALL__ *ModFunc)( void );
 
@@ -95,7 +91,7 @@ typedef unsigned long (__FASTCALL__ *AppRefs)(char *str,__filesize_t shift,int f
 #define PS_INACTIVE    0
 #define PS_ACTIVE      1
 
-typedef struct tag_REGISTRY_BIN
+struct REGISTRY_BIN
 {
   const char * name;                            /**< name of binary format */
   const char * prompt[10];                      /**< on ALT-Fx selection */
@@ -106,93 +102,93 @@ typedef struct tag_REGISTRY_BIN
   BinFunc   showHdr;                            /**< if not an MZ style format */
   AppRefs   bind;                               /**< for show references */
 
-                         /** This function is called, when activity of plugin is changed.
-                           * @param state      See PS_XXX constants.
-                           * @note             Plugin must support counter of
-                           *                   states. (For multiple call purpose)
-                          **/
+			 /** This function is called, when activity of plugin is changed.
+			   * @param state      See PS_XXX constants.
+			   * @note             Plugin must support counter of
+			   *                   states. (For multiple call purpose)
+			  **/
   void    (__FASTCALL__ *set_state)(int state);
 
-                         /** Returns CPU platform, that required by format.
-                           * @note           Full list of platform please see in
-                           *                 plugins/disasm.h file. If this
-                           *                 function return -1 then platform is
-                           *                 undefined.
-                          **/
+			 /** Returns CPU platform, that required by format.
+			   * @note           Full list of platform please see in
+			   *                 plugins/disasm.h file. If this
+			   *                 function return -1 then platform is
+			   *                 undefined.
+			  **/
   int     (__FASTCALL__ *query_platform)( void );
 
-                         /** Returns DAB_XXX. Quick version for disassembler */
+			 /** Returns DAB_XXX. Quick version for disassembler */
   int     (__FASTCALL__ *query_bitness)(__filesize_t);
 
-                         /** Returns DAE_XXX. */
+			 /** Returns DAE_XXX. */
   int     (__FASTCALL__ *query_endian)(__filesize_t);
 
-                         /** For displaying offset within struct in left address column.
-                           * @return         false if string is not modified.
-                          **/
+			 /** For displaying offset within struct in left address column.
+			   * @return         false if string is not modified.
+			  **/
   bool   (__FASTCALL__ *AddressResolving)(char *,__filesize_t);
 
-                         /** Converts virtual address to physical (means file offset).
-                           * @param va       indicates virtual address to be converted
-                           * @return         0 if operation meaningless
-                          **/
+			 /** Converts virtual address to physical (means file offset).
+			   * @param va       indicates virtual address to be converted
+			   * @return         0 if operation meaningless
+			  **/
  __filesize_t (__FASTCALL__ *va2pa)(__filesize_t va);
 
-                         /** Converts physical address to virtual.
-                           * @param pa       indicates physical address to be converted
-                           * @note           seg pointer can be NULL
-                          **/
+			 /** Converts physical address to virtual.
+			   * @param pa       indicates physical address to be converted
+			   * @note           seg pointer can be NULL
+			  **/
   __filesize_t (__FASTCALL__ *pa2va)(__filesize_t pa);
 
 
 /*-- Below placed functions for 'put structures' method of save as dialog --*/
 
-                         /** Fills the string with public symbol
-                           * @param str       pointer to the string to be filled
-                           * @param cb_str    indicates maximal length of string
-                           * @param _class    pointer to the memory where can be stored class of symbol (See SC_* conatnts)
-                           * @param pa        indicates physical offset within file
-                           * @param as_prev   indicates direction of symbol searching from given physical offset
-                           * @return          0 - if no symbol name available
-                           *                  in given direction (as_prev)
-                           *                  physical address of public symbol
-                           *                  which is found in given direction
-                          **/
+			 /** Fills the string with public symbol
+			   * @param str       pointer to the string to be filled
+			   * @param cb_str    indicates maximal length of string
+			   * @param _class    pointer to the memory where can be stored class of symbol (See SC_* conatnts)
+			   * @param pa        indicates physical offset within file
+			   * @param as_prev   indicates direction of symbol searching from given physical offset
+			   * @return          0 - if no symbol name available
+			   *                  in given direction (as_prev)
+			   *                  physical address of public symbol
+			   *                  which is found in given direction
+			  **/
   __filesize_t (__FASTCALL__ *GetPubSym)(char *str,unsigned cb_str,unsigned *_class,
-                             __filesize_t pa,bool as_prev);
+			     __filesize_t pa,bool as_prev);
 
-                         /** Determines attributes of object at given physical file address.
-                           * @param pa        indicates physical file offset of object
-                           * @param name      pointer to the string which is to be filled with object name
-                           * @param cb_name   indicates maximal length of string
-                           * @param start     pointer to the memory where must be stored start of given object, as file offset.
-                           * @param end       pointer to the memory where must be stored end of given object, as file offset.
-                           * @param _class    pointer to the memory where must be stored _class of object (See OC_* constants).
-                           * @param bitness   pointer to the memory where must be stored bitness of object (See DAB_* constants).
-                           * @return          logical number of object or 0 if at given offset is no object.
-                           * @note            all arguments exclude name of object
-                           *                  must be filled.
-                           * @remark          For example: if exe-format - new
-                           *                  exe i.e. contains MZ and NEW
-                           *                  header and given file offset
-                           *                  points to old exe stub then start
-                           *                  = 0, end = begin of first data or
-                           *                  code object).
-                          **/
+			 /** Determines attributes of object at given physical file address.
+			   * @param pa        indicates physical file offset of object
+			   * @param name      pointer to the string which is to be filled with object name
+			   * @param cb_name   indicates maximal length of string
+			   * @param start     pointer to the memory where must be stored start of given object, as file offset.
+			   * @param end       pointer to the memory where must be stored end of given object, as file offset.
+			   * @param _class    pointer to the memory where must be stored _class of object (See OC_* constants).
+			   * @param bitness   pointer to the memory where must be stored bitness of object (See DAB_* constants).
+			   * @return          logical number of object or 0 if at given offset is no object.
+			   * @note            all arguments exclude name of object
+			   *                  must be filled.
+			   * @remark          For example: if exe-format - new
+			   *                  exe i.e. contains MZ and NEW
+			   *                  header and given file offset
+			   *                  points to old exe stub then start
+			   *                  = 0, end = begin of first data or
+			   *                  code object).
+			  **/
   unsigned    (__FASTCALL__ *GetObjAttr)(__filesize_t pa,char *name,unsigned cb_name,
-                              __filesize_t *start,__filesize_t *end,int *_class,int *bitness);
+			      __filesize_t *start,__filesize_t *end,int *_class,int *bitness);
 
-                         /** Prepares internal buffers for work file structures.
-                           * @param start     indicates start position in the file, that is required for disassembler
-                           * @param end       indicates end position in the file, that is required for disassembler
-                           * return           false if success, true if an error
-                           *                  is occured (sample: out of memory)
-                           * @note            It is called before GetPubSym and GetObjAttr
-                          **/
+			 /** Prepares internal buffers for work file structures.
+			   * @param start     indicates start position in the file, that is required for disassembler
+			   * @param end       indicates end position in the file, that is required for disassembler
+			   * return           false if success, true if an error
+			   *                  is occured (sample: out of memory)
+			   * @note            It is called before GetPubSym and GetObjAttr
+			  **/
   bool         (__FASTCALL__ *prepare_structs)(__filesize_t start,__filesize_t end);
-                         /** Cleans internal buffers after stopping of structural disassembler */
+			 /** Cleans internal buffers after stopping of structural disassembler */
   void          (__FASTCALL__ *drop_structs)( void );
-}REGISTRY_BIN;
+};
 
 extern REGISTRY_BIN *detectedFormat;
 
@@ -209,26 +205,26 @@ extern REGISTRY_BIN *detectedFormat;
 
 typedef struct tag_REGISTRY_MODE
 {
-  const char *  name;
-  const char *  prompt[10];                   /**< on Ctrl-Fx selection */
-  ModFunc       action[10];                   /**< action on Ctrl-Fx selection */
+  const char*  name;
+  const char*  prompt[10];                   /**< on Ctrl-Fx selection */
+  ModFunc      action[10];                   /**< action on Ctrl-Fx selection */
   bool         (__FASTCALL__ *detect)(void); /**< detects possibility to assign this mode as default mode for openned file. */
-  unsigned       flags;                       /**< see __MF_* constants */
+  unsigned     flags;                        /**< see __MF_* constants */
 
-                         /** Paints the file on the screen.
-                           * @param keycode   indicates keyboard code which caused repainting
-                           * @param textshift indicates shift of text. Useful only for text mode.
-                           * return           new shift of text
-                          **/
+			 /** Paints the file on the screen.
+			   * @param keycode   indicates keyboard code which caused repainting
+			   * @param textshift indicates shift of text. Useful only for text mode.
+			   * return           new shift of text
+			  **/
   unsigned      (__FASTCALL__ *paint)(unsigned keycode,unsigned textshift);
 
-                         /** Converts buffer with using selected NLS as xlat table.
-                           * @param str       string to be converted
-                           * @param len       length of string
-                           * @param use_fs_nls specifies usage of nls of file
-                                              system but not screen.
-                           * @return          new size of blocks after conversation
-                          **/
+			 /** Converts buffer with using selected NLS as xlat table.
+			   * @param str       string to be converted
+			   * @param len       length of string
+			   * @param use_fs_nls specifies usage of nls of file
+					      system but not screen.
+			   * @return          new size of blocks after conversation
+			  **/
   unsigned      (__FASTCALL__ *convert_cp)(char *str,unsigned len, bool use_fs_nls);
 
   unsigned      (__FASTCALL__ *get_symbol_size)( void ); /**< Returns symbol size in bytes for selected NLS codepage */
@@ -243,16 +239,16 @@ typedef struct tag_REGISTRY_MODE
   void          (__FASTCALL__ *save_ini)( hIniProfile * );  /**< writes to beye.ini if need */
   void          (__FASTCALL__ *init)( void );            /**< initialize mode (constructor) */
   void          (__FASTCALL__ *term)( void );            /**< destroy mode (destructor) */
-                         /** Performs search in plugin's output
-                           * @param pwnd      indicates handle of Percent window with progress indicator
-                           * @param start     indicates start offset within file where search must be performed
-                           * @param slen      on output contains length of found sequence
-                           * @param flags     indicates flags (SF_* family) of search.
-                           * @param is_continue indicates initialization of search
-                           *                  If set then search should be continued
-                           * @param is_found  on output must contain true if result is really found
-                           * @return          offset of found sequence or ULONG(LONG)_MAX if not found
-                          **/
+			 /** Performs search in plugin's output
+			   * @param pwnd      indicates handle of Percent window with progress indicator
+			   * @param start     indicates start offset within file where search must be performed
+			   * @param slen      on output contains length of found sequence
+			   * @param flags     indicates flags (SF_* family) of search.
+			   * @param is_continue indicates initialization of search
+			   *                  If set then search should be continued
+			   * @param is_found  on output must contain true if result is really found
+			   * @return          offset of found sequence or ULONG(LONG)_MAX if not found
+			  **/
 __filesize_t (__FASTCALL__ *search_engine)(TWindow *pwnd, __filesize_t start, __filesize_t *slen, unsigned flags, bool is_continue, bool *is_found);
 }REGISTRY_MODE;
 
@@ -275,9 +271,5 @@ typedef struct tag_REGISTRY_SYSINFO
   void          (*read_ini)( void ); /**< reads beye.ini if need */
   void          (*save_ini)( void ); /**< writes to beye.ini if need */
 }REGISTRY_SYSINFO;
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

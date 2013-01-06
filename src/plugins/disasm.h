@@ -37,14 +37,14 @@
 #define DISASM_JAVA		3  /**< indicates Java disassembler */
 #define DISASM_CPU_ARM		4  /**< indicates ARM disassembler */
 #define DISASM_CPU_PPC		5  /**< indicates PowerPC disassembler */
-                                    /* ... here may placed other constants!!! ... */
+				    /* ... here may placed other constants!!! ... */
 #define DISASM_CPU_IA64		6  /**< indicates Itanium disassembler */
 #define DISASM_CPU_ALPHA	7  /**< indicates DEC Alpha disassembler */
 #define DISASM_CPU_MIPS		8  /**< indicates MIPS disassembler */
 #define DISASM_CPU_SPARC	9  /**< indicates SUN Sparc disassembler */
 #define DISASM_CPU_SH		10 /**< indicates Hitachi SH disassembler */
 #define DISASM_CPU_CRAY		11 /**< indicates Cray disassembler */
-                                    /* ... here may placed other constants!!! ... */
+				    /* ... here may placed other constants!!! ... */
 #define DISASM_DEFAULT		0  /**< indicates unspecified disassembler: format default */
 
 
@@ -105,8 +105,8 @@ extern unsigned dis_severity; /**< severity of disassembler commentaries */
 #define __INSNT_JMPRIP  0x00000005L /**< Jump via RIP. Like: .i386: jmp [rip+name@GOT(rip)] */
 
 typedef DisasmRet (__FASTCALL__ *DisasmFunc)(__filesize_t shift,
-                                             MBuffer insn_buff,
-                                             unsigned flags);
+					     MBuffer insn_buff,
+					     unsigned flags);
 typedef AsmRet    (__FASTCALL__ *AsmFunc)(const char *str);
 
 typedef struct tag_REGISTRY_DISASM
@@ -177,21 +177,21 @@ extern void   __FASTCALL__ disSetModifier(char *str,const char *modf);
     *** 1 ***
     00005678: B8 34 12       mov   ax, 1234
     after references resolving it can will:
-                             mov   ax, off16 KERNEL.@4
+			     mov   ax, off16 KERNEL.@4
     i.e. i must call this function as:
     strcpy(outstr,"mov ax,");
     disAppendDigits(outstr, 0x5679, 1, 2, 0x1234, DISARG_WORD);
     *** 2 ***
     00005678: 8B 80 34 12       mov   ax, [bx+si+1234]
     after references resolving it can will:
-                                mov   ax, [bx+si+off16 KERNEL.@4]
+				mov   ax, [bx+si+off16 KERNEL.@4]
     i.e. i must call this function as:
     strcpy(outstr,"mov ax,[bx+si+");
     disAppendDigits(outstr, 0x5680, 1, 2, 0x1234, DISARG_WORD);
     strcat(outstr,"]");
 **/
 extern int __FASTCALL__  disAppendDigits(char *str,__filesize_t ulShift,int flags,
-                              char codelen,any_t*defval,unsigned type);
+			      char codelen,any_t*defval,unsigned type);
 
 #define DISADR_SHORT   0x00
 #define DISADR_NEAR16  0x01
@@ -214,19 +214,19 @@ extern int __FASTCALL__  disAppendDigits(char *str,__filesize_t ulShift,int flag
     *** 1 ***
     00001002: 9A 78 56 34 12       callf 1234:5678
     after references resolving it may:
-                                   callf KERNEL.@90
+				   callf KERNEL.@90
     i.e. i must call this function as:
     strcpy(outstr,"callf ");
     disAppendFAddr(outstr, 0x1003, 0x5678, 0x1002, DISADR_FAR16, 0x1234, 4);
     *** 2 ***
     00001002: 66 E9 78 56 34 12       calln32 12345678
     after references resolving it may:
-                                      calln32 KERNEL32.TerminateApp
+				      calln32 KERNEL32.TerminateApp
     i.e. i must call this function as:
     strcpy(outstr,"calln32 ");
     disAppendFAddr(outstr, 0x1004, 0x12345678, 0x1002, DISADR_NEAR32, 0, 4);
 **/
 extern int __FASTCALL__  disAppendFAddr(char * str,__fileoff_t ulShift,__fileoff_t distin,
-                             __filesize_t r_sh,char type,
-                             unsigned seg,char codelen);
+			     __filesize_t r_sh,char type,
+			     unsigned seg,char codelen);
 #endif

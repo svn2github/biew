@@ -1,27 +1,27 @@
 include ../../config.mak
 
-CFLAGS = -I.. $(HOST_CFLAGS)
-LDFLAGS = $(HOST_LDFLAGS)
+CXXFLAGS = -I.. $(HOST_CFLAGS)
+LDXXFLAGS = $(HOST_LDFLAGS)
 
 LIBNAME = $(LIBPREFIX)beye.a
 
-SRCS= bbio.c \
-      file_ini.c \
-      libbeye.c \
-      pmalloc.c \
-      tw_class.c \
-      twin.c \
-      sysdep/$(MACHINE)/aclib.c \
-      sysdep/$(MACHINE)/cpu_info.c \
-      osdep/$(HOST)/fileio.c \
-      osdep/$(HOST)/keyboard.c \
-      osdep/$(HOST)/mmfio.c \
-      osdep/$(HOST)/mouse.c \
-      osdep/$(HOST)/misc.c \
-      osdep/$(HOST)/nls.c \
-      osdep/$(HOST)/os_dep.c \
-      osdep/$(HOST)/timer.c \
-      osdep/$(HOST)/vio.c
+SRCS= bbio.cpp \
+      file_ini.cpp \
+      libbeye.cpp \
+      pmalloc.cpp \
+      tw_class.cpp \
+      twin.cpp \
+      sysdep/$(MACHINE)/aclib.cpp \
+      sysdep/$(MACHINE)/cpu_info.cpp \
+      osdep/$(HOST)/fileio.cpp \
+      osdep/$(HOST)/keyboard.cpp \
+      osdep/$(HOST)/mmfio.cpp \
+      osdep/$(HOST)/mouse.cpp \
+      osdep/$(HOST)/misc.cpp \
+      osdep/$(HOST)/nls.cpp \
+      osdep/$(HOST)/os_dep.cpp \
+      osdep/$(HOST)/timer.cpp \
+      osdep/$(HOST)/vio.cpp
 
 
 ifeq ($(HOST),qnx)
@@ -30,15 +30,15 @@ ASMS = \
       osdep/$(HOST)/3sto3r.asm
 endif
 
-OBJS=$(SRCS:.c=.o)
+OBJS=$(SRCS:.cpp=.o)
 AOBJS=$(ASMS:.asm=.o)
 
 .SUFFIXES: .asm .c .o
 
 # .PHONY: all clean
 
-.c.o:
-	$(CC) -c $(CFLAGS) -o $@ $<
+.cpp.o:
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
 .asm.o:
 	$(CC) -c -o $@ $<
 

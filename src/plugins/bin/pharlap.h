@@ -80,8 +80,8 @@ typedef struct tagnewPharLap
   uint16_t           plLDT;            /**< initial LDT */
   uint16_t           plTSS;            /**< initial TSS */
   uint16_t           plFlags;          /**< bit 0: load image is packed */
-                                     /**< bit 1: 32-bit checksum is present */
-                                     /**< bits 4-2: type of relocation table */
+				     /**< bit 1: 32-bit checksum is present */
+				     /**< bits 4-2: type of relocation table */
   uint32_t           plMemReq;         /**< memory requirements for load image */
   uint32_t           plChecksum32;     /**< 32-bit checksum (optional) */
   uint32_t           plStackSize;      /**< size of stack segment in bytes */
@@ -108,8 +108,8 @@ typedef struct tagPLRunTimeParms
   uint32_t           rtEndRModeOffset; /**< offset of byte past end of real-mode code and data */
   uint16_t           rtCallBuffSize;   /**< size in KB of call buffers */
   uint16_t           rtFlags;
-                                     /**< bit 0: file is virtual memory manager */
-                                     /**< bit 1: file is a debugger */
+				     /**< bit 0: file is virtual memory manager */
+				     /**< bit 1: file is a debugger */
   uint16_t           rtUnprivFlags;    /**< unprivileged flag (if nonzero, executes at ring 1, 2, or 3) */
   uint8_t            rtReserv[104];
 }PLRunTimeParms;
