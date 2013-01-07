@@ -204,7 +204,7 @@ FiHandler __FASTCALL__ FiOpen( const char * filename)
   ret = bioOpen(filename,FO_READONLY | SO_DENYWRITE,UINT_MAX,BIO_OPT_USEMMF);
   /* Note! All OSes except DOS-DOS386 allows opening of empty filenames as /dev/null */
   if(ret == &bNull && filename[0]) FiAError(__FI_BADFILENAME,0,filename);
-  activeFile = (char *)PMalloc((strlen(filename) + 1));
+  activeFile = new char [strlen(filename) + 1];
   if(activeFile == NULL) FiAError(__FI_NOTMEM,0,NULL);
   strcpy(activeFile,filename);
   if(!FiFilePtr)
@@ -226,7 +226,7 @@ FiHandler __FASTCALL__ FiOpen( const char * filename)
 
 void __FASTCALL__ FiClose(FiHandler h)
 {
-  PFREE(FiFileNames[FiFilePtr-1]);
+  delete FiFileNames[FiFilePtr-1];
   if(FiFilePtr)
   {
     FiFileNames = (char**)PRealloc(FiFileNames,sizeof(char *)*(FiFilePtr));
@@ -236,8 +236,8 @@ void __FASTCALL__ FiClose(FiHandler h)
   }
   else
   {
-    PFREE(FiFileNames);
-    PFREE(FinCurrString);
+    delete FiFileNames;
+    delete FinCurrString;
   }
   bioClose(h);
 }
@@ -395,7 +395,7 @@ static char * __FASTCALL__ FiGetNextLegWord( STRING * str,const char * legal_sym
 static char * __NEAR__ __FASTCALL__ __FiCMaxStr( void )
 {
   char * ret;
-  ret = (char *)PMalloc(FI_MAXSTRLEN + 1);
+  ret = new char [FI_MAXSTRLEN + 1];
   if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
   return ret;
 }
@@ -405,7 +405,7 @@ static char * __NEAR__ __FASTCALL__ __FiCNWord( STRING *str , const char * illeg
   char * ret;
   unsigned int lword;
   lword = FiGetLengthNextWord(str,illegal_set);
-  ret = (char *)PMalloc(lword + 1);
+  ret = new char [lword + 1];
   if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
   if(lword) FiGetNextWord(str,illegal_set,ret);
   else      ret[0] = 0;
@@ -417,7 +417,7 @@ static char * __NEAR__ __FASTCALL__ __FiCNLegWord( STRING *str , const char * le
   char * ret;
   unsigned int lword;
   lword = FiGetLengthNextLegWord(str,legal_set);
-  ret = (char *)PMalloc(lword + 1);
+  ret = new char [lword + 1];
   if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
   if(lword) FiGetNextLegWord(str,legal_set,ret);
   else      ret[0] = 0;
@@ -429,7 +429,7 @@ static char * __NEAR__ __FASTCALL__ __FiCBString( const char * src )
   char * ret;
   unsigned int lbr;
   lbr = FiGetLengthBracketString(src);
-  ret = (char *)PMalloc(lbr + 1);
+  ret = new char [lbr + 1];
   if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
   if(lbr) FiGetBracketString(src,ret);
   else    ret[0] = 0;
@@ -441,7 +441,7 @@ static char * __NEAR__ __FASTCALL__ __FiCItem( const char * src )
   char * ret;
   unsigned int li;
   li = FiGetLengthItem(src);
-  ret = (char *)PMalloc(li + 1);
+  ret = new char [li + 1];
   if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
   if(li) FiGetItemName(src,ret);
   else   ret[0] = 0;
@@ -453,7 +453,7 @@ static char * __NEAR__ __FASTCALL__ __FiCValue( const char * src )
   char * ret;
   unsigned int lv;
   lv = FiGetLengthValue(src);
-  ret = (char *)PMalloc(lv + 1);
+  ret = new char [lv + 1];
   if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
   if(lv) FiGetValueOfItem(src,ret);
   else   ret[0] = 0;
@@ -465,7 +465,7 @@ static char * __NEAR__ __FASTCALL__ __FiCSection( const char * src )
   char * ret;
   unsigned int ls;
   ls = FiGetLengthSection(src);
-  ret = (char *)PMalloc(ls + 1);
+  ret = new char [ls + 1];
   if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
   if(ls) FiGetSectionName(src,ret);
   else   ret[0] = 0;
@@ -477,7 +477,7 @@ static char * __NEAR__ __FASTCALL__ __FiCSubSection( const char * src )
   char * ret;
   unsigned int lss;
   lss = FiGetLengthSubSection(src);
-  ret = (char *)PMalloc(lss + 1);
+  ret = new char [lss + 1];
   if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
   if(lss) FiGetSubSectionName(src,ret);
   else    ret[0] = 0;
@@ -489,7 +489,7 @@ static char * __NEAR__ __FASTCALL__ __FiCCmd( const char * src )
   char * ret;
   unsigned int lc;
   lc = FiGetLengthCommandString(src);
-  ret = (char *)PMalloc(lc + 1);
+  ret = new char [lc + 1];
   if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
   if(lc) FiGetCommandString(src,ret);
   else   ret[0] = 0;
@@ -512,7 +512,7 @@ void __FASTCALL__ FiSeekTo( FiHandler h, unsigned int nSection, unsigned int nSu
       if(FiisSection(buff)) ns++;
       if(ns < nSection) continue;
     }
-    PFREE(buff);
+    delete buff;
   }
   if(nSubSection)
   {
@@ -524,7 +524,7 @@ void __FASTCALL__ FiSeekTo( FiHandler h, unsigned int nSection, unsigned int nSu
      if(FiisSubSection(buff)) nss++;
      if(nss < nSubSection) continue;
    }
-   PFREE(buff);
+   delete buff;
   }
   if(nItem)
   {
@@ -536,7 +536,7 @@ void __FASTCALL__ FiSeekTo( FiHandler h, unsigned int nSection, unsigned int nSu
      if(FiisItem(buff)) ni++;
      if(nss < nItem) continue;
    }
-   PFREE(buff);
+   delete buff;
   }
 }
 
@@ -553,23 +553,23 @@ int __FASTCALL__ FiSearch(FiHandler h, const char * str )
    if(FiisSection(buff))
    {
      FiGetSectionName(buff,tmp);
-     if(strcmp(tmp,str) == 0) { PFREE(tmp); PFREE(buff); return __FI_SECTION;}
+     if(strcmp(tmp,str) == 0) { delete tmp; delete buff; return __FI_SECTION;}
    }
    if(FiisSubSection(buff))
    {
      FiGetSubSectionName(buff,tmp);
-     if(strcmp(tmp,str) == 0) { PFREE(buff); PFREE(tmp); return __FI_SUBSECTION; }
+     if(strcmp(tmp,str) == 0) { delete buff; delete tmp; return __FI_SUBSECTION; }
    }
    if(FiisItem(buff))
    {
      FiGetItemName(buff,tmp);
-     if(strcmp(tmp,str) == 0) { PFREE(tmp); PFREE(buff); return __FI_ITEM; }
+     if(strcmp(tmp,str) == 0) { delete tmp; delete buff; return __FI_ITEM; }
    }
   }
   bioSeek(h,0L,SEEKF_START);
   FinCurrString[FiFilePtr - 1] = 0;
-  PFREE(tmp);
-  PFREE(buff);
+  delete tmp;
+  delete buff;
   return __FI_NOTFOUND;
 }
 
@@ -591,7 +591,7 @@ unsigned int  __FASTCALL__ FiGetNumberOfSections( FiHandler h)
  }
  bioSeek(h,curr,SEEKF_START);
  FinCurrString[FiFilePtr - 1] = save;
- PFREE(buff);
+ delete buff;
  return eret;
 }
 
@@ -613,7 +613,7 @@ unsigned int __FASTCALL__ FiGetTotalNumberOfSubSections( FiHandler h )
  }
  bioSeek(h,curr,SEEKF_START);
  FinCurrString[FiFilePtr - 1] = save;
- PFREE(buff);
+ delete buff;
  return eret;
 }
 
@@ -635,7 +635,7 @@ unsigned int __FASTCALL__ FiGetLocalNumberOfSubSections( FiHandler h, unsigned u
   }
   bioSeek(h,curr,SEEKF_START);
   FinCurrString[FiFilePtr - 1] = save;
-  PFREE(buff);
+  delete buff;
   return eret;
 }
 
@@ -657,7 +657,7 @@ unsigned int  __FASTCALL__ FiGetTotalNumberOfItems( FiHandler h)
  }
  bioSeek(h,curr,SEEKF_START);
  FinCurrString[FiFilePtr - 1] = save;
- PFREE(buff);
+ delete buff;
  return eret;
 }
 
@@ -679,7 +679,7 @@ unsigned int  __FASTCALL__ FiGetLocalNumberOfItems( FiHandler h,int nSection, in
   }
   bioSeek(h,curr,SEEKF_START);
   FinCurrString[FiFilePtr - 1] = save;
-  PFREE(buff);
+  delete buff;
   return eret;
 }
 #endif
@@ -753,15 +753,15 @@ pVar __FASTCALL__ FiConstructVar(const char *v,const char *a)
 {
  char * str;
  pVar vv;
- vv = (pVar)PMalloc(sizeof(Var));
+ vv = new Var;
  if(vv == NULL) FiAError(__FI_NOTMEM,0,NULL);
  vv->next = NULL;
  vv->prev = NULL;
- str = (char *)PMalloc(strlen(v) + 1);
+ str = new char [strlen(v) + 1];
  if(str == NULL) FiAError(__FI_NOTMEM,0,NULL);
  strcpy(str,v);
  vv->variables = str;
- str = (char *)PMalloc(strlen(a) + 1);
+ str = new char [strlen(a) + 1];
  if(str == NULL) FiAError(__FI_NOTMEM,0,NULL);
  strcpy(str,a);
  vv->associate = str;
@@ -770,9 +770,9 @@ pVar __FASTCALL__ FiConstructVar(const char *v,const char *a)
 
 void __FASTCALL__ FiDeleteVar(pVar pp)
 {
-  PFREE(pp->variables);
-  PFREE(pp->associate);
-  PFREE(pp);
+  delete pp->variables;
+  delete pp->associate;
+  delete pp;
 }
 
 void __FASTCALL__ FiDeleteAllVar( void )
@@ -875,7 +875,7 @@ void __FASTCALL__ FiAddVariables(const char * var,const char * associate)
   {
    if(strcmp(iter->variables,var) == 0)
    {
-     PFREE(iter->associate);
+     delete iter->associate;
      iter->associate = new char [strlen(associate) + 1];
      if(iter->associate == NULL) FiAError(__FI_NOTMEM,0,NULL);
      strcpy(iter->associate,associate);
@@ -938,7 +938,7 @@ bool __FASTCALL__ FiGetConditionStd( const char *condstr)
 
   var = __FiCNWord(&str," !=");
   FiExpandAllVar(var,real_ass);
-  PFREE(var);
+  delete var;
   rvar = FiExpandVariables(real_ass);
   cond[0] = str.str[str.iptr++];
   cond[1] = str.str[str.iptr++];
@@ -946,7 +946,7 @@ bool __FASTCALL__ FiGetConditionStd( const char *condstr)
 
   var = __FiCNWord(&str," ");
   FiExpandAllVar(var,user_ass);
-  PFREE(var);
+  delete var;
   if(str.str[str.iptr]) FiAErrorCL(__FI_BADCHAR);
   ret = false;
   if(strcmp(cond,"==") == 0)  ret = (strcmp(user_ass,rvar) == 0);
@@ -954,8 +954,8 @@ bool __FASTCALL__ FiGetConditionStd( const char *condstr)
    if(strcmp(cond,"!=") == 0)  ret = (strcmp(user_ass,rvar) != 0);
    else
      FiAErrorCL(__FI_BADCOND);
-  PFREE(user_ass);
-  PFREE(real_ass);
+  delete user_ass;
+  delete real_ass;
   return ret;
 }
 
@@ -986,7 +986,7 @@ bool __FASTCALL__ FiCommandProcessorStd( const char * cmd )
    else    strcpy(pfile,_v);
    (*FiFileProcessor)(pfile);
    fi_Debug_Str = fdeb_save;
-   PFREE(bracket);
+   delete bracket;
    goto Exit_CP;
  }
  else
@@ -999,8 +999,8 @@ bool __FASTCALL__ FiCommandProcessorStd( const char * cmd )
    if(v[0] == '\0' || v == NULL ) FiAErrorCL(__FI_BADVAR);
    if(a[0] == '\0' || a == NULL ) FiAErrorCL(__FI_BADVAL);
    FiAddVariables(v,a);
-   PFREE(a);
-   PFREE(v);
+   delete a;
+   delete v;
    if(str.str[str.iptr]) FiAErrorCL(__FI_BADCHAR);
    goto Exit_CP;
  }
@@ -1012,8 +1012,8 @@ bool __FASTCALL__ FiCommandProcessorStd( const char * cmd )
    FiExpandAllVar(v,a);
    if(a[0] == '\0' || a == NULL) FiAErrorCL(__FI_BADVAR);
    FiRemoveVariables(a);
-   PFREE(v);
-   PFREE(a);
+   delete v;
+   delete a;
    if(str.str[str.iptr]) FiAErrorCL(__FI_BADCHAR);
    goto Exit_CP;
  }
@@ -1088,7 +1088,7 @@ bool __FASTCALL__ FiCommandProcessorStd( const char * cmd )
    while(!bioEOF(ActiveFile))
    {
      FiGetNextString(ActiveFile,sstore,FI_MAXSTRLEN,NULL);
-     if(sstore[0] == '\0') { PFREE(sstore); goto Exit_CP; }
+     if(sstore[0] == '\0') { delete sstore; goto Exit_CP; }
      if(FiisCommand(sstore))
      {
        STRING cStr;
@@ -1105,9 +1105,9 @@ bool __FASTCALL__ FiCommandProcessorStd( const char * cmd )
 	 nLabel--;
 	 if(nLabel == 0)
 	 {
-	   PFREE(sstore);
-	   PFREE(a);
-	   PFREE(v);
+	   delete sstore;
+	   delete a;
+	   delete v;
 	   goto Exit_CP;
 	 }
 	 if(nLabel <  0) FiAErrorCL(__FI_IFNOTFOUND);
@@ -1117,8 +1117,8 @@ bool __FASTCALL__ FiCommandProcessorStd( const char * cmd )
 	   if( BeenElse ) FiAErrorCL(__FI_ELSESTAT);
 	   if( nLabel == 1 ) cond_ret = Condition = (Condition ? false : true);
 	   if( nLabel == 1 ) BeenElse = true;
-	   PFREE(v);
-	   PFREE(a);
+	   delete v;
+	   delete a;
 	   continue;
        }
        if(strcmp(v,"elif") == 0 && nLabel == 1)
@@ -1126,22 +1126,22 @@ bool __FASTCALL__ FiCommandProcessorStd( const char * cmd )
 	   if( BeenElse ) FiAErrorCL(__FI_ELIFSTAT);
 	   if( nLabel == 1 ) cond_ret = Condition = (*FiGetCondition)(&a[cStr.iptr]);
 	   if( nLabel == 1 ) BeenElse = true;
-	   PFREE(v);
-	   PFREE(a);
+	   delete v;
+	   delete a;
 	   continue;
        }
        if(Condition) (*FiCommandProcessor)(a);
-       PFREE(v);
-       PFREE(a);
+       delete v;
+       delete a;
      }
      else { if(Condition) (*FiStringProcessor)(sstore); }
    }
-   PFREE(sstore)
+   delete sstore;
    FiAError(__FI_OPENCOND,nsave,NULL);
  }
  FiAErrorCL(__FI_UNRECOGN);
  Exit_CP:
- PFREE(word);
+ delete word;
  return cond_ret;
 }
 
@@ -1155,21 +1155,21 @@ bool __FASTCALL__ FiStringProcessorStd(char * curr_str)
     {
       item = __FiCCmd(curr_str);
       (*FiCommandProcessor)(item);
-      PFREE(item);
+      delete item;
       return false;
     }
     else
     if(FiisSection(curr_str))
     {
-      if(curr_sect) PFREE(curr_sect);
-      if(curr_subsect) PFREE(curr_subsect);
+      if(curr_sect) delete curr_sect;
+      if(curr_subsect) delete curr_subsect;
       curr_sect = __FiCSection(curr_str);
       return false;
     }
     else
     if(FiisSubSection(curr_str))
     {
-      if(curr_subsect) PFREE(curr_subsect);
+      if(curr_subsect) delete curr_subsect;
       curr_subsect = __FiCSubSection(curr_str);
       return false;
     }
@@ -1192,10 +1192,10 @@ bool __FASTCALL__ FiStringProcessorStd(char * curr_str)
        info.item = item;
        info.value = val;
        retval = (*proc)(&info);
-       PFREE(val);
+       delete val;
       }
       else FiAErrorCL(__FI_BADCHAR);
-      PFREE(item);
+      delete item;
       return retval;
     }
   return false;
@@ -1222,8 +1222,8 @@ void __FASTCALL__ FiFileProcessorStd(const char * filename)
       if(done) break;
   }
   FiClose(h);
-  if(work_str) PFREE(work_str)
-  else PFREE(ondelete)
+  if(work_str) delete work_str;
+  else delete ondelete;
   ActiveFile = oldh;
 }
 
@@ -1235,8 +1235,8 @@ void __FASTCALL__  FiProgress(const char * filename,FiUserFunc usrproc)
   (*FiFileProcessor)(filename);
 
   proc = NULL;
-  if(curr_sect) PFREE(curr_sect);
-  if(curr_subsect) PFREE(curr_subsect);
+  if(curr_sect) delete curr_sect;
+  if(curr_subsect) delete curr_subsect;
   FiDeleteAllVar();
 }
 
@@ -1259,8 +1259,8 @@ static void __FASTCALL__ hlFiFileProcessorStd(hIniProfile *ini)
       done = (*FiStringProcessor)(work_str);
       if(done) break;
   }
-  if(work_str) PFREE(work_str)
-  else PFREE(ondelete)
+  if(work_str) delete work_str;
+  else delete ondelete;
   ActiveFile = oldh;
 }
 
@@ -1273,8 +1273,8 @@ void __FASTCALL__ hlFiProgress(hIniProfile *ini,FiUserFunc usrproc)
   hlFiFileProcessorStd(ini);
 
   proc = NULL;
-  if(curr_sect) PFREE(curr_sect);
-  if(curr_subsect) PFREE(curr_subsect);
+  if(curr_sect) delete curr_sect;
+  if(curr_subsect) delete curr_subsect;
   FiDeleteAllVar();
 }
 
@@ -1325,7 +1325,6 @@ static bool __NEAR__ __FASTCALL__ __addCache(const char *section,const char *sub
   ic.flags = 0;
   if(!(found =la_Find((linearArray *)opening->cache,&ic,__full_compare_cache)))
   {
-      ic.item=section;
       if(!(ic.v.leaf = la_Build(0,sizeof(ini_cache),0)))
       {
 	 opening->flags &= ~HINI_FULLCACHED;
@@ -1683,7 +1682,7 @@ static bool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
 {
    FILE * tmphandle;
    char *tmpname, *prev_val;
-   char * workstr, *wstr2;
+   char *workstr, *wstr2;
    char *original;
    unsigned nled,prev_val_size;
    bhandle_t hsrc;
@@ -1726,9 +1725,9 @@ static bool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
    {
      fclose(tmphandle);
      __OsDelete(tmpname);
-     if(workstr) PFREE(workstr);
-     if(wstr2) PFREE(wstr2);
-     if(original) PFREE(original);
+     if(workstr) delete workstr;
+     if(wstr2) delete wstr2;
+     if(original) delete original;
      _ret = false;
      goto Exit_WS;
    }
@@ -1752,7 +1751,7 @@ static bool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
 	  strncmp(cstr,"else",4) == 0 )
        if_on = true;
        if(strncmp(cstr,"endif",5) == 0) if_on = false;
-       PFREE(cstr);
+       delete cstr;
      }
      if(Cond)
      {
@@ -1849,12 +1848,12 @@ static bool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
    __OsDelete(ini->fname);
    __OsRename(tmpname,ini->fname);
    ini->handler = FiOpen(ini->fname);
-   PFREE(workstr);
-   PFREE(wstr2);
-   PFREE(original);
+   delete workstr;
+   delete wstr2;
+   delete original;
    _ret = true;
    Exit_WS:
-   PFREE(tmpname);
+   delete tmpname;
    return _ret;
 }
 

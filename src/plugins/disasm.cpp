@@ -740,12 +740,12 @@ static void __FASTCALL__ disTerm( void )
 {
   termCodeGuider();
   if(activeDisasm->term) activeDisasm->term();
-  PFREE(CurrStrLenBuff);
-  PFREE(PrevStrLenAddr);
-  PFREE(dis_comments);
-  PFREE(disCodeBuffer);
-  PFREE(disCodeBuf2);
-  PFREE(disCodeBufPredict);
+  delete CurrStrLenBuff;
+  delete PrevStrLenAddr;
+  delete dis_comments;
+  delete disCodeBuffer;
+  delete disCodeBuf2;
+  delete disCodeBufPredict;
 }
 
 static void __FASTCALL__ disSaveIni( hIniProfile *ini )
@@ -845,7 +845,7 @@ static __filesize_t __FASTCALL__ disSearch(TWindow *pwnd, __filesize_t start,
       break;
     }
   }
-  PFREE(disSearchBuff);
+  delete disSearchBuff;
   bye:
   BMSeek(sfpos, SEEK_SET);
   DumpMode = false;

@@ -204,7 +204,7 @@ static void __FASTCALL__ EditBin( void )
 	BMSeek(cfp,BM_SEEK_SET);
 	for(i=0;i<size;i++) buff[i]=bin_mode==MOD_BINARY?buff[i*2]:buff[i*2+1];
 	inited=editInitBuffs(tvioWidth-virtWidthCorr,buff,size);
-	PFREE(buff);
+	delete buff;
     }
     else
     {

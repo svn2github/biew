@@ -131,7 +131,7 @@ static void      __FASTCALL__ nulInit( void )
 
 static void  __FASTCALL__ nulTerm( void )
 {
-   PFREE(outstr);
+   delete outstr;
 }
 
 static void __FASTCALL__ nulReadIni( hIniProfile *ini )

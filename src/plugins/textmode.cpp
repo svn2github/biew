@@ -1279,9 +1279,9 @@ static bool __FASTCALL__ txtShowType( void )
 static void __FASTCALL__ txtTerm( void )
 {
   unsigned i;
-  PFREE(buff);
-  PFREE(tlines);
-  PFREE(ptlines);
+  delete buff;
+  delete tlines;
+  delete ptlines;
   if(txtHandle != BMbioHandle()) { bioClose(txtHandle); txtHandle = &bNull; }
   if(syntax_hl.name) delete syntax_hl.name;
   if(escape) delete escape;

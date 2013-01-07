@@ -396,7 +396,7 @@ void __FASTCALL__ hlpDisplay( unsigned long item_id )
   {
     mem_off:
     MemOutBox("Loading help");
-    if(data) PHFREE(data);
+    if(data) delete data;
     goto hlp_bye;
   }
   data[data_size] = 0;
@@ -405,9 +405,9 @@ void __FASTCALL__ hlpDisplay( unsigned long item_id )
     if(!(str_ptr = hlpPointStrings(data,data_size,&nstr))) goto mem_off;
     title = data;
     __hlpListBox(str_ptr,(unsigned)nstr,title);
-    PFREE(str_ptr);
+    delete str_ptr;
   }
-  PHFREE(data);
+  delete data;
   hlp_bye:
   hlpClose();
 }

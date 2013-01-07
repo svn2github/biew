@@ -90,9 +90,9 @@ bool __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size
  EditorMem.alen = new unsigned char [tvioHeight];
  if((!EditorMem.buff) || (!EditorMem.save) || (!EditorMem.alen))
  {
-   if(EditorMem.buff) PFREE(EditorMem.buff);
-   if(EditorMem.save) PFREE(EditorMem.save);
-   if(EditorMem.alen) PFREE(EditorMem.alen);
+   if(EditorMem.buff) delete EditorMem.buff;
+   if(EditorMem.save) delete EditorMem.save;
+   if(EditorMem.alen) delete EditorMem.alen;
    MemOutBox("Editor initialization");
    return false;
  }
@@ -125,9 +125,9 @@ bool __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size
 
 void __FASTCALL__ editDestroyBuffs( void )
 {
-  PFREE(EditorMem.buff);
-  PFREE(EditorMem.save);
-  PFREE(EditorMem.alen);
+  delete EditorMem.buff;
+  delete EditorMem.save;
+  delete EditorMem.alen;
 }
 
 void __FASTCALL__ CheckBounds( void )

@@ -178,7 +178,7 @@ static void  __FASTCALL__ armTerm( void )
 {
    arm32Term();
    arm16Term();
-   PFREE(outstr);
+   delete outstr;
 }
 
 static void __FASTCALL__ armReadIni( hIniProfile *ini )

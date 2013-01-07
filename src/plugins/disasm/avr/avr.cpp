@@ -570,8 +570,8 @@ static void __FASTCALL__ AVRInit( void )
 
 static void __FASTCALL__ AVRTerm( void )
 {
-   PFREE(avr_bin_masks);
-   PFREE(outstr);
+   delete avr_bin_masks;
+   delete outstr;
 }
 
 REGISTRY_DISASM AVR_Disasm =

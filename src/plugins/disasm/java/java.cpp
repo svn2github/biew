@@ -622,7 +622,7 @@ static void      __FASTCALL__ javaInit( void )
 
 static void  __FASTCALL__ javaTerm( void )
 {
-   PFREE(outstr);
+   delete outstr;
 }
 
 static void __FASTCALL__ javaReadIni( hIniProfile *ini )

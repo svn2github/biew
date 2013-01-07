@@ -36,7 +36,7 @@ int __FASTCALL__ Gebool(bool _bool) { return _bool ? TWC_CHECK_CHAR : TWC_DEF_FI
 void FFreeArr(any_t** arr,unsigned n)
 {
   unsigned i;
-  for(i = 0;i < n;i++) PFREE(arr[i]);
+  for(i = 0;i < n;i++) delete arr[i];
 }
 
 unsigned __FASTCALL__ Summ(unsigned char *str,unsigned size)
@@ -277,10 +277,10 @@ void  __FASTCALL__ ma_Destroy(memArray *obj)
   unsigned i;
   for(i = 0;i < obj->nItems;i++)
   {
-    PFREE(obj->data[i]);
+    delete obj->data[i];
   }
-  PFREE(obj->data);
-  PFREE(obj);
+  delete obj->data;
+  delete obj;
 }
 
 #define LST_STEP 16
@@ -292,7 +292,7 @@ bool  __FASTCALL__ ma_AddData(memArray *obj,const any_t*udata,unsigned len,bool 
   if(obj->nItems + 1 > obj->nSize)
   {
     any_t*ptr;
-    if(!obj->data) ptr = PMalloc((obj->nSize+LST_STEP)*sizeof(char *));
+    if(!obj->data) ptr = new char*[obj->nSize+LST_STEP];
     else           ptr = PRealloc(obj->data,sizeof(char *)*(obj->nSize+LST_STEP));
     if(ptr)
     {

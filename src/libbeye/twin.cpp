@@ -381,7 +381,7 @@ void __FASTCALL__ twSetTitle(TWindow *win,const char *title,tTitleMode mode,Colo
   TWindow *tmp;
   unsigned slen;
   slen = strlen(title);
-  if(win->Title) PFREE(win->Title);
+  if(win->Title) delete win->Title;
   win->Title = new char [slen+1];
   if(!win->Title) winerr("Out of memory!");
   strcpy(win->Title,title);
@@ -428,7 +428,7 @@ void __FASTCALL__ twSetFooter(TWindow *win,const char *footer,tTitleMode mode,Co
   TWindow *tmp;
   unsigned slen;
   slen = strlen(footer);
-  if(win->Footer) PFREE(win->Footer);
+  if(win->Footer) delete win->Footer;
   win->Footer = new char [slen+1];
   if(!win->Footer) winerr("Out of memory!");
   strcpy(win->Footer,footer);
@@ -644,36 +644,36 @@ static TWindow * __NEAR__ __FASTCALL__ makewin(tAbsCoord x1, tAbsCoord y1, tAbsC
     if(!(win->body.chars = new t_vchar[size]))
     {
      bye0:
-      PFREE(win);
+      delete win;
       return NULL;
     }
     if(!(win->body.oem_pg = new t_vchar[size]))
     {
      bye1:
-      PFREE(win->body.chars);
+      delete win->body.chars;
       goto bye0;
     }
     if(!(win->body.attrs = new ColorAttr[size]))
     {
      bye2:
-      PFREE(win->body.oem_pg);
+      delete win->body.oem_pg;
       goto bye1;
     }
     if(!(win->saved.chars = new t_vchar[size]))
     {
      bye3:
-      PFREE(win->body.attrs);
+      delete win->body.attrs;
       goto bye2;
     }
     if(!(win->saved.oem_pg = new t_vchar[size]))
     {
      bye4:
-      PFREE(win->saved.chars);
+      delete win->saved.chars;
       goto bye3;
     }
     if(!(win->saved.attrs = new ColorAttr[size]))
     {
-      PFREE(win->saved.oem_pg);
+      delete win->saved.oem_pg;
       goto bye4;
     }
     win->X1 = x1;
@@ -1483,14 +1483,14 @@ void __FASTCALL__ twDestroyWin(TWindow *win)
 {
   twinSendMessage(win,WM_DESTROY,0L,NULL);
   twHideWin(win);
-  if(win->Title) PFREE(win->Title);
-  if(win->Footer) PFREE(win->Footer);
-  PFREE(win->body.chars);
-  PFREE(win->body.oem_pg);
-  PFREE(win->body.attrs);
-  PFREE(win->saved.chars);
-  PFREE(win->saved.oem_pg);
-  PFREE(win->saved.attrs);
+  if(win->Title) delete win->Title;
+  if(win->Footer) delete win->Footer;
+  delete win->body.chars;
+  delete win->body.oem_pg;
+  delete win->body.attrs;
+  delete win->saved.chars;
+  delete win->saved.oem_pg;
+  delete win->saved.attrs;
   if(active == win)
   {
      if(win == head)   active = win->next;
@@ -1499,7 +1499,7 @@ void __FASTCALL__ twDestroyWin(TWindow *win)
   __unlistwin(win);
   if(cursorwin == win) cursorwin = __findcursorablewin();
   paint_cursor();
-  PFREE(win);
+  delete win;
 }
 
 void __FASTCALL__ twGetWinPos(TWindow *win,tAbsCoord *x1,tAbsCoord *y1,tAbsCoord *x2,tAbsCoord *y2)
@@ -1576,12 +1576,12 @@ void __FASTCALL__ twResizeWin(TWindow *win,tAbsCoord width,tAbsCoord height)
   if(!(newbody.oem_pg = new t_vchar[size]))
   {
    bye1:
-    PFREE(newbody.chars);
+    delete newbody.chars;
     goto bye0;
   }
   if(!(newbody.attrs = new ColorAttr[size]))
   {
-    PFREE(newbody.oem_pg);
+    delete newbody.oem_pg;
     goto bye1;
   }
   oldw = win->wwidth;
@@ -1621,9 +1621,9 @@ void __FASTCALL__ twResizeWin(TWindow *win,tAbsCoord width,tAbsCoord height)
        to += width;
     }
   }
-  PFREE(win->saved.chars);
-  PFREE(win->saved.oem_pg);
-  PFREE(win->saved.attrs);
+  delete win->saved.chars;
+  delete win->saved.oem_pg;
+  delete win->saved.attrs;
   win->wsize = size;
   win->wwidth = width;
   win->wheight = height;
@@ -1631,17 +1631,17 @@ void __FASTCALL__ twResizeWin(TWindow *win,tAbsCoord width,tAbsCoord height)
   if(!(win->saved.oem_pg = new t_vchar[win->wsize]))
   {
    bye2:
-    PFREE(win->saved.chars);
+    delete win->saved.chars;
     goto bye0;
   }
   if(!(win->saved.attrs = new ColorAttr[win->wsize]))
   {
-    PFREE(win->saved.oem_pg);
+    delete win->saved.oem_pg;
     goto bye2;
   }
-  PFREE(win->body.chars);
-  PFREE(win->body.oem_pg);
-  PFREE(win->body.attrs);
+  delete win->body.chars;
+  delete win->body.oem_pg;
+  delete win->body.attrs;
   win->body = newbody;
   win->X2 = win->X1 + width;
   win->Y2 = win->Y1 + height;
@@ -1886,7 +1886,7 @@ int __FASTCALL__ twPrintF(const char *fmt,...)
     vsprintf(buff,fmt,args);
     va_end(args);
     ret = twPutS(buff);
-    PFREE(buff);
+    delete buff;
   }
   return ret;
 }

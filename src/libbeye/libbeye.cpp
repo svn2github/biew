@@ -663,16 +663,16 @@ void  __FASTCALL__ la_ForEach(linearArray *obj,void (__FASTCALL__ *iter_func)(vo
 void  __FASTCALL__ la_IterDestroy(linearArray *obj,void (__FASTCALL__ *del_it)(void __HUGE__ *))
 {
   la_ForEach(obj,del_it);
-  PHFREE(obj->data);
-  PFREE(obj);
+  delete obj->data;
+  delete obj;
 }
 
 void  __FASTCALL__ la_Destroy(linearArray *obj)
 {
   if(obj)
   {
-    PHFREE(obj->data);
-    PFREE(obj);
+    delete obj->data;
+    delete obj;
   }
 }
 

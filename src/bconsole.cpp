@@ -988,7 +988,7 @@ static int __NEAR__ __FASTCALL__ __ListBox(char** names,unsigned nlist,unsigned 
  }
  Done:
  CloseWnd(wlist);
- if(acctable) PFREE(acctable);
+ if(acctable) delete acctable;
  return ret;
 }
 

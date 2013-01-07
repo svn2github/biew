@@ -1634,7 +1634,7 @@ static void      __FASTCALL__ ppcInit( void )
 
 static void  __FASTCALL__ ppcTerm( void )
 {
-   PFREE(outstr);
+   delete outstr;
 }
 
 static void __FASTCALL__ ppcReadIni( hIniProfile *ini )

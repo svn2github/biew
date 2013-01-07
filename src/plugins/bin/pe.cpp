@@ -1170,8 +1170,8 @@ static void __FASTCALL__ initPE( void )
 static void __FASTCALL__ destroyPE( void )
 {
   BGLOBAL main_handle;
-  if(peVA) PFREE(peVA);
-  if(peDir) PFREE(peDir);
+  if(peVA) delete peVA;
+  if(peDir) delete peDir;
   if(PubNames) { la_Destroy(PubNames); PubNames = 0; }
   if(CurrPEChain) { la_Destroy(CurrPEChain); CurrPEChain = 0; } /* Fixed by "Kostya Nosov" <k-nosov@yandex.ru> */
   main_handle = bmbioHandle();

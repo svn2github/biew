@@ -204,8 +204,8 @@ static void __NEAR__ __FASTCALL__ __init_beye( void )
 
 static void __NEAR__ __FASTCALL__ __term_beye( void )
 {
-   PFREE(LastOpenFileName);
-   PFREE(ListFile);
+   delete LastOpenFileName;
+   delete ListFile;
 }
 
 void QuickSelectMode( void )
@@ -673,7 +673,7 @@ bool NewSource( void )
   unsigned j,freq;
   static int prev_file;
   char ** nlsListFile;
-  nlsListFile = (char **)PMalloc(ListFileCount*sizeof(char *));
+  nlsListFile = new char*[ListFileCount];
   if(nlsListFile)
   {
     for(j = 0;j < ListFileCount;j++)

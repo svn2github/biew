@@ -116,7 +116,7 @@ static const char * __NEAR__ __FASTCALL__ QueryAddInfo( void )
      bmReadBufferEx(memmap,1000,0x1C,BM_SEEK_SET);
      bmSeek(fpos,BM_SEEK_SET);
      ret = __QueryAddInfo(memmap);
-     PFREE(memmap);
+     delete memmap;
      return ret;
    }
    return NULL;

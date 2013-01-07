@@ -588,7 +588,7 @@ static void __FASTCALL__ coff386_init_fmt( void )
 static void __FASTCALL__ coff386_destroy_fmt( void )
 {
   BGLOBAL main_handle;
-  PFREE(coff386so);
+  delete coff386so;
   if(PubNames) { la_Destroy(PubNames); PubNames = 0; }
   main_handle = bmbioHandle();
   if(coff_cache != &bNull && coff_cache != main_handle) bioClose(coff_cache);

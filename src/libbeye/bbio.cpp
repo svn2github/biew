@@ -352,7 +352,7 @@ BGLOBAL  __FASTCALL__ bioOpen(const char * fname,unsigned openmode,unsigned bSiz
  BFILE  * bFile;
  BGLOBAL ret = NULL;
  unsigned len;
- ret = PMalloc(sizeof(BFILE));
+ ret = new BFILE;
  if(ret)
  {
    memset(ret,0,sizeof(BFILE));
@@ -360,7 +360,7 @@ BGLOBAL  __FASTCALL__ bioOpen(const char * fname,unsigned openmode,unsigned bSiz
    bFile->openmode = openmode;
    if(!(bFile->FileName = new char [strlen(fname)+1]))
    {
-     PFREE(bFile);
+     delete bFile;
      return &bNull;
    }
    strcpy(bFile->FileName,fname);
@@ -377,7 +377,7 @@ BGLOBAL  __FASTCALL__ bioOpen(const char * fname,unsigned openmode,unsigned bSiz
 	  bFile->is_mmf = true;
 	  bFile->b.vfb.MBuffer = NULL; /* [dBorca] be consistent with IS_CACHE_VALID */
 	}
-	else PFREE(bFile->b.mmb);
+	else delete bFile->b.mmb;
       }
    }
    if(!bFile->is_mmf)
@@ -386,8 +386,8 @@ BGLOBAL  __FASTCALL__ bioOpen(const char * fname,unsigned openmode,unsigned bSiz
      optimization = BIO_OPT_DB;
      if(handle == NULL_HANDLE)
      {
-       PFREE(bFile->FileName);
-       PFREE(ret);
+       delete bFile->FileName;
+       delete ret;
        return &bNull;
      }
      bFile->b.vfb.handle = handle;
@@ -407,9 +407,9 @@ BGLOBAL  __FASTCALL__ bioOpen(const char * fname,unsigned openmode,unsigned bSiz
        }
        else
        {
-	 PFREE(bFile->FileName);
+	 delete bFile->FileName;
 	 __OsClose(bFile->b.vfb.handle);
-	 PFREE(ret);
+	 delete ret;
 	 return &bNull;
        }
        __fill(bFile,0L);
@@ -429,7 +429,7 @@ bool  __FASTCALL__ bioClose(BGLOBAL handle)
     if(bFile->primary_mmf)
     {
       __mmfClose(bFile->b.mmb->mmf);
-      PFREE(bFile->b.mmb);
+      delete bFile->b.mmb;
     }
   }
   else
@@ -440,10 +440,10 @@ bool  __FASTCALL__ bioClose(BGLOBAL handle)
       /* For compatibility with DOS-32: don't try to close stderr */
       if(bFile->b.vfb.handle != (bhandle_t)2) __OsClose(bFile->b.vfb.handle);
     }
-    if(bFile->b.vfb.MBuffer) PFREE(bFile->b.vfb.MBuffer);
+    if(bFile->b.vfb.MBuffer) delete bFile->b.vfb.MBuffer;
   }
-  PFREE(bFile->FileName);
-  PFREE(handle);
+  delete bFile->FileName;
+  delete handle;
   return true;
 }
 
@@ -670,7 +670,7 @@ bool __FASTCALL__  bioChSize(BGLOBAL bioFile,__filesize_t newsize)
 	    if(!bioWriteBuffer(bioFile, (any_t* )buf, numtowrite)) { ret = false; break; }
 	    fillsize-=numtowrite;
 	  } while(fillsize);
-	  PFREE(buf);
+	  delete buf;
 	}
       }
    }
@@ -727,7 +727,7 @@ BGLOBAL __FASTCALL__ bioDupEx(BGLOBAL bioFile,unsigned buff_Size)
 {
  BGLOBAL ret = NULL;
  unsigned len;
- ret = PMalloc(sizeof(BFILE));
+ ret = new BFILE;
  if(ret)
  {
    BFILE * bFile,* fromFile;
@@ -738,7 +738,7 @@ BGLOBAL __FASTCALL__ bioDupEx(BGLOBAL bioFile,unsigned buff_Size)
    bFile->is_eof = fromFile->is_eof;
    if(!(bFile->FileName = new char [strlen(fromFile->FileName)+1]))
    {
-     PFREE(bFile);
+     delete bFile;
      return &bNull;
    }
    strcpy(bFile->FileName,fromFile->FileName);
@@ -757,8 +757,8 @@ BGLOBAL __FASTCALL__ bioDupEx(BGLOBAL bioFile,unsigned buff_Size)
    bFile->is_mmf = fromFile->is_mmf;
    if(bFile->b.vfb.handle == NULL_HANDLE)
    {
-     PFREE(bFile->FileName);
-     PFREE(ret);
+     delete bFile->FileName;
+     delete ret;
      return &bNull;
    }
    bFile->FLength = fromFile->FLength;
@@ -785,9 +785,9 @@ BGLOBAL __FASTCALL__ bioDupEx(BGLOBAL bioFile,unsigned buff_Size)
      }
      else
      {
-       PFREE(bFile->FileName);
+       delete bFile->FileName;
        __OsClose(bFile->b.vfb.handle);
-       PFREE(ret);
+       delete ret;
        return &bNull;
      }
    }

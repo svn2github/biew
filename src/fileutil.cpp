@@ -92,7 +92,7 @@ static bool __NEAR__ __FASTCALL__ InsBlock(BGLOBAL bHandle,__filesize_t start,__
    if(!bioChSize(bHandle,oflen+psize))
    {
      ErrMessageBox(EXPAND_FAIL,NULL);
-     PFREE(buffer);
+     delete buffer;
      return false;
    }
    crpos = oflen-std::min(tile,__filesize_t(51200U));
@@ -120,7 +120,7 @@ static bool __NEAR__ __FASTCALL__ InsBlock(BGLOBAL bHandle,__filesize_t start,__
      psize -= numtowrite;
      cwpos += numtowrite;
    }
-   PFREE(buffer);
+   delete buffer;
    return true;
 }
 
@@ -146,11 +146,11 @@ static bool __NEAR__ __FASTCALL__ DelBlock(BGLOBAL bHandle,__filesize_t start,__
      crpos += numtowrite;
      cwpos += numtowrite;
    }
-   PFREE(buffer);
+   delete buffer;
    if(!bioChSize(bHandle,oflen+psize))
    {
      ErrMessageBox(TRUNC_FAIL,NULL);
-     PFREE(buffer);
+     delete buffer;
    }
    return true;
 }
@@ -409,7 +409,7 @@ static bool FStore( void )
      if(fout == NULL)
      {
 	errnoMessageBox(WRITE_FAIL,NULL,errno);
-	PFREE(codebuff);
+	delete codebuff;
 	goto Exit;
      }
      if(file_cache) setvbuf(fout,file_cache,_IOFBF,BBIO_SMALL_CACHE_SIZE);
@@ -675,10 +675,10 @@ static bool FStore( void )
        }
      }
      dis_exit:
-     PFREE(codebuff);
+     delete codebuff;
      fclose(fout);
-     if(file_cache) PFREE(file_cache);
-     if(tmp_buff2) PFREE(tmp_buff2);
+     if(file_cache) delete file_cache;
+     if(tmp_buff2) delete tmp_buff2;
      if(flags & FSDLG_STRUCTS)
      {
        if(detectedFormat->drop_structs) detectedFormat->drop_structs();
@@ -692,7 +692,7 @@ static bool FStore( void )
   }
   else  ErrMessageBox("Start position > end position!",NULL);
  }
- PFREE(tmp_buff);
+ delete tmp_buff;
  DumpMode = false;
  return false;
 }
@@ -737,7 +737,7 @@ static bool FRestore( void )
      wsize = endpos - ff_startpos;
      cwpos = ff_startpos;
      __OsSeek(handle,0L,SEEKF_START);
-     tmp_buff = PMalloc(4096);
+     tmp_buff = new char [4096];
      if(!tmp_buff)
      {
        MemOutBox("temporary buffer initialization");
@@ -772,7 +772,7 @@ static bool FRestore( void )
        BMReRead();
      }
      else errnoMessageBox(OPEN_FAIL,NULL,errno);
-     PFREE(tmp_buff);
+     delete tmp_buff;
      __OsClose(handle);
      BMSeek(cpos,BM_SEEK_SET);
      ret = true;
@@ -853,7 +853,7 @@ static bool CryptBlock( void )
      cpos = BMGetCurrFilePos();
      wsize = endpos - ff_startpos;
      cwpos = ff_startpos;
-     tmp_buff = PMalloc(4096);
+     tmp_buff = new char [4096];
      if(!tmp_buff)
      {
        MemOutBox("temporary buffer initialization");
@@ -888,7 +888,7 @@ static bool CryptBlock( void )
        bioClose(bHandle);
        BMReRead();
      }
-     PFREE(tmp_buff);
+     delete tmp_buff;
      BMSeek(cpos,BM_SEEK_SET);
      ret = true;
    }
@@ -963,7 +963,7 @@ static bool ReverseBlock( void )
      cpos = BMGetCurrFilePos();
      wsize = endpos - ff_startpos;
      cwpos = ff_startpos;
-     tmp_buff = PMalloc(4096);
+     tmp_buff = new char [4096];
      if(!tmp_buff)
      {
        MemOutBox("temporary buffer initialization");
@@ -998,7 +998,7 @@ static bool ReverseBlock( void )
        bioClose(bHandle);
        BMReRead();
      }
-     PFREE(tmp_buff);
+     delete tmp_buff;
      BMSeek(cpos,BM_SEEK_SET);
      ret = true;
    }
@@ -1073,7 +1073,7 @@ static bool XLatBlock( void )
      bioSeek(xHandle, 0x40, SEEKF_START);
      bioReadBuffer(xHandle, xlt, 256);
      bioClose(xHandle);
-     tmp_buff = PMalloc(4096);
+     tmp_buff = new char [4096];
      if(!tmp_buff)
      {
        MemOutBox("temporary buffer initialization");
@@ -1108,7 +1108,7 @@ static bool XLatBlock( void )
        bioClose(bHandle);
        BMReRead();
      }
-     PFREE(tmp_buff);
+     delete tmp_buff;
      BMSeek(cpos,BM_SEEK_SET);
      ret = true;
    }

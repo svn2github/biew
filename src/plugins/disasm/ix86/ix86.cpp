@@ -5597,14 +5597,14 @@ static void __FASTCALL__ ix86Init( void )
 
 static void __FASTCALL__ ix86Term( void )
 {
-   PFREE(ix86_voidstr);
-   PFREE(ix86_da_out);
-   PFREE(ix86_Katmai_buff);
-   PFREE(ix86_appstr);
-   PFREE(ix86_dtile);
-   PFREE(ix86_appbuffer);
-   PFREE(ix86_apistr);
-   PFREE(ix86_modrm_ret);
+   delete ix86_voidstr;
+   delete ix86_da_out;
+   delete ix86_Katmai_buff;
+   delete ix86_appstr;
+   delete ix86_dtile;
+   delete ix86_appbuffer;
+   delete ix86_apistr;
+   delete ix86_modrm_ret;
 }
 
 static void __FASTCALL__ ix86ReadIni( hIniProfile *ini )
