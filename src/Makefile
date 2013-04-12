@@ -38,7 +38,6 @@ LIBS = -L./libbeye -lbeye $(EXTRALIBS)
 SRCS = \
 addendum.cpp\
 bconsole.cpp\
-beye.cpp\
 beyehelp.cpp\
 beyeutil.cpp\
 bin_util.cpp\
@@ -50,6 +49,7 @@ editors.cpp\
 events.cpp\
 fileutil.cpp\
 info_win.cpp\
+main.cpp\
 mainloop.cpp\
 refs.cpp\
 search.cpp\

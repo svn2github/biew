@@ -1,6 +1,6 @@
 /**
  * @namespace   beye
- * @file        beye.c
+ * @file        main.cpp
  * @brief       This file contains entry point of BEYE project.
  * @version     -
  * @remark      this source file is part of Binary EYE project (BEYE).
