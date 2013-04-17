@@ -312,9 +312,8 @@ static void __FASTCALL__ console_enter(int signum)
     ReadNextEvent is non-blocking
 */
 
-void __FASTCALL__ ReadNextEvent(int signum)
+void __FASTCALL__ ReadNextEvent(void)
 {
-    UNUSED(signum);
 #define get(x)	read(in_fd,&(x),1)
 #define ret(x)	pushEvent((x)); return;
 #define set_s(x) shift_status &= (x); shift_status ^= (x); ret(KE_SHIFTKEYS);
@@ -514,6 +513,11 @@ int __FASTCALL__ __kbdGetShiftsKey(void)
     return shift_status;
 }
 
+void __FASTCALL__ __ReadNextEvent(int signum) {
+    UNUSED(signum);
+    ReadNextEvent();
+}
+
 int __FASTCALL__ __kbdTestKey(unsigned long flg)
 {
     if(__MsGetBtns() && flg == KBD_NONSTOP_ON_MOUSE_PRESS) return KE_MOUSE;
@@ -650,7 +654,7 @@ void __FASTCALL__ __init_keyboard(const char *user_cp)
 
     keybuf.current = 0;
 
-    signal(SIGIO, ReadNextEvent);
+    signal(SIGIO, __ReadNextEvent);
 }
 
 void __FASTCALL__ __term_keyboard(void)
