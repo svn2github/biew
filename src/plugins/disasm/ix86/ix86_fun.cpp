@@ -1550,7 +1550,7 @@ void __FASTCALL__ ix86_BitGrp(char *str,ix86Param *DisP)
    strcpy(str,ix86_BitGrpNames[cop]);
    TabSpace(str,TAB_POS);
    strcat(str,ix86_getModRM(true,mod,rm,DisP));
-   ix86_CStile(DisP,str,ix86_GetDigitTile(DisP,0,0,DisP->codelen++));
+   ix86_CStile(DisP,str,ix86_GetDigitTile(DisP,0,0,++DisP->codelen));
 }
 
 static const char *ix86_KatmaiGr1Names[] = { "fxsave", "fxrstor", "ldmxcsr", "stmxcsr", "xsave", "xrstor", "???", "clflush" };
