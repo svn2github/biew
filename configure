@@ -242,8 +242,19 @@ enabled gomp && check_cflags -fopenmp || disable gomp
 print_config HAVE_ config.h config.mak gomp
 #enabled gomp && check_cflags -ftree-parallelize-loops=4
 #####################################################
-add_cflags "-Warray-bounds -Wreturn-type -Wuninitialized -Wlogical-op -Waddress"
-check_cflags "-W -Wall -Wextra -Wshadow"
+add_cflags "-I$srcdir"
+check_cflags "-W"
+check_cflags "-Wall"
+check_cflags "-Wextra"
+check_cflags "-Wshadow"
+check_cflags "-Warray-bounds"
+check_cflags "-Wreturn-type"
+check_cflags "-Wuninitialized"
+check_cflags "-Wlogical-op"
+check_cflags "-Waddress"
+# fixes MAC OS X compilation:
+check_cflags "-mdynapic-no-pic"
+check_cflags "-fno-pic"
 
 echocheck CFLAGS
 echores   $CFLAGS
@@ -263,7 +274,6 @@ echores   $extralibs
 ######################
 # MAIN TESTS GO HERE #
 ######################
-add_cflags "-I$srcdir -W -Wall -Wextra -Wshadow"
 
 # Printout architecture
 system=`echo $lc_host_os | tr [:upper:] [:lower:]`
