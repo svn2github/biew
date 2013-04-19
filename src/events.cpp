@@ -119,6 +119,11 @@ static int __NEAR__ __FASTCALL__ __GetEvent( void (*prompt)(void) ,TWindow *win)
 		    else
 		    {
 		      X1 = 0; X2 = twGetClientWidth(MainWnd); Y1 = 1; Y2 = twGetClientHeight(MainWnd) - 1;
+		      TWindow* wnd=
+		        MainWnd ? MainWnd : /*XXX:drop this line? */
+		        twGetWinAtPos(mx,my);
+		        if(!wnd) return KE_MOUSE;
+		        X1 = 0; X2 = twGetClientWidth(wnd); Y1 = 1; Y2 = twGetClientHeight(wnd) - 1;
 		    }
 		    wdh = X2 - X1;
 		    hght = Y2 - Y1;
