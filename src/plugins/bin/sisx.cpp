@@ -91,7 +91,8 @@ static __filesize_t __FASTCALL__ Show_SisX_Header( void )
 {
  unsigned keycode;
  TWindow * hwnd;
- char *cpuname,*exetype,head[80];
+ const char *cpuname,*exetype;
+ char head[80];
  struct E32ImageHeader img;
  __filesize_t fpos,fpos2;
  fpos2=fpos = BMGetCurrFilePos();

@@ -182,13 +182,13 @@ typedef enum
 #define TWS_CURSORABLE     0x0004 /**< Indicates that window has text cursor @see twCreateWin */
 #define TWS_NLSOEM         0x0100 /**< Indicates that window works in OEM mode @see twCreateWin */
 
-extern const char TW_SINGLE_FRAME[];    /**< Flat single-line frame @see twinDrawFrame */
-extern const char TW_DOUBLE_FRAME[];    /**< Flat double-line frame @see twinDrawFrame */
+extern const unsigned char TW_SINGLE_FRAME[];    /**< Flat single-line frame @see twinDrawFrame */
+extern const unsigned char TW_DOUBLE_FRAME[];    /**< Flat double-line frame @see twinDrawFrame */
 #define TW_THIN_FRAME   TW_SINGLE_FRAME /**< Synonym for TW_SINGLE_LINE @see twinDrawFrame */
-extern const char TW_MEDIUM_FRAME[];    /**< Flat frame of medium width (filles 50% of the character cells) @see twinDrawFrame */
-extern const char TW_THICK_FRAME[];     /**< Flat frame of full width (filles 100% of the character cells) @see twinDrawFrame */
-extern const char TW_UP3D_FRAME[];      /**< Emulates 3D-frame that similar unpressed button @see twinDrawFrame */
-extern const char TW_DN3D_FRAME[];      /**< Emulates 3D-frame that similar pressed button @see twinDrawFrame */
+extern const unsigned char TW_MEDIUM_FRAME[];    /**< Flat frame of medium width (filles 50% of the character cells) @see twinDrawFrame */
+extern const unsigned char TW_THICK_FRAME[];     /**< Flat frame of full width (filles 100% of the character cells) @see twinDrawFrame */
+extern const unsigned char TW_UP3D_FRAME[];      /**< Emulates 3D-frame that similar unpressed button @see twinDrawFrame */
+extern const unsigned char TW_DN3D_FRAME[];      /**< Emulates 3D-frame that similar pressed button @see twinDrawFrame */
 
 /** Defines color pair that contains original user color and converted system color */
 typedef struct tagDefColor
@@ -269,7 +269,7 @@ long __FASTCALL__ twinSendMessage(TWindow *win,unsigned event,unsigned long even
 		     * @param fore,back       indicate logical foreground and background attributes
 		     * @see                   twinDrawFrameAttr
 		    **/
-void __FASTCALL__ twinDrawFrame(tRelCoord x1_, tRelCoord y1_, tRelCoord x2_, tRelCoord y2_,const char *frame,Color fore, Color back);
+void __FASTCALL__ twinDrawFrame(tRelCoord x1_, tRelCoord y1_, tRelCoord x2_, tRelCoord y2_,const unsigned char *frame,Color fore, Color back);
 
 		   /** Draws frame of given type in active window
 		     * @return                none
@@ -278,7 +278,7 @@ void __FASTCALL__ twinDrawFrame(tRelCoord x1_, tRelCoord y1_, tRelCoord x2_, tRe
 		     * @param attr            indicates physical color attributes
 		     * @see                   twinDrawFrame
 		    **/
-void __FASTCALL__ twinDrawFrameAttr(tRelCoord x1_, tRelCoord y1_, tRelCoord x2_, tRelCoord y2_,const char *frame,ColorAttr attr);
+void __FASTCALL__ twinDrawFrameAttr(tRelCoord x1_, tRelCoord y1_, tRelCoord x2_, tRelCoord y2_,const unsigned char *frame,ColorAttr attr);
 
 #define TWIF_FORCEMONO   0x00000001L /**< forces monochrome mode of video output @see twInit */
 
@@ -699,7 +699,7 @@ Color             __FASTCALL__ twTextBkGnd( Color col );
 		     *                     twGetTitle twGetTitleAttr twSetTitle twSetTitleAttr
 		     *                     twGetFooter twGetFooterAttr twSetFooter twSetFooterAttr
 		    **/
-void              __FASTCALL__ twGetFrame(TWindow *win,char *frame,Color* fore,Color* back);
+void              __FASTCALL__ twGetFrame(TWindow *win,unsigned char *frame,Color* fore,Color* back);
 
 		   /** Returns title and title attributes of given window.
 		     * @param win          handle of window.
@@ -734,7 +734,7 @@ tTitleMode        __FASTCALL__ twGetFooter(TWindow *win,char* footer,unsigned cb
 		     *                     twGetTitle twGetTitleAttr twSetTitle twSetTitleAttr
 		     *                     twGetFooter twGetFooterAttr twSetFooter twSetFooterAttr
 		    **/
-void              __FASTCALL__ twGetFrameAttr(TWindow *win,char *frame,ColorAttr* attr);
+void              __FASTCALL__ twGetFrameAttr(TWindow *win,unsigned char *frame,ColorAttr* attr);
 
 		   /** Returns title and title attributes of given window.
 		     * @param win          handle of window.
@@ -769,7 +769,7 @@ tTitleMode        __FASTCALL__ twGetFooterAttr(TWindow *win,char* footer,unsigne
 		     *                     twGetTitle twGetTitleAttr twSetTitle twSetTitleAttr
 		     *                     twGetFooter twSetFooter twSetFooterAttr
 		    **/
-void              __FASTCALL__ twSetFrame(TWindow *win,const char *frame,Color fore,Color back);
+void              __FASTCALL__ twSetFrame(TWindow *win,const unsigned char *frame,Color fore,Color back);
 
 		   /** Updates window title with specified logical color attributes.
 		     * @param win          handle of window
@@ -804,7 +804,7 @@ void              __FASTCALL__ twSetFooter(TWindow *win,const char* footer,tTitl
 		     *                     twGetTitle twGetTitleAttr twSetTitle twSetTitleAttr
 		     *                     twGetFooter twSetFooter twSetFooterAttr
 		    **/
-void              __FASTCALL__ twSetFrameAttr(TWindow *win,const char *frame,ColorAttr attr);
+void              __FASTCALL__ twSetFrameAttr(TWindow *win,const unsigned char *frame,ColorAttr attr);
 
 		   /** Updates window title with specified physical color attributes.
 		     * @param win          handle of window

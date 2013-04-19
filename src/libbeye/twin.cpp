@@ -31,12 +31,12 @@
 #include "libbeye/twin.h"
 #include "libbeye/pmalloc.h"
 
-const char TW_SINGLE_FRAME[8] = { TWC_Sd_Sr, TWC_SH, TWC_Sl_Sd, TWC_SV, TWC_SV, TWC_Su_Sr, TWC_SH, TWC_Sl_Su };
-const char TW_DOUBLE_FRAME[8] = { TWC_Dd_Dr, TWC_DH, TWC_Dl_Dd, TWC_DV, TWC_DV, TWC_Du_Dr, TWC_DH, TWC_Dl_Du };
-const char TW_MEDIUM_FRAME[8] = { TWC_FL_BLK, TWC_UP_HBLK, TWC_FL_BLK, TWC_FL_BLK, TWC_FL_BLK, TWC_FL_BLK, TWC_LF_HBLK, TWC_FL_BLK };
-const char TW_THICK_FRAME[8] = { TWC_FL_BLK, TWC_FL_BLK, TWC_FL_BLK, TWC_FL_BLK, TWC_FL_BLK, TWC_FL_BLK, TWC_FL_BLK, TWC_FL_BLK };
-const char TW_UP3D_FRAME[8] = { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 };
-const char TW_DN3D_FRAME[8] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+const unsigned char TW_SINGLE_FRAME[8] = { TWC_Sd_Sr, TWC_SH, TWC_Sl_Sd, TWC_SV, TWC_SV, TWC_Su_Sr, TWC_SH, TWC_Sl_Su };
+const unsigned char TW_DOUBLE_FRAME[8] = { TWC_Dd_Dr, TWC_DH, TWC_Dl_Dd, TWC_DV, TWC_DV, TWC_Du_Dr, TWC_DH, TWC_Dl_Du };
+const unsigned char TW_MEDIUM_FRAME[8] = { TWC_FL_BLK, TWC_UP_HBLK, TWC_FL_BLK, TWC_FL_BLK, TWC_FL_BLK, TWC_FL_BLK, TWC_LF_HBLK, TWC_FL_BLK };
+const unsigned char TW_THICK_FRAME[8] = { TWC_FL_BLK, TWC_FL_BLK, TWC_FL_BLK, TWC_FL_BLK, TWC_FL_BLK, TWC_FL_BLK, TWC_FL_BLK, TWC_FL_BLK };
+const unsigned char TW_UP3D_FRAME[8] = { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 };
+const unsigned char TW_DN3D_FRAME[8] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
 #ifndef NDEBUG
 #ifdef __TSC__
@@ -342,7 +342,7 @@ Color __FASTCALL__ twTextBkGnd( Color col )
    return ret;
 }
 
-void __FASTCALL__ twSetFrame(TWindow *win,const char *frame,Color fore,Color back)
+void __FASTCALL__ twSetFrame(TWindow *win,const unsigned char *frame,Color fore,Color back)
 {
   TWindow *tmp;
   win->flags |= TWS_FRAMEABLE;
@@ -354,12 +354,12 @@ void __FASTCALL__ twSetFrame(TWindow *win,const char *frame,Color fore,Color bac
   active = tmp;
 }
 
-void __FASTCALL__ twSetFrameAttr(TWindow *win,const char *frame,ColorAttr attr)
+void __FASTCALL__ twSetFrameAttr(TWindow *win,const unsigned char *frame,ColorAttr attr)
 {
    twSetFrame(win,frame,FORE_COLOR(attr),BACK_COLOR(attr));
 }
 
-void __FASTCALL__ twGetFrameAttr(TWindow *win,char *frame,ColorAttr* attr)
+void __FASTCALL__ twGetFrameAttr(TWindow *win,unsigned char *frame,ColorAttr* attr)
 {
   if((win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE)
   {
@@ -368,7 +368,7 @@ void __FASTCALL__ twGetFrameAttr(TWindow *win,char *frame,ColorAttr* attr)
   }
 }
 
-void __FASTCALL__ twGetFrame(TWindow *win,char *frame,Color* fore,Color* back)
+void __FASTCALL__ twGetFrame(TWindow *win,unsigned char *frame,Color* fore,Color* back)
 {
   ColorAttr attr;
   twGetFrameAttr(win,frame,&attr);
@@ -1354,7 +1354,7 @@ static void __NEAR__ __FASTCALL__ paint_internal( void )
   if((active->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE) make_frame();
 }
 
-void __FASTCALL__ twinDrawFrame(tRelCoord x1, tRelCoord y1, tRelCoord x2, tRelCoord y2,const char *frame,Color fore, Color back)
+void __FASTCALL__ twinDrawFrame(tRelCoord x1, tRelCoord y1, tRelCoord x2, tRelCoord y2,const unsigned char *frame,Color fore, Color back)
 {
  DefColor dcol;
  tRelCoord sx,sy;
@@ -1374,7 +1374,7 @@ void __FASTCALL__ twinDrawFrame(tRelCoord x1, tRelCoord y1, tRelCoord x2, tRelCo
  active->cur_y = sy;
 }
 
-void __FASTCALL__ twinDrawFrameAttr(tRelCoord x1, tRelCoord y1, tRelCoord x2, tRelCoord y2,const char *frame,ColorAttr attr)
+void __FASTCALL__ twinDrawFrameAttr(tRelCoord x1, tRelCoord y1, tRelCoord x2, tRelCoord y2,const unsigned char *frame,ColorAttr attr)
 {
   twinDrawFrame(x1,y1,x2,y2,frame,FORE_COLOR(attr),BACK_COLOR(attr));
 }

@@ -146,7 +146,7 @@ static const char * __NEAR__ __FASTCALL__ PECPUType(void)
 {
     static const struct {
        int code;
-       char *name;
+       const char *name;
     } pe_cpu[] = {
        {0x014C, "Intel 80386"},
 //       {0x014D, "Intel 80486"},

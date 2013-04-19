@@ -62,7 +62,7 @@ static uint32_t recmax;
 static uint32_t reclast;
 static uint32_t segbase[MAXSEG];
 
-char *lmftypes[]={
+const char *lmftypes[]={
 	"definition",
 	"comment",
 	"text",

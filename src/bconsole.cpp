@@ -443,7 +443,7 @@ static TWindow * __NEAR__ __FASTCALL__ _CreateWindowDD(const char * title,tAbsCo
 {
  TWindow *win;
  unsigned flags;
- char frame[8];
+ unsigned char frame[8];
  flags = TWS_FRAMEABLE;
  if(is_nls) flags |= TWS_NLSOEM;
  win = WindowOpen(0,0,x2,y2,flags);

@@ -128,7 +128,7 @@ static int avr_operand( unsigned int insn,
 
     case 'e':
       {
-	char *xyz;
+	const char *xyz;
 
 	switch (insn & 0x100f)
 	  {

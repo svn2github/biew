@@ -366,7 +366,7 @@ char * __FASTCALL__ ix86_getModRM16(bool w,unsigned char mod,unsigned char rm,ix
  char square[50];
  char new_mode = mod;
  unsigned char clen;
- bool as_sign,is_disponly,as_rip;
+ bool as_sign,is_disponly;
  if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) {
     strcpy(square,ix86_A16[rm]);
     mod = new_mode;
@@ -377,7 +377,6 @@ char * __FASTCALL__ ix86_getModRM16(bool w,unsigned char mod,unsigned char rm,ix
     }
     is_disponly = false;
     as_sign = true;
-    as_rip=false;
  }
  clen = 2;
  switch(mod) {
@@ -1116,7 +1115,7 @@ void  __FASTCALL__ ix86_ArgExGr0(char *str,ix86Param *DisP)
     if((x86_Bitness != DAB_USE64) && (cop < 4)) DisP->pro_clone |= INSN_CPL0;
 }
 
-static char *ix86_vmxname[]={"???","???","???","???","???","???","vmclear","???",};
+static const char *ix86_vmxname[]={"???","???","???","???","???","???","vmclear","???",};
 void   __FASTCALL__ ix86_VMX(char *str,ix86Param *DisP)
 {
     unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
@@ -1692,7 +1691,7 @@ void __FASTCALL__  arg_simd_clmul(char *str,ix86Param *DisP)
 {
    char *a;
    unsigned char suffix;
-   char name[6], realname[10];
+   char name[10], realname[10];
    unsigned long mode=DisP->mode;
    unsigned namlen,precopy;
    DisP->mode|=MOD_SSE;

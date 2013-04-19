@@ -80,7 +80,7 @@ static __filesize_t __FASTCALL__ Show_Sis_Header( void )
 {
  unsigned keycode;
  TWindow * hwnd;
- char *TypeName;
+ const char *TypeName;
  struct SisHeader sis;
  __filesize_t fpos,fpos2;
  fpos2=fpos = BMGetCurrFilePos();

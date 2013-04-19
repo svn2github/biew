@@ -438,7 +438,7 @@ void About( void )
  TWindow * hwnd;
  unsigned i,j,len;
  char str[2];
- const char core[8] = { TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, 0x00 };
+ const unsigned char core[8] = { TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, 0x00 };
  hwnd = WindowOpen(0,0,73,13,TWS_FRAMEABLE | TWS_NLSOEM);
  twCentredWin(hwnd,NULL);
  twSetColor(LightCyan,Black);
@@ -471,7 +471,7 @@ void About( void )
  twinDrawFrame(3,8,13,12,TW_UP3D_FRAME,White,LightGray);
  twinDrawFrame(4,9,12,11,TW_DN3D_FRAME,Black,LightGray);
  twGotoXY(5,10);
- twPutS(core);
+ twPutS((const char*)core);
  twTextColor(Brown); twTextBkGnd(Black);
  for(i = 0;i < 7;i++)
  {
