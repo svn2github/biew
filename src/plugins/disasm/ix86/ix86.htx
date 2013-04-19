@@ -982,6 +982,7 @@
 ³ addss       [F3_0F_58]              Scalar F32 Add                      ³
 ³ andps       [0F_54]                 Bitwise Logical And for F32         ³
 ³ andnps      [0F_55]                 Bitwise Logical AndNot for F32      ³
+³ clflush     [0F_AE/7]               Flush cache line                    ³
 ³ cmpeqps     [0F_C2/rm/00]           Packet F32 Compare (Equal)          ³
 ³ cmpleps     [0F_C2/rm/02]           Packet F32 Compare (Less|Equal)     ³
 ³ cmpltps     [0F_C2/rm/01]           Packet F32 Compare (LessThan)       ³
