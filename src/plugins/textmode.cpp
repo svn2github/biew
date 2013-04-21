@@ -1282,7 +1282,7 @@ static void __FASTCALL__ txtTerm( void )
   delete buff;
   delete tlines;
   delete ptlines;
-  if(txtHandle != BMbioHandle()) { txtHandle->close(); txtHandle = &bNull; }
+  if(txtHandle != BMbioHandle()) { delete txtHandle; txtHandle = &bNull; }
   if(syntax_hl.name) delete syntax_hl.name;
   if(escape) delete escape;
   escape=NULL;

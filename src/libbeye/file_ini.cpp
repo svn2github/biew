@@ -239,7 +239,7 @@ void __FASTCALL__ FiClose(FiHandler h)
     PFREE(FiFileNames);
     PFREE(FinCurrString);
   }
-  h->close();
+  delete h;
 }
 
 static unsigned int __NEAR__ __FASTCALL__ __GetLengthBrStr(const char * src,char obr,char cbr)

@@ -591,7 +591,7 @@ static void __FASTCALL__ coff386_destroy_fmt( void )
   delete coff386so;
   if(PubNames) { la_Destroy(PubNames); PubNames = 0; }
   main_handle = bmbioHandle();
-  if(coff_cache != &bNull && coff_cache != main_handle) coff_cache->close();
+  if(coff_cache != &bNull && coff_cache != main_handle) delete coff_cache;
 }
 
 static int __FASTCALL__ coff386_bitness(__filesize_t off)

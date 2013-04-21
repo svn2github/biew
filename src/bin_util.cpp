@@ -162,7 +162,7 @@ int __FASTCALL__ fmtShowList( GetNumItems gni,ReadItems ri,const char * title,in
  }
  ma_Destroy(obj);
  exit:
- handle->close();
+ delete handle;
  return ret;
 }
 

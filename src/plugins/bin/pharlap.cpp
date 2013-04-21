@@ -262,7 +262,7 @@ static void __FASTCALL__ PharLapDestroy( void )
 {
   BFile* main_handle;
   main_handle = bmbioHandle();
-  if(pl_cache != &bNull && pl_cache != main_handle) pl_cache->close();
+  if(pl_cache != &bNull && pl_cache != main_handle) delete pl_cache;
 }
 
 static bool __FASTCALL__ PharLapAddrResolv(char *addr,__filesize_t cfpos)

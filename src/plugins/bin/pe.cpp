@@ -1174,11 +1174,11 @@ static void __FASTCALL__ destroyPE( void )
   if(PubNames) { la_Destroy(PubNames); PubNames = 0; }
   if(CurrPEChain) { la_Destroy(CurrPEChain); CurrPEChain = 0; } /* Fixed by "Kostya Nosov" <k-nosov@yandex.ru> */
   main_handle = bmbioHandle();
-  if(pe_cache != &bNull && pe_cache != main_handle) pe_cache->close();
-  if(pe_cache1 != &bNull && pe_cache1 != main_handle) pe_cache1->close();
-  if(pe_cache2 != &bNull && pe_cache2 != main_handle) pe_cache2->close();
-  if(pe_cache3 != &bNull && pe_cache3 != main_handle) pe_cache3->close();
-  if(pe_cache4 != &bNull && pe_cache4 != main_handle) pe_cache4->close();
+  if(pe_cache != &bNull && pe_cache != main_handle) delete pe_cache;
+  if(pe_cache1 != &bNull && pe_cache1 != main_handle) delete pe_cache1;
+  if(pe_cache2 != &bNull && pe_cache2 != main_handle) delete pe_cache2;
+  if(pe_cache3 != &bNull && pe_cache3 != main_handle) delete pe_cache3;
+  if(pe_cache4 != &bNull && pe_cache4 != main_handle) delete pe_cache4;
   PMUnregLowMemCallBack(peLowMemFunc);
 }
 

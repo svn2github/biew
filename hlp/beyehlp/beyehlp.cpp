@@ -207,7 +207,7 @@ bool __FASTCALL__ MyCallOut(IniInfo *ini)
 	   bOutput->write_buffer(tmp_buff,copysize);
 	   litem -= copysize;
 	} while(litem);
-	bIn->close();
+	delete bIn;
 	bOutput->flush();
 	items_freq++;
      }
@@ -234,11 +234,13 @@ int main( int argc, char *argv[] )
   atexit(my_atexit);
   __init_sys();
   archiver=argv[1];
+  FiProgress(argv[2],MyCallBack);
   printf("Using %s as archiver\n"
 	"Using %s as project\n"
+	"Using %s as output filename\n"
 	, argv[1]
-	, argv[2]);
-  FiProgress(argv[2],MyCallBack);
+	, argv[2]
+	, outfname);
   memset(&bhi,0,sizeof(BEYE_HELP_ITEM));
   if(__IsFileExists(outfname)) if(__OsDelete(outfname)) { fprintf(stderr,"Can not delete %s\n",argv[2]); return -1; }
   handle = __OsCreate(outfname);
@@ -264,7 +266,7 @@ int main( int argc, char *argv[] )
   for(i = 0;i < items_freq;i++) bOutput->write_buffer(&bhi,sizeof(BEYE_HELP_ITEM));
   items_freq = 0;
   FiProgress(argv[2],MyCallOut);
-  bOutput->close();
+  delete bOutput;
   __OsDelete(TEMPFNAME);
   __OsDelete(COMPNAME);
   printf("Help file looks - ok\n");

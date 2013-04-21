@@ -588,8 +588,8 @@ static void __FASTCALL__ jvm_init_fmt( void )
 
 static void __FASTCALL__ jvm_destroy_fmt(void)
 {
-  if(jvm_cache != &bNull && jvm_cache != bmbioHandle()) jvm_cache->close();
-  if(pool_cache != &bNull && pool_cache != bmbioHandle()) pool_cache->close();
+  if(jvm_cache != &bNull && jvm_cache != bmbioHandle()) delete jvm_cache;
+  if(pool_cache != &bNull && pool_cache != bmbioHandle()) delete pool_cache;
 }
 
 static int  __FASTCALL__ jvm_platform( void) { return DISASM_JAVA; }

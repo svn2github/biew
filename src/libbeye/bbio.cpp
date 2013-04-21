@@ -38,13 +38,13 @@ BFile::BFile()
 	optimize(0),
 	is_mmf(false),
 	primary_mmf(false),
-	is_eof(false),
+	is_eof(true),
 	founderr(false)
 {
-    b.mmb=NULL;
+    b.vfb.handle=NULL_HANDLE;
 }
 
-BFile::~BFile() {}
+BFile::~BFile() { if(FileName) close(); }
 
 /* notes: all function with prefix=>__ assume, that buffer present */
 
@@ -356,6 +356,7 @@ bool BFile::open(const char* fname,unsigned _openmode,unsigned bSize,unsigned op
      }
      else b.vfb.MBuffer = NULL;
    }
+   is_eof=false;
    return true;
 }
 
@@ -380,6 +381,7 @@ bool BFile::close()
     if(b.vfb.MBuffer) delete b.vfb.MBuffer;
   }
   delete FileName;
+  FileName=NULL;
   return true;
 }
 

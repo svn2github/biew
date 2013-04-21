@@ -69,8 +69,8 @@ int main(int argc, char *argv[])
 	if (toupper(*argv[1]) == 'E') retcode = Encode();
 	else                          retcode = Decode(infile,NULL,0L,infile->flength());
 	if(!retcode) fprintf(stderr,"Error allocating memory during operation\n");
-	infile->close();
-	outfile->close();
+	delete infile;
+	delete outfile;
 	__term_sys();
 	return EXIT_SUCCESS;
 }

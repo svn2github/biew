@@ -75,9 +75,9 @@ int __FASTCALL__ BMOpen(const char * fname)
 
 void __FASTCALL__ BMClose( void )
 {
-  if(bm_file_handle != &bNull) bm_file_handle->close();
+  if(bm_file_handle != &bNull) delete bm_file_handle;
   bm_file_handle = &bNull;
-  if(sc_bm_file_handle != &bNull) sc_bm_file_handle->close();
+  if(sc_bm_file_handle != &bNull) delete sc_bm_file_handle;
   sc_bm_file_handle = &bNull;
 }
 

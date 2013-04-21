@@ -174,7 +174,7 @@ static void save_video(unsigned char *buff,unsigned size)
     if(!bHandle->write_byte(buff[i])) goto err;
     bHandle->seek(1,BIO_SEEK_CUR);
   }
-  bHandle->close();
+  delete bHandle;
   BMReRead();
 }
 

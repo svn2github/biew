@@ -1390,10 +1390,10 @@ static void __FASTCALL__ NE_destroy( void )
   if(CurrNEChain) { la_Destroy(CurrNEChain); CurrNEChain = 0; }
   if(PubNames)  { la_Destroy(PubNames); PubNames = 0; }
   main_handle = bmbioHandle();
-  if(ne_cache != &bNull && ne_cache != main_handle) ne_cache->close();
-  if(ne_cache2 != &bNull && ne_cache2 != main_handle) ne_cache2->close();
-  if(ne_cache3 != &bNull && ne_cache3 != main_handle) ne_cache3->close();
-  if(ne_cache1 != &bNull && ne_cache1 != main_handle) ne_cache1->close();
+  if(ne_cache != &bNull && ne_cache != main_handle) delete ne_cache;
+  if(ne_cache2 != &bNull && ne_cache2 != main_handle) delete ne_cache2;
+  if(ne_cache3 != &bNull && ne_cache3 != main_handle) delete ne_cache3;
+  if(ne_cache1 != &bNull && ne_cache1 != main_handle) delete ne_cache1;
   PMUnregLowMemCallBack(neLowMemFunc);
 }
 

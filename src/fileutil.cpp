@@ -68,7 +68,7 @@ static bool ChSize( void )
        }
        ret = bHandle->chsize(psize);
        my_errno = errno;
-       bHandle->close();
+       delete bHandle;
        if(ret == false) goto err;
        BMReRead();
        return ret;
@@ -180,7 +180,7 @@ static bool InsDelBlock( void )
     {
       if(psize < 0) ret = DelBlock(bHandle,start,psize);
       else          ret = InsBlock(bHandle,start,psize);
-      bHandle->close();
+      delete bHandle;
       BMReRead();
     }
     BMSeek(fpos,BM_SEEK_SET);
@@ -353,14 +353,14 @@ static bool FStore( void )
 	if(!BMReadBufferEx(tmp_buff,rem,crpos,BM_SEEK_SET))
 	{
 	  errnoMessageBox(READ_FAIL,NULL,errno);
-	  _bioHandle->close();
+	  delete _bioHandle;
 	  goto Exit;
 	}
 	real_size = activeMode->convert_cp ? activeMode->convert_cp((char *)tmp_buff,rem,true) : rem;
 	if(!_bioHandle->write_buffer(tmp_buff,real_size))
 	{
 	  errnoMessageBox(WRITE_FAIL,NULL,errno);
-	  _bioHandle->close();
+	  delete _bioHandle;
 	  goto Exit;
 	}
 	wsize -= rem;
@@ -373,7 +373,7 @@ static bool FStore( void )
 	  if(!ShowPercentInWnd(progress_wnd,prcnt_counter)) break;
 	}
      }
-     _bioHandle->close();
+     delete _bioHandle;
    }
    else /** Write in disassembler mode */
    {
@@ -770,7 +770,7 @@ static bool FRestore( void )
 	 cwpos += remaind;
        }
        bye:
-       bHandle->close();
+       delete bHandle;
        BMReRead();
      }
      else errnoMessageBox(OPEN_FAIL,NULL,errno);
@@ -887,7 +887,7 @@ static bool CryptBlock( void )
 	 cwpos += remaind;
        }
        bye:
-       bHandle->close();
+       delete bHandle;
        BMReRead();
      }
      delete (char*)tmp_buff;
@@ -997,7 +997,7 @@ static bool ReverseBlock( void )
 	 cwpos += remaind;
        }
        bye:
-       bHandle->close();
+       delete bHandle;
        BMReRead();
      }
      delete (char*)tmp_buff;
@@ -1062,19 +1062,19 @@ static bool XLatBlock( void )
      if(xHandle->flength() != 320)
      {
        ErrMessageBox("Size of xlat file is not 320 bytes", NULL);
-       xHandle->close();
+       delete xHandle;
        return false;
      }
      xHandle->read_buffer(xlt, 16);
      if(memcmp(xlt, "Beye Xlat Table.", 16) != 0)
      {
        ErrMessageBox("It seems that xlat file is corrupt", NULL);
-       xHandle->close();
+       delete xHandle;
        return false;
      }
      xHandle->seek(0x40, SEEKF_START);
      xHandle->read_buffer(xlt, 256);
-     xHandle->close();
+     delete xHandle;
      tmp_buff = new char [4096];
      if(!tmp_buff)
      {
@@ -1107,7 +1107,7 @@ static bool XLatBlock( void )
 	 cwpos += remaind;
        }
        bye:
-       bHandle->close();
+       delete bHandle;
        BMReRead();
      }
      delete (char*)tmp_buff;

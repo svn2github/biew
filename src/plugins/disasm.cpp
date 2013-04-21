@@ -632,7 +632,7 @@ static int __NEAR__ __FASTCALL__ FullAsmEdit(TWindow * ewnd)
 			   bHandle->seek(edit_cp,BIO_SEEK_SET);
 			   if(!bHandle->write_buffer((any_t*)EditorMem.buff,rlen))
 			      errnoMessageBox(WRITE_FAIL,NULL,errno);
-			   bHandle->close();
+			   delete bHandle;
 			   BMReRead();
 			 }
 			 else errnoMessageBox("Can't reopen",NULL,errno);

@@ -295,7 +295,7 @@ bool __FASTCALL__ hlpOpen( bool interact )
     {
       ErrMessageBox("Incorrect help version",NULL);
     }
-    bHelp->close();
+    delete bHelp;
     bHelp = &bNull;
     return false;
   }
@@ -306,7 +306,7 @@ void __FASTCALL__ hlpClose( void )
 {
   if(bHelp != &bNull)
   {
-    bHelp->close();
+    delete bHelp;
     bHelp = &bNull;
   }
 }

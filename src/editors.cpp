@@ -169,7 +169,7 @@ void __FASTCALL__ editSaveContest( void )
   }
   bHandle->seek(edit_cp,BIO_SEEK_SET);
   if(!bHandle->write_buffer((any_t*)EditorMem.buff,EditorMem.size)) goto err;
-  bHandle->close();
+  delete bHandle;
   BMReRead();
 }
 

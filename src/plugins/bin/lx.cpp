@@ -1052,7 +1052,7 @@ static void __FASTCALL__ LXdestroy( void )
 {
    BFile* main_handle;
    main_handle = bmbioHandle();
-   if(lx_cache != &bNull && lx_cache != main_handle) lx_cache->close();
+   if(lx_cache != &bNull && lx_cache != main_handle) delete lx_cache;
 }
 
 static __filesize_t __FASTCALL__ LXHelp( void )

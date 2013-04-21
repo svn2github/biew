@@ -288,7 +288,7 @@ static void __FASTCALL__ LEdestroy( void )
 {
    BFile* main_handle;
    main_handle = bmbioHandle();
-   if(lx_cache != &bNull && lx_cache != main_handle) lx_cache->close();
+   if(lx_cache != &bNull && lx_cache != main_handle) delete lx_cache;
 }
 
 static __filesize_t __FASTCALL__ LEHelp( void )

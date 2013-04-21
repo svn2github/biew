@@ -586,7 +586,7 @@ static void __FASTCALL__ NLMdestroy( void )
 {
   BFile* main_handle;
   main_handle = bmbioHandle();
-  if(nlm_cache != &bNull && nlm_cache != main_handle) nlm_cache->close();
+  if(nlm_cache != &bNull && nlm_cache != main_handle) delete nlm_cache;
   PMUnregLowMemCallBack(nlmLowMemFunc);
 }
 

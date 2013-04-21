@@ -2183,9 +2183,9 @@ static void __FASTCALL__ ELFdestroy( void )
 {
    BFile* main_handle;
    main_handle = bmbioHandle();
-   if(namecache != &bNull && namecache != main_handle) namecache->close();
-   if(namecache2 != &bNull && namecache2 != main_handle) namecache2->close();
-   if(elfcache != &bNull && elfcache != main_handle) elfcache->close();
+   if(namecache != &bNull && namecache != main_handle) delete namecache;
+   if(namecache2 != &bNull && namecache2 != main_handle) delete namecache2;
+   if(elfcache != &bNull && elfcache != main_handle) delete elfcache;
    if(PubNames) { la_Destroy(PubNames); PubNames = 0; }
    if(CurrElfChain) { la_Destroy(CurrElfChain); CurrElfChain = 0; }
    PMUnregLowMemCallBack(elfLowMemFunc);
