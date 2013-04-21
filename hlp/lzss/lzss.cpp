@@ -51,8 +51,10 @@ int main(int argc, char *argv[])
 	    return EXIT_FAILURE;
 	}
 	ArgVector=argv;
+	infile = new BFile;
+	bool rc;
 	if ((s = argv[1], s[1] || strpbrk(s, "DEde") == NULL)
-	    || (s = argv[2], (infile  = bioOpen(s,O_RDONLY,0xFFFF,BIO_OPT_DB)) == NULL))
+	    || (s = argv[2], (rc = infile->open(s,O_RDONLY,0xFFFF,BIO_OPT_DB)) == false))
 	{
 		printf("??? %s\n", s);
 		return EXIT_FAILURE;
@@ -62,13 +64,13 @@ int main(int argc, char *argv[])
 	if(__IsFileExists(s)) if(__OsDelete(s)) { Err: printf("Problem with %s\n",s); return EXIT_FAILURE; }
 	handle = __OsCreate(s);
 	__OsClose(handle);
-	if((outfile = bioOpen(s,O_RDWR,0x1000,BIO_OPT_DB)) == NULL) goto Err;
+	outfile = new BFile;
+	if((rc = outfile->open(s,O_RDWR,0x1000,BIO_OPT_DB)) == false) goto Err;
 	if (toupper(*argv[1]) == 'E') retcode = Encode();
-	else                          retcode = Decode(infile,NULL,0L,
-						       bioFLength(infile));
+	else                          retcode = Decode(infile,NULL,0L,infile->flength());
 	if(!retcode) fprintf(stderr,"Error allocating memory during operation\n");
-	bioClose(infile);
-	bioClose(outfile);
+	infile->close();
+	outfile->close();
 	__term_sys();
 	return EXIT_SUCCESS;
 }

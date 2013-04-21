@@ -157,8 +157,8 @@ void __FASTCALL__ CheckXYBounds( void )
 
 void __FASTCALL__ editSaveContest( void )
 {
-  BGLOBAL bHandle;
-  char *fname;
+  BFile* bHandle;
+  const char *fname;
   fname = BMName();
   bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
   if(bHandle == &bNull)
@@ -167,9 +167,9 @@ void __FASTCALL__ editSaveContest( void )
       errnoMessageBox(WRITE_FAIL,NULL,errno);
       return;
   }
-  bioSeek(bHandle,edit_cp,BIO_SEEK_SET);
-  if(!bioWriteBuffer(bHandle,(any_t*)EditorMem.buff,EditorMem.size)) goto err;
-  bioClose(bHandle);
+  bHandle->seek(edit_cp,BIO_SEEK_SET);
+  if(!bHandle->write_buffer((any_t*)EditorMem.buff,EditorMem.size)) goto err;
+  bHandle->close();
   BMReRead();
 }
 

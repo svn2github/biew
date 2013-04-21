@@ -127,9 +127,8 @@ static __filesize_t __NEAR__ __FASTCALL__  ___lfind(const char *sfrom,
   start += beyeFlg & SF_REVERSE ? 0 : (pattern_size-1)*symb_size;
   if(!sfrom)
   {
-    bio_opt = bioGetOptimization(BMbioHandle());
-    bioSetOptimization(BMbioHandle(),
-		      (bio_opt & (~BIO_OPT_DIRMASK)) |
+    bio_opt = BMbioHandle()->get_optimization();
+    BMbioHandle()->set_optimization((bio_opt & (~BIO_OPT_DIRMASK)) |
 		      (beyeFlg & SF_REVERSE ? BIO_OPT_RBACKSCAN : BIO_OPT_RFORWARD));
   }
   start = (start/symb_size)*symb_size; /** align on symbol boundary */
@@ -216,7 +215,7 @@ static __filesize_t __NEAR__ __FASTCALL__  ___lfind(const char *sfrom,
     if(cond) { __found = true; retval = findptr; break; }
     if(flags & __LF_NOSEEK) break;
   }
-  if(!sfrom) bioSetOptimization(BMbioHandle(),bio_opt);
+  if(!sfrom) BMbioHandle()->set_optimization(bio_opt);
   return retval;
 }
 

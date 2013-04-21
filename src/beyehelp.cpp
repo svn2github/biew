@@ -271,12 +271,12 @@ static int __NEAR__ __FASTCALL__ __hlpListBox(char * * names,unsigned nlist,cons
 }
 
 
-static BGLOBAL bHelp = &bNull;
+static BFile* bHelp = &bNull;
 static BEYE_HELP_ITEM bhi;
 
 bool __FASTCALL__ hlpOpen( bool interact )
 {
-  char *help_name;
+  const char *help_name;
   char hlp_id[sizeof(BEYE_HELP_VER)];
   if(bHelp != &bNull) return false; /*means: help file is already opened */
   help_name = beyeGetHelpName();
@@ -286,16 +286,16 @@ bool __FASTCALL__ hlpOpen( bool interact )
     if(interact) errnoMessageBox("Can't open help file",NULL,errno);
     return false;
   }
-  bioSetOptimization(bHelp,BIO_OPT_RANDOM);
-  bioSeek(bHelp,0L,SEEK_SET);
-  bioReadBuffer(bHelp,hlp_id,sizeof(hlp_id));
+  bHelp->set_optimization(BIO_OPT_RANDOM);
+  bHelp->seek(0L,SEEK_SET);
+  bHelp->read_buffer(hlp_id,sizeof(hlp_id));
   if(memcmp(hlp_id,BEYE_HELP_VER,sizeof(BEYE_HELP_VER)) != 0)
   {
     if(interact)
     {
       ErrMessageBox("Incorrect help version",NULL);
     }
-    bioClose(bHelp);
+    bHelp->close();
     bHelp = &bNull;
     return false;
   }
@@ -306,7 +306,7 @@ void __FASTCALL__ hlpClose( void )
 {
   if(bHelp != &bNull)
   {
-    bioClose(bHelp);
+    bHelp->close();
     bHelp = &bNull;
   }
 }
@@ -315,12 +315,12 @@ static bool __FASTCALL__ find_item(unsigned long item_id)
 {
   unsigned long i,nsize,lval;
   char sout[HLP_SLONG_LEN];
-  bioSeek(bHelp,HLP_VER_LEN,SEEK_SET);
-  bioReadBuffer(bHelp,sout,sizeof(sout));
+  bHelp->seek(HLP_VER_LEN,SEEK_SET);
+  bHelp->read_buffer(sout,sizeof(sout));
   nsize = strtoul(sout,NULL,16);
   for(i = 0;i < nsize;i++)
   {
-    bioReadBuffer(bHelp,&bhi,sizeof(BEYE_HELP_ITEM));
+    bHelp->read_buffer(&bhi,sizeof(BEYE_HELP_ITEM));
     lval = strtoul(bhi.item_id,NULL,16);
     if(lval == item_id) return true;
   }

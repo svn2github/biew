@@ -53,24 +53,24 @@ struct PubName
 extern linearArray *PubNames;
 extern unsigned fmtActiveState;
 
-typedef void (__FASTCALL__ *ReadPubName)(BGLOBAL b_cache,const struct PubName *it,
+typedef void (__FASTCALL__ *ReadPubName)(BFile* b_cache,const struct PubName *it,
 			    char *buff,unsigned cb_buff);
-typedef void (__FASTCALL__ *ReadPubNameList)(BGLOBAL fmt_chahe,void (__FASTCALL__ *mem_out)(const char *));
+typedef void (__FASTCALL__ *ReadPubNameList)(BFile* fmt_chahe,void (__FASTCALL__ *mem_out)(const char *));
 
 extern void  __FASTCALL__ fmtSetState(int state);
 extern tCompare __FASTCALL__ fmtComparePubNames(const void __HUGE__ *v1,const void __HUGE__ *v2);
-extern bool __FASTCALL__ fmtFindPubName(BGLOBAL fmt_cache,char *buff,unsigned cb_buff,
+extern bool __FASTCALL__ fmtFindPubName(BFile* fmt_cache,char *buff,unsigned cb_buff,
 					 __filesize_t pa,
 					 ReadPubNameList fmtReadPubNameList,
 					 ReadPubName fmtReadPubName);
-extern __filesize_t __FASTCALL__ fmtGetPubSym(BGLOBAL fmt_cache,char *str,unsigned cb_str,
+extern __filesize_t __FASTCALL__ fmtGetPubSym(BFile* fmt_cache,char *str,unsigned cb_str,
 				      unsigned *func_class,__filesize_t pa,
 				      bool as_prev,
 				      ReadPubNameList fmtReadPubNameList,
 				      ReadPubName fmtReadPubName);
 
-typedef unsigned      (__FASTCALL__ * GetNumItems)(BGLOBAL handle);
-typedef bool         (__FASTCALL__ * ReadItems)(BGLOBAL handle,memArray * names,unsigned nnames);
+typedef unsigned      (__FASTCALL__ * GetNumItems)(BFile* handle);
+typedef bool         (__FASTCALL__ * ReadItems)(BFile* handle,memArray * names,unsigned nnames);
 typedef __filesize_t  (__FASTCALL__ * CalcEntry)(unsigned,int dispmsg);
 extern  int           __FASTCALL__ fmtShowList( GetNumItems gni,ReadItems ri,const char * title,int flags,unsigned * ordinal);
 

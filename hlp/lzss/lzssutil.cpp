@@ -42,7 +42,7 @@ int		match_position, match_length,  /** of longest match.  These are
 						    set by the InsertNode() procedure. */
 		*lson, *rson, *dad;  /** left & right children &
 					  parents -- These constitute binary search trees. */
-BGLOBAL	infile, outfile;  /** input & output files */
+BFile*	infile, *outfile;  /** input & output files */
 #ifdef INTERACTIVE
 static void InitTree(void)  /** initialize trees */
 {
@@ -145,9 +145,9 @@ static int Encode(void)
 	time(&sttime);
 	ppercent = -1;
 #endif
-	bioSeek(infile,0L,SEEK_END);
-	flen = bioTell(infile);
-	bioSeek(infile,0L,SEEK_SET);
+	infile->seek(0L,SEEK_END);
+	flen = infile->tell();
+	infile->seek(0L,SEEK_SET);
 	InitTree();  /** initialize trees */
 	code_buf[0] = 0;  /** code_buf[1..16] saves eight units of code, and
 		code_buf[0] works as eight flags, "1" representing that the unit
@@ -159,9 +159,9 @@ static int Encode(void)
 		any character that will appear often. */
 	for (len = 0; len < F; len++)
 	{
-	  reach_eof = bioEOF(infile) || bioTell(infile) > flen;
+	  reach_eof = infile->eof() || infile->tell() > flen;
 	  if(reach_eof) break;
-	  c = bioReadByte(infile);
+	  c = infile->read_byte();
 	  text_buf[r + len] = c;  /** Read F bytes into the last F bytes of
 			the buffer */
 	}
@@ -188,16 +188,16 @@ static int Encode(void)
 		}
 		if ((mask <<= 1) == 0) {  /** Shift mask left one bit. */
 			for (i = 0; i < code_buf_ptr; i++)  /** Send at most 8 units of */
-				bioWriteByte(outfile,code_buf[i]);     /** code together */
+				outfile->write_byte(code_buf[i]);     /** code together */
 			codesize += code_buf_ptr;
 			code_buf[0] = 0;  code_buf_ptr = mask = 1;
 		}
 		last_match_length = match_length;
 		for (i = 0; i < last_match_length; i++)
 		{
-			reach_eof = bioEOF(infile) || bioTell(infile) > flen;
+			reach_eof = infile->eof() || infile->tell() > flen;
 			if(reach_eof) break;
-			c = bioReadByte(infile);
+			c = infile->read_byte();
 			DeleteNode(s);		/** Delete old strings and */
 			text_buf[s] = c;	/** read new bytes */
 			if (s < F - 1) text_buf[s + N] = c;  /** If the position is
@@ -224,7 +224,7 @@ static int Encode(void)
 		}
 	} while (len > 0);	/** until length of string to be processed is zero */
 	if (code_buf_ptr > 1) {	/** Send remaining code. */
-		for (i = 0; i < code_buf_ptr; i++) bioWriteByte(outfile,code_buf[i]);
+		for (i = 0; i < code_buf_ptr; i++) outfile->write_byte(code_buf[i]);
 		codesize += code_buf_ptr;
 	}
 	PFREE(text_buf);
@@ -248,7 +248,7 @@ static int Encode(void)
 #endif
 
 /** Just the reverse of Encode(). */
-static int Decode(BGLOBAL instream,void __HUGE__*buff,unsigned long off, unsigned long length)
+static int Decode(BFile* instream,void __HUGE__*buff,unsigned long off, unsigned long length)
 {
 	int  i, j, k, r, c,reach_eof;
 #ifdef INTERACTIVE
@@ -279,49 +279,49 @@ static int Decode(BGLOBAL instream,void __HUGE__*buff,unsigned long off, unsigne
 	  time(&sttime);
 	}
 #endif
-	bioSeek(instream,off,SEEK_SET);
+	instream->seek(off,SEEK_SET);
 	for (i = 0; i < N - F; i++) text_buf[i] = ' ';
 	r = N - F;  flags = 0;
 	for ( ; ; )
 	{
 		if (((flags >>= 1) & 256) == 0)
 		{
-		   reach_eof = bioEOF(instream) || bioTell(instream) > flen;
+		   reach_eof = instream->eof() || instream->tell() > flen;
 		   if(reach_eof) break;
-		   c = bioReadByte(instream);
+		   c = instream->read_byte();
 		   flags = c | 0xff00;		/** uses higher byte cleverly */
 		}				/** to count eight */
 		if (flags & 1)
 		{
-		   reach_eof = bioEOF(instream) || bioTell(instream) > flen;
+		   reach_eof = instream->eof() || instream->tell() > flen;
 		   if(reach_eof) break;
-		   c = bioReadByte(instream);
+		   c = instream->read_byte();
 		   if(buff) ((char __HUGE__ *)buff)[buff_ptr++] = c;
-		   else bioWriteByte(outfile,c);
+		   else outfile->write_byte(c);
 		   text_buf[r++] = c;
 		   r &= (N - 1);
 		}
 		else
 		{
-		     reach_eof = bioEOF(instream) || bioTell(instream) > flen;
+		     reach_eof = instream->eof() || instream->tell() > flen;
 		     if(reach_eof) break;
-		     i = bioReadByte(instream);
-		     reach_eof = bioEOF(instream) || bioTell(instream) > flen;
+		     i = instream->read_byte();
+		     reach_eof = instream->eof() || instream->tell() > flen;
 		     if(reach_eof) break;
-		     j = bioReadByte(instream);
+		     j = instream->read_byte();
 
 		     i |= ((j & 0xf0) << 4);  j = (j & 0x0f) + THRESHOLD;
 		     for (k = 0; k <= j; k++)
 		     {
 				c = text_buf[(i + k) & (N - 1)];
 				if(buff) ((char __HUGE__ *)buff)[buff_ptr++] = c;
-				else bioWriteByte(outfile,c);
+				else outfile->write_byte(c);
 				text_buf[r++] = c;
 				r &= (N - 1);
 		     }
 		}
 #ifdef INTERACTIVE
-		cfpos = bioTell(instream);
+		cfpos = instream->tell();
 		{
 		  percent = (unsigned)(cfpos*100/flen);
 		  if (percent != ppercent)

@@ -32,23 +32,23 @@
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
-extern BGLOBAL lx_cache;
+extern BFile* lx_cache;
 
 static __filesize_t __FASTCALL__ ShowNewHeaderLE( void )
 {
   return ShowNewHeaderLX();
 }
 
-static bool __FASTCALL__ __ReadMapTblLE(BGLOBAL handle,memArray * obj,unsigned n)
+static bool __FASTCALL__ __ReadMapTblLE(BFile* handle,memArray * obj,unsigned n)
 {
  size_t i;
-  bioSeek(handle,lxe.le.leObjectPageMapTableOffset + headshift,SEEKF_START);
+  handle->seek(lxe.le.leObjectPageMapTableOffset + headshift,SEEKF_START);
   for(i = 0;i < n;i++)
   {
     LE_PAGE lep;
     char stmp[80];
-    if(IsKbdTerminate() || bioEOF(handle)) break;
-    bioReadBuffer(handle,&lep,sizeof(LE_PAGE));
+    if(IsKbdTerminate() || handle->eof()) break;
+    handle->read_buffer(&lep,sizeof(LE_PAGE));
     sprintf(stmp,"#=%08lXH Flags: %04hX = %s",(long)lep.number,lep.flags,lxeGetMapAttr(lep.flags));
     if(!ma_AddString(obj,stmp,true)) break;
   }
@@ -69,18 +69,18 @@ static __filesize_t __NEAR__ __FASTCALL__ __calcPageEntryLE(LE_PAGE *mt,unsigned
 
 __filesize_t __FASTCALL__ CalcPageEntryLE(unsigned long pageidx)
 {
-  BGLOBAL handle;
+  BFile* handle;
   bool found;
   unsigned i;
   LE_PAGE mt;
   if(!pageidx) return -1;
   handle = lx_cache;
-  bioSeek(handle,lxe.le.leObjectPageMapTableOffset + headshift,SEEK_SET);
+  handle->seek(lxe.le.leObjectPageMapTableOffset + headshift,SEEK_SET);
   found = false;
   for(i = 0;i < lxe.le.lePageCount;i++)
   {
-    bioReadBuffer(handle,(any_t*)&mt,sizeof(LE_PAGE));
-    if(bioEOF(handle)) break;
+    handle->read_buffer((any_t*)&mt,sizeof(LE_PAGE));
+    if(handle->eof()) break;
     if(mt.number == pageidx)
     {
       found = true;
@@ -93,16 +93,16 @@ __filesize_t __FASTCALL__ CalcPageEntryLE(unsigned long pageidx)
 
 __filesize_t __FASTCALL__ CalcEntryPointLE(unsigned long objnum,__filesize_t _offset)
 {
-  BGLOBAL handle;
+  BFile* handle;
   unsigned long i,start,pidx,j;
   __filesize_t ret,pageoff;
   LX_OBJECT lo;
   LE_PAGE mt;
   if(!objnum) return -1;
   handle = lx_cache;
-  bioSeek(handle,lxe.le.leObjectTableOffset + headshift,SEEK_SET);
-  bioSeek(handle,sizeof(LX_OBJECT)*(objnum - 1),SEEKF_CUR);
-  bioReadBuffer(handle,(any_t*)&lo,sizeof(LX_OBJECT));
+  handle->seek(lxe.le.leObjectTableOffset + headshift,SEEK_SET);
+  handle->seek(sizeof(LX_OBJECT)*(objnum - 1),SEEKF_CUR);
+  handle->read_buffer((any_t*)&lo,sizeof(LX_OBJECT));
 /*  if((lo.o32_flags & 0x00002000L) == 0x00002000L) USE16 = 0;
   else                                            USE16 = 0xFF; */
   pageoff = lxe.le.leObjectPageMapTableOffset + headshift;
@@ -115,13 +115,13 @@ __filesize_t __FASTCALL__ CalcEntryPointLE(unsigned long objnum,__filesize_t _of
     if(_offset >= start && _offset < start + lxe.le.lePageSize)
     {
       bool found;
-      bioSeek(handle,pageoff,SEEKF_START);
+      handle->seek(pageoff,SEEKF_START);
       pidx = i + lo.o32_pagemap;
       found = false;
       for(j = 0;j < lxe.le.lePageCount;j++)
       {
-	bioReadBuffer(handle,(any_t*)&mt,sizeof(LE_PAGE));
-	if((is_eof = bioEOF(handle)) != 0) break;
+	handle->read_buffer((any_t*)&mt,sizeof(LE_PAGE));
+	if((is_eof = handle->eof()) != 0) break;
 	if(mt.number == pidx) { found = true; break; }
       }
       if(found) ret = __calcPageEntryLE((LE_PAGE*)&mt,pidx - 1) + _offset - start;
@@ -155,7 +155,7 @@ __filesize_t __FASTCALL__ CalcEntryLE(const LX_ENTRY *lxent)
 
 static __filesize_t __NEAR__ __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,bool dispmsg)
 {
-  BGLOBAL handle;
+  BFile* handle;
   bool found;
   unsigned i;
   unsigned char j;
@@ -165,15 +165,15 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,boo
   __filesize_t ret;
   ret = BMGetCurrFilePos();
   handle = lx_cache;
-  bioSeek(handle,lxe.le.leEntryTableOffset + headshift,SEEK_SET);
+  handle->seek(lxe.le.leEntryTableOffset + headshift,SEEK_SET);
   i = 0;
   found = false;
   while(1)
   {
-   cnt = bioReadByte(handle);
-   type = bioReadByte(handle);
+   cnt = handle->read_byte();
+   type = handle->read_byte();
    if(!cnt) break;
-   if(type) numobj = bioReadWord(handle);
+   if(type) numobj = handle->read_word();
    for(j = 0;j < cnt;j++,i++)
    {
      char size;
@@ -194,14 +194,14 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,boo
        if(size)
        {
 	 lxent.b32_obj = numobj;
-	 lxent.entry.e32_flags = bioReadByte(handle);
-	 bioReadBuffer(handle,(any_t*)&lxent.entry.e32_variant,size);
+	 lxent.entry.e32_flags = handle->read_byte();
+	 handle->read_buffer((any_t*)&lxent.entry.e32_variant,size);
        }
        break;
      }
      else
-       if(size) bioSeek(handle,size + sizeof(char),SEEKF_CUR);
-     if(bioEOF(handle)) break;
+       if(size) handle->seek(size + sizeof(char),SEEKF_CUR);
+     if(handle->eof()) break;
    }
    if(found) break;
  }
@@ -210,7 +210,7 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,boo
  return ret;
 }
 
-static unsigned __FASTCALL__ leMapTblNumEntries(BGLOBAL handle)
+static unsigned __FASTCALL__ leMapTblNumEntries(BFile* handle)
 {
   UNUSED(handle);
   return (unsigned)lxe.le.lePageCount;
@@ -277,18 +277,18 @@ static bool __FASTCALL__ isLE( void )
 
 static void __FASTCALL__ LEinit( void )
 {
-   BGLOBAL main_handle;
+   BFile* main_handle;
    LXType = FILE_LE;
    bmReadBufferEx(&lxe.le,sizeof(LEHEADER),headshift,SEEKF_START);
    main_handle = bmbioHandle();
-   if((lx_cache = bioDupEx(main_handle,BBIO_SMALL_CACHE_SIZE)) == &bNull) lx_cache = main_handle;
+   if((lx_cache = main_handle->dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) lx_cache = main_handle;
 }
 
 static void __FASTCALL__ LEdestroy( void )
 {
-   BGLOBAL main_handle;
+   BFile* main_handle;
    main_handle = bmbioHandle();
-   if(lx_cache != &bNull && lx_cache != main_handle) bioClose(lx_cache);
+   if(lx_cache != &bNull && lx_cache != main_handle) lx_cache->close();
 }
 
 static __filesize_t __FASTCALL__ LEHelp( void )

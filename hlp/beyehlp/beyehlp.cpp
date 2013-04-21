@@ -33,7 +33,7 @@ char tmp_buff[0x1000];
 char o_buff[0x4000];
 char i_cache[0x1000];
 char o_cache[0x1000];
-BGLOBAL bOutput;
+BFile* bOutput;
 
 char* archiver;
 
@@ -157,9 +157,9 @@ bool __FASTCALL__ MyCallOut(IniInfo *ini)
 	unsigned long litem,fpos;
 	unsigned copysize;
 	BEYE_HELP_ITEM bhi;
-	BGLOBAL bIn;
+	BFile* bIn;
 	bhandle_t handle;
-	fpos = bioTell(bOutput);
+	fpos = bOutput->tell();
 	printf("Processing: %s\n",ini->value);
 	litem = strtoul(ini->item,NULL,10);
 	sprintf(bhi.item_id,"%08lX",litem);
@@ -174,15 +174,17 @@ bool __FASTCALL__ MyCallOut(IniInfo *ini)
 	  fprintf(stderr,"Error %s ocurred while processing: %s",strerror(errno),tmp_buff);
 	  exit(EXIT_FAILURE);
 	}
-	bIn = bioOpen(TEMPFNAME,FO_READONLY | SO_DENYNONE,BBIO_CACHE_SIZE,BIO_OPT_DB);
-	 if(bIn == &bNull)
-	 bIn = bioOpen(TEMPFNAME,FO_READONLY | SO_COMPAT,BBIO_CACHE_SIZE,BIO_OPT_DB);
-	  if(bIn == &bNull)
+	bIn = new BFile;
+	bool rc;
+	rc = bIn->open(TEMPFNAME,FO_READONLY | SO_DENYNONE,BBIO_CACHE_SIZE,BIO_OPT_DB);
+	 if(rc == false)
+	 rc = bIn->open(TEMPFNAME,FO_READONLY | SO_COMPAT,BBIO_CACHE_SIZE,BIO_OPT_DB);
+	  if(rc == false)
 	  {
 	      fprintf(stderr,"Can not open %s",TEMPFNAME);
 	      exit(EXIT_FAILURE);
 	  }
-	litem = __FileLength(bioHandle(bIn));
+	litem = __FileLength(bIn->handle());
 	sprintf(bhi.item_length,"%08lX",litem);
 	handle = __OsOpen(COMPNAME,FO_READONLY | SO_DENYNONE);
 	if(handle == NULL_HANDLE)
@@ -193,20 +195,20 @@ bool __FASTCALL__ MyCallOut(IniInfo *ini)
 	litem = __FileLength(handle);
 	__OsClose(handle);
 	sprintf(bhi.item_decomp_size,"%08lX",litem);
-	sprintf(bhi.item_off,"%08lX",bioFLength(bOutput));
-	bioSeek(bOutput,items_freq*sizeof(BEYE_HELP_ITEM)+strlen(id_string)+1+HLP_SLONG_LEN,SEEK_SET);
-	bioWriteBuffer(bOutput,&bhi,sizeof(BEYE_HELP_ITEM));
-	bioSeek(bOutput,fpos,SEEK_SET);
-	litem = __FileLength(bioHandle(bIn));
+	sprintf(bhi.item_off,"%08lX",bOutput->flength());
+	bOutput->seek(items_freq*sizeof(BEYE_HELP_ITEM)+strlen(id_string)+1+HLP_SLONG_LEN,SEEK_SET);
+	bOutput->write_buffer(&bhi,sizeof(BEYE_HELP_ITEM));
+	bOutput->seek(fpos,SEEK_SET);
+	litem = __FileLength(bIn->handle());
 	do
 	{
 	   copysize = std::min((unsigned long)0x1000,litem);
-	   bioReadBuffer(bIn,tmp_buff,copysize);
-	   bioWriteBuffer(bOutput,tmp_buff,copysize);
+	   bIn->read_buffer(tmp_buff,copysize);
+	   bOutput->write_buffer(tmp_buff,copysize);
 	   litem -= copysize;
 	} while(litem);
-	bioClose(bIn);
-	bioFlush(bOutput);
+	bIn->close();
+	bOutput->flush();
 	items_freq++;
      }
   }
@@ -241,26 +243,28 @@ int main( int argc, char *argv[] )
   if(__IsFileExists(outfname)) if(__OsDelete(outfname)) { fprintf(stderr,"Can not delete %s\n",argv[2]); return -1; }
   handle = __OsCreate(outfname);
   __OsClose(handle);
-  bOutput = bioOpen(outfname,FO_READWRITE | SO_DENYNONE,BBIO_CACHE_SIZE,BIO_OPT_DB);
-  if(bOutput == &bNull)
-    bOutput = bioOpen(outfname,FO_READWRITE | SO_COMPAT,BBIO_CACHE_SIZE,BIO_OPT_DB);
-    if(bOutput == &bNull)
-      bOutput = bioOpen(outfname,FO_READONLY | SO_DENYNONE,BBIO_CACHE_SIZE,BIO_OPT_DB);
-      if(bOutput == &bNull)
-	bOutput = bioOpen(outfname,FO_READONLY | SO_COMPAT,BBIO_CACHE_SIZE,BIO_OPT_DB);
-	if(bOutput == &bNull)
+  bOutput = new BFile;
+  bool rc;
+  rc = bOutput->open(outfname,FO_READWRITE | SO_DENYNONE,BBIO_CACHE_SIZE,BIO_OPT_DB);
+  if(rc == false)
+    rc = bOutput->open(outfname,FO_READWRITE | SO_COMPAT,BBIO_CACHE_SIZE,BIO_OPT_DB);
+    if(rc == false)
+      rc = bOutput->open(outfname,FO_READONLY | SO_DENYNONE,BBIO_CACHE_SIZE,BIO_OPT_DB);
+      if(rc == false)
+	rc = bOutput->open(outfname,FO_READONLY | SO_COMPAT,BBIO_CACHE_SIZE,BIO_OPT_DB);
+	if(rc == false)
 	{
 	  fprintf(stderr,"Can not work with %s",outfname);
 	  return -1;
 	}
-  bioSetOptimization(bOutput,BIO_OPT_RANDOM);
-  bioWriteBuffer(bOutput,id_string,strlen(id_string)+1);
+  bOutput->set_optimization(BIO_OPT_RANDOM);
+  bOutput->write_buffer(id_string,strlen(id_string)+1);
   sprintf(sout,"%08lX",items_freq);
-  bioWriteBuffer(bOutput,sout,HLP_SLONG_LEN);
-  for(i = 0;i < items_freq;i++) bioWriteBuffer(bOutput,&bhi,sizeof(BEYE_HELP_ITEM));
+  bOutput->write_buffer(sout,HLP_SLONG_LEN);
+  for(i = 0;i < items_freq;i++) bOutput->write_buffer(&bhi,sizeof(BEYE_HELP_ITEM));
   items_freq = 0;
   FiProgress(argv[2],MyCallOut);
-  bioClose(bOutput);
+  bOutput->close();
   __OsDelete(TEMPFNAME);
   __OsDelete(COMPNAME);
   printf("Help file looks - ok\n");

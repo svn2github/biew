@@ -64,7 +64,7 @@
 #define __FI_SUBSECTION 2 /**< required string is subsection */
 #define __FI_ITEM       3 /**< required string is item */
 
-typedef BGLOBAL FiHandler; /**< This is the data type used to represent ini stream objects */
+typedef BFile* FiHandler; /**< This is the data type used to represent ini stream objects */
 
 /** Contains information about current record in ini file */
 typedef struct tagIniInfo

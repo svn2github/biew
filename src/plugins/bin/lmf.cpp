@@ -327,7 +327,7 @@ static __filesize_t __FASTCALL__ lmf_pa2va(__filesize_t pa)
 	return addr;
 }
 
-static bool __FASTCALL__ lmf_ReadSecHdr(BGLOBAL handle,memArray *obj,unsigned nnames)
+static bool __FASTCALL__ lmf_ReadSecHdr(BFile* handle,memArray *obj,unsigned nnames)
 {
 	unsigned i;
 	char tmp[30];
@@ -384,7 +384,7 @@ static bool __FASTCALL__ lmf_ReadSecHdr(BGLOBAL handle,memArray *obj,unsigned nn
 	return true;
 }
 
-static unsigned __FASTCALL__ lmf_SecHdrNumItems(BGLOBAL handle)
+static unsigned __FASTCALL__ lmf_SecHdrNumItems(BFile* handle)
 {
 	UNUSED(handle);
 	return reclast+1;

@@ -624,15 +624,15 @@ static int __NEAR__ __FASTCALL__ FullAsmEdit(TWindow * ewnd)
      case KE_CTL_F(3): SelectTool(); continue;
      case KE_F(2)    :
 		      {
-			 BGLOBAL bHandle;
-			 char *fname;
+			 BFile* bHandle;
+			 const char *fname;
 			 fname = BMName();
 			 if((bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE)) != &bNull)
 			 {
-			   bioSeek(bHandle,edit_cp,BIO_SEEK_SET);
-			   if(!bioWriteBuffer(bHandle,(any_t*)EditorMem.buff,rlen))
+			   bHandle->seek(edit_cp,BIO_SEEK_SET);
+			   if(!bHandle->write_buffer((any_t*)EditorMem.buff,rlen))
 			      errnoMessageBox(WRITE_FAIL,NULL,errno);
-			   bioClose(bHandle);
+			   bHandle->close();
 			   BMReRead();
 			 }
 			 else errnoMessageBox("Can't reopen",NULL,errno);

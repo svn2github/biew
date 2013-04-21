@@ -602,7 +602,7 @@ static const char * mod_names[] =
 };
 
 static unsigned bin_mode = MOD_PLAIN; /**< points to currently selected mode text mode */
-static BGLOBAL txtHandle = &bNull; /**< Own handle of BBIO stream. (For speed). */
+static BFile* txtHandle = &bNull; /**< Own handle of BBIO stream. (For speed). */
 
 static TSTR *tlines,*ptlines;
 static unsigned int maxstrlen = MAX_STRLEN; /**< contains maximal length of string which can be displayed without wrapping */
@@ -644,8 +644,8 @@ static unsigned char __NEAR__ __FASTCALL__ nlsReadByte(__filesize_t cp)
  char nls_buff[256];
  unsigned sym_size;
  sym_size = activeNLS->get_symbol_size();
- bioSeek(txtHandle,cp,SEEK_SET);
- bioReadBuffer(txtHandle,nls_buff,sym_size);
+ txtHandle->seek(cp,SEEK_SET);
+ txtHandle->read_buffer(nls_buff,sym_size);
  activeNLS->convert_buffer(nls_buff,sym_size,true);
  return (unsigned char)nls_buff[0];
 }
@@ -1260,7 +1260,7 @@ static void __FASTCALL__ txtInit( void )
      MemOutBox("Text mode initialization");
      exit(EXIT_FAILURE);
    }
-   if((txtHandle = bioDup(BMbioHandle())) == &bNull) txtHandle = BMbioHandle();
+   if((txtHandle = BMbioHandle()->dup()) == &bNull) txtHandle = BMbioHandle();
    memset(&syntax_hl,0,sizeof(syntax_hl));
    /* Fill operator's hash */
    memset(syntax_hl.op_hash,text_cset.normal,sizeof(syntax_hl.op_hash));
@@ -1282,7 +1282,7 @@ static void __FASTCALL__ txtTerm( void )
   delete buff;
   delete tlines;
   delete ptlines;
-  if(txtHandle != BMbioHandle()) { bioClose(txtHandle); txtHandle = &bNull; }
+  if(txtHandle != BMbioHandle()) { txtHandle->close(); txtHandle = &bNull; }
   if(syntax_hl.name) delete syntax_hl.name;
   if(escape) delete escape;
   escape=NULL;

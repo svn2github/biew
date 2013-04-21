@@ -32,7 +32,7 @@
 #define __HAVE_MMX    0x2000
 #define __HAVE_SSE    0x1000
 
-#if !defined(__DISABLE_ASM) && (defined(__GNUC__) && defined(NDEBUG))
+#if !defined(__DISABLE_ASM) && defined(__GNUC__)
 
 static inline void do_cpuid(unsigned int ax, unsigned int *p)
 {
@@ -276,8 +276,8 @@ static unsigned long __NEAR__ __FASTCALL__ __OPS_std(volatile unsigned *counter,
       "pushq	%2\n"
       "pushq	%1\n"
       "movq	%2, %2\n"
-      "movsq\n"
-      "cmpsq\n"
+//      "movsq\n"
+//      "cmpsq\n"
       "popq	%1\n"
       "popq	%2\n"
       "pushq	%0\n"
@@ -297,8 +297,8 @@ static unsigned long __NEAR__ __FASTCALL__ __OPS_std(volatile unsigned *counter,
       "pushq	%2\n"
       "pushq	%1\n"
       "movq	%2, %2\n"
-      "movsq\n"
-      "cmpsq\n"
+//      "movsq\n"
+//      "cmpsq\n"
       "popq	%1\n"
       "popq	%2\n"
       "pushq	%0\n"
@@ -318,8 +318,8 @@ static unsigned long __NEAR__ __FASTCALL__ __OPS_std(volatile unsigned *counter,
       "pushq	%2\n"
       "pushq	%1\n"
       "movq	%2, %2\n"
-      "movsq\n"
-      "cmpsq\n"
+//      "movsq\n"
+//      "cmpsq\n"
       "popq	%1\n"
       "popq	%2\n"
       "pushq	%0\n"
@@ -623,14 +623,14 @@ static unsigned long __NEAR__ __FASTCALL__ __SSEOPS_std(volatile unsigned *count
 }
 
 #define __ASMPART_DEFINED 1
-#include "libbeye/sysdep/ia16/cmn_ix86.cpp"
+#include "libbeye/sysdep/ia32/cmn_ix86.cpp"
 
 #elif defined(__WATCOMC__) && __WATCOMC__ >= 1100
 
 #include "libbeye/sysdep/x86_64/cpu_info.wc"
 
 #define __ASMPART_DEFINED 1
-#include "libbeye/sysdep/ia16/cmn_ix86.cpp"
+#include "libbeye/sysdep/ia32/cmn_ix86.cpp"
 
 #elif defined(__WATCOMC__) && defined(__QNX4__)
 

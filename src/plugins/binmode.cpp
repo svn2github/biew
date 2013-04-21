@@ -156,8 +156,8 @@ static bool __FASTCALL__ binDetect( void ) { return true; }
 
 static void save_video(unsigned char *buff,unsigned size)
 {
-  BGLOBAL bHandle;
-  char *fname;
+  BFile* bHandle;
+  const char *fname;
   unsigned i;
   fname = BMName();
   bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
@@ -167,14 +167,14 @@ static void save_video(unsigned char *buff,unsigned size)
       errnoMessageBox(WRITE_FAIL,NULL,errno);
       return;
   }
-  bioSeek(bHandle,BMGetCurrFilePos(),BIO_SEEK_SET);
-  if(bin_mode==MOD_REVERSE) bioSeek(bHandle,1,BIO_SEEK_CUR);
+  bHandle->seek(BMGetCurrFilePos(),BIO_SEEK_SET);
+  if(bin_mode==MOD_REVERSE) bHandle->seek(1,BIO_SEEK_CUR);
   for(i=0;i<size;i++)
   {
-    if(!bioWriteByte(bHandle,buff[i])) goto err;
-    bioSeek(bHandle,1,BIO_SEEK_CUR);
+    if(!bHandle->write_byte(buff[i])) goto err;
+    bHandle->seek(1,BIO_SEEK_CUR);
   }
-  bioClose(bHandle);
+  bHandle->close();
   BMReRead();
 }
 

@@ -80,8 +80,8 @@ typedef struct ClassFile_s
 
 ClassFile_t jvm_header;
 
-static BGLOBAL jvm_cache;
-static BGLOBAL pool_cache;
+static BFile* jvm_cache;
+static BFile* pool_cache;
 
 static bool  __FASTCALL__ jvm_check_fmt( void )
 {
@@ -91,7 +91,7 @@ static bool  __FASTCALL__ jvm_check_fmt( void )
   return id[0]==0xCA && id[1]==0xFE && id[2]==0xBA && id[3]==0xBE && bmGetFLength()>=16;
 }
 
-static unsigned __NEAR__ __FASTCALL__ skip_constant(BGLOBAL handle,unsigned char id)
+static unsigned __NEAR__ __FASTCALL__ skip_constant(BFile* handle,unsigned char id)
 {
     unsigned add;
     unsigned short sval;
@@ -100,83 +100,83 @@ static unsigned __NEAR__ __FASTCALL__ skip_constant(BGLOBAL handle,unsigned char
     {
 	default:
 	case CONSTANT_STRING:
-	case CONSTANT_CLASS: bioSeek(handle,2,BM_SEEK_CUR); break;
+	case CONSTANT_CLASS: handle->seek(2,BM_SEEK_CUR); break;
 	case CONSTANT_INTEGER:
 	case CONSTANT_FLOAT:
 	case CONSTANT_FIELDREF:
 	case CONSTANT_METHODREF:
 	case CONSTANT_NAME_AND_TYPE:
-	case CONSTANT_INTERFACEMETHODREF: bioSeek(handle,4,BM_SEEK_CUR); break;
+	case CONSTANT_INTERFACEMETHODREF: handle->seek(4,BM_SEEK_CUR); break;
 	case CONSTANT_LONG:
-	case CONSTANT_DOUBLE: bioSeek(handle,8,BM_SEEK_CUR); add=1; break;
+	case CONSTANT_DOUBLE: handle->seek(8,BM_SEEK_CUR); add=1; break;
 	case CONSTANT_UTF8:
-			sval=bioReadWord(handle);
+			sval=handle->read_word();
 			sval=FMT_WORD(&sval,1);
-			bioSeek(handle,sval,BM_SEEK_CUR);
+			handle->seek(sval,BM_SEEK_CUR);
 			break;
     }
     return add;
 }
 
-static void __NEAR__ __FASTCALL__ skip_constant_pool(BGLOBAL handle,unsigned nitems)
+static void __NEAR__ __FASTCALL__ skip_constant_pool(BFile* handle,unsigned nitems)
 {
     unsigned i;
     for(i=0;i<nitems;i++)
     {
 	unsigned char id;
-	id=bioReadByte(handle);
+	id=handle->read_byte();
 	i+=skip_constant(handle,id);
     }
 }
 
-static void __NEAR__ __FASTCALL__ get_utf8(BGLOBAL handle,unsigned nidx,char *str,unsigned slen)
+static void __NEAR__ __FASTCALL__ get_utf8(BFile* handle,unsigned nidx,char *str,unsigned slen)
 {
     unsigned char id;
-    bioSeek(handle,jvm_header.constants_offset,BM_SEEK_SET);
+    handle->seek(jvm_header.constants_offset,BM_SEEK_SET);
     skip_constant_pool(handle,nidx-1);
-    id=bioReadByte(handle);
+    id=handle->read_byte();
     if(id==CONSTANT_UTF8)
     {
-	nidx=bioReadWord(handle);
+	nidx=handle->read_word();
 	nidx=FMT_WORD(&nidx,1);
 	nidx=std::min(nidx,slen-1);
-	bioReadBuffer(handle,str,nidx);
+	handle->read_buffer(str,nidx);
 	str[nidx]=0;
     }
 }
 
-static void __NEAR__ __FASTCALL__ get_name(BGLOBAL handle,char *str,unsigned slen)
+static void __NEAR__ __FASTCALL__ get_name(BFile* handle,char *str,unsigned slen)
 {
     unsigned short nidx;
-    nidx=bioReadWord(handle);
+    nidx=handle->read_word();
     nidx=FMT_WORD(&nidx,1);
     get_utf8(handle,nidx,str,slen);
 }
 
-static char * __NEAR__ __FASTCALL__ get_class_name(BGLOBAL handle,unsigned idx,char *str,unsigned slen)
+static char * __NEAR__ __FASTCALL__ get_class_name(BFile* handle,unsigned idx,char *str,unsigned slen)
 {
     *str='\0';
     if(idx && idx<(unsigned)jvm_header.constant_pool_count-1)
     {
 	unsigned char id;
-	bioSeek(handle,jvm_header.constants_offset,BM_SEEK_SET);
+	handle->seek(jvm_header.constants_offset,BM_SEEK_SET);
 	skip_constant_pool(handle,idx-1);
-	id=bioReadByte(handle);
+	id=handle->read_byte();
 	if(id==CONSTANT_CLASS) get_name(handle,str,slen);
     }
     return str;
 }
 
-static void __NEAR__ __FASTCALL__ skip_attributes(BGLOBAL handle,unsigned nitems)
+static void __NEAR__ __FASTCALL__ skip_attributes(BFile* handle,unsigned nitems)
 {
     unsigned i;
     for(i=0;i<nitems;i++)
     {
 	unsigned long lval;
-	bioSeek(handle,2,BM_SEEK_CUR);
-	lval=bioReadDWord(handle);
+	handle->seek(2,BM_SEEK_CUR);
+	lval=handle->read_dword();
 	lval=FMT_DWORD(&lval,1);
-	bioSeek(handle,lval,BM_SEEK_CUR);
+	handle->seek(lval,BM_SEEK_CUR);
     }
 }
 
@@ -202,26 +202,26 @@ static void __NEAR__ __FASTCALL__ skip_fields(unsigned nitems,int attr)
     }
 }
 
-static bool __FASTCALL__ jvm_read_interfaces(BGLOBAL handle,memArray * names,unsigned nnames)
+static bool __FASTCALL__ jvm_read_interfaces(BFile* handle,memArray * names,unsigned nnames)
 {
     unsigned i;
     __filesize_t fpos;
     unsigned short id;
     char str[80];
-    bioSeek(handle,jvm_header.interfaces_offset,BM_SEEK_SET);
+    handle->seek(jvm_header.interfaces_offset,BM_SEEK_SET);
     for(i=0;i<nnames;i++)
     {
-	id=bioReadWord(handle);
-	fpos=bioTell(handle);
+	id=handle->read_word();
+	fpos=handle->tell();
 	id=FMT_WORD(&id,1);
 	get_class_name(handle,id,str,sizeof(str));
 	if(!ma_AddString(names,str,true)) break;
-	bioSeek(handle,fpos,BM_SEEK_SET);
+	handle->seek(fpos,BM_SEEK_SET);
     }
     return true;
 }
 
-static unsigned __FASTCALL__ jvm_get_num_interfaces(BGLOBAL handle)
+static unsigned __FASTCALL__ jvm_get_num_interfaces(BFile* handle)
 {
     UNUSED(handle);
     return jvm_header.interfaces_count;
@@ -238,28 +238,28 @@ static __filesize_t __FASTCALL__ ShowInterfaces(void)
   return fpos;
 }
 
-static bool __FASTCALL__ jvm_read_attributes(BGLOBAL handle,memArray * names,unsigned nnames)
+static bool __FASTCALL__ jvm_read_attributes(BFile* handle,memArray * names,unsigned nnames)
 {
     unsigned i;
     __filesize_t fpos;
     unsigned long len;
     char str[80],sout[100];
-    bioSeek(handle,jvm_header.attributes_offset,BM_SEEK_SET);
+    handle->seek(jvm_header.attributes_offset,BM_SEEK_SET);
     for(i=0;i<nnames;i++)
     {
-	fpos=bioTell(handle);
+	fpos=handle->tell();
 	get_name(handle,str,sizeof(str));
-	bioSeek(handle,fpos+2,BM_SEEK_SET);
-	len=bioReadDWord(handle);
+	handle->seek(fpos+2,BM_SEEK_SET);
+	len=handle->read_dword();
 	len=FMT_DWORD(&len,1);
 	sprintf(sout,"%08lXH %s",len,str);
 	if(!ma_AddString(names,sout,true)) break;
-	bioSeek(handle,len,BM_SEEK_CUR);
+	handle->seek(len,BM_SEEK_CUR);
     }
     return true;
 }
 
-static unsigned __FASTCALL__ jvm_get_num_attributes(BGLOBAL handle)
+static unsigned __FASTCALL__ jvm_get_num_attributes(BFile* handle)
 {
     UNUSED(handle);
     return jvm_header.attributes_count;
@@ -297,23 +297,23 @@ static __filesize_t __FASTCALL__ ShowAttributes(void)
     return __ShowAttributes(" length   attributes ");
 }
 
-static bool __FASTCALL__ jvm_read_methods(BGLOBAL handle,memArray * names,unsigned nnames)
+static bool __FASTCALL__ jvm_read_methods(BFile* handle,memArray * names,unsigned nnames)
 {
     unsigned i;
     __filesize_t fpos;
     unsigned short flg,sval,acount;
     char str[80],str2[80],sout[256];
-    bioSeek(handle,jvm_header.methods_offset,BM_SEEK_SET);
+    handle->seek(jvm_header.methods_offset,BM_SEEK_SET);
     for(i=0;i<nnames;i++)
     {
-	fpos=bioTell(handle);
-	flg=bioReadWord(handle);
+	fpos=handle->tell();
+	flg=handle->read_word();
 	flg=FMT_WORD(&flg,1);
 	get_name(handle,str,sizeof(str));
-	bioSeek(handle,fpos+4,BM_SEEK_SET);
+	handle->seek(fpos+4,BM_SEEK_SET);
 	get_name(handle,str2,sizeof(str2));
-	bioSeek(handle,fpos+6,BM_SEEK_SET);
-	sval=bioReadWord(handle);
+	handle->seek(fpos+6,BM_SEEK_SET);
+	sval=handle->read_word();
 	acount=FMT_WORD(&sval,1);
 	skip_attributes(handle,acount);
 	sprintf(sout,"%04XH %04XH %s %s",acount,flg,str,str2);
@@ -322,7 +322,7 @@ static bool __FASTCALL__ jvm_read_methods(BGLOBAL handle,memArray * names,unsign
     return true;
 }
 
-static unsigned __FASTCALL__ jvm_get_num_methods(BGLOBAL handle)
+static unsigned __FASTCALL__ jvm_get_num_methods(BFile* handle)
 {
     UNUSED(handle);
     return jvm_header.methods_count;
@@ -371,23 +371,23 @@ static __filesize_t __FASTCALL__ ShowMethods(void)
 }
 
 
-static bool __FASTCALL__ jvm_read_fields(BGLOBAL handle,memArray * names,unsigned nnames)
+static bool __FASTCALL__ jvm_read_fields(BFile* handle,memArray * names,unsigned nnames)
 {
     unsigned i;
     __filesize_t fpos;
     unsigned short flg,sval,acount;
     char str[80],str2[80],sout[256];
-    bioSeek(handle,jvm_header.fields_offset,BM_SEEK_SET);
+    handle->seek(jvm_header.fields_offset,BM_SEEK_SET);
     for(i=0;i<nnames;i++)
     {
-	fpos=bioTell(handle);
-	flg=bioReadWord(handle);
+	fpos=handle->tell();
+	flg=handle->read_word();
 	flg=FMT_WORD(&flg,1);
 	get_name(handle,str,sizeof(str));
-	bioSeek(handle,fpos+4,BM_SEEK_SET);
+	handle->seek(fpos+4,BM_SEEK_SET);
 	get_name(handle,str2,sizeof(str2));
-	bioSeek(handle,fpos+6,BM_SEEK_SET);
-	sval=bioReadWord(handle);
+	handle->seek(fpos+6,BM_SEEK_SET);
+	sval=handle->read_word();
 	acount=FMT_WORD(&sval,1);
 	skip_attributes(handle,acount);
 	sprintf(sout,"%04XH %04XH %s %s",acount,flg,str,str2);
@@ -396,7 +396,7 @@ static bool __FASTCALL__ jvm_read_fields(BGLOBAL handle,memArray * names,unsigne
     return true;
 }
 
-static unsigned __FASTCALL__ jvm_get_num_fields(BGLOBAL handle)
+static unsigned __FASTCALL__ jvm_get_num_fields(BFile* handle)
 {
     UNUSED(handle);
     return jvm_header.fields_count;
@@ -444,7 +444,7 @@ static __filesize_t __FASTCALL__ ShowFields(void)
   return fpos;
 }
 
-static bool __FASTCALL__ jvm_read_pool(BGLOBAL handle,memArray * names,unsigned nnames)
+static bool __FASTCALL__ jvm_read_pool(BFile* handle,memArray * names,unsigned nnames)
 {
     __filesize_t fpos;
     unsigned long lval,lval2;
@@ -452,26 +452,26 @@ static bool __FASTCALL__ jvm_read_pool(BGLOBAL handle,memArray * names,unsigned 
     unsigned short flg,sval,slen;
     unsigned char utag;
     char str[80],str2[80],sout[256];
-    bioSeek(handle,jvm_header.constants_offset,BM_SEEK_SET);
+    handle->seek(jvm_header.constants_offset,BM_SEEK_SET);
     for(i=0;i<nnames;i++)
     {
-	fpos=bioTell(handle);
-	utag=bioReadByte(handle);
+	fpos=handle->tell();
+	utag=handle->read_byte();
 	switch(utag)
 	{
 	    case CONSTANT_STRING:
 	    case CONSTANT_CLASS:
-			fpos=bioTell(handle);
+			fpos=handle->tell();
 			get_name(handle,str,sizeof(str));
-			bioSeek(handle,fpos+2,BM_SEEK_SET);
+			handle->seek(fpos+2,BM_SEEK_SET);
 			sprintf(sout,"%s: %s",utag==CONSTANT_CLASS?"Class":"String",str);
 			break;
 	    case CONSTANT_FIELDREF:
 	    case CONSTANT_METHODREF:
 	    case CONSTANT_INTERFACEMETHODREF:
-			flg=bioReadWord(handle);
+			flg=handle->read_word();
 			flg=FMT_WORD(&flg,1);
-			sval=bioReadWord(handle);
+			sval=handle->read_word();
 			sval=FMT_WORD(&sval,1);
 			sprintf(sout,"%s: class=#%04XH name_type_idx=#%04XH"
 			,utag==CONSTANT_FIELDREF?"FieldRef":utag==CONSTANT_METHODREF?"MethodRef":"InterfaceMethodRef"
@@ -479,36 +479,36 @@ static bool __FASTCALL__ jvm_read_pool(BGLOBAL handle,memArray * names,unsigned 
 			break;
 	    case CONSTANT_INTEGER:
 	    case CONSTANT_FLOAT:
-			lval=bioReadDWord(handle);
+			lval=handle->read_dword();
 			lval=FMT_DWORD(&lval,1);
 			sprintf(sout,"%s: %08lXH",utag==CONSTANT_INTEGER?"Integer":"Float"
 			,lval);
 			break;
 	    case CONSTANT_LONG:
 	    case CONSTANT_DOUBLE:
-			lval=bioReadDWord(handle);
+			lval=handle->read_dword();
 			lval=FMT_DWORD(&lval,1);
-			lval2=bioReadDWord(handle);
+			lval2=handle->read_dword();
 			lval2=FMT_DWORD(&lval2,1);
 			sprintf(sout,"%s: hi=%08lXH lo=%08lXH",utag==CONSTANT_LONG?"Long":"Double"
 			,lval,lval2);
 			i++;
 			break;
 	    case CONSTANT_NAME_AND_TYPE:
-			fpos=bioTell(handle);
+			fpos=handle->tell();
 			get_name(handle,str,sizeof(str));
-			bioSeek(handle,fpos+2,BM_SEEK_SET);
+			handle->seek(fpos+2,BM_SEEK_SET);
 			get_name(handle,str2,sizeof(str2));
-			bioSeek(handle,fpos+4,BM_SEEK_SET);
+			handle->seek(fpos+4,BM_SEEK_SET);
 			sprintf(sout,"Name&Type: %s %s",str,str2);
 			break;
 	    case CONSTANT_UTF8:
-			sval=bioReadWord(handle);
+			sval=handle->read_word();
 			sval=FMT_WORD(&sval,1);
 			slen=std::min(sizeof(str)-1,size_t(sval));
-			fpos=bioTell(handle);
-			bioReadBuffer(handle,str,slen);
-			bioSeek(handle,fpos+sval,BM_SEEK_SET);
+			fpos=handle->tell();
+			handle->read_buffer(str,slen);
+			handle->seek(fpos+sval,BM_SEEK_SET);
 			str[slen]='\0';
 			sprintf(sout,"UTF8: %s",str);
 			break;
@@ -522,7 +522,7 @@ static bool __FASTCALL__ jvm_read_pool(BGLOBAL handle,memArray * names,unsigned 
     return true;
 }
 
-static unsigned __FASTCALL__ jvm_get_num_pools(BGLOBAL handle)
+static unsigned __FASTCALL__ jvm_get_num_pools(BFile* handle)
 {
     UNUSED(handle);
     return jvm_header.constant_pool_count;
@@ -582,14 +582,14 @@ static void __FASTCALL__ jvm_init_fmt( void )
     skip_attributes(bmbioHandle(),sval);
     jvm_header.header_length=bmGetCurrFilePos();
     bmSeek(fpos,BM_SEEK_SET);
-    if((jvm_cache = bioDupEx(bmbioHandle(),BBIO_SMALL_CACHE_SIZE)) == &bNull) jvm_cache = bmbioHandle();
-    if((pool_cache = bioDupEx(bmbioHandle(),BBIO_SMALL_CACHE_SIZE)) == &bNull) pool_cache = bmbioHandle();
+    if((jvm_cache = bmbioHandle()->dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) jvm_cache = bmbioHandle();
+    if((pool_cache = bmbioHandle()->dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) pool_cache = bmbioHandle();
 }
 
 static void __FASTCALL__ jvm_destroy_fmt(void)
 {
-  if(jvm_cache != &bNull && jvm_cache != bmbioHandle()) bioClose(jvm_cache);
-  if(pool_cache != &bNull && pool_cache != bmbioHandle()) bioClose(pool_cache);
+  if(jvm_cache != &bNull && jvm_cache != bmbioHandle()) jvm_cache->close();
+  if(pool_cache != &bNull && pool_cache != bmbioHandle()) pool_cache->close();
 }
 
 static int  __FASTCALL__ jvm_platform( void) { return DISASM_JAVA; }
@@ -684,22 +684,22 @@ static bool __FASTCALL__ jvm_AddressResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static void __FASTCALL__ jvm_ReadPubName(BGLOBAL b_cache,const struct PubName *it,
+static void __FASTCALL__ jvm_ReadPubName(BFile* b_cache,const struct PubName *it,
 			    char *buff,unsigned cb_buff)
 {
-    bioSeek(b_cache,it->nameoff,BM_SEEK_SET);
+    b_cache->seek(it->nameoff,BM_SEEK_SET);
     get_name(b_cache,buff,cb_buff);
     if(it->addinfo)
     {
 	char *s_end;
 	strcat(buff,".");
 	s_end=buff+strlen(buff);
-	bioSeek(b_cache,it->addinfo,SEEK_SET);
+	b_cache->seek(it->addinfo,SEEK_SET);
 	get_name(b_cache,s_end,cb_buff-(s_end-buff));
     }
 }
 
-static void __FASTCALL__ jvm_ReadPubNameList(BGLOBAL handle,void (__FASTCALL__ *mem_out)(const char *))
+static void __FASTCALL__ jvm_ReadPubNameList(BFile* handle,void (__FASTCALL__ *mem_out)(const char *))
 {
  __filesize_t fpos,len;
  unsigned i;
@@ -708,69 +708,69 @@ static void __FASTCALL__ jvm_ReadPubNameList(BGLOBAL handle,void (__FASTCALL__ *
  if(!PubNames)
    if(!(PubNames = la_Build(0,sizeof(struct PubName),mem_out))) return;
 /* Lookup fields */
- bioSeek(handle,jvm_header.fields_offset,BM_SEEK_SET);
+ handle->seek(jvm_header.fields_offset,BM_SEEK_SET);
  for(i = 0;i < jvm_header.fields_count;i++)
  {
-    fpos=bioTell(handle);
-    flg=bioReadWord(handle);
+    fpos=handle->tell();
+    flg=handle->read_word();
     flg=FMT_WORD(&flg,1);
-    jvm_pn.nameoff = bioTell(handle);
+    jvm_pn.nameoff = handle->tell();
     jvm_pn.addinfo=0;
-    bioSeek(handle,fpos+6,BM_SEEK_SET);
-    acount=bioReadWord(handle);
+    handle->seek(fpos+6,BM_SEEK_SET);
+    acount=handle->read_word();
     acount=FMT_WORD(&acount,1);
     for(i=0;i<acount;i++)
     {
-	fpos=bioTell(handle);
+	fpos=handle->tell();
 	jvm_pn.addinfo=fpos;
-	bioSeek(handle,fpos+2,BM_SEEK_SET);
-	len=bioReadDWord(handle);
+	handle->seek(fpos+2,BM_SEEK_SET);
+	len=handle->read_dword();
 	len=FMT_DWORD(&len,1);
-	jvm_pn.pa = bioTell(handle);
+	jvm_pn.pa = handle->tell();
 	jvm_pn.attr    = flg & 0x0008 ? SC_LOCAL : SC_GLOBAL;
 	if(!la_AddData(PubNames,&jvm_pn,mem_out)) break;
-	bioSeek(handle,len,BM_SEEK_CUR);
-	if(bioEOF(handle)) break;
+	handle->seek(len,BM_SEEK_CUR);
+	if(handle->eof()) break;
     }
     if(!acount)
     {
-	jvm_pn.pa      = bioTell(handle);
+	jvm_pn.pa      = handle->tell();
 	jvm_pn.attr    = flg & 0x0008 ? SC_LOCAL : SC_GLOBAL;
 	if(!la_AddData(PubNames,&jvm_pn,mem_out)) break;
     }
-    if(bioEOF(handle)) break;
+    if(handle->eof()) break;
  }
 /* Lookup methods */
- bioSeek(handle,jvm_header.methods_offset,BM_SEEK_SET);
+ handle->seek(jvm_header.methods_offset,BM_SEEK_SET);
  for(i=0;i<jvm_header.fields_count;i++)
  {
-    fpos=bioTell(handle);
-    flg=bioReadWord(handle);
+    fpos=handle->tell();
+    flg=handle->read_word();
     flg=FMT_WORD(&flg,1);
-    jvm_pn.nameoff = bioTell(handle);
-    bioSeek(handle,fpos+6,BM_SEEK_SET);
-    acount=bioReadWord(handle);
+    jvm_pn.nameoff = handle->tell();
+    handle->seek(fpos+6,BM_SEEK_SET);
+    acount=handle->read_word();
     acount=FMT_WORD(&acount,1);
     for(i=0;i<acount;i++)
     {
-	fpos=bioTell(handle);
+	fpos=handle->tell();
 	jvm_pn.addinfo=fpos;
-	bioSeek(handle,fpos+2,BM_SEEK_SET);
-	len=bioReadDWord(handle);
+	handle->seek(fpos+2,BM_SEEK_SET);
+	len=handle->read_dword();
 	len=FMT_DWORD(&len,1);
-	jvm_pn.pa = bioTell(handle);
+	jvm_pn.pa = handle->tell();
 	jvm_pn.attr    = flg & 0x0008 ? SC_LOCAL : SC_GLOBAL;
 	if(!la_AddData(PubNames,&jvm_pn,mem_out)) break;
-	bioSeek(handle,len,BM_SEEK_CUR);
-	if(bioEOF(handle)) break;
+	handle->seek(len,BM_SEEK_CUR);
+	if(handle->eof()) break;
     }
     if(!acount)
     {
-	jvm_pn.pa      = bioTell(handle);
+	jvm_pn.pa      = handle->tell();
 	jvm_pn.attr    = flg & 0x0008 ? SC_LOCAL : SC_GLOBAL;
 	if(!la_AddData(PubNames,&jvm_pn,mem_out)) break;
     }
-    if(bioEOF(handle)) break;
+    if(handle->eof()) break;
  }
  if(PubNames->nItems) la_Sort(PubNames,fmtComparePubNames);
 }
@@ -867,18 +867,18 @@ static unsigned long __FASTCALL__ jvm_AppendRef(char *str,__filesize_t ulShift,i
 	unsigned sl;
 	unsigned short sval,sval2;
 	unsigned char utag;
-	bioSeek(jvm_cache,ulShift,BM_SEEK_SET);
+	jvm_cache->seek(ulShift,BM_SEEK_SET);
 	switch(codelen)
 	{
-	    case 4: lidx=bioReadDWord(jvm_cache); lidx=FMT_DWORD(&lidx,1); break;
-	    case 2: sval=bioReadWord(jvm_cache); lidx=FMT_WORD(&sval,1); break;
+	    case 4: lidx=jvm_cache->read_dword(); lidx=FMT_DWORD(&lidx,1); break;
+	    case 2: sval=jvm_cache->read_word(); lidx=FMT_WORD(&sval,1); break;
 	    default:
-	    case 1: lidx=bioReadByte(jvm_cache); break;
+	    case 1: lidx=jvm_cache->read_byte(); break;
 	}
-	bioSeek(pool_cache,jvm_header.constants_offset,BM_SEEK_SET);
+	pool_cache->seek(jvm_header.constants_offset,BM_SEEK_SET);
 	if(lidx<1 || lidx>jvm_header.constant_pool_count) { retrf = RAPREF_NONE; goto bye; }
 	skip_constant_pool(pool_cache,lidx-1);
-	utag=bioReadByte(pool_cache);
+	utag=pool_cache->read_byte();
 	str=&str[strlen(str)];
 	switch(utag)
 	{
@@ -889,25 +889,25 @@ static unsigned long __FASTCALL__ jvm_AppendRef(char *str,__filesize_t ulShift,i
 	    case CONSTANT_FIELDREF:
 	    case CONSTANT_METHODREF:
 	    case CONSTANT_INTERFACEMETHODREF:
-			fpos=bioTell(pool_cache);
-			sval=bioReadWord(pool_cache);
+			fpos=pool_cache->tell();
+			sval=pool_cache->read_word();
 			sval=FMT_WORD(&sval,1);
-			sval2=bioReadWord(pool_cache);
+			sval2=pool_cache->read_word();
 			sval2=FMT_WORD(&sval2,1);
-			bioSeek(pool_cache,jvm_header.constants_offset,BM_SEEK_SET);
+			pool_cache->seek(jvm_header.constants_offset,BM_SEEK_SET);
 			get_class_name(pool_cache,sval,str,slen);
 			strcat(str,".");
 			sl=strlen(str);
 			slen-=sl;
 			str+=sl;
-			bioSeek(pool_cache,jvm_header.constants_offset,BM_SEEK_SET);
+			pool_cache->seek(jvm_header.constants_offset,BM_SEEK_SET);
 			skip_constant_pool(pool_cache,sval2-1);
-			utag=bioReadByte(pool_cache);
+			utag=pool_cache->read_byte();
 			if(utag!=CONSTANT_NAME_AND_TYPE) break;
 			goto name_type;
 	    case CONSTANT_INTEGER:
 	    case CONSTANT_FLOAT:
-			lval=bioReadDWord(pool_cache);
+			lval=pool_cache->read_dword();
 			lval=FMT_DWORD(&lval,1);
 			strcpy(str,utag==CONSTANT_INTEGER?"Integer":"Float");
 			strcat(str,":");
@@ -915,9 +915,9 @@ static unsigned long __FASTCALL__ jvm_AppendRef(char *str,__filesize_t ulShift,i
 			break;
 	    case CONSTANT_LONG:
 	    case CONSTANT_DOUBLE:
-			lval=bioReadDWord(pool_cache);
+			lval=pool_cache->read_dword();
 			lval=FMT_DWORD(&lval,1);
-			lval2=bioReadDWord(pool_cache);
+			lval2=pool_cache->read_dword();
 			lval2=FMT_DWORD(&lval2,1);
 			strcpy(str,utag==CONSTANT_INTEGER?"Long":"Double");
 			strcat(str,":");
@@ -926,9 +926,9 @@ static unsigned long __FASTCALL__ jvm_AppendRef(char *str,__filesize_t ulShift,i
 			break;
 	    case CONSTANT_NAME_AND_TYPE:
 	    name_type:
-			fpos=bioTell(pool_cache);
+			fpos=pool_cache->tell();
 			get_name(pool_cache,str,slen);
-			bioSeek(pool_cache,fpos+2,BM_SEEK_SET);
+			pool_cache->seek(fpos+2,BM_SEEK_SET);
 			strcat(str," ");
 			sl=strlen(str);
 			slen-=sl;
@@ -936,11 +936,11 @@ static unsigned long __FASTCALL__ jvm_AppendRef(char *str,__filesize_t ulShift,i
 			get_name(pool_cache,str,slen);
 			break;
 	    case CONSTANT_UTF8:
-			sval=bioReadWord(pool_cache);
+			sval=pool_cache->read_word();
 			sval=FMT_WORD(&sval,1);
 			sl=std::min(slen,unsigned(sval));
-			fpos=bioTell(pool_cache);
-			bioReadBuffer(pool_cache,str,sl);
+			fpos=pool_cache->tell();
+			pool_cache->read_buffer(str,sl);
 			str[sl]='\0';
 			break;
 	    default:	retrf = RAPREF_NONE;

@@ -57,8 +57,8 @@ static bool ChSize( void )
     {
        bool ret;
        int my_errno = 0;
-       char *fname = BMName();
-       BGLOBAL bHandle;
+       const char *fname = BMName();
+       BFile* bHandle;
        bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
        if(bHandle == &bNull)
        {
@@ -66,9 +66,9 @@ static bool ChSize( void )
 	 errnoMessageBox(RESIZE_FAIL,NULL,my_errno);
 	 return false;
        }
-       ret = bioChSize(bHandle,psize);
+       ret = bHandle->chsize(psize);
        my_errno = errno;
-       bioClose(bHandle);
+       bHandle->close();
        if(ret == false) goto err;
        BMReRead();
        return ret;
@@ -79,17 +79,17 @@ static bool ChSize( void )
  return false;
 }
 
-static bool __NEAR__ __FASTCALL__ InsBlock(BGLOBAL bHandle,__filesize_t start,__fileoff_t psize)
+static bool __NEAR__ __FASTCALL__ InsBlock(BFile* bHandle,__filesize_t start,__fileoff_t psize)
 {
    char *buffer;
    __filesize_t tile,oflen,flen,crpos,cwpos;
    unsigned numtowrite;
-   oflen = bioFLength(bHandle);
+   oflen = bHandle->flength();
    flen = oflen + psize;
    tile = oflen - start;
    buffer = new char [51200U];
    if(!buffer) return 0;
-   if(!bioChSize(bHandle,oflen+psize))
+   if(!bHandle->chsize(oflen+psize))
    {
      ErrMessageBox(EXPAND_FAIL,NULL);
      delete buffer;
@@ -100,10 +100,10 @@ static bool __NEAR__ __FASTCALL__ InsBlock(BGLOBAL bHandle,__filesize_t start,__
    numtowrite = (unsigned)std::min(tile,__filesize_t(51200U));
    while(tile)
    {
-     bioSeek(bHandle,crpos,BIO_SEEK_SET);
-     bioReadBuffer(bHandle,buffer,numtowrite);
-     bioSeek(bHandle,cwpos,BIO_SEEK_SET);
-     bioWriteBuffer(bHandle,buffer,numtowrite);
+     bHandle->seek(crpos,BIO_SEEK_SET);
+     bHandle->read_buffer(buffer,numtowrite);
+     bHandle->seek(cwpos,BIO_SEEK_SET);
+     bHandle->write_buffer(buffer,numtowrite);
      tile -= numtowrite;
      numtowrite = (unsigned)std::min(tile,__filesize_t(51200U));
      crpos -= numtowrite;
@@ -115,8 +115,8 @@ static bool __NEAR__ __FASTCALL__ InsBlock(BGLOBAL bHandle,__filesize_t start,__
    while(psize)
    {
      numtowrite = (unsigned)std::min(psize,__fileoff_t(51200U));
-     bioSeek(bHandle,cwpos,BIO_SEEK_SET);
-     bioWriteBuffer(bHandle,buffer,numtowrite);
+     bHandle->seek(cwpos,BIO_SEEK_SET);
+     bHandle->write_buffer(buffer,numtowrite);
      psize -= numtowrite;
      cwpos += numtowrite;
    }
@@ -124,12 +124,12 @@ static bool __NEAR__ __FASTCALL__ InsBlock(BGLOBAL bHandle,__filesize_t start,__
    return true;
 }
 
-static bool __NEAR__ __FASTCALL__ DelBlock(BGLOBAL bHandle,__filesize_t start,__fileoff_t psize)
+static bool __NEAR__ __FASTCALL__ DelBlock(BFile* bHandle,__filesize_t start,__fileoff_t psize)
 {
    char *buffer;
    __filesize_t tile,oflen,crpos,cwpos;
    unsigned numtowrite;
-   oflen = bioFLength(bHandle);
+   oflen = bHandle->flength();
    tile = oflen - start;
    buffer = new char [51200U];
    if(!buffer) return false;
@@ -138,16 +138,16 @@ static bool __NEAR__ __FASTCALL__ DelBlock(BGLOBAL bHandle,__filesize_t start,__
    while(tile)
    {
      numtowrite = (unsigned)std::min(tile,__filesize_t(51200U));
-     bioSeek(bHandle,crpos,BIO_SEEK_SET);
-     bioReadBuffer(bHandle,buffer,numtowrite);
-     bioSeek(bHandle,cwpos,BIO_SEEK_SET);
-     bioWriteBuffer(bHandle,buffer,numtowrite);
+     bHandle->seek(crpos,BIO_SEEK_SET);
+     bHandle->read_buffer(buffer,numtowrite);
+     bHandle->seek(cwpos,BIO_SEEK_SET);
+     bHandle->write_buffer(buffer,numtowrite);
      tile -= numtowrite;
      crpos += numtowrite;
      cwpos += numtowrite;
    }
    delete buffer;
-   if(!bioChSize(bHandle,oflen+psize))
+   if(!bHandle->chsize(oflen+psize))
    {
      ErrMessageBox(TRUNC_FAIL,NULL);
      delete buffer;
@@ -164,8 +164,8 @@ static bool InsDelBlock( void )
  if(GetInsDelBlkDlg(" Insert or delete block to/from file ",&start,&psize))
  {
     __filesize_t fpos;
-    BGLOBAL bHandle;
-    char *fname;
+    BFile* bHandle;
+    const char *fname;
     fpos = BMGetCurrFilePos();
     if(start > BMGetFLength()) { ErrMessageBox("Start is outside of file",NULL); return 0; }
     if(!psize) return 0;
@@ -180,7 +180,7 @@ static bool InsDelBlock( void )
     {
       if(psize < 0) ret = DelBlock(bHandle,start,psize);
       else          ret = InsBlock(bHandle,start,psize);
-      bioClose(bHandle);
+      bHandle->close();
       BMReRead();
     }
     BMSeek(fpos,BM_SEEK_SET);
@@ -317,7 +317,7 @@ static bool FStore( void )
    progress_wnd = PercentWnd("Saving ..."," Save block to file ");
    if(!(flags & FSDLG_ASMMODE)) /** Write in binary mode */
    {
-     BGLOBAL _bioHandle;
+     BFile* _bioHandle;
      bhandle_t handle;
      __filesize_t wsize,crpos,pwsize,awsize;
      unsigned rem;
@@ -336,11 +336,13 @@ static bool FStore( void )
        __OsTruncFile(handle,0L);
      }
      __OsClose(handle);
-     _bioHandle = bioOpen(ff_fname,FO_READWRITE | SO_DENYNONE,BBIO_CACHE_SIZE,fioUseMMF ? BIO_OPT_USEMMF : BIO_OPT_DB);
-     if(_bioHandle == &bNull)  _bioHandle = bioOpen(ff_fname,FO_READWRITE | SO_COMPAT,BBIO_CACHE_SIZE,fioUseMMF ? BIO_OPT_USEMMF : BIO_OPT_DB);
-     if(_bioHandle == &bNull)  goto use_err;
+     _bioHandle = new BFile;
+     bool rc;
+     rc = _bioHandle->open(ff_fname,FO_READWRITE | SO_DENYNONE,BBIO_CACHE_SIZE,fioUseMMF ? BIO_OPT_USEMMF : BIO_OPT_DB);
+     if(rc == false)  rc = _bioHandle->open(ff_fname,FO_READWRITE | SO_COMPAT,BBIO_CACHE_SIZE,fioUseMMF ? BIO_OPT_USEMMF : BIO_OPT_DB);
+     if(rc == false)  goto use_err;
      crpos = ff_startpos;
-     bioSeek(_bioHandle,0L,SEEKF_START);
+     _bioHandle->seek(0L,SEEKF_START);
      prcnt_counter = oprcnt_counter = 0;
      pwsize = 0;
      awsize = wsize;
@@ -351,14 +353,14 @@ static bool FStore( void )
 	if(!BMReadBufferEx(tmp_buff,rem,crpos,BM_SEEK_SET))
 	{
 	  errnoMessageBox(READ_FAIL,NULL,errno);
-	  bioClose(_bioHandle);
+	  _bioHandle->close();
 	  goto Exit;
 	}
 	real_size = activeMode->convert_cp ? activeMode->convert_cp((char *)tmp_buff,rem,true) : rem;
-	if(!bioWriteBuffer(_bioHandle,tmp_buff,real_size))
+	if(!_bioHandle->write_buffer(tmp_buff,real_size))
 	{
 	  errnoMessageBox(WRITE_FAIL,NULL,errno);
-	  bioClose(_bioHandle);
+	  _bioHandle->close();
 	  goto Exit;
 	}
 	wsize -= rem;
@@ -371,7 +373,7 @@ static bool FStore( void )
 	  if(!ShowPercentInWnd(progress_wnd,prcnt_counter)) break;
 	}
      }
-     bioClose(_bioHandle);
+     _bioHandle->close();
    }
    else /** Write in disassembler mode */
    {
@@ -709,8 +711,8 @@ static bool FRestore( void )
  {
    __filesize_t flen,lval;
    bhandle_t handle;
-   BGLOBAL bHandle;
-   char *fname;
+   BFile* bHandle;
+   const char *fname;
    endpos = ff_startpos + ff_len;
    handle = __OsOpen(ff_fname,FO_READONLY | SO_DENYNONE);
    if(handle == NULL_HANDLE) handle = __OsOpen(ff_fname,FO_READONLY | SO_COMPAT);
@@ -757,8 +759,8 @@ static bool FRestore( void )
 	   ret = false;
 	   goto bye;
 	 }
-	 bioSeek(bHandle,cwpos,BIO_SEEK_SET);
-	 if(!bioWriteBuffer(bHandle,tmp_buff,remaind))
+	 bHandle->seek(cwpos,BIO_SEEK_SET);
+	 if(!bHandle->write_buffer(tmp_buff,remaind))
 	 {
 	   errnoMessageBox(WRITE_FAIL,NULL,errno);
 	   ret = false;
@@ -768,11 +770,11 @@ static bool FRestore( void )
 	 cwpos += remaind;
        }
        bye:
-       bioClose(bHandle);
+       bHandle->close();
        BMReRead();
      }
      else errnoMessageBox(OPEN_FAIL,NULL,errno);
-     delete tmp_buff;
+     delete (char*)tmp_buff;
      __OsClose(handle);
      BMSeek(cpos,BM_SEEK_SET);
      ret = true;
@@ -847,8 +849,8 @@ static bool CryptBlock( void )
    {
      __filesize_t wsize,cwpos;
      unsigned remaind;
-     char *fname;
-     BGLOBAL bHandle;
+     const char *fname;
+     BFile* bHandle;
      any_t*tmp_buff;
      cpos = BMGetCurrFilePos();
      wsize = endpos - ff_startpos;
@@ -863,19 +865,19 @@ static bool CryptBlock( void )
      bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
      if(bHandle != &bNull)
      {
-       bioSeek(bHandle,ff_startpos,SEEK_SET);
+       bHandle->seek(ff_startpos,SEEK_SET);
        while(wsize)
        {
 	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
-	 if(!bioReadBuffer(bHandle,tmp_buff,remaind))
+	 if(!bHandle->read_buffer(tmp_buff,remaind))
 	 {
 	   errnoMessageBox(READ_FAIL,NULL,errno);
 	   ret = false;
 	   goto bye;
 	 }
 	 CryptFunc((char*)tmp_buff,remaind,pass);
-	 bioSeek(bHandle,cwpos,BIO_SEEK_SET);
-	 if(!(bioWriteBuffer(bHandle,tmp_buff,remaind)))
+	 bHandle->seek(cwpos,BIO_SEEK_SET);
+	 if(!(bHandle->write_buffer(tmp_buff,remaind)))
 	 {
 	   errnoMessageBox(WRITE_FAIL,NULL,errno);
 	   ret = false;
@@ -885,10 +887,10 @@ static bool CryptBlock( void )
 	 cwpos += remaind;
        }
        bye:
-       bioClose(bHandle);
+       bHandle->close();
        BMReRead();
      }
-     delete tmp_buff;
+     delete (char*)tmp_buff;
      BMSeek(cpos,BM_SEEK_SET);
      ret = true;
    }
@@ -957,8 +959,8 @@ static bool ReverseBlock( void )
    {
      __filesize_t wsize,cwpos;
      unsigned remaind;
-     char *fname;
-     BGLOBAL bHandle;
+     const char *fname;
+     BFile* bHandle;
      any_t*tmp_buff;
      cpos = BMGetCurrFilePos();
      wsize = endpos - ff_startpos;
@@ -973,19 +975,19 @@ static bool ReverseBlock( void )
      bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
      if(bHandle != &bNull)
      {
-       bioSeek(bHandle,ff_startpos,SEEK_SET);
+       bHandle->seek(ff_startpos,SEEK_SET);
        while(wsize)
        {
 	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
-	 if(!bioReadBuffer(bHandle,tmp_buff,remaind))
+	 if(!bHandle->read_buffer(tmp_buff,remaind))
 	 {
 	   errnoMessageBox(READ_FAIL,NULL,errno);
 	   ret = false;
 	   goto bye;
 	 }
 	 EndianifyBlock((char*)tmp_buff,remaind, flags & FSDLG_BTNSMASK);
-	 bioSeek(bHandle,cwpos,BIO_SEEK_SET);
-	 if(!(bioWriteBuffer(bHandle,tmp_buff,remaind)))
+	 bHandle->seek(cwpos,BIO_SEEK_SET);
+	 if(!(bHandle->write_buffer(tmp_buff,remaind)))
 	 {
 	   errnoMessageBox(WRITE_FAIL,NULL,errno);
 	   ret = false;
@@ -995,10 +997,10 @@ static bool ReverseBlock( void )
 	 cwpos += remaind;
        }
        bye:
-       bioClose(bHandle);
+       bHandle->close();
        BMReRead();
      }
-     delete tmp_buff;
+     delete (char*)tmp_buff;
      BMSeek(cpos,BM_SEEK_SET);
      ret = true;
    }
@@ -1044,8 +1046,8 @@ static bool XLatBlock( void )
    {
      __filesize_t wsize,cwpos;
      unsigned remaind;
-     char *fname;
-     BGLOBAL bHandle, xHandle;
+     const char *fname;
+     BFile* bHandle,* xHandle;
      any_t*tmp_buff;
      cpos = BMGetCurrFilePos();
      wsize = endpos - ff_startpos;
@@ -1057,22 +1059,22 @@ static bool XLatBlock( void )
        ErrMessageBox("Can't open xlat file", NULL);
        return false;
      }
-     if(bioFLength(xHandle) != 320)
+     if(xHandle->flength() != 320)
      {
        ErrMessageBox("Size of xlat file is not 320 bytes", NULL);
-       bioClose(xHandle);
+       xHandle->close();
        return false;
      }
-     bioReadBuffer(xHandle,xlt, 16);
+     xHandle->read_buffer(xlt, 16);
      if(memcmp(xlt, "Beye Xlat Table.", 16) != 0)
      {
        ErrMessageBox("It seems that xlat file is corrupt", NULL);
-       bioClose(xHandle);
+       xHandle->close();
        return false;
      }
-     bioSeek(xHandle, 0x40, SEEKF_START);
-     bioReadBuffer(xHandle, xlt, 256);
-     bioClose(xHandle);
+     xHandle->seek(0x40, SEEKF_START);
+     xHandle->read_buffer(xlt, 256);
+     xHandle->close();
      tmp_buff = new char [4096];
      if(!tmp_buff)
      {
@@ -1083,19 +1085,19 @@ static bool XLatBlock( void )
      bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
      if(bHandle != &bNull)
      {
-       bioSeek(bHandle,ff_startpos,SEEK_SET);
+       bHandle->seek(ff_startpos,SEEK_SET);
        while(wsize)
        {
 	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
-	 if(!bioReadBuffer(bHandle,tmp_buff,remaind))
+	 if(!bHandle->read_buffer(tmp_buff,remaind))
 	 {
 	   errnoMessageBox(READ_FAIL,NULL,errno);
 	   ret = false;
 	   goto bye;
 	 }
 	 TranslateBlock((char*)tmp_buff,remaind, xlt);
-	 bioSeek(bHandle,cwpos,BIO_SEEK_SET);
-	 if(!(bioWriteBuffer(bHandle,tmp_buff,remaind)))
+	 bHandle->seek(cwpos,BIO_SEEK_SET);
+	 if(!(bHandle->write_buffer(tmp_buff,remaind)))
 	 {
 	   errnoMessageBox(WRITE_FAIL,NULL,errno);
 	   ret = false;
@@ -1105,10 +1107,10 @@ static bool XLatBlock( void )
 	 cwpos += remaind;
        }
        bye:
-       bioClose(bHandle);
+       bHandle->close();
        BMReRead();
      }
-     delete tmp_buff;
+     delete (char*)tmp_buff;
      BMSeek(cpos,BM_SEEK_SET);
      ret = true;
    }

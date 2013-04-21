@@ -28,7 +28,7 @@
 #include "libbeye/file_ini.h"
 #include "libbeye/pmalloc.h"
 
-#define rewind_ini(h) (bioSeek(h,0L,BIO_SEEK_SET))
+#define rewind_ini(h) (h->seek(0L,BIO_SEEK_SET))
 
 #if 0
 static void dump_BFILE(BFILE *h) {
@@ -82,7 +82,7 @@ const char iniLegalSet[] = " _0123456789"
 #define FiisCommand( str ) (IS_SECT(str,'#'))
 #define FiisItem(str) (!(FiisSection(str) || FiisSubSection(str) || FiisCommand(str)))
 
-static char * __NEAR__ __FASTCALL__ GETS(char *str,unsigned num,BGLOBAL h)
+static char * __NEAR__ __FASTCALL__ GETS(char *str,unsigned num,BFile* h)
 {
   char *ret;
   unsigned i;
@@ -90,18 +90,18 @@ static char * __NEAR__ __FASTCALL__ GETS(char *str,unsigned num,BGLOBAL h)
   ret = str;
   for(i = 0;i < num;i++)
   {
-     ch = bioReadByte(h);
+     ch = h->read_byte();
      if(ch == '\n' || ch == '\r')
      {
        *str = ch;  str++;
-       ch1 = bioReadByte(h);
+       ch1 = h->read_byte();
        if((ch1 == '\n' || ch1 == '\r') && ch != ch1)
        {
 	 *str = ch; str++;
        }
        else
        {
-	 if(bioEOF(h))
+	 if(h->eof())
 	 {
 	   if((signed char)ch1 != -1 && ch1 != __C_EOF)
 	   {
@@ -109,11 +109,11 @@ static char * __NEAR__ __FASTCALL__ GETS(char *str,unsigned num,BGLOBAL h)
 	   }
 	   break;
 	 }
-	 bioSeek(h,-1,SEEK_CUR);
+	 h->seek(-1,SEEK_CUR);
        }
        break;
      }
-     if(bioEOF(h))
+     if(h->eof())
      {
        if((signed char)ch != -1 && ch != __C_EOF)
        {
@@ -198,11 +198,12 @@ int (__FASTCALL__ *FiError)(int nError,int row,const char *) = StdError;
 FiHandler __FASTCALL__ FiOpen( const char * filename)
 {
   char * activeFile;
-  FiHandler ret;
+  FiHandler ret = new BFile;
+  bool rc;
   /* Try to load .ini file entire into memory */
-  ret = bioOpen(filename,FO_READONLY | SO_DENYWRITE,UINT_MAX,BIO_OPT_USEMMF);
+  rc = ret->open(filename,FO_READONLY | SO_DENYWRITE,UINT_MAX,BIO_OPT_USEMMF);
   /* Note! All OSes except DOS-DOS386 allows opening of empty filenames as /dev/null */
-  if(ret == &bNull && filename[0]) FiAError(__FI_BADFILENAME,0,filename);
+  if(rc == false && filename[0]) FiAError(__FI_BADFILENAME,0,filename);
   activeFile = (char *)PMalloc((strlen(filename) + 1));
   if(activeFile == NULL) FiAError(__FI_NOTMEM,0,NULL);
   strcpy(activeFile,filename);
@@ -238,7 +239,7 @@ void __FASTCALL__ FiClose(FiHandler h)
     PFREE(FiFileNames);
     PFREE(FinCurrString);
   }
-  bioClose(h);
+  h->close();
 }
 
 static unsigned int __NEAR__ __FASTCALL__ __GetLengthBrStr(const char * src,char obr,char cbr)
@@ -499,13 +500,13 @@ static char * __NEAR__ __FASTCALL__ __FiCCmd( const char * src )
 void __FASTCALL__ FiSeekTo( FiHandler h, unsigned int nSection, unsigned int nSubSection, unsigned int nItem )
 {
   unsigned int ns = 0,nss = 0,ni = 0;
-  bioSeek(h,0L,SEEKF_START);
+  h->seek(0L,SEEKF_START);
   FinCurrString[FiFilePtr - 1] = 0;
   if(nSection)
   {
     char * buff;
     buff = __FiCMaxStr();
-    while(!bioEOF(h))
+    while(!h->eof())
     {
       FiGetNextString(h,buff,FI_MAXSTRLEN,NULL);
       if(FiisSection(buff)) ns++;
@@ -517,7 +518,7 @@ void __FASTCALL__ FiSeekTo( FiHandler h, unsigned int nSection, unsigned int nSu
   {
    char * buff;
    buff = __FiCMaxStr();
-   while(!bioEOF(h))
+   while(!h->eof())
    {
      FiGetNextString(h,buff,FI_MAXSTRLEN,NULL);
      if(FiisSubSection(buff)) nss++;
@@ -529,7 +530,7 @@ void __FASTCALL__ FiSeekTo( FiHandler h, unsigned int nSection, unsigned int nSu
   {
    char * buff;
    buff = __FiCMaxStr();
-   while(!bioEOF(h))
+   while(!h->eof())
    {
      FiGetNextString(h,buff,FI_MAXSTRLEN,NULL);
      if(FiisItem(buff)) ni++;
@@ -544,9 +545,9 @@ int __FASTCALL__ FiSearch(FiHandler h, const char * str )
   char *tmp,*buff;
   tmp  = __FiCMaxStr();
   buff = __FiCMaxStr();
-  bioSeek(h,0L,SEEKF_START);
+  h->seek(0L,SEEKF_START);
   FinCurrString[FiFilePtr - 1] = 0;
-  while(!bioEOF(h))
+  while(!h->eof())
   {
    FiGetNextString(h,buff,FI_MAXSTRLEN,NULL);
    if(FiisSection(buff))
@@ -565,7 +566,7 @@ int __FASTCALL__ FiSearch(FiHandler h, const char * str )
      if(strcmp(tmp,str) == 0) { PFREE(tmp); PFREE(buff); return __FI_ITEM; }
    }
   }
-  bioSeek(h,0L,SEEKF_START);
+  h->seek(0L,SEEKF_START);
   FinCurrString[FiFilePtr - 1] = 0;
   PFREE(tmp);
   PFREE(buff);
@@ -582,13 +583,13 @@ unsigned int  __FASTCALL__ FiGetNumberOfSections( FiHandler h)
  save = FinCurrString[FiFilePtr -1];
  curr = bioTell(h);
  buff = __FiCMaxStr();
- bioSeek(h,0L,SEEKF_START);
- while(!bioEOF(h))
+ h->seek(0L,SEEKF_START);
+ while(!h->eof())
  {
    FiGetNextString(h,buff,FI_MAXSTRLEN,NULL);
    if(FiisSection(buff)) eret++;
  }
- bioSeek(h,curr,SEEKF_START);
+ h->seek(curr,SEEKF_START);
  FinCurrString[FiFilePtr - 1] = save;
  PFREE(buff);
  return eret;
@@ -604,13 +605,13 @@ unsigned int __FASTCALL__ FiGetTotalNumberOfSubSections( FiHandler h )
  curr = bioTell(h);
  buff = __FiCMaxStr();
  save = FinCurrString[FiFilePtr - 1];
- bioSeek(h,0L,SEEKF_START);
- while(!bioEOF(h))
+ h->seek(0L,SEEKF_START);
+ while(!h->eof())
  {
    FiGetNextString(h,buff,FI_MAXSTRLEN,NULL);
    if(FiisSubSection(buff)) eret++;
  }
- bioSeek(h,curr,SEEKF_START);
+ h->seek(curr,SEEKF_START);
  FinCurrString[FiFilePtr - 1] = save;
  PFREE(buff);
  return eret;
@@ -627,12 +628,12 @@ unsigned int __FASTCALL__ FiGetLocalNumberOfSubSections( FiHandler h, unsigned u
   eret = 0;
   buff = __FiCMaxStr();
   FiSeekTo(h,nSection,0,0);
-  while(!bioEOF(h))
+  while(!h->eof())
   {
     FiGetNextString(h,buff,FI_MAXSTRLEN,NULL);
     if(FiisItem(buff)) eret++;
   }
-  bioSeek(h,curr,SEEKF_START);
+  h->seek(curr,SEEKF_START);
   FinCurrString[FiFilePtr - 1] = save;
   PFREE(buff);
   return eret;
@@ -648,13 +649,13 @@ unsigned int  __FASTCALL__ FiGetTotalNumberOfItems( FiHandler h)
  curr = bioTell(h);
  save = FinCurrString[FiFilePtr - 1];
  buff = __FiCMaxStr();
- bioSeek(h,0L,SEEKF_START);
- while(!bioEOF(h))
+ h->seek(0L,SEEKF_START);
+ while(!h->eof())
  {
    FiGetNextString(h,buff,FI_MAXSTRLEN,NULL);
    if(FiisItem(buff)) eret++;
  }
- bioSeek(h,curr,SEEKF_START);
+ h->seek(curr,SEEKF_START);
  FinCurrString[FiFilePtr - 1] = save;
  PFREE(buff);
  return eret;
@@ -671,12 +672,12 @@ unsigned int  __FASTCALL__ FiGetLocalNumberOfItems( FiHandler h,int nSection, in
   eret = 0;
   buff = __FiCMaxStr();
   FiSeekTo(h,nSection,nSubSection,0);
-  while(!bioEOF(h))
+  while(!h->eof())
   {
     FiGetNextString(h,buff,FI_MAXSTRLEN,NULL);
     if(FiisItem(buff)) eret++;
   }
-  bioSeek(h,curr,SEEKF_START);
+  h->seek(curr,SEEKF_START);
   FinCurrString[FiFilePtr - 1] = save;
   PFREE(buff);
   return eret;
@@ -692,7 +693,7 @@ char * __FASTCALL__ FiGetNextString(FiHandler h, char * str,unsigned int size,ch
   unsigned len;
   unsigned char ch;
   str[0] = 0;
-  while(!bioEOF(h))
+  while(!h->eof())
   {
     str[0] = 0;
     sret = (unsigned char*)GETS(str,size,h);
@@ -705,7 +706,7 @@ char * __FASTCALL__ FiGetNextString(FiHandler h, char * str,unsigned int size,ch
     }
     if(original) strcpy(original,str);
     FinCurrString[FiFilePtr - 1]++;
-    if((sret == NULL && !bioEOF( h )))  FiAError(__FI_BADFILENAME,0,str);
+    if((sret == NULL && !h->eof()))  FiAError(__FI_BADFILENAME,0,str);
     sret = (unsigned char*)strchr(str,FiOpenComment);
     if(sret) *sret = 0;
     if(!FiAllWantInput)
@@ -1084,7 +1085,7 @@ bool __FASTCALL__ FiCommandProcessorStd( const char * cmd )
    cond_ret = Condition = (*FiGetCondition)(&cmd[str.iptr]);
    nLabel = 1;
    BeenElse = false;
-   while(!bioEOF(ActiveFile))
+   while(!ActiveFile->eof())
    {
      FiGetNextString(ActiveFile,sstore,FI_MAXSTRLEN,NULL);
      if(sstore[0] == '\0') { PFREE(sstore); goto Exit_CP; }
@@ -1211,7 +1212,7 @@ void __FASTCALL__ FiFileProcessorStd(const char * filename)
   ActiveFile = h;
   work_str = __FiCMaxStr();
   fi_Debug_Str = ondelete = work_str;
-  while(!bioEOF(h))
+  while(!h->eof())
   {
       FiGetNextString(h,work_str,FI_MAXSTRLEN,NULL);
       if(!work_str || !work_str[0]) break;
@@ -1249,7 +1250,7 @@ static void __FASTCALL__ hlFiFileProcessorStd(hIniProfile *ini)
   work_str = __FiCMaxStr();
   fi_Debug_Str = ondelete = work_str;
   rewind_ini(ini->handler);
-  while(!bioEOF(ini->handler))
+  while(!ini->handler->eof())
   {
       FiGetNextString(ini->handler,work_str,FI_MAXSTRLEN,NULL);
       if(!work_str || !work_str[0]) break;
@@ -1723,7 +1724,7 @@ static bool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
      if(_ret) ini->handler = FiOpen(ini->fname);
      goto Exit_WS;
    }
-   bioSeek(ini->handler,0L,BIO_SEEK_SET);
+   ini->handler->seek(0L,BIO_SEEK_SET);
    ActiveFile = ini->handler;
    hsrc = make_temp(ini->fname,tmpname);
    if(hsrc == NULL_HANDLE) { _ret = false; goto Exit_WS; }
