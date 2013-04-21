@@ -83,6 +83,11 @@ ClassFile_t jvm_header;
 static BFile* jvm_cache;
 static BFile* pool_cache;
 
+inline uint16_t JVM_WORD(const uint16_t* cval,bool is_msbf) { return FMT_WORD(cval,is_msbf); }
+inline uint32_t JVM_DWORD(const uint32_t* cval,bool is_msbf) { return FMT_DWORD(cval,is_msbf); }
+inline uint64_t JVM_QWORD(const uint64_t* cval,bool is_msbf) { return FMT_DWORD(cval,is_msbf); }
+
+
 static bool  __FASTCALL__ jvm_check_fmt( void )
 {
   unsigned char id[4];
@@ -111,7 +116,7 @@ static unsigned __NEAR__ __FASTCALL__ skip_constant(BFile* handle,unsigned char 
 	case CONSTANT_DOUBLE: handle->seek(8,BM_SEEK_CUR); add=1; break;
 	case CONSTANT_UTF8:
 			sval=handle->read_word();
-			sval=FMT_WORD(&sval,1);
+			sval=JVM_WORD(&sval,1);
 			handle->seek(sval,BM_SEEK_CUR);
 			break;
     }
@@ -138,7 +143,7 @@ static void __NEAR__ __FASTCALL__ get_utf8(BFile* handle,unsigned nidx,char *str
     if(id==CONSTANT_UTF8)
     {
 	nidx=handle->read_word();
-	nidx=FMT_WORD(&nidx,1);
+	nidx=JVM_WORD((uint16_t*)&nidx,1);
 	nidx=std::min(nidx,slen-1);
 	handle->read_buffer(str,nidx);
 	str[nidx]=0;
@@ -149,7 +154,7 @@ static void __NEAR__ __FASTCALL__ get_name(BFile* handle,char *str,unsigned slen
 {
     unsigned short nidx;
     nidx=handle->read_word();
-    nidx=FMT_WORD(&nidx,1);
+    nidx=JVM_WORD(&nidx,1);
     get_utf8(handle,nidx,str,slen);
 }
 
@@ -172,10 +177,10 @@ static void __NEAR__ __FASTCALL__ skip_attributes(BFile* handle,unsigned nitems)
     unsigned i;
     for(i=0;i<nitems;i++)
     {
-	unsigned long lval;
+	uint32_t lval;
 	handle->seek(2,BM_SEEK_CUR);
 	lval=handle->read_dword();
-	lval=FMT_DWORD(&lval,1);
+	lval=JVM_DWORD(&lval,1);
 	handle->seek(lval,BM_SEEK_CUR);
     }
 }
@@ -189,7 +194,7 @@ static void __NEAR__ __FASTCALL__ skip_fields(unsigned nitems,int attr)
 	unsigned short sval;
 	bmSeek(6,BM_SEEK_CUR);
 	sval=bmReadWord();
-	sval=FMT_WORD(&sval,1);
+	sval=JVM_WORD(&sval,1);
 	fpos=bmGetCurrFilePos();
 	if(i==0)
 	{
@@ -213,7 +218,7 @@ static bool __FASTCALL__ jvm_read_interfaces(BFile* handle,memArray * names,unsi
     {
 	id=handle->read_word();
 	fpos=handle->tell();
-	id=FMT_WORD(&id,1);
+	id=JVM_WORD(&id,1);
 	get_class_name(handle,id,str,sizeof(str));
 	if(!ma_AddString(names,str,true)) break;
 	handle->seek(fpos,BM_SEEK_SET);
@@ -242,7 +247,7 @@ static bool __FASTCALL__ jvm_read_attributes(BFile* handle,memArray * names,unsi
 {
     unsigned i;
     __filesize_t fpos;
-    unsigned long len;
+    uint32_t len;
     char str[80],sout[100];
     handle->seek(jvm_header.attributes_offset,BM_SEEK_SET);
     for(i=0;i<nnames;i++)
@@ -251,8 +256,8 @@ static bool __FASTCALL__ jvm_read_attributes(BFile* handle,memArray * names,unsi
 	get_name(handle,str,sizeof(str));
 	handle->seek(fpos+2,BM_SEEK_SET);
 	len=handle->read_dword();
-	len=FMT_DWORD(&len,1);
-	sprintf(sout,"%08lXH %s",len,str);
+	len=JVM_DWORD(&len,1);
+	sprintf(sout,"%08lXH %s",(long)len,str);
 	if(!ma_AddString(names,sout,true)) break;
 	handle->seek(len,BM_SEEK_CUR);
     }
@@ -280,11 +285,11 @@ static __filesize_t __NEAR__ __FASTCALL__ __ShowAttributes(const char *title)
     bmSeek(jvm_header.attributes_offset,BM_SEEK_SET);
     for(i=0;i<(unsigned)ret+1;i++)
     {
-	unsigned long len;
+	uint32_t len;
 	fpos=bmGetCurrFilePos();
 	bmSeek(fpos+2,BM_SEEK_SET);
 	len=bmReadDWord();
-	len=FMT_DWORD(&len,1);
+	len=JVM_DWORD(&len,1);
 	fpos+=6;
 	bmSeek(len,BM_SEEK_CUR);
     }
@@ -308,13 +313,13 @@ static bool __FASTCALL__ jvm_read_methods(BFile* handle,memArray * names,unsigne
     {
 	fpos=handle->tell();
 	flg=handle->read_word();
-	flg=FMT_WORD(&flg,1);
+	flg=JVM_WORD(&flg,1);
 	get_name(handle,str,sizeof(str));
 	handle->seek(fpos+4,BM_SEEK_SET);
 	get_name(handle,str2,sizeof(str2));
 	handle->seek(fpos+6,BM_SEEK_SET);
 	sval=handle->read_word();
-	acount=FMT_WORD(&sval,1);
+	acount=JVM_WORD(&sval,1);
 	skip_attributes(handle,acount);
 	sprintf(sout,"%04XH %04XH %s %s",acount,flg,str,str2);
 	if(!ma_AddString(names,sout,true)) break;
@@ -349,7 +354,7 @@ static __filesize_t __FASTCALL__ ShowMethods(void)
 	get_name(bmbioHandle(),str,sizeof(str));
 	bmSeek(fpos+6,BM_SEEK_SET);
 	acount=bmReadWord();
-	acount=FMT_WORD(&acount,1);
+	acount=JVM_WORD(&acount,1);
 	skip_attributes(bmbioHandle(),acount);
     }
     fpos += 6;
@@ -382,13 +387,13 @@ static bool __FASTCALL__ jvm_read_fields(BFile* handle,memArray * names,unsigned
     {
 	fpos=handle->tell();
 	flg=handle->read_word();
-	flg=FMT_WORD(&flg,1);
+	flg=JVM_WORD(&flg,1);
 	get_name(handle,str,sizeof(str));
 	handle->seek(fpos+4,BM_SEEK_SET);
 	get_name(handle,str2,sizeof(str2));
 	handle->seek(fpos+6,BM_SEEK_SET);
 	sval=handle->read_word();
-	acount=FMT_WORD(&sval,1);
+	acount=JVM_WORD(&sval,1);
 	skip_attributes(handle,acount);
 	sprintf(sout,"%04XH %04XH %s %s",acount,flg,str,str2);
 	if(!ma_AddString(names,sout,true)) break;
@@ -423,7 +428,7 @@ static __filesize_t __FASTCALL__ ShowFields(void)
 	get_name(bmbioHandle(),str,sizeof(str));
 	bmSeek(fpos+6,BM_SEEK_SET);
 	acount=bmReadWord();
-	acount=FMT_WORD(&acount,1);
+	acount=JVM_WORD(&acount,1);
 	skip_attributes(bmbioHandle(),acount);
     }
     fpos += 6;
@@ -447,7 +452,7 @@ static __filesize_t __FASTCALL__ ShowFields(void)
 static bool __FASTCALL__ jvm_read_pool(BFile* handle,memArray * names,unsigned nnames)
 {
     __filesize_t fpos;
-    unsigned long lval,lval2;
+    uint32_t lval,lval2;
     unsigned i;
     unsigned short flg,sval,slen;
     unsigned char utag;
@@ -470,9 +475,9 @@ static bool __FASTCALL__ jvm_read_pool(BFile* handle,memArray * names,unsigned n
 	    case CONSTANT_METHODREF:
 	    case CONSTANT_INTERFACEMETHODREF:
 			flg=handle->read_word();
-			flg=FMT_WORD(&flg,1);
+			flg=JVM_WORD(&flg,1);
 			sval=handle->read_word();
-			sval=FMT_WORD(&sval,1);
+			sval=JVM_WORD(&sval,1);
 			sprintf(sout,"%s: class=#%04XH name_type_idx=#%04XH"
 			,utag==CONSTANT_FIELDREF?"FieldRef":utag==CONSTANT_METHODREF?"MethodRef":"InterfaceMethodRef"
 			,flg,sval);
@@ -480,18 +485,18 @@ static bool __FASTCALL__ jvm_read_pool(BFile* handle,memArray * names,unsigned n
 	    case CONSTANT_INTEGER:
 	    case CONSTANT_FLOAT:
 			lval=handle->read_dword();
-			lval=FMT_DWORD(&lval,1);
+			lval=JVM_DWORD(&lval,1);
 			sprintf(sout,"%s: %08lXH",utag==CONSTANT_INTEGER?"Integer":"Float"
-			,lval);
+			,(long)lval);
 			break;
 	    case CONSTANT_LONG:
 	    case CONSTANT_DOUBLE:
 			lval=handle->read_dword();
-			lval=FMT_DWORD(&lval,1);
+			lval=JVM_DWORD(&lval,1);
 			lval2=handle->read_dword();
-			lval2=FMT_DWORD(&lval2,1);
+			lval2=JVM_DWORD(&lval2,1);
 			sprintf(sout,"%s: hi=%08lXH lo=%08lXH",utag==CONSTANT_LONG?"Long":"Double"
-			,lval,lval2);
+			,(long)lval,(long)lval2);
 			i++;
 			break;
 	    case CONSTANT_NAME_AND_TYPE:
@@ -504,7 +509,7 @@ static bool __FASTCALL__ jvm_read_pool(BFile* handle,memArray * names,unsigned n
 			break;
 	    case CONSTANT_UTF8:
 			sval=handle->read_word();
-			sval=FMT_WORD(&sval,1);
+			sval=JVM_WORD(&sval,1);
 			slen=std::min(sizeof(str)-1,size_t(sval));
 			fpos=handle->tell();
 			handle->read_buffer(str,slen);
@@ -549,34 +554,34 @@ static void __FASTCALL__ jvm_init_fmt( void )
     fpos=bmGetCurrFilePos();
     bmSeek(4,BM_SEEK_SET);
     sval=bmReadWord();
-    jvm_header.minor=FMT_WORD(&sval,1);
+    jvm_header.minor=JVM_WORD(&sval,1);
     sval=bmReadWord();
-    jvm_header.major=FMT_WORD(&sval,1);
+    jvm_header.major=JVM_WORD(&sval,1);
     sval=bmReadWord();
-    jvm_header.constant_pool_count=FMT_WORD(&sval,1);
+    jvm_header.constant_pool_count=JVM_WORD(&sval,1);
     jvm_header.constants_offset=bmGetCurrFilePos();
     skip_constant_pool(bmbioHandle(),jvm_header.constant_pool_count-1);
     sval=bmReadWord();
-    jvm_header.access_flags=FMT_WORD(&sval,1);
+    jvm_header.access_flags=JVM_WORD(&sval,1);
     sval=bmReadWord();
-    jvm_header.this_class=FMT_WORD(&sval,1);
+    jvm_header.this_class=JVM_WORD(&sval,1);
     sval=bmReadWord();
-    jvm_header.super_class=FMT_WORD(&sval,1);
+    jvm_header.super_class=JVM_WORD(&sval,1);
     sval=bmReadWord();
-    jvm_header.interfaces_count=FMT_WORD(&sval,1);
+    jvm_header.interfaces_count=JVM_WORD(&sval,1);
     jvm_header.interfaces_offset=bmGetCurrFilePos();
     bmSeek(jvm_header.interfaces_count*2,BM_SEEK_CUR);
     sval=bmReadWord();
-    jvm_header.fields_count=FMT_WORD(&sval,1);
+    jvm_header.fields_count=JVM_WORD(&sval,1);
     jvm_header.fields_offset=bmGetCurrFilePos();
     skip_fields(jvm_header.fields_count,0);
     sval=bmReadWord();
-    jvm_header.methods_count=FMT_WORD(&sval,1);
+    jvm_header.methods_count=JVM_WORD(&sval,1);
     jvm_header.methods_offset=bmGetCurrFilePos();
     skip_fields(jvm_header.fields_count,1); /* methods have the same struct as fields */
     sval=bmReadWord();
     jvm_header.attrcode_offset=0;
-    jvm_header.attributes_count=FMT_WORD(&sval,1);
+    jvm_header.attributes_count=JVM_WORD(&sval,1);
     jvm_header.attributes_offset=bmGetCurrFilePos();
     if(jvm_header.attributes_count) jvm_header.attrcode_offset=jvm_header.attributes_offset;
     skip_attributes(bmbioHandle(),sval);
@@ -701,7 +706,7 @@ static void __FASTCALL__ jvm_ReadPubName(BFile* b_cache,const struct PubName *it
 
 static void __FASTCALL__ jvm_ReadPubNameList(BFile* handle,void (__FASTCALL__ *mem_out)(const char *))
 {
- __filesize_t fpos,len;
+ __filesize_t fpos;
  unsigned i;
  struct PubName jvm_pn;
  unsigned short acount,flg;
@@ -713,23 +718,24 @@ static void __FASTCALL__ jvm_ReadPubNameList(BFile* handle,void (__FASTCALL__ *m
  {
     fpos=handle->tell();
     flg=handle->read_word();
-    flg=FMT_WORD(&flg,1);
+    flg=JVM_WORD(&flg,1);
     jvm_pn.nameoff = handle->tell();
     jvm_pn.addinfo=0;
     handle->seek(fpos+6,BM_SEEK_SET);
     acount=handle->read_word();
-    acount=FMT_WORD(&acount,1);
+    acount=JVM_WORD(&acount,1);
     for(i=0;i<acount;i++)
     {
+	uint32_t jlen;
 	fpos=handle->tell();
 	jvm_pn.addinfo=fpos;
 	handle->seek(fpos+2,BM_SEEK_SET);
-	len=handle->read_dword();
-	len=FMT_DWORD(&len,1);
+	jlen=handle->read_dword();
+	jlen=JVM_DWORD(&jlen,1);
 	jvm_pn.pa = handle->tell();
 	jvm_pn.attr    = flg & 0x0008 ? SC_LOCAL : SC_GLOBAL;
 	if(!la_AddData(PubNames,&jvm_pn,mem_out)) break;
-	handle->seek(len,BM_SEEK_CUR);
+	handle->seek(jlen,BM_SEEK_CUR);
 	if(handle->eof()) break;
     }
     if(!acount)
@@ -746,22 +752,23 @@ static void __FASTCALL__ jvm_ReadPubNameList(BFile* handle,void (__FASTCALL__ *m
  {
     fpos=handle->tell();
     flg=handle->read_word();
-    flg=FMT_WORD(&flg,1);
+    flg=JVM_WORD(&flg,1);
     jvm_pn.nameoff = handle->tell();
     handle->seek(fpos+6,BM_SEEK_SET);
     acount=handle->read_word();
-    acount=FMT_WORD(&acount,1);
+    acount=JVM_WORD(&acount,1);
     for(i=0;i<acount;i++)
     {
+	uint32_t jlen;
 	fpos=handle->tell();
 	jvm_pn.addinfo=fpos;
 	handle->seek(fpos+2,BM_SEEK_SET);
-	len=handle->read_dword();
-	len=FMT_DWORD(&len,1);
+	jlen=handle->read_dword();
+	jlen=JVM_DWORD(&jlen,1);
 	jvm_pn.pa = handle->tell();
 	jvm_pn.attr    = flg & 0x0008 ? SC_LOCAL : SC_GLOBAL;
 	if(!la_AddData(PubNames,&jvm_pn,mem_out)) break;
-	handle->seek(len,BM_SEEK_CUR);
+	handle->seek(jlen,BM_SEEK_CUR);
 	if(handle->eof()) break;
     }
     if(!acount)
@@ -833,13 +840,13 @@ static unsigned __FASTCALL__ jvm_GetObjAttr(__filesize_t pa,char *name,unsigned 
     else
     {
       __filesize_t fpos;
-      unsigned long len;
+      uint32_t len;
       fpos=bmGetCurrFilePos();
       bmSeek(jvm_header.attributes_offset,BM_SEEK_SET);
       get_name(bmbioHandle(),name,cb_name);
       bmSeek(fpos+2,BM_SEEK_SET);
       len=bmReadDWord();
-      len=FMT_DWORD(&len,1);
+      len=JVM_DWORD(&len,1);
       bmSeek(fpos,BM_SEEK_SET);
       *_class = OC_CODE;
       *start = jvm_header.attributes_offset+6;
@@ -863,15 +870,15 @@ static unsigned long __FASTCALL__ jvm_AppendRef(char *str,__filesize_t ulShift,i
     if((flags & APREF_TRY_LABEL)!=APREF_TRY_LABEL)
     {
 	__filesize_t fpos;
-	unsigned long lidx,lval,lval2;
+	uint32_t lidx,lval,lval2;
 	unsigned sl;
 	unsigned short sval,sval2;
 	unsigned char utag;
 	jvm_cache->seek(ulShift,BM_SEEK_SET);
 	switch(codelen)
 	{
-	    case 4: lidx=jvm_cache->read_dword(); lidx=FMT_DWORD(&lidx,1); break;
-	    case 2: sval=jvm_cache->read_word(); lidx=FMT_WORD(&sval,1); break;
+	    case 4: lidx=jvm_cache->read_dword(); lidx=JVM_DWORD(&lidx,1); break;
+	    case 2: sval=jvm_cache->read_word(); lidx=JVM_WORD(&sval,1); break;
 	    default:
 	    case 1: lidx=jvm_cache->read_byte(); break;
 	}
@@ -891,9 +898,9 @@ static unsigned long __FASTCALL__ jvm_AppendRef(char *str,__filesize_t ulShift,i
 	    case CONSTANT_INTERFACEMETHODREF:
 			fpos=pool_cache->tell();
 			sval=pool_cache->read_word();
-			sval=FMT_WORD(&sval,1);
+			sval=JVM_WORD(&sval,1);
 			sval2=pool_cache->read_word();
-			sval2=FMT_WORD(&sval2,1);
+			sval2=JVM_WORD(&sval2,1);
 			pool_cache->seek(jvm_header.constants_offset,BM_SEEK_SET);
 			get_class_name(pool_cache,sval,str,slen);
 			strcat(str,".");
@@ -908,7 +915,7 @@ static unsigned long __FASTCALL__ jvm_AppendRef(char *str,__filesize_t ulShift,i
 	    case CONSTANT_INTEGER:
 	    case CONSTANT_FLOAT:
 			lval=pool_cache->read_dword();
-			lval=FMT_DWORD(&lval,1);
+			lval=JVM_DWORD(&lval,1);
 			strcpy(str,utag==CONSTANT_INTEGER?"Integer":"Float");
 			strcat(str,":");
 			strcat(str,Get8Digit(lval));
@@ -916,9 +923,9 @@ static unsigned long __FASTCALL__ jvm_AppendRef(char *str,__filesize_t ulShift,i
 	    case CONSTANT_LONG:
 	    case CONSTANT_DOUBLE:
 			lval=pool_cache->read_dword();
-			lval=FMT_DWORD(&lval,1);
+			lval=JVM_DWORD(&lval,1);
 			lval2=pool_cache->read_dword();
-			lval2=FMT_DWORD(&lval2,1);
+			lval2=JVM_DWORD(&lval2,1);
 			strcpy(str,utag==CONSTANT_INTEGER?"Long":"Double");
 			strcat(str,":");
 			strcat(str,Get8Digit(lval));
@@ -937,7 +944,7 @@ static unsigned long __FASTCALL__ jvm_AppendRef(char *str,__filesize_t ulShift,i
 			break;
 	    case CONSTANT_UTF8:
 			sval=pool_cache->read_word();
-			sval=FMT_WORD(&sval,1);
+			sval=JVM_WORD(&sval,1);
 			sl=std::min(slen,unsigned(sval));
 			fpos=pool_cache->tell();
 			pool_cache->read_buffer(str,sl);

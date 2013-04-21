@@ -35,8 +35,8 @@
 #include "libbeye/kbd_code.h"
 #include "libbeye/pmalloc.h"
 
-#define COFF_WORD(cval)  ((uint16_t)(*(const uint16_t *)(const uint8_t *)cval))
-#define COFF_DWORD(cval) ((uint32_t)(*(const uint32_t *)(const uint8_t *)cval))
+inline uint16_t COFF_WORD(const uint8_t* cval) { return (uint16_t)(*(const uint16_t *)(const uint8_t *)cval); }
+inline uint32_t COFF_DWORD(const uint8_t* cval) { return (uint32_t)(*(const uint32_t *)(const uint8_t *)cval); }
 
 
 static struct external_filehdr coff386hdr;

@@ -34,11 +34,11 @@
 static char is_msbf=0; /* is most significand byte first */
 static char is_64bit=0;
 
-#define AOUT_HALF(cval) FMT_WORD(cval,is_msbf)
-#define AOUT_WORD(cval) FMT_DWORD(cval,is_msbf)
-#define AOUT_QWORD(cval) FMT_QWORD(cval,is_msbf)
+inline uint16_t AOUT_HALF(const uint16_t* cval) { return FMT_WORD(cval,is_msbf); }
+inline uint32_t AOUT_WORD(const uint32_t* cval) { return FMT_DWORD(cval,is_msbf); }
+inline uint64_t AOUT_QWORD(const uint64_t* cval) { return FMT_QWORD(cval,is_msbf); }
 
-static const char * __NEAR__ __FASTCALL__ aout_encode_hdr(unsigned long info)
+static const char * __NEAR__ __FASTCALL__ aout_encode_hdr(uint32_t info)
 {
    switch(N_MAGIC(AOUT_WORD(&info)))
    {
@@ -55,7 +55,7 @@ static const char * __NEAR__ __FASTCALL__ aout_encode_hdr(unsigned long info)
    }
 }
 
-static const char * __NEAR__ __FASTCALL__ aout_encode_machine(unsigned long info,unsigned* id)
+static const char * __NEAR__ __FASTCALL__ aout_encode_machine(uint32_t info,unsigned* id)
 {
    *id=DISASM_DATA;
    switch(N_MACHTYPE(AOUT_WORD(&info)))
@@ -79,31 +79,32 @@ static __filesize_t __FASTCALL__ ShowAOutHeader( void )
   TWindow *w;
   fpos = BMGetCurrFilePos();
   bmReadBufferEx(&aout,sizeof(struct external_exec),0,SEEKF_START);
-  w = CrtDlgWndnls(aout_encode_hdr(*((unsigned long *)&aout.e_info)),54,7);
+  uint32_t* p_info = (uint32_t*)&aout.e_info;
+  w = CrtDlgWndnls(aout_encode_hdr(*p_info),54,7);
   twGotoXY(1,1);
   twPrintF("Flags & CPU                 = %02XH %s(%s)\n"
 	   "Length of text section      = %08lXH\n"
 	   "Length of data section      = %08lXH\n"
 	   "Length of bss area          = %08lXH\n"
 	   "Length of symbol table      = %08lXH\n"
-	   ,N_FLAGS(*((unsigned long *)&aout.e_info)),aout_encode_machine(*((unsigned long *)&aout.e_info),&dummy),is_msbf?"big-endian":"little-endian"
-	   ,AOUT_WORD((unsigned long *)&aout.e_text)
-	   ,AOUT_WORD((unsigned long *)&aout.e_data)
-	   ,AOUT_WORD((unsigned long *)&aout.e_bss)
-	   ,AOUT_WORD((unsigned long *)&aout.e_syms));
+	   ,N_FLAGS(*p_info),aout_encode_machine(*p_info,&dummy),is_msbf?"big-endian":"little-endian"
+	   ,AOUT_WORD((uint32_t *)&aout.e_text)
+	   ,AOUT_WORD((uint32_t *)&aout.e_data)
+	   ,AOUT_WORD((uint32_t *)&aout.e_bss)
+	   ,AOUT_WORD((uint32_t *)&aout.e_syms));
   twSetColorAttr(dialog_cset.entry);
   twPrintF("Start address               = %08lXH"
-	   ,AOUT_WORD((unsigned long *)&aout.e_entry));
+	   ,AOUT_WORD((uint32_t *)&aout.e_entry));
   twClrEOL(); twPrintF("\n");
   twSetColorAttr(dialog_cset.main);
   twPrintF("Length of text relocation   = %08lXH\n"
 	   "Length of data relocation   = %08lXH"
-	   ,AOUT_WORD((unsigned long *)&aout.e_trsize)
-	   ,AOUT_WORD((unsigned long *)&aout.e_drsize));
+	   ,AOUT_WORD((uint32_t *)&aout.e_trsize)
+	   ,AOUT_WORD((uint32_t *)&aout.e_drsize));
   while(1)
   {
     keycode = GetEvent(drawEmptyPrompt,NULL,w);
-    if(keycode == KE_ENTER) { fpos = AOUT_WORD(*((unsigned long *)&aout.e_entry)); break; }
+    if(keycode == KE_ENTER) { fpos = AOUT_WORD((uint32_t *)aout.e_entry); break; }
     else
       if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
   }
@@ -169,7 +170,7 @@ static int __FASTCALL__ aout_platform( void ) {
  unsigned id;
  struct external_exec aout;
  bmReadBufferEx(&aout,sizeof(struct external_exec),0,SEEKF_START);
- aout_encode_machine(*((unsigned long *)&aout.e_info),&id);
+ aout_encode_machine(*((uint32_t *)aout.e_info),&id);
  return id;
 }
 

@@ -42,10 +42,10 @@ static __filesize_t __FASTCALL__ Show_BMP_Header( void )
  unsigned keycode;
  TWindow * hwnd;
  BITMAPINFOHEADER bmph;
- __filesize_t fpos,fpos2,filesize;
+ __filesize_t fpos,fpos2;
  fpos = BMGetCurrFilePos();
  bmSeek(2,BM_SEEK_SET);
- filesize = bmReadDWord();
+ /*filesize = */bmReadDWord();
  bmSeek(4,BM_SEEK_CUR);
  fpos2=bmReadWord(); /* data offset */
  bmSeek(2,BM_SEEK_CUR);

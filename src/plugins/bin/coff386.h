@@ -91,7 +91,7 @@ typedef struct gnu_aout {
 	uint32_t entry;
 	uint32_t txrel;
 	uint32_t dtrel;
-	} GNU_AOUT;
+} GNU_AOUT;
 
 #define AOUTSZ (sizeof(AOUTHDR))
 
