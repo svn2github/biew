@@ -16,7 +16,7 @@
 ##############################################################################
 include ../config.mak
 
-SUBDIRS=libbeye
+SUBDIRS=addons plugins libbeye
 
 DO_MAKE = @ for i in $(SUBDIRS); do $(MAKE) -C $$i $@ || exit; done
 DO_ALL  = @ for i in $(SUBDIRS); do $(MAKE) -C $$i all || exit; done
@@ -34,9 +34,8 @@ BEYELIB = ./libbeye/$(LIBPREFIX)beye.$(LIBEXT)
 ##########################################################################
 
 INCS = -I.
-LIBS = -L./libbeye -lbeye $(EXTRALIBS)
+LIBS = -L./addons -laddons -L./plugins -lplugins -L./plugins/disasm -ldisasm -L./libbeye -lbeye $(EXTRALIBS)
 SRCS = \
-addendum.cpp\
 bconsole.cpp\
 beyehelp.cpp\
 beyeutil.cpp\
@@ -54,58 +53,7 @@ mainloop.cpp\
 refs.cpp\
 search.cpp\
 setup.cpp\
-sysinfo.cpp\
-tstrings.cpp\
-addons/sys/ascii.cpp\
-addons/sys/consinfo.cpp\
-addons/sys/cpu_perf.cpp\
-addons/sys/inview.cpp\
-addons/tools/dig_conv.cpp\
-addons/tools/eval.cpp\
-plugins/bin/aout.cpp\
-plugins/bin/arch.cpp\
-plugins/bin/asf.cpp\
-plugins/bin/avi.cpp\
-plugins/bin/bin.cpp\
-plugins/bin/bmp.cpp\
-plugins/bin/coff386.cpp\
-plugins/bin/dos_sys.cpp\
-plugins/bin/elf386.cpp\
-plugins/bin/jpeg.cpp\
-plugins/bin/jvmclass.cpp\
-plugins/bin/le.cpp\
-plugins/bin/lmf.cpp\
-plugins/bin/lx.cpp\
-plugins/bin/mov.cpp\
-plugins/bin/mp3.cpp\
-plugins/bin/mpeg.cpp\
-plugins/bin/mz.cpp\
-plugins/bin/ne.cpp\
-plugins/bin/nlm386.cpp\
-plugins/bin/opharlap.cpp\
-plugins/bin/pe.cpp\
-plugins/bin/pharlap.cpp\
-plugins/bin/rdoff.cpp\
-plugins/bin/rdoff2.cpp\
-plugins/bin/realmedia.cpp\
-plugins/bin/sis.cpp\
-plugins/bin/sisx.cpp\
-plugins/bin/wav.cpp\
-plugins/binmode.cpp\
-plugins/disasm.cpp\
-plugins/hexmode.cpp\
-plugins/textmode.cpp\
-plugins/nls/russian.cpp\
-plugins/disasm/null_da.cpp\
-plugins/disasm/arm/arm.cpp\
-plugins/disasm/arm/arm16.cpp\
-plugins/disasm/arm/arm32.cpp\
-plugins/disasm/avr/avr.cpp\
-plugins/disasm/ppc/ppc.cpp\
-plugins/disasm/java/java.cpp\
-plugins/disasm/ix86/ix86.cpp\
-plugins/disasm/ix86/ix86_fpu.cpp\
-plugins/disasm/ix86/ix86_fun.cpp
+tstrings.cpp
 
 OBJS=$(SRCS:.cpp=.o)
 

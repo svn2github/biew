@@ -75,7 +75,7 @@ static unsigned char *CurrStrLenBuff = NULL;
 static unsigned long *PrevStrLenAddr = NULL;
 static char          LastPrevLen;
 static char          PrevStrCount = 0;
-static char *        disCodeBuffer = NULL,*disCodeBuf2 = NULL;
+static char *        disCodeBuffer = NULL;
 static char *        disCodeBufPredict = NULL;
 static int           disMaxCodeLen;
 
@@ -744,7 +744,6 @@ static void __FASTCALL__ disTerm( void )
   delete PrevStrLenAddr;
   delete dis_comments;
   delete disCodeBuffer;
-  delete disCodeBuf2;
   delete disCodeBufPredict;
 }
 
@@ -882,11 +881,9 @@ static void __NEAR__ __FASTCALL__ disAcceptActions( void )
   disMaxCodeLen = activeDisasm->max_insn_len();
   if(disCodeBuffer) delete disCodeBuffer;
   disCodeBuffer = new char [disMaxCodeLen];
-  if(disCodeBuf2) delete disCodeBuf2;
-  disCodeBuf2 = new char [disMaxCodeLen];
   if(disCodeBufPredict) delete disCodeBufPredict;
   disCodeBufPredict = new char [disMaxCodeLen*PREDICT_DEPTH];
-  if(!(disCodeBuffer && disCodeBuf2 && disCodeBufPredict))
+  if(!(disCodeBuffer && disCodeBufPredict))
   {
     MemOutBox("Disassembler initialization");
     exit(EXIT_FAILURE);
