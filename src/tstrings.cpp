@@ -20,7 +20,7 @@
 
 const char msgAboutText[] =
 "Multiplatform portable Binary EYE (aka viewer)\n"
-"with built-in x86/i386/Amd64/AVX/FMA/XOP, Java\n"
+"with built-in x86/i386/Amd64/AVX2/FMA/XOP,Java\n"
 "AVR,ARM/XScale,PPC-64 disassemblers and editor\n"
 "for bin-hex-disas modes. Highlights opcodes\n"
 "and supports multiple executable structures.\n";

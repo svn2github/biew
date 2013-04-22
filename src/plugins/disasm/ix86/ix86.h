@@ -162,6 +162,7 @@ typedef void (__FASTCALL__*ix86_method)(char *encode_str,ix86Param *);
 #define IX86_CPU1086	0x0000000AUL
 #define IX86_CPU1186	0x0000000BUL
 #define IX86_CPU1286	0x0000000CUL
+#define IX86_CPU1386	0x0000000CUL
 #define IX86_CPUMASK	0x000000FFUL
 
 #define IX86_P2		IX86_CPU686
@@ -174,6 +175,7 @@ typedef void (__FASTCALL__*ix86_method)(char *encode_str,ix86Param *);
 /* Xeon5200 processor (SSE4)*/
 #define IX86_P7		IX86_CPU1186
 #define IX86_P8		IX86_CPU1286
+#define IX86_P9		IX86_CPU1386
 
 #define K64_ATHLON	0x00000000UL
 #define K64_GEODE	0x00000000UL
@@ -196,11 +198,13 @@ typedef void (__FASTCALL__*ix86_method)(char *encode_str,ix86Param *);
 #define INSN_FPU	0x00001000UL /* insn works with fpu registers */
 #define INSN_MMX	0x00002000UL /* insn works with mmx registers */
 #define INSN_SSE	0x00004000UL /* insn works with sse registers */
-#define INSN_AVX	0x0000C000UL /* insn works with avx registers */
+#define INSN_AVX	0x00008000UL /* insn works with avx registers */
 
 #define INSN_VEXMASK		0x000F0000UL
 #define INSN_VEX_V		0x00010000UL /* means insns use VVVV register extension from VEX prefix*/
 #define INSN_VEXW_AS_SWAP	0x00020000UL /* means use VEX.W register to swap sources */
+#define INSN_VEXW_AS_SIZE	0x00040000UL /* means use VEX.W register as double size */
+#define INSN_VEX_VSIB		0x00080000UL /* means use V-SIB memory access */
 
 #define INSN_FLAGS_MASK	0xFFF00000UL
 #define INSN_LOAD	0x00000000UL /* means direction: OPCODE reg,[mem] */
@@ -340,6 +344,7 @@ extern void   __FASTCALL__ arg_cpu_modREGrm(char * str,ix86Param *DisP); /* CRC3
 extern void   __FASTCALL__ arg_cpu_mod_rm(char* str,ix86Param *DisP);
 extern void   __FASTCALL__ arg_cpu_mod_rm_imm(char *str,ix86Param *DisP);
 extern void   __FASTCALL__ arg_cpu_modregrm_imm(char *str,ix86Param *DisP);
+extern void   __FASTCALL__ arg_cpu_modregrm_imm8(char *str,ix86Param *DisP);
 extern void   __FASTCALL__ arg_offset(char *str,ix86Param *);
 extern void   __FASTCALL__ arg_segoff(char *str,ix86Param *);
 extern void   __FASTCALL__ arg_insnreg(char *str,ix86Param *); /* reg is part of insn */
@@ -400,6 +405,8 @@ extern void   __FASTCALL__ ix86_ArgMovYX(char *str,ix86Param *);
 extern void   __FASTCALL__ arg_simd_cmp(char *str,ix86Param *DisP);
 extern void   __FASTCALL__ arg_simd_clmul(char *str,ix86Param *DisP);
 extern void   __FASTCALL__ arg_xop_cmp(char *str,ix86Param *DisP);
+extern void   __FASTCALL__ ix86_ArgBm1Grp(char *str,ix86Param *);
+extern void   __FASTCALL__ ix86_ArgFsGsBaseGrp(char *str,ix86Param *);
 
 
 extern void   __FASTCALL__ ix86_VMX(char *str,ix86Param *);

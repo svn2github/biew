@@ -60,7 +60,7 @@ OBJS=$(SRCS:.cpp=.o)
 HLP_SUBDIRS=tools/beyehlp tools/lzss
 DO_HELP = @ for i in $(HLP_SUBDIRS); do $(MAKE) -C $$i $@ || exit; done
 
-all:     $(SUBDIRS) $(TARGET)
+all:     $(SUBDIRS) $(OBJS) $(TARGET)
 
 .PHONY: subdirs $(SUBDIRS)
 

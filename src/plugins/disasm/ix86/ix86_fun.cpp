@@ -67,6 +67,7 @@ static inline unsigned ix86_calcModifier(ix86Param* DisP,unsigned w) {
 
 static const char * __FASTCALL__ k64_getREG(ix86Param*DisP,unsigned char reg,bool w,bool rex, bool use_qregs)
 {
+ if(x86_Bitness!=DAB_USE64) use_qregs=false;
  if((DisP->mode&MOD_SSE)) {
     const char **k64_xmm_regs;
     unsigned ridx;
@@ -325,7 +326,9 @@ static void __NEAR__ __FASTCALL__ getSIBRegs(ix86Param*DisP,char * base,char * s
 	 wrex = HAS_67_IN64?0:1;
 	 brex = REX_X(K64_REX);
      }
+     if(DisP->insn_flags & INSN_VEX_VSIB) DisP->mode |= MOD_SSE;
      strcpy(_index,k64_getREG(DisP,ind,true,brex,wrex));
+     if(DisP->insn_flags & INSN_VEX_VSIB) DisP->mode &= ~MOD_SSE;
   }
   if(bas == 5 && *mod == 0) { base[0] = 0; *mod = 2; }
   else
@@ -734,6 +737,12 @@ void  __FASTCALL__ arg_cpu_modregrm_imm(char *str,ix86Param *DisP)
 {
   arg_cpu_modregrm(str,DisP);
   ix86_CStile(DisP,str,ix86_GetDigitTile(DisP,(DisP->insn_flags&IMM_BYTE)?false:true,0,DisP->codelen));
+}
+
+void  __FASTCALL__ arg_cpu_modregrm_imm8(char *str,ix86Param *DisP)
+{
+  arg_cpu_modregrm(str,DisP);
+  ix86_CStile(DisP,str,ix86_GetDigitTile(DisP,false,0,DisP->codelen));
 }
 
 void __FASTCALL__ arg_cpu_modsegrm(char * str,ix86Param *DisP)
@@ -1589,6 +1598,37 @@ void __FASTCALL__ ix86_ArgKatmaiGrp2(char *str,ix86Param *DisP)
    arg_cpu_mod_rm(str,DisP);
 }
 
+static const char *ix86_Bm1GrpNames[] = { "???", "blsr", "blmsk", "blsi", "???", "???", "???", "???" };
+void __FASTCALL__ ix86_ArgBm1Grp(char *str,ix86Param *DisP)
+{
+    unsigned char rm = MODRM_RM(DisP->RealCmd[1]);
+    unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
+    unsigned char mod = MODRM_MOD(DisP->RealCmd[1]);
+    bool brex,wrex;
+    strcpy(str,ix86_Bm1GrpNames[cop]);
+    TabSpace(str,TAB_POS);
+    DisP->codelen++;
+    brex = REX_B(DisP->REX);
+    wrex = REX_W(DisP->REX);
+    strcat(str,k64_getREG(DisP,(~(DisP->VEX_vlp>>3))&0x0F,true,brex,wrex));
+    strcat(str,",");
+    strcat(str,ix86_getModRM(true,mod,rm,DisP));
+}
+
+static const char *ix86_FsGsBaseNames[] = { "rdfsbase", "rdgsbase", "wrfsbase", "wrgsbase", "???", "???", "???", "???" };
+void   __FASTCALL__ ix86_ArgFsGsBaseGrp(char *str,ix86Param *DisP)
+{
+    unsigned char rm = MODRM_RM(DisP->RealCmd[1]);
+    unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
+    unsigned char mod = MODRM_MOD(DisP->RealCmd[1]);
+    bool brex,wrex;
+    strcpy(str,ix86_FsGsBaseNames[cop]);
+    TabSpace(str,TAB_POS);
+    DisP->codelen++;
+    brex = REX_B(DisP->REX);
+    wrex = REX_W(DisP->REX);
+    strcat(str,k64_getREG(DisP,rm,true,brex,wrex));
+}
 void __FASTCALL__  arg_simd_imm8(char *str,ix86Param *DisP)
 {
     arg_simd(str,DisP);
