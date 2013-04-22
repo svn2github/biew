@@ -1734,6 +1734,13 @@
 ³ vxorps       VEX[0F_57]             Bitwise Logical XOR for F32         ³
 ³ vzeroall     VEX[0F_77]             Zero All YMM registers              ³
 ³ veroupper    VEX[0F_77]             Zero Upper bits of YMM registers    ³
+ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ BMI1 ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³ andn         VEX[0F_38_F2]          Logocal AND NOT                     ³
+³ bextr        VEX[0F_38_F7]          Bit field extract                   ³
+³ blsi         VEX[0F_38_F3/3]        Extract Lowest set isolated bit     ³
+³ blmsk        VEX[0F_38_F3/2]        Get mask up to lowest set bit       ³
+³ blsr         VEX[0F_38_F3/1]        Reset lowest set bit                ³
+³ tzcnt        VEX[F3_0F_BC]          Count trailing zero bits            ³
 ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ FMA ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
 ³ vfmadd132pd  VEX.W1[66_0F_38_98]    Fused Multiply-Add of packed F64    ³
 ³ vfmadd213pd  VEX.W1[66_0F_38_A8]    Fused Multiply-Add of packed F64    ³
@@ -1795,6 +1802,42 @@
 ³ vfnmsub132ss VEX.W0[66_0F_38_9F]    Fused Neg Multiply-Sub of scalar F32³
 ³ vfnmsub213ss VEX.W0[66_0F_38_AF]    Fused Neg Multiply-Sub of scalar F32³
 ³ vfnmsub231ss VEX.W0[66_0F_38_BF]    Fused Neg Multiply-Sub of scalar F32³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³                      %BHaswell instruction mnemonics%b                      ³
+³ AVX2 extends %IIntel AVX%i by promoting most of the 128-bit SIMD integer    ³
+³ instructions with 256-bit numeric processor capabilities.               ³
+ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³ invpcid      [66_0F_38_82]          Invalidate processor context id     ³
+³ xsaveopt     [0F_AE/6]              Extended save optimization          ³
+ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ BMI2 ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³ bzhi         VEX[0F_38_F5]          Zero high-bits from position        ³
+³ mulx         VEX[F2_0F_38_F6]       Unsigned multiple wo affecting flags³
+³ pdep         VEX[F2_0F_38_F5]       Parallel bits deposit               ³
+³ pext         VEX[F3_0F_38_F5]       Parallel bits extract               ³
+³ rorx         VEX[F2_0F_3A_F0]       ROR without affecting flags         ³
+³ sarx         VEX[F3_0F_38_F7]       SAR without affecting flags         ³
+³ shlx         VEX[66_0F_38_F7]       SHL without affecting flags         ³
+³ shrx         VEX[F2_0F_38_F7]       SHR without affecting flags         ³
+ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ AVX2 ÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+³ vpblendd     VEX[66_0F_3A_02]       Blend packed Dwords                 ³
+³ vpbroadcat   VEX[66_0F_38_78]       Broadcast integer data              ³
+³ vpermd       VEX[66_0F_38_36]       Full doublewords element permutation³
+³ vpermpd      VEX[66_0F_3A_01]       Permute double-precision FP-elements³
+³ vpermsd      VEX[66_0F_38_16]       Permute single-precision FP-elements³
+³ vpermq       VEX[66_0F_3A_00]       QWords elements permutation         ³
+³ vperm2i128   VEX[66_0F_3A_46]       Permute integer values              ³
+³ vextracti128 VEX[66_0F_3A_39]       Extract packed integer values       ³
+³ vinserti128  VEX[66_0F_3A_38]       Insert packed integer values        ³
+³ vpmaskmovd(q)VEX[66_0F_38_8C]       Conditional SIMD int-packed load    ³
+³ vpmaskmovd(q)VEX[66_0F_38_8E]       Conditional SIMD int-packed store   ³
+³ vpsllvd(q)   VEX[66_0F_38_47]       Variable bit-shift left logical     ³
+³ vpsravd      VEX[66_0F_38_46]       Variable bit-shift right arithmetic ³
+³ vpsrlvd(q)   VEX[66_0F_38_45]       Variable bit-shift right logical    ³
+³ vgatherdpd(s)VEX[66_0F_38_92]       Gather packed DP-FP values using idx³
+³ vgatherqpd(s)VEX[66_0F_38_93]       Gather packed DP-FP values using idx³
+³ vpgatherdd(q)VEX[66_0F_38_90]       Gather packed Dword values using idx³
+³ vpgatherqd(q)VEX[66_0F_38_91]       Gather packed Dword values using idx³
 ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 ³                     %BBulldozer instruction mnemonics%b                     ³
