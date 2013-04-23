@@ -17,6 +17,7 @@
 #ifndef __RDOFF_INC
 #define __RDOFF_INC
 
+namespace beye {
 #ifndef __SYS_DEP_H
 #include "_sys_dep.h"
 #endif
@@ -37,5 +38,5 @@ typedef struct tag_rdoff2_Header
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
 #endif
-
+} // namespace beye
 #endif

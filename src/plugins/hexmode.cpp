@@ -37,6 +37,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 static unsigned virtWidthCorr=0;
 
 typedef char *(__NEAR__ __FASTCALL__ *hexFunc)(__filesize_t);
@@ -461,11 +462,4 @@ REGISTRY_MODE hexMode =
   NULL,
   NULL
 };
-
-
-
-
-
-
-
-
+} // namespace beye

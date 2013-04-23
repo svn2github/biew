@@ -37,6 +37,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
 
+namespace beye {
 union LX_LE lxe;
 int LXType;
 
@@ -1218,3 +1219,4 @@ REGISTRY_BIN lxTable =
   NULL,
   NULL
 };
+} // namespace beye

@@ -48,6 +48,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 extern REGISTRY_DISASM ix86_Disasm;
 extern REGISTRY_DISASM Null_Disasm;
 extern REGISTRY_DISASM AVR_Disasm;
@@ -1348,13 +1349,4 @@ int __FASTCALL__ disAppendFAddr(char * str,__fileoff_t ulShift,__fileoff_t disti
  bmSeek(fpos,BM_SEEK_SET);
  return appended;
 }
-
-
-
-
-
-
-
-
-
-
+} // namespace beye

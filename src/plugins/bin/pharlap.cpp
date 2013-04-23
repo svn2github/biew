@@ -34,6 +34,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 static newPharLap nph;
 
 static BFile* pl_cache = &bNull;
@@ -308,3 +309,4 @@ REGISTRY_BIN PharLapTable =
   NULL,
   NULL
 };
+} // namespace beye

@@ -25,6 +25,7 @@ using namespace beye;
 #include "bconsole.h"
 #include "beyeutil.h"
 
+namespace beye {
 #define TXT_CURRCP      0
 #define TXT_CP866       1
 #define TXT_WIN1251     2
@@ -455,5 +456,5 @@ REGISTRY_NLS RussianNLS =
   NULL,
   NULL
 };
-
+} // namespace beye
 

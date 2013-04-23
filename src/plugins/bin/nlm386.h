@@ -21,6 +21,7 @@
 #include "_sys_dep.h"
 #endif
 
+namespace beye {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack(1)
 #endif
@@ -188,6 +189,5 @@ typedef uint16_t	Nlm64_Half;
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
 #endif
-
-
+} // namespace beye
 #endif

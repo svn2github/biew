@@ -23,6 +23,7 @@ using namespace beye;
 #include "reg_form.h"
 #include "plugins/disasm.h"
 
+namespace beye {
 static bool  __FASTCALL__ bin_check_fmt( void ) { return true; }
 static void __FASTCALL__ bin_init_fmt( void ) {}
 static void __FASTCALL__ bin_destroy_fmt(void) {}
@@ -50,3 +51,4 @@ REGISTRY_BIN binTable =
   NULL,
   NULL
 };
+} // namespace beye

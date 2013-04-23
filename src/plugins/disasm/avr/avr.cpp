@@ -35,6 +35,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
 
+namespace beye {
 #define _(STR)     STR
 #define _MAX(A,B)  ( (A) > (B) ? (A) : (B) )
 
@@ -597,3 +598,4 @@ REGISTRY_DISASM AVR_Disasm =
   NULL,                                  /* plugin setting reader (from .ini) */
   NULL                                   /* plugin setting writer (to .ini) */
 };
+} // namespace beye

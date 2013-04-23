@@ -35,6 +35,7 @@ using namespace beye;
 #include "plugins/bin/rdoff.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 struct rdoff_ImpName
 {
   unsigned short lsegno;
@@ -781,3 +782,4 @@ REGISTRY_BIN rdoffTable =
   NULL,
   NULL
 };
+} // namespace beye

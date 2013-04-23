@@ -30,6 +30,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 static TWindow * __NEAR__ __FASTCALL__ CreatePanelNF(tAbsCoord x1,tAbsCoord y1,tAbsCoord x2,tAbsCoord y2)
 {
  TWindow *win;
@@ -86,5 +87,5 @@ REGISTRY_SYSINFO AsciiTable =
   NULL,
   NULL
 };
-
+} // namespace beye
 

@@ -30,8 +30,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 namespace beye {
-    extern char beye_scheme_name[];
-} // namespace beye
+extern char beye_scheme_name[];
 
 static void ShowConsInfo( void )
 {
@@ -94,6 +93,4 @@ REGISTRY_SYSINFO ConsoleInfo =
   NULL,
   NULL
 };
-
-
-
+} // namespace beye

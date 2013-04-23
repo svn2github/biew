@@ -30,6 +30,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
 
+namespace beye {
 #define MKTAG(a, b, c, d) (a | (b << 8) | (c << 16) | (d << 24))
 
 static bool  __FASTCALL__ rm_check_fmt( void )
@@ -70,3 +71,4 @@ REGISTRY_BIN rmTable =
   NULL,
   NULL
 };
+} // namespace beye

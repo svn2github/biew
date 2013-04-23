@@ -32,6 +32,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 static oldPharLap oph;
 
 static bool __FASTCALL__ IsOldPharLap( void )
@@ -140,3 +141,4 @@ REGISTRY_BIN OldPharLapTable =
   NULL,
   NULL
 };
+} // namespace beye

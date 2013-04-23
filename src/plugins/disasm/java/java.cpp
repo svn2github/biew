@@ -32,6 +32,7 @@ using namespace beye;
 #include "reg_form.h"
 #include "libbeye/file_ini.h"
 
+namespace beye {
 #define TAB_POS 10
 
 typedef struct java_codes_s
@@ -658,7 +659,4 @@ REGISTRY_DISASM Java_Disasm =
   javaReadIni,
   javaWriteIni
 };
-
-
-
-
+} // namespace beye

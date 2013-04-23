@@ -34,6 +34,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "plugins/bin/mz.h"
 
+namespace beye {
 static MZHEADER mz;
 static unsigned long HeadSize;
 
@@ -360,3 +361,4 @@ REGISTRY_BIN mzTable =
   NULL,
   NULL
 };
+} // namespace beye

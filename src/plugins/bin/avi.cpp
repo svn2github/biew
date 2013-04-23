@@ -31,6 +31,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
 
+namespace beye {
 typedef struct
 {
     DWORD		dwMicroSecPerFrame;	// frame display rate (or 0L)
@@ -357,3 +358,4 @@ REGISTRY_BIN aviTable =
   NULL,
   NULL
 };
+} // namespace beye

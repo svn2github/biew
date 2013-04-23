@@ -31,6 +31,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
 
+namespace beye {
 static bool  __FASTCALL__ jpeg_check_fmt( void )
 {
     unsigned long val;
@@ -73,3 +74,4 @@ REGISTRY_BIN jpegTable =
   NULL,
   NULL
 };
+} // namespace beye

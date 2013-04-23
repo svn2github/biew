@@ -37,6 +37,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 #define CONSTANT_UTF8		1
 #define CONSTANT_INTEGER	3
 #define CONSTANT_FLOAT		4
@@ -985,3 +986,4 @@ REGISTRY_BIN jvmTable =
   NULL,
   NULL
 };
+} // namespace beye

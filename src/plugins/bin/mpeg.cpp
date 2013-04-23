@@ -30,6 +30,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
 
+namespace beye {
 /*
  headers:
  0x00000100		- picture_start_code
@@ -90,3 +91,4 @@ REGISTRY_BIN mpegTable =
   NULL,
   NULL
 };
+} // namespace beye

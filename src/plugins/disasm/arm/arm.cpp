@@ -31,6 +31,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/file_ini.h"
 
+namespace beye {
 static char *outstr;
 
 static int armBitness=DAB_USE32;
@@ -267,7 +268,4 @@ REGISTRY_DISASM ARM_Disasm =
   armReadIni,
   armWriteIni
 };
-
-
-
-
+} // namespace beye

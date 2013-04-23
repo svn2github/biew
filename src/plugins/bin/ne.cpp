@@ -39,6 +39,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 static NEHEADER ne;
 
 static BFile* ne_cache = &bNull;
@@ -1547,3 +1548,4 @@ REGISTRY_BIN neTable =
   NULL,
   NULL
 };
+} // namespace beye

@@ -22,10 +22,10 @@ using namespace beye;
 #include "beyeutil.h"
 #include "reg_form.h"
 
+namespace beye {
 extern REGISTRY_TOOL DigitalConvertor;
 extern REGISTRY_TOOL Calculator;
 
-namespace beye {
 static REGISTRY_TOOL *toolTable[] =
 {
   &DigitalConvertor,

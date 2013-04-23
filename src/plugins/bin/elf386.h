@@ -30,7 +30,7 @@
 #ifndef __SYS_DEP_H
 #include "_sys_dep.h"
 #endif
-
+namespace beye {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack(1)
 #endif
@@ -1313,5 +1313,5 @@ typedef struct
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
 #endif
-
+} // namespace beye
 #endif

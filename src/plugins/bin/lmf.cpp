@@ -36,6 +36,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 #define MAXREC			200
 #define MINREC			20
 #define MAXSEG			50
@@ -518,3 +519,4 @@ REGISTRY_BIN lmfTable=
 	NULL,
 	NULL
 };
+} // namespace beye

@@ -25,6 +25,7 @@
 #include "bbio.h"
 #endif
 
+namespace beye {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack(1)
 #endif
@@ -119,5 +120,5 @@ extern bool __FASTCALL__ RNamesReadItems(BFile&,memArray *,unsigned,__filesize_t
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
 #endif
-
+} // namespace beye
 #endif

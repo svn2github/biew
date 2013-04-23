@@ -32,6 +32,7 @@ using namespace beye;
 #include "codeguid.h"
 #include "reg_form.h"
 
+namespace beye {
 #define MODRM_REG(X) (((X)&0x38)>>3)
 #define MODRM_COP(X) MODRM_REG(X)
 #define MODRM_MOD(X) (((X)&0xC0)>>6)
@@ -1833,4 +1834,4 @@ void __FASTCALL__ ix86_3dNowPrefetchGrp(char *str,ix86Param *DisP)
    TabSpace(str,TAB_POS);
    arg_cpu_mod_rm(str,DisP);
 }
-
+} // namespace beye

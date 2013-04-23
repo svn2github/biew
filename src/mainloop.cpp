@@ -32,10 +32,9 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
 
+namespace beye {
 extern REGISTRY_BIN mzTable;
 extern unsigned strmaxlen;
-
-namespace beye {
 extern __filesize_t LastOffset;
 
 

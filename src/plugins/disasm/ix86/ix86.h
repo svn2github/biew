@@ -25,6 +25,7 @@
 #include "libbeye/libbeye.h"
 #endif
 
+namespace beye {
 #define TAB_POS 10
 #define TILE_SAFE 4000
 
@@ -325,94 +326,91 @@ extern const char * ix86_3dPrefetchGrp[];
 
 extern const char * ix86_KatmaiGr2Names[];
 
-extern const ix86_ExOpcodes* __FASTCALL__ ix86_prepare_flags(const ix86_ExOpcodes *extable,ix86Param *DisP,unsigned char *code,unsigned char *codelen);
-extern char * __FASTCALL__ ix86_getModRM(bool w,unsigned char mod,unsigned char rm,ix86Param *DisP);
-extern void   __FASTCALL__ ix86_setModifier(char *str,const char *modf);
-extern char * __FASTCALL__ ix86_CStile(ix86Param *DisP,char *str,const char *arg2);
+    const ix86_ExOpcodes* __FASTCALL__ ix86_prepare_flags(const ix86_ExOpcodes *extable,ix86Param *DisP,unsigned char *code,unsigned char *codelen);
+    char * __FASTCALL__ ix86_getModRM(bool w,unsigned char mod,unsigned char rm,ix86Param *DisP);
+    void   __FASTCALL__ ix86_setModifier(char *str,const char *modf);
+    char * __FASTCALL__ ix86_CStile(ix86Param *DisP,char *str,const char *arg2);
 
 /* methods */
 
-extern void   __FASTCALL__ ix86_ArgES(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ArgDS(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ArgSS(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ArgCS(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ArgFS(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ArgGS(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgES(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgDS(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgSS(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgCS(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgFS(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgGS(char *str,ix86Param *);
 
-extern void   __FASTCALL__ arg_cpu_modregrm(char * str,ix86Param *DisP);
-extern void   __FASTCALL__ arg_cpu_modREGrm(char * str,ix86Param *DisP); /* CRC32 */
-extern void   __FASTCALL__ arg_cpu_mod_rm(char* str,ix86Param *DisP);
-extern void   __FASTCALL__ arg_cpu_mod_rm_imm(char *str,ix86Param *DisP);
-extern void   __FASTCALL__ arg_cpu_modregrm_imm(char *str,ix86Param *DisP);
-extern void   __FASTCALL__ arg_cpu_modregrm_imm8(char *str,ix86Param *DisP);
-extern void   __FASTCALL__ arg_offset(char *str,ix86Param *);
-extern void   __FASTCALL__ arg_segoff(char *str,ix86Param *);
-extern void   __FASTCALL__ arg_insnreg(char *str,ix86Param *); /* reg is part of insn */
-extern void   __FASTCALL__ arg_insnreg_imm(char *str,ix86Param *);
-extern void   __FASTCALL__ arg_cpu_modsegrm(char * str,ix86Param *DisP);
-extern void   __FASTCALL__ arg_r0_imm(char *str,ix86Param *);
-extern void   __FASTCALL__ arg_r0rm(char *str,ix86Param *);
-extern void   __FASTCALL__ arg_r0mem(char *str,ix86Param *DisP);
-extern void   __FASTCALL__ arg_imm(char *str,ix86Param *);
-extern void   __FASTCALL__ arg_imm8(char *str,ix86Param *);
-extern void   __FASTCALL__ arg_imm16(char *str,ix86Param *);
-extern void   __FASTCALL__ arg_imm16_imm8(char *str,ix86Param *);
+    void   __FASTCALL__ arg_cpu_modregrm(char * str,ix86Param *DisP);
+    void   __FASTCALL__ arg_cpu_modREGrm(char * str,ix86Param *DisP); /* CRC32 */
+    void   __FASTCALL__ arg_cpu_mod_rm(char* str,ix86Param *DisP);
+    void   __FASTCALL__ arg_cpu_mod_rm_imm(char *str,ix86Param *DisP);
+    void   __FASTCALL__ arg_cpu_modregrm_imm(char *str,ix86Param *DisP);
+    void   __FASTCALL__ arg_cpu_modregrm_imm8(char *str,ix86Param *DisP);
+    void   __FASTCALL__ arg_offset(char *str,ix86Param *);
+    void   __FASTCALL__ arg_segoff(char *str,ix86Param *);
+    void   __FASTCALL__ arg_insnreg(char *str,ix86Param *); /* reg is part of insn */
+    void   __FASTCALL__ arg_insnreg_imm(char *str,ix86Param *);
+    void   __FASTCALL__ arg_cpu_modsegrm(char * str,ix86Param *DisP);
+    void   __FASTCALL__ arg_r0_imm(char *str,ix86Param *);
+    void   __FASTCALL__ arg_r0rm(char *str,ix86Param *);
+    void   __FASTCALL__ arg_r0mem(char *str,ix86Param *DisP);
+    void   __FASTCALL__ arg_imm(char *str,ix86Param *);
+    void   __FASTCALL__ arg_imm8(char *str,ix86Param *);
+    void   __FASTCALL__ arg_imm16(char *str,ix86Param *);
+    void   __FASTCALL__ arg_imm16_imm8(char *str,ix86Param *);
 
-extern void   __FASTCALL__ ix86_ArgOp1(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ArgOp2(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ShOp2(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ShOp1(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ShOpCL(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ArgGrp1(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ArgGrp2(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_InOut(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_FPUCmd(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgOp1(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgOp2(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ShOp2(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ShOp1(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ShOpCL(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgGrp1(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgGrp2(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_InOut(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_FPUCmd(char *str,ix86Param *);
 
-extern void   __FASTCALL__ ix86_ExOpCodes(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_3dNowOpCodes(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_3dNowPrefetchGrp(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_BitGrp(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ExOpCodes(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_3dNowOpCodes(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_3dNowPrefetchGrp(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_BitGrp(char *str,ix86Param *);
 
-extern void   __FASTCALL__ ix86_ArgExGr0(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ArgExGr1(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ArgMovXRY(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_DblShift(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgExGr0(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgExGr1(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgMovXRY(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_DblShift(char *str,ix86Param *);
 
-extern void   __FASTCALL__ arg_emms(char *str,ix86Param *);
-extern void   __FASTCALL__ arg_simd(char *str,ix86Param *);
-extern void   __FASTCALL__ arg_simd_imm8(char *str,ix86Param *);
-extern void   __FASTCALL__ arg_simd_xmm0(char *str,ix86Param *);
-extern void   __FASTCALL__ arg_simd_regrm(char *str,ix86Param *);
-extern void   __FASTCALL__ arg_simd_regrm_imm8_imm8(char *str,ix86Param *);
-extern void   __FASTCALL__ arg_simd_rm_imm8_imm8(char *str,ix86Param *);
-extern void   __FASTCALL__ bridge_sse_mmx(char *str,ix86Param* DisP);
-extern void   __FASTCALL__ bridge_simd_cpu(char *str,ix86Param* DisP);
-extern void   __FASTCALL__ bridge_simd_cpu_imm8(char *str,ix86Param* DisP);
-extern void   __FASTCALL__ arg_fma(char *str,ix86Param *);
-extern void   __FASTCALL__ arg_fma4(char *str,ix86Param *);
-extern void   __FASTCALL__ arg_fma4_imm8(char *str,ix86Param *DisP);
+    void   __FASTCALL__ arg_emms(char *str,ix86Param *);
+    void   __FASTCALL__ arg_simd(char *str,ix86Param *);
+    void   __FASTCALL__ arg_simd_imm8(char *str,ix86Param *);
+    void   __FASTCALL__ arg_simd_xmm0(char *str,ix86Param *);
+    void   __FASTCALL__ arg_simd_regrm(char *str,ix86Param *);
+    void   __FASTCALL__ arg_simd_regrm_imm8_imm8(char *str,ix86Param *);
+    void   __FASTCALL__ arg_simd_rm_imm8_imm8(char *str,ix86Param *);
+    void   __FASTCALL__ bridge_sse_mmx(char *str,ix86Param* DisP);
+    void   __FASTCALL__ bridge_simd_cpu(char *str,ix86Param* DisP);
+    void   __FASTCALL__ bridge_simd_cpu_imm8(char *str,ix86Param* DisP);
+    void   __FASTCALL__ arg_fma(char *str,ix86Param *);
+    void   __FASTCALL__ arg_fma4(char *str,ix86Param *);
+    void   __FASTCALL__ arg_fma4_imm8(char *str,ix86Param *DisP);
 
-extern void   __FASTCALL__ ix86_ArgMMXGr1(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ArgMMXGr2(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ArgMMXGr3(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ArgXMMXGr1(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ArgXMMXGr2(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ArgXMMXGr3(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgMMXGr1(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgMMXGr2(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgMMXGr3(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgXMMXGr1(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgXMMXGr2(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgXMMXGr3(char *str,ix86Param *);
 
-extern void   __FASTCALL__ ix86_ArgKatmaiGrp1(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ArgKatmaiGrp2(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ArgMovYX(char *str,ix86Param *);
-extern void   __FASTCALL__ arg_simd_cmp(char *str,ix86Param *DisP);
-extern void   __FASTCALL__ arg_simd_clmul(char *str,ix86Param *DisP);
-extern void   __FASTCALL__ arg_xop_cmp(char *str,ix86Param *DisP);
-extern void   __FASTCALL__ ix86_ArgBm1Grp(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_ArgFsGsBaseGrp(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgKatmaiGrp1(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgKatmaiGrp2(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgMovYX(char *str,ix86Param *);
+    void   __FASTCALL__ arg_simd_cmp(char *str,ix86Param *DisP);
+    void   __FASTCALL__ arg_simd_clmul(char *str,ix86Param *DisP);
+    void   __FASTCALL__ arg_xop_cmp(char *str,ix86Param *DisP);
+    void   __FASTCALL__ ix86_ArgBm1Grp(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_ArgFsGsBaseGrp(char *str,ix86Param *);
 
-
-extern void   __FASTCALL__ ix86_VMX(char *str,ix86Param *);
-extern void   __FASTCALL__ ix86_0FVMX(char *str,ix86Param *DisP);
-extern void   __FASTCALL__ ix86_660FVMX(char *str,ix86Param *DisP);
-
+    void   __FASTCALL__ ix86_VMX(char *str,ix86Param *);
+    void   __FASTCALL__ ix86_0FVMX(char *str,ix86Param *DisP);
+    void   __FASTCALL__ ix86_660FVMX(char *str,ix86Param *DisP);
+} // namespace beye
 #endif
-
-

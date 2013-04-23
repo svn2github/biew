@@ -28,6 +28,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 static int __NEAR__ __FASTCALL__ GetFullBin(uintmax_t value,char * buff)
 {
  char byte,*b;
@@ -250,3 +251,4 @@ REGISTRY_TOOL DigitalConvertor =
   NULL,
   NULL
 };
+} // namespace beye

@@ -35,6 +35,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 extern BFile* lx_cache;
 
 static __filesize_t __FASTCALL__ ShowNewHeaderLE( void )
@@ -348,3 +349,4 @@ REGISTRY_BIN leTable =
   NULL,
   NULL
 };
+} // namespace beye

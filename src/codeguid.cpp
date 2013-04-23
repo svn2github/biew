@@ -34,9 +34,9 @@ using namespace beye;
 #include "libbeye/twin.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 extern int DisasmCurrLine;
 extern bool DisasmPrepareMode;
-namespace beye {
 #define BACK_ADDR_SIZE 256
 #define GO_ADDR_SIZE   37
 

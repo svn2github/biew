@@ -37,6 +37,7 @@ using namespace beye;
 #include "reg_form.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 typedef struct tag_shash_s
 {
     unsigned start;
@@ -78,11 +79,9 @@ static struct tag_syntax_hl_s
 acontext_hl_t __HUGE__ *acontext=NULL; /* means active context*/
 unsigned long  acontext_num;
 
-namespace beye {
-    extern char beye_syntax_name[];
-    extern std::string ArgVector1;
-    extern char last_skin_error[];
-} // namespace beye
+extern char beye_syntax_name[];
+extern std::string ArgVector1;
+extern char last_skin_error[];
 
 static int HiLight = 1;
 static char detected_syntax_name[FILENAME_MAX+1] = "";
@@ -1324,9 +1323,4 @@ REGISTRY_MODE textMode =
   txtTerm,
   NULL
 };
-
-
-
-
-
-
+} // namespace beye

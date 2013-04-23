@@ -39,6 +39,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
 
+namespace beye {
 #define MAX_IX86_INSN_LEN 15
 
 const char ix86CloneSNames[4] = { 'i', 'a', 'c', 'v' };
@@ -6349,9 +6350,7 @@ static signed int active_assembler = -1;
 #ifndef HAVE_PCLOSE
 #define pclose(fp) fclose(fp)
 #endif
-namespace beye {
-    extern bool iniUseExtProgs;
-} // namespace beye
+extern bool iniUseExtProgs;
 
 static void __FASTCALL__ ix86Init( void )
 {
@@ -6602,11 +6601,4 @@ REGISTRY_DISASM ix86_Disasm =
   ix86ReadIni,
   ix86WriteIni
 };
-
-
-
-
-
-
-
-
+} // namespace beye

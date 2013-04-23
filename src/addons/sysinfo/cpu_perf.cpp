@@ -30,6 +30,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 static TWindow *pwnd;
 
 static void paint_prcnt(int n_prcnt)
@@ -91,4 +92,4 @@ REGISTRY_SYSINFO CPUPerformance =
   NULL,
   NULL
 };
-
+} // namespace beye

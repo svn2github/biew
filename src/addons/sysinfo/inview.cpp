@@ -27,6 +27,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 static void InputViewLoop( void )
 {
   TWindow * hwnd = CrtDlgWndnls(" Input viewer ",78,2);
@@ -65,4 +66,4 @@ REGISTRY_SYSINFO InputViewer =
   NULL,
   NULL
 };
-
+} // namespace beye

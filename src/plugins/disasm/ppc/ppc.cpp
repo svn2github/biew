@@ -33,6 +33,7 @@ using namespace beye;
 
 #include "ppc.h"
 
+namespace beye {
 static char *outstr;
 
 static int ppcBitness=DAB_USE32;
@@ -1688,7 +1689,4 @@ REGISTRY_DISASM PPC_Disasm =
   ppcReadIni,
   ppcWriteIni
 };
-
-
-
-
+} // namespace beye

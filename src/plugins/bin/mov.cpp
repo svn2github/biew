@@ -30,7 +30,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
-
+namespace beye {
 #define MOV_FOURCC(a,b,c,d) ((a<<24)|(b<<16)|(c<<8)|(d))
 
 static __filesize_t __FASTCALL__ mov_find_chunk(__filesize_t off,unsigned long id)
@@ -91,3 +91,4 @@ REGISTRY_BIN movTable =
   NULL,
   NULL
 };
+} // namespace beye

@@ -1,6 +1,7 @@
 #ifndef __MMIO
 #define __MMIO 1
 
+namespace beye {
 typedef unsigned long DWORD;
 typedef unsigned short WORD;
 typedef unsigned char BYTE;
@@ -66,5 +67,5 @@ typedef struct
 }wTagNames;
 extern wTagNames wtagNames[];
 extern const char *wtag_find_name(unsigned short wtag);
-
+} // namespace beye
 #endif

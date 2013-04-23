@@ -30,6 +30,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
 
+namespace beye {
 static bool  __FASTCALL__ bmp_check_fmt( void )
 {
     if(	bmReadByteEx(0,BM_SEEK_SET) == 'B' &&
@@ -101,3 +102,4 @@ REGISTRY_BIN bmpTable =
   NULL,
   NULL
 };
+} // namespace beye

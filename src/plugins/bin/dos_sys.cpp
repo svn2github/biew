@@ -30,6 +30,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "plugins/bin/dos_sys.h"
 
+namespace beye {
 static DOSDRIVER drv;
 
 static __filesize_t __FASTCALL__ ShowSysHeader( void )
@@ -136,3 +137,4 @@ REGISTRY_BIN dossysTable =
   NULL,
   NULL
 };
+} // namespace beye

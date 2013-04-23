@@ -25,6 +25,7 @@ using namespace beye;
 #include "reg_form.h"
 #include "plugins/disasm/ix86/ix86.h"
 
+namespace beye {
 extern char *ix86_appstr;
 
 static char * __NEAR__ __FASTCALL__ SetNameTab(char * str,const char * name)
@@ -530,4 +531,4 @@ void __FASTCALL__ ix86_FPUCmd(char * str,ix86Param *DisP)
 	   break;
  }
 }
-
+} // namespace beye

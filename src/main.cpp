@@ -52,6 +52,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
 
+namespace beye {
 extern REGISTRY_BIN binTable;
 extern REGISTRY_BIN rmTable;
 extern REGISTRY_BIN movTable;
@@ -82,14 +83,11 @@ extern REGISTRY_BIN lmfTable;
 extern REGISTRY_BIN mzTable;
 extern REGISTRY_BIN dossysTable;
 
-
 extern REGISTRY_MODE binMode;
 extern REGISTRY_MODE textMode;
 extern REGISTRY_MODE hexMode;
 extern REGISTRY_MODE disMode;
 
-
-namespace beye {
 extern char last_skin_error[];
 static volatile char antiviral_hole1[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 std::string ArgVector1;

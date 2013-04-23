@@ -30,6 +30,7 @@ using namespace beye;
 #include "plugins/bin/mmio.h"
 #include "plugins/disasm.h"
 
+namespace beye {
 struct SisHeader
 {
     unsigned long UID1;
@@ -166,3 +167,4 @@ REGISTRY_BIN sisTable =
   NULL,
   NULL
 };
+} // namespace beye

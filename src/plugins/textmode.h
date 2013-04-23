@@ -21,6 +21,7 @@
 #include "libbeye/file_ini.h"
 #endif
 
+namespace beye {
 typedef struct tag_REGISTRY_NLS
 {
   const char *   set_name;
@@ -34,10 +35,10 @@ typedef struct tag_REGISTRY_NLS
 }REGISTRY_NLS;
 
 /** Below describes function prototypes for small table conversations */
-extern void __FASTCALL__ txt_cvt_full(char * str,int size,const unsigned char *tmpl);
-extern void __FASTCALL__ txt_cvt_hi80(char * str,unsigned size,const unsigned char *tmpl);
-extern void __FASTCALL__ txt_cvt_lo80(char * str,unsigned size,const unsigned char *tmpl);
-
+    void __FASTCALL__ txt_cvt_full(char * str,int size,const unsigned char *tmpl);
+    void __FASTCALL__ txt_cvt_hi80(char * str,unsigned size,const unsigned char *tmpl);
+    void __FASTCALL__ txt_cvt_lo80(char * str,unsigned size,const unsigned char *tmpl);
+} // namespace beye
 #endif
 
 

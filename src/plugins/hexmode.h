@@ -21,9 +21,10 @@
 #include "libbeye/file_ini.h"
 #endif
 
-extern bool hexAddressResolv;
-extern bool __FASTCALL__ hexAddressResolution( void );
-extern void  __FASTCALL__ ReadIniAResolv( hIniProfile *ini );
-extern void  __FASTCALL__ WriteIniAResolv( hIniProfile *ini );
-
+namespace beye {
+    extern bool hexAddressResolv;
+    bool __FASTCALL__ hexAddressResolution( void );
+    void  __FASTCALL__ ReadIniAResolv( hIniProfile *ini );
+    void  __FASTCALL__ WriteIniAResolv( hIniProfile *ini );
+} // namespace beye
 #endif

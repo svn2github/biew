@@ -25,6 +25,7 @@
 #include "bbio.h"
 #endif
 
+namespace beye {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack(1)
 #endif
@@ -293,5 +294,5 @@ extern int LXType;
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
 #endif
-
+} // namespace beye
 #endif

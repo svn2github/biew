@@ -1,6 +1,7 @@
 #ifndef POWER_PC_G5
 #define POWER_PC_G5 1
 
+namespace beye {
 #define TAB_POS 10
 
 typedef struct s_ppc_arg {
@@ -323,5 +324,5 @@ typedef struct s_ppc_opcode {
 #define Z22_SH  { '+',16, 6, 0 }
 #define Z22_DCM { '+',16, 6, 0 }
 
-
+} // namespace beye
 #endif

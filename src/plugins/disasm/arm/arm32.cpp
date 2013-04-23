@@ -28,6 +28,7 @@ using namespace beye;
 #include "beyeutil.h"
 #include "plugins/disasm/arm/arm.h"
 
+namespace beye {
 typedef struct tag_arm_opcode32
 {
     const char *name;
@@ -693,3 +694,4 @@ void __FASTCALL__ arm32Init(void)
 }
 
 void __FASTCALL__ arm32Term(void) {}
+} // namespace beye

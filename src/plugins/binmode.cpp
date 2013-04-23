@@ -35,6 +35,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
 
+namespace beye {
 static unsigned virtWidthCorr=0;
 
 #define MOD_PLAIN    0
@@ -284,8 +285,4 @@ REGISTRY_MODE binMode =
   NULL,
   NULL
 };
-
-
-
-
-
+} // namespace beye

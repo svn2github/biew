@@ -28,6 +28,7 @@ using namespace beye;
 #include "beyehelp.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 static __filesize_t __FASTCALL__ rdoff2_ShowHeader( void )
 {
   int endian;
@@ -106,3 +107,4 @@ REGISTRY_BIN rdoff2Table =
   NULL,
   NULL
 };
+} // namespace beye

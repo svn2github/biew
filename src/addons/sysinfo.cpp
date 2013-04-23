@@ -23,12 +23,12 @@ using namespace beye;
 #include "beyeutil.h"
 #include "reg_form.h"
 
+namespace beye {
 extern REGISTRY_SYSINFO AsciiTable;
 extern REGISTRY_SYSINFO CPUPerformance;
 extern REGISTRY_SYSINFO InputViewer;
 extern REGISTRY_SYSINFO ConsoleInfo;
 
-namespace beye {
 static REGISTRY_SYSINFO *toolTable[] =
 {
   &AsciiTable,

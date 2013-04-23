@@ -43,6 +43,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 #define ARRAY_SIZE(x)       (sizeof(x)/sizeof(x[0]))
 
 static int is_64bit;
@@ -1365,3 +1366,4 @@ REGISTRY_BIN peTable =
   NULL,
   NULL
 };
+} // namespace beye

@@ -25,8 +25,8 @@ using namespace beye;
 #include "beyeutil.h"
 #include "bconsole.h"
 
-extern REGISTRY_BIN binTable;
 namespace beye {
+extern REGISTRY_BIN binTable;
 unsigned long __FASTCALL__ AppendAsmRef(char *str,__filesize_t ulShift,int mode,char codelen,__filesize_t r_sh)
 {
   static bool warn_displayed = false;

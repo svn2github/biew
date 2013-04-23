@@ -39,6 +39,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 static Nlm_Internal_Fixed_Header nlm;
 
 static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
@@ -727,3 +728,4 @@ REGISTRY_BIN nlm386Table =
   NULL,
   NULL
 };
+} // namespace beye

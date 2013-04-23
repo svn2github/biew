@@ -29,6 +29,7 @@ using namespace beye;
 #include "reg_form.h"
 #include "libbeye/file_ini.h"
 
+namespace beye {
 static int nulWidth = 1;
 
 static const char *width_names[] =
@@ -175,7 +176,4 @@ REGISTRY_DISASM Null_Disasm =
   nulReadIni,
   nulWriteIni
 };
-
-
-
-
+} // namespace beye

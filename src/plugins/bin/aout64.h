@@ -30,10 +30,10 @@
 #include "_sys_dep.h"
 #endif
 
+namespace beye {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack(1)
 #endif
-
 /** This is the layout on disk of the 32-bit or 64-bit exec header. */
 
 #define BYTES_IN_WORD 4
@@ -475,5 +475,5 @@ enum reloc_type
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
 #endif
-
+} // namespace beye
 #endif				/* __A_OUT_64_H__ */

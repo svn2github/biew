@@ -37,6 +37,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 ar_hdr arch;
 
 static __filesize_t __FASTCALL__ ShowARCHHeader( void )
@@ -208,3 +209,4 @@ REGISTRY_BIN archTable =
   NULL,
   NULL
 };
+} // namespace beye

@@ -57,6 +57,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 #define LAST_CHAR(string) (((char *)string)[strlen(string)-1])
 
 /*
@@ -655,7 +656,4 @@ REGISTRY_TOOL Calculator =
   NULL,
   NULL
 };
-
-
-
-
+} // namespace beye

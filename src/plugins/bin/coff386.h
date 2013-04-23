@@ -26,6 +26,7 @@
 #include "_sys_dep.h"
 #endif
 
+namespace beye {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack(1)
 #endif
@@ -355,3 +356,4 @@ struct external_reloc {
 #endif
 
 #define RELOC struct external_reloc
+} // namespace beye

@@ -32,7 +32,7 @@ using namespace beye;
 #include "plugins/bin/mmio.h"
 #include "plugins/disasm.h"
 
-
+namespace beye {
 struct E32ImageHeader
 {
     unsigned long iUid1;
@@ -192,3 +192,4 @@ REGISTRY_BIN sisxTable =
   NULL,
   NULL
 };
+} // namespace beye

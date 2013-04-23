@@ -536,7 +536,7 @@ int __FASTCALL__ mp_mprotect(any_t* addr,size_t len,enum mp_prot_e flags)
 using namespace beye;
 #include <new>
 
-any_t*	SECURE_NAME0(_mp_malloc)(size_t size) {
+extern "C" any_t*	SECURE_NAME0(_mp_malloc)(size_t size) {
     any_t* ptr;
     ptr = mp_malloc(size);
     if(!ptr) {
@@ -546,7 +546,7 @@ any_t*	SECURE_NAME0(_mp_malloc)(size_t size) {
     return ptr;
 }
 
-any_t*	SECURE_NAME1(_mp_mallocz)(size_t size) {
+extern "C" any_t*	SECURE_NAME1(_mp_mallocz)(size_t size) {
     any_t* ptr;
     ptr = mp_mallocz(size);
     if(!ptr) {
@@ -556,7 +556,7 @@ any_t*	SECURE_NAME1(_mp_mallocz)(size_t size) {
     return ptr;
 }
 
-any_t*	SECURE_NAME2(_mp_memalign)(size_t boundary,size_t size) {
+extern "C" any_t*	SECURE_NAME2(_mp_memalign)(size_t boundary,size_t size) {
     any_t* ptr;
     ptr = mp_memalign(boundary,size);
     if(!ptr) {
@@ -566,7 +566,7 @@ any_t*	SECURE_NAME2(_mp_memalign)(size_t boundary,size_t size) {
     return ptr;
 }
 
-void	SECURE_NAME3(_mp_free)(any_t* ptr) {
+extern "C" void	SECURE_NAME3(_mp_free)(any_t* ptr) {
     mp_free(ptr);
 }
 

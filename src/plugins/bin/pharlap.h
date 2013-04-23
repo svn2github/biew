@@ -21,6 +21,7 @@
 #include "_sys_dep.h"
 #endif
 
+namespace beye {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack(1)
 #endif
@@ -123,5 +124,5 @@ typedef struct tagPLRepeatBlock
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
 #endif
-
+} // namespace beye
 #endif

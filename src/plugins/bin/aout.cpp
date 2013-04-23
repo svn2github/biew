@@ -34,6 +34,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
 
+namespace beye {
 static char is_msbf=0; /* is most significand byte first */
 static char is_64bit=0;
 
@@ -199,3 +200,4 @@ REGISTRY_BIN aoutTable =
   NULL,
   NULL
 };
+} // namespace beye

@@ -69,6 +69,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 static char is_msbf; /* is most significand byte first */
 static char is_64bit;
 
@@ -2378,3 +2379,4 @@ REGISTRY_BIN elf386Table =
   NULL,
   NULL
 };
+} // namespace beye

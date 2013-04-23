@@ -22,6 +22,7 @@
 #include "_sys_dep.h"
 #endif
 
+namespace beye {
 #if __WATCOMC__ > 1000
 #pragma pack(__push,1);
 #else
@@ -112,5 +113,5 @@ typedef struct tag_lmf_resource
 #else
 #pragma pack()
 #endif
-
+} // namespace beye
 #endif/*__LMF_INC*/

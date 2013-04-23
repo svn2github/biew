@@ -30,6 +30,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
 
+namespace beye {
 wTagNames wtagNames[] =
 {
  { 0x0000, "MS-Unknown" },
@@ -272,3 +273,4 @@ REGISTRY_BIN wavTable =
   NULL,
   NULL
 };
+} // namespace beye

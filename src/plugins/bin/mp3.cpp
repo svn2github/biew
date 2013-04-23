@@ -21,6 +21,7 @@ using namespace beye;
 #include <algorithm>
 #include <stddef.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "bswap.h"
 #include "bconsole.h"
@@ -33,8 +34,8 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
 
+namespace beye {
 //----------------------- mp3 audio frame header parser -----------------------
-
 static int tabsel_123[2][3][16] = {
    { {0,32,64,96,128,160,192,224,256,288,320,352,384,416,448,},
      {0,32,48,56, 64, 80, 96,112,128,160,192,224,256,320,384,},
@@ -352,7 +353,7 @@ static int Xing_test(char *hdr,int *scale,int *lsf,int *srate,long *nframes,long
     bmSeek(fpos,BM_SEEK_SET);
     return is_xing;
 }
-#include <stdio.h>
+
 static bool  __FASTCALL__ mp3_check_fmt( void )
 {
     unsigned i;
@@ -473,3 +474,4 @@ REGISTRY_BIN mp3Table =
   NULL,
   NULL
 };
+} // namespace beye

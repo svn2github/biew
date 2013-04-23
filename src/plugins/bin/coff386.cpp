@@ -37,6 +37,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 inline uint16_t COFF_WORD(const uint8_t* cval) { return (uint16_t)(*(const uint16_t *)(const uint8_t *)cval); }
 inline uint32_t COFF_DWORD(const uint8_t* cval) { return (uint32_t)(*(const uint32_t *)(const uint8_t *)cval); }
 
@@ -751,3 +752,4 @@ REGISTRY_BIN coff386Table =
   NULL,
   NULL
 };
+} // namespace beye

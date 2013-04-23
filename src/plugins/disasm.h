@@ -29,6 +29,7 @@
 #include "libbeye/file_ini.h"
 #endif
 
+namespace beye {
 /** List of CPU platform. */
 
 #define DISASM_DATA		0  /**< indicates data disassembler */
@@ -144,12 +145,12 @@ extern unsigned disPanelMode; /**< contains select mode of panel */
 #define NEEDREF_NONE    0    /**< do not resolve references */
 extern unsigned disNeedRef;  /**< contains selected references resolution */
 
-extern DisasmRet Disassembler(__filesize_t ulShift,MBuffer buffer,unsigned flags);
+    DisasmRet Disassembler(__filesize_t ulShift,MBuffer buffer,unsigned flags);
 
 /** Common disassembler utility */
 
-extern char * __FASTCALL__ TabSpace(char * str,unsigned nSpace);
-extern void   __FASTCALL__ disSetModifier(char *str,const char *modf);
+    char * __FASTCALL__ TabSpace(char * str,unsigned nSpace);
+    void   __FASTCALL__ disSetModifier(char *str,const char *modf);
 
 #define DISARG_LLONG    0x0080U /**< signed 8-byte value */
 #define DISARG_LONG     0x0040U /**< signed 4-byte value */
@@ -190,7 +191,7 @@ extern void   __FASTCALL__ disSetModifier(char *str,const char *modf);
     disAppendDigits(outstr, 0x5680, 1, 2, 0x1234, DISARG_WORD);
     strcat(outstr,"]");
 **/
-extern int __FASTCALL__  disAppendDigits(char *str,__filesize_t ulShift,int flags,
+    int __FASTCALL__  disAppendDigits(char *str,__filesize_t ulShift,int flags,
 			      char codelen,any_t*defval,unsigned type);
 
 #define DISADR_SHORT   0x00
@@ -226,7 +227,8 @@ extern int __FASTCALL__  disAppendDigits(char *str,__filesize_t ulShift,int flag
     strcpy(outstr,"calln32 ");
     disAppendFAddr(outstr, 0x1004, 0x12345678, 0x1002, DISADR_NEAR32, 0, 4);
 **/
-extern int __FASTCALL__  disAppendFAddr(char * str,__fileoff_t ulShift,__fileoff_t distin,
+    int __FASTCALL__  disAppendFAddr(char * str,__fileoff_t ulShift,__fileoff_t distin,
 			     __filesize_t r_sh,char type,
 			     unsigned seg,char codelen);
+} // namespace beye
 #endif

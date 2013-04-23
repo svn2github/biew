@@ -40,11 +40,11 @@ using namespace beye;
 #include "libbeye/twin.h"
 #include "libbeye/kbd_code.h"
 
-extern REGISTRY_MODE disMode;
 
 namespace beye {
-    extern char shortname[];
-    extern bool fioUseMMF;
+extern REGISTRY_MODE disMode;
+extern char shortname[];
+extern bool fioUseMMF;
 
 static bool ChSize( void )
 {
