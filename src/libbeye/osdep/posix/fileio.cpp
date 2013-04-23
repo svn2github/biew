@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/posix/fileio.c
@@ -30,8 +33,6 @@
 #include <utime.h>
 #endif
 #include <sys/stat.h>
-
-#include "libbeye/libbeye.h"
 
 bhandle_t __FASTCALL__ __OsCreate(const char *name)
 {

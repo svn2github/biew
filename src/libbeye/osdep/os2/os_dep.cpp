@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/os2/os_dep.c
@@ -29,8 +32,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#include "libbeye/libbeye.h"
 
 static char rbuff[FILENAME_MAX+1];
 static char rbuff2[FILENAME_MAX+1];

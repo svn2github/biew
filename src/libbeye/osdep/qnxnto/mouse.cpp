@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/qnxnto/mouse.c
@@ -24,7 +27,6 @@
 #include <term.h>
 #undef buttons
 
-#include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
 #define DEV_MOUSE	"/dev/devi/mouse0"

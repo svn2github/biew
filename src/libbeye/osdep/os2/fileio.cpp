@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/os2/fileio.c
@@ -19,7 +22,6 @@
 #include <errno.h>
 #include <stdio.h>
 #include <time.h>
-#include "libbeye/libbeye.h"
 
 #ifdef __EMX__
 extern void _sys_set_errno(unsigned long rc);

@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/win32/mmfio.c
@@ -27,7 +30,6 @@
 #include <errno.h>
 #include <windows.h>
 #include "libbeye/pmalloc.h"
-#include "libbeye/libbeye.h"
 
 /*
    Using standard file-mapping technique of Win32 (CreateFileMapping,

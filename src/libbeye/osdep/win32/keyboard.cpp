@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/win32/keyboard.c
@@ -43,7 +46,6 @@
 #include <stdlib.h>
 
 #include "libbeye/kbd_code.h"
-#include "libbeye/libbeye.h"
 
 static int KB_Buff[64];
 static unsigned char KB_freq = 0;

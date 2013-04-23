@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/win32/nls.c
@@ -18,8 +21,6 @@
 #define _OLE_H
 #define _OLE2_H
 #include <windows.h>
-
-#include "libbeye/libbeye.h"
 
 bool win32_use_ansi;
 

@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/win32/mouse.c
@@ -22,8 +25,6 @@
 #include <windows.h>
 #include <limits.h>
 #include <string.h>
-
-#include "libbeye/libbeye.h"
 
 static bool ms_visible = false;
 tAbsCoord win32_mx = 0,win32_my = 0;

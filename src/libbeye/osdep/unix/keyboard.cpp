@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/unix/keyboard.c
@@ -32,7 +35,6 @@ static const char rcs_id[] = "$Id: keyboard.c,v 1.9 2009/09/20 13:43:37 nickols_
 #include <string.h>
 
 #include "libbeye/kbd_code.h"
-#include "libbeye/libbeye.h"
 #include "console.h"
 
 char rawkb_buf[100];

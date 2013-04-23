@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/unix/os_dep.c
@@ -40,7 +43,6 @@ static const char rcs_id[] = "$Id: os_dep.c,v 1.10 2009/09/03 16:57:40 nickols_k
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "libbeye/libbeye.h"
 #include "console.h"
 
 #ifndef	PREFIX

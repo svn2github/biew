@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/libbeye.c
@@ -27,20 +30,6 @@
 #endif
 #include "libbeye/pmalloc.h"
 
-bool __FASTCALL__ isseparate(int ch) { return (isspace(ch) || ispunct(ch)); }
-
-void      __FASTCALL__ __nls_PrepareOEMForTVio(tvioBuff *it,unsigned size)
-{
-  unsigned i;
-  unsigned char ch;
-  for(i = 0;i < size;i++)
-  {
-    ch = it->chars[i];
-    it->oem_pg[i] = NLS_IS_OEMPG(ch) ? ch : 0;
-  }
-  __nls_OemToOsdep(it->chars,size);
-}
-
 void __FASTCALL__ memupr(any_t*ptr,unsigned n)
 {
    unsigned i;
@@ -54,6 +43,134 @@ void __FASTCALL__ memlwr(any_t*ptr,unsigned n)
    for(i = 0;i < n;i++)
    ((char *)ptr)[i] = tolower(((char *)ptr)[i]);
 }
+
+#ifdef __GNUC__
+/* (emx+gcc) -- Copyright (c) 1990-1995 by Eberhard Mattes */
+char *ltoa (long value, char *string, int radix)
+{
+  char *dst;
+
+  dst = string;
+  if (radix < 2 || radix > 36) *dst = 0;
+  else
+  {
+    unsigned long x;
+    int i, n;
+    char digits[32];
+    if (radix == 10 && value < 0)
+    {
+      *dst++ = '-';
+      x = -value;
+    }
+    else x = value;
+    i = 0;
+    do
+    {
+      n = x % radix;
+      digits[i++] = n+(n < 10 ? '0' : 'A'-10);
+      x /= radix;
+    } while (x != 0);
+    while (i > 0) *dst++ = digits[--i];
+    *dst = 0;
+  }
+  return string;
+}
+
+char *ultoa (unsigned long value, char *string, int radix)
+{
+  char *dst;
+
+  dst = string;
+  if (radix < 2 || radix > 36) *dst = 0;
+  else
+  {
+    int i;
+    unsigned n;
+    char digits[32];
+    i = 0;
+    do
+    {
+      n = value % radix;
+      digits[i++] = n+(n < 10 ? '0' : 'A'-10);
+      value /= radix;
+    } while (value != 0);
+    while (i > 0) *dst++ = digits[--i];
+    *dst = 0;
+  }
+  return string;
+}
+#endif
+
+#if __WORDSIZE >= 32
+char *lltoa (long long int value, char *string, int radix)
+{
+  char *dst;
+
+  dst = string;
+  if (radix < 2 || radix > 36) *dst = 0;
+  else
+  {
+    unsigned long long int x;
+    int i, n;
+    char digits[64];
+    if (radix == 10 && value < 0)
+    {
+      *dst++ = '-';
+      x = -value;
+    }
+    else x = value;
+    i = 0;
+    do
+    {
+      n = x % radix;
+      digits[i++] = n+(n < 10 ? '0' : 'A'-10);
+      x /= radix;
+    } while (x != 0);
+    while (i > 0) *dst++ = digits[--i];
+    *dst = 0;
+  }
+  return string;
+}
+
+char *ulltoa (unsigned long long int value, char *string, int radix)
+{
+  char *dst;
+
+  dst = string;
+  if (radix < 2 || radix > 36) *dst = 0;
+  else
+  {
+    int i;
+    unsigned n;
+    char digits[64];
+    i = 0;
+    do
+    {
+      n = value % radix;
+      digits[i++] = n+(n < 10 ? '0' : 'A'-10);
+      value /= radix;
+    } while (value != 0);
+    while (i > 0) *dst++ = digits[--i];
+    *dst = 0;
+  }
+  return string;
+}
+#endif
+
+void      __FASTCALL__ __nls_PrepareOEMForTVio(tvioBuff *it,unsigned size)
+{
+  unsigned i;
+  unsigned char ch;
+  for(i = 0;i < size;i++)
+  {
+    ch = it->chars[i];
+    it->oem_pg[i] = NLS_IS_OEMPG(ch) ? ch : 0;
+  }
+  __nls_OemToOsdep(it->chars,size);
+}
+
+namespace beye {
+bool __FASTCALL__ isseparate(int ch) { return (isspace(ch) || ispunct(ch)); }
 
 int __FASTCALL__ szTrimTrailingSpace(char *str)
 {
@@ -194,118 +311,26 @@ void huge * __FASTCALL__ HMemCpy(void huge *_dest, const void huge *_source, uns
 }
 #endif
 
-#ifdef __GNUC__
-/* (emx+gcc) -- Copyright (c) 1990-1995 by Eberhard Mattes */
-char *ltoa (long value, char *string, int radix)
+int printm(const char *str,...)
 {
-  char *dst;
 
-  dst = string;
-  if (radix < 2 || radix > 36) *dst = 0;
-  else
-  {
-    unsigned long x;
-    int i, n;
-    char digits[32];
-    if (radix == 10 && value < 0)
-    {
-      *dst++ = '-';
-      x = -value;
-    }
-    else x = value;
-    i = 0;
-    do
-    {
-      n = x % radix;
-      digits[i++] = n+(n < 10 ? '0' : 'A'-10);
-      x /= radix;
-    } while (x != 0);
-    while (i > 0) *dst++ = digits[--i];
-    *dst = 0;
-  }
-  return string;
-}
+#define _out_ stderr
 
-char *ultoa (unsigned long value, char *string, int radix)
-{
-  char *dst;
-
-  dst = string;
-  if (radix < 2 || radix > 36) *dst = 0;
-  else
-  {
     int i;
-    unsigned n;
-    char digits[32];
-    i = 0;
-    do
-    {
-      n = value % radix;
-      digits[i++] = n+(n < 10 ? '0' : 'A'-10);
-      value /= radix;
-    } while (value != 0);
-    while (i > 0) *dst++ = digits[--i];
-    *dst = 0;
-  }
-  return string;
+    va_list args;
+
+
+    va_start(args,str);
+    i = vfprintf(_out_,str,args);
+    va_end(args);
+
+    fflush(_out_);
+
+    return i;
+
+#undef _out_
+
 }
-#endif
-
-#if __WORDSIZE >= 32
-char *lltoa (long long int value, char *string, int radix)
-{
-  char *dst;
-
-  dst = string;
-  if (radix < 2 || radix > 36) *dst = 0;
-  else
-  {
-    unsigned long long int x;
-    int i, n;
-    char digits[64];
-    if (radix == 10 && value < 0)
-    {
-      *dst++ = '-';
-      x = -value;
-    }
-    else x = value;
-    i = 0;
-    do
-    {
-      n = x % radix;
-      digits[i++] = n+(n < 10 ? '0' : 'A'-10);
-      x /= radix;
-    } while (x != 0);
-    while (i > 0) *dst++ = digits[--i];
-    *dst = 0;
-  }
-  return string;
-}
-
-char *ulltoa (unsigned long long int value, char *string, int radix)
-{
-  char *dst;
-
-  dst = string;
-  if (radix < 2 || radix > 36) *dst = 0;
-  else
-  {
-    int i;
-    unsigned n;
-    char digits[64];
-    i = 0;
-    do
-    {
-      n = value % radix;
-      digits[i++] = n+(n < 10 ? '0' : 'A'-10);
-      value /= radix;
-    } while (value != 0);
-    while (i > 0) *dst++ = digits[--i];
-    *dst = 0;
-  }
-  return string;
-}
-#endif
 
 /*
    Using own code for qsort and bsearch functions is guarantee of stable work */
@@ -605,27 +630,6 @@ unsigned long __FASTCALL__ HLFindNearest(const any_t*key,void __HUGE__ *base,uns
 	(do not use printf, fprintf, etc. !)
 */
 
-int printm(const char *str,...)
-{
-
-#define _out_ stderr
-
-    int i;
-    va_list args;
-
-
-    va_start(args,str);
-    i = vfprintf(_out_,str,args);
-    va_end(args);
-
-    fflush(_out_);
-
-    return i;
-
-#undef _out_
-
-}
-
 linearArray * __FASTCALL__ la_Build( unsigned long nitems, unsigned size_of_item,
 			void (__FASTCALL__ *mem_out)(const char *) )
 {
@@ -740,3 +744,4 @@ unsigned long __FASTCALL__ la_FindNearest(linearArray *obj,const any_t*key,
       ret = HLFindNearest(key,obj->data,obj->nItems,obj->itemSize,compare);
   return ret;
 }
+} // namespace beye

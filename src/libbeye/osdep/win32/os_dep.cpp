@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/win32/os_dep.c
@@ -26,8 +29,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <process.h>
-
-#include "libbeye/libbeye.h"
 
 #if __WORDSIZE > 32
 /* Note: Vista-64 requires porting for MMF file handling */

@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/linux/vio.c
@@ -44,7 +47,6 @@ static const char rcs_id[] = "$Id: vio.c,v 1.18 2009/09/03 16:57:40 nickols_k Ex
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/vt.h>
-#include "libbeye/libbeye.h"
 #include "console.h"
 
 #if (__GLIBC__ >= 2) && (__GLIBC_MINOR__ >= 1)

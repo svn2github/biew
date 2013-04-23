@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/posix/mmfio.c
@@ -16,7 +19,6 @@
 **/
 #include <errno.h>
 #include <stdlib.h>
-#include "libbeye/libbeye.h"
 
 #ifndef ENOSYS
 #define ENOSYS -1

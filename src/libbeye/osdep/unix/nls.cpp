@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/unix/nls.c
@@ -32,7 +35,6 @@ static const char copyright[] = "$Id: nls.c,v 1.11 2009/09/20 14:37:19 nickols_k
 #include <errno.h>
 #include <stdlib.h>
 #include <stddef.h>
-#include "libbeye/libbeye.h"
 
 int do_nls = 0;
 

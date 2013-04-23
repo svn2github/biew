@@ -40,9 +40,10 @@
 
 #endif
 
+namespace beye {
 #define TESTFLAG(x,y) (((x) & (y)) == (y)) /**< Test y bits in x */
 
-typedef int tCompare; /**< This is the data type used to represent comparition results */
+    typedef int tCompare; /**< This is the data type used to represent comparition results */
 
 		   /** Pointer to a user supplied function that compares array elements.
 		     * @return                tCompare value indicated relationship between elements of array:
@@ -51,7 +52,7 @@ typedef int tCompare; /**< This is the data type used to represent comparition r
 					      if e1 == e2, return = 0
 		     * @param e1,e2           pointers to array elements
 		    **/
-typedef tCompare (__FASTCALL__ *func_compare)(const void __HUGE__ *e1,const void __HUGE__ *e2);
+    typedef tCompare (__FASTCALL__ *func_compare)(const void __HUGE__ *e1,const void __HUGE__ *e2);
 
 		   /** Implements quick sort algorithm.
 		     * @return                none
@@ -66,7 +67,7 @@ typedef tCompare (__FASTCALL__ *func_compare)(const void __HUGE__ *e1,const void
 		     *                        functions is guarantee of stable work
 		     * @see                   HLFind HLFindNearest
 		    **/
-extern void  __FASTCALL__ HQSort(void __HUGE__ *base, unsigned long num, unsigned width,
+    void  __FASTCALL__ HQSort(void __HUGE__ *base, unsigned long num, unsigned width,
 				 func_compare fcompare);
 
 		   /** Performs a quick search on a sorted array.
@@ -82,7 +83,7 @@ extern void  __FASTCALL__ HQSort(void __HUGE__ *base, unsigned long num, unsigne
 		     *                        functions is guarantee of stable work
 		     * @see                   HQSort HLFindNearest
 		    **/
-extern void __HUGE__ * __FASTCALL__ HLFind(const any_t*key,
+    void __HUGE__ * __FASTCALL__ HLFind(const any_t*key,
 				     void __HUGE__ *base,
 				     unsigned long nelem,unsigned width,
 				     func_compare fcompare);
@@ -100,7 +101,7 @@ extern void __HUGE__ * __FASTCALL__ HLFind(const any_t*key,
 		     *                        functions is guarantee of stable work
 		     * @see                   HQSort HLFind
 		    **/
-extern unsigned long __FASTCALL__ HLFindNearest(const any_t*key,
+    unsigned long __FASTCALL__ HLFindNearest(const any_t*key,
 				     void __HUGE__ *base,
 				     unsigned long nelem,unsigned width,
 				     func_compare fcompare);
@@ -111,7 +112,7 @@ extern unsigned long __FASTCALL__ HLFindNearest(const any_t*key,
 		     * @note                  returns true if character is space
 		     *                        or punctuator
 		    **/
-extern bool  __FASTCALL__ isseparate(int ch);
+    bool  __FASTCALL__ isseparate(int ch);
 
 /** ASCIIZ string extended support */
 
@@ -120,14 +121,14 @@ extern bool  __FASTCALL__ isseparate(int ch);
 		     * @param str             pointer to string to be trimmed
 		     * @see                   szTrimLeadingSpace szKillSpaceAround
 		    **/
-extern int   __FASTCALL__ szTrimTrailingSpace(char *str);
+    int   __FASTCALL__ szTrimTrailingSpace(char *str);
 
 		   /** Removes all leading spaces from string
 		     * @return                number of removed spaces
 		     * @param str             pointer to string to be trimmed
 		     * @see                   szTrimTrailingSpace szKillSpaceAround
 		    **/
-extern int   __FASTCALL__ szTrimLeadingSpace(char *str);
+    int   __FASTCALL__ szTrimLeadingSpace(char *str);
 
 		   /** Converts space into tabulation characters
 		     * @return                none
@@ -135,7 +136,7 @@ extern int   __FASTCALL__ szTrimLeadingSpace(char *str);
 		     * @param src             pointer to source string
 		     * @see                   szTab2Space
 		    **/
-extern void  __FASTCALL__ szSpace2Tab(char *dest,const char *src);
+    void  __FASTCALL__ szSpace2Tab(char *dest,const char *src);
 
 		   /** Expands all tabulation characters with spaces
 		     * @return                length of new string
@@ -143,7 +144,7 @@ extern void  __FASTCALL__ szSpace2Tab(char *dest,const char *src);
 		     * @param src             pointer to source string
 		     * @see                   szSpace2Tab
 		    **/
-extern int   __FASTCALL__ szTab2Space(char *dest,const char *src);
+    int   __FASTCALL__ szTab2Space(char *dest,const char *src);
 
 		   /** Removes all spaces around given position
 		     * @return                pointer onto next non space character
@@ -151,7 +152,7 @@ extern int   __FASTCALL__ szTab2Space(char *dest,const char *src);
 		     * @param point_to        specifies position to be unspaced
 		     * @see                   szTrimLeadingSpace szTrimTrailingSpace
 		    **/
-extern char *__FASTCALL__ szKillSpaceAround(char *str,char *point_to);
+    char *__FASTCALL__ szKillSpaceAround(char *str,char *point_to);
 
 		   /** Prints formatted message into standard error stream
 		     * @return                number of printed characters
@@ -160,16 +161,15 @@ extern char *__FASTCALL__ szKillSpaceAround(char *str,char *point_to);
 		     *                        for error reporting. (do not use
 		     *                        printf, fprintf, etc. !)
 		    **/
-extern int  printm(const char *str,...);
+    int  printm(const char *str,...);
 
-/** Internal structure of Linear memory container */
-typedef struct tag_linearArray
-{
-  unsigned long   nItems;    /**< Number of stored items */
-  void __HUGE__ * data;      /**< Pointer into linear array */
-  unsigned long   nSize;     /**< Size of linear array (May differ from nItems) */
-  unsigned        itemSize;  /**< Size of one item in linear array */
-}linearArray;
+    /** Internal structure of Linear memory container */
+    typedef struct tag_linearArray {
+	unsigned long   nItems;    /**< Number of stored items */
+	void __HUGE__ * data;      /**< Pointer into linear array */
+	unsigned long   nSize;     /**< Size of linear array (May differ from nItems) */
+	unsigned        itemSize;  /**< Size of one item in linear array */
+    }linearArray;
 
 		   /** Builds linear arrays
 		     * @return                pointer to builded array or NULL if error
@@ -180,7 +180,7 @@ typedef struct tag_linearArray
 		     *                        same width.
 		     * @see                   la_Destroy la_IterDestroy
 		    **/
-extern linearArray *__FASTCALL__ la_Build( unsigned long maxitems,unsigned size_of_item,
+    linearArray *__FASTCALL__ la_Build( unsigned long maxitems,unsigned size_of_item,
 					   void (__FASTCALL__ *mem_out)(const char *));
 
 		   /** Adds new element to linear array
@@ -190,7 +190,7 @@ extern linearArray *__FASTCALL__ la_Build( unsigned long maxitems,unsigned size_
 		     * @param mem_out         specifies user-defined function to be called when low-memory. May be NULL.
 		     * @see                   la_Build la_Find
 		    **/
-extern void __HUGE__*__FASTCALL__ la_AddData(linearArray *obj,const any_t*data,void (__FASTCALL__ *mem_out)(const char *));
+    void __HUGE__*__FASTCALL__ la_AddData(linearArray *obj,const any_t*data,void (__FASTCALL__ *mem_out)(const char *));
 
 		   /** Removes given element from linear array
 		     * @param obj             specifies linear array where element will be removed
@@ -198,7 +198,7 @@ extern void __HUGE__*__FASTCALL__ la_AddData(linearArray *obj,const any_t*data,v
 		     * @param mem_out         specifies user-defined function to be called when low-memory. May be NULL.
 		     * @see                   la_Build la_Find
 		    **/
-extern void __FASTCALL__          la_DeleteData(linearArray *obj,unsigned long idx);
+    void __FASTCALL__          la_DeleteData(linearArray *obj,unsigned long idx);
 
 		   /** Destroys of linear array
 		     * @return                none
@@ -208,7 +208,7 @@ extern void __FASTCALL__          la_DeleteData(linearArray *obj,unsigned long i
 		     *                        it will be lost
 		     * @see                   la_Build la_IterDestroy
 		    **/
-extern void         __FASTCALL__ la_Destroy(linearArray *obj);
+    void         __FASTCALL__ la_Destroy(linearArray *obj);
 
 		   /** Destroys of linear array and calls "destructor" for each element of array.
 		     * @return                none
@@ -220,7 +220,7 @@ extern void         __FASTCALL__ la_Destroy(linearArray *obj);
 		     *                        arguments
 		     * @see                   la_Build la_Destroy
 		    **/
-extern void         __FASTCALL__ la_IterDestroy(linearArray *obj,void (__FASTCALL__ *del_func)(void __HUGE__ *));
+    void         __FASTCALL__ la_IterDestroy(linearArray *obj,void (__FASTCALL__ *del_func)(void __HUGE__ *));
 
 		   /** Calls the given iterator function on each array element
 		     * @return                none
@@ -228,7 +228,7 @@ extern void         __FASTCALL__ la_IterDestroy(linearArray *obj,void (__FASTCAL
 		     * @param iter_func       specifies iterator function which is to be called for each array element
 		     * @see                   la_IterDestroy
 		    **/
-extern void         __FASTCALL__ la_ForEach(linearArray *obj,void (__FASTCALL__ *iter_func)(void __HUGE__ *));
+    void         __FASTCALL__ la_ForEach(linearArray *obj,void (__FASTCALL__ *iter_func)(void __HUGE__ *));
 
 		   /** Implements quick sort algorithm for linear array
 		     * @return                none
@@ -240,7 +240,7 @@ extern void         __FASTCALL__ la_ForEach(linearArray *obj,void (__FASTCALL__ 
 		     * @note                  Based on HQSort function
 		     * @see                   la_Find la_FindNearest
 		    **/
-extern void         __FASTCALL__ la_Sort(linearArray *obj,func_compare fcompare);
+    void         __FASTCALL__ la_Sort(linearArray *obj,func_compare fcompare);
 
 		   /** Performs a quick search on a sorted linear array.
 		     * @return                pointer to the first matching element if found, otherwise NULL is returned
@@ -252,7 +252,7 @@ extern void         __FASTCALL__ la_Sort(linearArray *obj,func_compare fcompare)
 		     *                        functions is guarantee of stable work
 		     * @see                   la_Sort la_FindNearest
 		    **/
-extern void __HUGE__ *__FASTCALL__ la_Find(linearArray *obj,const any_t*key,
+    void __HUGE__ *__FASTCALL__ la_Find(linearArray *obj,const any_t*key,
 					   func_compare fcompare);
 
 		   /** Performs a quick search on a sorted linear array of nearest element.
@@ -264,7 +264,7 @@ extern void __HUGE__ *__FASTCALL__ la_Find(linearArray *obj,const any_t*key,
 		     * @note                  Based on HLFindNearest function
 		     * @see                   HQSort HLFind
 		    **/
-extern unsigned long __FASTCALL__ la_FindNearest(linearArray *obj, const any_t*key,
+    unsigned long __FASTCALL__ la_FindNearest(linearArray *obj, const any_t*key,
 					   func_compare fcompare);
-
+} // namespace beye
 #endif

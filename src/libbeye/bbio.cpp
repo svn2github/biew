@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/bbio.c
@@ -28,6 +31,7 @@
 #include "libbeye/bbio.h"
 #include "libbeye/pmalloc.h"
 
+namespace beye {
 BFile bNull;
 
 BFile::BFile()
@@ -699,3 +703,4 @@ bool BFile::eof()
     else                           retval = (__filesize_t)__OsTell(b.vfb.handle) >= FLength;
     return retval;
 }
+} // namespace beye

@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/dos/misc.c
@@ -9,8 +12,6 @@
 #include <bios.h>
 #include <stdio.h>
 #include <string.h>
-
-#include "libbeye/libbeye.h"
 
 int __FASTCALL__ __inputRawInfo(char *head, char *text)
 {

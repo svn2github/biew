@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/win32/misc.c
@@ -12,8 +15,6 @@
 #include <windows.h>
 #include <stdlib.h>
 #include <stdio.h>
-
-#include "libbeye/libbeye.h"
 
 extern HANDLE hIn;
 

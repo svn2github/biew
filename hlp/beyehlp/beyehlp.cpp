@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   beye_tools
  * @file        beyehlp.c
@@ -22,7 +25,6 @@
 #include <stdlib.h>
 
 #include "libbeye/bbio.h"
-#include "libbeye/libbeye.h"
 #include "libbeye/file_ini.h"
 #include "beyehelp.h"
 

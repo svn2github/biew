@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/dos/mouse.c
@@ -17,8 +20,6 @@
 #include <dos.h>
 #include <limits.h>
 #include <string.h>
-
-#include "libbeye/libbeye.h"
 
 static bool ms_visible = false;
 static bool ms_inited = false;

@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/unix/misc.c
@@ -11,7 +14,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
 extern char rawkb_buf[];

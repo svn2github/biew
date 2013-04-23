@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/qnx/nls.c
@@ -15,8 +18,6 @@
  * @note        Development, fixes and improvements
 **/
 #ifdef __QNX4__
-
-#include "libbeye/libbeye.h"
 
 void __FASTCALL__ __nls_OemToOsdep(unsigned char *buff,unsigned int len)
 {

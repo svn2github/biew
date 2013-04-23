@@ -25,6 +25,7 @@
 *  Helpful for read/write small size objects from/to file          *
 \******************************************************************/
 
+namespace beye {
 enum {
 			 /** FORWARD: default (forward scan)
 			     reposition of cache as 100% forward
@@ -358,6 +359,6 @@ class BFile {
 	    }
 
 };
-
+} // namespace beye
 #endif
 

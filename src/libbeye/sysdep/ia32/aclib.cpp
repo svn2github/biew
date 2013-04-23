@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/sysdep/ia32/aclib.c
@@ -21,7 +24,6 @@
  * @since       2001
  * @note        Development, fixes and improvements
 **/
-#include "config.h"
 #include <stddef.h>
 #include <string.h>
 #include <stdint.h>

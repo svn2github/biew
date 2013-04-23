@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/linux/mmfio.c
@@ -20,7 +23,6 @@
 #else
 #include <sys/mman.h>
 #include "libbeye/pmalloc.h"
-#include "libbeye/libbeye.h"
 
 #ifndef MREMAP_MAYMOVE
 #define MREMAP_MAYMOVE 1

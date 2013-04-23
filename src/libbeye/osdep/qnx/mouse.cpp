@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/qnx/mouse.c
@@ -18,7 +21,6 @@
 #include <limits.h>
 #include <sys/qnxterm.h>
 
-#include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
 #define MFL TERM_MOUSE_FOLLOW|TERM_MOUSE_ADJUST|TERM_MOUSE_HELD|\

@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/sysdep/x86_64/cpu_info.c
@@ -23,8 +26,6 @@
 **/
 #include <stdio.h>
 #include <string.h>
-
-#include "libbeye/libbeye.h"
 
 #define CPU_CLONE     0x000F
 #define __HAVE_FPU    0x8000

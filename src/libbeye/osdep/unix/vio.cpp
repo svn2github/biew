@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/unix/vio.c
@@ -30,7 +33,6 @@ static const char rcs_id[] = "$Id: vio.c,v 1.16 2009/09/20 14:39:37 nickols_k Ex
 #include <fcntl.h>
 #include <errno.h>
 
-#include "libbeye/libbeye.h"
 #include "console.h"
 
 #define VMAX_X __TVIO_MAXSCREENWIDTH

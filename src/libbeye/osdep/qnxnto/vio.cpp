@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/qnxnto/vio.c
@@ -29,8 +32,6 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <dlfcn.h>
-
-#include "libbeye/libbeye.h"
 
 #define _PSMIN 0xb0
 #define _PSMAX 0xdf

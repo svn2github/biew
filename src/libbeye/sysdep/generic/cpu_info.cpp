@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/sysdep/generic/cpu_info.c
@@ -16,8 +19,6 @@
  * @note        Development, fixes and improvements
 **/
 #include <stdio.h>
-
-#include "libbeye/libbeye.h"
 
 void __FillCPUInfo(char *buff,unsigned cbBuff,void (*func)(int))
 {

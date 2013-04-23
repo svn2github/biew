@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/qnx/os_dep.c
@@ -30,8 +33,6 @@
 #include <sys/sched.h>
 #include <sys/qnxterm.h>
 #include <sys/kernel.h>
-
-#include "libbeye/libbeye.h"
 
 #define LIBDIR "/usr/lib"
 

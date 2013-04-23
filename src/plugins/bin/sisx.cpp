@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   beye_plugins_auto
  * @file        plugins/bin/sisx.c

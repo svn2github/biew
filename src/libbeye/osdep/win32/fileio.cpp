@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/win32/fileio.c
@@ -24,7 +27,6 @@
 #include <stdio.h>
 #include <time.h>
 #include <errno.h>
-#include "libbeye/libbeye.h"
 
 static char f_buff[FILENAME_MAX+1];
 

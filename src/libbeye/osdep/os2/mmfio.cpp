@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/os2/mmfio.c
@@ -30,7 +33,6 @@
 #define INCL_ERRORS
 #include <os2.h>
 #include "libbeye/pmalloc.h"
-#include "libbeye/libbeye.h"
 
 /*
 **  Constants

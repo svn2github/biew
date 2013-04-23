@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/qnxnto/keyboard.c
@@ -23,7 +26,6 @@
 #include <sys/dcmd_chr.h>
 #include <Ph.h>
 
-#include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
 #define DEV_SCRLOCK     _LINESTATUS_CON_SCROLL

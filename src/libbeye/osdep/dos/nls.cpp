@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/dos/nls.c
@@ -14,7 +17,6 @@
  * @since       1995
  * @note        Development, fixes and improvements
 **/
-#include "libbeye/libbeye.h"
 #if 0
 static const unsigned char normalDOS[128] = { /**< alt2alt*/
 	0x80,0x81,0x82,0x83,0x84,0x85,0x86,0x87,0x88,0x89,0x8A,0x8B,0x8C,0x8D,0x8E,0x8F, /*0x80*/

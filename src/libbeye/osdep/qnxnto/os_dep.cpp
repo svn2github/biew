@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/qnxnto/os_dep.c
@@ -32,7 +35,6 @@
 #include <sys/neutrino.h>
 
 #include "ph_icon.h"
-#include "libbeye/libbeye.h"
 
 #define LIBDIR "/usr/share"
 

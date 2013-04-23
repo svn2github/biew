@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/win32/timer.c
@@ -20,8 +23,6 @@
 #include <windows.h>
 #include <stddef.h>
 #include <stdlib.h>
-
-#include "libbeye/libbeye.h"
 
 #if defined(__GNUC__) && !defined(_MMSYSTEM_H) && __MACHINE__!=x86_64
 /****************************************************************\

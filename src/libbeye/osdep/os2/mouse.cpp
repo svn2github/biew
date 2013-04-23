@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/os2/mouse.c
@@ -19,8 +22,6 @@
 #define INCL_MOU
 #include <os2.h>
 #include <limits.h>
-
-#include "libbeye/libbeye.h"
 
 static HMOU mouHandle;
 static int mou_btns;

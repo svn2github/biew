@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/win32/vio.c
@@ -24,7 +27,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include "libbeye/libbeye.h"
 
 tAbsCoord tvioWidth,tvioHeight;
 unsigned tvioNumColors;

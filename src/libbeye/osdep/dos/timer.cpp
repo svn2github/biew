@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/dos/timer.c
@@ -17,8 +20,6 @@
 #include <go32.h>
 #include <dpmi.h>
 #include <stddef.h>
-
-#include "libbeye/libbeye.h"
 
 static timer_callback *user_callback = NULL;
 

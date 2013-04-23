@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   beye_tools
  * @file        tools/lzss/lzss.c
@@ -33,7 +36,6 @@
 
 #include "libbeye/bbio.h"
 #include "libbeye/pmalloc.h"
-#include "libbeye/libbeye.h"
 #define INTERACTIVE
 #include "lzssutil.cpp"
 

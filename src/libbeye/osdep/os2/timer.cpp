@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/os2/timer.c
@@ -21,8 +24,6 @@
 #include <os2.h>
 #include <stddef.h>
 #include <stdlib.h>
-
-#include "libbeye/libbeye.h"
 
 extern HEV      beyeSem;
 static HTIMER   timerID = 0;

@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/os2/keyboard.c
@@ -19,7 +22,6 @@
 #define INCL_DOSSIGNALS
 #include <os2.h>
 
-#include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
 static HKBD kbdHandle;

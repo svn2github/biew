@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/posix/timer.c
@@ -17,8 +20,6 @@
 #include <sys/time.h>
 #include <signal.h>
 #include <stddef.h>
-
-#include "libbeye/libbeye.h"
 
 static timer_callback *user_func = NULL;
 static struct itimerval otimer;

@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/dos/keyboard.c
@@ -17,7 +20,6 @@
 #include <bios.h>
 #include <limits.h>
 
-#include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
 static int __ms_nbtns;

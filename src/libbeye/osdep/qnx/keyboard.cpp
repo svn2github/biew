@@ -1,3 +1,6 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace beye;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/qnx/keyboard.c
@@ -23,7 +26,6 @@
 #include <sys/qioctl.h>
 #include <Ph.h>
 
-#include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
 #define DEV_SCRLOCK     0x00000001
