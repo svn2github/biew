@@ -20,6 +20,7 @@ using namespace beye;
 **/
 #include <stdio.h>
 #include <stddef.h>
+#include <string.h>
 
 #include "reg_form.h"
 #include "bmfile.h"

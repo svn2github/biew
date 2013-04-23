@@ -33,7 +33,6 @@ using namespace beye;
 #include "tstrings.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/rdoff.h"
-#include "libbeye/pmalloc.h"
 #include "libbeye/kbd_code.h"
 
 struct rdoff_ImpName
@@ -54,34 +53,6 @@ static void __FASTCALL__ rdoff_ReadPubNameList(BFile& handle,void (__FASTCALL__ 
 static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
 
 static tCompare __FASTCALL__ compare_impnames(const void __HUGE__ *v1,const void __HUGE__ *v2);
-
-static bool __FASTCALL__ rdoffLowMemFunc( unsigned long need_mem )
-{
-  bool ret = false;
-  UNUSED(need_mem);
-  if(!fmtActiveState)
-  {
-    if(PubNames)
-    {
-       la_Destroy(PubNames);
-       PubNames = NULL;
-       ret = true;
-    }
-    if(rdoffImpNames)
-    {
-       la_Destroy(rdoffImpNames);
-       rdoffImpNames = NULL;
-       ret = true;
-    }
-    if(rdoffReloc)
-    {
-       la_Destroy(rdoffReloc);
-       rdoffReloc = NULL;
-       ret = true;
-    }
-  }
-  return ret;
-}
 
 static __filesize_t __FASTCALL__ rdoff_Help( void )
 {
@@ -563,7 +534,6 @@ static bool __FASTCALL__ rdoff_check_fmt( void )
 static void __FASTCALL__ rdoff_init_fmt( void )
 {
   unsigned long cs_len;
-  PMRegLowMemCallBack(rdoffLowMemFunc);
   rdoff_hdrlen = bmReadDWordEx(6,BM_SEEK_SET);
   bmSeek(rdoff_hdrlen,BM_SEEK_CUR);
   cs_len = bmReadDWord();
@@ -578,7 +548,6 @@ static void __FASTCALL__ rdoff_destroy_fmt( void )
   if(rdoffReloc) { la_Destroy(rdoffReloc); rdoffReloc = NULL; }
   if(rdoffImpNames) { la_Destroy(rdoffImpNames); rdoffImpNames = NULL; }
   if(PubNames) { la_Destroy(PubNames); PubNames = NULL; }
-  PMUnregLowMemCallBack(rdoffLowMemFunc);
 }
 
 static void __FASTCALL__ rdoff_ReadPubName(BFile& b_cache,const struct PubName *it,

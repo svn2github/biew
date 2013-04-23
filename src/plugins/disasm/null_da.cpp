@@ -28,7 +28,6 @@ using namespace beye;
 #include "beyeutil.h"
 #include "reg_form.h"
 #include "libbeye/file_ini.h"
-#include "libbeye/pmalloc.h"
 
 static int nulWidth = 1;
 

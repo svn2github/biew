@@ -30,7 +30,6 @@ using namespace beye;
 #include "plugins/disasm/arm/arm.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/file_ini.h"
-#include "libbeye/pmalloc.h"
 
 static char *outstr;
 

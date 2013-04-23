@@ -138,10 +138,10 @@ static int Encode(void)
 	if(!text_buf || !lson || !rson || !dad)
 	{
 	  err:
-	  if(text_buf) PFREE(text_buf);
-	  if(lson) PFREE(lson);
-	  if(rson) PFREE(rson);
-	  if(dad)  PFREE(dad);
+	  if(text_buf) delete text_buf;
+	  if(lson) delete lson;
+	  if(rson) delete rson;
+	  if(dad)  delete dad;
 	  return 0;
 	}
 #ifdef INTERACTIVE
@@ -230,10 +230,10 @@ static int Encode(void)
 		for (i = 0; i < code_buf_ptr; i++) outfile->write_byte(code_buf[i]);
 		codesize += code_buf_ptr;
 	}
-	PFREE(text_buf);
-	PFREE(lson);
-	PFREE(rson);
-	PFREE(dad);
+	delete text_buf;
+	delete lson;
+	delete rson;
+	delete dad;
 #ifdef INTERACTIVE
 	time(&endtime);
 	endtime -= sttime;
@@ -263,16 +263,16 @@ static int Decode(BFile* instream,void __HUGE__*buff,unsigned long off, unsigned
 	unsigned int  flags;
 	unsigned long buff_ptr = 0;
 
-	text_buf = (unsigned char*)PMalloc((N+F-1)*sizeof(unsigned char));
-	lson = (int*)PMalloc((N+1)*sizeof(int));
-	rson = (int*)PMalloc((N+257)*sizeof(int));
-	dad  = (int*)PMalloc((N+1)*sizeof(int));
+	text_buf = new unsigned char[N+F-1];
+	lson = new int[N+1];
+	rson = new int [N+257];
+	dad  = new int [N+1];
 	if(!text_buf || !lson || !rson || !dad)
 	{
-	  if(text_buf) PFREE(text_buf);
-	  if(lson) PFREE(lson);
-	  if(rson) PFREE(rson);
-	  if(dad)  PFREE(dad);
+	  if(text_buf) delete text_buf;
+	  if(lson) delete lson;
+	  if(rson) delete rson;
+	  if(dad)  delete dad;
 	  return 0;
 	}
 	flen = off + length;
@@ -339,9 +339,9 @@ static int Decode(BFile* instream,void __HUGE__*buff,unsigned long off, unsigned
 	  time(&endtime);
 	  printf("Elapsed  time  : %ld msec\n",(endtime-sttime)*55);
 #endif
-	PFREE(text_buf);
-	PFREE(lson);
-	PFREE(rson);
-	PFREE(dad);
+	delete text_buf;
+	delete lson;
+	delete rson;
+	delete dad;
 	return 1;
 }

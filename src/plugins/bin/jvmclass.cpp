@@ -36,7 +36,6 @@ using namespace beye;
 #include "tstrings.h"
 #include "plugins/disasm.h"
 #include "libbeye/kbd_code.h"
-#include "libbeye/pmalloc.h"
 
 #define CONSTANT_UTF8		1
 #define CONSTANT_INTEGER	3

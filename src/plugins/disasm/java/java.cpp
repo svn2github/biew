@@ -31,7 +31,6 @@ using namespace beye;
 #include "bmfile.h"
 #include "reg_form.h"
 #include "libbeye/file_ini.h"
-#include "libbeye/pmalloc.h"
 
 #define TAB_POS 10
 

@@ -36,7 +36,6 @@ using namespace beye;
 #include "tstrings.h"
 #include "beyeutil.h"
 #include "beyehelp.h"
-#include "libbeye/pmalloc.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
@@ -47,21 +46,6 @@ static void __FASTCALL__ nlm_ReadPubNameList(BFile& handle,void (__FASTCALL__ *m
 static __filesize_t __FASTCALL__ NLMPA2VA(__filesize_t pa);
 
 static BFile* nlm_cache = &bNull;
-
-static bool __FASTCALL__ nlmLowMemFunc( unsigned long need_mem )
-{
-  UNUSED(need_mem);
-  if(!fmtActiveState)
-  {
-    if(PubNames)
-    {
-       la_Destroy(PubNames);
-       PubNames = NULL;
-       return true;
-    }
-  }
-  return false;
-}
 
 static __filesize_t __FASTCALL__ ShowNLMHeader( void )
 {
@@ -579,7 +563,6 @@ static bool __FASTCALL__ IsNLM( void )
 static void __FASTCALL__ NLMinit( void )
 {
   BFile& main_handle = bmbioHandle();
-  PMRegLowMemCallBack(nlmLowMemFunc);
   bmReadBufferEx(&nlm,sizeof(Nlm_Internal_Fixed_Header),0,SEEKF_START);
   if((nlm_cache = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) nlm_cache = &main_handle;
 }
@@ -588,7 +571,6 @@ static void __FASTCALL__ NLMdestroy( void )
 {
   BFile& main_handle = bmbioHandle();
   if(nlm_cache != &bNull && nlm_cache != &main_handle) delete nlm_cache;
-  PMUnregLowMemCallBack(nlmLowMemFunc);
 }
 
 static int __FASTCALL__ NLMbitness(__filesize_t off)

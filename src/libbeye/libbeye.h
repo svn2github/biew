@@ -39,8 +39,33 @@
 #endif
 
 #endif
+#include "libbeye/mp_malloc.h"
 
 namespace beye {
+
+    template <typename T> class LocalPtr {
+	public:
+	    LocalPtr(T* value):ptr(value) {}
+	    virtual ~LocalPtr() { delete ptr; }
+
+	    T& operator*() const { return *ptr; }
+	    T* operator->() const { return ptr; }
+	private:
+	    LocalPtr<T>& operator=(LocalPtr<T> a) { return this; }
+	    LocalPtr<T>& operator=(LocalPtr<T>& a) { return this; }
+	    LocalPtr<T>& operator=(LocalPtr<T>* a) { return this; }
+	    T* ptr;
+    };
+
+    class Opaque {
+	public:
+	    Opaque();
+	    virtual ~Opaque();
+	
+	any_t*		false_pointers[RND_CHAR0];
+	any_t*		unusable;
+    };
+
 #define TESTFLAG(x,y) (((x) & (y)) == (y)) /**< Test y bits in x */
 
     typedef int tCompare; /**< This is the data type used to represent comparition results */
@@ -266,5 +291,8 @@ namespace beye {
 		    **/
     unsigned long __FASTCALL__ la_FindNearest(linearArray *obj, const any_t*key,
 					   func_compare fcompare);
+
+/** Frees pointer and nullifies it */
+#define PFREE(ptr)      { mp_free(ptr); ptr = 0; }
 } // namespace beye
 #endif

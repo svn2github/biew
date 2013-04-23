@@ -153,7 +153,7 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x,tAbsCoord y,const tvioBuff *buff,un
   uint16_t *resbuff, small_buffer[__TVIO_MAXSCREENWIDTH];
   if(len > tvioWidth)
   {
-    if(!(resbuff = malloc(sizeof(uint16_t)*len)))
+    if(!(resbuff = new uint16_t[len]))
     {
       printm("Memory allocation failed: %s\nExiting..", strerror(errno));
       exit(EXIT_FAILURE);
@@ -188,7 +188,7 @@ void __FASTCALL__ __vioReadBuff(tAbsCoord x,tAbsCoord y,tvioBuff *buff,unsigned 
   uint16_t *resbuff, small_buffer[__TVIO_MAXSCREENWIDTH];
   if(len > tvioWidth)
   {
-    if(!(resbuff = malloc(sizeof(uint16_t)*len)))
+    if(!(resbuff = new uint16_t[len]))
     {
       printm("Memory allocation failed: %s\nExiting..", strerror(errno));
       exit(EXIT_FAILURE);

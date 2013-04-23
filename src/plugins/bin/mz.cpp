@@ -31,7 +31,6 @@ using namespace beye;
 #include "reg_form.h"
 #include "tstrings.h"
 #include "libbeye/kbd_code.h"
-#include "libbeye/pmalloc.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/mz.h"
 
@@ -226,8 +225,8 @@ static void __NEAR__ __FASTCALL__ BuildMZChain( void )
     unsigned off,seg,j;
     __filesize_t ptr;
     void __HUGE__ * tptr;
-    if(!CurrMZChain) tptr = PHMalloc(sizeof(any_t*));
-    else             tptr = PHRealloc(CurrMZChain,(CurrMZCount + 1)*sizeof(any_t*));
+    if(!CurrMZChain) tptr = mp_malloc(sizeof(any_t*));
+    else             tptr = mp_realloc(CurrMZChain,(CurrMZCount + 1)*sizeof(any_t*));
     if(!tptr) break;
     CurrMZChain = (long*)tptr;
     j = mz.mzTableOffset + i*4;

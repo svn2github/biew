@@ -42,8 +42,6 @@
 extern "C" {
 #endif
 
-#include "libbeye/sysdep/ia32/fastcopy.h"
-
 		/** Changes byte order in 16-bit number */
 __inline static uint16_t __FASTCALL__ __CONSTFUNC__ ByteSwapS(uint16_t _val)
 {

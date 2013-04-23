@@ -186,7 +186,7 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x, tAbsCoord y, const tvioBuff *buff,
 #define	LEN(x) (x << 4)
     unsigned char mode = 0, old_mode = -1;
     unsigned char cache_pb[LEN(VMAX_X)];
-    unsigned char *dpb,*pb = len > VMAX_X ? malloc(LEN(len)) : cache_pb;
+    unsigned char *dpb,*pb = len > VMAX_X ? new char [LEN(len)] : cache_pb;
     unsigned slen;
 
     if (pb == NULL) {
@@ -287,7 +287,7 @@ void __FASTCALL__ __init_vio(const char *user_cp,unsigned long flags)
     if (!output_7) output_7 = TESTFLAG(console_flags, __TVIO_FLG_USE_7BIT);
     do_nls = 1;
 
-    if ((vtmp = malloc(VTMP_LEN)) == NULL) {
+    if ((vtmp = new char [VTMP_LEN]) == NULL) {
 	printm("Can't allocate memory for output: %s\nExiting..", strerror(errno));
 	exit(errno);
     }
@@ -308,7 +308,7 @@ void __FASTCALL__ __init_vio(const char *user_cp,unsigned long flags)
     saveY = firstY;
     violen = tvioWidth * tvioHeight;
 
-    if ((viomem = malloc((violen << 1) + violen)) == NULL) {
+    if ((viomem = new unsigned char[(violen << 1) + violen]) == NULL) {
 	printm("Can't allocate memory for output: %s\nExiting..", strerror(errno));
 	exit(errno);
     }

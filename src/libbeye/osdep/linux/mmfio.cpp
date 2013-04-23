@@ -22,7 +22,6 @@ using namespace beye;
 #include "libbeye/osdep/posix/mmfio.cpp"
 #else
 #include <sys/mman.h>
-#include "libbeye/pmalloc.h"
 
 #ifndef MREMAP_MAYMOVE
 #define MREMAP_MAYMOVE 1

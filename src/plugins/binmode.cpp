@@ -34,7 +34,6 @@ using namespace beye;
 #include "libbeye/file_ini.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
-#include "libbeye/pmalloc.h"
 
 static unsigned virtWidthCorr=0;
 

@@ -36,7 +36,6 @@ using namespace beye;
 #include "bconsole.h"
 #include "reg_form.h"
 #include "codeguid.h"
-#include "libbeye/pmalloc.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
@@ -52,21 +51,6 @@ static void __FASTCALL__ ne_ReadPubNameList(BFile& handle,void (__FASTCALL__ *me
 static bool  __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
 static void __FASTCALL__ rd_ImpName(char *buff,int blen,unsigned idx,bool useasoff);
 static __filesize_t __FASTCALL__ nePA2VA(__filesize_t pa);
-
-static bool __FASTCALL__ neLowMemFunc( unsigned long need_mem )
-{
-  UNUSED(need_mem);
-  if(!fmtActiveState)
-  {
-    if(PubNames)
-    {
-       la_Destroy(PubNames);
-       PubNames = NULL;
-       return true;
-    }
-  }
-  return false;
-}
 
 const char * __nedata[] =
 {
@@ -1371,7 +1355,6 @@ static void __FASTCALL__ ne_ReadPubNameList(BFile& handle,void (__FASTCALL__ *me
 static void __FASTCALL__ NE_init( void )
 {
    BFile& main_handle = bmbioHandle();
-   PMRegLowMemCallBack(neLowMemFunc);
    bmReadBufferEx(&ne,sizeof(NEHEADER),headshift,SEEKF_START);
    if((ne_cache3 = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) ne_cache3 = &main_handle;
    if((ne_cache1 = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) ne_cache2 = &main_handle;
@@ -1388,7 +1371,6 @@ static void __FASTCALL__ NE_destroy( void )
   if(ne_cache2 != &bNull && ne_cache2 != &main_handle) delete ne_cache2;
   if(ne_cache3 != &bNull && ne_cache3 != &main_handle) delete ne_cache3;
   if(ne_cache1 != &bNull && ne_cache1 != &main_handle) delete ne_cache1;
-  PMUnregLowMemCallBack(neLowMemFunc);
 }
 
 static __filesize_t __FASTCALL__ NEHelp( void )

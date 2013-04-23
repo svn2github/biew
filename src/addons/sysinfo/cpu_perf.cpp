@@ -29,7 +29,6 @@ using namespace beye;
 #include "reg_form.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
-#include "libbeye/pmalloc.h"
 
 static TWindow *pwnd;
 
@@ -54,13 +53,13 @@ char ** __FASTCALL__ cpuPointStrings(char __HUGE__ *data,unsigned long data_size
        if(ch == '\n' || ch == '\r')
        {
 	 data[i] = 0;
-	 if(!(new_ptr = (char**)PRealloc(str_ptr,((unsigned)(*nstr)+1)*sizeof(char *)))) goto mem_off;
+	 if(!(new_ptr = (char**)mp_realloc(str_ptr,((unsigned)(*nstr)+1)*sizeof(char *)))) goto mem_off;
 	 str_ptr = new_ptr;
 	 ch1 = data[i+1];
 	 if((ch1 == '\n' || ch1 == '\r') && ch != ch1) ++i;
 	 str_ptr[(*nstr)++] = &data[i+1];
        }
-       if(*nstr > UINT_MAX-2) { mem_off: PFree(str_ptr); return NULL; }
+       if(*nstr > UINT_MAX-2) { mem_off: mp_free(str_ptr); return NULL; }
      }
   }
   return str_ptr;

@@ -42,7 +42,6 @@ using namespace beye;
 #include "reg_form.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
-#include "libbeye/pmalloc.h"
 
 #define ARRAY_SIZE(x)       (sizeof(x)/sizeof(x[0]))
 
@@ -74,21 +73,6 @@ static void __FASTCALL__ pe_ReadPubNameList(BFile& handle,void (__FASTCALL__ *me
 static __filesize_t __FASTCALL__ peVA2PA(__filesize_t va);
 static __filesize_t __FASTCALL__ pePA2VA(__filesize_t pa);
 static __fileoff_t __NEAR__ CalcOverlayOffset( void );
-
-static bool __FASTCALL__ peLowMemFunc( unsigned long need_mem )
-{
-  UNUSED(need_mem);
-  if(!fmtActiveState)
-  {
-    if(PubNames)
-    {
-       la_Destroy(PubNames);
-       PubNames = NULL;
-       return true;
-    }
-  }
-  return false;
-}
 
 static __filesize_t __NEAR__ __FASTCALL__ CalcPEObjectEntry(__fileoff_t offset)
 {
@@ -1127,7 +1111,6 @@ static bool __FASTCALL__ IsPE( void )
 static void __FASTCALL__ initPE( void )
 {
    int i;
-   PMRegLowMemCallBack(peLowMemFunc);
 
    bmReadBufferEx(&pe,sizeof(PEHEADER),headshift,SEEKF_START);
    is_64bit = pe.peMagic==0x20B?1:0;
@@ -1173,7 +1156,6 @@ static void __FASTCALL__ destroyPE( void )
   if(pe_cache2 != &bNull && pe_cache2 != &main_handle) delete pe_cache2;
   if(pe_cache3 != &bNull && pe_cache3 != &main_handle) delete pe_cache3;
   if(pe_cache4 != &bNull && pe_cache4 != &main_handle) delete pe_cache4;
-  PMUnregLowMemCallBack(peLowMemFunc);
 }
 
 static int __FASTCALL__ bitnessPE(__filesize_t off)

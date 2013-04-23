@@ -46,7 +46,6 @@ using namespace beye;
 #include "tstrings.h"
 #include "libbeye/file_ini.h"
 #include "libbeye/libbeye.h"
-#include "libbeye/pmalloc.h"
 #include "libbeye/kbd_code.h"
 
 extern REGISTRY_DISASM ix86_Disasm;

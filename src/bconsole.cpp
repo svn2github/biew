@@ -38,7 +38,6 @@ using namespace beye;
 #include "tstrings.h"
 #include "search.h"
 #include "bconsole.h"
-#include "libbeye/pmalloc.h"
 
 extern TWindow * ErrorWnd;
 

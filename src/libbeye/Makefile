@@ -8,7 +8,7 @@ LIBNAME = $(LIBPREFIX)beye.a
 SRCS= bbio.cpp \
       file_ini.cpp \
       libbeye.cpp \
-      pmalloc.cpp \
+      mp_malloc.cpp \
       tw_class.cpp \
       twin.cpp \
       sysdep/$(MACHINE)/aclib.cpp \

@@ -56,8 +56,6 @@ using namespace beye;
 #include "bconsole.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
-#include "libbeye/pmalloc.h"
-
 
 #define LAST_CHAR(string) (((char *)string)[strlen(string)-1])
 

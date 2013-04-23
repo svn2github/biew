@@ -29,7 +29,6 @@ using namespace beye;
 
 #include "libbeye/bbio.h"
 #include "libbeye/file_ini.h"
-#include "libbeye/pmalloc.h"
 
 #define rewind_ini(h) (h->seek(0L,BIO_SEEK_SET))
 
@@ -207,18 +206,18 @@ FiHandler __FASTCALL__ FiOpen( const char * filename)
   rc = ret->open(filename,FO_READONLY | SO_DENYWRITE,UINT_MAX,BIO_OPT_USEMMF);
   /* Note! All OSes except DOS-DOS386 allows opening of empty filenames as /dev/null */
   if(rc == false && filename[0]) FiAError(__FI_BADFILENAME,0,filename);
-  activeFile = (char *)PMalloc((strlen(filename) + 1));
+  activeFile = (char *)mp_malloc((strlen(filename) + 1));
   if(activeFile == NULL) FiAError(__FI_NOTMEM,0,NULL);
   strcpy(activeFile,filename);
   if(!FiFilePtr)
   {
-    FiFileNames = (char**)PMalloc(sizeof(char *));
-    FinCurrString = (unsigned*)PMalloc(sizeof(unsigned int));
+    FiFileNames = (char**)mp_malloc(sizeof(char *));
+    FinCurrString = (unsigned*)mp_malloc(sizeof(unsigned int));
   }
   else
   {
-    FiFileNames = (char**)PRealloc(FiFileNames,sizeof(char *)*(FiFilePtr+1));
-    FinCurrString = (unsigned*)PRealloc(FinCurrString,sizeof(unsigned int)*(FiFilePtr+1));
+    FiFileNames = (char**)mp_realloc(FiFileNames,sizeof(char *)*(FiFilePtr+1));
+    FinCurrString = (unsigned*)mp_realloc(FinCurrString,sizeof(unsigned int)*(FiFilePtr+1));
   }
   if(!FiFileNames || !FinCurrString) FiAError(__FI_NOTMEM,0,NULL);
   FiFileNames[FiFilePtr] = activeFile;
@@ -232,8 +231,8 @@ void __FASTCALL__ FiClose(FiHandler h)
   PFREE(FiFileNames[FiFilePtr-1]);
   if(FiFilePtr)
   {
-    FiFileNames = (char**)PRealloc(FiFileNames,sizeof(char *)*(FiFilePtr));
-    FinCurrString = (unsigned*)PRealloc(FinCurrString,sizeof(unsigned int)*(FiFilePtr));
+    FiFileNames = (char**)mp_realloc(FiFileNames,sizeof(char *)*(FiFilePtr));
+    FinCurrString = (unsigned*)mp_realloc(FinCurrString,sizeof(unsigned int)*(FiFilePtr));
     if(!FiFileNames || !FinCurrString) FiAError(__FI_NOTMEM,0,NULL);
     FiFilePtr--;
   }
@@ -398,7 +397,7 @@ static char * __FASTCALL__ FiGetNextLegWord( STRING * str,const char * legal_sym
 static char * __NEAR__ __FASTCALL__ __FiCMaxStr( void )
 {
   char * ret;
-  ret = (char *)PMalloc(FI_MAXSTRLEN + 1);
+  ret = (char *)mp_malloc(FI_MAXSTRLEN + 1);
   if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
   return ret;
 }
@@ -408,7 +407,7 @@ static char * __NEAR__ __FASTCALL__ __FiCNWord( STRING *str , const char * illeg
   char * ret;
   unsigned int lword;
   lword = FiGetLengthNextWord(str,illegal_set);
-  ret = (char *)PMalloc(lword + 1);
+  ret = (char *)mp_malloc(lword + 1);
   if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
   if(lword) FiGetNextWord(str,illegal_set,ret);
   else      ret[0] = 0;
@@ -420,7 +419,7 @@ static char * __NEAR__ __FASTCALL__ __FiCNLegWord( STRING *str , const char * le
   char * ret;
   unsigned int lword;
   lword = FiGetLengthNextLegWord(str,legal_set);
-  ret = (char *)PMalloc(lword + 1);
+  ret = (char *)mp_malloc(lword + 1);
   if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
   if(lword) FiGetNextLegWord(str,legal_set,ret);
   else      ret[0] = 0;
@@ -432,7 +431,7 @@ static char * __NEAR__ __FASTCALL__ __FiCBString( const char * src )
   char * ret;
   unsigned int lbr;
   lbr = FiGetLengthBracketString(src);
-  ret = (char *)PMalloc(lbr + 1);
+  ret = (char *)mp_malloc(lbr + 1);
   if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
   if(lbr) FiGetBracketString(src,ret);
   else    ret[0] = 0;
@@ -444,7 +443,7 @@ static char * __NEAR__ __FASTCALL__ __FiCItem( const char * src )
   char * ret;
   unsigned int li;
   li = FiGetLengthItem(src);
-  ret = (char *)PMalloc(li + 1);
+  ret = (char *)mp_malloc(li + 1);
   if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
   if(li) FiGetItemName(src,ret);
   else   ret[0] = 0;
@@ -456,7 +455,7 @@ static char * __NEAR__ __FASTCALL__ __FiCValue( const char * src )
   char * ret;
   unsigned int lv;
   lv = FiGetLengthValue(src);
-  ret = (char *)PMalloc(lv + 1);
+  ret = (char *)mp_malloc(lv + 1);
   if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
   if(lv) FiGetValueOfItem(src,ret);
   else   ret[0] = 0;
@@ -468,7 +467,7 @@ static char * __NEAR__ __FASTCALL__ __FiCSection( const char * src )
   char * ret;
   unsigned int ls;
   ls = FiGetLengthSection(src);
-  ret = (char *)PMalloc(ls + 1);
+  ret = (char *)mp_malloc(ls + 1);
   if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
   if(ls) FiGetSectionName(src,ret);
   else   ret[0] = 0;
@@ -480,7 +479,7 @@ static char * __NEAR__ __FASTCALL__ __FiCSubSection( const char * src )
   char * ret;
   unsigned int lss;
   lss = FiGetLengthSubSection(src);
-  ret = (char *)PMalloc(lss + 1);
+  ret = (char *)mp_malloc(lss + 1);
   if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
   if(lss) FiGetSubSectionName(src,ret);
   else    ret[0] = 0;
@@ -492,7 +491,7 @@ static char * __NEAR__ __FASTCALL__ __FiCCmd( const char * src )
   char * ret;
   unsigned int lc;
   lc = FiGetLengthCommandString(src);
-  ret = (char *)PMalloc(lc + 1);
+  ret = (char *)mp_malloc(lc + 1);
   if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
   if(lc) FiGetCommandString(src,ret);
   else   ret[0] = 0;
@@ -756,15 +755,15 @@ pVar __FASTCALL__ FiConstructVar(const char *v,const char *a)
 {
  char * str;
  pVar vv;
- vv = (pVar)PMalloc(sizeof(Var));
+ vv = (pVar)mp_malloc(sizeof(Var));
  if(vv == NULL) FiAError(__FI_NOTMEM,0,NULL);
  vv->next = NULL;
  vv->prev = NULL;
- str = (char *)PMalloc(strlen(v) + 1);
+ str = (char *)mp_malloc(strlen(v) + 1);
  if(str == NULL) FiAError(__FI_NOTMEM,0,NULL);
  strcpy(str,v);
  vv->variables = str;
- str = (char *)PMalloc(strlen(a) + 1);
+ str = (char *)mp_malloc(strlen(a) + 1);
  if(str == NULL) FiAError(__FI_NOTMEM,0,NULL);
  strcpy(str,a);
  vv->associate = str;
@@ -879,7 +878,7 @@ void __FASTCALL__ FiAddVariables(const char * var,const char * associate)
    if(strcmp(iter->variables,var) == 0)
    {
      PFREE(iter->associate);
-     iter->associate = (char*)PMalloc(strlen(associate) + 1);
+     iter->associate = (char*)mp_malloc(strlen(associate) + 1);
      if(iter->associate == NULL) FiAError(__FI_NOTMEM,0,NULL);
      strcpy(iter->associate,associate);
      return;
@@ -1328,19 +1327,19 @@ static bool __NEAR__ __FASTCALL__ __addCache(const char *section,const char *sub
   ic.flags = 0;
   if(!(found =la_Find((linearArray *)opening->cache,&ic,__full_compare_cache)))
   {
-      ic.item = (char*)PMalloc(strlen(section)+1);
+      ic.item = (char*)mp_malloc(strlen(section)+1);
       if(!ic.item) { opening->flags &= ~HINI_FULLCACHED; return true; }
       strcpy(ic.item,section);
       if(!(ic.v.leaf = la_Build(0,sizeof(ini_cache),0)))
       {
-	 PFree(ic.item);
+	 mp_free(ic.item);
 	 opening->flags &= ~HINI_FULLCACHED;
 	 return true;
       }
       ic.flags = 0;
       if(!(la_AddData((linearArray *)opening->cache,&ic,NULL)))
       {
-	PFree(ic.item);
+	mp_free(ic.item);
 	la_Destroy(ic.v.leaf);
 	opening->flags &= ~HINI_FULLCACHED;
 	return true;
@@ -1357,19 +1356,19 @@ static bool __NEAR__ __FASTCALL__ __addCache(const char *section,const char *sub
       ic.item = const_cast<char*>(subsection);
       if(!(found=la_Find(it->v.leaf,&ic,__full_compare_cache)))
       {
-	ic.item = (char*)PMalloc(strlen(subsection)+1);
+	ic.item = (char*)mp_malloc(strlen(subsection)+1);
 	if(!ic.item) { opening->flags &= ~HINI_FULLCACHED; return true; }
 	strcpy(ic.item,subsection);
 	if(!(ic.v.leaf = la_Build(0,sizeof(ini_cache),0)))
 	{
-	   PFree(ic.item);
+	   mp_free(ic.item);
 	   opening->flags &= ~HINI_FULLCACHED;
 	   return true;
 	}
 	ic.flags = 0;
 	if(!(la_AddData(it->v.leaf,&ic,NULL)))
 	{
-	  PFree(ic.item);
+	  mp_free(ic.item);
 	  la_Destroy(ic.v.leaf);
 	  opening->flags &= ~HINI_FULLCACHED;
 	  return true;
@@ -1387,16 +1386,16 @@ static bool __NEAR__ __FASTCALL__ __addCache(const char *section,const char *sub
 	ic.flags = IC_STRING;
 	if(!(found=la_Find(it->v.leaf,&ic,__full_compare_cache)))
 	{
-	  ic.item = (char*)PMalloc(strlen(item)+1);
+	  ic.item = (char*)mp_malloc(strlen(item)+1);
 	  if(!ic.item) { opening->flags &= ~HINI_FULLCACHED; return true; }
 	  strcpy(ic.item,item);
-	  ic.v.value = (char*)PMalloc(strlen(value)+1);
-	  if(!ic.v.value) { PFree(ic.item); opening->flags &= ~HINI_FULLCACHED; return true; }
+	  ic.v.value = (char*)mp_malloc(strlen(value)+1);
+	  if(!ic.v.value) { mp_free(ic.item); opening->flags &= ~HINI_FULLCACHED; return true; }
 	  strcpy(ic.v.value,value);
 	  if(!(la_AddData(it->v.leaf,&ic,NULL)))
 	  {
-	    PFree(ic.item);
-	    PFree(ic.v.value);
+	    mp_free(ic.item);
+	    mp_free(ic.v.value);
 	    opening->flags &= ~HINI_FULLCACHED;
 	    return true;
 	  }
@@ -1410,7 +1409,7 @@ static bool __NEAR__ __FASTCALL__ __addCache(const char *section,const char *sub
 	  if(strcmp(it->v.value,value) != 0)
 	  {
 	     char *newval,*oldval;
-	     newval = (char*)PMalloc(strlen(value)+1);
+	     newval = (char*)mp_malloc(strlen(value)+1);
 	     if(!newval)
 	     {
 	       opening->flags &= ~HINI_FULLCACHED;
@@ -1419,7 +1418,7 @@ static bool __NEAR__ __FASTCALL__ __addCache(const char *section,const char *sub
 	     strcpy(newval,value);
 	     oldval = it->v.value;
 	     it->v.value = newval;
-	     PFree(oldval);
+	     mp_free(oldval);
 	     opening->flags |= HINI_UPDATED;
 	  }
 	}
@@ -1444,12 +1443,12 @@ static void __FASTCALL__ __iter_destroy(void __HUGE__ *it)
   ic = (ini_cache __HUGE__ *)it;
   if(ic->flags & IC_STRING)
   {
-    PFree(ic->item);
-    PFree(ic->v.value);
+    mp_free(ic->item);
+    mp_free(ic->v.value);
   }
   else
   {
-    PFree(ic->item);
+    mp_free(ic->item);
     la_IterDestroy(ic->v.leaf,__iter_destroy);
   }
 }
@@ -1464,7 +1463,7 @@ static bhandle_t __NEAR__ __FASTCALL__ make_temp(const char *path,char *name_ptr
   char *fullname, *nptr;
   unsigned i,len;
   bhandle_t handle;
-  fullname = (char*)PMalloc((strlen(path)+1)*2);
+  fullname = (char*)mp_malloc((strlen(path)+1)*2);
   if(!fullname) return NULL_HANDLE;
   strcpy(fullname,path);
   len = strlen(fullname);
@@ -1549,16 +1548,16 @@ hIniProfile * __FASTCALL__ iniOpenFile(const char *fname,bool *has_error)
 {
   hIniProfile *_ret;
   unsigned fname_size;
-  _ret = (hIniProfile*)PMalloc(sizeof(hIniProfile));
+  _ret = (hIniProfile*)mp_malloc(sizeof(hIniProfile));
   if(has_error) *has_error = true;
   if(_ret)
   {
     fname_size = strlen(fname)+1;
-    _ret->fname = (char*)PMalloc(fname_size);
+    _ret->fname = (char*)mp_malloc(fname_size);
     if(_ret->fname) strcpy(_ret->fname,fname);
     else
     {
-      PFree(_ret);
+      mp_free(_ret);
       return NULL;
     }
     if(__IsFileExists(_ret->fname)) _ret->handler = FiOpen(fname);
@@ -1589,8 +1588,8 @@ void __FASTCALL__ iniCloseFile(hIniProfile *ini)
       __destroyCache((linearArray *)ini->cache);
     }
     if(ini->handler != &bNull) FiClose(ini->handler);
-    PFree(ini->fname);
-    PFree(ini);
+    mp_free(ini->fname);
+    mp_free(ini);
   }
 }
 
@@ -1706,7 +1705,7 @@ static bool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
    bool _ret,need_write,s_ok,ss_ok,i_ok,done,sb_ok,ssb_ok,written,Cond,if_on;
    /* test for no change of value */
    prev_val_size = strlen(_value)+2;
-   prev_val = (char*)PMalloc(prev_val_size);
+   prev_val = (char*)mp_malloc(prev_val_size);
    need_write = true;
    if(!ini) return false;
    if(prev_val && ini->handler != &bNull)
@@ -1716,10 +1715,10 @@ static bool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
      else                       def_val = "y";
      iniReadProfileString(ini,_section,_subsection,_item,def_val,prev_val,prev_val_size);
      if(strcmp(prev_val,_value) == 0) need_write = false;
-     PFree(prev_val);
+     mp_free(prev_val);
    }
    if(!need_write) return true;
-   tmpname = (char*)PMalloc((strlen(ini->fname)+1)*2);
+   tmpname = (char*)mp_malloc((strlen(ini->fname)+1)*2);
    if(!tmpname) return false;
    if(ini->handler == &bNull) /* if file does not exist make it. */
    {

@@ -32,7 +32,6 @@ using namespace beye;
 #include "bconsole.h"
 #include "reg_form.h"
 #include "libbeye/kbd_code.h"
-#include "libbeye/pmalloc.h"
 #include "libbeye/bbio.h"
 
 static TWindow *prcntswnd;

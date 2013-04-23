@@ -32,7 +32,6 @@ using namespace beye;
 #include "editor.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
-#include "libbeye/pmalloc.h"
 
 __fileoff_t edit_cp = 0;
 struct tag_emem EditorMem;

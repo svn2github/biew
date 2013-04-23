@@ -35,7 +35,6 @@ using namespace beye;
 #include "search.h"
 #include "reg_form.h"
 #include "libbeye/kbd_code.h"
-#include "libbeye/pmalloc.h"
 
 typedef struct tag_shash_s
 {
@@ -203,7 +202,7 @@ static void __NEAR__ __FASTCALL__ txtMarkupCtx(void)
 		if(found)
 		{
 		    if(!acontext) acontext=new acontext_hl_t;
-		    else	  acontext=(acontext_hl_t*)PHRealloc(acontext,sizeof(acontext_hl_t)*(acontext_num+1));
+		    else	  acontext=(acontext_hl_t*)mp_realloc(acontext,sizeof(acontext_hl_t)*(acontext_num+1));
 		    acontext[acontext_num].color=(Color)LOGFB_TO_PHYS(syntax_hl.context[i].color,BACK_COLOR(text_cset.normal));
 		    acontext[acontext_num].start_off=fptr-ss_idx;
 		    acontext[acontext_num].end_off=flen;
@@ -1301,7 +1300,7 @@ static void __FASTCALL__ txtTerm( void )
      for(i=0;i<syntax_hl.keyword_num;i++) { delete syntax_hl.keyword[i].keyword; }
      delete syntax_hl.keyword;
   }
-  PHFree(acontext);
+  delete acontext;
   acontext=NULL;
   acontext_num=0;
   memset(&syntax_hl,0,sizeof(syntax_hl));

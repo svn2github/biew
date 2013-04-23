@@ -46,8 +46,6 @@ using namespace beye;
 #include "libbeye/file_ini.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
-#include "libbeye/pmalloc.h"
-
 
 unsigned ArgCount;
 char **  ArgVector;
@@ -586,7 +584,14 @@ int main( int argc, char *argv[] )
   }
 #endif
 #endif
- PMallocInit(1000);
+/*
+    flg=MPA_FLG_RANDOMIZER;
+    flg=MPA_FLG_BOUNDS_CHECK;
+    flg=MPA_FLG_BEFORE_CHECK;
+    flg=MPA_FLG_BACKTRACE;
+*/
+ mp_malloc_e flg=MPA_FLG_RANDOMIZER;
+ mp_init_malloc(argv[0],1000,10,flg);
  ArgCount = argc;
  ArgVector = argv;
  __init_sys();

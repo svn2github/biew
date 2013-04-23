@@ -36,7 +36,6 @@ using namespace beye;
 #include "reg_form.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
-#include "libbeye/pmalloc.h"
 
 union LX_LE lxe;
 int LXType;

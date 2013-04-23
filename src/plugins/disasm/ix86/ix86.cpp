@@ -37,7 +37,6 @@ using namespace beye;
 #include "codeguid.h"
 #include "libbeye/file_ini.h"
 #include "libbeye/kbd_code.h"
-#include "libbeye/pmalloc.h"
 #include "libbeye/libbeye.h"
 
 #define MAX_IX86_INSN_LEN 15

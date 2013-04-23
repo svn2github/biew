@@ -29,7 +29,6 @@ using namespace beye;
 #include <stdlib.h>
 #include <errno.h>
 #include <windows.h>
-#include "libbeye/pmalloc.h"
 
 /*
    Using standard file-mapping technique of Win32 (CreateFileMapping,
@@ -408,7 +407,6 @@ bool             __FASTCALL__ __mmfIsWorkable( void ) { return true; }
     to close the file-mapping object before you can call SetEndOfFile.
 */
 #include <windows.h>
-#include "libbeye/pmalloc.h"
 #include "libbeye/libbeye.h"
 
 #ifndef _MSC_VER
@@ -454,7 +452,7 @@ mmfHandle          __FASTCALL__ __mmfOpen(const char *fname,int mode)
     length = __FileLength(fhandle);
     if(length <= PTRDIFF_MAX)
     {
-      mret = PMalloc(sizeof(struct mmfRecord));
+      mret = new struct mmfRecord;
       if(mret)
       {
 	HANDLE fmapping;

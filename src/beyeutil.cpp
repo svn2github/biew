@@ -29,7 +29,6 @@ using namespace beye;
 #include "bconsole.h"
 #include "tstrings.h"
 #include "libbeye/libbeye.h"
-#include "libbeye/pmalloc.h"
 
 bool DumpMode = false;
 bool EditMode = false;
@@ -296,7 +295,7 @@ bool  __FASTCALL__ ma_AddData(memArray *obj,const any_t*udata,unsigned len,bool 
   {
     any_t*ptr;
     if(!obj->data) ptr = new char*[obj->nSize+LST_STEP];
-    else           ptr = PRealloc(obj->data,sizeof(char *)*(obj->nSize+LST_STEP));
+    else           ptr = mp_realloc(obj->data,sizeof(char *)*(obj->nSize+LST_STEP));
     if(ptr)
     {
       obj->nSize = obj->nSize+LST_STEP;

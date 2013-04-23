@@ -32,7 +32,6 @@ using namespace beye;
 #define INCL_DOSEXCEPTIONS
 #define INCL_ERRORS
 #include <os2.h>
-#include "libbeye/pmalloc.h"
 
 /*
 **  Constants

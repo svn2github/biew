@@ -30,7 +30,6 @@ using namespace beye;
 #include "plugins/disasm/ppc/ppc.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/file_ini.h"
-#include "libbeye/pmalloc.h"
 
 #include "ppc.h"
 

@@ -35,7 +35,6 @@ using namespace beye;
 #include <time.h>
 
 #include "libbeye/bbio.h"
-#include "libbeye/pmalloc.h"
 #define INTERACTIVE
 #include "lzssutil.cpp"
 

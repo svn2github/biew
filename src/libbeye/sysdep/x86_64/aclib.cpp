@@ -27,7 +27,6 @@ using namespace beye;
 #include <stddef.h>
 #include <string.h>
 #include <stdint.h>
-#include "libbeye/sysdep/x86_64/fastcopy.h"
 #include "libbeye/sysdep/x86_64/_inlines.h"
 #define BLOCK_SIZE 4096
 #define CONFUSION_FACTOR 0
@@ -94,7 +93,6 @@ static unsigned __mmx_caps=0;
 static void GetCpuCaps( void ) {}
 #endif
 
-
 #undef HAVE_MMX
 #undef HAVE_MMX2
 #undef HAVE_3DNOW
@@ -131,36 +129,6 @@ static void GetCpuCaps( void ) {}
 #endif
 
 #endif // CAN_COMPILE_X86_ASM
-
-static any_t* init_fast_memcpy(any_t* to, const any_t* from, size_t len)
-{
-#ifdef CAN_COMPILE_X86_ASM
-	/* ordered per speed fastest first */
-	if(!_mmx_inited) GetCpuCaps();
-//	if(__mmx_caps & USE_MMX2)	fast_memcpy_ptr = fast_memcpy_MMX2;
-//	else if(__mmx_caps & USE_3DNOW)	fast_memcpy_ptr = fast_memcpy_3DNow;
-	else if(__mmx_caps & USE_MMX)	fast_memcpy_ptr = fast_memcpy_MMX;
-	else
-#endif
-	fast_memcpy_ptr = memcpy;
-	return (*fast_memcpy_ptr)(to,from,len);
-}
-any_t*(*fast_memcpy_ptr)(any_t* to, const any_t* from, size_t len) = init_fast_memcpy;
-
-static any_t* init_fast_memset(any_t* to, int filler, size_t len)
-{
-#ifdef CAN_COMPILE_X86_ASM
-	/* ordered per speed fastest first */
-	if(!_mmx_inited) GetCpuCaps();
-//	if(__mmx_caps & USE_MMX2)	fast_memset_ptr = fast_memset_MMX2;
-//	else if(__mmx_caps & USE_3DNOW)	fast_memset_ptr = fast_memset_3DNow;
-	else if(__mmx_caps & USE_MMX)	fast_memset_ptr = fast_memset_MMX;
-	else
-#endif
-	fast_memset_ptr = memset;
-	return (*fast_memset_ptr)(to,filler,len);
-}
-any_t*(*fast_memset_ptr)(any_t* to, int filler, size_t len) = init_fast_memset;
 
 static void __FASTCALL__ init_InterleaveBuffers(uint32_t limit,
 				    any_t*destbuffer,

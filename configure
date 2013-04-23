@@ -7,7 +7,6 @@ init_functions
 ENABLED_LIST=(
     "gomp|use GNU OpenMP (requires gcc-4.3+)",
     "fastcall|use regparm method on x86 systems",
-    "fastmemcpy|use SIMD optimized memcpy()",
     "mouse|build mouse support on *nix systems",
     "iconv|build iconv support",
 )
@@ -233,7 +232,6 @@ test_optimizations config.mak config.h
 
 enabled "$profile"	&& disable fastcall
 print_config USE_ config.h config.mak fastcall
-print_config USE_ config.h config.mak fastmemcpy
 
 # Checking for GOMP
 enabled gomp && check_ldflags -fopenmp || disable gomp
@@ -387,6 +385,101 @@ fi
 enabled mouse && require2 mouse gpm.h Gpm_GetEvent -lgpm
 print_config HAVE_ config.h config.mak mouse
 
+# find pagesize on this system
+echocheck "VM pagesize is"
+cat > $TMPC << EOF
+#include <stdio.h>
+#include <unistd.h>
+int main(void) { printf("%i\n",getpagesize()); }
+EOF
+syspagesize="no"
+cc_check && syspagesize="yes"
+if enabled syspagesize ; then
+vm_pagesize=`$TMPO`
+else
+vm_pagesize="1"
+fi
+echores "$vm_pagesize"
+
+# pseudo-ramdom names
+cat > $TMPC << EOF
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+int main(void) {
+    srand(time(0));
+    printf("%u %u %u %u %u %u %u %u %u %u\n"
+    ,rand(),rand(),rand(),rand(),rand(),rand(),rand(),rand(),rand(),rand()); }
+EOF
+cc_check || die "Canot generate pseudo-random numbers"
+
+echocheck "generating pseudo-random numbers"
+rnd_arr=`$TMPO`
+sleep 1
+rnd_carr=`$TMPO`
+sleep 1
+rnd_sarr=`$TMPO`
+sleep 1
+rnd_farr=`$TMPO`
+echores "done"
+
+rnd0=`echo $rnd_arr | cut -d ' ' -f 1`
+rnd1=`echo $rnd_arr | cut -d ' ' -f 2`
+rnd2=`echo $rnd_arr | cut -d ' ' -f 3`
+rnd3=`echo $rnd_arr | cut -d ' ' -f 4`
+rnd4=`echo $rnd_arr | cut -d ' ' -f 5`
+rnd5=`echo $rnd_arr | cut -d ' ' -f 6`
+rnd6=`echo $rnd_arr | cut -d ' ' -f 7`
+rnd7=`echo $rnd_arr | cut -d ' ' -f 8`
+rnd8=`echo $rnd_arr | cut -d ' ' -f 9`
+rnd9=`echo $rnd_arr | cut -d ' ' -f 10`
+
+srnd0=`echo $rnd_sarr | cut -d ' ' -f 1`
+srnd1=`echo $rnd_sarr | cut -d ' ' -f 2`
+srnd2=`echo $rnd_sarr | cut -d ' ' -f 3`
+srnd3=`echo $rnd_sarr | cut -d ' ' -f 4`
+srnd4=`echo $rnd_sarr | cut -d ' ' -f 5`
+srnd5=`echo $rnd_sarr | cut -d ' ' -f 6`
+srnd6=`echo $rnd_sarr | cut -d ' ' -f 7`
+srnd7=`echo $rnd_sarr | cut -d ' ' -f 8`
+srnd8=`echo $rnd_sarr | cut -d ' ' -f 9`
+srnd9=`echo $rnd_sarr | cut -d ' ' -f 10`
+
+frnd0=`echo $rnd_farr | cut -d ' ' -f 1`
+frnd1=`echo $rnd_farr | cut -d ' ' -f 2`
+frnd2=`echo $rnd_farr | cut -d ' ' -f 3`
+frnd3=`echo $rnd_farr | cut -d ' ' -f 4`
+frnd4=`echo $rnd_farr | cut -d ' ' -f 5`
+frnd5=`echo $rnd_farr | cut -d ' ' -f 6`
+frnd6=`echo $rnd_farr | cut -d ' ' -f 7`
+frnd7=`echo $rnd_farr | cut -d ' ' -f 8`
+frnd8=`echo $rnd_farr | cut -d ' ' -f 9`
+frnd9=`echo $rnd_farr | cut -d ' ' -f 10`
+
+crnd0=`echo $rnd_carr | cut -d ' ' -f 1`
+crnd1=`echo $rnd_carr | cut -d ' ' -f 2`
+crnd2=`echo $rnd_carr | cut -d ' ' -f 3`
+crnd3=`echo $rnd_carr | cut -d ' ' -f 4`
+crnd4=`echo $rnd_carr | cut -d ' ' -f 5`
+crnd5=`echo $rnd_carr | cut -d ' ' -f 6`
+crnd6=`echo $rnd_carr | cut -d ' ' -f 7`
+crnd7=`echo $rnd_carr | cut -d ' ' -f 8`
+crnd8=`echo $rnd_carr | cut -d ' ' -f 9`
+crnd9=`echo $rnd_carr | cut -d ' ' -f 10`
+
+crnd0=$(($crnd0 % 255))
+crnd1=$(($crnd1 % 255))
+crnd2=$(($crnd2 % 255))
+crnd3=$(($crnd3 % 255))
+crnd4=$(($crnd4 % 255))
+crnd5=$(($crnd5 % 255))
+crnd6=$(($crnd6 % 255))
+crnd7=$(($crnd7 % 255))
+crnd8=$(($crnd8 % 255))
+crnd9=$(($crnd9 % 255))
+
+
+
 CXXFLAGS=$CFLAGS
 
 ./version.sh
@@ -414,6 +507,71 @@ typedef void any_t;
 
 /* Removes warning about unused arguments */
 # define UNUSED(x) ((any_t)(x))
+
+/* Physical size of page on this system */
+#define __VM_PAGE_SIZE__ $vm_pagesize
+#if defined(__GNUC__) && (__GNUC__ > 3 || __GNUC__ == 3 && __GNUC_MINOR__ > 0)
+#define __PAGE_ALIGNED__ __attribute__ ((aligned (__VM_PAGE_SIZE__)))
+#else
+#define __PAGE_ALIGNED__
+#endif
+
+/* Compile-time random numbers */
+#define RND_CHAR0 $crnd0
+#define RND_CHAR1 $crnd1
+#define RND_CHAR2 $crnd2
+#define RND_CHAR3 $crnd3
+#define RND_CHAR4 $crnd4
+#define RND_CHAR5 $crnd5
+#define RND_CHAR6 $crnd6
+#define RND_CHAR7 $crnd7
+#define RND_CHAR8 $crnd8
+#define RND_CHAR9 $crnd9
+
+#define RND_NUMBER0 $rnd0
+#define RND_NUMBER1 $rnd1
+#define RND_NUMBER2 $rnd2
+#define RND_NUMBER3 $rnd3
+#define RND_NUMBER4 $rnd4
+#define RND_NUMBER5 $rnd5
+#define RND_NUMBER6 $rnd6
+#define RND_NUMBER7 $rnd7
+#define RND_NUMBER8 $rnd8
+#define RND_NUMBER9 $rnd9
+
+#define RND_STR0 "x$srnd0"
+#define RND_STR1 "x$srnd1"
+#define RND_STR2 "x$srnd2"
+#define RND_STR3 "x$srnd3"
+#define RND_STR4 "x$srnd4"
+#define RND_STR5 "x$srnd5"
+#define RND_STR6 "x$srnd6"
+#define RND_STR7 "x$srnd7"
+#define RND_STR8 "x$srnd8"
+#define RND_STR9 "x$srnd9"
+
+
+#define RND_RENAME0(a) a ## $frnd0
+#define RND_RENAME1(a) a ## $frnd1
+#define RND_RENAME2(a) a ## $frnd2
+#define RND_RENAME3(a) a ## $frnd3
+#define RND_RENAME4(a) a ## $frnd4
+#define RND_RENAME5(a) a ## $frnd5
+#define RND_RENAME6(a) a ## $frnd6
+#define RND_RENAME7(a) a ## $frnd7
+#define RND_RENAME8(a) a ## $frnd8
+#define RND_RENAME9(a) a ## $frnd9
+
+#define SECURE_NAME0(a) x$srnd0
+#define SECURE_NAME1(a) x$srnd1
+#define SECURE_NAME2(a) x$srnd2
+#define SECURE_NAME3(a) x$srnd3
+#define SECURE_NAME4(a) x$srnd4
+#define SECURE_NAME5(a) x$srnd5
+#define SECURE_NAME6(a) x$srnd6
+#define SECURE_NAME7(a) x$srnd7
+#define SECURE_NAME8(a) x$srnd8
+#define SECURE_NAME9(a) x$srnd9
 EOF
 
 echo "Creating config.mak"
@@ -442,6 +600,17 @@ MANDIR=$mandir
 DESTDIR=$DESTDIR
 HOST=$system
 MACHINE=$machine
+#-- Compile-time random numbers
+RND_NUMBER0 = $rnd0
+RND_NUMBER1 = $rnd1
+RND_NUMBER2 = $rnd2
+RND_NUMBER3 = $rnd3
+RND_NUMBER4 = $rnd4
+RND_NUMBER5 = $rnd5
+RND_NUMBER6 = $rnd6
+RND_NUMBER7 = $rnd7
+RND_NUMBER8 = $rnd8
+RND_NUMBER9 = $rnd9
 EOF
 echo "HOST_CFLAGS=$CXXFLAGS" >>config.mak
 echo "EXTRALIBS=$extralibs" >> config.mak

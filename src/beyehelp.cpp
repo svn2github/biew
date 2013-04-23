@@ -34,7 +34,6 @@ using namespace beye;
 #include "tstrings.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
-#include "libbeye/pmalloc.h"
 
 #include "lzss/lzssutil.cpp"
 
@@ -373,7 +372,7 @@ char **   __FASTCALL__ hlpPointStrings(char __HUGE__ *data,unsigned long data_si
        if(ch == '\n' || ch == '\r')
        {
 	 data[i] = 0;
-	 if(!(new_ptr = (char**)PRealloc(str_ptr,((unsigned)(*nstr)+1)*sizeof(char *)))) goto mem_off;
+	 if(!(new_ptr = (char**)mp_realloc(str_ptr,((unsigned)(*nstr)+1)*sizeof(char *)))) goto mem_off;
 	 str_ptr = new_ptr;
 	 ch1 = data[i+1];
 	 if((ch1 == '\n' || ch1 == '\r') && ch != ch1) ++i;

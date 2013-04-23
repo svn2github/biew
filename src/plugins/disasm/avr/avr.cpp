@@ -33,7 +33,6 @@ using namespace beye;
 #include "codeguid.h"
 #include "libbeye/file_ini.h"
 #include "libbeye/kbd_code.h"
-#include "libbeye/pmalloc.h"
 #include "libbeye/libbeye.h"
 
 #define _(STR)     STR
@@ -540,7 +539,7 @@ static void __FASTCALL__ AVRInit( void )
   unsigned int nopcodes;
 
   nopcodes = sizeof (avr_opcodes) / sizeof (struct avr_opcodes_s);
-  avr_bin_masks = (unsigned int *)PMalloc(nopcodes * sizeof (unsigned int));
+  avr_bin_masks = (unsigned int *)mp_malloc(nopcodes * sizeof (unsigned int));
   outstr = new char [1000];
 
   if (!outstr || !avr_bin_masks)

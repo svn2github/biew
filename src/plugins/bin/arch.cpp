@@ -34,7 +34,6 @@ using namespace beye;
 #include "tstrings.h"
 #include "plugins/bin/arch.h"
 #include "plugins/disasm.h"
-#include "libbeye/pmalloc.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 

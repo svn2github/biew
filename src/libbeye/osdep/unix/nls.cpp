@@ -35,6 +35,7 @@ static const char copyright[] = "$Id: nls.c,v 1.11 2009/09/20 14:37:19 nickols_k
 #include <errno.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <string.h>
 
 int do_nls = 0;
 

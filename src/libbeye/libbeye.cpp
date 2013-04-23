@@ -28,7 +28,6 @@ using namespace beye;
 #if __WORDSIZE == 16
 #include <mem.h>
 #endif
-#include "libbeye/pmalloc.h"
 
 void __FASTCALL__ memupr(any_t*ptr,unsigned n)
 {
@@ -641,7 +640,7 @@ linearArray * __FASTCALL__ la_Build( unsigned long nitems, unsigned size_of_item
     ret->itemSize = size_of_item;
     if(nitems)
     {
-      ret->data = PHMalloc(nitems*size_of_item);
+      ret->data = mp_malloc(nitems*size_of_item);
       if(ret->data)
       {
 	ret->nSize = nitems;
@@ -689,8 +688,8 @@ void __HUGE__*  __FASTCALL__ la_AddData(linearArray *obj,const any_t*udata,void 
   if(obj->nItems + 1 > obj->nSize)
   {
     any_t*ptr;
-    if(!obj->data) ptr = PHMalloc((obj->nSize+LST_STEP)*obj->itemSize);
-    else           ptr = PHRealloc(obj->data,obj->itemSize*(obj->nSize+LST_STEP));
+    if(!obj->data) ptr = mp_malloc((obj->nSize+LST_STEP)*obj->itemSize);
+    else           ptr = mp_realloc(obj->data,obj->itemSize*(obj->nSize+LST_STEP));
     if(ptr)
     {
       obj->nSize = obj->nSize+LST_STEP;
@@ -744,4 +743,55 @@ unsigned long __FASTCALL__ la_FindNearest(linearArray *obj,const any_t*key,
       ret = HLFindNearest(key,obj->data,obj->nItems,obj->itemSize,compare);
   return ret;
 }
+
+any_t* rnd_fill(any_t* buffer,size_t size)
+{
+    unsigned i;
+    char ch;
+    for(i=0;i<size;i++) {
+	ch=::rand()%255;
+	((char *)buffer)[i]=ch;
+    }
+    return buffer;
+}
+
+any_t* make_false_pointer(any_t* tmplt) {
+    long lo_mask=(sizeof(any_t*)*8/2)-1;
+    long hi_mask=~lo_mask;
+    long false_pointer;
+    false_pointer=::rand()&lo_mask;
+    false_pointer|=(reinterpret_cast<long>(tmplt)&hi_mask);
+    return reinterpret_cast<any_t*>(false_pointer);
+}
+
+any_t*	__FASTCALL__ make_false_pointer_to(any_t* tmplt,unsigned size) {
+    long false_pointer=reinterpret_cast<long>(tmplt);
+    false_pointer+=::rand()%size;
+    return reinterpret_cast<any_t*>(false_pointer);
+}
+
+any_t* fill_false_pointers(any_t* buffer,size_t size)
+{
+    unsigned i,psize=(size/sizeof(any_t*))*sizeof(any_t*);
+    any_t* filler;
+    for(i=0;i<psize/sizeof(long);i++) {
+	filler=make_false_pointer(buffer);
+	((long *)buffer)[i]=::rand()%2?reinterpret_cast<long>(filler):0;
+    }
+    ::memset(&((char *)buffer)[psize],0,size-psize);
+    return buffer;
+}
+
+any_t* get_caller_address(unsigned num_caller) {
+    any_t*	stack[3+num_caller];
+    ::backtrace(stack,3+num_caller);
+    return stack[2+num_caller];
+}
+
+Opaque::Opaque() {
+    fill_false_pointers(&false_pointers,reinterpret_cast<long>(&unusable)-reinterpret_cast<long>(&false_pointers));
+    fill_false_pointers(&unusable,sizeof(any_t*));
+}
+
+Opaque::~Opaque() {}
 } // namespace beye

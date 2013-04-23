@@ -27,7 +27,6 @@ using namespace beye;
 #include "colorset.h"
 #include "reg_form.h"
 #include "libbeye/kbd_code.h"
-#include "libbeye/pmalloc.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/dos_sys.h"
 

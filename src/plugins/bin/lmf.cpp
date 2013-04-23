@@ -35,7 +35,6 @@ using namespace beye;
 #include "plugins/bin/lmf.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
-#include "libbeye/pmalloc.h"
 
 #define MAXREC			200
 #define MINREC			20
@@ -139,7 +138,7 @@ static void __FASTCALL__ lmf_init_fmt(void)
 	{
 		if((unsigned)i==recmax)
 		{
-			hl=(lmf_headers_list*)PRealloc(hl,(recmax+=MINREC)*sizeof(lmf_headers_list));
+			hl=(lmf_headers_list*)mp_realloc(hl,(recmax+=MINREC)*sizeof(lmf_headers_list));
 			if(hl==NULL) return;
 		}
 		if(!bmReadBufferEx(&hl[i].header,HDRSIZE,pos,BM_SEEK_SET))

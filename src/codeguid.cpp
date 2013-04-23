@@ -32,7 +32,6 @@ using namespace beye;
 #include "reg_form.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/twin.h"
-#include "libbeye/pmalloc.h"
 #include "libbeye/kbd_code.h"
 
 #define BACK_ADDR_SIZE 256

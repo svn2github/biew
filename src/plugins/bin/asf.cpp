@@ -19,6 +19,7 @@ using namespace beye;
  * @note        Development, fixes and improvements
 **/
 #include <stddef.h>
+#include <string.h>
 
 #include "bconsole.h"
 #include "beyehelp.h"

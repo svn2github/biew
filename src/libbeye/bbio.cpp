@@ -29,7 +29,6 @@ using namespace beye;
 #include <limits.h>
 
 #include "libbeye/bbio.h"
-#include "libbeye/pmalloc.h"
 
 namespace beye {
 BFile bNull;

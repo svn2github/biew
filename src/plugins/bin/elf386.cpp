@@ -67,7 +67,6 @@ using namespace beye;
 #include "bconsole.h"
 #include "reg_form.h"
 #include "libbeye/libbeye.h"
-#include "libbeye/pmalloc.h"
 #include "libbeye/kbd_code.h"
 
 static char is_msbf; /* is most significand byte first */
@@ -330,21 +329,6 @@ static __filesize_t __FASTCALL__ elfPA2VA(__filesize_t pa)
     }
   }
   return ret;
-}
-
-static bool __FASTCALL__ elfLowMemFunc( unsigned long need_mem )
-{
-  UNUSED(need_mem);
-  if(!fmtActiveState)
-  {
-    if(PubNames)
-    {
-       la_Destroy(PubNames);
-       PubNames = NULL;
-       return true;
-    }
-  }
-  return false;
 }
 
 static void __NEAR__ __FASTCALL__ elf386_readnametable(__filesize_t off,char *buf,unsigned blen)
@@ -2148,7 +2132,6 @@ static void __FASTCALL__ ELFinit( void )
 {
  __filesize_t fs;
  size_t i;
-   PMRegLowMemCallBack(elfLowMemFunc);
    bmReadBufferEx(&elf,sizeof(ElfXX_External_Ehdr),0,SEEKF_START);
    is_msbf = ELF_EHDR(elf,e_ident[EI_DATA]) == ELFDATA2MSB;
    is_64bit = ELF_EHDR(elf,e_ident[EI_CLASS]) == ELFCLASS64;
@@ -2187,7 +2170,6 @@ static void __FASTCALL__ ELFdestroy( void )
    if(&elfcache != &bNull && &elfcache != &main_handle) delete &elfcache;
    if(PubNames) { la_Destroy(PubNames); PubNames = 0; }
    if(CurrElfChain) { la_Destroy(CurrElfChain); CurrElfChain = 0; }
-   PMUnregLowMemCallBack(elfLowMemFunc);
    la_Destroy(va_map_virt);
    la_Destroy(va_map_phys);
 }

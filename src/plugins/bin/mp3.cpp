@@ -20,6 +20,7 @@ using namespace beye;
 **/
 #include <algorithm>
 #include <stddef.h>
+#include <string.h>
 
 #include "bswap.h"
 #include "bconsole.h"

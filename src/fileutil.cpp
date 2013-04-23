@@ -36,7 +36,6 @@ using namespace beye;
 #include "beyeutil.h"
 #include "bconsole.h"
 #include "reg_form.h"
-#include "libbeye/pmalloc.h"
 #include "libbeye/bbio.h"
 #include "libbeye/twin.h"
 #include "libbeye/kbd_code.h"
