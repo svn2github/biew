@@ -43,7 +43,7 @@ using namespace beye;
 static Nlm_Internal_Fixed_Header nlm;
 
 static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
-static void __FASTCALL__ nlm_ReadPubNameList(BFile* handle,void (__FASTCALL__ *mem_out)(const char *));
+static void __FASTCALL__ nlm_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *));
 static __filesize_t __FASTCALL__ NLMPA2VA(__filesize_t pa);
 
 static BFile* nlm_cache = &bNull;
@@ -284,27 +284,27 @@ static __filesize_t __FASTCALL__ ShowNewNLM( void )
   return fpos;
 }
 
-static unsigned __FASTCALL__ NLMExtRefNumItems(BFile* handle)
+static unsigned __FASTCALL__ NLMExtRefNumItems(BFile& handle)
 {
   UNUSED(handle);
   return (unsigned)nlm.nlm_numberOfExternalReferences;
 }
 
-static bool __FASTCALL__ __ReadExtRefNamesNLM(BFile* handle,memArray * obj,unsigned n)
+static bool __FASTCALL__ __ReadExtRefNamesNLM(BFile& handle,memArray * obj,unsigned n)
 {
  unsigned i;
- handle->seek(nlm.nlm_externalReferencesOffset,SEEKF_START);
+ handle.seek(nlm.nlm_externalReferencesOffset,SEEKF_START);
  for(i = 0;i < n;i++)
  {
    char stmp[256];
    unsigned char length;
    unsigned long nrefs;
-   length = handle->read_byte();
-   if(IsKbdTerminate() || handle->eof()) break;
-   handle->read_buffer(stmp,length);
+   length = handle.read_byte();
+   if(IsKbdTerminate() || handle.eof()) break;
+   handle.read_buffer(stmp,length);
    stmp[length] = 0;
-   nrefs = handle->read_dword();
-   handle->seek(nrefs*4,SEEKF_CUR);
+   nrefs = handle.read_dword();
+   handle.seek(nrefs*4,SEEKF_CUR);
    if(!ma_AddString(obj,stmp,true)) break;
  }
  return true;
@@ -334,30 +334,30 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcEntryNLM(unsigned ord,bool dispmsg
  return ret;
 }
 
-static unsigned __FASTCALL__ NLMNamesNumItems(BFile* handle)
+static unsigned __FASTCALL__ NLMNamesNumItems(BFile& handle)
 {
   UNUSED(handle);
   return (unsigned)nlm.nlm_numberOfPublics;
 }
 
-static bool __FASTCALL__ NLMNamesReadItems(BFile* handle,memArray * obj,unsigned nnames)
+static bool __FASTCALL__ NLMNamesReadItems(BFile& handle,memArray * obj,unsigned nnames)
 {
  unsigned char length;
  unsigned i;
- handle->seek(nlm.nlm_publicsOffset,SEEKF_START);
+ handle.seek(nlm.nlm_publicsOffset,SEEKF_START);
  for(i = 0;i < nnames;i++)
  {
    char stmp[256];
-   length = handle->read_byte();
-   if(IsKbdTerminate() || handle->eof()) break;
+   length = handle.read_byte();
+   if(IsKbdTerminate() || handle.eof()) break;
    if(length > 66)
    {
-     handle->read_buffer(stmp,66);
-     handle->seek(length - 66,SEEKF_CUR);
+     handle.read_buffer(stmp,66);
+     handle.seek(length - 66,SEEKF_CUR);
      strcat(stmp,">>>");
    }
-   else { handle->read_buffer(stmp,length); stmp[length] = 0; }
-   handle->seek(4L,SEEKF_CUR);
+   else { handle.read_buffer(stmp,length); stmp[length] = 0; }
+   handle.seek(4L,SEEKF_CUR);
    if(!ma_AddString(obj,stmp,true)) break;
  }
  return true;
@@ -373,29 +373,29 @@ static __filesize_t __FASTCALL__ ShowExtRefNLM( void )
    return BMGetCurrFilePos();
 }
 
-static unsigned __FASTCALL__ NLMModRefNumItems(BFile* handle)
+static unsigned __FASTCALL__ NLMModRefNumItems(BFile& handle)
 {
   UNUSED(handle);
   return (unsigned)nlm.nlm_numberOfModuleDependencies;
 }
 
-static bool __FASTCALL__ __ReadModRefNamesNLM(BFile* handle,memArray * obj,unsigned nnames)
+static bool __FASTCALL__ __ReadModRefNamesNLM(BFile& handle,memArray * obj,unsigned nnames)
 {
  unsigned char length;
  unsigned i;
- handle->seek(nlm.nlm_moduleDependencyOffset,SEEKF_START);
+ handle.seek(nlm.nlm_moduleDependencyOffset,SEEKF_START);
  for(i = 0;i < nnames;i++)
  {
    char stmp[256];
-   length = handle->read_byte();
-   if(IsKbdTerminate() || handle->eof()) break;
+   length = handle.read_byte();
+   if(IsKbdTerminate() || handle.eof()) break;
    if(length > 66)
    {
-     handle->read_buffer(stmp,66);
-     handle->seek(length - 66,SEEKF_CUR);
+     handle.read_buffer(stmp,66);
+     handle.seek(length - 66,SEEKF_CUR);
      strcat(stmp,">>>");
    }
-   else { handle->read_buffer(stmp,length); stmp[length] = 0; }
+   else { handle.read_buffer(stmp,length); stmp[length] = 0; }
    if(!ma_AddString(obj,stmp,true)) break;
  }
  return true;
@@ -578,18 +578,16 @@ static bool __FASTCALL__ IsNLM( void )
 
 static void __FASTCALL__ NLMinit( void )
 {
-  BFile* main_handle;
+  BFile& main_handle = bmbioHandle();
   PMRegLowMemCallBack(nlmLowMemFunc);
   bmReadBufferEx(&nlm,sizeof(Nlm_Internal_Fixed_Header),0,SEEKF_START);
-  main_handle = bmbioHandle();
-  if((nlm_cache = main_handle->dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) nlm_cache = main_handle;
+  if((nlm_cache = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) nlm_cache = &main_handle;
 }
 
 static void __FASTCALL__ NLMdestroy( void )
 {
-  BFile* main_handle;
-  main_handle = bmbioHandle();
-  if(nlm_cache != &bNull && nlm_cache != main_handle) delete nlm_cache;
+  BFile& main_handle = bmbioHandle();
+  if(nlm_cache != &bNull && nlm_cache != &main_handle) delete nlm_cache;
   PMUnregLowMemCallBack(nlmLowMemFunc);
 }
 
@@ -626,42 +624,42 @@ static __filesize_t __FASTCALL__ HelpNLM( void )
   return BMGetCurrFilePos();
 }
 
-static void __FASTCALL__ nlm_ReadPubName(BFile* b_cache,const struct PubName *it,
+static void __FASTCALL__ nlm_ReadPubName(BFile& b_cache,const struct PubName *it,
 			    char *buff,unsigned cb_buff)
 {
     unsigned char length;
-    b_cache->seek(it->nameoff,SEEK_SET);
-    length = b_cache->read_byte();
+    b_cache.seek(it->nameoff,SEEK_SET);
+    length = b_cache.read_byte();
     length = std::min(unsigned(length),cb_buff);
-    b_cache->read_buffer(buff,length);
+    b_cache.read_buffer(buff,length);
     buff[length] = 0;
 }
 
 static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
-  return fmtFindPubName(nlm_cache,buff,cb_buff,pa,
+  return fmtFindPubName(*nlm_cache,buff,cb_buff,pa,
 			nlm_ReadPubNameList,
 			nlm_ReadPubName);
 }
 
-static void __FASTCALL__ nlm_ReadPubNameList(BFile* handle,void (__FASTCALL__ *mem_out)(const char *))
+static void __FASTCALL__ nlm_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *))
 {
  unsigned char length;
  unsigned i;
  unsigned nnames = (unsigned)nlm.nlm_numberOfPublics;
  if(!PubNames)
    if(!(PubNames = la_Build(0,sizeof(struct PubName),mem_out))) return;
- handle->seek(nlm.nlm_publicsOffset,SEEKF_START);
+ handle.seek(nlm.nlm_publicsOffset,SEEKF_START);
  for(i = 0;i < nnames;i++)
  {
    struct PubName nlm_pn;
-   nlm_pn.nameoff = handle->tell();
-   length         = handle->read_byte();
-   handle->seek(length,SEEK_CUR);
-   nlm_pn.pa      = (handle->read_dword() & 0x00FFFFFFL) + nlm.nlm_codeImageOffset;
+   nlm_pn.nameoff = handle.tell();
+   length         = handle.read_byte();
+   handle.seek(length,SEEK_CUR);
+   nlm_pn.pa      = (handle.read_dword() & 0x00FFFFFFL) + nlm.nlm_codeImageOffset;
    nlm_pn.attr    = SC_GLOBAL;
    if(!la_AddData(PubNames,&nlm_pn,mem_out)) break;
-   if(handle->eof()) break;
+   if(handle.eof()) break;
  }
  if(PubNames->nItems) la_Sort(PubNames,fmtComparePubNames);
 }
@@ -669,7 +667,7 @@ static void __FASTCALL__ nlm_ReadPubNameList(BFile* handle,void (__FASTCALL__ *m
 static __filesize_t __FASTCALL__ NLMGetPubSym(char *str,unsigned cb_str,unsigned *func_class,
 			   __filesize_t pa,bool as_prev)
 {
-  return fmtGetPubSym(nlm_cache,str,cb_str,func_class,pa,as_prev,
+  return fmtGetPubSym(*nlm_cache,str,cb_str,func_class,pa,as_prev,
 		      nlm_ReadPubNameList,
 		      nlm_ReadPubName);
 }

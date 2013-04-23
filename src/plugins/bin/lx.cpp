@@ -288,57 +288,57 @@ __filesize_t __FASTCALL__ ShowNewHeaderLX( void )
   return fpos;
 }
 
-static unsigned __FASTCALL__ LXModRefNumItems(BFile* handle)
+static unsigned __FASTCALL__ LXModRefNumItems(BFile& handle)
 {
   UNUSED(handle);
   return (unsigned)lxe.lx.lxImportModuleTableEntries;
 }
 
-unsigned __FASTCALL__ LXRNamesNumItems(BFile* handle)
+unsigned __FASTCALL__ LXRNamesNumItems(BFile& handle)
 {
   return GetNamCountNE(handle,headshift + lxe.lx.lxResidentNameTableOffset);
 }
 
-unsigned __FASTCALL__ LXNRNamesNumItems(BFile* handle)
+unsigned __FASTCALL__ LXNRNamesNumItems(BFile& handle)
 {
   return GetNamCountNE(handle,lxe.lx.lxNonResidentNameTableOffset);
 }
 
-bool __FASTCALL__ LXRNamesReadItems(BFile* handle,memArray * obj,unsigned nnames)
+bool __FASTCALL__ LXRNamesReadItems(BFile& handle,memArray * obj,unsigned nnames)
 {
    return RNamesReadItems(handle,obj,nnames,lxe.lx.lxResidentNameTableOffset + headshift);
 }
 
-static unsigned __FASTCALL__ LXImpNamesNumItems(BFile* handle)
+static unsigned __FASTCALL__ LXImpNamesNumItems(BFile& handle)
 {
   __filesize_t fpos;
   unsigned char len;
   unsigned count;
-  handle->seek(lxe.lx.lxImportProcedureTableOffset + headshift,SEEKF_START);
-  fpos = handle->tell();
+  handle.seek(lxe.lx.lxImportProcedureTableOffset + headshift,SEEKF_START);
+  fpos = handle.tell();
   count = 0;
   while(fpos < lxe.lx.lxFixupSectionSize + lxe.lx.lxFixupPageTableOffset + headshift)
   {
-    len = handle->read_byte();
-    handle->seek(len,SEEKF_CUR);
-    fpos = handle->tell();
-    if(handle->eof()) break;
+    len = handle.read_byte();
+    handle.seek(len,SEEKF_CUR);
+    fpos = handle.tell();
+    if(handle.eof()) break;
     count++;
   }
   return count;
 }
 
-static bool __FASTCALL__ LXImpNamesReadItems(BFile* handle,memArray * obj,unsigned nnames)
+static bool __FASTCALL__ LXImpNamesReadItems(BFile& handle,memArray * obj,unsigned nnames)
 {
  unsigned i;
  unsigned char byte;
- handle->seek(lxe.lx.lxImportProcedureTableOffset + headshift,SEEKF_START);
+ handle.seek(lxe.lx.lxImportProcedureTableOffset + headshift,SEEKF_START);
  for(i = 0;i < nnames;i++)
  {
    char nam[256];
-   byte = handle->read_byte();
-   if(IsKbdTerminate() || handle->eof()) break;
-   handle->read_buffer(nam,byte);
+   byte = handle.read_byte();
+   if(IsKbdTerminate() || handle.eof()) break;
+   handle.read_buffer(nam,byte);
    nam[byte] = 0;
    if(!ma_AddString(obj,nam,true)) break;
  }
@@ -346,34 +346,34 @@ static bool __FASTCALL__ LXImpNamesReadItems(BFile* handle,memArray * obj,unsign
 }
 
 
-bool __FASTCALL__ LXNRNamesReadItems(BFile* handle,memArray * obj,unsigned nnames)
+bool __FASTCALL__ LXNRNamesReadItems(BFile& handle,memArray * obj,unsigned nnames)
 {
    return RNamesReadItems(handle,obj,nnames,lxe.lx.lxNonResidentNameTableOffset);
 }
 
 #if 0
-extern unsigned __FASTCALL__ RNameReadFull(BFile* handle,char * names,unsigned nindex,__filesize_t _offset);
-static unsigned __FASTCALL__ LXRNamesReadFullName(BFile* handle,char * names,unsigned index)
+extern unsigned __FASTCALL__ RNameReadFull(BFile& handle,char * names,unsigned nindex,__filesize_t _offset);
+static unsigned __FASTCALL__ LXRNamesReadFullName(BFile& handle,char * names,unsigned index)
 {
    return RNameReadFull(handle,names,index,lxe.lx.lxResidentNameTableOffset + headshift);
 }
 
-static unsigned __FASTCALL__ LXNRNamesReadFullName(BFile* handle,char * names,unsigned index)
+static unsigned __FASTCALL__ LXNRNamesReadFullName(BFile& handle,char * names,unsigned index)
 {
    return RNameReadFull(handle,names,index,lxe.lx.lxNonResidentNameTableOffset);
 }
 #endif
-static bool __FASTCALL__  __ReadModRefNamesLX(BFile* handle,memArray * obj,unsigned nnames)
+static bool __FASTCALL__  __ReadModRefNamesLX(BFile& handle,memArray * obj,unsigned nnames)
 {
  unsigned i;
  unsigned char byte;
- handle->seek(lxe.lx.lxImportModuleTableOffset + headshift,SEEKF_START);
+ handle.seek(lxe.lx.lxImportModuleTableOffset + headshift,SEEKF_START);
  for(i = 0;i < nnames;i++)
  {
    char nam[256];
-   byte = handle->read_byte();
-   if(IsKbdTerminate() || handle->eof()) break;
-   handle->read_buffer(nam,byte);
+   byte = handle.read_byte();
+   if(IsKbdTerminate() || handle.eof()) break;
+   handle.read_buffer(nam,byte);
    nam[byte] = 0;
    if(!ma_AddString(obj,nam,true)) break;
  }
@@ -441,20 +441,20 @@ static void __FASTCALL__ ObjPaintLX(TWindow * win,const any_t** names,unsigned s
  twRefreshFullWin(win);
 }
 
-static bool __NEAR__ __FASTCALL__ __ReadObjectsLX(BFile* handle,memArray * obj,unsigned n)
+static bool __NEAR__ __FASTCALL__ __ReadObjectsLX(BFile& handle,memArray * obj,unsigned n)
 {
  size_t i;
   for(i = 0;i < n;i++)
   {
     LX_OBJECT lxo;
-    if(IsKbdTerminate() || handle->eof()) break;
-    handle->read_buffer(&lxo,sizeof(LX_OBJECT));
+    if(IsKbdTerminate() || handle.eof()) break;
+    handle.read_buffer(&lxo,sizeof(LX_OBJECT));
     if(!ma_AddData(obj,&lxo,sizeof(LX_OBJECT),true)) break;
   }
   return true;
 }
 
-static bool __NEAR__ __FASTCALL__ __ReadEntriesLX(BFile* handle,memArray *obj)
+static bool __NEAR__ __FASTCALL__ __ReadEntriesLX(BFile& handle,memArray *obj)
 {
  unsigned i;
  unsigned char j;
@@ -466,10 +466,10 @@ static bool __NEAR__ __FASTCALL__ __ReadEntriesLX(BFile* handle,memArray *obj)
  {
    bool is_eof;
    is_eof = false;
-   cnt = handle->read_byte();
-   type = handle->read_byte();
+   cnt = handle.read_byte();
+   type = handle.read_byte();
    if(!cnt) break;
-   if(type) numobj = handle->read_word();
+   if(type) numobj = handle.read_word();
    for(j = 0;j < cnt;j++,i++)
    {
      char size;
@@ -483,14 +483,14 @@ static bool __NEAR__ __FASTCALL__ __ReadEntriesLX(BFile* handle,memArray *obj)
        default:
        case 4: size = 6; break;
      }
-     is_eof = handle->eof();
+     is_eof = handle.eof();
      if(IsKbdTerminate() || is_eof) goto exit;
      _lxe.b32_type = type;
      if(size)
      {
        _lxe.b32_obj = numobj;
-       _lxe.entry.e32_flags = handle->read_byte();
-       handle->read_buffer(&_lxe.entry.e32_variant,size);
+       _lxe.entry.e32_flags = handle.read_byte();
+       handle.read_buffer(&_lxe.entry.e32_variant,size);
      }
      if(!ma_AddData(obj,&_lxe,sizeof(LX_ENTRY),true)) goto exit;
    }
@@ -500,11 +500,11 @@ static bool __NEAR__ __FASTCALL__ __ReadEntriesLX(BFile* handle,memArray *obj)
  return true;
 }
 
-static void __FASTCALL__ lxReadPageDesc(BFile* handle,LX_MAP_TABLE *mt,unsigned long pageidx)
+static void __FASTCALL__ lxReadPageDesc(BFile& handle,LX_MAP_TABLE *mt,unsigned long pageidx)
 {
-  handle->seek(headshift+lxe.lx.lxObjectPageTableOffset+
+  handle.seek(headshift+lxe.lx.lxObjectPageTableOffset+
 	  sizeof(LX_MAP_TABLE)*(pageidx - 1),SEEK_SET);
-  handle->read_buffer((any_t*)mt,sizeof(LX_MAP_TABLE));
+  handle.read_buffer((any_t*)mt,sizeof(LX_MAP_TABLE));
 }
 
 static __filesize_t __NEAR__ __FASTCALL__ __calcPageEntry(LX_MAP_TABLE *mt)
@@ -530,25 +530,23 @@ static __filesize_t __NEAR__ __FASTCALL__ __calcPageEntry(LX_MAP_TABLE *mt)
 
 static __filesize_t __NEAR__ __FASTCALL__ CalcPageEntry(unsigned long pageidx)
 {
-  BFile* handle;
+  BFile& handle = *lx_cache;
   LX_MAP_TABLE mt;
   if(!pageidx) return -1;
-  handle = lx_cache;
   lxReadPageDesc(handle,&mt,pageidx);
   return __calcPageEntry(&mt);
 }
 
 static __filesize_t __NEAR__ __FASTCALL__ CalcEntryPointLX(unsigned long objnum,__filesize_t _offset)
 {
-  BFile* handle;
+  BFile& handle = *lx_cache;
   unsigned long i,diff;
   LX_OBJECT lo;
   LX_MAP_TABLE mt;
   if(!objnum) return BMGetCurrFilePos();
-  handle = lx_cache;
-  handle->seek(lxe.lx.lxObjectTableOffset + headshift,SEEK_SET);
-  handle->seek(sizeof(LX_OBJECT)*(objnum - 1),SEEKF_CUR);
-  handle->read_buffer((any_t*)&lo,sizeof(LX_OBJECT));
+  handle.seek(lxe.lx.lxObjectTableOffset + headshift,SEEK_SET);
+  handle.seek(sizeof(LX_OBJECT)*(objnum - 1),SEEKF_CUR);
+  handle.read_buffer((any_t*)&lo,sizeof(LX_OBJECT));
   i = _offset / lxe.lx.lxPageSize;
   diff = _offset - i*lxe.lx.lxPageSize;
   lxReadPageDesc(handle,&mt,i+lo.o32_pagemap);
@@ -683,7 +681,7 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcEntryBungleLX(unsigned ordinal,boo
 
 __filesize_t __FASTCALL__ ShowObjectsLX( void )
 {
- BFile* handle;
+ BFile& handle = *lx_cache;
  __filesize_t fpos;
  unsigned nnames;
  memArray * obj;
@@ -691,8 +689,7 @@ __filesize_t __FASTCALL__ ShowObjectsLX( void )
  nnames = (unsigned)lxe.lx.lxObjectCount;
  if(!nnames) { NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
- handle = lx_cache;
- handle->seek(lxe.lx.lxObjectTableOffset + headshift,SEEK_SET);
+ handle.seek(lxe.lx.lxObjectTableOffset + headshift,SEEK_SET);
  if(__ReadObjectsLX(handle,obj,nnames))
  {
   int ret;
@@ -837,14 +834,14 @@ static void __FASTCALL__ PaintEntriesLX(TWindow * win,const any_t** names,unsign
  twRefreshFullWin(win);
 }
 
-static bool __FASTCALL__ __ReadMapTblLX(BFile* handle,memArray * obj,unsigned n)
+static bool __FASTCALL__ __ReadMapTblLX(BFile& handle,memArray * obj,unsigned n)
 {
   size_t i;
   for(i = 0;i < n;i++)
   {
     LX_MAP_TABLE mt;
     char stmp[80];
-    if(IsKbdTerminate() || handle->eof()) break;
+    if(IsKbdTerminate() || handle.eof()) break;
     lxReadPageDesc(handle,&mt,i+1);
     sprintf(stmp,"Off=%08lXH Siz=%04hXH Flg:%04hXH=%s",
 		 (unsigned long)mt.o32_pagedataoffset,
@@ -856,7 +853,7 @@ static bool __FASTCALL__ __ReadMapTblLX(BFile* handle,memArray * obj,unsigned n)
   return true;
 }
 #if 0
-static bool __NEAR__ __FASTCALL__ __ReadIterTblLX(BFile* handle,memArray * obj,unsigned n)
+static bool __NEAR__ __FASTCALL__ __ReadIterTblLX(BFile& handle,memArray * obj,unsigned n)
 {
  int i;
   for(i = 0;i < n;i++)
@@ -869,7 +866,7 @@ static bool __NEAR__ __FASTCALL__ __ReadIterTblLX(BFile* handle,memArray * obj,u
   return true;
 }
 #endif
-static unsigned __FASTCALL__ lxGetPageCount(BFile* handle)
+static unsigned __FASTCALL__ lxGetPageCount(BFile& handle)
 {
   UNUSED(handle);
   return (unsigned)lxe.lx.lxPageCount;
@@ -891,13 +888,12 @@ static __filesize_t __FASTCALL__ ShowMapTableLX( void )
 
 __filesize_t __FASTCALL__ ShowEntriesLX( void )
 {
- BFile* handle;
+ BFile& handle = *lx_cache;
  __filesize_t fpos;
  memArray * obj;
  fpos = BMGetCurrFilePos();
  if(!lxe.lx.lxEntryTableOffset) { NotifyBox(NOT_ENTRY," Entry Table "); return fpos; }
- handle = lx_cache;
- handle->seek(lxe.lx.lxEntryTableOffset + headshift,SEEK_SET);
+ handle.seek(lxe.lx.lxEntryTableOffset + headshift,SEEK_SET);
  if(!(obj = ma_Build(0,true))) goto exit;
  if(__ReadEntriesLX(handle,obj))
  {
@@ -938,16 +934,16 @@ const char * ResourceGrNamesLX[] =
   "DBCS font drive"
 };
 
-static bool __NEAR__ __FASTCALL__ __ReadResourceGroupLX(BFile* handle,memArray *obj,unsigned nitems,long * addr)
+static bool __NEAR__ __FASTCALL__ __ReadResourceGroupLX(BFile& handle,memArray *obj,unsigned nitems,long * addr)
 {
  unsigned i;
  LXResource lxr;
  for(i = 0;i < nitems;i++)
  {
     char stmp[81];
-    handle->read_buffer(&lxr,sizeof(LXResource));
+    handle.read_buffer(&lxr,sizeof(LXResource));
     addr[i] = lxr.offset;
-    if(IsKbdTerminate() || handle->eof()) break;
+    if(IsKbdTerminate() || handle.eof()) break;
     sprintf(stmp,"%6hu = ",lxr.nameID);
     if(lxr.typeID < sizeof(ResourceGrNamesLX)/sizeof(char *)) strcat(stmp,ResourceGrNamesLX[lxr.typeID]);
     else  sprintf(&stmp[strlen(stmp)],"Unknown < %04hXH >",lxr.typeID);
@@ -962,13 +958,12 @@ static bool __NEAR__ __FASTCALL__ __ReadResourceGroupLX(BFile* handle,memArray *
 static __filesize_t __FASTCALL__ ShowResourceLX( void )
 {
  __filesize_t fpos;
- BFile* handle;
+ BFile& handle = *lx_cache;
  memArray * obj;
  long * raddr;
  unsigned nrgroup;
  fpos = BMGetCurrFilePos();
- handle = lx_cache;
- handle->seek((__fileoff_t)headshift + lxe.lx.lxResourceTableOffset,SEEK_SET);
+ handle.seek((__fileoff_t)headshift + lxe.lx.lxResourceTableOffset,SEEK_SET);
  nrgroup = (unsigned)lxe.lx.lxNumberResourceTableEntries;
  if(!nrgroup) { NotifyBox(NOT_ENTRY," Resources "); return fpos; }
  if(!(obj = ma_Build(nrgroup,true))) goto exit;
@@ -1044,18 +1039,16 @@ static bool __FASTCALL__ isLX( void )
 
 static void __FASTCALL__ LXinit( void )
 {
-   BFile* main_handle;
+   BFile& main_handle = bmbioHandle();
    LXType = FILE_LX;
    bmReadBufferEx(&lxe.lx,sizeof(LXHEADER),headshift,SEEKF_START);
-   main_handle = bmbioHandle();
-   if((lx_cache = main_handle->dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) lx_cache = main_handle;
+   if((lx_cache = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) lx_cache = &main_handle;
 }
 
 static void __FASTCALL__ LXdestroy( void )
 {
-   BFile* main_handle;
-   main_handle = bmbioHandle();
-   if(lx_cache != &bNull && lx_cache != main_handle) delete lx_cache;
+   BFile& main_handle = bmbioHandle();
+   if(lx_cache != &bNull && lx_cache != &main_handle) delete lx_cache;
 }
 
 static __filesize_t __FASTCALL__ LXHelp( void )
@@ -1067,17 +1060,16 @@ static __filesize_t __FASTCALL__ LXHelp( void )
 static __filesize_t __FASTCALL__ lxVA2PA(__filesize_t va)
 {
  /* First we must determine object number for given virtual address */
-  BFile* handle;
+  BFile& handle = *lx_cache;
   unsigned long i,diff,oidx;
   __filesize_t rva,pa;
   LX_OBJECT lo;
   LX_MAP_TABLE mt;
-  handle = lx_cache;
-  handle->seek(lxe.lx.lxObjectTableOffset + headshift,SEEK_SET);
+  handle.seek(lxe.lx.lxObjectTableOffset + headshift,SEEK_SET);
   pa = oidx = 0; /* means: error */
   for(i = 0;i < lxe.lx.lxObjectCount;i++)
   {
-    handle->read_buffer((any_t*)&lo,sizeof(LX_OBJECT));
+    handle.read_buffer((any_t*)&lo,sizeof(LX_OBJECT));
     if(lo.o32_base <= va && va < lo.o32_base + lo.o32_size)
     {
       oidx = i+1;
@@ -1099,12 +1091,11 @@ static __filesize_t __FASTCALL__ lxVA2PA(__filesize_t va)
 static __filesize_t __FASTCALL__ lxPA2VA(__filesize_t pa)
 {
  /* First we must determine page for given physical address */
-  BFile* handle;
+  BFile& handle = *lx_cache;
   unsigned long i,pidx,pagentry;
   __filesize_t rva,va;
   LX_OBJECT lo;
   LX_MAP_TABLE mt;
-  handle = lx_cache;
   pagentry = va = pidx = 0;
   for(i = 0;i < lxe.lx.lxPageCount;i++)
   {
@@ -1120,10 +1111,10 @@ static __filesize_t __FASTCALL__ lxPA2VA(__filesize_t pa)
   if(pidx)
   {
     rva = pa - pagentry + (pidx-1)*lxe.lx.lxPageSize;
-    handle->seek(lxe.lx.lxObjectTableOffset + headshift,SEEK_SET);
+    handle.seek(lxe.lx.lxObjectTableOffset + headshift,SEEK_SET);
     for(i = 0;i < lxe.lx.lxObjectCount;i++)
     {
-      handle->read_buffer((any_t*)&lo,sizeof(LX_OBJECT));
+      handle.read_buffer((any_t*)&lo,sizeof(LX_OBJECT));
       if(lo.o32_pagemap <= pidx && pidx < lo.o32_pagemap + lo.o32_mapsize)
       {
 	va = lo.o32_base + rva;
@@ -1137,12 +1128,11 @@ static __filesize_t __FASTCALL__ lxPA2VA(__filesize_t pa)
 static int __FASTCALL__ lxBitness(__filesize_t pa)
 {
  /* First we must determine page for given physical address */
-  BFile* handle;
+  BFile& handle = *lx_cache;
   unsigned long i,pidx,pagentry;
   int ret;
   LX_OBJECT lo;
   LX_MAP_TABLE mt;
-  handle = lx_cache;
   pagentry = pidx = 0;
   ret = DAB_USE16;
   for(i = 0;i < lxe.lx.lxPageCount;i++)
@@ -1158,10 +1148,10 @@ static int __FASTCALL__ lxBitness(__filesize_t pa)
   /* Secondly we must determine object number for given physical address */
   if(pidx)
   {
-    handle->seek(lxe.lx.lxObjectTableOffset + headshift,SEEK_SET);
+    handle.seek(lxe.lx.lxObjectTableOffset + headshift,SEEK_SET);
     for(i = 0;i < lxe.lx.lxObjectCount;i++)
     {
-      handle->read_buffer((any_t*)&lo,sizeof(LX_OBJECT));
+      handle.read_buffer((any_t*)&lo,sizeof(LX_OBJECT));
       if(lo.o32_pagemap <= pidx && pidx < lo.o32_pagemap + lo.o32_mapsize)
       {
 	ret = (lo.o32_flags & 0x00002000L) == 0x00002000L ? DAB_USE32 : DAB_USE16;

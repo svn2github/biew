@@ -42,16 +42,16 @@ static __filesize_t __FASTCALL__ ShowNewHeaderLE( void )
   return ShowNewHeaderLX();
 }
 
-static bool __FASTCALL__ __ReadMapTblLE(BFile* handle,memArray * obj,unsigned n)
+static bool __FASTCALL__ __ReadMapTblLE(BFile& handle,memArray * obj,unsigned n)
 {
  size_t i;
-  handle->seek(lxe.le.leObjectPageMapTableOffset + headshift,SEEKF_START);
+  handle.seek(lxe.le.leObjectPageMapTableOffset + headshift,SEEKF_START);
   for(i = 0;i < n;i++)
   {
     LE_PAGE lep;
     char stmp[80];
-    if(IsKbdTerminate() || handle->eof()) break;
-    handle->read_buffer(&lep,sizeof(LE_PAGE));
+    if(IsKbdTerminate() || handle.eof()) break;
+    handle.read_buffer(&lep,sizeof(LE_PAGE));
     sprintf(stmp,"#=%08lXH Flags: %04hX = %s",(long)lep.number,lep.flags,lxeGetMapAttr(lep.flags));
     if(!ma_AddString(obj,stmp,true)) break;
   }
@@ -213,7 +213,7 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,boo
  return ret;
 }
 
-static unsigned __FASTCALL__ leMapTblNumEntries(BFile* handle)
+static unsigned __FASTCALL__ leMapTblNumEntries(BFile& handle)
 {
   UNUSED(handle);
   return (unsigned)lxe.le.lePageCount;
@@ -280,18 +280,16 @@ static bool __FASTCALL__ isLE( void )
 
 static void __FASTCALL__ LEinit( void )
 {
-   BFile* main_handle;
+   BFile& main_handle = bmbioHandle();
    LXType = FILE_LE;
    bmReadBufferEx(&lxe.le,sizeof(LEHEADER),headshift,SEEKF_START);
-   main_handle = bmbioHandle();
-   if((lx_cache = main_handle->dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) lx_cache = main_handle;
+   if((lx_cache = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) lx_cache = &main_handle;
 }
 
 static void __FASTCALL__ LEdestroy( void )
 {
-   BFile* main_handle;
-   main_handle = bmbioHandle();
-   if(lx_cache != &bNull && lx_cache != main_handle) delete lx_cache;
+   BFile& main_handle = bmbioHandle();
+   if(lx_cache != &bNull && lx_cache != &main_handle) delete lx_cache;
 }
 
 static __filesize_t __FASTCALL__ LEHelp( void )

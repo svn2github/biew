@@ -1263,7 +1263,8 @@ static void __FASTCALL__ txtInit( void )
      MemOutBox("Text mode initialization");
      exit(EXIT_FAILURE);
    }
-   if((txtHandle = BMbioHandle()->dup()) == &bNull) txtHandle = BMbioHandle();
+   BFile& bh = BMbioHandle();
+   if((txtHandle = bh.dup()) == &bNull) txtHandle = &bh;
    memset(&syntax_hl,0,sizeof(syntax_hl));
    /* Fill operator's hash */
    memset(syntax_hl.op_hash,text_cset.normal,sizeof(syntax_hl.op_hash));
@@ -1285,7 +1286,8 @@ static void __FASTCALL__ txtTerm( void )
   delete buff;
   delete tlines;
   delete ptlines;
-  if(txtHandle != BMbioHandle()) { delete txtHandle; txtHandle = &bNull; }
+  BFile& bh = BMbioHandle();
+  if(txtHandle != &bh) { delete txtHandle; txtHandle = &bNull; }
   if(syntax_hl.name) delete syntax_hl.name;
   if(escape) delete escape;
   escape=NULL;

@@ -49,8 +49,8 @@ static __filesize_t cs_start,ds_start;
 static linearArray *rdoffReloc = NULL;
 static linearArray *rdoffImpNames = NULL;
 
-static void __NEAR__ __FASTCALL__ ReadImpNameList(BFile* handle,void (__FASTCALL__ *mem_out)(const char *));
-static void __FASTCALL__ rdoff_ReadPubNameList(BFile* handle,void (__FASTCALL__ *mem_out)(const char *));
+static void __NEAR__ __FASTCALL__ ReadImpNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *));
+static void __FASTCALL__ rdoff_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *));
 static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
 
 static tCompare __FASTCALL__ compare_impnames(const void __HUGE__ *v1,const void __HUGE__ *v2);
@@ -581,12 +581,12 @@ static void __FASTCALL__ rdoff_destroy_fmt( void )
   PMUnregLowMemCallBack(rdoffLowMemFunc);
 }
 
-static void __FASTCALL__ rdoff_ReadPubName(BFile* b_cache,const struct PubName *it,
+static void __FASTCALL__ rdoff_ReadPubName(BFile& b_cache,const struct PubName *it,
 		       char *buff,unsigned cb_buff)
 {
     unsigned char ch;
     unsigned i;
-    b_cache->seek(it->nameoff,SEEK_SET);
+    b_cache.seek(it->nameoff,SEEK_SET);
     for(i = 0;i < cb_buff;i++)
     {
       ch = bmReadByte();
@@ -597,14 +597,13 @@ static void __FASTCALL__ rdoff_ReadPubName(BFile* b_cache,const struct PubName *
 
 static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
-  BFile* b_cache;
-  b_cache = bmbioHandle();
+  BFile& b_cache = bmbioHandle();
   return fmtFindPubName(b_cache,buff,cb_buff,pa,
 			rdoff_ReadPubNameList,
 			rdoff_ReadPubName);
 }
 
-static void __FASTCALL__ rdoff_ReadPubNameList(BFile* handle,void (__FASTCALL__ *mem_out)(const char *))
+static void __FASTCALL__ rdoff_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *))
 {
  unsigned char segno,rec;
  __filesize_t segoff,abs_off;
@@ -654,7 +653,7 @@ static tCompare __FASTCALL__ compare_impnames(const void __HUGE__ *v1,const void
   return __CmpLong__(pnam1->lsegno,pnam2->lsegno);
 }
 
-static void __NEAR__ __FASTCALL__ ReadImpNameList(BFile* handle,void (__FASTCALL__ *mem_out)(const char *))
+static void __NEAR__ __FASTCALL__ ReadImpNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *))
 {
  unsigned char rec;
  unsigned i;
@@ -700,8 +699,7 @@ static int __FASTCALL__ rdoff_bitness(__filesize_t pa)
 static __filesize_t __FASTCALL__ rdoffGetPubSym(char *str,unsigned cb_str,unsigned *func_class,
 			   __filesize_t pa,bool as_prev)
 {
-  BFile* b_cache;
-  b_cache = bmbioHandle();
+  BFile& b_cache = bmbioHandle();
   return fmtGetPubSym(b_cache,str,cb_str,func_class,pa,as_prev,
 		      rdoff_ReadPubNameList,
 		      rdoff_ReadPubName);

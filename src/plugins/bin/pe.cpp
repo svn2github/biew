@@ -70,7 +70,7 @@ static BFile* pe_cache3 = &bNull;
 static BFile* pe_cache4 = &bNull;
 
 static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
-static void __FASTCALL__ pe_ReadPubNameList(BFile* handle,void (__FASTCALL__ *mem_out)(const char *));
+static void __FASTCALL__ pe_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *));
 static __filesize_t __FASTCALL__ peVA2PA(__filesize_t va);
 static __filesize_t __FASTCALL__ pePA2VA(__filesize_t pa);
 static __fileoff_t __NEAR__ CalcOverlayOffset( void );
@@ -126,19 +126,19 @@ static __filesize_t __NEAR__ __FASTCALL__ RVA2Phys(__filesize_t rva)
  return ret;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ fioReadDWord(BFile* handle,__filesize_t offset,int origin)
+static __filesize_t __NEAR__ __FASTCALL__ fioReadDWord(BFile& handle,__filesize_t offset,int origin)
 {
- handle->seek(offset,origin);
- return handle->read_dword();
+ handle.seek(offset,origin);
+ return handle.read_dword();
 }
 
-static unsigned __NEAR__ __FASTCALL__ fioReadWord(BFile* handle,__filesize_t offset,int origin)
+static unsigned __NEAR__ __FASTCALL__ fioReadWord(BFile& handle,__filesize_t offset,int origin)
 {
- handle->seek(offset,origin);
- return handle->read_word();
+ handle.seek(offset,origin);
+ return handle.read_word();
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ fioReadDWord2Phys(BFile* handle,__filesize_t offset,int origin)
+static __filesize_t __NEAR__ __FASTCALL__ fioReadDWord2Phys(BFile& handle,__filesize_t offset,int origin)
 {
  unsigned long dword;
  dword = fioReadDWord(handle,offset,origin);
@@ -184,7 +184,7 @@ static const char * __NEAR__ __FASTCALL__ PECPUType(void)
        {0xC0EE, "CEE"},
        {0x0000, "Unknown"},
     };
-    int i;
+    unsigned i;
 
     for(i=0; i<(sizeof(pe_cpu)/sizeof(pe_cpu[0])); i++) {
        if(pe.peCPUType == pe_cpu[i].code)
@@ -427,14 +427,14 @@ static void __FASTCALL__ ObjPaintPE(TWindow * win,const any_t** names,unsigned s
  twRefreshFullWin(win);
 }
 
-static bool __NEAR__ __FASTCALL__ __ReadObjectsPE(BFile* handle,memArray * obj,unsigned n)
+static bool __NEAR__ __FASTCALL__ __ReadObjectsPE(BFile& handle,memArray * obj,unsigned n)
 {
  unsigned i;
   for(i = 0;i < n;i++)
   {
     PE_OBJECT po;
-    if(IsKbdTerminate() || handle->eof()) break;
-    handle->read_buffer(&po,sizeof(PE_OBJECT));
+    if(IsKbdTerminate() || handle.eof()) break;
+    handle.read_buffer(&po,sizeof(PE_OBJECT));
     if(!ma_AddData(obj,&po,sizeof(PE_OBJECT),true)) break;
   }
   return true;
@@ -446,7 +446,7 @@ static __fileoff_t __NEAR__ CalcOverlayOffset( void )
     memArray *obj;
     if ((obj = ma_Build(pe.peObjects, true))) {
       pe_cache->seek(0x18 + pe.peNTHdrSize + headshift, SEEK_SET);
-      if (__ReadObjectsPE(pe_cache, obj, pe.peObjects)) {
+      if (__ReadObjectsPE(*pe_cache, obj, pe.peObjects)) {
 	int i;
 	for (i = 0; i < pe.peObjects; i++) {
 	  PE_OBJECT *o = (PE_OBJECT *)obj->data[i];
@@ -465,15 +465,14 @@ static __fileoff_t __NEAR__ CalcOverlayOffset( void )
 static __filesize_t __FASTCALL__ ShowObjectsPE( void )
 {
  __filesize_t fpos;
- BFile* handle;
+ BFile& handle = *pe_cache;
  unsigned nnames;
  memArray * obj;
  fpos = BMGetCurrFilePos();
  nnames = pe.peObjects;
  if(!nnames) { NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
- handle = pe_cache;
- handle->seek(0x18 + pe.peNTHdrSize + headshift,SEEK_SET);
+ handle.seek(0x18 + pe.peNTHdrSize + headshift,SEEK_SET);
  if(__ReadObjectsPE(handle,obj,nnames))
  {
   int ret;
@@ -484,94 +483,94 @@ static __filesize_t __FASTCALL__ ShowObjectsPE( void )
  return fpos;
 }
 
-static unsigned __NEAR__ __FASTCALL__ GetImportCountPE(BFile* handle,__filesize_t phys)
+static unsigned __NEAR__ __FASTCALL__ GetImportCountPE(BFile& handle,__filesize_t phys)
 {
   unsigned count;
-  __filesize_t fpos = handle->tell();
+  __filesize_t fpos = handle.tell();
   unsigned long ctrl;
   count = 0;
-  handle->seek(phys,SEEKF_START);
+  handle.seek(phys,SEEKF_START);
   while(1)
   {
     ctrl = fioReadDWord(handle,12L,SEEKF_CUR);
-    handle->seek(4L,SEEKF_CUR);
-    if(ctrl == 0 || count > 0xFFFD || IsKbdTerminate() || handle->eof()) break;
+    handle.seek(4L,SEEKF_CUR);
+    if(ctrl == 0 || count > 0xFFFD || IsKbdTerminate() || handle.eof()) break;
     count++;
   }
-  handle->seek(fpos,SEEKF_START);
+  handle.seek(fpos,SEEKF_START);
   return count;
 }
 
 /* returns really readed number of characters */
-unsigned __NEAR__ __FASTCALL__ __peReadASCIIZName(BFile* handle,__filesize_t offset,char *buff, unsigned cb_buff)
+unsigned __NEAR__ __FASTCALL__ __peReadASCIIZName(BFile& handle,__filesize_t offset,char *buff, unsigned cb_buff)
 {
   unsigned j;
   char ch;
   __filesize_t fpos;
-  fpos = handle->tell();
+  fpos = handle.tell();
   j = 0;
-  handle->seek(offset,SEEKF_START);
+  handle.seek(offset,SEEKF_START);
   while(1)
   {
-    ch = handle->read_byte();
+    ch = handle.read_byte();
     buff[j++] = ch;
-    if(!ch || j >= cb_buff || handle->eof()) break;
+    if(!ch || j >= cb_buff || handle.eof()) break;
   }
   if(j) buff[j-1]=0;
-  handle->seek(fpos,SEEKF_START);
+  handle.seek(fpos,SEEKF_START);
   return j;
 }
 
-static unsigned __NEAR__ __FASTCALL__ __ReadImportPE(BFile* handle,__filesize_t phys,memArray *obj,unsigned nnames)
+static unsigned __NEAR__ __FASTCALL__ __ReadImportPE(BFile& handle,__filesize_t phys,memArray *obj,unsigned nnames)
 {
   unsigned i;
-  __filesize_t fpos = handle->tell();
+  __filesize_t fpos = handle.tell();
   __filesize_t rva,addr;
-  handle->seek(phys,SEEKF_START);
+  handle.seek(phys,SEEKF_START);
   for(i = 0;i < nnames;i++)
   {
     char tmp[300];
     bool is_eof;
     rva = fioReadDWord(handle,12L,SEEKF_CUR);
-    handle->seek(4L,SEEKF_CUR);
+    handle.seek(4L,SEEKF_CUR);
     addr = RVA2Phys(rva);
     __peReadASCIIZName(handle,addr,tmp,sizeof(tmp));
     if(IsKbdTerminate()) break;
-    is_eof = handle->eof();
+    is_eof = handle.eof();
     if(!ma_AddString(obj,is_eof ? CORRUPT_BIN_MSG : tmp,true)) break;
     if(is_eof) break;
   }
-  handle->seek(fpos,SEEKF_START);
+  handle.seek(fpos,SEEKF_START);
   return obj->nItems;
 }
 
 static __filesize_t addr_shift_pe = 0L;
 
-static unsigned __FASTCALL__ GetImpCountPE(BFile* handle)
+static unsigned __FASTCALL__ GetImpCountPE(BFile& handle)
 {
  unsigned count;
  uint64_t Hint;
  count = 0;
  if(addr_shift_pe)
  {
-   handle->seek(addr_shift_pe,SEEKF_START);
+   handle.seek(addr_shift_pe,SEEKF_START);
    while(1)
    {
-     Hint = is_64bit ? handle->read_qword():handle->read_dword();
-     if(Hint == 0ULL || count > 0xFFFD || IsKbdTerminate() || handle->eof()) break;
+     Hint = is_64bit ? handle.read_qword():handle.read_dword();
+     if(Hint == 0ULL || count > 0xFFFD || IsKbdTerminate() || handle.eof()) break;
      count++;
    }
  }
  return count;
 }
 
-static bool __FASTCALL__  __ReadImpContPE(BFile* handle,memArray * obj,unsigned nnames)
+static bool __FASTCALL__  __ReadImpContPE(BFile& handle,memArray * obj,unsigned nnames)
 {
   unsigned i,VA;
   uint64_t Hint;
   int cond;
   __filesize_t rphys;
-  handle->seek(addr_shift_pe,SEEKF_START);
+  handle.seek(addr_shift_pe,SEEKF_START);
   VA = pePA2VA(addr_shift_pe);
   for(i = 0;i < nnames;i++)
   {
@@ -579,14 +578,14 @@ static bool __FASTCALL__  __ReadImpContPE(BFile* handle,memArray * obj,unsigned 
     bool is_eof;
     sprintf(stmp,".%08X: ", VA);
     VA += 4;
-    Hint = is_64bit?handle->read_qword():handle->read_dword();
+    Hint = is_64bit?handle.read_qword():handle.read_dword();
     cond=0;
     if(is_64bit) { if(Hint & 0x8000000000000000ULL) cond = 1; }
     else         { if(Hint & 0x0000000080000000ULL) cond = 1; }
     if(!cond)
     {
       rphys = RVA2Phys(is_64bit?(Hint&0x7FFFFFFFFFFFFFFFULL):(Hint&0x7FFFFFFFUL));
-      if(rphys > bmGetFLength() || handle->eof())
+      if(rphys > bmGetFLength() || handle.eof())
       {
 	if(!ma_AddString(obj,CORRUPT_BIN_MSG,true)) break;
       }
@@ -604,7 +603,7 @@ static bool __FASTCALL__  __ReadImpContPE(BFile* handle,memArray * obj,unsigned 
       else         sprintf(tmp,"< By ordinal >   @%lu" ,(uint32_t)(Hint & 0x7FFFFFFFUL));
       strcat(stmp,tmp);
     }
-    is_eof = handle->eof();
+    is_eof = handle.eof();
     if(!ma_AddString(obj,is_eof ? CORRUPT_BIN_MSG : stmp,true)) break;
     if(IsKbdTerminate() || is_eof) break;
   }
@@ -613,15 +612,14 @@ static bool __FASTCALL__  __ReadImpContPE(BFile* handle,memArray * obj,unsigned 
 
 static __filesize_t __FASTCALL__ ShowModRefPE( void )
 {
-  BFile* handle;
+  BFile& handle = *pe_cache;
   char petitle[80];
   memArray * obj;
   unsigned nnames;
   __filesize_t phys,fret;
   fret = BMGetCurrFilePos();
   if(!peDir[PE_IMPORT].rva) { not_found: NotifyBox(NOT_ENTRY," Module References "); return fret; }
-  handle = pe_cache;
-  handle->seek(0L,SEEK_SET);
+  handle.seek(0L,SEEK_SET);
   phys = RVA2Phys(peDir[PE_IMPORT].rva);
   if(!(nnames = GetImportCountPE(handle,phys))) goto not_found;
   if(!(obj = ma_Build(nnames,true))) goto exit;
@@ -637,9 +635,9 @@ static __filesize_t __FASTCALL__ ShowModRefPE( void )
      i = ma_Display(obj,MOD_REFER,LB_SELECTIVE,i);
      if(i == -1) break;
      sprintf(petitle,"%s%s ",IMPPROC_TABLE,(char *)obj->data[i]);
-     handle->seek(phys + i*sizeof(ImportDirPE),SEEKF_START);
-     handle->read_buffer(&imp_pe,sizeof(ImportDirPE));
-     if(handle->eof()) break;
+     handle.seek(phys + i*sizeof(ImportDirPE),SEEKF_START);
+     handle.read_buffer(&imp_pe,sizeof(ImportDirPE));
+     if(handle.eof()) break;
      if(!(imp_pe.idMajVer == 0 && imp_pe.idMinVer == 0 && imp_pe.idDateTime != 0xFFFFFFFFUL))
 				   magic = imp_pe.idFlags;
      else                          magic = imp_pe.idLookupTableRVA;
@@ -654,7 +652,7 @@ static __filesize_t __FASTCALL__ ShowModRefPE( void )
 
 static ExportTablePE et;
 
-static inline void writeExportVA(__filesize_t va, BFile* handle, char *buf, unsigned long bufsize)
+static inline void writeExportVA(__filesize_t va, BFile& handle, char *buf, unsigned long bufsize)
 {
     // check for forwarded export
     if (va>=peDir[PE_EXPORT].rva && va<peDir[PE_EXPORT].rva+peDir[PE_EXPORT].size)
@@ -664,7 +662,7 @@ static inline void writeExportVA(__filesize_t va, BFile* handle, char *buf, unsi
     sprintf(buf, ".%08lX", (unsigned long)(va + PE32_HDR(pe32,peImageBase)));
 }
 
-static bool __FASTCALL__ PEExportReadItems(BFile* handle,memArray * obj,unsigned nnames)
+static bool __FASTCALL__ PEExportReadItems(BFile& handle,memArray * obj,unsigned nnames)
 {
   __filesize_t nameaddr,expaddr,nameptr;
   unsigned long *addr;
@@ -674,8 +672,8 @@ static bool __FASTCALL__ PEExportReadItems(BFile* handle,memArray * obj,unsigned
   nameptr = RVA2Phys(et.etNamePtrTableRVA);
   expaddr = RVA2Phys(et.etOrdinalTableRVA);
   if(!(addr = new unsigned long[nnames])) return true;
-  handle->seek(RVA2Phys(et.etAddressTableRVA),SEEKF_START);
-  handle->read_buffer(addr,sizeof(unsigned long)*nnames);
+  handle.seek(RVA2Phys(et.etAddressTableRVA),SEEKF_START);
+  handle.read_buffer(addr,sizeof(unsigned long)*nnames);
 
   for(i = 0;i < et.etNumNamePtrs;i++)
   {
@@ -685,7 +683,7 @@ static bool __FASTCALL__ PEExportReadItems(BFile* handle,memArray * obj,unsigned
     __peReadASCIIZName(handle,nameaddr, stmp, sizeof(stmp)-sizeof(buff)-1);
     if(IsKbdTerminate()) break;
     ord = fioReadWord(handle,expaddr + i*2,SEEKF_START);
-    is_eof = handle->eof();
+    is_eof = handle.eof();
     sprintf(buff,"%c%-9lu ", LB_ORD_DELIMITER, ord+(unsigned long)et.etOrdinalBase);
     writeExportVA(addr[ord], handle, buff+11, sizeof(buff)-11);
     addr[ord] = 0;
@@ -709,13 +707,13 @@ static bool __FASTCALL__ PEExportReadItems(BFile* handle,memArray * obj,unsigned
   return true;
 }
 
-static unsigned __FASTCALL__ PEExportNumItems(BFile* handle)
+static unsigned __FASTCALL__ PEExportNumItems(BFile& handle)
 {
   __filesize_t addr;
   if(!peDir[PE_EXPORT].rva) return 0;
   addr = RVA2Phys(peDir[PE_EXPORT].rva);
-  handle->seek(addr,SEEKF_START);
-  handle->read_buffer((any_t*)&et,sizeof(et));
+  handle.seek(addr,SEEKF_START);
+  handle.read_buffer((any_t*)&et,sizeof(et));
   return (unsigned)(et.etNumEATEntries);
 }
 
@@ -723,9 +721,8 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcEntryPE(unsigned ordinal,bool disp
 {
  __filesize_t fret,rva;
  unsigned ord;
- BFile* handle;
+ BFile& handle = *pe_cache1;
  fret = BMGetCurrFilePos();
- handle = pe_cache1;
  {
    __filesize_t eret;
    rva = RVA2Phys(et.etAddressTableRVA);
@@ -778,7 +775,7 @@ static __filesize_t __FASTCALL__ ShowExpNamPE( void )
 }
 
 
-static bool __FASTCALL__ PEReadRVAs(BFile* handle, memArray * obj, unsigned nnames)
+static bool __FASTCALL__ PEReadRVAs(BFile& handle, memArray * obj, unsigned nnames)
 {
   unsigned i;
   static const char *rvaNames[] =
@@ -817,7 +814,7 @@ static bool __FASTCALL__ PEReadRVAs(BFile* handle, memArray * obj, unsigned nnam
   return true;
 }
 
-static unsigned __FASTCALL__ PENumRVAs(BFile* handle)
+static unsigned __FASTCALL__ PENumRVAs(BFile& handle)
 {
   UNUSED(handle);
   return PE32_HDR(pe32,peDirSize);
@@ -867,7 +864,6 @@ static void __NEAR__ __FASTCALL__ BuildPERefChain( void )
   RELOC_PE rel;
   ImportDirPE ipe;
   unsigned nnames;
-  BFile* handle;
   TWindow *w,*usd;
   usd = twUsedWin();
   if(!(CurrPEChain = la_Build(0,sizeof(RELOC_PE),MemOutBox))) return;
@@ -877,8 +873,8 @@ static void __NEAR__ __FASTCALL__ BuildPERefChain( void )
   twGotoXY(1,1);
   twPutS(BUILD_REFS);
   twUseWin(usd);
-  handle = pe_cache;
-  handle->seek(0L,SEEK_SET);
+  BFile& handle = *pe_cache;
+  handle.seek(0L,SEEK_SET);
   /**
      building references chain for external
   */
@@ -895,8 +891,8 @@ static void __NEAR__ __FASTCALL__ BuildPERefChain( void )
   for(i = 0;i < nnames;i++)
   {
     unsigned long magic,Hint;
-    handle->seek(phys + i*sizeof(ImportDirPE),SEEKF_START);
-    handle->read_buffer(&ipe,sizeof(ImportDirPE));
+    handle.seek(phys + i*sizeof(ImportDirPE),SEEKF_START);
+    handle.read_buffer(&ipe,sizeof(ImportDirPE));
     if(!(ipe.idMajVer == 0 && ipe.idMinVer == 0 && ipe.idDateTime != 0xFFFFFFFFUL))
 				 magic = ipe.idLookupTableRVA;
     else                         magic = ipe.idFlags;
@@ -905,13 +901,13 @@ static void __NEAR__ __FASTCALL__ BuildPERefChain( void )
     if(addr_shift_pe)
     {
       bool is_eof;
-      handle->seek(addr_shift_pe,SEEKF_START);
+      handle.seek(addr_shift_pe,SEEKF_START);
       j = 0;
       is_eof = false;
       while(1)
       {
-	Hint = is_64bit?handle->read_qword():handle->read_dword();
-	is_eof = handle->eof();
+	Hint = is_64bit?handle.read_qword():handle.read_dword();
+	is_eof = handle.eof();
 	if(!Hint || IsKbdTerminate() || is_eof) break;
 	rel.modidx = i;
 	rel.laddr = Hint;
@@ -928,22 +924,22 @@ static void __NEAR__ __FASTCALL__ BuildPERefChain( void )
   if(peDir[PE_FIXUP].size)
   {
     phys = RVA2Phys(peDir[PE_FIXUP].rva);
-    handle->seek(phys,SEEKF_START);
-    cpos = handle->tell();
-    while(handle->tell() < cpos + peDir[PE_FIXUP].size)
+    handle.seek(phys,SEEKF_START);
+    cpos = handle.tell();
+    while(handle.tell() < cpos + peDir[PE_FIXUP].size)
     {
       uint16_t typeoff;
       __filesize_t page,physoff,size,ccpos;
       bool is_eof;
-      ccpos = handle->tell();
-      page = handle->read_dword();
+      ccpos = handle.tell();
+      page = handle.read_dword();
       physoff = RVA2Phys(page);
-      size = handle->read_dword();
+      size = handle.read_dword();
       is_eof = false;
-      while(handle->tell() < ccpos + size)
+      while(handle.tell() < ccpos + size)
       {
-	typeoff = handle->read_word();
-	is_eof = handle->eof();
+	typeoff = handle.read_word();
+	is_eof = handle.eof();
 	if(IsKbdTerminate() || is_eof) break;
 	rel.modidx = std::numeric_limits<uint64_t>::max();
 	rel.import.type = typeoff >> 12;
@@ -968,25 +964,22 @@ static RELOC_PE __HUGE__ * __NEAR__ __FASTCALL__ __found_RPE(__filesize_t laddr)
 
 static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE __HUGE__ *rpe,int flags)
 {
-   BFile* handle,*handle2,*handle3;
+   BFile& handle=*pe_cache,&handle2=*pe_cache4,&handle3=*pe_cache3;
    __filesize_t phys,rva,retrf;
    unsigned long magic;
    uint64_t Hint;
    ImportDirPE ipe;
    char buff[400];
-   handle = pe_cache;
-   handle2 = pe_cache4;
-   handle3 = pe_cache3;
    phys = RVA2Phys(peDir[PE_IMPORT].rva);
-   handle->seek(phys + 20L*rpe->modidx,SEEKF_START);
+   handle.seek(phys + 20L*rpe->modidx,SEEKF_START);
    rva = fioReadDWord(handle,12L,SEEKF_CUR);
    retrf = RAPREF_DONE;
    if(rpe->modidx != std::numeric_limits<uint64_t>::max())
    {
      char *is_ext;
      if(flags & APREF_USE_TYPE) strcat(str," off32");
-     handle2->seek(RVA2Phys(rva),SEEKF_START);
-     handle2->read_buffer(buff,400);
+     handle2.seek(RVA2Phys(rva),SEEKF_START);
+     handle2.read_buffer(buff,400);
      buff[399] = 0;
      /*
 	Removing extension .dll from import name.
@@ -1000,8 +993,8 @@ static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE __H
      }
      else
        sprintf(&str[strlen(str)]," <%s>.",buff);
-     handle3->seek(phys + rpe->modidx*sizeof(ImportDirPE),SEEKF_START);
-     handle3->read_buffer(&ipe,sizeof(ImportDirPE));
+     handle3.seek(phys + rpe->modidx*sizeof(ImportDirPE),SEEKF_START);
+     handle3.read_buffer(&ipe,sizeof(ImportDirPE));
      if(!(ipe.idMajVer == 0 && ipe.idMinVer == 0 && ipe.idDateTime != 0xFFFFFFFFUL))
 				  magic = ipe.idFlags;
      else                         magic = ipe.idLookupTableRVA;
@@ -1010,8 +1003,8 @@ static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE __H
      if(magic)
      {
        int cond;
-       handle->seek(magic + rpe->import.funcidx*sizeof(long),SEEKF_START);
-       Hint = is_64bit?handle->read_qword():handle->read_dword();
+       handle.seek(magic + rpe->import.funcidx*sizeof(long),SEEKF_START);
+       Hint = is_64bit?handle.read_qword():handle.read_dword();
        cond=0;
        if(is_64bit) { if(Hint & 0x8000000000000000ULL) cond=1; }
        else         { if(Hint & 0x80000000UL) cond=1; }
@@ -1031,8 +1024,8 @@ static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE __H
 	 if(phys > bmGetFLength()) strcat(str,"???");
 	 else
 	 {
-	   handle2->seek(phys + 2,SEEKF_START);
-	   handle2->read_buffer(buff,400);
+	   handle2.seek(phys + 2,SEEKF_START);
+	   handle2.read_buffer(buff,400);
 	   buff[399] = 0;
 	   strcat(str,buff);
 	 }
@@ -1043,8 +1036,8 @@ static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE __H
    {
      unsigned long delta,value,point_to;
      const char *pe_how;
-     handle3->seek(rpe->laddr,SEEKF_START);
-     value = handle->read_dword();
+     handle3.seek(rpe->laddr,SEEKF_START);
+     value = handle.read_dword();
      delta = PE32_HDR(pe32,peImageBase);
      point_to = 0;
      switch(rpe->import.type)
@@ -1065,8 +1058,8 @@ static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE __H
 		  pe_how = "((off32)";
 		  break;
 	  case 4: /** HIGHADJUST */
-		  handle->seek(value,SEEK_SET);
-		  value = handle->read_dword();
+		  handle.seek(value,SEEK_SET);
+		  value = handle.read_dword();
 		  point_to = peVA2PA(value);
 		  pe_how = "((full32)";
 		  break;
@@ -1134,7 +1127,6 @@ static bool __FASTCALL__ IsPE( void )
 static void __FASTCALL__ initPE( void )
 {
    int i;
-   BFile* main_handle;
    PMRegLowMemCallBack(peLowMemFunc);
 
    bmReadBufferEx(&pe,sizeof(PEHEADER),headshift,SEEKF_START);
@@ -1161,27 +1153,26 @@ static void __FASTCALL__ initPE( void )
      bmSeek(16L,SEEKF_CUR);
    }
 
-   main_handle = bmbioHandle();
-   if((pe_cache = main_handle->dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache = main_handle;
-   if((pe_cache1 = main_handle->dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache1 = main_handle;
-   if((pe_cache2 = main_handle->dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache2 = main_handle;
-   if((pe_cache3 = main_handle->dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache3 = main_handle;
-   if((pe_cache4 = main_handle->dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache4 = main_handle;
+   BFile& main_handle = bmbioHandle();
+   if((pe_cache = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache = &main_handle;
+   if((pe_cache1 = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache1 = &main_handle;
+   if((pe_cache2 = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache2 = &main_handle;
+   if((pe_cache3 = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache3 = &main_handle;
+   if((pe_cache4 = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache4 = &main_handle;
 }
 
 static void __FASTCALL__ destroyPE( void )
 {
-  BFile* main_handle;
+  BFile& main_handle = bmbioHandle();
   if(peVA) delete peVA;
   if(peDir) delete peDir;
   if(PubNames) { la_Destroy(PubNames); PubNames = 0; }
   if(CurrPEChain) { la_Destroy(CurrPEChain); CurrPEChain = 0; } /* Fixed by "Kostya Nosov" <k-nosov@yandex.ru> */
-  main_handle = bmbioHandle();
-  if(pe_cache != &bNull && pe_cache != main_handle) delete pe_cache;
-  if(pe_cache1 != &bNull && pe_cache1 != main_handle) delete pe_cache1;
-  if(pe_cache2 != &bNull && pe_cache2 != main_handle) delete pe_cache2;
-  if(pe_cache3 != &bNull && pe_cache3 != main_handle) delete pe_cache3;
-  if(pe_cache4 != &bNull && pe_cache4 != main_handle) delete pe_cache4;
+  if(pe_cache != &bNull && pe_cache != &main_handle) delete pe_cache;
+  if(pe_cache1 != &bNull && pe_cache1 != &main_handle) delete pe_cache1;
+  if(pe_cache2 != &bNull && pe_cache2 != &main_handle) delete pe_cache2;
+  if(pe_cache3 != &bNull && pe_cache3 != &main_handle) delete pe_cache3;
+  if(pe_cache4 != &bNull && pe_cache4 != &main_handle) delete pe_cache4;
   PMUnregLowMemCallBack(peLowMemFunc);
 }
 
@@ -1256,7 +1247,7 @@ static __filesize_t __FASTCALL__ pePA2VA(__filesize_t pa)
   return ret_addr;
 }
 
-static void __FASTCALL__ pe_ReadPubName(BFile* b_cache,const struct PubName *it,
+static void __FASTCALL__ pe_ReadPubName(BFile& b_cache,const struct PubName *it,
 			   char *buff,unsigned cb_buff)
 {
     char stmp[300];
@@ -1267,18 +1258,17 @@ static void __FASTCALL__ pe_ReadPubName(BFile* b_cache,const struct PubName *it,
 
 static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
-  return fmtFindPubName(pe_cache4,buff,cb_buff,pa,
+  return fmtFindPubName(*pe_cache4,buff,cb_buff,pa,
 			pe_ReadPubNameList,
 			pe_ReadPubName);
 }
 
-static void __FASTCALL__ pe_ReadPubNameList(BFile* handle,void (__FASTCALL__ *mem_out)(const char *))
+static void __FASTCALL__ pe_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *))
 {
   unsigned long i,nitems,expaddr,nameptr,nameaddr,entry_pa;
   unsigned ord;
   struct PubName pn;
-  BFile* b_cache;
-  b_cache = pe_cache4 == &bNull ? handle : pe_cache4;
+  BFile& b_cache = (pe_cache4 == &bNull) ? handle : *pe_cache4;
   nitems = PEExportNumItems(handle);
   if(!(PubNames = la_Build(0,sizeof(struct PubName),mem_out))) return;
   expaddr  = RVA2Phys(et.etOrdinalTableRVA);
@@ -1299,7 +1289,7 @@ static void __FASTCALL__ pe_ReadPubNameList(BFile* handle,void (__FASTCALL__ *me
 static __filesize_t __FASTCALL__ peGetPubSym(char *str,unsigned cb_str,unsigned *func_class,
 			  __filesize_t pa,bool as_prev)
 {
-  return fmtGetPubSym(pe_cache,str,cb_str,func_class,pa,as_prev,
+  return fmtGetPubSym(*pe_cache,str,cb_str,func_class,pa,as_prev,
 		      pe_ReadPubNameList,
 		      pe_ReadPubName);
 }

@@ -31,6 +31,7 @@ using namespace beye;
 #include "tstrings.h"
 #include "plugins/disasm.h"
 
+namespace beye {
 unsigned fmtActiveState = 0;
 
 linearArray *PubNames = NULL;
@@ -49,7 +50,7 @@ tCompare __FASTCALL__ fmtComparePubNames(const void __HUGE__ *v1,const void __HU
   return __CmpLong__(pnam1->pa,pnam2->pa);
 }
 
-bool __FASTCALL__ fmtFindPubName(BFile* fmt_cache,char *buff,unsigned cb_buff,
+bool __FASTCALL__ fmtFindPubName(BFile& fmt_cache,char *buff,unsigned cb_buff,
 		   __filesize_t pa,
 		   ReadPubNameList fmt_readlist,
 		   ReadPubName fmt_readpub)
@@ -66,7 +67,7 @@ bool __FASTCALL__ fmtFindPubName(BFile* fmt_cache,char *buff,unsigned cb_buff,
   return udnFindName(pa,buff,cb_buff);
 }
 
-__filesize_t __FASTCALL__ fmtGetPubSym(BFile* fmt_cache,char *str,unsigned cb_str,
+__filesize_t __FASTCALL__ fmtGetPubSym(BFile& fmt_cache,char *str,unsigned cb_str,
 			   unsigned *func_class,__filesize_t pa,bool as_prev,
 			   ReadPubNameList fmt_readlist,
 			   ReadPubName fmt_readpub)
@@ -124,7 +125,7 @@ __filesize_t __FASTCALL__ fmtGetPubSym(BFile* fmt_cache,char *str,unsigned cb_st
 static BFile* __NEAR__ __FASTCALL__ ReopenSeek(__filesize_t dist)
 {
  BFile* handle;
- handle = bmbioHandle()->dup_ex(BBIO_SMALL_CACHE_SIZE);
+ handle = bmbioHandle().dup_ex(BBIO_SMALL_CACHE_SIZE);
  if(handle != &bNull) handle->seek(dist,BIO_SEEK_SET);
  else                 errnoMessageBox(READ_FAIL,NULL,errno);
  return handle;
@@ -140,10 +141,10 @@ int __FASTCALL__ fmtShowList( GetNumItems gni,ReadItems ri,const char * title,in
  TWindow* w;
  ret = -1;
  if((handle = ReopenSeek(0)) == &bNull) return ret;
- nnames = gni ? (*gni)(handle) : (unsigned)-1;
+ nnames = gni ? (*gni)(*handle) : (unsigned)-1;
  if(!(obj = ma_Build(nnames,true))) goto exit;
  w = PleaseWaitWnd();
- bval = (*ri)(handle,obj,nnames);
+ bval = (*ri)(*handle,obj,nnames);
  CloseWnd(w);
  if(bval)
  {
@@ -219,12 +220,12 @@ static bool __FASTCALL__ udnAddItem( void ) {
     return false;
 }
 
-static unsigned __FASTCALL__ udnGetNumItems(BFile* handle) {
+static unsigned __FASTCALL__ udnGetNumItems(BFile& handle) {
     UNUSED(handle);
     return udn_list->nItems;
 }
 
-static bool    __FASTCALL__ udnReadItems(BFile* handle,memArray * names,unsigned nnames)
+static bool    __FASTCALL__ udnReadItems(BFile& handle,memArray * names,unsigned nnames)
 {
     char stmp[256];
     unsigned i;
@@ -427,3 +428,4 @@ void __FASTCALL__ udnTerm( hIniProfile *ini ) {
   }
   beyeWriteProfileString(ini,"Beye","Browser","udn_list",udn_fname);
 }
+} // namespace beye
