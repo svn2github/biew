@@ -40,10 +40,11 @@ using namespace beye;
 #include "libbeye/twin.h"
 #include "libbeye/kbd_code.h"
 
+extern REGISTRY_MODE disMode;
+
 namespace beye {
     extern char shortname[];
     extern bool fioUseMMF;
-} // namespace beye
 
 static bool ChSize( void )
 {
@@ -269,7 +270,6 @@ static unsigned __NEAR__ __FASTCALL__ printHelpComment(char *buff,MBuffer codebu
    return len;
 }
 
-extern REGISTRY_MODE disMode;
 
 #define GET_FUNC_CLASS(x) x == SC_LOCAL ? "private" : "public"
 
@@ -1280,3 +1280,5 @@ bool FileUtils( void )
   }
   return false;
 }
+} // namespace beye
+

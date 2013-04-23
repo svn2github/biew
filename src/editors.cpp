@@ -33,6 +33,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
+namespace beye {
 __fileoff_t edit_cp = 0;
 struct tag_emem EditorMem;
 
@@ -302,3 +303,5 @@ int __FASTCALL__ FullEdit(TWindow * txtwnd,void (*save_func)(unsigned char *,uns
  twSetCursorType(TW_CUR_OFF);
  return _lastbyte;
 }
+} // namespace beye
+

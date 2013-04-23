@@ -17,6 +17,7 @@
 #ifndef __SEARCH__H
 #define __SEARCH__H
 
+namespace beye {
 		   /** Main search routine
 		     * @param is_continue  indicates initialization of search
 					   If set then search should be continued
@@ -24,7 +25,7 @@
 		     * @return             new offset on successful search and
 					   current offset otherwise
 		    **/
-extern __filesize_t __FASTCALL__ Search( bool is_continue );
+    __filesize_t __FASTCALL__ Search( bool is_continue );
 
 #define SD_SIMPLE       0x0000   /**< indicates simple search dialog to be displayed */
 #define SD_ALLFEATURES  0x0001   /**< indicates fully featured search dialog to be displayed */
@@ -38,7 +39,7 @@ extern __filesize_t __FASTCALL__ Search( bool is_continue );
 #define SF_ASHEX        0x0020   /**< indicates hex mode of input sequence */
 
 #define MAX_SEARCH_SIZE 76
-extern bool        __FASTCALL__ SearchDialog(int dlg_flags,
+    bool        __FASTCALL__ SearchDialog(int dlg_flags,
 					      char *searchbuff,
 					      unsigned char *searchlen,
 					      unsigned *search_flags);
@@ -54,7 +55,7 @@ extern bool        __FASTCALL__ SearchDialog(int dlg_flags,
 					   of searching sequence in the
 					   string or NULL if not found.
 		    **/
-extern char *       __FASTCALL__ strFind(const char *str, unsigned str_len,
+    char *       __FASTCALL__ strFind(const char *str, unsigned str_len,
 					 const any_t* sbuff, unsigned sbuflen,
 					 const int *cache, unsigned flags);
 
@@ -66,16 +67,16 @@ extern char *       __FASTCALL__ strFind(const char *str, unsigned str_len,
 		     * @param case_sens    indicates case sensitivity of search
 		     * @return             none
 		    **/
-void                __FASTCALL__ fillBoyerMooreCache(int *cache,
+    void                __FASTCALL__ fillBoyerMooreCache(int *cache,
 					 const char *pattern,
 					 unsigned pattern_len,
 					 bool case_sens);
 
-extern unsigned char search_buff[MAX_SEARCH_SIZE];
-extern unsigned char search_len;
-extern unsigned beyeSearchFlg;
+    extern unsigned char search_buff[MAX_SEARCH_SIZE];
+    extern unsigned char search_len;
+    extern unsigned beyeSearchFlg;
 
-extern __filesize_t FoundTextSt; /**< Indicates start of found text */
-extern __filesize_t FoundTextEnd;/**< Indicates end of found text */
-
+    extern __filesize_t FoundTextSt; /**< Indicates start of found text */
+    extern __filesize_t FoundTextEnd;/**< Indicates end of found text */
+} // namespace beye
 #endif

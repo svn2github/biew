@@ -21,15 +21,16 @@
 #include "_sys_dep.h"
 #endif
 
-extern char codeguid_image[];
+namespace beye {
+    extern char codeguid_image[];
 
-extern void              __FASTCALL__ GidResetGoAddress( int keycode );
-extern void              __FASTCALL__ GidAddGoAddress(char *str,__filesize_t addr);
-extern void              __FASTCALL__ GidAddBackAddress( void );
-extern __filesize_t      __FASTCALL__ GidGetGoAddress(unsigned keycode);
-extern char *            __FASTCALL__ GidEncodeAddress(__filesize_t cfpos,bool aresolv);
+    void              __FASTCALL__ GidResetGoAddress( int keycode );
+    void              __FASTCALL__ GidAddGoAddress(char *str,__filesize_t addr);
+    void              __FASTCALL__ GidAddBackAddress( void );
+    __filesize_t      __FASTCALL__ GidGetGoAddress(unsigned keycode);
+    char *            __FASTCALL__ GidEncodeAddress(__filesize_t cfpos,bool aresolv);
 
-extern bool             __FASTCALL__ initCodeGuider( void );
-extern void              __FASTCALL__ termCodeGuider( void );
-
+    bool             __FASTCALL__ initCodeGuider( void );
+    void              __FASTCALL__ termCodeGuider( void );
+} // namespace beye
 #endif

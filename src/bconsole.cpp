@@ -42,7 +42,6 @@ using namespace beye;
 namespace beye {
     extern TWindow * ErrorWnd;
     extern char beye_codepage[];
-} // namespace beye
 
 #define MAXINPUT 79
 
@@ -1060,3 +1059,5 @@ int __FASTCALL__ PageBox(unsigned width,unsigned height,const any_t** __obj,unsi
  CloseWnd(wlist);
  return ret;
 }
+} // namespace beye
+

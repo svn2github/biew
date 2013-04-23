@@ -21,31 +21,30 @@
 #include "libbeye/twin.h"
 #endif
 
-struct tag_emem
-{
-  unsigned char *buff;
-  unsigned char *save;
-  unsigned char *alen;
-  unsigned       size;
-  unsigned       width;
-};
+namespace beye {
+    struct tag_emem {
+	unsigned char *buff;
+	unsigned char *save;
+	unsigned char *alen;
+	unsigned       size;
+	unsigned       width;
+    };
 
-extern struct tag_emem EditorMem;
+    extern struct tag_emem EditorMem;
 
-extern int edit_x,edit_y;
-extern unsigned char edit_XX;
-extern __fileoff_t edit_cp;
+    extern int edit_x,edit_y;
+    extern unsigned char edit_XX;
+    extern __fileoff_t edit_cp;
 
-
-extern void   __FASTCALL__ PaintETitle( int shift,bool use_shift );
-extern void   __FASTCALL__ CheckBounds( void );
-extern void   __FASTCALL__ CheckYBounds( void );
-extern void   __FASTCALL__ CheckXYBounds( void );
-extern bool  __FASTCALL__ edit_defaction(int _lastbyte);
-extern void   __FASTCALL__ editSaveContest( void );
-extern bool  __FASTCALL__ editDefAction(int _lastbyte);
-extern int    __FASTCALL__ FullEdit(TWindow * txtwnd,void (*save)(unsigned char *,unsigned));
-extern bool  __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size);
-extern void   __FASTCALL__ editDestroyBuffs( void );
-
+    void   __FASTCALL__ PaintETitle( int shift,bool use_shift );
+    void   __FASTCALL__ CheckBounds( void );
+    void   __FASTCALL__ CheckYBounds( void );
+    void   __FASTCALL__ CheckXYBounds( void );
+    bool  __FASTCALL__ edit_defaction(int _lastbyte);
+    void   __FASTCALL__ editSaveContest( void );
+    bool  __FASTCALL__ editDefAction(int _lastbyte);
+    int    __FASTCALL__ FullEdit(TWindow * txtwnd,void (*save)(unsigned char *,unsigned));
+    bool  __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size);
+    void   __FASTCALL__ editDestroyBuffs( void );
+} // namespace beye
 #endif

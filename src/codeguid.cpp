@@ -34,6 +34,9 @@ using namespace beye;
 #include "libbeye/twin.h"
 #include "libbeye/kbd_code.h"
 
+extern int DisasmCurrLine;
+extern bool DisasmPrepareMode;
+namespace beye {
 #define BACK_ADDR_SIZE 256
 #define GO_ADDR_SIZE   37
 
@@ -44,7 +47,6 @@ static unsigned int  *GoLineNums=NULL;
 static int GoAddrPtr = -1;
 static unsigned char Alarm = 0;
 
-extern int DisasmCurrLine;
 
 char codeguid_image[] = "=>[X]";
 
@@ -179,7 +181,6 @@ void __FASTCALL__ GidResetGoAddress( int keycode )
        else GoAddrPtr = -1;
 }
 
-extern bool DisasmPrepareMode;
 
 void __FASTCALL__ GidAddGoAddress(char *str,__filesize_t addr)
 {
@@ -272,3 +273,5 @@ char * __FASTCALL__ GidEncodeAddress(__filesize_t cfpos,bool AddressDetail)
   strcat(addr,": ");
   return addr;
 }
+} // namespace beye
+

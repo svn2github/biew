@@ -25,8 +25,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 
 namespace beye {
-    extern unsigned long beye_kbdFlags;
-} // namespace beye
+extern unsigned long beye_kbdFlags;
 
 static int KB_Buff[64];
 static size_t KB_freq = 0;
@@ -177,3 +176,5 @@ void __FASTCALL__ PostEvent(int code)
 {
   if(KB_freq < sizeof(KB_Buff)/sizeof(int)) KB_Buff[KB_freq++] = code;
 }
+} // namespace beye
+

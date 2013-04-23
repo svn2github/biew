@@ -26,6 +26,7 @@ using namespace beye;
 #include "bconsole.h"
 
 extern REGISTRY_BIN binTable;
+namespace beye {
 unsigned long __FASTCALL__ AppendAsmRef(char *str,__filesize_t ulShift,int mode,char codelen,__filesize_t r_sh)
 {
   static bool warn_displayed = false;
@@ -41,3 +42,4 @@ unsigned long __FASTCALL__ AppendAsmRef(char *str,__filesize_t ulShift,int mode,
   }
   return ret;
 }
+} // namespace beye

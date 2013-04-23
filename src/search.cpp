@@ -34,9 +34,10 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/bbio.h"
 
-static TWindow *prcntswnd;
 extern void ReReadFile( int );
 
+namespace beye {
+static TWindow *prcntswnd;
 unsigned char search_buff[MAX_SEARCH_SIZE] = "";
 unsigned char search_len = 0;
 unsigned beyeSearchFlg = SF_NONE;
@@ -616,3 +617,4 @@ __filesize_t __FASTCALL__ Search( bool is_continue )
   BMSeek(fmem,BM_SEEK_SET);
   return fmem;
 }
+} // namespace beye

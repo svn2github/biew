@@ -37,6 +37,7 @@ using namespace beye;
 
 #include "lzss/lzssutil.cpp"
 
+namespace beye {
 #define TEXT_TAB 8
 
 extern void drawHelpListPrompt( void );
@@ -413,3 +414,5 @@ void __FASTCALL__ hlpDisplay( unsigned long item_id )
   hlp_bye:
   hlpClose();
 }
+} // namespace beye
+

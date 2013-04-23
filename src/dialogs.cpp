@@ -31,6 +31,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/twin.h"
 
+namespace beye {
 bool __FASTCALL__ Get2DigitDlg(const char *title,const char * text,unsigned char *xx)
 {
  tAbsCoord x1,y1,x2,y2;
@@ -695,3 +696,5 @@ bool __FASTCALL__ GetInsDelBlkDlg(const char *title,__filesize_t * start,__fileo
  *size = strtol(enddig,NULL,16);
  return !(_lastbyte == KE_ESCAPE || _lastbyte == KE_F(10));
 }
+} // namespace beye
+

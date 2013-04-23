@@ -19,6 +19,7 @@
 
 #include "../version.h"
 
+namespace beye {
 /** @def BEYE_VERSION
     Ver.SubVer.ExtraVer-ReleaseLevel.Test_FixPak_Level
   */
@@ -118,4 +119,5 @@ extern const char EXPAND_FAIL[];
 extern const char TRUNC_FAIL[];
 
 extern const char NOTHING_EDIT[];
+} // namespace beye
 #endif

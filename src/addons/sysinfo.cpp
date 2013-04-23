@@ -28,6 +28,7 @@ extern REGISTRY_SYSINFO CPUPerformance;
 extern REGISTRY_SYSINFO InputViewer;
 extern REGISTRY_SYSINFO ConsoleInfo;
 
+namespace beye {
 static REGISTRY_SYSINFO *toolTable[] =
 {
   &AsciiTable,
@@ -71,3 +72,5 @@ void term_sysinfo( void )
     if(toolTable[i]->save_ini) toolTable[i]->save_ini();
   }
 }
+} // namespace beye
+

@@ -17,7 +17,8 @@
 #ifndef __SETUP__H
 #define __SETUP__H
 
-extern char *     beyeGetHelpName( void );
-extern void       Setup( void );
-
+namespace beye {
+    char *     beyeGetHelpName( void );
+    void       Setup( void );
+} // namespace beye
 #endif

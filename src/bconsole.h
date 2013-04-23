@@ -25,28 +25,28 @@
 #endif
 
 namespace beye {
+
     extern TWindow *MainWnd,*HelpWnd,*TitleWnd,*CritErrWnd;
-} // namespace beye
 
-extern void         __FASTCALL__ initBConsole( unsigned long vio_flg,unsigned long twin_flg );
-extern void         __FASTCALL__ termBConsole( void );
-extern bool        __FASTCALL__ IsKbdTerminate( void );
-extern void         __FASTCALL__ CleanKbdTermSig( void );
+    void         __FASTCALL__ initBConsole( unsigned long vio_flg,unsigned long twin_flg );
+    void         __FASTCALL__ termBConsole( void );
+    bool        __FASTCALL__ IsKbdTerminate( void );
+    void         __FASTCALL__ CleanKbdTermSig( void );
 
-typedef void (__FASTCALL__ * pagefunc)(TWindow *win,const any_t**__obj,unsigned i__obj,unsigned total_obj);
+    typedef void (__FASTCALL__ * pagefunc)(TWindow *win,const any_t**__obj,unsigned i__obj,unsigned total_obj);
 
-extern void         __FASTCALL__ CloseWnd(TWindow *w);
-extern TWindow *    __FASTCALL__ CrtDlgWnd(const char *,tAbsCoord,tAbsCoord);
-extern TWindow *    __FASTCALL__ CrtDlgWndnls(const char *,tAbsCoord,tAbsCoord);
-extern TWindow *    __FASTCALL__ CrtMnuWnd(const char *,tAbsCoord,tAbsCoord,tAbsCoord,tAbsCoord);
-extern TWindow *    __FASTCALL__ CrtMnuWndnls(const char *,tAbsCoord,tAbsCoord,tAbsCoord,tAbsCoord);
-extern TWindow *    __FASTCALL__ CrtLstWnd(const char *,tAbsCoord,tAbsCoord);
-extern TWindow *    __FASTCALL__ CrtLstWndnls(const char *,tAbsCoord,tAbsCoord);
-extern TWindow *    __FASTCALL__ CrtHlpWnd(const char *,tAbsCoord,tAbsCoord);
-extern TWindow *    __FASTCALL__ CrtHlpWndnls(const char *,tAbsCoord,tAbsCoord);
-extern TWindow *    __FASTCALL__ CreateEditor(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsCoord Y2,unsigned flags);
-extern TWindow *    __FASTCALL__ WindowOpen(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsCoord Y2,unsigned flags);
-extern void         __FASTCALL__ DisplayBox(char **names,unsigned nlist,const char *title);
+    void         __FASTCALL__ CloseWnd(TWindow *w);
+    TWindow *    __FASTCALL__ CrtDlgWnd(const char *,tAbsCoord,tAbsCoord);
+    TWindow *    __FASTCALL__ CrtDlgWndnls(const char *,tAbsCoord,tAbsCoord);
+    TWindow *    __FASTCALL__ CrtMnuWnd(const char *,tAbsCoord,tAbsCoord,tAbsCoord,tAbsCoord);
+    TWindow *    __FASTCALL__ CrtMnuWndnls(const char *,tAbsCoord,tAbsCoord,tAbsCoord,tAbsCoord);
+    TWindow *    __FASTCALL__ CrtLstWnd(const char *,tAbsCoord,tAbsCoord);
+    TWindow *    __FASTCALL__ CrtLstWndnls(const char *,tAbsCoord,tAbsCoord);
+    TWindow *    __FASTCALL__ CrtHlpWnd(const char *,tAbsCoord,tAbsCoord);
+    TWindow *    __FASTCALL__ CrtHlpWndnls(const char *,tAbsCoord,tAbsCoord);
+    TWindow *    __FASTCALL__ CreateEditor(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsCoord Y2,unsigned flags);
+    TWindow *    __FASTCALL__ WindowOpen(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsCoord Y2,unsigned flags);
+    void         __FASTCALL__ DisplayBox(char **names,unsigned nlist,const char *title);
 
 /** Edit string styles */
 #define __ESS_ENABLEINSERT 0x0001U /**< enable insert mode */
@@ -78,32 +78,32 @@ extern void         __FASTCALL__ DisplayBox(char **names,unsigned nlist,const ch
 	       restore contest on CtrlBkSpace
      func    - if not NULL then called to display prompt string
 */
-extern int         __FASTCALL__ eeditstring(char *s,const char *legal,
+    int         __FASTCALL__ eeditstring(char *s,const char *legal,
 					unsigned *maxlength, unsigned y,
 					unsigned *stx,unsigned attr,char *undo,
 					void (*func)(void));
-extern int          __FASTCALL__ xeditstring(char *s,const char *legal,
+    int          __FASTCALL__ xeditstring(char *s,const char *legal,
 					unsigned maxlength, void(*func)(void));
-extern void         __FASTCALL__ ErrMessageBox(const char * text,const char * title);
-extern void         __FASTCALL__ WarnMessageBox(const char * text,const char * title);
-extern void         __FASTCALL__ errnoMessageBox(const char * text,const char * title,int __errno__);
-extern void         __FASTCALL__ ListBox(const char ** names,unsigned nlist,const char * title);
-extern void         __FASTCALL__ TMessageBox(const char * text,const char * title);
-extern void         __FASTCALL__ NotifyBox(const char * text,const char * title);
-extern int          __FASTCALL__ PageBox(unsigned width,unsigned height,const any_t** __obj,
+    void         __FASTCALL__ ErrMessageBox(const char * text,const char * title);
+    void         __FASTCALL__ WarnMessageBox(const char * text,const char * title);
+    void         __FASTCALL__ errnoMessageBox(const char * text,const char * title,int __errno__);
+    void         __FASTCALL__ ListBox(const char ** names,unsigned nlist,const char * title);
+    void         __FASTCALL__ TMessageBox(const char * text,const char * title);
+    void         __FASTCALL__ NotifyBox(const char * text,const char * title);
+    int          __FASTCALL__ PageBox(unsigned width,unsigned height,const any_t** __obj,
 				 unsigned nobj,pagefunc func);
-extern void         __FASTCALL__ MemOutBox(const char *user_msg);
-extern TWindow *    __FASTCALL__ PleaseWaitWnd( void );
+    void         __FASTCALL__ MemOutBox(const char *user_msg);
+    TWindow *    __FASTCALL__ PleaseWaitWnd( void );
 
-extern bool        __FASTCALL__ Get2DigitDlg(const char *title,const char *text,unsigned char *xx);
+    bool        __FASTCALL__ Get2DigitDlg(const char *title,const char *text,unsigned char *xx);
 #if __WORDSIZE >= 32
-extern bool        __FASTCALL__ Get16DigitDlg(const char *title,const char *text,char attr,
+    bool        __FASTCALL__ Get16DigitDlg(const char *title,const char *text,char attr,
 						unsigned long long int *xx);
 #else
-extern bool        __FASTCALL__ Get8DigitDlg(const char *title,const char *text,char attr,
+    bool        __FASTCALL__ Get8DigitDlg(const char *title,const char *text,char attr,
 						unsigned long *xx);
 #endif
-extern bool        __FASTCALL__ GetStringDlg(char * buff,const char * title,const char *subtitle,
+    bool        __FASTCALL__ GetStringDlg(char * buff,const char * title,const char *subtitle,
 				     const char *prompt);
 
 #define GJDLG_FILE_TOP  0x00000000UL
@@ -111,8 +111,7 @@ extern bool        __FASTCALL__ GetStringDlg(char * buff,const char * title,cons
 #define GJDLG_REL_EOF   0x00000002UL
 #define GJDLG_VIRTUAL   0x00000003UL
 #define GJDLG_PERCENTS  0x00000004UL
-
-extern bool        __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags);
+    bool        __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags);
 
 #define FSDLG_BINMODE   0x00000000UL
 #define FSDLG_ASMMODE   0x00000001UL
@@ -125,12 +124,12 @@ extern bool        __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *f
 #define FSDLG_BTNSMASK  0x00000003UL /**< 0=8bit 1=16bit 2=32bit 3=64bit */
 #define FSDLG_USEBITNS  0x40000000UL
 
-extern bool        __FASTCALL__ GetFStoreDlg(const char *title,char *fname,
+    bool        __FASTCALL__ GetFStoreDlg(const char *title,char *fname,
 				     unsigned long *flags,
 				     __filesize_t *start,
 				     __filesize_t *end,
 				     const char *prompt);
-extern bool        __FASTCALL__ GetInsDelBlkDlg(const char *title,__filesize_t *start,
+    bool        __FASTCALL__ GetInsDelBlkDlg(const char *title,__filesize_t *start,
 					__fileoff_t *size);
 
 #define LB_SELECTIVE 0x01U
@@ -138,29 +137,29 @@ extern bool        __FASTCALL__ GetInsDelBlkDlg(const char *title,__filesize_t *
 #define LB_USEACC    0x04U
 
 #define LB_ORD_DELIMITER TWC_FL_BLK
-extern int          __FASTCALL__ CommonListBox(char** names,unsigned nlist,const char *title,
+    int          __FASTCALL__ CommonListBox(char** names,unsigned nlist,const char *title,
 				      int acc,unsigned defsel);
-extern int          __FASTCALL__ SelBox(char** names,unsigned nlist,const char * title,
+    int          __FASTCALL__ SelBox(char** names,unsigned nlist,const char * title,
 			       unsigned defsel);
-extern int          __FASTCALL__ SelBoxA(char** names,unsigned nlist,const char * title,
+    int          __FASTCALL__ SelBoxA(char** names,unsigned nlist,const char * title,
 				unsigned defsel);
-extern int         __FASTCALL__ SelListBox(char** names,unsigned nlist,const char * title,
+    int         __FASTCALL__ SelListBox(char** names,unsigned nlist,const char * title,
 				   unsigned defsel);
 
-extern TWindow *    __FASTCALL__ PercentWnd(const char *text,const char *title);
+    TWindow *    __FASTCALL__ PercentWnd(const char *text,const char *title);
 
 			   /** return true - if can continue
 				     false -  if user want terminate process */
-extern bool        __FASTCALL__ ShowPercentInWnd(TWindow *prcntwnd,unsigned n);
+    bool        __FASTCALL__ ShowPercentInWnd(TWindow *prcntwnd,unsigned n);
 
-extern int          __FASTCALL__ GetEvent(void (*)(void),int (*)(void),TWindow *);
-extern void         __FASTCALL__ PostEvent(int kbdcode);
+    int          __FASTCALL__ GetEvent(void (*)(void),int (*)(void),TWindow *);
+    void         __FASTCALL__ PostEvent(int kbdcode);
 
-extern bool __FASTCALL__ _lb_searchtext(const char *str,const char *tmpl,
+    bool __FASTCALL__ _lb_searchtext(const char *str,const char *tmpl,
 					 unsigned searchlen,const int *cache,
 					 unsigned flg);
-extern void __FASTCALL__ __drawSinglePrompt(const char *prmt[]);
+    void __FASTCALL__ __drawSinglePrompt(const char *prmt[]);
 
-extern bool __FASTCALL__ ungotstring(char *string);
-
+    bool __FASTCALL__ ungotstring(char *string);
+} // namespace beye
 #endif

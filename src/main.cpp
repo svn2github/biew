@@ -88,9 +88,9 @@ extern REGISTRY_MODE textMode;
 extern REGISTRY_MODE hexMode;
 extern REGISTRY_MODE disMode;
 
-extern char last_skin_error[];
 
 namespace beye {
+extern char last_skin_error[];
 static volatile char antiviral_hole1[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 std::string ArgVector1;
 

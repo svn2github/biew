@@ -32,12 +32,12 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
 
-namespace beye {
-    extern __filesize_t LastOffset;
-} // namespace beye
-
-extern unsigned strmaxlen;
 extern REGISTRY_BIN mzTable;
+extern unsigned strmaxlen;
+
+namespace beye {
+extern __filesize_t LastOffset;
+
 
 __filesize_t lastbyte;
 static __filesize_t OldCurrFilePos; /** means previous File position */
@@ -347,3 +347,5 @@ void MainLoop( void )
   drawTitle();
  }
 }
+} // namespace beye
+

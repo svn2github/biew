@@ -33,6 +33,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
 
+namespace beye {
 static void __NEAR__ __FASTCALL__ ShowFunKey(const char * key,const char * text)
 {
  twSetColorAttr(prompt_cset.digit);
@@ -660,3 +661,4 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
   CloseWnd(hwnd);
   return ret_addr;
 }
+} // namespace beye

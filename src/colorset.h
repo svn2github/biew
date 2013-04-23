@@ -21,13 +21,13 @@
 #include "libbeye/twin.h"
 #endif
 
-typedef struct tag_namedColorDef
-{
-  const char  *name;
-  Color  color;
-}namedColorDef;
+namespace beye {
+    typedef struct tag_namedColorDef {
+	const char  *name;
+	Color  color;
+    }namedColorDef;
 
-extern namedColorDef named_color_def[16];
+    extern namedColorDef named_color_def[16];
 
 typedef struct tag_MultiEditCSet
 {
@@ -209,8 +209,9 @@ typedef struct tag_HelpCSet
   ColorAttr sellink;
 }HelpCSet;
 
-extern HelpCSet help_cset;
+    extern HelpCSet help_cset;
 
-extern bool   csetReadIniFile(const char *pal_name);
+    bool   csetReadIniFile(const char *pal_name);
+} // namespace beye
 
 #endif

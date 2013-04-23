@@ -30,6 +30,7 @@ using namespace beye;
 #include "tstrings.h"
 #include "libbeye/libbeye.h"
 
+namespace beye {
 bool DumpMode = false;
 bool EditMode = false;
 
@@ -330,3 +331,4 @@ int __FASTCALL__ ma_Display(memArray *obj,const char *title,int flg, unsigned de
 {
   return CommonListBox((char**)obj->data,obj->nItems,title,flg,defsel);
 }
+} // namespace beye

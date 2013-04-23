@@ -28,8 +28,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 
 namespace beye {
-    extern char beye_scheme_name[];
-} // namespace beye
+extern char beye_scheme_name[];
 
 char last_skin_error[50];
 
@@ -513,3 +512,5 @@ HelpCSet help_cset =
   LOGFB_TO_PHYS(Yellow, LightCyan),
   LOGFB_TO_PHYS(White, Black)
 };
+} // namespace beye
+

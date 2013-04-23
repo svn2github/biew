@@ -26,6 +26,7 @@
 #include "libbeye/twin.h"
 #endif
 
+namespace beye {
 typedef __filesize_t  (__FASTCALL__ *BinFunc)( void );
 typedef bool         (__FASTCALL__ *ModFunc)( void );
 
@@ -251,14 +252,11 @@ typedef struct tag_REGISTRY_MODE
 __filesize_t (__FASTCALL__ *search_engine)(TWindow *pwnd, __filesize_t start, __filesize_t *slen, unsigned flags, bool is_continue, bool *is_found);
 }REGISTRY_MODE;
 
-namespace beye {
     extern REGISTRY_BIN *detectedFormat;
     extern REGISTRY_MODE *activeMode;
 
     bool SelectMode( void );
     void QuickSelectMode( void );
-} // namespace beye
-
 
 typedef struct tag_REGISTRY_TOOL
 {
@@ -275,5 +273,5 @@ typedef struct tag_REGISTRY_SYSINFO
   void          (*read_ini)( void ); /**< reads beye.ini if need */
   void          (*save_ini)( void ); /**< writes to beye.ini if need */
 }REGISTRY_SYSINFO;
-
+} // namespace beye
 #endif

@@ -28,6 +28,9 @@ using namespace beye;
 #include "libbeye/twin.h"
 #include "libbeye/kbd_code.h"
 
+#ifdef __QNX4__
+extern int photon,bit7;
+#endif
 namespace beye {
     extern char beye_help_name[];
     extern char beye_skin_name[];
@@ -41,11 +44,7 @@ namespace beye {
     extern bool fioUseMMF;
     extern bool iniPreserveTime;
     extern bool iniUseExtProgs;
-} // namespace beye
 
-#ifdef __QNX4__
-extern int photon,bit7;
-#endif
 char * beyeGetHelpName( void )
 {
   if(!beye_help_name[0])
@@ -294,3 +293,4 @@ void Setup(void)
   CloseWnd(ewnd[2]);
   CloseWnd(wdlg);
 }
+} // namespace beye

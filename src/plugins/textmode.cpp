@@ -81,6 +81,7 @@ unsigned long  acontext_num;
 namespace beye {
     extern char beye_syntax_name[];
     extern std::string ArgVector1;
+    extern char last_skin_error[];
 } // namespace beye
 
 static int HiLight = 1;
@@ -389,7 +390,6 @@ static Color __NEAR__ __FASTCALL__ getOpColorByName(const char *item,Color cdef,
     return cdef;
 }
 
-extern char last_skin_error[];
 static const char *last_syntax_err="";
 static bool __FASTCALL__ txtFiUserFunc2(IniInfo * info)
 {

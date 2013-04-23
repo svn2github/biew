@@ -21,6 +21,7 @@
 #include "libbeye/twin.h"
 #endif
 
+namespace beye {
 #define BEYE_HELP_VER "BEYE_HLP v6.1.0"
 
 #define HLP_SLONG_LEN 9
@@ -58,26 +59,27 @@ typedef struct tag_beye_help
 #define HLPC_REVERSE_OFF           0x15
 #define HLPC_LINK_OFF              0x16
 
-extern bool           __FASTCALL__ hlpOpen( bool interactive );
-extern void            __FASTCALL__ hlpClose( void );
+    bool           __FASTCALL__ hlpOpen( bool interactive );
+    void            __FASTCALL__ hlpClose( void );
 		       /** Return uncompressed size of help item
 			  0 - if error occured */
-extern unsigned long   __FASTCALL__ hlpGetItemSize(unsigned long item_id);
-extern bool           __FASTCALL__ hlpLoadItem(unsigned long item_id, void __HUGE__* buffer);
+    unsigned long   __FASTCALL__ hlpGetItemSize(unsigned long item_id);
+    bool           __FASTCALL__ hlpLoadItem(unsigned long item_id, void __HUGE__* buffer);
 		       /** Fully-functionallity utility for displaying help */
-extern void            __FASTCALL__ hlpDisplay(unsigned long id);
+    void            __FASTCALL__ hlpDisplay(unsigned long id);
 
 		       /** Returns array of char pointers.
 			  Title always is data[0] */
-extern char **         __FASTCALL__ hlpPointStrings(char __HUGE__ *data,unsigned long data_size,
+    char **         __FASTCALL__ hlpPointStrings(char __HUGE__ *data,unsigned long data_size,
 				       unsigned long *nstr);
 		       /** Filles buffer as video memory from string */
-extern unsigned        __FASTCALL__ hlpFillBuffer(tvioBuff * dest,unsigned int cw_dest,
+    unsigned        __FASTCALL__ hlpFillBuffer(tvioBuff * dest,unsigned int cw_dest,
 				     const char * str,unsigned int cb_str,
 				     unsigned int shift,unsigned *n_tabs,
 				     bool is_hl);
 		       /** Paints line of help */
-extern void            __FASTCALL__ hlpPaintLine(TWindow *win,unsigned y,const char *str,
+    void            __FASTCALL__ hlpPaintLine(TWindow *win,unsigned y,const char *str,
 				    bool is_hl);
+} // namespace beye
 
 #endif

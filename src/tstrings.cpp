@@ -20,7 +20,7 @@ using namespace beye;
 #include "tstrings.h"
 #include "libbeye/libbeye.h" /* for INT64_C */
 /**   English release for all messages */
-
+namespace beye {
 const char msgAboutText[] =
 "Multiplatform portable Binary EYE (aka viewer)\n"
 "with built-in x86/i386/Amd64/AVX2/FMA/XOP,Java\n"
@@ -201,3 +201,4 @@ const char RESIZE_FAIL[]=      " Can't change size of file ";
 const char EXPAND_FAIL[]=      " Can't expand file ";
 const char TRUNC_FAIL[]=       " Can't truncate file ";
 const char NOTHING_EDIT[]=     " Can't edit zero file ";
+} // namespace beye
