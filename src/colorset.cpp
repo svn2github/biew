@@ -27,7 +27,10 @@ using namespace beye;
 #include "libbeye/file_ini.h"
 #include "libbeye/libbeye.h"
 
-extern char beye_scheme_name[];
+namespace beye {
+    extern char beye_scheme_name[];
+} // namespace beye
+
 char last_skin_error[50];
 
 namedColorDef named_color_def[16] =

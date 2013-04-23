@@ -28,18 +28,20 @@ using namespace beye;
 #include "libbeye/twin.h"
 #include "libbeye/kbd_code.h"
 
-extern char beye_help_name[];
-extern char beye_skin_name[];
-extern char beye_syntax_name[];
-extern char beye_codepage[];
+namespace beye {
+    extern char beye_help_name[];
+    extern char beye_skin_name[];
+    extern char beye_syntax_name[];
+    extern char beye_codepage[];
 
-extern unsigned long beye_vioIniFlags;
-extern unsigned long beye_twinIniFlags;
-extern unsigned long beye_kbdFlags;
-extern bool iniSettingsAnywhere;
-extern bool fioUseMMF;
-extern bool iniPreserveTime;
-extern bool iniUseExtProgs;
+    extern unsigned long beye_vioIniFlags;
+    extern unsigned long beye_twinIniFlags;
+    extern unsigned long beye_kbdFlags;
+    extern bool iniSettingsAnywhere;
+    extern bool fioUseMMF;
+    extern bool iniPreserveTime;
+    extern bool iniUseExtProgs;
+} // namespace beye
 
 #ifdef __QNX4__
 extern int photon,bit7;

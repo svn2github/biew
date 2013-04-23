@@ -29,7 +29,9 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
-extern char beye_scheme_name[];
+namespace beye {
+    extern char beye_scheme_name[];
+} // namespace beye
 
 static void ShowConsInfo( void )
 {

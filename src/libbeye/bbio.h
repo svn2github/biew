@@ -20,6 +20,7 @@
 #ifndef __BEYELIB_H
 #include "libbeye/libbeye.h"
 #endif
+#include <string>
 /******************************************************************\
 *  Buffered binary file streams input/output section               *
 *  Helpful for read/write small size objects from/to file          *
@@ -78,8 +79,9 @@ struct mmb {
 class BFile;
 extern BFile bNull; /**< Stream associated with STDERR */
 
-class BFile {
+class BFile : public Opaque {
     private:
+	Opaque		opaque;
 	__filesize_t	FilePos;   /**< current logical position in file */
 	__filesize_t	FLength;   /**< real length of the file */
 	char*		FileName;  /**< Real file name of opened file */
@@ -112,7 +114,7 @@ class BFile {
 		     *                        memory entire.
 		     * @see                   bioClose
 		    **/
-	bool	open(const char * fname,unsigned openmode,unsigned buffSize,unsigned optimization);
+	bool	open(const std::string& fname,unsigned openmode,unsigned buffSize,unsigned optimization);
 
 		   /** Changes size of opened file.
 		     * @return                true if operation was succesfully performed

@@ -20,6 +20,11 @@ using namespace beye;
  * @date        27.11.2000
  * @note        Changing technology recognition of new-exe files
 **/
+#include <iostream>
+#include <string>
+#include <vector>
+#include <map>
+
 #include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -46,36 +51,6 @@ using namespace beye;
 #include "libbeye/file_ini.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
-
-unsigned ArgCount;
-char **  ArgVector;
-unsigned ListFileCount;
-static char **ListFile;
-static char *LastOpenFileName;
-__filesize_t LastOffset;
-static bool UseIniFile=true;
-char beye_help_name[FILENAME_MAX+1] = "";
-char beye_skin_name[FILENAME_MAX+1] = "";
-char beye_syntax_name[FILENAME_MAX+1] = "";
-char beye_codepage[256] = "CP866";
-extern char last_skin_error[];
-char beye_scheme_name[256] = "Built-in";
-static char beye_ini_ver[32];
-unsigned long beye_vioIniFlags = 0L;
-unsigned long beye_twinIniFlags = 0L;
-unsigned long beye_kbdFlags = 0L;
-bool iniSettingsAnywhere = false;
-bool fioUseMMF = false;
-bool iniPreserveTime = false;
-bool iniUseExtProgs = false;
-__filesize_t headshift = 0L;
-char *ini_name;
-
-TWindow * MainWnd = 0,*HelpWnd = 0,*TitleWnd = 0,*ErrorWnd = 0;
-
-#define SHORT_PATH_LEN __TVIO_MAXSCREENWIDTH-54
-
-char shortname[SHORT_PATH_LEN + 1];
 
 extern REGISTRY_BIN binTable;
 extern REGISTRY_BIN rmTable;
@@ -106,6 +81,49 @@ extern REGISTRY_BIN sisxTable;
 extern REGISTRY_BIN lmfTable;
 extern REGISTRY_BIN mzTable;
 extern REGISTRY_BIN dossysTable;
+
+
+extern REGISTRY_MODE binMode;
+extern REGISTRY_MODE textMode;
+extern REGISTRY_MODE hexMode;
+extern REGISTRY_MODE disMode;
+
+extern char last_skin_error[];
+
+namespace beye {
+static volatile char antiviral_hole1[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
+std::string ArgVector1;
+
+unsigned ListFileCount;
+static const char **ListFile;
+static char *LastOpenFileName;
+__filesize_t LastOffset;
+static bool UseIniFile=true;
+char beye_help_name[FILENAME_MAX+1] = "";
+char beye_skin_name[FILENAME_MAX+1] = "";
+char beye_syntax_name[FILENAME_MAX+1] = "";
+char beye_codepage[256] = "CP866";
+char beye_scheme_name[256] = "Built-in";
+static char beye_ini_ver[32];
+unsigned long beye_vioIniFlags = 0L;
+unsigned long beye_twinIniFlags = 0L;
+unsigned long beye_kbdFlags = 0L;
+bool iniSettingsAnywhere = false;
+bool fioUseMMF = false;
+bool iniPreserveTime = false;
+bool iniUseExtProgs = false;
+__filesize_t headshift = 0L;
+char *ini_name;
+
+static volatile char antiviral_hole2[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
+
+TWindow * MainWnd = 0,*HelpWnd = 0,*TitleWnd = 0,*ErrorWnd = 0;
+
+#define SHORT_PATH_LEN __TVIO_MAXSCREENWIDTH-54
+
+char shortname[SHORT_PATH_LEN + 1];
+
+static volatile char antiviral_hole3[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 
 static REGISTRY_BIN *mainBinTable[] =
 {
@@ -142,12 +160,6 @@ static REGISTRY_BIN *mainBinTable[] =
 
 REGISTRY_BIN *detectedFormat = 0;
 
-
-extern REGISTRY_MODE binMode;
-extern REGISTRY_MODE textMode;
-extern REGISTRY_MODE hexMode;
-extern REGISTRY_MODE disMode;
-
 static REGISTRY_MODE *mainModeTable[] =
 {
   &textMode,
@@ -160,6 +172,8 @@ REGISTRY_MODE *activeMode;
 static size_t LastMode = sizeof(mainModeTable)/sizeof(REGISTRY_BIN *)+10;
 
 static unsigned defMainModeSel = 0;
+
+static volatile char antiviral_hole4[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 
 bool SelectMode( void )
 {
@@ -192,10 +206,10 @@ static void __NEAR__ __FASTCALL__ term_modes( void )
   if(activeMode->term) activeMode->term();
 }
 
-static void __NEAR__ __FASTCALL__ __init_beye( void )
+static void __NEAR__ __FASTCALL__ __init_beye( unsigned ArgCount )
 {
    LastOpenFileName = new char[4096];
-   ListFile = new char*[ArgCount-1];
+   ListFile = new const char*[ArgCount-1];
    if((!LastOpenFileName) || (!ListFile))
    {
      printm("BEYE initialization failed! Out of memory!");
@@ -224,14 +238,14 @@ static void __NEAR__ __FASTCALL__ MakeShortName( void )
 {
   unsigned l;
   unsigned slen = twGetClientWidth(TitleWnd)-54;
-  l = strlen(ArgVector[1]);
-  if(l <= slen) strcpy(shortname,ArgVector[1]);
+  l = ArgVector1.length();
+  if(l <= slen) strcpy(shortname,ArgVector1.c_str());
   else
   {
-    strncpy(shortname,ArgVector[1],slen/2 - 3);
+    strncpy(shortname,ArgVector1.c_str(),slen/2 - 3);
     shortname[slen/2-4] = 0;
     strcat(shortname,"...");
-    strcat(shortname,&ArgVector[1][l - slen/2]);
+    strcat(shortname,&ArgVector1.c_str()[l - slen/2]);
   }
   __nls_CmdlineToOem((unsigned char *)shortname,strlen(shortname));
 }
@@ -289,16 +303,17 @@ struct tagbeyeArg
   { "-t", "view file in text mode" },
   { "-s", "change size of file to NNN bytes (create, if file does not exist)" },
   { "-i", "ignore .ini file (create new)" },
+  { "-c", "debug mp_malloc: (1 - bounds; 2 - prebounds; 3-backtrace)" },
   { "-?", "display this screen" }
 };
 
-static int __NEAR__ __FASTCALL__ queryKey(char *arg)
+static int __NEAR__ __FASTCALL__ queryKey(const std::string& arg)
 {
   int ret = -1;
   size_t i;
   for(i = 0;i < sizeof(beyeArg)/sizeof(struct tagbeyeArg);i++)
   {
-    if(strcmp(arg,beyeArg[i].key) == 0) { ret = i; break; }
+    if(arg==beyeArg[i].key) { ret = i; break; }
   }
   return ret;
 }
@@ -306,11 +321,11 @@ static int __NEAR__ __FASTCALL__ queryKey(char *arg)
 static unsigned int  beye_mode     = UINT_MAX;
 static __filesize_t  new_file_size = FILESIZE_MAX;
 
-static void __NEAR__ __FASTCALL__ ParseCmdLine( void )
+static void __NEAR__ __FASTCALL__ ParseCmdLine( const std::vector<std::string>& ArgVector )
 {
   unsigned i;
   ListFileCount = 0;
-  for(i = 1;i < ArgCount;i++)
+  for(i = 1;i < ArgVector.size();i++)
   {
      int beye_key;
      beye_key = queryKey(ArgVector[i]);
@@ -323,17 +338,18 @@ static void __NEAR__ __FASTCALL__ ParseCmdLine( void )
        case 4: beye_mode = 0; break;
        case 5:
 #if (__WORDSIZE >= 32) && !defined(__QNX4__)
-		new_file_size = strtoull(ArgVector[++i],NULL,10);
+		new_file_size = strtoull(ArgVector[++i].c_str(),NULL,10);
 #else
-		new_file_size = strtoul(ArgVector[++i],NULL,10);
+		new_file_size = strtoul(ArgVector[++i].c_str(),NULL,10);
 #endif
 		break;
        case 6: UseIniFile = false; break;
-       case 7: ListFileCount = 0; return;
-       default: ListFile[ListFileCount++] = ArgVector[i];
+       case 7: i++; break; // parsed early
+       case 8: ListFileCount = 0; return;
+       default: ListFile[ListFileCount++] = ArgVector[i].c_str();
      }
   }
-  if(ListFileCount) ArgVector[1] = ListFile[0];
+  if(ListFileCount) ArgVector1 = ListFile[0];
 }
 
 static bool __NEAR__ __FASTCALL__ LoadInfo( void )
@@ -342,11 +358,11 @@ static bool __NEAR__ __FASTCALL__ LoadInfo( void )
    if(new_file_size != FILESIZE_MAX)
    {
        bhandle_t handle;
-       if(__IsFileExists(ArgVector[1]) == false) handle = __OsCreate(ArgVector[1]);
+       if(__IsFileExists(ArgVector1.c_str()) == false) handle = __OsCreate(ArgVector1.c_str());
        else
        {
-	 handle = __OsOpen(ArgVector[1],FO_READWRITE | SO_DENYNONE);
-	 if(handle == NULL_HANDLE) handle = __OsOpen(ArgVector[1],FO_READWRITE | SO_COMPAT);
+	 handle = __OsOpen(ArgVector1.c_str(),FO_READWRITE | SO_DENYNONE);
+	 if(handle == NULL_HANDLE) handle = __OsOpen(ArgVector1.c_str(),FO_READWRITE | SO_COMPAT);
        }
        if(handle != NULL_HANDLE)
        {
@@ -359,7 +375,7 @@ static bool __NEAR__ __FASTCALL__ LoadInfo( void )
 	  return false;
        }
    }
-   if(BMOpen(ArgVector[1]) != 0) return false;
+   if(BMOpen(ArgVector1) != 0) return false;
    if(beye_mode != UINT_MAX)
    {
      defMainModeSel = beye_mode;
@@ -424,8 +440,8 @@ static void MyAtExit( void )
 bool isValidIniArgs( void )
 {
   return iniSettingsAnywhere ? true :
-	 ArgVector[1] ?
-	 strcmp(ArgVector[1],LastOpenFileName) == 0 ?
+	 !ArgVector1.empty() ?
+	 ArgVector1==LastOpenFileName ?
 	 beye_mode != UINT_MAX && beye_mode != LastMode ?
 	 false : true : false : false;
 }
@@ -503,7 +519,7 @@ static void __NEAR__ __FASTCALL__ save_ini_info( void )
   beyeWriteProfileString(ini,"Beye","Search","Template",beyeSearchFlg & SF_WILDCARDS ? "on" : "off");
   beyeWriteProfileString(ini,"Beye","Search","UsePlugin",beyeSearchFlg & SF_PLUGINS ? "on" : "off");
   beyeWriteProfileString(ini,"Beye","Search","AsHex",beyeSearchFlg & SF_ASHEX ? "on" : "off");
-  beyeWriteProfileString(ini,"Beye","Browser","LastOpen",ArgVector[1]);
+  beyeWriteProfileString(ini,"Beye","Browser","LastOpen",ArgVector1.c_str());
   sprintf(tmp,"%u",defMainModeSel);
   beyeWriteProfileString(ini,"Beye","Browser","LastMode",tmp);
 #if (__WORDSIZE >= 32) && !defined(__QNX4__)
@@ -567,7 +583,7 @@ static void __FASTCALL__ ShowUsage(void) {
     termBConsole();
 }
 
-int main( int argc, char *argv[] )
+int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::string>& envm)
 {
  hIniProfile *ini;
  bool skin_err;
@@ -590,17 +606,14 @@ int main( int argc, char *argv[] )
     flg=MPA_FLG_BEFORE_CHECK;
     flg=MPA_FLG_BACKTRACE;
 */
- mp_malloc_e flg=MPA_FLG_RANDOMIZER;
- mp_init_malloc(argv[0],1000,10,flg);
- ArgCount = argc;
- ArgVector = argv;
+ if(argv.size()>1) ArgVector1 = argv[1];
  __init_sys();
- __init_beye();
+ __init_beye(argv.size());
  ini = load_ini_info();
  skin_err = csetReadIniFile(beye_skin_name);
  initBConsole(beye_vioIniFlags,beye_twinIniFlags);
- if(ArgCount < 2) goto show_usage;
- ParseCmdLine();
+ if(argv.size() < 2) goto show_usage;
+ ParseCmdLine(argv);
  if(!ListFileCount)
  {
    /** print usage message */
@@ -643,7 +656,7 @@ int main( int argc, char *argv[] )
  }
  /* We must do it before opening a file because of some RTL has bug
     when are trying to open already open file with no sharing access */
- ftim_ok = __OsGetFTime(ArgVector[1],&ftim);
+ ftim_ok = __OsGetFTime(ArgVector1.c_str(),&ftim);
  if(!LoadInfo())
  {
    if(ini) iniCloseFile(ini);
@@ -669,7 +682,7 @@ int main( int argc, char *argv[] )
  term_modes();
  if(detectedFormat->destroy) detectedFormat->destroy();
  BMClose();
- if(iniPreserveTime && ftim_ok) __OsSetFTime(ArgVector[1],&ftim);
+ if(iniPreserveTime && ftim_ok) __OsSetFTime(ArgVector1.c_str(),&ftim);
  Bye:
  return retval;
 }
@@ -704,12 +717,12 @@ bool NewSource( void )
   delete nlsListFile;
   if(i != -1)
   {
-    if(iniPreserveTime && ftim_ok) __OsSetFTime(ArgVector[1],&ftim);
+    if(iniPreserveTime && ftim_ok) __OsSetFTime(ArgVector1.c_str(),&ftim);
     BMClose();
     ftim_ok = __OsGetFTime(ListFile[i],&ftim);
     if(BMOpen(ListFile[i]) == 0)
     {
-      ArgVector[1] = ListFile[i];
+      ArgVector1 = ListFile[i];
       if(detectedFormat->destroy) detectedFormat->destroy();
       if(activeMode->term) activeMode->term();
       MakeShortName();
@@ -719,7 +732,7 @@ bool NewSource( void )
     }
     else
     {
-       if(BMOpen(ArgVector[1]) != 0)
+       if(BMOpen(ArgVector1) != 0)
        {
 	 exit(EXIT_FAILURE);
        }
@@ -754,4 +767,63 @@ bool __FASTCALL__ beyeWriteProfileString(hIniProfile *ini,
 					  const char *value)
 {
   return iniWriteProfileString(ini,section,subsection,item,value);
+}
+} // namespace beye
+
+int main(int argc,char* args[], char *envp[])
+{
+    try {
+	std::vector<std::string> ArgVector;
+	std::string str,stmp;
+	for(int i=0;i<argc;i++) {
+	    str=args[i];
+	    ArgVector.push_back(str);
+	}
+	args[argc] = (char*)make_false_pointer((any_t*)antiviral_hole1);
+	std::map<std::string,std::string> envm;
+	unsigned j=0;
+	size_t pos;
+	while(envp[j]) {
+	    str=envp[j++];
+	    pos=str.find('=');
+	    if(pos==std::string::npos) throw "Broken environment variable: "+str;
+	    stmp=str.substr(pos+1);
+	    str=str.substr(0,pos);
+	    envm[str]=stmp;
+	}
+//	envp[j+1] = NULL;
+	/* init antiviral protection */
+	int rc;
+	rc=mp_mprotect((any_t*)antiviral_hole1,sizeof(antiviral_hole1),MP_DENY_ALL);
+	rc|=mp_mprotect((any_t*)antiviral_hole2,sizeof(antiviral_hole2),MP_DENY_ALL);
+	rc|=mp_mprotect((any_t*)antiviral_hole3,sizeof(antiviral_hole3),MP_DENY_ALL);
+	rc|=mp_mprotect((any_t*)antiviral_hole4,sizeof(antiviral_hole4),MP_DENY_ALL);
+	if(rc) {
+		std::cerr<<"*** Error! Cannot initialize antiviral protection: '"<<strerror(errno)<<"' ***!"<<std::endl;
+		return EXIT_FAILURE;
+	}
+	/* init malloc */
+	size_t i,sz=ArgVector.size();
+	int malloc_debug=0;
+	mp_malloc_e flg=MPA_FLG_RANDOMIZER;
+	for(i=0;i<sz;i++) {
+	    if(ArgVector[i]=="-c") {
+		malloc_debug=::atoi(ArgVector[++i].c_str());
+		switch(malloc_debug) {
+		    default:
+		    case 0: flg=MPA_FLG_RANDOMIZER; break;
+		    case 1: flg=MPA_FLG_BOUNDS_CHECK; break;
+		    case 2: flg=MPA_FLG_BEFORE_CHECK; break;
+		    case 3: flg=MPA_FLG_BACKTRACE; break;
+		}
+		break;
+	    }
+	}
+	mp_init_malloc(ArgVector[0],1000,10,flg);
+	/* call program */
+	return Beye(ArgVector,envm);
+    } catch(const std::string& what) {
+	std::cout<<"[main_module] Exception '"<<what<<"'caught in module: MPlayerXP"<<std::endl;
+    }
+    return EXIT_FAILURE;
 }

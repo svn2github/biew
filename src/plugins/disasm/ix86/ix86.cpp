@@ -6349,7 +6349,10 @@ static signed int active_assembler = -1;
 #ifndef HAVE_PCLOSE
 #define pclose(fp) fclose(fp)
 #endif
-extern bool iniUseExtProgs;
+namespace beye {
+    extern bool iniUseExtProgs;
+} // namespace beye
+
 static void __FASTCALL__ ix86Init( void )
 {
   ix86_voidstr = new char [1000];

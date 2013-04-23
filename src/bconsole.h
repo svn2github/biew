@@ -24,7 +24,9 @@
 #include "libbeye/twin.h"
 #endif
 
-extern TWindow *MainWnd,*HelpWnd,*TitleWnd,*CritErrWnd;
+namespace beye {
+    extern TWindow *MainWnd,*HelpWnd,*TitleWnd,*CritErrWnd;
+} // namespace beye
 
 extern void         __FASTCALL__ initBConsole( unsigned long vio_flg,unsigned long twin_flg );
 extern void         __FASTCALL__ termBConsole( void );

@@ -17,6 +17,7 @@
 #ifndef __BMFILE_INC
 #define __BMFILE_INC
 
+#include <string>
 #ifndef __BBIO_H
 #include "libbeye/bbio.h"
 #endif
@@ -36,15 +37,15 @@ namespace beye {
 #define BBIO_SMALL_CACHE_SIZE  0x4000  /* 16k */
 #endif
 
-    BFile*        __FASTCALL__ beyeOpenRO(const char *fname,unsigned cache_size);
-    BFile*        __FASTCALL__ beyeOpenRW(const char *fname,unsigned cache_size);
+    BFile*        __FASTCALL__ beyeOpenRO(const std::string& fname,unsigned cache_size);
+    BFile*        __FASTCALL__ beyeOpenRW(const std::string& fname,unsigned cache_size);
 
 #define BM_SEEK_SET BIO_SEEK_SET
 #define BM_SEEK_CUR BIO_SEEK_CUR
 #define BM_SEEK_END BIO_SEEK_END
     extern BFile& bm_file_handle,&sc_bm_file_handle;
 
-    int            __FASTCALL__ BMOpen(const char * fname);
+    int            __FASTCALL__ BMOpen(const std::string& fname);
     void           __FASTCALL__ BMClose( void );
     inline bhandle_t		__FASTCALL__ BMHandle( void ) { return bm_file_handle.handle(); }
     inline BFile&		__FASTCALL__ BMbioHandle( void ) { return bm_file_handle; }

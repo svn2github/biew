@@ -32,7 +32,6 @@
 #endif
 
 extern char legalchars[];
-extern __filesize_t headshift;
 extern bool DumpMode;
 extern bool EditMode;
 
@@ -51,12 +50,8 @@ extern void               SelectTool( void );
 extern void               init_sysinfo( void );
 extern void               term_sysinfo( void );
 extern void               SelectSysInfo( void );
-			  /** return true if LastOpenFile == Current open file */
-extern bool              isValidIniArgs( void );
 
-extern bool              NewSource( void );
-extern bool              FileUtils( void );
-extern __filesize_t       IsNewExe(void);
+extern bool               FileUtils( void );
 
 extern char * __FASTCALL__ Get2Digit(uint8_t);
 extern char * __FASTCALL__ Get2SignDig(int8_t);
@@ -114,7 +109,6 @@ extern unsigned long __FASTCALL__ AppendAsmRef(char *str,__filesize_t ulShift,
 
 
 extern void  ShowSysInfo( void );
-extern void  PaintTitle( void );
 extern void  MainLoop( void );
 
 extern int  __FASTCALL__ isHOnLine(__filesize_t cp,int width);
@@ -147,7 +141,16 @@ extern bool     __FASTCALL__ ma_AddData(memArray *obj,const any_t*data,unsigned 
 extern void      __FASTCALL__ ma_Destroy(memArray *obj);
 extern int       __FASTCALL__ ma_Display(memArray *obj,const char *title,int flg,unsigned defsel);
 
-extern unsigned __FASTCALL__ beyeReadProfileString(hIniProfile *ini,
+namespace beye {
+    extern __filesize_t headshift;
+
+    void		PaintTitle( void );
+    bool               NewSource( void );
+    __filesize_t       IsNewExe(void);
+			  /** return true if LastOpenFile == Current open file */
+    bool              isValidIniArgs( void );
+
+    unsigned __FASTCALL__ beyeReadProfileString(hIniProfile *ini,
 				      const char *section,
 				      const char *subsection,
 				      const char *_item,
@@ -155,10 +158,10 @@ extern unsigned __FASTCALL__ beyeReadProfileString(hIniProfile *ini,
 				      char *buffer,
 				      unsigned cbBuffer);
 
-extern bool __FASTCALL__ beyeWriteProfileString(hIniProfile *ini,
+    bool __FASTCALL__ beyeWriteProfileString(hIniProfile *ini,
 						 const char *section,
 						 const char *subsection,
 						 const char *item,
 						 const char *value);
-
+} // namespace beye
 #endif

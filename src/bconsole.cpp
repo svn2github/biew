@@ -39,7 +39,10 @@ using namespace beye;
 #include "search.h"
 #include "bconsole.h"
 
-extern TWindow * ErrorWnd;
+namespace beye {
+    extern TWindow * ErrorWnd;
+    extern char beye_codepage[];
+} // namespace beye
 
 #define MAXINPUT 79
 
@@ -47,7 +50,6 @@ extern TWindow * ErrorWnd;
 
 static int KB_Buff[64];
 static unsigned char KB_freq = 0;
-extern char beye_codepage[];
 
 void __FASTCALL__ initBConsole( unsigned long vio_flg,unsigned long twin_flg )
 {

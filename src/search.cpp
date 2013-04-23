@@ -570,7 +570,9 @@ bool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
   return ret;
 }
 
-extern TWindow * ErrorWnd;
+namespace beye {
+    extern TWindow * ErrorWnd;
+} // namespace beye
 
 __filesize_t __FASTCALL__ Search( bool is_continue )
 {

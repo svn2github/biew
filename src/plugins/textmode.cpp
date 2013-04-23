@@ -18,6 +18,7 @@ using namespace beye;
  * @note        Development, fixes and improvements
 **/
 #include <algorithm>
+#include <string>
 
 #include <string.h>
 #include <stdio.h>
@@ -77,8 +78,10 @@ static struct tag_syntax_hl_s
 acontext_hl_t __HUGE__ *acontext=NULL; /* means active context*/
 unsigned long  acontext_num;
 
-extern char beye_syntax_name[];
-extern char **  ArgVector;
+namespace beye {
+    extern char beye_syntax_name[];
+    extern std::string ArgVector1;
+} // namespace beye
 
 static int HiLight = 1;
 static char detected_syntax_name[FILENAME_MAX+1] = "";
@@ -284,43 +287,37 @@ static void unfmt_str(unsigned char *str)
 
 static bool __FASTCALL__ txtFiUserFunc1(IniInfo * info)
 {
-  char *p;
-  if(strcmp(info->section,"Extensions")==0)
-  {
-	p = strrchr(ArgVector[1],'.');
-	if(p)
-	{
+  const char* p;
+  if(strcmp(info->section,"Extensions")==0) {
+	p = strrchr(ArgVector1.c_str(),'.');
+	if(p) {
 	    p++;
-	    if(strcmp(p,info->item)==0)
-	    {
+	    if(strcmp(p,info->item)==0) {
 		strcpy(detected_syntax_name,info->value);
 		return true;
 	    }
 	}
   }
-  if(strcmp(info->section,"Names")==0)
-  {
-	char *pp;
-	p = strrchr(ArgVector[1],'/');
-	pp = strrchr(ArgVector[1],'\\');
+  if(strcmp(info->section,"Names")==0) {
+	const char *pp;
+	p = strrchr(ArgVector1.c_str(),'/');
+	pp = strrchr(ArgVector1.c_str(),'\\');
 	p=std::max(p,pp);
 	if(p) p++;
-	else  p=ArgVector[1];
-	if(memcmp(p,info->item,strlen(info->item))==0)
-	{
+	else  p=ArgVector1.c_str();
+	if(memcmp(p,info->item,strlen(info->item))==0) {
 	    strcpy(detected_syntax_name,info->value);
 	    return true;
 	}
   }
-  if(strcmp(info->section,"Context")==0)
-  {
+  if(strcmp(info->section,"Context")==0) {
 	long off,fpos;
 	unsigned i,ilen;
 	int found,softmode;
 	off = atol(info->item);
-	p = strstr((char*)info->value,"-->");
+	char* value=strstr((char*)info->value,"-->");
 	if(!p) { ErrMessageBox("Missing separator in main context definition",NULL); return true; }
-	*p=0;
+	*value=0;
 	softmode=0;
 	if(strcmp(info->subsection,"Soft")==0) softmode=1;
 	unfmt_str((unsigned char*)info->value);
@@ -328,21 +325,18 @@ static bool __FASTCALL__ txtFiUserFunc1(IniInfo * info)
 	fpos=BMGetCurrFilePos();
 	BMSeek(off,BM_SEEK_SET);
 	found=1;
-	for(i=0;i<ilen;i++)
-	{
+	for(i=0;i<ilen;i++) {
 	    unsigned char ch;
 	    ch=BMReadByte();
 	    if(softmode) while(isspace(ch)) { ch=BMReadByte(); if(BMEOF()) { found = 0; break; }}
-	    if(ch != info->value[i])
-	    {
+	    if(ch != info->value[i]) {
 		found=0;
 		break;
 	    }
 	}
 	BMSeek(fpos,BM_SEEK_SET);
-	if(found)
-	{
-	    strcpy(detected_syntax_name,p+3);
+	if(found) {
+	    strcpy(detected_syntax_name,value+3);
 	    return true;
 	}
   }
@@ -360,8 +354,7 @@ static Color __NEAR__ __FASTCALL__ getCtxColorByName(const char *subsection,cons
     else if(strcmp(subsection,"Keywords")==0) cset=&prog_cset.keywords;
     else if(strcmp(subsection,"Operators")==0) cset=&prog_cset.operators;
     else ErrMessageBox("Unknown context subsection definition",subsection);
-    if(cset)
-    {
+    if(cset) {
 	if(strcmp(item,"base")==0) return Color(cset->base);
 	if(strcmp(item,"extended")==0) return Color(cset->extended);
 	if(strcmp(item,"reserved")==0) return Color(cset->reserved);

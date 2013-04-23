@@ -28,12 +28,12 @@ using namespace beye;
 #include "tstrings.h"
 #include "libbeye/bbio.h"
 
-extern bool fioUseMMF;
 namespace beye {
+extern bool fioUseMMF;
 unsigned BMFileFlags=0;
 BFile& bm_file_handle = bNull,& sc_bm_file_handle = bNull;
 
-BFile* __FASTCALL__ beyeOpenRO(const char *fname,unsigned cache_size)
+BFile* __FASTCALL__ beyeOpenRO(const std::string& fname,unsigned cache_size)
 {
   BFile* fret;
   fret=new BFile;
@@ -45,7 +45,7 @@ BFile* __FASTCALL__ beyeOpenRO(const char *fname,unsigned cache_size)
   return fret;
 }
 
-BFile* __FASTCALL__ beyeOpenRW(const char *fname,unsigned cache_size)
+BFile* __FASTCALL__ beyeOpenRW(const std::string& fname,unsigned cache_size)
 {
   BFile* fret;
   fret=new BFile;
@@ -57,7 +57,7 @@ BFile* __FASTCALL__ beyeOpenRW(const char *fname,unsigned cache_size)
   return fret;
 }
 
-int __FASTCALL__ BMOpen(const char * fname)
+int __FASTCALL__ BMOpen(const std::string& fname)
 {
   BFile *bm,*sc;
   bm = beyeOpenRO(fname,BBIO_CACHE_SIZE);

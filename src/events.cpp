@@ -24,6 +24,10 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
 
+namespace beye {
+    extern unsigned long beye_kbdFlags;
+} // namespace beye
+
 static int KB_Buff[64];
 static size_t KB_freq = 0;
 
@@ -67,8 +71,6 @@ static int __NEAR__ __FASTCALL__ getPromptKey(int flag)
      if(flag & KS_CTRL) ret += KE_CTL_F(1) - KE_F(1);
  return ret;
 }
-
-extern unsigned long beye_kbdFlags;
 
 static int __NEAR__ __FASTCALL__ __GetEvent( void (*prompt)(void) ,TWindow *win)
 {

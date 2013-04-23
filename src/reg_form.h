@@ -190,7 +190,6 @@ struct REGISTRY_BIN
   void          (__FASTCALL__ *drop_structs)( void );
 };
 
-extern REGISTRY_BIN *detectedFormat;
 
 /***************************************************************\
 * This form registry modes of translation file                  *
@@ -252,9 +251,14 @@ typedef struct tag_REGISTRY_MODE
 __filesize_t (__FASTCALL__ *search_engine)(TWindow *pwnd, __filesize_t start, __filesize_t *slen, unsigned flags, bool is_continue, bool *is_found);
 }REGISTRY_MODE;
 
-extern REGISTRY_MODE *activeMode;
-extern bool SelectMode( void );
-extern void QuickSelectMode( void );
+namespace beye {
+    extern REGISTRY_BIN *detectedFormat;
+    extern REGISTRY_MODE *activeMode;
+
+    bool SelectMode( void );
+    void QuickSelectMode( void );
+} // namespace beye
+
 
 typedef struct tag_REGISTRY_TOOL
 {

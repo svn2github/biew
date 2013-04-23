@@ -40,7 +40,10 @@ using namespace beye;
 #include "libbeye/twin.h"
 #include "libbeye/kbd_code.h"
 
-extern bool fioUseMMF;
+namespace beye {
+    extern char shortname[];
+    extern bool fioUseMMF;
+} // namespace beye
 
 static bool ChSize( void )
 {
@@ -1120,8 +1123,6 @@ static bool XLatBlock( void )
  }
  return ret;
 }
-
-extern char shortname[];
 
 static bool FileInfo( void )
 {

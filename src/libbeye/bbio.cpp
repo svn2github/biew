@@ -308,18 +308,18 @@ bool BFile::__putbuff(const char* buff,unsigned cbBuff)
   return ret;
 }
 
-bool BFile::open(const char* fname,unsigned _openmode,unsigned bSize,unsigned optimization)
+bool BFile::open(const std::string& fname,unsigned _openmode,unsigned bSize,unsigned optimization)
 {
     unsigned len;
     openmode = _openmode;
-    FileName = new char [strlen(fname)+1];
-    strcpy(FileName,fname);
+    FileName = new char [fname.length()+1];
+    strcpy(FileName,fname.c_str());
     /* Attempt open as MMF */
     if(!is_writeable(openmode) && optimization == BIO_OPT_USEMMF)
     {
       if((b.mmb = new mmb))
       {
-	if((b.mmb->mmf = __mmfOpen(fname,openmode)) != NULL)
+	if((b.mmb->mmf = __mmfOpen(FileName,openmode)) != NULL)
 	{
 	  b.mmb->mmf_addr = __mmfAddress(b.mmb->mmf);
 	  FLength = __mmfSize(b.mmb->mmf);
@@ -332,7 +332,7 @@ bool BFile::open(const char* fname,unsigned _openmode,unsigned bSize,unsigned op
    }
    if(!is_mmf)
    {
-     bhandle_t _handle = __OsOpen(fname,openmode);
+     bhandle_t _handle = __OsOpen(FileName,openmode);
      optimization = BIO_OPT_DB;
      if(_handle == NULL_HANDLE) return false;
      b.vfb.handle = _handle;
