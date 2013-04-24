@@ -34,7 +34,11 @@ BEYELIB = ./libbeye/$(LIBPREFIX)beye.$(LIBEXT)
 ##########################################################################
 
 INCS = -I.
-LIBS = -L./addons -laddons -L./plugins -lplugins -L./plugins/disasm -ldisasm -L./libbeye -lbeye $(EXTRALIBS)
+LIBS = addons/libaddons.a \
+       plugins/libplugins.a \
+       plugins/disasm/libdisasm.a \
+       libbeye/libbeye.a
+LIBS += $(EXTRALIBS)
 SRCS = \
 bconsole.cpp\
 beyehelp.cpp\
@@ -60,11 +64,11 @@ OBJS=$(SRCS:.cpp=.o)
 HLP_SUBDIRS=tools/beyehlp tools/lzss
 DO_HELP = @ for i in $(HLP_SUBDIRS); do $(MAKE) -C $$i $@ || exit; done
 
-all:     $(SUBDIRS) $(OBJS) $(TARGET)
+all:     $(LIBS) $(OBJS) $(TARGET)
 
-.PHONY: subdirs $(SUBDIRS)
+$(LIBS): $(SUBDIRS)
 
-subdirs: $(SUBDIRS)
+.PHONY: all $(SUBDIRS)
 
 $(SUBDIRS):
 ifeq ($(filter 3.81,$(firstword $(sort $(MAKE_VERSION) \ 3.81))),)
@@ -81,7 +85,7 @@ clean:
 distclean: clean
 	$(DO_MAKE)
 
-$(TARGET): $(OBJS)
+$(TARGET): $(OBJS) $(LIBS)
 	$(CXX) $(LDXXFLAGS) -o $@ $(OBJS) $(LIBS)
 
 %.o : %.cpp
