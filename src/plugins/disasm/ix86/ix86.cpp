@@ -40,7 +40,8 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 
 namespace beye {
-#define MAX_IX86_INSN_LEN 15
+static unsigned MAX_IX86_INSN_LEN=15;
+static unsigned MAX_DISASM_OUTPUT=1000;
 
 const char ix86CloneSNames[4] = { 'i', 'a', 'c', 'v' };
 const char * ix86_sizes[] = { "", "(b)", "(w)", "(d)", "(p)", "(q)", "(t)" };
@@ -6015,7 +6016,7 @@ static DisasmRet __FASTCALL__ ix86Disassembler(__filesize_t ulShift,
     strcat(ix86_da_out," ");
  }
  if(ix86_da_out[0]) TabSpace(ix86_da_out,TAB_POS);
- strcat(ix86_da_out,Ret.str);
+ strncat(ix86_da_out,Ret.str,MAX_DISASM_OUTPUT);
  Ret.str = ix86_da_out;
 #ifdef IX86_64
  if(x86_Bitness < DAB_USE64)
@@ -6354,14 +6355,14 @@ extern bool iniUseExtProgs;
 
 static void __FASTCALL__ ix86Init( void )
 {
-  ix86_voidstr = new char [1000];
-  ix86_da_out  = new char [1000];
-  ix86_Katmai_buff = new char [1000];
-  ix86_appstr = new char [1000];
-  ix86_dtile = new char [1000];
-  ix86_appbuffer = new char [1000];
-  ix86_apistr = new char [1000];
-  ix86_modrm_ret = new char [1000];
+  ix86_voidstr = new char [MAX_DISASM_OUTPUT];
+  ix86_da_out  = new char [MAX_DISASM_OUTPUT];
+  ix86_Katmai_buff = new char [MAX_DISASM_OUTPUT];
+  ix86_appstr = new char [MAX_DISASM_OUTPUT];
+  ix86_dtile = new char [MAX_DISASM_OUTPUT];
+  ix86_appbuffer = new char [MAX_DISASM_OUTPUT];
+  ix86_apistr = new char [MAX_DISASM_OUTPUT];
+  ix86_modrm_ret = new char [MAX_DISASM_OUTPUT];
   if((!ix86_voidstr) || (!ix86_da_out) || !(ix86_Katmai_buff) ||
      (!ix86_appstr) || (!ix86_dtile) || (!ix86_appbuffer) ||
      (!ix86_apistr) || (!ix86_modrm_ret)

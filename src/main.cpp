@@ -301,7 +301,7 @@ struct tagbeyeArg
   { "-t", "view file in text mode" },
   { "-s", "change size of file to NNN bytes (create, if file does not exist)" },
   { "-i", "ignore .ini file (create new)" },
-  { "-c", "debug mp_malloc: (1 - bounds; 2 - prebounds; 3-backtrace)" },
+  { "-m", "debug mp_malloc: (1 - bounds; 2 - prebounds; 3-backtrace)" },
   { "-?", "display this screen" }
 };
 
@@ -771,6 +771,25 @@ bool __FASTCALL__ beyeWriteProfileString(hIniProfile *ini,
 int main(int argc,char* args[], char *envp[])
 {
     try {
+	/* init malloc */
+	size_t i;
+	int malloc_debug=0;
+	mp_malloc_e flg=MPA_FLG_RANDOMIZER;
+	for(i=0;i<argc;i++) {
+	    if(strcmp(args[i],"-m")==0) {
+		malloc_debug=::atoi(args[i]);
+		switch(malloc_debug) {
+		    default:
+		    case 0: flg=MPA_FLG_RANDOMIZER; break;
+		    case 1: flg=MPA_FLG_BOUNDS_CHECK; break;
+		    case 2: flg=MPA_FLG_BEFORE_CHECK; break;
+		    case 3: flg=MPA_FLG_BACKTRACE; break;
+		}
+		break;
+	    }
+	}
+	mp_init_malloc(args[0],1000,10,flg);
+	/* init vectors */
 	std::vector<std::string> ArgVector;
 	std::string str,stmp;
 	for(int i=0;i<argc;i++) {
@@ -800,24 +819,6 @@ int main(int argc,char* args[], char *envp[])
 		std::cerr<<"*** Error! Cannot initialize antiviral protection: '"<<strerror(errno)<<"' ***!"<<std::endl;
 		return EXIT_FAILURE;
 	}
-	/* init malloc */
-	size_t i,sz=ArgVector.size();
-	int malloc_debug=0;
-	mp_malloc_e flg=MPA_FLG_RANDOMIZER;
-	for(i=0;i<sz;i++) {
-	    if(ArgVector[i]=="-c") {
-		malloc_debug=::atoi(ArgVector[++i].c_str());
-		switch(malloc_debug) {
-		    default:
-		    case 0: flg=MPA_FLG_RANDOMIZER; break;
-		    case 1: flg=MPA_FLG_BOUNDS_CHECK; break;
-		    case 2: flg=MPA_FLG_BEFORE_CHECK; break;
-		    case 3: flg=MPA_FLG_BACKTRACE; break;
-		}
-		break;
-	    }
-	}
-	mp_init_malloc(ArgVector[0],1000,10,flg);
 	/* call program */
 	return Beye(ArgVector,envm);
     } catch(const std::string& what) {

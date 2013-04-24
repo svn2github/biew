@@ -743,11 +743,11 @@ static void __FASTCALL__ disTerm( void )
 {
   termCodeGuider();
   if(activeDisasm->term) activeDisasm->term();
-  delete CurrStrLenBuff;
-  delete PrevStrLenAddr;
-  delete dis_comments;
-  delete disCodeBuffer;
-  delete disCodeBufPredict;
+  delete CurrStrLenBuff; CurrStrLenBuff=NULL;
+  delete PrevStrLenAddr; PrevStrLenAddr=NULL;
+  delete dis_comments;   dis_comments=NULL;
+  delete disCodeBuffer;  disCodeBuffer=NULL;
+  delete disCodeBufPredict; disCodeBufPredict=NULL;
 }
 
 static void __FASTCALL__ disSaveIni( hIniProfile *ini )

@@ -107,7 +107,7 @@ static void	prot_free_slot(mp_slot_container_t* c,any_t* ptr) {
 	    c->size-=16;
 	    c->slots=(mp_slot_t*)realloc(c->slots,sizeof(mp_slot_t)*c->size);
 	}
-    } else printf("[prot_free_slot] Internal error! Can't find slot for address: %p\n",ptr);
+    } else std::cerr<<"[prot_free_slot] Internal error! Can't find slot for address: "<<ptr<<std::endl;
 }
 
 /* ----------- append ------------ */
@@ -220,7 +220,7 @@ static void __prot_free_append(any_t*ptr) {
     any_t *page_ptr=prot_page_align(ptr);
     mp_slot_t* slot=prot_find_slot(&priv->mallocs,page_ptr);
     if(!slot) {
-	::printf("[__prot_free_append] suspect call found! Can't find slot for address: %p [aligned: %p]\n",ptr,page_ptr);
+	std::cerr<<"[__prot_free_slot] suspect call found! Can't find slot for address: "<<ptr<<" [aligned: "<<page_ptr<<"]"<<std::endl;
 	__prot_print_slots(&priv->mallocs);
 	__print_backtrace(Max_BackTraces);
 	::kill(::getpid(), SIGILL);
@@ -236,7 +236,7 @@ static any_t* __prot_realloc_append(any_t*ptr,size_t size) {
     if((rp=__prot_malloc_append(size))!=NULL && ptr) {
 	mp_slot_t* slot=prot_find_slot(&priv->mallocs,prot_page_align(ptr));
 	if(!slot) {
-	    ::printf("[__prot_realloc_append] suspect call found! Can't find slot for address: %p [aligned: %p]\n",ptr,prot_page_align(ptr));
+	    std::cerr<<"[__prot_realloc_append] suspect call found! Can't find slot for address: "<<ptr<<" [aligned: "<<prot_page_align(ptr)<<"]"<<std::endl;
 	    __prot_print_slots(&priv->mallocs);
 	    __print_backtrace(Max_BackTraces);
 	    ::kill(::getpid(), SIGILL);
@@ -270,7 +270,7 @@ static void __prot_free_prepend(any_t*ptr) {
     any_t *page_ptr=pre_page_align(ptr);
     mp_slot_t* slot=prot_find_slot(&priv->mallocs,page_ptr);
     if(!slot) {
-	::printf("[__prot_free_prepend] suspect call found! Can't find slot for address: %p [aligned: %p]\n",ptr,page_ptr);
+	std::cerr<<"[__prot_free_slot] suspect call found! Can't find slot for address: "<<ptr<<" [aligned: "<<page_ptr<<"]"<<std::endl;
 	__prot_print_slots(&priv->mallocs);
 	__print_backtrace(Max_BackTraces);
 	::kill(::getpid(), SIGILL);
@@ -285,7 +285,7 @@ static any_t* __prot_realloc_prepend(any_t*ptr,size_t size) {
     if((rp=__prot_malloc_prepend(size))!=NULL && ptr) {
 	mp_slot_t* slot=prot_find_slot(&priv->mallocs,pre_page_align(ptr));
 	if(!slot) {
-	    ::printf("[__prot_realloc_prepend] suspect call found! Can't find slot for address: %p [aligned: %p]\n",ptr,pre_page_align(ptr));
+	    std::cerr<<"[__prot_realloc_prepend] suspect call found! Can't find slot for address: "<<ptr<<" [aligned: "<<pre_page_align(ptr)<<"]"<<std::endl;
 	    __prot_print_slots(&priv->mallocs);
 	    __print_backtrace(Max_BackTraces);
 	    ::kill(getpid(), SIGILL);
