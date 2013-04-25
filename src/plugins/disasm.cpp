@@ -632,7 +632,7 @@ static int __NEAR__ __FASTCALL__ FullAsmEdit(TWindow * ewnd)
 			 fname = BMName();
 			 if((bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE)) != &bNull)
 			 {
-			   bHandle->seek(edit_cp,BIO_SEEK_SET);
+			   bHandle->seek(edit_cp,BFile::Seek_Set);
 			   if(!bHandle->write_buffer((any_t*)EditorMem.buff,rlen))
 			      errnoMessageBox(WRITE_FAIL,NULL,errno);
 			   delete bHandle;

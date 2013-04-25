@@ -40,8 +40,8 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 
 namespace beye {
-static unsigned MAX_IX86_INSN_LEN=15;
-static unsigned MAX_DISASM_OUTPUT=1000;
+static const unsigned MAX_IX86_INSN_LEN=15;
+static const unsigned MAX_DISASM_OUTPUT=1000;
 
 const char ix86CloneSNames[4] = { 'i', 'a', 'c', 'v' };
 const char * ix86_sizes[] = { "", "(b)", "(w)", "(d)", "(p)", "(q)", "(t)" };

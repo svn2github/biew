@@ -1011,7 +1011,7 @@ static unsigned __FASTCALL__ drawText( unsigned keycode , unsigned shift )
     else
 				    cpos=(cpos/cp_symb_len)*cp_symb_len;
   }
-  BMSeek(cpos,BIO_SEEK_SET);
+  BMSeek(cpos,BFile::Seek_Set);
   if(!(keycode == KE_LEFTARROW || keycode == KE_RIGHTARROW))
 				     PrepareLines(keycode);
   hilightline = -1;

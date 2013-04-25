@@ -178,9 +178,9 @@ bool __FASTCALL__ MyCallOut(IniInfo *ini)
 	}
 	bIn = new BFile;
 	bool rc;
-	rc = bIn->open(TEMPFNAME,FO_READONLY | SO_DENYNONE,BBIO_CACHE_SIZE,BIO_OPT_DB);
+	rc = bIn->open(TEMPFNAME,FO_READONLY | SO_DENYNONE,BBIO_CACHE_SIZE,BFile::Opt_Db);
 	 if(rc == false)
-	 rc = bIn->open(TEMPFNAME,FO_READONLY | SO_COMPAT,BBIO_CACHE_SIZE,BIO_OPT_DB);
+	 rc = bIn->open(TEMPFNAME,FO_READONLY | SO_COMPAT,BBIO_CACHE_SIZE,BFile::Opt_Db);
 	  if(rc == false)
 	  {
 	      fprintf(stderr,"Can not open %s",TEMPFNAME);
@@ -249,19 +249,19 @@ int main( int argc, char *argv[] )
   __OsClose(handle);
   bOutput = new BFile;
   bool rc;
-  rc = bOutput->open(outfname,FO_READWRITE | SO_DENYNONE,BBIO_CACHE_SIZE,BIO_OPT_DB);
+  rc = bOutput->open(outfname,FO_READWRITE | SO_DENYNONE,BBIO_CACHE_SIZE,BFile::Opt_Db);
   if(rc == false)
-    rc = bOutput->open(outfname,FO_READWRITE | SO_COMPAT,BBIO_CACHE_SIZE,BIO_OPT_DB);
+    rc = bOutput->open(outfname,FO_READWRITE | SO_COMPAT,BBIO_CACHE_SIZE,BFile::Opt_Db);
     if(rc == false)
-      rc = bOutput->open(outfname,FO_READONLY | SO_DENYNONE,BBIO_CACHE_SIZE,BIO_OPT_DB);
+      rc = bOutput->open(outfname,FO_READONLY | SO_DENYNONE,BBIO_CACHE_SIZE,BFile::Opt_Db);
       if(rc == false)
-	rc = bOutput->open(outfname,FO_READONLY | SO_COMPAT,BBIO_CACHE_SIZE,BIO_OPT_DB);
+	rc = bOutput->open(outfname,FO_READONLY | SO_COMPAT,BBIO_CACHE_SIZE,BFile::Opt_Db);
 	if(rc == false)
 	{
 	  fprintf(stderr,"Can not work with %s",outfname);
 	  return -1;
 	}
-  bOutput->set_optimization(BIO_OPT_RANDOM);
+  bOutput->set_optimization(BFile::Opt_Random);
   bOutput->write_buffer(id_string,strlen(id_string)+1);
   sprintf(sout,"%08lX",items_freq);
   bOutput->write_buffer(sout,HLP_SLONG_LEN);

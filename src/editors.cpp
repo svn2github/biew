@@ -170,7 +170,7 @@ void __FASTCALL__ editSaveContest( void )
       errnoMessageBox(WRITE_FAIL,NULL,errno);
       return;
   }
-  bHandle->seek(edit_cp,BIO_SEEK_SET);
+  bHandle->seek(edit_cp,BFile::Seek_Set);
   if(!bHandle->write_buffer((any_t*)EditorMem.buff,EditorMem.size)) goto err;
   delete bHandle;
   BMReRead();

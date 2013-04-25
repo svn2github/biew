@@ -25,24 +25,30 @@
 namespace beye {
 #define HA_LEN ((BMFileFlags&BMFF_USE64)?18:10)
 
-#define BMFF_NONE	0x00000000
-#define BMFF_USE64	0x00000001
+    enum {
+	BMFF_NONE=0x00000000,
+	BMFF_USE64=0x00000001
+    };
     extern unsigned BMFileFlags;
 
+    enum {
 #if __WORDSIZE == 16
-#define BBIO_CACHE_SIZE        0x4000  /* 16k */
-#define BBIO_SMALL_CACHE_SIZE  0x1000  /* 4k */
+	BBIO_CACHE_SIZE        =0x4000,  /* 16k */
+	BBIO_SMALL_CACHE_SIZE  =0x1000  /* 4k */
 #else
-#define BBIO_CACHE_SIZE        0xFFFF  /* 64k */
-#define BBIO_SMALL_CACHE_SIZE  0x4000  /* 16k */
+	BBIO_CACHE_SIZE        =0xFFFF,  /* 64k */
+	BBIO_SMALL_CACHE_SIZE  =0x4000  /* 16k */
 #endif
+    };
 
     BFile*        __FASTCALL__ beyeOpenRO(const std::string& fname,unsigned cache_size);
     BFile*        __FASTCALL__ beyeOpenRW(const std::string& fname,unsigned cache_size);
 
-#define BM_SEEK_SET BIO_SEEK_SET
-#define BM_SEEK_CUR BIO_SEEK_CUR
-#define BM_SEEK_END BIO_SEEK_END
+    enum {
+	BM_SEEK_SET=BFile::Seek_Set,
+	BM_SEEK_CUR=BFile::Seek_Cur,
+	BM_SEEK_END=BFile::Seek_End
+    };
     extern BFile& bm_file_handle,&sc_bm_file_handle;
 
     int            __FASTCALL__ BMOpen(const std::string& fname);

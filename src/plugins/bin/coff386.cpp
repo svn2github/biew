@@ -69,7 +69,7 @@ static void __NEAR__ __FASTCALL__ coffReadLongName(BFile& handle,__filesize_t of
   unsigned i;
   __filesize_t fpos;
    fpos = handle.tell();
-   handle.seek(offset+strings_ptr,BIO_SEEK_SET);
+   handle.seek(offset+strings_ptr,BFile::Seek_Set);
    for(i = 0;i < slen;i++)
    {
      unsigned char ch;
@@ -78,7 +78,7 @@ static void __NEAR__ __FASTCALL__ coffReadLongName(BFile& handle,__filesize_t of
      else  break;
    }
    str[i] = 0;
-   handle.seek(fpos,BIO_SEEK_SET);
+   handle.seek(fpos,BFile::Seek_Set);
 }
 
 static __filesize_t __FASTCALL__ coff386_VA2PA(__filesize_t va)
@@ -580,7 +580,7 @@ static void __FASTCALL__ coff386_init_fmt( void )
   main_handle = bmbioHandle();
   if((coff_cache = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) coff_cache = &main_handle;
   if(COFF_WORD(coff386hdr.f_opthdr)) s_off += COFF_WORD(coff386hdr.f_opthdr);
-  coff_cache->seek(s_off,BIO_SEEK_SET);
+  coff_cache->seek(s_off,BFile::Seek_Set);
   for(i = 0;i < nsections;i++)
   {
     coff_cache->read_buffer(&coff386so[i],sizeof(SCNHDR));
@@ -637,7 +637,7 @@ static void __FASTCALL__ coff_ReadPubName(BFile& b_cache,const struct PubName *i
       coffReadLongName(b_cache,it->nameoff,buff,cb_buff);
     else
     {
-      b_cache.seek(it->nameoff,BIO_SEEK_SET);
+      b_cache.seek(it->nameoff,BFile::Seek_Set);
       b_cache.read_buffer(buff,it->addinfo);
       buff[it->addinfo] = 0;
     }

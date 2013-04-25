@@ -1439,7 +1439,7 @@ static unsigned __FASTCALL__ neGetObjAttr(__filesize_t pa,char *name,unsigned cb
   name[0] = 0;
   ret = 0;
   bio_opt = bmbioHandle().get_optimization();
-  bmbioHandle().set_optimization(bio_opt | BIO_OPT_DB);
+  bmbioHandle().set_optimization(bio_opt | BFile::Opt_Db);
   bmSeek((__fileoff_t)headshift + ne.neOffsetSegmentTable,SEEK_SET);
   found = false;
   for(i = 0;i < segcount;i++)

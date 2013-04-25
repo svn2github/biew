@@ -106,9 +106,9 @@ static bool __NEAR__ __FASTCALL__ InsBlock(BFile* bHandle,__filesize_t start,__f
    numtowrite = (unsigned)std::min(tile,__filesize_t(51200U));
    while(tile)
    {
-     bHandle->seek(crpos,BIO_SEEK_SET);
+     bHandle->seek(crpos,BFile::Seek_Set);
      bHandle->read_buffer(buffer,numtowrite);
-     bHandle->seek(cwpos,BIO_SEEK_SET);
+     bHandle->seek(cwpos,BFile::Seek_Set);
      bHandle->write_buffer(buffer,numtowrite);
      tile -= numtowrite;
      numtowrite = (unsigned)std::min(tile,__filesize_t(51200U));
@@ -121,7 +121,7 @@ static bool __NEAR__ __FASTCALL__ InsBlock(BFile* bHandle,__filesize_t start,__f
    while(psize)
    {
      numtowrite = (unsigned)std::min(psize,__fileoff_t(51200U));
-     bHandle->seek(cwpos,BIO_SEEK_SET);
+     bHandle->seek(cwpos,BFile::Seek_Set);
      bHandle->write_buffer(buffer,numtowrite);
      psize -= numtowrite;
      cwpos += numtowrite;
@@ -144,9 +144,9 @@ static bool __NEAR__ __FASTCALL__ DelBlock(BFile* bHandle,__filesize_t start,__f
    while(tile)
    {
      numtowrite = (unsigned)std::min(tile,__filesize_t(51200U));
-     bHandle->seek(crpos,BIO_SEEK_SET);
+     bHandle->seek(crpos,BFile::Seek_Set);
      bHandle->read_buffer(buffer,numtowrite);
-     bHandle->seek(cwpos,BIO_SEEK_SET);
+     bHandle->seek(cwpos,BFile::Seek_Set);
      bHandle->write_buffer(buffer,numtowrite);
      tile -= numtowrite;
      crpos += numtowrite;
@@ -343,8 +343,8 @@ static bool FStore( void )
      __OsClose(handle);
      _bioHandle = new BFile;
      bool rc;
-     rc = _bioHandle->open(ff_fname,FO_READWRITE | SO_DENYNONE,BBIO_CACHE_SIZE,fioUseMMF ? BIO_OPT_USEMMF : BIO_OPT_DB);
-     if(rc == false)  rc = _bioHandle->open(ff_fname,FO_READWRITE | SO_COMPAT,BBIO_CACHE_SIZE,fioUseMMF ? BIO_OPT_USEMMF : BIO_OPT_DB);
+     rc = _bioHandle->open(ff_fname,FO_READWRITE | SO_DENYNONE,BBIO_CACHE_SIZE,fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
+     if(rc == false)  rc = _bioHandle->open(ff_fname,FO_READWRITE | SO_COMPAT,BBIO_CACHE_SIZE,fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
      if(rc == false)  goto use_err;
      crpos = ff_startpos;
      _bioHandle->seek(0L,SEEKF_START);
@@ -764,7 +764,7 @@ static bool FRestore( void )
 	   ret = false;
 	   goto bye;
 	 }
-	 bHandle->seek(cwpos,BIO_SEEK_SET);
+	 bHandle->seek(cwpos,BFile::Seek_Set);
 	 if(!bHandle->write_buffer(tmp_buff,remaind))
 	 {
 	   errnoMessageBox(WRITE_FAIL,NULL,errno);
@@ -881,7 +881,7 @@ static bool CryptBlock( void )
 	   goto bye;
 	 }
 	 CryptFunc((char*)tmp_buff,remaind,pass);
-	 bHandle->seek(cwpos,BIO_SEEK_SET);
+	 bHandle->seek(cwpos,BFile::Seek_Set);
 	 if(!(bHandle->write_buffer(tmp_buff,remaind)))
 	 {
 	   errnoMessageBox(WRITE_FAIL,NULL,errno);
@@ -991,7 +991,7 @@ static bool ReverseBlock( void )
 	   goto bye;
 	 }
 	 EndianifyBlock((char*)tmp_buff,remaind, flags & FSDLG_BTNSMASK);
-	 bHandle->seek(cwpos,BIO_SEEK_SET);
+	 bHandle->seek(cwpos,BFile::Seek_Set);
 	 if(!(bHandle->write_buffer(tmp_buff,remaind)))
 	 {
 	   errnoMessageBox(WRITE_FAIL,NULL,errno);
@@ -1101,7 +1101,7 @@ static bool XLatBlock( void )
 	   goto bye;
 	 }
 	 TranslateBlock((char*)tmp_buff,remaind, xlt);
-	 bHandle->seek(cwpos,BIO_SEEK_SET);
+	 bHandle->seek(cwpos,BFile::Seek_Set);
 	 if(!(bHandle->write_buffer(tmp_buff,remaind)))
 	 {
 	   errnoMessageBox(WRITE_FAIL,NULL,errno);

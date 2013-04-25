@@ -99,18 +99,18 @@ bool BFile::__seek(__fileoff_t pos,int origin)
  if(__isOutOfBuffer(pos))
  {
     __flush();
-    switch(optimize & BIO_OPT_DIRMASK)
+    switch(optimize & Opt_DirMask)
     {
       default:
-      case BIO_OPT_DB:         break;
-      case BIO_OPT_RANDOM:     pos -= b.vfb.MBufSize / 2;
-			       break;
-      case BIO_OPT_BACKSCAN:   pos -= (b.vfb.MBufSize - 1);
-			       break;
-      case BIO_OPT_RFORWARD:   pos -= b.vfb.MBufSize / 10;
-			       break;
-      case BIO_OPT_RBACKSCAN:  pos -= (b.vfb.MBufSize/10)*9;
-			       break;
+      case Opt_Db:         break;
+      case Opt_Random:     pos -= b.vfb.MBufSize / 2;
+			   break;
+      case Opt_BackScan:   pos -= (b.vfb.MBufSize - 1);
+			   break;
+      case Opt_RForward:   pos -= b.vfb.MBufSize / 10;
+			   break;
+      case Opt_RBackScan:  pos -= (b.vfb.MBufSize/10)*9;
+			   break;
     }
     if(FilePos < FLength)
     {
@@ -223,7 +223,7 @@ bool BFile::__getbuff(char* buff,unsigned cbBuff)
   }
   else
   {
-    optimize = (_optimize & ~BIO_OPT_DIRMASK) | BIO_OPT_DB;
+    optimize = (_optimize & ~Opt_DirMask) | Opt_Db;
     while(cbBuff)
     {
       MBufStart = (unsigned)(FilePos - b.vfb.FBufStart);
@@ -273,7 +273,7 @@ bool BFile::__putbuff(const char* buff,unsigned cbBuff)
     }
     else
     {
-      optimize = (_optimize & ~BIO_OPT_DIRMASK) | BIO_OPT_DB;
+      optimize = (_optimize & ~Opt_DirMask) | Opt_Db;
       ret = true;
       while(cbBuff)
       {
@@ -315,7 +315,7 @@ bool BFile::open(const std::string& fname,unsigned _openmode,unsigned bSize,unsi
     FileName = new char [fname.length()+1];
     strcpy(FileName,fname.c_str());
     /* Attempt open as MMF */
-    if(!is_writeable(openmode) && optimization == BIO_OPT_USEMMF)
+    if(!is_writeable(openmode) && optimization == Opt_UseMMF)
     {
       if((b.mmb = new mmb))
       {
@@ -333,7 +333,7 @@ bool BFile::open(const std::string& fname,unsigned _openmode,unsigned bSize,unsi
    if(!is_mmf)
    {
      bhandle_t _handle = __OsOpen(FileName,openmode);
-     optimization = BIO_OPT_DB;
+     optimization = Opt_Db;
      if(_handle == NULL_HANDLE) return false;
      b.vfb.handle = _handle;
      optimize = optimization;

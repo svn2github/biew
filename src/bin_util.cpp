@@ -118,7 +118,7 @@ __filesize_t __FASTCALL__ fmtGetPubSym(BFile& fmt_cache,char *str,unsigned cb_st
       str[cb_str-1] = 0;
     }
   }
-  bmSeek(cfpos,BIO_SEEK_SET);
+  bmSeek(cfpos,BFile::Seek_Set);
   return ret_addr;
 }
 
@@ -126,7 +126,7 @@ static BFile* __NEAR__ __FASTCALL__ ReopenSeek(__filesize_t dist)
 {
  BFile* handle;
  handle = bmbioHandle().dup_ex(BBIO_SMALL_CACHE_SIZE);
- if(handle != &bNull) handle->seek(dist,BIO_SEEK_SET);
+ if(handle != &bNull) handle->seek(dist,BFile::Seek_Set);
  else                 errnoMessageBox(READ_FAIL,NULL,errno);
  return handle;
 }

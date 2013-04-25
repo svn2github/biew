@@ -30,7 +30,7 @@ using namespace beye;
 #include "libbeye/bbio.h"
 #include "libbeye/file_ini.h"
 
-#define rewind_ini(h) (h->seek(0L,BIO_SEEK_SET))
+inline void rewind_ini(FiHandler h) { h->seek(0L,BFile::Seek_Set); }
 
 #if 0
 static void dump_BFILE(BFILE *h) {
@@ -203,7 +203,7 @@ FiHandler __FASTCALL__ FiOpen( const char * filename)
   FiHandler ret = new BFile;
   bool rc;
   /* Try to load .ini file entire into memory */
-  rc = ret->open(filename,FO_READONLY | SO_DENYWRITE,UINT_MAX,BIO_OPT_USEMMF);
+  rc = ret->open(filename,FO_READONLY | SO_DENYWRITE,UINT_MAX,BFile::Opt_UseMMF);
   /* Note! All OSes except DOS-DOS386 allows opening of empty filenames as /dev/null */
   if(rc == false && filename[0]) FiAError(__FI_BADFILENAME,0,filename);
   activeFile = (char *)mp_malloc((strlen(filename) + 1));
@@ -1726,7 +1726,7 @@ static bool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
      if(_ret) ini->handler = FiOpen(ini->fname);
      goto Exit_WS;
    }
-   ini->handler->seek(0L,BIO_SEEK_SET);
+   ini->handler->seek(0L,BFile::Seek_Set);
    ActiveFile = ini->handler;
    hsrc = make_temp(ini->fname,tmpname);
    if(hsrc == NULL_HANDLE) { _ret = false; goto Exit_WS; }

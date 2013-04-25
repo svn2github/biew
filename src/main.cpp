@@ -424,6 +424,7 @@ void PaintTitle( void )
  twRefreshWin(TitleWnd);
 }
 
+static int malloc_debug=0;
 static void MyAtExit( void )
 {
   if(MainWnd) CloseWnd(MainWnd);
@@ -433,6 +434,7 @@ static void MyAtExit( void )
   termBConsole();
   __term_beye();
   __term_sys();
+  mp_uninit_malloc(malloc_debug?1:0);
 }
 
 bool isValidIniArgs( void )
@@ -773,10 +775,11 @@ int main(int argc,char* args[], char *envp[])
     try {
 	/* init malloc */
 	size_t i;
-	int malloc_debug=0;
 	mp_malloc_e flg=MPA_FLG_RANDOMIZER;
+	malloc_debug=0;
 	for(i=0;i<argc;i++) {
 	    if(strcmp(args[i],"-m")==0) {
+		i++;
 		malloc_debug=::atoi(args[i]);
 		switch(malloc_debug) {
 		    default:

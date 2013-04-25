@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 	infile = new BFile;
 	bool rc;
 	if ((s = argv[1], s[1] || strpbrk(s, "DEde") == NULL)
-	    || (s = argv[2], (rc = infile->open(s,O_RDONLY,0xFFFF,BIO_OPT_DB)) == false))
+	    || (s = argv[2], (rc = infile->open(s,O_RDONLY,0xFFFF,BFile::Opt_Db)) == false))
 	{
 		printf("??? %s\n", s);
 		return EXIT_FAILURE;
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 	handle = __OsCreate(s);
 	__OsClose(handle);
 	outfile = new BFile;
-	if((rc = outfile->open(s,O_RDWR,0x1000,BIO_OPT_DB)) == false) goto Err;
+	if((rc = outfile->open(s,O_RDWR,0x1000,BFile::Opt_Db)) == false) goto Err;
 	if (toupper(*argv[1]) == 'E') retcode = Encode();
 	else                          retcode = Decode(infile,NULL,0L,infile->flength());
 	if(!retcode) fprintf(stderr,"Error allocating memory during operation\n");

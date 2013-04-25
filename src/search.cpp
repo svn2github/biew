@@ -131,8 +131,8 @@ static __filesize_t __NEAR__ __FASTCALL__  ___lfind(const char *sfrom,
   if(!sfrom)
   {
     bio_opt = BMbioHandle().get_optimization();
-    BMbioHandle().set_optimization((bio_opt & (~BIO_OPT_DIRMASK)) |
-		      (beyeFlg & SF_REVERSE ? BIO_OPT_RBACKSCAN : BIO_OPT_RFORWARD));
+    BMbioHandle().set_optimization((bio_opt & (~BFile::Opt_DirMask)) |
+		      (beyeFlg & SF_REVERSE ? BFile::Opt_RBackScan : BFile::Opt_RForward));
   }
   start = (start/symb_size)*symb_size; /** align on symbol boundary */
   memcpy(cbuff,pattern,pattern_size);

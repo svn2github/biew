@@ -38,9 +38,9 @@ BFile* __FASTCALL__ beyeOpenRO(const std::string& fname,unsigned cache_size)
   BFile* fret;
   fret=new BFile;
   bool rc;
-  rc = fret->open(fname,FO_READONLY | SO_DENYNONE,cache_size,fioUseMMF ? BIO_OPT_USEMMF : BIO_OPT_DB);
+  rc = fret->open(fname,FO_READONLY | SO_DENYNONE,cache_size,fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
   if(rc == false)
-    rc = fret->open(fname,FO_READONLY | SO_COMPAT,cache_size,fioUseMMF ? BIO_OPT_USEMMF : BIO_OPT_DB);
+    rc = fret->open(fname,FO_READONLY | SO_COMPAT,cache_size,fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
   if(rc==false) { delete fret; fret=&bNull; }
   return fret;
 }
@@ -50,9 +50,9 @@ BFile* __FASTCALL__ beyeOpenRW(const std::string& fname,unsigned cache_size)
   BFile* fret;
   fret=new BFile;
   bool rc;
-  rc = fret->open(fname,FO_READWRITE | SO_DENYNONE,cache_size,fioUseMMF ? BIO_OPT_USEMMF : BIO_OPT_DB);
+  rc = fret->open(fname,FO_READWRITE | SO_DENYNONE,cache_size,fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
   if(rc == false)
-    rc = fret->open(fname,FO_READWRITE | SO_COMPAT,cache_size,fioUseMMF ? BIO_OPT_USEMMF : BIO_OPT_DB);
+    rc = fret->open(fname,FO_READWRITE | SO_COMPAT,cache_size,fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
   if(rc==false) { delete fret; fret=&bNull; }
   return fret;
 }
@@ -74,8 +74,8 @@ int __FASTCALL__ BMOpen(const std::string& fname)
     return -1;
   }
   sc_bm_file_handle = *sc;
-  bm_file_handle.set_optimization(BIO_OPT_RANDOM);
-  sc_bm_file_handle.set_optimization(BIO_OPT_RANDOM);
+  bm_file_handle.set_optimization(BFile::Opt_Random);
+  sc_bm_file_handle.set_optimization(BFile::Opt_Random);
   if(BMGetFLength() > ULONG_MAX) BMFileFlags |= BMFF_USE64;
   return 0;
 }

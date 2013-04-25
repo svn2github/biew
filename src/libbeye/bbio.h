@@ -27,35 +27,6 @@
 \******************************************************************/
 
 namespace beye {
-enum {
-			 /** FORWARD: default (forward scan)
-			     reposition of cache as 100% forward
-			     from current file position */
-    BIO_OPT_FORWARD  =0x0000,
-    BIO_OPT_DB       =BIO_OPT_FORWARD,
-			 /** RANDOM: middle scan
-			     reposition of cache as 50% forward & 50%
-			     backward from current file position */
-    BIO_OPT_RANDOM   =0x0001,
-			 /** BACKWARD: backward scan
-			     reposition of cache as 100% backward
-			     from current file position */
-    BIO_OPT_BACKSCAN =0x0002,
-			 /** RANDOM FORWARD: reposition of cache as 90% forward
-			     & 10% backward from current file position */
-    BIO_OPT_RFORWARD =0x0003,
-			 /** RANDOM BACKWARD: reposition of cache as 10% forward
-			     & 90% backward from current file position */
-    BIO_OPT_RBACKSCAN=0x0004,
-    BIO_OPT_DIRMASK  =0x000F, /**< direction mask */
-    BIO_OPT_USEMMF   =0xFFFF, /**< Use mmf instead buffering i/o. This covers all optimizations */
-    BIO_OPT_NOCACHE  =0x8000, /**< disable cache */
-
-    BIO_SEEK_SET     =SEEKF_START, /**< specifies reference location from begin of file */
-    BIO_SEEK_CUR     =SEEKF_CUR,   /**< specifies reference location from current position of file */
-    BIO_SEEK_END     =SEEKF_END   /**< specifies reference location from end of file */
-};
-
 /*
    This struct is ordered as it documented in Athlon manual
    Publication # 22007 Rev: D
@@ -96,6 +67,35 @@ class BFile : public Opaque {
 	bool		is_eof;    /**< Indicates EOF for buffering streams */
 	bool		founderr;
     public:
+	enum opt {
+			 /** FORWARD: default (forward scan)
+			     reposition of cache as 100% forward
+			     from current file position */
+	    Opt_Forward  =0x0000,
+	    Opt_Db       =Opt_Forward,
+			 /** RANDOM: middle scan
+			     reposition of cache as 50% forward & 50%
+			     backward from current file position */
+	    Opt_Random   =0x0001,
+			 /** BACKWARD: backward scan
+			     reposition of cache as 100% backward
+			     from current file position */
+	    Opt_BackScan =0x0002,
+			 /** RANDOM FORWARD: reposition of cache as 90% forward
+			     & 10% backward from current file position */
+	    Opt_RForward =0x0003,
+			 /** RANDOM BACKWARD: reposition of cache as 10% forward
+			     & 90% backward from current file position */
+	    Opt_RBackScan=0x0004,
+	    Opt_DirMask  =0x000F, /**< direction mask */
+	    Opt_UseMMF   =0xFFFF, /**< Use mmf instead buffering i/o. This covers all optimizations */
+	    Opt_NoCache  =0x8000, /**< disable cache */
+
+	    Seek_Set     =SEEKF_START, /**< specifies reference location from begin of file */
+	    Seek_Cur     =SEEKF_CUR,   /**< specifies reference location from current position of file */
+	    Seek_End     =SEEKF_END   /**< specifies reference location from end of file */
+	};
+
 	BFile();
 	virtual ~BFile();
 		   /** Opens existed file and buffered it
@@ -328,7 +328,7 @@ class BFile : public Opaque {
 		    **/
 	unsigned buffpos();
     private:
-	bool is_cache_valid() { return (b.vfb.MBuffer && !(optimize & BIO_OPT_NOCACHE)); }
+	bool is_cache_valid() { return (b.vfb.MBuffer && !(optimize & Opt_NoCache)); }
 	bool is_writeable(unsigned _openmode) { return ((_openmode & FO_READWRITE) || (_openmode & FO_WRITEONLY)); }
 	bool __isOutOfBuffer(__filesize_t pos) { return (pos < b.vfb.FBufStart || pos >= b.vfb.FBufStart + b.vfb.MBufSize) && !is_mmf; }
 	bool __isOutOfContents(__filesize_t pos) { return ((pos < b.vfb.FBufStart || pos >= b.vfb.FBufStart + b.vfb.MBufLen) && !is_mmf); }
@@ -353,14 +353,20 @@ class BFile : public Opaque {
 
 	bool seek_fptr(__fileoff_t& pos,int origin) {
 		switch((int)origin) {
-		    case BIO_SEEK_SET: break;
-		    case BIO_SEEK_CUR: pos += FilePos; break;
+		    case Seek_Set: break;
+		    case Seek_Cur: pos += FilePos; break;
 		    default:           pos += FLength;
 		}
 		return chk_eof(pos);
 	    }
-
-};
+    };
+    inline BFile::opt operator~(BFile::opt a) { return static_cast<BFile::opt>(~static_cast<unsigned>(a)); }
+    inline BFile::opt operator|(BFile::opt a, BFile::opt b) { return static_cast<BFile::opt>(static_cast<unsigned>(a)|static_cast<unsigned>(b)); }
+    inline BFile::opt operator&(BFile::opt a, BFile::opt b) { return static_cast<BFile::opt>(static_cast<unsigned>(a)&static_cast<unsigned>(b)); }
+    inline BFile::opt operator^(BFile::opt a, BFile::opt b) { return static_cast<BFile::opt>(static_cast<unsigned>(a)^static_cast<unsigned>(b)); }
+    inline BFile::opt operator|=(BFile::opt a, BFile::opt b) { return (a=static_cast<BFile::opt>(static_cast<unsigned>(a)|static_cast<unsigned>(b))); }
+    inline BFile::opt operator&=(BFile::opt a, BFile::opt b) { return (a=static_cast<BFile::opt>(static_cast<unsigned>(a)&static_cast<unsigned>(b))); }
+    inline BFile::opt operator^=(BFile::opt a, BFile::opt b) { return (a=static_cast<BFile::opt>(static_cast<unsigned>(a)^static_cast<unsigned>(b))); }
 } // namespace beye
 #endif
 

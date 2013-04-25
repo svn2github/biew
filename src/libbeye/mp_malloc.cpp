@@ -452,6 +452,7 @@ void	mp_uninit_malloc(int verbose)
     uninit_bt_cache(cache);
     if(priv->argv0) ::free((void*)priv->argv0);
     ::free(priv);
+    if(verbose) std::cerr<<"*** End of mp_malloc report! ***"<<std::endl;
     priv=NULL;
 }
 

@@ -170,12 +170,12 @@ static void save_video(unsigned char *buff,unsigned size)
       errnoMessageBox(WRITE_FAIL,NULL,errno);
       return;
   }
-  bHandle->seek(BMGetCurrFilePos(),BIO_SEEK_SET);
-  if(bin_mode==MOD_REVERSE) bHandle->seek(1,BIO_SEEK_CUR);
+  bHandle->seek(BMGetCurrFilePos(),BFile::Seek_Set);
+  if(bin_mode==MOD_REVERSE) bHandle->seek(1,BFile::Seek_Cur);
   for(i=0;i<size;i++)
   {
     if(!bHandle->write_byte(buff[i])) goto err;
-    bHandle->seek(1,BIO_SEEK_CUR);
+    bHandle->seek(1,BFile::Seek_Cur);
   }
   delete bHandle;
   BMReRead();

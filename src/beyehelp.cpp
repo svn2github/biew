@@ -289,7 +289,7 @@ bool __FASTCALL__ hlpOpen( bool interact )
     if(interact) errnoMessageBox("Can't open help file",NULL,errno);
     return false;
   }
-  bHelp->set_optimization(BIO_OPT_RANDOM);
+  bHelp->set_optimization(BFile::Opt_Random);
   bHelp->seek(0L,SEEK_SET);
   bHelp->read_buffer(hlp_id,sizeof(hlp_id));
   if(memcmp(hlp_id,BEYE_HELP_VER,sizeof(BEYE_HELP_VER)) != 0)
