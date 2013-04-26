@@ -24,6 +24,7 @@ using namespace beye;
 #include <stdio.h>
 #include <limits.h>
 
+#include "beye.h"
 #include "bmfile.h"
 #include "beyeutil.h"
 #include "plugins/disasm.h"
@@ -269,8 +270,8 @@ char * __FASTCALL__ GidEncodeAddress(__filesize_t cfpos,bool AddressDetail)
 #else
   strcpy(addr,Get8Digit(cfpos));
 #endif
-  if(AddressDetail && detectedFormat->AddressResolving)
-       detectedFormat->AddressResolving(addr,cfpos);
+  if(AddressDetail && beye_context().active_format()->AddressResolving)
+       beye_context().active_format()->AddressResolving(addr,cfpos);
   strcat(addr,": ");
   return addr;
 }

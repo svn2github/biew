@@ -21,6 +21,7 @@ using namespace beye;
 #include <string.h>
 #include <stdlib.h>
 
+#include "beye.h"
 #include "reg_form.h"
 #include "beyeutil.h"
 #include "bconsole.h"
@@ -31,10 +32,10 @@ unsigned long __FASTCALL__ AppendAsmRef(char *str,__filesize_t ulShift,int mode,
 {
   static bool warn_displayed = false;
   unsigned long ret = RAPREF_NONE;
-  if(detectedFormat->bind) ret = detectedFormat->bind(str,ulShift,mode,codelen,r_sh);
+  if(beye_context().active_format()->bind) ret = beye_context().active_format()->bind(str,ulShift,mode,codelen,r_sh);
   else
   {
-    if(detectedFormat != &binTable && !warn_displayed)
+    if(beye_context().active_format() != &binTable && !warn_displayed)
     {
       WarnMessageBox("Sorry! Reference resolving for this format is still not supported",NULL);
       warn_displayed = true;

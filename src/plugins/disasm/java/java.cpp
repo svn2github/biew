@@ -22,6 +22,7 @@ using namespace beye;
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "beye.h"
 #include "reg_form.h"
 #include "plugins/disasm.h"
 #include "bconsole.h"
@@ -405,11 +406,11 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
     unsigned func_class;
     vartail_flags=jflags;
     /* Sorry! We really need to know method offset to compute padding bytes */
-    if(detectedFormat->GetPubSym)
+    if(beye_context().active_format()->GetPubSym)
     {
-	prev_pa = detectedFormat->GetPubSym(prev_func,sizeof(prev_func),
+	prev_pa = beye_context().active_format()->GetPubSym(prev_func,sizeof(prev_func),
 					    &func_class,ulShift,true);
-	next_pa = detectedFormat->GetPubSym(prev_func,sizeof(prev_func),
+	next_pa = beye_context().active_format()->GetPubSym(prev_func,sizeof(prev_func),
 					    &func_class,ulShift,false);
     }
     else next_pa=prev_pa=0;

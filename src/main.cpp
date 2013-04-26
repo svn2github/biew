@@ -37,6 +37,8 @@ using namespace beye;
 #include <stdlib.h>
 #include <errno.h>
 
+#include "addons/addendum.h"
+#include "addons/sysinfo.h"
 #include "beye.h"
 #include "bconsole.h"
 #include "colorset.h"
@@ -93,12 +95,15 @@ extern char last_skin_error[];
 static volatile char antiviral_hole1[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 
 static BeyeContext* BeyeCtx=NULL;
+static addendum* addons=NULL;
+static sysinfo*  sysinfo=NULL;
 
 static volatile char antiviral_hole2[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 
 TWindow * MainWnd = 0,*HelpWnd = 0,*TitleWnd = 0,*ErrorWnd = 0;
 
 static const unsigned SHORT_PATH_LEN=__TVIO_MAXSCREENWIDTH-54;
+static int malloc_debug=0;
 
 static volatile char antiviral_hole3[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 
@@ -135,8 +140,6 @@ static REGISTRY_BIN *mainBinTable[] =
   &binTable
 };
 
-REGISTRY_BIN *detectedFormat = 0;
-
 static REGISTRY_MODE *mainModeTable[] =
 {
   &textMode,
@@ -145,16 +148,11 @@ static REGISTRY_MODE *mainModeTable[] =
   &disMode
 };
 
-REGISTRY_MODE *activeMode;
-static size_t LastMode = sizeof(mainModeTable)/sizeof(REGISTRY_BIN *)+10;
-
-static unsigned defMainModeSel = 0;
-
 static volatile char antiviral_hole4[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 
 BeyeContext& beye_context() { return *BeyeCtx; }
 
-bool SelectMode( void )
+bool BeyeContext::select_mode()
 {
   char *modeName[sizeof(mainModeTable)/sizeof(REGISTRY_MODE *)];
   size_t i,nModes;
@@ -174,18 +172,18 @@ bool SelectMode( void )
   return false;
 }
 
-static void __NEAR__ __FASTCALL__ init_modes( hIniProfile *ini )
+void BeyeContext::init_modes( hIniProfile *ini )
 {
   if(activeMode->init) activeMode->init();
   if(activeMode->read_ini) activeMode->read_ini(ini);
 }
 
-static void __NEAR__ __FASTCALL__ term_modes( void )
+void BeyeContext::term_modes( void )
 {
   if(activeMode->term) activeMode->term();
 }
 
-void QuickSelectMode( void )
+void BeyeContext::quick_select_mode()
 {
   unsigned nModes;
   nModes = sizeof(mainModeTable)/sizeof(REGISTRY_MODE *);
@@ -236,7 +234,7 @@ __filesize_t IsNewExe()
    return (__filesize_t)ret;
 }
 
-static void __NEAR__ __FASTCALL__ AutoDetectMode( void )
+void BeyeContext::auto_detect_mode()
 {
   int i,n;
   n = sizeof(mainModeTable) / sizeof(REGISTRY_MODE *);
@@ -252,7 +250,7 @@ static void __NEAR__ __FASTCALL__ AutoDetectMode( void )
   BMSeek(0,BM_SEEK_SET);
 }
 
-struct tagbeyeArg
+static const struct tagbeyeArg
 {
   const char key[4];
   const char *prompt;
@@ -265,7 +263,7 @@ struct tagbeyeArg
   { "-t", "view file in text mode" },
   { "-s", "change size of file to NNN bytes (create, if file does not exist)" },
   { "-i", "ignore .ini file (create new)" },
-  { "-m", "debug mp_malloc: (1 - bounds; 2 - prebounds; 3-backtrace)" },
+  { "-m", "debug mp_malloc: (1 - bounds; 2 - prebounds; 3-leaks)" },
   { "-?", "display this screen" }
 };
 
@@ -279,9 +277,6 @@ static int __NEAR__ __FASTCALL__ queryKey(const std::string& arg)
   }
   return ret;
 }
-
-static unsigned int  beye_mode     = UINT_MAX;
-static __filesize_t  new_file_size = FILESIZE_MAX;
 
 void BeyeContext::parse_cmdline( const std::vector<std::string>& ArgVector )
 {
@@ -314,7 +309,7 @@ void BeyeContext::parse_cmdline( const std::vector<std::string>& ArgVector )
   if(!ListFile.empty()) ArgVector1 = ListFile[0];
 }
 
-static bool __NEAR__ __FASTCALL__ LoadInfo( void )
+bool BeyeContext::LoadInfo( )
 {
    beye_context().make_shortname();
    if(new_file_size != FILESIZE_MAX)
@@ -345,7 +340,7 @@ static bool __NEAR__ __FASTCALL__ LoadInfo( void )
    }
    else
    {
-     if(LastMode >= sizeof(mainModeTable)/sizeof(REGISTRY_MODE *) || !beye_context().is_valid_ini_args()) AutoDetectMode();
+     if(LastMode >= sizeof(mainModeTable)/sizeof(REGISTRY_MODE *) || !beye_context().is_valid_ini_args()) auto_detect_mode();
      else
      {
        defMainModeSel = LastMode;
@@ -355,7 +350,7 @@ static bool __NEAR__ __FASTCALL__ LoadInfo( void )
  return true;
 }
 
-static void __NEAR__ __FASTCALL__ __detectBinFmt( void )
+void BeyeContext::detect_binfmt()
 {
  unsigned i;
  if(!bmGetFLength())
@@ -388,7 +383,6 @@ void PaintTitle( void )
  twRefreshWin(TitleWnd);
 }
 
-static int malloc_debug=0;
 static void MyAtExit( void )
 {
   if(MainWnd) CloseWnd(MainWnd);
@@ -413,14 +407,17 @@ bool BeyeContext::is_valid_ini_args( ) const
 
 hIniProfile* BeyeContext::load_ini_info()
 {
-  char tmp[20], buf[20];
+  char tmp[20], buf[20],stmp[4096];
   hIniProfile *ini;
   ini_name = getenv("BEYE_INI");
   if(!ini_name) ini_name = __get_ini_name("beye");
   ini = UseIniFile ? iniOpenFile(ini_name,NULL) : NULL;
-  read_profile_string(ini,"Beye","Setup","HelpName","",help_name,sizeof(help_name));
-  read_profile_string(ini,"Beye","Setup","SkinName","",skin_name,sizeof(skin_name));
-  read_profile_string(ini,"Beye","Setup","SyntaxName","",syntax_name,sizeof(syntax_name));
+  read_profile_string(ini,"Beye","Setup","HelpName","",stmp,sizeof(stmp));
+  help_name=stmp;
+  read_profile_string(ini,"Beye","Setup","SkinName","",stmp,sizeof(stmp));
+  skin_name=stmp;
+  read_profile_string(ini,"Beye","Setup","SyntaxName","",stmp,sizeof(stmp));
+  syntax_name=stmp;
   read_profile_string(ini,"Beye","Search","String","",(char *)search_buff,sizeof(search_buff));
   search_len = strlen((char *)search_buff);
   read_profile_string(ini,"Beye","Search","Case","off",tmp,sizeof(tmp));
@@ -463,7 +460,8 @@ hIniProfile* BeyeContext::load_ini_info()
   if(stricmp(tmp,"yes") == 0) iniPreserveTime = true;
   read_profile_string(ini,"Beye","Setup","UseExternalProgs","no",tmp,sizeof(tmp));
   if(stricmp(tmp,"yes") == 0) iniUseExtProgs = true;
-  read_profile_string(ini,"Beye","Setup","Codepage","CP866",codepage,sizeof(codepage));
+  read_profile_string(ini,"Beye","Setup","Codepage","CP866",stmp,sizeof(stmp));
+  codepage=stmp;
   return ini;
 }
 
@@ -473,9 +471,9 @@ void BeyeContext::save_ini_info() const
   hIniProfile *ini;
   search_buff[search_len] = 0;
   ini = iniOpenFile(ini_name,NULL);
-  write_profile_string(ini,"Beye","Setup","HelpName",help_name);
-  write_profile_string(ini,"Beye","Setup","SkinName",skin_name);
-  write_profile_string(ini,"Beye","Setup","SyntaxName",syntax_name);
+  write_profile_string(ini,"Beye","Setup","HelpName",help_name.c_str());
+  write_profile_string(ini,"Beye","Setup","SkinName",skin_name.c_str());
+  write_profile_string(ini,"Beye","Setup","SyntaxName",syntax_name.c_str());
   write_profile_string(ini,"Beye","Setup","Version",BEYE_VERSION);
   write_profile_string(ini,"Beye","Search","String",(char *)search_buff);
   write_profile_string(ini,"Beye","Search","Case",beyeSearchFlg & SF_CASESENS ? "on" : "off");
@@ -509,7 +507,7 @@ void BeyeContext::save_ini_info() const
   write_profile_string(ini,"Beye","Setup","PreserveTimeStamp",tmp);
   strcpy(tmp,iniUseExtProgs ? "yes" : "no");
   write_profile_string(ini,"Beye","Setup","UseExternalProgs",tmp);
-  write_profile_string(ini,"Beye","Setup","Codepage",codepage);
+  write_profile_string(ini,"Beye","Setup","Codepage",codepage.c_str());
   if(activeMode->save_ini) activeMode->save_ini(ini);
   udnTerm(ini);
   iniCloseFile(ini);
@@ -518,7 +516,7 @@ void BeyeContext::save_ini_info() const
 static FTime ftim;
 static bool ftim_ok = false;
 
-static void __FASTCALL__ ShowUsage(void) {
+void BeyeContext::show_usage() const {
     unsigned evt,i,nln,h,y;
     TWindow *win;
     nln = sizeof(beyeArg)/sizeof(struct tagbeyeArg);
@@ -574,7 +572,7 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
 */
  __init_sys();
  ini=BeyeCtx->load_ini_info();
- skin_err = csetReadIniFile(BeyeCtx->skin_name);
+ skin_err = csetReadIniFile(BeyeCtx->skin_name.c_str());
  initBConsole(BeyeCtx->vioIniFlags,BeyeCtx->twinIniFlags);
  if(argv.size() < 2) goto show_usage;
  BeyeCtx->parse_cmdline(argv);
@@ -583,7 +581,7 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
    /** print usage message */
     size_t i;
     show_usage:
-    ShowUsage();
+    BeyeCtx->show_usage();
     printm("%s\n",BEYE_VER_MSG);
     printm(" Usage: beye [OPTIONS] file...\n\n");
     for(i = 0;i < sizeof(beyeArg)/sizeof(struct tagbeyeArg);i++)
@@ -609,7 +607,6 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  twSetColorAttr(title_cset.main);
  twClearWin();
  twShowWin(TitleWnd);
- activeMode = mainModeTable[1];
  atexit(MyAtExit);
  retval = EXIT_SUCCESS;
  if(skin_err)
@@ -621,16 +618,16 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  /* We must do it before opening a file because of some RTL has bug
     when are trying to open already open file with no sharing access */
  ftim_ok = __OsGetFTime(BeyeCtx->ArgVector1.c_str(),&ftim);
- if(!LoadInfo())
+ if(!BeyeCtx->LoadInfo())
  {
    if(ini) iniCloseFile(ini);
    retval = EXIT_FAILURE;
    goto Bye;
  }
- __detectBinFmt();
- init_modes(ini);
- init_addons();
- init_sysinfo();
+ BeyeCtx->detect_binfmt();
+ BeyeCtx->init_modes(ini);
+ addons = new(zeromem) addendum;
+ sysinfo =new(zeromem) class sysinfo;
  if(ini) iniCloseFile(ini);
  MainWnd = WindowOpen(1,2,tvioWidth,tvioHeight-1,TWS_NONE);
  twSetColorAttr(browser_cset.main);
@@ -641,10 +638,10 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  MainLoop();
  BeyeCtx->LastOffset = BMGetCurrFilePos();
  BeyeCtx->save_ini_info();
- term_sysinfo();
- term_addons();
- term_modes();
- if(detectedFormat->destroy) detectedFormat->destroy();
+ delete sysinfo;
+ delete addons;
+ BeyeCtx->term_modes();
+ if(BeyeCtx->active_format()->destroy) BeyeCtx->active_format()->destroy();
  if(BeyeCtx->iniPreserveTime && ftim_ok) __OsSetFTime(BeyeCtx->ArgVector1.c_str(),&ftim);
  Bye:
  return retval;
@@ -690,7 +687,7 @@ bool BeyeContext::new_source()
       if(detectedFormat->destroy) detectedFormat->destroy();
       if(activeMode->term) activeMode->term();
       make_shortname();
-      __detectBinFmt();
+      detect_binfmt();
       if(activeMode->init) activeMode->init();
       ret = true;
     }
@@ -703,7 +700,7 @@ bool BeyeContext::new_source()
        if(detectedFormat->destroy) detectedFormat->destroy();
        if(activeMode->term) activeMode->term();
        make_shortname();
-       __detectBinFmt();
+       detect_binfmt();
        if(activeMode->init) activeMode->init();
        ret = false;
     }
@@ -744,24 +741,30 @@ BeyeContext::BeyeContext(const std::vector<std::string>& _argv, const std::map<s
 	    iniUseExtProgs(false),
 	    headshift(0L),
 	    LastOffset(0L),
+	    detectedFormat(0),
 	    argv(_argv),
 	    envm(_envm),
-	    UseIniFile(true)
+	    UseIniFile(true),
+	    beye_mode(UINT_MAX),
+	    defMainModeSel(0),
+	    new_file_size(FILESIZE_MAX)
 {
-    ::strcpy(help_name,"");
-    ::strcpy(skin_name,"");
-    ::strcpy(syntax_name,"");
-    ::strcpy(codepage,"CP866");
-    ::strcpy(scheme_name,"Built-in");
+    codepage="CP866";
+    scheme_name="Built-in";
     if(argv.size()>1) ArgVector1 = argv[1];
     LastOpenFileName = new char[4096];
-   _shortname = new char[SHORT_PATH_LEN + 1];
+    _shortname = new char[SHORT_PATH_LEN + 1];
+    LastMode = sizeof(mainModeTable)/sizeof(REGISTRY_BIN *)+10;
+    activeMode = mainModeTable[1];
 }
 BeyeContext::~BeyeContext() {
     delete LastOpenFileName;
     delete _shortname;
 }
 const std::vector<std::string>& BeyeContext::list_file() const { return ListFile; }
+
+void BeyeContext::select_tool() const { addons->select(); }
+void BeyeContext::select_sysinfo() const { sysinfo->select(); }
 } // namespace beye
 
 int main(int argc,char* args[], char *envp[])

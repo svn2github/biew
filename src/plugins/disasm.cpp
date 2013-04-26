@@ -420,8 +420,8 @@ static bool __FASTCALL__ disReferenceResolving( void )
     ret = true;
   }
   else ret = false;
-  if(detectedFormat->set_state)
-    detectedFormat->set_state(disNeedRef ? PS_ACTIVE : PS_INACTIVE);
+  if(beye_context().active_format()->set_state)
+    beye_context().active_format()->set_state(disNeedRef ? PS_ACTIVE : PS_INACTIVE);
   return ret;
 }
 
@@ -624,8 +624,8 @@ static int __NEAR__ __FASTCALL__ FullAsmEdit(TWindow * ewnd)
 		      }
      case KE_F(1)    : ExtHelp(); continue;
      case KE_CTL_F(1): activeDisasm->action[0](); continue;
-     case KE_CTL_F(2): SelectSysInfo(); continue;
-     case KE_CTL_F(3): SelectTool(); continue;
+     case KE_CTL_F(2): beye_context().select_sysinfo(); continue;
+     case KE_CTL_F(3): beye_context().select_tool(); continue;
      case KE_F(2)    :
 		      {
 			 BFile* bHandle;
@@ -726,7 +726,7 @@ static void __FASTCALL__ disInit( void )
     exit(EXIT_FAILURE);
   }
   def_platform = DISASM_DATA;
-  if(detectedFormat->query_platform) def_platform = detectedFormat->query_platform();
+  if(beye_context().active_format()->query_platform) def_platform = beye_context().active_format()->query_platform();
   activeDisasm = mainDisasmTable[0];
   DefDisasmSel = DISASM_DATA;
   for(i=0;i<sizeof(mainDisasmTable)/sizeof(REGISTRY_DISASM *);i++) {
@@ -953,7 +953,7 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
      }
   }
 #endif
-  if(hexAddressResolv && detectedFormat->AddressResolving) flags |= APREF_SAVE_VIRT;
+  if(hexAddressResolv && beye_context().active_format()->AddressResolving) flags |= APREF_SAVE_VIRT;
   app = disNeedRef >= NEEDREF_ALL ? AppendAsmRef(str,ulShift,flags,codelen,0L) :
 				    RAPREF_NONE;
   if(app != RAPREF_DONE)
@@ -985,11 +985,11 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
       __filesize_t pa,psym;
       unsigned _class;
       if(type & DISARG_RIP) {
-	_defval += (detectedFormat->pa2va ?
-		    detectedFormat->pa2va(ulShift) :
+	_defval += (beye_context().active_format()->pa2va ?
+		    beye_context().active_format()->pa2va(ulShift) :
 		    ulShift)+fld_len;
      }
-      if(!app) pa = detectedFormat->va2pa ? detectedFormat->va2pa(_defval) :
+      if(!app) pa = beye_context().active_format()->va2pa ? beye_context().active_format()->va2pa(_defval) :
 					   _defval;
       else pa = app;
       if(pa)
@@ -1000,9 +1000,9 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
 	if(dis_severity < DISCOMSEV_FUNC)
 	{
 	  strcpy(comments,".*");
-	  if(detectedFormat->GetPubSym)
+	  if(beye_context().active_format()->GetPubSym)
 	  {
-	    psym = detectedFormat->GetPubSym(&comments[2],sizeof(comments)-2,
+	    psym = beye_context().active_format()->GetPubSym(&comments[2],sizeof(comments)-2,
 					     &_class,pa,false);
 	    if(psym != pa) comments[0] = 0;
 	    else
@@ -1214,7 +1214,7 @@ int __FASTCALL__ disAppendFAddr(char * str,__fileoff_t ulShift,__fileoff_t disti
  {
    if(dret.pro_clone == __INSNT_JMPPIC || dret.pro_clone == __INSNT_JMPRIP) goto try_pic; /* skip defaults for PIC */
    flags = APREF_TRY_LABEL;
-   if(hexAddressResolv && detectedFormat->AddressResolving) flags |= APREF_SAVE_VIRT;
+   if(hexAddressResolv && beye_context().active_format()->AddressResolving) flags |= APREF_SAVE_VIRT;
    if(AppendAsmRef(str,ulShift,flags,codelen,r_sh)) appended = RAPREF_DONE;
    else
    {
@@ -1258,10 +1258,10 @@ int __FASTCALL__ disAppendFAddr(char * str,__fileoff_t ulShift,__fileoff_t disti
 		_defval = dret.codelen==8 ? BMReadQWordEx(r_sh+dret.field,SEEKF_START):
 					    BMReadDWordEx(r_sh+dret.field,SEEKF_START);
 		BMSeek(fpos,SEEKF_START);
-	_defval += (detectedFormat->pa2va ?
-		    detectedFormat->pa2va(r_sh+dret.field) :
+	_defval += (beye_context().active_format()->pa2va ?
+		    beye_context().active_format()->pa2va(r_sh+dret.field) :
 		    r_sh+dret.field)+dret.codelen;
-	pa = detectedFormat->va2pa ? detectedFormat->va2pa(_defval) :
+	pa = beye_context().active_format()->va2pa ? beye_context().active_format()->va2pa(_defval) :
 					   _defval;
 	app=AppendAsmRef(str,pa,APREF_TRY_LABEL,dret.codelen,0L);
 	if(app)
@@ -1284,10 +1284,10 @@ int __FASTCALL__ disAppendFAddr(char * str,__fileoff_t ulShift,__fileoff_t disti
    */
  if(!appended)
  {
-   if(hexAddressResolv && detectedFormat->AddressResolving)
+   if(hexAddressResolv && beye_context().active_format()->AddressResolving)
    {
      r_sh = r_sh ? r_sh : (__filesize_t)ulShift;
-     appended = detectedFormat->AddressResolving(&str[strlen(str)],r_sh) ? RAPREF_DONE : RAPREF_NONE;
+     appended = beye_context().active_format()->AddressResolving(&str[strlen(str)],r_sh) ? RAPREF_DONE : RAPREF_NONE;
    }
    if(!appended)
    {

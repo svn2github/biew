@@ -45,13 +45,6 @@ namespace beye {
     void               FFreeArr(any_t**arr,unsigned n);
     void               CriticalExit(int code);
 
-    void               init_addons(void);
-    void               term_addons(void);
-    void               SelectTool( void );
-    void               init_sysinfo( void );
-    void               term_sysinfo( void );
-    void               SelectSysInfo( void );
-
     bool               FileUtils( void );
 
     char * __FASTCALL__ Get2Digit(uint8_t);

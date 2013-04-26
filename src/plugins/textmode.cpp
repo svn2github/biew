@@ -500,15 +500,15 @@ static tCompare __FASTCALL__ cmp_kwd(const void __HUGE__ *e1,const void __HUGE__
 
 static void txtReadSyntaxes(void)
 {
-  if(__IsFileExists(beye_context().syntax_name))
+  if(__IsFileExists(beye_context().syntax_name.c_str()))
   {
-    FiProgress(beye_context().syntax_name,txtFiUserFunc1);
+    FiProgress(beye_context().syntax_name.c_str(),txtFiUserFunc1);
     if(detected_syntax_name[0])
     {
 	char tmp[FILENAME_MAX+1];
 	char *p;
 	char *pp;
-	strcpy(tmp,beye_context().syntax_name);
+	strcpy(tmp,beye_context().syntax_name.c_str());
 	p=strrchr(tmp,'/');
 	pp=strrchr(tmp,'\\');
 	p=std::max(p,pp);

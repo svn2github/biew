@@ -125,14 +125,15 @@ static bool __NEAR__ __FASTCALL__ readButton(hIniProfile *ini,const char *sectio
 bool csetReadIniFile(const char *ini_name)
 {
   hIniProfile *cset;
-  char cstr[80],cval[80],csec[80];
+  char cstr[80],cval[80],csec[80],stmp[256];
   unsigned value,i,j;
   bool has_err,cur_err;
   has_err = false;
   cset = iniOpenFile(ini_name,&has_err);
   last_skin_error[0] = 0;
   if(has_err) return false; /** return no error, because ini_name was not found or unavailable */
-  iniReadProfileString(cset,"Skin info","","Name","Unnamed",beye_context().scheme_name,256);
+  iniReadProfileString(cset,"Skin info","","Name","Unnamed",stmp,sizeof(stmp));
+  beye_context().scheme_name=stmp;
   for(i = 0;i < 16;i++)
   {
     sprintf(cval,"%i",named_color_def[i].color);

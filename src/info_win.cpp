@@ -23,6 +23,7 @@ using namespace beye;
 #include <stdio.h>
 #include <string.h>
 
+#include "beye.h"
 #include "colorset.h"
 #include "bmfile.h"
 #include "tstrings.h"
@@ -125,14 +126,14 @@ static const char * FxText[] =
 
 static void __NEAR__ fillFxText( void )
 {
-  FxText[3] = activeMode->misckey_name ? activeMode->misckey_name() : NULL;
-  FxText[7] = detectedFormat->showHdr || IsNewExe() ? "Header" : NULL;
+  FxText[3] = beye_context().active_mode()->misckey_name ? beye_context().active_mode()->misckey_name() : NULL;
+  FxText[7] = beye_context().active_format()->showHdr || IsNewExe() ? "Header" : NULL;
 }
 
 void drawPrompt( void )
 {
   fillFxText();
-  __drawMultiPrompt(FxText, ShiftFxText, detectedFormat->prompt, activeMode->prompt);
+  __drawMultiPrompt(FxText, ShiftFxText, beye_context().active_format()->prompt, beye_context().active_mode()->prompt);
 }
 
 static const char * amenu_names[] =
@@ -164,11 +165,11 @@ int MainActionFromMenu( void )
 		if(i!=-1) return KE_SHIFT_F(i+1);
 		break;
 	case 2:
-		i = SelBoxA(const_cast<char**>(detectedFormat->prompt),10," Select format-depended action: ",0);
+		i = SelBoxA(const_cast<char**>(beye_context().active_format()->prompt),10," Select format-depended action: ",0);
 		if(i!=-1) return KE_ALT_F(i+1);
 		break;
 	case 3:
-		i = SelBoxA(const_cast<char**>(activeMode->prompt),10," Select mode-depended action: ",0);
+		i = SelBoxA(const_cast<char**>(beye_context().active_mode()->prompt),10," Select mode-depended action: ",0);
 		if(i!=-1) return KE_CTL_F(i+1);
 		break;
     }
@@ -551,10 +552,10 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
   twGotoXY(1,1);
   wait_wnd = PleaseWaitWnd();
   cfpos = BMGetCurrFilePos();
-  if(detectedFormat->set_state) detectedFormat->set_state(PS_ACTIVE);
-  if(detectedFormat->prepare_structs)
-	   detectedFormat->prepare_structs(ctrl_pos,ctrl_pos);
-  va = detectedFormat->pa2va ? detectedFormat->pa2va(ctrl_pos) : ctrl_pos;
+  if(beye_context().active_format()->set_state) beye_context().active_format()->set_state(PS_ACTIVE);
+  if(beye_context().active_format()->prepare_structs)
+	   beye_context().active_format()->prepare_structs(ctrl_pos,ctrl_pos);
+  va = beye_context().active_format()->pa2va ? beye_context().active_format()->pa2va(ctrl_pos) : ctrl_pos;
   vaddr[0] = '\0';
 #if (__WORDSIZE >= 32) && !defined(__QNX4__)
   sprintf(&vaddr[strlen(vaddr)],"%016llXH",va);
@@ -563,17 +564,17 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
 #endif
   prev_func_pa = next_func_pa = 0;
   prev_func[0] = next_func[0] = '\0';
-  if(detectedFormat->GetPubSym)
+  if(beye_context().active_format()->GetPubSym)
   {
-     prev_func_pa = detectedFormat->GetPubSym(prev_func,sizeof(prev_func),
+     prev_func_pa = beye_context().active_format()->GetPubSym(prev_func,sizeof(prev_func),
 					      &func_class,ctrl_pos,true);
-     next_func_pa = detectedFormat->GetPubSym(next_func,sizeof(next_func),
+     next_func_pa = beye_context().active_format()->GetPubSym(next_func,sizeof(next_func),
 					      &func_class,ctrl_pos,false);
   }
   prev_func[sizeof(prev_func)-1] = next_func[sizeof(next_func)-1] = '\0';
-  if(detectedFormat->GetObjAttr)
+  if(beye_context().active_format()->GetObjAttr)
   {
-     obj_num = detectedFormat->GetObjAttr(ctrl_pos,oname,sizeof(oname),
+     obj_num = beye_context().active_format()->GetObjAttr(ctrl_pos,oname,sizeof(oname),
 					  &obj_start,&obj_end,&obj_class,
 					  &obj_bitness);
      oname[sizeof(oname)-1] = 0;
@@ -655,8 +656,8 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
     }
   }
   exit:
-  if(detectedFormat->drop_structs) detectedFormat->drop_structs();
-  if(detectedFormat->set_state) detectedFormat->set_state(PS_INACTIVE);
+  if(beye_context().active_format()->drop_structs) beye_context().active_format()->drop_structs();
+  if(beye_context().active_format()->set_state) beye_context().active_format()->set_state(PS_INACTIVE);
   BMSeek(cfpos,BM_SEEK_SET);
   CloseWnd(hwnd);
   return ret_addr;

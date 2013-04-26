@@ -34,34 +34,31 @@ extern int photon,bit7;
 #endif
 namespace beye {
 
-char * beyeGetHelpName( void )
+const char * beyeGetHelpName( void )
 {
   if(!beye_context().help_name[0])
   {
-    strcpy(beye_context().help_name,__get_rc_dir("beye"));
-    strcat(beye_context().help_name,"beye.hlp");
+    beye_context().help_name=std::string(__get_rc_dir("beye"))+"beye.hlp";
   }
-  return beye_context().help_name;
+  return beye_context().help_name.c_str();
 }
 
-static char * __NEAR__ __FASTCALL__ beyeGetColorSetName( void )
+static const char * __NEAR__ __FASTCALL__ beyeGetColorSetName( void )
 {
   if(!beye_context().skin_name[0])
   {
-    strcpy(beye_context().skin_name,__get_rc_dir("beye"));
-    strcat(beye_context().skin_name,"skn/" "standard.skn"); /* [dBorca] in skn/ subdir */
+    beye_context().skin_name=std::string(__get_rc_dir("beye"))+"skn/standard.skn"; /* [dBorca] in skn/ subdir */
   }
-  return beye_context().skin_name;
+  return beye_context().skin_name.c_str();
 }
 
-static char * __NEAR__ __FASTCALL__ beyeGetSyntaxName( void )
+static const char * __NEAR__ __FASTCALL__ beyeGetSyntaxName( void )
 {
   if(!beye_context().syntax_name[0])
   {
-    strcpy(beye_context().syntax_name,__get_rc_dir("beye"));
-    strcat(beye_context().syntax_name,"syntax/" "syntax.stx"); /* [dBorca] in syntax/ subdir */
+    beye_context().syntax_name=std::string(__get_rc_dir("beye"))+"syntax/syntax.stx"; /* [dBorca] in syntax/ subdir */
   }
-  return beye_context().syntax_name;
+  return beye_context().syntax_name.c_str();
 }
 
 
@@ -114,8 +111,7 @@ static bool __FASTCALL__ select_codepage( void )
     default_cp = i;
     p = strchr(cp_list[i],' ');
     len = p-cp_list[i];
-    memcpy(beye_context().codepage,cp_list[i],len);
-    beye_context().codepage[len] = '\0';
+    beye_context().codepage=std::string(cp_list[i]).substr(0,len);
     return true;
   }
   return false;
@@ -169,7 +165,7 @@ static void __NEAR__ __FASTCALL__ setup_paint( TWindow *twin )
   twPrintF(" [%c] - Enable usage of external programs      "
 	   ,Gebool(beye_context().iniUseExtProgs));
   twSetColorAttr(dialog_cset.main);
-  twGotoXY(50,7); twPutS(beye_context().codepage);
+  twGotoXY(50,7); twPutS(beye_context().codepage.c_str());
   twUseWin(usd);
 }
 
@@ -273,9 +269,9 @@ void Setup(void)
   exit:
   if(ret)
   {
-    strcpy(beye_context().help_name,estr[0]);
-    strcpy(beye_context().skin_name,estr[1]);
-    strcpy(beye_context().syntax_name,estr[2]);
+    beye_context().help_name=estr[0];
+    beye_context().skin_name=estr[1];
+    beye_context().syntax_name=estr[2];
   }
   CloseWnd(ewnd[0]);
   CloseWnd(ewnd[1]);

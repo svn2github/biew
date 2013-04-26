@@ -18,7 +18,7 @@
 #define __SETUP__H
 
 namespace beye {
-    char *     beyeGetHelpName( void );
+    const char*beyeGetHelpName( void );
     void       Setup( void );
 } // namespace beye
 #endif

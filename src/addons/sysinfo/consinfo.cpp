@@ -48,7 +48,7 @@ static void ShowConsInfo( void )
 	   ,tvioWidth
 	   ,tvioHeight
 	   ,tvioNumColors
-	   ,beye_context().scheme_name);
+	   ,beye_context().scheme_name.c_str());
   twDirectWrite(1,3,str,len);
   str[0] = TWC_SH;
   for(i = 0;i < 63;i++)  twDirectWrite(i+1,4,str,1);

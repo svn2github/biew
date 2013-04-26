@@ -274,10 +274,10 @@ inline const char* GET_FUNC_CLASS(unsigned x) { return x == SC_LOCAL ? "private"
 
 static void __NEAR__ __FASTCALL__ make_addr_column(char *buff,__filesize_t offset)
 {
-   if(hexAddressResolv && detectedFormat->AddressResolving)
+   if(hexAddressResolv && beye_context().active_format()->AddressResolving)
    {
      buff[0] = 0;
-     detectedFormat->AddressResolving(buff,offset);
+     beye_context().active_format()->AddressResolving(buff,offset);
    }
    else sprintf(buff,"L%s",Get8Digit(offset));
    strcat(buff,":");
@@ -360,7 +360,7 @@ static bool FStore( void )
 	  delete _bioHandle;
 	  goto Exit;
 	}
-	real_size = activeMode->convert_cp ? activeMode->convert_cp((char *)tmp_buff,rem,true) : rem;
+	real_size = beye_context().active_mode()->convert_cp ? beye_context().active_mode()->convert_cp((char *)tmp_buff,rem,true) : rem;
 	if(!_bioHandle->write_buffer(tmp_buff,real_size))
 	{
 	  errnoMessageBox(WRITE_FAIL,NULL,errno);
@@ -395,12 +395,12 @@ static bool FStore( void )
      int obj_class,obj_bitness;
      unsigned obj_num;
 
-     if(activeMode != &disMode) disMode.init();
+     if(beye_context().active_mode() != &disMode) disMode.init();
      if(flags & FSDLG_STRUCTS)
      {
-       if(detectedFormat->set_state) detectedFormat->set_state(PS_ACTIVE);
-       if(detectedFormat->prepare_structs)
-		    detectedFormat->prepare_structs(ff_startpos,ff_startpos+ff_len);
+       if(beye_context().active_format()->set_state) beye_context().active_format()->set_state(PS_ACTIVE);
+       if(beye_context().active_format()->prepare_structs)
+		    beye_context().active_format()->prepare_structs(ff_startpos,ff_startpos+ff_len);
      }
      MaxInsnLen = activeDisasm->max_insn_len();
      codebuff = new unsigned char [MaxInsnLen];
@@ -421,13 +421,13 @@ static bool FStore( void )
      if(file_cache) setvbuf(fout,file_cache,_IOFBF,BBIO_SMALL_CACHE_SIZE);
      if(flags & FSDLG_COMMENT)
      {
-       printHdr(fout,detectedFormat);
+       printHdr(fout,beye_context().active_format());
      }
      if(flags & FSDLG_STRUCTS)
      {
-       if(detectedFormat->GetObjAttr)
+       if(beye_context().active_format()->GetObjAttr)
        {
-	 obj_num = detectedFormat->GetObjAttr(ff_startpos,obj_name,
+	 obj_num = beye_context().active_format()->GetObjAttr(ff_startpos,obj_name,
 					      sizeof(obj_name),&obj_start,
 					      &obj_end,&obj_class,&obj_bitness);
 	 obj_name[sizeof(obj_name)-1] = 0;
@@ -442,15 +442,15 @@ static bool FStore( void )
        obj_end = BMGetFLength();
        obj_name[0] = 0;
        obj_class = OC_CODE;
-       obj_bitness = detectedFormat->query_bitness ? detectedFormat->query_bitness(ff_startpos) : DAB_USE16;
+       obj_bitness = beye_context().active_format()->query_bitness ? beye_context().active_format()->query_bitness(ff_startpos) : DAB_USE16;
      }
      if(flags & FSDLG_STRUCTS) printObject(fout,obj_num,obj_name,obj_class,obj_bitness,obj_end - obj_start);
      func_pa = 0;
      if(flags & FSDLG_STRUCTS)
      {
-       if(detectedFormat->GetPubSym)
+       if(beye_context().active_format()->GetPubSym)
        {
-	 func_pa = detectedFormat->GetPubSym(func_name,sizeof(func_name),
+	 func_pa = beye_context().active_format()->GetPubSym(func_name,sizeof(func_name),
 					     &func_class,ff_startpos,true);
 	 func_name[sizeof(func_name)-1] = 0;
 	 if(func_pa)
@@ -463,7 +463,7 @@ static bool FStore( void )
 	      fprintf(fout,"; ...\n");
 	    }
 	 }
-	 func_pa = detectedFormat->GetPubSym(func_name,sizeof(func_name),
+	 func_pa = beye_context().active_format()->GetPubSym(func_name,sizeof(func_name),
 					     &func_class,ff_startpos,false);
 	 func_name[sizeof(func_name)-1] = 0;
        }
@@ -478,11 +478,11 @@ static bool FStore( void )
       int len;
        if(flags & FSDLG_STRUCTS)
        {
-	  if(detectedFormat->GetObjAttr)
+	  if(beye_context().active_format()->GetObjAttr)
 	  {
 	    if(ff_startpos >= obj_end)
 	    {
-	       obj_num = detectedFormat->GetObjAttr(ff_startpos,obj_name,
+	       obj_num = beye_context().active_format()->GetObjAttr(ff_startpos,obj_name,
 						    sizeof(obj_name),&obj_start,
 						    &obj_end,&obj_class,
 						    &obj_bitness);
@@ -516,7 +516,7 @@ static bool FStore( void )
 			      ,func_name
 			      ,func_pa);
 		  ff_startpos = func_pa;
-		  func_pa = detectedFormat->GetPubSym(func_name,sizeof(func_name),
+		  func_pa = beye_context().active_format()->GetPubSym(func_name,sizeof(func_name),
 						    &func_class,ff_startpos,false);
 		  func_name[sizeof(func_name)-1] = 0;
 		  if(func_pa == ff_startpos)
@@ -534,7 +534,7 @@ static bool FStore( void )
 	      ff_startpos = obj_end;
 	      goto next_obj;
 	  }
-	  if(detectedFormat->GetPubSym && func_pa)
+	  if(beye_context().active_format()->GetPubSym && func_pa)
 	  {
 	    int not_silly;
 	    not_silly = 0;
@@ -544,7 +544,7 @@ static bool FStore( void )
 	      fprintf(fout,"%s %s:\n"
 			  ,GET_FUNC_CLASS(func_class)
 			  ,func_name);
-	      func_pa = detectedFormat->GetPubSym(func_name,sizeof(func_name),
+	      func_pa = beye_context().active_format()->GetPubSym(func_name,sizeof(func_name),
 						  &func_class,ff_startpos,false);
 	      func_name[sizeof(func_name)-1] = 0;
 	      not_silly++;
@@ -614,7 +614,7 @@ static bool FStore( void )
        stop = func_pa ? std::min(func_pa,obj_end) : obj_end;
        if(flags & FSDLG_STRUCTS)
        {
-	 if(detectedFormat->GetPubSym && stop && stop > ff_startpos &&
+	 if(beye_context().active_format()->GetPubSym && stop && stop > ff_startpos &&
 	    ff_startpos + dret.codelen > stop)
 	 {
 	   unsigned lim,ii;
@@ -660,7 +660,7 @@ static bool FStore( void )
        }
        if(flags & FSDLG_STRUCTS)
        {
-	 if(detectedFormat->GetPubSym && stop && ff_startpos != stop &&
+	 if(beye_context().active_format()->GetPubSym && stop && ff_startpos != stop &&
 	    ff_startpos + dret.codelen > stop)
 		      dret.codelen = stop - ff_startpos;
        }
@@ -687,10 +687,10 @@ static bool FStore( void )
      if(tmp_buff2) delete tmp_buff2;
      if(flags & FSDLG_STRUCTS)
      {
-       if(detectedFormat->drop_structs) detectedFormat->drop_structs();
-       if(detectedFormat->set_state) detectedFormat->set_state(PS_INACTIVE);
+       if(beye_context().active_format()->drop_structs) beye_context().active_format()->drop_structs();
+       if(beye_context().active_format()->set_state) beye_context().active_format()->set_state(PS_INACTIVE);
      }
-     if(activeMode != &disMode) disMode.term();
+     if(beye_context().active_mode() != &disMode) disMode.term();
    }
    Exit:
    CloseWnd(progress_wnd);
@@ -1214,7 +1214,7 @@ static bool FileInfo( void )
 	   "User ID of the file owner     = %u\n"
 	   "Group ID of the file owner    = %u"
 	   ,beye_context().short_name()
-	   ,detectedFormat->name ? detectedFormat->name : "Not detected"
+	   ,beye_context().active_format()->name ? beye_context().active_format()->name : "Not detected"
 	   ,BMGetFLength()
 	   ,attr
 	   ,stimes[0]

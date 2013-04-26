@@ -3,12 +3,11 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/file_ini.h"
+#include "reg_form.h"
 
 #include <map>
 #include <vector>
 #include <string>
-
-#include <stdio.h>
 
 namespace beye {
     class BeyeContext : public Opaque {
@@ -20,6 +19,7 @@ namespace beye {
 	    void		parse_cmdline( const std::vector<std::string>& ArgVector );
 	    hIniProfile*	load_ini_info();
 	    void		save_ini_info() const;
+	    bool		LoadInfo();
 	    bool		is_valid_ini_args() const;
 	    const std::vector<std::string>& list_file() const;
 	    const char*		short_name() const { return _shortname; }
@@ -36,14 +36,25 @@ namespace beye {
 						    const char *subsection,
 						    const char *item,
 						    const char *value) const;
+	    void		init_modes( hIniProfile *ini );
+	    void		term_modes();
+	    void		quick_select_mode();
+	    bool		select_mode();
+	    REGISTRY_MODE*	active_mode() const { return activeMode; }
+	    REGISTRY_BIN*	active_format() const { return detectedFormat; }
+	    void		detect_binfmt();
+	    void		show_usage() const;
+
+	    void		select_tool() const;
+	    void		select_sysinfo() const;
 
 	    std::string ArgVector1;
 	    char ini_ver[32];
-	    char help_name[FILENAME_MAX+1];
-	    char skin_name[FILENAME_MAX+1];
-	    char syntax_name[FILENAME_MAX+1];
-	    char codepage[256];
-	    char scheme_name[256];
+	    std::string help_name;
+	    std::string skin_name;
+	    std::string syntax_name;
+	    std::string codepage;
+	    std::string scheme_name;
 	    unsigned long vioIniFlags;
 	    unsigned long twinIniFlags;
 	    unsigned long kbdFlags;
@@ -54,13 +65,22 @@ namespace beye {
 	    __filesize_t headshift;
 	    __filesize_t LastOffset;
 	private:
+	    void		auto_detect_mode();
+
+	    Opaque		opaque;
+	    REGISTRY_MODE*	activeMode;
+	    REGISTRY_BIN*	detectedFormat;
 	    const std::vector<std::string>& argv;
 	    const std::map<std::string,std::string>& envm;
 	    std::vector<std::string> ListFile;
-	    char* LastOpenFileName;
-	    char* _shortname;
-	    const char *ini_name;
-	    bool UseIniFile;
+	    char*		LastOpenFileName;
+	    char*		_shortname;
+	    const char*		ini_name;
+	    bool		UseIniFile;
+	    size_t		LastMode;
+	    unsigned int	beye_mode;
+	    unsigned		defMainModeSel;
+	    __filesize_t	new_file_size;
     };
     BeyeContext& beye_context();
 } // namespace beye

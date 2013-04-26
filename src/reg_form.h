@@ -255,12 +255,6 @@ typedef struct tag_REGISTRY_MODE
 __filesize_t (__FASTCALL__ *search_engine)(TWindow *pwnd, __filesize_t start, __filesize_t *slen, unsigned flags, bool is_continue, bool *is_found);
 }REGISTRY_MODE;
 
-    extern REGISTRY_BIN *detectedFormat;
-    extern REGISTRY_MODE *activeMode;
-
-    bool SelectMode( void );
-    void QuickSelectMode( void );
-
 typedef struct tag_REGISTRY_TOOL
 {
   const char *  name;                /**< Tool name */

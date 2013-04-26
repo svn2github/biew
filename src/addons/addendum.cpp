@@ -18,54 +18,47 @@ using namespace beye;
  * @note        Development, fixes and improvements
 **/
 #include <stddef.h>
+
+#include "addendum.h"
 #include "bconsole.h"
 #include "beyeutil.h"
-#include "reg_form.h"
 
 namespace beye {
 extern REGISTRY_TOOL DigitalConvertor;
 extern REGISTRY_TOOL Calculator;
 
-static REGISTRY_TOOL *toolTable[] =
+void addendum::select()
 {
-  &DigitalConvertor,
-  &Calculator
-};
+    size_t i,nTools=list.size();
+    const char *toolName[nTools];
+    int retval;
 
-static size_t defToolSel = 0;
-
-void SelectTool( void )
-{
-  const char *toolName[sizeof(toolTable)/sizeof(REGISTRY_TOOL *)];
-  size_t i,nTools;
-  int retval;
-
-  nTools = sizeof(toolTable)/sizeof(REGISTRY_TOOL *);
-  for(i = 0;i < nTools;i++) toolName[i] = toolTable[i]->name;
-  retval = SelBoxA(const_cast<char**>(toolName),nTools," Select tool: ",defToolSel);
-  if(retval != -1)
-  {
-    toolTable[retval]->tool();
-    defToolSel = retval;
-  }
+    nTools = list.size();
+    for(i = 0;i < nTools;i++) toolName[i] = list[i]->name;
+    retval = SelBoxA(const_cast<char**>(toolName),nTools," Select tool: ",defToolSel);
+    if(retval != -1) {
+	list[retval]->tool();
+	defToolSel = retval;
+    }
 }
 
-void init_addons( void )
+addendum::addendum()
+	:defToolSel(0)
 {
-  size_t i;
-  for(i = 0;i < sizeof(toolTable)/sizeof(REGISTRY_TOOL *);i++)
-  {
-    if(toolTable[i]->read_ini) toolTable[i]->read_ini();
-  }
+    list.push_back(&DigitalConvertor);
+    list.push_back(&Calculator);
+    size_t i,sz=list.size();
+    for(i = 0;i < sz;i++) {
+	if(list[i]->read_ini) list[i]->read_ini();
+    }
 }
 
-void term_addons( void )
+addendum::~addendum()
 {
-  size_t i;
-  for(i = 0;i < sizeof(toolTable)/sizeof(REGISTRY_TOOL *);i++)
-  {
-    if(toolTable[i]->save_ini) toolTable[i]->save_ini();
-  }
+    size_t i,sz=list.size();
+    for(i = 0;i < sz;i++) {
+	if(list[i]->save_ini) list[i]->save_ini();
+    }
 }
 } // namespace beye
 

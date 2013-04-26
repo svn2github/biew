@@ -19,9 +19,9 @@ using namespace beye;
 **/
 #include <stddef.h>
 
+#include "sysinfo.h"
 #include "bconsole.h"
 #include "beyeutil.h"
-#include "reg_form.h"
 
 namespace beye {
 extern REGISTRY_SYSINFO AsciiTable;
@@ -29,48 +29,40 @@ extern REGISTRY_SYSINFO CPUPerformance;
 extern REGISTRY_SYSINFO InputViewer;
 extern REGISTRY_SYSINFO ConsoleInfo;
 
-static REGISTRY_SYSINFO *toolTable[] =
+void sysinfo::select()
 {
-  &AsciiTable,
-  &ConsoleInfo,
-  &InputViewer,
-  &CPUPerformance
-};
+    size_t i,nTools=list.size();
+    const char *toolName[nTools];
+    int retval;
 
-static int defToolSel = 0;
-
-void SelectSysInfo( void )
-{
-  const char *toolName[sizeof(toolTable)/sizeof(REGISTRY_TOOL *)];
-  size_t i,nTools;
-  int retval;
-
-  nTools = sizeof(toolTable)/sizeof(REGISTRY_TOOL *);
-  for(i = 0;i < nTools;i++) toolName[i] = toolTable[i]->name;
-  retval = SelBoxA(const_cast<char**>(toolName),nTools," Select tool: ",defToolSel);
-  if(retval != -1)
-  {
-    toolTable[retval]->sysinfo();
-    defToolSel = retval;
-  }
+    nTools = list.size();
+    for(i = 0;i < nTools;i++) toolName[i] = list[i]->name;
+    retval = SelBoxA(const_cast<char**>(toolName),nTools," Select tool: ",defToolSel);
+    if(retval != -1) {
+	list[retval]->sysinfo();
+	defToolSel = retval;
+    }
 }
 
-void init_sysinfo( void )
+sysinfo::sysinfo()
+	:defToolSel(0)
 {
-  size_t i;
-  for(i = 0;i < sizeof(toolTable)/sizeof(REGISTRY_TOOL *);i++)
-  {
-    if(toolTable[i]->read_ini) toolTable[i]->read_ini();
-  }
+    list.push_back(&AsciiTable);
+    list.push_back(&CPUPerformance);
+    list.push_back(&InputViewer);
+    list.push_back(&ConsoleInfo);
+    size_t i,sz=list.size();
+    for(i = 0;i < sz;i++) {
+	if(list[i]->read_ini) list[i]->read_ini();
+    }
 }
 
-void term_sysinfo( void )
+sysinfo::~sysinfo()
 {
-  size_t i;
-  for(i = 0;i < sizeof(toolTable)/sizeof(REGISTRY_TOOL *);i++)
-  {
-    if(toolTable[i]->save_ini) toolTable[i]->save_ini();
-  }
+    size_t i,sz=list.size();
+    for(i = 0;i < sz;i++) {
+	if(list[i]->save_ini) list[i]->save_ini();
+    }
 }
 } // namespace beye
 
