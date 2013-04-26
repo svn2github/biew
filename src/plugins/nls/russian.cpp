@@ -26,28 +26,29 @@ using namespace beye;
 #include "beyeutil.h"
 
 namespace beye {
-#define TXT_CURRCP      0
-#define TXT_CP866       1
-#define TXT_WIN1251     2
-#define TXT_KOIR8       3
-#define TXT_ISO         4
-#define TXT_CP855       5
-#define TXT_APPLE       6
-#define TXT_UNICODE     7
-#define TXT_BIG_UNICODE 8
-#define TXT_EBCDIC      9
-#define TXT_MIK16       10
-#define TXT_GOST87      11
-#define TXT_KOI0        12
-#define TXT_KOI7        13
-#define TXT_KOI8A       14
-#define TXT_KOI8E       15
-#define TXT_KOIR8V2     16
-#define TXT_TRANSLIT    17
-#define TXT_7BIT        18
+enum {
+    TXT_CURRCP      =0,
+    TXT_CP866       =1,
+    TXT_WIN1251     =2,
+    TXT_KOIR8       =3,
+    TXT_ISO         =4,
+    TXT_CP855       =5,
+    TXT_APPLE       =6,
+    TXT_UNICODE     =7,
+    TXT_BIG_UNICODE =8,
+    TXT_EBCDIC      =9,
+    TXT_MIK16       =10,
+    TXT_GOST87      =11,
+    TXT_KOI0        =12,
+    TXT_KOI7        =13,
+    TXT_KOI8A       =14,
+    TXT_KOI8E       =15,
+    TXT_KOIR8V2     =16,
+    TXT_TRANSLIT    =17,
+    TXT_7BIT        =18,
 
-#define TXT_MAXMODE     18
-
+    TXT_MAXMODE     =18
+};
 static const char * ru_cp_names[] =
 {
    "~Current",

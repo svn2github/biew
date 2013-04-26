@@ -18,9 +18,15 @@ using namespace beye;
  * @note        Development, fixes and improvements
 **/
 #include "tstrings.h"
-#include "libbeye/libbeye.h" /* for INT64_C */
 /**   English release for all messages */
 namespace beye {
+const char* BEYE_VERSION=VERSION;
+#if defined(__WIN32__) && defined(_MSC_VER)
+const char* BEYE_VER_MSG=" Binary EYE v "VERSION"-i386.Win32 Build: " __DATE__ " ";
+#else
+const char* BEYE_VER_MSG=" Binary EYE v "VERSION"-"HOST" Build: "__DATE__" ";
+#endif
+
 const char msgAboutText[] =
 "Multiplatform portable Binary EYE (aka viewer)\n"
 "with built-in x86/i386/Amd64/AVX2/FMA/XOP,Java\n"

@@ -31,23 +31,23 @@
 
 namespace beye {
 /** List of CPU platform. */
-
-#define DISASM_DATA		0  /**< indicates data disassembler */
-#define DISASM_CPU_IX86		1  /**< indicates Intel-x86 disassembler */
-#define DISASM_CPU_AVR		2  /**< indicates Atmel-AVR disassembler */
-#define DISASM_JAVA		3  /**< indicates Java disassembler */
-#define DISASM_CPU_ARM		4  /**< indicates ARM disassembler */
-#define DISASM_CPU_PPC		5  /**< indicates PowerPC disassembler */
-				    /* ... here may placed other constants!!! ... */
-#define DISASM_CPU_IA64		6  /**< indicates Itanium disassembler */
-#define DISASM_CPU_ALPHA	7  /**< indicates DEC Alpha disassembler */
-#define DISASM_CPU_MIPS		8  /**< indicates MIPS disassembler */
-#define DISASM_CPU_SPARC	9  /**< indicates SUN Sparc disassembler */
-#define DISASM_CPU_SH		10 /**< indicates Hitachi SH disassembler */
-#define DISASM_CPU_CRAY		11 /**< indicates Cray disassembler */
-				    /* ... here may placed other constants!!! ... */
-#define DISASM_DEFAULT		0  /**< indicates unspecified disassembler: format default */
-
+enum {
+    DISASM_DATA		=0,  /**< indicates data disassembler */
+    DISASM_CPU_IX86	=1,  /**< indicates Intel-x86 disassembler */
+    DISASM_CPU_AVR	=2,  /**< indicates Atmel-AVR disassembler */
+    DISASM_JAVA		=3,  /**< indicates Java disassembler */
+    DISASM_CPU_ARM	=4,  /**< indicates ARM disassembler */
+    DISASM_CPU_PPC	=5,  /**< indicates PowerPC disassembler */
+			    /* ... here may placed other constants!!! ... */
+    DISASM_CPU_IA64	=6,  /**< indicates Itanium disassembler */
+    DISASM_CPU_ALPHA	=7,  /**< indicates DEC Alpha disassembler */
+    DISASM_CPU_MIPS	=8,  /**< indicates MIPS disassembler */
+    DISASM_CPU_SPARC	=9,  /**< indicates SUN Sparc disassembler */
+    DISASM_CPU_SH	=10, /**< indicates Hitachi SH disassembler */
+    DISASM_CPU_CRAY	=11, /**< indicates Cray disassembler */
+			    /* ... here may placed other constants!!! ... */
+    DISASM_DEFAULT	=0  /**< indicates unspecified disassembler: format default */
+};
 
 typedef bool (__FASTCALL__ *DisasmAction)( void );
 typedef unsigned char * MBuffer;
@@ -64,9 +64,10 @@ typedef struct tagDisasmRet
   unsigned char codelen;   /**< contains length of instruction when normal disassembling; length of field for binding on __DISF_GETTYPE */
 }DisasmRet;
 
-#define ASM_NOERR  0
-#define ASM_SYNTAX 1
-
+enum {
+    ASM_NOERR  =0,
+    ASM_SYNTAX =1
+};
 /*
    This struct is ordered as it documented in Athlon manual
    Publication # 22007 Rev: D
@@ -79,32 +80,38 @@ typedef struct tagAsmRet
 }AsmRet;
 
 /* New features: commentaries */
-#define DISCOM_SIZE 256       /**< Size of disassembler commentaries */
+enum {
+    DISCOM_SIZE=256       /**< Size of disassembler commentaries */
+};
 extern char *   dis_comments; /**< Pointer to disassembler commentaries */
 
-#define DISCOMSEV_NONE    0 /**< means no comments were appended */
-#define DISCOMSEV_STRING  1 /**< means comment is representation of multibyte immediate operand */
-#define DISCOMSEV_INSNREF 2 /**< means comment is instruction reference (like ; RETURN) */
-#define DISCOMSEV_STRPTR  3 /**< means comment is pointer to the string */
-#define DISCOMSEV_FUNC    4 /**< means comment is function name */
+enum {
+    DISCOMSEV_NONE    =0, /**< means no comments were appended */
+    DISCOMSEV_STRING  =1, /**< means comment is representation of multibyte immediate operand */
+    DISCOMSEV_INSNREF =2, /**< means comment is instruction reference (like ; RETURN) */
+    DISCOMSEV_STRPTR  =3, /**< means comment is pointer to the string */
+    DISCOMSEV_FUNC    =4  /**< means comment is function name */
+};
 extern unsigned dis_severity; /**< severity of disassembler commentaries */
 
-
-#define PREDICT_DEPTH 15 /**< means depth of prediction is 15 insns which have max_insn_len */
-
+enum {
+    PREDICT_DEPTH =15 /**< means depth of prediction is 15 insns which have max_insn_len */
+};
 /** Flags of disassembler */
-#define __DISF_NORMAL   0x0000 /**< Performs normal disassembling */
-#define __DISF_GETTYPE  0x0001 /**< Tells to disassembler that field pro_clone must to contain type of instruction */
-#define __DISF_SIZEONLY 0x8000 /**< Performs computing size of insns */
-
+enum {
+    __DISF_NORMAL   =0x0000, /**< Performs normal disassembling */
+    __DISF_GETTYPE  =0x0001, /**< Tells to disassembler that field pro_clone must to contain type of instruction */
+    __DISF_SIZEONLY =0x8000 /**< Performs computing size of insns */
+};
 /** Types of instruction (for __DISF_GETTYPE) in future must grow */
-#define __INSNT_ORDINAL 0x00000000L /**< Any unspecified instruction */
-#define __INSNT_RET     0x00000001L /**< Instruction of return class */
-#define __INSNT_LEAVE   0x00000002L /**< Instruction of leave class: Example: pop reg1; pop reg2; mov esp, ebp; pop ebp; retx or similar */
-#define __INSNT_JMPVVT  0x00000003L /**< Jump via virtual table */
-#define __INSNT_JMPPIC  0x00000004L /**< Jump via PIC. Like: .i386: jmp name@GOT(ebx) */
-#define __INSNT_JMPRIP  0x00000005L /**< Jump via RIP. Like: .i386: jmp [rip+name@GOT(rip)] */
-
+enum {
+    __INSNT_ORDINAL =0x00000000L, /**< Any unspecified instruction */
+    __INSNT_RET     =0x00000001L, /**< Instruction of return class */
+    __INSNT_LEAVE   =0x00000002L, /**< Instruction of leave class: Example: pop reg1; pop reg2; mov esp, ebp; pop ebp; retx or similar */
+    __INSNT_JMPVVT  =0x00000003L, /**< Jump via virtual table */
+    __INSNT_JMPPIC  =0x00000004L, /**< Jump via PIC. Like: .i386: jmp name@GOT(ebx) */
+    __INSNT_JMPRIP  =0x00000005L  /**< Jump via RIP. Like: .i386: jmp [rip+name@GOT(rip)] */
+};
 typedef DisasmRet (__FASTCALL__ *DisasmFunc)(__filesize_t shift,
 					     MBuffer insn_buff,
 					     unsigned flags);
@@ -133,16 +140,20 @@ typedef struct tag_REGISTRY_DISASM
 }REGISTRY_DISASM;
 
 extern REGISTRY_DISASM *activeDisasm; /**< currently selected active disassembler */
-#define PANMOD_FULL   2       /**< full mode of panel: address + instruction bytes + instruction */
-#define PANMOD_MEDIUM 1       /**< medium mode of panel: address + instruction */
-#define PANMOD_WIDE   0       /**< full mode of panel: instruction only */
+enum {
+    PANMOD_FULL   =2,       /**< full mode of panel: address + instruction bytes + instruction */
+    PANMOD_MEDIUM =1,       /**< medium mode of panel: address + instruction */
+    PANMOD_WIDE   =0        /**< full mode of panel: instruction only */
+};
 extern unsigned disPanelMode; /**< contains select mode of panel */
 
 /* references resolution */
-#define NEEDREF_PREDICT 3    /**< resolves all instructions and uses prediction mechanism */
-#define NEEDREF_ALL     2    /**< resolves all instructions that has binding */
-#define NEEDREF_JMP     1    /**< resolves only jump and call instructions */
-#define NEEDREF_NONE    0    /**< do not resolve references */
+enum {
+    NEEDREF_PREDICT =3,    /**< resolves all instructions and uses prediction mechanism */
+    NEEDREF_ALL     =2,    /**< resolves all instructions that has binding */
+    NEEDREF_JMP     =1,    /**< resolves only jump and call instructions */
+    NEEDREF_NONE    =0     /**< do not resolve references */
+};
 extern unsigned disNeedRef;  /**< contains selected references resolution */
 
     DisasmRet Disassembler(__filesize_t ulShift,MBuffer buffer,unsigned flags);
@@ -152,19 +163,21 @@ extern unsigned disNeedRef;  /**< contains selected references resolution */
     char * __FASTCALL__ TabSpace(char * str,unsigned nSpace);
     void   __FASTCALL__ disSetModifier(char *str,const char *modf);
 
-#define DISARG_LLONG    0x0080U /**< signed 8-byte value */
-#define DISARG_LONG     0x0040U /**< signed 4-byte value */
-#define DISARG_SHORT    0x0020U /**< signed 2-byte value */
-#define DISARG_CHAR     0x0010U /**< signed 1-byte value */
-#define DISARG_BYTE     0x0001U /**< unsigned 1-byte value */
-#define DISARG_WORD     0x0002U /**< unsigned 2-byte value */
-#define DISARG_DWORD    0x0004U /**< unsigned 4-byte value */
-#define DISARG_QWORD    0x0008U /**< unsigned 8-byte value */
+enum {
+    DISARG_LLONG    =0x0080U, /**< signed 8-byte value */
+    DISARG_LONG     =0x0040U, /**< signed 4-byte value */
+    DISARG_SHORT    =0x0020U, /**< signed 2-byte value */
+    DISARG_CHAR     =0x0010U, /**< signed 1-byte value */
+    DISARG_BYTE     =0x0001U, /**< unsigned 1-byte value */
+    DISARG_WORD     =0x0002U, /**< unsigned 2-byte value */
+    DISARG_DWORD    =0x0004U, /**< unsigned 4-byte value */
+    DISARG_QWORD    =0x0008U, /**< unsigned 8-byte value */
 /* Contsants for references predictions */
-#define DISARG_IMM      0x1000U /**< Immediate argument */
-#define DISARG_DISP     0x2000U /**< Argument is displacement only */
-#define DISARG_IDXDISP  0x4000U /**< Argument is displacement which is combined with registers */
-#define DISARG_RIP      0x8000U /**< Argument is displacement relatively current Instruction Pointer */
+    DISARG_IMM      =0x1000U, /**< Immediate argument */
+    DISARG_DISP     =0x2000U, /**< Argument is displacement only */
+    DISARG_IDXDISP  =0x4000U, /**< Argument is displacement which is combined with registers */
+    DISARG_RIP      =0x8000U  /**< Argument is displacement relatively current Instruction Pointer */
+};
 /** Appends symbolic information instead digits to instruction string
     @param str       string to be appended
     @param flags     same as described in reg_form.h (APREF_* family)
@@ -193,14 +206,15 @@ extern unsigned disNeedRef;  /**< contains selected references resolution */
 **/
     int __FASTCALL__  disAppendDigits(char *str,__filesize_t ulShift,int flags,
 			      char codelen,any_t*defval,unsigned type);
-
-#define DISADR_SHORT   0x00
-#define DISADR_NEAR16  0x01
-#define DISADR_NEAR32  0x02
-#define DISADR_NEAR64  0x04
-#define DISADR_USESEG  0x10
-#define DISADR_FAR16   (DISADR_USESEG | DISADR_NEAR16)
-#define DISADR_FAR32   (DISADR_USESEG | DISADR_NEAR32)
+enum {
+    DISADR_SHORT   =0x00,
+    DISADR_NEAR16  =0x01,
+    DISADR_NEAR32  =0x02,
+    DISADR_NEAR64  =0x04,
+    DISADR_USESEG  =0x10,
+    DISADR_FAR16   =(DISADR_USESEG | DISADR_NEAR16),
+    DISADR_FAR32   =(DISADR_USESEG | DISADR_NEAR32)
+};
 /** Appends symbolic information to address field of jump instructions
     @param str       string to be appended
     @param ulShift   indicates offset to field for binding

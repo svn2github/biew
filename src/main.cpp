@@ -117,7 +117,7 @@ static volatile char antiviral_hole2[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 
 TWindow * MainWnd = 0,*HelpWnd = 0,*TitleWnd = 0,*ErrorWnd = 0;
 
-#define SHORT_PATH_LEN __TVIO_MAXSCREENWIDTH-54
+static const unsigned SHORT_PATH_LEN=__TVIO_MAXSCREENWIDTH-54;
 
 char shortname[SHORT_PATH_LEN + 1];
 
@@ -620,7 +620,7 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
     size_t i;
     show_usage:
     ShowUsage();
-    printm("\n"BEYE_VER_MSG"\n");
+    printm("%s\n",BEYE_VER_MSG);
     printm(" Usage: beye [OPTIONS] file...\n\n");
     for(i = 0;i < sizeof(beyeArg)/sizeof(struct tagbeyeArg);i++)
     {

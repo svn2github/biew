@@ -66,8 +66,8 @@ const char *fi_Debug_Str = NULL;
 \**************************************************************/
 
 
-#define __C_EOF 0x1A
-#define __FI_MAXFILES 200
+static const unsigned __C_EOF=0x1A;
+static const unsigned __FI_MAXFILES=200;
 
 unsigned int  *FinCurrString;
 char ** FiFileNames;

@@ -38,17 +38,17 @@ using namespace beye;
 #include "lzss/lzssutil.cpp"
 
 namespace beye {
-#define TEXT_TAB 8
+static const unsigned TEXT_TAB=8;
 
 extern void drawHelpListPrompt( void );
-
-#define HPROP_BOLD                  0x01
-#define HPROP_ITALIC                0x02
-#define HPROP_UNDERLINE             0x04
-#define HPROP_STRIKETHROUGH         0x08
-#define HPROP_REVERSE               0x10
-#define HPROP_LINK                  0x20
-
+enum {
+    HPROP_BOLD                  =0x01,
+    HPROP_ITALIC                =0x02,
+    HPROP_UNDERLINE             =0x04,
+    HPROP_STRIKETHROUGH         =0x08,
+    HPROP_REVERSE               =0x10,
+    HPROP_LINK                  =0x20
+};
 unsigned __FASTCALL__ hlpFillBuffer(tvioBuff * dest,unsigned int alen,const char * str,unsigned int len,unsigned int shift,unsigned *n_tabs,bool is_hl)
 {
   t_vchar ch;
@@ -292,7 +292,7 @@ bool __FASTCALL__ hlpOpen( bool interact )
   bHelp->set_optimization(BFile::Opt_Random);
   bHelp->seek(0L,SEEK_SET);
   bHelp->read_buffer(hlp_id,sizeof(hlp_id));
-  if(memcmp(hlp_id,BEYE_HELP_VER,sizeof(BEYE_HELP_VER)) != 0)
+  if(memcmp(hlp_id,BEYE_HELP_VER,strlen(BEYE_HELP_VER)) != 0)
   {
     if(interact)
     {

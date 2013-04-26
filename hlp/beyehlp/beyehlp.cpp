@@ -28,16 +28,16 @@ using namespace beye;
 #include "libbeye/file_ini.h"
 #include "beyehelp.h"
 
-unsigned long items_freq = 0;
-char outfname[FILENAME_MAX];
-char id_string[80] = BEYE_HELP_VER;
-char tmp_buff[0x1000];
-char o_buff[0x4000];
-char i_cache[0x1000];
-char o_cache[0x1000];
-BFile* bOutput;
+static unsigned long items_freq = 0;
+static char outfname[FILENAME_MAX];
+static char id_string[80];
+static char tmp_buff[0x1000];
+static char o_buff[0x4000];
+static char i_cache[0x1000];
+static char o_cache[0x1000];
+static BFile* bOutput;
 
-char* archiver;
+static char* archiver;
 
 #define BBIO_CACHE_SIZE 0x1000
 #define COMPNAME  "temp_fil.tmp"
@@ -232,6 +232,7 @@ int main( int argc, char *argv[] )
 	     Usage: beyehlp archiver project.file\n");
      return -1;
   }
+  strcpy(id_string,BEYE_HELP_VER);
   ArgVector=argv;
   atexit(my_atexit);
   __init_sys();

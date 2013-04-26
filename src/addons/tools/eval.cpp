@@ -71,7 +71,7 @@ struct Operator {
       const char  token;
 };
 
-#define NUL '\0'
+static const char NUL='\0';
 
 
 typedef enum { E_MEM = -4,
@@ -97,7 +97,7 @@ static struct Operator verbs[] = {
       {NULL,0, 0, NUL }
 };
 
-#define EVAL_STACK_SIZE 256
+static const unsigned EVAL_STACK_SIZE=256;
 
 static char   *op_stack;                        /** Operator stack       */
 static intmax_t*arg_stack;                       /** Argument stack       */

@@ -34,8 +34,9 @@
 typedef long (__FASTCALL__ *twClassFunc)(TWindow *win,unsigned event,
 				  unsigned long event_param, any_t*event_data);
 
-#define __CS_ORDINAL 0x0000 /**< Indicates ordinal type of callback function */
-
+enum {
+    __CS_ORDINAL=0x0000 /**< Indicates ordinal type of callback function */
+};
 /** Internal structure of text window class */
 typedef struct tagTwClass
 {

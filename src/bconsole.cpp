@@ -43,9 +43,10 @@ namespace beye {
     extern TWindow * ErrorWnd;
     extern char beye_codepage[];
 
-#define MAXINPUT 79
-
-#define FORMFEED 12
+enum {
+    MAXINPUT=79,
+    FORMFEED=12
+};
 
 static int KB_Buff[64];
 static unsigned char KB_freq = 0;

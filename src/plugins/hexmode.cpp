@@ -75,10 +75,10 @@ static char * __NEAR__ __FASTCALL__ Get8D(__filesize_t val)
     return Get8Digit(v);
 }
 
-static unsigned char __NEAR__ __FASTCALL__ sizeBit( void )  { return (tvioWidth-HA_LEN)/(8+1+1); }
-static unsigned char __NEAR__ __FASTCALL__ sizeByte( void ) { return ((tvioWidth-HA_LEN)/(12+1+4)*4); } /* always round on four-column boundary */
-static unsigned char __NEAR__ __FASTCALL__ sizeWord( void ) { return (tvioWidth-HA_LEN)/(4+1+2); }
-static unsigned char __NEAR__ __FASTCALL__ sizeDWord( void ){ return (tvioWidth-HA_LEN)/(8+1+4); }
+static unsigned char __NEAR__ __FASTCALL__ sizeBit( void )  { return (tvioWidth-HA_LEN())/(8+1+1); }
+static unsigned char __NEAR__ __FASTCALL__ sizeByte( void ) { return ((tvioWidth-HA_LEN())/(12+1+4)*4); } /* always round on four-column boundary */
+static unsigned char __NEAR__ __FASTCALL__ sizeWord( void ) { return (tvioWidth-HA_LEN())/(4+1+2); }
+static unsigned char __NEAR__ __FASTCALL__ sizeDWord( void ){ return (tvioWidth-HA_LEN())/(8+1+4); }
 
 hexView hexViewer[] =
 {
@@ -152,7 +152,7 @@ static unsigned __FASTCALL__ drawHex( unsigned keycode,unsigned textshift )
        int freq,j,rwidth,xmin,len;
        lindex = (flen - sindex)/__inc;
        rwidth = lindex > HWidth ? HWidth : (int)lindex;
-       len = HA_LEN;
+       len = HA_LEN();
        memcpy(outstr,GidEncodeAddress(sindex,hexAddressResolv),len);
        for(j = 0,freq = 0,lindex = sindex;j < rwidth;j++,lindex += __inc,freq++)
        {
@@ -351,7 +351,7 @@ static void __FASTCALL__ EditHex( void )
  if(hmode != 1) return;
  if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,NULL); return; }
  bound = width-(hexViewer[hmode].width()-virtWidthCorr);
- ewnd[0] = WindowOpen(HA_LEN+1,2,bound,tvioHeight-1,TWS_CURSORABLE);
+ ewnd[0] = WindowOpen(HA_LEN()+1,2,bound,tvioHeight-1,TWS_CURSORABLE);
  twSetColorAttr(browser_cset.edit.main); twClearWin();
  ewnd[1] = WindowOpen(bound+1,2,width,tvioHeight-1,TWS_CURSORABLE);
  twSetColorAttr(browser_cset.edit.main); twClearWin();

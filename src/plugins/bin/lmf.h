@@ -79,34 +79,34 @@ typedef struct tag_lmf_resource
 
 /*	Record types
  */
-
-#define _LMF_DEFINITION_REC     0
-#define _LMF_COMMENT_REC        1
+enum {
+    _LMF_DEFINITION_REC		=0,
+    _LMF_COMMENT_REC		=1,
 			    /* ^^^ Never seen this record.		(AG)  */
-#define _LMF_DATA_REC           2
-#define _LMF_FIXUP_SEG_REC      3
-#define _LMF_FIXUP_80X87_REC    4
-#define _LMF_EOF_REC            5
-#define _LMF_RESOURCE_REC       6
-#define _LMF_ENDDATA_REC        7
-#define _LMF_FIXUP_LINEAR_REC   8
+    _LMF_DATA_REC		=2,
+    _LMF_FIXUP_SEG_REC		=3,
+    _LMF_FIXUP_80X87_REC	=4,
+    _LMF_EOF_REC		=5,
+    _LMF_RESOURCE_REC		=6,
+    _LMF_ENDDATA_REC		=7,
+    _LMF_FIXUP_LINEAR_REC	=8,
 			    /* ^^^ Never seen this record.		(AG)  */
-#define _LMF_PHRESOURCE			9	/* A widget resource for photon apps */
+    _LMF_PHRESOURCE		=9,	/* A widget resource for photon apps */
 			    /* ^^^ Never seen this record.		(AG)  */
-
-/*	Bit defitions for lh_code_flags
- */
-
-#define _PCF_LONG_LIVED     0x0001
-#define _PCF_32BIT          0x0002
-#define _PCF_PRIVMASK       0x000c   /* Two bits */
-#define _PCF_FLAT           0x0010
-#define _PCF_NOSHARE        0x0020
-
 /*	The top 4 bits of the segment sizes
  */
 
-#define _LMF_CODE           0x2
+    _LMF_CODE			=0x2
+};
+/*	Bit defitions for lh_code_flags
+ */
+enum {
+    _PCF_LONG_LIVED     =0x0001,
+    _PCF_32BIT          =0x0002,
+    _PCF_PRIVMASK       =0x000c,  /* Two bits */
+    _PCF_FLAT           =0x0010,
+    _PCF_NOSHARE        =0x0020
+};
 
 #if __WATCOMC__ > 1000
 #pragma pack(__pop);

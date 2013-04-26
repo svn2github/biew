@@ -23,7 +23,7 @@ namespace beye {
 /** @def BEYE_VERSION
     Ver.SubVer.ExtraVer-ReleaseLevel.Test_FixPak_Level
   */
-#define BEYE_VERSION VERSION
+extern const char* BEYE_VERSION;
 
 extern const char   msgUndef[];
 extern const char   msgFatalError[];
@@ -48,11 +48,7 @@ extern const char * msgHeadDesc[];
 extern const char * msgFindOpt[];
 extern const char * msgFindOpt2[];
 
-#if defined(__WIN32__) && defined(_MSC_VER)
-  #define BEYE_VER_MSG          " Binary EYE v "BEYE_VERSION"-i386.Win32 Build: " __DATE__ " "
-#else
-  #define BEYE_VER_MSG          " Binary EYE v "BEYE_VERSION"-"HOST" Build: "__DATE__" "
-#endif
+extern const char* BEYE_VER_MSG;
 
 extern const char UNDEFINE[];
 extern const char FATAL_ERROR[];

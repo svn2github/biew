@@ -88,8 +88,8 @@ static char detected_syntax_name[FILENAME_MAX+1] = "";
 static unsigned char word_set[UCHAR_MAX+1],wset[UCHAR_MAX+1];
 static char *escape=NULL;
 
-#define MAX_STRLEN 1000 /**< defines maximal length of string */
-#define is_legal_word_char(ch) ((int)word_set[(unsigned char)ch])
+static const unsigned MAX_STRLEN=1000; /**< defines maximal length of string */
+inline bool is_legal_word_char(unsigned char ch) { return (bool)word_set[(unsigned char)ch]; }
 
 static bool __FASTCALL__ testLeadingEscape(__fileoff_t cpos) {
 	char tmps[MAX_STRLEN];
@@ -576,12 +576,12 @@ static REGISTRY_NLS *nls_set[] =
 static REGISTRY_NLS *activeNLS = &RussianNLS;
 static unsigned      defNLSSet = 0;
 
-#define TEXT_TAB 8
-
-#define MOD_PLAIN    0
-#define MOD_BINARY   1
-
-#define MOD_MAXMODE  1
+enum {
+    TEXT_TAB     =8,
+    MOD_PLAIN    =0,
+    MOD_BINARY   =1,
+    MOD_MAXMODE  =1
+};
 
 typedef struct tagTSTR
 {
@@ -1027,7 +1027,7 @@ static unsigned __FASTCALL__ drawText( unsigned keycode , unsigned shift )
 	if(bin_mode != MOD_BINARY)
 	{
 	  unsigned n_tabs,b_ptr,b_lim;
-	  len = std::min(MAX_STRLEN,FoundTextSt > tlines[i].st ? (int)(FoundTextSt-tlines[i].st):0);
+	  len = std::min(MAX_STRLEN,FoundTextSt > tlines[i].st ? (int)(FoundTextSt-tlines[i].st):unsigned(0));
 	  BMReadBufferEx((any_t*)buff,len,tlines[i].st,BM_SEEK_SET);
 	  len = txtConvertBuffer(buff,len,false);
 	  for(b_lim=len,b_ptr = 0;b_ptr < len;b_ptr+=2,b_lim-=2)

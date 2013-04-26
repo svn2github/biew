@@ -2,7 +2,11 @@
 #define POWER_PC_G5 1
 
 namespace beye {
-#define TAB_POS 10
+enum {
+    TAB_POS		=10,
+    PPC_LSHIFT_MASK	=0x0F, /* mask for left shift operations */
+    PPC_EA		=0x80 /* mark effective address computing */
+};
 
 typedef struct s_ppc_arg {
     /*
@@ -16,8 +20,6 @@ typedef struct s_ppc_arg {
     unsigned char type;
     unsigned char off;
     unsigned char len;
-#define PPC_LSHIFT_MASK	0x0F /* mask for left shift operations */
-#define PPC_EA		0x80 /* mark effective address computing */
     unsigned char flg;
 }ppc_arg;
 
@@ -30,17 +32,17 @@ typedef struct s_ppc_opcode {
 }ppc_opcode;
 
 #define PPC_0 { '\0', 0, 0, 0 }
-
-#define PPC_CPU		0x00000000UL
-#define PPC_FPU		0x00000001UL
-#define PPC_ALTIVEC	0x00000002UL
-#define PPC_CLONE_MSK	0x0000000FUL
-#define PPC_BRANCH_INSN	0x00000010UL
-#define PPC_ORDINAL	0x00000000UL
-#define PPC_VEC		0x00000100UL
-#define PPC_SPE		0x00000200UL
-#define PPC_DIALECT	0x0000FF00UL
-
+enum {
+    PPC_CPU		=0x00000000UL,
+    PPC_FPU		=0x00000001UL,
+    PPC_ALTIVEC		=0x00000002UL,
+    PPC_CLONE_MSK	=0x0000000FUL,
+    PPC_BRANCH_INSN	=0x00000010UL,
+    PPC_ORDINAL		=0x00000000UL,
+    PPC_VEC		=0x00000100UL,
+    PPC_SPE		=0x00000200UL,
+    PPC_DIALECT		=0x0000FF00UL
+};
 #if __BYTE_ORDER != __LITTLE_ENDIAN
 /* Native endian versions: */
 #define PPC_GET_BITS(opcode,off,len) (((uint32_t)(opcode)>>off)&((1<<len)-1))

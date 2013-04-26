@@ -2,19 +2,19 @@
 #define ARMV5TE_H 1
 
 namespace beye {
-#define TAB_POS 10
-
-#define	ARM_V1		0x00000001UL
-#define	ARM_V2		0x00000002UL
-#define	ARM_V3		0x00000003UL
-#define ARM_V4		0x00000004UL
-#define ARM_V5		0x00000005UL
-#define ARM_VX		0x000000FFUL
-#define ARM_INTEGER	0x00000000UL
-#define ARM_FPU		0x00000100UL
-#define ARM_DSP		0x00000200UL
-#define ARM_XSCALE	0x00000400UL
-
+    enum {
+	TAB_POS		=10,
+	ARM_V1		=0x00000001UL,
+	ARM_V2		=0x00000002UL,
+	ARM_V3		=0x00000003UL,
+	ARM_V4		=0x00000004UL,
+	ARM_V5		=0x00000005UL,
+	ARM_VX		=0x000000FFUL,
+	ARM_INTEGER	=0x00000000UL,
+	ARM_FPU		=0x00000100UL,
+	ARM_DSP		=0x00000200UL,
+	ARM_XSCALE	=0x00000400UL
+    };
     void __FASTCALL__ arm16Init(void);
     void __FASTCALL__ arm16Term(void);
     void __FASTCALL__ arm16Disassembler(DisasmRet *dret,__filesize_t ulShift,

@@ -43,20 +43,21 @@ struct external_filehdr {
 	uint8_t f_flags[2];       /**< flags                        */
 };
 
-#define F_RELFLG        (0x0001) /**< relocation info stripped from file */
-#define F_EXEC          (0x0002) /**< file is executable (no unresolved external references) */
-#define F_LNNO          (0x0004) /**< line numbers stripped from file */
-#define F_LSYMS         (0x0008) /**< local symbols stripped from file */
-#define F_AR32WR        (0x0100) /**< file has byte ordering of an AR32WR machine (e.g. vax) */
+enum {
+    F_RELFLG        =(0x0001), /**< relocation info stripped from file */
+    F_EXEC          =(0x0002), /**< file is executable (no unresolved external references) */
+    F_LNNO          =(0x0004), /**< line numbers stripped from file */
+    F_LSYMS         =(0x0008), /**< local symbols stripped from file */
+    F_AR32WR        =(0x0100) /**< file has byte ordering of an AR32WR machine (e.g. vax) */
+};
 
-
-#define I386MAGIC       0x14c
-#define I386PTXMAGIC    0x154
-#define I386AIXMAGIC    0x175
-
+enum {
+    I386MAGIC       =0x14c,
+    I386PTXMAGIC    =0x154,
+    I386AIXMAGIC    =0x175,
 /** This is Lynx's all-platform magic number for executables. */
-
-#define LYNXCOFFMAGIC   0415
+    LYNXCOFFMAGIC   =0415
+};
 
 #define I386BADMAG(x) (((x) != I386MAGIC) \
 		       && (x) != I386AIXMAGIC \
@@ -94,21 +95,22 @@ typedef struct gnu_aout {
 	uint32_t dtrel;
 } GNU_AOUT;
 
-#define AOUTSZ (sizeof(AOUTHDR))
-
-#define OMAGIC          0404    /**< object files, eg as output */
-#define ZMAGIC          0413    /**< demand load format, eg normal ld output */
-#define STMAGIC         0401    /**< target shlib */
-#define SHMAGIC         0443    /**< host   shlib */
-
+enum {
+    AOUTSZ	=(sizeof(AOUTHDR)),
+    OMAGIC	=0404,    /**< object files, eg as output */
+    ZMAGIC	=0413,    /**< demand load format, eg normal ld output */
+    STMAGIC	=0401,    /**< target shlib */
+    SHMAGIC	=0443    /**< host   shlib */
+};
 
 /** define some NT default values */
 /*  #define NT_IMAGE_BASE        0x400000 moved to internal.h */
-#define NT_SECTION_ALIGNMENT 0x1000
-#define NT_FILE_ALIGNMENT    0x200
-#define NT_DEF_RESERVE       0x100000
-#define NT_DEF_COMMIT        0x1000
-
+enum {
+    NT_SECTION_ALIGNMENT =0x1000,
+    NT_FILE_ALIGNMENT    =0x200,
+    NT_DEF_RESERVE       =0x100000,
+    NT_DEF_COMMIT        =0x1000
+};
 /********************** SECTION HEADER **********************/
 
 
@@ -125,12 +127,13 @@ struct external_scnhdr {
 	uint8_t   s_flags[4];     /**< flags                        */
 };
 
-#define STYP_TEXT      0x0020
-#define STYP_DATA      0x0040
-#define STYP_BSS       0x0080
-
+enum {
+    STYP_TEXT      =0x0020,
+    STYP_DATA      =0x0040,
+    STYP_BSS       =0x0080,
+    SCNHSZ         =40
+};
 #define SCNHDR  struct external_scnhdr
-#define SCNHSZ  40
 
 /**
  * names of "special" sections
@@ -158,14 +161,13 @@ struct external_lineno {
 
 
 #define LINENO  struct external_lineno
-#define LINESZ  6
-
-
+enum {
+    LINESZ=6,
 /********************** SYMBOLS **********************/
-
-#define E_SYMNMLEN      8       /**< # uint8_tacters in a symbol name       */
-#define E_FILNMLEN      14      /**< # uint8_tacters in a file name         */
-#define E_DIMNUM        4       /**< # array dimensions in auxiliary entry */
+    E_SYMNMLEN      =8,       /**< # uint8_tacters in a symbol name       */
+    E_FILNMLEN      =14,      /**< # uint8_tacters in a file name         */
+    E_DIMNUM        =4        /**< # array dimensions in auxiliary entry */
+};
 
 struct external_syment
 {
@@ -183,10 +185,12 @@ struct external_syment
   uint8_t e_numaux[1];
 };
 
-#define __N_BTMASK        (0xf)
-#define __N_TMASK         (0x30)
-#define __N_BTSHFT        (4)
-#define __N_TSHIFT        (2)
+enum {
+    __N_BTMASK        =(0xf),
+    __N_TMASK         =(0x30),
+    __N_BTSHFT        =(4),
+    __N_TSHIFT        =(2)
+};
 
 union external_auxent {
 	struct {
@@ -249,45 +253,46 @@ union external_auxent {
 
 #define _ETEXT	"etext"
 
-
 /** Relocatable symbols have number of the section in which they are defined,
    or one of the following: */
-
-#define N_UNDEF	((int16_t)0)	/**< undefined symbol */
-#define N_ABS	((int16_t)-1)	/**< value of symbol is unsigned */
-#define N_DEBUG	((int16_t)-2)	/**< debugging symbol -- value is meaningless */
-#define N_TV	((int16_t)-3)	/**< indicates symbol needs preload transfer vector */
-#define P_TV	((int16_t)-4)	/**< indicates symbol needs postload transfer vector*/
-
+enum {
+    N_UNDEF	=((int16_t)0),	/**< undefined symbol */
+    N_ABS	=((int16_t)-1),	/**< value of symbol is unsigned */
+    N_DEBUG	=((int16_t)-2),	/**< debugging symbol -- value is meaningless */
+    N_TV	=((int16_t)-3),	/**< indicates symbol needs preload transfer vector */
+    P_TV	=((int16_t)-4)	/**< indicates symbol needs postload transfer vector*/
+};
 /**
  * Type of a symbol, in low N bits of the word
  */
-#define T_NULL		0
-#define T_VOID		1	/**< function argument (only used by compiler) */
-#define T_CHAR		2	/**< character		*/
-#define T_SHORT		3	/**< short integer	*/
-#define T_INT		4	/**< integer		*/
-#define T_LONG		5	/**< long integer		*/
-#define T_FLOAT		6	/**< floating point	*/
-#define T_DOUBLE	7	/**< double word		*/
-#define T_STRUCT	8	/**< structure 		*/
-#define T_UNION		9	/**< union 		*/
-#define T_ENUM		10	/**< enumeration 		*/
-#define T_MOE		11	/**< member of enumeration*/
-#define T_UCHAR		12	/**< unsigned character	*/
-#define T_USHORT	13	/**< unsigned short	*/
-#define T_UINT		14	/**< unsigned integer	*/
-#define T_ULONG		15	/**< uint32_t	*/
-#define T_LNGDBL	16	/**< long double		*/
-
+enum {
+    T_NULL	=0,
+    T_VOID	=1,	/**< function argument (only used by compiler) */
+    T_CHAR	=2,	/**< character		*/
+    T_SHORT	=3,	/**< short integer	*/
+    T_INT	=4,	/**< integer		*/
+    T_LONG	=5,	/**< long integer		*/
+    T_FLOAT	=6,	/**< floating point	*/
+    T_DOUBLE	=7,	/**< double word		*/
+    T_STRUCT	=8,	/**< structure 		*/
+    T_UNION	=9,	/**< union 		*/
+    T_ENUM	=10,	/**< enumeration 		*/
+    T_MOE	=11,	/**< member of enumeration*/
+    T_UCHAR	=12,	/**< unsigned character	*/
+    T_USHORT	=13,	/**< unsigned short	*/
+    T_UINT	=14,	/**< unsigned integer	*/
+    T_ULONG	=15,	/**< uint32_t	*/
+    T_LNGDBL	=16	/**< long double		*/
+};
 /**
  * derived types, in n_type
 */
-#define DT_NON		(0)	/**< no derived type */
-#define DT_PTR		(1)	/**< pointer */
-#define DT_FCN		(2)	/**< function */
-#define DT_ARY		(3)	/**< array */
-
+enum {
+    DT_NON		=(0),	/**< no derived type */
+    DT_PTR		=(1),	/**< pointer */
+    DT_FCN		=(2),	/**< function */
+    DT_ARY		=(3)	/**< array */
+};
 #define BTYPE(x)	((x) & N_BTMASK)
 #define ISPTR(x)	(((x) & N_TMASK) == (DT_PTR << N_BTSHFT))
 #define ISFCN(x)	(((x) & N_TMASK) == (DT_FCN << N_BTSHFT))
@@ -298,36 +303,37 @@ union external_auxent {
 /********************** STORAGE CLASSES **********************/
 
 /** This used to be defined as -1, but now n_sclass is unsigned.  */
-#define C_EFCN		0xff	/**< physical end of function	*/
-#define C_NULL		0
-#define C_AUTO		1	/**< automatic variable		*/
-#define C_EXT		2	/**< external symbol		*/
-#define C_STAT		3	/**< static			*/
-#define C_REG		4	/**< register variable		*/
-#define C_EXTDEF	5	/**< external definition	*/
-#define C_LABEL		6	/**< label			*/
-#define C_ULABEL	7	/**< undefined label		*/
-#define C_MOS		8	/**< member of structure	*/
-#define C_ARG		9	/**< function argument		*/
-#define C_STRTAG	10	/**< structure tag		*/
-#define C_MOU		11	/**< member of union		*/
-#define C_UNTAG		12	/**< union tag			*/
-#define C_TPDEF		13	/**< type definition		*/
-#define C_USTATIC	14	/**< undefined static		*/
-#define C_ENTAG		15	/**< enumeration tag		*/
-#define C_MOE		16	/**< member of enumeration	*/
-#define C_REGPARM	17	/**< register parameter		*/
-#define C_FIELD		18	/**< bit field			*/
-#define C_AUTOARG	19	/**< auto argument		*/
-#define C_LASTENT	20	/**< dummy entry (end of block)	*/
-#define C_BLOCK		100	/**< ".bb" or ".eb"		*/
-#define C_FCN		101	/**< ".bf" or ".ef"		*/
-#define C_EOS		102	/**< end of structure		*/
-#define C_FILE		103	/**< file name			*/
-#define C_LINE		104	/**< line # reformatted as symbol table entry */
-#define C_ALIAS	 	105	/**< duplicate tag		*/
-#define C_HIDDEN	106	/**< ext symbol in dmert public lib */
-
+enum {
+    C_EFCN	=0xff,	/**< physical end of function	*/
+    C_NULL	=0,
+    C_AUTO	=1,	/**< automatic variable		*/
+    C_EXT	=2,	/**< external symbol		*/
+    C_STAT	=3,	/**< static			*/
+    C_REG	=4,	/**< register variable		*/
+    C_EXTDEF	=5,	/**< external definition	*/
+    C_LABEL	=6,	/**< label			*/
+    C_ULABEL	=7,	/**< undefined label		*/
+    C_MOS	=8,	/**< member of structure	*/
+    C_ARG	=9,	/**< function argument		*/
+    C_STRTAG	=10,	/**< structure tag		*/
+    C_MOU	=11,	/**< member of union		*/
+    C_UNTAG	=12,	/**< union tag			*/
+    C_TPDEF	=13,	/**< type definition		*/
+    C_USTATIC	=14,	/**< undefined static		*/
+    C_ENTAG	=15,	/**< enumeration tag		*/
+    C_MOE	=16,	/**< member of enumeration	*/
+    C_REGPARM	=17,	/**< register parameter		*/
+    C_FIELD	=18,	/**< bit field			*/
+    C_AUTOARG	=19,	/**< auto argument		*/
+    C_LASTENT	=20,	/**< dummy entry (end of block)	*/
+    C_BLOCK	=100,	/**< ".bb" or ".eb"		*/
+    C_FCN	=101,	/**< ".bf" or ".ef"		*/
+    C_EOS	=102,	/**< end of structure		*/
+    C_FILE	=103,	/**< file name			*/
+    C_LINE	=104,	/**< line # reformatted as symbol table entry */
+    C_ALIAS	=105,	/**< duplicate tag		*/
+    C_HIDDEN	=106	/**< ext symbol in dmert public lib */
+};
 /********************** RELOCATION DIRECTIVES **********************/
 
 
@@ -342,15 +348,17 @@ struct external_reloc {
 #define RELOC struct external_reloc
 #define RELSZ sizeof(RELOC)
 
-#define RELOC_REL32	20	/**< 32-bit PC-relative address */
-#define RELOC_ADDR32	6	/**< 32-bit full address */
-
-#define DEFAULT_DATA_SECTION_ALIGNMENT 4
-#define DEFAULT_BSS_SECTION_ALIGNMENT 4
-#define DEFAULT_TEXT_SECTION_ALIGNMENT 4
+enum {
+    RELOC_REL32		=20,	/**< 32-bit PC-relative address */
+    RELOC_ADDR32	=6	/**< 32-bit full address */
+};
+enum {
+    DEFAULT_DATA_SECTION_ALIGNMENT=4,
+    DEFAULT_BSS_SECTION_ALIGNMENT=4,
+    DEFAULT_TEXT_SECTION_ALIGNMENT=4,
 /** For new sections we havn't heard of before */
-#define DEFAULT_SECTION_ALIGNMENT 4
-
+    DEFAULT_SECTION_ALIGNMENT=4
+};
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
 #endif

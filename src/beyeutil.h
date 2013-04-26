@@ -89,10 +89,8 @@ namespace beye {
     void   About( void );
 
     __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos);
-
 #define RAPREF_NONE    0  /**< means reference is not appended */
 #define RAPREF_DONE    std::numeric_limits<int32_t>::max() /**< means reference is appended */
-
 		   /** Appends disassembler reference to string.
 		     * @param str          string buffer for append to
 		     * @param ulShift      physical address of field, that required of binding
@@ -111,10 +109,11 @@ namespace beye {
     void  MainLoop( void );
 
     int  __FASTCALL__ isHOnLine(__filesize_t cp,int width);
-
-#define HLS_NORMAL               0x0000
-#define HLS_USE_DOUBLE_WIDTH     0x0001
-#define HLS_USE_BUFFER_AS_VIDEO  0x0002
+    enum {
+	HLS_NORMAL               =0x0000,
+	HLS_USE_DOUBLE_WIDTH     =0x0001,
+	HLS_USE_BUFFER_AS_VIDEO  =0x0002
+    };
 
 typedef union tag_HLInfo
 {

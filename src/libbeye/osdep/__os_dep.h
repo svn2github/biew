@@ -37,9 +37,9 @@
 #endif
 
 /* KEYBOARD handling */
-
-#define KBD_NONSTOP_ON_MOUSE_PRESS 0x00000001L /**< Defines that \e kbdGetKey must receive mouse events as frequently as it possible. Otherwise each press on mouse button will send only one event. */
-
+enum {
+    KBD_NONSTOP_ON_MOUSE_PRESS=0x00000001L /**< Defines that \e kbdGetKey must receive mouse events as frequently as it possible. Otherwise each press on mouse button will send only one event. */
+};
 		   /** Initializes keyboard handler.
 		     * @return                none
 		     * @note                  You must call this function before calling any other keyboard related functions
@@ -99,11 +99,11 @@ typedef unsigned tAbsCoord; /**< This is the data type used to represent screen-
 #endif
 
 /* MOUSE handling */
-
-#define MS_LEFTPRESS    1  /**< Defines that left button of mouse have been pressed */
-#define MS_RIGHTPRESS   2  /**< Defines that middle button of mouse have been pressed */
-#define MS_MIDDLEPRESS  4  /**< Defines that right button of mouse have been pressed */
-
+enum {
+    MS_LEFTPRESS    =1,  /**< Defines that left button of mouse have been pressed */
+    MS_RIGHTPRESS   =2,  /**< Defines that middle button of mouse have been pressed */
+    MS_MIDDLEPRESS  =4   /**< Defines that right button of mouse have been pressed */
+};
 		   /** Initializes mouse handler.
 		     * @return                none
 		     * @note                  You must call this function before calling any other mouse related functions
@@ -163,15 +163,16 @@ typedef struct tag_tvioBuff
 				      Today project support any height of
 				      screen.
 */
+enum {
 #if __WORDSIZE == 16
-#define __TVIO_MAXSCREENWIDTH   132 /**< Defines maximal width of screen */
+    __TVIO_MAXSCREENWIDTH   =132, /**< Defines maximal width of screen */
 #else
-#define __TVIO_MAXSCREENWIDTH   255 /**< Defines maximal width of screen */
+    __TVIO_MAXSCREENWIDTH   =255, /**< Defines maximal width of screen */
 #endif
 
-#define __TVIO_FLG_DIRECT_CONSOLE_ACCESS  0x00000001L /**< Defines that video subsystem must access to console directly, if it possible */
-#define __TVIO_FLG_USE_7BIT               0x00000002L /**< Defines that video subsystem must strip high bit of video characters */
-
+    __TVIO_FLG_DIRECT_CONSOLE_ACCESS  =0x00000001L, /**< Defines that video subsystem must access to console directly, if it possible */
+    __TVIO_FLG_USE_7BIT               =0x00000002L  /**< Defines that video subsystem must strip high bit of video characters */
+};
 
 		   /** Initializes video handler.
 		     * @return                none
@@ -187,10 +188,11 @@ extern void      __FASTCALL__ __init_vio(const char *user_cp, unsigned long flag
 		    **/
 extern void      __FASTCALL__ __term_vio( void );
 
-#define __TVIO_CUR_OFF   0 /** Defines that cursor in invisible state */
-#define __TVIO_CUR_NORM  1 /**< Defines that cursor in normal state (filles 20% of the character cell) */
-#define __TVIO_CUR_SOLID 2 /**< Defines that cursor in solid state (filles 100% of the character cell) */
-
+enum {
+    __TVIO_CUR_OFF   =0, /** Defines that cursor in invisible state */
+    __TVIO_CUR_NORM  =1, /**< Defines that cursor in normal state (filles 20% of the character cell) */
+    __TVIO_CUR_SOLID =2  /**< Defines that cursor in solid state (filles 100% of the character cell) */
+};
 		   /** Returns type of cursor.
 		     * @return                cursor type. For detail see __TVIO_CUR* flag definitions.
 		     * @see                   __vioSetCursorType
@@ -411,17 +413,19 @@ extern bhandle_t __FASTCALL__ __OsDupHandle(bhandle_t handle);
 		    **/
 extern int       __FASTCALL__ __OsDelete(const char *name);
 
-#define FO_READONLY           0x0000 /**< Defines flag of file opening, that indicates opening in read-only mode */
-#define FO_WRITEONLY          0x0001 /**< Defines flag of file opening, that indicates opening in write-only mode */
-#define FO_READWRITE          0x0002 /**< Defines flag of file opening, that indicates opening in read-write mode */
-
-#define SO_COMPAT             0x0000 /**< Defines flag of file sharing, that indicates opening in compatibility mode */
-#define SO_DENYALL            0x0010 /**< Defines flag of file sharing, that indicates opening in mode, which denies any access to file by other processes */
-#define SO_DENYWRITE          0x0020 /**< Defines flag of file sharing, that indicates opening in mode, which denies write access to file by other processes */
-#define SO_DENYREAD           0x0030 /**< Defines flag of file sharing, that indicates opening in mode, which denies read access to file by other processes */
-#define SO_DENYNONE           0x0040 /**< Defines flag of file sharing, that indicates opening in mode, which allows any access to file by other processes */
-#define SO_PRIVATE            0x0080 /**< Defines flag of file sharing, that indicates opening in mode, which denies any access to file by child processes */
-
+enum {
+    FO_READONLY           =0x0000, /**< Defines flag of file opening, that indicates opening in read-only mode */
+    FO_WRITEONLY          =0x0001, /**< Defines flag of file opening, that indicates opening in write-only mode */
+    FO_READWRITE          =0x0002 /**< Defines flag of file opening, that indicates opening in read-write mode */
+};
+enum {
+    SO_COMPAT             =0x0000, /**< Defines flag of file sharing, that indicates opening in compatibility mode */
+    SO_DENYALL            =0x0010, /**< Defines flag of file sharing, that indicates opening in mode, which denies any access to file by other processes */
+    SO_DENYWRITE          =0x0020, /**< Defines flag of file sharing, that indicates opening in mode, which denies write access to file by other processes */
+    SO_DENYREAD           =0x0030, /**< Defines flag of file sharing, that indicates opening in mode, which denies read access to file by other processes */
+    SO_DENYNONE           =0x0040, /**< Defines flag of file sharing, that indicates opening in mode, which allows any access to file by other processes */
+    SO_PRIVATE            =0x0080  /**< Defines flag of file sharing, that indicates opening in mode, which denies any access to file by child processes */
+};
 		   /** Opens existed file.
 		     * @return                handle of opened stream if successful, -1 otherwise
 		     * @param name            name of existed file to be opened
@@ -442,10 +446,11 @@ extern bool  __FASTCALL__    __IsFileExists(const char *name);
 		    **/
 extern __fileoff_t   __FASTCALL__    __FileLength(bhandle_t handle);
 
-#define SEEKF_START           (int)0  /**< Defines references location of computing file offset from beginning of file */
-#define SEEKF_CUR             (int)1  /**< Defines references location of computing file offset from current position */
-#define SEEKF_END             (int)2  /**< Defines references location of computing file offset from end of file */
-
+enum {
+    SEEKF_START    =(int)0,  /**< Defines references location of computing file offset from beginning of file */
+    SEEKF_CUR      =(int)1,  /**< Defines references location of computing file offset from current position */
+    SEEKF_END      =(int)2   /**< Defines references location of computing file offset from end of file */
+};
 		   /** Positions file pointer.
 		     * @return                offset from beginning of file to new pointer position in bytes
 		     * @param handle          handle of opened stream

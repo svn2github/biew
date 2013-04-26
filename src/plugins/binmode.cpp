@@ -38,11 +38,12 @@ using namespace beye;
 namespace beye {
 static unsigned virtWidthCorr=0;
 
-#define MOD_PLAIN    0
-#define MOD_BINARY   1
-#define MOD_REVERSE  2
-
-#define MOD_MAXMODE  2
+enum {
+    MOD_PLAIN    =0,
+    MOD_BINARY   =1,
+    MOD_REVERSE  =2,
+    MOD_MAXMODE  =2
+};
 
 static const char * mod_names[] =
 {

@@ -29,10 +29,11 @@ using namespace beye;
 #include "plugins/disasm/arm/arm.h"
 
 namespace beye {
-#define ARM_USE_SP	0x00100000UL
-#define ARM_USE_PC	0x00200000UL
-#define ARM_HAS_RN	0x00400000UL
-
+enum {
+    ARM_USE_SP	=0x00100000UL,
+    ARM_USE_PC	=0x00200000UL,
+    ARM_HAS_RN	=0x00400000UL
+};
 typedef struct tag_arm_opcode16
 {
     const char *name;

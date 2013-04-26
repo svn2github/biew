@@ -58,12 +58,13 @@ void __FASTCALL__ fillBoyerMooreCache(int *cache, const char *pattern,
   }
 }
 
-#define __LF_NORMAL    0x0000 /**< Indicates normal search engine */
-#define __LF_NOSEEK    0x0001 /**< Indicates that search must be performed at given offset only */
-#define __LF_NOLEFT    0x0002 /**< Indicates that search engine should ignore left whitespace */
-#define __LF_NORIGHT   0x0004 /**< Indicates that search engine should ignore right whitespace */
-#define __LF_HIDEPRCNT 0x8000 /**< Indicates that search engine must not display percents >*/
-
+enum {
+    __LF_NORMAL    =0x0000, /**< Indicates normal search engine */
+    __LF_NOSEEK    =0x0001, /**< Indicates that search must be performed at given offset only */
+    __LF_NOLEFT    =0x0002, /**< Indicates that search engine should ignore left whitespace */
+    __LF_NORIGHT   =0x0004, /**< Indicates that search engine should ignore right whitespace */
+    __LF_HIDEPRCNT =0x8000  /**< Indicates that search engine must not display percents >*/
+};
 		   /** Performs single search (without templates) within file.
 		     * @return                address of found sequence
 		     *                        if global variable __found is true

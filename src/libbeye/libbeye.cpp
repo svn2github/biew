@@ -206,7 +206,7 @@ int __FASTCALL__ szTrimLeadingSpace(char *str)
   return freq;
 }
 
-#define TEXT_TAB 8
+static const unsigned TEXT_TAB=8;
 
 void __FASTCALL__ szSpace2Tab(char *dest,const char * src)
 {
@@ -679,7 +679,7 @@ void  __FASTCALL__ la_Destroy(linearArray *obj)
   }
 }
 
-#define LST_STEP 16
+static const unsigned LST_STEP=16;
 
 void __HUGE__*  __FASTCALL__ la_AddData(linearArray *obj,const any_t*udata,void (__FASTCALL__ *mem_out)(const char *))
 {

@@ -239,13 +239,13 @@ static void __NEAR__ __FASTCALL__ printHdr(FILE * fout,REGISTRY_BIN *fmt)
 #else
 	       "%sRange : %08lXH-%08lXH\n"
 #endif
-	       "%sWritten by "BEYE_VER_MSG"\n"
+	       "%sWritten by %s\n"
 	       "%sDumped : %s\n"
 	       "%sFormat : %s\n"
 	       "%s\n\n"
 	      ,cptr1,cptr,BMName()
 	      ,cptr,ff_startpos,ff_startpos+ff_len
-	      ,cptr
+	      ,cptr,BEYE_VER_MSG
 	      ,cptr,ctime(&tim)
 	      ,cptr,fmt->name
 	      ,cptr2);
@@ -271,7 +271,7 @@ static unsigned __NEAR__ __FASTCALL__ printHelpComment(char *buff,MBuffer codebu
 }
 
 
-#define GET_FUNC_CLASS(x) x == SC_LOCAL ? "private" : "public"
+inline const char* GET_FUNC_CLASS(unsigned x) { return x == SC_LOCAL ? "private" : "public"; }
 
 static void __NEAR__ __FASTCALL__ make_addr_column(char *buff,__filesize_t offset)
 {

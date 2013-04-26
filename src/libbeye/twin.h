@@ -52,114 +52,115 @@ typedef enum
    u - up  d - down  l - left  r - right
 */
 
-#define TWC_DEF_FILLER        0x20  /**< default filler char */
+enum {
+    TWC_DEF_FILLER        =0x20,  /**< default filler char */
 
 #ifndef HAVE_TERMINAL_OUT
-#define TWC_UP_ARROW          ''   /**< Up arrow character */
-#define TWC_DN_ARROW          ''   /**< Down arrow character */
-#define TWC_LT_ARROW          ''   /**< Left arrow character */
-#define TWC_RT_ARROW          ''   /**< Right arrow character */
-#define TWC_THUMB             '\xFE'/**< Thumb character */
+    TWC_UP_ARROW          ='',   /**< Up arrow character */
+    TWC_DN_ARROW          ='',   /**< Down arrow character */
+    TWC_LT_ARROW          ='',   /**< Left arrow character */
+    TWC_RT_ARROW          ='',   /**< Right arrow character */
+    TWC_THUMB             ='\xFE',/**< Thumb character */
 #else
-#define TWC_UP_ARROW          '^'   /**< Up arrow character */
-#define TWC_DN_ARROW          'v'   /**< Down arrow character */
-#define TWC_LT_ARROW          '<'   /**< Left arrow character */
-#define TWC_RT_ARROW          '>'   /**< Right arrow character */
-#define TWC_THUMB             '#'   /**< Thumb character */
+    TWC_UP_ARROW          ='^',   /**< Up arrow character */
+    TWC_DN_ARROW          ='v',   /**< Down arrow character */
+    TWC_LT_ARROW          ='<',   /**< Left arrow character */
+    TWC_RT_ARROW          ='>',   /**< Right arrow character */
+    TWC_THUMB             ='#',   /**< Thumb character */
 #endif
 
-#define TWC_RADIO_CHAR        '*'   /**< Character for radio buttons */
-#define TWC_CHECK_CHAR        'x'   /**< Character for check buttons */
+    TWC_RADIO_CHAR        ='*',   /**< Character for radio buttons */
+    TWC_CHECK_CHAR        ='x',   /**< Character for check buttons */
 
-#define TWC_LT_SHADE          0xB0  /**< Light shade characters */
-#define TWC_MED_SHADE         0xB1  /**< Medium shade characters */
-#define TWC_DK_SHADE          0xB2  /**< Dark shade characters */
+    TWC_LT_SHADE          =0xB0,  /**< Light shade characters */
+    TWC_MED_SHADE         =0xB1,  /**< Medium shade characters */
+    TWC_DK_SHADE          =0xB2,  /**< Dark shade characters */
 
-#define TWC_SV                0xB3  /**< SINGLE VERTICAL */
-#define TWC_SV_Sl             0xB4  /**< SINGLE VERTICAL and SINGLE left */
-#define TWC_Sl_SV             TWC_SV_Sl
-#define TWC_SV_Dl             0xB5  /**< SINGLE VERTICAL and DOUBLE left */
-#define TWC_Dl_SV             TWC_SV_Dl
-#define TWC_DV_Sl             0xB6  /**< DOUBLE VERTICAL and SINGLE left */
-#define TWC_Sl_DV             TWC_DV_Sl
-#define TWC_Dd_Sl             0xB7  /**< DOUBLE down and SINGLE left */
-#define TWC_Sl_Dd             TWC_Dd_Sl
-#define TWC_Sd_Dl             0xB8  /**< SINGLE down and DOUBLE left */
-#define TWC_Dl_Sd             TWC_Sd_Dl
-#define TWC_DV_Dl             0xB9  /**< DOUBLE VERTICAL and DOUBLE left */
-#define TWC_Dl_DV             TWC_DV_Dl
-#define TWC_DV                0xBA  /**< DOUBLE VERTICAL */
-#define TWC_Dd_Dl             0xBB  /**< DOUBLE down and DOUBLE left */
-#define TWC_Dl_Dd             TWC_Dd_Dl
-#define TWC_Du_Dl             0xBC  /**< DOUBLE up and DOUBLE left */
-#define TWC_Dl_Du             TWC_Du_Dl
-#define TWC_Du_Sl             0xBD  /**< DOUBLE up and SINGLE left */
-#define TWC_Sl_Du             TWC_Du_Sl
-#define TWC_Su_Dl             0xBE  /**< SINGLE up and DOUBLE left */
-#define TWC_Dl_Su             TWC_Su_Dl
-#define TWC_Sd_Sl             0xBF  /**< SINGLE down and SINGLE left */
-#define TWC_Sl_Sd             TWC_Sd_Sl
-#define TWC_Su_Sr             0xC0  /**< SINGLE up and SINGLE right */
-#define TWC_Sr_Su             TWC_Su_Sr
-#define TWC_SH_Su             0xC1  /**< SINGLE HORIZONTAL and SINGLE up */
-#define TWC_Su_SH             TWC_SH_Su
-#define TWC_SH_Sd             0xC2  /**< SINGLE HORIZONTAL and SINGLE down */
-#define TWC_Sd_SH             TWC_SH_Sd
-#define TWC_SV_Sr             0xC3  /**< SINGLE VERTICAL and SINGLE right */
-#define TWC_Sr_SV             TWC_SV_Sr
-#define TWC_SH                0xC4  /**< SINGLE HORIZONTAL */
-#define TWC_SH_SV             0xC5  /**< SINGLE HORIZONTAL and SINGLE VERTICAL */
-#define TWC_SV_SH             TWC_SH_SV
-#define TWC_SV_Dr             0xC6  /**< SINGLE VERTICAL and DOUBLE right */
-#define TWC_Dr_SV             TWC_SV_Dr
-#define TWC_DV_Sr             0xC7  /**< DOUBLE VERTICAL and SINGLE right */
-#define TWC_Sr_DV             TWC_DV_Sr
-#define TWC_Du_Dr             0xC8  /**< DOUBLE up and DOUBLE right */
-#define TWC_Dr_Du             TWC_Du_Dr
-#define TWC_Dd_Dr             0xC9  /**< DOUBLE down and DOUBLE right */
-#define TWC_Dr_Dd             TWC_Dd_Dr
-#define TWC_DH_Du             0xCA  /**< DOUBLE HORIZONTAL and DOUBLE up */
-#define TWC_Du_DH             TWC_DH_Du
-#define TWC_DH_Dd             0xCB  /**< DOUBLE HORIZONTAL and DOUBLE down */
-#define TWC_Dd_DH             TWC_DH_Dd
-#define TWC_DV_Dr             0xCC  /**< DOUBLE VERTICAL and DOUBLE right */
-#define TWC_Dr_DV             TWC_DV_Dr
-#define TWC_DH                0xCD  /**< DOUBLE HORIZONTAL */
-#define TWC_DH_DV             0xCE  /**< DOUBLE HORIZONTAL and DOUBLE VERTICAL */
-#define TWC_DV_DH             TWC_DH_DV
-#define TWC_DH_Su             0xCF  /**< DOUBLE HORIZONTAL and SINGLE up */
-#define TWC_Su_DH             TWC_DH_Su
-#define TWC_SH_Du             0xD0  /**< SINGLE HORIZONTAL and DOUBLE up */
-#define TWC_Du_SH             TWC_SH_Du
-#define TWC_DH_Sd             0xD1  /**< DOUBLE HORIZONTAL and SINGLE down */
-#define TWC_Sd_DH             TWC_DH_Sd
-#define TWC_SH_Dd             0xD2  /**< SINGLE HORIZONTAL and DOUBLE down */
-#define TWC_Dd_SH             TWC_SH_Dd
-#define TWC_Du_Sr             0xD3  /**< DOUBLE up and SINGLE right */
-#define TWC_Sr_Du             TWC_Du_Sr
-#define TWC_Su_Dr             0xD4  /**< SINGLE up and DOUBLE right */
-#define TWC_Dr_Su             TWC_Su_Dr
-#define TWC_Sd_Dr             0xD5  /**< SINGLE down and DOUBLE right */
-#define TWC_Dr_Sd             TWC_Sd_Dr
-#define TWC_Dd_Sr             0xD6  /**< DOUBLE down and SINGLE right */
-#define TWC_Sr_Dd             TWC_Sr_Dd
-#define TWC_DV_SH             0xD7  /**< DOUBLE VERTICAL and SINGLE HORIZONTAL */
-#define TWC_SH_DV             TWC_DV_SH
-#define TWC_SV_DH             0xD8  /**< SINGLE VERTICAL and DOUBLE HORIZONTAL */
-#define TWC_DH_SV             TWC_SV_DH
-#define TWC_Su_Sl             0xD9  /**< SINGLE up and SINGLE left */
-#define TWC_Sl_Su             TWC_Su_Sl
-#define TWC_Sd_Sr             0xDA  /**< SINGLE down and SINGLE right */
-#define TWC_Sr_Sd             TWC_Sd_Sr
+    TWC_SV                =0xB3,  /**< SINGLE VERTICAL */
+    TWC_SV_Sl             =0xB4,  /**< SINGLE VERTICAL and SINGLE left */
+    TWC_Sl_SV             =TWC_SV_Sl,
+    TWC_SV_Dl             =0xB5,  /**< SINGLE VERTICAL and DOUBLE left */
+    TWC_Dl_SV             =TWC_SV_Dl,
+    TWC_DV_Sl             =0xB6,  /**< DOUBLE VERTICAL and SINGLE left */
+    TWC_Sl_DV             =TWC_DV_Sl,
+    TWC_Dd_Sl             =0xB7,  /**< DOUBLE down and SINGLE left */
+    TWC_Sl_Dd             =TWC_Dd_Sl,
+    TWC_Sd_Dl             =0xB8,  /**< SINGLE down and DOUBLE left */
+    TWC_Dl_Sd             =TWC_Sd_Dl,
+    TWC_DV_Dl             =0xB9,  /**< DOUBLE VERTICAL and DOUBLE left */
+    TWC_Dl_DV             =TWC_DV_Dl,
+    TWC_DV                =0xBA,  /**< DOUBLE VERTICAL */
+    TWC_Dd_Dl             =0xBB,  /**< DOUBLE down and DOUBLE left */
+    TWC_Dl_Dd             =TWC_Dd_Dl,
+    TWC_Du_Dl             =0xBC,  /**< DOUBLE up and DOUBLE left */
+    TWC_Dl_Du             =TWC_Du_Dl,
+    TWC_Du_Sl             =0xBD,  /**< DOUBLE up and SINGLE left */
+    TWC_Sl_Du             =TWC_Du_Sl,
+    TWC_Su_Dl             =0xBE,  /**< SINGLE up and DOUBLE left */
+    TWC_Dl_Su             =TWC_Su_Dl,
+    TWC_Sd_Sl             =0xBF,  /**< SINGLE down and SINGLE left */
+    TWC_Sl_Sd             =TWC_Sd_Sl,
+    TWC_Su_Sr             =0xC0,  /**< SINGLE up and SINGLE right */
+    TWC_Sr_Su             =TWC_Su_Sr,
+    TWC_SH_Su             =0xC1,  /**< SINGLE HORIZONTAL and SINGLE up */
+    TWC_Su_SH             =TWC_SH_Su,
+    TWC_SH_Sd             =0xC2,  /**< SINGLE HORIZONTAL and SINGLE down */
+    TWC_Sd_SH             =TWC_SH_Sd,
+    TWC_SV_Sr             =0xC3,  /**< SINGLE VERTICAL and SINGLE right */
+    TWC_Sr_SV             =TWC_SV_Sr,
+    TWC_SH                =0xC4,  /**< SINGLE HORIZONTAL */
+    TWC_SH_SV             =0xC5,  /**< SINGLE HORIZONTAL and SINGLE VERTICAL */
+    TWC_SV_SH             =TWC_SH_SV,
+    TWC_SV_Dr             =0xC6,  /**< SINGLE VERTICAL and DOUBLE right */
+    TWC_Dr_SV             =TWC_SV_Dr,
+    TWC_DV_Sr             =0xC7,  /**< DOUBLE VERTICAL and SINGLE right */
+    TWC_Sr_DV             =TWC_DV_Sr,
+    TWC_Du_Dr             =0xC8,  /**< DOUBLE up and DOUBLE right */
+    TWC_Dr_Du             =TWC_Du_Dr,
+    TWC_Dd_Dr             =0xC9,  /**< DOUBLE down and DOUBLE right */
+    TWC_Dr_Dd             =TWC_Dd_Dr,
+    TWC_DH_Du             =0xCA,  /**< DOUBLE HORIZONTAL and DOUBLE up */
+    TWC_Du_DH             =TWC_DH_Du,
+    TWC_DH_Dd             =0xCB,  /**< DOUBLE HORIZONTAL and DOUBLE down */
+    TWC_Dd_DH             =TWC_DH_Dd,
+    TWC_DV_Dr             =0xCC,  /**< DOUBLE VERTICAL and DOUBLE right */
+    TWC_Dr_DV             =TWC_DV_Dr,
+    TWC_DH                =0xCD,  /**< DOUBLE HORIZONTAL */
+    TWC_DH_DV             =0xCE,  /**< DOUBLE HORIZONTAL and DOUBLE VERTICAL */
+    TWC_DV_DH             =TWC_DH_DV,
+    TWC_DH_Su             =0xCF,  /**< DOUBLE HORIZONTAL and SINGLE up */
+    TWC_Su_DH             =TWC_DH_Su,
+    TWC_SH_Du             =0xD0,  /**< SINGLE HORIZONTAL and DOUBLE up */
+    TWC_Du_SH             =TWC_SH_Du,
+    TWC_DH_Sd             =0xD1,  /**< DOUBLE HORIZONTAL and SINGLE down */
+    TWC_Sd_DH             =TWC_DH_Sd,
+    TWC_SH_Dd             =0xD2,  /**< SINGLE HORIZONTAL and DOUBLE down */
+    TWC_Dd_SH             =TWC_SH_Dd,
+    TWC_Du_Sr             =0xD3,  /**< DOUBLE up and SINGLE right */
+    TWC_Sr_Du             =TWC_Du_Sr,
+    TWC_Su_Dr             =0xD4,  /**< SINGLE up and DOUBLE right */
+    TWC_Dr_Su             =TWC_Su_Dr,
+    TWC_Sd_Dr             =0xD5,  /**< SINGLE down and DOUBLE right */
+    TWC_Dr_Sd             =TWC_Sd_Dr,
+    TWC_Dd_Sr             =0xD6,  /**< DOUBLE down and SINGLE right */
+//    TWC_Sr_Dd             =TWC_Sr_Dd,
+    TWC_DV_SH             =0xD7,  /**< DOUBLE VERTICAL and SINGLE HORIZONTAL */
+    TWC_SH_DV             =TWC_DV_SH,
+    TWC_SV_DH             =0xD8,  /**< SINGLE VERTICAL and DOUBLE HORIZONTAL */
+    TWC_DH_SV             =TWC_SV_DH,
+    TWC_Su_Sl             =0xD9,  /**< SINGLE up and SINGLE left */
+    TWC_Sl_Su             =TWC_Su_Sl,
+    TWC_Sd_Sr             =0xDA,  /**< SINGLE down and SINGLE right */
+    TWC_Sr_Sd             =TWC_Sd_Sr,
 
-#define TWC_FL_BLK            0xDB  /**< Full block character */
-#define TWC_LW_HBLK           0xDC  /**< Lower half block character */
-#define TWC_LF_HBLK           0xDD  /**< Left half block character */
-#define TWC_RT_HBLK           0xDE  /**< Right half block character */
-#define TWC_UP_HBLK           0xDF  /**< Up half block character */
+    TWC_FL_BLK            =0xDB,  /**< Full block character */
+    TWC_LW_HBLK           =0xDC,  /**< Lower half block character */
+    TWC_LF_HBLK           =0xDD,  /**< Left half block character */
+    TWC_RT_HBLK           =0xDE,  /**< Right half block character */
+    TWC_UP_HBLK           =0xDF,  /**< Up half block character */
 
-#define TWC_BLACK_SQUARE      0xFE  /**< Black square */
-
+    TWC_BLACK_SQUARE      =0xFE  /**< Black square */
+};
 /** Describes window-related coordinate type */
 #if __WORDSIZE == 16
 typedef unsigned char tRelCoord;
@@ -176,15 +177,15 @@ typedef enum
 }tTitleMode;
 
 /** Flags of twCreateWin */
-#define TWS_NONE           0x0000 /**< Indicates no flags @see twCreateWin */
-#define TWS_FRAMEABLE      0x0001 /**< Indicates that window has frame border @see twCreateWin */
-#define TWS_VISIBLE        0x0002 /**< Indicates that window creates in visible state @see twCreateWin */
-#define TWS_CURSORABLE     0x0004 /**< Indicates that window has text cursor @see twCreateWin */
-#define TWS_NLSOEM         0x0100 /**< Indicates that window works in OEM mode @see twCreateWin */
-
+enum {
+    TWS_NONE           =0x0000, /**< Indicates no flags @see twCreateWin */
+    TWS_FRAMEABLE      =0x0001, /**< Indicates that window has frame border @see twCreateWin */
+    TWS_VISIBLE        =0x0002, /**< Indicates that window creates in visible state @see twCreateWin */
+    TWS_CURSORABLE     =0x0004, /**< Indicates that window has text cursor @see twCreateWin */
+    TWS_NLSOEM         =0x0100 /**< Indicates that window works in OEM mode @see twCreateWin */
+};
 extern const unsigned char TW_SINGLE_FRAME[];    /**< Flat single-line frame @see twinDrawFrame */
 extern const unsigned char TW_DOUBLE_FRAME[];    /**< Flat double-line frame @see twinDrawFrame */
-#define TW_THIN_FRAME   TW_SINGLE_FRAME /**< Synonym for TW_SINGLE_LINE @see twinDrawFrame */
 extern const unsigned char TW_MEDIUM_FRAME[];    /**< Flat frame of medium width (filles 50% of the character cells) @see twinDrawFrame */
 extern const unsigned char TW_THICK_FRAME[];     /**< Flat frame of full width (filles 100% of the character cells) @see twinDrawFrame */
 extern const unsigned char TW_UP3D_FRAME[];      /**< Emulates 3D-frame that similar unpressed button @see twinDrawFrame */
@@ -198,13 +199,13 @@ typedef struct tagDefColor
 }DefColor;
 
 		      /** Converts logical foreground and background into physical color attributes */
-#define LOGFB_TO_PHYS(fore,back) ((((back) << 4) & 0xF0) | ((fore) & 0x0F))
+inline ColorAttr LOGFB_TO_PHYS(Color fore,Color back) { return (((back) << 4) & 0xF0) | ((fore) & 0x0F); }
 		      /** Gets background color from physical attributes */
-#define BACK_COLOR(attr) Color(((attr) >> 4) & 0x0F)
+inline Color BACK_COLOR(ColorAttr attr) { return Color(((attr) >> 4) & 0x0F); }
 		      /** Gets foreground color from physical attributes */
-#define FORE_COLOR(attr) Color((attr) & 0x0F)
+inline Color FORE_COLOR(ColorAttr attr) { return Color((attr) & 0x0F); }
 		      /** Converts physical color attributes into logical foreground and background */
-#define PHYS_TO_LOGFB(attr,fore,back) { fore = FORE_COLOR(attr); back = BACK_COLOR(attr); }
+inline void PHYS_TO_LOGFB(ColorAttr attr,Color& fore,Color& back) { fore = FORE_COLOR(attr); back = BACK_COLOR(attr); }
 
 /*
    This struct is ordered as it documented in Athlon manual
@@ -244,15 +245,15 @@ typedef struct tagTWindow
 
 /* Below located list of window messages. Prefix WM_ was imported from
    MSWindows SDK, but I hope it so understandable. */
-
-#define WM_NULL          0x0000 /**< Never to send */
-#define WM_CREATE        0x0001 /**< It sent when window is being created, has no parameters */
-#define WM_DESTROY       0x0002 /**< It sent when window is being destroyed, has no parameters*/
-#define WM_SHOW          0x0003 /**< It sent when window is being displayed, has no parameters*/
-#define WM_TOPSHOW       0x0004 /**< It sent when window is being displayed on top of all windows, has no parameters*/
-#define WM_SHOWBENEATH   0x0005 /**< It sent when window is being displayed beneath of other window, has handle of top window as event_data*/
-#define WM_HIDE          0x0006 /**< It sent when window is being hidded, has no parameters */
-
+enum {
+    WM_NULL          =0x0000, /**< Never to send */
+    WM_CREATE        =0x0001, /**< It sent when window is being created, has no parameters */
+    WM_DESTROY       =0x0002, /**< It sent when window is being destroyed, has no parameters*/
+    WM_SHOW          =0x0003, /**< It sent when window is being displayed, has no parameters*/
+    WM_TOPSHOW       =0x0004, /**< It sent when window is being displayed on top of all windows, has no parameters*/
+    WM_SHOWBENEATH   =0x0005, /**< It sent when window is being displayed beneath of other window, has handle of top window as event_data*/
+    WM_HIDE          =0x0006 /**< It sent when window is being hidded, has no parameters */
+};
 		   /** Calls window function with given arguments
 		     * @return                function answer
 		     * @param event           one of WM_* commands
@@ -279,9 +280,9 @@ void __FASTCALL__ twinDrawFrame(tRelCoord x1_, tRelCoord y1_, tRelCoord x2_, tRe
 		     * @see                   twinDrawFrame
 		    **/
 void __FASTCALL__ twinDrawFrameAttr(tRelCoord x1_, tRelCoord y1_, tRelCoord x2_, tRelCoord y2_,const unsigned char *frame,ColorAttr attr);
-
-#define TWIF_FORCEMONO   0x00000001L /**< forces monochrome mode of video output @see twInit */
-
+enum {
+    TWIF_FORCEMONO   =0x00000001L, /**< forces monochrome mode of video output @see twInit */
+};
 		   /** Initialization of twin library and video subsystem
 		     * @param user_cp     indicates character's codepage or IBM866 if NULL
 		     * @param vio_flags   flags for _init_vio
@@ -829,11 +830,11 @@ void              __FASTCALL__ twSetTitleAttr(TWindow *win,const char* title,tTi
 		     *                     twGetFooter twSetTitle twSetFooter
 		    **/
 void              __FASTCALL__ twSetFooterAttr(TWindow *win,const char* footer,tTitleMode footermode,ColorAttr attr);
-
-#define TW_CUR_OFF   0 /**< Defines that cursor in invisible state */
-#define TW_CUR_NORM  1 /**< Defines that cursor in normal state (filles 20% of the character cell) */
-#define TW_CUR_SOLID 2 /**< Defines that cursor in solid state (filles 100% of the character cell) */
-
+enum {
+    TW_CUR_OFF   =0, /**< Defines that cursor in invisible state */
+    TW_CUR_NORM  =1, /**< Defines that cursor in normal state (filles 20% of the character cell) */
+    TW_CUR_SOLID =2 /**< Defines that cursor in solid state (filles 100% of the character cell) */
+};
 		   /** Sets the size and visibility of the cursor
 		     * @param  type       indicates type of cursor
 		     * @return            none

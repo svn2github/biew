@@ -23,13 +23,13 @@
 #endif
 
 namespace beye {
-#define HA_LEN ((BMFileFlags&BMFF_USE64)?18:10)
 
     enum {
 	BMFF_NONE=0x00000000,
 	BMFF_USE64=0x00000001
     };
     extern unsigned BMFileFlags;
+    inline unsigned HA_LEN() { return (BMFileFlags&BMFF_USE64)?18:10; }
 
     enum {
 #if __WORDSIZE == 16

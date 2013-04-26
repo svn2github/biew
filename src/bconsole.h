@@ -49,19 +49,20 @@ namespace beye {
     void         __FASTCALL__ DisplayBox(char **names,unsigned nlist,const char *title);
 
 /** Edit string styles */
-#define __ESS_ENABLEINSERT 0x0001U /**< enable insert mode */
-#define __ESS_HARDEDIT     0x0002U /**< inform, that editing within hard multiline
+enum {
+    __ESS_ENABLEINSERT =0x0001U, /**< enable insert mode */
+    __ESS_HARDEDIT     =0x0002U, /**< inform, that editing within hard multiline
 					editor without insert mode */
-#define __ESS_WANTRETURN   0x0004U /**< return from routine after each pressed key
+    __ESS_WANTRETURN   =0x0004U, /**< return from routine after each pressed key
 					need for contest depended painting. */
-#define __ESS_ASHEX        0x0008U /**< worked, as hexadecimal editor, i.e. insert
+    __ESS_ASHEX        =0x0008U, /**< worked, as hexadecimal editor, i.e. insert
 					space on each third position */
-#define __ESS_NOTUPDATELEN 0x0010U /**< if attr & __ESS_ASHEX procedure not will
+    __ESS_NOTUPDATELEN =0x0010U, /**< if attr & __ESS_ASHEX procedure not will
 					update field *maxlength on each return */
-#define __ESS_FILLER_7BIT  0x0020U /**< Editor for Assemebler mode */
-#define __ESS_NON_C_STR    0x0040U /**< Notify editor about non-C string */
-#define __ESS_NOREDRAW     0x8000U /**< Force no redraw string */
-
+    __ESS_FILLER_7BIT  =0x0020U, /**< Editor for Assemebler mode */
+    __ESS_NON_C_STR    =0x0040U, /**< Notify editor about non-C string */
+    __ESS_NOREDRAW     =0x8000U /**< Force no redraw string */
+};
 /** Arguments for (x,e)editstring:
    s         - pointer to a buffer with editing strings
    legal     - pointer to a legal character set (all if NULL)
@@ -105,25 +106,27 @@ namespace beye {
 #endif
     bool        __FASTCALL__ GetStringDlg(char * buff,const char * title,const char *subtitle,
 				     const char *prompt);
-
-#define GJDLG_FILE_TOP  0x00000000UL
-#define GJDLG_RELATIVE  0x00000001UL
-#define GJDLG_REL_EOF   0x00000002UL
-#define GJDLG_VIRTUAL   0x00000003UL
-#define GJDLG_PERCENTS  0x00000004UL
+enum {
+    GJDLG_FILE_TOP  =0x00000000UL,
+    GJDLG_RELATIVE  =0x00000001UL,
+    GJDLG_REL_EOF   =0x00000002UL,
+    GJDLG_VIRTUAL   =0x00000003UL,
+    GJDLG_PERCENTS  =0x00000004UL
+};
     bool        __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags);
 
-#define FSDLG_BINMODE   0x00000000UL
-#define FSDLG_ASMMODE   0x00000001UL
-#define FSDLG_NOCOMMENT 0x00000000UL
-#define FSDLG_COMMENT   0x00000002UL
-#define FSDLG_STRUCTS   0x00000004UL
-#define FSDLG_NOMODES   0x00000000UL
-#define FSDLG_USEMODES  0x80000000UL
+enum {
+    FSDLG_BINMODE   =0x00000000UL,
+    FSDLG_ASMMODE   =0x00000001UL,
+    FSDLG_NOCOMMENT =0x00000000UL,
+    FSDLG_COMMENT   =0x00000002UL,
+    FSDLG_STRUCTS   =0x00000004UL,
+    FSDLG_NOMODES   =0x00000000UL,
+    FSDLG_USEMODES  =0x80000000UL,
 
-#define FSDLG_BTNSMASK  0x00000003UL /**< 0=8bit 1=16bit 2=32bit 3=64bit */
-#define FSDLG_USEBITNS  0x40000000UL
-
+    FSDLG_BTNSMASK  =0x00000003UL, /**< 0=8bit 1=16bit 2=32bit 3=64bit */
+    FSDLG_USEBITNS  =0x40000000UL
+};
     bool        __FASTCALL__ GetFStoreDlg(const char *title,char *fname,
 				     unsigned long *flags,
 				     __filesize_t *start,
@@ -131,12 +134,13 @@ namespace beye {
 				     const char *prompt);
     bool        __FASTCALL__ GetInsDelBlkDlg(const char *title,__filesize_t *start,
 					__fileoff_t *size);
+enum {
+    LB_SELECTIVE =0x01U,
+    LB_SORTABLE  =0x02U,
+    LB_USEACC    =0x04U,
 
-#define LB_SELECTIVE 0x01U
-#define LB_SORTABLE  0x02U
-#define LB_USEACC    0x04U
-
-#define LB_ORD_DELIMITER TWC_FL_BLK
+    LB_ORD_DELIMITER =TWC_FL_BLK
+};
     int          __FASTCALL__ CommonListBox(char** names,unsigned nlist,const char *title,
 				      int acc,unsigned defsel);
     int          __FASTCALL__ SelBox(char** names,unsigned nlist,const char * title,

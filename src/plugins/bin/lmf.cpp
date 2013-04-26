@@ -37,11 +37,12 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 namespace beye {
-#define MAXREC			200
-#define MINREC			20
-#define MAXSEG			50
-#define MAXSEGFRAMES	50
-
+enum {
+    MAXREC		=200,
+    MINREC		=20,
+    MAXSEG		=50,
+    MAXSEGFRAMES	=50
+};
 typedef struct		/* LMF file frame */
 {
 	lmf_header header;		/* Header of frame */

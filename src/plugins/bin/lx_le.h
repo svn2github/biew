@@ -170,13 +170,14 @@ typedef struct o32_obj
     uint32_t       o32_reserved;   /**< Reserved */
 }LX_OBJECT;
 
-#define PAGE_VALID       0x0000    /**< Valid Physical Page in .EXE */
-#define PAGE_ITERDATA    0x0001    /**< Iterated Data Page */
-#define PAGE_INVALID     0x0002    /**< Invalid Page */
-#define PAGE_ZEROED      0x0003    /**< Zero Filled Page */
-#define PAGE_RANGE       0x0004    /**< Range of pages */
-#define PAGE_ITERDATA2   0x0005    /**< Iterated Data Page Type II */
-
+enum {
+    PAGE_VALID       =0x0000,    /**< Valid Physical Page in .EXE */
+    PAGE_ITERDATA    =0x0001,    /**< Iterated Data Page */
+    PAGE_INVALID     =0x0002,    /**< Invalid Page */
+    PAGE_ZEROED      =0x0003,    /**< Zero Filled Page */
+    PAGE_RANGE       =0x0004,    /**< Range of pages */
+    PAGE_ITERDATA2   =0x0005     /**< Iterated Data Page Type II */
+};
 /* Object Page Table entry */
 typedef struct o32_map
 {
@@ -229,26 +230,26 @@ typedef struct e32_entry
  *  In 32-bit .EXE file run-time relocations are written as varying size
  *  records, so we need many size definitions.
  */
-
-#define RINTSIZE16      8
-#define RINTSIZE32      10
-#define RORDSIZE        8
-#define RNAMSIZE16      8
-#define RNAMSIZE32      10
-#define RADDSIZE16      10
-#define RADDSIZE32      12
-
+enum {
+    RINTSIZE16      =8,
+    RINTSIZE32      =10,
+    RORDSIZE        =8,
+    RNAMSIZE16      =8,
+    RNAMSIZE32      =10,
+    RADDSIZE16      =10,
+    RADDSIZE32      =12
+};
 /*
  *  BUNDLE TYPES
  */
-
-#define EMPTY        0x00               /* Empty bundle */
-#define ENTRY16      0x01               /* 16-bit offset entry point */
-#define GATE16       0x02               /* 286 call gate (16-bit IOPL) */
-#define ENTRY32      0x03               /* 32-bit offset entry point */
-#define ENTRYFWD     0x04               /* Forwarder entry point */
-#define TYPEINFO     0x80               /* Typing information present flag */
-
+enum {
+    EMPTY        =0x00,               /* Empty bundle */
+    ENTRY16      =0x01,               /* 16-bit offset entry point */
+    GATE16       =0x02,               /* 286 call gate (16-bit IOPL) */
+    ENTRY32      =0x03,               /* 32-bit offset entry point */
+    ENTRYFWD     =0x04,               /* Forwarder entry point */
+    TYPEINFO     =0x80                /* Typing information present flag */
+};
 typedef struct lxEntry
 {
   int8_t b32_type;
@@ -287,8 +288,10 @@ extern __filesize_t  __FASTCALL__ CalcEntryPointLE(unsigned long objnum,__filesi
 extern __filesize_t  __FASTCALL__ CalcPageEntryLE(unsigned long idx);
 extern __filesize_t  __FASTCALL__ CalcEntryLE(const LX_ENTRY *);
 
-#define FILE_LX 1
-#define FILE_LE 2
+enum {
+    FILE_LX=1,
+    FILE_LE=2
+};
 extern int LXType;
 
 #ifdef __HAVE_PRAGMA_PACK__

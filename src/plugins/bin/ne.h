@@ -30,10 +30,11 @@ namespace beye {
 #pragma pack(1)
 #endif
 
-#define NE_WIN2X_ON_3X_PROTMODE 2
-#define NE_WIN2X_PROPORTFONT    4
-#define NE_FASTLOADAREA         8
-
+enum {
+    NE_WIN2X_ON_3X_PROTMODE=2,
+    NE_WIN2X_PROPORTFONT   =4,
+    NE_FASTLOADAREA        =8
+};
 /** New EXE header */
 typedef struct tagNEHEADER
 {

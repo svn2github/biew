@@ -26,44 +26,44 @@
 /**
     List of possible errors that are generic
 */
-
-#define __FI_NOERRORS      0 /**< No errors */
-#define __FI_BADFILENAME  -1 /**< Can not open file */
-#define __FI_TOOMANY      -2 /**< Too many opened files */
-#define __FI_NOTMEM       -3 /**< Memory exhausted */
-#define __FI_OPENCOND     -4 /**< Opened 'if' (missing '#endif') */
-#define __FI_IFNOTFOUND   -5 /**< Missing 'if' for 'endif' statement */
-#define __FI_ELSESTAT     -6 /**< Missing 'if' for 'else' statement */
-#define __FI_UNRECOGN     -7 /**< Unknown '#' directive */
-#define __FI_BADCOND      -8 /**< Syntax error in 'if' statement */
-#define __FI_OPENSECT     -9 /**< Expected opened section or subsection or invalid string */
-#define __FI_BADCHAR      -10 /**< Bad character on line (possible lost comment) */
-#define __FI_BADVAR       -11 /**< Bad variable in 'set' or 'delete' statement */
-#define __FI_BADVAL       -12 /**< Bad value of variable in 'set' statement */
-#define __FI_NOVAR        -13 /**< Unrecognized name of variable in 'delete' statement */
-#define __FI_NODEFVAR     -14 /**< Detected undefined variable (case sensitivity?) */
-#define __FI_ELIFSTAT     -15 /**< Missing 'if' for 'elif' statement */
-#define __FI_OPENVAR      -16 /**< Opened variable on line (use even number of '%' characters) */
-#define __FI_NOTEQU       -17 /**< Lost or mismatch character '=' in assigned expression */
-#define __FI_USER         -18 /**< User defined message */
-#define __FI_FIUSER       -19 /**< User error */
-
+enum {
+    __FI_NOERRORS     = 0, /**< No errors */
+    __FI_BADFILENAME  =-1, /**< Can not open file */
+    __FI_TOOMANY      =-2, /**< Too many opened files */
+    __FI_NOTMEM       =-3, /**< Memory exhausted */
+    __FI_OPENCOND     =-4, /**< Opened 'if' (missing '#endif') */
+    __FI_IFNOTFOUND   =-5, /**< Missing 'if' for 'endif' statement */
+    __FI_ELSESTAT     =-6, /**< Missing 'if' for 'else' statement */
+    __FI_UNRECOGN     =-7, /**< Unknown '#' directive */
+    __FI_BADCOND      =-8, /**< Syntax error in 'if' statement */
+    __FI_OPENSECT     =-9, /**< Expected opened section or subsection or invalid string */
+    __FI_BADCHAR      =-10, /**< Bad character on line (possible lost comment) */
+    __FI_BADVAR       =-11, /**< Bad variable in 'set' or 'delete' statement */
+    __FI_BADVAL       =-12, /**< Bad value of variable in 'set' statement */
+    __FI_NOVAR        =-13, /**< Unrecognized name of variable in 'delete' statement */
+    __FI_NODEFVAR     =-14, /**< Detected undefined variable (case sensitivity?) */
+    __FI_ELIFSTAT     =-15, /**< Missing 'if' for 'elif' statement */
+    __FI_OPENVAR      =-16, /**< Opened variable on line (use even number of '%' characters) */
+    __FI_NOTEQU       =-17, /**< Lost or mismatch character '=' in assigned expression */
+    __FI_USER         =-18, /**< User defined message */
+    __FI_FIUSER       =-19  /**< User error */
+};
 /**
     possible answers to the errors
 */
-
-#define __FI_IGNORE   0 /**< Ignore error and continue */
-#define __FI_EXITPROC 1 /**< Terminate the program execution */
-
+enum {
+    __FI_IGNORE   =0, /**< Ignore error and continue */
+    __FI_EXITPROC =1 /**< Terminate the program execution */
+};
 /**
     return constants for FiSearch
 */
-
-#define __FI_NOTFOUND   0 /**< Required string is not found */
-#define __FI_SECTION    1 /**< Required string is section */
-#define __FI_SUBSECTION 2 /**< required string is subsection */
-#define __FI_ITEM       3 /**< required string is item */
-
+enum {
+    __FI_NOTFOUND   =0, /**< Required string is not found */
+    __FI_SECTION    =1, /**< Required string is section */
+    __FI_SUBSECTION =2, /**< required string is subsection */
+    __FI_ITEM       =3  /**< required string is item */
+};
 typedef BFile* FiHandler; /**< This is the data type used to represent ini stream objects */
 
 /** Contains information about current record in ini file */
@@ -100,8 +100,9 @@ extern  bool  (__FASTCALL__ *FiStringProcessor)(char * curr_str); /**< Default s
 extern  bool  (__FASTCALL__ *FiCommandProcessor)(const char * cmd); /**< Default command processor */
 extern  bool  (__FASTCALL__ *FiGetCondition)(const char * cond);    /**< Default processor of conditions */
 
-#define FI_MAXSTRLEN 255 /**< Specifies maximal length of string, that can be readed from ini file */
-
+enum {
+    FI_MAXSTRLEN=255 /**< Specifies maximal length of string, that can be readed from ini file */
+};
 		   /** Decodes error of ini library and return it string equivalent.
 		     * @return                String, that described error
 		     * @param nError          Specifies error number
@@ -227,10 +228,10 @@ bool           __FASTCALL__ FiGetConditionStd( const char *condstr);
 /**
     High level routines (similar to MS WIN SDK)
 */
-
-#define HINI_FULLCACHED 0x0001
-#define HINI_UPDATED    0x0002
-
+enum {
+    HINI_FULLCACHED=0x0001,
+    HINI_UPDATED   =0x0002
+};
 typedef struct tag_iniProfile
 {
    FiHandler     handler;

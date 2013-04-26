@@ -286,7 +286,7 @@ void  __FASTCALL__ ma_Destroy(memArray *obj)
   delete obj;
 }
 
-#define LST_STEP 16
+static const unsigned LST_STEP=16;
 
 bool  __FASTCALL__ ma_AddData(memArray *obj,const any_t*udata,unsigned len,bool interact)
 {

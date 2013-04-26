@@ -71,36 +71,37 @@ typedef struct {
     RECT		rcFrame;
 } AVIStreamHeader;
 
-#define formtypeAVI             mmioFOURCC('A', 'V', 'I', ' ')
-#define listtypeAVIHEADER       mmioFOURCC('h', 'd', 'r', 'l')
-#define ckidAVIMAINHDR          mmioFOURCC('a', 'v', 'i', 'h')
-#define listtypeSTREAMHEADER    mmioFOURCC('s', 't', 'r', 'l')
-#define ckidSTREAMHEADER        mmioFOURCC('s', 't', 'r', 'h')
-#define ckidSTREAMFORMAT        mmioFOURCC('s', 't', 'r', 'f')
-#define ckidSTREAMHANDLERDATA   mmioFOURCC('s', 't', 'r', 'd')
-#define ckidSTREAMNAME		mmioFOURCC('s', 't', 'r', 'n')
+static const uint32_t formtypeAVI             =mmioFOURCC('A', 'V', 'I', ' ');
+static const uint32_t listtypeAVIHEADER       =mmioFOURCC('h', 'd', 'r', 'l');
+static const uint32_t ckidAVIMAINHDR          =mmioFOURCC('a', 'v', 'i', 'h');
+static const uint32_t listtypeSTREAMHEADER    =mmioFOURCC('s', 't', 'r', 'l');
+static const uint32_t ckidSTREAMHEADER        =mmioFOURCC('s', 't', 'r', 'h');
+static const uint32_t ckidSTREAMFORMAT        =mmioFOURCC('s', 't', 'r', 'f');
+static const uint32_t ckidSTREAMHANDLERDATA   =mmioFOURCC('s', 't', 'r', 'd');
+static const uint32_t ckidSTREAMNAME	      =mmioFOURCC('s', 't', 'r', 'n');
 
-#define listtypeAVIMOVIE        mmioFOURCC('m', 'o', 'v', 'i')
-#define listtypeAVIRECORD       mmioFOURCC('r', 'e', 'c', ' ')
+static const uint32_t listtypeAVIMOVIE        =mmioFOURCC('m', 'o', 'v', 'i');
+static const uint32_t listtypeAVIRECORD       =mmioFOURCC('r', 'e', 'c', ' ');
 
-#define ckidAVINEWINDEX         mmioFOURCC('i', 'd', 'x', '1')
+static const uint32_t ckidAVINEWINDEX         =mmioFOURCC('i', 'd', 'x', '1');
 
 /*
 ** Stream types for the <fccType> field of the stream header.
 */
-#define streamtypeVIDEO         mmioFOURCC('v', 'i', 'd', 's')
-#define streamtypeAUDIO         mmioFOURCC('a', 'u', 'd', 's')
-#define streamtypeMIDI		mmioFOURCC('m', 'i', 'd', 's')
-#define streamtypeTEXT          mmioFOURCC('t', 'x', 't', 's')
+static const uint32_t streamtypeVIDEO         =mmioFOURCC('v', 'i', 'd', 's');
+static const uint32_t streamtypeAUDIO         =mmioFOURCC('a', 'u', 'd', 's');
+static const uint32_t streamtypeMIDI	      =mmioFOURCC('m', 'i', 'd', 's');
+static const uint32_t streamtypeTEXT          =mmioFOURCC('t', 'x', 't', 's');
 
+#if 0
 /* Basic chunk types */
-#define cktypeDIBbits           aviTWOCC('d', 'b')
-#define cktypeDIBcompressed     aviTWOCC('d', 'c')
-#define cktypePALchange         aviTWOCC('p', 'c')
-#define cktypeWAVEbytes         aviTWOCC('w', 'b')
-
+static const uint32_t cktypeDIBbits           =aviTWOCC('d', 'b');
+static const uint32_t cktypeDIBcompressed     =aviTWOCC('d', 'c');
+static const uint32_t cktypePALchange         =aviTWOCC('p', 'c');
+static const uint32_t cktypeWAVEbytes         =aviTWOCC('w', 'b');
+#endif
 /* Chunk id to use for extra chunks for padding. */
-#define ckidAVIPADDING          mmioFOURCC('J', 'U', 'N', 'K')
+static const uint32_t ckidAVIPADDING          =mmioFOURCC('J', 'U', 'N', 'K');
 
 static bool  __FASTCALL__ avi_check_fmt( void )
 {

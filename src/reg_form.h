@@ -30,12 +30,13 @@ namespace beye {
 typedef __filesize_t  (__FASTCALL__ *BinFunc)( void );
 typedef bool         (__FASTCALL__ *ModFunc)( void );
 
-#define APREF_NORMAL      0x0000 /**< Append references in short form if it really present in binary */
-#define APREF_USE_TYPE    0x0001 /**< Append references in detail form if it really present in binary */
-#define APREF_TRY_LABEL   0x0002 /**< Append references in short form even if it not present in binary (smart method) */
-#define APREF_SAVE_VIRT   0x0004 /**< Notifies plugin about preserving of virtual address, if binding is local */
-#define APREF_TRY_PIC     0x0008 /**< Append references in short form assuming that shift is offset in .GOT table where references are binded */
-
+enum {
+    APREF_NORMAL      =0x0000, /**< Append references in short form if it really present in binary */
+    APREF_USE_TYPE    =0x0001, /**< Append references in detail form if it really present in binary */
+    APREF_TRY_LABEL   =0x0002, /**< Append references in short form even if it not present in binary (smart method) */
+    APREF_SAVE_VIRT   =0x0004, /**< Notifies plugin about preserving of virtual address, if binding is local */
+    APREF_TRY_PIC     =0x0008  /**< Append references in short form assuming that shift is offset in .GOT table where references are binded */
+};
 /**
    Appends disassembler reference to string.
    * @param str          string buffer for append to
@@ -52,29 +53,30 @@ typedef unsigned long (__FASTCALL__ *AppRefs)(char *str,__filesize_t shift,int f
 \***************************************************************/
 
 /** List of DisAssembler Bitness */
-
-#define DAB_USE16   0
-#define DAB_USE32   1
-#define DAB_USE64   2
-#define DAB_USE128  3
-#define DAB_USE256  4
-#define DAB_AUTO    0xFFFFU /**< never must return! Only for selection */
-
+enum {
+    DAB_USE16   =0,
+    DAB_USE32   =1,
+    DAB_USE64   =2,
+    DAB_USE128  =3,
+    DAB_USE256  =4,
+    DAB_AUTO    =0xFFFFU /**< never must return! Only for selection */
+};
 /** List of DisAssembler Endian */
-#define DAE_LITTLE	0
-#define DAE_BIG		1
-
+enum {
+    DAE_LITTLE	=0,
+    DAE_BIG	=1
+};
 /** Public symbols classes */
-
-#define SC_LOCAL    0 /**< means: present as entry but not exported */
-#define SC_GLOBAL   1 /**< means: exported entry point */
-
+enum {
+    SC_LOCAL    =0, /**< means: present as entry but not exported */
+    SC_GLOBAL   =1  /**< means: exported entry point */
+};
 /** object classes */
-
-#define OC_CODE      0 /**< for code objects */
-#define OC_DATA      1 /**< for any data objects */
-#define OC_NOOBJECT -1 /**< for non objects (means: relocs, resources, tables ...) */
-
+enum {
+    OC_CODE      =0, /**< for code objects */
+    OC_DATA      =1, /**< for any data objects */
+    OC_NOOBJECT =-1 /**< for non objects (means: relocs, resources, tables ...) */
+};
 /*
    Binary plugins state constants:
      First called 'check_format' - plugin in UNPLUGGED state.
@@ -88,10 +90,10 @@ typedef unsigned long (__FASTCALL__ *AppRefs)(char *str,__filesize_t shift,int f
      buffers. (This need for prevent of infinity loop of memory
      allocation/freing, that possible in some case).
 */
-
-#define PS_INACTIVE    0
-#define PS_ACTIVE      1
-
+enum {
+    PS_INACTIVE    =0,
+    PS_ACTIVE      =1
+};
 struct REGISTRY_BIN
 {
   const char * name;                            /**< name of binary format */
@@ -195,14 +197,15 @@ struct REGISTRY_BIN
 /***************************************************************\
 * This form registry modes of translation file                  *
 \***************************************************************/
-
-#define __MF_NONE          0x0000 /**< Indicates that no flags were defined */
-#define __MF_TEXT          0x0001 /**< Indicates that plugin is text browser */
-#define __MF_DISASM        0x0002 /**< Indicates that plugin is disassembler */
-#define __MF_USECODEGUIDE  0x0004 /**< Indicates that plugin uses code guider */
-
-#define __MAX_SYMBOL_SIZE  4 /**< Insicates maximal size of multibyte symbol. (For optimization purposes only).*/
-
+enum {
+    __MF_NONE          =0x0000, /**< Indicates that no flags were defined */
+    __MF_TEXT          =0x0001, /**< Indicates that plugin is text browser */
+    __MF_DISASM        =0x0002, /**< Indicates that plugin is disassembler */
+    __MF_USECODEGUIDE  =0x0004 /**< Indicates that plugin uses code guider */
+};
+enum {
+    __MAX_SYMBOL_SIZE=4 /**< Insicates maximal size of multibyte symbol. (For optimization purposes only).*/
+};
 typedef struct tag_REGISTRY_MODE
 {
   const char*  name;

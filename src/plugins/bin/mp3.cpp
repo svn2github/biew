@@ -62,7 +62,7 @@ int mp_mp3_get_lsf(unsigned char* hbuf){
 /*
  * return frame size or -1 (bad frame)
  */
-#define MAXFRAMESIZE 1280
+static const unsigned MAXFRAMESIZE=1280;
 int mp_decode_mp3_header(unsigned char* hbuf,int *fmt,int *brate,int *samplerate,int *channels){
     int nch,ssize,crc,lsf,mpeg25,framesize,padding,bitrate_index,sampling_frequency,mp3_fmt;
     unsigned long newhead =

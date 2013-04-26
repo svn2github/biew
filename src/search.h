@@ -26,19 +26,22 @@ namespace beye {
 					   current offset otherwise
 		    **/
     __filesize_t __FASTCALL__ Search( bool is_continue );
-
-#define SD_SIMPLE       0x0000   /**< indicates simple search dialog to be displayed */
-#define SD_ALLFEATURES  0x0001   /**< indicates fully featured search dialog to be displayed */
-
-#define SF_NONE         0x0000   /**< indicates no flags */
-#define SF_CASESENS     0x0001   /**< indicates case sensitivity search engine */
-#define SF_WORDONLY     0x0002   /**< indicates word only to be found */
-#define SF_REVERSE      0x0004   /**< indicates reverse search */
-#define SF_WILDCARDS    0x0008   /**< indicates wildcard can be used */
-#define SF_PLUGINS      0x0010   /**< indicates using plugin's output */
-#define SF_ASHEX        0x0020   /**< indicates hex mode of input sequence */
-
-#define MAX_SEARCH_SIZE 76
+enum {
+    SD_SIMPLE       =0x0000,   /**< indicates simple search dialog to be displayed */
+    SD_ALLFEATURES  =0x0001    /**< indicates fully featured search dialog to be displayed */
+};
+enum {
+    SF_NONE         =0x0000,   /**< indicates no flags */
+    SF_CASESENS     =0x0001,   /**< indicates case sensitivity search engine */
+    SF_WORDONLY     =0x0002,   /**< indicates word only to be found */
+    SF_REVERSE      =0x0004,   /**< indicates reverse search */
+    SF_WILDCARDS    =0x0008,   /**< indicates wildcard can be used */
+    SF_PLUGINS      =0x0010,   /**< indicates using plugin's output */
+    SF_ASHEX        =0x0020    /**< indicates hex mode of input sequence */
+};
+enum {
+    MAX_SEARCH_SIZE=76
+};
     bool        __FASTCALL__ SearchDialog(int dlg_flags,
 					      char *searchbuff,
 					      unsigned char *searchlen,

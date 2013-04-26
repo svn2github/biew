@@ -33,24 +33,26 @@ using namespace beye;
 #include "libbeye/file_ini.h"
 
 namespace beye {
-#define TAB_POS 10
+static const unsigned TAB_POS=10;
 
+enum {
+    JVM_TAIL		=0x000000FFUL, /* n-bytes of insn's tail */
+    JVM_OBJREF1		=0x00000100UL, /* insns refers object as 1-byte idx */
+    JVM_OBJREF2		=0x00000200UL, /* insns refers object as 2-byte idx */
+    JVM_OBJREF4		=0x00000300UL, /* insns refers object as 4-byte idx */
+    JVM_OBJREFMASK	=0x00000300UL,
+    JVM_CONST1		=0x00000400UL, /* insns hass const as idx,1-byte const */
+    JVM_CONST2		=0x00000800UL, /* insns hass const as idx,2-byte const */
+    JVM_CONST4		=0x00000C00UL, /* insns hass const as idx,4-byte const */
+    JVM_CONSTMASK	=0x00000C00UL,
+    JVM_ATYPE		=0x00001000UL,
+    JVM_CODEREF		=0x20000000UL, /* insns refers relative jump */
+    JVM_LOOKUPSWITCH	=0x01000000UL, /* special case : lookupswitch insn */
+    JVM_TABLESWITCH	=0x02000000UL  /* special case : tableswitch insn */
+};
 typedef struct java_codes_s
 {
     const char * name;
-#define JVM_TAIL	0x000000FFUL /* n-bytes of insn's tail */
-#define JVM_OBJREF1	0x00000100UL /* insns refers object as 1-byte idx */
-#define JVM_OBJREF2	0x00000200UL /* insns refers object as 2-byte idx */
-#define JVM_OBJREF4	0x00000300UL /* insns refers object as 4-byte idx */
-#define JVM_OBJREFMASK	0x00000300UL
-#define JVM_CONST1	0x00000400UL /* insns hass const as idx,1-byte const */
-#define JVM_CONST2	0x00000800UL /* insns hass const as idx,2-byte const */
-#define JVM_CONST4	0x00000C00UL /* insns hass const as idx,4-byte const */
-#define JVM_CONSTMASK	0x00000C00UL
-#define JVM_ATYPE	0x00001000UL
-#define JVM_CODEREF	0x20000000UL /* insns refers relative jump */
-#define JVM_LOOKUPSWITCH 0x01000000UL /* special case : lookupswitch insn */
-#define JVM_TABLESWITCH	0x02000000UL /* special case : tableswitch insn */
     unsigned long flags;
 }java_codes_t;
 

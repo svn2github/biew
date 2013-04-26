@@ -24,9 +24,10 @@
 namespace beye {
 #define BEYE_HELP_VER "BEYE_HLP v6.1.0"
 
-#define HLP_SLONG_LEN 9
-#define HLP_VER_LEN 16
-
+enum {
+    HLP_SLONG_LEN=9,
+    HLP_VER_LEN=16
+};
 /** Maximal size of help topic - is 0xFFFF bytes */
 
 typedef struct tag_beye_help_item
@@ -46,19 +47,20 @@ typedef struct tag_beye_help
 }BEYE_HELP;
 
 /** Color definition */
-#define HLPC_BOLD_ON               0x01
-#define HLPC_ITALIC_ON             0x02
-#define HLPC_UNDERLINE_ON          0x03
-#define HLPC_STRIKETHROUGH_ON      0x04
-#define HLPC_REVERSE_ON            0x05
-#define HLPC_LINK_ON               0x06
-#define HLPC_BOLD_OFF              0x11
-#define HLPC_ITALIC_OFF            0x12
-#define HLPC_UNDERLINE_OFF         0x13
-#define HLPC_STRIKETHROUGH_OFF     0x14
-#define HLPC_REVERSE_OFF           0x15
-#define HLPC_LINK_OFF              0x16
-
+enum {
+    HLPC_BOLD_ON               =0x01,
+    HLPC_ITALIC_ON             =0x02,
+    HLPC_UNDERLINE_ON          =0x03,
+    HLPC_STRIKETHROUGH_ON      =0x04,
+    HLPC_REVERSE_ON            =0x05,
+    HLPC_LINK_ON               =0x06,
+    HLPC_BOLD_OFF              =0x11,
+    HLPC_ITALIC_OFF            =0x12,
+    HLPC_UNDERLINE_OFF         =0x13,
+    HLPC_STRIKETHROUGH_OFF     =0x14,
+    HLPC_REVERSE_OFF           =0x15,
+    HLPC_LINK_OFF              =0x16
+};
     bool           __FASTCALL__ hlpOpen( bool interactive );
     void            __FASTCALL__ hlpClose( void );
 		       /** Return uncompressed size of help item

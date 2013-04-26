@@ -280,7 +280,7 @@ static unsigned __FASTCALL__ drawAsm( unsigned keycode, unsigned textshift )
        if(i == 0) CurrStrLen = dret.codelen;
        CurrStrLenBuff[i] = dret.codelen;
        twSetColorAttr(browser_cset.main);
-       len_64=HA_LEN;
+       len_64=HA_LEN();
        memcpy(outstr,GidEncodeAddress(cfpos,hexAddressResolv),len_64);
        len = 0;
        if(disPanelMode < PANMOD_FULL)
@@ -502,7 +502,7 @@ static void __FASTCALL__ DisasmScreen(TWindow* ewnd,__filesize_t cp,__filesize_t
  {
   if(start + cp < flen)
   {
-   len_64=HA_LEN;
+   len_64=HA_LEN();
    memcpy(outstr,GidEncodeAddress(cp + start,hexAddressResolv),len_64);
    twUseWin(MainWnd);
    twSetColorAttr(browser_cset.main);
@@ -666,7 +666,7 @@ static void __FASTCALL__ disEdit( void )
 {
  unsigned len_64;
  TWindow * ewnd;
- len_64=HA_LEN;
+ len_64=HA_LEN();
  if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,NULL); return; }
  ewnd = WindowOpen(len_64+1,2,disMaxCodeLen*2+len_64+1,tvioHeight-1,TWS_CURSORABLE);
  twSetColorAttr(browser_cset.edit.main); twClearWin();

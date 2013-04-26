@@ -70,10 +70,12 @@ bool __FASTCALL__ Get2DigitDlg(const char *title,const char * text,unsigned char
  return ret;
 }
 
-#define HEX     0x00
-#define UNSIGN  0x00
-#define SIGN    0x01
-#define DECIMAL 0x02
+enum {
+    HEX     =0x00,
+    UNSIGN  =0x00,
+    SIGN    =0x01,
+    DECIMAL =0x02
+};
 
 bool __FASTCALL__ Get8DigitDlg(const char *title,const char *text,char attr,unsigned long *xx)
 {
@@ -220,7 +222,7 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
  tRelCoord X1,Y1,X2,Y2;
  int key;
  TWindow * hwnd,*ewnd,*_using;
- unsigned len = HA_LEN-1,stx = 0;
+ unsigned len = HA_LEN()-1,stx = 0;
  bool ret,update;
  static char str[21] = "";
  char * legals;

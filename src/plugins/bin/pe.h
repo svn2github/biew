@@ -102,22 +102,24 @@ typedef struct tagPERVA
   uint32_t size;
 } PERVA;
 
-#define PE_EXPORT           0
-#define PE_IMPORT           1
-#define PE_RESOURCE         2
-#define PE_EXCEPT           3
-#define PE_SECURITY         4
-#define PE_FIXUP            5
-#define PE_DEBUG            6
-#define PE_IMAGE_DESC       7
-#define PE_MACHINE          8
-#define PE_TLS              9
-#define PE_LOAD_CONFIG      10
-#define PE_BOUND_IMPORT     11
-#define PE_IAT              12
-#define PE_DELAY_IMPORT     13
-#define PE_COM              14
-#define PE_RESERVED         15
+enum {
+    PE_EXPORT           =0,
+    PE_IMPORT           =1,
+    PE_RESOURCE         =2,
+    PE_EXCEPT           =3,
+    PE_SECURITY         =4,
+    PE_FIXUP            =5,
+    PE_DEBUG            =6,
+    PE_IMAGE_DESC       =7,
+    PE_MACHINE          =8,
+    PE_TLS              =9,
+    PE_LOAD_CONFIG      =10,
+    PE_BOUND_IMPORT     =11,
+    PE_IAT              =12,
+    PE_DELAY_IMPORT     =13,
+    PE_COM              =14,
+    PE_RESERVED         =15
+};
 
 typedef struct tagPE_ADDR
 {

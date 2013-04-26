@@ -54,32 +54,29 @@ struct external_exec
   uint8_t e_drsize[BYTES_IN_WORD]; /**< length of data relocation info 	*/
 };
 
-#define	EXEC_BYTES_SIZE	(4 + BYTES_IN_WORD * 7)
-
+enum {
+    EXEC_BYTES_SIZE	=(4 + BYTES_IN_WORD * 7),
 /** Magic numbers for a.out files */
-
-#define OMAGIC64 0x1001		/**< Code indicating object file  */
-#define ZMAGIC64 0x1002		/**< Code indicating demand-paged executable.  */
-#define NMAGIC64 0x1003		/**< Code indicating pure executable.  */
-
+    OMAGIC64		=0x1001,		/**< Code indicating object file  */
+    ZMAGIC64		=0x1002,		/**< Code indicating demand-paged executable.  */
+    NMAGIC64		=0x1003			/**< Code indicating pure executable.  */
+};
 /* There is no 64-bit QMAGIC as far as I know.  */
 
 #define N_BADMAG64(x)	  (N_MAGIC(x) != OMAGIC64	\
 			&& N_MAGIC(x) != NMAGIC64	\
 			&& N_MAGIC(x) != ZMAGIC64)
 
-#define OMAGIC 0x0107		/**< ...object file or impure executable.  */
-#define NMAGIC 0x0108		/**< Code indicating pure executable.  */
-#define ZMAGIC 0x010B		/**< Code indicating demand-paged executable.  */
-#define BMAGIC 0x010D		/**< Used by a b.out object.  */
-
-#define CMAGIC 0x0111		/**< Code indicating core file.  */
-
+enum {
+    OMAGIC=0x0107,		/**< ...object file or impure executable.  */
+    NMAGIC=0x0108,		/**< Code indicating pure executable.  */
+    ZMAGIC=0x010B,		/**< Code indicating demand-paged executable.  */
+    BMAGIC=0x010D,		/**< Used by a b.out object.  */
+    CMAGIC=0x0111,		/**< Code indicating core file.  */
+    QMAGIC=0x00CC
+};
 /** This indicates a demand-paged executable with the header in the text.
     It is used by 386BSD (and variants) and Linux, at least.  */
-#ifndef QMAGIC
-#define QMAGIC 0x00CC
-#endif
 # ifndef N_BADMAG
 #  define N_BADMAG(x)	  (N_MAGIC(x) != OMAGIC	\
 			&& N_MAGIC(x) != NMAGIC	\
@@ -290,24 +287,23 @@ struct internal_nlist {
 };
 
 /** The n_type field is the symbol type, containing:  */
-
-#define N_UNDF	0	/**< Undefined symbol */
-#define N_ABS 	2	/**< Abs symbol -- defined at particular addr */
-#define N_TEXT 	4	/**< Text sym -- defined at offset in text seg */
-#define N_DATA 	6	/**< Data sym -- defined at offset in data seg */
-#define N_BSS 	8	/**< BSS  sym -- defined at offset in zero'd seg */
-#define	N_COMM	0x12	/**< Common symbol (visible after shared lib dynlink) */
-#define N_FN	0x1f	/**< File name of .o file */
-#define	N_FN_SEQ 0x0C	/**< N_FN from Sequent compilers (sigh) */
+enum {
+    N_UNDF	=0,	/**< Undefined symbol */
+    N_ABS 	=2,	/**< Abs symbol -- defined at particular addr */
+    N_TEXT 	=4,	/**< Text sym -- defined at offset in text seg */
+    N_DATA 	=6,	/**< Data sym -- defined at offset in data seg */
+    N_BSS 	=8,	/**< BSS  sym -- defined at offset in zero'd seg */
+    N_COMM	=0x12,	/**< Common symbol (visible after shared lib dynlink) */
+    N_FN	=0x1f,	/**< File name of .o file */
+    N_FN_SEQ	=0x0C,	/**< N_FN from Sequent compilers (sigh) */
 /** Note: N_EXT can only be usefully OR-ed with N_UNDF, N_ABS, N_TEXT,
    N_DATA, or N_BSS.  When the low-order bit of other types is set,
    (e.g. N_WARNING versus N_FN), they are two different types.  */
-#define N_EXT 	1	/**< External symbol (as opposed to local-to-this-file) */
-#define N_TYPE  0x1e
-#define N_STAB 	0xe0	/**< If any of these bits are on, it's a debug symbol */
+    N_EXT	=1,	/**< External symbol (as opposed to local-to-this-file) */
+    N_TYPE	=0x1e,
+    N_STAB	=0xe0,	/**< If any of these bits are on, it's a debug symbol */
 
-#define N_INDR 0x0a
-
+    N_INDR	=0x0a,
 /** The following symbols refer to set elements.
    All the N_SET[ATDB] symbols with the same name form one set.
    Space is allocated for the set in the text section, and each set
@@ -320,30 +316,31 @@ struct internal_nlist {
    in that it can satisfy undefined external references.  */
 
 /** These appear as input to LD, in a .o file.  */
-#define	N_SETA	0x14		/**< Abs set element symbol */
-#define	N_SETT	0x16		/**< Text set element symbol */
-#define	N_SETD	0x18		/**< Data set element symbol */
-#define	N_SETB	0x1A		/**< Bss set element symbol */
+    N_SETA	=0x14,		/**< Abs set element symbol */
+    N_SETT	=0x16,		/**< Text set element symbol */
+    N_SETD	=0x18,		/**< Data set element symbol */
+    N_SETB	=0x1A,		/**< Bss set element symbol */
 
 /** This is output from LD.  */
-#define N_SETV	0x1C		/**< Pointer to set vector in data area.  */
+    N_SETV	=0x1C,		/**< Pointer to set vector in data area.  */
 
 /** Warning symbol. The text gives a warning message, the next symbol
    in the table will be undefined. When the symbol is referenced, the
    message is printed.  */
 
-#define	N_WARNING 0x1e
+    N_WARNING	=0x1e,
 
 /** Weak symbols.  These are a GNU extension to the a.out format.  The
    semantics are those of ELF weak symbols.  Weak symbols are always
    externally visible.  The N_WEAK? values are squeezed into the
    available slots.  The value of a N_WEAKU symbol is 0.  The values
    of the other types are the definitions.  */
-#define N_WEAKU	0x0d		/**< Weak undefined symbol.  */
-#define N_WEAKA 0x0e		/**< Weak abs symbol.  */
-#define N_WEAKT 0x0f		/**< Weak text symbol.  */
-#define N_WEAKD 0x10		/**< Weak data symbol.  */
-#define N_WEAKB 0x11		/**< Weak bss symbol.  */
+    N_WEAKU	=0x0d,		/**< Weak undefined symbol.  */
+    N_WEAKA	=0x0e,		/**< Weak abs symbol.  */
+    N_WEAKT	=0x0f,		/**< Weak text symbol.  */
+    N_WEAKD	=0x10,		/**< Weak data symbol.  */
+    N_WEAKB	=0x11		/**< Weak bss symbol.  */
+};
 
 /** Relocations
 
@@ -368,28 +365,29 @@ struct reloc_std_external {
   uint8_t r_type[1];	/**< relocation type			*/
 };
 
-#define	RELOC_STD_BITS_PCREL_BIG	((unsigned int) 0x80)
-#define	RELOC_STD_BITS_PCREL_LITTLE	((unsigned int) 0x01)
+enum {
+    RELOC_STD_BITS_PCREL_BIG	=((unsigned int) 0x80),
+    RELOC_STD_BITS_PCREL_LITTLE	=((unsigned int) 0x01),
 
-#define	RELOC_STD_BITS_LENGTH_BIG	((unsigned int) 0x60)
-#define	RELOC_STD_BITS_LENGTH_SH_BIG	5
-#define	RELOC_STD_BITS_LENGTH_LITTLE	((unsigned int) 0x06)
-#define	RELOC_STD_BITS_LENGTH_SH_LITTLE	1
+    RELOC_STD_BITS_LENGTH_BIG	=((unsigned int) 0x60),
+    RELOC_STD_BITS_LENGTH_SH_BIG=5,
+    RELOC_STD_BITS_LENGTH_LITTLE=((unsigned int) 0x06),
+    RELOC_STD_BITS_LENGTH_SH_LITTLE=1,
 
-#define	RELOC_STD_BITS_EXTERN_BIG	((unsigned int) 0x10)
-#define	RELOC_STD_BITS_EXTERN_LITTLE	((unsigned int) 0x08)
+    RELOC_STD_BITS_EXTERN_BIG	=((unsigned int) 0x10),
+    RELOC_STD_BITS_EXTERN_LITTLE=((unsigned int) 0x08),
 
-#define	RELOC_STD_BITS_BASEREL_BIG	((unsigned int) 0x08)
-#define	RELOC_STD_BITS_BASEREL_LITTLE	((unsigned int) 0x10)
+    RELOC_STD_BITS_BASEREL_BIG	=((unsigned int) 0x08),
+    RELOC_STD_BITS_BASEREL_LITTLE=((unsigned int) 0x10),
 
-#define	RELOC_STD_BITS_JMPTABLE_BIG	((unsigned int) 0x04)
-#define	RELOC_STD_BITS_JMPTABLE_LITTLE	((unsigned int) 0x20)
+    RELOC_STD_BITS_JMPTABLE_BIG	=((unsigned int) 0x04),
+    RELOC_STD_BITS_JMPTABLE_LITTLE=((unsigned int) 0x20),
 
-#define	RELOC_STD_BITS_RELATIVE_BIG	((unsigned int) 0x02)
-#define	RELOC_STD_BITS_RELATIVE_LITTLE	((unsigned int) 0x40)
+    RELOC_STD_BITS_RELATIVE_BIG	=((unsigned int) 0x02),
+    RELOC_STD_BITS_RELATIVE_LITTLE=((unsigned int) 0x40),
 
-#define	RELOC_STD_SIZE	(BYTES_IN_WORD + 3 + 1)		/**< Bytes per relocation entry */
-
+    RELOC_STD_SIZE		=(BYTES_IN_WORD + 3 + 1)		/**< Bytes per relocation entry */
+};
 
 /** EXTENDED RELOCS  */
 
@@ -400,16 +398,18 @@ struct reloc_ext_external {
   uint8_t r_addend[BYTES_IN_WORD];	/**< datum addend				*/
 };
 
-#define	RELOC_EXT_BITS_EXTERN_BIG	((unsigned int) 0x80)
-#define	RELOC_EXT_BITS_EXTERN_LITTLE	((unsigned int) 0x01)
+enum {
+    RELOC_EXT_BITS_EXTERN_BIG	=((unsigned int) 0x80),
+    RELOC_EXT_BITS_EXTERN_LITTLE=((unsigned int) 0x01),
 
-#define	RELOC_EXT_BITS_TYPE_BIG		((unsigned int) 0x1F)
-#define	RELOC_EXT_BITS_TYPE_SH_BIG	0
-#define	RELOC_EXT_BITS_TYPE_LITTLE	((unsigned int) 0xF8)
-#define	RELOC_EXT_BITS_TYPE_SH_LITTLE	3
+    RELOC_EXT_BITS_TYPE_BIG	=((unsigned int) 0x1F),
+    RELOC_EXT_BITS_TYPE_SH_BIG	=0,
+    RELOC_EXT_BITS_TYPE_LITTLE	=((unsigned int) 0xF8),
+    RELOC_EXT_BITS_TYPE_SH_LITTLE=3,
 
 /** Bytes per relocation entry */
-#define	RELOC_EXT_SIZE	(BYTES_IN_WORD + 3 + 1 + BYTES_IN_WORD)
+    RELOC_EXT_SIZE		=(BYTES_IN_WORD + 3 + 1 + BYTES_IN_WORD)
+};
 
 enum reloc_type
 {

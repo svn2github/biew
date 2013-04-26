@@ -37,9 +37,10 @@ using namespace beye;
 namespace beye {
 extern int DisasmCurrLine;
 extern bool DisasmPrepareMode;
-#define BACK_ADDR_SIZE 256
-#define GO_ADDR_SIZE   37
-
+enum {
+    BACK_ADDR_SIZE=256,
+    GO_ADDR_SIZE  =37
+};
 static __filesize_t *BackAddr=NULL;
 static int BackAddrPtr = -1;
 static __filesize_t *GoAddr=NULL;
@@ -190,7 +191,7 @@ void __FASTCALL__ GidAddGoAddress(char *str,__filesize_t addr)
   if(DisasmPrepareMode) return;
   len = strlen((char *)str);
   where = (disPanelMode == PANMOD_FULL ? width :
-	   disPanelMode == PANMOD_MEDIUM ? width-HA_LEN : width-(HA_LEN+1)-bytecodes) - 5;
+	   disPanelMode == PANMOD_MEDIUM ? width-HA_LEN() : width-(HA_LEN()+1)-bytecodes) - 5;
   if(Alarm)
   {
      int i;

@@ -65,9 +65,11 @@ static bool __NEAR__ __FASTCALL__ test_win(TWindow *win)
 #define CHECK_WINS(x)
 #endif
 
-#define IFLG_VISIBLE       0x00000001UL
-#define IFLG_ENABLED       0x00000002UL
-#define IFLG_CURSORBEENOFF 0x80000000UL
+enum {
+    IFLG_VISIBLE      =0x00000001UL,
+    IFLG_ENABLED      =0x00000002UL,
+    IFLG_CURSORBEENOFF=0x80000000UL
+};
 
 TWindow *active;
 
@@ -242,9 +244,11 @@ void __FASTCALL__ twDestroy( void )
   Cause of programs can used multiple color conversation better use same
   values for each color component
 */
-#define BR_BLUE  1
-#define BR_GREEN 1
-#define BR_RED   1
+enum {
+    BR_BLUE  =1,
+    BR_GREEN =1,
+    BR_RED   =1
+};
 
 static const unsigned char brightness[16] =
 {
@@ -1259,7 +1263,7 @@ static void __NEAR__ __FASTCALL__ __draw_frame( tRelCoord xs, tRelCoord ys, tRel
      if(memcmp(_frame,TW_UP3D_FRAME,8) == 0) up = 1;
      else                                    up = 2;
      cfbk = BACK_COLOR(cfr);
-     lt = LOGFB_TO_PHYS(cfbk < 8 ? cfbk + 8 : White,cfbk);
+     lt = LOGFB_TO_PHYS((Color)(cfbk < 8 ? cfbk + 8 : White),cfbk);
      gr = LOGFB_TO_PHYS(cfbk == LightGray ? Gray : LightGray,cfbk);
      bl = LOGFB_TO_PHYS(cfbk == LightGray ? Black : Gray,cfbk);
    }

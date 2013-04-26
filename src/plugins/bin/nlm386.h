@@ -31,14 +31,15 @@ typedef uint32_t bfd_size_type;
 typedef uint32_t bfd_vma;
 typedef uint32_t PTR;
 #define NLM_SIGNATURE "NetWare Loadable Module\x1a"
-#define NLM_SIGNATURE_SIZE 24
-#define NLM_MODULE_NAME_SIZE 14
-#define NLM_MAX_DESCRIPTION_LENGTH 41
-#define NLM_OLD_THREAD_NAME_LENGTH 5
-#define NLM_MAX_SCREEN_NAME_LENGTH 4
-#define NLM_MAX_THREAD_NAME_LENGTH 7
-#define NLM_MAX_COPYRIGHT_MESSAGE_LENGTH 1
-
+enum {
+    NLM_SIGNATURE_SIZE=24,
+    NLM_MODULE_NAME_SIZE=14,
+    NLM_MAX_DESCRIPTION_LENGTH=41,
+    NLM_OLD_THREAD_NAME_LENGTH=5,
+    NLM_MAX_SCREEN_NAME_LENGTH=4,
+    NLM_MAX_THREAD_NAME_LENGTH=7,
+    NLM_MAX_COPYRIGHT_MESSAGE_LENGTH=1
+};
 
 typedef struct nlm_internal_fixed_header
 {
