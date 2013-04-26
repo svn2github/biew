@@ -81,6 +81,8 @@ namespace beye {
 	    unsigned int	beye_mode;
 	    unsigned		defMainModeSel;
 	    __filesize_t	new_file_size;
+	    std::vector<REGISTRY_BIN*> formats;
+	    std::vector<REGISTRY_MODE*> modes;
     };
     BeyeContext& beye_context();
 } // namespace beye

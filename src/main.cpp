@@ -103,50 +103,10 @@ static volatile char antiviral_hole2[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 TWindow * MainWnd = 0,*HelpWnd = 0,*TitleWnd = 0,*ErrorWnd = 0;
 
 static const unsigned SHORT_PATH_LEN=__TVIO_MAXSCREENWIDTH-54;
-static int malloc_debug=0;
 
 static volatile char antiviral_hole3[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 
-static REGISTRY_BIN *mainBinTable[] =
-{
-  &neTable,
-  &peTable,
-  &leTable,
-  &lxTable,
-  &nlm386Table,
-  &elf386Table,
-  &jvmTable,
-  &coff386Table,
-  &archTable,
-  &aoutTable,
-  &OldPharLapTable,
-  &PharLapTable,
-  &rdoffTable,
-  &rdoff2Table,
-  &lmfTable,
-  &mzTable,
-  &dossysTable,
-  &sisTable,
-  &sisxTable,
-  &aviTable,
-  &asfTable,
-  &bmpTable,
-  &mpegTable,
-  &jpegTable,
-  &wavTable,
-  &movTable,
-  &rmTable,
-  &mp3Table,
-  &binTable
-};
-
-static REGISTRY_MODE *mainModeTable[] =
-{
-  &textMode,
-  &binMode,
-  &hexMode,
-  &disMode
-};
+static int malloc_debug=0;
 
 static volatile char antiviral_hole4[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 
@@ -154,17 +114,16 @@ BeyeContext& beye_context() { return *BeyeCtx; }
 
 bool BeyeContext::select_mode()
 {
-  char *modeName[sizeof(mainModeTable)/sizeof(REGISTRY_MODE *)];
-  size_t i,nModes;
+  size_t i,nModes = modes.size();
+  const char *modeName[nModes];
   int retval;
 
-  nModes = sizeof(mainModeTable)/sizeof(REGISTRY_MODE *);
-  for(i = 0;i < nModes;i++) modeName[i] = const_cast<char*>(mainModeTable[i]->name);
-  retval = SelBoxA(modeName,nModes," Select translation mode: ",defMainModeSel);
+  for(i = 0;i < nModes;i++) modeName[i] = modes[i]->name;
+  retval = SelBoxA(const_cast<char**>(modeName),nModes," Select translation mode: ",defMainModeSel);
   if(retval != -1)
   {
     if(activeMode->term) activeMode->term();
-    activeMode = mainModeTable[retval];
+    activeMode = modes[retval];
     if(activeMode->init) activeMode->init();
     defMainModeSel = retval;
     return true;
@@ -185,12 +144,11 @@ void BeyeContext::term_modes( void )
 
 void BeyeContext::quick_select_mode()
 {
-  unsigned nModes;
-  nModes = sizeof(mainModeTable)/sizeof(REGISTRY_MODE *);
+  size_t nModes = modes.size();
   if(defMainModeSel < nModes - 1) defMainModeSel++;
   else                            defMainModeSel = 0;
   if(activeMode->term) activeMode->term();
-  activeMode = mainModeTable[defMainModeSel];
+  activeMode = modes[defMainModeSel];
   if(activeMode->init) activeMode->init();
 }
 
@@ -236,17 +194,16 @@ __filesize_t IsNewExe()
 
 void BeyeContext::auto_detect_mode()
 {
-  int i,n;
-  n = sizeof(mainModeTable) / sizeof(REGISTRY_MODE *);
+  size_t i,n = modes.size();
   for(i = 0;i < n;i++)
   {
-    if(mainModeTable[i]->detect())
+    if(modes[i]->detect())
     {
       defMainModeSel = i;
       break;
     }
   }
-  activeMode = mainModeTable[i];
+  activeMode = modes[i];
   BMSeek(0,BM_SEEK_SET);
 }
 
@@ -336,15 +293,15 @@ bool BeyeContext::LoadInfo( )
    if(beye_mode != UINT_MAX)
    {
      defMainModeSel = beye_mode;
-     activeMode = mainModeTable[defMainModeSel];
+     activeMode = modes[defMainModeSel];
    }
    else
    {
-     if(LastMode >= sizeof(mainModeTable)/sizeof(REGISTRY_MODE *) || !beye_context().is_valid_ini_args()) auto_detect_mode();
+     if(LastMode >= modes.size() || !beye_context().is_valid_ini_args()) auto_detect_mode();
      else
      {
        defMainModeSel = LastMode;
-       activeMode = mainModeTable[defMainModeSel];
+       activeMode = modes[defMainModeSel];
      }
    }
  return true;
@@ -352,17 +309,17 @@ bool BeyeContext::LoadInfo( )
 
 void BeyeContext::detect_binfmt()
 {
- unsigned i;
+ size_t i,sz=formats.size();
  if(!bmGetFLength())
  {
    detectedFormat = &binTable;
    return;
  }
- for(i = 0;i < sizeof(mainBinTable)/sizeof(REGISTRY_BIN *);i++)
+ for(i = 0;i < sz;i++)
  {
-   if(mainBinTable[i]->check_format())
+   if(formats[i]->check_format())
    {
-     detectedFormat = mainBinTable[i];
+     detectedFormat = formats[i];
      if(detectedFormat->init) detectedFormat->init();
      break;
    }
@@ -749,13 +706,48 @@ BeyeContext::BeyeContext(const std::vector<std::string>& _argv, const std::map<s
 	    defMainModeSel(0),
 	    new_file_size(FILESIZE_MAX)
 {
+    modes.push_back(&textMode);
+    modes.push_back(&binMode);
+    modes.push_back(&hexMode);
+    modes.push_back(&disMode);
+
+    formats.push_back(&neTable);
+    formats.push_back(&peTable);
+    formats.push_back(&leTable);
+    formats.push_back(&lxTable);
+    formats.push_back(&nlm386Table);
+    formats.push_back(&elf386Table);
+    formats.push_back(&jvmTable);
+    formats.push_back(&coff386Table);
+    formats.push_back(&archTable);
+    formats.push_back(&aoutTable);
+    formats.push_back(&OldPharLapTable);
+    formats.push_back(&PharLapTable);
+    formats.push_back(&rdoffTable);
+    formats.push_back(&rdoff2Table);
+    formats.push_back(&lmfTable);
+    formats.push_back(&mzTable);
+    formats.push_back(&dossysTable);
+    formats.push_back(&sisTable);
+    formats.push_back(&sisxTable);
+    formats.push_back(&aviTable);
+    formats.push_back(&asfTable);
+    formats.push_back(&bmpTable);
+    formats.push_back(&mpegTable);
+    formats.push_back(&jpegTable);
+    formats.push_back(&wavTable);
+    formats.push_back(&movTable);
+    formats.push_back(&rmTable);
+    formats.push_back(&mp3Table);
+    formats.push_back(&binTable);
+
     codepage="CP866";
     scheme_name="Built-in";
     if(argv.size()>1) ArgVector1 = argv[1];
     LastOpenFileName = new char[4096];
     _shortname = new char[SHORT_PATH_LEN + 1];
-    LastMode = sizeof(mainModeTable)/sizeof(REGISTRY_BIN *)+10;
-    activeMode = mainModeTable[1];
+    LastMode = modes.size()+10;
+    activeMode = modes[1];
 }
 BeyeContext::~BeyeContext() {
     delete LastOpenFileName;
