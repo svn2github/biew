@@ -118,47 +118,6 @@ __inline static uint64_t __ByteSwapLL(uint64_t x)\
 }
 #endif
 
-		/** Performs conversation string of characters to zero extended
-		    string of short values.
-		  * @return         none
-		  * @param limit    specified size of evenbuffer and oddbuffer
-		  * @param destbuffer specified pointer to the destinition buffer
-				    where result will be placed.
-		  * @param evenbuffer specified source buffer with even bytes.
-		  * @param zerofiller specified pointer to zero filled memory,
-				    which must have size of MMREG_SIZE.
-		 **/
-#ifndef __CHARS_TO_SHORTS
-#define __CHARS_TO_SHORTS(limit, destbuffer, evenbuffer)\
-{\
-  register size_t freq;\
-  for(freq=0;freq<(size_t)limit;freq++)\
-  {\
-    ((char *)destbuffer)[freq+freq] = ((char *)evenbuffer)[freq];\
-    ((char *)destbuffer)[freq+freq+1] = 0;\
-  }\
-}
-#endif
-
-		/** Performs conversation string of zero extended short values
-		    to string of characters.
-		  * @return         none
-		  * @param limit    specified size of evenbuffer and oddbuffer
-		  * @param destbuffer specified pointer to the destinition buffer
-				    where result will be placed.
-		  * @param srcbuffer specified source buffer to be converted.
-		 **/
-#ifndef __SHORTS_TO_CHARS
-#define __SHORTS_TO_CHARS(limit, destbuffer, srcbuffer)\
-{\
-  register size_t freq;\
-  for(freq=0;freq<(size_t)limit;freq++)\
-  {\
-    ((char *)destbuffer)[freq] = ((char *)srcbuffer)[freq+freq];\
-  }\
-}
-#endif
-
 #ifndef COREDUMP
 #define COREDUMP()
 #endif

@@ -41,6 +41,44 @@ static CONSOLE_SCREEN_BUFFER_INFO win32_init_csbinfo;
 static CONSOLE_CURSOR_INFO win32_init_cci;
 /* End of addition */
 
+
+                /** Performs conversation string of characters to zero extended
+                    string of short values.
+                  * @return         none
+                  * @param limit    specified size of evenbuffer and oddbuffer
+                  * @param destbuffer specified pointer to the destinition buffer
+                                    where result will be placed.
+                  * @param evenbuffer specified source buffer with even bytes.
+                  * @param zerofiller specified pointer to zero filled memory,
+                                    which must have size of MMREG_SIZE.
+                 **/
+inline void __CHARS_TO_SHORTS(size_t limit,char* destbuffer,const char* evenbuffer)
+{
+  register size_t freq;
+  for(freq=0;freq<limit;freq++)
+  {
+    destbuffer[2*freq] = evenbuffer[freq];
+    destbuffer[2*freq+1] = 0;
+  }
+}
+
+                /** Performs conversation string of zero extended short values
+                    to string of characters.
+                  * @return         none
+                  * @param limit    specified size of evenbuffer and oddbuffer
+                  * @param destbuffer specified pointer to the destinition buffer
+                                    where result will be placed.
+                  * @param srcbuffer specified source buffer to be converted.
+                 **/
+inline void __SHORTS_TO_CHARS(size_t limit,char* destbuffer,const char* srcbuffer)
+{
+  register size_t freq;
+  for(freq=0;freq<limit;freq++)
+  {
+    destbuffer[freq] = srcbuffer[2*freq];
+  }
+}
+
 void __FASTCALL__ __init_vio(const char *user_cp, unsigned long flg )
 {
 #if 0

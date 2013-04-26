@@ -102,25 +102,6 @@ extern void (__FASTCALL__ *InterleaveBuffers_ptr)(uint32_t limit,
 #define InterleaveBuffers(a,b,c,d) (*InterleaveBuffers_ptr)(a,b,c,d)
 #define __INTERLEAVE_BUFFERS InterleaveBuffers
 
-
-extern void (__FASTCALL__ *CharsToShorts_ptr)(uint32_t limit,
-					     any_t*destbuffer,
-					     const any_t*evenbuffer);
-#ifdef CharsToShorts
-#undef CharsToShorts
-#endif
-#define CharsToShorts(a,b,c) (*CharsToShorts_ptr)(a,b,c)
-#define __CHARS_TO_SHORTS CharsToShorts
-
-extern void (__FASTCALL__ *ShortsToChars_ptr)(uint32_t limit,
-				     any_t* destbuffer, const any_t* srcbuffer);
-
-#ifdef ShortsToChars
-#undef ShortsToChars
-#endif
-#define ShortsToChars(a,b,c) (*ShortsToChars_ptr)(a,b,c)
-#define __SHORTS_TO_CHARS ShortsToChars
-
 #define COREDUMP() { __asm__ __volatile__(".short 0xffff":::"memory"); }
 
 #endif
