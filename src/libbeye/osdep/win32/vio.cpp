@@ -17,7 +17,7 @@ using namespace beye;
  * @since       1999
  * @note        Development, fixes and improvements
 **/
-
+#include <algorithm>
 /* Reduce include size */
 #define WIN32_LEAN_AND_MEAN
 /* More strict type checking */
@@ -255,7 +255,7 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x,tAbsCoord y,const tvioBuff *buff,un
 */
     }
     pos.X = pos.Y = 0;
-    size.X = min(len,tvioWidth);
+    size.X = std::min(len,tvioWidth);
     size.Y = (len/tvioWidth)+(len%tvioWidth?1:0);
     sr.Left = x;
     sr.Top = y;
@@ -296,11 +296,11 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x,tAbsCoord y,const tvioBuff *buff,un
       cc.Y += win32_init_csbinfo.srWindow.Top;
     }
     /* End of addition */
-    WriteConsoleOutputCharacter(hOut,buff->chars,len,cc,(LPDWORD)&w);
-    __CHARS_TO_SHORTS(len, attr, buff->attrs);
+    WriteConsoleOutputCharacter(hOut,(LPCSTR)buff->chars,len,cc,(LPDWORD)&w);
+    __CHARS_TO_SHORTS(len, (char*)attr, (const char*)buff->attrs);
     /* added by Kostya Nosov: */
     attr2=attr;
-    ii=min(len, tvioWidth);
+    ii=std::min(len, tvioWidth);
     for (i=0; i<len; i+=tvioWidth)
     {
 	WriteConsoleOutputAttribute(hOut, attr2, ii, cc, (LPDWORD)&w);
@@ -329,7 +329,7 @@ void __FASTCALL__ __vioReadBuff(tAbsCoord x,tAbsCoord y,tvioBuff *buff,unsigned 
     }
     else obuff = small_buffer;
     pos.X = pos.Y = 0;
-    size.X = min(len,tvioWidth);
+    size.X = std::min(len,tvioWidth);
     size.Y = (len/tvioWidth)+(len%tvioWidth?1:0);
     sr.Left = x;
     sr.Top = y;
@@ -394,17 +394,17 @@ void __FASTCALL__ __vioReadBuff(tAbsCoord x,tAbsCoord y,tvioBuff *buff,unsigned 
       cc.Y += win32_init_csbinfo.srWindow.Top;
     }
     /* End of addition */
-    ReadConsoleOutputCharacter(hOut,buff->chars,len,cc,(LPDWORD)&r);
+    ReadConsoleOutputCharacter(hOut,(LPSTR)buff->chars,len,cc,(LPDWORD)&r);
     /* added by Kostya Nosov: */
     attr2 = attr;
-    ii = min(len, tvioWidth);
+    ii = std::min(len, tvioWidth);
     for (i=0; i<len; i+=tvioWidth)
     {
 	ReadConsoleOutputAttribute(hOut, attr2, ii, cc, (LPDWORD)&r);
 	attr2 += ii;
 	cc.Y++;
     } /* end of addition */
-    __SHORTS_TO_CHARS(len, buff->attrs, attr);
+    __SHORTS_TO_CHARS(len, (char*)buff->attrs, (const char*)attr);
     if(attr != small_buffer) delete attr;
   }
 }

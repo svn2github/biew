@@ -151,7 +151,7 @@ bhandle_t __FASTCALL__ __OsOpen(const char *fname,int mode)
 __fileoff_t __FASTCALL__ __OsSeek(bhandle_t handle,__fileoff_t offset,int origin)
 {
   unsigned long hioff=offset>>32;
-  return SetFilePointer((HANDLE)handle,offset,&hioff,origin);
+  return SetFilePointer((HANDLE)handle,offset,(PLONG)&hioff,origin);
 }
 
 int __FASTCALL__ __OsTruncFile(bhandle_t handle, __filesize_t newsize)

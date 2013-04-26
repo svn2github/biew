@@ -251,11 +251,7 @@ void BeyeContext::parse_cmdline( const std::vector<std::string>& ArgVector )
        case 3: beye_mode = 2; break;
        case 4: beye_mode = 0; break;
        case 5:
-#if (__WORDSIZE >= 32) && !defined(__QNX4__)
 		new_file_size = strtoull(ArgVector[++i].c_str(),NULL,10);
-#else
-		new_file_size = strtoul(ArgVector[++i].c_str(),NULL,10);
-#endif
 		break;
        case 6: UseIniFile = false; break;
        case 7: i++; break; // parsed early
@@ -394,11 +390,7 @@ hIniProfile* BeyeContext::load_ini_info()
   read_profile_string(ini,"Beye","Browser","LastMode",buf,tmp,sizeof(tmp));
   LastMode = (size_t)strtoul(tmp,NULL,10);
   read_profile_string(ini,"Beye","Browser","Offset","0",tmp,sizeof(tmp));
-#if (__WORDSIZE >= 32) && !defined(__QNX4__)
   LastOffset = atoll(tmp);
-#else
-  LastOffset = atol(tmp); /** by watcom */
-#endif
   read_profile_string(ini,"Beye","Setup","Version","",ini_ver,sizeof(ini_ver));
   read_profile_string(ini,"Beye","Setup","DirectConsole","yes",tmp,sizeof(tmp));
   if(stricmp(tmp,"yes") == 0) vioIniFlags = __TVIO_FLG_DIRECT_CONSOLE_ACCESS;
@@ -442,11 +434,7 @@ void BeyeContext::save_ini_info() const
   write_profile_string(ini,"Beye","Browser","LastOpen",ArgVector1.c_str());
   sprintf(tmp,"%u",defMainModeSel);
   write_profile_string(ini,"Beye","Browser","LastMode",tmp);
-#if (__WORDSIZE >= 32) && !defined(__QNX4__)
   sprintf(tmp,"%llu",LastOffset);
-#else
-  sprintf(tmp,"%lu",LastOffset);
-#endif
   write_profile_string(ini,"Beye","Browser","Offset",tmp);
   strcpy(tmp,vioIniFlags & __TVIO_FLG_DIRECT_CONSOLE_ACCESS ? "yes" : "no");
   write_profile_string(ini,"Beye","Setup","DirectConsole",tmp);

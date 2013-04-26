@@ -53,13 +53,8 @@ namespace beye {
     char * __FASTCALL__ Get4SignDig(int16_t);
     char * __FASTCALL__ Get8Digit(uint32_t);
     char * __FASTCALL__ Get8SignDig(int32_t);
-#if __WORDSIZE >= 32
     char * __FASTCALL__ Get16Digit(uint64_t);
     char * __FASTCALL__ Get16SignDig(int64_t);
-#else
-    char * __FASTCALL__ Get16Digit(uint32_t low,uint32_t high);
-    char * __FASTCALL__ Get16SignDig(int32_t low,int32_t high);
-#endif
     char * __FASTCALL__ GetBinary(char val);
 
     void     __FASTCALL__ CompressHex(unsigned char * dest,const char * src,unsigned sizedest,bool usespace);

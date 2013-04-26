@@ -42,6 +42,48 @@
 #include "libbeye/mp_malloc.h"
 
 namespace beye {
+		   /** Converts all alphabetic characters in buffer to upper case.
+		     * @return                none
+		     * @param buff            buffer to be converted
+		     * @param cbBuff          size of buffer
+		     * @see                   memlwr
+		    **/
+extern void __FASTCALL__ memupr(any_t*buffer,unsigned cb_buffer);
+
+		   /** Converts all alphabetic characters in buffer to lower case.
+		     * @return                none
+		     * @param buff            buffer to be converted
+		     * @param cbBuff          size of buffer
+		     * @see                   memlwr
+		    **/
+extern void __FASTCALL__ memlwr(any_t*buffer,unsigned cb_buffer);
+
+#if defined(__GLIBC__) || defined (__UNIX__)
+#define strupr(s) memupr(s,strlen(s)) /**< C library of *nix systems lacks strupr function */
+#define strlwr(s) memlwr(s,strlen(s)) /**< C library of *nix systems lacks strlwr function */
+#define stricmp strcasecmp            /**< Alias of stricmp for *nix systems */
+#endif
+#ifndef HAVE_LTOA
+extern char *        ltoa(long _value, char *_s, int _radix);
+#endif
+#ifndef HAVE_ATOLL
+#define atoll(s) strtoll(s, NULL, 10) /* temporal workaround */
+#endif
+#ifndef HAVE_STRTOLL
+extern long long strtoll(const char *nptr, char **endptr, int base);
+#endif
+#ifndef HAVE_STRTOULL
+unsigned long long strtoull(const char *nptr, char **endptr, int base);
+#endif
+#ifndef HAVE_ULTOA
+extern char *        ultoa(unsigned long _value, char *_s, int _radix);
+#endif
+#ifndef HAVE_LLTOA
+extern char *        lltoa(long long int _value, char *_s, int _radix);
+#endif
+#ifndef HAVE_ULLTOA
+extern char *        ulltoa(unsigned long long int _value, char *_s, int _radix);
+#endif
 
     template <typename T> class LocalPtr {
 	public:

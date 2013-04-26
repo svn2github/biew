@@ -25,10 +25,20 @@ using namespace beye;
 #include <ctype.h>
 #include <limits.h>
 #include "libbeye/sysdep/__config.h"
-#if __WORDSIZE == 16
-#include <mem.h>
-#endif
 
+void      __FASTCALL__ __nls_PrepareOEMForTVio(tvioBuff *it,unsigned size)
+{
+  unsigned i;
+  unsigned char ch;
+  for(i = 0;i < size;i++)
+  {
+    ch = it->chars[i];
+    it->oem_pg[i] = NLS_IS_OEMPG(ch) ? ch : 0;
+  }
+  __nls_OemToOsdep(it->chars,size);
+}
+
+namespace beye {
 void __FASTCALL__ memupr(any_t*ptr,unsigned n)
 {
    unsigned i;
@@ -43,7 +53,7 @@ void __FASTCALL__ memlwr(any_t*ptr,unsigned n)
    ((char *)ptr)[i] = tolower(((char *)ptr)[i]);
 }
 
-#ifdef __GNUC__
+#ifndef HAVE_LTOA
 /* (emx+gcc) -- Copyright (c) 1990-1995 by Eberhard Mattes */
 char *ltoa (long value, char *string, int radix)
 {
@@ -74,7 +84,8 @@ char *ltoa (long value, char *string, int radix)
   }
   return string;
 }
-
+#endif
+#ifndef HAVE_ULTOA
 char *ultoa (unsigned long value, char *string, int radix)
 {
   char *dst;
@@ -99,8 +110,7 @@ char *ultoa (unsigned long value, char *string, int radix)
   return string;
 }
 #endif
-
-#if __WORDSIZE >= 32
+#ifndef HAVE_LLTOA
 char *lltoa (long long int value, char *string, int radix)
 {
   char *dst;
@@ -130,7 +140,8 @@ char *lltoa (long long int value, char *string, int radix)
   }
   return string;
 }
-
+#endif
+#ifndef HAVE_ULLTOA
 char *ulltoa (unsigned long long int value, char *string, int radix)
 {
   char *dst;
@@ -156,19 +167,6 @@ char *ulltoa (unsigned long long int value, char *string, int radix)
 }
 #endif
 
-void      __FASTCALL__ __nls_PrepareOEMForTVio(tvioBuff *it,unsigned size)
-{
-  unsigned i;
-  unsigned char ch;
-  for(i = 0;i < size;i++)
-  {
-    ch = it->chars[i];
-    it->oem_pg[i] = NLS_IS_OEMPG(ch) ? ch : 0;
-  }
-  __nls_OemToOsdep(it->chars,size);
-}
-
-namespace beye {
 bool __FASTCALL__ isseparate(int ch) { return (isspace(ch) || ispunct(ch)); }
 
 int __FASTCALL__ szTrimTrailingSpace(char *str)
@@ -296,19 +294,6 @@ char * __FASTCALL__ szKillSpaceAround(char *str,char *place)
   str[idx-nmoves] = prev;
   return &str[idx-nmoves];
 }
-
-
-#if __WORDSIZE == 16
-void huge * __FASTCALL__ HMemCpy(void huge *_dest, const void huge *_source, unsigned long n)
-{
-  long i;
-  for(i = 0;i < n;i++)
-  {
-    ((char huge *)_dest)[i] = ((const char huge *)_source)[i];
-  }
-  return _dest;
-}
-#endif
 
 int printm(const char *str,...)
 {

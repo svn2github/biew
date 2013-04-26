@@ -15,6 +15,7 @@ using namespace beye;
  * @bug         Program can be destroyed if operates with 0 size of file.
 **/
 /* for cygwin - remove unnecessary includes */
+#include <algorithm>
 #ifdef __x86_64__
 #include "libbeye/sysdep/ia16/dos/mmfio.cpp"
 #endif
@@ -70,7 +71,7 @@ using namespace beye;
 /* Internal structures and constants */
 
 #define PAG_SIZE    4096
-#if __WORDSIZE == 32
+#if __SIZEOF_POINTER__ == 4
 #define PAG_MASK    0xFFFFF000
 typedef unsigned long ADRSIZE;
 #else
@@ -129,7 +130,7 @@ LONG CALLBACK apiPageFaultHandler(LPEXCEPTION_POINTERS excpt)
 {
     MEMORY_BASIC_INFORMATION mbi;
     ADRSIZE ulTemp;
-#if __WORDSIZE > 32
+#if __SIZEOF_POINTER__ > 4
     PEXCEPTION_RECORD64 per=excpt->ExceptionRecord;
 #else
     PEXCEPTION_RECORD per=excpt->ExceptionRecord;
@@ -208,13 +209,13 @@ LONG CALLBACK PageFaultHandler(LPEXCEPTION_POINTERS excpt)
 
 static int __FASTCALL__ DosUpdateMMF(PMMF pMMF,ADRSIZE length)
 {
-    char *  pArea  = 0;
+    BYTE*  pArea  = 0;
     ADRSIZE ulPos  = 0;
     MEMORY_BASIC_INFORMATION mbi;
 
 /* locate all regions which needs update, and actually update them */
 
-    for(pArea = (PBYTE)pMMF->pData; ulPos < min(length,pMMF->ulSize); )
+    for(pArea = (PBYTE)pMMF->pData; ulPos < std::min(length,pMMF->ulSize); )
     {
 	/* Query info about range */
 	if(VirtualQuery(pArea, &mbi, sizeof(MEMORY_BASIC_INFORMATION) !=
@@ -225,11 +226,11 @@ static int __FASTCALL__ DosUpdateMMF(PMMF pMMF,ADRSIZE length)
 	{
 	    /* set pointer */
 	    errno = 0;
-	    __OsSeek(pMMF->fhandle,(ADRSIZE)pArea - (ADRSIZE)pMMF->pData,SEEKF_START);
+	    __OsSeek((bhandle_t)pMMF->fhandle,(ADRSIZE)pArea - (ADRSIZE)pMMF->pData,SEEKF_START);
 	    if(!errno)
 	    {
 		ADRSIZE rem = ulPos - pMMF->ulSize;
-		__OsWrite(pMMF->fhandle,pArea,rem >= PAG_SIZE ? PAG_SIZE : rem);
+		__OsWrite((bhandle_t)pMMF->fhandle,pArea,rem >= PAG_SIZE ? PAG_SIZE : rem);
 		if(errno)  return errno;
 		VirtualProtect(pArea,PAG_SIZE,PAGE_READONLY,(DWORD *) &rem); /* Mark it as clean */
 	    }
@@ -303,7 +304,7 @@ mmfHandle          __FASTCALL__ __mmfOpen(const char *fname,int mode)
 /* Everything seems ok, fill data structure and return pointer to memory */
 
     pMMF->ulFlags   = mode | MMF_USEDENTRY;
-    pMMF->fhandle   = fhandle;
+    pMMF->fhandle   = (HANDLE)fhandle;
     pMMF->pData     = pData;
     pMMF->ulSize    = flength;
     return pMMF;
@@ -319,13 +320,13 @@ mmfHandle     __FASTCALL__ __mmfSync(mmfHandle mh)
 {
   PMMF mrec = (PMMF)mh;
   long length;
-  length = __FileLength(mrec->fhandle);
-  DosUpdateMMF(mrec,min((ADRSIZE)length,mrec->ulSize));
+  length = __FileLength((bhandle_t)mrec->fhandle);
+  DosUpdateMMF(mrec,std::min((ADRSIZE)length,mrec->ulSize));
   if(length!=mrec->ulSize) {
     if(DosReallocMMF(mrec,length))
     {
 	VirtualFree(mrec->pData, 0L, MEM_RELEASE);
-	__OsClose(mrec->fhandle);
+	__OsClose((bhandle_t)mrec->fhandle);
 	mrec = NULL;
     }
   }
@@ -345,22 +346,22 @@ bool              __FASTCALL__ __mmfResize(mmfHandle mh,long size)
   ADRSIZE old_length;
   bool can_continue = false;
   old_length = mrec->ulSize;
-  DosUpdateMMF(mrec,min((ADRSIZE)size,mrec->ulSize));
+  DosUpdateMMF(mrec,std::min((ADRSIZE)size,mrec->ulSize));
   if(mrec->ulSize > (ADRSIZE)size) /* truncate */
   {
     if(!DosReallocMMF(mrec,size)) can_continue = true;
     if(can_continue)
-      can_continue = __OsChSize(mrec->fhandle,size) != -1 ? true : false;
+      can_continue = __OsChSize((bhandle_t)mrec->fhandle,size) != -1 ? true : false;
   }
   else /* expand */
   {
-    if(__OsChSize(mrec->fhandle,size) != -1) can_continue = true;
+    if(__OsChSize((bhandle_t)mrec->fhandle,size) != -1) can_continue = true;
     if(can_continue)
       can_continue = !DosReallocMMF(mrec,size) ? true : false;
   }
   if(can_continue) return true;
   else /* Attempt to unroll transaction back */
-    __OsChSize(mrec->fhandle,old_length);
+    __OsChSize((bhandle_t)mrec->fhandle,old_length);
   return false;
 }
 
@@ -371,13 +372,13 @@ void               __FASTCALL__ __mmfClose(mmfHandle mh)
 /* No automatic update when area freed */
 
     if((mrec->ulFlags & FO_READWRITE) || (mrec->ulFlags & FO_WRITEONLY))
-	DosUpdateMMF(mrec->pData,mrec->ulSize);
+	DosUpdateMMF((PMMF)mrec->pData,mrec->ulSize);
 
     CloseHandle((HANDLE)mrec->fhandle);
     VirtualFree(mrec->pData, 0L, MEM_RELEASE);
 
     mrec->ulFlags   = 0;
-    mrec->fhandle   = NULL_HANDLE;
+    mrec->fhandle   = (HANDLE)NULL_HANDLE;
     mrec->pData     = 0;
     mrec->ulSize    = 0;
 }

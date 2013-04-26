@@ -162,11 +162,7 @@ enum {
     TWC_BLACK_SQUARE      =0xFE  /**< Black square */
 };
 /** Describes window-related coordinate type */
-#if __WORDSIZE == 16
-typedef unsigned char tRelCoord;
-#else
 typedef unsigned tRelCoord;
-#endif
 
 /** align modes for title and footer */
 typedef enum

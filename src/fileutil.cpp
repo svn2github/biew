@@ -48,11 +48,7 @@ extern REGISTRY_MODE disMode;
 static bool ChSize( void )
 {
  __fileoff_t psize,tile = 0;
-#if __WORDSIZE >= 32
  if(Get16DigitDlg(" Change size of file ","Num. of bytes (+-dec):",3,(unsigned long long*)&tile))
-#else
- if(Get8DigitDlg(" Change size of file ","Num. of bytes (+-dec):",3,(unsigned long *)&tile))
-#endif
  {
   if(tile != 0)
   {
@@ -215,11 +211,7 @@ static void __NEAR__ __FASTCALL__ printObject(FILE *fout,unsigned obj_num,char *
 			    oclass == OC_CODE ? "DUMP_TEXT" :
 			    "Unknown";
   if(!oname[0]) { sprintf(onumname,"%s%u",name,obj_num); name = onumname; }
-#if (__WORDSIZE >=32) && !defined(__QNX4__)
   fprintf(fout,"\nSEGMENT %s BYTE PUBLIC %s '%s'\n; size: %llu bytes\n\n"
-#else
-  fprintf(fout,"\nSEGMENT %s BYTE PUBLIC %s '%s'\n; size: %lu bytes\n\n"
-#endif
 	      ,name
 	      ,btn
 	      ,oclass == OC_DATA ? "DATA" : oclass == OC_CODE ? "CODE" : "NoObject"
@@ -233,11 +225,7 @@ static void __NEAR__ __FASTCALL__ printHdr(FILE * fout,REGISTRY_BIN *fmt)
   cptr = cptr1 = ";"; cptr2 = "";
   time(&tim);
   fprintf(fout,"%s\n%sDisassembler dump of \'%s\'\n"
-#if (__WORDSIZE >= 32) && !defined(__QNX4__)
 	       "%sRange : %16llXH-%16llXH\n"
-#else
-	       "%sRange : %08lXH-%08lXH\n"
-#endif
 	       "%sWritten by %s\n"
 	       "%sDumped : %s\n"
 	       "%sFormat : %s\n"
@@ -494,24 +482,15 @@ static bool FStore( void )
 	  if(obj_class == OC_NOOBJECT)
 	  {
 	    __filesize_t diff;
-#if (__WORDSIZE >= 32) && !defined(__QNX4__)
 	    fprintf(fout,"; L%016llXH-L%016llXH - no object\n",obj_start,obj_end);
-#else
-	    fprintf(fout,"; L%08lXH-L%08lXH - no object\n",obj_start,obj_end);
-#endif
 	    dret.codelen = std::min(__filesize_t(UCHAR_MAX),obj_end - ff_startpos);
 	    /** some functions can placed in virtual area of objects
 		mean at end of true data, but before next object */
 	     while(func_pa && func_pa >= obj_start && func_pa < obj_end && func_pa > ff_startpos)
 	     {
 		  diff = func_pa - ff_startpos;
-#if (__WORDSIZE >= 32) && !defined(__QNX4__)
 		  if(diff) fprintf(fout,"resb %16llXH\n",diff);
 		  fprintf(fout,"%s %s: ;at offset - %16llXH\n"
-#else
-		  if(diff) fprintf(fout,"resb %08lXH\n",diff);
-		  fprintf(fout,"%s %s: ;at offset - %08lXH\n"
-#endif
 			      ,GET_FUNC_CLASS(func_class)
 			      ,func_name
 			      ,func_pa);
@@ -526,11 +505,7 @@ static bool FStore( void )
 		  }
 	      }
 	      diff = obj_end - ff_startpos;
-#if (__WORDSIZE>=32) && !defined(__QNX4__)
 	      if(diff) fprintf(fout,"resb %16llXH\n",diff);
-#else
-	      if(diff) fprintf(fout,"resb %08lXH\n",diff);
-#endif
 	      ff_startpos = obj_end;
 	      goto next_obj;
 	  }
@@ -1198,11 +1173,7 @@ static bool FileInfo( void )
   strcpy(stimes[2],ctime(&statbuf.st_atime));
   twPrintF("Name                          = %s\n"
 	   "Type                          = %s\n"
-#if (__WORDSIZE >= 32) && !defined(__QNX4__)
 	   "Length                        = %llu bytes\n"
-#else
-	   "Length                        = %lu bytes\n"
-#endif
 	   "Attributes                    = %s\n"
 	   "                                TUGVOwnGrpOth\n"
 	   "Creation time                 = %s"

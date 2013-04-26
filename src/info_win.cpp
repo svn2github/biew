@@ -557,11 +557,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
 	   beye_context().active_format()->prepare_structs(ctrl_pos,ctrl_pos);
   va = beye_context().active_format()->pa2va ? beye_context().active_format()->pa2va(ctrl_pos) : ctrl_pos;
   vaddr[0] = '\0';
-#if (__WORDSIZE >= 32) && !defined(__QNX4__)
   sprintf(&vaddr[strlen(vaddr)],"%016llXH",va);
-#else
-  sprintf(&vaddr[strlen(vaddr)],"%08lXH",va);
-#endif
   prev_func_pa = next_func_pa = 0;
   prev_func[0] = next_func[0] = '\0';
   if(beye_context().active_format()->GetPubSym)
@@ -599,19 +595,11 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
     default: btn = "";
   }
   twPrintF(
-#if (__WORDSIZE >= 32) && !defined(__QNX4__)
 	   "File  offset : %016llXH\n"
-#else
-	   "File  offset : %08lXH\n"
-#endif
 	   "Virt. address: %s\n"
 	   "%s entry  : %s\n"
 	   "Next  entry  : %s\n"
-#if (__WORDSIZE >= 32) && !defined(__QNX4__)
 	   "Curr. object : #%u %s %s %016llXH=%016llXH %s"
-#else
-	   "Curr. object : #%u %s %s %08lXH=%08lXH %s"
-#endif
 	   ,ctrl_pos
 	   ,vaddr
 	   ,prev_func_pa == ctrl_pos ? "Curr." : "Prev."

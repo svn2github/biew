@@ -128,7 +128,6 @@ bool __FASTCALL__ Get8DigitDlg(const char *title,const char *text,char attr,unsi
  return ret;
 }
 
-#if __WORDSIZE >= 32
 bool        __FASTCALL__ Get16DigitDlg(const char *title,const char *text,char attr,
 					unsigned long long int *xx)
 {
@@ -180,7 +179,6 @@ bool        __FASTCALL__ Get16DigitDlg(const char *title,const char *text,char a
  twUseWin(_using);
  return ret;
 }
-#endif
 
 static void __NEAR__ __FASTCALL__ paintJumpDlg(TWindow *wdlg,unsigned long flags)
 {
@@ -293,13 +291,11 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
  CloseWnd(hwnd);
  if(ret)
  {
-#if __WORDSIZE >= 32
  if(BMFileFlags&BMFF_USE64)
     *addr = (*flags) == GJDLG_RELATIVE ||
 	    (*flags) == GJDLG_REL_EOF ? (unsigned long long int)strtoll(str,NULL,(*flags)==GJDLG_PERCENTS?10:16):
 					strtoull(str,NULL,(*flags)==GJDLG_PERCENTS?10:16);
  else
-#endif
     *addr = (*flags) == GJDLG_RELATIVE ||
 	    (*flags) == GJDLG_REL_EOF ? (unsigned long)strtol(str,NULL,(*flags)==GJDLG_PERCENTS?10:16):
 	    strtoul(str,NULL,(*flags)==GJDLG_PERCENTS?10:16);
@@ -358,19 +354,11 @@ static void __NEAR__ __FASTCALL__ FFStaticPaint(TWindow * wdlg,char * fname,char
     }
     len = strlen(st);
     twGotoXY(8,4); twPutS(st);
-#if __WORDSIZE >= 32
     for(i = len;i < 18;i++)
-#else
-    for(i = len;i < 10;i++)
-#endif
 	twPutChar(TWC_MED_SHADE);
     len = strlen(end);
     twGotoXY(35,4); twPutS(end);
-#if __WORDSIZE >= 32
     for(i = len;i < 18;i++)
-#else
-    for(i = len;i < 10;i++)
-#endif
 	twPutChar(TWC_MED_SHADE);
     if(flg & FSDLG_USEMODES)
     {
@@ -465,13 +453,8 @@ bool __FASTCALL__ GetFStoreDlg(const char *title,char * fname,unsigned long * fl
  int i,active,oactive,_lastbyte, neditors;
  bool redraw;
  unsigned attr,stx = 0;
-#if __WORDSIZE >= 32
  char startdig[19],enddig[19];
  unsigned mlen[3] = { 19, 19, 71 };
-#else
- char startdig[11],enddig[11];
- unsigned mlen[3] = { 10, 10, 71 };
-#endif
  char * legal[3] = { &legalchars[2], &legalchars[2], NULL };
  char *wbuff[3];
 
@@ -500,20 +483,12 @@ bool __FASTCALL__ GetFStoreDlg(const char *title,char * fname,unsigned long * fl
    neditors++;
  }
  XX1 += 5;
-#if __WORDSIZE >= 32
  XX2  = XX1 + 17;
-#else
- XX2  = XX1 + 9;
-#endif
  YY1 -= 3;
  YY2  = YY1;
  ewnd[0] = CreateEditor(XX1,YY1,XX2,YY2,TWS_CURSORABLE | TWS_NLSOEM);
  XX1 += 27;
-#if __WORDSIZE >= 32
  XX2 = XX1 + 17;
-#else
- XX2 = XX1 + 9;
-#endif
  ewnd[1] = CreateEditor(XX1,YY1,XX2,YY2,TWS_CURSORABLE | TWS_NLSOEM);
  twUseWin(wdlg);
  twGotoXY(1,2);  twPutS(TYPE_HEX_FORM);
@@ -590,19 +565,11 @@ static void __NEAR__ __FASTCALL__ FFStaticPaintInsDel(TWindow * wdlg,char * st,c
     twUseWin(wdlg);
     len = strlen(st);
     twGotoXY(8,4); twPutS(st);
-#if __WORDSIZE >= 32
     for(i = len;i < 18;i++)
-#else
-    for(i = len;i < 10;i++)
-#endif
 	twPutChar(TWC_MED_SHADE);
     len = strlen(end);
     twGotoXY(35,4); twPutS(end);
-#if __WORDSIZE >= 32
     for(i = len;i < 18;i++)
-#else
-    for(i = len;i < 10;i++)
-#endif
 	twPutChar(TWC_MED_SHADE);
     twUseWin(_using);
 }
@@ -618,11 +585,7 @@ bool __FASTCALL__ GetInsDelBlkDlg(const char *title,__filesize_t * start,__fileo
  bool redraw;
  char startdig[11],enddig[11];
  char * legal[2] = { &legalchars[2], legalchars };
-#if __WORDSIZE >= 32
  unsigned mlen[2] = { 19, 19 };
-#else
- unsigned mlen[2] = { 10, 10 };
-#endif
  char *wbuff[2];
 
  twGetWinPos(wdlg,&x1,&y1,&x2,&y2);
@@ -633,18 +596,10 @@ bool __FASTCALL__ GetInsDelBlkDlg(const char *title,__filesize_t * start,__fileo
  wbuff[1] = enddig;
  XX1 = X1 + 8;
  YY2 = YY1 = Y1 + 4;
-#if __WORDSIZE >= 32
  XX2 = XX1 + 17;
-#else
- XX2 = XX1 + 9;
-#endif
  ewnd[0] = CreateEditor(XX1,YY1,XX2,YY2,TWS_CURSORABLE | TWS_NLSOEM);
  XX1 += 27;
-#if __WORDSIZE >= 32
  XX2 = XX1 + 17;
-#else
- XX2 = XX1 + 9;
-#endif
  ewnd[1] = CreateEditor(XX1,YY1,XX2,YY2,TWS_CURSORABLE | TWS_NLSOEM);
  twUseWin(wdlg);
  twGotoXY(1,2); twPutS(TYPE_HEX_FORM);

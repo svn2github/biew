@@ -28,7 +28,7 @@ void __FASTCALL__ __nls_OemToOsdep(unsigned char *buff,unsigned len)
 {
  if(win32_use_ansi)
  {
-   OemToCharBuff(buff,buff,len);
+   OemToCharBuff((LPCSTR)buff,(LPSTR)buff,len);
  }
 }
 
@@ -38,5 +38,5 @@ void __FASTCALL__ __nls_OemToFs(unsigned char *buff,unsigned len)
 
 void __FASTCALL__ __nls_CmdlineToOem(unsigned char *buff,unsigned len)
 {
-   CharToOemBuff(buff,buff,len);
+   CharToOemBuff((LPCSTR)buff,(LPSTR)buff,len);
 }

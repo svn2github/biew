@@ -128,7 +128,7 @@ static __filesize_t __FASTCALL__ archModLst( void )
    */
    if(!(nnames%4)) nnames/=sizeof(unsigned long);
    if(!(obj = ma_Build(nnames,true))) return fpos;
-   if(!(addr = new unsigned long [nnames])) goto exit;
+   if(!(addr = new __filesize_t [nnames])) goto exit;
    bmReadBufferEx(addr,sizeof(unsigned long)*nnames,sizeof(ar_hdr)+sizeof(unsigned long),BM_SEEK_SET);
    if(archReadModList(obj,nnames,addr))
    {

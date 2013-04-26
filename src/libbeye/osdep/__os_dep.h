@@ -91,12 +91,7 @@ extern int       __FASTCALL__ __kbdGetShiftsKey( void );
 		    **/
 extern int       __FASTCALL__ __inputRawInfo(char *head, char *text);
 
-
-#if __WORDSIZE == 16
-typedef unsigned char tAbsCoord; /**< This is the data type used to represent screen-related coordinates */
-#else
 typedef unsigned tAbsCoord; /**< This is the data type used to represent screen-related coordinates */
-#endif
 
 /* MOUSE handling */
 enum {
@@ -164,12 +159,7 @@ typedef struct tag_tvioBuff
 				      screen.
 */
 enum {
-#if __WORDSIZE == 16
-    __TVIO_MAXSCREENWIDTH   =132, /**< Defines maximal width of screen */
-#else
     __TVIO_MAXSCREENWIDTH   =255, /**< Defines maximal width of screen */
-#endif
-
     __TVIO_FLG_DIRECT_CONSOLE_ACCESS  =0x00000001L, /**< Defines that video subsystem must access to console directly, if it possible */
     __TVIO_FLG_USE_7BIT               =0x00000002L  /**< Defines that video subsystem must strip high bit of video characters */
 };
@@ -352,23 +342,12 @@ extern unsigned  __FASTCALL__ __OsSetTimerCallBack(unsigned ms,timer_callback *f
 		    **/
 extern void      __FASTCALL__ __OsRestoreTimer(void);
 
-#if __WORDSIZE >= 32
 #define __fileoff_t  int64_t
 #define __filesize_t uint64_t
 #define FILEOFF_MAX std::numeric_limits<int64_t>::max()
 #define FILESIZE_MAX std::numeric_limits<uint64_t>::max()
-#else
-#define __fileoff_t  int32_t
-#define __filesize_t uint32_t
-#define FILEOFF_MAX LONG_MAX
-#define FILESIZE_MAX ULONG_MAX
-#endif
 
-#if __WORDSIZE >= 64
 typedef any_t* bhandle_t;
-#else
-typedef int   bhandle_t;
-#endif
 #define NULL_HANDLE ((bhandle_t)-1)
 
 		   /** Closes opened stream

@@ -6,12 +6,21 @@
  */
 #ifndef __MP_MALLOC_H_INCLUDED__
 #define __MP_MALLOC_H_INCLUDED__ 1
+#include "config.h"
 
 #include <string>
 
+#ifdef HAVE_BACKRACE
 #include <execinfo.h>
+#else
+inline int backtrace(any_t** buffer,size_t siz) { return 0; }
+#endif
 #include <stddef.h>
+#ifdef HAVE_MPROTECT
 #include <sys/mman.h>
+#else
+inline int mprotect(any_t* addr,size_t len,int prot) { return -1; }
+#endif
 #include "config.h"
 
 namespace beye {

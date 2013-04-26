@@ -52,11 +52,7 @@ static unsigned long __NEAR__ __FASTCALL__ __get_perf(perf_func fnc,unsigned n_i
   ctrl_arr = c_arr;
   /* align pointer on 16-byte boundary */
 
-#if __WORDSIZE == 64
   if((uint64_t)ctrl_arr & 15) ctrl_arr += 16-((uint64_t)ctrl_arr&15);
-#else
-  if((uint32_t)ctrl_arr & 15) ctrl_arr += 16-((uint32_t)ctrl_arr&15);
-#endif
 
   memset(ctrl_arr,0,sizeof(ctrl_arr));
   if(time_interval)

@@ -1045,11 +1045,7 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
      switch(dig_type)
      {
       case DISARG_LLONG:
-#if __WORDSIZE > 32
 			 appstr = Get16SignDig(*(int64_t *)defval);
-#else
-			 appstr = Get16SignDig(((int32_t *)defval)[0],((int32_t *)defval)[1]);
-#endif
 			 if(type & DISARG_IMM &&
 			    disNeedRef >= NEEDREF_PREDICT &&
 			    dis_severity < DISCOMSEV_STRING &&
@@ -1135,11 +1131,7 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
 					    ,((unsigned char *)defval)[3]);
 			 break;
       case DISARG_QWORD:
-#if __WORDSIZE > 32
 			 appstr = Get16Digit(*(uint64_t *)defval);
-#else
-			 appstr = Get16Digit(((uint32_t *)defval)[0],((uint32_t *)defval)[1]);
-#endif
 			 if(type & DISARG_IMM &&
 			    disNeedRef >= NEEDREF_PREDICT &&
 			    dis_severity < DISCOMSEV_STRING &&
@@ -1299,12 +1291,10 @@ int __FASTCALL__ disAppendFAddr(char * str,__fileoff_t ulShift,__fileoff_t disti
        char lbuf[20];
        cptr = DumpMode ? "L" : "file:";
        strcat(str,cptr);
-#if (__WORDSIZE >= 32) && !defined(__QNX4__)
 	if((BMFileFlags&BMFF_USE64))
 	    sprintf(lbuf,"%016llX",r_sh);
 	else
-#endif
-       sprintf(lbuf,"%08lX",(unsigned long)r_sh);
+	    sprintf(lbuf,"%08lX",(unsigned long)r_sh);
        strcat(str,lbuf);
        appended = RAPREF_DONE;
      }

@@ -265,11 +265,7 @@ __filesize_t __FASTCALL__ GidGetGoAddress(unsigned keycode)
 char * __FASTCALL__ GidEncodeAddress(__filesize_t cfpos,bool AddressDetail)
 {
   static char addr[11];
-#if __WORDSIZE >= 32
   strcpy(addr,((BMFileFlags&BMFF_USE64)?Get16Digit(cfpos):Get8Digit(cfpos)));
-#else
-  strcpy(addr,Get8Digit(cfpos));
-#endif
   if(AddressDetail && beye_context().active_format()->AddressResolving)
        beye_context().active_format()->AddressResolving(addr,cfpos);
   strcat(addr,": ");

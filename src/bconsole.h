@@ -97,13 +97,10 @@ enum {
     TWindow *    __FASTCALL__ PleaseWaitWnd( void );
 
     bool        __FASTCALL__ Get2DigitDlg(const char *title,const char *text,unsigned char *xx);
-#if __WORDSIZE >= 32
     bool        __FASTCALL__ Get16DigitDlg(const char *title,const char *text,char attr,
 						unsigned long long int *xx);
-#else
-    bool        __FASTCALL__ Get8DigitDlg(const char *title,const char *text,char attr,
-						unsigned long *xx);
-#endif
+    bool        __FASTCALL__ Get8DigitDlg(const char *title,const char *text,char attr,unsigned long *xx);
+
     bool        __FASTCALL__ GetStringDlg(char * buff,const char * title,const char *subtitle,
 				     const char *prompt);
 enum {

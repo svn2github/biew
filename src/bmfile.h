@@ -32,13 +32,8 @@ namespace beye {
     inline unsigned HA_LEN() { return (BMFileFlags&BMFF_USE64)?18:10; }
 
     enum {
-#if __WORDSIZE == 16
-	BBIO_CACHE_SIZE        =0x4000,  /* 16k */
-	BBIO_SMALL_CACHE_SIZE  =0x1000  /* 4k */
-#else
 	BBIO_CACHE_SIZE        =0xFFFF,  /* 64k */
 	BBIO_SMALL_CACHE_SIZE  =0x4000  /* 16k */
-#endif
     };
 
     BFile*        __FASTCALL__ beyeOpenRO(const std::string& fname,unsigned cache_size);

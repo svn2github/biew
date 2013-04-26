@@ -34,7 +34,6 @@ static int __NEAR__ __FASTCALL__ GetFullBin(uintmax_t value,char * buff)
  char byte,*b;
  bool started = false;
  buff[0] = 0;
-#if __WORDSIZE >= 32
  byte = (value >> 60) & 0x0F;
  if(byte) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
  byte = (value >> 56) & 0x0F;
@@ -53,10 +52,6 @@ static int __NEAR__ __FASTCALL__ GetFullBin(uintmax_t value,char * buff)
  if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
  byte = (value >> 28) & 0x0F;
  if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
-#else
- byte = (value >> 28) & 0x0F;
- if(byte) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
-#endif
  byte = (value >> 24) & 0x0F;
  if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
  byte = (value >> 20) & 0x0F;
@@ -76,39 +71,22 @@ static int __NEAR__ __FASTCALL__ GetFullBin(uintmax_t value,char * buff)
 
 static int __NEAR__ __FASTCALL__ Dig2Str(uintmax_t value,char * buff,int action)
 {
-#if __WORDSIZE >= 32
  if(action == 0) return strlen(ulltoa(value,buff,16));
  if(action == 1) return strlen(lltoa(value,buff,8));
  if(action == 2) return strlen(ulltoa(value,buff,10));
  if(action == 3) return strlen(lltoa(value,buff,10));
  if(action == 4) return GetFullBin(value,buff);
  if(action == 5) return strlen(ulltoa(value,buff,2));
-#else
- if(action == 0) return strlen(ultoa(value,buff,16));
- if(action == 1) return strlen(ltoa(value,buff,8));
- if(action == 2) return strlen(ultoa(value,buff,10));
- if(action == 3) return strlen(ltoa(value,buff,10));
- if(action == 4) return GetFullBin(value,buff);
- if(action == 5) return strlen(ultoa(value,buff,2));
-#endif
  return 0;
 }
 
 static uintmax_t __NEAR__ __FASTCALL__ Str2Dig(char * buff,int action)
 {
-#if __WORDSIZE >= 32
  if(action == 0) return strtoull(buff,NULL,16);
  if(action == 1) return strtoull(buff,NULL,8);
  if(action == 2) return strtoull(buff,NULL,10);
  if(action == 3) return strtoll(buff,NULL,10);
  if(action == 4) return strtoull(buff,NULL,2);
-#else
- if(action == 0) return strtoul(buff,NULL,16);
- if(action == 1) return strtoul(buff,NULL,8);
- if(action == 2) return strtoul(buff,NULL,10);
- if(action == 3) return strtol(buff,NULL,10);
- if(action == 4) return strtoul(buff,NULL,2);
-#endif
  return 0;
 }
 
@@ -138,13 +116,8 @@ static void DigConv( void )
 {
  tAbsCoord x1,y1,x2,y2;
  tRelCoord X1,Y1,XX1,XX2,YY1,YY2;
-#if __WORDSIZE >= 32
  TWindow * wdlg = CrtDlgWndnls(" Digital convertor ",78,9);
  unsigned mlen[5] = { 16, 22, 19, 20, 64 };
-#else
- TWindow * wdlg = CrtDlgWndnls(" Digital convertor ",48,9);
- unsigned mlen[5] = { 8, 11, 10, 11, 32 };
-#endif
  TWindow * ewnd[5];
  int i,active,oactive,_lastbyte;
  unsigned attr,stx = 0,rlen,w;

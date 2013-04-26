@@ -282,11 +282,7 @@ int evaluate(char *line, intmax_t *val,int *result_base)
 				  base = 2;
 			      }
 			      else base = 10;
-#if (__WORDSIZE >= 32) && !defined(__QNX4__)
 			      if (0 == (arg = strtoll(e_num, &endptr,base)) &&
-#else
-			      if (0 == (arg = strtol(e_num, &endptr,base)) &&
-#endif
 				    NULL == strchr(num, '0'))
 			      {
 				    retval = O_ERROR;
@@ -629,11 +625,7 @@ static void CalculatorFunc(void)
 	   case 8:  strcpy(sres,"0"); break;
 	   default: break;
 	 }
-#if (__WORDSIZE >= 32) && !defined(__QNX4__)
 	 lltoa(val,&sres[strlen(sres)],base);
-#else
-	 ltoa(val,&sres[strlen(sres)],base);
-#endif
 	 switch(base)
 	 {
 	   case 2: strcat(sres,"b"); break;

@@ -27,7 +27,6 @@ using namespace beye;
 #include <stddef.h>
 #include <string.h>
 #include <stdint.h>
-#include "libbeye/sysdep/ia32/fastcopy.h"
 #include "libbeye/sysdep/ia32/_inlines.h"
 
 #if defined( CAN_COMPILE_X86_GAS ) && defined( USE_FASTMEMCPY )

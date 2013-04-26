@@ -15,6 +15,10 @@ using namespace beye;
 #include <time.h>
 #include <unistd.h>
 
+#ifndef HAVE_MEMALIGN
+inline any_t* memalign(size_t b,size_t s) { return malloc(s); }
+#endif
+
 namespace beye {
 
 enum { Max_BackTraces=13 };
@@ -195,7 +199,7 @@ static char* addr2line(bt_cache_t* cache,any_t*ptr) {
     return NULL;
 }
 
-static __always_inline void __print_backtrace(unsigned num) {
+inline void __print_backtrace(unsigned num) {
     bt_cache_t* cache=init_bt_cache();
     any_t*	calls[num];
     unsigned	i,ncalls;
@@ -223,7 +227,7 @@ static void __prot_free_append(any_t*ptr) {
 	std::cerr<<"[__prot_free_slot] suspect call found! Can't find slot for address: "<<ptr<<" [aligned: "<<page_ptr<<"]"<<std::endl;
 	__prot_print_slots(&priv->mallocs);
 	__print_backtrace(Max_BackTraces);
-	::kill(::getpid(), SIGILL);
+	exit(EXIT_FAILURE);
     }
     size_t fullsize=app_fullsize(slot->size);
     ::mprotect(prot_last_page(page_ptr,fullsize),__VM_PAGE_SIZE__,MP_PROT_READ|MP_PROT_WRITE);
@@ -239,7 +243,7 @@ static any_t* __prot_realloc_append(any_t*ptr,size_t size) {
 	    std::cerr<<"[__prot_realloc_append] suspect call found! Can't find slot for address: "<<ptr<<" [aligned: "<<prot_page_align(ptr)<<"]"<<std::endl;
 	    __prot_print_slots(&priv->mallocs);
 	    __print_backtrace(Max_BackTraces);
-	    ::kill(::getpid(), SIGILL);
+	    exit(EXIT_FAILURE);
 	}
 	::memcpy(rp,ptr,std::min(slot->size,size));
 	__prot_free_append(ptr);
@@ -273,7 +277,7 @@ static void __prot_free_prepend(any_t*ptr) {
 	std::cerr<<"[__prot_free_slot] suspect call found! Can't find slot for address: "<<ptr<<" [aligned: "<<page_ptr<<"]"<<std::endl;
 	__prot_print_slots(&priv->mallocs);
 	__print_backtrace(Max_BackTraces);
-	::kill(::getpid(), SIGILL);
+	exit(EXIT_FAILURE);
     }
     ::mprotect(page_ptr,__VM_PAGE_SIZE__,MP_PROT_READ|MP_PROT_WRITE);
     ::free(page_ptr);
@@ -288,7 +292,7 @@ static any_t* __prot_realloc_prepend(any_t*ptr,size_t size) {
 	    std::cerr<<"[__prot_realloc_prepend] suspect call found! Can't find slot for address: "<<ptr<<" [aligned: "<<pre_page_align(ptr)<<"]"<<std::endl;
 	    __prot_print_slots(&priv->mallocs);
 	    __print_backtrace(Max_BackTraces);
-	    ::kill(getpid(), SIGILL);
+	    exit(EXIT_FAILURE);
 	}
 	::memcpy(rp,ptr,std::min(slot->size,size));
 	__prot_free_prepend(ptr);
@@ -322,7 +326,7 @@ static void prot_free(any_t*ptr) {
     else				 __prot_free_prepend(ptr);
 }
 
-static __always_inline any_t* bt_malloc(size_t size) {
+inline any_t* bt_malloc(size_t size) {
     any_t*rp;
     mp_slot_t* slot;
     rp=::malloc(size);
@@ -333,7 +337,7 @@ static __always_inline any_t* bt_malloc(size_t size) {
     return rp;
 }
 
-static __always_inline any_t* bt_memalign(size_t boundary,size_t size) {
+inline any_t* bt_memalign(size_t boundary,size_t size) {
     any_t*rp;
     rp=::memalign(boundary,size);
     if(rp) {
@@ -344,7 +348,7 @@ static __always_inline any_t* bt_memalign(size_t boundary,size_t size) {
     return rp;
 }
 
-static __always_inline any_t* bt_realloc(any_t*ptr,size_t size) {
+inline any_t* bt_realloc(any_t*ptr,size_t size) {
     any_t* rp;
     mp_slot_t* slot;
     if(!ptr) return bt_malloc(size);
@@ -364,7 +368,7 @@ static __always_inline any_t* bt_realloc(any_t*ptr,size_t size) {
     return rp;
 }
 
-static __always_inline void bt_free(any_t*ptr) {
+inline void bt_free(any_t*ptr) {
     mp_slot_t* slot=prot_find_slot(&priv->mallocs,ptr);
     if(!slot) {
 	std::cerr<<"[bt_free] suspect call found! Can't find slot for address: "<<ptr<<std::endl;

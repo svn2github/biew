@@ -21,6 +21,7 @@ using namespace beye;
  * @since       11.2007
  * @note        Added __get_home_dir() and some optimizations
 **/
+#include <algorithm>
 /* for cygwin - remove unnecessary includes */
 #define _OLE_H
 #define _OLE2_H
@@ -30,7 +31,7 @@ using namespace beye;
 #include <stdlib.h>
 #include <process.h>
 
-#if __WORDSIZE > 32
+#if __SIZEOF_POINTER__ > 4
 /* Note: Vista-64 requires porting for MMF file handling */
 #define __DISABLE_MMF 1
 #endif
@@ -46,7 +47,7 @@ static bool __c__break = false;
 #if defined( _MSC_VER ) || __GNUC_MINOR__ >= 95
 static BOOL WINAPI MyHandler( DWORD type )
 #else
-static BOOL MyHandler( DWORD type )
+static BOOL __attribute((stdcall)) MyHandler( DWORD type )
 #endif
 {
   switch(type)
@@ -135,7 +136,7 @@ char * __FASTCALL__ __get_rc_dir( const char *progname )
    getStartupFolder(rbuff2,sizeof(rbuff2));
    p1 = strrchr(rbuff2,'\\');
    p2 = strrchr(rbuff2,'/');
-   p1 = max(p1,p2);
+   p1 = std::max(p1,p2);
    if(p1) p1[1] = '\0';
    last = p1[strlen(p1)-1];
    if(!(last == '\\' || last == '/')) strcat(rbuff2,"\\");
@@ -157,7 +158,7 @@ char * __FASTCALL__ __get_home_dir(const char *progname)
    getStartupFolder(_home_dir_name,sizeof(_home_dir_name));
    p1 = strrchr(_home_dir_name,'\\');
    p2 = strrchr(_home_dir_name,'/');
-   p1 = max(p1,p2);
+   p1 = std::max(p1,p2);
    if(p1) p1[1] = '\0';
    last = p1[strlen(p1)-1];
    if(!(last == '\\' || last == '/')) strcat(_home_dir_name,"\\");
