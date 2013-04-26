@@ -323,7 +323,7 @@ exesuf=".exe"
 fi
 if win32 ; then
 app_libs="-lwinmm"
-app_ldflags="--force-exe-suffix"
+app_ldflags="-static"
 app_cflags=
 libext=lib
 exesuf=".exe"

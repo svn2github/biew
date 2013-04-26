@@ -19,6 +19,7 @@
 #define __BEYELIB_H 1
 
 #include "config.h"
+#include <stdlib.h>
 
 #ifndef __NORECURSIVE
 
@@ -41,7 +42,6 @@
 #endif
 #include "libbeye/mp_malloc.h"
 
-namespace beye {
 		   /** Converts all alphabetic characters in buffer to upper case.
 		     * @return                none
 		     * @param buff            buffer to be converted
@@ -67,7 +67,7 @@ extern void __FASTCALL__ memlwr(any_t*buffer,unsigned cb_buffer);
 extern char *        ltoa(long _value, char *_s, int _radix);
 #endif
 #ifndef HAVE_ATOLL
-#define atoll(s) strtoll(s, NULL, 10) /* temporal workaround */
+extern long long int atoll(const char *s);
 #endif
 #ifndef HAVE_STRTOLL
 extern long long strtoll(const char *nptr, char **endptr, int base);
@@ -84,7 +84,7 @@ extern char *        lltoa(long long int _value, char *_s, int _radix);
 #ifndef HAVE_ULLTOA
 extern char *        ulltoa(unsigned long long int _value, char *_s, int _radix);
 #endif
-
+namespace beye {
     template <typename T> class LocalPtr {
 	public:
 	    LocalPtr(T* value):ptr(value) {}

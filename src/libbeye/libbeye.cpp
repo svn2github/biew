@@ -38,7 +38,6 @@ void      __FASTCALL__ __nls_PrepareOEMForTVio(tvioBuff *it,unsigned size)
   __nls_OemToOsdep(it->chars,size);
 }
 
-namespace beye {
 void __FASTCALL__ memupr(any_t*ptr,unsigned n)
 {
    unsigned i;
@@ -53,6 +52,9 @@ void __FASTCALL__ memlwr(any_t*ptr,unsigned n)
    ((char *)ptr)[i] = tolower(((char *)ptr)[i]);
 }
 
+#ifndef HAVE_ATOLL
+long long int atoll(const char* s) { return strtoll(s, NULL, 10); } /* temporal workaround */
+#endif
 #ifndef HAVE_LTOA
 /* (emx+gcc) -- Copyright (c) 1990-1995 by Eberhard Mattes */
 char *ltoa (long value, char *string, int radix)
@@ -166,7 +168,7 @@ char *ulltoa (unsigned long long int value, char *string, int radix)
   return string;
 }
 #endif
-
+namespace beye {
 bool __FASTCALL__ isseparate(int ch) { return (isspace(ch) || ispunct(ch)); }
 
 int __FASTCALL__ szTrimTrailingSpace(char *str)

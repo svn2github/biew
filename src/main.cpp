@@ -789,6 +789,7 @@ int main(int argc,char* args[], char *envp[])
 	    envm[str]=stmp;
 	}
 //	envp[j+1] = NULL;
+#ifdef HAVE_MRPOTECT
 	/* init antiviral protection */
 	int rc;
 	rc=mp_mprotect((any_t*)antiviral_hole1,sizeof(antiviral_hole1),MP_DENY_ALL);
@@ -799,6 +800,7 @@ int main(int argc,char* args[], char *envp[])
 		std::cerr<<"*** Error! Cannot initialize antiviral protection: '"<<strerror(errno)<<"' ***!"<<std::endl;
 		return EXIT_FAILURE;
 	}
+#endif
 	/* call program */
 	return Beye(ArgVector,envm);
     } catch(const std::string& what) {
