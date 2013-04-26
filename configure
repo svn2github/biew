@@ -354,7 +354,7 @@ LIBS="$LIBS $app_libs"
 print_config HAVE_ config.h config.mak terminal_out
 
 check_func2 execinfo.h backtrace
-print_config HAVE_ cnofig.h config.mak backtrace
+print_config HAVE_ config.h config.mak backtrace
 
 check_func2 stdio.h popen
 print_config HAVE_ config.h config.mak popen

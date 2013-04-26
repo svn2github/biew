@@ -10,7 +10,7 @@
 
 #include <string>
 
-#ifdef HAVE_BACKRACE
+#ifdef HAVE_BACKTRACE
 #include <execinfo.h>
 #else
 inline int backtrace(any_t** buffer,size_t siz) { return 0; }
@@ -21,7 +21,6 @@ inline int backtrace(any_t** buffer,size_t siz) { return 0; }
 #else
 inline int mprotect(any_t* addr,size_t len,int prot) { return -1; }
 #endif
-#include "config.h"
 
 namespace beye {
 
