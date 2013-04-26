@@ -134,12 +134,12 @@ class BFile : public Opaque {
 		   /** Determines whether a opened stream has reached the End of File.
 		     * @return                true if EOF has reached
 		    **/
-	bool	eof();
+	bool	eof() const;
 
 		   /** Returns the length (in bytes) of file associated with opened stream.
 		     * @return                file length
 		    **/
-	__filesize_t flength();
+	__filesize_t flength() const;
 
 		   /** Flushes buffer onto disk.
 		     * @return                true if operation was succesfully performed
@@ -212,7 +212,7 @@ class BFile : public Opaque {
 		     * @return                optimization (BIO_OPT_*)
 		     * @see                   bioSetOptimization
 		    **/
-	unsigned get_optimization();
+	unsigned get_optimization() const;
 
 		   /** Sets new optimization of buffering and returns previous.
 		     * @return                optimization (BIO_OPT_*)
@@ -224,7 +224,7 @@ class BFile : public Opaque {
 		     * @return                offset from begin of file
 		     * @see                   bioSeek
 		    **/
-	__filesize_t tell();
+	__filesize_t tell() const;
 
 		   /** Writes one byte to stream.
 		     * @return                true if operation was succesfully performed
@@ -275,7 +275,7 @@ class BFile : public Opaque {
 		   /** Returns name of file associated with opened stream.
 		     * @return                name of file
 		    **/
-	const char* filename();
+	const char* filename() const;
 
 		   /** Causes opened stream to be duplicated.
 		     * @return                handle of duplicted stream
@@ -284,7 +284,7 @@ class BFile : public Opaque {
 		     *                        characteristics.
 		     * @see                   bioDupEx
 		    **/
-	BFile*	dup();
+	BFile*	dup() const;
 
 		   /** Causes opened stream to be duplicated.
 		     * @return                handle of duplicted stream
@@ -295,12 +295,12 @@ class BFile : public Opaque {
 		     *                        possible characteristics.
 		     * @see                   bioDup
 		    **/
-	BFile*	dup_ex(unsigned buffSize);
+	BFile*	dup_ex(unsigned buffSize) const;
 
 		   /** Returns low-level OS handle of opened stream.
 		     * @return                OS handle of opened stream
 		    **/
-	bhandle_t handle();
+	bhandle_t handle() const;
 
 		   /** Returns pointer to buffer of opened stream.
 		     * @return                pointer to buffer
@@ -308,7 +308,7 @@ class BFile : public Opaque {
 		     *                        access to file cache.
 		     * @see                   bioBuffLen bioBuffPos
 		    **/
-	any_t*	buffer();
+	any_t*	buffer() const;
 
 		   /** Returns length of opened stream buffer.
 		     * @return                length of buffer
@@ -316,7 +316,7 @@ class BFile : public Opaque {
 		     *                        access to file cache.
 		     * @see                   bioBuff bioBuffPos
 		    **/
-	unsigned bufflen();
+	unsigned bufflen() const;
 
 		   /** Returns logical buffer position.
 		     * @return                length of buffer
@@ -326,12 +326,12 @@ class BFile : public Opaque {
 		     *                        logical file position.
 		     * @see                   bioBuff bioBuffLen
 		    **/
-	unsigned buffpos();
+	unsigned buffpos() const;
     private:
-	bool is_cache_valid() { return (b.vfb.MBuffer && !(optimize & Opt_NoCache)); }
-	bool is_writeable(unsigned _openmode) { return ((_openmode & FO_READWRITE) || (_openmode & FO_WRITEONLY)); }
-	bool __isOutOfBuffer(__filesize_t pos) { return (pos < b.vfb.FBufStart || pos >= b.vfb.FBufStart + b.vfb.MBufSize) && !is_mmf; }
-	bool __isOutOfContents(__filesize_t pos) { return ((pos < b.vfb.FBufStart || pos >= b.vfb.FBufStart + b.vfb.MBufLen) && !is_mmf); }
+	bool is_cache_valid() const { return (b.vfb.MBuffer && !(optimize & Opt_NoCache)); }
+	bool is_writeable(unsigned _openmode) const { return ((_openmode & FO_READWRITE) || (_openmode & FO_WRITEONLY)); }
+	bool __isOutOfBuffer(__filesize_t pos) const { return (pos < b.vfb.FBufStart || pos >= b.vfb.FBufStart + b.vfb.MBufSize) && !is_mmf; }
+	bool __isOutOfContents(__filesize_t pos) const { return ((pos < b.vfb.FBufStart || pos >= b.vfb.FBufStart + b.vfb.MBufLen) && !is_mmf); }
 	bool __fill(__fileoff_t pos);
 	bool __flush();
 	bool __seek(__fileoff_t pos,int origin);

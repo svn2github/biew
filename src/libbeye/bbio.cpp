@@ -408,7 +408,7 @@ bool BFile::seek(__fileoff_t pos,int orig)
  return ret;
 }
 
-__filesize_t BFile::tell()
+__filesize_t BFile::tell() const
 {
   return (is_cache_valid() || is_mmf) ? FilePos : (__filesize_t)__OsTell(b.vfb.handle);
 }
@@ -547,7 +547,7 @@ bool BFile::reread()
   return ret;
 }
 
-__filesize_t BFile::flength()
+__filesize_t BFile::flength() const
 {
   return FLength;
 }
@@ -604,37 +604,37 @@ unsigned BFile::set_optimization(unsigned flags)
   return ret;
 }
 
-unsigned BFile::get_optimization()
+unsigned BFile::get_optimization() const
 {
   return optimize;
 }
 
-bhandle_t BFile::handle()
+bhandle_t BFile::handle() const
 {
    return b.vfb.handle;
 }
 
-const char* BFile::filename()
+const char* BFile::filename() const
 {
   return FileName;
 }
 
-any_t* BFile::buffer()
+any_t* BFile::buffer() const
 {
   return is_mmf ? b.mmb->mmf_addr : b.vfb.MBuffer;
 }
 
-unsigned BFile::bufflen()
+unsigned BFile::bufflen() const
 {
   return is_mmf ? FLength : b.vfb.MBufLen;
 }
 
-unsigned BFile::buffpos()
+unsigned BFile::buffpos() const
 {
   return is_mmf ? 0L : b.vfb.MBufLen - (unsigned)(FilePos - b.vfb.FBufStart);
 }
 
-BFile* BFile::dup_ex(unsigned buff_size)
+BFile* BFile::dup_ex(unsigned buff_size) const
 {
     BFile* ret = NULL;
     unsigned len;
@@ -690,12 +690,12 @@ BFile* BFile::dup_ex(unsigned buff_size)
     return ret;
 }
 
-BFile* BFile::dup()
+BFile* BFile::dup() const
 {
     return dup_ex(b.vfb.MBufSize);
 }
 
-bool BFile::eof()
+bool BFile::eof() const
 {
     bool retval;
     if(is_cache_valid() || is_mmf) retval = is_eof;
