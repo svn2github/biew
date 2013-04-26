@@ -23,6 +23,7 @@ using namespace beye;
 #include <errno.h>
 #include <stdlib.h>
 
+#include "beye.h"
 #include "bin_util.h"
 #include "reg_form.h"
 #include "beyeutil.h"
@@ -411,9 +412,9 @@ bool __FASTCALL__ udnUserNames( void ) {
 
 void __FASTCALL__ udnInit( hIniProfile *ini ) {
   udn_fname[0]='\0';
-  if(isValidIniArgs())
+  if(beye_context().is_valid_ini_args())
   {
-    beyeReadProfileString(ini,"Beye","Browser","udn_list","",udn_fname,sizeof(udn_fname));
+    beye_context().read_profile_string(ini,"Beye","Browser","udn_list","",udn_fname,sizeof(udn_fname));
     if(udn_fname[0]) __udnLoadList();
   }
 }
@@ -426,6 +427,6 @@ void __FASTCALL__ udnTerm( hIniProfile *ini ) {
     }
     la_Destroy(udn_list);
   }
-  beyeWriteProfileString(ini,"Beye","Browser","udn_list",udn_fname);
+  beye_context().write_profile_string(ini,"Beye","Browser","udn_list",udn_fname);
 }
 } // namespace beye

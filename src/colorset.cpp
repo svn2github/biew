@@ -22,13 +22,13 @@ using namespace beye;
 #include <ctype.h>
 #include <string.h>
 
+#include "beye.h"
 #include "colorset.h"
 #include "bconsole.h"
 #include "libbeye/file_ini.h"
 #include "libbeye/libbeye.h"
 
 namespace beye {
-extern char beye_scheme_name[];
 
 char last_skin_error[50];
 
@@ -132,7 +132,7 @@ bool csetReadIniFile(const char *ini_name)
   cset = iniOpenFile(ini_name,&has_err);
   last_skin_error[0] = 0;
   if(has_err) return false; /** return no error, because ini_name was not found or unavailable */
-  iniReadProfileString(cset,"Skin info","","Name","Unnamed",beye_scheme_name,256);
+  iniReadProfileString(cset,"Skin info","","Name","Unnamed",beye_context().scheme_name,256);
   for(i = 0;i < 16;i++)
   {
     sprintf(cval,"%i",named_color_def[i].color);

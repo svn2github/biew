@@ -32,6 +32,7 @@ using namespace beye;
 #include <limits.h>
 #include <time.h>
 
+#include "beye.h"
 #include "editor.h"
 #include "colorset.h"
 #include "beyeutil.h"
@@ -41,7 +42,6 @@ using namespace beye;
 
 namespace beye {
     extern TWindow * ErrorWnd;
-    extern char beye_codepage[];
 
 enum {
     MAXINPUT=79,
@@ -53,7 +53,7 @@ static unsigned char KB_freq = 0;
 
 void __FASTCALL__ initBConsole( unsigned long vio_flg,unsigned long twin_flg )
 {
-  twInit(beye_codepage,vio_flg,twin_flg);
+  twInit(beye_context().codepage,vio_flg,twin_flg);
   if(tvioWidth < 80 || tvioHeight < 3)
   {
     if(tvioWidth>16&&tvioHeight>2) {

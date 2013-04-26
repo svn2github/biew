@@ -23,13 +23,13 @@ using namespace beye;
 #include <string.h>
 #include <errno.h>
 
+#include "beye.h"
 #include "bmfile.h"
 #include "bconsole.h"
 #include "tstrings.h"
 #include "libbeye/bbio.h"
 
 namespace beye {
-extern bool fioUseMMF;
 unsigned BMFileFlags=0;
 BFile& bm_file_handle = bNull,& sc_bm_file_handle = bNull;
 
@@ -38,9 +38,9 @@ BFile* __FASTCALL__ beyeOpenRO(const std::string& fname,unsigned cache_size)
   BFile* fret;
   fret=new BFile;
   bool rc;
-  rc = fret->open(fname,FO_READONLY | SO_DENYNONE,cache_size,fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
+  rc = fret->open(fname,FO_READONLY | SO_DENYNONE,cache_size,beye_context().fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
   if(rc == false)
-    rc = fret->open(fname,FO_READONLY | SO_COMPAT,cache_size,fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
+    rc = fret->open(fname,FO_READONLY | SO_COMPAT,cache_size,beye_context().fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
   if(rc==false) { delete fret; fret=&bNull; }
   return fret;
 }
@@ -50,9 +50,9 @@ BFile* __FASTCALL__ beyeOpenRW(const std::string& fname,unsigned cache_size)
   BFile* fret;
   fret=new BFile;
   bool rc;
-  rc = fret->open(fname,FO_READWRITE | SO_DENYNONE,cache_size,fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
+  rc = fret->open(fname,FO_READWRITE | SO_DENYNONE,cache_size,beye_context().fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
   if(rc == false)
-    rc = fret->open(fname,FO_READWRITE | SO_COMPAT,cache_size,fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
+    rc = fret->open(fname,FO_READWRITE | SO_COMPAT,cache_size,beye_context().fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
   if(rc==false) { delete fret; fret=&bNull; }
   return fret;
 }
@@ -66,6 +66,7 @@ int __FASTCALL__ BMOpen(const std::string& fname)
     errnoMessageBox(OPEN_FAIL,NULL,errno);
     return -1;
   }
+  if(&bm_file_handle != &bNull) delete &bm_file_handle;
   bm_file_handle = *bm;
   sc = bm_file_handle.dup_ex(BBIO_SMALL_CACHE_SIZE);
   if(sc == &bNull)
@@ -73,6 +74,7 @@ int __FASTCALL__ BMOpen(const std::string& fname)
     errnoMessageBox(DUP_FAIL,NULL,errno);
     return -1;
   }
+  if(&sc_bm_file_handle != &bNull) delete &sc_bm_file_handle;
   sc_bm_file_handle = *sc;
   bm_file_handle.set_optimization(BFile::Opt_Random);
   sc_bm_file_handle.set_optimization(BFile::Opt_Random);

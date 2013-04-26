@@ -22,6 +22,7 @@ using namespace beye;
 #include <stdio.h>
 #include "bswap.h"
 
+#include "beye.h"
 #include "reg_form.h"
 #include "plugins/disasm.h"
 #include "bconsole.h"
@@ -187,12 +188,12 @@ static void  __FASTCALL__ armTerm( void )
 static void __FASTCALL__ armReadIni( hIniProfile *ini )
 {
   char tmps[10];
-  if(isValidIniArgs())
+  if(beye_context().is_valid_ini_args())
   {
-    beyeReadProfileString(ini,"Beye","Browser","SubSubMode3","1",tmps,sizeof(tmps));
+    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode3","1",tmps,sizeof(tmps));
     armBitness = (int)strtoul(tmps,NULL,10);
     if(armBitness > 1 && armBitness != DAB_AUTO) armBitness = 0;
-    beyeReadProfileString(ini,"Beye","Browser","SubSubMode4","1",tmps,sizeof(tmps));
+    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode4","1",tmps,sizeof(tmps));
     armBigEndian = (int)strtoul(tmps,NULL,10);
     if(armBigEndian > 1) armBigEndian = 0;
   }
@@ -202,9 +203,9 @@ static void __FASTCALL__ armWriteIni( hIniProfile *ini )
 {
   char tmps[10];
   sprintf(tmps,"%i",armBitness);
-  beyeWriteProfileString(ini,"Beye","Browser","SubSubMode3",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
   sprintf(tmps,"%i",armBigEndian);
-  beyeWriteProfileString(ini,"Beye","Browser","SubSubMode4",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode4",tmps);
 }
 
 static const char *arm_bitness_names[] =

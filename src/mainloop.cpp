@@ -19,6 +19,7 @@ using namespace beye;
 **/
 #include <string.h>
 
+#include "beye.h"
 #include "colorset.h"
 #include "bmfile.h"
 #include "tstrings.h"
@@ -35,7 +36,6 @@ using namespace beye;
 namespace beye {
 extern REGISTRY_BIN mzTable;
 extern unsigned strmaxlen;
-extern __filesize_t LastOffset;
 
 
 __filesize_t lastbyte;
@@ -119,11 +119,11 @@ void MainLoop( void )
  int ch;
  __filesize_t savep = 0,cfp,nfp,flen;
  unsigned long lwidth;
- BMSeek(LastOffset,BM_SEEK_SET);
+ BMSeek(beye_context().LastOffset,BM_SEEK_SET);
  drawPrompt();
  twUseWin(MainWnd);
  textshift = activeMode->paint(KE_SUPERKEY,textshift);
- BMSeek(LastOffset,BM_SEEK_SET);
+ BMSeek(beye_context().LastOffset,BM_SEEK_SET);
  drawTitle();
  while(1)
  {
@@ -195,7 +195,7 @@ void MainLoop( void )
 		  if(SelectMode()) ch = KE_SUPERKEY;
 		  break;
     case KE_F(3):
-		  if(NewSource())
+		  if(beye_context().new_source())
 		  {
 		    ch = KE_SUPERKEY;
 		    FoundTextSt = FoundTextEnd; ch = KE_SUPERKEY;

@@ -37,6 +37,7 @@ using namespace beye;
 #include <stdlib.h>
 #include <errno.h>
 
+#include "beye.h"
 #include "bconsole.h"
 #include "colorset.h"
 #include "bmfile.h"
@@ -90,36 +91,14 @@ extern REGISTRY_MODE disMode;
 
 extern char last_skin_error[];
 static volatile char antiviral_hole1[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
-std::string ArgVector1;
 
-unsigned ListFileCount;
-static const char **ListFile;
-static char *LastOpenFileName;
-__filesize_t LastOffset;
-static bool UseIniFile=true;
-char beye_help_name[FILENAME_MAX+1] = "";
-char beye_skin_name[FILENAME_MAX+1] = "";
-char beye_syntax_name[FILENAME_MAX+1] = "";
-char beye_codepage[256] = "CP866";
-char beye_scheme_name[256] = "Built-in";
-static char beye_ini_ver[32];
-unsigned long beye_vioIniFlags = 0L;
-unsigned long beye_twinIniFlags = 0L;
-unsigned long beye_kbdFlags = 0L;
-bool iniSettingsAnywhere = false;
-bool fioUseMMF = false;
-bool iniPreserveTime = false;
-bool iniUseExtProgs = false;
-__filesize_t headshift = 0L;
-char *ini_name;
+static BeyeContext* BeyeCtx=NULL;
 
 static volatile char antiviral_hole2[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 
 TWindow * MainWnd = 0,*HelpWnd = 0,*TitleWnd = 0,*ErrorWnd = 0;
 
 static const unsigned SHORT_PATH_LEN=__TVIO_MAXSCREENWIDTH-54;
-
-char shortname[SHORT_PATH_LEN + 1];
 
 static volatile char antiviral_hole3[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 
@@ -173,6 +152,8 @@ static unsigned defMainModeSel = 0;
 
 static volatile char antiviral_hole4[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 
+BeyeContext& beye_context() { return *BeyeCtx; }
+
 bool SelectMode( void )
 {
   char *modeName[sizeof(mainModeTable)/sizeof(REGISTRY_MODE *)];
@@ -204,23 +185,6 @@ static void __NEAR__ __FASTCALL__ term_modes( void )
   if(activeMode->term) activeMode->term();
 }
 
-static void __NEAR__ __FASTCALL__ __init_beye( unsigned ArgCount )
-{
-   LastOpenFileName = new char[4096];
-   ListFile = new const char*[ArgCount-1];
-   if((!LastOpenFileName) || (!ListFile))
-   {
-     printm("BEYE initialization failed! Out of memory!");
-     exit(EXIT_FAILURE);
-   }
-}
-
-static void __NEAR__ __FASTCALL__ __term_beye( void )
-{
-   delete LastOpenFileName;
-   delete ListFile;
-}
-
 void QuickSelectMode( void )
 {
   unsigned nModes;
@@ -232,20 +196,20 @@ void QuickSelectMode( void )
   if(activeMode->init) activeMode->init();
 }
 
-static void __NEAR__ __FASTCALL__ MakeShortName( void )
+void BeyeContext::make_shortname()
 {
   unsigned l;
   unsigned slen = twGetClientWidth(TitleWnd)-54;
   l = ArgVector1.length();
-  if(l <= slen) strcpy(shortname,ArgVector1.c_str());
+  if(l <= slen) strcpy(_shortname,ArgVector1.c_str());
   else
   {
-    strncpy(shortname,ArgVector1.c_str(),slen/2 - 3);
-    shortname[slen/2-4] = 0;
-    strcat(shortname,"...");
-    strcat(shortname,&ArgVector1.c_str()[l - slen/2]);
+    strncpy(_shortname,ArgVector1.c_str(),slen/2 - 3);
+    _shortname[slen/2-4] = 0;
+    strcat(_shortname,"...");
+    strcat(_shortname,&ArgVector1.c_str()[l - slen/2]);
   }
-  __nls_CmdlineToOem((unsigned char *)shortname,strlen(shortname));
+  __nls_CmdlineToOem((unsigned char *)_shortname,strlen(_shortname));
 }
 
 __filesize_t IsNewExe()
@@ -319,10 +283,10 @@ static int __NEAR__ __FASTCALL__ queryKey(const std::string& arg)
 static unsigned int  beye_mode     = UINT_MAX;
 static __filesize_t  new_file_size = FILESIZE_MAX;
 
-static void __NEAR__ __FASTCALL__ ParseCmdLine( const std::vector<std::string>& ArgVector )
+void BeyeContext::parse_cmdline( const std::vector<std::string>& ArgVector )
 {
   unsigned i;
-  ListFileCount = 0;
+  ListFile.clear();
   for(i = 1;i < ArgVector.size();i++)
   {
      int beye_key;
@@ -343,24 +307,24 @@ static void __NEAR__ __FASTCALL__ ParseCmdLine( const std::vector<std::string>& 
 		break;
        case 6: UseIniFile = false; break;
        case 7: i++; break; // parsed early
-       case 8: ListFileCount = 0; return;
-       default: ListFile[ListFileCount++] = ArgVector[i].c_str();
+       case 8: ListFile.clear(); return;
+       default: ListFile.push_back(ArgVector[i]);
      }
   }
-  if(ListFileCount) ArgVector1 = ListFile[0];
+  if(!ListFile.empty()) ArgVector1 = ListFile[0];
 }
 
 static bool __NEAR__ __FASTCALL__ LoadInfo( void )
 {
-   MakeShortName();
+   beye_context().make_shortname();
    if(new_file_size != FILESIZE_MAX)
    {
        bhandle_t handle;
-       if(__IsFileExists(ArgVector1.c_str()) == false) handle = __OsCreate(ArgVector1.c_str());
+       if(__IsFileExists(beye_context().ArgVector1.c_str()) == false) handle = __OsCreate(beye_context().ArgVector1.c_str());
        else
        {
-	 handle = __OsOpen(ArgVector1.c_str(),FO_READWRITE | SO_DENYNONE);
-	 if(handle == NULL_HANDLE) handle = __OsOpen(ArgVector1.c_str(),FO_READWRITE | SO_COMPAT);
+	 handle = __OsOpen(beye_context().ArgVector1.c_str(),FO_READWRITE | SO_DENYNONE);
+	 if(handle == NULL_HANDLE) handle = __OsOpen(beye_context().ArgVector1.c_str(),FO_READWRITE | SO_COMPAT);
        }
        if(handle != NULL_HANDLE)
        {
@@ -373,7 +337,7 @@ static bool __NEAR__ __FASTCALL__ LoadInfo( void )
 	  return false;
        }
    }
-   if(BMOpen(ArgVector1) != 0) return false;
+   if(BMOpen(beye_context().ArgVector1) != 0) return false;
    if(beye_mode != UINT_MAX)
    {
      defMainModeSel = beye_mode;
@@ -381,7 +345,7 @@ static bool __NEAR__ __FASTCALL__ LoadInfo( void )
    }
    else
    {
-     if(LastMode >= sizeof(mainModeTable)/sizeof(REGISTRY_MODE *) || !isValidIniArgs()) AutoDetectMode();
+     if(LastMode >= sizeof(mainModeTable)/sizeof(REGISTRY_MODE *) || !beye_context().is_valid_ini_args()) AutoDetectMode();
      else
      {
        defMainModeSel = LastMode;
@@ -418,7 +382,7 @@ void PaintTitle( void )
  twFreezeWin(TitleWnd);
  twGotoXY(1,1);
  twClrEOL();
- twPrintF("File : %s",shortname);
+ twPrintF("File : %s",beye_context().short_name());
  twGotoXY(twGetClientWidth(TitleWnd)-43,1);
  twPrintF("Size : %8llu bytes",BMGetFLength());
  twRefreshWin(TitleWnd);
@@ -432,12 +396,13 @@ static void MyAtExit( void )
   if(TitleWnd) CloseWnd(TitleWnd);
   if(ErrorWnd) CloseWnd(ErrorWnd);
   termBConsole();
-  __term_beye();
   __term_sys();
+  BMClose();
+  delete BeyeCtx;
   mp_uninit_malloc(malloc_debug?1:0);
 }
 
-bool isValidIniArgs( void )
+bool BeyeContext::is_valid_ini_args( ) const
 {
   return iniSettingsAnywhere ? true :
 	 !ArgVector1.empty() ?
@@ -446,105 +411,105 @@ bool isValidIniArgs( void )
 	 false : true : false : false;
 }
 
-static hIniProfile * __NEAR__ __FASTCALL__ load_ini_info( void )
+hIniProfile* BeyeContext::load_ini_info()
 {
   char tmp[20], buf[20];
   hIniProfile *ini;
   ini_name = getenv("BEYE_INI");
   if(!ini_name) ini_name = __get_ini_name("beye");
   ini = UseIniFile ? iniOpenFile(ini_name,NULL) : NULL;
-  beyeReadProfileString(ini,"Beye","Setup","HelpName","",beye_help_name,sizeof(beye_help_name));
-  beyeReadProfileString(ini,"Beye","Setup","SkinName","",beye_skin_name,sizeof(beye_skin_name));
-  beyeReadProfileString(ini,"Beye","Setup","SyntaxName","",beye_syntax_name,sizeof(beye_syntax_name));
-  beyeReadProfileString(ini,"Beye","Search","String","",(char *)search_buff,sizeof(search_buff));
+  read_profile_string(ini,"Beye","Setup","HelpName","",help_name,sizeof(help_name));
+  read_profile_string(ini,"Beye","Setup","SkinName","",skin_name,sizeof(skin_name));
+  read_profile_string(ini,"Beye","Setup","SyntaxName","",syntax_name,sizeof(syntax_name));
+  read_profile_string(ini,"Beye","Search","String","",(char *)search_buff,sizeof(search_buff));
   search_len = strlen((char *)search_buff);
-  beyeReadProfileString(ini,"Beye","Search","Case","off",tmp,sizeof(tmp));
+  read_profile_string(ini,"Beye","Search","Case","off",tmp,sizeof(tmp));
   beyeSearchFlg = stricmp(tmp,"on") == 0 ? SF_CASESENS : SF_NONE;
-  beyeReadProfileString(ini,"Beye","Search","Word","off",tmp,sizeof(tmp));
+  read_profile_string(ini,"Beye","Search","Word","off",tmp,sizeof(tmp));
   if(stricmp(tmp,"on") == 0) beyeSearchFlg |= SF_WORDONLY;
-  beyeReadProfileString(ini,"Beye","Search","Backward","off",tmp,sizeof(tmp));
+  read_profile_string(ini,"Beye","Search","Backward","off",tmp,sizeof(tmp));
   if(stricmp(tmp,"on") == 0) beyeSearchFlg |= SF_REVERSE;
-  beyeReadProfileString(ini,"Beye","Search","Template","off",tmp,sizeof(tmp));
+  read_profile_string(ini,"Beye","Search","Template","off",tmp,sizeof(tmp));
   if(stricmp(tmp,"on") == 0) beyeSearchFlg |= SF_WILDCARDS;
-  beyeReadProfileString(ini,"Beye","Search","UsePlugin","off",tmp,sizeof(tmp));
+  read_profile_string(ini,"Beye","Search","UsePlugin","off",tmp,sizeof(tmp));
   if(stricmp(tmp,"on") == 0) beyeSearchFlg |= SF_PLUGINS;
-  beyeReadProfileString(ini,"Beye","Search","AsHex","off",tmp,sizeof(tmp));
+  read_profile_string(ini,"Beye","Search","AsHex","off",tmp,sizeof(tmp));
   if(stricmp(tmp,"on") == 0) beyeSearchFlg |= SF_ASHEX;
-  beyeReadProfileString(ini,"Beye","Browser","LastOpen","",LastOpenFileName,4096);
+  read_profile_string(ini,"Beye","Browser","LastOpen","",LastOpenFileName,4096);
   sprintf(buf,"%u",LastMode); /* [dBorca] so that src and dst won't overlap for strncpy */
-  beyeReadProfileString(ini,"Beye","Browser","LastMode",buf,tmp,sizeof(tmp));
+  read_profile_string(ini,"Beye","Browser","LastMode",buf,tmp,sizeof(tmp));
   LastMode = (size_t)strtoul(tmp,NULL,10);
-  beyeReadProfileString(ini,"Beye","Browser","Offset","0",tmp,sizeof(tmp));
+  read_profile_string(ini,"Beye","Browser","Offset","0",tmp,sizeof(tmp));
 #if (__WORDSIZE >= 32) && !defined(__QNX4__)
   LastOffset = atoll(tmp);
 #else
   LastOffset = atol(tmp); /** by watcom */
 #endif
-  beyeReadProfileString(ini,"Beye","Setup","Version","",beye_ini_ver,sizeof(beye_ini_ver));
-  beyeReadProfileString(ini,"Beye","Setup","DirectConsole","yes",tmp,sizeof(tmp));
-  if(stricmp(tmp,"yes") == 0) beye_vioIniFlags = __TVIO_FLG_DIRECT_CONSOLE_ACCESS;
-  beyeReadProfileString(ini,"Beye","Setup","ForceMono","no",tmp,sizeof(tmp));
-  if(stricmp(tmp,"yes") == 0) beye_twinIniFlags = TWIF_FORCEMONO;
-  beyeReadProfileString(ini,"Beye","Setup","Force7Bit","no",tmp,sizeof(tmp));
-  if(stricmp(tmp,"yes") == 0) beye_vioIniFlags |= __TVIO_FLG_USE_7BIT;
-  beyeReadProfileString(ini,"Beye","Setup","MouseSens","yes",tmp,sizeof(tmp));
-  if(stricmp(tmp,"yes") == 0) beye_kbdFlags = KBD_NONSTOP_ON_MOUSE_PRESS;
-  beyeReadProfileString(ini,"Beye","Setup","IniSettingsAnywhere","no",tmp,sizeof(tmp));
+  read_profile_string(ini,"Beye","Setup","Version","",ini_ver,sizeof(ini_ver));
+  read_profile_string(ini,"Beye","Setup","DirectConsole","yes",tmp,sizeof(tmp));
+  if(stricmp(tmp,"yes") == 0) vioIniFlags = __TVIO_FLG_DIRECT_CONSOLE_ACCESS;
+  read_profile_string(ini,"Beye","Setup","ForceMono","no",tmp,sizeof(tmp));
+  if(stricmp(tmp,"yes") == 0) twinIniFlags = TWIF_FORCEMONO;
+  read_profile_string(ini,"Beye","Setup","Force7Bit","no",tmp,sizeof(tmp));
+  if(stricmp(tmp,"yes") == 0) vioIniFlags |= __TVIO_FLG_USE_7BIT;
+  read_profile_string(ini,"Beye","Setup","MouseSens","yes",tmp,sizeof(tmp));
+  if(stricmp(tmp,"yes") == 0) kbdFlags = KBD_NONSTOP_ON_MOUSE_PRESS;
+  read_profile_string(ini,"Beye","Setup","IniSettingsAnywhere","no",tmp,sizeof(tmp));
   if(stricmp(tmp,"yes") == 0) iniSettingsAnywhere = true;
-  beyeReadProfileString(ini,"Beye","Setup","FioUseMMF","no",tmp,sizeof(tmp));
+  read_profile_string(ini,"Beye","Setup","FioUseMMF","no",tmp,sizeof(tmp));
   if(stricmp(tmp,"yes") == 0) fioUseMMF = true;
   if(!__mmfIsWorkable()) fioUseMMF = false;
-  beyeReadProfileString(ini,"Beye","Setup","PreserveTimeStamp","no",tmp,sizeof(tmp));
+  read_profile_string(ini,"Beye","Setup","PreserveTimeStamp","no",tmp,sizeof(tmp));
   if(stricmp(tmp,"yes") == 0) iniPreserveTime = true;
-  beyeReadProfileString(ini,"Beye","Setup","UseExternalProgs","no",tmp,sizeof(tmp));
+  read_profile_string(ini,"Beye","Setup","UseExternalProgs","no",tmp,sizeof(tmp));
   if(stricmp(tmp,"yes") == 0) iniUseExtProgs = true;
-  beyeReadProfileString(ini,"Beye","Setup","Codepage","CP866",beye_codepage,sizeof(beye_codepage));
+  read_profile_string(ini,"Beye","Setup","Codepage","CP866",codepage,sizeof(codepage));
   return ini;
 }
 
-static void __NEAR__ __FASTCALL__ save_ini_info( void )
+void BeyeContext::save_ini_info() const
 {
   char tmp[20];
   hIniProfile *ini;
   search_buff[search_len] = 0;
   ini = iniOpenFile(ini_name,NULL);
-  beyeWriteProfileString(ini,"Beye","Setup","HelpName",beye_help_name);
-  beyeWriteProfileString(ini,"Beye","Setup","SkinName",beye_skin_name);
-  beyeWriteProfileString(ini,"Beye","Setup","SyntaxName",beye_syntax_name);
-  beyeWriteProfileString(ini,"Beye","Setup","Version",BEYE_VERSION);
-  beyeWriteProfileString(ini,"Beye","Search","String",(char *)search_buff);
-  beyeWriteProfileString(ini,"Beye","Search","Case",beyeSearchFlg & SF_CASESENS ? "on" : "off");
-  beyeWriteProfileString(ini,"Beye","Search","Word",beyeSearchFlg & SF_WORDONLY ? "on" : "off");
-  beyeWriteProfileString(ini,"Beye","Search","Backward",beyeSearchFlg & SF_REVERSE ? "on" : "off");
-  beyeWriteProfileString(ini,"Beye","Search","Template",beyeSearchFlg & SF_WILDCARDS ? "on" : "off");
-  beyeWriteProfileString(ini,"Beye","Search","UsePlugin",beyeSearchFlg & SF_PLUGINS ? "on" : "off");
-  beyeWriteProfileString(ini,"Beye","Search","AsHex",beyeSearchFlg & SF_ASHEX ? "on" : "off");
-  beyeWriteProfileString(ini,"Beye","Browser","LastOpen",ArgVector1.c_str());
+  write_profile_string(ini,"Beye","Setup","HelpName",help_name);
+  write_profile_string(ini,"Beye","Setup","SkinName",skin_name);
+  write_profile_string(ini,"Beye","Setup","SyntaxName",syntax_name);
+  write_profile_string(ini,"Beye","Setup","Version",BEYE_VERSION);
+  write_profile_string(ini,"Beye","Search","String",(char *)search_buff);
+  write_profile_string(ini,"Beye","Search","Case",beyeSearchFlg & SF_CASESENS ? "on" : "off");
+  write_profile_string(ini,"Beye","Search","Word",beyeSearchFlg & SF_WORDONLY ? "on" : "off");
+  write_profile_string(ini,"Beye","Search","Backward",beyeSearchFlg & SF_REVERSE ? "on" : "off");
+  write_profile_string(ini,"Beye","Search","Template",beyeSearchFlg & SF_WILDCARDS ? "on" : "off");
+  write_profile_string(ini,"Beye","Search","UsePlugin",beyeSearchFlg & SF_PLUGINS ? "on" : "off");
+  write_profile_string(ini,"Beye","Search","AsHex",beyeSearchFlg & SF_ASHEX ? "on" : "off");
+  write_profile_string(ini,"Beye","Browser","LastOpen",ArgVector1.c_str());
   sprintf(tmp,"%u",defMainModeSel);
-  beyeWriteProfileString(ini,"Beye","Browser","LastMode",tmp);
+  write_profile_string(ini,"Beye","Browser","LastMode",tmp);
 #if (__WORDSIZE >= 32) && !defined(__QNX4__)
   sprintf(tmp,"%llu",LastOffset);
 #else
   sprintf(tmp,"%lu",LastOffset);
 #endif
-  beyeWriteProfileString(ini,"Beye","Browser","Offset",tmp);
-  strcpy(tmp,beye_vioIniFlags & __TVIO_FLG_DIRECT_CONSOLE_ACCESS ? "yes" : "no");
-  beyeWriteProfileString(ini,"Beye","Setup","DirectConsole",tmp);
-  strcpy(tmp,beye_twinIniFlags & TWIF_FORCEMONO ? "yes" : "no");
-  beyeWriteProfileString(ini,"Beye","Setup","ForceMono",tmp);
-  strcpy(tmp,(beye_vioIniFlags & __TVIO_FLG_USE_7BIT) == __TVIO_FLG_USE_7BIT ? "yes" : "no");
-  beyeWriteProfileString(ini,"Beye","Setup","Force7Bit",tmp);
-  strcpy(tmp,beye_kbdFlags & KBD_NONSTOP_ON_MOUSE_PRESS ? "yes" : "no");
-  beyeWriteProfileString(ini,"Beye","Setup","MouseSens",tmp);
+  write_profile_string(ini,"Beye","Browser","Offset",tmp);
+  strcpy(tmp,vioIniFlags & __TVIO_FLG_DIRECT_CONSOLE_ACCESS ? "yes" : "no");
+  write_profile_string(ini,"Beye","Setup","DirectConsole",tmp);
+  strcpy(tmp,twinIniFlags & TWIF_FORCEMONO ? "yes" : "no");
+  write_profile_string(ini,"Beye","Setup","ForceMono",tmp);
+  strcpy(tmp,(vioIniFlags & __TVIO_FLG_USE_7BIT) == __TVIO_FLG_USE_7BIT ? "yes" : "no");
+  write_profile_string(ini,"Beye","Setup","Force7Bit",tmp);
+  strcpy(tmp,kbdFlags & KBD_NONSTOP_ON_MOUSE_PRESS ? "yes" : "no");
+  write_profile_string(ini,"Beye","Setup","MouseSens",tmp);
   strcpy(tmp,iniSettingsAnywhere ? "yes" : "no");
-  beyeWriteProfileString(ini,"Beye","Setup","IniSettingsAnywhere",tmp);
+  write_profile_string(ini,"Beye","Setup","IniSettingsAnywhere",tmp);
   strcpy(tmp,fioUseMMF ? "yes" : "no");
-  beyeWriteProfileString(ini,"Beye","Setup","FioUseMMF",tmp);
+  write_profile_string(ini,"Beye","Setup","FioUseMMF",tmp);
   strcpy(tmp,iniPreserveTime ? "yes" : "no");
-  beyeWriteProfileString(ini,"Beye","Setup","PreserveTimeStamp",tmp);
+  write_profile_string(ini,"Beye","Setup","PreserveTimeStamp",tmp);
   strcpy(tmp,iniUseExtProgs ? "yes" : "no");
-  beyeWriteProfileString(ini,"Beye","Setup","UseExternalProgs",tmp);
-  beyeWriteProfileString(ini,"Beye","Setup","Codepage",beye_codepage);
+  write_profile_string(ini,"Beye","Setup","UseExternalProgs",tmp);
+  write_profile_string(ini,"Beye","Setup","Codepage",codepage);
   if(activeMode->save_ini) activeMode->save_ini(ini);
   udnTerm(ini);
   iniCloseFile(ini);
@@ -600,21 +565,20 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
   }
 #endif
 #endif
+  BeyeCtx=new(zeromem) BeyeContext(argv,envm);
 /*
     flg=MPA_FLG_RANDOMIZER;
     flg=MPA_FLG_BOUNDS_CHECK;
     flg=MPA_FLG_BEFORE_CHECK;
     flg=MPA_FLG_BACKTRACE;
 */
- if(argv.size()>1) ArgVector1 = argv[1];
  __init_sys();
- __init_beye(argv.size());
- ini = load_ini_info();
- skin_err = csetReadIniFile(beye_skin_name);
- initBConsole(beye_vioIniFlags,beye_twinIniFlags);
+ ini=BeyeCtx->load_ini_info();
+ skin_err = csetReadIniFile(BeyeCtx->skin_name);
+ initBConsole(BeyeCtx->vioIniFlags,BeyeCtx->twinIniFlags);
  if(argv.size() < 2) goto show_usage;
- ParseCmdLine(argv);
- if(!ListFileCount)
+ BeyeCtx->parse_cmdline(argv);
+ if(BeyeCtx->list_file().empty())
  {
    /** print usage message */
     size_t i;
@@ -640,7 +604,7 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  twSetColorAttr(prompt_cset.digit);
  twClearWin();
  twShowWin(HelpWnd);
- if(strcmp(beye_ini_ver,BEYE_VERSION) != 0) Setup();
+ if(strcmp(BeyeCtx->ini_ver,BEYE_VERSION) != 0) Setup();
  TitleWnd = WindowOpen(1,1,tvioWidth,1,TWS_NONE);
  twSetColorAttr(title_cset.main);
  twClearWin();
@@ -656,7 +620,7 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  }
  /* We must do it before opening a file because of some RTL has bug
     when are trying to open already open file with no sharing access */
- ftim_ok = __OsGetFTime(ArgVector1.c_str(),&ftim);
+ ftim_ok = __OsGetFTime(BeyeCtx->ArgVector1.c_str(),&ftim);
  if(!LoadInfo())
  {
    if(ini) iniCloseFile(ini);
@@ -672,34 +636,34 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  twSetColorAttr(browser_cset.main);
  twClearWin();
  PaintTitle();
- if(!isValidIniArgs() || LastOffset > BMGetFLength()) LastOffset = 0;
+ if(!BeyeCtx->is_valid_ini_args() || BeyeCtx->LastOffset > BMGetFLength()) BeyeCtx->LastOffset = 0;
  twShowWin(MainWnd);
  MainLoop();
- LastOffset = BMGetCurrFilePos();
- save_ini_info();
+ BeyeCtx->LastOffset = BMGetCurrFilePos();
+ BeyeCtx->save_ini_info();
  term_sysinfo();
  term_addons();
  term_modes();
  if(detectedFormat->destroy) detectedFormat->destroy();
- BMClose();
- if(iniPreserveTime && ftim_ok) __OsSetFTime(ArgVector1.c_str(),&ftim);
+ if(BeyeCtx->iniPreserveTime && ftim_ok) __OsSetFTime(BeyeCtx->ArgVector1.c_str(),&ftim);
  Bye:
  return retval;
 }
 
-bool NewSource( void )
+bool BeyeContext::new_source()
 {
   int i;
   bool ret;
   unsigned j,freq;
   static int prev_file;
   char ** nlsListFile;
-  nlsListFile = new char*[ListFileCount];
+  size_t sz=ListFile.size();
+  nlsListFile = new char*[sz];
   if(nlsListFile)
   {
-    for(j = 0;j < ListFileCount;j++)
+    for(j = 0;j < sz;j++)
     {
-      nlsListFile[j] = new char [strlen(ListFile[j])+1];
+      nlsListFile[j] = new char [ListFile[j].length()+1];
       if(!nlsListFile[j]) break;
     }
   }
@@ -707,8 +671,8 @@ bool NewSource( void )
   for(freq = 0;freq < j;freq++)
   {
     unsigned ls;
-    ls = strlen(ListFile[freq]);
-    memcpy(nlsListFile[freq],ListFile[freq],ls+1);
+    ls = ListFile[freq].length();
+    memcpy(nlsListFile[freq],ListFile[freq].c_str(),ls+1);
     __nls_CmdlineToOem((unsigned char *)nlsListFile[freq],ls);
   }
   i = SelBoxA(nlsListFile,j," Select new file: ",prev_file);
@@ -719,13 +683,13 @@ bool NewSource( void )
   {
     if(iniPreserveTime && ftim_ok) __OsSetFTime(ArgVector1.c_str(),&ftim);
     BMClose();
-    ftim_ok = __OsGetFTime(ListFile[i],&ftim);
+    ftim_ok = __OsGetFTime(ListFile[i].c_str(),&ftim);
     if(BMOpen(ListFile[i]) == 0)
     {
       ArgVector1 = ListFile[i];
       if(detectedFormat->destroy) detectedFormat->destroy();
       if(activeMode->term) activeMode->term();
-      MakeShortName();
+      make_shortname();
       __detectBinFmt();
       if(activeMode->init) activeMode->init();
       ret = true;
@@ -738,7 +702,7 @@ bool NewSource( void )
        }
        if(detectedFormat->destroy) detectedFormat->destroy();
        if(activeMode->term) activeMode->term();
-       MakeShortName();
+       make_shortname();
        __detectBinFmt();
        if(activeMode->init) activeMode->init();
        ret = false;
@@ -747,27 +711,57 @@ bool NewSource( void )
   return ret;
 }
 
-unsigned __FASTCALL__ beyeReadProfileString(hIniProfile *ini,
+unsigned BeyeContext::read_profile_string(hIniProfile *ini,
 			       const char *section,
 			       const char *subsection,
 			       const char *_item,
 			       const char *def_value,
 			       char *buffer,
-			       unsigned cbBuffer)
+			       unsigned cbBuffer) const
 {
   return UseIniFile ? iniReadProfileString(ini,section,subsection,
 					   _item,def_value,buffer,cbBuffer)
 		    : 1;
 }
 
-bool __FASTCALL__ beyeWriteProfileString(hIniProfile *ini,
+bool BeyeContext::write_profile_string(hIniProfile *ini,
 					  const char *section,
 					  const char *subsection,
 					  const char *item,
-					  const char *value)
+					  const char *value) const
 {
   return iniWriteProfileString(ini,section,subsection,item,value);
 }
+
+
+BeyeContext::BeyeContext(const std::vector<std::string>& _argv, const std::map<std::string,std::string>& _envm)
+	    :vioIniFlags(0L),
+	    twinIniFlags(0L),
+	    kbdFlags(0L),
+	    iniSettingsAnywhere(false),
+	    fioUseMMF(false),
+	    iniPreserveTime(false),
+	    iniUseExtProgs(false),
+	    headshift(0L),
+	    LastOffset(0L),
+	    argv(_argv),
+	    envm(_envm),
+	    UseIniFile(true)
+{
+    ::strcpy(help_name,"");
+    ::strcpy(skin_name,"");
+    ::strcpy(syntax_name,"");
+    ::strcpy(codepage,"CP866");
+    ::strcpy(scheme_name,"Built-in");
+    if(argv.size()>1) ArgVector1 = argv[1];
+    LastOpenFileName = new char[4096];
+   _shortname = new char[SHORT_PATH_LEN + 1];
+}
+BeyeContext::~BeyeContext() {
+    delete LastOpenFileName;
+    delete _shortname;
+}
+const std::vector<std::string>& BeyeContext::list_file() const { return ListFile; }
 } // namespace beye
 
 int main(int argc,char* args[], char *envp[])
@@ -777,7 +771,7 @@ int main(int argc,char* args[], char *envp[])
 	size_t i;
 	mp_malloc_e flg=MPA_FLG_RANDOMIZER;
 	malloc_debug=0;
-	for(i=0;i<argc;i++) {
+	for(i=0;i<size_t(argc);i++) {
 	    if(strcmp(args[i],"-m")==0) {
 		i++;
 		malloc_debug=::atoi(args[i]);
@@ -795,7 +789,7 @@ int main(int argc,char* args[], char *envp[])
 	/* init vectors */
 	std::vector<std::string> ArgVector;
 	std::string str,stmp;
-	for(int i=0;i<argc;i++) {
+	for(i=0;i<size_t(argc);i++) {
 	    str=args[i];
 	    ArgVector.push_back(str);
 	}

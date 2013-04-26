@@ -32,6 +32,7 @@ using namespace beye;
 #include <errno.h>
 #include <ctype.h>
 
+#include "beye.h"
 #include "colorset.h"
 #include "bmfile.h"
 #include "bin_util.h"
@@ -690,19 +691,19 @@ static void __FASTCALL__ HelpAsm( void )
 static void __FASTCALL__ disReadIni( hIniProfile *ini )
 {
   char tmps[10];
-  if(isValidIniArgs())
+  if(beye_context().is_valid_ini_args())
   {
-    beyeReadProfileString(ini,"Beye","Browser","LastSubMode","0",tmps,sizeof(tmps));
+    beye_context().read_profile_string(ini,"Beye","Browser","LastSubMode","0",tmps,sizeof(tmps));
     DefDisasmSel = (int)strtoul(tmps,NULL,10);
     if(DefDisasmSel >= sizeof(mainDisasmTable)/sizeof(REGISTRY_DISASM *)) DefDisasmSel = 0;
     ReadIniAResolv(ini);
-    beyeReadProfileString(ini,"Beye","Browser","SubSubMode7","0",tmps,sizeof(tmps));
+    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode7","0",tmps,sizeof(tmps));
     disPanelMode = (int)strtoul(tmps,NULL,10);
     if(disPanelMode > PANMOD_FULL) disPanelMode = 0;
-    beyeReadProfileString(ini,"Beye","Browser","SubSubMode8","0",tmps,sizeof(tmps));
+    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode8","0",tmps,sizeof(tmps));
     disNeedRef = (int)strtoul(tmps,NULL,10);
     if(disNeedRef > NEEDREF_PREDICT) disNeedRef = 0;
-    beyeReadProfileString(ini,"Beye","Browser","SubSubMode9","0",tmps,sizeof(tmps));
+    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode9","0",tmps,sizeof(tmps));
     HiLight = (int)strtoul(tmps,NULL,10);
     if(HiLight > 2) HiLight = 2;
     activeDisasm = mainDisasmTable[DefDisasmSel];
@@ -754,14 +755,14 @@ static void __FASTCALL__ disSaveIni( hIniProfile *ini )
 {
   char tmps[10];
   sprintf(tmps,"%i",DefDisasmSel);
-  beyeWriteProfileString(ini,"Beye","Browser","LastSubMode",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","LastSubMode",tmps);
   WriteIniAResolv(ini);
   sprintf(tmps,"%i",disPanelMode);
-  beyeWriteProfileString(ini,"Beye","Browser","SubSubMode7",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode7",tmps);
   sprintf(tmps,"%i",disNeedRef);
-  beyeWriteProfileString(ini,"Beye","Browser","SubSubMode8",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode8",tmps);
   sprintf(tmps,"%i",HiLight);
-  beyeWriteProfileString(ini,"Beye","Browser","SubSubMode9",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode9",tmps);
   if(activeDisasm->save_ini) activeDisasm->save_ini(ini);
 }
 

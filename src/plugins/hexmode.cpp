@@ -21,6 +21,7 @@ using namespace beye;
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "beye.h"
 #include "bswap.h"
 #include "plugins/hexmode.h"
 #include "colorset.h"
@@ -386,7 +387,7 @@ static void __FASTCALL__ EditHex( void )
 void __FASTCALL__ ReadIniAResolv( hIniProfile *ini )
 {
   char tmps[10];
-  beyeReadProfileString(ini,"Beye","Browser","SubSubMode6","0",tmps,sizeof(tmps));
+  beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode6","0",tmps,sizeof(tmps));
   hexAddressResolv = (unsigned)strtoul(tmps,NULL,10);
   if(hexAddressResolv > 1) hexAddressResolv = 0;
 }
@@ -395,21 +396,21 @@ void __FASTCALL__ WriteIniAResolv( hIniProfile *ini )
 {
   char tmps[10];
   sprintf(tmps,"%i",hexAddressResolv);
-  beyeWriteProfileString(ini,"Beye","Browser","SubSubMode6",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode6",tmps);
   sprintf(tmps,"%u",virtWidthCorr);
-  beyeWriteProfileString(ini,"Beye","Browser","VirtWidthCorr",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","VirtWidthCorr",tmps);
 }
 
 static void __FASTCALL__ hexReadIni( hIniProfile *ini )
 {
   char tmps[10];
-  if(isValidIniArgs())
+  if(beye_context().is_valid_ini_args())
   {
-    beyeReadProfileString(ini,"Beye","Browser","LastSubMode","2",tmps,sizeof(tmps));
+    beye_context().read_profile_string(ini,"Beye","Browser","LastSubMode","2",tmps,sizeof(tmps));
     hmode = (unsigned)strtoul(tmps,NULL,10);
     if(hmode > 3) hmode = 1;
     ReadIniAResolv(ini);
-    beyeReadProfileString(ini,"Beye","Browser","VirtWidthCorr","0",tmps,sizeof(tmps));
+    beye_context().read_profile_string(ini,"Beye","Browser","VirtWidthCorr","0",tmps,sizeof(tmps));
     virtWidthCorr = (unsigned)strtoul(tmps,NULL,10);
     __checkWidthCorr();
   }
@@ -419,10 +420,10 @@ static void __FASTCALL__ hexSaveIni( hIniProfile * ini)
 {
   char tmps[10];
   sprintf(tmps,"%i",hmode);
-  beyeWriteProfileString(ini,"Beye","Browser","LastSubMode",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","LastSubMode",tmps);
   WriteIniAResolv(ini);
   sprintf(tmps,"%u",virtWidthCorr);
-  beyeWriteProfileString(ini,"Beye","Browser","VirtWidthCorr",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","VirtWidthCorr",tmps);
 }
 
 static unsigned __FASTCALL__ hexCharSize( void ) { return 1; }

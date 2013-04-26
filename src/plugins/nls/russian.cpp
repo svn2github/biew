@@ -21,6 +21,7 @@ using namespace beye;
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "beye.h"
 #include "plugins/textmode.h"
 #include "bconsole.h"
 #include "beyeutil.h"
@@ -429,9 +430,9 @@ static bool __FASTCALL__ ru_select_table( void )
 static void __FASTCALL__ ru_read_ini( hIniProfile *ini )
 {
   char tmps[10];
-  if(isValidIniArgs())
+  if(beye_context().is_valid_ini_args())
   {
-    beyeReadProfileString(ini,"Beye","Browser","LastSubMode","0",tmps,sizeof(tmps));
+    beye_context().read_profile_string(ini,"Beye","Browser","LastSubMode","0",tmps,sizeof(tmps));
     cp_mode = (unsigned)strtoul(tmps,NULL,10);
     if(cp_mode > TXT_MAXMODE) cp_mode = 0;
  }
@@ -443,7 +444,7 @@ static void __FASTCALL__ ru_save_ini( hIniProfile *ini )
 {
   char tmps[10];
   sprintf(tmps,"%i",cp_mode);
-  beyeWriteProfileString(ini,"Beye","Browser","LastSubMode",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","LastSubMode",tmps);
 }
 
 REGISTRY_NLS RussianNLS =

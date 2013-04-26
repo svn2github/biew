@@ -23,6 +23,7 @@ using namespace beye;
 #include <stdlib.h>
 #include <string.h>
 
+#include "beye.h"
 #include "colorset.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/lx_le.h"
@@ -296,7 +297,7 @@ static unsigned __FASTCALL__ LXModRefNumItems(BFile& handle)
 
 unsigned __FASTCALL__ LXRNamesNumItems(BFile& handle)
 {
-  return GetNamCountNE(handle,headshift + lxe.lx.lxResidentNameTableOffset);
+  return GetNamCountNE(handle,beye_context().headshift + lxe.lx.lxResidentNameTableOffset);
 }
 
 unsigned __FASTCALL__ LXNRNamesNumItems(BFile& handle)
@@ -306,7 +307,7 @@ unsigned __FASTCALL__ LXNRNamesNumItems(BFile& handle)
 
 bool __FASTCALL__ LXRNamesReadItems(BFile& handle,memArray * obj,unsigned nnames)
 {
-   return RNamesReadItems(handle,obj,nnames,lxe.lx.lxResidentNameTableOffset + headshift);
+   return RNamesReadItems(handle,obj,nnames,lxe.lx.lxResidentNameTableOffset + beye_context().headshift);
 }
 
 static unsigned __FASTCALL__ LXImpNamesNumItems(BFile& handle)
@@ -314,10 +315,10 @@ static unsigned __FASTCALL__ LXImpNamesNumItems(BFile& handle)
   __filesize_t fpos;
   unsigned char len;
   unsigned count;
-  handle.seek(lxe.lx.lxImportProcedureTableOffset + headshift,SEEKF_START);
+  handle.seek(lxe.lx.lxImportProcedureTableOffset + beye_context().headshift,SEEKF_START);
   fpos = handle.tell();
   count = 0;
-  while(fpos < lxe.lx.lxFixupSectionSize + lxe.lx.lxFixupPageTableOffset + headshift)
+  while(fpos < lxe.lx.lxFixupSectionSize + lxe.lx.lxFixupPageTableOffset + beye_context().headshift)
   {
     len = handle.read_byte();
     handle.seek(len,SEEKF_CUR);
@@ -332,7 +333,7 @@ static bool __FASTCALL__ LXImpNamesReadItems(BFile& handle,memArray * obj,unsign
 {
  unsigned i;
  unsigned char byte;
- handle.seek(lxe.lx.lxImportProcedureTableOffset + headshift,SEEKF_START);
+ handle.seek(lxe.lx.lxImportProcedureTableOffset + beye_context().headshift,SEEKF_START);
  for(i = 0;i < nnames;i++)
  {
    char nam[256];
@@ -355,7 +356,7 @@ bool __FASTCALL__ LXNRNamesReadItems(BFile& handle,memArray * obj,unsigned nname
 extern unsigned __FASTCALL__ RNameReadFull(BFile& handle,char * names,unsigned nindex,__filesize_t _offset);
 static unsigned __FASTCALL__ LXRNamesReadFullName(BFile& handle,char * names,unsigned index)
 {
-   return RNameReadFull(handle,names,index,lxe.lx.lxResidentNameTableOffset + headshift);
+   return RNameReadFull(handle,names,index,lxe.lx.lxResidentNameTableOffset + beye_context().headshift);
 }
 
 static unsigned __FASTCALL__ LXNRNamesReadFullName(BFile& handle,char * names,unsigned index)
@@ -367,7 +368,7 @@ static bool __FASTCALL__  __ReadModRefNamesLX(BFile& handle,memArray * obj,unsig
 {
  unsigned i;
  unsigned char byte;
- handle.seek(lxe.lx.lxImportModuleTableOffset + headshift,SEEKF_START);
+ handle.seek(lxe.lx.lxImportModuleTableOffset + beye_context().headshift,SEEKF_START);
  for(i = 0;i < nnames;i++)
  {
    char nam[256];
@@ -502,7 +503,7 @@ static bool __NEAR__ __FASTCALL__ __ReadEntriesLX(BFile& handle,memArray *obj)
 
 static void __FASTCALL__ lxReadPageDesc(BFile& handle,LX_MAP_TABLE *mt,unsigned long pageidx)
 {
-  handle.seek(headshift+lxe.lx.lxObjectPageTableOffset+
+  handle.seek(beye_context().headshift+lxe.lx.lxObjectPageTableOffset+
 	  sizeof(LX_MAP_TABLE)*(pageidx - 1),SEEK_SET);
   handle.read_buffer((any_t*)mt,sizeof(LX_MAP_TABLE));
 }
@@ -544,7 +545,7 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcEntryPointLX(unsigned long objnum,
   LX_OBJECT lo;
   LX_MAP_TABLE mt;
   if(!objnum) return BMGetCurrFilePos();
-  handle.seek(lxe.lx.lxObjectTableOffset + headshift,SEEK_SET);
+  handle.seek(lxe.lx.lxObjectTableOffset + beye_context().headshift,SEEK_SET);
   handle.seek(sizeof(LX_OBJECT)*(objnum - 1),SEEKF_CUR);
   handle.read_buffer((any_t*)&lo,sizeof(LX_OBJECT));
   i = _offset / lxe.lx.lxPageSize;
@@ -589,13 +590,13 @@ void __FASTCALL__ ShowFwdModOrdLX(const LX_ENTRY *lxent)
 {
   char buff[513];
   buff[0] = 0;
-  ReadLXLEImpMod(lxe.lx.lxImportModuleTableOffset + headshift,lxent->entry.e32_variant.e32_fwd.modord,buff);
+  ReadLXLEImpMod(lxe.lx.lxImportModuleTableOffset + beye_context().headshift,lxent->entry.e32_variant.e32_fwd.modord,buff);
   strcat(buff,".");
   if((lxent->entry.e32_flags & 0x01) == 0x01)
   {
     sprintf(&buff[strlen(buff)],"@%u",(unsigned)lxent->entry.e32_variant.e32_fwd.value);
   }
-  else ReadLXLEImpName(lxe.lx.lxImportProcedureTableOffset + headshift,(unsigned)lxent->entry.e32_variant.e32_fwd.value,buff);
+  else ReadLXLEImpName(lxe.lx.lxImportProcedureTableOffset + beye_context().headshift,(unsigned)lxent->entry.e32_variant.e32_fwd.value,buff);
   TMessageBox(buff," Forwarder entry point ");
 }
 
@@ -630,7 +631,7 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcEntryBungleLX(unsigned ordinal,boo
   __filesize_t ret;
   ret = BMGetCurrFilePos();
   handle = lx_cache;
-  handle->seek(lxe.lx.lxEntryTableOffset + headshift,SEEK_SET);
+  handle->seek(lxe.lx.lxEntryTableOffset + beye_context().headshift,SEEK_SET);
   i = 0;
   found = false;
   while(1)
@@ -689,7 +690,7 @@ __filesize_t __FASTCALL__ ShowObjectsLX( void )
  nnames = (unsigned)lxe.lx.lxObjectCount;
  if(!nnames) { NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
- handle.seek(lxe.lx.lxObjectTableOffset + headshift,SEEK_SET);
+ handle.seek(lxe.lx.lxObjectTableOffset + beye_context().headshift,SEEK_SET);
  if(__ReadObjectsLX(handle,obj,nnames))
  {
   int ret;
@@ -893,7 +894,7 @@ __filesize_t __FASTCALL__ ShowEntriesLX( void )
  memArray * obj;
  fpos = BMGetCurrFilePos();
  if(!lxe.lx.lxEntryTableOffset) { NotifyBox(NOT_ENTRY," Entry Table "); return fpos; }
- handle.seek(lxe.lx.lxEntryTableOffset + headshift,SEEK_SET);
+ handle.seek(lxe.lx.lxEntryTableOffset + beye_context().headshift,SEEK_SET);
  if(!(obj = ma_Build(0,true))) goto exit;
  if(__ReadEntriesLX(handle,obj))
  {
@@ -963,7 +964,7 @@ static __filesize_t __FASTCALL__ ShowResourceLX( void )
  long * raddr;
  unsigned nrgroup;
  fpos = BMGetCurrFilePos();
- handle.seek((__fileoff_t)headshift + lxe.lx.lxResourceTableOffset,SEEK_SET);
+ handle.seek((__fileoff_t)beye_context().headshift + lxe.lx.lxResourceTableOffset,SEEK_SET);
  nrgroup = (unsigned)lxe.lx.lxNumberResourceTableEntries;
  if(!nrgroup) { NotifyBox(NOT_ENTRY," Resources "); return fpos; }
  if(!(obj = ma_Build(nrgroup,true))) goto exit;
@@ -1031,8 +1032,8 @@ __filesize_t __FASTCALL__ ShowImpProcLXLE( void )
 static bool __FASTCALL__ isLX( void )
 {
    char id[4];
-   headshift = IsNewExe();
-   bmReadBufferEx(id,sizeof(id),headshift,SEEKF_START);
+   beye_context().headshift = IsNewExe();
+   bmReadBufferEx(id,sizeof(id),beye_context().headshift,SEEKF_START);
    if(id[0] == 'L' && id[1] == 'X' && id[2] == 0 && id[3] == 0) return true;
    return false;
 }
@@ -1041,7 +1042,7 @@ static void __FASTCALL__ LXinit( void )
 {
    BFile& main_handle = bmbioHandle();
    LXType = FILE_LX;
-   bmReadBufferEx(&lxe.lx,sizeof(LXHEADER),headshift,SEEKF_START);
+   bmReadBufferEx(&lxe.lx,sizeof(LXHEADER),beye_context().headshift,SEEKF_START);
    if((lx_cache = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) lx_cache = &main_handle;
 }
 
@@ -1065,7 +1066,7 @@ static __filesize_t __FASTCALL__ lxVA2PA(__filesize_t va)
   __filesize_t rva,pa;
   LX_OBJECT lo;
   LX_MAP_TABLE mt;
-  handle.seek(lxe.lx.lxObjectTableOffset + headshift,SEEK_SET);
+  handle.seek(lxe.lx.lxObjectTableOffset + beye_context().headshift,SEEK_SET);
   pa = oidx = 0; /* means: error */
   for(i = 0;i < lxe.lx.lxObjectCount;i++)
   {
@@ -1111,7 +1112,7 @@ static __filesize_t __FASTCALL__ lxPA2VA(__filesize_t pa)
   if(pidx)
   {
     rva = pa - pagentry + (pidx-1)*lxe.lx.lxPageSize;
-    handle.seek(lxe.lx.lxObjectTableOffset + headshift,SEEK_SET);
+    handle.seek(lxe.lx.lxObjectTableOffset + beye_context().headshift,SEEK_SET);
     for(i = 0;i < lxe.lx.lxObjectCount;i++)
     {
       handle.read_buffer((any_t*)&lo,sizeof(LX_OBJECT));
@@ -1148,7 +1149,7 @@ static int __FASTCALL__ lxBitness(__filesize_t pa)
   /* Secondly we must determine object number for given physical address */
   if(pidx)
   {
-    handle.seek(lxe.lx.lxObjectTableOffset + headshift,SEEK_SET);
+    handle.seek(lxe.lx.lxObjectTableOffset + beye_context().headshift,SEEK_SET);
     for(i = 0;i < lxe.lx.lxObjectCount;i++)
     {
       handle.read_buffer((any_t*)&lo,sizeof(LX_OBJECT));
@@ -1168,24 +1169,24 @@ static bool __FASTCALL__ lxAddressResolv(char *addr,__filesize_t cfpos)
     it must be seriously optimized for speed. */
   bool bret = true;
   uint32_t res;
-  if(cfpos >= headshift && cfpos < headshift + sizeof(LXHEADER))
+  if(cfpos >= beye_context().headshift && cfpos < beye_context().headshift + sizeof(LXHEADER))
   {
     strcpy(addr,"LXH :");
-    strcpy(&addr[5],Get4Digit(cfpos - headshift));
+    strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift));
   }
   else
-  if(cfpos >= headshift + lxe.lx.lxObjectTableOffset &&
-     cfpos <  headshift + lxe.lx.lxObjectTableOffset + sizeof(LX_OBJECT)*lxe.lx.lxObjectCount)
+  if(cfpos >= beye_context().headshift + lxe.lx.lxObjectTableOffset &&
+     cfpos <  beye_context().headshift + lxe.lx.lxObjectTableOffset + sizeof(LX_OBJECT)*lxe.lx.lxObjectCount)
   {
     strcpy(addr,"LXOD:");
-    strcpy(&addr[5],Get4Digit(cfpos - headshift - lxe.lx.lxObjectTableOffset));
+    strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift - lxe.lx.lxObjectTableOffset));
   }
   else
-  if(cfpos >= headshift + lxe.lx.lxObjectPageTableOffset &&
-     cfpos <  headshift + lxe.lx.lxObjectPageTableOffset + sizeof(LX_MAP_TABLE)*lxe.lx.lxPageCount)
+  if(cfpos >= beye_context().headshift + lxe.lx.lxObjectPageTableOffset &&
+     cfpos <  beye_context().headshift + lxe.lx.lxObjectPageTableOffset + sizeof(LX_MAP_TABLE)*lxe.lx.lxPageCount)
   {
     strcpy(addr,"LXPD:");
-    strcpy(&addr[5],Get4Digit(cfpos - headshift - lxe.lx.lxObjectPageTableOffset));
+    strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift - lxe.lx.lxObjectPageTableOffset));
   }
   else
    if((res=lxPA2VA(cfpos))!=0)

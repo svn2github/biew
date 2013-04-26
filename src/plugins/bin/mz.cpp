@@ -22,6 +22,7 @@ using namespace beye;
 #include <stdio.h>
 #include <stddef.h>
 
+#include "beye.h"
 #include "bconsole.h"
 #include "bmfile.h"
 #include "beyehelp.h"
@@ -173,10 +174,10 @@ static __filesize_t __FASTCALL__ ShowMZHeader( void )
  twClrEOL();
  twSetColorAttr(dialog_cset.main);
  twPrintF("\nImage offset         = %08lXH",(long)HeadSize);
- if(headshift)
+ if(beye_context().headshift)
  {
    twSetColorAttr(dialog_cset.altinfo);
-   twPrintF("\nNew EXE header shift = %08lXH",(long)headshift);
+   twPrintF("\nNew EXE header shift = %08lXH",(long)beye_context().headshift);
    twClrEOL();
  }
  if(addinfo)

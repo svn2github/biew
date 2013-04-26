@@ -21,6 +21,7 @@ using namespace beye;
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "beye.h"
 #include "reg_form.h"
 #include "plugins/disasm.h"
 #include "bconsole.h"
@@ -140,9 +141,9 @@ static void  __FASTCALL__ nulTerm( void )
 static void __FASTCALL__ nulReadIni( hIniProfile *ini )
 {
   char tmps[10];
-  if(isValidIniArgs())
+  if(beye_context().is_valid_ini_args())
   {
-    beyeReadProfileString(ini,"Beye","Browser","SubSubMode3","1",tmps,sizeof(tmps));
+    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode3","1",tmps,sizeof(tmps));
     nulWidth = (int)strtoul(tmps,NULL,10);
     if(nulWidth > 3) nulWidth = 0;
   }
@@ -152,7 +153,7 @@ static void __FASTCALL__ nulWriteIni( hIniProfile *ini )
 {
   char tmps[10];
   sprintf(tmps,"%i",nulWidth);
-  beyeWriteProfileString(ini,"Beye","Browser","SubSubMode3",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
 }
 
 REGISTRY_DISASM Null_Disasm =

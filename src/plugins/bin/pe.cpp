@@ -29,6 +29,7 @@ using namespace beye;
 #include <time.h>
 #include <limits.h>
 
+#include "beye.h"
 #include "colorset.h"
 #include "plugins/bin/pe.h"
 #include "plugins/disasm.h"
@@ -430,7 +431,7 @@ static __fileoff_t __NEAR__ CalcOverlayOffset( void )
   if (overlayPE == -1 && pe.peObjects) {
     memArray *obj;
     if ((obj = ma_Build(pe.peObjects, true))) {
-      pe_cache->seek(0x18 + pe.peNTHdrSize + headshift, SEEK_SET);
+      pe_cache->seek(0x18 + pe.peNTHdrSize + beye_context().headshift, SEEK_SET);
       if (__ReadObjectsPE(*pe_cache, obj, pe.peObjects)) {
 	int i;
 	for (i = 0; i < pe.peObjects; i++) {
@@ -457,7 +458,7 @@ static __filesize_t __FASTCALL__ ShowObjectsPE( void )
  nnames = pe.peObjects;
  if(!nnames) { NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
- handle.seek(0x18 + pe.peNTHdrSize + headshift,SEEK_SET);
+ handle.seek(0x18 + pe.peNTHdrSize + beye_context().headshift,SEEK_SET);
  if(__ReadObjectsPE(handle,obj,nnames))
  {
   int ret;
@@ -1100,10 +1101,10 @@ static unsigned long __FASTCALL__ AppendPERef(char *str,__filesize_t ulShift,int
 static bool __FASTCALL__ IsPE( void )
 {
    char id[2];
-   headshift = IsNewExe();
-   if(headshift)
+   beye_context().headshift = IsNewExe();
+   if(beye_context().headshift)
    {
-     bmReadBufferEx(id,sizeof(id),headshift,SEEKF_START);
+     bmReadBufferEx(id,sizeof(id),beye_context().headshift,SEEKF_START);
      if(id[0] == 'P' && id[1] == 'E') return true;
    }
    return false;
@@ -1113,9 +1114,9 @@ static void __FASTCALL__ initPE( void )
 {
    int i;
 
-   bmReadBufferEx(&pe,sizeof(PEHEADER),headshift,SEEKF_START);
+   bmReadBufferEx(&pe,sizeof(PEHEADER),beye_context().headshift,SEEKF_START);
    is_64bit = pe.peMagic==0x20B?1:0;
-   bmReadBufferEx(&pe32,PE32_HDR_SIZE(),headshift+sizeof(PEHEADER),SEEKF_START);
+   bmReadBufferEx(&pe32,PE32_HDR_SIZE(),beye_context().headshift+sizeof(PEHEADER),SEEKF_START);
 
    if(!(peDir = new PERVA[PE32_HDR(pe32,peDirSize)]))
    {
@@ -1129,7 +1130,7 @@ static void __FASTCALL__ initPE( void )
      MemOutBox("PE initialization");
      exit(EXIT_FAILURE);
    }
-   bmSeek(0x18 + pe.peNTHdrSize + headshift,SEEKF_START);
+   bmSeek(0x18 + pe.peNTHdrSize + beye_context().headshift,SEEKF_START);
    for(i = 0;i < pe.peObjects;i++)
    {
      peVA[i].rva = bmReadDWordEx(12L,SEEKF_CUR);
@@ -1161,7 +1162,7 @@ static void __FASTCALL__ destroyPE( void )
 
 static int __FASTCALL__ bitnessPE(__filesize_t off)
 {
-   if(off >= headshift)
+   if(off >= beye_context().headshift)
    {
      return (pe.peFlags & 0x0040) ? DAB_USE16 :
 	    (pe.peFlags & 0x0100) ? DAB_USE32 : DAB_USE64;
@@ -1181,17 +1182,17 @@ static bool __FASTCALL__ peAddressResolv(char *addr,__filesize_t cfpos)
     it must be seriously optimized for speed. */
  bool bret = true;
  uint32_t res;
- if(cfpos >= headshift && cfpos < headshift + PE_HDR_SIZE() + PE32_HDR(pe32,peDirSize)*sizeof(PERVA))
+ if(cfpos >= beye_context().headshift && cfpos < beye_context().headshift + PE_HDR_SIZE() + PE32_HDR(pe32,peDirSize)*sizeof(PERVA))
  {
     strcpy(addr,"PEH :");
-    strcpy(&addr[5],Get4Digit(cfpos - headshift));
+    strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift));
  }
  else
- if(cfpos >= headshift + pe.peNTHdrSize + 0x18 &&
-    cfpos <  headshift + pe.peNTHdrSize + 0x18 + pe.peObjects*sizeof(PE_OBJECT))
+ if(cfpos >= beye_context().headshift + pe.peNTHdrSize + 0x18 &&
+    cfpos <  beye_context().headshift + pe.peNTHdrSize + 0x18 + pe.peObjects*sizeof(PE_OBJECT))
  {
     strcpy(addr,"PEOD:");
-    strcpy(&addr[5],Get4Digit(cfpos - headshift - pe.peNTHdrSize - 0x18));
+    strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift - pe.peNTHdrSize - 0x18));
  }
  else  /* Added by "Kostya Nosov" <k-nosov@yandex.ru> */
    if((res=pePA2VA(cfpos))!=0)
@@ -1212,7 +1213,7 @@ static __filesize_t __FASTCALL__ pePA2VA(__filesize_t pa)
 {
   int i;
   __filesize_t ret_addr;
-  bmSeek(0x18 + pe.peNTHdrSize + headshift,SEEK_SET);
+  bmSeek(0x18 + pe.peNTHdrSize + beye_context().headshift,SEEK_SET);
   ret_addr = 0;
   for(i = 0;i < pe.peObjects;i++)
   {
@@ -1288,7 +1289,7 @@ static unsigned __FASTCALL__ peGetObjAttr(__filesize_t pa,char *name,unsigned cb
   name[0] = 0;
   nitems = pe.peObjects;
   ret = 0;
-  bmSeek(0x18 + pe.peNTHdrSize + headshift,SEEK_SET);
+  bmSeek(0x18 + pe.peNTHdrSize + beye_context().headshift,SEEK_SET);
   for(i = 0;i < nitems;i++)
   {
     PE_OBJECT po;

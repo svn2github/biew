@@ -21,11 +21,11 @@ using namespace beye;
 #include <string.h>
 
 #include "bconsole.h"
+#include "beye.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
 
 namespace beye {
-extern unsigned long beye_kbdFlags;
 
 static int KB_Buff[64];
 static size_t KB_freq = 0;
@@ -86,7 +86,7 @@ static int __NEAR__ __FASTCALL__ __GetEvent( void (*prompt)(void) ,TWindow *win)
  }
  while(1)
  {
-     key = __kbdGetKey(beye_kbdFlags);
+     key = __kbdGetKey(beye_context().kbdFlags);
      switch( key )
      {
        case KE_SHIFTKEYS:

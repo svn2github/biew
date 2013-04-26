@@ -26,6 +26,7 @@ using namespace beye;
 #include <ctype.h>
 #include <limits.h>
 
+#include "beye.h"
 #include "plugins/textmode.h"
 #include "colorset.h"
 #include "bmfile.h"
@@ -79,8 +80,6 @@ static struct tag_syntax_hl_s
 acontext_hl_t __HUGE__ *acontext=NULL; /* means active context*/
 unsigned long  acontext_num;
 
-extern char beye_syntax_name[];
-extern std::string ArgVector1;
 extern char last_skin_error[];
 
 static int HiLight = 1;
@@ -289,7 +288,7 @@ static bool __FASTCALL__ txtFiUserFunc1(IniInfo * info)
 {
   const char* p;
   if(strcmp(info->section,"Extensions")==0) {
-	p = strrchr(ArgVector1.c_str(),'.');
+	p = strrchr(beye_context().ArgVector1.c_str(),'.');
 	if(p) {
 	    p++;
 	    if(strcmp(p,info->item)==0) {
@@ -300,11 +299,11 @@ static bool __FASTCALL__ txtFiUserFunc1(IniInfo * info)
   }
   if(strcmp(info->section,"Names")==0) {
 	const char *pp;
-	p = strrchr(ArgVector1.c_str(),'/');
-	pp = strrchr(ArgVector1.c_str(),'\\');
+	p = strrchr(beye_context().ArgVector1.c_str(),'/');
+	pp = strrchr(beye_context().ArgVector1.c_str(),'\\');
 	p=std::max(p,pp);
 	if(p) p++;
-	else  p=ArgVector1.c_str();
+	else  p=beye_context().ArgVector1.c_str();
 	if(memcmp(p,info->item,strlen(info->item))==0) {
 	    strcpy(detected_syntax_name,info->value);
 	    return true;
@@ -501,15 +500,15 @@ static tCompare __FASTCALL__ cmp_kwd(const void __HUGE__ *e1,const void __HUGE__
 
 static void txtReadSyntaxes(void)
 {
-  if(__IsFileExists(beye_syntax_name))
+  if(__IsFileExists(beye_context().syntax_name))
   {
-    FiProgress(beye_syntax_name,txtFiUserFunc1);
+    FiProgress(beye_context().syntax_name,txtFiUserFunc1);
     if(detected_syntax_name[0])
     {
 	char tmp[FILENAME_MAX+1];
 	char *p;
 	char *pp;
-	strcpy(tmp,beye_syntax_name);
+	strcpy(tmp,beye_context().syntax_name);
 	p=strrchr(tmp,'/');
 	pp=strrchr(tmp,'\\');
 	p=std::max(p,pp);
@@ -1210,22 +1209,22 @@ static bool __FASTCALL__ txtDetect( void )
 static void __FASTCALL__ txtReadIni( hIniProfile *ini )
 {
   char tmps[10];
-  if(isValidIniArgs())
+  if(beye_context().is_valid_ini_args())
   {
     int w_m;
-    beyeReadProfileString(ini,"Beye","Browser","SubSubMode4","0",tmps,sizeof(tmps));
+    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode4","0",tmps,sizeof(tmps));
     defNLSSet = (unsigned)strtoul(tmps,NULL,10);
     if(defNLSSet > sizeof(nls_set)/sizeof(REGISTRY_NLS *)) defNLSSet = 0;
     activeNLS = nls_set[defNLSSet];
     if(activeNLS->init) activeNLS->init();
     activeNLS->read_ini(ini);
-    beyeReadProfileString(ini,"Beye","Browser","SubSubMode3","0",tmps,sizeof(tmps));
+    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode3","0",tmps,sizeof(tmps));
     bin_mode = (unsigned)strtoul(tmps,NULL,10);
     if(bin_mode > MOD_MAXMODE) bin_mode = 0;
-    beyeReadProfileString(ini,"Beye","Browser","MiscMode","0",tmps,sizeof(tmps));
+    beye_context().read_profile_string(ini,"Beye","Browser","MiscMode","0",tmps,sizeof(tmps));
     w_m = (int)strtoul(tmps,NULL,10);
     wmode = w_m ? true : false;
-    beyeReadProfileString(ini,"Beye","Browser","SubSubMode9","0",tmps,sizeof(tmps));
+    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode9","0",tmps,sizeof(tmps));
     HiLight = (int)strtoul(tmps,NULL,10);
     if(HiLight > 1) HiLight = 1;
   }
@@ -1235,12 +1234,12 @@ static void __FASTCALL__ txtSaveIni( hIniProfile *ini )
 {
   char tmps[10];
   sprintf(tmps,"%i",bin_mode);
-  beyeWriteProfileString(ini,"Beye","Browser","SubSubMode3",tmps);
-  beyeWriteProfileString(ini,"Beye","Browser","MiscMode",wmode ? "1" : "0");
+  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","MiscMode",wmode ? "1" : "0");
   sprintf(tmps,"%i",defNLSSet);
-  beyeWriteProfileString(ini,"Beye","Browser","SubSubMode4",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode4",tmps);
   sprintf(tmps,"%i",HiLight);
-  beyeWriteProfileString(ini,"Beye","Browser","SubSubMode9",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode9",tmps);
   activeNLS->save_ini(ini);
 }
 

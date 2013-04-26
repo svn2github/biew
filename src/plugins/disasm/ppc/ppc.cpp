@@ -22,6 +22,7 @@ using namespace beye;
 #include <stdio.h>
 #include "bswap.h"
 
+#include "beye.h"
 #include "reg_form.h"
 #include "plugins/disasm.h"
 #include "bconsole.h"
@@ -1643,15 +1644,15 @@ static void  __FASTCALL__ ppcTerm( void )
 static void __FASTCALL__ ppcReadIni( hIniProfile *ini )
 {
   char tmps[10];
-  if(isValidIniArgs())
+  if(beye_context().is_valid_ini_args())
   {
-    beyeReadProfileString(ini,"Beye","Browser","SubSubMode3","1",tmps,sizeof(tmps));
+    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode3","1",tmps,sizeof(tmps));
     ppcBitness = (int)strtoul(tmps,NULL,10);
     if(ppcBitness > 1 && ppcBitness != DAB_AUTO) ppcBitness = 0;
-    beyeReadProfileString(ini,"Beye","Browser","SubSubMode4","1",tmps,sizeof(tmps));
+    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode4","1",tmps,sizeof(tmps));
     ppcBigEndian = (int)strtoul(tmps,NULL,10);
     if(ppcBigEndian > 1) ppcBigEndian = 0;
-    beyeReadProfileString(ini,"Beye","Browser","SubSubMode5","0",tmps,sizeof(tmps));
+    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode5","0",tmps,sizeof(tmps));
     ppcDialect = (int)strtoul(tmps,NULL,10);
     if(ppcDialect > 1) ppcDialect = 0;
   }
@@ -1661,11 +1662,11 @@ static void __FASTCALL__ ppcWriteIni( hIniProfile *ini )
 {
   char tmps[10];
   sprintf(tmps,"%i",ppcBitness);
-  beyeWriteProfileString(ini,"Beye","Browser","SubSubMode3",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
   sprintf(tmps,"%i",ppcBigEndian);
-  beyeWriteProfileString(ini,"Beye","Browser","SubSubMode4",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode4",tmps);
   sprintf(tmps,"%i",ppcDialect);
-  beyeWriteProfileString(ini,"Beye","Browser","SubSubMode5",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode5",tmps);
 }
 
 REGISTRY_DISASM PPC_Disasm =

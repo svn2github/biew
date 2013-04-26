@@ -28,6 +28,7 @@ using namespace beye;
 #include <errno.h>
 #include <ctype.h>
 
+#include "beye.h"
 #include "editor.h"
 #include "bmfile.h"
 #include "tstrings.h"
@@ -43,8 +44,6 @@ using namespace beye;
 
 namespace beye {
 extern REGISTRY_MODE disMode;
-extern char shortname[];
-extern bool fioUseMMF;
 
 static bool ChSize( void )
 {
@@ -343,8 +342,8 @@ static bool FStore( void )
      __OsClose(handle);
      _bioHandle = new BFile;
      bool rc;
-     rc = _bioHandle->open(ff_fname,FO_READWRITE | SO_DENYNONE,BBIO_CACHE_SIZE,fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
-     if(rc == false)  rc = _bioHandle->open(ff_fname,FO_READWRITE | SO_COMPAT,BBIO_CACHE_SIZE,fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
+     rc = _bioHandle->open(ff_fname,FO_READWRITE | SO_DENYNONE,BBIO_CACHE_SIZE,beye_context().fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
+     if(rc == false)  rc = _bioHandle->open(ff_fname,FO_READWRITE | SO_COMPAT,BBIO_CACHE_SIZE,beye_context().fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
      if(rc == false)  goto use_err;
      crpos = ff_startpos;
      _bioHandle->seek(0L,SEEKF_START);
@@ -1214,7 +1213,7 @@ static bool FileInfo( void )
 	   "Number of hard links to file  = %u\n"
 	   "User ID of the file owner     = %u\n"
 	   "Group ID of the file owner    = %u"
-	   ,shortname
+	   ,beye_context().short_name()
 	   ,detectedFormat->name ? detectedFormat->name : "Not detected"
 	   ,BMGetFLength()
 	   ,attr

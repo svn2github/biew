@@ -23,6 +23,7 @@ using namespace beye;
 #include <string.h>
 #include <stdarg.h>
 
+#include "beye.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/lx_le.h"
 #include "bin_util.h"
@@ -46,7 +47,7 @@ static __filesize_t __FASTCALL__ ShowNewHeaderLE( void )
 static bool __FASTCALL__ __ReadMapTblLE(BFile& handle,memArray * obj,unsigned n)
 {
  size_t i;
-  handle.seek(lxe.le.leObjectPageMapTableOffset + headshift,SEEKF_START);
+  handle.seek(lxe.le.leObjectPageMapTableOffset + beye_context().headshift,SEEKF_START);
   for(i = 0;i < n;i++)
   {
     LE_PAGE lep;
@@ -79,7 +80,7 @@ __filesize_t __FASTCALL__ CalcPageEntryLE(unsigned long pageidx)
   LE_PAGE mt;
   if(!pageidx) return -1;
   handle = lx_cache;
-  handle->seek(lxe.le.leObjectPageMapTableOffset + headshift,SEEK_SET);
+  handle->seek(lxe.le.leObjectPageMapTableOffset + beye_context().headshift,SEEK_SET);
   found = false;
   for(i = 0;i < lxe.le.lePageCount;i++)
   {
@@ -104,12 +105,12 @@ __filesize_t __FASTCALL__ CalcEntryPointLE(unsigned long objnum,__filesize_t _of
   LE_PAGE mt;
   if(!objnum) return -1;
   handle = lx_cache;
-  handle->seek(lxe.le.leObjectTableOffset + headshift,SEEK_SET);
+  handle->seek(lxe.le.leObjectTableOffset + beye_context().headshift,SEEK_SET);
   handle->seek(sizeof(LX_OBJECT)*(objnum - 1),SEEKF_CUR);
   handle->read_buffer((any_t*)&lo,sizeof(LX_OBJECT));
 /*  if((lo.o32_flags & 0x00002000L) == 0x00002000L) USE16 = 0;
   else                                            USE16 = 0xFF; */
-  pageoff = lxe.le.leObjectPageMapTableOffset + headshift;
+  pageoff = lxe.le.leObjectPageMapTableOffset + beye_context().headshift;
   start = 0;
   ret = -1;
   for(i = 0;i < lo.o32_mapsize;i++)
@@ -169,7 +170,7 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,boo
   __filesize_t ret;
   ret = BMGetCurrFilePos();
   handle = lx_cache;
-  handle->seek(lxe.le.leEntryTableOffset + headshift,SEEK_SET);
+  handle->seek(lxe.le.leEntryTableOffset + beye_context().headshift,SEEK_SET);
   i = 0;
   found = false;
   while(1)
@@ -270,10 +271,10 @@ static __filesize_t __FASTCALL__ ShowNResNmLE( void )
 static bool __FASTCALL__ isLE( void )
 {
    char id[2];
-   headshift = IsNewExe();
-   if(headshift)
+   beye_context().headshift = IsNewExe();
+   if(beye_context().headshift)
    {
-     bmReadBufferEx(id,sizeof(id),headshift,SEEKF_START);
+     bmReadBufferEx(id,sizeof(id),beye_context().headshift,SEEKF_START);
      if(id[0] == 'L' && id[1] == 'E') return true;
    }
    return false;
@@ -283,7 +284,7 @@ static void __FASTCALL__ LEinit( void )
 {
    BFile& main_handle = bmbioHandle();
    LXType = FILE_LE;
-   bmReadBufferEx(&lxe.le,sizeof(LEHEADER),headshift,SEEKF_START);
+   bmReadBufferEx(&lxe.le,sizeof(LEHEADER),beye_context().headshift,SEEKF_START);
    if((lx_cache = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) lx_cache = &main_handle;
 }
 
@@ -304,24 +305,24 @@ static bool __FASTCALL__ leAddressResolv(char *addr,__filesize_t cfpos)
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
   bool bret = true;
-  if(cfpos >= headshift && cfpos < headshift + sizeof(LEHEADER))
+  if(cfpos >= beye_context().headshift && cfpos < beye_context().headshift + sizeof(LEHEADER))
   {
      strcpy(addr,"LEH :");
-     strcpy(&addr[5],Get4Digit(cfpos - headshift));
+     strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift));
   }
   else
-  if(cfpos >= headshift + lxe.le.leObjectTableOffset &&
-     cfpos <  headshift + lxe.le.leObjectTableOffset + sizeof(LX_OBJECT)*lxe.le.leObjectCount)
+  if(cfpos >= beye_context().headshift + lxe.le.leObjectTableOffset &&
+     cfpos <  beye_context().headshift + lxe.le.leObjectTableOffset + sizeof(LX_OBJECT)*lxe.le.leObjectCount)
   {
      strcpy(addr,"LEOD:");
-     strcpy(&addr[5],Get4Digit(cfpos - headshift - lxe.le.leObjectTableOffset));
+     strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift - lxe.le.leObjectTableOffset));
   }
   else
-  if(cfpos >= headshift + lxe.le.leObjectPageMapTableOffset &&
-     cfpos <  headshift + lxe.le.leObjectPageMapTableOffset + sizeof(LE_PAGE)*lxe.le.lePageCount)
+  if(cfpos >= beye_context().headshift + lxe.le.leObjectPageMapTableOffset &&
+     cfpos <  beye_context().headshift + lxe.le.leObjectPageMapTableOffset + sizeof(LE_PAGE)*lxe.le.lePageCount)
   {
     strcpy(addr,"LEPD:");
-    strcpy(&addr[5],Get4Digit(cfpos - headshift - lxe.le.leObjectPageMapTableOffset));
+    strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift - lxe.le.leObjectPageMapTableOffset));
   }
   else bret = false;
   return bret;

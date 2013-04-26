@@ -20,6 +20,7 @@ using namespace beye;
 #include <string.h>
 #include <stdio.h>
 
+#include "beye.h"
 #include "beyehelp.h"
 #include "colorset.h"
 #include "setup.h"
@@ -32,47 +33,35 @@ using namespace beye;
 extern int photon,bit7;
 #endif
 namespace beye {
-    extern char beye_help_name[];
-    extern char beye_skin_name[];
-    extern char beye_syntax_name[];
-    extern char beye_codepage[];
-
-    extern unsigned long beye_vioIniFlags;
-    extern unsigned long beye_twinIniFlags;
-    extern unsigned long beye_kbdFlags;
-    extern bool iniSettingsAnywhere;
-    extern bool fioUseMMF;
-    extern bool iniPreserveTime;
-    extern bool iniUseExtProgs;
 
 char * beyeGetHelpName( void )
 {
-  if(!beye_help_name[0])
+  if(!beye_context().help_name[0])
   {
-    strcpy(beye_help_name,__get_rc_dir("beye"));
-    strcat(beye_help_name,"beye.hlp");
+    strcpy(beye_context().help_name,__get_rc_dir("beye"));
+    strcat(beye_context().help_name,"beye.hlp");
   }
-  return beye_help_name;
+  return beye_context().help_name;
 }
 
 static char * __NEAR__ __FASTCALL__ beyeGetColorSetName( void )
 {
-  if(!beye_skin_name[0])
+  if(!beye_context().skin_name[0])
   {
-    strcpy(beye_skin_name,__get_rc_dir("beye"));
-    strcat(beye_skin_name,"skn/" "standard.skn"); /* [dBorca] in skn/ subdir */
+    strcpy(beye_context().skin_name,__get_rc_dir("beye"));
+    strcat(beye_context().skin_name,"skn/" "standard.skn"); /* [dBorca] in skn/ subdir */
   }
-  return beye_skin_name;
+  return beye_context().skin_name;
 }
 
 static char * __NEAR__ __FASTCALL__ beyeGetSyntaxName( void )
 {
-  if(!beye_syntax_name[0])
+  if(!beye_context().syntax_name[0])
   {
-    strcpy(beye_syntax_name,__get_rc_dir("beye"));
-    strcat(beye_syntax_name,"syntax/" "syntax.stx"); /* [dBorca] in syntax/ subdir */
+    strcpy(beye_context().syntax_name,__get_rc_dir("beye"));
+    strcat(beye_context().syntax_name,"syntax/" "syntax.stx"); /* [dBorca] in syntax/ subdir */
   }
-  return beye_syntax_name;
+  return beye_context().syntax_name;
 }
 
 
@@ -125,8 +114,8 @@ static bool __FASTCALL__ select_codepage( void )
     default_cp = i;
     p = strchr(cp_list[i],' ');
     len = p-cp_list[i];
-    memcpy(beye_codepage,cp_list[i],len);
-    beye_codepage[len] = '\0';
+    memcpy(beye_context().codepage,cp_list[i],len);
+    beye_context().codepage[len] = '\0';
     return true;
   }
   return false;
@@ -145,13 +134,13 @@ static void __NEAR__ __FASTCALL__ setup_paint( TWindow *twin )
   twSetColorAttr(dialog_cset.group.active);
   twGotoXY(2,9);
   twPrintF(" [%c] - Direct console access "
-	   ,Gebool((beye_vioIniFlags & __TVIO_FLG_DIRECT_CONSOLE_ACCESS) == __TVIO_FLG_DIRECT_CONSOLE_ACCESS));
+	   ,Gebool((beye_context().vioIniFlags & __TVIO_FLG_DIRECT_CONSOLE_ACCESS) == __TVIO_FLG_DIRECT_CONSOLE_ACCESS));
   twGotoXY(2,10);
   twPrintF(" [%c] - Mouse sensitivity     "
-	   ,Gebool((beye_kbdFlags & KBD_NONSTOP_ON_MOUSE_PRESS) == KBD_NONSTOP_ON_MOUSE_PRESS));
+	   ,Gebool((beye_context().kbdFlags & KBD_NONSTOP_ON_MOUSE_PRESS) == KBD_NONSTOP_ON_MOUSE_PRESS));
   twGotoXY(2,11);
   twPrintF(" [%c] - Force mono            "
-	   ,Gebool((beye_twinIniFlags & TWIF_FORCEMONO) == TWIF_FORCEMONO));
+	   ,Gebool((beye_context().twinIniFlags & TWIF_FORCEMONO) == TWIF_FORCEMONO));
   twGotoXY(2,12);
 #ifdef __QNX4__
   if(photon)
@@ -164,23 +153,23 @@ static void __NEAR__ __FASTCALL__ setup_paint( TWindow *twin )
   else
 #endif
   twPrintF(" [%c] - Force 7-bit output    "
-	   ,Gebool((beye_vioIniFlags & __TVIO_FLG_USE_7BIT) == __TVIO_FLG_USE_7BIT));
+	   ,Gebool((beye_context().vioIniFlags & __TVIO_FLG_USE_7BIT) == __TVIO_FLG_USE_7BIT));
   twGotoXY(32,9);
   twPrintF(" [%c] - Apply plugin settings to all files     "
-	   ,Gebool(iniSettingsAnywhere));
+	   ,Gebool(beye_context().iniSettingsAnywhere));
   twGotoXY(32,10);
   if(!__mmfIsWorkable()) twSetColorAttr(dialog_cset.group.disabled);
   twPrintF(" [%c] - Use MMF                                "
-	   ,Gebool(fioUseMMF));
+	   ,Gebool(beye_context().fioUseMMF));
   twSetColorAttr(dialog_cset.group.active);
   twGotoXY(32,11);
   twPrintF(" [%c] - Preserve timestamp                     "
-	   ,Gebool(iniPreserveTime));
+	   ,Gebool(beye_context().iniPreserveTime));
   twGotoXY(32,12);
   twPrintF(" [%c] - Enable usage of external programs      "
-	   ,Gebool(iniUseExtProgs));
+	   ,Gebool(beye_context().iniUseExtProgs));
   twSetColorAttr(dialog_cset.main);
-  twGotoXY(50,7); twPutS(beye_codepage);
+  twGotoXY(50,7); twPutS(beye_context().codepage);
   twUseWin(usd);
 }
 
@@ -261,21 +250,21 @@ void Setup(void)
 		    continue;
      case KE_F(1):  hlpDisplay(5);
 		    break;
-     case KE_F(2):  beye_vioIniFlags ^= __TVIO_FLG_DIRECT_CONSOLE_ACCESS;
+     case KE_F(2):  beye_context().vioIniFlags ^= __TVIO_FLG_DIRECT_CONSOLE_ACCESS;
 		    break;
-     case KE_F(3):  beye_twinIniFlags ^= TWIF_FORCEMONO ;
+     case KE_F(3):  beye_context().twinIniFlags ^= TWIF_FORCEMONO ;
 		    break;
-     case KE_F(4):  beye_kbdFlags ^= KBD_NONSTOP_ON_MOUSE_PRESS;
+     case KE_F(4):  beye_context().kbdFlags ^= KBD_NONSTOP_ON_MOUSE_PRESS;
 		    break;
-     case KE_F(5):  beye_vioIniFlags ^= __TVIO_FLG_USE_7BIT;
+     case KE_F(5):  beye_context().vioIniFlags ^= __TVIO_FLG_USE_7BIT;
 		    break;
-     case KE_F(6):  iniSettingsAnywhere = iniSettingsAnywhere ? false : true;
+     case KE_F(6):  beye_context().iniSettingsAnywhere = beye_context().iniSettingsAnywhere ? false : true;
 		    break;
-     case KE_F(7):  if(__mmfIsWorkable()) fioUseMMF = fioUseMMF ? false : true;
+     case KE_F(7):  if(__mmfIsWorkable()) beye_context().fioUseMMF = beye_context().fioUseMMF ? false : true;
 		    break;
-     case KE_F(8):  iniPreserveTime = iniPreserveTime ? false : true;
+     case KE_F(8):  beye_context().iniPreserveTime = beye_context().iniPreserveTime ? false : true;
 		    break;
-     case KE_F(9):  iniUseExtProgs = iniUseExtProgs ? false : true;
+     case KE_F(9):  beye_context().iniUseExtProgs = beye_context().iniUseExtProgs ? false : true;
 		    break;
      default: continue;
    }
@@ -284,9 +273,9 @@ void Setup(void)
   exit:
   if(ret)
   {
-    strcpy(beye_help_name,estr[0]);
-    strcpy(beye_skin_name,estr[1]);
-    strcpy(beye_syntax_name,estr[2]);
+    strcpy(beye_context().help_name,estr[0]);
+    strcpy(beye_context().skin_name,estr[1]);
+    strcpy(beye_context().syntax_name,estr[2]);
   }
   CloseWnd(ewnd[0]);
   CloseWnd(ewnd[1]);

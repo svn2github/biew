@@ -22,6 +22,7 @@ using namespace beye;
 #include <stdio.h>
 #include <errno.h>
 
+#include "beye.h"
 #include "colorset.h"
 #include "bconsole.h"
 #include "beyeutil.h"
@@ -228,12 +229,12 @@ static void __FASTCALL__ EditBin( void )
 static void __FASTCALL__ binReadIni( hIniProfile *ini )
 {
   char tmps[10];
-  if(isValidIniArgs())
+  if(beye_context().is_valid_ini_args())
   {
-    beyeReadProfileString(ini,"Beye","Browser","LastSubMode","0",tmps,sizeof(tmps));
+    beye_context().read_profile_string(ini,"Beye","Browser","LastSubMode","0",tmps,sizeof(tmps));
     bin_mode = (unsigned)strtoul(tmps,NULL,10);
     if(bin_mode > MOD_MAXMODE) bin_mode = MOD_MAXMODE;
-    beyeReadProfileString(ini,"Beye","Browser","VirtWidthCorr","0",tmps,sizeof(tmps));
+    beye_context().read_profile_string(ini,"Beye","Browser","VirtWidthCorr","0",tmps,sizeof(tmps));
     virtWidthCorr = (unsigned)strtoul(tmps,NULL,10);
     if(virtWidthCorr>tvioWidth-1) virtWidthCorr=tvioWidth-1;
   }
@@ -244,9 +245,9 @@ static void __FASTCALL__ binSaveIni( hIniProfile *ini )
   char tmps[10];
   /** Nullify LastSubMode */
   sprintf(tmps,"%i",bin_mode);
-  beyeWriteProfileString(ini,"Beye","Browser","LastSubMode",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","LastSubMode",tmps);
   sprintf(tmps,"%u",virtWidthCorr);
-  beyeWriteProfileString(ini,"Beye","Browser","VirtWidthCorr",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","VirtWidthCorr",tmps);
 }
 
 static unsigned __FASTCALL__ binCharSize( void ) { return bin_mode==MOD_PLAIN?1:2; }

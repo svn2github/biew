@@ -27,6 +27,7 @@ using namespace beye;
 #include <stdio.h>
 #include <errno.h>
 
+#include "beye.h"
 #include "beyehelp.h"
 #include "bmfile.h"
 #include "plugins/disasm.h"
@@ -6351,7 +6352,6 @@ static signed int active_assembler = -1;
 #ifndef HAVE_PCLOSE
 #define pclose(fp) fclose(fp)
 #endif
-extern bool iniUseExtProgs;
 
 static void __FASTCALL__ ix86Init( void )
 {
@@ -6374,7 +6374,7 @@ static void __FASTCALL__ ix86Init( void )
 #ifdef HAVE_POPEN
   //Assembler initialization
   //Look for an available assembler
-  if (active_assembler == -1 && iniUseExtProgs==true) //Execute this only once
+  if (active_assembler == -1 && beye_context().iniUseExtProgs==true) //Execute this only once
   {
     int i;
     for (i = 0; assemblers[i].detect_command; i++)
@@ -6410,9 +6410,9 @@ static void __FASTCALL__ ix86Term( void )
 static void __FASTCALL__ ix86ReadIni( hIniProfile *ini )
 {
   char tmps[10];
-  if(isValidIniArgs())
+  if(beye_context().is_valid_ini_args())
   {
-    beyeReadProfileString(ini,"Beye","Browser","SubSubMode3","1",tmps,sizeof(tmps));
+    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode3","1",tmps,sizeof(tmps));
     BITNESS = (unsigned)strtoul(tmps,NULL,10);
     if(BITNESS > 2 && BITNESS != DAB_AUTO) BITNESS = 0;
     x86_Bitness = BITNESS;
@@ -6423,7 +6423,7 @@ static void __FASTCALL__ ix86WriteIni( hIniProfile *ini )
 {
   char tmps[10];
   sprintf(tmps,"%u",BITNESS);
-  beyeWriteProfileString(ini,"Beye","Browser","SubSubMode3",tmps);
+  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
 }
 
 #define CODEBUFFER_LEN 64

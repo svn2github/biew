@@ -139,28 +139,9 @@ typedef struct tag_memArray
     void      __FASTCALL__ ma_Destroy(memArray *obj);
     int       __FASTCALL__ ma_Display(memArray *obj,const char *title,int flg,unsigned defsel);
 
-    extern __filesize_t headshift;
-
     int      __FASTCALL__ ExpandHex(char * dest,const unsigned char * src,int size,char hard);
 
     void		PaintTitle( void );
-    bool               NewSource( void );
     __filesize_t       IsNewExe(void);
-			  /** return true if LastOpenFile == Current open file */
-    bool              isValidIniArgs( void );
-
-    unsigned __FASTCALL__ beyeReadProfileString(hIniProfile *ini,
-				      const char *section,
-				      const char *subsection,
-				      const char *_item,
-				      const char *def_value,
-				      char *buffer,
-				      unsigned cbBuffer);
-
-    bool __FASTCALL__ beyeWriteProfileString(hIniProfile *ini,
-						 const char *section,
-						 const char *subsection,
-						 const char *item,
-						 const char *value);
 } // namespace beye
 #endif

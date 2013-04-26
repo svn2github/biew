@@ -22,6 +22,7 @@ using namespace beye;
 #include <string.h>
 #include <stddef.h>
 
+#include "beye.h"
 #include "colorset.h"
 #include "bconsole.h"
 #include "beyeutil.h"
@@ -30,7 +31,6 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 namespace beye {
-extern char beye_scheme_name[];
 
 static void ShowConsInfo( void )
 {
@@ -48,7 +48,7 @@ static void ShowConsInfo( void )
 	   ,tvioWidth
 	   ,tvioHeight
 	   ,tvioNumColors
-	   ,beye_scheme_name);
+	   ,beye_context().scheme_name);
   twDirectWrite(1,3,str,len);
   str[0] = TWC_SH;
   for(i = 0;i < 63;i++)  twDirectWrite(i+1,4,str,1);

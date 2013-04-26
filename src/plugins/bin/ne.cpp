@@ -25,6 +25,7 @@ using namespace beye;
 #include <stdlib.h>
 #include <limits.h>
 
+#include "beye.h"
 #include "colorset.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/ne.h"
@@ -332,7 +333,7 @@ static bool __FASTCALL__ __ReadModRefNamesNE(BFile& handle,memArray * obj)
 {
  unsigned i;
  uint_fast16_t offTable;
- handle.seek(ne.neOffsetModuleReferenceTable + headshift,SEEKF_START);
+ handle.seek(ne.neOffsetModuleReferenceTable + beye_context().headshift,SEEKF_START);
  for(i = 0;i < ne.neModuleReferenceTableCount;i++)
  {
    __filesize_t NameOff;
@@ -341,7 +342,7 @@ static bool __FASTCALL__ __ReadModRefNamesNE(BFile& handle,memArray * obj)
    char stmp[256];
    offTable = handle.read_word();
    fp = handle.tell();
-   NameOff = (__fileoff_t)headshift + offTable + ne.neOffsetImportTable;
+   NameOff = (__fileoff_t)beye_context().headshift + offTable + ne.neOffsetImportTable;
    handle.seek(NameOff,SEEKF_START);
    length = handle.read_byte();
    if(IsKbdTerminate() || handle.eof()) break;
@@ -411,7 +412,7 @@ static bool __FASTCALL__ __ReadProcListNE(BFile& handle,memArray * obj,int modno
   modno++;
   count = 0;
 
-  handle.seek(headshift+ne.neOffsetSegmentTable,SEEKF_START);
+  handle.seek(beye_context().headshift+ne.neOffsetSegmentTable,SEEKF_START);
   for(i = 0;i < ne.neSegmentTableCount;i++)
   {
     handle.read_buffer(&tsd,sizeof(SEGDEF));
@@ -501,7 +502,7 @@ static unsigned __FASTCALL__ RNameReadFull(BFile& handle,char * names,unsigned n
 
 static unsigned __FASTCALL__ ResNameReadFull(BFile& handle,char * names,unsigned nindex)
 {
-  return RNameReadFull(handle,names,nindex,ne.neOffsetResidentNameTable + headshift);
+  return RNameReadFull(handle,names,nindex,ne.neOffsetResidentNameTable + beye_context().headshift);
 }
 
 static unsigned __FASTCALL__ NResNameReadFull(BFile& handle,char * names,unsigned nindex)
@@ -530,7 +531,7 @@ bool __FASTCALL__ RNamesReadItems(BFile& handle,memArray * obj,unsigned nnames,_
 
 static bool __FASTCALL__ NERNamesReadItems(BFile& handle,memArray * names,unsigned nnames)
 {
-   return RNamesReadItems(handle,names,nnames,ne.neOffsetResidentNameTable + headshift);
+   return RNamesReadItems(handle,names,nnames,ne.neOffsetResidentNameTable + beye_context().headshift);
 }
 
 static bool __FASTCALL__ NENRNamesReadItems(BFile& handle,memArray * names,unsigned nnames)
@@ -571,7 +572,7 @@ unsigned __FASTCALL__ GetNamCountNE(BFile& handle,__filesize_t offset )
 
 static unsigned __FASTCALL__ NERNamesNumItems(BFile& handle)
 {
-   return GetNamCountNE(handle,headshift + ne.neOffsetResidentNameTable);
+   return GetNamCountNE(handle,beye_context().headshift + ne.neOffsetResidentNameTable);
 }
 
 static unsigned __FASTCALL__ NENRNamesNumItems(BFile& handle)
@@ -615,7 +616,7 @@ static bool __FASTCALL__ ReadEntryNE(ENTRY * obj,unsigned entnum)
   BFile& handle = *ne_cache1;
   unsigned i,j;
   unsigned char nentry,etype;
-  handle.seek((__fileoff_t)headshift + ne.neOffsetEntryTable,SEEK_SET);
+  handle.seek((__fileoff_t)beye_context().headshift + ne.neOffsetEntryTable,SEEK_SET);
   i = 0;
   while(1)
   {
@@ -640,7 +641,7 @@ static bool __FASTCALL__ ReadSegDefNE(SEGDEF * obj,unsigned segnum)
  BFile* handle;
   handle = ne_cache3;
   if(segnum > ne.neSegmentTableCount || !segnum) return false;
-  handle->seek((__fileoff_t)headshift + ne.neOffsetSegmentTable + (segnum - 1)*sizeof(SEGDEF),BM_SEEK_SET);
+  handle->seek((__fileoff_t)beye_context().headshift + ne.neOffsetSegmentTable + (segnum - 1)*sizeof(SEGDEF),BM_SEEK_SET);
   handle->read_buffer((any_t*)obj,sizeof(SEGDEF));
   return true;
 }
@@ -689,7 +690,7 @@ static __filesize_t __FASTCALL__ ShowSegDefNE( void )
  fpos = BMGetCurrFilePos();
  if(!nnames) { NotifyBox(NOT_ENTRY," Segment Definition "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
- handle.seek((__fileoff_t)headshift + ne.neOffsetSegmentTable,SEEK_SET);
+ handle.seek((__fileoff_t)beye_context().headshift + ne.neOffsetSegmentTable,SEEK_SET);
  if(__ReadSegTableNE(handle,obj,nnames))
  {
     int i;
@@ -730,7 +731,7 @@ static unsigned __FASTCALL__ GetEntryCountNE( void )
  BFile& handle = *ne_cache;
  unsigned i,j;
  unsigned char nentry;
- handle.seek((__fileoff_t)headshift + ne.neOffsetEntryTable,SEEK_SET);
+ handle.seek((__fileoff_t)beye_context().headshift + ne.neOffsetEntryTable,SEEK_SET);
  i = 0;
  while(1)
  {
@@ -757,7 +758,7 @@ static __filesize_t __FASTCALL__ ShowEntriesNE( void )
  fpos = BMGetCurrFilePos();
  if(!nnames) { NotifyBox(NOT_ENTRY," Entries "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
- handle.seek((__fileoff_t)headshift + ne.neOffsetEntryTable,SEEK_SET);
+ handle.seek((__fileoff_t)beye_context().headshift + ne.neOffsetEntryTable,SEEK_SET);
  if(__ReadEntryTableNE(handle,obj))
  {
   int i;
@@ -890,7 +891,7 @@ static __filesize_t __FASTCALL__ ShowResourcesNE( void )
  long * raddr;
  unsigned nrgroup;
  fpos = BMGetCurrFilePos();
- handle.seek((__fileoff_t)headshift + ne.neOffsetResourceTable,SEEK_SET);
+ handle.seek((__fileoff_t)beye_context().headshift + ne.neOffsetResourceTable,SEEK_SET);
  if(!(nrgroup = GetResourceGroupCountNE(handle))) { NotifyBox(NOT_ENTRY," Resources "); return fpos; }
  if(!(rgroup = ma_Build(nrgroup,true))) goto exit;
  if(!(raddr  = new long [nrgroup])) return fpos;
@@ -942,10 +943,10 @@ static __filesize_t __FASTCALL__ ShowNResNmNE( void )
 static bool __FASTCALL__ IsNEFormat( void )
 {
    char id[2];
-   headshift = IsNewExe();
-   if(headshift)
+   beye_context().headshift = IsNewExe();
+   if(beye_context().headshift)
    {
-     bmReadBufferEx(id,sizeof(id),headshift,SEEKF_START);
+     bmReadBufferEx(id,sizeof(id),beye_context().headshift,SEEKF_START);
      if(id[0] == 'N' && id[1] == 'E') return true;
    }
    return false;
@@ -1114,7 +1115,7 @@ static void __NEAR__ __FASTCALL__ rdImpNameNELX(char *buff,int blen,unsigned idx
   if(!useasoff)
   {
     __filesize_t ref_off;
-    ref_off = (__filesize_t)headshift
+    ref_off = (__filesize_t)beye_context().headshift
 	      + ne.neOffsetModuleReferenceTable
 	      + (idx - 1)*2;
     name_off += bmReadWordEx(ref_off,SEEKF_START);
@@ -1129,7 +1130,7 @@ static void __NEAR__ __FASTCALL__ rdImpNameNELX(char *buff,int blen,unsigned idx
 
 static void __FASTCALL__ rd_ImpName(char *buff,int blen,unsigned idx,bool useasoff)
 {
-  rdImpNameNELX(buff,blen,idx,useasoff,headshift + ne.neOffsetImportTable);
+  rdImpNameNELX(buff,blen,idx,useasoff,beye_context().headshift + ne.neOffsetImportTable);
 }
 
 static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrNE(char *str,RELOC_NE *rne,int flags,__filesize_t ulShift)
@@ -1346,7 +1347,7 @@ static void __FASTCALL__ ne_ReadPubNameList(BFile& handle,void (__FASTCALL__ *me
 {
    if((PubNames = la_Build(0,sizeof(struct PubName),mem_out)) != NULL)
    {
-     ReadPubNames(handle,headshift + ne.neOffsetResidentNameTable,mem_out);
+     ReadPubNames(handle,beye_context().headshift + ne.neOffsetResidentNameTable,mem_out);
      ReadPubNames(handle,ne.neOffsetNonResidentNameTable,mem_out);
      if(PubNames->nItems)
        la_Sort(PubNames,fmtComparePubNames);
@@ -1356,7 +1357,7 @@ static void __FASTCALL__ ne_ReadPubNameList(BFile& handle,void (__FASTCALL__ *me
 static void __FASTCALL__ NE_init( void )
 {
    BFile& main_handle = bmbioHandle();
-   bmReadBufferEx(&ne,sizeof(NEHEADER),headshift,SEEKF_START);
+   bmReadBufferEx(&ne,sizeof(NEHEADER),beye_context().headshift,SEEKF_START);
    if((ne_cache3 = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) ne_cache3 = &main_handle;
    if((ne_cache1 = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) ne_cache2 = &main_handle;
    if((ne_cache = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) ne_cache = &main_handle;
@@ -1440,7 +1441,7 @@ static unsigned __FASTCALL__ neGetObjAttr(__filesize_t pa,char *name,unsigned cb
   ret = 0;
   bio_opt = bmbioHandle().get_optimization();
   bmbioHandle().set_optimization(bio_opt | BFile::Opt_Db);
-  bmSeek((__fileoff_t)headshift + ne.neOffsetSegmentTable,SEEK_SET);
+  bmSeek((__fileoff_t)beye_context().headshift + ne.neOffsetSegmentTable,SEEK_SET);
   found = false;
   for(i = 0;i < segcount;i++)
   {
@@ -1497,24 +1498,24 @@ static bool __FASTCALL__ neAddressResolv(char *addr,__filesize_t cfpos)
     it must be seriously optimized for speed. */
   bool bret = true;
   uint32_t res;
-  if(cfpos >= headshift && cfpos < headshift + sizeof(NEHEADER))
+  if(cfpos >= beye_context().headshift && cfpos < beye_context().headshift + sizeof(NEHEADER))
   {
      strcpy(addr,"NEH :");
-     strcpy(&addr[5],Get4Digit(cfpos - headshift));
+     strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift));
   }
   else
-  if(cfpos >= headshift + ne.neOffsetSegmentTable &&
-     cfpos <  headshift + ne.neOffsetSegmentTable + ne.neSegmentTableCount*sizeof(SEGDEF))
+  if(cfpos >= beye_context().headshift + ne.neOffsetSegmentTable &&
+     cfpos <  beye_context().headshift + ne.neOffsetSegmentTable + ne.neSegmentTableCount*sizeof(SEGDEF))
   {
     strcpy(addr,"NESD:");
-    strcpy(&addr[5],Get4Digit(cfpos - headshift - ne.neOffsetSegmentTable));
+    strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift - ne.neOffsetSegmentTable));
   }
   else
-  if(cfpos >= headshift + ne.neOffsetEntryTable &&
-     cfpos <  headshift + ne.neOffsetEntryTable + ne.neLengthEntryTable)
+  if(cfpos >= beye_context().headshift + ne.neOffsetEntryTable &&
+     cfpos <  beye_context().headshift + ne.neOffsetEntryTable + ne.neLengthEntryTable)
   {
     strcpy(addr,"NEET:");
-    strcpy(&addr[5],Get4Digit(cfpos - headshift - ne.neOffsetEntryTable));
+    strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift - ne.neOffsetEntryTable));
   }
   else
     if((res=nePA2VA(cfpos))!=0)
