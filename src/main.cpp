@@ -221,6 +221,7 @@ static const struct tagbeyeArg
   { "-s", "change size of file to NNN bytes (create, if file does not exist)" },
   { "-i", "ignore .ini file (create new)" },
   { "-m", "debug mp_malloc: (1 - bounds; 2 - prebounds; 3-leaks)" },
+  { "-k", "test anti-viral protection" },
   { "-?", "display this screen" }
 };
 
@@ -255,7 +256,8 @@ void BeyeContext::parse_cmdline( const std::vector<std::string>& ArgVector )
 		break;
        case 6: UseIniFile = false; break;
        case 7: i++; break; // parsed early
-       case 8: ListFile.clear(); return;
+       case 8: i++; break; // parsed early
+       case 9: ListFile.clear(); return;
        default: ListFile.push_back(ArgVector[i]);
      }
   }
@@ -572,7 +574,7 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  BeyeCtx->detect_binfmt();
  BeyeCtx->init_modes(ini);
  addons = new(zeromem) addendum;
- sysinfo =new(zeromem) class sysinfo;
+ sysinfo= new(zeromem) class sysinfo;
  if(ini) iniCloseFile(ini);
  MainWnd = WindowOpen(1,2,tvioWidth,tvioHeight-1,TWS_NONE);
  twSetColorAttr(browser_cset.main);
@@ -745,12 +747,21 @@ const std::vector<std::string>& BeyeContext::list_file() const { return ListFile
 
 void BeyeContext::select_tool() const { addons->select(); }
 void BeyeContext::select_sysinfo() const { sysinfo->select(); }
+
+static bool test_antiviral_protection(int* verbose)
+{
+    if(*verbose) std::cerr<<"Your've specified test-av option!\nRight now Beye should make coredump!"<<std::endl;
+    *verbose=antiviral_hole1[0]|antiviral_hole2[0]|antiviral_hole3[0]|antiviral_hole4[0];
+    std::cerr<<"Antiviral protection of Beye doesn't work!"<<std::endl;
+    return false;
+}
 } // namespace beye
 
 int main(int argc,char* args[], char *envp[])
 {
     try {
 	/* init malloc */
+	int do_av_test=0;
 	size_t i;
 	mp_malloc_e flg=MPA_FLG_RANDOMIZER;
 	malloc_debug=0;
@@ -767,6 +778,7 @@ int main(int argc,char* args[], char *envp[])
 		}
 		break;
 	    }
+	    if(strcmp(args[i],"-k")==0) do_av_test=1;
 	}
 	mp_init_malloc(args[0],1000,10,flg);
 	/* init vectors */
@@ -789,7 +801,7 @@ int main(int argc,char* args[], char *envp[])
 	    envm[str]=stmp;
 	}
 //	envp[j+1] = NULL;
-#ifdef HAVE_MRPOTECT
+#ifdef HAVE_MPROTECT
 	/* init antiviral protection */
 	int rc;
 	rc=mp_mprotect((any_t*)antiviral_hole1,sizeof(antiviral_hole1),MP_DENY_ALL);
@@ -800,7 +812,14 @@ int main(int argc,char* args[], char *envp[])
 		std::cerr<<"*** Error! Cannot initialize antiviral protection: '"<<strerror(errno)<<"' ***!"<<std::endl;
 		return EXIT_FAILURE;
 	}
+#else
+	std::cerr<<"*** Project was compiled without antiviral protection!"<<std::endl;
 #endif
+	if(do_av_test) {
+	    test_antiviral_protection(&do_av_test);
+	    std::cerr<<"*** Test of antiviral protection failed! ***"<<std::endl;
+	    return EXIT_FAILURE;
+	}
 	/* call program */
 	return Beye(ArgVector,envm);
     } catch(const std::string& what) {
