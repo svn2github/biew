@@ -18,14 +18,6 @@
 #define __SEARCH__H
 
 namespace beye {
-		   /** Main search routine
-		     * @param is_continue  indicates initialization of search
-					   If set then search should be continued
-					   search dialog will displayed otherwise
-		     * @return             new offset on successful search and
-					   current offset otherwise
-		    **/
-    __filesize_t __FASTCALL__ Search( bool is_continue );
 enum {
     SD_SIMPLE       =0x0000,   /**< indicates simple search dialog to be displayed */
     SD_ALLFEATURES  =0x0001    /**< indicates fully featured search dialog to be displayed */

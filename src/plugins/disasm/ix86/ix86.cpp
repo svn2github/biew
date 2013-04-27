@@ -41,6 +41,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 
 namespace beye {
+DisMode* ix86_parent;
 static const unsigned MAX_IX86_INSN_LEN=15;
 static const unsigned MAX_DISASM_OUTPUT=1000;
 
@@ -6353,8 +6354,9 @@ static signed int active_assembler = -1;
 #define pclose(fp) fclose(fp)
 #endif
 
-static void __FASTCALL__ ix86Init( void )
+static void __FASTCALL__ ix86Init( DisMode& _parent )
 {
+  ix86_parent = &_parent;
   ix86_voidstr = new char [MAX_DISASM_OUTPUT];
   ix86_da_out  = new char [MAX_DISASM_OUTPUT];
   ix86_Katmai_buff = new char [MAX_DISASM_OUTPUT];

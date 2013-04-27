@@ -34,6 +34,7 @@ using namespace beye;
 #include "libbeye/file_ini.h"
 
 namespace beye {
+static DisMode* parent;
 static const unsigned TAB_POS=10;
 
 enum {
@@ -378,8 +379,8 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
 			lval=FMT_DWORD(buffer, 1);
 			newpos=vartail_base+lval;
 			if(lval!=newpos)
-				disAppendFAddr(outstr,ulShift,lval,
-						newpos,DISADR_NEAR32,0,4);
+				parent->append_faddr(outstr,ulShift,lval,
+						newpos,DisMode::Near32,0,4);
 				else
 				    strcat(outstr,Get8Digit(newpos));
 		}
@@ -392,8 +393,8 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
 			lval=FMT_DWORD(&buffer[4], 1);
 			newpos=vartail_base+lval;
 			if(lval!=newpos)
-				disAppendFAddr(outstr,ulShift,lval,
-						newpos,DISADR_NEAR32,0,4);
+				parent->append_faddr(outstr,ulShift,lval,
+						newpos,DisMode::Near32,0,4);
 				else
 				    strcat(outstr,Get8Digit(newpos));
 		}
@@ -471,8 +472,8 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
 			strcat(outstr,",default:");
 			newpos=ulShift+(__fileoff_t)defval;
 			if(defval)
-				disAppendFAddr(outstr,ulShift+idx+1+npadds,defval,
-						newpos,DISADR_NEAR32,0,4);
+				parent->append_faddr(outstr,ulShift+idx+1+npadds,defval,
+						newpos,DisMode::Near32,0,4);
 			else
 				strcat(outstr,Get8Digit(newpos));
 		}
@@ -489,8 +490,8 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
 			strcat(outstr," default:");
 			newpos=ulShift+(__fileoff_t)defval;
 			if(defval)
-				disAppendFAddr(outstr,ulShift+idx+1+npadds,defval,
-						newpos,DISADR_NEAR32,0,4);
+				parent->append_faddr(outstr,ulShift+idx+1+npadds,defval,
+						newpos,DisMode::Near32,0,4);
 			else
 				strcat(outstr,Get8Digit(newpos));
 		}
@@ -530,8 +531,8 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
 		    if((jflags & JVM_CODEREF)==JVM_CODEREF && sval)
 		    {
 			newpos = ulShift + (signed short)sval;
-			disAppendFAddr(outstr,ulShift + 1,sval,
-					newpos,DISADR_NEAR16,0,2);
+			parent->append_faddr(outstr,ulShift + 1,sval,
+					newpos,DisMode::Near16,0,2);
 		    }
 		    else
 		    if((jflags & JVM_OBJREF1)==JVM_OBJREF1)
@@ -543,8 +544,8 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
 		    }
 		    else
 		    if(jflags & JVM_OBJREFMASK)
-		    disAppendDigits(outstr,ulShift+idx,
-			APREF_USE_TYPE,2,&sval,DISARG_WORD);
+		    parent->append_digits(outstr,ulShift+idx,
+			APREF_USE_TYPE,2,&sval,DisMode::Arg_Word);
 		    else strcat(outstr,Get4Digit(sval));
 		    break;
 		}
@@ -557,16 +558,16 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
 		    if((jflags & JVM_CODEREF)==JVM_CODEREF && lval)
 		    {
 			newpos = ulShift + (__fileoff_t)lval;
-			disAppendFAddr(outstr,ulShift + 1,lval,
-					newpos,DISADR_NEAR32,0,4);
+			parent->append_faddr(outstr,ulShift + 1,lval,
+					newpos,DisMode::Near32,0,4);
 		    }
 		    else
 		    if((jflags & JVM_OBJREF2)==JVM_OBJREF2)
 		    {
 			unsigned short sval;
 			sval=FMT_WORD(&buffer[idx],1);
-			disAppendDigits(outstr,ulShift,
-				    APREF_USE_TYPE,2,&sval,DISARG_WORD);
+			parent->append_digits(outstr,ulShift,
+				    APREF_USE_TYPE,2,&sval,DisMode::Arg_Word);
 			strcat(outstr,",");
 			if((jflags & JVM_CONST1)==JVM_CONST1) strcat(outstr,Get2Digit(buffer[idx+2]));
 			else
@@ -577,14 +578,14 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
 		    }
 		    else
 		    if(jflags & JVM_OBJREFMASK)
-		    disAppendDigits(outstr,ulShift+idx,
-			APREF_USE_TYPE,4,&lval,DISARG_DWORD);
+		    parent->append_digits(outstr,ulShift+idx,
+			APREF_USE_TYPE,4,&lval,DisMode::Arg_DWord);
 		    else strcat(outstr,Get8Digit(lval));
 		    break;
 		}
 		case 8:
-		    disAppendDigits(outstr,ulShift+idx,
-			APREF_USE_TYPE,8,&buffer[idx],DISARG_QWORD);
+		    parent->append_digits(outstr,ulShift+idx,
+			APREF_USE_TYPE,8,&buffer[idx],DisMode::Arg_QWord);
 		    break;
 	    }
 	}
@@ -616,8 +617,9 @@ static char      __FASTCALL__ javaGetClone( unsigned long clone )
   UNUSED(clone);
   return ' ';
 }
-static void      __FASTCALL__ javaInit( void )
+static void      __FASTCALL__ javaInit( DisMode& _parent )
 {
+  parent = &_parent;
   outstr = new char [1000];
   if(!outstr)
   {

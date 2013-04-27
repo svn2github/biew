@@ -162,7 +162,7 @@ static __filesize_t __NEAR__ __FASTCALL__  ___lfind(const char *sfrom,
       memcpy(nbuff,&sfrom[start],symb_size);
     else
       BMReadBufferEx(nbuff,symb_size,start,BM_SEEK_SET);
-    if((beye_context().active_mode()->flags & __MF_TEXT) == __MF_TEXT) beye_context().active_mode()->convert_cp(nbuff,symb_size,false);
+    if((beye_context().active_mode()->flags() & Plugin::Text) == Plugin::Text) beye_context().active_mode()->convert_cp(nbuff,symb_size,false);
     ch = nbuff[0];
     if(!(beyeFlg & SF_CASESENS)) ch = toupper(ch);
     if(cache[ch])
@@ -175,7 +175,7 @@ static __filesize_t __NEAR__ __FASTCALL__  ___lfind(const char *sfrom,
 	  memcpy(fbuff,&sfrom[findptr],pattern_size*symb_size);
 	else
 	  BMReadBufferEx((any_t*)fbuff,pattern_size*symb_size,findptr,BM_SEEK_SET);
-	if((beye_context().active_mode()->flags & __MF_TEXT) == __MF_TEXT)
+	if((beye_context().active_mode()->flags() & Plugin::Text) == Plugin::Text)
 	     __search_len = beye_context().active_mode()->convert_cp((char *)fbuff,pattern_size*symb_size,false);
 	else __search_len = pattern_size;
 	if(!(beyeFlg & SF_CASESENS)) memupr((any_t*)fbuff,__search_len);
@@ -200,7 +200,7 @@ static __filesize_t __NEAR__ __FASTCALL__  ___lfind(const char *sfrom,
 	    memcpy(nbuff,&sfrom[findptr-symb_size],symb_size);
 	  else
 	    BMReadBufferEx(nbuff,symb_size,findptr - symb_size,BM_SEEK_SET);
-	  if((beye_context().active_mode()->flags & __MF_TEXT) == __MF_TEXT) beye_context().active_mode()->convert_cp(nbuff,symb_size,false);
+	  if((beye_context().active_mode()->flags() & Plugin::Text) == Plugin::Text) beye_context().active_mode()->convert_cp(nbuff,symb_size,false);
 	  ch = nbuff[0];
 	}
 	else      ch = ' ';
@@ -210,7 +210,7 @@ static __filesize_t __NEAR__ __FASTCALL__  ___lfind(const char *sfrom,
 	    memcpy(nbuff,&sfrom[findptr + (pattern_size*symb_size)],symb_size);
 	  else
 	    BMReadBufferEx(nbuff,symb_size,findptr + (pattern_size*symb_size),BM_SEEK_SET);
-	  if((beye_context().active_mode()->flags & __MF_TEXT) == __MF_TEXT) beye_context().active_mode()->convert_cp(nbuff,symb_size,false);
+	  if((beye_context().active_mode()->flags() & Plugin::Text) == Plugin::Text) beye_context().active_mode()->convert_cp(nbuff,symb_size,false);
 	  ch1 = nbuff[0];
 	}
 	else      ch1 = ' ';
@@ -416,7 +416,7 @@ static void __NEAR__ __FASTCALL__ SearchPaint(TWindow *wdlg,int flags,
  twGotoXY(46,4); twPutChar(Gebool(sf_flags & SF_ASHEX));
  twSetColorAttr((!(flags & SD_ALLFEATURES) || sf_flags & SF_ASHEX)?dialog_cset.group.disabled:dialog_cset.group.active);
  twGotoXY(46,5); twPutChar(Gebool(sf_flags & SF_WILDCARDS));
- twSetColorAttr(!((flags & SD_ALLFEATURES) && beye_context().active_mode()->search_engine)?dialog_cset.group.disabled:dialog_cset.group.active);
+ twSetColorAttr(!((flags & SD_ALLFEATURES) && (beye_context().active_mode()->flags()&Plugin::Has_SearchEngine))?dialog_cset.group.disabled:dialog_cset.group.active);
  twGotoXY(46,6); twPutChar(Gebool(sf_flags & SF_PLUGINS));
  twSetColorAttr(dialog_cset.main);
  twUseWin(_using);
@@ -435,7 +435,7 @@ static void __NEAR__ __FASTCALL__ SearchUpdate(TWindow *wdlg,int _flags,
  twGotoXY(44,4); twPutS(msgFindOpt2[0]);
  twSetColorAttr((!(_flags & SD_ALLFEATURES) || sf_flags & SF_ASHEX)?dialog_cset.group.disabled:dialog_cset.group.active);
  twGotoXY(44,5); twPutS(msgFindOpt2[1]);
- twSetColorAttr(!((_flags & SD_ALLFEATURES) && beye_context().active_mode()->search_engine)?dialog_cset.group.disabled:dialog_cset.group.active);
+ twSetColorAttr(!((_flags & SD_ALLFEATURES) && (beye_context().active_mode()->flags() & Plugin::Has_SearchEngine))?dialog_cset.group.disabled:dialog_cset.group.active);
  twGotoXY(44,6); twPutS(msgFindOpt2[2]);
  twSetColorAttr(dialog_cset.main);
  twUseWin(_using);
@@ -474,7 +474,8 @@ bool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
   char attr[2] = { __ESS_FILLER_7BIT | __ESS_WANTRETURN | __ESS_ENABLEINSERT | __ESS_NON_C_STR,
 		   __ESS_WANTRETURN | __ESS_ASHEX | __ESS_NON_C_STR };
   char ebuff1[MAX_SEARCH_SIZE],ebuff2[MAX_SEARCH_SIZE*3];
-  char *ebuff[2],*legal[2];
+  char *ebuff[2];
+  const char* legal[2];
   unsigned mlen[2],flags;
   int ch,i;
   hwnd = CrtDlgWndnls(FIND_STR,78,7);
@@ -540,7 +541,7 @@ bool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
        case KE_F(6)     : if(!(*sf_flags&SF_ASHEX) && (_flags & SD_ALLFEATURES)) *sf_flags ^= SF_WILDCARDS;
 			  update = 0;
 			  break;
-       case KE_F(7)     : if(_flags & SD_ALLFEATURES && beye_context().active_mode()->search_engine)
+       case KE_F(7)     : if(_flags & SD_ALLFEATURES && (beye_context().active_mode()->flags() & Plugin::Has_SearchEngine))
 			  *sf_flags ^= SF_PLUGINS;
 			  update = 0;
 			  break;
@@ -573,11 +574,9 @@ bool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
   return ret;
 }
 
-namespace beye {
-    extern TWindow * ErrorWnd;
-} // namespace beye
+extern TWindow * ErrorWnd;
 
-__filesize_t __FASTCALL__ Search( bool is_continue )
+__filesize_t BeyeContext::search( bool is_continue )
 {
   __filesize_t found;
   __filesize_t fmem,lmem,slen, flen;
@@ -594,20 +593,20 @@ __filesize_t __FASTCALL__ Search( bool is_continue )
     {
       unsigned cp_symb_size;
       if(is_continue) lmem = FoundTextSt;
-      cp_symb_size = beye_context().active_mode()->get_symbol_size();
+      cp_symb_size = activeMode->get_symbol_size();
       if((beyeSearchFlg & SF_REVERSE) && lmem) lmem-=cp_symb_size;
       else if(lmem < flen) lmem+=cp_symb_size;
     }
     __found = false;
-    found = (beyeSearchFlg & SF_PLUGINS) && beye_context().active_mode()->search_engine ?
-       beye_context().active_mode()->search_engine(prcntswnd,lmem,&slen,beyeSearchFlg,
+    found = (beyeSearchFlg & SF_PLUGINS) && (activeMode->flags() & Plugin::Has_SearchEngine) ?
+       activeMode->search_engine(prcntswnd,lmem,&slen,beyeSearchFlg,
 				 is_continue,&__found):
        __adv_find(lmem,&slen);
     CloseWnd(prcntswnd);
     if(__found)
     {
        FoundTextSt = found;
-       FoundTextEnd = found + slen*beye_context().active_mode()->get_symbol_size();
+       FoundTextEnd = found + slen*activeMode->get_symbol_size();
        /* it is not an error of search engine it is special case:
 	  adv_find function don't want to use a file stream directly */
        if(FoundTextEnd > flen) FoundTextEnd = flen;

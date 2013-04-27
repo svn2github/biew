@@ -29,6 +29,7 @@ using namespace beye;
 #include "plugins/disasm/arm/arm.h"
 
 namespace beye {
+static DisMode* parent;
 enum {
     ARM_USE_SP	=0x00100000UL,
     ARM_USE_PC	=0x00200000UL,
@@ -161,7 +162,7 @@ extern const char *armCCnames[16];
 	READ_IMM(chr);\
 	if(prev) strcat(dret->str,",");\
 	strcat(dret->str,"#");\
-	disAppendDigits(dret->str,ulShift,APREF_USE_TYPE,2,&val,DISARG_WORD);\
+	parent->append_digits(dret->str,ulShift,APREF_USE_TYPE,2,&val,DisMode::Arg_Word);\
 	if(smul) strcat(dret->str,smul);\
 	prev=1;\
     }
@@ -246,8 +247,7 @@ static void __FASTCALL__ arm16EncodeTail(DisasmRet *dret,uint16_t opcode,__files
 	    tbuff=tbuff<<12;
 	else if(hh==1)
 	    tbuff=(tbuff<<1)&0xfffffffc;
-	disAppendFAddr(dret->str,ulShift+1,(long)tbuff,ulShift+tbuff,
-			DISADR_NEAR32,0,2);
+	parent->append_faddr(dret->str,ulShift+1,(long)tbuff,ulShift+tbuff,DisMode::Near32,0,2);
 	prev=1;
     }
     p=strchr(msk,'R');
@@ -304,12 +304,13 @@ void __FASTCALL__ arm16Disassembler(DisasmRet *dret,__filesize_t ulShift,
     {
 	strcpy(dret->str,"???");
 	TabSpace(dret->str,TAB_POS);
-	disAppendDigits(dret->str,ulShift,APREF_USE_TYPE,2,&opcode,DISARG_WORD);
+	parent->append_digits(dret->str,ulShift,APREF_USE_TYPE,2,&opcode,DisMode::Arg_Word);
     }
 }
 
-void __FASTCALL__ arm16Init(void)
+void __FASTCALL__ arm16Init(DisMode* _parent)
 {
+    parent = _parent;
     unsigned i,n,j;
     n = sizeof(opcode_table)/sizeof(arm_opcode16);
     for(i=0;i<n;i++)

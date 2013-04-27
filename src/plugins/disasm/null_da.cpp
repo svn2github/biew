@@ -32,7 +32,7 @@ using namespace beye;
 
 namespace beye {
 static int nulWidth = 1;
-
+static DisMode* parent;
 static const char *width_names[] =
 {
    "~Byte",
@@ -62,7 +62,8 @@ static DisasmRet __FASTCALL__ nulDisassembler(__filesize_t ulShift,
 					      unsigned flags)
 {
   DisasmRet ret;
-  int type,cl;
+  int cl;
+  DisMode::e_disarg type;
   const char *preface;
   if(!((flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
   {
@@ -71,26 +72,26 @@ static DisasmRet __FASTCALL__ nulDisassembler(__filesize_t ulShift,
     switch(nulWidth)
     {
       case 0: preface = "db ";
-	      type = DISARG_BYTE;
+	      type = DisMode::Arg_Byte;
 	      cl = 1;
 	      break;
       default:
       case 1: preface = "dw ";
-	      type = DISARG_WORD;
+	      type = DisMode::Arg_Word;
 	      cl = 2;
 	      break;
       case 2: preface = "dd ";
-	      type = DISARG_DWORD;
+	      type = DisMode::Arg_DWord;
 	      cl = 4;
 	      break;
       case 3: preface = "dq ";
-	      type = DISARG_QWORD;
+	      type = DisMode::Arg_QWord;
 	      cl = 8;
 	      break;
     }
     ret.codelen = cl;
     strcpy(outstr,preface);
-    disAppendDigits(outstr,ulShift,APREF_USE_TYPE,cl,buffer,type);
+    parent->append_digits(outstr,ulShift,APREF_USE_TYPE,cl,buffer,type);
   }
   else
     if(flags & __DISF_GETTYPE) ret.pro_clone = __INSNT_ORDINAL;
@@ -123,8 +124,9 @@ static char      __FASTCALL__ nulGetClone( unsigned long clone )
   UNUSED(clone);
   return ' ';
 }
-static void      __FASTCALL__ nulInit( void )
+static void      __FASTCALL__ nulInit( DisMode& _parent )
 {
+  parent = &_parent;
   outstr = new char [1000];
   if(!outstr)
   {

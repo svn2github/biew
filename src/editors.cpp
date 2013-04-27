@@ -214,7 +214,7 @@ bool __FASTCALL__ editDefAction(int _lastbyte)
    return redraw;
 }
 
-int __FASTCALL__ FullEdit(TWindow * txtwnd,void (*save_func)(unsigned char *,unsigned))
+int __FASTCALL__ FullEdit(TWindow * txtwnd,Opaque& _this,void (*save_func)(Opaque& _this,unsigned char *,unsigned))
 {
  size_t i,j;
  unsigned mlen;
@@ -277,7 +277,7 @@ int __FASTCALL__ FullEdit(TWindow * txtwnd,void (*save_func)(unsigned char *,uns
    switch(_lastbyte)
    {
      case KE_F(1)   : ExtHelp(); continue;
-     case KE_F(2)   : save_func?save_func(EditorMem.buff,EditorMem.size):editSaveContest();
+     case KE_F(2)   : save_func?save_func(_this,EditorMem.buff,EditorMem.size):editSaveContest();
      case KE_F(10)  :
      case KE_ESCAPE : goto bye;
      case KE_TAB : if(txtwnd) goto bye;

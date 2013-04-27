@@ -35,8 +35,6 @@ using namespace beye;
 
 namespace beye {
 extern REGISTRY_BIN mzTable;
-extern unsigned strmaxlen;
-
 
 __filesize_t lastbyte;
 static __filesize_t OldCurrFilePos; /** means previous File position */
@@ -112,239 +110,220 @@ static void __NEAR__ __FASTCALL__ drawTitle( void )
   twClrEOL();
 }
 
-char legalchars[] = "+-0123456789ABCDEFabcdef";
+const char legalchars[] = "+-0123456789ABCDEFabcdef";
 
-void MainLoop( void )
+void BeyeContext::main_loop()
 {
- int ch;
- __filesize_t savep = 0,cfp,nfp,flen;
- unsigned long lwidth;
- BMSeek(beye_context().LastOffset,BM_SEEK_SET);
- drawPrompt();
- twUseWin(MainWnd);
- textshift = beye_context().active_mode()->paint(KE_SUPERKEY,textshift);
- BMSeek(beye_context().LastOffset,BM_SEEK_SET);
- drawTitle();
- while(1)
- {
-  unsigned che;
-  ch = GetEvent(drawPrompt,MainActionFromMenu,NULL);
-  nfp = cfp = OldCurrFilePos = BMGetCurrFilePos();
-  flen = BMGetFLength();
-  lwidth = beye_context().active_mode()->CurLineWidth();
-  che = ch & 0x00FF;
-  if(((che >= '0' && che <= '9') ||
-      (che >= 'A' && che <= 'Z') ||
-      (che >= 'a' && che <= 'z') ||
-       ch == KE_BKSPACE) &&
-       (beye_context().active_mode()->flags & __MF_USECODEGUIDE) == __MF_USECODEGUIDE)
-     {
-       nfp = GidGetGoAddress(ch);
-       goto GO;
-     }
-  switch(ch)
-  {
-    case KE_CTL_F(1):
-    case KE_CTL_F(2):
-    case KE_CTL_F(3):
-    case KE_CTL_F(4):
-    case KE_CTL_F(5):
-    case KE_CTL_F(6):
-    case KE_CTL_F(7):
-    case KE_CTL_F(8):
-    case KE_CTL_F(9):
-    case KE_CTL_F(10):
-		    {
-		       unsigned i;
-		       i = (ch - KE_CTL_F(1)) >> 8;
-		       if(beye_context().active_mode()->action[i])
-		       {
-			 if(beye_context().active_mode()->action[i]()) { ch = KE_SUPERKEY; drawPrompt(); }
-		       }
-		     }
-		     break;
-    case KE_ALT_F(1):
-    case KE_ALT_F(2):
-    case KE_ALT_F(3):
-    case KE_ALT_F(4):
-    case KE_ALT_F(5):
-    case KE_ALT_F(6):
-    case KE_ALT_F(7):
-    case KE_ALT_F(8):
-    case KE_ALT_F(9):
-    case KE_ALT_F(10):
-		      {
-			unsigned i;
-			i = (ch - KE_ALT_F(1)) >> 8;
-			if(beye_context().active_format()->action[i]) nfp = beye_context().active_format()->action[i]();
-		      }
-		      break;
-    case KE_SUPERKEY: goto DRAW;
-    case KE_F(1) : About();  continue;
-    default : continue;
-    case KE_SHIFT_F(1): beye_context().active_mode()->help();
-		  break;
-    case KE_F(10):
-    case KE_ESCAPE : return;
-    case KE_ENTER:
-		  beye_context().quick_select_mode();
-		  drawPrompt();
-		  ch = KE_SUPERKEY;
-		  break;
-    case KE_F(2):
-		  if(beye_context().select_mode()) ch = KE_SUPERKEY;
-		  break;
-    case KE_F(3):
-		  if(beye_context().new_source())
-		  {
+    int ch;
+    __filesize_t savep = 0,cfp,nfp,flen;
+    unsigned long lwidth;
+    BMSeek(LastOffset,BM_SEEK_SET);
+    drawPrompt();
+    twUseWin(MainWnd);
+    textshift = activeMode->paint(KE_SUPERKEY,textshift);
+    BMSeek(LastOffset,BM_SEEK_SET);
+    drawTitle();
+    while(1) {
+	unsigned che;
+	ch = GetEvent(drawPrompt,MainActionFromMenu,NULL);
+	nfp = cfp = OldCurrFilePos = BMGetCurrFilePos();
+	flen = BMGetFLength();
+	lwidth = activeMode->curr_line_width();
+	che = ch & 0x00FF;
+	if(((che >= '0' && che <= '9') ||
+	    (che >= 'A' && che <= 'Z') ||
+	    (che >= 'a' && che <= 'z') ||
+	    ch == KE_BKSPACE) &&
+	    (activeMode->flags() & Plugin::UseCodeGuide) == Plugin::UseCodeGuide) {
+		nfp = GidGetGoAddress(ch);
+		goto GO;
+        }
+	switch(ch) {
+	    case KE_CTL_F(1): if(activeMode->action_F1()) { ch = KE_SUPERKEY; drawPrompt(); } break;
+	    case KE_CTL_F(2): if(activeMode->action_F2()) { ch = KE_SUPERKEY; drawPrompt(); } break;
+	    case KE_CTL_F(3): if(activeMode->action_F3()) { ch = KE_SUPERKEY; drawPrompt(); } break;
+	    case KE_CTL_F(4): if(activeMode->action_F4()) { ch = KE_SUPERKEY; drawPrompt(); } break;
+	    case KE_CTL_F(5): if(activeMode->action_F5()) { ch = KE_SUPERKEY; drawPrompt(); } break;
+	    case KE_CTL_F(6): if(activeMode->action_F6()) { ch = KE_SUPERKEY; drawPrompt(); } break;
+	    case KE_CTL_F(7): if(activeMode->action_F7()) { ch = KE_SUPERKEY; drawPrompt(); } break;
+	    case KE_CTL_F(8): if(activeMode->action_F8()) { ch = KE_SUPERKEY; drawPrompt(); } break;
+	    case KE_CTL_F(9): if(activeMode->action_F9()) { ch = KE_SUPERKEY; drawPrompt(); } break;
+	    case KE_CTL_F(10):if(activeMode->action_F10()) { ch = KE_SUPERKEY; drawPrompt(); } break;
+	    case KE_ALT_F(1):
+	    case KE_ALT_F(2):
+	    case KE_ALT_F(3):
+	    case KE_ALT_F(4):
+	    case KE_ALT_F(5):
+	    case KE_ALT_F(6):
+	    case KE_ALT_F(7):
+	    case KE_ALT_F(8):
+	    case KE_ALT_F(9):
+	    case KE_ALT_F(10):
+		{
+		    unsigned i;
+		    i = (ch - KE_ALT_F(1)) >> 8;
+		    if(detectedFormat->action[i]) nfp = detectedFormat->action[i]();
+		}
+		break;
+	    case KE_SUPERKEY: goto DRAW;
+	    case KE_F(1) : About();  continue;
+	    default : continue;
+	    case KE_SHIFT_F(1): activeMode->help(); break;
+	    case KE_F(10):
+	    case KE_ESCAPE : return;
+	    case KE_ENTER:
+		quick_select_mode();
+		drawPrompt();
+		ch = KE_SUPERKEY;
+		break;
+	    case KE_F(2):
+		if(select_mode()) ch = KE_SUPERKEY; break;
+	    case KE_F(3):
+		if(new_source()) {
 		    ch = KE_SUPERKEY;
 		    FoundTextSt = FoundTextEnd; ch = KE_SUPERKEY;
 		    PaintTitle();
-		  }
-		  break;
-    case KE_F(4):
-		  if(beye_context().active_mode()->misc_action)
-		  {
-		     __filesize_t sfp;
-		     sfp = BMGetCurrFilePos();
-		     beye_context().active_mode()->misc_action();
-		     ch = KE_SUPERKEY;
-		     PaintTitle();
-		     drawPrompt();
-		     BMSeek(sfp,BM_SEEK_SET);
-		  }
-		  break;
-    case KE_F(5):
-	   {
-	     static __filesize_t shift = 0;
-	     static unsigned long flags = GJDLG_FILE_TOP;
-	     if(GetJumpDlg(&shift,&flags))
-	     {
-	       switch(flags&0xFF)
-	       {
-		 default:
-		 case GJDLG_PERCENTS: shift=shift>100?100:shift;
-				      nfp = BMGetFLength()*shift/100;
-				      break;
-		 case GJDLG_FILE_TOP: nfp = shift;
-				      break;
-		 case GJDLG_RELATIVE: nfp += (long)shift;
-				      break;
-		 case GJDLG_REL_EOF:  nfp = BMGetFLength()+(long)shift;
-				      break;
-		 case GJDLG_VIRTUAL:
-				      if(beye_context().active_format()->va2pa)
-				      {
-					__filesize_t temp_fp;
-					temp_fp = beye_context().active_format()->va2pa(shift);
-					if(!temp_fp) ErrMessageBox(NOT_ENTRY,NULL);
-					else nfp = temp_fp;
-				      }
-				      else nfp = shift;
-				      break;
-	       }
-	       if((beye_context().active_mode()->flags & __MF_USECODEGUIDE) == __MF_USECODEGUIDE)
+		}
+		break;
+	    case KE_F(4):
+		__filesize_t sfp;
+		sfp = BMGetCurrFilePos();
+		activeMode->misckey_action();
+		ch = KE_SUPERKEY;
+		PaintTitle();
+		drawPrompt();
+		BMSeek(sfp,BM_SEEK_SET);
+		break;
+	    case KE_F(5):
+		{
+		    static __filesize_t shift = 0;
+		    static unsigned long flags = GJDLG_FILE_TOP;
+		    if(GetJumpDlg(&shift,&flags)) {
+		    switch(flags&0xFF) {
+			default:
+			case GJDLG_PERCENTS:
+				shift=shift>100?100:shift;
+				nfp = BMGetFLength()*shift/100;
+				break;
+			case GJDLG_FILE_TOP:
+				nfp = shift;
+				break;
+			case GJDLG_RELATIVE:
+				nfp += (long)shift;
+				break;
+			case GJDLG_REL_EOF:
+				nfp = BMGetFLength()+(long)shift;
+				break;
+			case GJDLG_VIRTUAL:
+				if(detectedFormat->va2pa) {
+				    __filesize_t temp_fp;
+				    temp_fp = detectedFormat->va2pa(shift);
+				    if(!temp_fp) ErrMessageBox(NOT_ENTRY,NULL);
+				    else nfp = temp_fp;
+				} else nfp = shift;
+				break;
+		    }
+		    if((activeMode->flags() & Plugin::UseCodeGuide) == Plugin::UseCodeGuide)
 								 GidAddBackAddress();
-	       ch = KE_SUPERKEY;
-	     }
-	   }
-	   break;
-    case KE_SHIFT_F(5): nfp = WhereAMI(nfp);
-			break;
-    case KE_F(6): BMReRead();
-	     FoundTextSt = FoundTextEnd; ch = KE_SUPERKEY;
-	     PaintTitle();
-	     break;
-    case KE_SHIFT_F(6): beye_context().select_sysinfo(); break;
-    case KE_F(7): nfp = Search(false); ch = KE_JUSTFIND; break;
-    case KE_SHIFT_F(7) : nfp = Search(true); ch = KE_JUSTFIND; break;
-    case KE_F(8):  if(beye_context().active_format()->showHdr) nfp = beye_context().active_format()->showHdr();
-		   else if(IsNewExe()) nfp = mzTable.showHdr();
-		   break;
-    case KE_SHIFT_F(8): beye_context().select_tool(); break;
-    case KE_F(9): Setup(); break;
-    case KE_SHIFT_F(10): if(FileUtils())
-		   {
-		      FoundTextSt = FoundTextEnd; ch = KE_SUPERKEY;
-		      PaintTitle();
-		   }
-		   break;
-    case KE_HOME: textshift = 0; break;
-    case KE_END:  textshift = strmaxlen - tvioWidth/2; break;
-    case KE_UPARROW:
-		   nfp = cfp - beye_context().active_mode()->PrevLineWidth();
-		   break;
-    case KE_DOWNARROW:
-		     nfp = cfp + beye_context().active_mode()->CurLineWidth();
-		     break;
-    case KE_RIGHTARROW:
-		     if((beye_context().active_mode()->flags & __MF_TEXT) == __MF_TEXT)
-				      textshift+=beye_context().active_mode()->get_symbol_size();
-		     else             nfp = cfp + beye_context().active_mode()->get_symbol_size();
-		     break;
-    case KE_LEFTARROW:
-		     if((beye_context().active_mode()->flags & __MF_TEXT) == __MF_TEXT)
-				      textshift-=beye_context().active_mode()->get_symbol_size();
-		     else             nfp = cfp - beye_context().active_mode()->get_symbol_size();
-		     if(textshift < 0) textshift = 0;
-		     break;
-    case KE_CTL_RIGHTARROW:
-		     if((beye_context().active_mode()->flags & __MF_TEXT) == __MF_TEXT)
-				      textshift+=8*beye_context().active_mode()->get_symbol_size();
-		     else             nfp = cfp + 8*beye_context().active_mode()->get_symbol_size();
-		     break;
-    case KE_CTL_LEFTARROW:
-		     if((beye_context().active_mode()->flags & __MF_TEXT) == __MF_TEXT)
-				      textshift-=8*beye_context().active_mode()->get_symbol_size();
-		     else             nfp = cfp - 8*beye_context().active_mode()->get_symbol_size();
-		     if(textshift < 0) textshift = 0;
-		     break;
-    case KE_PGUP:
-		    nfp = cfp - beye_context().active_mode()->PrevPageSize();
+		    ch = KE_SUPERKEY;
+		    }
+	    }
+	    break;
+	    case KE_SHIFT_F(5): nfp = WhereAMI(nfp); break;
+	    case KE_F(6):
+		BMReRead();
+		FoundTextSt = FoundTextEnd; ch = KE_SUPERKEY;
+		PaintTitle();
+		break;
+	    case KE_SHIFT_F(6): select_sysinfo(); break;
+	    case KE_F(7): nfp = search(false); ch = KE_JUSTFIND; break;
+	    case KE_SHIFT_F(7): nfp = search(true); ch = KE_JUSTFIND; break;
+	    case KE_F(8):
+		    if(detectedFormat->showHdr) nfp = detectedFormat->showHdr();
+		    else if(IsNewExe()) nfp = mzTable.showHdr();
 		    break;
-    case KE_PGDN:
-		      nfp = cfp + beye_context().active_mode()->CurPageSize();
-		      break;
-    case KE_CTL_PGUP: nfp = 0;
-		   break;
-    case KE_CTL_PGDN:
-		   nfp = flen;
-		   break;
-    case KE_CTL_(O): /** User screen */
-		   {
-		     unsigned evt;
-		     twHideWin(MainWnd);
-		     twHideWin(TitleWnd);
-		     do
-		     {
+	    case KE_SHIFT_F(8): select_tool(); break;
+	    case KE_F(9): Setup(); break;
+	    case KE_SHIFT_F(10):
+		if(FileUtils()) {
+		    FoundTextSt = FoundTextEnd; ch = KE_SUPERKEY;
+		    PaintTitle();
+		}
+		break;
+	    case KE_HOME: textshift = 0; break;
+	    case KE_END:  textshift = activeMode->get_max_line_length() - tvioWidth/2; break;
+	    case KE_UPARROW:
+		nfp = cfp - activeMode->prev_line_width();
+		break;
+	    case KE_DOWNARROW:
+		nfp = cfp + activeMode->curr_line_width();
+		break;
+	    case KE_RIGHTARROW:
+		if((activeMode->flags() & Plugin::Text) == Plugin::Text)
+		    textshift+=activeMode->get_symbol_size();
+		else nfp = cfp + activeMode->get_symbol_size();
+		break;
+	    case KE_LEFTARROW:
+		if((activeMode->flags() & Plugin::Text) == Plugin::Text)
+		    textshift-=activeMode->get_symbol_size();
+		else nfp = cfp - activeMode->get_symbol_size();
+		if(textshift < 0) textshift = 0;
+		break;
+	    case KE_CTL_RIGHTARROW:
+		if((activeMode->flags() & Plugin::Text) == Plugin::Text)
+		    textshift+=8*activeMode->get_symbol_size();
+		else nfp = cfp + 8*activeMode->get_symbol_size();
+		break;
+	    case KE_CTL_LEFTARROW:
+		if((activeMode->flags() & Plugin::Text) == Plugin::Text)
+		    textshift-=8*activeMode->get_symbol_size();
+		else nfp = cfp - 8*activeMode->get_symbol_size();
+		if(textshift < 0) textshift = 0;
+		break;
+	    case KE_PGUP:
+		nfp = cfp - activeMode->prev_page_size();
+		break;
+	    case KE_PGDN:
+		nfp = cfp + activeMode->curr_page_size();
+		break;
+	    case KE_CTL_PGUP:
+		nfp = 0;
+		break;
+	    case KE_CTL_PGDN:
+		nfp = flen;
+		break;
+	    case KE_CTL_(O): /** User screen */
+		{
+		    unsigned evt;
+		    twHideWin(MainWnd);
+		    twHideWin(TitleWnd);
+		    do {
 			evt = GetEvent(drawEmptyPrompt,NULL,NULL);
-		     }
-		     while(!(evt == KE_ESCAPE || evt == KE_F(10) || evt == KE_CTL_(O)));
-		     twShowWin(MainWnd);
-		     twShowWin(TitleWnd);
-		   }
-		   continue;
-
-  }
-  GO:
-  if(cfp != nfp)
-  {
-    unsigned long twidth = ( beye_context().active_mode()->flags & __MF_TEXT ) == __MF_TEXT ?
-			   beye_context().active_mode()->get_symbol_size() :
-			   ( beye_context().active_mode()->flags & __MF_DISASM ) == __MF_DISASM ?
+		    }
+		    while(!(evt == KE_ESCAPE || evt == KE_F(10) || evt == KE_CTL_(O)));
+		    twShowWin(MainWnd);
+		    twShowWin(TitleWnd);
+		}
+		continue;
+	}
+	GO:
+	if(cfp != nfp) {
+	    unsigned long twidth = ( activeMode->flags() & Plugin::Text ) == Plugin::Text ?
+			   activeMode->get_symbol_size() :
+			   ( activeMode->flags() & Plugin::Disasm ) == Plugin::Disasm ?
 			   1 : lwidth;
-    __filesize_t p = flen - twidth;
-    if((__fileoff_t)nfp < 0) nfp = 0;
-    if(nfp > 0) if(nfp > p) nfp = p;
-    BMSeek(nfp,BM_SEEK_SET);
-  }
-  DRAW:
-  twUseWin(MainWnd);
-  if((beye_context().active_mode()->flags & __MF_TEXT) != __MF_TEXT) savep = BMGetCurrFilePos();
-  textshift = beye_context().active_mode()->paint(ch,textshift);
-  if((beye_context().active_mode()->flags & __MF_TEXT) != __MF_TEXT) BMSeek(savep,BM_SEEK_SET);
-  drawTitle();
- }
+	    __filesize_t p = flen - twidth;
+	    if((__fileoff_t)nfp < 0) nfp = 0;
+	    if(nfp > 0) if(nfp > p) nfp = p;
+	    BMSeek(nfp,BM_SEEK_SET);
+	}
+	DRAW:
+	twUseWin(MainWnd);
+	if((activeMode->flags() & Plugin::Text) != Plugin::Text) savep = BMGetCurrFilePos();
+	textshift = activeMode->paint(ch,textshift);
+	if((activeMode->flags() & Plugin::Text) != Plugin::Text) BMSeek(savep,BM_SEEK_SET);
+	drawTitle();
+    }
 }
 } // namespace beye
 

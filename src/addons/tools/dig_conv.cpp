@@ -123,7 +123,7 @@ static void DigConv( void )
  unsigned attr,stx = 0,rlen,w;
  char wbuff[68];
  bool redraw;
- char * legal[5];
+ const char * legal[5];
  uintmax_t digit;
  char decleg[13],oleg[9],bleg[3];
  memcpy(decleg,legalchars,12);

@@ -18,6 +18,7 @@
 #define __BEYEUTIL__H
 
 #include <limits>
+#include <limits.h>
 
 #ifndef __TWIN_H
 #include "libbeye/twin.h"
@@ -32,7 +33,7 @@
 #endif
 
 namespace beye {
-    extern char legalchars[];
+    extern const char legalchars[];
     extern bool DumpMode;
     extern bool EditMode;
 
@@ -77,8 +78,10 @@ namespace beye {
     void   About( void );
 
     __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos);
-#define RAPREF_NONE    0  /**< means reference is not appended */
-#define RAPREF_DONE    std::numeric_limits<int32_t>::max() /**< means reference is appended */
+    enum {
+	RAPREF_NONE=0,  /**< means reference is not appended */
+	RAPREF_DONE=UINT_MAX /**< means reference is appended */
+    };
 		   /** Appends disassembler reference to string.
 		     * @param str          string buffer for append to
 		     * @param ulShift      physical address of field, that required of binding
@@ -94,7 +97,6 @@ namespace beye {
 					       __filesize_t r_shift);
 
     void  ShowSysInfo( void );
-    void  MainLoop( void );
 
     int  __FASTCALL__ isHOnLine(__filesize_t cp,int width);
     enum {

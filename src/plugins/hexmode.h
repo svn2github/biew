@@ -22,9 +22,9 @@
 #endif
 
 namespace beye {
-    extern bool hexAddressResolv;
-    bool __FASTCALL__ hexAddressResolution( void );
-    void  __FASTCALL__ ReadIniAResolv( hIniProfile *ini );
-    void  __FASTCALL__ WriteIniAResolv( hIniProfile *ini );
+    extern unsigned		hexAddressResolv;
+    bool __FASTCALL__		hexAddressResolution(unsigned& hexAddressResolv);
+    unsigned  __FASTCALL__	ReadIniAResolv( hIniProfile *ini );
+    void  __FASTCALL__		WriteIniAResolv( hIniProfile *ini,unsigned hexAddressResolv, unsigned virt_width_corr);
 } // namespace beye
 #endif

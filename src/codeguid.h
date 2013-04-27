@@ -20,6 +20,7 @@
 #ifndef __SYS_DEP_H
 #include "_sys_dep.h"
 #endif
+#include "plugins/disasm.h"
 
 namespace beye {
     extern char codeguid_image[];
@@ -30,7 +31,7 @@ namespace beye {
     __filesize_t      __FASTCALL__ GidGetGoAddress(unsigned keycode);
     char *            __FASTCALL__ GidEncodeAddress(__filesize_t cfpos,bool aresolv);
 
-    bool             __FASTCALL__ initCodeGuider( void );
+    bool             __FASTCALL__ initCodeGuider(const DisMode& parent);
     void              __FASTCALL__ termCodeGuider( void );
 } // namespace beye
 #endif

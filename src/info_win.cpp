@@ -126,14 +126,17 @@ static const char * FxText[] =
 
 static void __NEAR__ fillFxText( void )
 {
-  FxText[3] = beye_context().active_mode()->misckey_name ? beye_context().active_mode()->misckey_name() : NULL;
+  FxText[3] = beye_context().active_mode()->misckey_name();
   FxText[7] = beye_context().active_format()->showHdr || IsNewExe() ? "Header" : NULL;
 }
 
 void drawPrompt( void )
 {
-  fillFxText();
-  __drawMultiPrompt(FxText, ShiftFxText, beye_context().active_format()->prompt, beye_context().active_mode()->prompt);
+    fillFxText();
+    const char* prmt[10];
+    size_t i;
+    for(i=0;i<10;i++) prmt[i]=beye_context().active_mode()->prompt(i);
+    __drawMultiPrompt(FxText, ShiftFxText, beye_context().active_format()->prompt, prmt);
 }
 
 static const char * amenu_names[] =
@@ -169,7 +172,10 @@ int MainActionFromMenu( void )
 		if(i!=-1) return KE_ALT_F(i+1);
 		break;
 	case 3:
-		i = SelBoxA(const_cast<char**>(beye_context().active_mode()->prompt),10," Select mode-depended action: ",0);
+		const char* prmt[10];
+		size_t j;
+		for(j=0;j<10;j++) prmt[j]=beye_context().active_mode()->prompt(i);
+		i = SelBoxA(const_cast<char**>(prmt),10," Select mode-depended action: ",0);
 		if(i!=-1) return KE_CTL_F(i+1);
 		break;
     }

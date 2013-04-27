@@ -49,355 +49,381 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
+#include "plugin.h"
+
 namespace beye {
-extern const REGISTRY_DISASM ix86_Disasm;
-extern const REGISTRY_DISASM Null_Disasm;
-extern const REGISTRY_DISASM AVR_Disasm;
-extern const REGISTRY_DISASM ARM_Disasm;
-extern const REGISTRY_DISASM PPC_Disasm;
-extern const REGISTRY_DISASM Java_Disasm;
+    extern const REGISTRY_DISASM ix86_Disasm;
+    extern const REGISTRY_DISASM Null_Disasm;
+    extern const REGISTRY_DISASM AVR_Disasm;
+    extern const REGISTRY_DISASM ARM_Disasm;
+    extern const REGISTRY_DISASM PPC_Disasm;
+    extern const REGISTRY_DISASM Java_Disasm;
 
-static const REGISTRY_DISASM *mainDisasmTable[] =
+    static const REGISTRY_DISASM *mainDisasmTable[] = {
+	&Null_Disasm,
+	&ix86_Disasm,
+	&Java_Disasm,
+	&AVR_Disasm,
+	&ARM_Disasm,
+	&PPC_Disasm
+    };
+
+DisMode::DisMode()
+	:DefDisasmSel(__DEFAULT_DISASM)
+	,HiLight(1)
+	,DisasmPrepareMode(false)
 {
-  &Null_Disasm,
-  &ix86_Disasm,
-  &Java_Disasm,
-  &AVR_Disasm,
-  &ARM_Disasm,
-  &PPC_Disasm
-};
+    unsigned i;
+    unsigned def_platform;
+    CurrStrLenBuff = new unsigned char [tvioHeight];
+    PrevStrLenAddr = new unsigned long [tvioHeight];
+    dis_comments   = new char [Comm_Size];
+    if((!CurrStrLenBuff) || (!PrevStrLenAddr) || (!dis_comments)) {
+	err:
+	MemOutBox("Disassembler initialization");
+	::exit(EXIT_FAILURE);
+    }
+    def_platform = DISASM_DATA;
+    if(beye_context().active_format()->query_platform) def_platform = beye_context().active_format()->query_platform();
+    activeDisasm = mainDisasmTable[0];
+    DefDisasmSel = DISASM_DATA;
+    for(i=0;i<sizeof(mainDisasmTable)/sizeof(REGISTRY_DISASM *);i++) {
+	if(mainDisasmTable[i]->type == def_platform) {
+	    activeDisasm=mainDisasmTable[i];
+	    DefDisasmSel = def_platform;
+	    break;
+	}
+    }
+    accept_actions();
+    if(!initCodeGuider(*this)) goto err;
+}
 
-static unsigned DefDisasmSel = __DEFAULT_DISASM;
-const REGISTRY_DISASM *activeDisasm = NULL;
-
-static unsigned long PrevPageSize,CurrPageSize,PrevStrLen,CurrStrLen;
-unsigned disNeedRef = 0;
-int DisasmCurrLine;
-unsigned disPanelMode = 0;
-static int           HiLight = 1;
-static unsigned char *CurrStrLenBuff = NULL;
-static unsigned long *PrevStrLenAddr = NULL;
-static char          LastPrevLen;
-static char          PrevStrCount = 0;
-static char *        disCodeBuffer = NULL;
-static char *        disCodeBufPredict = NULL;
-static int           disMaxCodeLen;
-
-bool DisasmPrepareMode = false;
-
-char *   dis_comments;
-unsigned dis_severity;
-
-static void __NEAR__ __FASTCALL__ disAcceptActions( void );
-
-static bool __FASTCALL__ disSelect_Disasm( void )
+DisMode::~DisMode()
 {
-  const char *modeName[sizeof(mainDisasmTable)/sizeof(REGISTRY_DISASM *)];
-  size_t i,nModes;
-  int retval;
-
-  nModes = sizeof(mainDisasmTable)/sizeof(REGISTRY_DISASM *);
-  for(i = 0;i < nModes;i++) modeName[i] = mainDisasmTable[i]->name;
-  retval = SelBoxA(const_cast<char**>(modeName),nModes," Select disassembler: ",DefDisasmSel);
-  if(retval != -1)
-  {
+    termCodeGuider();
     if(activeDisasm->term) activeDisasm->term();
-    activeDisasm = mainDisasmTable[retval];
-    DefDisasmSel = retval;
-    disAcceptActions();
-    return true;
-  }
-  return false;
+    delete CurrStrLenBuff;
+    delete PrevStrLenAddr;
+    delete dis_comments;
+    delete disCodeBuffer;
+    delete disCodeBufPredict;
 }
 
-static void __FASTCALL__ FillPrevAsmPage(__filesize_t bound,unsigned predist)
+DisMode::e_flag DisMode::flags() const { return UseCodeGuide | Disasm | Has_SearchEngine; }
+
+static const char* txt[] = { "", "Disasm", "", "", "", "AResol", "PanMod", "ResRef", "HiLght", "UsrNam" };
+const char* DisMode::prompt(unsigned idx) const {
+    if(activeDisasm && idx<5) {
+	if(!idx) return activeDisasm->prompt[idx];
+	return activeDisasm->prompt[idx-1];
+    }
+    return (idx < 10) ? txt[idx] : "";
+}
+
+bool DisMode::action_F2() /* disSelect_Disasm */
 {
-  __filesize_t distin,addr;
-  unsigned j;
-  unsigned totallen;
-  tAbsCoord height = twGetClientHeight(MainWnd);
-  char showref,addrdet;
-  if(!predist) predist = height*disMaxCodeLen;
-  predist = (predist/16)*16+16;   /** align on 16-byte boundary */
-  distin = bound >= predist ? bound - predist : 0;
-  memset(PrevStrLenAddr,TWC_DEF_FILLER,height*sizeof(long));
-  PrevStrCount = 0;
-  totallen = 0;
-  showref = disNeedRef;
-  addrdet = hexAddressResolv;
-  hexAddressResolv = 0;
-  disNeedRef = 0;
-  DisasmPrepareMode = true;
-  for(j = 0;;j++)
-  {
-    DisasmRet dret;
-       addr = distin + totallen;
-       BMReadBufferEx(disCodeBuffer,disMaxCodeLen,addr,BM_SEEK_SET);
-       dret = Disassembler(distin,(unsigned char*)disCodeBuffer,__DISF_SIZEONLY);
-       if(addr >= bound) break;
-       totallen += dret.codelen;
-       if(j < height) PrevStrLenAddr[j] = addr;
-       else
-       {
-	  memmove(PrevStrLenAddr,&PrevStrLenAddr[1],(height - 1)*sizeof(long));
-	  PrevStrLenAddr[height - 1] = addr;
-       }
-  }
-  PrevStrCount = j < height ? j : height;
-  LastPrevLen = PrevStrCount ? bound - PrevStrLenAddr[PrevStrCount - 1] : 0;
-  disNeedRef = showref;
-  DisasmPrepareMode = false;
-  hexAddressResolv = addrdet;
+    const char *modeName[sizeof(mainDisasmTable)/sizeof(REGISTRY_DISASM *)];
+    size_t i,nModes;
+    int retval;
+
+    nModes = sizeof(mainDisasmTable)/sizeof(REGISTRY_DISASM *);
+    for(i = 0;i < nModes;i++) modeName[i] = mainDisasmTable[i]->name;
+    retval = SelBoxA(const_cast<char**>(modeName),nModes," Select disassembler: ",DefDisasmSel);
+    if(retval != -1) {
+	if(activeDisasm->term) activeDisasm->term();
+	activeDisasm = mainDisasmTable[retval];
+	DefDisasmSel = retval;
+	accept_actions();
+	return true;
+    }
+    return false;
 }
 
-static void __FASTCALL__ PrepareAsmLines(int keycode,__filesize_t cfpos)
+void DisMode::fill_prev_asm_page(__filesize_t bound,unsigned predist)
 {
-  tAbsCoord height = twGetClientHeight(MainWnd);
-  switch(keycode)
-  {
-    case KE_DOWNARROW:
-		    PrevStrLen = CurrStrLenBuff[0];
-		    CurrStrLen = CurrStrLenBuff[1];
-		    if((unsigned)PrevStrCount < height) PrevStrCount++;
-		    else                                memmove(PrevStrLenAddr,&PrevStrLenAddr[1],sizeof(long)*(height - 1));
-		    PrevStrLenAddr[PrevStrCount - 1] = cfpos - CurrStrLenBuff[0];
-		    PrevPageSize = PrevStrLenAddr[PrevStrCount - 1] - PrevStrLenAddr[0] + PrevStrLen;
-		    break;
-    case KE_PGDN:
-		    {
-		      size_t i;
-		      unsigned size;
-		      __filesize_t prevpos;
-		      size = Summ(CurrStrLenBuff,height);
-		      prevpos = cfpos - size;
-		      size = 0;
-		      for(i = 0;i < height;i++)
-		      {
-			  size += CurrStrLenBuff[i];
-			  PrevStrLenAddr[i] = prevpos + size;
-		      }
-		      PrevStrLen = CurrStrLenBuff[height - 1];
-		      PrevPageSize = size;
-		      PrevStrCount = height;
-		    }
-		    break;
-   case KE_UPARROW:
-		    FillPrevAsmPage(cfpos,(unsigned)(PrevPageSize + 15));
-		    goto Calc;
-    default:
-		    FillPrevAsmPage(cfpos,0);
-    Calc:
-		    if(PrevStrCount)
-		    {
-		      PrevStrLen = LastPrevLen;
-		      PrevPageSize = PrevStrLenAddr[PrevStrCount - 1] + LastPrevLen - PrevStrLenAddr[0];
-		    }
-		    else
-		    {
-		      PrevStrLen = 0;
-		      PrevPageSize = 0;
-		    }
-		    break;
-  }
+    __filesize_t distin,addr;
+    unsigned j;
+    unsigned totallen;
+    tAbsCoord height = twGetClientHeight(MainWnd);
+    char addrdet;
+    e_ref showref;
+    if(!predist) predist = height*disMaxCodeLen;
+    predist = (predist/16)*16+16;   /** align on 16-byte boundary */
+    distin = bound >= predist ? bound - predist : 0;
+    memset(PrevStrLenAddr,TWC_DEF_FILLER,height*sizeof(long));
+    PrevStrCount = 0;
+    totallen = 0;
+    showref = disNeedRef;
+    addrdet = hexAddressResolv;
+    hexAddressResolv = 0;
+    disNeedRef = Ref_None;
+    DisasmPrepareMode = true;
+    for(j = 0;;j++) {
+	DisasmRet dret;
+	addr = distin + totallen;
+	BMReadBufferEx(disCodeBuffer,disMaxCodeLen,addr,BM_SEEK_SET);
+	dret = disassembler(distin,(unsigned char*)disCodeBuffer,__DISF_SIZEONLY);
+	if(addr >= bound) break;
+	totallen += dret.codelen;
+	if(j < height) PrevStrLenAddr[j] = addr;
+	else {
+	    ::memmove(PrevStrLenAddr,&PrevStrLenAddr[1],(height - 1)*sizeof(long));
+	    PrevStrLenAddr[height - 1] = addr;
+	}
+    }
+    PrevStrCount = j < height ? j : height;
+    LastPrevLen = PrevStrCount ? bound - PrevStrLenAddr[PrevStrCount - 1] : 0;
+    disNeedRef = showref;
+    DisasmPrepareMode = false;
+    hexAddressResolv = addrdet;
 }
 
-static unsigned __FASTCALL__ drawAsm( unsigned keycode, unsigned textshift )
+void DisMode::prepare_asm_lines(int keycode,__filesize_t cfpos)
 {
- int i,I,Limit,dir,orig_commpos,orig_commoff;
- size_t j,len,len_64;
- __filesize_t cfpos,flen,TopCFPos;
- static __filesize_t amocpos = 0L;
- char outstr[__TVIO_MAXSCREENWIDTH];
- char savstring[20];
- HLInfo hli;
- ColorAttr cattr;
- flen = BMGetFLength();
- cfpos = TopCFPos = BMGetCurrFilePos();
- if(keycode == KE_UPARROW)
- {
-   char showref,addrdet;
-   DisasmRet dret;
-   showref = disNeedRef;
-   addrdet = hexAddressResolv;
-   disNeedRef = hexAddressResolv = 0;
-   BMReadBufferEx(disCodeBuffer,disMaxCodeLen,cfpos,BM_SEEK_SET);
-   DisasmPrepareMode = true;
-   dret = Disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_SIZEONLY);
-   if(cfpos + dret.codelen != amocpos && cfpos && amocpos) keycode = KE_SUPERKEY;
-   DisasmPrepareMode = false;
-   disNeedRef = showref;
-   hexAddressResolv = addrdet;
- }
- PrepareAsmLines(keycode,cfpos);
- if(amocpos != cfpos || keycode == KE_SUPERKEY || keycode == KE_JUSTFIND)
- {
-   tAbsCoord height = twGetClientHeight(MainWnd);
-   tAbsCoord width = twGetClientWidth(MainWnd);
-   GidResetGoAddress(keycode);
-   I = 0;
-   twFreezeWin(MainWnd);
-   if(keycode == KE_UPARROW)
-   {
-     dir = -1;
-     Limit = -1;
-     /* All checks we have done above */
-     twScrollWinDn(MainWnd,1,1);
-     memmove(&CurrStrLenBuff[1],CurrStrLenBuff,height-1);
-   }
-   else
-   {
-     dir = 1;
-     Limit = height;
-   }
-   if(keycode == KE_DOWNARROW)
-   {
-     if(CurrStrLenBuff[1])
-     {
-       I = height-1;
-       twScrollWinUp(MainWnd,I,1);
-       memmove(CurrStrLenBuff,&CurrStrLenBuff[1],I);
-       cfpos += Summ(CurrStrLenBuff,I);
-     }
-     else
-     {
-       twRefreshWin(MainWnd);
-       goto bye;
-     }
-   }
-   if(cfpos > flen) cfpos = flen;
-   amocpos = cfpos;
-   twUseWin(MainWnd);
-   for(i = I;i != Limit;i+=1*dir)
-   {
-     DisasmRet dret;
-     memset(outstr,TWC_DEF_FILLER,__TVIO_MAXSCREENWIDTH);
-     DisasmCurrLine = i;
-     if(cfpos < flen)
-     {
-       len = cfpos + disMaxCodeLen < flen ? disMaxCodeLen : (int)(flen - cfpos);
-       memset(disCodeBuffer,0,disMaxCodeLen);
-       BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,BM_SEEK_SET);
-       dret = Disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
-       if(i == 0) CurrStrLen = dret.codelen;
-       CurrStrLenBuff[i] = dret.codelen;
-       twSetColorAttr(browser_cset.main);
-       len_64=HA_LEN();
-       memcpy(outstr,GidEncodeAddress(cfpos,hexAddressResolv),len_64);
-       len = 0;
-       if(disPanelMode < PANMOD_FULL)
-       {
-	 static char _clone;
-	 len = len_64;
-	 twDirectWrite(1,i + 1,outstr,len);
-	 if(!hexAddressResolv)
-	 {
-	   twSetColorAttr(disasm_cset.family_id);
-	   _clone = activeDisasm->CloneShortName(dret.pro_clone);
-	   twDirectWrite(len_64,i + 1,&_clone,1);
-	   twSetColorAttr(browser_cset.main);
-	 }
-       }
-       if(disPanelMode < PANMOD_MEDIUM)
-       {
-	 unsigned full_off,med_off,tmp_off;
-	 ColorAttr opc;
-	 med_off = disMaxCodeLen*2+1;
-	 full_off = med_off+len_64;
-	 for(j = 0;j < dret.codelen;j++,len+=2)
-	    memcpy(&outstr[len],Get2Digit(disCodeBuffer[j]),2);
-	 tmp_off = disPanelMode < PANMOD_FULL ? full_off : med_off;
-	 if(len < tmp_off) len = tmp_off;
-	 if(activeDisasm->GetOpcodeColor)
-		opc =	HiLight == 2 ? activeDisasm->altGetOpcodeColor(dret.pro_clone) :
-			HiLight == 1 ? activeDisasm->GetOpcodeColor(dret.pro_clone) : disasm_cset.opcodes;
-	 else	opc = disasm_cset.opcodes;
-	 twSetColorAttr(opc);
-	 twDirectWrite(disPanelMode < PANMOD_FULL ? len_64+1 : 1,
-		       i + 1,
-		       &outstr[len_64],
-		       disPanelMode < PANMOD_FULL ? len - (len_64+1) : len - 1);
-	 if(isHOnLine(cfpos,dret.codelen))
-	 {
-	    hli.text = &outstr[len_64];
-	    HiLightSearch(MainWnd,cfpos,len_64,dret.codelen,i,&hli,HLS_USE_DOUBLE_WIDTH);
-	 }
-       }
-       twSetColorAttr(browser_cset.main);
-       twDirectWrite(len,i + 1," ",1);  len++;
-       cattr =	HiLight == 2 ?  activeDisasm->altGetInsnColor(dret.pro_clone) :
-		HiLight == 1 ?  activeDisasm->GetInsnColor(dret.pro_clone) :
-				browser_cset.main;
-       twSetColorAttr(cattr);
-       j = strlen(dret.str);
-       /* Here adding commentaries */
-       savstring[0] = 0;
-       orig_commoff = orig_commpos = 0;
-       if(j > 5)
-       if(dret.str[j-5] == codeguid_image[0] &&
-	  dret.str[j-4] == codeguid_image[1] &&
-	  dret.str[j-3] == codeguid_image[2] &&
-	  dret.str[j-1] == codeguid_image[4] &&
-	  dis_severity > DISCOMSEV_NONE)
-       {
-	 int new_idx;
-	 orig_commpos = new_idx = j-5;
-	 orig_commoff = len;
-	 strcpy(savstring,&dret.str[new_idx]);
-	 dret.str[new_idx--] = 0;
-	 while(dret.str[new_idx] == ' ' && new_idx) new_idx--;
-	 if(dret.str[new_idx] != ' ') new_idx++;
-	 dret.str[new_idx] = 0;
-	 j = strlen(dret.str);
-       }
-       twDirectWrite(len,i+1,dret.str,j); len += j;
-       if(dis_severity > DISCOMSEV_NONE)
-       {
-	 twSetColorAttr(disasm_cset.comments);
-	 twGotoXY(len,i+1);
-	 twPutS(" ; "); len+=3;
-	 j = orig_commpos-len;
-	 j = std::min(j,strlen(dis_comments));
-	 twDirectWrite(len,i+1,dis_comments,j);
-	 len += j;
-	 if(savstring[0])
-	 {
-	   twGotoXY(len,i+1);
-	   twClrEOL();
-	   twSetColorAttr(cattr);
-	   len = orig_commoff + orig_commpos;
-	   twDirectWrite(len,i+1,savstring,5);
-	   len += 5;
-	 }
-       }
-       twSetColorAttr(browser_cset.main);
-       if(len < width)
-       {
-	 twGotoXY(len,i + 1);
-	 twClrEOL();
-       }
-       cfpos += dret.codelen;
-       BMSeek(cfpos,BM_SEEK_SET);
-     }
-     else
-     {
-       twDirectWrite(1,i + 1,outstr,width);
-       CurrStrLenBuff[i] = 0;
-     }
-   }
-   twRefreshWin(MainWnd);
-   twSetColorAttr(browser_cset.main);
-   lastbyte = TopCFPos + Summ(CurrStrLenBuff,height);
-   CurrPageSize = lastbyte-TopCFPos;
- }
- bye:
- return textshift;
+    tAbsCoord height = twGetClientHeight(MainWnd);
+    switch(keycode) {
+	case KE_DOWNARROW:
+		PrevStrLen = CurrStrLenBuff[0];
+		CurrStrLen = CurrStrLenBuff[1];
+		if((unsigned)PrevStrCount < height) PrevStrCount++;
+		else                                ::memmove(PrevStrLenAddr,&PrevStrLenAddr[1],sizeof(long)*(height - 1));
+		PrevStrLenAddr[PrevStrCount - 1] = cfpos - CurrStrLenBuff[0];
+		PrevPageSize = PrevStrLenAddr[PrevStrCount - 1] - PrevStrLenAddr[0] + PrevStrLen;
+		break;
+	case KE_PGDN:
+		{
+		    size_t i;
+		    unsigned size;
+		    __filesize_t prevpos;
+		    size = Summ(CurrStrLenBuff,height);
+		    prevpos = cfpos - size;
+		    size = 0;
+		    for(i = 0;i < height;i++) {
+			size += CurrStrLenBuff[i];
+			PrevStrLenAddr[i] = prevpos + size;
+		    }
+		    PrevStrLen = CurrStrLenBuff[height - 1];
+		    PrevPageSize = size;
+		    PrevStrCount = height;
+		}
+		break;
+	case KE_UPARROW:
+		fill_prev_asm_page(cfpos,(unsigned)(PrevPageSize + 15));
+		goto Calc;
+	default:
+		fill_prev_asm_page(cfpos,0);
+	Calc:
+		if(PrevStrCount) {
+		    PrevStrLen = LastPrevLen;
+		    PrevPageSize = PrevStrLenAddr[PrevStrCount - 1] + LastPrevLen - PrevStrLenAddr[0];
+		} else {
+		    PrevStrLen = 0;
+		    PrevPageSize = 0;
+		}
+		break;
+    }
 }
 
-static unsigned long __FASTCALL__ disPrevPageSize( void ) { return PrevPageSize; }
-static unsigned long __FASTCALL__ disCurrPageSize( void ) { return CurrPageSize; }
-static unsigned long __FASTCALL__ disPrevLineWidth( void ) { return PrevStrLen; }
-static unsigned long __FASTCALL__ disCurrLineWidth( void ) { return CurrStrLen; }
-static const char *  __FASTCALL__ disMiscKeyName( void ) { return "Modify"; }
+unsigned DisMode::paint( unsigned keycode, unsigned textshift )
+{
+    int i,I,Limit,dir,orig_commpos,orig_commoff;
+    size_t j,len,len_64;
+    __filesize_t cfpos,flen,TopCFPos;
+    static __filesize_t amocpos = 0L;
+    char outstr[__TVIO_MAXSCREENWIDTH];
+    char savstring[20];
+    HLInfo hli;
+    ColorAttr cattr;
+    flen = BMGetFLength();
+    cfpos = TopCFPos = BMGetCurrFilePos();
+    if(keycode == KE_UPARROW) {
+	char addrdet;
+	e_ref showref;
+	DisasmRet dret;
+	showref = disNeedRef;
+	addrdet = hexAddressResolv;
+	disNeedRef = Ref_None; hexAddressResolv = 0;
+	BMReadBufferEx(disCodeBuffer,disMaxCodeLen,cfpos,BM_SEEK_SET);
+	DisasmPrepareMode = true;
+	dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_SIZEONLY);
+	if(cfpos + dret.codelen != amocpos && cfpos && amocpos) keycode = KE_SUPERKEY;
+	DisasmPrepareMode = false;
+	disNeedRef = showref;
+	hexAddressResolv = addrdet;
+    }
+    prepare_asm_lines(keycode,cfpos);
+    if(amocpos != cfpos || keycode == KE_SUPERKEY || keycode == KE_JUSTFIND) {
+	tAbsCoord height = twGetClientHeight(MainWnd);
+	tAbsCoord width = twGetClientWidth(MainWnd);
+	GidResetGoAddress(keycode);
+	I = 0;
+	twFreezeWin(MainWnd);
+	if(keycode == KE_UPARROW) {
+	    dir = -1;
+	    Limit = -1;
+	    /* All checks we have done above */
+	    twScrollWinDn(MainWnd,1,1);
+	    ::memmove(&CurrStrLenBuff[1],CurrStrLenBuff,height-1);
+	} else {
+	    dir = 1;
+	    Limit = height;
+	}
+	if(keycode == KE_DOWNARROW) {
+	    if(CurrStrLenBuff[1]) {
+		I = height-1;
+		twScrollWinUp(MainWnd,I,1);
+		::memmove(CurrStrLenBuff,&CurrStrLenBuff[1],I);
+		cfpos += Summ(CurrStrLenBuff,I);
+	    } else {
+		twRefreshWin(MainWnd);
+		goto bye;
+	    }
+	}
+	if(cfpos > flen) cfpos = flen;
+	amocpos = cfpos;
+	twUseWin(MainWnd);
+	for(i = I;i != Limit;i+=1*dir) {
+	    DisasmRet dret;
+	    ::memset(outstr,TWC_DEF_FILLER,__TVIO_MAXSCREENWIDTH);
+	    DisasmCurrLine = i;
+	    if(cfpos < flen) {
+		len = cfpos + disMaxCodeLen < flen ? disMaxCodeLen : (int)(flen - cfpos);
+		::memset(disCodeBuffer,0,disMaxCodeLen);
+		BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,BM_SEEK_SET);
+		dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
+		if(i == 0) CurrStrLen = dret.codelen;
+		CurrStrLenBuff[i] = dret.codelen;
+		twSetColorAttr(browser_cset.main);
+		len_64=HA_LEN();
+		::memcpy(outstr,GidEncodeAddress(cfpos,hexAddressResolv),len_64);
+		len = 0;
+		if(disPanelMode < Panel_Full) {
+		    static char _clone;
+		    len = len_64;
+		    twDirectWrite(1,i + 1,outstr,len);
+		    if(!hexAddressResolv) {
+			twSetColorAttr(disasm_cset.family_id);
+			_clone = activeDisasm->CloneShortName(dret.pro_clone);
+			twDirectWrite(len_64,i + 1,&_clone,1);
+			twSetColorAttr(browser_cset.main);
+		    }
+		}
+		if(disPanelMode < Panel_Medium) {
+		    unsigned full_off,med_off,tmp_off;
+		    ColorAttr opc;
+		    med_off = disMaxCodeLen*2+1;
+		    full_off = med_off+len_64;
+		    for(j = 0;j < dret.codelen;j++,len+=2) ::memcpy(&outstr[len],Get2Digit(disCodeBuffer[j]),2);
+		    tmp_off = disPanelMode < Panel_Full ? full_off : med_off;
+		    if(len < tmp_off) len = tmp_off;
+		    if(activeDisasm->GetOpcodeColor)
+			opc =	HiLight == 2 ? activeDisasm->altGetOpcodeColor(dret.pro_clone) :
+				HiLight == 1 ? activeDisasm->GetOpcodeColor(dret.pro_clone) : disasm_cset.opcodes;
+		    else	opc = disasm_cset.opcodes;
+		    twSetColorAttr(opc);
+		    twDirectWrite(disPanelMode < Panel_Full ? len_64+1 : 1,
+				i + 1,
+				&outstr[len_64],
+				disPanelMode < Panel_Full ? len - (len_64+1) : len - 1);
+		    if(isHOnLine(cfpos,dret.codelen)) {
+			hli.text = &outstr[len_64];
+			HiLightSearch(MainWnd,cfpos,len_64,dret.codelen,i,&hli,HLS_USE_DOUBLE_WIDTH);
+		    }
+		}
+		twSetColorAttr(browser_cset.main);
+		twDirectWrite(len,i + 1," ",1);  len++;
+		cattr =	HiLight == 2 ?  activeDisasm->altGetInsnColor(dret.pro_clone) :
+			HiLight == 1 ?  activeDisasm->GetInsnColor(dret.pro_clone) :
+					browser_cset.main;
+		twSetColorAttr(cattr);
+		j = strlen(dret.str);
+		/* Here adding commentaries */
+		savstring[0] = 0;
+		orig_commoff = orig_commpos = 0;
+		if(j > 5)
+		    if(dret.str[j-5] == codeguid_image[0] &&
+			dret.str[j-4] == codeguid_image[1] &&
+			dret.str[j-3] == codeguid_image[2] &&
+			dret.str[j-1] == codeguid_image[4] &&
+			dis_severity > DisMode::CommSev_None) {
+			    int new_idx;
+			    orig_commpos = new_idx = j-5;
+			    orig_commoff = len;
+			    ::strcpy(savstring,&dret.str[new_idx]);
+			    dret.str[new_idx--] = 0;
+			    while(dret.str[new_idx] == ' ' && new_idx) new_idx--;
+			    if(dret.str[new_idx] != ' ') new_idx++;
+			    dret.str[new_idx] = 0;
+			    j = ::strlen(dret.str);
+		    }
+		twDirectWrite(len,i+1,dret.str,j); len += j;
+		if(dis_severity > DisMode::CommSev_None) {
+		    twSetColorAttr(disasm_cset.comments);
+		    twGotoXY(len,i+1);
+		    twPutS(" ; "); len+=3;
+		    j = orig_commpos-len;
+		    j = std::min(j,strlen(dis_comments));
+		    twDirectWrite(len,i+1,dis_comments,j);
+		    len += j;
+		    if(savstring[0]) {
+			twGotoXY(len,i+1);
+			twClrEOL();
+			twSetColorAttr(cattr);
+			len = orig_commoff + orig_commpos;
+			twDirectWrite(len,i+1,savstring,5);
+			len += 5;
+		    }
+		}
+		twSetColorAttr(browser_cset.main);
+		if(len < width) {
+		    twGotoXY(len,i + 1);
+		    twClrEOL();
+		}
+		cfpos += dret.codelen;
+		BMSeek(cfpos,BM_SEEK_SET);
+	    } else {
+		twDirectWrite(1,i + 1,outstr,width);
+		CurrStrLenBuff[i] = 0;
+	    }
+	}
+	twRefreshWin(MainWnd);
+	twSetColorAttr(browser_cset.main);
+	lastbyte = TopCFPos + Summ(CurrStrLenBuff,height);
+	CurrPageSize = lastbyte-TopCFPos;
+    }
+    bye:
+    return textshift;
+}
+
+bool DisMode::action_F1() { return activeDisasm->action[0]; }
+bool DisMode::action_F3() { return activeDisasm->action[1]; }
+bool DisMode::action_F4() { return activeDisasm->action[2]; }
+bool DisMode::action_F5() { return activeDisasm->action[3]; }
+
+unsigned long DisMode::prev_page_size() const { return PrevPageSize; }
+unsigned long DisMode::curr_page_size() const { return CurrPageSize; }
+unsigned long DisMode::prev_line_width() const { return PrevStrLen; }
+unsigned long DisMode::curr_line_width() const { return CurrStrLen; }
+const char*   DisMode::misckey_name() const { return "Modify"; }
+
+void DisMode::misckey_action() /* disEdit */
+{
+    unsigned len_64;
+    TWindow * ewnd;
+    len_64=HA_LEN();
+    if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,NULL); return; }
+    ewnd = WindowOpen(len_64+1,2,disMaxCodeLen*2+len_64+1,tvioHeight-1,TWS_CURSORABLE);
+    twSetColorAttr(browser_cset.edit.main); twClearWin();
+    edit_x = edit_y = 0;
+    EditMode = EditMode ? false : true;
+    if(editInitBuffs(disMaxCodeLen,NULL,0)) {
+	full_asm_edit(ewnd);
+	editDestroyBuffs();
+    }
+    EditMode = EditMode ? false : true;
+    CloseWnd(ewnd);
+    PaintTitle();
+}
 
 static const char *refsdepth_names[] =
 {
@@ -407,22 +433,20 @@ static const char *refsdepth_names[] =
    "Reference ~prediction (mostly full)"
 };
 
-static bool __FASTCALL__ disReferenceResolving( void )
+bool DisMode::action_F8() /* disReferenceResolving */
 {
-  size_t nModes;
-  int retval;
-  bool ret;
-  nModes = sizeof(refsdepth_names)/sizeof(char *);
-  retval = SelBoxA(const_cast<char**>(refsdepth_names),nModes," Reference resolving depth: ",disNeedRef);
-  if(retval != -1)
-  {
-    disNeedRef = retval;
-    ret = true;
-  }
-  else ret = false;
-  if(beye_context().active_format()->set_state)
-    beye_context().active_format()->set_state(disNeedRef ? PS_ACTIVE : PS_INACTIVE);
-  return ret;
+    BeyeContext& bctx = beye_context();
+    size_t nModes;
+    int retval;
+    bool ret;
+    nModes = sizeof(refsdepth_names)/sizeof(char *);
+    retval = SelBoxA(const_cast<char**>(refsdepth_names),nModes," Reference resolving depth: ",disNeedRef);
+    if(retval != -1) {
+	disNeedRef = e_ref(retval);
+	ret = true;
+    } else ret = false;
+    if(bctx.active_format()->set_state) bctx.active_format()->set_state(disNeedRef ? PS_ACTIVE : PS_INACTIVE);
+    return ret;
 }
 
 static const char *panmod_names[] =
@@ -432,18 +456,17 @@ static const char *panmod_names[] =
    "~Wide"
 };
 
-static bool __FASTCALL__ disSelectPanelMode( void )
+bool DisMode::action_F7() /* disSelectPanelMode */
 {
-  unsigned nModes;
-  int i;
-  nModes = sizeof(panmod_names)/sizeof(char *);
-  i = SelBoxA(const_cast<char**>(panmod_names),nModes," Select panel mode: ",disPanelMode);
-  if(i != -1)
-  {
-    disPanelMode = i;
-    return true;
-  }
-  return false;
+    unsigned nModes;
+    int i;
+    nModes = sizeof(panmod_names)/sizeof(char *);
+    i = SelBoxA(const_cast<char**>(panmod_names),nModes," Select panel mode: ",disPanelMode);
+    if(i != -1) {
+	disPanelMode = e_panel(i);
+	return true;
+    }
+    return false;
 }
 
 static const char *hilight_names[] =
@@ -453,453 +476,335 @@ static const char *hilight_names[] =
    "~Alt Highlight"
 };
 
-static bool __FASTCALL__ disSelectHiLight( void )
+bool DisMode::action_F9() /* disSelectHiLight */
 {
-  unsigned nModes;
-  int i;
-  nModes = sizeof(hilight_names)/sizeof(char *);
-  i = SelBoxA(const_cast<char**>(hilight_names),nModes," Select highlight mode: ",HiLight);
-  if(i != -1)
-  {
-    HiLight = i;
-    return true;
-  }
-  return false;
+    unsigned nModes;
+    int i;
+    nModes = sizeof(hilight_names)/sizeof(char *);
+    i = SelBoxA(const_cast<char**>(hilight_names),nModes," Select highlight mode: ",HiLight);
+    if(i != -1) {
+	HiLight = i;
+	return true;
+    }
+    return false;
 }
 
-static bool __FASTCALL__ disDetect( void ) { return true; }
+bool DisMode::action_F10() { return udnUserNames(); }
 
-static bool __FASTCALL__ DefAsmAction(int _lastbyte,int start)
+bool DisMode::detect() { return true; }
+
+bool DisMode::def_asm_action(int _lastbyte,int start)
 {
- int _index;
- bool redraw,dox;
- char xx;
-  redraw = true;
-  xx = edit_x / 2;
-  dox = true;
-  _index = start + xx;
-   switch(_lastbyte)
-   {
-     case KE_F(4)   : EditorMem.buff[_index] = ~EditorMem.buff[_index]; break;
-     case KE_F(5)   : EditorMem.buff[_index] |= edit_XX; break;
-     case KE_F(6)   : EditorMem.buff[_index] &= edit_XX; break;
-     case KE_F(7)   : EditorMem.buff[_index] ^= edit_XX; break;
-     case KE_F(8)   : EditorMem.buff[_index]  = edit_XX; break;
-     case KE_F(9)   : EditorMem.buff[_index] = EditorMem.save[_index]; break;
-     default        : redraw = edit_defaction(_lastbyte); dox = false; break;
-   }
-  if(dox) { xx++; edit_x = xx*2; }
-  return redraw;
+    int _index;
+    bool redraw,dox;
+    char xx;
+    redraw = true;
+    xx = edit_x / 2;
+    dox = true;
+    _index = start + xx;
+    switch(_lastbyte) {
+	case KE_F(4)   : EditorMem.buff[_index] = ~EditorMem.buff[_index]; break;
+	case KE_F(5)   : EditorMem.buff[_index] |= edit_XX; break;
+	case KE_F(6)   : EditorMem.buff[_index] &= edit_XX; break;
+	case KE_F(7)   : EditorMem.buff[_index] ^= edit_XX; break;
+	case KE_F(8)   : EditorMem.buff[_index]  = edit_XX; break;
+	case KE_F(9)   : EditorMem.buff[_index] = EditorMem.save[_index]; break;
+	default        : redraw = edit_defaction(_lastbyte); dox = false; break;
+    }
+    if(dox) { xx++; edit_x = xx*2; }
+    return redraw;
 }
 
-static void __FASTCALL__ DisasmScreen(TWindow* ewnd,__filesize_t cp,__filesize_t flen,int st,int stop,int start)
+
+void DisMode::disasm_screen(TWindow* ewnd,__filesize_t cp,__filesize_t flen,int st,int stop,int start)
 {
- int i,j,len,lim,len_64;
- char outstr[__TVIO_MAXSCREENWIDTH+1],outstr1[__TVIO_MAXSCREENWIDTH+1];
- tAbsCoord width = twGetClientWidth(MainWnd);
- DisasmRet dret;
- twFreezeWin(ewnd);
- for(i = st;i < stop;i++)
- {
-  if(start + cp < flen)
-  {
-   len_64=HA_LEN();
-   memcpy(outstr,GidEncodeAddress(cp + start,hexAddressResolv),len_64);
-   twUseWin(MainWnd);
-   twSetColorAttr(browser_cset.main);
-   twDirectWrite(1,i + 1,outstr,len_64-1);
-   dret = Disassembler(cp + start,&EditorMem.buff[start],__DISF_NORMAL);
-   EditorMem.alen[i] = dret.codelen;
-   memset(outstr,TWC_DEF_FILLER,width);
-   memset(outstr1,TWC_DEF_FILLER,width);
-   len = 0; for(j = 0;j < EditorMem.alen[i];j++) { memcpy(&outstr1[len],Get2Digit(EditorMem.save[start + j]),2); len += 2; }
-   len = 0; for(j = 0;j < EditorMem.alen[i];j++) { memcpy(&outstr[len],Get2Digit(EditorMem.buff[start + j]),2); len += 2; }
-   twUseWin(ewnd);
-   len = disMaxCodeLen*2;
-   for(j = 0;j < len;j++)
-   {
-     twSetColorAttr(outstr[j] == outstr1[j] ? browser_cset.edit.main : browser_cset.edit.change);
-     twDirectWrite(j + 1,i + 1,&outstr[j],1);
-   }
-   len = strlen(dret.str);
-   memset(outstr,TWC_DEF_FILLER,width);
-   memcpy(outstr,dret.str,len);
-   twUseWin(MainWnd);
-   twSetColorAttr(browser_cset.main);
-   lim = disMaxCodeLen*2+len_64+1;
-   twDirectWrite(lim+1,i + 1,outstr,width-lim);
-   start += EditorMem.alen[i];
-  }
-  else
-  {
-    twUseWin(MainWnd);
-    twGotoXY(1,i + 1);
-    twClrEOL();
-    twUseWin(ewnd);
-    twGotoXY(1,i + 1);
-    twClrEOL();
-    EditorMem.alen[i] = 0;
-  }
- }
- twRefreshWin(ewnd);
+    int i,j,len,lim,len_64;
+    char outstr[__TVIO_MAXSCREENWIDTH+1],outstr1[__TVIO_MAXSCREENWIDTH+1];
+    tAbsCoord width = twGetClientWidth(MainWnd);
+    DisasmRet dret;
+    twFreezeWin(ewnd);
+    for(i = st;i < stop;i++) {
+	if(start + cp < flen) {
+	    len_64=HA_LEN();
+	    ::memcpy(outstr,GidEncodeAddress(cp + start,hexAddressResolv),len_64);
+	    twUseWin(MainWnd);
+	    twSetColorAttr(browser_cset.main);
+	    twDirectWrite(1,i + 1,outstr,len_64-1);
+	    dret = disassembler(cp + start,&EditorMem.buff[start],__DISF_NORMAL);
+	    EditorMem.alen[i] = dret.codelen;
+	    ::memset(outstr,TWC_DEF_FILLER,width);
+	    ::memset(outstr1,TWC_DEF_FILLER,width);
+	    len = 0; for(j = 0;j < EditorMem.alen[i];j++) { ::memcpy(&outstr1[len],Get2Digit(EditorMem.save[start + j]),2); len += 2; }
+	    len = 0; for(j = 0;j < EditorMem.alen[i];j++) { ::memcpy(&outstr[len],Get2Digit(EditorMem.buff[start + j]),2); len += 2; }
+	    twUseWin(ewnd);
+	    len = disMaxCodeLen*2;
+	    for(j = 0;j < len;j++) {
+		twSetColorAttr(outstr[j] == outstr1[j] ? browser_cset.edit.main : browser_cset.edit.change);
+		twDirectWrite(j + 1,i + 1,&outstr[j],1);
+	    }
+	    len = ::strlen(dret.str);
+	    ::memset(outstr,TWC_DEF_FILLER,width);
+	    ::memcpy(outstr,dret.str,len);
+	    twUseWin(MainWnd);
+	    twSetColorAttr(browser_cset.main);
+	    lim = disMaxCodeLen*2+len_64+1;
+	    twDirectWrite(lim+1,i + 1,outstr,width-lim);
+	    start += EditorMem.alen[i];
+	} else {
+	    twUseWin(MainWnd);
+	    twGotoXY(1,i + 1);
+	    twClrEOL();
+	    twUseWin(ewnd);
+	    twGotoXY(1,i + 1);
+	    twClrEOL();
+	    EditorMem.alen[i] = 0;
+	}
+    }
+    twRefreshWin(ewnd);
 }
 
-static int __NEAR__ __FASTCALL__ FullAsmEdit(TWindow * ewnd)
+int DisMode::full_asm_edit(TWindow * ewnd)
 {
- int j,_lastbyte,start;
- unsigned rlen,len,flags;
- __filesize_t flen;
- unsigned max_buff_size = disMaxCodeLen*tvioHeight;
- tAbsCoord height = twGetClientHeight(MainWnd);
- bool redraw = false;
- char outstr[__TVIO_MAXSCREENWIDTH],owork[__TVIO_MAXSCREENWIDTH];
+    int j,_lastbyte,start;
+    unsigned rlen,len,flg;
+    __filesize_t flen;
+    unsigned max_buff_size = disMaxCodeLen*tvioHeight;
+    tAbsCoord height = twGetClientHeight(MainWnd);
+    bool redraw = false;
+    char outstr[__TVIO_MAXSCREENWIDTH],owork[__TVIO_MAXSCREENWIDTH];
 
- flen = BMGetFLength();
- edit_cp = BMGetCurrFilePos();
- start = 0;
+    flen = BMGetFLength();
+    edit_cp = BMGetCurrFilePos();
+    start = 0;
 
- rlen = (__filesize_t)edit_cp + max_buff_size < flen ? max_buff_size : (unsigned)(flen - edit_cp);
- BMReadBufferEx((any_t*)EditorMem.buff,rlen,edit_cp,BM_SEEK_SET);
- memcpy(EditorMem.save,EditorMem.buff,max_buff_size);
- memset(EditorMem.alen,TWC_DEF_FILLER,height);
+    rlen = (__filesize_t)edit_cp + max_buff_size < flen ? max_buff_size : (unsigned)(flen - edit_cp);
+    BMReadBufferEx((any_t*)EditorMem.buff,rlen,edit_cp,BM_SEEK_SET);
+    ::memcpy(EditorMem.save,EditorMem.buff,max_buff_size);
+    ::memset(EditorMem.alen,TWC_DEF_FILLER,height);
 
- DisasmScreen(ewnd,edit_cp,flen,0,height,start);
- PaintETitle(0,true);
- start = 0;
- twShowWin(ewnd);
- twSetCursorType(TW_CUR_NORM);
- while(1)
- {
-   twUseWin(ewnd);
+    disasm_screen(ewnd,edit_cp,flen,0,height,start);
+    PaintETitle(0,true);
+    start = 0;
+    twShowWin(ewnd);
+    twSetCursorType(TW_CUR_NORM);
+    while(1) {
+	twUseWin(ewnd);
 
-   len = 0; for(j = 0;j < EditorMem.alen[edit_y];j++) { memcpy(&owork[len],Get2Digit(EditorMem.save[start + j]),2); len += 2; }
-   len = 0; for(j = 0;j < EditorMem.alen[edit_y];j++) { memcpy(&outstr[len],Get2Digit(EditorMem.buff[start + j]),2); len += 2; }
-   flags = __ESS_FILLER_7BIT | __ESS_WANTRETURN | __ESS_HARDEDIT;
-   if(!redraw) flags |= __ESS_NOREDRAW;
-   _lastbyte = eeditstring(outstr,&legalchars[2],&len,(unsigned)(edit_y + 1),(unsigned *)&edit_x,
-			  flags,owork,NULL);
-   CompressHex(&EditorMem.buff[start],outstr,EditorMem.alen[edit_y],false);
-   switch(_lastbyte)
-   {
-     case KE_CTL_F(4):
-		      {
-		       AsmRet aret;
-		       if(activeDisasm->asm_f)
-		       {
-			 char code[81];
-			 code[0]='\0';
-			 if(GetStringDlg(code,activeDisasm->name,
-					 NULL,"Enter assembler instruction:"))
-			 {
-			   aret = (*activeDisasm->asm_f)(code);
-			   if(aret.err_code)
-			   {
-			      const char *message="Syntax error";
-			      if (aret.insn[0])
-			      {
-				message=(const char*)aret.insn;
-			      }
-			      ErrMessageBox(message,NULL);
-			      continue;
-			   }
-			   else
-			   {
-			      int i;
-			      char bytebuffer[3];
+	len = 0; for(j = 0;j < EditorMem.alen[edit_y];j++) { ::memcpy(&owork[len],Get2Digit(EditorMem.save[start + j]),2); len += 2; }
+	len = 0; for(j = 0;j < EditorMem.alen[edit_y];j++) { ::memcpy(&outstr[len],Get2Digit(EditorMem.buff[start + j]),2); len += 2; }
+	flg = __ESS_FILLER_7BIT | __ESS_WANTRETURN | __ESS_HARDEDIT;
+	if(!redraw) flg |= __ESS_NOREDRAW;
+	_lastbyte = eeditstring(outstr,&legalchars[2],&len,(unsigned)(edit_y + 1),(unsigned *)&edit_x,flg,owork,NULL);
+	CompressHex(&EditorMem.buff[start],outstr,EditorMem.alen[edit_y],false);
+	switch(_lastbyte) {
+	    case KE_CTL_F(4):
+		{
+		    AsmRet aret;
+		    if(activeDisasm->asm_f) {
+			char code[81];
+			code[0]='\0';
+			if(GetStringDlg(code,activeDisasm->name,
+					 NULL,"Enter assembler instruction:")) {
+			    aret = (*activeDisasm->asm_f)(code);
+			    if(aret.err_code) {
+				const char *message="Syntax error";
+				if (aret.insn[0]) {
+				    message=(const char*)aret.insn;
+				}
+				ErrMessageBox(message,NULL);
+				continue;
+			    } else {
+				int i;
+				char bytebuffer[3];
 
-			      for (i=aret.insn_len-1; i>=0; i--)
-			      {
-				sprintf(bytebuffer, "%02x", aret.insn[i]);
-				ungotstring(bytebuffer);
-			      }
-			   }
-			 }
-			 break;
-		       }
-		       else
-		       {
-			 ErrMessageBox("Sorry, no assembler available",NULL);
-			 continue;
-		       }
-		      }
-     case KE_F(1)    : ExtHelp(); continue;
-     case KE_CTL_F(1): activeDisasm->action[0](); continue;
-     case KE_CTL_F(2): beye_context().select_sysinfo(); continue;
-     case KE_CTL_F(3): beye_context().select_tool(); continue;
-     case KE_F(2)    :
-		      {
-			 BFile* bHandle;
-			 const char *fname;
-			 fname = BMName();
-			 if((bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE)) != &bNull)
-			 {
-			   bHandle->seek(edit_cp,BFile::Seek_Set);
-			   if(!bHandle->write_buffer((any_t*)EditorMem.buff,rlen))
-			      errnoMessageBox(WRITE_FAIL,NULL,errno);
-			   delete bHandle;
-			   BMReRead();
-			 }
-			 else errnoMessageBox("Can't reopen",NULL,errno);
-		      }
-     case KE_F(10):
-     case KE_ESCAPE: goto bye;
-     default: redraw = DefAsmAction(_lastbyte,start); break;
-   }
-   CheckYBounds();
-   start = edit_y ? Summ(EditorMem.alen,edit_y) : 0;
-   if(redraw)
-   {
-     DisasmRet dret;
-     dret = Disassembler(edit_cp + start,&EditorMem.buff[start],__DISF_NORMAL);
-     EditorMem.alen[edit_y] = dret.codelen;
-     DisasmScreen(ewnd,edit_cp,flen,0,height,0);
-   }
-   PaintETitle(start + edit_x/2,true);
-   CheckXYBounds();
-   start = edit_y ? Summ(EditorMem.alen,edit_y) : 0;
- }
- bye:
- twSetCursorType(TW_CUR_OFF);
- return _lastbyte;
+				for (i=aret.insn_len-1; i>=0; i--) {
+				    sprintf(bytebuffer, "%02x", aret.insn[i]);
+				    ungotstring(bytebuffer);
+				}
+			    }
+			}
+			break;
+		    } else {
+			ErrMessageBox("Sorry, no assembler available",NULL);
+			continue;
+		    }
+		}
+	    case KE_F(1)    : ExtHelp(); continue;
+	    case KE_CTL_F(1): activeDisasm->action[0](); continue;
+	    case KE_CTL_F(2): beye_context().select_sysinfo(); continue;
+	    case KE_CTL_F(3): beye_context().select_tool(); continue;
+	    case KE_F(2)    :
+		{
+		    BFile* bHandle;
+		    const char *fname;
+		    fname = BMName();
+		    if((bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE)) != &bNull) {
+			bHandle->seek(edit_cp,BFile::Seek_Set);
+			if(!bHandle->write_buffer((any_t*)EditorMem.buff,rlen))
+			    errnoMessageBox(WRITE_FAIL,NULL,errno);
+			delete bHandle;
+			BMReRead();
+		    } else errnoMessageBox("Can't reopen",NULL,errno);
+		}
+	    case KE_F(10):
+	    case KE_ESCAPE: goto bye;
+	    default: redraw = def_asm_action(_lastbyte,start); break;
+	}
+	CheckYBounds();
+	start = edit_y ? Summ(EditorMem.alen,edit_y) : 0;
+	if(redraw) {
+	    DisasmRet dret;
+	    dret = disassembler(edit_cp + start,&EditorMem.buff[start],__DISF_NORMAL);
+	    EditorMem.alen[edit_y] = dret.codelen;
+	    disasm_screen(ewnd,edit_cp,flen,0,height,0);
+	}
+	PaintETitle(start + edit_x/2,true);
+	CheckXYBounds();
+	start = edit_y ? Summ(EditorMem.alen,edit_y) : 0;
+    }
+    bye:
+    twSetCursorType(TW_CUR_OFF);
+    return _lastbyte;
 }
 
-static void __FASTCALL__ disEdit( void )
-{
- unsigned len_64;
- TWindow * ewnd;
- len_64=HA_LEN();
- if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,NULL); return; }
- ewnd = WindowOpen(len_64+1,2,disMaxCodeLen*2+len_64+1,tvioHeight-1,TWS_CURSORABLE);
- twSetColorAttr(browser_cset.edit.main); twClearWin();
- edit_x = edit_y = 0;
- EditMode = EditMode ? false : true;
- if(editInitBuffs(disMaxCodeLen,NULL,0))
- {
-   FullAsmEdit(ewnd);
-   editDestroyBuffs();
- }
- EditMode = EditMode ? false : true;
- CloseWnd(ewnd);
- PaintTitle();
-}
-
-static void __FASTCALL__ HelpAsm( void )
+void DisMode::help() const
 {
    if( activeDisasm->ShowShortHelp ) activeDisasm->ShowShortHelp();
 }
 
-static void __FASTCALL__ disReadIni( hIniProfile *ini )
+void DisMode::read_ini(hIniProfile *ini)
 {
-  char tmps[10];
-  if(beye_context().is_valid_ini_args())
-  {
-    beye_context().read_profile_string(ini,"Beye","Browser","LastSubMode","0",tmps,sizeof(tmps));
-    DefDisasmSel = (int)strtoul(tmps,NULL,10);
-    if(DefDisasmSel >= sizeof(mainDisasmTable)/sizeof(REGISTRY_DISASM *)) DefDisasmSel = 0;
-    ReadIniAResolv(ini);
-    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode7","0",tmps,sizeof(tmps));
-    disPanelMode = (int)strtoul(tmps,NULL,10);
-    if(disPanelMode > PANMOD_FULL) disPanelMode = 0;
-    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode8","0",tmps,sizeof(tmps));
-    disNeedRef = (int)strtoul(tmps,NULL,10);
-    if(disNeedRef > NEEDREF_PREDICT) disNeedRef = 0;
-    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode9","0",tmps,sizeof(tmps));
-    HiLight = (int)strtoul(tmps,NULL,10);
-    if(HiLight > 2) HiLight = 2;
-    activeDisasm = mainDisasmTable[DefDisasmSel];
-    disAcceptActions();
-    if(activeDisasm->read_ini) activeDisasm->read_ini(ini);
-  }
-}
-
-static void __FASTCALL__ disInit( void )
-{
-  unsigned i;
-  unsigned def_platform;
-  CurrStrLenBuff = new unsigned char [tvioHeight];
-  PrevStrLenAddr = new unsigned long [tvioHeight];
-  dis_comments   = new char [DISCOM_SIZE];
-  if((!CurrStrLenBuff) || (!PrevStrLenAddr) || (!dis_comments))
-  {
-    err:
-    MemOutBox("Disassembler initialization");
-    exit(EXIT_FAILURE);
-  }
-  def_platform = DISASM_DATA;
-  if(beye_context().active_format()->query_platform) def_platform = beye_context().active_format()->query_platform();
-  activeDisasm = mainDisasmTable[0];
-  DefDisasmSel = DISASM_DATA;
-  for(i=0;i<sizeof(mainDisasmTable)/sizeof(REGISTRY_DISASM *);i++) {
-    if(mainDisasmTable[i]->type == def_platform) {
-	activeDisasm=mainDisasmTable[i];
-	DefDisasmSel = def_platform;
-	break;
+    BeyeContext& bctx = beye_context();
+    char tmps[10];
+    if(bctx.is_valid_ini_args()) {
+	bctx.read_profile_string(ini,"Beye","Browser","LastSubMode","0",tmps,sizeof(tmps));
+	DefDisasmSel = (int)::strtoul(tmps,NULL,10);
+	if(DefDisasmSel >= sizeof(mainDisasmTable)/sizeof(REGISTRY_DISASM *)) DefDisasmSel = 0;
+	hexAddressResolv=ReadIniAResolv(ini);
+	bctx.read_profile_string(ini,"Beye","Browser","SubSubMode7","0",tmps,sizeof(tmps));
+	disPanelMode = e_panel((int)::strtoul(tmps,NULL,10));
+	if(disPanelMode > Panel_Full) disPanelMode = Panel_Wide;
+	bctx.read_profile_string(ini,"Beye","Browser","SubSubMode8","0",tmps,sizeof(tmps));
+	disNeedRef = e_ref((int)::strtoul(tmps,NULL,10));
+	if(disNeedRef > Ref_Predict) disNeedRef = Ref_None;
+	bctx.read_profile_string(ini,"Beye","Browser","SubSubMode9","0",tmps,sizeof(tmps));
+	HiLight = (int)strtoul(tmps,NULL,10);
+	if(HiLight > 2) HiLight = 2;
+	activeDisasm = mainDisasmTable[DefDisasmSel];
+	accept_actions();
+	if(activeDisasm->read_ini) activeDisasm->read_ini(ini);
     }
-  }
-  disAcceptActions();
-  if(!initCodeGuider()) goto err;
 }
 
-static void __FASTCALL__ disTerm( void )
+void DisMode::save_ini(hIniProfile *ini)
 {
-  termCodeGuider();
-  if(activeDisasm->term) activeDisasm->term();
-  delete CurrStrLenBuff; CurrStrLenBuff=NULL;
-  delete PrevStrLenAddr; PrevStrLenAddr=NULL;
-  delete dis_comments;   dis_comments=NULL;
-  delete disCodeBuffer;  disCodeBuffer=NULL;
-  delete disCodeBufPredict; disCodeBufPredict=NULL;
+    BeyeContext& bctx = beye_context();
+    char tmps[10];
+    ::sprintf(tmps,"%i",DefDisasmSel);
+    bctx.write_profile_string(ini,"Beye","Browser","LastSubMode",tmps);
+    WriteIniAResolv(ini,hexAddressResolv,1);
+    ::sprintf(tmps,"%i",disPanelMode);
+    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode7",tmps);
+    ::sprintf(tmps,"%i",disNeedRef);
+    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode8",tmps);
+    ::sprintf(tmps,"%i",HiLight);
+    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode9",tmps);
+    if(activeDisasm->save_ini) activeDisasm->save_ini(ini);
 }
 
-static void __FASTCALL__ disSaveIni( hIniProfile *ini )
+DisasmRet DisMode::disassembler(__filesize_t ulShift,MBuffer buffer,unsigned flg)
 {
-  char tmps[10];
-  sprintf(tmps,"%i",DefDisasmSel);
-  beye_context().write_profile_string(ini,"Beye","Browser","LastSubMode",tmps);
-  WriteIniAResolv(ini);
-  sprintf(tmps,"%i",disPanelMode);
-  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode7",tmps);
-  sprintf(tmps,"%i",disNeedRef);
-  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode8",tmps);
-  sprintf(tmps,"%i",HiLight);
-  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode9",tmps);
-  if(activeDisasm->save_ini) activeDisasm->save_ini(ini);
+    dis_comments[0] = 0;
+    dis_severity = DisMode::CommSev_None;
+    return activeDisasm->disasm(ulShift,buffer,flg);
 }
 
-DisasmRet Disassembler(__filesize_t ulShift,MBuffer buffer,unsigned flags)
-{
-  dis_comments[0] = 0;
-  dis_severity = DISCOMSEV_NONE;
-  return activeDisasm->disasm(ulShift,buffer,flags);
-}
+unsigned DisMode::get_symbol_size() const { return 1; }
+unsigned DisMode::get_max_symbol_size() const { return activeDisasm->max_insn_len(); }
 
-static unsigned __FASTCALL__ disCharSize( void ) { return 1; }
-
-static __filesize_t __FASTCALL__ disSearch(TWindow *pwnd, __filesize_t start,
-					    __filesize_t *slen, unsigned flags,
-					    bool is_continue, bool *is_found)
+__filesize_t DisMode::search_engine(TWindow *pwnd, __filesize_t start,
+					__filesize_t *slen, unsigned flg,
+					bool is_continue, bool *is_found)
 {
-  DisasmRet dret;
-  __filesize_t tsize, retval, flen, dfpos, cfpos, sfpos; /* If search have no result */
-  char *disSearchBuff;
-  unsigned len, lw, proc, pproc, pmult;
-  int cache[UCHAR_MAX+1];
-  cfpos = sfpos = BMGetCurrFilePos();
-  flen = BMGetFLength();
-  retval = FILESIZE_MAX;
-  disSearchBuff  = new char [1002+DISCOM_SIZE];
-  DumpMode = true;
-  if(!disSearchBuff)
-  {
-     MemOutBox("Disassembler search initialization");
-     goto bye;
-  }
-  cfpos = start;
-  tsize = flen;
-  pmult = 100;
-  if(tsize > FILESIZE_MAX/100) { tsize /= 100; pmult = 1; }
-  pproc = proc = 0;
-  /* Attempt to balance disassembler output */
-  PrepareAsmLines(KE_SUPERKEY, cfpos);
-  lw = disPrevLineWidth();
-  if(cfpos && cfpos >= lw) cfpos -= lw;
-  if(!(is_continue && (flags & SF_REVERSE))) cfpos += disCurrLineWidth();
-  /* end of attempt */
-  fillBoyerMooreCache(cache, (char*)search_buff, search_len, flags & SF_CASESENS);
-  while(1)
-  {
-    proc = (unsigned)((cfpos*pmult)/tsize);
-    if(proc != pproc)
-    {
-      if(!ShowPercentInWnd(pwnd,pproc=proc))  break;
+    DisasmRet dret;
+    __filesize_t tsize, retval, flen, dfpos, cfpos, sfpos; /* If search have no result */
+    char *disSearchBuff;
+    unsigned len, lw, proc, pproc, pmult;
+    int cache[UCHAR_MAX+1];
+    cfpos = sfpos = BMGetCurrFilePos();
+    flen = BMGetFLength();
+    retval = FILESIZE_MAX;
+    disSearchBuff  = new char [1002+Comm_Size];
+    DumpMode = true;
+    if(!disSearchBuff) {
+	MemOutBox("Disassembler search initialization");
+	goto bye;
     }
-    if(flags & SF_REVERSE)
-    {
-       PrepareAsmLines(KE_UPARROW, cfpos);
-       lw = disPrevLineWidth();
-       if(cfpos && lw && cfpos >= lw)
-       {
-	 len = cfpos + disMaxCodeLen < flen ? disMaxCodeLen : (int)(flen - cfpos);
-	 memset(disCodeBuffer,0,disMaxCodeLen);
-	 dfpos = cfpos;
-	 BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,BM_SEEK_SET);
-	 dret = Disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
-	 cfpos -= lw;
-       }
-       else break;
+    cfpos = start;
+    tsize = flen;
+    pmult = 100;
+    if(tsize > FILESIZE_MAX/100) { tsize /= 100; pmult = 1; }
+    pproc = proc = 0;
+    /* Attempt to balance disassembler output */
+    prepare_asm_lines(KE_SUPERKEY, cfpos);
+    lw = prev_line_width();
+    if(cfpos && cfpos >= lw) cfpos -= lw;
+    if(!(is_continue && (flg & SF_REVERSE))) cfpos += curr_line_width();
+    /* end of attempt */
+    fillBoyerMooreCache(cache, (char*)search_buff, search_len, flg & SF_CASESENS);
+    while(1) {
+	proc = (unsigned)((cfpos*pmult)/tsize);
+	if(proc != pproc) {
+	    if(!ShowPercentInWnd(pwnd,pproc=proc))  break;
+	}
+	if(flg & SF_REVERSE) {
+	    prepare_asm_lines(KE_UPARROW, cfpos);
+	    lw = prev_line_width();
+	    if(cfpos && lw && cfpos >= lw) {
+		len = cfpos + disMaxCodeLen < flen ? disMaxCodeLen : (int)(flen - cfpos);
+		::memset(disCodeBuffer,0,disMaxCodeLen);
+		dfpos = cfpos;
+		BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,BM_SEEK_SET);
+		dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
+		cfpos -= lw;
+	    } else break;
+	} else {
+	    len = cfpos + disMaxCodeLen < flen ? disMaxCodeLen : (int)(flen - cfpos);
+	    ::memset(disCodeBuffer,0,disMaxCodeLen);
+	    dfpos = cfpos;
+	    BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,BM_SEEK_SET);
+	    dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
+	    cfpos += dret.codelen;
+	    if(cfpos >= flen) break;
+	}
+	::strcpy(disSearchBuff, dret.str);
+	::strcat(disSearchBuff, dis_comments);
+	if(strFind(disSearchBuff, strlen(disSearchBuff), search_buff, search_len, cache, flg)) {
+	    *is_found = true;
+	    retval = dfpos;
+	    *slen = dret.codelen;
+	    break;
+	}
     }
-    else
-    {
-	 len = cfpos + disMaxCodeLen < flen ? disMaxCodeLen : (int)(flen - cfpos);
-	 memset(disCodeBuffer,0,disMaxCodeLen);
-	 dfpos = cfpos;
-	 BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,BM_SEEK_SET);
-	 dret = Disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
-	 cfpos += dret.codelen;
-	 if(cfpos >= flen) break;
-    }
-    strcpy(disSearchBuff, dret.str);
-    strcat(disSearchBuff, dis_comments);
-    if(strFind(disSearchBuff, strlen(disSearchBuff), search_buff, search_len, cache, flags))
-    {
-      *is_found = true;
-      retval = dfpos;
-      *slen = dret.codelen;
-      break;
-    }
-  }
-  delete disSearchBuff;
-  bye:
-  BMSeek(sfpos, SEEK_SET);
-  DumpMode = false;
-  return retval;
+    delete disSearchBuff;
+    bye:
+    BMSeek(sfpos, SEEK_SET);
+    DumpMode = false;
+    return retval;
 }
 
-extern REGISTRY_MODE disMode =
+void DisMode::accept_actions()
 {
-  "~Disassembler",
-  { NULL, "Disasm", NULL, NULL, NULL, "AResol", "PanMod", "ResRef", "HiLght", "UsrNam" },
-  { NULL, disSelect_Disasm, NULL, NULL, NULL, hexAddressResolution, disSelectPanelMode, disReferenceResolving, disSelectHiLight, udnUserNames },
-  disDetect,
-  __MF_USECODEGUIDE | __MF_DISASM,
-  drawAsm,
-  NULL,
-  disCharSize,
-  disMiscKeyName,
-  disEdit,
-  disPrevPageSize,
-  disCurrPageSize,
-  disPrevLineWidth,
-  disCurrLineWidth,
-  HelpAsm,
-  disReadIni,
-  disSaveIni,
-  disInit,
-  disTerm,
-  disSearch
-};
-
-static void __NEAR__ __FASTCALL__ disAcceptActions( void )
-{
-  if(activeDisasm->init) activeDisasm->init();
-  disMaxCodeLen = activeDisasm->max_insn_len();
-  if(disCodeBuffer) delete disCodeBuffer;
-  disCodeBuffer = new char [disMaxCodeLen];
-  if(disCodeBufPredict) delete disCodeBufPredict;
-  disCodeBufPredict = new char [disMaxCodeLen*PREDICT_DEPTH];
-  if(!(disCodeBuffer && disCodeBufPredict))
-  {
-    MemOutBox("Disassembler initialization");
-    exit(EXIT_FAILURE);
-  }
-  disMode.prompt[0] = activeDisasm->prompt[0];
-  disMode.action[0] = activeDisasm->action[0];
-  disMode.prompt[2] = activeDisasm->prompt[1];
-  disMode.action[2] = activeDisasm->action[1];
-  disMode.prompt[3] = activeDisasm->prompt[2];
-  disMode.action[3] = activeDisasm->action[2];
-  disMode.prompt[4] = activeDisasm->prompt[3];
-  disMode.action[4] = activeDisasm->action[3];
+    if(activeDisasm->init) activeDisasm->init(*this);
+    disMaxCodeLen = activeDisasm->max_insn_len();
+    if(disCodeBuffer) delete disCodeBuffer;
+    disCodeBuffer = new char [disMaxCodeLen];
+    if(disCodeBufPredict) delete disCodeBufPredict;
+    disCodeBufPredict = new char [disMaxCodeLen*PREDICT_DEPTH];
+    if(!(disCodeBuffer && disCodeBufPredict)) {
+	MemOutBox("Disassembler initialization");
+	::exit(EXIT_FAILURE);
+    }
 }
 
 /** Common disassembler utility */
@@ -928,11 +833,10 @@ void  __FASTCALL__ disSetModifier(char *str,const char *modf)
   if(i+mlen > len) { str[i+mlen] = TWC_DEF_FILLER; str[i+mlen+1] = 0; }
 }
 
-int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
-		     char codelen,any_t*defval,unsigned type)
+int DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,any_t*defval,e_disarg type)
 {
  unsigned long app;
- char comments[DISCOM_SIZE];
+ char comments[Comm_Size];
  const char *appstr;
  unsigned dig_type;
  __filesize_t fpos;
@@ -953,8 +857,8 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
      }
   }
 #endif
-  if(hexAddressResolv && beye_context().active_format()->AddressResolving) flags |= APREF_SAVE_VIRT;
-  app = disNeedRef >= NEEDREF_ALL ? AppendAsmRef(str,ulShift,flags,codelen,0L) :
+  if(hexAddressResolv && beye_context().active_format()->AddressResolving) flg |= APREF_SAVE_VIRT;
+  app = disNeedRef >= Ref_All ? AppendAsmRef(str,ulShift,flg,codelen,0L) :
 				    RAPREF_NONE;
   if(app != RAPREF_DONE)
   {
@@ -962,42 +866,42 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
     comments[0] = 0;
     /* @todo Remove dependencies from 4-byte size of operand */
 					 /* Only if immediate operand */
-    if(((type & DISARG_IMM) || (type & DISARG_DISP) ||
-	(type & DISARG_IDXDISP) || (type & DISARG_RIP)) &&
-	disNeedRef >= NEEDREF_PREDICT)    /* Only when reference prediction is on */
+    if(((type & Arg_Imm) || (type & Arg_Disp) ||
+	(type & Arg_IdxDisp) || (type & Arg_Rip)) &&
+	disNeedRef >= Ref_Predict)    /* Only when reference prediction is on */
     {
       uint64_t _defval;
       unsigned fld_len=1;
       switch(dig_type)
       {
 	default:
-	case DISARG_BYTE: _defval = *(uint8_t *)defval;  fld_len=1; break;
-	case DISARG_CHAR: _defval = *(int8_t *)defval;   fld_len=1; break;
-	case DISARG_WORD: _defval = *(uint16_t *)defval; fld_len=2; break;
-	case DISARG_SHORT:_defval = *(int16_t *)defval;  fld_len=2; break;
-	case DISARG_DWORD:_defval = *(uint32_t *)defval; fld_len=4; break;
-	case DISARG_LONG: _defval = *(int32_t *)defval;  fld_len=4; break;
-	case DISARG_QWORD:_defval = *(uint64_t *)defval; fld_len=8; break;
-	case DISARG_LLONG:_defval = *(int64_t *)defval;  fld_len=8; break;
+	case Arg_Byte: _defval = *(uint8_t *)defval;  fld_len=1; break;
+	case Arg_Char: _defval = *(int8_t *)defval;   fld_len=1; break;
+	case Arg_Word: _defval = *(uint16_t *)defval; fld_len=2; break;
+	case Arg_Short:_defval = *(int16_t *)defval;  fld_len=2; break;
+	case Arg_DWord:_defval = *(uint32_t *)defval; fld_len=4; break;
+	case Arg_Long: _defval = *(int32_t *)defval;  fld_len=4; break;
+	case Arg_QWord:_defval = *(uint64_t *)defval; fld_len=8; break;
+	case Arg_LLong:_defval = *(int64_t *)defval;  fld_len=8; break;
       }
       if(_defval)         /* Do not perform operation on NULL */
       {
       __filesize_t pa,psym;
       unsigned _class;
-      if(type & DISARG_RIP) {
+      if(type & Arg_Rip) {
 	_defval += (beye_context().active_format()->pa2va ?
 		    beye_context().active_format()->pa2va(ulShift) :
 		    ulShift)+fld_len;
-     }
+      }
       if(!app) pa = beye_context().active_format()->va2pa ? beye_context().active_format()->va2pa(_defval) :
 					   _defval;
       else pa = app;
       if(pa)
       {
 	/* 1. Try to determine immediate as offset to public symbol */
-	if(type & DISARG_RIP) app = AppendAsmRef(str,pa,flags,codelen,0L);
+	if(type & Arg_Rip) app = AppendAsmRef(str,pa,flg,codelen,0L);
 	if(app == RAPREF_DONE) goto next_step;
-	if(dis_severity < DISCOMSEV_FUNC)
+	if(dis_severity < CommSev_Func)
 	{
 	  strcpy(comments,".*");
 	  if(beye_context().active_format()->GetPubSym)
@@ -1007,14 +911,14 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
 	    if(psym != pa) comments[0] = 0;
 	    else
 	    {
-		dis_severity = DISCOMSEV_FUNC;
+		dis_severity = CommSev_Func;
 		strcpy(dis_comments,comments);
 	    }
 	  }
 	}
 	/* 2. Try to determine immediate as offset to string constant */
 	comments[0] = 0;
-	if(dis_severity < DISCOMSEV_STRPTR)
+	if(dis_severity < CommSev_StrPtr)
 	{
 	  size_t _index;
 	  unsigned char rch;
@@ -1031,7 +935,7 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
 	  else
 	  {
 	    comments[_index++] = '"'; comments[_index] = 0;
-	    dis_severity = DISCOMSEV_STRPTR;
+	    dis_severity = CommSev_StrPtr;
 	    strcpy(dis_comments,comments);
 	  }
 	}
@@ -1044,11 +948,11 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
     {
      switch(dig_type)
      {
-      case DISARG_LLONG:
+      case Arg_LLong:
 			 appstr = Get16SignDig(*(int64_t *)defval);
-			 if(type & DISARG_IMM &&
-			    disNeedRef >= NEEDREF_PREDICT &&
-			    dis_severity < DISCOMSEV_STRING &&
+			 if(type & Arg_Imm &&
+			    disNeedRef >= Ref_Predict &&
+			    dis_severity < CommSev_String &&
 			    isprint(((unsigned char *)defval)[0]) &&
 			    isprint(((unsigned char *)defval)[1]) &&
 			    isprint(((unsigned char *)defval)[2]) &&
@@ -1067,10 +971,10 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
 					    ,((unsigned char *)defval)[6]
 					    ,((unsigned char *)defval)[7]);
 			 break;
-      case DISARG_LONG:  appstr = Get8SignDig(*(int32_t *)defval);
-			 if(type & DISARG_IMM &&
-			    disNeedRef >= NEEDREF_PREDICT &&
-			    dis_severity < DISCOMSEV_STRING &&
+      case Arg_Long:  appstr = Get8SignDig(*(int32_t *)defval);
+			 if(type & Arg_Imm &&
+			    disNeedRef >= Ref_Predict &&
+			    dis_severity < CommSev_String &&
 			    isprint(((unsigned char *)defval)[0]) &&
 			    isprint(((unsigned char *)defval)[1]) &&
 			    isprint(((unsigned char *)defval)[2]) &&
@@ -1081,34 +985,34 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
 					    ,((unsigned char *)defval)[2]
 					    ,((unsigned char *)defval)[3]);
 			 break;
-      case DISARG_SHORT: appstr = Get4SignDig(*(int16_t *)defval);
-			 if(type & DISARG_IMM &&
-			    disNeedRef >= NEEDREF_PREDICT &&
-			    dis_severity < DISCOMSEV_STRING &&
+      case Arg_Short: appstr = Get4SignDig(*(int16_t *)defval);
+			 if(type & Arg_Imm &&
+			    disNeedRef >= Ref_Predict &&
+			    dis_severity < CommSev_String &&
 			    isprint(((unsigned char *)defval)[0]) &&
 			    isprint(((unsigned char *)defval)[1]))
 			    sprintf(comments,"\"%c%c\""
 					    ,((unsigned char *)defval)[0]
 					    ,((unsigned char *)defval)[1]);
 			 break;
-      case DISARG_CHAR:  appstr = Get2SignDig(*(char *)defval);
-			 if(type & DISARG_IMM &&
-			    disNeedRef >= NEEDREF_PREDICT &&
-			    dis_severity < DISCOMSEV_STRING &&
+      case Arg_Char:  appstr = Get2SignDig(*(char *)defval);
+			 if(type & Arg_Imm &&
+			    disNeedRef >= Ref_Predict &&
+			    dis_severity < CommSev_String &&
 			    isprint(*(unsigned char *)defval))
 			    sprintf(comments,"'%c'",*(unsigned char *)defval);
 			 break;
-      case DISARG_BYTE:  appstr = Get2Digit(*(unsigned char *)defval);
-			 if(type & DISARG_IMM &&
-			    disNeedRef >= NEEDREF_PREDICT &&
-			    dis_severity < DISCOMSEV_STRING &&
+      case Arg_Byte:  appstr = Get2Digit(*(unsigned char *)defval);
+			 if(type & Arg_Imm &&
+			    disNeedRef >= Ref_Predict &&
+			    dis_severity < CommSev_String &&
 			    isprint(*(unsigned char *)defval))
 			    sprintf(comments,"'%c'",*(unsigned char *)defval);
 			 break;
-      case DISARG_WORD:  appstr = Get4Digit(*(uint16_t *)defval);
-			 if(type & DISARG_IMM &&
-			    disNeedRef >= NEEDREF_PREDICT &&
-			    dis_severity < DISCOMSEV_STRING &&
+      case Arg_Word:  appstr = Get4Digit(*(uint16_t *)defval);
+			 if(type & Arg_Imm &&
+			    disNeedRef >= Ref_Predict &&
+			    dis_severity < CommSev_String &&
 			    isprint(((unsigned char *)defval)[0]) &&
 			    isprint(((unsigned char *)defval)[1]))
 			    sprintf(comments,"\"%c%c\""
@@ -1116,10 +1020,10 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
 					    ,((unsigned char *)defval)[1]);
 			 break;
       default:
-      case DISARG_DWORD: appstr = Get8Digit(*(uint32_t *)defval);
-			 if(type & DISARG_IMM &&
-			    disNeedRef >= NEEDREF_PREDICT &&
-			    dis_severity < DISCOMSEV_STRING &&
+      case Arg_DWord: appstr = Get8Digit(*(uint32_t *)defval);
+			 if(type & Arg_Imm &&
+			    disNeedRef >= Ref_Predict &&
+			    dis_severity < CommSev_String &&
 			    isprint(((unsigned char *)defval)[0]) &&
 			    isprint(((unsigned char *)defval)[1]) &&
 			    isprint(((unsigned char *)defval)[2]) &&
@@ -1130,11 +1034,11 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
 					    ,((unsigned char *)defval)[2]
 					    ,((unsigned char *)defval)[3]);
 			 break;
-      case DISARG_QWORD:
+      case Arg_QWord:
 			 appstr = Get16Digit(*(uint64_t *)defval);
-			 if(type & DISARG_IMM &&
-			    disNeedRef >= NEEDREF_PREDICT &&
-			    dis_severity < DISCOMSEV_STRING &&
+			 if(type & Arg_Imm &&
+			    disNeedRef >= Ref_Predict &&
+			    dis_severity < CommSev_String &&
 			    isprint(((unsigned char *)defval)[0]) &&
 			    isprint(((unsigned char *)defval)[1]) &&
 			    isprint(((unsigned char *)defval)[2]) &&
@@ -1158,7 +1062,7 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
    }
    if(comments[0])
    {
-     dis_severity = DISCOMSEV_STRING;
+     dis_severity = CommSev_String;
      strcpy(dis_comments,comments);
    }
   }
@@ -1166,25 +1070,25 @@ int __FASTCALL__ disAppendDigits(char *str,__filesize_t ulShift,int flags,
   return app;
 }
 
-int __FASTCALL__ disAppendFAddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__filesize_t r_sh,char type,unsigned seg,char codelen)
+int DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__filesize_t r_sh,e_disaddr type,unsigned seg,char codelen)
 {
- int needref;
+ e_ref needref;
  __filesize_t fpos;
  char *modif_to;
  DisasmRet dret;
  int appended = RAPREF_NONE;
- int flags;
+ int flg;
  fpos = bmGetCurrFilePos();
  memset(&dret,0,sizeof(DisasmRet));
  /* Prepare insn type */
- if(disNeedRef > NEEDREF_NONE)
+ if(disNeedRef > Ref_None)
  {
    /* Forward prediction: ulShift = offset of binded field but r_sh is
       pointer where this field is referenced. */
    memset(disCodeBufPredict,0,disMaxCodeLen*PREDICT_DEPTH);
    bmSeek(r_sh, SEEK_SET);
    bmReadBuffer(disCodeBufPredict,disMaxCodeLen*PREDICT_DEPTH);
-   dret = Disassembler(r_sh,(MBuffer)disCodeBufPredict,__DISF_GETTYPE);
+   dret = disassembler(r_sh,(MBuffer)disCodeBufPredict,__DISF_GETTYPE);
  }
 #ifndef NDEBUG
   if(ulShift >= (__fileoff_t)BMGetFLength()-codelen)
@@ -1202,12 +1106,12 @@ int __FASTCALL__ disAppendFAddr(char * str,__fileoff_t ulShift,__fileoff_t disti
      }
   }
 #endif
- if(disNeedRef > NEEDREF_NONE)
+ if(disNeedRef > Ref_None)
  {
    if(dret.pro_clone == __INSNT_JMPPIC || dret.pro_clone == __INSNT_JMPRIP) goto try_pic; /* skip defaults for PIC */
-   flags = APREF_TRY_LABEL;
-   if(hexAddressResolv && beye_context().active_format()->AddressResolving) flags |= APREF_SAVE_VIRT;
-   if(AppendAsmRef(str,ulShift,flags,codelen,r_sh)) appended = RAPREF_DONE;
+   flg = APREF_TRY_LABEL;
+   if(hexAddressResolv && beye_context().active_format()->AddressResolving) flg |= APREF_SAVE_VIRT;
+   if(AppendAsmRef(str,ulShift,flg,codelen,r_sh)) appended = RAPREF_DONE;
    else
    {
       /*
@@ -1243,13 +1147,13 @@ int __FASTCALL__ disAppendFAddr(char * str,__fileoff_t ulShift,__fileoff_t disti
        else
        if(dret.pro_clone == __INSNT_JMPRIP) /* calln *(jmp [rip+offset]) */
        {
-	__filesize_t _defval,fpos,pa;
+	__filesize_t _defval,_fpos,pa;
 	unsigned long app;
 		try_rip:
-		fpos = BMGetCurrFilePos();
+		_fpos = BMGetCurrFilePos();
 		_defval = dret.codelen==8 ? BMReadQWordEx(r_sh+dret.field,SEEKF_START):
 					    BMReadDWordEx(r_sh+dret.field,SEEKF_START);
-		BMSeek(fpos,SEEKF_START);
+		BMSeek(_fpos,SEEKF_START);
 	_defval += (beye_context().active_format()->pa2va ?
 		    beye_context().active_format()->pa2va(r_sh+dret.field) :
 		    r_sh+dret.field)+dret.codelen;
@@ -1284,7 +1188,7 @@ int __FASTCALL__ disAppendFAddr(char * str,__fileoff_t ulShift,__fileoff_t disti
    if(!appended)
    {
      needref = disNeedRef;
-     disNeedRef = NEEDREF_NONE;
+     disNeedRef = Ref_None;
      if(r_sh <= BMGetFLength())
      {
        const char * cptr;
@@ -1301,25 +1205,25 @@ int __FASTCALL__ disAppendFAddr(char * str,__fileoff_t ulShift,__fileoff_t disti
      else
      {
        const char * pstr = "";
-       if(type & DISADR_USESEG)
+       if(type & UseSeg)
        {
 	 strcat(str,Get4Digit(seg));
 	 strcat(str,":");
        }
        if(!type) pstr = Get2SignDig((char)distin);
        else
-	 if(type & DISADR_NEAR16)
-	      pstr = type & DISADR_USESEG ? Get4Digit((unsigned)distin) :
-					    Get4SignDig((unsigned)distin);
+	 if(type & Near16)
+	      pstr = type & UseSeg ? Get4Digit((unsigned)distin) :
+				     Get4SignDig((unsigned)distin);
 	 else
-	  if(type & DISADR_NEAR32)   pstr = Get8SignDig(distin);
+	  if(type & Near32)   pstr = Get8SignDig(distin);
 	  else
-	   if(type & DISADR_NEAR64) pstr = Get16SignDig(distin);
+	   if(type & Near64) pstr = Get16SignDig(distin);
        strcat(str,pstr);
      }
      disNeedRef = needref;
    }
-   if(disNeedRef >= NEEDREF_PREDICT && dis_severity < DISCOMSEV_INSNREF)
+   if(disNeedRef >= Ref_Predict && dis_severity < CommSev_InsnRef)
    {
      const char * comms;
      comms = NULL;
@@ -1331,7 +1235,7 @@ int __FASTCALL__ disAppendFAddr(char * str,__fileoff_t ulShift,__fileoff_t disti
      }
      if(comms)
      {
-	dis_severity = DISCOMSEV_INSNREF;
+	dis_severity = CommSev_InsnRef;
 	strcpy(dis_comments,comms);
      }
    }
@@ -1340,4 +1244,16 @@ int __FASTCALL__ disAppendFAddr(char * str,__fileoff_t ulShift,__fileoff_t disti
  bmSeek(fpos,BM_SEEK_SET);
  return appended;
 }
+
+bool hexAddressResolution(unsigned& har);
+bool DisMode::action_F6() { return hexAddressResolution(hexAddressResolv); }
+unsigned DisMode::get_max_line_length() const { return get_max_symbol_size(); }
+
+static Plugin* query_interface() { return new(zeromem) DisMode; }
+
+extern const Plugin_Info disMode = {
+    "~Disassembler",	/**< plugin name */
+    query_interface
+};
+
 } // namespace beye

@@ -37,6 +37,7 @@ static char *outstr;
 
 static int armBitness=DAB_USE32;
 static int armBigEndian=1;
+static DisMode* parent;
 
 static DisasmRet __FASTCALL__ armDisassembler(__filesize_t ulShift,
 					      MBuffer buffer,
@@ -166,16 +167,17 @@ static char      __FASTCALL__ armGetClone( unsigned long clone )
   UNUSED(clone);
   return ' ';
 }
-static void      __FASTCALL__ armInit( void )
+static void      __FASTCALL__ armInit( DisMode& _parent )
 {
+  parent = &_parent;
   outstr = new char[1000];
   if(!outstr)
   {
     MemOutBox("Data disassembler initialization");
     exit(EXIT_FAILURE);
   }
-  arm16Init();
-  arm32Init();
+  arm16Init(parent);
+  arm32Init(parent);
 }
 
 static void  __FASTCALL__ armTerm( void )

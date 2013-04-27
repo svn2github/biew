@@ -27,7 +27,6 @@ using namespace beye;
 #include "beye.h"
 #include "bmfile.h"
 #include "beyeutil.h"
-#include "plugins/disasm.h"
 #include "bconsole.h"
 #include "codeguid.h"
 #include "reg_form.h"
@@ -36,8 +35,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 namespace beye {
-extern int DisasmCurrLine;
-extern bool DisasmPrepareMode;
+static const DisMode* parent;
 enum {
     BACK_ADDR_SIZE=256,
     GO_ADDR_SIZE  =37
@@ -52,8 +50,9 @@ static unsigned char Alarm = 0;
 
 char codeguid_image[] = "=>[X]";
 
-bool __FASTCALL__ initCodeGuider( void )
+bool __FASTCALL__ initCodeGuider(const DisMode& _parent)
 {
+  parent = &_parent;
   bool ret = false;
   BackAddr = new __filesize_t[BACK_ADDR_SIZE];
   if(BackAddr)
@@ -183,16 +182,15 @@ void __FASTCALL__ GidResetGoAddress( int keycode )
        else GoAddrPtr = -1;
 }
 
-
 void __FASTCALL__ GidAddGoAddress(char *str,__filesize_t addr)
 {
   tAbsCoord width = twGetClientWidth(MainWnd);
-  unsigned bytecodes=activeDisasm->max_insn_len()*2;
+  unsigned bytecodes=beye_context().active_mode()->get_max_symbol_size()*2;
   int len,where;
-  if(DisasmPrepareMode) return;
+  if(parent->prepare_mode()) return;
   len = strlen((char *)str);
-  where = (disPanelMode == PANMOD_FULL ? width :
-	   disPanelMode == PANMOD_MEDIUM ? width-HA_LEN() : width-(HA_LEN()+1)-bytecodes) - 5;
+  where = (parent->panel_mode() == DisMode::Panel_Full ? width :
+	   parent->panel_mode() == DisMode::Panel_Medium ? width-HA_LEN() : width-(HA_LEN()+1)-bytecodes) - 5;
   if(Alarm)
   {
      int i;
@@ -200,7 +198,7 @@ void __FASTCALL__ GidAddGoAddress(char *str,__filesize_t addr)
       memmove(&GoAddr[1],&GoAddr[0],GoAddrPtr*sizeof(long));
       memmove(&GoLineNums[1],&GoLineNums[0],GoAddrPtr*sizeof(int));
       GoAddr[0] = addr;
-      GoLineNums[0] = DisasmCurrLine;
+      GoLineNums[0] = parent->get_curr_line_num();
       if(len < where)
       {
 	memset(&str[len],TWC_DEF_FILLER,where-len);
@@ -220,7 +218,7 @@ void __FASTCALL__ GidAddGoAddress(char *str,__filesize_t addr)
   {
      GoAddrPtr++;
      GoAddr[GoAddrPtr] = addr;
-     GoLineNums[GoAddrPtr] = DisasmCurrLine;
+     GoLineNums[GoAddrPtr] = parent->get_curr_line_num();
      if(len < where)
      {
 	memset(&str[len],TWC_DEF_FILLER,where-len);

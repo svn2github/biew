@@ -88,7 +88,7 @@ bool __FASTCALL__ Get8DigitDlg(const char *title,const char *text,char attr,unsi
  bool ret;
  char decleg[13];
  char str[12] = "";
- char * legals;
+ const char* legals;
  memcpy(decleg,legalchars,12);
  decleg[12] = '\0';
  len += attr & SIGN ? 1 : 0;
@@ -140,7 +140,7 @@ bool        __FASTCALL__ Get16DigitDlg(const char *title,const char *text,char a
  bool ret;
  char decleg[13];
  char str[20] = "";
- char * legals;
+ const char* legals;
  memcpy(decleg,legalchars,12);
  decleg[12] = '\0';
  len += attr & SIGN ? 1 : 0;
@@ -223,7 +223,7 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
  unsigned len = HA_LEN()-1,stx = 0;
  bool ret,update;
  static char str[21] = "";
- char * legals;
+ const char * legals;
  char declegals[13];
  unsigned attr;
  _using = twUsedWin();
@@ -455,7 +455,7 @@ bool __FASTCALL__ GetFStoreDlg(const char *title,char * fname,unsigned long * fl
  unsigned attr,stx = 0;
  char startdig[19],enddig[19];
  unsigned mlen[3] = { 19, 19, 71 };
- char * legal[3] = { &legalchars[2], &legalchars[2], NULL };
+ const char * legal[3] = { &legalchars[2], &legalchars[2], NULL };
  char *wbuff[3];
 
  if((*flags) & FSDLG_USEMODES) fs_txt = fs1_txt;
@@ -584,7 +584,7 @@ bool __FASTCALL__ GetInsDelBlkDlg(const char *title,__filesize_t * start,__fileo
  unsigned stx = 0,attr;
  bool redraw;
  char startdig[11],enddig[11];
- char * legal[2] = { &legalchars[2], legalchars };
+ const char * legal[2] = { &legalchars[2], legalchars };
  unsigned mlen[2] = { 19, 19 };
  char *wbuff[2];
 

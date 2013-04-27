@@ -43,8 +43,7 @@ using namespace beye;
 
 
 namespace beye {
-extern REGISTRY_MODE disMode;
-
+extern const Plugin_Info disMode;
 static bool ChSize( void )
 {
  __fileoff_t psize,tile = 0;
@@ -238,25 +237,21 @@ static void __NEAR__ __FASTCALL__ printHdr(FILE * fout,const REGISTRY_BIN *fmt)
 	      ,cptr2);
 }
 
-static unsigned __NEAR__ __FASTCALL__ printHelpComment(char *buff,MBuffer codebuff,DisasmRet *dret)
+static unsigned __NEAR__ __FASTCALL__ printHelpComment(char *buff,MBuffer codebuff,DisasmRet *dret,DisMode::e_severity dis_severity,const char* dis_comments)
 {
-  unsigned len,j;
-   if(dis_severity > DISCOMSEV_NONE)
-   {
-     len = 3+strlen(dis_comments);
-     strcat(buff,dis_comments);
-     strcat(buff," ; ");
-   }
-   else len = 0;
-   for(j = 0;j < dret->codelen;j++)
-   {
-      memcpy((char *)&buff[len],(char *)Get2Digit(codebuff[j]),2);
-      len += 2;
-   }
-   buff[len] = 0;
-   return len;
+    unsigned len,j;
+    if(dis_severity > DisMode::CommSev_None) {
+	len = 3+::strlen(dis_comments);
+	::strcat(buff,dis_comments);
+	::strcat(buff," ; ");
+    } else len = 0;
+    for(j = 0;j < dret->codelen;j++) {
+	::memcpy((char *)&buff[len],(char *)Get2Digit(codebuff[j]),2);
+	len += 2;
+    }
+    buff[len] = 0;
+    return len;
 }
-
 
 inline const char* GET_FUNC_CLASS(unsigned x) { return x == SC_LOCAL ? "private" : "public"; }
 
@@ -283,399 +278,332 @@ static void __make_dump_name(const char *end)
 
 static bool FStore( void )
 {
- unsigned long flags;
- char *tmp_buff;
- __filesize_t endpos,cpos;
- tmp_buff = new char [0x1000];
- if(!tmp_buff)
- {
-       MemOutBox("temporary buffer initialization");
-       return false;
- }
- flags = FSDLG_USEMODES | FSDLG_BINMODE | FSDLG_COMMENT;
- DumpMode = true;
- ff_startpos = BMGetCurrFilePos();
- if(!ff_len) ff_len = BMGetFLength() - ff_startpos;
- __make_dump_name(".$$$");
- if(GetFStoreDlg(" Save information to file ",ff_fname,&flags,&ff_startpos,&ff_len,FILE_PRMT))
- {
-  endpos = ff_startpos + ff_len;
-  endpos = endpos > BMGetFLength() ? BMGetFLength() : endpos;
-  if(endpos > ff_startpos)
-  {
-   TWindow *progress_wnd;
-   unsigned prcnt_counter,oprcnt_counter;
-   cpos = BMGetCurrFilePos();
-   progress_wnd = PercentWnd("Saving ..."," Save block to file ");
-   if(!(flags & FSDLG_ASMMODE)) /** Write in binary mode */
-   {
-     BFile* _bioHandle;
-     bhandle_t handle;
-     __filesize_t wsize,crpos,pwsize,awsize;
-     unsigned rem;
-     wsize = endpos - ff_startpos;
-     if(__IsFileExists(ff_fname) == false) handle = __OsCreate(ff_fname);
-     else
-     {
-       handle = __OsOpen(ff_fname,FO_READWRITE | SO_DENYNONE);
-       if(handle == NULL_HANDLE)  handle = __OsOpen(ff_fname,FO_READWRITE | SO_COMPAT);
-       if(handle == NULL_HANDLE)
-       {
-	  use_err:
-	  errnoMessageBox("Can't use file",NULL,errno);
-	  goto Exit;
-       }
-       __OsTruncFile(handle,0L);
-     }
-     __OsClose(handle);
-     _bioHandle = new BFile;
-     bool rc;
-     rc = _bioHandle->open(ff_fname,FO_READWRITE | SO_DENYNONE,BBIO_CACHE_SIZE,beye_context().fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
-     if(rc == false)  rc = _bioHandle->open(ff_fname,FO_READWRITE | SO_COMPAT,BBIO_CACHE_SIZE,beye_context().fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
-     if(rc == false)  goto use_err;
-     crpos = ff_startpos;
-     _bioHandle->seek(0L,SEEKF_START);
-     prcnt_counter = oprcnt_counter = 0;
-     pwsize = 0;
-     awsize = wsize;
-     while(wsize)
-     {
-	unsigned real_size;
-	rem = (unsigned)std::min(wsize,__filesize_t(4096));
-	if(!BMReadBufferEx(tmp_buff,rem,crpos,BM_SEEK_SET))
-	{
-	  errnoMessageBox(READ_FAIL,NULL,errno);
-	  delete _bioHandle;
-	  goto Exit;
-	}
-	real_size = beye_context().active_mode()->convert_cp ? beye_context().active_mode()->convert_cp((char *)tmp_buff,rem,true) : rem;
-	if(!_bioHandle->write_buffer(tmp_buff,real_size))
-	{
-	  errnoMessageBox(WRITE_FAIL,NULL,errno);
-	  delete _bioHandle;
-	  goto Exit;
-	}
-	wsize -= rem;
-	crpos += rem;
-	pwsize += rem;
-	prcnt_counter = (unsigned)((pwsize*100)/awsize);
-	if(prcnt_counter != oprcnt_counter)
-	{
-	  oprcnt_counter = prcnt_counter;
-	  if(!ShowPercentInWnd(progress_wnd,prcnt_counter)) break;
-	}
-     }
-     delete _bioHandle;
-   }
-   else /** Write in disassembler mode */
-   {
-     FILE * fout = NULL;
-     unsigned char *codebuff;
-     char *file_cache = NULL,*tmp_buff2 = NULL;
-     unsigned MaxInsnLen;
-     char func_name[300],obj_name[300],data_dis[300];
-     __filesize_t func_pa,stop;
-     unsigned func_class;
-     __filesize_t awsize,pwsize;
-     bool has_string;
+    BeyeContext& bctx = beye_context();
+    unsigned long flags;
+    char *tmp_buff;
+    __filesize_t endpos,cpos;
+    tmp_buff = new char [0x1000];
+    if(!tmp_buff) {
+	 MemOutBox("temporary buffer initialization");
+	 return false;
+    }
+    flags = FSDLG_USEMODES | FSDLG_BINMODE | FSDLG_COMMENT;
+    DumpMode = true;
+    ff_startpos = BMGetCurrFilePos();
+    if(!ff_len) ff_len = BMGetFLength() - ff_startpos;
+    __make_dump_name(".$$$");
+    if(GetFStoreDlg(" Save information to file ",ff_fname,&flags,&ff_startpos,&ff_len,FILE_PRMT)) {
+	endpos = ff_startpos + ff_len;
+	endpos = endpos > BMGetFLength() ? BMGetFLength() : endpos;
+	if(endpos > ff_startpos) {
+	    TWindow *progress_wnd;
+	    unsigned prcnt_counter,oprcnt_counter;
+	    cpos = BMGetCurrFilePos();
+	    progress_wnd = PercentWnd("Saving ..."," Save block to file ");
+	    if(!(flags & FSDLG_ASMMODE)) { /** Write in binary mode */
+		BFile* _bioHandle;
+		bhandle_t handle;
+		__filesize_t wsize,crpos,pwsize,awsize;
+		unsigned rem;
+		wsize = endpos - ff_startpos;
+		if(__IsFileExists(ff_fname) == false) handle = __OsCreate(ff_fname);
+		else {
+		    handle = __OsOpen(ff_fname,FO_READWRITE | SO_DENYNONE);
+		    if(handle == NULL_HANDLE) handle = __OsOpen(ff_fname,FO_READWRITE | SO_COMPAT);
+		    if(handle == NULL_HANDLE) {
+			use_err:
+			errnoMessageBox("Can't use file",NULL,errno);
+			goto Exit;
+		    }
+		    __OsTruncFile(handle,0L);
+		}
+		__OsClose(handle);
+		_bioHandle = new BFile;
+		bool rc = _bioHandle->open(ff_fname,FO_READWRITE | SO_DENYNONE,BBIO_CACHE_SIZE,bctx.fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
+		if(rc == false)  rc = _bioHandle->open(ff_fname,FO_READWRITE | SO_COMPAT,BBIO_CACHE_SIZE,bctx.fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
+		if(rc == false)  goto use_err;
+		crpos = ff_startpos;
+		_bioHandle->seek(0L,SEEKF_START);
+		prcnt_counter = oprcnt_counter = 0;
+		pwsize = 0;
+		awsize = wsize;
+		while(wsize) {
+		    unsigned real_size;
+		    rem = (unsigned)std::min(wsize,__filesize_t(4096));
+		    if(!BMReadBufferEx(tmp_buff,rem,crpos,BM_SEEK_SET)) {
+			errnoMessageBox(READ_FAIL,NULL,errno);
+			delete _bioHandle;
+			goto Exit;
+		    }
+		    real_size = (bctx.active_mode()->flags()&Plugin::Has_ConvertCP) ? bctx.active_mode()->convert_cp((char *)tmp_buff,rem,true) : rem;
+		    if(!_bioHandle->write_buffer(tmp_buff,real_size)) {
+			errnoMessageBox(WRITE_FAIL,NULL,errno);
+			delete _bioHandle;
+			goto Exit;
+		    }
+		    wsize -= rem;
+		    crpos += rem;
+		    pwsize += rem;
+		    prcnt_counter = (unsigned)((pwsize*100)/awsize);
+		    if(prcnt_counter != oprcnt_counter) {
+			oprcnt_counter = prcnt_counter;
+			if(!ShowPercentInWnd(progress_wnd,prcnt_counter)) break;
+		    }
+		}
+		delete _bioHandle;
+	    } else { /** Write in disassembler mode */
+		FILE * fout = NULL;
+		unsigned char *codebuff;
+		char *file_cache = NULL,*tmp_buff2 = NULL;
+		unsigned MaxInsnLen;
+		char func_name[300],obj_name[300],data_dis[300];
+		__filesize_t func_pa,stop;
+		unsigned func_class;
+		__filesize_t awsize,pwsize;
+		bool has_string;
 
-     __filesize_t obj_start,obj_end;
-     int obj_class,obj_bitness;
-     unsigned obj_num;
+		__filesize_t obj_start,obj_end;
+		int obj_class,obj_bitness;
+		unsigned obj_num;
 
-     if(beye_context().active_mode() != &disMode) disMode.init();
-     if(flags & FSDLG_STRUCTS)
-     {
-       if(beye_context().active_format()->set_state) beye_context().active_format()->set_state(PS_ACTIVE);
-       if(beye_context().active_format()->prepare_structs)
-		    beye_context().active_format()->prepare_structs(ff_startpos,ff_startpos+ff_len);
-     }
-     MaxInsnLen = activeDisasm->max_insn_len();
-     codebuff = new unsigned char [MaxInsnLen];
-     if(!codebuff)
-     {
-       MemOutBox("Disasm initialization");
-       goto dis_exit;
-     }
-     tmp_buff2 = new char [0x1000];
-     file_cache = new char [BBIO_SMALL_CACHE_SIZE];
-     fout = fopen(ff_fname,"wt");
-     if(fout == NULL)
-     {
-	errnoMessageBox(WRITE_FAIL,NULL,errno);
-	delete codebuff;
-	goto Exit;
-     }
-     if(file_cache) setvbuf(fout,file_cache,_IOFBF,BBIO_SMALL_CACHE_SIZE);
-     if(flags & FSDLG_COMMENT)
-     {
-       printHdr(fout,beye_context().active_format());
-     }
-     if(flags & FSDLG_STRUCTS)
-     {
-       if(beye_context().active_format()->GetObjAttr)
-       {
-	 obj_num = beye_context().active_format()->GetObjAttr(ff_startpos,obj_name,
-					      sizeof(obj_name),&obj_start,
-					      &obj_end,&obj_class,&obj_bitness);
-	 obj_name[sizeof(obj_name)-1] = 0;
-       }
-       else goto defobj;
-     }
-     else
-     {
-       defobj:
-       obj_num = 0;
-       obj_start = 0;
-       obj_end = BMGetFLength();
-       obj_name[0] = 0;
-       obj_class = OC_CODE;
-       obj_bitness = beye_context().active_format()->query_bitness ? beye_context().active_format()->query_bitness(ff_startpos) : DAB_USE16;
-     }
-     if(flags & FSDLG_STRUCTS) printObject(fout,obj_num,obj_name,obj_class,obj_bitness,obj_end - obj_start);
-     func_pa = 0;
-     if(flags & FSDLG_STRUCTS)
-     {
-       if(beye_context().active_format()->GetPubSym)
-       {
-	 func_pa = beye_context().active_format()->GetPubSym(func_name,sizeof(func_name),
-					     &func_class,ff_startpos,true);
-	 func_name[sizeof(func_name)-1] = 0;
-	 if(func_pa)
-	 {
-	    fprintf(fout,"%s %s:\n"
-			,GET_FUNC_CLASS(func_class)
-			,func_name);
-	    if(func_pa < ff_startpos && flags & FSDLG_COMMENT)
-	    {
-	      fprintf(fout,"; ...\n");
-	    }
-	 }
-	 func_pa = beye_context().active_format()->GetPubSym(func_name,sizeof(func_name),
-					     &func_class,ff_startpos,false);
-	 func_name[sizeof(func_name)-1] = 0;
-       }
-     }
-     prcnt_counter = oprcnt_counter = 0;
-     awsize = endpos - ff_startpos;
-     pwsize = 0;
-     has_string = false;
-     while(1)
-     {
-      DisasmRet dret;
-      int len;
-       if(flags & FSDLG_STRUCTS)
-       {
-	  if(beye_context().active_format()->GetObjAttr)
-	  {
-	    if(ff_startpos >= obj_end)
-	    {
-	       obj_num = beye_context().active_format()->GetObjAttr(ff_startpos,obj_name,
-						    sizeof(obj_name),&obj_start,
-						    &obj_end,&obj_class,
-						    &obj_bitness);
-	       obj_name[sizeof(obj_name)-1] = 0;
-	       printObject(fout,obj_num,obj_name,obj_class,obj_bitness,obj_end - obj_start);
-
-	    }
-	  }
-	  if(obj_class == OC_NOOBJECT)
-	  {
-	    __filesize_t diff;
-	    fprintf(fout,"; L%016llXH-L%016llXH - no object\n",obj_start,obj_end);
-	    dret.codelen = std::min(__filesize_t(UCHAR_MAX),obj_end - ff_startpos);
-	    /** some functions can placed in virtual area of objects
-		mean at end of true data, but before next object */
-	     while(func_pa && func_pa >= obj_start && func_pa < obj_end && func_pa > ff_startpos)
-	     {
-		  diff = func_pa - ff_startpos;
-		  if(diff) fprintf(fout,"resb %16llXH\n",diff);
-		  fprintf(fout,"%s %s: ;at offset - %16llXH\n"
-			      ,GET_FUNC_CLASS(func_class)
-			      ,func_name
-			      ,func_pa);
-		  ff_startpos = func_pa;
-		  func_pa = beye_context().active_format()->GetPubSym(func_name,sizeof(func_name),
-						    &func_class,ff_startpos,false);
-		  func_name[sizeof(func_name)-1] = 0;
-		  if(func_pa == ff_startpos)
-		  {
-		    fprintf(fout,"...Probably internal error of beye...\n");
-		    break;
-		  }
-	      }
-	      diff = obj_end - ff_startpos;
-	      if(diff) fprintf(fout,"resb %16llXH\n",diff);
-	      ff_startpos = obj_end;
-	      goto next_obj;
-	  }
-	  if(beye_context().active_format()->GetPubSym && func_pa)
-	  {
-	    int not_silly;
-	    not_silly = 0;
-	    while(ff_startpos == func_pa)
-	    {
-	      /* print out here all public labels */
-	      fprintf(fout,"%s %s:\n"
-			  ,GET_FUNC_CLASS(func_class)
-			  ,func_name);
-	      func_pa = beye_context().active_format()->GetPubSym(func_name,sizeof(func_name),
-						  &func_class,ff_startpos,false);
-	      func_name[sizeof(func_name)-1] = 0;
-	      not_silly++;
-	      if(not_silly > 100)
-	      {
-		fprintf(fout,"; [snipped out] ...\n");
-		break;
-	      }
-	    }
-	  }
-       }
-       memset(codebuff,0,sizeof(codebuff));
-       BMReadBufferEx((any_t*)codebuff,MaxInsnLen,ff_startpos,BM_SEEK_SET);
-       if(obj_class == OC_CODE)
-	 dret = Disassembler(ff_startpos,codebuff,__DISF_NORMAL);
-       else /** Data object */
-       {
-	 unsigned dis_data_len,ifreq,data_len;
-	 char coll_str[__TVIO_MAXSCREENWIDTH];
-	 size_t cstr_idx = 0;
-	 dis_data_len = std::min(sizeof(coll_str)-1,size_t(MaxInsnLen));
-	 for(cstr_idx = 0;cstr_idx < dis_data_len;cstr_idx++)
-	 {
-	   if(isprint(codebuff[cstr_idx]))
-	   {
-	     coll_str[cstr_idx] = codebuff[cstr_idx];
-	   }
-	   else break;
-	 }
-	 coll_str[cstr_idx] = 0;
-	 switch(obj_bitness)
-	 {
-	   case DAB_USE16: dis_data_len = 2; break;
-	   case DAB_USE32: dis_data_len = 4; break;
-	   case DAB_USE64: dis_data_len = 8; break;
-	   case DAB_USE128: dis_data_len = 16; break;
-	   case DAB_USE256: dis_data_len = 32; break;
-	   default:         dis_data_len = 1; break;
-	 }
-	 data_len = 0;
-	 sprintf(data_dis,"db  ");
-	 if(cstr_idx > 1)
-	 {
-	   sprintf(&data_dis[strlen(data_dis)],"'%s'",coll_str);
-	   dret.codelen = cstr_idx;
-	   has_string = true;
-	 }
-	 else
-	 {
-	   for(ifreq = 0;ifreq < dis_data_len;ifreq++)
-	   {
-	      if(isprint(codebuff[ifreq]) && isprint(codebuff[ifreq+1]))
-					      break;
-	      if(isprint(codebuff[ifreq]) && has_string)
-		  sprintf(&data_dis[strlen(data_dis)],"'%c',",codebuff[ifreq]);
-	      else
-		sprintf(&data_dis[strlen(data_dis)],"%02Xh,",codebuff[ifreq]);
-	      data_len++;
-	      has_string = false;
-	   }
-	   dret.codelen = data_len;
-	 }
-	 dret.str = data_dis;
-	 dret.pro_clone = 0;
-	 dis_severity = DISCOMSEV_NONE;
-       }
-       stop = func_pa ? std::min(func_pa,obj_end) : obj_end;
-       if(flags & FSDLG_STRUCTS)
-       {
-	 if(beye_context().active_format()->GetPubSym && stop && stop > ff_startpos &&
-	    ff_startpos + dret.codelen > stop)
-	 {
-	   unsigned lim,ii;
-	   make_addr_column(tmp_buff,ff_startpos);
-	   strcat(tmp_buff," db ");
-	   lim = (unsigned)(stop-ff_startpos);
-	   if(lim > MaxInsnLen) lim = MaxInsnLen;
-	   for(ii = 0;ii < lim;ii++)
-	     sprintf(&tmp_buff[strlen(tmp_buff)],"%s ",Get2Digit(codebuff[ii]));
-	   dret.codelen = lim;
-	 }
-	 else goto normline;
-       }
-       else
-       {
-	  normline:
-	  make_addr_column(tmp_buff,ff_startpos);
-	  sprintf(&tmp_buff[strlen(tmp_buff)]," %s",dret.str);
-       }
-       len = strlen(tmp_buff);
-       if(flags & FSDLG_COMMENT)
-       {
-	  if(len < 48)
-	  {
-	    memset(&tmp_buff[len],' ',48-len);
-	    len = 48;
-	    tmp_buff[len] = 0;
-	  }
-	  strcat(tmp_buff,"; ");
-	  len += 2;
-	  len += printHelpComment(&((char *)tmp_buff)[len],codebuff,&dret);
-       }
-       if(tmp_buff2)
-       {
-	 szSpace2Tab(tmp_buff2,tmp_buff);
-	 szTrimTrailingSpace(tmp_buff2);
-       }
-       strcat(tmp_buff2 ? tmp_buff2 : tmp_buff,"\n");
-       if(fputs(tmp_buff2 ? tmp_buff2 : tmp_buff,fout) == EOF)
-       {
-	 errnoMessageBox(WRITE_FAIL,NULL,errno);
-	 goto dis_exit;
-       }
-       if(flags & FSDLG_STRUCTS)
-       {
-	 if(beye_context().active_format()->GetPubSym && stop && ff_startpos != stop &&
-	    ff_startpos + dret.codelen > stop)
-		      dret.codelen = stop - ff_startpos;
-       }
-       if(!dret.codelen)
-       {
-	 ErrMessageBox("Internal fatal error"," Put structures ");
-	 goto dis_exit;
-       }
-       ff_startpos += dret.codelen;
-       next_obj:
-       if(ff_startpos >= endpos) break;
-       pwsize += dret.codelen;
-       prcnt_counter = (unsigned)((pwsize*100)/awsize);
-       if(prcnt_counter != oprcnt_counter)
-       {
-	 oprcnt_counter = prcnt_counter;
-	 if(!ShowPercentInWnd(progress_wnd,prcnt_counter)) break;
-       }
-     }
-     dis_exit:
-     delete codebuff;
-     fclose(fout);
-     if(file_cache) delete file_cache;
-     if(tmp_buff2) delete tmp_buff2;
-     if(flags & FSDLG_STRUCTS)
-     {
-       if(beye_context().active_format()->drop_structs) beye_context().active_format()->drop_structs();
-       if(beye_context().active_format()->set_state) beye_context().active_format()->set_state(PS_INACTIVE);
-     }
-     if(beye_context().active_mode() != &disMode) disMode.term();
-   }
-   Exit:
-   CloseWnd(progress_wnd);
-   BMSeek(cpos,BM_SEEK_SET);
-  }
-  else  ErrMessageBox("Start position > end position!",NULL);
- }
- delete tmp_buff;
- DumpMode = false;
- return false;
+		DisMode* dismode = static_cast<DisMode*>(disMode.query_interface());
+		if(flags & FSDLG_STRUCTS) {
+		    if(bctx.active_format()->set_state) bctx.active_format()->set_state(PS_ACTIVE);
+		    if(bctx.active_format()->prepare_structs) bctx.active_format()->prepare_structs(ff_startpos,ff_startpos+ff_len);
+		}
+		MaxInsnLen = dismode->get_max_symbol_size();
+		codebuff = new unsigned char [MaxInsnLen];
+		if(!codebuff) {
+		    MemOutBox("Disasm initialization");
+		    goto dis_exit;
+		}
+		tmp_buff2 = new char [0x1000];
+		file_cache = new char [BBIO_SMALL_CACHE_SIZE];
+		fout = fopen(ff_fname,"wt");
+		if(fout == NULL) {
+		    errnoMessageBox(WRITE_FAIL,NULL,errno);
+		    delete codebuff;
+		    goto Exit;
+		}
+		if(file_cache) setvbuf(fout,file_cache,_IOFBF,BBIO_SMALL_CACHE_SIZE);
+		if(flags & FSDLG_COMMENT) {
+		    printHdr(fout,bctx.active_format());
+		}
+		if(flags & FSDLG_STRUCTS) {
+		    if(bctx.active_format()->GetObjAttr) {
+			obj_num = bctx.active_format()->GetObjAttr(ff_startpos,obj_name,
+						sizeof(obj_name),&obj_start,
+						&obj_end,&obj_class,&obj_bitness);
+			obj_name[sizeof(obj_name)-1] = 0;
+		    } else goto defobj;
+		} else {
+		    defobj:
+		    obj_num = 0;
+		    obj_start = 0;
+		    obj_end = BMGetFLength();
+		    obj_name[0] = 0;
+		    obj_class = OC_CODE;
+		    obj_bitness = bctx.active_format()->query_bitness ? bctx.active_format()->query_bitness(ff_startpos) : DAB_USE16;
+		}
+		if(flags & FSDLG_STRUCTS) printObject(fout,obj_num,obj_name,obj_class,obj_bitness,obj_end - obj_start);
+		func_pa = 0;
+		if(flags & FSDLG_STRUCTS) {
+		    if(bctx.active_format()->GetPubSym) {
+			func_pa = bctx.active_format()->GetPubSym(func_name,sizeof(func_name),
+						&func_class,ff_startpos,true);
+			func_name[sizeof(func_name)-1] = 0;
+			if(func_pa) {
+			    fprintf(fout,"%s %s:\n"
+					,GET_FUNC_CLASS(func_class)
+					,func_name);
+			    if(func_pa < ff_startpos && flags & FSDLG_COMMENT) {
+				fprintf(fout,"; ...\n");
+			    }
+			}
+			func_pa = bctx.active_format()->GetPubSym(func_name,sizeof(func_name),
+						&func_class,ff_startpos,false);
+			func_name[sizeof(func_name)-1] = 0;
+		    }
+		}
+		prcnt_counter = oprcnt_counter = 0;
+		awsize = endpos - ff_startpos;
+		pwsize = 0;
+		has_string = false;
+		while(1) {
+		    DisasmRet dret;
+		    int len;
+		    if(flags & FSDLG_STRUCTS) {
+			if(bctx.active_format()->GetObjAttr) {
+			    if(ff_startpos >= obj_end) {
+				obj_num = bctx.active_format()->GetObjAttr(ff_startpos,obj_name,
+						sizeof(obj_name),&obj_start,
+						&obj_end,&obj_class,
+						&obj_bitness);
+				obj_name[sizeof(obj_name)-1] = 0;
+				printObject(fout,obj_num,obj_name,obj_class,obj_bitness,obj_end - obj_start);
+			    }
+			}
+			if(obj_class == OC_NOOBJECT) {
+			    __filesize_t diff;
+			    fprintf(fout,"; L%016llXH-L%016llXH - no object\n",obj_start,obj_end);
+			    dret.codelen = std::min(__filesize_t(UCHAR_MAX),obj_end - ff_startpos);
+			    /** some functions can placed in virtual area of objects
+				mean at end of true data, but before next object */
+			    while(func_pa && func_pa >= obj_start && func_pa < obj_end && func_pa > ff_startpos) {
+				diff = func_pa - ff_startpos;
+				if(diff) fprintf(fout,"resb %16llXH\n",diff);
+				fprintf(fout,"%s %s: ;at offset - %16llXH\n"
+					,GET_FUNC_CLASS(func_class)
+					,func_name
+					,func_pa);
+				ff_startpos = func_pa;
+				func_pa = bctx.active_format()->GetPubSym(func_name,sizeof(func_name),
+						&func_class,ff_startpos,false);
+				func_name[sizeof(func_name)-1] = 0;
+				if(func_pa == ff_startpos) {
+				    fprintf(fout,"...Probably internal error of beye...\n");
+				    break;
+				}
+			    }
+			    diff = obj_end - ff_startpos;
+			    if(diff) fprintf(fout,"resb %16llXH\n",diff);
+			    ff_startpos = obj_end;
+			    goto next_obj;
+			}
+			if(bctx.active_format()->GetPubSym && func_pa) {
+			    int not_silly;
+			    not_silly = 0;
+			    while(ff_startpos == func_pa) {
+				/* print out here all public labels */
+				fprintf(fout,"%s %s:\n"
+					,GET_FUNC_CLASS(func_class)
+					,func_name);
+				func_pa = bctx.active_format()->GetPubSym(func_name,sizeof(func_name),
+						&func_class,ff_startpos,false);
+				func_name[sizeof(func_name)-1] = 0;
+				not_silly++;
+				if(not_silly > 100) {
+				    fprintf(fout,"; [snipped out] ...\n");
+				    break;
+				}
+			    }
+			}
+		    }
+		    memset(codebuff,0,sizeof(codebuff));
+		    BMReadBufferEx((any_t*)codebuff,MaxInsnLen,ff_startpos,BM_SEEK_SET);
+		    if(obj_class == OC_CODE) dret = dismode->disassembler(ff_startpos,codebuff,__DISF_NORMAL);
+		    else { /** Data object */
+			unsigned dis_data_len,ifreq,data_len;
+			char coll_str[__TVIO_MAXSCREENWIDTH];
+			size_t cstr_idx = 0;
+			dis_data_len = std::min(sizeof(coll_str)-1,size_t(MaxInsnLen));
+			for(cstr_idx = 0;cstr_idx < dis_data_len;cstr_idx++) {
+			    if(isprint(codebuff[cstr_idx])) {
+				coll_str[cstr_idx] = codebuff[cstr_idx];
+			    } else break;
+			}
+			coll_str[cstr_idx] = 0;
+			switch(obj_bitness) {
+			    case DAB_USE16: dis_data_len = 2; break;
+			    case DAB_USE32: dis_data_len = 4; break;
+			    case DAB_USE64: dis_data_len = 8; break;
+			    case DAB_USE128: dis_data_len = 16; break;
+			    case DAB_USE256: dis_data_len = 32; break;
+			    default:         dis_data_len = 1; break;
+			}
+			data_len = 0;
+			sprintf(data_dis,"db  ");
+			if(cstr_idx > 1) {
+			    sprintf(&data_dis[strlen(data_dis)],"'%s'",coll_str);
+			    dret.codelen = cstr_idx;
+			    has_string = true;
+			} else {
+			    for(ifreq = 0;ifreq < dis_data_len;ifreq++) {
+				if(isprint(codebuff[ifreq]) && isprint(codebuff[ifreq+1])) break;
+				if(isprint(codebuff[ifreq]) && has_string) sprintf(&data_dis[strlen(data_dis)],"'%c',",codebuff[ifreq]);
+				else		sprintf(&data_dis[strlen(data_dis)],"%02Xh,",codebuff[ifreq]);
+				data_len++;
+				has_string = false;
+			    }
+			    dret.codelen = data_len;
+			}
+			dret.str = data_dis;
+			dret.pro_clone = 0;
+			dismode->dis_severity = DisMode::CommSev_None;
+		    }
+		    stop = func_pa ? std::min(func_pa,obj_end) : obj_end;
+		    if(flags & FSDLG_STRUCTS) {
+			if(bctx.active_format()->GetPubSym && stop && stop > ff_startpos && ff_startpos + dret.codelen > stop) {
+			    unsigned lim,ii;
+			    make_addr_column(tmp_buff,ff_startpos);
+			    strcat(tmp_buff," db ");
+			    lim = (unsigned)(stop-ff_startpos);
+			    if(lim > MaxInsnLen) lim = MaxInsnLen;
+			    for(ii = 0;ii < lim;ii++) sprintf(&tmp_buff[strlen(tmp_buff)],"%s ",Get2Digit(codebuff[ii]));
+			    dret.codelen = lim;
+			} else goto normline;
+		    } else {
+			normline:
+			make_addr_column(tmp_buff,ff_startpos);
+			sprintf(&tmp_buff[strlen(tmp_buff)]," %s",dret.str);
+		    }
+		    len = strlen(tmp_buff);
+		    if(flags & FSDLG_COMMENT) {
+			if(len < 48) {
+			    memset(&tmp_buff[len],' ',48-len);
+			    len = 48;
+			    tmp_buff[len] = 0;
+			}
+			strcat(tmp_buff,"; ");
+			len += 2;
+			len += printHelpComment(&((char *)tmp_buff)[len],codebuff,&dret,dismode->dis_severity,dismode->dis_comments);
+		    }
+		    if(tmp_buff2) {
+			szSpace2Tab(tmp_buff2,tmp_buff);
+			szTrimTrailingSpace(tmp_buff2);
+		    }
+		    strcat(tmp_buff2 ? tmp_buff2 : tmp_buff,"\n");
+		    if(fputs(tmp_buff2 ? tmp_buff2 : tmp_buff,fout) == EOF) {
+			errnoMessageBox(WRITE_FAIL,NULL,errno);
+			goto dis_exit;
+		    }
+		    if(flags & FSDLG_STRUCTS) {
+			if(bctx.active_format()->GetPubSym && stop && ff_startpos != stop && ff_startpos + dret.codelen > stop)
+			    dret.codelen = stop - ff_startpos;
+		    }
+		    if(!dret.codelen) {
+			ErrMessageBox("Internal fatal error"," Put structures ");
+			goto dis_exit;
+		    }
+		    ff_startpos += dret.codelen;
+		    next_obj:
+		    if(ff_startpos >= endpos) break;
+		    pwsize += dret.codelen;
+		    prcnt_counter = (unsigned)((pwsize*100)/awsize);
+		    if(prcnt_counter != oprcnt_counter) {
+			oprcnt_counter = prcnt_counter;
+			if(!ShowPercentInWnd(progress_wnd,prcnt_counter)) break;
+		    }
+		}
+		dis_exit:
+		delete codebuff;
+		fclose(fout);
+		if(file_cache) delete file_cache;
+		if(tmp_buff2) delete tmp_buff2;
+		if(flags & FSDLG_STRUCTS) {
+		    if(bctx.active_format()->drop_structs) bctx.active_format()->drop_structs();
+		    if(bctx.active_format()->set_state) bctx.active_format()->set_state(PS_INACTIVE);
+		}
+		delete dismode;
+	    } /** END: Write in disassembler mode */
+	    Exit:
+	    CloseWnd(progress_wnd);
+	    BMSeek(cpos,BM_SEEK_SET);
+	} else  ErrMessageBox("Start position > end position!",NULL);
+    }
+    delete tmp_buff;
+    DumpMode = false;
+    return false;
 }
 
 static bool FRestore( void )

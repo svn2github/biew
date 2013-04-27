@@ -4,6 +4,7 @@
 #include "libbeye/libbeye.h"
 #include "libbeye/file_ini.h"
 #include "reg_form.h"
+#include "plugins/plugin.h"
 
 #include <map>
 #include <vector>
@@ -40,10 +41,19 @@ namespace beye {
 	    void		term_modes();
 	    void		quick_select_mode();
 	    bool		select_mode();
-	    const REGISTRY_MODE*active_mode() const { return activeMode; }
+	    Plugin*		active_mode() const { return activeMode; }
 	    const REGISTRY_BIN*	active_format() const { return detectedFormat; }
 	    void		detect_binfmt();
 	    void		show_usage() const;
+	    void		main_loop();
+		   /** Main search routine
+		     * @param is_continue  indicates initialization of search
+					   If set then search should be continued
+					   search dialog will displayed otherwise
+		     * @return             new offset on successful search and
+					   current offset otherwise
+		    **/
+	    __filesize_t	search( bool is_continue );
 
 	    void		select_tool() const;
 	    void		select_sysinfo() const;
@@ -68,7 +78,7 @@ namespace beye {
 	    void		auto_detect_mode();
 
 	    Opaque		opaque;
-	    REGISTRY_MODE*	activeMode;
+	    Plugin*		activeMode;
 	    const REGISTRY_BIN*	detectedFormat;
 	    const std::vector<std::string>& argv;
 	    const std::map<std::string,std::string>& envm;
@@ -82,7 +92,7 @@ namespace beye {
 	    unsigned		defMainModeSel;
 	    __filesize_t	new_file_size;
 	    std::vector<const REGISTRY_BIN*> formats;
-	    std::vector<REGISTRY_MODE*> modes;
+	    std::vector<const Plugin_Info*> modes;
     };
     BeyeContext& beye_context();
 } // namespace beye

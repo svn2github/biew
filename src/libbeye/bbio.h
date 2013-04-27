@@ -364,9 +364,9 @@ class BFile : public Opaque {
     inline BFile::opt operator|(BFile::opt a, BFile::opt b) { return static_cast<BFile::opt>(static_cast<unsigned>(a)|static_cast<unsigned>(b)); }
     inline BFile::opt operator&(BFile::opt a, BFile::opt b) { return static_cast<BFile::opt>(static_cast<unsigned>(a)&static_cast<unsigned>(b)); }
     inline BFile::opt operator^(BFile::opt a, BFile::opt b) { return static_cast<BFile::opt>(static_cast<unsigned>(a)^static_cast<unsigned>(b)); }
-    inline BFile::opt operator|=(BFile::opt a, BFile::opt b) { return (a=static_cast<BFile::opt>(static_cast<unsigned>(a)|static_cast<unsigned>(b))); }
-    inline BFile::opt operator&=(BFile::opt a, BFile::opt b) { return (a=static_cast<BFile::opt>(static_cast<unsigned>(a)&static_cast<unsigned>(b))); }
-    inline BFile::opt operator^=(BFile::opt a, BFile::opt b) { return (a=static_cast<BFile::opt>(static_cast<unsigned>(a)^static_cast<unsigned>(b))); }
+    inline BFile::opt operator|=(BFile::opt& a, BFile::opt b) { return (a=static_cast<BFile::opt>(static_cast<unsigned>(a)|static_cast<unsigned>(b))); }
+    inline BFile::opt operator&=(BFile::opt& a, BFile::opt b) { return (a=static_cast<BFile::opt>(static_cast<unsigned>(a)&static_cast<unsigned>(b))); }
+    inline BFile::opt operator^=(BFile::opt& a, BFile::opt b) { return (a=static_cast<BFile::opt>(static_cast<unsigned>(a)^static_cast<unsigned>(b))); }
 } // namespace beye
 #endif
 

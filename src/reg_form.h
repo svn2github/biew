@@ -31,6 +31,10 @@ typedef __filesize_t  (__FASTCALL__ *BinFunc)( void );
 typedef bool         (__FASTCALL__ *ModFunc)( void );
 
 enum {
+    __MAX_SYMBOL_SIZE=4
+};
+
+enum {
     APREF_NORMAL      =0x0000, /**< Append references in short form if it really present in binary */
     APREF_USE_TYPE    =0x0001, /**< Append references in detail form if it really present in binary */
     APREF_TRY_LABEL   =0x0002, /**< Append references in short form even if it not present in binary (smart method) */
@@ -192,68 +196,6 @@ struct REGISTRY_BIN
 			 /** Cleans internal buffers after stopping of structural disassembler */
   void          (__FASTCALL__ *drop_structs)( void );
 };
-
-
-/***************************************************************\
-* This form registry modes of translation file                  *
-\***************************************************************/
-enum {
-    __MF_NONE          =0x0000, /**< Indicates that no flags were defined */
-    __MF_TEXT          =0x0001, /**< Indicates that plugin is text browser */
-    __MF_DISASM        =0x0002, /**< Indicates that plugin is disassembler */
-    __MF_USECODEGUIDE  =0x0004 /**< Indicates that plugin uses code guider */
-};
-enum {
-    __MAX_SYMBOL_SIZE=4 /**< Insicates maximal size of multibyte symbol. (For optimization purposes only).*/
-};
-typedef struct tag_REGISTRY_MODE
-{
-  const char*  name;
-  const char*  prompt[10];                   /**< on Ctrl-Fx selection */
-  ModFunc      action[10];                   /**< action on Ctrl-Fx selection */
-  bool         (__FASTCALL__ *detect)(void); /**< detects possibility to assign this mode as default mode for openned file. */
-  unsigned     flags;                        /**< see __MF_* constants */
-
-			 /** Paints the file on the screen.
-			   * @param keycode   indicates keyboard code which caused repainting
-			   * @param textshift indicates shift of text. Useful only for text mode.
-			   * return           new shift of text
-			  **/
-  unsigned      (__FASTCALL__ *paint)(unsigned keycode,unsigned textshift);
-
-			 /** Converts buffer with using selected NLS as xlat table.
-			   * @param str       string to be converted
-			   * @param len       length of string
-			   * @param use_fs_nls specifies usage of nls of file
-					      system but not screen.
-			   * @return          new size of blocks after conversation
-			  **/
-  unsigned      (__FASTCALL__ *convert_cp)(char *str,unsigned len, bool use_fs_nls);
-
-  unsigned      (__FASTCALL__ *get_symbol_size)( void ); /**< Returns symbol size in bytes for selected NLS codepage */
-  const char *  (__FASTCALL__ *misckey_name)( void );    /**< F4 key name */
-  void          (__FASTCALL__ *misc_action)( void );     /**< F4 action */
-  unsigned long (__FASTCALL__ *PrevPageSize)(void);      /**< Get previous page size */
-  unsigned long (__FASTCALL__ *CurPageSize)(void);       /**< Get current page size */
-  unsigned long (__FASTCALL__ *PrevLineWidth)( void );   /**< Get previous line width */
-  unsigned long (__FASTCALL__ *CurLineWidth)( void );    /**< Get current line width */
-  void          (__FASTCALL__ *help)( void );            /**< display help about mode */
-  void          (__FASTCALL__ *read_ini)( hIniProfile * );  /**< reads beye.ini file if need */
-  void          (__FASTCALL__ *save_ini)( hIniProfile * );  /**< writes to beye.ini if need */
-  void          (__FASTCALL__ *init)( void );            /**< initialize mode (constructor) */
-  void          (__FASTCALL__ *term)( void );            /**< destroy mode (destructor) */
-			 /** Performs search in plugin's output
-			   * @param pwnd      indicates handle of Percent window with progress indicator
-			   * @param start     indicates start offset within file where search must be performed
-			   * @param slen      on output contains length of found sequence
-			   * @param flags     indicates flags (SF_* family) of search.
-			   * @param is_continue indicates initialization of search
-			   *                  If set then search should be continued
-			   * @param is_found  on output must contain true if result is really found
-			   * @return          offset of found sequence or ULONG(LONG)_MAX if not found
-			  **/
-__filesize_t (__FASTCALL__ *search_engine)(TWindow *pwnd, __filesize_t start, __filesize_t *slen, unsigned flags, bool is_continue, bool *is_found);
-}REGISTRY_MODE;
 
 typedef struct tag_REGISTRY_TOOL
 {

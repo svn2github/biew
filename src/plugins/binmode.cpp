@@ -36,15 +36,59 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
 
-namespace beye {
-static unsigned virtWidthCorr=0;
+#include "plugin.h"
 
-enum {
-    MOD_PLAIN    =0,
-    MOD_BINARY   =1,
-    MOD_REVERSE  =2,
-    MOD_MAXMODE  =2
-};
+namespace beye {
+    enum {
+	MOD_PLAIN  =0,
+	MOD_BINARY =1,
+	MOD_REVERSE=2,
+	MOD_MAXMODE=2
+    };
+    class BinMode : public Plugin {
+	public:
+	    BinMode();
+	    virtual ~BinMode();
+
+	    virtual const char*		prompt(unsigned idx) const;
+	    virtual bool		action_F2();
+	    virtual bool		action_F6();
+	    virtual bool		action_F7();
+	    virtual bool		action_F10();
+
+	    virtual bool		detect();
+	    virtual e_flag		flags() const;
+	    virtual unsigned		paint(unsigned keycode,unsigned textshift);
+
+	    virtual unsigned		get_symbol_size() const;
+	    virtual unsigned		get_max_line_length() const;
+	    virtual const char*		misckey_name() const;
+	    virtual void		misckey_action();
+	    virtual unsigned long	prev_page_size() const;
+	    virtual unsigned long	curr_page_size() const;
+	    virtual unsigned long	prev_line_width() const;
+	    virtual unsigned long	curr_line_width() const;
+	    virtual void		help() const;
+	    virtual void		read_ini(hIniProfile *);
+	    virtual void		save_ini(hIniProfile *);
+	private:
+	    static void	save_video(Opaque& _this,unsigned char *buff,unsigned size);
+
+	    unsigned	virtWidthCorr;
+	    unsigned	bin_mode; /**< points to currently selected mode text mode */
+
+    };
+
+BinMode::BinMode()
+	:virtWidthCorr(0)
+	,bin_mode(MOD_PLAIN)
+{}
+BinMode::~BinMode() {}
+
+static const char* txt[] = { "", "BinMod", "", "", "", "", "<<<   ", "   >>>", "", "UsrNam" };
+const char* BinMode::prompt(unsigned idx) const {
+    return (idx < 10) ? txt[idx] : "";
+}
 
 static const char * mod_names[] =
 {
@@ -52,239 +96,211 @@ static const char * mod_names[] =
    "~Video dump",
    "~Reversed video dump"
 };
-static unsigned bin_mode = MOD_PLAIN; /**< points to currently selected mode text mode */
 
-static bool __FASTCALL__ binSelectMode( void )
+bool BinMode::action_F2() /* select mode */
 {
-  unsigned nModes;
-  int i;
-  nModes = sizeof(mod_names)/sizeof(char *);
-  i = SelBoxA(const_cast<char**>(mod_names),nModes," Select binary mode: ",bin_mode);
-  if(i != -1)
-  {
-    bin_mode = i;
-    return true;
-  }
-  return false;
+    unsigned nModes;
+    int i;
+    nModes = sizeof(mod_names)/sizeof(char *);
+    i = SelBoxA(const_cast<char**>(mod_names),nModes," Select binary mode: ",bin_mode);
+    if(i != -1) {
+	bin_mode = i;
+	return true;
+    }
+    return false;
 }
 
-static unsigned __FASTCALL__ drawBinary( unsigned keycode,unsigned tshift )
+bool BinMode::action_F6() /* binDecVirtWidth */
 {
- static __filesize_t bmocpos = 0L;
- __filesize_t _index;
- __filesize_t limit,flen,cfp;
- int len;
- unsigned BWidth,_b_width,count;
- size_t j;
- HLInfo hli;
- tvioBuff it;
- char buffer[__TVIO_MAXSCREENWIDTH*2];
- t_vchar chars[__TVIO_MAXSCREENWIDTH];
- t_vchar oem_pg[__TVIO_MAXSCREENWIDTH];
- ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
- tAbsCoord width,height;
-
- it.chars=chars;
- it.oem_pg=oem_pg;
- it.attrs=attrs;
- cfp  = BMGetCurrFilePos();
- width = twGetClientWidth(MainWnd);
- BWidth = twGetClientWidth(MainWnd)-virtWidthCorr;
- height = twGetClientHeight(MainWnd);
- if(bin_mode==MOD_PLAIN) _b_width=1;
- else _b_width=2;
- if(cfp != bmocpos || keycode == KE_SUPERKEY || keycode == KE_JUSTFIND)
- {
-   bmocpos = cfp;
-   flen = BMGetFLength();
-   limit = flen - BWidth;
-   if(flen < (__filesize_t)BWidth) BWidth = (int)(limit = flen);
-   twFreezeWin(MainWnd);
-   for(j = 0;j < height;j++)
-   {
-     count=BWidth*_b_width;
-     _index = cfp + j*count;
-     len = _index < limit ? (int)count : _index < flen ? (int)(flen - _index) : 0;
-     if(len) { lastbyte = _index + len; BMReadBufferEx((any_t*)buffer,len,_index,BM_SEEK_SET); }
-     if(bin_mode!=MOD_PLAIN)
-     {
-	unsigned i,ii;
-	for(i=ii=0;i<BWidth;i++)
-	{
-	    chars[i]=buffer[ii++];
-	    attrs[i]=buffer[ii++];
-	}
-	memset(oem_pg,0,tvioWidth);
-	if(bin_mode==MOD_REVERSE)
-	{
-	    t_vchar *t;
-	    t=it.chars;
-	    it.chars=it.attrs;
-	    it.attrs=(ColorAttr*)t;
-	}
-	count=len/2;
-	memset(&it.chars[count],TWC_DEF_FILLER,tvioWidth-count);
-	memset(&it.attrs[count],browser_cset.main,tvioWidth-count);
-     }
-     else
-       memset(&buffer[len],TWC_DEF_FILLER,tvioWidth-len);
-     if(isHOnLine(_index,width))
-     {
-	hli.text = buffer;
-	HiLightSearch(MainWnd,_index,0,BWidth,j,&hli,HLS_NORMAL);
-     }
-     else
-     {
-	if(bin_mode==MOD_PLAIN)
-	    twDirectWrite(1,j + 1,buffer,width);
-	else
-	    twWriteBuffer(MainWnd,1,j + 1,&it,width);
-     }
-   }
-   twRefreshWin(MainWnd);
- }
- return tshift;
+    if(virtWidthCorr < tvioWidth-1) { virtWidthCorr++; return true; }
+    return false;
 }
 
-static void __FASTCALL__ HelpBin( void )
+bool BinMode::action_F7() /* binIncVirtWidth */
+{
+    if(virtWidthCorr) { virtWidthCorr--; return true; }
+    return false;
+}
+
+bool BinMode::action_F10() { return udnUserNames(); }
+
+bool BinMode::detect() { return true; }
+
+BinMode::e_flag BinMode::flags() const { return None; }
+
+unsigned BinMode::paint( unsigned keycode,unsigned tshift )
+{
+    static __filesize_t bmocpos = 0L;
+    __filesize_t _index;
+    __filesize_t limit,flen,cfp;
+    int len;
+    unsigned BWidth,_b_width,count;
+    size_t j;
+    HLInfo hli;
+    tvioBuff it;
+    char buffer[__TVIO_MAXSCREENWIDTH*2];
+    t_vchar chars[__TVIO_MAXSCREENWIDTH];
+    t_vchar oem_pg[__TVIO_MAXSCREENWIDTH];
+    ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
+    tAbsCoord width,height;
+
+    it.chars=chars;
+    it.oem_pg=oem_pg;
+    it.attrs=attrs;
+    cfp  = BMGetCurrFilePos();
+    width = twGetClientWidth(MainWnd);
+    BWidth = twGetClientWidth(MainWnd)-virtWidthCorr;
+    height = twGetClientHeight(MainWnd);
+    if(bin_mode==MOD_PLAIN) _b_width=1;
+    else _b_width=2;
+    if(cfp != bmocpos || keycode == KE_SUPERKEY || keycode == KE_JUSTFIND) {
+	bmocpos = cfp;
+	flen = BMGetFLength();
+	limit = flen - BWidth;
+	if(flen < (__filesize_t)BWidth) BWidth = (int)(limit = flen);
+	twFreezeWin(MainWnd);
+	for(j = 0;j < height;j++) {
+	    count=BWidth*_b_width;
+	    _index = cfp + j*count;
+	    len = _index < limit ? (int)count : _index < flen ? (int)(flen - _index) : 0;
+	    if(len) { lastbyte = _index + len; BMReadBufferEx((any_t*)buffer,len,_index,BM_SEEK_SET); }
+	    if(bin_mode!=MOD_PLAIN) {
+		unsigned i,ii;
+		for(i=ii=0;i<BWidth;i++) {
+		    chars[i]=buffer[ii++];
+		    attrs[i]=buffer[ii++];
+		}
+		::memset(oem_pg,0,tvioWidth);
+		if(bin_mode==MOD_REVERSE) {
+		    t_vchar *t;
+		    t=it.chars;
+		    it.chars=it.attrs;
+		    it.attrs=(ColorAttr*)t;
+		}
+		count=len/2;
+		::memset(&it.chars[count],TWC_DEF_FILLER,tvioWidth-count);
+		::memset(&it.attrs[count],browser_cset.main,tvioWidth-count);
+	    } else ::memset(&buffer[len],TWC_DEF_FILLER,tvioWidth-len);
+	    if(isHOnLine(_index,width)) {
+		hli.text = buffer;
+		HiLightSearch(MainWnd,_index,0,BWidth,j,&hli,HLS_NORMAL);
+	    } else {
+		if(bin_mode==MOD_PLAIN)
+		    twDirectWrite(1,j + 1,buffer,width);
+		else
+		    twWriteBuffer(MainWnd,1,j + 1,&it,width);
+	    }
+	}
+	twRefreshWin(MainWnd);
+    }
+    return tshift;
+}
+
+void BinMode::help() const
 {
    hlpDisplay(1000);
 }
 
-static unsigned long __FASTCALL__ binPrevPageSize( void ) { return (twGetClientWidth(MainWnd)-virtWidthCorr)*twGetClientHeight(MainWnd)*(bin_mode==MOD_PLAIN?1:2); }
-static unsigned long __FASTCALL__ binCurrPageSize( void ) { return (twGetClientWidth(MainWnd)-virtWidthCorr)*twGetClientHeight(MainWnd)*(bin_mode==MOD_PLAIN?1:2); }
-static unsigned long __FASTCALL__ binPrevLineWidth( void ) { return (twGetClientWidth(MainWnd)-virtWidthCorr)*(bin_mode==MOD_PLAIN?1:2); }
-static unsigned long __FASTCALL__ binCurrLineWidth( void ) { return (twGetClientWidth(MainWnd)-virtWidthCorr)*(bin_mode==MOD_PLAIN?1:2); }
-static const char *  __FASTCALL__ binMiscKeyName( void ) { return "Modify"; }
+unsigned long BinMode::prev_page_size() const { return (twGetClientWidth(MainWnd)-virtWidthCorr)*twGetClientHeight(MainWnd)*(bin_mode==MOD_PLAIN?1:2); }
+unsigned long BinMode::curr_page_size() const { return (twGetClientWidth(MainWnd)-virtWidthCorr)*twGetClientHeight(MainWnd)*(bin_mode==MOD_PLAIN?1:2); }
+unsigned long BinMode::prev_line_width() const{ return (twGetClientWidth(MainWnd)-virtWidthCorr)*(bin_mode==MOD_PLAIN?1:2); }
+unsigned long BinMode::curr_line_width() const{ return (twGetClientWidth(MainWnd)-virtWidthCorr)*(bin_mode==MOD_PLAIN?1:2); }
 
-static bool __FASTCALL__ binDetect( void ) { return true; }
+const char*   BinMode::misckey_name() const { return "Modify"; }
 
-static void save_video(unsigned char *buff,unsigned size)
+void BinMode::save_video(Opaque& _this,unsigned char *buff,unsigned size)
 {
-  BFile* bHandle;
-  const char *fname;
-  unsigned i;
-  fname = BMName();
-  bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
-  if(bHandle == &bNull)
-  {
-      err:
-      errnoMessageBox(WRITE_FAIL,NULL,errno);
-      return;
-  }
-  bHandle->seek(BMGetCurrFilePos(),BFile::Seek_Set);
-  if(bin_mode==MOD_REVERSE) bHandle->seek(1,BFile::Seek_Cur);
-  for(i=0;i<size;i++)
-  {
-    if(!bHandle->write_byte(buff[i])) goto err;
-    bHandle->seek(1,BFile::Seek_Cur);
-  }
-  delete bHandle;
-  BMReRead();
-}
-
-static void __FASTCALL__ EditBin( void )
-{
- TWindow *ewin;
- bool inited;
- if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,NULL); return; }
- ewin = WindowOpen(1,2,tvioWidth-virtWidthCorr,tvioHeight-1,TWS_CURSORABLE);
- twSetColorAttr(browser_cset.edit.main); twClearWin();
- drawEditPrompt();
- twUseWin(ewin);
- edit_x = edit_y = 0;
- if(bin_mode==MOD_PLAIN)
-    inited=editInitBuffs(tvioWidth-virtWidthCorr,NULL,0);
- else
- {
-    unsigned long flen,cfp;
-    unsigned i,size,msize = tvioWidth*tvioHeight;
-    unsigned char *buff = new unsigned char [msize*2];
-    if(buff)
-    {
-	flen = BMGetFLength();
-	cfp = BMGetCurrFilePos();
-	size = (unsigned)((unsigned long)msize > (flen-cfp) ? (flen-cfp) : msize);
-	BMReadBufferEx(buff,size*2,cfp,BM_SEEK_SET);
-	BMSeek(cfp,BM_SEEK_SET);
-	for(i=0;i<size;i++) buff[i]=bin_mode==MOD_BINARY?buff[i*2]:buff[i*2+1];
-	inited=editInitBuffs(tvioWidth-virtWidthCorr,buff,size);
-	delete buff;
+    BinMode& it = static_cast<BinMode&>(_this);
+    BFile* bHandle;
+    const char *fname;
+    unsigned i;
+    fname = BMName();
+    bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
+    if(bHandle == &bNull) {
+	err:
+	errnoMessageBox(WRITE_FAIL,NULL,errno);
+	return;
     }
-    else
-    {
-	MemOutBox("Editor initialization");
-	inited=false;
+    bHandle->seek(BMGetCurrFilePos(),BFile::Seek_Set);
+    if(it.bin_mode==MOD_REVERSE) bHandle->seek(1,BFile::Seek_Cur);
+    for(i=0;i<size;i++) {
+	if(!bHandle->write_byte(buff[i])) goto err;
+	bHandle->seek(1,BFile::Seek_Cur);
     }
- }
- if(inited)
- {
-   FullEdit(NULL,bin_mode==MOD_PLAIN?NULL:save_video);
-   editDestroyBuffs();
- }
- CloseWnd(ewin);
- PaintTitle();
+    delete bHandle;
+    BMReRead();
 }
 
-static void __FASTCALL__ binReadIni( hIniProfile *ini )
+void BinMode::misckey_action() /* EditBin */
 {
-  char tmps[10];
-  if(beye_context().is_valid_ini_args())
-  {
-    beye_context().read_profile_string(ini,"Beye","Browser","LastSubMode","0",tmps,sizeof(tmps));
-    bin_mode = (unsigned)strtoul(tmps,NULL,10);
-    if(bin_mode > MOD_MAXMODE) bin_mode = MOD_MAXMODE;
-    beye_context().read_profile_string(ini,"Beye","Browser","VirtWidthCorr","0",tmps,sizeof(tmps));
-    virtWidthCorr = (unsigned)strtoul(tmps,NULL,10);
-    if(virtWidthCorr>tvioWidth-1) virtWidthCorr=tvioWidth-1;
-  }
+    TWindow *ewin;
+    bool inited;
+    if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,NULL); return; }
+    ewin = WindowOpen(1,2,tvioWidth-virtWidthCorr,tvioHeight-1,TWS_CURSORABLE);
+    twSetColorAttr(browser_cset.edit.main); twClearWin();
+    drawEditPrompt();
+    twUseWin(ewin);
+    edit_x = edit_y = 0;
+    if(bin_mode==MOD_PLAIN) inited=editInitBuffs(tvioWidth-virtWidthCorr,NULL,0);
+    else {
+	unsigned long flen,cfp;
+	unsigned i,size,msize = tvioWidth*tvioHeight;
+	unsigned char *buff = new unsigned char [msize*2];
+	if(buff) {
+	    flen = BMGetFLength();
+	    cfp = BMGetCurrFilePos();
+	    size = (unsigned)((unsigned long)msize > (flen-cfp) ? (flen-cfp) : msize);
+	    BMReadBufferEx(buff,size*2,cfp,BM_SEEK_SET);
+	    BMSeek(cfp,BM_SEEK_SET);
+	    for(i=0;i<size;i++) buff[i]=bin_mode==MOD_BINARY?buff[i*2]:buff[i*2+1];
+	    inited=editInitBuffs(tvioWidth-virtWidthCorr,buff,size);
+	    delete buff;
+	} else {
+	    MemOutBox("Editor initialization");
+	    inited=false;
+	}
+    }
+    if(inited) {
+	FullEdit(NULL,*this,bin_mode==MOD_PLAIN?NULL:save_video);
+	editDestroyBuffs();
+    }
+    CloseWnd(ewin);
+    PaintTitle();
 }
 
-static void __FASTCALL__ binSaveIni( hIniProfile *ini )
+void BinMode::read_ini(hIniProfile *ini)
 {
-  char tmps[10];
-  /** Nullify LastSubMode */
-  sprintf(tmps,"%i",bin_mode);
-  beye_context().write_profile_string(ini,"Beye","Browser","LastSubMode",tmps);
-  sprintf(tmps,"%u",virtWidthCorr);
-  beye_context().write_profile_string(ini,"Beye","Browser","VirtWidthCorr",tmps);
+    BeyeContext& bctx = beye_context();
+    char tmps[10];
+    if(bctx.is_valid_ini_args()) {
+	bctx.read_profile_string(ini,"Beye","Browser","LastSubMode","0",tmps,sizeof(tmps));
+	bin_mode = (unsigned)::strtoul(tmps,NULL,10);
+	if(bin_mode > MOD_MAXMODE) bin_mode = MOD_MAXMODE;
+	bctx.read_profile_string(ini,"Beye","Browser","VirtWidthCorr","0",tmps,sizeof(tmps));
+	virtWidthCorr = (unsigned)::strtoul(tmps,NULL,10);
+	if(virtWidthCorr>tvioWidth-1) virtWidthCorr=tvioWidth-1;
+    }
 }
 
-static unsigned __FASTCALL__ binCharSize( void ) { return bin_mode==MOD_PLAIN?1:2; }
-
-static bool __FASTCALL__ binIncVirtWidth( void )
+void BinMode::save_ini(hIniProfile *ini)
 {
-  if(virtWidthCorr) { virtWidthCorr--; return true; }
-  return false;
+    BeyeContext& bctx = beye_context();
+    char tmps[10];
+    /** Nullify LastSubMode */
+    ::sprintf(tmps,"%i",bin_mode);
+    bctx.write_profile_string(ini,"Beye","Browser","LastSubMode",tmps);
+    ::sprintf(tmps,"%u",virtWidthCorr);
+    bctx.write_profile_string(ini,"Beye","Browser","VirtWidthCorr",tmps);
 }
 
-static bool __FASTCALL__ binDecVirtWidth( void )
-{
-  if(virtWidthCorr < tvioWidth-1) { virtWidthCorr++; return true; }
-  return false;
-}
+unsigned BinMode::get_symbol_size() const { return bin_mode==MOD_PLAIN?1:2; }
+unsigned BinMode::get_max_line_length() const { return twGetClientWidth(MainWnd); }
 
-extern REGISTRY_MODE binMode =
-{
-  "~Binary mode",
-  { NULL, "BinMod", NULL, NULL, NULL, NULL, "<<<   ", "   >>>", NULL, "UsrNam" },
-  { NULL, binSelectMode, NULL, NULL, NULL, NULL, binDecVirtWidth, binIncVirtWidth, NULL, udnUserNames },
-  binDetect,
-  __MF_NONE,
-  drawBinary,
-  NULL,
-  binCharSize,
-  binMiscKeyName,
-  EditBin,
-  binPrevPageSize,
-  binCurrPageSize,
-  binPrevLineWidth,
-  binCurrLineWidth,
-  HelpBin,
-  binReadIni,
-  binSaveIni,
-  NULL,
-  NULL,
-  NULL
+static Plugin* query_interface() { return new(zeromem) BinMode; }
+
+extern const Plugin_Info binMode = {
+    "~Binary mode",	/**< plugin name */
+    query_interface
 };
+
 } // namespace beye

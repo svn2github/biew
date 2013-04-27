@@ -35,6 +35,7 @@ using namespace beye;
 #include "ppc.h"
 
 namespace beye {
+static DisMode* parent;
 static char *outstr;
 
 static int ppcBitness=DAB_USE32;
@@ -70,7 +71,7 @@ static void ppc_Encode_args(char *ostr,uint32_t opcode,
 			unsigned long flags,
 			const ppc_arg *args) {
     __fileoff_t dig_off;
-    unsigned long dig_flg;
+    DisMode::e_disarg dig_flg;
     unsigned i,dig_sz;
     int use_ea=0;
     TabSpace(ostr,TAB_POS);
@@ -90,15 +91,15 @@ static void ppc_Encode_args(char *ostr,uint32_t opcode,
 	    case 'v': strcat(ostr,vprs[value&0x3F]); break;
 	    case '-': dig_off = ulShift+(args[i].off+7)/8;
 			dig_sz = (len+7)/8;
-			dig_flg =	len<9?  DISARG_CHAR:
-					len<17? DISARG_SHORT:
-						DISARG_LONG;
+			dig_flg =	len<9?  DisMode::Arg_Char:
+					len<17? DisMode::Arg_Short:
+						DisMode::Arg_Long;
 			break;
 	    case '+': dig_off = ulShift+(args[i].off+7)/8;
 			dig_sz = (len+7)/8;
-			dig_flg =	len<9?  DISARG_BYTE:
-					len<17? DISARG_WORD:
-						DISARG_DWORD;
+			dig_flg =	len<9?  DisMode::Arg_Byte:
+					len<17? DisMode::Arg_Word:
+						DisMode::Arg_DWord;
 			break;
 	    default: /* internal disassembler error */
 		break;
@@ -108,14 +109,14 @@ static void ppc_Encode_args(char *ostr,uint32_t opcode,
 		if(len>6) {
 		    int aa = PPC_GET_BITS(opcode,30,1);
 		    unsigned long distin = (value<<2) + (aa?0:ulShift);
-		    disAppendFAddr(ostr,dig_off,value,distin,
-				DISADR_NEAR32,0,dig_sz);
+		    parent->append_faddr(ostr,dig_off,value,distin,
+				DisMode::Near32,0,dig_sz);
 		}
 		else goto do_digs;
 	    }
 	    else {
 		do_digs:
-		disAppendDigits(ostr,dig_off,APREF_USE_TYPE,dig_sz,&opcode,dig_flg);
+		parent->append_digits(ostr,dig_off,APREF_USE_TYPE,dig_sz,&opcode,dig_flg);
 	    }
 	}
     }
@@ -1457,7 +1458,7 @@ static DisasmRet __FASTCALL__ ppcDisassembler(__filesize_t ulShift,
 	{
 		strcpy(dret.str,"db");
 		TabSpace(dret.str,TAB_POS);
-		disAppendDigits(dret.str,ulShift,APREF_USE_TYPE,4,&opcode,DISARG_DWORD);
+		parent->append_digits(dret.str,ulShift,APREF_USE_TYPE,4,&opcode,DisMode::Arg_DWord);
 	}
 	dret.pro_clone=0;
     }
@@ -1626,8 +1627,9 @@ static bool __FASTCALL__ ppcSelectDialect( void )
   return false;
 }
 
-static void      __FASTCALL__ ppcInit( void )
+static void      __FASTCALL__ ppcInit( DisMode& _parent )
 {
+  parent = &_parent;
   outstr = new char [1000];
   if(!outstr)
   {

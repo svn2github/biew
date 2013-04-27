@@ -86,10 +86,10 @@ extern const REGISTRY_BIN lmfTable;
 extern const REGISTRY_BIN mzTable;
 extern const REGISTRY_BIN dossysTable;
 
-extern REGISTRY_MODE binMode;
-extern REGISTRY_MODE textMode;
-extern REGISTRY_MODE hexMode;
-extern REGISTRY_MODE disMode;
+extern const Plugin_Info binMode;
+extern const Plugin_Info textMode;
+extern const Plugin_Info hexMode;
+extern const Plugin_Info disMode;
 
 extern char last_skin_error[];
 static volatile char antiviral_hole1[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
@@ -114,42 +114,39 @@ BeyeContext& beye_context() { return *BeyeCtx; }
 
 bool BeyeContext::select_mode()
 {
-  size_t i,nModes = modes.size();
-  const char *modeName[nModes];
-  int retval;
+    size_t i,nModes = modes.size();
+    const char *modeName[nModes];
+    int retval;
 
-  for(i = 0;i < nModes;i++) modeName[i] = modes[i]->name;
-  retval = SelBoxA(const_cast<char**>(modeName),nModes," Select translation mode: ",defMainModeSel);
-  if(retval != -1)
-  {
-    if(activeMode->term) activeMode->term();
-    activeMode = modes[retval];
-    if(activeMode->init) activeMode->init();
-    defMainModeSel = retval;
-    return true;
-  }
-  return false;
+    for(i = 0;i < nModes;i++) modeName[i] = modes[i]->name;
+    retval = SelBoxA(const_cast<char**>(modeName),nModes," Select translation mode: ",defMainModeSel);
+    if(retval != -1) {
+	defMainModeSel = retval;
+	delete activeMode;
+	activeMode = modes[defMainModeSel]->query_interface();
+	return true;
+    }
+    return false;
 }
 
 void BeyeContext::init_modes( hIniProfile *ini )
 {
-  if(activeMode->init) activeMode->init();
-  if(activeMode->read_ini) activeMode->read_ini(ini);
+    if(!activeMode) activeMode = modes[defMainModeSel]->query_interface();
+    activeMode->read_ini(ini);
 }
 
 void BeyeContext::term_modes( void )
 {
-  if(activeMode->term) activeMode->term();
+    delete activeMode; activeMode = NULL;
 }
 
 void BeyeContext::quick_select_mode()
 {
-  size_t nModes = modes.size();
-  if(defMainModeSel < nModes - 1) defMainModeSel++;
-  else                            defMainModeSel = 0;
-  if(activeMode->term) activeMode->term();
-  activeMode = modes[defMainModeSel];
-  if(activeMode->init) activeMode->init();
+    size_t nModes = modes.size();
+    if(defMainModeSel < nModes - 1) defMainModeSel++;
+    else                            defMainModeSel = 0;
+    delete activeMode;
+    activeMode = modes[defMainModeSel]->query_interface();
 }
 
 void BeyeContext::make_shortname()
@@ -194,25 +191,25 @@ __filesize_t IsNewExe()
 
 void BeyeContext::auto_detect_mode()
 {
-  size_t i,n = modes.size();
-  for(i = 0;i < n;i++)
-  {
-    if(modes[i]->detect())
-    {
-      defMainModeSel = i;
-      break;
+    size_t i,n = modes.size();
+    Plugin* mode;
+    for(i = 0;i < n;i++) {
+	mode = modes[i]->query_interface();
+	if(mode->detect()) {
+	    defMainModeSel = i;
+	    break;
+	}
+	delete mode; mode = NULL;
     }
-  }
-  activeMode = modes[i];
-  BMSeek(0,BM_SEEK_SET);
+    if(mode) delete mode;
+    activeMode = modes[defMainModeSel]->query_interface();
+    BMSeek(0,BM_SEEK_SET);
 }
 
-static const struct tagbeyeArg
-{
-  const char key[4];
-  const char *prompt;
-}beyeArg[] =
-{
+static const struct tagbeyeArg {
+    const char key[4];
+    const char *prompt;
+}beyeArg[] = {
   { "-a", "autodetect mode (default)" },
   { "-b", "view file in binary mode" },
   { "-d", "view file in disassembler mode" },
@@ -266,43 +263,29 @@ void BeyeContext::parse_cmdline( const std::vector<std::string>& ArgVector )
 
 bool BeyeContext::LoadInfo( )
 {
-   beye_context().make_shortname();
-   if(new_file_size != FILESIZE_MAX)
-   {
-       bhandle_t handle;
-       if(__IsFileExists(beye_context().ArgVector1.c_str()) == false) handle = __OsCreate(beye_context().ArgVector1.c_str());
-       else
-       {
-	 handle = __OsOpen(beye_context().ArgVector1.c_str(),FO_READWRITE | SO_DENYNONE);
-	 if(handle == NULL_HANDLE) handle = __OsOpen(beye_context().ArgVector1.c_str(),FO_READWRITE | SO_COMPAT);
-       }
-       if(handle != NULL_HANDLE)
-       {
-	   __OsChSize(handle,new_file_size);
-	   __OsClose(handle);
-       }
-       else
-       {
-	  errnoMessageBox(OPEN_FAIL,NULL,errno);
-	  return false;
-       }
-   }
-   if(BMOpen(beye_context().ArgVector1) != 0) return false;
-   if(beye_mode != UINT_MAX)
-   {
-     defMainModeSel = beye_mode;
-     activeMode = modes[defMainModeSel];
-   }
-   else
-   {
-     if(LastMode >= modes.size() || !beye_context().is_valid_ini_args()) auto_detect_mode();
-     else
-     {
-       defMainModeSel = LastMode;
-       activeMode = modes[defMainModeSel];
-     }
-   }
- return true;
+    make_shortname();
+    if(new_file_size != FILESIZE_MAX) {
+	bhandle_t handle;
+	if(__IsFileExists(beye_context().ArgVector1.c_str()) == false) handle = __OsCreate(beye_context().ArgVector1.c_str());
+	else {
+	    handle = __OsOpen(beye_context().ArgVector1.c_str(),FO_READWRITE | SO_DENYNONE);
+	    if(handle == NULL_HANDLE) handle = __OsOpen(ArgVector1.c_str(),FO_READWRITE | SO_COMPAT);
+	}
+	if(handle != NULL_HANDLE) {
+	    __OsChSize(handle,new_file_size);
+	    __OsClose(handle);
+	} else {
+	    errnoMessageBox(OPEN_FAIL,NULL,errno);
+	    return false;
+        }
+    }
+    if(BMOpen(ArgVector1) != 0) return false;
+    if(beye_mode != UINT_MAX) defMainModeSel = beye_mode;
+    else {
+	if(LastMode >= modes.size() || !is_valid_ini_args()) auto_detect_mode();
+	else defMainModeSel = LastMode;
+    }
+    return true;
 }
 
 void BeyeContext::detect_binfmt()
@@ -455,7 +438,7 @@ void BeyeContext::save_ini_info() const
   strcpy(tmp,iniUseExtProgs ? "yes" : "no");
   write_profile_string(ini,"Beye","Setup","UseExternalProgs",tmp);
   write_profile_string(ini,"Beye","Setup","Codepage",codepage.c_str());
-  if(activeMode->save_ini) activeMode->save_ini(ini);
+  activeMode->save_ini(ini);
   udnTerm(ini);
   iniCloseFile(ini);
 }
@@ -582,7 +565,7 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  PaintTitle();
  if(!BeyeCtx->is_valid_ini_args() || BeyeCtx->LastOffset > BMGetFLength()) BeyeCtx->LastOffset = 0;
  twShowWin(MainWnd);
- MainLoop();
+ BeyeCtx->main_loop();
  BeyeCtx->LastOffset = BMGetCurrFilePos();
  BeyeCtx->save_ini_info();
  delete sysinfo;
@@ -597,62 +580,51 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
 bool BeyeContext::new_source()
 {
   int i;
-  bool ret;
-  unsigned j,freq;
-  static int prev_file;
-  char ** nlsListFile;
-  size_t sz=ListFile.size();
-  nlsListFile = new char*[sz];
-  if(nlsListFile)
-  {
-    for(j = 0;j < sz;j++)
-    {
-      nlsListFile[j] = new char [ListFile[j].length()+1];
-      if(!nlsListFile[j]) break;
+    bool ret;
+    unsigned j,freq;
+    static int prev_file;
+    char ** nlsListFile;
+    size_t sz=ListFile.size();
+    nlsListFile = new char*[sz];
+    if(nlsListFile) {
+	for(j = 0;j < sz;j++) {
+	    nlsListFile[j] = new char [ListFile[j].length()+1];
+	    if(!nlsListFile[j]) break;
+	}
+    } else { MemOutBox("Initializing List of File\n"); return 0; }
+    for(freq = 0;freq < j;freq++) {
+	unsigned ls;
+	ls = ListFile[freq].length();
+	::memcpy(nlsListFile[freq],ListFile[freq].c_str(),ls+1);
+	__nls_CmdlineToOem((unsigned char *)nlsListFile[freq],ls);
     }
-  }
-  else { MemOutBox("Initializing List of File\n"); return 0; }
-  for(freq = 0;freq < j;freq++)
-  {
-    unsigned ls;
-    ls = ListFile[freq].length();
-    memcpy(nlsListFile[freq],ListFile[freq].c_str(),ls+1);
-    __nls_CmdlineToOem((unsigned char *)nlsListFile[freq],ls);
-  }
-  i = SelBoxA(nlsListFile,j," Select new file: ",prev_file);
-  ret = 0;
-  for(freq = 0;freq < j;freq++) delete nlsListFile[freq];
-  delete nlsListFile;
-  if(i != -1)
-  {
-    if(iniPreserveTime && ftim_ok) __OsSetFTime(ArgVector1.c_str(),&ftim);
-    BMClose();
-    ftim_ok = __OsGetFTime(ListFile[i].c_str(),&ftim);
-    if(BMOpen(ListFile[i]) == 0)
-    {
-      ArgVector1 = ListFile[i];
-      if(detectedFormat->destroy) detectedFormat->destroy();
-      if(activeMode->term) activeMode->term();
-      make_shortname();
-      detect_binfmt();
-      if(activeMode->init) activeMode->init();
-      ret = true;
+    i = SelBoxA(nlsListFile,j," Select new file: ",prev_file);
+    ret = 0;
+    for(freq = 0;freq < j;freq++) delete nlsListFile[freq];
+    delete nlsListFile;
+    if(i != -1) {
+	if(iniPreserveTime && ftim_ok) __OsSetFTime(ArgVector1.c_str(),&ftim);
+	BMClose();
+	ftim_ok = __OsGetFTime(ListFile[i].c_str(),&ftim);
+	if(BMOpen(ListFile[i]) == 0) {
+	    ArgVector1 = ListFile[i];
+	    if(detectedFormat->destroy) detectedFormat->destroy();
+	    delete activeMode;
+	    make_shortname();
+	    detect_binfmt();
+	    activeMode=modes[defMainModeSel]->query_interface();
+	    ret = true;
+	} else {
+	    if(BMOpen(ArgVector1) != 0) ::exit(EXIT_FAILURE);
+	    if(detectedFormat->destroy) detectedFormat->destroy();
+	    delete activeMode;
+	    make_shortname();
+	    detect_binfmt();
+	    activeMode=modes[defMainModeSel]->query_interface();
+	    ret = false;
+	}
     }
-    else
-    {
-       if(BMOpen(ArgVector1) != 0)
-       {
-	 exit(EXIT_FAILURE);
-       }
-       if(detectedFormat->destroy) detectedFormat->destroy();
-       if(activeMode->term) activeMode->term();
-       make_shortname();
-       detect_binfmt();
-       if(activeMode->init) activeMode->init();
-       ret = false;
-    }
-  }
-  return ret;
+    return ret;
 }
 
 unsigned BeyeContext::read_profile_string(hIniProfile *ini,
@@ -693,7 +665,7 @@ BeyeContext::BeyeContext(const std::vector<std::string>& _argv, const std::map<s
 	    envm(_envm),
 	    UseIniFile(true),
 	    beye_mode(UINT_MAX),
-	    defMainModeSel(0),
+	    defMainModeSel(1),
 	    new_file_size(FILESIZE_MAX)
 {
     modes.push_back(&textMode);
@@ -737,8 +709,8 @@ BeyeContext::BeyeContext(const std::vector<std::string>& _argv, const std::map<s
     LastOpenFileName = new char[4096];
     _shortname = new char[SHORT_PATH_LEN + 1];
     LastMode = modes.size()+10;
-    activeMode = modes[1];
 }
+
 BeyeContext::~BeyeContext() {
     delete LastOpenFileName;
     delete _shortname;

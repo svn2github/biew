@@ -39,6 +39,7 @@ namespace beye {
 #define _(STR)     STR
 #define _MAX(A,B)  ( (A) > (B) ? (A) : (B) )
 
+static DisMode* parent;
 struct avr_opcodes_s
 {
   const char *name;
@@ -534,10 +535,12 @@ static char __FASTCALL__ AVRGetClone( unsigned long clone )
   return ' ';
 }
 
-static void __FASTCALL__ AVRInit( void )
+static void __FASTCALL__ AVRInit( DisMode& _parent )
 {
   const struct avr_opcodes_s *opcode;
   unsigned int nopcodes;
+
+  parent = &_parent;
 
   nopcodes = sizeof (avr_opcodes) / sizeof (struct avr_opcodes_s);
   avr_bin_masks = (unsigned int *)mp_malloc(nopcodes * sizeof (unsigned int));

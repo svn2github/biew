@@ -33,6 +33,7 @@ using namespace beye;
 #include "reg_form.h"
 
 namespace beye {
+extern DisMode* ix86_parent;
 #define MODRM_REG(X) (((X)&0x38)>>3)
 #define MODRM_COP(X) MODRM_REG(X)
 #define MODRM_MOD(X) (((X)&0xC0)>>6)
@@ -101,23 +102,23 @@ static const char *get_VEX_reg(ix86Param* DisP)
 
 static char * __NEAR__ __FASTCALL__ GetDigitsApp(unsigned char loc_off,
 						 ix86Param *DisP,
-						 char codelen,int type)
+						 char codelen,DisMode::e_disarg type)
 {
   ix86_appbuffer[0] = 0;
   if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
-    disAppendDigits(ix86_appbuffer,DisP->CodeAddress + loc_off,
+    ix86_parent->append_digits(ix86_appbuffer,DisP->CodeAddress + loc_off,
 		    APREF_USE_TYPE,codelen,&DisP->RealCmd[loc_off],type);
   return ix86_appbuffer;
 }
 
-#define Get2DigitApp(loc_off,DisP)   GetDigitsApp(loc_off,DisP,1,DISARG_BYTE)
-#define Get2SignDigApp(loc_off,DisP) GetDigitsApp(loc_off,DisP,1,DISARG_CHAR)
-#define Get4DigitApp(loc_off,DisP)   GetDigitsApp(loc_off,DisP,2,DISARG_WORD)
-#define Get4SignDigApp(loc_off,DisP) GetDigitsApp(loc_off,DisP,2,DISARG_SHORT)
-#define Get8DigitApp(loc_off,DisP)   GetDigitsApp(loc_off,DisP,4,DISARG_DWORD)
-#define Get8SignDigApp(loc_off,DisP) GetDigitsApp(loc_off,DisP,4,DISARG_LONG)
-#define Get16DigitApp(loc_off,DisP)   GetDigitsApp(loc_off,DisP,8,DISARG_QWORD)
-#define Get16SignDigApp(loc_off,DisP) GetDigitsApp(loc_off,DisP,8,DISARG_LLONG)
+inline char* Get2DigitApp(unsigned char loc_off,ix86Param* DisP) { return GetDigitsApp(loc_off,DisP,1,DisMode::Arg_Byte); }
+inline char* Get2SignDigApp(unsigned char loc_off,ix86Param* DisP) { return GetDigitsApp(loc_off,DisP,1,DisMode::Arg_Char); }
+inline char* Get4DigitApp(unsigned char loc_off,ix86Param* DisP)   { return GetDigitsApp(loc_off,DisP,2,DisMode::Arg_Word); }
+inline char* Get4SignDigApp(unsigned char loc_off,ix86Param* DisP) { return GetDigitsApp(loc_off,DisP,2,DisMode::Arg_Short); }
+inline char* Get8DigitApp(unsigned char loc_off,ix86Param* DisP)   { return GetDigitsApp(loc_off,DisP,4,DisMode::Arg_DWord); }
+inline char* Get8SignDigApp(unsigned char loc_off,ix86Param* DisP) { return GetDigitsApp(loc_off,DisP,4,DisMode::Arg_Long); }
+inline char* Get16DigitApp(unsigned char loc_off,ix86Param* DisP)   { return GetDigitsApp(loc_off,DisP,8,DisMode::Arg_QWord); }
+inline char* Get16SignDigApp(unsigned char loc_off,ix86Param* DisP) { return GetDigitsApp(loc_off,DisP,8,DisMode::Arg_LLong); }
 static char * __NEAR__ __FASTCALL__ Get2SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign)
 {
   char *ptr = ix86_apistr;
@@ -125,7 +126,7 @@ static char * __NEAR__ __FASTCALL__ Get2SquareDig(unsigned char loc_off,ix86Para
   *ptr = 0;
   if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
   {
-    rets = GetDigitsApp(loc_off,DisP,1,as_sign ? DISARG_CHAR : DISARG_BYTE);
+    rets = GetDigitsApp(loc_off,DisP,1,as_sign ? DisMode::Arg_Char : DisMode::Arg_Byte);
     if(!(rets[0] == '+' || rets[0] == '-')) *ptr++ = '+';
     strcpy(ptr,rets);
   }
@@ -136,12 +137,12 @@ static char * __NEAR__ __FASTCALL__ Get4SquareDig(unsigned char loc_off,ix86Para
 {
   char *ptr = ix86_apistr;
   char *rets;
-  unsigned type;
+  DisMode::e_disarg type;
   *ptr = 0;
   if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
   {
-    type = as_sign ? DISARG_SHORT : DISARG_WORD;
-    type |= is_disponly ? DISARG_DISP : DISARG_IDXDISP;
+    type = as_sign ? DisMode::Arg_Short : DisMode::Arg_Word;
+    type |= is_disponly ? DisMode::Arg_Disp : DisMode::Arg_IdxDisp;
     rets = GetDigitsApp(loc_off,DisP,2,type);
     if(!(rets[0] == '+' || rets[0] == '-')) *ptr++ = '+';
     strcpy(ptr,rets);
@@ -153,13 +154,13 @@ static char * __NEAR__ __FASTCALL__ Get8SquareDig(unsigned char loc_off,ix86Para
 {
   char *ptr = ix86_apistr;
   char *rets;
-  unsigned type;
+  DisMode::e_disarg type;
   *ptr = 0;
   if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
   {
-    type = as_sign ? DISARG_LONG : DISARG_DWORD;
-    type |= is_disponly ? DISARG_DISP : DISARG_IDXDISP;
-    if(as_rip) type |= DISARG_RIP;
+    type = as_sign ? DisMode::Arg_Long : DisMode::Arg_DWord;
+    type |= is_disponly ? DisMode::Arg_Disp : DisMode::Arg_IdxDisp;
+    if(as_rip) type |= DisMode::Arg_Rip;
     rets = GetDigitsApp(loc_off,DisP,4,type);
     if(!(rets[0] == '+' || rets[0] == '-')) *ptr++ = '+';
     strcpy(ptr,rets);
@@ -171,12 +172,12 @@ static char * __NEAR__ __FASTCALL__ Get16SquareDig(unsigned char loc_off,ix86Par
 {
   char *ptr = ix86_apistr;
   char *rets;
-  unsigned type;
+  DisMode::e_disarg type;
   *ptr = 0;
   if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
   {
-    type = as_sign ? DISARG_LLONG : DISARG_QWORD;
-    type |= is_disponly ? DISARG_DISP : DISARG_IDXDISP;
+    type = as_sign ? DisMode::Arg_LLong : DisMode::Arg_QWord;
+    type |= is_disponly ? DisMode::Arg_Disp : DisMode::Arg_IdxDisp;
     rets = GetDigitsApp(loc_off,DisP,8,type);
     if(!(rets[0] == '+' || rets[0] == '-')) *ptr++ = '+';
     strcpy(ptr,rets);
@@ -220,23 +221,23 @@ void __FASTCALL__ ix86_ArgGS(char *str,ix86Param *param)
   strcat(str,"gs");
 }
 
-
 static char * __FASTCALL__ ix86_GetDigitTile(ix86Param* DisP,char wrd,char sgn,unsigned char loc_off)
 {
-  int cl,type;
+  int cl;
+  DisMode::e_disarg type;
   int do_64;
   do_64 = 0;
   if(x86_Bitness == DAB_USE64 && wrd == -1) do_64 = 1; /* special case for */
   cl = do_64 ? 8 : wrd ? ( USE_WIDE_DATA ? 4 : 2 ) : 1;
   if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
   {
-    if(do_64) type = sgn ? DISARG_LLONG : DISARG_QWORD;
+    if(do_64) type = sgn ? DisMode::Arg_LLong : DisMode::Arg_QWord;
     else
-    type = sgn ? wrd ? ( USE_WIDE_DATA ? DISARG_LONG : DISARG_SHORT ) : DISARG_CHAR:
-		 wrd ? ( USE_WIDE_DATA ? DISARG_DWORD : DISARG_WORD ) : DISARG_BYTE;
-    type |= DISARG_IMM;
+    type = sgn ? wrd ? ( USE_WIDE_DATA ? DisMode::Arg_Long : DisMode::Arg_Short ) : DisMode::Arg_Char:
+		 wrd ? ( USE_WIDE_DATA ? DisMode::Arg_DWord : DisMode::Arg_Word ) : DisMode::Arg_Byte;
+    type |= DisMode::Arg_Imm;
     ix86_dtile[0] = 0;
-    disAppendDigits(ix86_dtile,
+    ix86_parent->append_digits(ix86_dtile,
 		    DisP->CodeAddress + loc_off,
 		    APREF_USE_TYPE,cl,&DisP->RealCmd[loc_off],type);
   }
@@ -257,15 +258,16 @@ void __FASTCALL__ arg_segoff(char * str,ix86Param *DisP)
   }
   DisP->codelen += USE_WIDE_DATA ? 6 : 4;
   if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
-    disAppendFAddr(str,DisP->CodeAddress + 1,off,newpos,
-		   USE_WIDE_DATA ? DISADR_FAR32 : DISADR_FAR16,seg,DisP->codelen-1);
+    ix86_parent->append_faddr(str,DisP->CodeAddress + 1,off,newpos,
+		   USE_WIDE_DATA ? DisMode::Far32 : DisMode::Far16,seg,DisP->codelen-1);
 }
 
 void __FASTCALL__ arg_offset(char * str,ix86Param *DisP)
 {
   long lshift = 0L;
   unsigned long newpos;
-  unsigned modifier,off8;
+  unsigned off8;
+  DisMode::e_disaddr modifier;
   off8 = (DisP->insn_flags&IMM_BYTE)?1:0;
   if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
     lshift =	off8 ? (long)(*((int8_t  *)(&DisP->RealCmd[1]))):
@@ -284,12 +286,12 @@ the 8-bit or 32-bit displacement value to 64 bits before adding it to the RIP.
 #endif
   {
     DisP->codelen += off8 ? 1 : USE_WIDE_DATA ? 4 : 2;
-    modifier = USE_WIDE_DATA ? off8 ? DISARG_SHORT : DISADR_NEAR32 : DISADR_NEAR16;
+    modifier = USE_WIDE_DATA ? off8 ? DisMode::Short : DisMode::Near32 : DisMode::Near16;
   }
   if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
   {
     newpos = DisP->CodeAddress + lshift + DisP->codelen;
-    disAppendFAddr(str,DisP->CodeAddress + 1,lshift,newpos,modifier,0,DisP->codelen);
+    ix86_parent->append_faddr(str,DisP->CodeAddress + 1,lshift,newpos,modifier,0,DisP->codelen);
   }
 }
 
@@ -852,16 +854,16 @@ void __FASTCALL__ arg_imm(char *str,ix86Param *DisP)
 void __FASTCALL__ arg_imm8(char *str,ix86Param *DisP)
 {
   if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
-    disAppendDigits(str,DisP->CodeAddress + DisP->codelen,
-		 APREF_USE_TYPE,1,&DisP->RealCmd[DisP->codelen],DISARG_BYTE);
+    ix86_parent->append_digits(str,DisP->CodeAddress + DisP->codelen,
+		 APREF_USE_TYPE,1,&DisP->RealCmd[DisP->codelen],DisMode::Arg_Byte);
   DisP->codelen++;
 }
 
 void __FASTCALL__ arg_imm16(char *str,ix86Param *DisP)
 {
   if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
-    disAppendDigits(str,DisP->CodeAddress + DisP->codelen,
-		 APREF_USE_TYPE,2,&DisP->RealCmd[DisP->codelen],DISARG_WORD | DISARG_IMM);
+    ix86_parent->append_digits(str,DisP->CodeAddress + DisP->codelen,
+		 APREF_USE_TYPE,2,&DisP->RealCmd[DisP->codelen],DisMode::Arg_Word | DisMode::Arg_Imm);
   DisP->codelen+=2;
 }
 
@@ -987,7 +989,7 @@ void __FASTCALL__ ix86_ArgGrp2(char *str,ix86Param *DisP)
    unsigned char w = DisP->RealCmd[0] & 0x01;
    unsigned char wrd = cop & 0x01;
    unsigned sizptr;
-   unsigned oldDisNeedRef;
+   DisMode::e_ref oldDisNeedRef;
    unsigned char REX = DisP->REX;
    DisP->codelen++;
    strcpy(str,ix86_Gr2Names[cop]);
@@ -995,7 +997,7 @@ void __FASTCALL__ ix86_ArgGrp2(char *str,ix86Param *DisP)
       Added by "Kostya Nosov" <k-nosov@yandex.ru>:
       make NEEDREF_ALL for indirect "jmp" and "call"
    */
-   oldDisNeedRef = disNeedRef;
+   oldDisNeedRef = ix86_parent->disNeedRef;
 /*
    if(code2 >= 2 && code2 <= 5 && disNeedRef != NEEDREF_NONE)
 					     disNeedRef = NEEDREF_ALL;
@@ -1013,7 +1015,7 @@ void __FASTCALL__ ix86_ArgGrp2(char *str,ix86Param *DisP)
      ix86_setModifier(str,ix86_sizes[sizptr]);
      strcat(str,ix86_getModRM(true,mod,rm,DisP));
    }
-   disNeedRef = oldDisNeedRef;
+   ix86_parent->disNeedRef = oldDisNeedRef;
    DisP->REX = REX;
 }
 
@@ -1624,7 +1626,7 @@ void   __FASTCALL__ ix86_ArgFsGsBaseGrp(char *str,ix86Param *DisP)
 {
     unsigned char rm = MODRM_RM(DisP->RealCmd[1]);
     unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
-    unsigned char mod = MODRM_MOD(DisP->RealCmd[1]);
+//    unsigned char mod = MODRM_MOD(DisP->RealCmd[1]);
     bool brex,wrex;
     strcpy(str,ix86_FsGsBaseNames[cop]);
     TabSpace(str,TAB_POS);
