@@ -20,9 +20,9 @@
 #ifndef __SYS_DEP_H
 #include "_sys_dep.h"
 #endif
-#include "plugins/disasm.h"
 
 namespace beye {
+    class DisMode;
     extern char codeguid_image[];
 
     void              __FASTCALL__ GidResetGoAddress( int keycode );

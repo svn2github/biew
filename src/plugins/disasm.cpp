@@ -59,22 +59,19 @@ namespace beye {
     extern const REGISTRY_DISASM PPC_Disasm;
     extern const REGISTRY_DISASM Java_Disasm;
 
-    static const REGISTRY_DISASM *mainDisasmTable[] = {
-	&Null_Disasm,
-	&ix86_Disasm,
-	&Java_Disasm,
-	&AVR_Disasm,
-	&ARM_Disasm,
-	&PPC_Disasm
-    };
-
 DisMode::DisMode()
 	:DefDisasmSel(__DEFAULT_DISASM)
 	,HiLight(1)
 	,DisasmPrepareMode(false)
 {
-    unsigned i;
+    size_t i,sz;
     unsigned def_platform;
+    list.push_back(&Null_Disasm);
+    list.push_back(&ix86_Disasm);
+    list.push_back(&Java_Disasm);
+    list.push_back(&AVR_Disasm);
+    list.push_back(&ARM_Disasm);
+    list.push_back(&PPC_Disasm);
     CurrStrLenBuff = new unsigned char [tvioHeight];
     PrevStrLenAddr = new unsigned long [tvioHeight];
     dis_comments   = new char [Comm_Size];
@@ -85,11 +82,12 @@ DisMode::DisMode()
     }
     def_platform = DISASM_DATA;
     if(beye_context().active_format()->query_platform) def_platform = beye_context().active_format()->query_platform();
-    activeDisasm = mainDisasmTable[0];
+    activeDisasm = list[0];
     DefDisasmSel = DISASM_DATA;
-    for(i=0;i<sizeof(mainDisasmTable)/sizeof(REGISTRY_DISASM *);i++) {
-	if(mainDisasmTable[i]->type == def_platform) {
-	    activeDisasm=mainDisasmTable[i];
+    sz=list.size();
+    for(i=0;i<sz;i++) {
+	if(list[i]->type == def_platform) {
+	    activeDisasm=list[i];
 	    DefDisasmSel = def_platform;
 	    break;
 	}
@@ -113,7 +111,7 @@ DisMode::e_flag DisMode::flags() const { return UseCodeGuide | Disasm | Has_Sear
 
 static const char* txt[] = { "", "Disasm", "", "", "", "AResol", "PanMod", "ResRef", "HiLght", "UsrNam" };
 const char* DisMode::prompt(unsigned idx) const {
-    if(activeDisasm && idx<5) {
+    if(activeDisasm && idx!=1 && idx<5) {
 	if(!idx) return activeDisasm->prompt[idx];
 	return activeDisasm->prompt[idx-1];
     }
@@ -122,16 +120,15 @@ const char* DisMode::prompt(unsigned idx) const {
 
 bool DisMode::action_F2() /* disSelect_Disasm */
 {
-    const char *modeName[sizeof(mainDisasmTable)/sizeof(REGISTRY_DISASM *)];
-    size_t i,nModes;
+    size_t i,nModes=list.size();
+    const char *modeName[nModes];
     int retval;
 
-    nModes = sizeof(mainDisasmTable)/sizeof(REGISTRY_DISASM *);
-    for(i = 0;i < nModes;i++) modeName[i] = mainDisasmTable[i]->name;
+    for(i = 0;i < nModes;i++) modeName[i] = list[i]->name;
     retval = SelBoxA(const_cast<char**>(modeName),nModes," Select disassembler: ",DefDisasmSel);
     if(retval != -1) {
 	if(activeDisasm->term) activeDisasm->term();
-	activeDisasm = mainDisasmTable[retval];
+	activeDisasm = list[retval];
 	DefDisasmSel = retval;
 	accept_actions();
 	return true;
@@ -679,7 +676,7 @@ void DisMode::read_ini(hIniProfile *ini)
     if(bctx.is_valid_ini_args()) {
 	bctx.read_profile_string(ini,"Beye","Browser","LastSubMode","0",tmps,sizeof(tmps));
 	DefDisasmSel = (int)::strtoul(tmps,NULL,10);
-	if(DefDisasmSel >= sizeof(mainDisasmTable)/sizeof(REGISTRY_DISASM *)) DefDisasmSel = 0;
+	if(DefDisasmSel >= list.size()) DefDisasmSel = 0;
 	hexAddressResolv=ReadIniAResolv(ini);
 	bctx.read_profile_string(ini,"Beye","Browser","SubSubMode7","0",tmps,sizeof(tmps));
 	disPanelMode = e_panel((int)::strtoul(tmps,NULL,10));
@@ -690,7 +687,7 @@ void DisMode::read_ini(hIniProfile *ini)
 	bctx.read_profile_string(ini,"Beye","Browser","SubSubMode9","0",tmps,sizeof(tmps));
 	HiLight = (int)strtoul(tmps,NULL,10);
 	if(HiLight > 2) HiLight = 2;
-	activeDisasm = mainDisasmTable[DefDisasmSel];
+	activeDisasm = list[DefDisasmSel];
 	accept_actions();
 	if(activeDisasm->read_ini) activeDisasm->read_ini(ini);
     }

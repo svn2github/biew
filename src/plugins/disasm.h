@@ -17,6 +17,8 @@
 #ifndef __DISASM_H
 #define __DISASM_H
 
+#include <vector>
+
 #ifndef __COLORSET__H
 #include "colorset.h"
 #endif
@@ -216,6 +218,7 @@ struct REGISTRY_DISASM;
 	    int				disMaxCodeLen;
 
 	    bool			DisasmPrepareMode;
+	    std::vector<const REGISTRY_DISASM *> list;
     };
     inline DisMode::e_disarg operator~(DisMode::e_disarg a) { return static_cast<DisMode::e_disarg>(~static_cast<unsigned>(a)); }
     inline DisMode::e_disarg operator|(DisMode::e_disarg a, DisMode::e_disarg b) { return static_cast<DisMode::e_disarg>(static_cast<unsigned>(a)|static_cast<unsigned>(b)); }

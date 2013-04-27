@@ -33,6 +33,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/twin.h"
 #include "libbeye/kbd_code.h"
+#include "plugins/disasm.h"
 
 namespace beye {
 static const DisMode* parent;
