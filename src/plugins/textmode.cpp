@@ -565,14 +565,14 @@ static ColorAttr __NEAR__ __FASTCALL__ hlGetCtx(long off,int *is_valid, long *en
     return 0;
 }
 
-extern REGISTRY_NLS RussianNLS;
+extern const REGISTRY_NLS RussianNLS;
 
-static REGISTRY_NLS *nls_set[] =
+static const REGISTRY_NLS *nls_set[] =
 {
   &RussianNLS
 };
 
-static REGISTRY_NLS *activeNLS = &RussianNLS;
+static const REGISTRY_NLS *activeNLS = &RussianNLS;
 static unsigned      defNLSSet = 0;
 
 enum {
@@ -1299,7 +1299,7 @@ static void __FASTCALL__ txtTerm( void )
 
 static unsigned __FASTCALL__ txtCharSize( void ) { return activeNLS->get_symbol_size(); }
 
-REGISTRY_MODE textMode =
+extern REGISTRY_MODE textMode =
 {
   "~Text mode",
   { NULL, "CodPag", "TxMode", "NLSSet", NULL, NULL, NULL, "TxType", "HiLght", "UsrNam" },

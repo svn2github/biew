@@ -330,7 +330,7 @@ static bool __FASTCALL__ leAddressResolv(char *addr,__filesize_t cfpos)
 
 static int __FASTCALL__ lePlatform( void ) { return DISASM_CPU_IX86; }
 
-REGISTRY_BIN leTable =
+extern const REGISTRY_BIN leTable =
 {
   "LE (Linear Executable)",
   { "LEHelp", "Import", "ResNam", "NRsNam", "ImpNam", "Entry ", NULL, "LEHead", "MapTbl", "Object" },

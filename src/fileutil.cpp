@@ -218,7 +218,7 @@ static void __NEAR__ __FASTCALL__ printObject(FILE *fout,unsigned obj_num,char *
 	      ,size);
 }
 
-static void __NEAR__ __FASTCALL__ printHdr(FILE * fout,REGISTRY_BIN *fmt)
+static void __NEAR__ __FASTCALL__ printHdr(FILE * fout,const REGISTRY_BIN *fmt)
 {
   const char *cptr,*cptr1,*cptr2;
   time_t tim;

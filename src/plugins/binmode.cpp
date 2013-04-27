@@ -264,7 +264,7 @@ static bool __FASTCALL__ binDecVirtWidth( void )
   return false;
 }
 
-REGISTRY_MODE binMode =
+extern REGISTRY_MODE binMode =
 {
   "~Binary mode",
   { NULL, "BinMod", NULL, NULL, NULL, NULL, "<<<   ", "   >>>", NULL, "UsrNam" },

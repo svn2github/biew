@@ -640,8 +640,7 @@ static void CalculatorFunc(void)
   CloseWnd(wdlg);
 }
 
-
-REGISTRY_TOOL Calculator =
+extern const REGISTRY_TOOL Calculator =
 {
   "~String calculator",
   CalculatorFunc,

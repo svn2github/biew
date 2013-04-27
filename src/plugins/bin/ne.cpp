@@ -1529,7 +1529,7 @@ static bool __FASTCALL__ neAddressResolv(char *addr,__filesize_t cfpos)
 
 static int __FASTCALL__ platformNE( void ) { return DISASM_CPU_IX86; }
 
-REGISTRY_BIN neTable =
+extern const REGISTRY_BIN neTable =
 {
   "NE (New Exe)",
   { "NEHelp", "ModRef", "ResNam", "NRsNam", NULL, "Entry ", "ResTbl", "NE Hdr", NULL, "SegDef" },

@@ -59,7 +59,7 @@ static void __NEAR__ __FASTCALL__ drawControlKeys(int flg)
   twPutChar(ckey);
 }
 
-void __FASTCALL__ __drawMultiPrompt(const char *norm[], const char *shift[], const char *alt[], const char *ctrl[])
+void __FASTCALL__ __drawMultiPrompt(const char * const norm[], const char *const shift[], const char * const alt[], const char * const ctrl[])
 {
   TWindow *_using;
   int flg = __kbdGetShiftsKey();

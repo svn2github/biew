@@ -80,7 +80,7 @@ static __filesize_t __FASTCALL__ Show_BMP_Header( void )
  return fpos;
 }
 
-REGISTRY_BIN bmpTable =
+extern const REGISTRY_BIN bmpTable =
 {
   "BitMaP file format",
   { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },

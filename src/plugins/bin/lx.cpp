@@ -1200,7 +1200,7 @@ static bool __FASTCALL__ lxAddressResolv(char *addr,__filesize_t cfpos)
 
 static int __FASTCALL__ lxPlatform( void ) { return DISASM_CPU_IX86; }
 
-REGISTRY_BIN lxTable =
+extern const REGISTRY_BIN lxTable =
 {
   "LX (Linear eXecutable)",
   { "LXhelp", "Import", "ResNam", "NRsNam", "ImpNam", "Entry ", "ResTbl", "LXHead", "MapTbl", "Object" },

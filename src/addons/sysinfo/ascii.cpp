@@ -80,7 +80,7 @@ static void ShowASCII( void )
   CloseWnd(hwnd);
 }
 
-REGISTRY_SYSINFO AsciiTable =
+extern const REGISTRY_SYSINFO AsciiTable =
 {
   "~ASCII table",
   ShowASCII,

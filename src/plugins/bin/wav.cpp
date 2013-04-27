@@ -251,7 +251,7 @@ static __filesize_t __FASTCALL__ Show_WAV_Header( void )
  return fpos;
 }
 
-REGISTRY_BIN wavTable =
+extern const REGISTRY_BIN wavTable =
 {
   "RIFF WAVE format",
   { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },

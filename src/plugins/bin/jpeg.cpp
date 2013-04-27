@@ -52,7 +52,7 @@ static __filesize_t __FASTCALL__ Show_JPEG_Header( void )
     return BMGetCurrFilePos();
 }
 
-REGISTRY_BIN jpegTable =
+extern const REGISTRY_BIN jpegTable =
 {
   "JPEG file format",
   { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },

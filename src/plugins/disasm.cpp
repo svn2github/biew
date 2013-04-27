@@ -50,14 +50,14 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 namespace beye {
-extern REGISTRY_DISASM ix86_Disasm;
-extern REGISTRY_DISASM Null_Disasm;
-extern REGISTRY_DISASM AVR_Disasm;
-extern REGISTRY_DISASM ARM_Disasm;
-extern REGISTRY_DISASM PPC_Disasm;
-extern REGISTRY_DISASM Java_Disasm;
+extern const REGISTRY_DISASM ix86_Disasm;
+extern const REGISTRY_DISASM Null_Disasm;
+extern const REGISTRY_DISASM AVR_Disasm;
+extern const REGISTRY_DISASM ARM_Disasm;
+extern const REGISTRY_DISASM PPC_Disasm;
+extern const REGISTRY_DISASM Java_Disasm;
 
-static REGISTRY_DISASM *mainDisasmTable[] =
+static const REGISTRY_DISASM *mainDisasmTable[] =
 {
   &Null_Disasm,
   &ix86_Disasm,
@@ -68,7 +68,7 @@ static REGISTRY_DISASM *mainDisasmTable[] =
 };
 
 static unsigned DefDisasmSel = __DEFAULT_DISASM;
-REGISTRY_DISASM *activeDisasm = NULL;
+const REGISTRY_DISASM *activeDisasm = NULL;
 
 static unsigned long PrevPageSize,CurrPageSize,PrevStrLen,CurrStrLen;
 unsigned disNeedRef = 0;
@@ -855,7 +855,7 @@ static __filesize_t __FASTCALL__ disSearch(TWindow *pwnd, __filesize_t start,
   return retval;
 }
 
-REGISTRY_MODE disMode =
+extern REGISTRY_MODE disMode =
 {
   "~Disassembler",
   { NULL, "Disasm", NULL, NULL, NULL, "AResol", "PanMod", "ResRef", "HiLght", "UsrNam" },

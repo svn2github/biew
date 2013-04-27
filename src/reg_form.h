@@ -98,7 +98,7 @@ struct REGISTRY_BIN
 {
   const char * name;                            /**< name of binary format */
   const char * prompt[10];                      /**< on ALT-Fx selection */
-  BinFunc   action[10];                         /**< action on ALT-Fx selection */
+  const BinFunc  action[10];                         /**< action on ALT-Fx selection */
   bool   (__FASTCALL__ *check_format)( void ); /**< Checks format */
   void    (__FASTCALL__ *init)( void );         /**< Inits plugin (if check o'k) (constructor) */
   void    (__FASTCALL__ *destroy)( void );      /**< Destroys plugin (destructor) */

@@ -69,7 +69,7 @@ static __filesize_t __FASTCALL__ Show_MOV_Header( void )
 }
 
 
-REGISTRY_BIN movTable =
+extern const REGISTRY_BIN movTable =
 {
   "MOV file format",
   { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },

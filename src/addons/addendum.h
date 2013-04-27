@@ -14,7 +14,7 @@ namespace beye {
 	    void	select();
 	private:
 	    size_t	defToolSel;
-	    std::vector<REGISTRY_TOOL*> list;
+	    std::vector<const REGISTRY_TOOL*> list;
     };
 } // namespace beye
 #endif

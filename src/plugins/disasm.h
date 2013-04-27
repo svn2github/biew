@@ -139,7 +139,7 @@ typedef struct tag_REGISTRY_DISASM
   void         (__FASTCALL__ *save_ini)(hIniProfile *);  /**< stores settings of plugin into .ini file */
 }REGISTRY_DISASM;
 
-extern REGISTRY_DISASM *activeDisasm; /**< currently selected active disassembler */
+extern const REGISTRY_DISASM *activeDisasm; /**< currently selected active disassembler */
 enum {
     PANMOD_FULL   =2,       /**< full mode of panel: address + instruction bytes + instruction */
     PANMOD_MEDIUM =1,       /**< medium mode of panel: address + instruction */

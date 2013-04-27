@@ -340,7 +340,7 @@ static __filesize_t __FASTCALL__ MZHelp( void )
   return BMGetCurrFilePos();
 }
 
-REGISTRY_BIN mzTable =
+extern const REGISTRY_BIN mzTable =
 {
   "MZ (Old DOS-exe)",
   { "MZHelp", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },

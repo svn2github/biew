@@ -217,7 +217,7 @@ static void DigConv( void )
  for(i = 0;i < 5;i++) CloseWnd(ewnd[i]);
 }
 
-REGISTRY_TOOL DigitalConvertor =
+extern const REGISTRY_TOOL DigitalConvertor =
 {
   "~Digital convertor",
   DigConv,

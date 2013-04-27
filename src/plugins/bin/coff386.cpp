@@ -730,7 +730,7 @@ static unsigned __FASTCALL__ coff386_GetObjAttr(__filesize_t pa,char *name,unsig
 
 static int __FASTCALL__ coff386_platform( void ) { return DISASM_CPU_IX86; }
 
-REGISTRY_BIN coff386Table =
+extern const REGISTRY_BIN coff386Table =
 {
   "coff-i386 (Common Object File Format)",
   { "CofHlp", NULL, NULL, NULL, NULL, NULL, "SymTab", NULL, NULL, "Objects" },

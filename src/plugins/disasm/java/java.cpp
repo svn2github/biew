@@ -641,7 +641,7 @@ static void __FASTCALL__ javaWriteIni( hIniProfile *ini )
     UNUSED(ini);
 }
 
-REGISTRY_DISASM Java_Disasm =
+extern const REGISTRY_DISASM Java_Disasm =
 {
   DISASM_JAVA,
   "~Java",

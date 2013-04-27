@@ -6581,7 +6581,7 @@ done:
   return result;
 }
 
-REGISTRY_DISASM ix86_Disasm =
+extern const REGISTRY_DISASM ix86_Disasm =
 {
   DISASM_CPU_IX86,
   "Intel ~ix86 / x86_64",

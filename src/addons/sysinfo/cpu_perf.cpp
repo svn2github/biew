@@ -85,7 +85,7 @@ static void ShowCPUInfo( void )
    PFREE(cpu_info);
 }
 
-REGISTRY_SYSINFO CPUPerformance =
+extern const REGISTRY_SYSINFO CPUPerformance =
 {
   "CPU ~performance",
   ShowCPUInfo,

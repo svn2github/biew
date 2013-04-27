@@ -965,7 +965,7 @@ static unsigned long __FASTCALL__ jvm_AppendRef(char *str,__filesize_t ulShift,i
     return retrf;
 }
 
-REGISTRY_BIN jvmTable =
+extern const REGISTRY_BIN jvmTable =
 {
   "Java's ClassFile",
   { NULL, "Import", "Code  ", "Data  ", NULL, NULL, NULL, "Pool  ", NULL, "Attrib" },

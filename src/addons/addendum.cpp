@@ -24,8 +24,8 @@ using namespace beye;
 #include "beyeutil.h"
 
 namespace beye {
-extern REGISTRY_TOOL DigitalConvertor;
-extern REGISTRY_TOOL Calculator;
+extern const REGISTRY_TOOL DigitalConvertor;
+extern const REGISTRY_TOOL Calculator;
 
 void addendum::select()
 {

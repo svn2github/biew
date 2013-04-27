@@ -69,7 +69,7 @@ static void __FASTCALL__ mpeg_init_fmt( void ) {}
 static void __FASTCALL__ mpeg_destroy_fmt(void) {}
 static int  __FASTCALL__ mpeg_platform( void) { return DISASM_DEFAULT; }
 
-REGISTRY_BIN mpegTable =
+extern const REGISTRY_BIN mpegTable =
 {
   "MPEG-PES file format",
   { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },

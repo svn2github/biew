@@ -577,7 +577,7 @@ static void __FASTCALL__ AVRTerm( void )
    delete outstr;
 }
 
-REGISTRY_DISASM AVR_Disasm =
+extern const REGISTRY_DISASM AVR_Disasm =
 {
   DISASM_CPU_AVR,
   "Atmel ~AVR",                          /* disassembler name */

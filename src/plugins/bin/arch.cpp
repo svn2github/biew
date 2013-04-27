@@ -189,7 +189,7 @@ static __filesize_t __FASTCALL__ archHelp( void )
 
 static int __FASTCALL__ arch_platform( void ) { return DISASM_DEFAULT; }
 
-REGISTRY_BIN archTable =
+extern const REGISTRY_BIN archTable =
 {
   "arch (Archive)",
   { "ArcHlp", NULL, "ModLst", NULL, NULL, NULL, NULL, NULL, NULL, NULL },

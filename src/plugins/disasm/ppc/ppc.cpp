@@ -1669,7 +1669,7 @@ static void __FASTCALL__ ppcWriteIni( hIniProfile *ini )
   beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode5",tmps);
 }
 
-REGISTRY_DISASM PPC_Disasm =
+extern const REGISTRY_DISASM PPC_Disasm =
 {
   DISASM_CPU_PPC,
   "AIM Power5+ ISA             [New,Experimental]",

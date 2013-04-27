@@ -452,7 +452,7 @@ static void __FASTCALL__ mp3_destroy_fmt(void) {}
 static int  __FASTCALL__ mp3_platform( void) { return DISASM_DEFAULT; }
 
 
-REGISTRY_BIN mp3Table =
+extern const REGISTRY_BIN mp3Table =
 {
   "MP3 file format",
   { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },

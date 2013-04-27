@@ -40,8 +40,8 @@ namespace beye {
 	    void		term_modes();
 	    void		quick_select_mode();
 	    bool		select_mode();
-	    REGISTRY_MODE*	active_mode() const { return activeMode; }
-	    REGISTRY_BIN*	active_format() const { return detectedFormat; }
+	    const REGISTRY_MODE*active_mode() const { return activeMode; }
+	    const REGISTRY_BIN*	active_format() const { return detectedFormat; }
 	    void		detect_binfmt();
 	    void		show_usage() const;
 
@@ -69,7 +69,7 @@ namespace beye {
 
 	    Opaque		opaque;
 	    REGISTRY_MODE*	activeMode;
-	    REGISTRY_BIN*	detectedFormat;
+	    const REGISTRY_BIN*	detectedFormat;
 	    const std::vector<std::string>& argv;
 	    const std::map<std::string,std::string>& envm;
 	    std::vector<std::string> ListFile;
@@ -81,7 +81,7 @@ namespace beye {
 	    unsigned int	beye_mode;
 	    unsigned		defMainModeSel;
 	    __filesize_t	new_file_size;
-	    std::vector<REGISTRY_BIN*> formats;
+	    std::vector<const REGISTRY_BIN*> formats;
 	    std::vector<REGISTRY_MODE*> modes;
     };
     BeyeContext& beye_context();

@@ -178,7 +178,7 @@ static int __FASTCALL__ aout_platform( void ) {
  return id;
 }
 
-REGISTRY_BIN aoutTable =
+extern const REGISTRY_BIN aoutTable =
 {
   "a.out (Assembler and link Output)",
   { "AOutHl", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },

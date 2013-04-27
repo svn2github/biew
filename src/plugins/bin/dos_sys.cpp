@@ -114,8 +114,7 @@ static __filesize_t __FASTCALL__ SYSHelp( void )
   return BMGetCurrFilePos();
 }
 
-
-REGISTRY_BIN dossysTable =
+extern const REGISTRY_BIN dossysTable =
 {
   "DOS driver",
   { "SYSHlp", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },

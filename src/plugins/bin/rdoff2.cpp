@@ -85,7 +85,7 @@ static void __FASTCALL__ rdoff2_destroy_fmt( void ) {}
 
 static int __FASTCALL__ rdoff2_platform( void ) { return DISASM_CPU_IX86; }
 
-REGISTRY_BIN rdoff2Table =
+extern const REGISTRY_BIN rdoff2Table =
 {
   "RDOFF v2 (Relocatable Dynamic Object File Format)",
   { "RdHelp", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },

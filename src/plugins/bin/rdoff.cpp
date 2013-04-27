@@ -760,7 +760,7 @@ static bool __FASTCALL__ rdoff_AddressResolv(char *addr,__filesize_t cfpos)
 
 static int __FASTCALL__ rdoff_platform( void ) { return DISASM_CPU_IX86; }
 
-REGISTRY_BIN rdoffTable =
+extern const REGISTRY_BIN rdoffTable =
 {
   "RDOFF (Relocatable Dynamic Object File Format)",
   { "RdHelp", "ModRef", "Export", NULL, "Import", NULL, NULL, NULL, NULL, NULL },

@@ -1347,7 +1347,7 @@ static int __FASTCALL__ pePlatform( void ) {
     return id;
 }
 
-REGISTRY_BIN peTable =
+extern const REGISTRY_BIN peTable =
 {
   "PE (Portable Executable)",
   { "PEHelp", "Import", "Export", NULL, NULL, NULL, NULL, "PEHead", "Dir   ", "Object" },

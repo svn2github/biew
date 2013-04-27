@@ -498,7 +498,7 @@ static __filesize_t __FASTCALL__ lmf_LMFHlp( void )
   return BMGetCurrFilePos();
 }
 
-REGISTRY_BIN lmfTable=
+extern const REGISTRY_BIN lmfTable=
 {
 	"lmf (QNX4 executable file)",
 	{"LMFHlp",NULL,NULL,NULL,NULL,NULL,NULL,NULL,"SecLst",NULL},

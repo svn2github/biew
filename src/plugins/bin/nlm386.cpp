@@ -708,7 +708,7 @@ static __filesize_t __FASTCALL__ NLMPA2VA(__filesize_t pa)
 
 static int __FASTCALL__ NLMPlatform( void ) { return DISASM_CPU_IX86; }
 
-REGISTRY_BIN nlm386Table =
+extern const REGISTRY_BIN nlm386Table =
 {
   "nlm-i386 (Novell Loadable Module)",
   { "NlmHlp", "ModRef", "PubDef", NULL, "ExtNam", NULL, NULL, "NlmHdr", NULL, NULL },

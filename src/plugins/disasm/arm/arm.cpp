@@ -248,7 +248,7 @@ static bool __FASTCALL__ armSelect_endian( void )
   return false;
 }
 
-REGISTRY_DISASM ARM_Disasm =
+extern const REGISTRY_DISASM ARM_Disasm =
 {
   DISASM_CPU_ARM,
   "A~RMv5TE/XScale",

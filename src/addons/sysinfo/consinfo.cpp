@@ -86,7 +86,7 @@ static void ShowConsInfo( void )
   CloseWnd(hwnd);
 }
 
-REGISTRY_SYSINFO ConsoleInfo =
+extern const REGISTRY_SYSINFO ConsoleInfo =
 {
   "~Console information",
   ShowConsInfo,

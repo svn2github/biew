@@ -447,7 +447,7 @@ static void __FASTCALL__ ru_save_ini( hIniProfile *ini )
   beye_context().write_profile_string(ini,"Beye","Browser","LastSubMode",tmps);
 }
 
-REGISTRY_NLS RussianNLS =
+extern const REGISTRY_NLS RussianNLS =
 {
   "Russian set",
   ru_convert_buffer,

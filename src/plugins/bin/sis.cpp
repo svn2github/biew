@@ -145,7 +145,7 @@ static __filesize_t __FASTCALL__ Show_Sis_Header( void )
  return fpos;
 }
 
-REGISTRY_BIN sisTable =
+extern const REGISTRY_BIN sisTable =
 {
   "Sis(EPOC) Symbian OS installable file",
   { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },

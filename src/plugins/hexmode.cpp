@@ -81,7 +81,7 @@ static unsigned char __NEAR__ __FASTCALL__ sizeByte( void ) { return ((tvioWidth
 static unsigned char __NEAR__ __FASTCALL__ sizeWord( void ) { return (tvioWidth-HA_LEN())/(4+1+2); }
 static unsigned char __NEAR__ __FASTCALL__ sizeDWord( void ){ return (tvioWidth-HA_LEN())/(8+1+4); }
 
-hexView hexViewer[] =
+static const hexView hexViewer[] =
 {
   { "B~it",         GetB,   sizeBit,   1, 8 },
   { "~Byte",        Get2D,  sizeByte,  1, 2 },
@@ -440,7 +440,7 @@ static bool __FASTCALL__ hexDecVirtWidth( void )
   return false;
 }
 
-REGISTRY_MODE hexMode =
+extern REGISTRY_MODE hexMode =
 {
   "~Hexadecimal mode",
   { NULL, "HexMod", "Endian", NULL, NULL, "AResol", "<<<   ", "   >>>", NULL, "UsrNam" },

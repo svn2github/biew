@@ -119,7 +119,7 @@ static __filesize_t __FASTCALL__ HelpOPharLap( void )
 
 static int __FASTCALL__ OldPharLapPlatform( void ) { return DISASM_CPU_IX86; }
 
-REGISTRY_BIN OldPharLapTable =
+extern const REGISTRY_BIN OldPharLapTable =
 {
   "Pharlap",
   { "PLHelp", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },

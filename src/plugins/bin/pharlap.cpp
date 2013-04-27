@@ -287,7 +287,7 @@ static __filesize_t __FASTCALL__ PharLapHelp( void )
 
 static int __FASTCALL__ PharLapPlatform( void ) { return DISASM_CPU_IX86; }
 
-REGISTRY_BIN PharLapTable =
+extern const REGISTRY_BIN PharLapTable =
 {
   "PharLap",
   { "PLHelp", NULL, NULL, NULL, NULL, NULL, NULL, NULL, "RunTim", "SegInf" },

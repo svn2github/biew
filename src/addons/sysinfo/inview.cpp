@@ -59,7 +59,7 @@ static void InputViewLoop( void )
   CloseWnd(hwnd);
 }
 
-REGISTRY_SYSINFO InputViewer =
+extern const REGISTRY_SYSINFO InputViewer =
 {
   "~Input viewer",
   InputViewLoop,

@@ -337,7 +337,7 @@ static __filesize_t __FASTCALL__ Show_V_Header( void )
  return fpos;
 }
 
-REGISTRY_BIN aviTable =
+extern const REGISTRY_BIN aviTable =
 {
   "Audio Video Interleaved format",
   { NULL, "Audio", "Video", NULL, NULL, NULL, NULL, NULL, NULL, NULL },

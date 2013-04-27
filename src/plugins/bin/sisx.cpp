@@ -170,7 +170,7 @@ static __filesize_t __FASTCALL__ Show_SisX_Header( void )
  return fpos;
 }
 
-REGISTRY_BIN sisxTable =
+extern const REGISTRY_BIN sisxTable =
 {
   "SisX(EPOC) Symbian OS executable file",
   { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },

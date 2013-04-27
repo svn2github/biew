@@ -49,7 +49,7 @@ static void __FASTCALL__ rm_init_fmt( void ) {}
 static void __FASTCALL__ rm_destroy_fmt(void) {}
 static int  __FASTCALL__ rm_platform( void) { return DISASM_DEFAULT; }
 
-REGISTRY_BIN rmTable =
+extern const REGISTRY_BIN rmTable =
 {
   "Real Media file format",
   { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },

@@ -24,10 +24,10 @@ using namespace beye;
 #include "beyeutil.h"
 
 namespace beye {
-extern REGISTRY_SYSINFO AsciiTable;
-extern REGISTRY_SYSINFO CPUPerformance;
-extern REGISTRY_SYSINFO InputViewer;
-extern REGISTRY_SYSINFO ConsoleInfo;
+extern const REGISTRY_SYSINFO AsciiTable;
+extern const REGISTRY_SYSINFO CPUPerformance;
+extern const REGISTRY_SYSINFO InputViewer;
+extern const REGISTRY_SYSINFO ConsoleInfo;
 
 void sysinfo::select()
 {

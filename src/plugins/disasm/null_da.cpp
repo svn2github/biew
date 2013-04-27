@@ -156,7 +156,7 @@ static void __FASTCALL__ nulWriteIni( hIniProfile *ini )
   beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
 }
 
-REGISTRY_DISASM Null_Disasm =
+extern const REGISTRY_DISASM Null_Disasm =
 {
   DISASM_DATA,
   "~Data",

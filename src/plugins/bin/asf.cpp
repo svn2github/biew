@@ -52,7 +52,7 @@ static void __FASTCALL__ asf_init_fmt( void ) {}
 static void __FASTCALL__ asf_destroy_fmt(void) {}
 static int  __FASTCALL__ asf_platform( void) { return DISASM_DEFAULT; }
 
-REGISTRY_BIN asfTable =
+extern const REGISTRY_BIN asfTable =
 {
   "Advanced stream file format v1",
   { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
