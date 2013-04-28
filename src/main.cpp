@@ -135,11 +135,6 @@ void BeyeContext::init_modes( hIniProfile *ini )
     activeMode->read_ini(ini);
 }
 
-void BeyeContext::term_modes( void )
-{
-    delete activeMode; activeMode = NULL;
-}
-
 void BeyeContext::quick_select_mode()
 {
     size_t nModes = modes.size();
@@ -570,8 +565,6 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  BeyeCtx->save_ini_info();
  delete sysinfo;
  delete addons;
- BeyeCtx->term_modes();
- if(BeyeCtx->active_format()->destroy) BeyeCtx->active_format()->destroy();
  if(BeyeCtx->iniPreserveTime && ftim_ok) __OsSetFTime(BeyeCtx->ArgVector1.c_str(),&ftim);
  Bye:
  return retval;
@@ -713,6 +706,9 @@ BeyeContext::BeyeContext(const std::vector<std::string>& _argv, const std::map<s
 }
 
 BeyeContext::~BeyeContext() {
+    delete activeMode;
+    if(active_format()->destroy) active_format()->destroy();
+
     delete LastOpenFileName;
     delete _shortname;
     delete code_guider;

@@ -16,6 +16,7 @@
 **/
 #ifndef __CODEGUID__H
 #define __CODEGUID__H
+#include <vector>
 
 #ifndef __SYS_DEP_H
 #include "_sys_dep.h"
@@ -32,19 +33,16 @@ namespace beye {
 	    void		add_go_address(const DisMode& parent,char *str,__filesize_t addr);
 	    void		add_back_address();
 	    __filesize_t	get_go_address(unsigned keycode);
-	    char*		encode_address(__filesize_t cfpos,bool aresolv);
+	    char*		encode_address(__filesize_t cfpos,bool aresolv) const;
 	    const char*		image() const { return codeguid_image; }
 	private:
 	    char*		gidBuildKeyStr();
-	    int			gidGetKeyIndex(char key);
-	    char		gidGetAddressKey( unsigned _index );
+	    int			gidGetKeyIndex(char key) const;
+	    char		gidGetAddressKey( unsigned _index ) const;
 
 	    char		codeguid_image[6];
-	    __filesize_t*	BackAddr;
-	    int			BackAddrPtr;
-	    __filesize_t*	GoAddr;
-	    unsigned int*	GoLineNums;
-	    int			GoAddrPtr;
+	    std::vector<__filesize_t> BackAddr;
+	    std::vector<std::pair<__filesize_t,unsigned> > GoAddr;
 	    unsigned char	Alarm;
     };
 } // namespace beye

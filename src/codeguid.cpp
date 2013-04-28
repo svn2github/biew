@@ -36,49 +36,32 @@ using namespace beye;
 #include "plugins/disasm.h"
 
 namespace beye {
-enum {
-    BACK_ADDR_SIZE=256,
-    GO_ADDR_SIZE  =37
-};
-
-CodeGuider::CodeGuider()
-	    :BackAddrPtr(-1)
-	    ,GoAddrPtr(-1)
-{
+CodeGuider::CodeGuider() {
     strcpy(codeguid_image,"=>[X]");
-    BackAddr = new __filesize_t[BACK_ADDR_SIZE];
-    GoAddr = new __filesize_t[GO_ADDR_SIZE];
-    GoLineNums = new unsigned[GO_ADDR_SIZE];
 }
-
-CodeGuider::~CodeGuider()
-{
-    delete GoLineNums;
-    delete GoAddr;
-    delete BackAddr;
-}
+CodeGuider::~CodeGuider() {}
 
   /*
       Added by "Kostya Nosov" <k-nosov@yandex.ru>:
       for removing difference keys for same locations of jump
    */
-char CodeGuider::gidGetAddressKey( unsigned _index )
+char CodeGuider::gidGetAddressKey( unsigned _index ) const
 {
-  int i,j;
+  size_t i,j,sz=GoAddr.size();
   char key;
   bool found;
   __filesize_t addr1,addr2;
   key = 0;
-  addr1 = GoAddr[_index];
-  for (i = 0;i <= GoAddrPtr;i++)
+  addr1 = GoAddr[_index].first;
+  for (i = 0;i < sz;i++)
   {
-    addr2 = GoAddr[i];
+    addr2 = GoAddr[i].first;
     if (addr2 == addr1) break;
     /* check for presence addr2 above */
     found = false;
     for (j = 0;j < i;j++)
     {
-      if (GoAddr[j] == addr2)
+      if (GoAddr[j].first == addr2)
       {
 	found = true;
 	break;
@@ -89,31 +72,28 @@ char CodeGuider::gidGetAddressKey( unsigned _index )
   return key < 10 ? key + '0' : key - 10 + 'A';
 }
 
-int CodeGuider::gidGetKeyIndex( char key )
+int CodeGuider::gidGetKeyIndex( char key ) const
 {
-  int res,i,j,_index;
+  int res,_index;
   bool found;
   __filesize_t addr;
   if (key > 'Z') key = key - 'z' + 'Z';
   key = key > '9' ? key - 'A' + 10 : key - '0';
-  res = GoAddrPtr + 1;
+  res = GoAddr.size();
   _index = 0;
-  for (i = 0;i <= GoAddrPtr;i++)
-  {
-    addr = GoAddr[i];
+  size_t j,i,sz=GoAddr.size();
+  for (i = 0;i < sz;i++) {
+    addr = GoAddr[i].first;
     /* check for presence addr above */
     found = false;
-    for (j = 0;j < i;j++)
-    {
-      if (GoAddr[j] == addr)
-      {
+    for (j = 0;j < i;j++) {
+      if (GoAddr[j].first == addr) {
 	found = true;
 	break;
       }
     }
     if (i > 0 && !found) _index++;
-    if (_index == key)
-    {
+    if (_index == key) {
       res = i;
       break;
     }
@@ -123,7 +103,7 @@ int CodeGuider::gidGetKeyIndex( char key )
 
 char* CodeGuider::gidBuildKeyStr()
 {
-    codeguid_image[3] = gidGetAddressKey(GoAddrPtr);
+    codeguid_image[3] = gidGetAddressKey(GoAddr.size()-1);
     return codeguid_image;
 }
 
@@ -131,28 +111,24 @@ void CodeGuider::reset_go_address( int keycode )
 {
     Alarm = 0;
     if(keycode == KE_DOWNARROW) {
-	int i;
-	if(GoAddrPtr >= 0) {
-	    if(GoLineNums[0] == 0) {
-		memmove(GoAddr,&GoAddr[1],GoAddrPtr*sizeof(__filesize_t));
-		memmove(GoLineNums,&GoLineNums[1],GoAddrPtr*sizeof(unsigned int));
-		GoAddrPtr--;
-	    }
-	    for(i = 0;i <= GoAddrPtr;i++) {
+	size_t i,sz=GoAddr.size();
+	if(sz) {
+	    if(GoAddr[0].second == 0) GoAddr.erase(GoAddr.begin());
+	    for(i = 0;i < sz;i++) {
 		char dig;
-		GoLineNums[i]--;
+		GoAddr[i].second=GoAddr[i].second-1;
 		dig = gidGetAddressKey(i);
-		twDirectWrite(twGetClientWidth(MainWnd)-1,GoLineNums[i]+2,&dig,1);
+		twDirectWrite(twGetClientWidth(MainWnd)-1,GoAddr[i].second+2,&dig,1);
 	    }
 	}
     } else if(keycode == KE_UPARROW) {
-	int i;
+	size_t i,sz=GoAddr.size();
 	Alarm = UCHAR_MAX;
-	if(GoAddrPtr >= 0) {
-	    for(i = 0;i <= GoAddrPtr;i++) GoLineNums[i]++;
-	    if(GoLineNums[GoAddrPtr] >= twGetClientHeight(MainWnd)) GoAddrPtr--;
+	if(sz) {
+	    for(i = 0;i < sz;i++) GoAddr[i].second=GoAddr[i].second+1;
+	    if(GoAddr.back().second >= twGetClientHeight(MainWnd)) GoAddr.pop_back();
 	}
-    } else GoAddrPtr = -1;
+    } else GoAddr.clear();
 }
 
 void CodeGuider::add_go_address(const DisMode& parent,char *str,__filesize_t addr)
@@ -165,27 +141,22 @@ void CodeGuider::add_go_address(const DisMode& parent,char *str,__filesize_t add
     where = (parent.panel_mode() == DisMode::Panel_Full ? width :
 	    parent.panel_mode() == DisMode::Panel_Medium ? width-HA_LEN() : width-(HA_LEN()+1)-bytecodes) - 5;
     if(Alarm) {
-	int i;
-	if(GoAddrPtr < GO_ADDR_SIZE - 2) GoAddrPtr++;
-	memmove(&GoAddr[1],&GoAddr[0],GoAddrPtr*sizeof(long));
-	memmove(&GoLineNums[1],&GoLineNums[0],GoAddrPtr*sizeof(int));
-	GoAddr[0] = addr;
-	GoLineNums[0] = parent.get_curr_line_num();
+	size_t i,sz;
+	GoAddr.insert(GoAddr.begin(),std::make_pair(addr,parent.get_curr_line_num()));
 	if(len < where) {
 	    memset(&str[len],TWC_DEF_FILLER,where-len);
 	    str[where] = 0;
 	}
 	strcat(str,codeguid_image);
 	str[where + 3] = '0';
-	for(i = 1;i <= GoAddrPtr;i++) {
+	sz=GoAddr.size();
+	for(i = 1;i < sz;i++) {
 	    char dig;
 	    dig = gidGetAddressKey(i);
-	    twDirectWrite(width-1,GoLineNums[i]+1,&dig,1);
+	    twDirectWrite(width-1,GoAddr[i].second+1,&dig,1);
 	}
-    } else if(GoAddrPtr < GO_ADDR_SIZE - 2) {
-	GoAddrPtr++;
-	GoAddr[GoAddrPtr] = addr;
-	GoLineNums[GoAddrPtr] = parent.get_curr_line_num();
+    } else {
+	GoAddr.push_back(std::make_pair(addr,parent.get_curr_line_num()));
 	if(len < where) {
 	    memset(&str[len],TWC_DEF_FILLER,where-len);
 	    str[where] = 0;
@@ -196,31 +167,31 @@ void CodeGuider::add_go_address(const DisMode& parent,char *str,__filesize_t add
 
 void CodeGuider::add_back_address()
 {
-    if(BackAddrPtr >= BACK_ADDR_SIZE - 2) {
-	memmove(BackAddr,&BackAddr[1],BackAddrPtr);
-	BackAddrPtr--;
-    }
-    BackAddrPtr++;
-    BackAddr[BackAddrPtr] = BMGetCurrFilePos();
+    BackAddr.push_back(BMGetCurrFilePos());
 }
 
 __filesize_t CodeGuider::get_go_address(unsigned keycode)
 {
     __filesize_t ret;
-    if(keycode == KE_BKSPACE) ret = BackAddrPtr >= 0 ? BackAddr[BackAddrPtr--] : BMGetCurrFilePos();
-    else {
-	int ptr;
+    if(keycode == KE_BKSPACE) {
+	if(BackAddr.size()) {
+	    ret = BackAddr.back();
+	    BackAddr.pop_back();
+	}
+	else ret=BMGetCurrFilePos();
+    } else {
+	unsigned ptr;
 	keycode &= 0x00FF;
 	ptr = gidGetKeyIndex(keycode);
-	if(ptr <= GoAddrPtr) {
+	if(ptr < GoAddr.size()) {
 	    add_back_address();
-	    ret = GoAddr[ptr];
+	    ret = GoAddr[ptr].first;
 	} else ret = BMGetCurrFilePos();
     }
     return ret;
 }
 
-char* CodeGuider::encode_address(__filesize_t cfpos,bool AddressDetail)
+char* CodeGuider::encode_address(__filesize_t cfpos,bool AddressDetail) const
 {
     static char addr[11];
     strcpy(addr,((BMFileFlags&BMFF_USE64)?Get16Digit(cfpos):Get8Digit(cfpos)));

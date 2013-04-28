@@ -39,7 +39,6 @@ namespace beye {
 						    const char *item,
 						    const char *value) const;
 	    void		init_modes( hIniProfile *ini );
-	    void		term_modes();
 	    void		quick_select_mode();
 	    bool		select_mode();
 	    Plugin*		active_mode() const { return activeMode; }
