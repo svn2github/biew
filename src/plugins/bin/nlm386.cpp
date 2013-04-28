@@ -40,6 +40,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 namespace beye {
+static CodeGuider* code_guider;
 static Nlm_Internal_Fixed_Header nlm;
 
 static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
@@ -526,7 +527,7 @@ static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrNLM(char *str,RELOC_NLM*r
   return retrf;
 }
 
-static unsigned long __FASTCALL__ AppendNLMRef(char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+static unsigned long __FASTCALL__ AppendNLMRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
   RELOC_NLM *rnlm,key;
   unsigned long retrf;
@@ -547,7 +548,7 @@ static unsigned long __FASTCALL__ AppendNLMRef(char *str,__filesize_t ulShift,in
      if(FindPubName(buff,sizeof(buff),r_sh))
      {
        strcat(str,buff);
-       if(!DumpMode && !EditMode) GidAddGoAddress(str,r_sh);
+       if(!DumpMode && !EditMode) code_guider->add_go_address(parent,str,r_sh);
        retrf = RAPREF_DONE;
      }
   }
@@ -561,8 +562,9 @@ static bool __FASTCALL__ IsNLM( void )
   return memcmp(ctrl,NLM_SIGNATURE,NLM_SIGNATURE_SIZE) == 0;
 }
 
-static void __FASTCALL__ NLMinit( void )
+static void __FASTCALL__ NLMinit(CodeGuider& _code_guider)
 {
+    code_guider=&_code_guider;
   BFile& main_handle = bmbioHandle();
   bmReadBufferEx(&nlm,sizeof(Nlm_Internal_Fixed_Header),0,SEEKF_START);
   if((nlm_cache = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) nlm_cache = &main_handle;

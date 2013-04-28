@@ -3,6 +3,7 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/file_ini.h"
+#include "codeguid.h"
 #include "reg_form.h"
 #include "plugins/plugin.h"
 
@@ -58,6 +59,8 @@ namespace beye {
 	    void		select_tool() const;
 	    void		select_sysinfo() const;
 
+	    CodeGuider&		codeguider() const { return *code_guider; }
+
 	    std::string ArgVector1;
 	    char ini_ver[32];
 	    std::string help_name;
@@ -93,6 +96,7 @@ namespace beye {
 	    __filesize_t	new_file_size;
 	    std::vector<const REGISTRY_BIN*> formats;
 	    std::vector<const Plugin_Info*> modes;
+	    CodeGuider*		code_guider;
     };
     BeyeContext& beye_context();
 } // namespace beye

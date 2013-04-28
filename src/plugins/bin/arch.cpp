@@ -158,9 +158,10 @@ static bool __FASTCALL__ IsArch( void )
   return strncmp(str,"!<arch>\012",8) == 0;
 }
 
-static void __FASTCALL__ ArchInit( void )
+static void __FASTCALL__ ArchInit(CodeGuider& code_guider)
 {
-  bmReadBufferEx(&arch,sizeof(arch),0,BM_SEEK_SET);
+    UNUSED(code_guider);
+    bmReadBufferEx(&arch,sizeof(arch),0,BM_SEEK_SET);
 }
 
 static void __FASTCALL__ ArchDestroy( void )

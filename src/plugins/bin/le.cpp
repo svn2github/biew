@@ -280,8 +280,9 @@ static bool __FASTCALL__ isLE( void )
    return false;
 }
 
-static void __FASTCALL__ LEinit( void )
+static void __FASTCALL__ LEinit(CodeGuider& code_guider)
 {
+    UNUSED(code_guider);
    BFile& main_handle = bmbioHandle();
    LXType = FILE_LE;
    bmReadBufferEx(&lxe.le,sizeof(LEHEADER),beye_context().headshift,SEEKF_START);

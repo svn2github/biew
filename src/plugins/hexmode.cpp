@@ -43,7 +43,7 @@ using namespace beye;
 namespace beye {
     class HexMode : public Plugin {
 	public:
-	    HexMode();
+	    HexMode(CodeGuider& code_guider);
 	    virtual ~HexMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -73,6 +73,7 @@ namespace beye {
 	    void		check_width_corr();
 	    int			full_hex_edit(TWindow * txtwnd);
 
+	    CodeGuider&	code_guider;
 	    unsigned	virtWidthCorr;
 	    unsigned	hmode;
 
@@ -80,8 +81,10 @@ namespace beye {
 unsigned	hexAddressResolv;
 static unsigned hendian;
 
-HexMode::HexMode()
-	:virtWidthCorr(0)
+HexMode::HexMode(CodeGuider& _code_guider)
+	:Plugin(_code_guider)
+	,code_guider(_code_guider)
+	,virtWidthCorr(0)
 	,hmode(1)
 {}
 HexMode::~HexMode() {}
@@ -189,7 +192,7 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 		lindex = (flen - sindex)/__inc;
 		rwidth = lindex > HWidth ? HWidth : (int)lindex;
 		len = HA_LEN();
-		::memcpy(outstr,GidEncodeAddress(sindex,hexAddressResolv),len);
+		::memcpy(outstr,code_guider.encode_address(sindex,hexAddressResolv),len);
 		for(j = 0,freq = 0,lindex = sindex;j < rwidth;j++,lindex += __inc,freq++) {
 		    ::memcpy(&outstr[len],hexViewer[hmode].func(lindex),dlen);
 		    len += dlen + 1;
@@ -463,7 +466,7 @@ void HexMode::save_ini(hIniProfile * ini)
 unsigned HexMode::get_symbol_size() const { return 1; }
 unsigned HexMode::get_max_line_length() const { return hexViewer[hmode].width(); }
 
-static Plugin* query_interface() { return new(zeromem) HexMode; }
+static Plugin* query_interface(CodeGuider& code_guider) { return new(zeromem) HexMode(code_guider); }
 
 extern const Plugin_Info hexMode = {
     "~Hexadecimal mode",	/**< plugin name */

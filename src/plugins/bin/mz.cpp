@@ -36,6 +36,7 @@ using namespace beye;
 #include "plugins/bin/mz.h"
 
 namespace beye {
+static CodeGuider* code_guider;
 static MZHEADER mz;
 static unsigned long HeadSize;
 
@@ -271,7 +272,7 @@ static bool __NEAR__ __FASTCALL__ isMZReferenced(__filesize_t shift,char len)
   }
   return false;
 }
-static unsigned long __FASTCALL__ AppendMZRef(char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+static unsigned long __FASTCALL__ AppendMZRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
   char stmp[256];
   unsigned long ret = RAPREF_NONE;
@@ -289,7 +290,7 @@ static unsigned long __FASTCALL__ AppendMZRef(char *str,__filesize_t ulShift,int
     r_sh += (((__filesize_t)mz.mzHeaderSize) << 4);
     if(udnFindName(r_sh,stmp,sizeof(stmp))==true) strcat(str,stmp);
     else strcat(str,Get8Digit(r_sh));
-    GidAddGoAddress(str,r_sh);
+    code_guider->add_go_address(parent,str,r_sh);
     ret = RAPREF_DONE;
   }
   return ret;
@@ -311,7 +312,7 @@ static bool  __FASTCALL__ mz_check_fmt( void )
 }
 
 /* Special case: this module must not use init and destroy */
-static void __FASTCALL__ mz_init_fmt( void ) {}
+static void __FASTCALL__ mz_init_fmt(CodeGuider& _code_guider) { code_guider=&_code_guider; }
 static void __FASTCALL__ mz_destroy_fmt(void) {}
 static int  __FASTCALL__ mz_platform( void) { return DISASM_CPU_IX86; }
 

@@ -1038,8 +1038,9 @@ static bool __FASTCALL__ isLX( void )
    return false;
 }
 
-static void __FASTCALL__ LXinit( void )
+static void __FASTCALL__ LXinit(CodeGuider& code_guider)
 {
+    UNUSED(code_guider);
    BFile& main_handle = bmbioHandle();
    LXType = FILE_LX;
    bmReadBufferEx(&lxe.lx,sizeof(LXHEADER),beye_context().headshift,SEEKF_START);

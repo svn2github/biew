@@ -70,6 +70,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 namespace beye {
+static CodeGuider* code_guider;
 static char is_msbf; /* is most significand byte first */
 static char is_64bit;
 
@@ -1971,7 +1972,7 @@ static __filesize_t __FASTCALL__ ShowELFDynInfo( void )
   return fpos;
 }
 
-static unsigned long __FASTCALL__ AppendELFRef(char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+static unsigned long __FASTCALL__ AppendELFRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
   char buff[400];
   unsigned long ret = RAPREF_NONE;
@@ -1998,7 +1999,7 @@ static unsigned long __FASTCALL__ AppendELFRef(char *str,__filesize_t ulShift,in
 	 if(dyn_ent)
 	 {
 	   got_off = elfVA2PA(dyn_ent);
-	   return AppendELFRef(str, got_off + off_in_got, flags & ~APREF_TRY_PIC, codelen, r_sh);
+	   return AppendELFRef(parent,str, got_off + off_in_got, flags & ~APREF_TRY_PIC, codelen, r_sh);
 	 }
        }
        return RAPREF_NONE;
@@ -2025,7 +2026,7 @@ static unsigned long __FASTCALL__ AppendELFRef(char *str,__filesize_t ulShift,in
 	 if(strlen(buff))
 	 {
 	   strcat(str,buff);
-	   if(!DumpMode && !EditMode) GidAddGoAddress(str,r_sh);
+	   if(!DumpMode && !EditMode) code_guider->add_go_address(parent,str,r_sh);
 	   ret = RAPREF_DONE;
 	 }
        }
@@ -2129,8 +2130,9 @@ static void __FASTCALL__ __elfReadSegments(linearArray **to, bool is_virt )
     }
 }
 
-static void __FASTCALL__ ELFinit( void )
+static void __FASTCALL__ ELFinit(CodeGuider& _code_guider)
 {
+    code_guider=&_code_guider;
  __filesize_t fs;
  size_t i;
    bmReadBufferEx(&elf,sizeof(ElfXX_External_Ehdr),0,SEEKF_START);

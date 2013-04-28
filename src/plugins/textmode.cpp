@@ -108,7 +108,7 @@ extern char last_skin_error[];
 
     class TextMode : public Plugin {
 	public:
-	    TextMode();
+	    TextMode(CodeGuider& code_guider);
 	    virtual ~TextMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -934,8 +934,9 @@ static void __NEAR__ __FASTCALL__ drawBound(int x,int y,char ch)
   twSetColorAttr(browser_cset.main);
 }
 
-TextMode::TextMode()
-	:HiLight(1)
+TextMode::TextMode(CodeGuider& code_guider)
+	:Plugin(code_guider)
+	,HiLight(1)
 	,bin_mode(MOD_PLAIN)
 	,txtHandle(&bNull)
 	,maxstrlen(MAX_STRLEN)
@@ -1239,7 +1240,7 @@ unsigned TextMode::get_symbol_size() const { return activeNLS->get_symbol_size()
 unsigned TextMode::get_max_line_length() const { return strmaxlen; }
 TextMode::e_flag TextMode::flags() const { return Text|Has_ConvertCP; }
 
-static Plugin* query_interface() { return new(zeromem) TextMode; }
+static Plugin* query_interface(CodeGuider& code_guider) { return new(zeromem) TextMode(code_guider); }
 
 extern const Plugin_Info textMode = {
     "~Text mode",	/**< plugin name */

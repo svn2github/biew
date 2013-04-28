@@ -70,7 +70,7 @@ static bool  __FASTCALL__ sis_check_fmt( void )
     if(id1==0x10201A7A) return true;
     return false;
 }
-static void __FASTCALL__ sis_init_fmt( void ) {}
+static void __FASTCALL__ sis_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
 static void __FASTCALL__ sis_destroy_fmt(void) {}
 static int  __FASTCALL__ sis_platform( void) { return DISASM_CPU_ARM; }
 

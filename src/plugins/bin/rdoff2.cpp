@@ -80,7 +80,7 @@ static bool __FASTCALL__ rdoff2_check_fmt( void )
 	 memcmp(rbuff,"RDOFF\x2",sizeof(rbuff)) == 0;
 }
 
-static void __FASTCALL__ rdoff2_init_fmt( void ) {}
+static void __FASTCALL__ rdoff2_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
 static void __FASTCALL__ rdoff2_destroy_fmt( void ) {}
 
 static int __FASTCALL__ rdoff2_platform( void ) { return DISASM_CPU_IX86; }

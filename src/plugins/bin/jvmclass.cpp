@@ -547,8 +547,9 @@ static __filesize_t __FASTCALL__ ShowPool(void)
   return fpos;
 }
 
-static void __FASTCALL__ jvm_init_fmt( void )
+static void __FASTCALL__ jvm_init_fmt(CodeGuider& code_guider)
 {
+    UNUSED(code_guider);
     __filesize_t fpos;
     unsigned short sval;
     jvm_header.magic=0xCAFEBABE;
@@ -868,7 +869,7 @@ static int __FASTCALL__ jvm_bitness(__filesize_t off)
     return DAB_USE16;
 }
 
-static unsigned long __FASTCALL__ jvm_AppendRef(char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+static unsigned long __FASTCALL__ jvm_AppendRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
  unsigned long  retrf = RAPREF_DONE;
  unsigned slen=1000; /* According on disasm/java/java.c */

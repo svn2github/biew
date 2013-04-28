@@ -47,7 +47,7 @@ namespace beye {
     };
     class BinMode : public Plugin {
 	public:
-	    BinMode();
+	    BinMode(CodeGuider& code_guider);
 	    virtual ~BinMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -79,8 +79,9 @@ namespace beye {
 
     };
 
-BinMode::BinMode()
-	:virtWidthCorr(0)
+BinMode::BinMode(CodeGuider& code_guider)
+	:Plugin(code_guider)
+	,virtWidthCorr(0)
 	,bin_mode(MOD_PLAIN)
 {}
 BinMode::~BinMode() {}
@@ -296,7 +297,7 @@ void BinMode::save_ini(hIniProfile *ini)
 unsigned BinMode::get_symbol_size() const { return bin_mode==MOD_PLAIN?1:2; }
 unsigned BinMode::get_max_line_length() const { return twGetClientWidth(MainWnd); }
 
-static Plugin* query_interface() { return new(zeromem) BinMode; }
+static Plugin* query_interface(CodeGuider& code_guider) { return new(zeromem) BinMode(code_guider); }
 
 extern const Plugin_Info binMode = {
     "~Binary mode",	/**< plugin name */

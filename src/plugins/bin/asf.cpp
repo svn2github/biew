@@ -48,7 +48,7 @@ static __filesize_t __FASTCALL__ Show_ASF_Header( void )
     return BMGetCurrFilePos();
 }
 
-static void __FASTCALL__ asf_init_fmt( void ) {}
+static void __FASTCALL__ asf_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
 static void __FASTCALL__ asf_destroy_fmt(void) {}
 static int  __FASTCALL__ asf_platform( void) { return DISASM_DEFAULT; }
 

@@ -99,7 +99,7 @@ struct REGISTRY_DISASM;
 		Panel_Wide   =0        /**< full mode of panel: instruction only */
 	    };
 
-	    DisMode();
+	    DisMode(CodeGuider& code_guider);
 	    virtual ~DisMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -217,6 +217,7 @@ struct REGISTRY_DISASM;
 	    char*			disCodeBufPredict;
 	    int				disMaxCodeLen;
 
+	    CodeGuider&			code_guider;
 	    bool			DisasmPrepareMode;
 	    std::vector<const REGISTRY_DISASM *> list;
     };

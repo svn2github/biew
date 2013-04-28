@@ -113,7 +113,7 @@ static bool  __FASTCALL__ avi_check_fmt( void )
     return false;
 }
 
-static void __FASTCALL__ avi_init_fmt( void ) {}
+static void __FASTCALL__ avi_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
 static void __FASTCALL__ avi_destroy_fmt(void) {}
 static int  __FASTCALL__ avi_platform( void) { return DISASM_DEFAULT; }
 

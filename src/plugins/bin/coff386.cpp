@@ -38,6 +38,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 namespace beye {
+static CodeGuider* code_guider;
 inline uint16_t COFF_WORD(const uint8_t* cval) { return (uint16_t)(*(const uint16_t *)(const uint8_t *)cval); }
 inline uint32_t COFF_DWORD(const uint8_t* cval) { return (uint32_t)(*(const uint32_t *)(const uint8_t *)cval); }
 
@@ -475,7 +476,7 @@ static bool  __NEAR__ __FASTCALL__ coffSymTabReadItemsIdx(BFile& handle,unsigned
  return true;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrCoff386(char *str,RELOC_COFF386 *rne,int flags)
+static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrCoff386(const DisMode& parent,char *str,RELOC_COFF386 *rne,int flags)
 {
   __filesize_t offset,retval,s,e;
   unsigned long val;
@@ -526,11 +527,11 @@ static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrCoff386(char *str,RELOC_C
   }
   e = CalcEntryCoff(rne->nameoff,false);
   if(!DumpMode && !EditMode && e && (flags & APREF_TRY_LABEL) == APREF_TRY_LABEL)
-						  GidAddGoAddress(str,e);
+						code_guider->add_go_address(parent,str,e);
   return retval;
 }
 
-static unsigned long __FASTCALL__ coff386_AppendRef(char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+static unsigned long __FASTCALL__ coff386_AppendRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
   RELOC_COFF386 *rcoff386,key;
   __filesize_t ret;
@@ -543,14 +544,14 @@ static unsigned long __FASTCALL__ coff386_AppendRef(char *str,__filesize_t ulShi
   key.offset = ulShift;
   __codelen = codelen;
   rcoff386 = (RELOC_COFF386*)la_Find(RelocCoff386,&key,coff386_compare_rels);
-  if(rcoff386) ret = BuildReferStrCoff386(str,rcoff386,flags);
+  if(rcoff386) ret = BuildReferStrCoff386(parent,str,rcoff386,flags);
   try_pub:
   if(!ret && (flags & APREF_TRY_LABEL))
   {
      if(FindPubName(buff,sizeof(buff),r_sh))
      {
        strcat(str,buff);
-       if(!DumpMode && !EditMode) GidAddGoAddress(str,r_sh);
+       if(!DumpMode && !EditMode) code_guider->add_go_address(parent,str,r_sh);
        ret = RAPREF_DONE;
      }
   }
@@ -564,8 +565,9 @@ static bool __FASTCALL__ coff386_check_fmt( void )
   return !(I386BADMAG(id));
 }
 
-static void __FASTCALL__ coff386_init_fmt( void )
+static void __FASTCALL__ coff386_init_fmt(CodeGuider& _code_guider)
 {
+    code_guider=&_code_guider;
   BFile& main_handle=bNull;
   __filesize_t s_off = sizeof(coff386hdr);
   uint_fast16_t i;

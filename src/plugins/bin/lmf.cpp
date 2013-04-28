@@ -126,8 +126,9 @@ static bool __FASTCALL__ lmf_check_fmt(void)
 
 #define failed_lmf {failed_lmf();return;}
 
-static void __FASTCALL__ lmf_init_fmt(void)
+static void __FASTCALL__ lmf_init_fmt(CodeGuider& code_guider)
 {
+    UNUSED(code_guider);
 	uint32_t i,l;
 	int32_t pos=0;
 	hl=new lmf_headers_list[MINREC];

@@ -41,6 +41,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 namespace beye {
+static CodeGuider* code_guider;
 static NEHEADER ne;
 
 static BFile* ne_cache = &bNull;
@@ -1133,7 +1134,7 @@ static void __FASTCALL__ rd_ImpName(char *buff,int blen,unsigned idx,bool useaso
   rdImpNameNELX(buff,blen,idx,useasoff,beye_context().headshift + ne.neOffsetImportTable);
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrNE(char *str,RELOC_NE *rne,int flags,__filesize_t ulShift)
+static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrNE(const DisMode& parent,char *str,RELOC_NE *rne,int flags,__filesize_t ulShift)
 {
   char buff[256];
   const char *pref;
@@ -1181,7 +1182,7 @@ static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrNE(char *str,RELOC_NE *rn
 	 retrf = ea;
 	 sprintf(&str[strlen(str)],"(*this).@%hu",rne->ordinal);
        }
-       if(!DumpMode && !EditMode && !(flags & APREF_USE_TYPE)) GidAddGoAddress(str,ea);
+       if(!DumpMode && !EditMode && !(flags & APREF_USE_TYPE)) code_guider->add_go_address(parent,str,ea);
      }
      else
      {
@@ -1195,7 +1196,7 @@ static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrNE(char *str,RELOC_NE *rn
 	 else sprintf(&str[strlen(str)],"(*this).seg<#%hu>:%sH",rne->idx,Get4Digit(rne->ordinal));
 	 retrf = ep;
        }
-       if(!DumpMode && !EditMode && !(flags & APREF_USE_TYPE)) GidAddGoAddress(str,ep);
+       if(!DumpMode && !EditMode && !(flags & APREF_USE_TYPE)) code_guider->add_go_address(parent,str,ep);
      }
    }
    else
@@ -1216,7 +1217,7 @@ static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrNE(char *str,RELOC_NE *rn
    return retrf;
 }
 
-static unsigned long __FASTCALL__ AppendNERef(char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+static unsigned long __FASTCALL__ AppendNERef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
     unsigned i;
     __filesize_t segpos,slength;
@@ -1256,7 +1257,7 @@ static unsigned long __FASTCALL__ AppendNERef(char *str,__filesize_t ulShift,int
 	    {
 	      rne->idx    = __findSpecType(CurrSegmentStart,CurrSegmentLength,i + 1,ulShift,codelen,2,rne->idx);
 	    }
-	    return BuildReferStrNE(str,rne,flags,ulShift);
+	    return BuildReferStrNE(parent,str,rne,flags,ulShift);
 	 }
 	 else
 	 {
@@ -1266,7 +1267,7 @@ static unsigned long __FASTCALL__ AppendNERef(char *str,__filesize_t ulShift,int
 	      if(FindPubName(buff,sizeof(buff),r_sh))
 	      {
 		strcat(str,buff);
-		if(!DumpMode && !EditMode) GidAddGoAddress(str,r_sh);
+		if(!DumpMode && !EditMode) code_guider->add_go_address(parent,str,r_sh);
 		return RAPREF_DONE;
 	      }
 	   }
@@ -1354,8 +1355,9 @@ static void __FASTCALL__ ne_ReadPubNameList(BFile& handle,void (__FASTCALL__ *me
    }
 }
 
-static void __FASTCALL__ NE_init( void )
+static void __FASTCALL__ NE_init(CodeGuider& _code_guider)
 {
+    code_guider=&_code_guider;
    BFile& main_handle = bmbioHandle();
    bmReadBufferEx(&ne,sizeof(NEHEADER),beye_context().headshift,SEEKF_START);
    if((ne_cache3 = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) ne_cache3 = &main_handle;

@@ -59,10 +59,12 @@ namespace beye {
     extern const REGISTRY_DISASM PPC_Disasm;
     extern const REGISTRY_DISASM Java_Disasm;
 
-DisMode::DisMode()
-	:DefDisasmSel(__DEFAULT_DISASM)
+DisMode::DisMode(CodeGuider& _code_guider)
+	:Plugin(_code_guider)
+	,DefDisasmSel(__DEFAULT_DISASM)
 	,HiLight(1)
 	,DisasmPrepareMode(false)
+	,code_guider(_code_guider)
 {
     size_t i,sz;
     unsigned def_platform;
@@ -93,12 +95,10 @@ DisMode::DisMode()
 	}
     }
     accept_actions();
-    if(!initCodeGuider(*this)) goto err;
 }
 
 DisMode::~DisMode()
 {
-    termCodeGuider();
     if(activeDisasm->term) activeDisasm->term();
     delete CurrStrLenBuff;
     delete PrevStrLenAddr;
@@ -252,7 +252,7 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
     if(amocpos != cfpos || keycode == KE_SUPERKEY || keycode == KE_JUSTFIND) {
 	tAbsCoord height = twGetClientHeight(MainWnd);
 	tAbsCoord width = twGetClientWidth(MainWnd);
-	GidResetGoAddress(keycode);
+	code_guider.reset_go_address(keycode);
 	I = 0;
 	twFreezeWin(MainWnd);
 	if(keycode == KE_UPARROW) {
@@ -292,7 +292,7 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 		CurrStrLenBuff[i] = dret.codelen;
 		twSetColorAttr(browser_cset.main);
 		len_64=HA_LEN();
-		::memcpy(outstr,GidEncodeAddress(cfpos,hexAddressResolv),len_64);
+		::memcpy(outstr,code_guider.encode_address(cfpos,hexAddressResolv),len_64);
 		len = 0;
 		if(disPanelMode < Panel_Full) {
 		    static char _clone;
@@ -337,6 +337,7 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 		/* Here adding commentaries */
 		savstring[0] = 0;
 		orig_commoff = orig_commpos = 0;
+		const char*codeguid_image = code_guider.image();
 		if(j > 5)
 		    if(dret.str[j-5] == codeguid_image[0] &&
 			dret.str[j-4] == codeguid_image[1] &&
@@ -523,7 +524,7 @@ void DisMode::disasm_screen(TWindow* ewnd,__filesize_t cp,__filesize_t flen,int 
     for(i = st;i < stop;i++) {
 	if(start + cp < flen) {
 	    len_64=HA_LEN();
-	    ::memcpy(outstr,GidEncodeAddress(cp + start,hexAddressResolv),len_64);
+	    ::memcpy(outstr,code_guider.encode_address(cp + start,hexAddressResolv),len_64);
 	    twUseWin(MainWnd);
 	    twSetColorAttr(browser_cset.main);
 	    twDirectWrite(1,i + 1,outstr,len_64-1);
@@ -855,7 +856,7 @@ int DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,a
   }
 #endif
   if(hexAddressResolv && beye_context().active_format()->AddressResolving) flg |= APREF_SAVE_VIRT;
-  app = disNeedRef >= Ref_All ? AppendAsmRef(str,ulShift,flg,codelen,0L) :
+  app = disNeedRef >= Ref_All ? AppendAsmRef(*this,str,ulShift,flg,codelen,0L) :
 				    RAPREF_NONE;
   if(app != RAPREF_DONE)
   {
@@ -896,7 +897,7 @@ int DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,a
       if(pa)
       {
 	/* 1. Try to determine immediate as offset to public symbol */
-	if(type & Arg_Rip) app = AppendAsmRef(str,pa,flg,codelen,0L);
+	if(type & Arg_Rip) app = AppendAsmRef(*this,str,pa,flg,codelen,0L);
 	if(app == RAPREF_DONE) goto next_step;
 	if(dis_severity < CommSev_Func)
 	{
@@ -1108,7 +1109,7 @@ int DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__fi
    if(dret.pro_clone == __INSNT_JMPPIC || dret.pro_clone == __INSNT_JMPRIP) goto try_pic; /* skip defaults for PIC */
    flg = APREF_TRY_LABEL;
    if(hexAddressResolv && beye_context().active_format()->AddressResolving) flg |= APREF_SAVE_VIRT;
-   if(AppendAsmRef(str,ulShift,flg,codelen,r_sh)) appended = RAPREF_DONE;
+   if(AppendAsmRef(*this,str,ulShift,flg,codelen,r_sh)) appended = RAPREF_DONE;
    else
    {
       /*
@@ -1118,7 +1119,7 @@ int DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__fi
       */
        if(dret.pro_clone == __INSNT_JMPVVT) /* jmp (mod r/m) */
        {
-	    if(AppendAsmRef(str,r_sh+dret.field,APREF_TRY_LABEL,dret.codelen,r_sh))
+	    if(AppendAsmRef(*this,str,r_sh+dret.field,APREF_TRY_LABEL,dret.codelen,r_sh))
 	    {
 	      appended = RAPREF_DONE;
 	      modif_to = strchr(str,' ');
@@ -1127,7 +1128,7 @@ int DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__fi
 		while(*modif_to == ' ') modif_to++;
 		*(modif_to-1) = '*';
 	      }
-	      if(!DumpMode && !EditMode) GidAddGoAddress(str,r_sh);
+	      if(!DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
 	    }
        }
        else
@@ -1135,10 +1136,10 @@ int DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__fi
        {
 	    try_pic:
 	    if(dret.pro_clone == __INSNT_JMPRIP) goto try_rip;
-	    if(AppendAsmRef(str,r_sh+dret.field,APREF_TRY_PIC,dret.codelen,r_sh))
+	    if(AppendAsmRef(*this,str,r_sh+dret.field,APREF_TRY_PIC,dret.codelen,r_sh))
 	    {
 	      appended = RAPREF_DONE; /* terminate appending any info anyway */
-	      if(!DumpMode && !EditMode) GidAddGoAddress(str,r_sh);
+	      if(!DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
 	    }
        }
        else
@@ -1156,7 +1157,7 @@ int DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__fi
 		    r_sh+dret.field)+dret.codelen;
 	pa = beye_context().active_format()->va2pa ? beye_context().active_format()->va2pa(_defval) :
 					   _defval;
-	app=AppendAsmRef(str,pa,APREF_TRY_LABEL,dret.codelen,0L);
+	app=AppendAsmRef(*this,str,pa,APREF_TRY_LABEL,dret.codelen,0L);
 	if(app)
 	{
 	  appended = RAPREF_DONE; /* terminate appending any info anyway */
@@ -1166,7 +1167,7 @@ int DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__fi
 	    while(*modif_to == ' ') modif_to++;
 	    *(modif_to-1) = '*';
 	  }
-	  if(!DumpMode && !EditMode) GidAddGoAddress(str,r_sh);
+	  if(!DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
 	}
        }
    }
@@ -1236,7 +1237,7 @@ int DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__fi
 	strcpy(dis_comments,comms);
      }
    }
-   if(appended && !DumpMode && !EditMode) GidAddGoAddress(str,r_sh);
+   if(appended && !DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
  }
  bmSeek(fpos,BM_SEEK_SET);
  return appended;
@@ -1246,7 +1247,7 @@ bool hexAddressResolution(unsigned& har);
 bool DisMode::action_F6() { return hexAddressResolution(hexAddressResolv); }
 unsigned DisMode::get_max_line_length() const { return get_max_symbol_size(); }
 
-static Plugin* query_interface() { return new(zeromem) DisMode; }
+static Plugin* query_interface(CodeGuider& code_guider) { return new(zeromem) DisMode(code_guider); }
 
 extern const Plugin_Info disMode = {
     "~Disassembler",	/**< plugin name */

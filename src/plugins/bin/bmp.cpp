@@ -37,7 +37,7 @@ static bool  __FASTCALL__ bmp_check_fmt( void )
 	bmReadByteEx(1,BM_SEEK_SET) == 'M') return true;
     return false;
 }
-static void __FASTCALL__ bmp_init_fmt( void ) {}
+static void __FASTCALL__ bmp_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
 static void __FASTCALL__ bmp_destroy_fmt(void) {}
 static int  __FASTCALL__ bmp_platform( void) { return DISASM_DEFAULT; }
 

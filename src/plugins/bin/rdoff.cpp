@@ -36,6 +36,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 namespace beye {
+static CodeGuider* code_guider;
 struct rdoff_ImpName
 {
   unsigned short lsegno;
@@ -395,7 +396,7 @@ static void __NEAR__ __FASTCALL__ BuildRelocRDOFF( void )
 
 static unsigned char __codelen;
 
-static __filesize_t __FASTCALL__ rdoffBuildReferStr(char *str,RDOFF_RELOC *reloc,__filesize_t ulShift,int flags)
+static __filesize_t __FASTCALL__ rdoffBuildReferStr(const DisMode& parent,char *str,RDOFF_RELOC *reloc,__filesize_t ulShift,int flags)
 {
    char name[400],ch,buff[400];
    const char *ptr_type;
@@ -481,7 +482,7 @@ static __filesize_t __FASTCALL__ rdoffBuildReferStr(char *str,RDOFF_RELOC *reloc
 	 strcat(str,ptr_type);
 	 strcat(str,Get8Digit(field_val));
 	 if(!EditMode && !DumpMode && (flags & APREF_TRY_LABEL))
-	   GidAddGoAddress(str,reloc->segto ? ds_start + field_val : cs_start + field_val);
+	   code_guider->add_go_address(parent,str,reloc->segto ? ds_start + field_val : cs_start + field_val);
        }
      }
      if(reloc->is_rel)
@@ -499,7 +500,7 @@ static __filesize_t __FASTCALL__ rdoffBuildReferStr(char *str,RDOFF_RELOC *reloc
    return retrf;
 }
 
-static unsigned long __FASTCALL__ rdoff_AppendRef(char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+static unsigned long __FASTCALL__ rdoff_AppendRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
   RDOFF_RELOC *rrdoff,key;
   unsigned long ret;
@@ -511,13 +512,13 @@ static unsigned long __FASTCALL__ rdoff_AppendRef(char *str,__filesize_t ulShift
   key.offset = ulShift;
   __codelen = codelen;
   rrdoff = (RDOFF_RELOC*)la_Find(rdoffReloc,&key,rdoff_compare_reloc);
-  ret = rrdoff ? rdoffBuildReferStr(str,rrdoff,ulShift,flags) : RAPREF_NONE;
+  ret = rrdoff ? rdoffBuildReferStr(parent,str,rrdoff,ulShift,flags) : RAPREF_NONE;
   if(!ret && (flags & APREF_TRY_LABEL))
   {
      if(FindPubName(buff,sizeof(buff),r_sh))
      {
        strcat(str,buff);
-       if(!DumpMode && !EditMode) GidAddGoAddress(str,r_sh);
+       if(!DumpMode && !EditMode) code_guider->add_go_address(parent,str,r_sh);
        ret = RAPREF_DONE;
      }
   }
@@ -532,8 +533,9 @@ static bool __FASTCALL__ rdoff_check_fmt( void )
 	 memcmp(rbuff,"RDOFF\x1",sizeof(rbuff)) == 0;
 }
 
-static void __FASTCALL__ rdoff_init_fmt( void )
+static void __FASTCALL__ rdoff_init_fmt(CodeGuider& _code_guider)
 {
+    code_guider=&_code_guider;
   unsigned long cs_len;
   rdoff_hdrlen = bmReadDWordEx(6,BM_SEEK_SET);
   bmSeek(rdoff_hdrlen,BM_SEEK_CUR);

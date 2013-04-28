@@ -366,7 +366,7 @@ static bool FStore( void )
 		int obj_class,obj_bitness;
 		unsigned obj_num;
 
-		DisMode* dismode = static_cast<DisMode*>(disMode.query_interface());
+		DisMode* dismode = static_cast<DisMode*>(disMode.query_interface(bctx.codeguider()));
 		if(flags & FSDLG_STRUCTS) {
 		    if(bctx.active_format()->set_state) bctx.active_format()->set_state(PS_ACTIVE);
 		    if(bctx.active_format()->prepare_structs) bctx.active_format()->prepare_structs(ff_startpos,ff_startpos+ff_len);

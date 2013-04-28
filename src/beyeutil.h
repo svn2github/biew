@@ -33,6 +33,7 @@
 #endif
 
 namespace beye {
+    class DisMode;
     extern const char legalchars[];
     extern bool DumpMode;
     extern bool EditMode;
@@ -83,6 +84,7 @@ namespace beye {
 	RAPREF_DONE=UINT_MAX /**< means reference is appended */
     };
 		   /** Appends disassembler reference to string.
+		     * @paran parent       reference to class DisMode
 		     * @param str          string buffer for append to
 		     * @param ulShift      physical address of field, that required of binding
 		     * @param mode         see reg_form.h for detail
@@ -92,7 +94,7 @@ namespace beye {
 					   offset of target which is applied to
 					   fixing field.
 		    **/
-    unsigned long __FASTCALL__ AppendAsmRef(char *str,__filesize_t ulShift,
+    unsigned long __FASTCALL__ AppendAsmRef(const DisMode& parent,char *str,__filesize_t ulShift,
 					       int mode,char codelen,
 					       __filesize_t r_shift);
 

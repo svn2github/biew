@@ -79,7 +79,7 @@ static bool  __FASTCALL__ sisx_check_fmt( void )
     if((id&0x10000000UL)==0x10000000UL && memcmp(sign,"EPOC",4)==0) return true;
     return false;
 }
-static void __FASTCALL__ sisx_init_fmt( void ) {}
+static void __FASTCALL__ sisx_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
 static void __FASTCALL__ sisx_destroy_fmt(void) {}
 static int  __FASTCALL__ sisx_platform(void) {
  unsigned id;

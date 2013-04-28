@@ -45,7 +45,7 @@ static __filesize_t __FASTCALL__ Show_RM_Header( void )
     return BMGetCurrFilePos();
 }
 
-static void __FASTCALL__ rm_init_fmt( void ) {}
+static void __FASTCALL__ rm_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
 static void __FASTCALL__ rm_destroy_fmt(void) {}
 static int  __FASTCALL__ rm_platform( void) { return DISASM_DEFAULT; }
 

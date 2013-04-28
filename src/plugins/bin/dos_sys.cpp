@@ -96,7 +96,7 @@ static bool  __FASTCALL__ dossys_check_fmt( void )
   return ret;
 }
 
-static void __FASTCALL__ dossys_init_fmt( void ) {}
+static void __FASTCALL__ dossys_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
 static void __FASTCALL__ dossys_destroy_fmt(void) {}
 static int  __FASTCALL__ dossys_platform( void) { return DISASM_CPU_IX86; }
 

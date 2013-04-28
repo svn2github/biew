@@ -88,8 +88,9 @@ static __filesize_t __FASTCALL__ ShowOPharLapHeader( void )
   return fpos;
 }
 
-static void __FASTCALL__ OPharLapInit( void )
+static void __FASTCALL__ OPharLapInit(CodeGuider& code_guider)
 {
+    UNUSED(code_guider);
   bmReadBufferEx(&oph,sizeof(oph),0,SEEKF_START);
 }
 

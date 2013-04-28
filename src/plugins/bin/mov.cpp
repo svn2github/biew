@@ -58,7 +58,7 @@ static bool  __FASTCALL__ mov_check_fmt( void )
     return false;
 }
 
-static void __FASTCALL__ mov_init_fmt( void ) {}
+static void __FASTCALL__ mov_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
 static void __FASTCALL__ mov_destroy_fmt(void) {}
 static int  __FASTCALL__ mov_platform( void) { return DISASM_DEFAULT; }
 

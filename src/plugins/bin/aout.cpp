@@ -135,7 +135,7 @@ static bool __FASTCALL__ aout_check_fmt( void )
   return 0;
 }
 
-static void __FASTCALL__ aout_init_fmt( void ) {}
+static void __FASTCALL__ aout_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider);}
 static void __FASTCALL__ aout_destroy_fmt( void ) {}
 
 static int __FASTCALL__ aout_bitness(__filesize_t off)

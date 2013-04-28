@@ -447,7 +447,7 @@ static __filesize_t __FASTCALL__ Show_MP3_Header( void )
  return fpos;
 }
 
-static void __FASTCALL__ mp3_init_fmt( void ) {}
+static void __FASTCALL__ mp3_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
 static void __FASTCALL__ mp3_destroy_fmt(void) {}
 static int  __FASTCALL__ mp3_platform( void) { return DISASM_DEFAULT; }
 

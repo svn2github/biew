@@ -45,6 +45,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 namespace beye {
+static CodeGuider* code_guider;
 #define ARRAY_SIZE(x)       (sizeof(x)/sizeof(x[0]))
 
 static int is_64bit;
@@ -1067,7 +1068,7 @@ static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE __H
    return retrf;
 }
 
-static unsigned long __FASTCALL__ AppendPERef(char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+static unsigned long __FASTCALL__ AppendPERef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
   RELOC_PE __HUGE__ *rpe;
   __filesize_t retrf;
@@ -1091,7 +1092,7 @@ static unsigned long __FASTCALL__ AppendPERef(char *str,__filesize_t ulShift,int
      if(FindPubName(buff,sizeof(buff),r_sh))
      {
        strcat(str,buff);
-       if(!DumpMode && !EditMode) GidAddGoAddress(str,r_sh);
+       if(!DumpMode && !EditMode) code_guider->add_go_address(parent,str,r_sh);
        retrf = RAPREF_DONE;
      }
   }
@@ -1110,8 +1111,9 @@ static bool __FASTCALL__ IsPE( void )
    return false;
 }
 
-static void __FASTCALL__ initPE( void )
+static void __FASTCALL__ initPE(CodeGuider& _code_guider)
 {
+    code_guider=&_code_guider;
    int i;
 
    bmReadBufferEx(&pe,sizeof(PEHEADER),beye_context().headshift,SEEKF_START);

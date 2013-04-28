@@ -23,15 +23,29 @@
 
 namespace beye {
     class DisMode;
-    extern char codeguid_image[];
+    class CodeGuider : public Opaque {
+	public:
+	    CodeGuider();
+	    virtual ~CodeGuider();
 
-    void              __FASTCALL__ GidResetGoAddress( int keycode );
-    void              __FASTCALL__ GidAddGoAddress(char *str,__filesize_t addr);
-    void              __FASTCALL__ GidAddBackAddress( void );
-    __filesize_t      __FASTCALL__ GidGetGoAddress(unsigned keycode);
-    char *            __FASTCALL__ GidEncodeAddress(__filesize_t cfpos,bool aresolv);
+	    void		reset_go_address( int keycode );
+	    void		add_go_address(const DisMode& parent,char *str,__filesize_t addr);
+	    void		add_back_address();
+	    __filesize_t	get_go_address(unsigned keycode);
+	    char*		encode_address(__filesize_t cfpos,bool aresolv);
+	    const char*		image() const { return codeguid_image; }
+	private:
+	    char*		gidBuildKeyStr();
+	    int			gidGetKeyIndex(char key);
+	    char		gidGetAddressKey( unsigned _index );
 
-    bool             __FASTCALL__ initCodeGuider(const DisMode& parent);
-    void              __FASTCALL__ termCodeGuider( void );
+	    char		codeguid_image[6];
+	    __filesize_t*	BackAddr;
+	    int			BackAddrPtr;
+	    __filesize_t*	GoAddr;
+	    unsigned int*	GoLineNums;
+	    int			GoAddrPtr;
+	    unsigned char	Alarm;
+    };
 } // namespace beye
 #endif

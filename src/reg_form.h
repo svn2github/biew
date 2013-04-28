@@ -41,6 +41,7 @@ enum {
     APREF_SAVE_VIRT   =0x0004, /**< Notifies plugin about preserving of virtual address, if binding is local */
     APREF_TRY_PIC     =0x0008  /**< Append references in short form assuming that shift is offset in .GOT table where references are binded */
 };
+class DisMode;
 /**
    Appends disassembler reference to string.
    * @param str          string buffer for append to
@@ -50,7 +51,7 @@ enum {
    * @param r_shift      used only if APPREF_TRY_LABEL mode is set, contains real value of field, that required binding
    * @return             one of RAPREF_* constants (see beyeutil.h file for detail)
 */
-typedef unsigned long (__FASTCALL__ *AppRefs)(char *str,__filesize_t shift,int flags,int codelen,__filesize_t r_shift);
+typedef unsigned long (__FASTCALL__ *AppRefs)(const DisMode& parent,char *str,__filesize_t shift,int flags,int codelen,__filesize_t r_shift);
 
 /***************************************************************\
 *  This form registry binary file formats                       *
@@ -98,13 +99,14 @@ enum {
     PS_INACTIVE    =0,
     PS_ACTIVE      =1
 };
+class CodeGuider;
 struct REGISTRY_BIN
 {
   const char * name;                            /**< name of binary format */
   const char * prompt[10];                      /**< on ALT-Fx selection */
   const BinFunc  action[10];                         /**< action on ALT-Fx selection */
   bool   (__FASTCALL__ *check_format)( void ); /**< Checks format */
-  void    (__FASTCALL__ *init)( void );         /**< Inits plugin (if check o'k) (constructor) */
+  void    (__FASTCALL__ *init)(CodeGuider&);    /**< Inits plugin (if check o'k) (constructor) */
   void    (__FASTCALL__ *destroy)( void );      /**< Destroys plugin (destructor) */
   BinFunc   showHdr;                            /**< if not an MZ style format */
   AppRefs   bind;                               /**< for show references */

@@ -135,7 +135,7 @@ void BeyeContext::main_loop()
 	    (che >= 'a' && che <= 'z') ||
 	    ch == KE_BKSPACE) &&
 	    (activeMode->flags() & Plugin::UseCodeGuide) == Plugin::UseCodeGuide) {
-		nfp = GidGetGoAddress(ch);
+		nfp = code_guider->get_go_address(ch);
 		goto GO;
         }
 	switch(ch) {
@@ -224,7 +224,7 @@ void BeyeContext::main_loop()
 				break;
 		    }
 		    if((activeMode->flags() & Plugin::UseCodeGuide) == Plugin::UseCodeGuide)
-								 GidAddBackAddress();
+								 code_guider->add_back_address();
 		    ch = KE_SUPERKEY;
 		    }
 	    }

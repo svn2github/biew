@@ -252,8 +252,9 @@ static bool __FASTCALL__ IsPharLap( void )
    return false;
 }
 
-static void __FASTCALL__ PharLapInit( void )
+static void __FASTCALL__ PharLapInit(CodeGuider& code_guider)
 {
+    UNUSED(code_guider);
   BFile& main_handle = bmbioHandle();
   bmReadBufferEx(&nph,sizeof(nph),0,BM_SEEK_SET);
   if((pl_cache = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) pl_cache = &main_handle;

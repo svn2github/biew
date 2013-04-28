@@ -3,6 +3,7 @@
 #include "libbeye/libbeye.h"
 
 namespace beye {
+    class CodeGuider;
     class Plugin : public Opaque {
 	public:
 	    enum e_flag {
@@ -14,7 +15,7 @@ namespace beye {
 		Has_ConvertCP	=0x0010
 	    };
 
-	    Plugin() {}
+	    Plugin(CodeGuider& code_guider) { UNUSED(code_guider); }
 	    virtual ~Plugin() {}
 
 	    virtual const char*		prompt(unsigned idx) const = 0;	/**< on Ctrl-Fx selection */
@@ -79,7 +80,7 @@ namespace beye {
 
     struct Plugin_Info {
 	const char* name;
-	Plugin* (*query_interface)();
+	Plugin* (*query_interface)(CodeGuider& code_guider);
     };
 } //namespace beye
 #endif
