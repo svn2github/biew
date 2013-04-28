@@ -303,9 +303,7 @@ void __FASTCALL__ ix86_FPUCmd(char * str,ix86Param *DisP)
 		if(code1 == 0xF6 || code1 == 0xF7) strcpy(str,D9Fx[code1 & 0x0F]);
 		else    FPUcmdst0(str,D9Fx[code1 & 0x0F]);
 		if(code1 == 0xF5 || code1 == 0xFB || code1 == 0xFE || code1 == 0xFF)
-#ifdef IX86_64
 		if(x86_Bitness != DAB_USE64)
-#endif
 			DisP->pro_clone &= ~IX86_CPUMASK;
 			DisP->pro_clone |= IX86_CPU386|INSN_FPU;
 	      }
@@ -318,22 +316,16 @@ void __FASTCALL__ ix86_FPUCmd(char * str,ix86Param *DisP)
    case 0xDA :
 	    if(code1 == 0xE9)
 	    {
-#ifdef IX86_64
-		if(x86_Bitness != DAB_USE64)
-#endif
-	      DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
+		if(x86_Bitness != DAB_USE64) DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 	      DisP->pro_clone |= IX86_CPU386|INSN_FPU;
 	      strcpy(str,SC("fucompp","st(1)"));
 	    }
 	    else
 	      if((code1 & 0xC0) == 0xC0)
 	      {
-#ifdef IX86_64
-		if(x86_Bitness != DAB_USE64)
-#endif
-		 DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
-		 DisP->pro_clone |= IX86_CPU686|INSN_FPU;
-		 FPUst0sti(str,FCMOVc[(code1 >> 3) & 0x07],code1);
+		if(x86_Bitness != DAB_USE64) DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
+		DisP->pro_clone |= IX86_CPU686|INSN_FPU;
+		FPUst0sti(str,FCMOVc[(code1 >> 3) & 0x07],code1);
 	      }
 	      else
 		FPUint16int32(str,int16int32[rm],DisP);
@@ -342,17 +334,13 @@ void __FASTCALL__ ix86_FPUCmd(char * str,ix86Param *DisP)
 	   switch(code1)
 	   {
 	     case 0xFC:
-#ifdef IX86_64
 		if(x86_Bitness != DAB_USE64)
 		{
-#endif
 			strcpy(str,SC("frint2","st(0)"));
 			DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP|IX86_CLONEMASK);
 			DisP->pro_clone |= IX86_CPU486|INSN_FPU|IX86_CYRIX;
-#ifdef IX86_64
 		}
 		else strcpy(str,"f???");
-#endif
 		break;
 	     default:
 	     if((code1 & 0xF0) == 0xE0)
@@ -361,9 +349,7 @@ void __FASTCALL__ ix86_FPUCmd(char * str,ix86Param *DisP)
 	       {
 		  unsigned char _index = code1 & 0x07;
 		  strcpy(str,DBEx[_index]);
-#ifdef IX86_64
 		  if(x86_Bitness != DAB_USE64)
-#endif
 		  if(_index == 4) {
 		    DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 		    DisP->pro_clone |= IX86_CPU286|INSN_FPU;
@@ -377,9 +363,7 @@ void __FASTCALL__ ix86_FPUCmd(char * str,ix86Param *DisP)
 	       if((code1 & 0xC0) == 0xC0)
 	       {
 		  XC0:
-#ifdef IX86_64
 		  if(x86_Bitness != DAB_USE64)
-#endif
 		  DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 		  DisP->pro_clone |= IX86_CPU386|INSN_FPU;
 		  FPUst0sti(str,FCMOVnc[(code1 >> 3) & 0x07],code1);
@@ -388,9 +372,7 @@ void __FASTCALL__ ix86_FPUCmd(char * str,ix86Param *DisP)
 	       {
 		 (*DBrm[rm].f)(str,DBrm[rm].c,DisP);
 		 if(rm==1
-#ifdef IX86_64
 		  && x86_Bitness != DAB_USE64
-#endif
 		 ) {
 		    DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 		    DisP->pro_clone |= IX86_P5|INSN_FPU;
@@ -410,17 +392,13 @@ void __FASTCALL__ ix86_FPUCmd(char * str,ix86Param *DisP)
 	    switch(code1)
 	    {
 	      case 0xFC:
-#ifdef IX86_64
 		if(x86_Bitness != DAB_USE64)
 		{
-#endif
 			strcpy(str,SC("frichop","st(0)"));
 			DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP|IX86_CLONEMASK);
 			DisP->pro_clone |= IX86_CPU486|INSN_FPU|IX86_CYRIX;
-#ifdef IX86_64
 		}
 		else strcpy(str, "f???");
-#endif
 		break;
 	      default:
 	      if((code1 & 0xF0) == 0xC0) FPUcmdsti_2(str,"ffree","f???",code1);
@@ -429,9 +407,7 @@ void __FASTCALL__ ix86_FPUCmd(char * str,ix86Param *DisP)
 		else
 		  if((code1 & 0xF0) == 0xE0)
 		  {
-#ifdef IX86_64
 		    if(x86_Bitness != DAB_USE64)
-#endif
 		    DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 		    DisP->pro_clone |= IX86_CPU386|INSN_FPU;
 		    FPUcmdsti_2(str,"fucom","fucomp",code1);
@@ -440,9 +416,7 @@ void __FASTCALL__ ix86_FPUCmd(char * str,ix86Param *DisP)
 		  {
 		    (*DDrm[rm].f)(str,DDrm[rm].c,DisP);
 		    if(rm==1
-#ifdef IX86_64
 		  && x86_Bitness != DAB_USE64
-#endif
 		    ) {
 			DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 			DisP->pro_clone |= IX86_P5|INSN_FPU;
@@ -466,39 +440,29 @@ void __FASTCALL__ ix86_FPUCmd(char * str,ix86Param *DisP)
 	     case 0xE0:  strcpy(str,SC("fstsw","ax"));
 			 break;
 	     case 0xE1:  strcpy(str,SC("fnstdw","ax"));
-#ifdef IX86_64
 			 if(x86_Bitness != DAB_USE64)
-#endif
 			 DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 			 DisP->pro_clone |= IX86_CPU386|INSN_FPU;
 			 break;
 	     case 0xE2:  strcpy(str,SC("fnstsg","ax"));
-#ifdef IX86_64
 			 if(x86_Bitness != DAB_USE64)
-#endif
 			 DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 			 DisP->pro_clone |= IX86_CPU386|INSN_FPU;
 			 break;
 	     case 0xFC:
-#ifdef IX86_64
 			 if(x86_Bitness != DAB_USE64)
 			 {
-#endif
 			 strcpy(str,SC("frinear","st(0)"));
 			 DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP|IX86_CLONEMASK);
 			 DisP->pro_clone |= IX86_CPU486|INSN_FPU|IX86_CYRIX;
-#ifdef IX86_64
 			 }
 			 else strcpy(str,"f???");
-#endif
 			 break;
 	     default:
 	      {
 		if((code1 & 0xE0) == 0xE0)
 		{
-#ifdef IX86_64
 		  if(x86_Bitness != DAB_USE64)
-#endif
 		  DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 		  DisP->pro_clone |= IX86_CPU686|INSN_FPU;
 		  FPUst0sti(str,FxCOMIP[(code1 >> 3) & 0x07],code1);
@@ -506,9 +470,7 @@ void __FASTCALL__ ix86_FPUCmd(char * str,ix86Param *DisP)
 		else
 		if((code1 & 0xC0) == 0xC0)
 		{
-#ifdef IX86_64
 		 if(x86_Bitness != DAB_USE64)
-#endif
 		  DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 		  DisP->pro_clone |= IX86_CPU386|INSN_FPU;
 		  FPUcmdsti_2(str,"ffreep","f???",code1);
@@ -517,9 +479,7 @@ void __FASTCALL__ ix86_FPUCmd(char * str,ix86Param *DisP)
 		{
 		   (*DFrm[rm].f)(str,DFrm[rm].c,DisP);
 		   if(rm==1
-#ifdef IX86_64
 		  && x86_Bitness != DAB_USE64
-#endif
 		   ) {
 		    DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 		    DisP->pro_clone |= IX86_P5|INSN_FPU;

@@ -17,8 +17,6 @@
 #ifndef ____DISASM_H
 #define ____DISASM_H
 
-#define IX86_64 1 /* enable athlon64 disassembler by default */
-
 #include "plugins/disasm.h"
 
 #ifndef __BEYELIB_H
@@ -257,28 +255,20 @@ typedef struct tag_ix86opcodes
 {
   const char *  name16;
   const char *  name32;
-#ifdef IX86_64
   const char *  name64;
-#endif
   ix86_method   method;
   unsigned long pro_clone;
-#ifdef IX86_64
   ix86_method   method64;
   unsigned long flags64;
-#endif
 }ix86_Opcodes;
 
 typedef struct tag_ix86ExOpcodes
 {
   const char *  name;
-#ifdef IX86_64
   const char *  name64;
-#endif
   ix86_method   method;
-#ifdef IX86_64
   ix86_method   method64;
   unsigned long flags64;
-#endif
   unsigned long pro_clone;
 }ix86_ExOpcodes;
 

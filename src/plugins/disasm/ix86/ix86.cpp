@@ -64,13 +64,7 @@ const char * k64_DrxRegs[]  = { "dr0", "dr1", "dr2", "dr3", "dr4", "dr5", "dr6",
 const char * k64_TrxRegs[]  = { "tr0", "tr1", "tr2", "tr3", "tr4", "tr5", "tr6", "tr7", "tr8", "tr9", "tr10", "tr11", "tr12", "tr13", "tr14", "tr15" };
 const char * k64_XrxRegs[]  = { "?r0", "?r1", "?r2", "?r3", "?r4", "?r5", "?r6", "?r7", "?r8", "?r9", "?r10", "?r11", "?r12", "?r13", "?r14", "?r15" };
 
-#ifdef IX86_64
-#define DECLARE_BASE_INSN(n16, n32, n64, func, func64, flags, flags64)\
-{ n16, n32, n64, func, flags, func64, flags64 }
-#else
-#define DECLARE_BASE_INSN(n16, n32, n64, func, func64, flags, flags64)\
-{ n16, n32, func, flags }
-#endif
+#define DECLARE_BASE_INSN(n16, n32, n64, func, func64, flags, flags64) { n16, n32, n64, func, flags, func64, flags64 }
 
 const ix86_Opcodes ix86_table[256] =
 {
@@ -332,13 +326,7 @@ const ix86_Opcodes ix86_table[256] =
   /*0xFF*/ DECLARE_BASE_INSN("!!!","!!!","!!!",ix86_ArgGrp2,ix86_ArgGrp2,IX86_CPU086|INSN_STORE,K64_ATHLON|INSN_STORE)
 };
 
-#ifdef IX86_64
-#define DECLARE_EX_INSN(n32, n64, func, func64, flags, flags64)\
-{ n32, n64, func, func64, flags64, flags }
-#else
-#define DECLARE_EX_INSN(n32, n64, func, func64, flags, flags64)\
-{ n32, func, flags }
-#endif
+#define DECLARE_EX_INSN(n32, n64, func, func64, flags, flags64) { n32, n64, func, func64, flags64, flags }
 
 const ix86_ExOpcodes ix86_0F38_Table[256] =
 {
@@ -1914,13 +1902,7 @@ const ix86_3dNowopcodes ix86_3dNowtable[256] =
   /*0xFF*/ { "???", IX86_UNKAMD }
 };
 
-#ifdef IX86_64
-#define DECLARE_EX_INSN(n32, n64, func, func64, flags, flags64)\
-{ n32, n64, func, func64, flags64, flags }
-#else
-#define DECLARE_EX_INSN(n32, n64, func, func64, flags, flags64)\
-{ n32, func, flags }
-#endif
+#define DECLARE_EX_INSN(n32, n64, func, func64, flags, flags64) { n32, n64, func, func64, flags64, flags }
 
 /*
   note: first column describes XOP_mmmm=08
@@ -5375,19 +5357,16 @@ static void ix86_gettype(DisasmRet *dret,ix86Param *_DisP)
  has_vex = has_lock = has_rep = has_seg = 0;
  up = ua = ud = 0;
  RepeateByPrefix:
-#ifdef IX86_64
  if(x86_Bitness == DAB_USE64)
  {
    if(ua+has_seg+has_rep+has_lock+has_vex>4) goto get_type;
    if(ud>6) goto get_type;
  }
  else
-#endif
  if(has_lock + has_rep > 1 || has_seg > 1 || ua > 1 || ud > 6 || has_vex > 0) goto get_type;
  /** do prefixes loop */
  switch(insn[0])
  {
-#ifdef IX86_64
    case 0x40:
    case 0x41:
    case 0x42:
@@ -5410,7 +5389,6 @@ static void ix86_gettype(DisasmRet *dret,ix86Param *_DisP)
 		}
 		else goto MakePref;
 		break;
-#endif
    case 0x26:
    case 0x2E:
    case 0x36:
@@ -5472,21 +5450,17 @@ static void ix86_gettype(DisasmRet *dret,ix86Param *_DisP)
     else
     if(_DisP->pfx&PFX_66)       SSE2_ext=ix86_660F_PentiumTable;
     if(!(
-#ifdef IX86_64
 		x86_Bitness==DAB_USE64?
 		SSE2_ext[insn[1]].name64:
-#endif
 		SSE2_ext[insn[1]].name
 		))  return;
   }
  get_type:
-#ifdef IX86_64
   if(x86_Bitness == DAB_USE64)
   {
     _DisP->mode|= MOD_WIDE_ADDR;
     if(_DisP->pfx&PFX_REX && ((_DisP->REX & 0x0F)>>3) != 0) _DisP->mode|=MOD_WIDE_DATA;
   }
-#endif
    if((insn[0] & 0xF6) == 0xC2)
    {
      dret->pro_clone = __INSNT_RET;
@@ -5503,7 +5477,6 @@ static void ix86_gettype(DisasmRet *dret,ix86Param *_DisP)
      }
      return; /* Return here immediatly, because we have 'goto' operator. */
    }
-#ifdef IX86_64
      else
      if(insn[0] == 0xFF && (insn[1]==0x15 || insn[1] == 0x25) && x86_Bitness == DAB_USE64)
      {
@@ -5511,7 +5484,6 @@ static void ix86_gettype(DisasmRet *dret,ix86Param *_DisP)
 	dret->codelen = 4;
 	dret->field = 2;
      }
-#endif
      else
      if(insn[0] == 0xFF &&
 	(((insn[1] & 0x27) == 0x25 && (_DisP->mode&MOD_WIDE_ADDR)) ||
@@ -5579,7 +5551,6 @@ static void ix86_gettype(DisasmRet *dret,ix86Param *_DisP)
 
 static unsigned char parse_REX(unsigned char code,ix86Param* DisP)
 {
-#ifdef IX86_64
     if(x86_Bitness == DAB_USE64 && !(DisP->pfx&PFX_REX))
     {
 	DisP->pfx|=PFX_REX;
@@ -5587,7 +5558,6 @@ static unsigned char parse_REX(unsigned char code,ix86Param* DisP)
     }
     DisP->CodeAddress++;
     DisP->RealCmd = &DisP->RealCmd[1];
-#endif
     return DisP->RealCmd[0];
 }
 
@@ -5649,11 +5619,8 @@ static DisasmRet __FASTCALL__ ix86Disassembler(__filesize_t ulShift,
 
  memset(&DisP,0,sizeof(DisP));
  memset(&Ret,0,sizeof(Ret));
-#ifdef IX86_64
  if(x86_Bitness == DAB_USE64) DisP.pro_clone=K64_ATHLON;
- else
-#endif
- DisP.pro_clone = IX86_CPU086;
+ else DisP.pro_clone = IX86_CPU086;
  DisP.codelen = 1;
  DisP.DisasmPrefAddr = ulShift;
  DisP.CodeAddress = ulShift;
@@ -5689,7 +5656,6 @@ static DisasmRet __FASTCALL__ ix86Disassembler(__filesize_t ulShift,
  Ret.str[0] = 0;
  RepeateByPrefix:
  code = DisP.RealCmd[0];
-#ifdef IX86_64
  if(x86_Bitness == DAB_USE64)
  {
    if(ua+has_seg+has_rep+has_lock+has_vex+has_xop>4) goto bad_prefixes;
@@ -5699,7 +5665,6 @@ static DisasmRet __FASTCALL__ ix86Disassembler(__filesize_t ulShift,
    if(ud>6) goto bad_prefixes;
  }
  else
-#endif
  if(has_lock + has_rep > 1 || has_seg > 1 || ua > 1 || ud > 6 || has_vex > 1 || has_rex > 1 || has_xop > 1)
  {
    bad_prefixes:
@@ -5711,7 +5676,6 @@ static DisasmRet __FASTCALL__ ix86Disassembler(__filesize_t ulShift,
  /** do prefixes loop */
  switch(code)
  {
-#ifdef IX86_64
    case 0x40:
    case 0x41:
    case 0x42:
@@ -5735,7 +5699,6 @@ static DisasmRet __FASTCALL__ ix86Disassembler(__filesize_t ulShift,
 		goto RepeateByPrefix;
 	      }
 	      break;
-#endif
    case 0x26:
 		if(has_seg) break;
 		/*in 64-bit mode, the CS,DS,ES,SS segment overrides are ignored but may be specified */
@@ -5856,11 +5819,9 @@ static DisasmRet __FASTCALL__ ix86Disassembler(__filesize_t ulShift,
 	      goto RepeateByPrefix;
  }
  end_of_prefixes:
-#ifdef IX86_64
  /* Let it be overwritten later */
  if(x86_Bitness == DAB_USE64) DisP.insn_flags = ix86_table[code].flags64;
  else
-#endif
  DisP.insn_flags = ix86_table[code].pro_clone;
  if((DisP.pfx&PFX_VEX) && DisP.VEX_m>0 && DisP.VEX_m<4 && !(DisP.pfx&PFX_XOP)) goto fake_0F_opcode;
  if(code==0x0F && (DisP.pfx&(PFX_F2_REPNE|PFX_F3_REP|PFX_66))) {
@@ -5940,7 +5901,6 @@ static DisasmRet __FASTCALL__ ix86Disassembler(__filesize_t ulShift,
     }
  }
  else {
-#ifdef IX86_64
  if(x86_Bitness == DAB_USE64)
  {
    if(REX_W(DisP.REX)) DisP.mode|=MOD_WIDE_DATA; /* 66h prefix is ignored if REX prefix is present*/
@@ -5957,9 +5917,7 @@ static DisasmRet __FASTCALL__ ix86Disassembler(__filesize_t ulShift,
    else		strcpy(Ret.str,ix86_table[code].name32);
  }
  else
-#endif
    strcpy(Ret.str,(DisP.mode&MOD_WIDE_DATA) ? ix86_table[code].name32 : ix86_table[code].name16);
-#ifdef IX86_64
  if(x86_Bitness == DAB_USE64)
  {
    if(ix86_table[code].method64)
@@ -5970,7 +5928,6 @@ static DisasmRet __FASTCALL__ ix86Disassembler(__filesize_t ulShift,
    }
  }
  else
-#endif
  if(ix86_table[code].method)
  {
 	DisP.insn_flags = ix86_table[code].pro_clone;
@@ -6020,9 +5977,7 @@ static DisasmRet __FASTCALL__ ix86Disassembler(__filesize_t ulShift,
  if(ix86_da_out[0]) TabSpace(ix86_da_out,TAB_POS);
  strncat(ix86_da_out,Ret.str,MAX_DISASM_OUTPUT);
  Ret.str = ix86_da_out;
-#ifdef IX86_64
  if(x86_Bitness < DAB_USE64)
-#endif
  if((DisP.pfx&PFX_66) || (DisP.pfx&PFX_67) || x86_Bitness == DAB_USE32)
  {
     if((DisP.pro_clone & IX86_CPUMASK) < IX86_CPU386)
@@ -6090,7 +6045,6 @@ static const char * MMXNames[] =
   "Prescott "
 };
 
-#ifdef IX86_64
 static const char * CPU64Names[] =
 {
   " K86-64 CPU ",
@@ -6104,7 +6058,6 @@ static const char * CPU64Names[] =
   "      ",
   "      "
 };
-#endif
 static const char * altPipesNames[] =
 {
   " CPU ALU ",
@@ -6167,11 +6120,7 @@ static void __FASTCALL__ ix86HelpAsm( void )
  unsigned long nstrs;
  TWindow * hwnd;
  if(!hlpOpen(true)) return;
-#ifdef IX86_64
  size = (unsigned)hlpGetItemSize(x86_Bitness == DAB_USE64 ? 20002:20001);
-#else
- size = (unsigned)hlpGetItemSize(20001);
-#endif
  if(!size) goto ix86hlp_bye;
  msgAsmText = new char [size+1];
  if(!msgAsmText)
@@ -6180,11 +6129,7 @@ static void __FASTCALL__ ix86HelpAsm( void )
    MemOutBox(" Help Display ");
    goto ix86hlp_bye;
  }
-#ifdef IX86_64
  if(!hlpLoadItem(x86_Bitness == DAB_USE64 ? 20002:20001,msgAsmText))
-#else
- if(!hlpLoadItem(20001,msgAsmText))
-#endif
  {
    delete msgAsmText;
    goto ix86hlp_bye;
@@ -6210,7 +6155,6 @@ static void __FASTCALL__ ix86HelpAsm( void )
  }
  delete msgAsmText;
  twGotoXY(5,3);
-#ifdef IX86_64
  if(x86_Bitness == DAB_USE64 || color_mode==1)
  {
    twGotoXY(5,3);
@@ -6237,7 +6181,6 @@ static void __FASTCALL__ ix86HelpAsm( void )
    }
  }
  else
-#endif
  {
  for(i = 0;i < 10;i++)
  {
@@ -6271,9 +6214,7 @@ static const char *use_names[] =
 {
    "Use1~6",
    "Use~32",
-#ifdef IX86_64
    "Use6~4",
-#endif
    "~Auto"
 };
 
@@ -6473,12 +6414,10 @@ AsmRet __FASTCALL__ ix86Asm(const char *code)
   {
     fprintf(asmf, "BITS 16");
   }
-#ifdef IX86_64
   else if (ix86GetBitness() == DAB_USE64)
   {
     fprintf(asmf, "BITS 64");
   }
-#endif
   else
   {
     fprintf(asmf, "BITS 32");
