@@ -410,7 +410,7 @@ typedef struct tagRELOC_COFF386
 
 static linearArray *RelocCoff386 = NULL;
 
-static tCompare __FASTCALL__ coff386_compare_rels(const void  *e1,const void  *e2)
+static tCompare __FASTCALL__ coff386_compare_rels(const any_t*e1,const any_t*e2)
 {
   const RELOC_COFF386  *r1, *r2;
   r1 = reinterpret_cast<const RELOC_COFF386*>(e1);

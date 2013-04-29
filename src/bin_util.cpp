@@ -35,7 +35,7 @@ using namespace beye;
 namespace beye {
 linearArray *PubNames = NULL;
 
-tCompare __FASTCALL__ fmtComparePubNames(const void  *v1,const void  *v2)
+tCompare __FASTCALL__ fmtComparePubNames(const any_t* v1,const any_t* v2)
 {
   const struct PubName  *pnam1, *pnam2;
   pnam1 = (const struct PubName  *)v1;
@@ -170,7 +170,7 @@ typedef struct tagUDN {
     __filesize_t	offset;
 }udn;
 
-static tCompare __FASTCALL__ udn_compare(const void  *e1,const void  *e2)
+static tCompare __FASTCALL__ udn_compare(const any_t* e1,const any_t* e2)
 {
     const udn  *p1 = (const udn  *)e1;
     const udn  *p2 = (const udn  *)e2;

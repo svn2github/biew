@@ -425,7 +425,7 @@ typedef struct tagRELOC_NLM
 
 static linearArray *RelocNlm = NULL;
 
-static tCompare __FASTCALL__ nlm_compare_s(const void  *e1,const void  *e2)
+static tCompare __FASTCALL__ nlm_compare_s(const any_t*e1,const any_t*e2)
 {
   const RELOC_NLM  *r1, *r2;
   r1 = reinterpret_cast<const RELOC_NLM*>(e1);
@@ -433,7 +433,7 @@ static tCompare __FASTCALL__ nlm_compare_s(const void  *e1,const void  *e2)
   return __CmpLong__(r1->offset,r2->offset);
 }
 
-static tCompare __FASTCALL__ nlm_compare_f(const void  *e1,const void  *e2)
+static tCompare __FASTCALL__ nlm_compare_f(const any_t*e1,const any_t*e2)
 {
   const RELOC_NLM  *r1, *r2;
   r1 = reinterpret_cast<const RELOC_NLM*>(e1);

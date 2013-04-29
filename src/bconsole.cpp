@@ -720,7 +720,7 @@ bool __FASTCALL__ _lb_searchtext(const char *str,const char *tmpl,unsigned searc
   return strFind(str, strlen(str), tmpl, searchlen, cache, flg) ? true : false;
 }
 
-static tCompare __FASTCALL__ listcompare(const void  *v1,const void  *v2)
+static tCompare __FASTCALL__ listcompare(const any_t* v1,const any_t* v2)
 {
   tCompare ret;
   if(byNam)  ret = stricmp(*((const char **)v1),*((const char **)v2));

@@ -490,7 +490,7 @@ static void  qst(char  *base, char  *max)
  * with qst(), and then a cleanup insertion sort ourselves.  Sound simple?
  * It's not...
  */
-void __FASTCALL__ HQSort(void  *base0,unsigned long num, unsigned width,
+void __FASTCALL__ HQSort(any_t*base0,unsigned long num, unsigned width,
 			 func_compare compare)
 {
   char  *base = (char  *)base0;
@@ -555,11 +555,11 @@ void __FASTCALL__ HQSort(void  *base0,unsigned long num, unsigned width,
   }
 }
 
-void  * __FASTCALL__ HLFind(const any_t*key,void  *base,unsigned long nelem,unsigned width,
+any_t* __FASTCALL__ HLFind(const any_t*key,any_t*base,unsigned long nelem,unsigned width,
 				    func_compare compare)
 {
   unsigned long iter,start,end;
-  void  *it;
+  any_t*it;
   tCompare comp_result;
   start = 0;
   end = nelem;
@@ -582,7 +582,7 @@ void  * __FASTCALL__ HLFind(const any_t*key,void  *base,unsigned long nelem,unsi
   return NULL;
 }
 
-unsigned long __FASTCALL__ HLFindNearest(const any_t*key,void  *base,unsigned long nelem,
+unsigned long __FASTCALL__ HLFindNearest(const any_t*key,any_t*base,unsigned long nelem,
 			    unsigned width,
 			    func_compare compare)
 {
@@ -643,7 +643,7 @@ linearArray * __FASTCALL__ la_Build( unsigned long nitems, unsigned size_of_item
   return ret;
 }
 
-void  __FASTCALL__ la_ForEach(linearArray *obj,void (__FASTCALL__ *iter_func)(void  *))
+void  __FASTCALL__ la_ForEach(linearArray *obj,void (__FASTCALL__ *iter_func)(any_t*))
 {
   unsigned long i;
   for(i = 0;i < obj->nItems;i++)
@@ -652,7 +652,7 @@ void  __FASTCALL__ la_ForEach(linearArray *obj,void (__FASTCALL__ *iter_func)(vo
   }
 }
 
-void  __FASTCALL__ la_IterDestroy(linearArray *obj,void (__FASTCALL__ *del_it)(void  *))
+void  __FASTCALL__ la_IterDestroy(linearArray *obj,void (__FASTCALL__ *del_it)(any_t*))
 {
   la_ForEach(obj,del_it);
   delete obj->data;
@@ -670,9 +670,9 @@ void  __FASTCALL__ la_Destroy(linearArray *obj)
 
 static const unsigned LST_STEP=16;
 
-void *  __FASTCALL__ la_AddData(linearArray *obj,const any_t*udata,void (__FASTCALL__ *mem_out)(const char *))
+any_t*  __FASTCALL__ la_AddData(linearArray *obj,const any_t*udata,void (__FASTCALL__ *mem_out)(const char *))
 {
-  void *to;
+  any_t* to;
   if(obj->nSize > ULONG_MAX - (LST_STEP+1)) return 0;
   if(obj->nItems + 1 > obj->nSize)
   {
@@ -713,10 +713,10 @@ void         __FASTCALL__ la_Sort(linearArray *obj,func_compare compare)
       HQSort(obj->data,obj->nItems,obj->itemSize,compare);
 }
 
-void  *__FASTCALL__ la_Find(linearArray * obj,const any_t*key,
+any_t*__FASTCALL__ la_Find(linearArray * obj,const any_t*key,
 				    func_compare compare)
 {
-  void  * ret = NULL;
+  any_t* ret = NULL;
   if(obj)
     if(obj->nItems)
      ret = HLFind(key,obj->data,obj->nItems,obj->itemSize,compare);

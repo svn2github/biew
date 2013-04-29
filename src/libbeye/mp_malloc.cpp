@@ -454,7 +454,7 @@ void	mp_uninit_malloc(int verbose)
     }
     if(done) std::cerr<<std::endl<<"For source lines you may also print in (gdb): list *0xADDRESS"<<std::endl;
     uninit_bt_cache(cache);
-    if(priv->argv0) ::free((void*)priv->argv0);
+    if(priv->argv0) ::free((any_t*)priv->argv0);
     ::free(priv);
     if(verbose) std::cerr<<"*** End of mp_malloc report! ***"<<std::endl;
     priv=NULL;

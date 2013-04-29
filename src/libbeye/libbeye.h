@@ -119,7 +119,7 @@ namespace beye {
 					      if e1 == e2, return = 0
 		     * @param e1,e2           pointers to array elements
 		    **/
-    typedef tCompare (__FASTCALL__ *func_compare)(const void  *e1,const void  *e2);
+    typedef tCompare (__FASTCALL__ *func_compare)(const any_t*e1,const any_t*e2);
 
 		   /** Implements quick sort algorithm.
 		     * @return                none
@@ -134,7 +134,7 @@ namespace beye {
 		     *                        functions is guarantee of stable work
 		     * @see                   HLFind HLFindNearest
 		    **/
-    void  __FASTCALL__ HQSort(void  *base, unsigned long num, unsigned width,
+    void  __FASTCALL__ HQSort(any_t*base, unsigned long num, unsigned width,
 				 func_compare fcompare);
 
 		   /** Performs a quick search on a sorted array.
@@ -150,8 +150,8 @@ namespace beye {
 		     *                        functions is guarantee of stable work
 		     * @see                   HQSort HLFindNearest
 		    **/
-    void  * __FASTCALL__ HLFind(const any_t*key,
-				     void  *base,
+    any_t* __FASTCALL__ HLFind(const any_t*key,
+				     any_t*base,
 				     unsigned long nelem,unsigned width,
 				     func_compare fcompare);
 
@@ -169,7 +169,7 @@ namespace beye {
 		     * @see                   HQSort HLFind
 		    **/
     unsigned long __FASTCALL__ HLFindNearest(const any_t*key,
-				     void  *base,
+				     any_t*base,
 				     unsigned long nelem,unsigned width,
 				     func_compare fcompare);
 
@@ -224,7 +224,7 @@ namespace beye {
     /** Internal structure of Linear memory container */
     typedef struct tag_linearArray {
 	unsigned long   nItems;    /**< Number of stored items */
-	void  * data;      /**< Pointer into linear array */
+	any_t* data;      /**< Pointer into linear array */
 	unsigned long   nSize;     /**< Size of linear array (May differ from nItems) */
 	unsigned        itemSize;  /**< Size of one item in linear array */
     }linearArray;
@@ -248,7 +248,7 @@ namespace beye {
 		     * @param mem_out         specifies user-defined function to be called when low-memory. May be NULL.
 		     * @see                   la_Build la_Find
 		    **/
-    void *__FASTCALL__ la_AddData(linearArray *obj,const any_t*data,void (__FASTCALL__ *mem_out)(const char *));
+    any_t* __FASTCALL__ la_AddData(linearArray *obj,const any_t*data,void (__FASTCALL__ *mem_out)(const char *));
 
 		   /** Removes given element from linear array
 		     * @param obj             specifies linear array where element will be removed
@@ -278,7 +278,7 @@ namespace beye {
 		     *                        arguments
 		     * @see                   la_Build la_Destroy
 		    **/
-    void         __FASTCALL__ la_IterDestroy(linearArray *obj,void (__FASTCALL__ *del_func)(void  *));
+    void         __FASTCALL__ la_IterDestroy(linearArray *obj,void (__FASTCALL__ *del_func)(any_t*));
 
 		   /** Calls the given iterator function on each array element
 		     * @return                none
@@ -286,7 +286,7 @@ namespace beye {
 		     * @param iter_func       specifies iterator function which is to be called for each array element
 		     * @see                   la_IterDestroy
 		    **/
-    void         __FASTCALL__ la_ForEach(linearArray *obj,void (__FASTCALL__ *iter_func)(void  *));
+    void         __FASTCALL__ la_ForEach(linearArray *obj,void (__FASTCALL__ *iter_func)(any_t*));
 
 		   /** Implements quick sort algorithm for linear array
 		     * @return                none
@@ -310,7 +310,7 @@ namespace beye {
 		     *                        functions is guarantee of stable work
 		     * @see                   la_Sort la_FindNearest
 		    **/
-    void  *__FASTCALL__ la_Find(linearArray *obj,const any_t*key,
+    any_t*__FASTCALL__ la_Find(linearArray *obj,const any_t*key,
 					   func_compare fcompare);
 
 		   /** Performs a quick search on a sorted linear array of nearest element.

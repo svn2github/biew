@@ -338,7 +338,7 @@ unsigned long   __FASTCALL__ hlpGetItemSize(unsigned long item_id)
   return ret;
 }
 
-bool   __FASTCALL__ hlpLoadItem(unsigned long item_id, void * buffer)
+bool   __FASTCALL__ hlpLoadItem(unsigned long item_id, any_t* buffer)
 {
   unsigned long hlp_off,hlp_size;
   bool ret = false;

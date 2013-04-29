@@ -524,7 +524,7 @@ static bool __FASTCALL__ txtFiUserFunc2(IniInfo * info)
     return err?true:false;
 }
 
-static tCompare __FASTCALL__ cmp_ctx(const void  *e1,const void  *e2)
+static tCompare __FASTCALL__ cmp_ctx(const any_t* e1,const any_t* e2)
 {
     const char *k1,*k2;
     int sl1,sl2,res;
@@ -536,7 +536,7 @@ static tCompare __FASTCALL__ cmp_ctx(const void  *e1,const void  *e2)
     return res==0?__CmpLong__(sl2,sl1):res;
 }
 
-static tCompare __FASTCALL__ cmp_kwd(const void  *e1,const void  *e2)
+static tCompare __FASTCALL__ cmp_kwd(const any_t* e1,const any_t* e2)
 {
     const char *k1,*k2;
     int sl1,sl2,res;

@@ -1305,7 +1305,7 @@ typedef struct tag_ini_Cache
   }v;
 }ini_cache;
 
-static tCompare __FASTCALL__ __full_compare_cache(const void  *v1,const void  *v2)
+static tCompare __FASTCALL__ __full_compare_cache(const any_t*v1,const any_t*v2)
 {
   const ini_cache  *c1,  *c2;
   int iflg;
@@ -1321,7 +1321,7 @@ static tCompare __FASTCALL__ __full_compare_cache(const void  *v1,const void  *v
 static bool  __FASTCALL__ __addCache(const char *section,const char *subsection,
 			       const char *item,const char *value)
 {
-  void  *found;
+  any_t*found;
   ini_cache  *it;
   ini_cache ic;
   ic.item = const_cast<char*>(section);
@@ -1434,11 +1434,11 @@ static bool __FASTCALL__ __buildCache(IniInfo *ini)
 		    ini->item,ini->value);
 }
 
-static void __FASTCALL__ __iter_destroy(void  *it);
+static void __FASTCALL__ __iter_destroy(any_t*it);
 
 #define __destroyCache(it) (la_IterDestroy(it,__iter_destroy))
 
-static void __FASTCALL__ __iter_destroy(void  *it)
+static void __FASTCALL__ __iter_destroy(any_t*it)
 {
   ini_cache  *ic;
   ic = (ini_cache  *)it;
@@ -1566,7 +1566,7 @@ hIniProfile * __FASTCALL__ iniOpenFile(const char *fname,bool *has_error)
   }
   opening = _ret;
   _ret->flags |= HINI_FULLCACHED;
-  _ret->cache = (void *)la_Build(0,sizeof(ini_cache),NULL);
+  _ret->cache = (any_t*)la_Build(0,sizeof(ini_cache),NULL);
   if(_ret->cache)
   {
     hlFiProgress(_ret,__buildCache);
@@ -1616,7 +1616,7 @@ unsigned __FASTCALL__ iniReadProfileString(hIniProfile *ini,const char *section,
        if(ini->cache)
        {
 	  ini_cache ic;
-	  void  *found, *foundi, *foundv;
+	  any_t*found, *foundi, *foundv;
 	  ini_cache  *fi;
 	  ic.item = const_cast<char*>(section);
 	  ic.flags = 0;
@@ -1877,7 +1877,7 @@ static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
 static char *__partSect,*__partSubSect;
 static hIniProfile *part_ini_profile;
 
-static void __FASTCALL__ part_flush_item(void  *data)
+static void __FASTCALL__ part_flush_item(any_t*data)
 {
   ini_cache  *it;
   it = (ini_cache  *)data;
@@ -1888,7 +1888,7 @@ static void __FASTCALL__ part_flush_item(void  *data)
 			     it->v.value);
 }
 
-static void __FASTCALL__ part_flush_subsect(void  *data)
+static void __FASTCALL__ part_flush_subsect(any_t*data)
 {
   ini_cache  *it;
   it = (ini_cache  *)data;
@@ -1896,7 +1896,7 @@ static void __FASTCALL__ part_flush_subsect(void  *data)
   la_ForEach(it->v.leaf,part_flush_item);
 }
 
-static void __FASTCALL__ part_flush_sect(void  *data)
+static void __FASTCALL__ part_flush_sect(any_t*data)
 {
   ini_cache  *it;
   it = (ini_cache  *)data;
@@ -1941,14 +1941,14 @@ bool __FASTCALL__ iniWriteProfileString(hIniProfile *ini, const char *_section,
 static int __nled;
 static FILE * flush_handler = NULL;
 
-static void __FASTCALL__ flush_item(void  *data)
+static void __FASTCALL__ flush_item(any_t*data)
 {
   ini_cache  *it;
   it = (ini_cache  *)data;
   out_item(flush_handler,__nled,it->item,it->v.value);
 }
 
-static void __FASTCALL__ flush_subsect(void  *data)
+static void __FASTCALL__ flush_subsect(any_t*data)
 {
   ini_cache  *it;
   int _has_led;
@@ -1959,7 +1959,7 @@ static void __FASTCALL__ flush_subsect(void  *data)
   __nled = _has_led;
 }
 
-static void __FASTCALL__ flush_sect(void  *data)
+static void __FASTCALL__ flush_sect(any_t*data)
 {
   ini_cache  *it;
   it = (ini_cache  *)data;

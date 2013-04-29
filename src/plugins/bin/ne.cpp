@@ -970,7 +970,7 @@ static int           CurrSegmentHasReloc = -1;
 static linearArray *CurrNEChain = NULL;
 static char __codelen,__type;
 
-static tCompare __FASTCALL__ compare_chains(const void  *v1,const void  *v2)
+static tCompare __FASTCALL__ compare_chains(const any_t*v1,const any_t*v2)
 {
   const NERefChain  * c1, * c2;
   c1 = (const NERefChain  *)v1;
@@ -1024,7 +1024,7 @@ static void  __FASTCALL__ BuildNERefChain(__filesize_t segoff,__filesize_t sleng
   CloseWnd(w);
 }
 
-static tCompare __FASTCALL__ compare_ne_spec(const void  *e1,const void  *e2)
+static tCompare __FASTCALL__ compare_ne_spec(const any_t*e1,const any_t*e2)
 {
   const NERefChain  *r1, *r2;
   RELOC_NE rne;
@@ -1041,7 +1041,7 @@ static tCompare __FASTCALL__ compare_ne_spec(const void  *e1,const void  *e2)
   return ret;
 }
 
-static tCompare __FASTCALL__ compare_ne(const void  *e1,const void  *e2)
+static tCompare __FASTCALL__ compare_ne(const any_t*e1,const any_t*e2)
 {
   const NERefChain  *r1, *r2;
   int ret;

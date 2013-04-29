@@ -202,7 +202,7 @@ long  * CurrMZChain = 0;
 static unsigned long CurrMZCount;
 static char __codelen;
 
-static tCompare __FASTCALL__ compare_ptr(const void  *e1,const void  *e2)
+static tCompare __FASTCALL__ compare_ptr(const any_t*e1,const any_t*e2)
 {
   unsigned long v1,v2;
   v1 = *((const unsigned long  *)e1);
@@ -227,7 +227,7 @@ static void  __FASTCALL__ BuildMZChain( void )
   {
     unsigned off,seg,j;
     __filesize_t ptr;
-    void  * tptr;
+    any_t* tptr;
     if(!CurrMZChain) tptr = mp_malloc(sizeof(any_t*));
     else             tptr = mp_realloc(CurrMZChain,(CurrMZCount + 1)*sizeof(any_t*));
     if(!tptr) break;
@@ -244,7 +244,7 @@ static void  __FASTCALL__ BuildMZChain( void )
   CloseWnd(w);
 }
 
-static tCompare __FASTCALL__ compare_mz(const void  *e1,const void  *e2)
+static tCompare __FASTCALL__ compare_mz(const any_t*e1,const any_t*e2)
 {
   long l1,l2;
   tCompare ret;

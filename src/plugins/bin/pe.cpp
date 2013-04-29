@@ -836,7 +836,7 @@ typedef struct tagRELOC_PE
 
 static linearArray *CurrPEChain = NULL;
 
-static tCompare __FASTCALL__ compare_pe_reloc_s(const void  *e1,const void  *e2)
+static tCompare __FASTCALL__ compare_pe_reloc_s(const any_t*e1,const any_t*e2)
 {
   const RELOC_PE  *p1, *p2;
   p1 = (const RELOC_PE  *)e1;

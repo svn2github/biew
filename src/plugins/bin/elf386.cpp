@@ -286,7 +286,7 @@ static BFile& elfcache = bNull;
 
 static linearArray *va_map_phys,* va_map_virt;
 
-static tCompare __FASTCALL__ vamap_comp_virt(const void  *v1,const void  *v2)
+static tCompare __FASTCALL__ vamap_comp_virt(const any_t*v1,const any_t*v2)
 {
   const struct tag_elfVAMap  *pnam1, *pnam2;
   pnam1 = (const struct tag_elfVAMap  *)v1;
@@ -294,7 +294,7 @@ static tCompare __FASTCALL__ vamap_comp_virt(const void  *v1,const void  *v2)
   return pnam1->va<pnam2->va?-1:pnam1->va>pnam2->va?1:0;
 }
 
-static tCompare __FASTCALL__ vamap_comp_phys(const void  *v1,const void  *v2)
+static tCompare __FASTCALL__ vamap_comp_phys(const any_t*v1,const any_t*v2)
 {
   const struct tag_elfVAMap  *pnam1, *pnam2;
   pnam1 = (const struct tag_elfVAMap  *)v1;
@@ -1093,7 +1093,7 @@ typedef struct tagElfRefChain
 }Elf_Reloc;
 static linearArray *CurrElfChain = NULL;
 
-static tCompare __FASTCALL__ compare_elf_reloc(const void  *e1,const void  *e2)
+static tCompare __FASTCALL__ compare_elf_reloc(const any_t*e1,const any_t*e2)
 {
   const Elf_Reloc  *p1, *p2;
   p1 = (const Elf_Reloc  *)e1;
@@ -2210,7 +2210,7 @@ static bool __FASTCALL__ ELFAddrResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static tCompare __FASTCALL__ compare_pubnames(const void  *v1,const void  *v2)
+static tCompare __FASTCALL__ compare_pubnames(const any_t*v1,const any_t*v2)
 {
   const struct PubName  *pnam1, *pnam2;
   pnam1 = (const struct PubName  *)v1;

@@ -66,7 +66,7 @@ enum {
 		       /** Return uncompressed size of help item
 			  0 - if error occured */
     unsigned long   __FASTCALL__ hlpGetItemSize(unsigned long item_id);
-    bool           __FASTCALL__ hlpLoadItem(unsigned long item_id, void * buffer);
+    bool           __FASTCALL__ hlpLoadItem(unsigned long item_id, any_t* buffer);
 		       /** Fully-functionallity utility for displaying help */
     void            __FASTCALL__ hlpDisplay(unsigned long id);
 

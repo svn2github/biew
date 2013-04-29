@@ -251,7 +251,7 @@ static int Encode(void)
 #endif
 
 /** Just the reverse of Encode(). */
-static int Decode(BFile* instream,void *buff,unsigned long off, unsigned long length)
+static int Decode(BFile* instream,any_t* buff,unsigned long off, unsigned long length)
 {
 	int  i, j, k, r, c,reach_eof;
 #ifdef INTERACTIVE
