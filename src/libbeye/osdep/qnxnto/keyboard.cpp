@@ -108,7 +108,7 @@ int __FASTCALL__ __kbdGetShiftsKey( void )
 	return _shift_state;
 }
 
-static int __NEAR__ __FASTCALL__ isShiftKeysChange( int flush_queue )
+static int  __FASTCALL__ isShiftKeysChange( int flush_queue )
 {
 	int ss;
 

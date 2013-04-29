@@ -251,7 +251,7 @@ static int Encode(void)
 #endif
 
 /** Just the reverse of Encode(). */
-static int Decode(BFile* instream,void __HUGE__*buff,unsigned long off, unsigned long length)
+static int Decode(BFile* instream,void *buff,unsigned long off, unsigned long length)
 {
 	int  i, j, k, r, c,reach_eof;
 #ifdef INTERACTIVE
@@ -299,7 +299,7 @@ static int Decode(BFile* instream,void __HUGE__*buff,unsigned long off, unsigned
 		   reach_eof = instream->eof() || instream->tell() > flen;
 		   if(reach_eof) break;
 		   c = instream->read_byte();
-		   if(buff) ((char __HUGE__ *)buff)[buff_ptr++] = c;
+		   if(buff) ((char  *)buff)[buff_ptr++] = c;
 		   else outfile->write_byte(c);
 		   text_buf[r++] = c;
 		   r &= (N - 1);
@@ -317,7 +317,7 @@ static int Decode(BFile* instream,void __HUGE__*buff,unsigned long off, unsigned
 		     for (k = 0; k <= j; k++)
 		     {
 				c = text_buf[(i + k) & (N - 1)];
-				if(buff) ((char __HUGE__ *)buff)[buff_ptr++] = c;
+				if(buff) ((char  *)buff)[buff_ptr++] = c;
 				else outfile->write_byte(c);
 				text_buf[r++] = c;
 				r &= (N - 1);

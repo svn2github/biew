@@ -31,7 +31,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 namespace beye {
-static TWindow * __NEAR__ __FASTCALL__ CreatePanelNF(tAbsCoord x1,tAbsCoord y1,tAbsCoord x2,tAbsCoord y2)
+static TWindow *  __FASTCALL__ CreatePanelNF(tAbsCoord x1,tAbsCoord y1,tAbsCoord x2,tAbsCoord y2)
 {
  TWindow *win;
  unsigned flags = 0;

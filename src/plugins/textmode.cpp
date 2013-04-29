@@ -404,7 +404,7 @@ static bool __FASTCALL__ txtFiUserFunc1(IniInfo * info)
   return false;
 }
 
-static Color __NEAR__ __FASTCALL__ getCtxColorByName(const char *subsection,const char *item,Color cdef,bool *err)
+static Color  __FASTCALL__ getCtxColorByName(const char *subsection,const char *item,Color cdef,bool *err)
 {
     PrgWordCSet *cset;
     *err=0;
@@ -426,7 +426,7 @@ static Color __NEAR__ __FASTCALL__ getCtxColorByName(const char *subsection,cons
     return cdef;
 }
 
-static Color __NEAR__ __FASTCALL__ getKwdColorByName(const char *item,Color cdef,bool *err)
+static Color  __FASTCALL__ getKwdColorByName(const char *item,Color cdef,bool *err)
 {
     *err=0;
     if(::strcmp(item,"base")==0) return Color(prog_cset.keywords.base);
@@ -438,7 +438,7 @@ static Color __NEAR__ __FASTCALL__ getKwdColorByName(const char *item,Color cdef
     return cdef;
 }
 
-static Color __NEAR__ __FASTCALL__ getOpColorByName(const char *item,Color cdef,bool *err)
+static Color  __FASTCALL__ getOpColorByName(const char *item,Color cdef,bool *err)
 {
     *err=0;
     if(::strcmp(item,"base")==0) return Color(prog_cset.operators.base);
@@ -524,26 +524,26 @@ static bool __FASTCALL__ txtFiUserFunc2(IniInfo * info)
     return err?true:false;
 }
 
-static tCompare __FASTCALL__ cmp_ctx(const void __HUGE__ *e1,const void __HUGE__ *e2)
+static tCompare __FASTCALL__ cmp_ctx(const void  *e1,const void  *e2)
 {
     const char *k1,*k2;
     int sl1,sl2,res;
-    k1=(*(const context_hl_t __HUGE__ *)e1).start_seq;
-    k2=(*(const context_hl_t __HUGE__ *)e2).start_seq;
-    sl1=::strlen((*(const context_hl_t __HUGE__ *)e1).start_seq);
-    sl2=::strlen((*(const context_hl_t __HUGE__ *)e2).start_seq);
+    k1=(*(const context_hl_t  *)e1).start_seq;
+    k2=(*(const context_hl_t  *)e2).start_seq;
+    sl1=::strlen((*(const context_hl_t  *)e1).start_seq);
+    sl2=::strlen((*(const context_hl_t  *)e2).start_seq);
     res=::memcmp(k1,k2,std::min(sl1,sl2));
     return res==0?__CmpLong__(sl2,sl1):res;
 }
 
-static tCompare __FASTCALL__ cmp_kwd(const void __HUGE__ *e1,const void __HUGE__ *e2)
+static tCompare __FASTCALL__ cmp_kwd(const void  *e1,const void  *e2)
 {
     const char *k1,*k2;
     int sl1,sl2,res;
-    k1=(*(const keyword_hl_t __HUGE__ *)e1).keyword;
-    k2=(*(const keyword_hl_t __HUGE__ *)e2).keyword;
-    sl1=::strlen((*(const keyword_hl_t __HUGE__ *)e1).keyword);
-    sl2=::strlen((*(const keyword_hl_t __HUGE__ *)e2).keyword);
+    k1=(*(const keyword_hl_t  *)e1).keyword;
+    k2=(*(const keyword_hl_t  *)e2).keyword;
+    sl1=::strlen((*(const keyword_hl_t  *)e1).keyword);
+    sl2=::strlen((*(const keyword_hl_t  *)e2).keyword);
     res=::memcmp(k1,k2,std::min(sl1,sl2));
     return res==0?__CmpLong__(sl2,sl1):res;
 }
@@ -926,7 +926,7 @@ void TextMode::paint_search(HLInfo * cptr,unsigned int shift,int i,int size,int 
     FoundTextEnd = savee;
 }
 
-static void __NEAR__ __FASTCALL__ drawBound(int x,int y,char ch)
+static void  __FASTCALL__ drawBound(int x,int y,char ch)
 {
   twGotoXY(x,y);
   twSetColorAttr(browser_cset.bound);
@@ -1163,7 +1163,7 @@ bool TextMode::action_F4() /* txtSelectNLS */
 }
 
 
-inline bool __NEAR__ __FASTCALL__ isBinByte(unsigned char ch)
+inline bool  __FASTCALL__ isBinByte(unsigned char ch)
 {
   return ch < 32 && !isspace(ch & 0xFF) && ch != 0x08 && ch != 0x1A;
 }

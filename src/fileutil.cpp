@@ -79,7 +79,7 @@ static bool ChSize( void )
  return false;
 }
 
-static bool __NEAR__ __FASTCALL__ InsBlock(BFile* bHandle,__filesize_t start,__fileoff_t psize)
+static bool  __FASTCALL__ InsBlock(BFile* bHandle,__filesize_t start,__fileoff_t psize)
 {
    char *buffer;
    __filesize_t tile,oflen,flen,crpos,cwpos;
@@ -124,7 +124,7 @@ static bool __NEAR__ __FASTCALL__ InsBlock(BFile* bHandle,__filesize_t start,__f
    return true;
 }
 
-static bool __NEAR__ __FASTCALL__ DelBlock(BFile* bHandle,__filesize_t start,__fileoff_t psize)
+static bool  __FASTCALL__ DelBlock(BFile* bHandle,__filesize_t start,__fileoff_t psize)
 {
    char *buffer;
    __filesize_t tile,oflen,crpos,cwpos;
@@ -192,7 +192,7 @@ static char ff_fname[FILENAME_MAX+1] = "beye.$$$";
 static char xlat_fname[FILENAME_MAX+1];
 static __filesize_t ff_startpos = 0L,ff_len = 0L;
 
-static void __NEAR__ __FASTCALL__ printObject(FILE *fout,unsigned obj_num,char *oname,int oclass,int obitness,__filesize_t size)
+static void  __FASTCALL__ printObject(FILE *fout,unsigned obj_num,char *oname,int oclass,int obitness,__filesize_t size)
 {
   const char *name,*btn;
   char onumname[30];
@@ -217,7 +217,7 @@ static void __NEAR__ __FASTCALL__ printObject(FILE *fout,unsigned obj_num,char *
 	      ,size);
 }
 
-static void __NEAR__ __FASTCALL__ printHdr(FILE * fout,const REGISTRY_BIN *fmt)
+static void  __FASTCALL__ printHdr(FILE * fout,const REGISTRY_BIN *fmt)
 {
   const char *cptr,*cptr1,*cptr2;
   time_t tim;
@@ -237,7 +237,7 @@ static void __NEAR__ __FASTCALL__ printHdr(FILE * fout,const REGISTRY_BIN *fmt)
 	      ,cptr2);
 }
 
-static unsigned __NEAR__ __FASTCALL__ printHelpComment(char *buff,MBuffer codebuff,DisasmRet *dret,DisMode::e_severity dis_severity,const char* dis_comments)
+static unsigned  __FASTCALL__ printHelpComment(char *buff,MBuffer codebuff,DisasmRet *dret,DisMode::e_severity dis_severity,const char* dis_comments)
 {
     unsigned len,j;
     if(dis_severity > DisMode::CommSev_None) {
@@ -255,7 +255,7 @@ static unsigned __NEAR__ __FASTCALL__ printHelpComment(char *buff,MBuffer codebu
 
 inline const char* GET_FUNC_CLASS(unsigned x) { return x == SC_LOCAL ? "private" : "public"; }
 
-static void __NEAR__ __FASTCALL__ make_addr_column(char *buff,__filesize_t offset)
+static void  __FASTCALL__ make_addr_column(char *buff,__filesize_t offset)
 {
    if(hexAddressResolv && beye_context().active_format()->AddressResolving)
    {
@@ -691,7 +691,7 @@ static bool FRestore( void )
  return ret;
 }
 
-static void __NEAR__ __FASTCALL__ CryptFunc(char * buff,unsigned len,char *pass)
+static void  __FASTCALL__ CryptFunc(char * buff,unsigned len,char *pass)
 {
   char ch,cxor;
   unsigned i,j;
@@ -806,7 +806,7 @@ static bool CryptBlock( void )
  return ret;
 }
 
-static void __NEAR__ __FASTCALL__ EndianifyBlock(char * buff,unsigned len, int type)
+static void  __FASTCALL__ EndianifyBlock(char * buff,unsigned len, int type)
 {
   unsigned i, step;
   if(!type) return; /* for now */
@@ -916,7 +916,7 @@ static bool ReverseBlock( void )
  return ret;
 }
 
-static void __NEAR__ __FASTCALL__ TranslateBlock(char * buff,unsigned len, const unsigned char *xlt)
+static void  __FASTCALL__ TranslateBlock(char * buff,unsigned len, const unsigned char *xlt)
 {
   unsigned i;
   for(i = 0;i < len;i++)

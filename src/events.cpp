@@ -42,7 +42,7 @@ void __FASTCALL__ CleanKbdTermSig( void )
 
 static tAbsCoord mx,my;
 
-static int __NEAR__ __FASTCALL__ getPromptKey(int flag)
+static int  __FASTCALL__ getPromptKey(int flag)
 {
  int ret;
  if(mx <= 7) ret = KE_F(1);
@@ -71,7 +71,7 @@ static int __NEAR__ __FASTCALL__ getPromptKey(int flag)
  return ret;
 }
 
-static int __NEAR__ __FASTCALL__ __GetEvent( void (*prompt)(void) ,TWindow *win)
+static int  __FASTCALL__ __GetEvent( void (*prompt)(void) ,TWindow *win)
 {
  static unsigned char oFlag = UCHAR_MAX;
  static void (* oprompt)(void) = 0;
@@ -154,7 +154,7 @@ static int __NEAR__ __FASTCALL__ __GetEvent( void (*prompt)(void) ,TWindow *win)
  return key;
 }
 
-static void __NEAR__ __FASTCALL__ __GetEventQue(void (*prompt)(void), TWindow *win)
+static void  __FASTCALL__ __GetEventQue(void (*prompt)(void), TWindow *win)
 {
   int key;
   key = __GetEvent(prompt,win);

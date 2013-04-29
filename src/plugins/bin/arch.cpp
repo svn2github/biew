@@ -81,7 +81,7 @@ static __filesize_t __FASTCALL__ ShowARCHHeader( void )
   return fpos;
 }
 
-static bool __NEAR__ __FASTCALL__ archReadModList(memArray *obj,unsigned nnames,__filesize_t *addr)
+static bool  __FASTCALL__ archReadModList(memArray *obj,unsigned nnames,__filesize_t *addr)
 {
   __filesize_t foff,flen;
   unsigned i;

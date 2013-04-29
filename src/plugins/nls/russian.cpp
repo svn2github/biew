@@ -139,7 +139,7 @@ static const unsigned char uni_draw[] =
 0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f,0x3f, /*0xF0*/
 };
 
-static void __NEAR__ __FASTCALL__ txt_cvt_unicode(unsigned char * str,int size,bool big_endian)
+static void  __FASTCALL__ txt_cvt_unicode(unsigned char * str,int size,bool big_endian)
 {
   int i;
   unsigned high_byte,low_byte;
@@ -347,13 +347,13 @@ static const unsigned char Mik16Alt[128] = {
  0xf0,0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,0xf8,0xf9,0xfa,0xfb,0xfc,0xfd,0xfe,0xff, /*0xf0*/
 };
 
-static void __NEAR__ __FASTCALL__ Unix7Bit(char *str,int size)
+static void  __FASTCALL__ Unix7Bit(char *str,int size)
 {
   int i;
   for(i = 0;i < size;i++) str[i] &= 0x7F;
 }
 
-static void __NEAR__ __FASTCALL__ Translit7Bit(char *str,int size)
+static void  __FASTCALL__ Translit7Bit(char *str,int size)
 {
   int i;
   for(i = 0;i < size;i++)

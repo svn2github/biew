@@ -51,7 +51,7 @@ void __FASTCALL__ __term_keyboard( void )
 static int _mou_btns = 0;
 static tAbsCoord _mou_x = 0,_mou_y = 0;
 
-static int __NEAR__ __FASTCALL__ isMouseEventPresent( unsigned long flg, int flush_queue )
+static int  __FASTCALL__ isMouseEventPresent( unsigned long flg, int flush_queue )
 {
   int _btns;
   tAbsCoord x,y;
@@ -76,7 +76,7 @@ static int __NEAR__ __FASTCALL__ isMouseEventPresent( unsigned long flg, int flu
 
 static int __old_ks = 0;
 
-static int __NEAR__ __FASTCALL__ isShiftKeysChange( int flush_queue )
+static int  __FASTCALL__ isShiftKeysChange( int flush_queue )
 {
   int __ks;
   __ks = __kbdGetShiftsKey();
@@ -88,7 +88,7 @@ static int __NEAR__ __FASTCALL__ isShiftKeysChange( int flush_queue )
   return 0;
 }
 
-static int __NEAR__ __FASTCALL__ __test_key( unsigned long flg, int flush_queue )
+static int  __FASTCALL__ __test_key( unsigned long flg, int flush_queue )
 {
 	USHORT retval = 0;
 	USHORT save;

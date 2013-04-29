@@ -84,7 +84,7 @@ const char iniLegalSet[] = " _0123456789"
 #define FiisCommand( str ) (IS_SECT(str,'#'))
 #define FiisItem(str) (!(FiisSection(str) || FiisSubSection(str) || FiisCommand(str)))
 
-static char * __NEAR__ __FASTCALL__ GETS(char *str,unsigned num,BFile* h)
+static char *  __FASTCALL__ GETS(char *str,unsigned num,BFile* h)
 {
   char *ret;
   unsigned i;
@@ -244,7 +244,7 @@ void __FASTCALL__ FiClose(FiHandler h)
   delete h;
 }
 
-static unsigned int __NEAR__ __FASTCALL__ __GetLengthBrStr(const char * src,char obr,char cbr)
+static unsigned int  __FASTCALL__ __GetLengthBrStr(const char * src,char obr,char cbr)
 {
  char *ends;
  unsigned ret = 0;
@@ -264,7 +264,7 @@ static unsigned int __NEAR__ __FASTCALL__ __GetLengthBrStr(const char * src,char
  return ret;
 }
 
-static char * __NEAR__ __FASTCALL__ __GetBrStrName(const char * src,char * store,char obr,char cbr)
+static char *  __FASTCALL__ __GetBrStrName(const char * src,char * store,char obr,char cbr)
 {
  char *ends;
  if(*src == obr)
@@ -394,7 +394,7 @@ static char * __FASTCALL__ FiGetNextLegWord( STRING * str,const char * legal_sym
    because #include statement does recursion.
 */
 
-static char * __NEAR__ __FASTCALL__ __FiCMaxStr( void )
+static char *  __FASTCALL__ __FiCMaxStr( void )
 {
   char * ret;
   ret = (char *)mp_malloc(FI_MAXSTRLEN + 1);
@@ -402,7 +402,7 @@ static char * __NEAR__ __FASTCALL__ __FiCMaxStr( void )
   return ret;
 }
 
-static char * __NEAR__ __FASTCALL__ __FiCNWord( STRING *str , const char * illegal_set)
+static char *  __FASTCALL__ __FiCNWord( STRING *str , const char * illegal_set)
 {
   char * ret;
   unsigned int lword;
@@ -414,7 +414,7 @@ static char * __NEAR__ __FASTCALL__ __FiCNWord( STRING *str , const char * illeg
   return ret;
 }
 
-static char * __NEAR__ __FASTCALL__ __FiCNLegWord( STRING *str , const char * legal_set)
+static char *  __FASTCALL__ __FiCNLegWord( STRING *str , const char * legal_set)
 {
   char * ret;
   unsigned int lword;
@@ -426,7 +426,7 @@ static char * __NEAR__ __FASTCALL__ __FiCNLegWord( STRING *str , const char * le
   return ret;
 }
 
-static char * __NEAR__ __FASTCALL__ __FiCBString( const char * src )
+static char *  __FASTCALL__ __FiCBString( const char * src )
 {
   char * ret;
   unsigned int lbr;
@@ -438,7 +438,7 @@ static char * __NEAR__ __FASTCALL__ __FiCBString( const char * src )
   return ret;
 }
 
-static char * __NEAR__ __FASTCALL__ __FiCItem( const char * src )
+static char *  __FASTCALL__ __FiCItem( const char * src )
 {
   char * ret;
   unsigned int li;
@@ -450,7 +450,7 @@ static char * __NEAR__ __FASTCALL__ __FiCItem( const char * src )
   return ret;
 }
 
-static char * __NEAR__ __FASTCALL__ __FiCValue( const char * src )
+static char *  __FASTCALL__ __FiCValue( const char * src )
 {
   char * ret;
   unsigned int lv;
@@ -462,7 +462,7 @@ static char * __NEAR__ __FASTCALL__ __FiCValue( const char * src )
   return ret;
 }
 
-static char * __NEAR__ __FASTCALL__ __FiCSection( const char * src )
+static char *  __FASTCALL__ __FiCSection( const char * src )
 {
   char * ret;
   unsigned int ls;
@@ -474,7 +474,7 @@ static char * __NEAR__ __FASTCALL__ __FiCSection( const char * src )
   return ret;
 }
 
-static char * __NEAR__ __FASTCALL__ __FiCSubSection( const char * src )
+static char *  __FASTCALL__ __FiCSubSection( const char * src )
 {
   char * ret;
   unsigned int lss;
@@ -486,7 +486,7 @@ static char * __NEAR__ __FASTCALL__ __FiCSubSection( const char * src )
   return ret;
 }
 
-static char * __NEAR__ __FASTCALL__ __FiCCmd( const char * src )
+static char *  __FASTCALL__ __FiCCmd( const char * src )
 {
   char * ret;
   unsigned int lc;
@@ -1304,24 +1304,24 @@ typedef struct tag_ini_Cache
   }v;
 }ini_cache;
 
-static tCompare __FASTCALL__ __full_compare_cache(const void __HUGE__ *v1,const void __HUGE__ *v2)
+static tCompare __FASTCALL__ __full_compare_cache(const void  *v1,const void  *v2)
 {
-  const ini_cache __HUGE__ *c1, __HUGE__ *c2;
+  const ini_cache  *c1,  *c2;
   int iflg;
   tCompare i_ret;
-  c1 = (const ini_cache __HUGE__ *)v1;
-  c2 = (const ini_cache __HUGE__ *)v2;
+  c1 = (const ini_cache  *)v1;
+  c2 = (const ini_cache  *)v2;
   iflg = __CmpLong__(c1->flags,c2->flags);
   i_ret = strcmp(c1->item,c2->item);
   return i_ret ? i_ret : iflg;
 }
 #define __compare_cache __full_compare_cache
 
-static bool __NEAR__ __FASTCALL__ __addCache(const char *section,const char *subsection,
+static bool  __FASTCALL__ __addCache(const char *section,const char *subsection,
 			       const char *item,const char *value)
 {
-  void __HUGE__ *found;
-  ini_cache __HUGE__ *it;
+  void  *found;
+  ini_cache  *it;
   ini_cache ic;
   ic.item = const_cast<char*>(section);
   ic.flags = 0;
@@ -1352,7 +1352,7 @@ static bool __NEAR__ __FASTCALL__ __addCache(const char *section,const char *sub
   else
   {
     do_subsect:
-      it = (ini_cache __HUGE__ *)found;
+      it = (ini_cache  *)found;
       ic.item = const_cast<char*>(subsection);
       if(!(found=la_Find(it->v.leaf,&ic,__full_compare_cache)))
       {
@@ -1381,7 +1381,7 @@ static bool __NEAR__ __FASTCALL__ __addCache(const char *section,const char *sub
       else
       {
 	do_item:
-	it = (ini_cache __HUGE__ *)found;
+	it = (ini_cache  *)found;
 	ic.item = const_cast<char*>(item);
 	ic.flags = IC_STRING;
 	if(!(found=la_Find(it->v.leaf,&ic,__full_compare_cache)))
@@ -1405,7 +1405,7 @@ static bool __NEAR__ __FASTCALL__ __addCache(const char *section,const char *sub
 	else
 	{
 	  /* item already exists. Try replace it */
-	  it = (ini_cache __HUGE__ *)found;
+	  it = (ini_cache  *)found;
 	  if(strcmp(it->v.value,value) != 0)
 	  {
 	     char *newval,*oldval;
@@ -1433,14 +1433,14 @@ static bool __FASTCALL__ __buildCache(IniInfo *ini)
 		    ini->item,ini->value);
 }
 
-static void __FASTCALL__ __iter_destroy(void __HUGE__ *it);
+static void __FASTCALL__ __iter_destroy(void  *it);
 
 #define __destroyCache(it) (la_IterDestroy(it,__iter_destroy))
 
-static void __FASTCALL__ __iter_destroy(void __HUGE__ *it)
+static void __FASTCALL__ __iter_destroy(void  *it)
 {
-  ini_cache __HUGE__ *ic;
-  ic = (ini_cache __HUGE__ *)it;
+  ini_cache  *ic;
+  ic = (ini_cache  *)it;
   if(ic->flags & IC_STRING)
   {
     mp_free(ic->item);
@@ -1458,7 +1458,7 @@ static unsigned buf_len;
 static char *buf_ptr;
 static const char *sect,* subsect,* item;
 
-static bhandle_t __NEAR__ __FASTCALL__ make_temp(const char *path,char *name_ptr)
+static bhandle_t  __FASTCALL__ make_temp(const char *path,char *name_ptr)
 {
   char *fullname, *nptr;
   unsigned i,len;
@@ -1510,19 +1510,19 @@ static bool __FASTCALL__ MyCallback(IniInfo * ini)
   return false;
 }
 
-static int __NEAR__ __FASTCALL__ out_sect(FILE * handle,const char *section)
+static int  __FASTCALL__ out_sect(FILE * handle,const char *section)
 {
    fprintf(handle,"[ %s ]\n",section);
    return 2;
 }
 
-static int __NEAR__ __FASTCALL__ out_subsect(FILE * handle,const char *subsection)
+static int  __FASTCALL__ out_subsect(FILE * handle,const char *subsection)
 {
    fprintf(handle,"  < %s >\n",subsection);
    return 2;
 }
 
-static void __NEAR__ __FASTCALL__ out_item(FILE * handle,unsigned nled,const char *_item,const char *value)
+static void  __FASTCALL__ out_item(FILE * handle,unsigned nled,const char *_item,const char *value)
 {
   char *sm_char;
   unsigned i;
@@ -1576,7 +1576,7 @@ hIniProfile * __FASTCALL__ iniOpenFile(const char *fname,bool *has_error)
   return _ret;
 }
 
-static bool __NEAR__ __FASTCALL__ __flushCache(hIniProfile *ini);
+static bool  __FASTCALL__ __flushCache(hIniProfile *ini);
 
 void __FASTCALL__ iniCloseFile(hIniProfile *ini)
 {
@@ -1615,22 +1615,22 @@ unsigned __FASTCALL__ iniReadProfileString(hIniProfile *ini,const char *section,
        if(ini->cache)
        {
 	  ini_cache ic;
-	  void __HUGE__ *found,__HUGE__ *foundi,__HUGE__ *foundv;
-	  ini_cache __HUGE__ *fi;
+	  void  *found, *foundi, *foundv;
+	  ini_cache  *fi;
 	  ic.item = const_cast<char*>(section);
 	  ic.flags = 0;
 	  if((found=la_Find((linearArray*)ini->cache,&ic,__full_compare_cache))!=NULL)
 	  {
 	    ic.item=const_cast<char*>(subsection);
-	    fi = (ini_cache __HUGE__ *)found;
+	    fi = (ini_cache  *)found;
 	    if((foundi=la_Find(fi->v.leaf,&ic,__full_compare_cache))!=NULL)
 	    {
 	       ic.item = const_cast<char*>(_item);
 	       ic.flags = IC_STRING;
-	       fi = (ini_cache __HUGE__ *)foundi;
+	       fi = (ini_cache  *)foundi;
 	       if((foundv=la_Find(fi->v.leaf,&ic,__full_compare_cache))!=NULL)
 	       {
-		  fi = (ini_cache __HUGE__ *)foundv;
+		  fi = (ini_cache  *)foundv;
 		  strncpy(buffer,fi->v.value,cbBuffer);
 		  ret = std::min(strlen(fi->v.value),size_t(cbBuffer));
 		  v_found = true;
@@ -1647,7 +1647,7 @@ unsigned __FASTCALL__ iniReadProfileString(hIniProfile *ini,const char *section,
 
 #define HINI_HEADER "; This file was generated automatically by BEYELIB.\n; WARNING: Any changes made by hands may be lost the next time you run the program.\n"
 
-static FILE * __NEAR__ __FASTCALL__ __makeIni(hIniProfile *ini)
+static FILE *  __FASTCALL__ __makeIni(hIniProfile *ini)
 {
   FILE *hout;
   hout = fopen(ini->fname,"wt");
@@ -1658,7 +1658,7 @@ static FILE * __NEAR__ __FASTCALL__ __makeIni(hIniProfile *ini)
   return hout;
 }
 
-static bool __NEAR__ __FASTCALL__ __createIni(hIniProfile *ini,
+static bool  __FASTCALL__ __createIni(hIniProfile *ini,
 				const char *_section,
 				const char *_subsection,
 				const char *_item,
@@ -1690,7 +1690,7 @@ static bool __NEAR__ __FASTCALL__ __createIni(hIniProfile *ini,
   return _ret;
 }
 
-static bool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
+static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
 					       const char *_section,
 					       const char *_subsection,
 					       const char *_item,
@@ -1876,10 +1876,10 @@ static bool __NEAR__ __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
 static char *__partSect,*__partSubSect;
 static hIniProfile *part_ini_profile;
 
-static void __FASTCALL__ part_flush_item(void __HUGE__ *data)
+static void __FASTCALL__ part_flush_item(void  *data)
 {
-  ini_cache __HUGE__ *it;
-  it = (ini_cache __HUGE__ *)data;
+  ini_cache  *it;
+  it = (ini_cache  *)data;
   __directWriteProfileString(part_ini_profile,
 			     __partSect,
 			     __partSubSect,
@@ -1887,23 +1887,23 @@ static void __FASTCALL__ part_flush_item(void __HUGE__ *data)
 			     it->v.value);
 }
 
-static void __FASTCALL__ part_flush_subsect(void __HUGE__ *data)
+static void __FASTCALL__ part_flush_subsect(void  *data)
 {
-  ini_cache __HUGE__ *it;
-  it = (ini_cache __HUGE__ *)data;
+  ini_cache  *it;
+  it = (ini_cache  *)data;
   __partSubSect = it->item;
   la_ForEach(it->v.leaf,part_flush_item);
 }
 
-static void __FASTCALL__ part_flush_sect(void __HUGE__ *data)
+static void __FASTCALL__ part_flush_sect(void  *data)
 {
-  ini_cache __HUGE__ *it;
-  it = (ini_cache __HUGE__ *)data;
+  ini_cache  *it;
+  it = (ini_cache  *)data;
   __partSect = it->item;
   la_ForEach(it->v.leaf,part_flush_subsect);
 }
 
-static void __NEAR__ __FASTCALL__ __flushPartialCache(hIniProfile *ini)
+static void  __FASTCALL__ __flushPartialCache(hIniProfile *ini)
 {
   part_ini_profile = ini;
   la_ForEach((linearArray *)ini->cache,part_flush_sect);
@@ -1940,34 +1940,34 @@ bool __FASTCALL__ iniWriteProfileString(hIniProfile *ini, const char *_section,
 static int __nled;
 static FILE * flush_handler = NULL;
 
-static void __FASTCALL__ flush_item(void __HUGE__ *data)
+static void __FASTCALL__ flush_item(void  *data)
 {
-  ini_cache __HUGE__ *it;
-  it = (ini_cache __HUGE__ *)data;
+  ini_cache  *it;
+  it = (ini_cache  *)data;
   out_item(flush_handler,__nled,it->item,it->v.value);
 }
 
-static void __FASTCALL__ flush_subsect(void __HUGE__ *data)
+static void __FASTCALL__ flush_subsect(void  *data)
 {
-  ini_cache __HUGE__ *it;
+  ini_cache  *it;
   int _has_led;
-  it = (ini_cache __HUGE__ *)data;
+  it = (ini_cache  *)data;
   _has_led = __nled;
   if(strlen(it->item)) __nled += out_subsect(flush_handler,it->item);
   la_ForEach(it->v.leaf,flush_item);
   __nled = _has_led;
 }
 
-static void __FASTCALL__ flush_sect(void __HUGE__ *data)
+static void __FASTCALL__ flush_sect(void  *data)
 {
-  ini_cache __HUGE__ *it;
-  it = (ini_cache __HUGE__ *)data;
+  ini_cache  *it;
+  it = (ini_cache  *)data;
   __nled = 0;
   if(strlen(it->item)) __nled += out_sect(flush_handler,it->item);
   la_ForEach(it->v.leaf,flush_subsect);
 }
 
-static bool __NEAR__ __FASTCALL__ __flushCache(hIniProfile *ini)
+static bool  __FASTCALL__ __flushCache(hIniProfile *ini)
 {
   if((ini->flags & HINI_UPDATED) == HINI_UPDATED && ini->cache)
   {

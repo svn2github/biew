@@ -30,7 +30,7 @@
 		  * @param t        pointer to 256-byte memory block from which will be readed byte
 		  * @param i        index of memory block where byte is to be readed
 		**/
-__inline static uint8_t __FASTCALL__ __CONSTFUNC__ __Xlat__(const uint8_t *_table, uint8_t _idx)
+__inline static uint8_t __FASTCALL__ __Xlat__(const uint8_t *_table, uint8_t _idx)
 {
  return _table[_idx];
 }

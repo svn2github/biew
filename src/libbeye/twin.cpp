@@ -49,7 +49,7 @@ static inline void winInternalError( void ) {};
 #else
 static inline void winInternalError( void ) { (void)0xFFFFFFFF; };
 #endif
-static bool __NEAR__ __FASTCALL__ test_win(TWindow *win)
+static bool  __FASTCALL__ test_win(TWindow *win)
 {
  bool ret;
  ret = *((any_t**)(win->body.chars + win->wsize)) == win->body.chars &&
@@ -73,9 +73,9 @@ enum {
 
 TWindow *active;
 
-static void __NEAR__ __FASTCALL__ __NORETURN__ winerr(const char *str) { printm("\n\nInternal twin library error: %s\n",str); _exit(EXIT_FAILURE); }
-static void __NEAR__ __FASTCALL__ wputc_oem(char ch,char oempg,char color,bool update);
-static void __NEAR__ __FASTCALL__ paint_internal(void);
+static void  __FASTCALL__ winerr(const char *str) { printm("\n\nInternal twin library error: %s\n",str); _exit(EXIT_FAILURE); }
+static void  __FASTCALL__ wputc_oem(char ch,char oempg,char color,bool update);
+static void  __FASTCALL__ paint_internal(void);
 
 #define wputc(ch,color,update) wputc_oem((char)ch,(char)0,(char)color,(bool)update)
 
@@ -125,7 +125,7 @@ static unsigned long twin_flags = 0L;
    (tAbsCoord)y < win->wheight-1 :\
    (tAbsCoord)y < win->wheight)
 
-static bool __NEAR__ __FASTCALL__ isOverlapped(TWindow *win)
+static bool  __FASTCALL__ isOverlapped(TWindow *win)
 {
   TWindow *iter;
   bool ret = false;
@@ -276,7 +276,7 @@ static uint8_t color_map[16] =
   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
 };
 
-static void __NEAR__ __FASTCALL__ adjustColor(Color *fore,Color *back)
+static void  __FASTCALL__ adjustColor(Color *fore,Color *back)
 {
   if(tvioNumColors < 16 || (twin_flags & TWIF_FORCEMONO))
   {
@@ -298,7 +298,7 @@ static void __NEAR__ __FASTCALL__ adjustColor(Color *fore,Color *back)
   (*back) = Color(color_map[(*back) & 0x0F]);
 }
 
-static void __NEAR__ __FASTCALL__ __set_color(DefColor *to,Color fore,Color back)
+static void  __FASTCALL__ __set_color(DefColor *to,Color fore,Color back)
 {
   to->user = LOGFB_TO_PHYS(fore,back);
   adjustColor(&fore,&back);
@@ -477,7 +477,7 @@ tTitleMode __FASTCALL__ twGetFooter(TWindow *win,char *footer,unsigned cb_footer
   return ret;
 }
 
-static void __NEAR__ __FASTCALL__ __unlistwin(TWindow *win)
+static void  __FASTCALL__ __unlistwin(TWindow *win)
 {
   if(head == win) head = win->next;
   else
@@ -492,7 +492,7 @@ static void __NEAR__ __FASTCALL__ __unlistwin(TWindow *win)
   }
 }
 
-static TWindow * __NEAR__ __FASTCALL__ __prevwin(TWindow *win)
+static TWindow *  __FASTCALL__ __prevwin(TWindow *win)
 {
   TWindow *ret = NULL;
   if(head != win)
@@ -508,7 +508,7 @@ static TWindow * __NEAR__ __FASTCALL__ __prevwin(TWindow *win)
   return ret;
 }
 
-static TWindow * __NEAR__ __FASTCALL__ __findcursorablewin(void)
+static TWindow *  __FASTCALL__ __findcursorablewin(void)
 {
   TWindow *iter,*ret;
   iter = head;
@@ -554,7 +554,7 @@ bool __FASTCALL__ twIsPieceVisible(TWindow *win,tRelCoord x, tRelCoord y)
   return over ? true : false;
 }
 
-static void __NEAR__ __FASTCALL__ iGotoXY(tRelCoord x,tRelCoord y)
+static void  __FASTCALL__ iGotoXY(tRelCoord x,tRelCoord y)
 {
   if(x && y)
   {
@@ -565,7 +565,7 @@ static void __NEAR__ __FASTCALL__ iGotoXY(tRelCoord x,tRelCoord y)
   }
 }
 
-static void __NEAR__ __FASTCALL__ set_xy(tRelCoord x,tRelCoord y)
+static void  __FASTCALL__ set_xy(tRelCoord x,tRelCoord y)
 {
   tRelCoord width,height;
   if(x && y)
@@ -587,7 +587,7 @@ static void __NEAR__ __FASTCALL__ set_xy(tRelCoord x,tRelCoord y)
   }
 }
 
-static void __NEAR__ __FASTCALL__ paint_cursor( void )
+static void  __FASTCALL__ paint_cursor( void )
 {
   TWindow * top=NULL;
   static tAbsCoord c_x = UCHAR_MAX, c_y = UCHAR_MAX;
@@ -635,7 +635,7 @@ void __FASTCALL__ twGotoXY(tRelCoord x,tRelCoord y)
   paint_cursor();
 }
 
-static TWindow * __NEAR__ __FASTCALL__ makewin(tAbsCoord x1, tAbsCoord y1, tAbsCoord width, tAbsCoord height)
+static TWindow *  __FASTCALL__ makewin(tAbsCoord x1, tAbsCoord y1, tAbsCoord width, tAbsCoord height)
 {
   TWindow *win;
   unsigned size;
@@ -699,7 +699,7 @@ static TWindow * __NEAR__ __FASTCALL__ makewin(tAbsCoord x1, tAbsCoord y1, tAbsC
  *  restorescreenchar: correctly copyed window memory from win to screen
  */
 
-static void __NEAR__ __FASTCALL__ updatescreencharfrombuff(TWindow *win,
+static void  __FASTCALL__ updatescreencharfrombuff(TWindow *win,
 					      tRelCoord x,
 					      tRelCoord y,
 					      tvioBuff *buff,
@@ -803,7 +803,7 @@ static void __NEAR__ __FASTCALL__ updatescreencharfrombuff(TWindow *win,
  *  snapshot:   snap shot of screen to win body
  */
 
-static void __NEAR__ __FASTCALL__ updatewinmemcharfromscreen(TWindow *win,tRelCoord x,tRelCoord y,tvioBuff *accel)
+static void  __FASTCALL__ updatewinmemcharfromscreen(TWindow *win,tRelCoord x,tRelCoord y,tvioBuff *accel)
 {
   unsigned idx,aidx;
   tvioBuff it;
@@ -868,7 +868,7 @@ static void __NEAR__ __FASTCALL__ updatewinmemcharfromscreen(TWindow *win,tRelCo
   }
 }
 
-static void __NEAR__ __FASTCALL__ screen2win(TWindow *win)
+static void  __FASTCALL__ screen2win(TWindow *win)
 {
   tvioBuff it;
   unsigned i,lwidth,idx;
@@ -968,7 +968,7 @@ void __FASTCALL__ twSnapShot(TWindow *win) /**< for snapshot */
  *  updatewinmem:     update entire window memory from screen
  */
 
-static void __NEAR__ __FASTCALL__ savedwin2screen(TWindow *win)
+static void  __FASTCALL__ savedwin2screen(TWindow *win)
 {
   unsigned i,j, tidx;
   tvioBuff accel;
@@ -1026,7 +1026,7 @@ static void __NEAR__ __FASTCALL__ savedwin2screen(TWindow *win)
   }
 }
 
-static void __NEAR__ __FASTCALL__ updatescreen(TWindow *win,bool full_area)
+static void  __FASTCALL__ updatescreen(TWindow *win,bool full_area)
 {
   unsigned i,j, tidx;
   tAbsCoord xs,xe,ys,ye,cx,rw;
@@ -1105,7 +1105,7 @@ static void __NEAR__ __FASTCALL__ updatescreen(TWindow *win,bool full_area)
   }
 }
 
-static void __NEAR__ __FASTCALL__ updatescreenpiece(TWindow *win,tRelCoord stx,tRelCoord endx,tRelCoord y)
+static void  __FASTCALL__ updatescreenpiece(TWindow *win,tRelCoord stx,tRelCoord endx,tRelCoord y)
 {
   unsigned i,line, tidx;
   tAbsCoord _stx,_endx;
@@ -1158,7 +1158,7 @@ static void __NEAR__ __FASTCALL__ updatescreenpiece(TWindow *win,tRelCoord stx,t
   }
 }
 
-static void __NEAR__ __FASTCALL__ updatewinmem(TWindow *win)
+static void  __FASTCALL__ updatewinmem(TWindow *win)
 {
   unsigned i,j,tidx;
   tvioBuff accel;
@@ -1218,7 +1218,7 @@ static void __NEAR__ __FASTCALL__ updatewinmem(TWindow *win)
   }
 }
 
-static tRelCoord __NEAR__ __FASTCALL__ calc_title_off(tTitleMode mode,unsigned w,unsigned slen)
+static tRelCoord  __FASTCALL__ calc_title_off(tTitleMode mode,unsigned w,unsigned slen)
 {
  tRelCoord stx;
    switch(mode)
@@ -1239,7 +1239,7 @@ static tRelCoord __NEAR__ __FASTCALL__ calc_title_off(tTitleMode mode,unsigned w
 
 #define DO_OEM_PG(ch) ((active->flags & TWS_NLSOEM) == TWS_NLSOEM ? NLS_IS_OEMPG(ch) ? ch : 0 : 0)
 
-static void __NEAR__ __FASTCALL__ __draw_frame( tRelCoord xs, tRelCoord ys, tRelCoord xe, tRelCoord ye,
+static void  __FASTCALL__ __draw_frame( tRelCoord xs, tRelCoord ys, tRelCoord xe, tRelCoord ye,
 				   const any_t*_frame, DefColor color)
 {
  unsigned i;
@@ -1314,7 +1314,7 @@ static void __NEAR__ __FASTCALL__ __draw_frame( tRelCoord xs, tRelCoord ys, tRel
 
 }
 
-static void __NEAR__ __FASTCALL__ make_frame( void )
+static void  __FASTCALL__ make_frame( void )
 {
  unsigned i,w,h;
  tRelCoord sx,sy;
@@ -1355,7 +1355,7 @@ static void __NEAR__ __FASTCALL__ make_frame( void )
  active->cur_y = sy;
 }
 
-static void __NEAR__ __FASTCALL__ paint_internal( void )
+static void  __FASTCALL__ paint_internal( void )
 {
   if((active->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE) make_frame();
 }
@@ -1774,7 +1774,7 @@ tRelCoord __FASTCALL__ twWhereY( void )
   return (active->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE ? active->cur_y : active->cur_y+1;
 }
 
-static void __NEAR__ __FASTCALL__ wputc_oem(char ch,char oempg,char color,bool update)
+static void  __FASTCALL__ wputc_oem(char ch,char oempg,char color,bool update)
 {
   unsigned idx;
   idx = active->cur_x + active->cur_y*active->wwidth;

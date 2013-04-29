@@ -100,7 +100,7 @@ static bool  __FASTCALL__ jvm_check_fmt( void )
   return id[0]==0xCA && id[1]==0xFE && id[2]==0xBA && id[3]==0xBE && bmGetFLength()>=16;
 }
 
-static unsigned __NEAR__ __FASTCALL__ skip_constant(BFile& handle,unsigned char id)
+static unsigned  __FASTCALL__ skip_constant(BFile& handle,unsigned char id)
 {
     unsigned add;
     unsigned short sval;
@@ -127,7 +127,7 @@ static unsigned __NEAR__ __FASTCALL__ skip_constant(BFile& handle,unsigned char 
     return add;
 }
 
-static void __NEAR__ __FASTCALL__ skip_constant_pool(BFile& handle,unsigned nitems)
+static void  __FASTCALL__ skip_constant_pool(BFile& handle,unsigned nitems)
 {
     unsigned i;
     for(i=0;i<nitems;i++)
@@ -138,7 +138,7 @@ static void __NEAR__ __FASTCALL__ skip_constant_pool(BFile& handle,unsigned nite
     }
 }
 
-static void __NEAR__ __FASTCALL__ get_utf8(BFile& handle,unsigned nidx,char *str,unsigned slen)
+static void  __FASTCALL__ get_utf8(BFile& handle,unsigned nidx,char *str,unsigned slen)
 {
     unsigned char id;
     handle.seek(jvm_header.constants_offset,BM_SEEK_SET);
@@ -154,7 +154,7 @@ static void __NEAR__ __FASTCALL__ get_utf8(BFile& handle,unsigned nidx,char *str
     }
 }
 
-static void __NEAR__ __FASTCALL__ get_name(BFile& handle,char *str,unsigned slen)
+static void  __FASTCALL__ get_name(BFile& handle,char *str,unsigned slen)
 {
     unsigned short nidx;
     nidx=handle.read_word();
@@ -162,7 +162,7 @@ static void __NEAR__ __FASTCALL__ get_name(BFile& handle,char *str,unsigned slen
     get_utf8(handle,nidx,str,slen);
 }
 
-static char * __NEAR__ __FASTCALL__ get_class_name(BFile& handle,unsigned idx,char *str,unsigned slen)
+static char *  __FASTCALL__ get_class_name(BFile& handle,unsigned idx,char *str,unsigned slen)
 {
     *str='\0';
     if(idx && idx<(unsigned)jvm_header.constant_pool_count-1)
@@ -176,7 +176,7 @@ static char * __NEAR__ __FASTCALL__ get_class_name(BFile& handle,unsigned idx,ch
     return str;
 }
 
-static void __NEAR__ __FASTCALL__ skip_attributes(BFile& handle,unsigned nitems)
+static void  __FASTCALL__ skip_attributes(BFile& handle,unsigned nitems)
 {
     unsigned i;
     for(i=0;i<nitems;i++)
@@ -189,7 +189,7 @@ static void __NEAR__ __FASTCALL__ skip_attributes(BFile& handle,unsigned nitems)
     }
 }
 
-static void __NEAR__ __FASTCALL__ skip_fields(unsigned nitems,int attr)
+static void  __FASTCALL__ skip_fields(unsigned nitems,int attr)
 {
     unsigned i;
     __filesize_t fpos;
@@ -275,7 +275,7 @@ static unsigned __FASTCALL__ jvm_get_num_attributes(BFile& handle)
 }
 
 
-static __filesize_t __NEAR__ __FASTCALL__ __ShowAttributes(const char *title)
+static __filesize_t  __FASTCALL__ __ShowAttributes(const char *title)
 {
   __filesize_t fpos;
   int ret;
@@ -606,7 +606,7 @@ static void __FASTCALL__ jvm_destroy_fmt(void)
 
 static int  __FASTCALL__ jvm_platform( void) { return DISASM_JAVA; }
 
-static void __NEAR__ __FASTCALL__ decode_acc_flags(unsigned flags, char *str)
+static void  __FASTCALL__ decode_acc_flags(unsigned flags, char *str)
 {
     if(flags & 0x0001) strcpy(str," PUBLIC");
     if(flags & 0x0010) strcat(str," FINAL");

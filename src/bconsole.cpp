@@ -91,7 +91,7 @@ void __FASTCALL__ termBConsole( void )
 /**
    read the next keyboard character
 */
-static int __NEAR__ __FASTCALL__ getkey(int hard, void (*func)(void))
+static int  __FASTCALL__ getkey(int hard, void (*func)(void))
 {
  return KB_freq ? KB_Buff[--KB_freq] :
 		  GetEvent( func ? func : hard ? hard > 1 ?
@@ -101,7 +101,7 @@ static int __NEAR__ __FASTCALL__ getkey(int hard, void (*func)(void))
 			    NULL);
 }
 
-static bool __NEAR__ __FASTCALL__ ungotkey(int keycode)
+static bool  __FASTCALL__ ungotkey(int keycode)
 {
   bool ret = false;
   if(KB_freq < sizeof(KB_Buff)/sizeof(int))
@@ -443,7 +443,7 @@ void __FASTCALL__ CloseWnd(TWindow *w)
    twDestroyWin(w);
 }
 
-static TWindow * __NEAR__ __FASTCALL__ _CreateWindowDD(const char * title,tAbsCoord x2,tAbsCoord y2,bool is_nls)
+static TWindow *  __FASTCALL__ _CreateWindowDD(const char * title,tAbsCoord x2,tAbsCoord y2,bool is_nls)
 {
  TWindow *win;
  unsigned flags;
@@ -474,7 +474,7 @@ TWindow * __FASTCALL__ CrtDlgWndnls(const char * title,tAbsCoord width,tAbsCoord
   return _CreateWindowDDnls(title,width,height);
 }
 
-static TWindow * __NEAR__ __FASTCALL__ _CrtMnuWindowDD(const char *title,tAbsCoord x1, tAbsCoord y1, tAbsCoord x2,tAbsCoord y2,bool is_nls)
+static TWindow *  __FASTCALL__ _CrtMnuWindowDD(const char *title,tAbsCoord x1, tAbsCoord y1, tAbsCoord x2,tAbsCoord y2,bool is_nls)
 {
  TWindow *win;
  unsigned flags;
@@ -510,7 +510,7 @@ TWindow * __FASTCALL__ CrtLstWndnls(const char * title,tAbsCoord x2,tAbsCoord y2
   return _CrtMnuWindowDD(title,0,0,x2,y2,true);
 }
 
-static TWindow * __NEAR__ __FASTCALL__ _CreateHlpWnd(const char * title,tAbsCoord x2,tAbsCoord y2,bool is_nls)
+static TWindow *  __FASTCALL__ _CreateHlpWnd(const char * title,tAbsCoord x2,tAbsCoord y2,bool is_nls)
 {
  TWindow *win;
  unsigned flags;
@@ -545,7 +545,7 @@ TWindow * __FASTCALL__ CreateEditor(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsC
  return ret;
 }
 
-static void __NEAR__ __FASTCALL__ __MB(const char * text,const char * title,
+static void  __FASTCALL__ __MB(const char * text,const char * title,
 				       ColorAttr base,ColorAttr frame)
 {
  unsigned slen,tlen;
@@ -563,7 +563,7 @@ static void __NEAR__ __FASTCALL__ __MB(const char * text,const char * title,
  twPutS(text);
 }
 
-static void __NEAR__ __FASTCALL__ __MessageBox(const char * text,const char * title,
+static void  __FASTCALL__ __MessageBox(const char * text,const char * title,
 					       ColorAttr base,ColorAttr frame)
 {
  TWindow *prev;
@@ -609,7 +609,7 @@ void __FASTCALL__ errnoMessageBox(const char *text,const char *title,int __errno
   ErrMessageBox(stmp,title);
 }
 
-static void __NEAR__ __FASTCALL__ PaintLine(unsigned i,const char *name,
+static void  __FASTCALL__ PaintLine(unsigned i,const char *name,
 					    unsigned width,unsigned mord_width,
 					    bool isOrdinal,
 					    bool useAcc,bool is_hl)
@@ -680,7 +680,7 @@ static void __NEAR__ __FASTCALL__ PaintLine(unsigned i,const char *name,
   else  twDirectWrite(3,i+1,buffer,width);
 }
 
-static void __NEAR__ __FASTCALL__ Paint(TWindow *win,const char ** names,
+static void  __FASTCALL__ Paint(TWindow *win,const char ** names,
 					unsigned nlist,unsigned start,
 					unsigned height,unsigned width,
 					unsigned mord_width,
@@ -719,7 +719,7 @@ bool __FASTCALL__ _lb_searchtext(const char *str,const char *tmpl,unsigned searc
   return strFind(str, strlen(str), tmpl, searchlen, cache, flg) ? true : false;
 }
 
-static tCompare __FASTCALL__ listcompare(const void __HUGE__ *v1,const void __HUGE__ *v2)
+static tCompare __FASTCALL__ listcompare(const void  *v1,const void  *v2)
 {
   tCompare ret;
   if(byNam)  ret = stricmp(*((const char **)v1),*((const char **)v2));
@@ -747,7 +747,7 @@ static tCompare __FASTCALL__ listcompare(const void __HUGE__ *v1,const void __HU
   return ret;
 }
 
-static int __NEAR__ __FASTCALL__ __ListBox(char** names,unsigned nlist,unsigned defsel,const char * title,int assel)
+static int  __FASTCALL__ __ListBox(char** names,unsigned nlist,unsigned defsel,const char * title,int assel)
 {
  TWindow * wlist;
  char *acctable = 0;

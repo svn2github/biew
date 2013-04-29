@@ -178,7 +178,7 @@ bool BFile::__putc(unsigned char ch)
 }
 
 #if 0
-static void __NEAR__ __FASTCALL__ dump_BFILE(BFILE*obj)
+static void  __FASTCALL__ dump_BFILE(BFILE*obj)
 {
 fprintf(stderr,
 	"      %p\n"

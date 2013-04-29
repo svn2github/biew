@@ -66,13 +66,13 @@ enum {
 		       /** Return uncompressed size of help item
 			  0 - if error occured */
     unsigned long   __FASTCALL__ hlpGetItemSize(unsigned long item_id);
-    bool           __FASTCALL__ hlpLoadItem(unsigned long item_id, void __HUGE__* buffer);
+    bool           __FASTCALL__ hlpLoadItem(unsigned long item_id, void * buffer);
 		       /** Fully-functionallity utility for displaying help */
     void            __FASTCALL__ hlpDisplay(unsigned long id);
 
 		       /** Returns array of char pointers.
 			  Title always is data[0] */
-    char **         __FASTCALL__ hlpPointStrings(char __HUGE__ *data,unsigned long data_size,
+    char **         __FASTCALL__ hlpPointStrings(char  *data,unsigned long data_size,
 				       unsigned long *nstr);
 		       /** Filles buffer as video memory from string */
     unsigned        __FASTCALL__ hlpFillBuffer(tvioBuff * dest,unsigned int cw_dest,

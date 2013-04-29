@@ -39,7 +39,7 @@ static void paint_prcnt(int n_prcnt)
   ShowPercentInWnd(pwnd,n_prcnt);
 }
 
-char ** __FASTCALL__ cpuPointStrings(char __HUGE__ *data,unsigned long data_size,unsigned long *nstr)
+char ** __FASTCALL__ cpuPointStrings(char  *data,unsigned long data_size,unsigned long *nstr)
 {
   char **str_ptr,**new_ptr;
   unsigned long i;

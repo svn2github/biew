@@ -88,7 +88,7 @@ enum {
 		     * @param beyeFlg         indicates global flags of Beye
 		     *                        search engine.
 		    **/
-static __filesize_t __NEAR__ __FASTCALL__  ___lfind(const char *sfrom,
+static __filesize_t  __FASTCALL__  ___lfind(const char *sfrom,
 						    unsigned slen,
 						    unsigned flags,
 						    __filesize_t start,
@@ -224,7 +224,7 @@ static __filesize_t __NEAR__ __FASTCALL__  ___lfind(const char *sfrom,
   return retval;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__  ___adv_find(const char *sfrom,
+static __filesize_t  __FASTCALL__  ___adv_find(const char *sfrom,
 						       unsigned sfromlen,
 						       __filesize_t start,
 						       __filesize_t *slen,
@@ -401,7 +401,7 @@ int __FASTCALL__ ExpandHex(char * dest,const unsigned char * src,int size,char h
   return k;
 }
 
-static void __NEAR__ __FASTCALL__ SearchPaint(TWindow *wdlg,int flags,
+static void  __FASTCALL__ SearchPaint(TWindow *wdlg,int flags,
 					      unsigned sf_flags)
 {
  TWindow *_using = twUsedWin();
@@ -422,7 +422,7 @@ static void __NEAR__ __FASTCALL__ SearchPaint(TWindow *wdlg,int flags,
  twUseWin(_using);
 }
 
-static void __NEAR__ __FASTCALL__ SearchUpdate(TWindow *wdlg,int _flags,
+static void  __FASTCALL__ SearchUpdate(TWindow *wdlg,int _flags,
 					      unsigned sf_flags)
 {
  TWindow *_using = twUsedWin();

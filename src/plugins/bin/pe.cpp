@@ -71,13 +71,13 @@ static BFile* pe_cache2 = &bNull;
 static BFile* pe_cache3 = &bNull;
 static BFile* pe_cache4 = &bNull;
 
-static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
+static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
 static void __FASTCALL__ pe_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *));
 static __filesize_t __FASTCALL__ peVA2PA(__filesize_t va);
 static __filesize_t __FASTCALL__ pePA2VA(__filesize_t pa);
-static __fileoff_t __NEAR__ CalcOverlayOffset( void );
+static __fileoff_t  CalcOverlayOffset( void );
 
-static __filesize_t __NEAR__ __FASTCALL__ CalcPEObjectEntry(__fileoff_t offset)
+static __filesize_t  __FASTCALL__ CalcPEObjectEntry(__fileoff_t offset)
 {
  __filesize_t intp;
  intp = offset / PE32_HDR(pe32,peFileAlign);
@@ -85,7 +85,7 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcPEObjectEntry(__fileoff_t offset)
  return offset;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ RVA2Phys(__filesize_t rva)
+static __filesize_t  __FASTCALL__ RVA2Phys(__filesize_t rva)
 {
  int i;
  __filesize_t npages,poff,obj_rva,pphys,ret,size;
@@ -113,26 +113,26 @@ static __filesize_t __NEAR__ __FASTCALL__ RVA2Phys(__filesize_t rva)
  return ret;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ fioReadDWord(BFile& handle,__filesize_t offset,int origin)
+static __filesize_t  __FASTCALL__ fioReadDWord(BFile& handle,__filesize_t offset,int origin)
 {
  handle.seek(offset,origin);
  return handle.read_dword();
 }
 
-static unsigned __NEAR__ __FASTCALL__ fioReadWord(BFile& handle,__filesize_t offset,int origin)
+static unsigned  __FASTCALL__ fioReadWord(BFile& handle,__filesize_t offset,int origin)
 {
  handle.seek(offset,origin);
  return handle.read_word();
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ fioReadDWord2Phys(BFile& handle,__filesize_t offset,int origin)
+static __filesize_t  __FASTCALL__ fioReadDWord2Phys(BFile& handle,__filesize_t offset,int origin)
 {
  unsigned long dword;
  dword = fioReadDWord(handle,offset,origin);
  return RVA2Phys(dword);
 }
 
-static const char * __NEAR__ __FASTCALL__ PECPUType(void)
+static const char *  __FASTCALL__ PECPUType(void)
 {
     static const struct {
        int code;
@@ -184,7 +184,7 @@ static const char * __NEAR__ __FASTCALL__ PECPUType(void)
 static __filesize_t entryPE = 0L;
 static __fileoff_t overlayPE = -1L;
 
-static void __NEAR__ PaintNewHeaderPE_1( void )
+static void  PaintNewHeaderPE_1( void )
 {
   const char *fmt;
   time_t tval;
@@ -240,7 +240,7 @@ static void __NEAR__ PaintNewHeaderPE_1( void )
 	   ,PE32_HDR(pe32,peObjectAlign));
 }
 
-static void __NEAR__ PaintNewHeaderPE_2( void )
+static void  PaintNewHeaderPE_2( void )
 {
   const char *fmt;
   static const char * subSystem[] =
@@ -318,7 +318,7 @@ static void __NEAR__ PaintNewHeaderPE_2( void )
   }
 }
 
-static void (__NEAR__ * const pephead[])(void) = /* [dBorca] the table is const, not the any_t*/
+static void ( * const pephead[])(void) = /* [dBorca] the table is const, not the any_t*/
 {
     PaintNewHeaderPE_1,
     PaintNewHeaderPE_2
@@ -414,7 +414,7 @@ static void __FASTCALL__ ObjPaintPE(TWindow * win,const any_t** names,unsigned s
  twRefreshFullWin(win);
 }
 
-static bool __NEAR__ __FASTCALL__ __ReadObjectsPE(BFile& handle,memArray * obj,unsigned n)
+static bool  __FASTCALL__ __ReadObjectsPE(BFile& handle,memArray * obj,unsigned n)
 {
  unsigned i;
   for(i = 0;i < n;i++)
@@ -427,7 +427,7 @@ static bool __NEAR__ __FASTCALL__ __ReadObjectsPE(BFile& handle,memArray * obj,u
   return true;
 }
 
-static __fileoff_t __NEAR__ CalcOverlayOffset( void )
+static __fileoff_t  CalcOverlayOffset( void )
 {
   if (overlayPE == -1 && pe.peObjects) {
     memArray *obj;
@@ -470,7 +470,7 @@ static __filesize_t __FASTCALL__ ShowObjectsPE( void )
  return fpos;
 }
 
-static unsigned __NEAR__ __FASTCALL__ GetImportCountPE(BFile& handle,__filesize_t phys)
+static unsigned  __FASTCALL__ GetImportCountPE(BFile& handle,__filesize_t phys)
 {
   unsigned count;
   __filesize_t fpos = handle.tell();
@@ -489,7 +489,7 @@ static unsigned __NEAR__ __FASTCALL__ GetImportCountPE(BFile& handle,__filesize_
 }
 
 /* returns really readed number of characters */
-unsigned __NEAR__ __FASTCALL__ __peReadASCIIZName(BFile& handle,__filesize_t offset,char *buff, unsigned cb_buff)
+unsigned  __FASTCALL__ __peReadASCIIZName(BFile& handle,__filesize_t offset,char *buff, unsigned cb_buff)
 {
   unsigned j;
   char ch;
@@ -508,7 +508,7 @@ unsigned __NEAR__ __FASTCALL__ __peReadASCIIZName(BFile& handle,__filesize_t off
   return j;
 }
 
-static unsigned __NEAR__ __FASTCALL__ __ReadImportPE(BFile& handle,__filesize_t phys,memArray *obj,unsigned nnames)
+static unsigned  __FASTCALL__ __ReadImportPE(BFile& handle,__filesize_t phys,memArray *obj,unsigned nnames)
 {
   unsigned i;
   __filesize_t fpos = handle.tell();
@@ -704,7 +704,7 @@ static unsigned __FASTCALL__ PEExportNumItems(BFile& handle)
   return (unsigned)(et.etNumEATEntries);
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ CalcEntryPE(unsigned ordinal,bool dispmsg)
+static __filesize_t  __FASTCALL__ CalcEntryPE(unsigned ordinal,bool dispmsg)
 {
  __filesize_t fret,rva;
  unsigned ord;
@@ -836,15 +836,15 @@ typedef struct tagRELOC_PE
 
 static linearArray *CurrPEChain = NULL;
 
-static tCompare __FASTCALL__ compare_pe_reloc_s(const void __HUGE__ *e1,const void __HUGE__ *e2)
+static tCompare __FASTCALL__ compare_pe_reloc_s(const void  *e1,const void  *e2)
 {
-  const RELOC_PE __HUGE__ *p1,__HUGE__ *p2;
-  p1 = (const RELOC_PE __HUGE__ *)e1;
-  p2 = (const RELOC_PE __HUGE__ *)e2;
+  const RELOC_PE  *p1, *p2;
+  p1 = (const RELOC_PE  *)e1;
+  p2 = (const RELOC_PE  *)e2;
   return ((p1->laddr) < (p2->laddr) ? -1 : (p1->laddr) > (p2->laddr) ? 1 : 0);
 }
 
-static void __NEAR__ __FASTCALL__ BuildPERefChain( void )
+static void  __FASTCALL__ BuildPERefChain( void )
 {
   __filesize_t  phys,cpos;
   unsigned long i,j;
@@ -941,7 +941,7 @@ static void __NEAR__ __FASTCALL__ BuildPERefChain( void )
   CloseWnd(w);
 }
 
-static RELOC_PE __HUGE__ * __NEAR__ __FASTCALL__ __found_RPE(__filesize_t laddr)
+static RELOC_PE  *  __FASTCALL__ __found_RPE(__filesize_t laddr)
 {
   RELOC_PE key;
   if(!CurrPEChain) BuildPERefChain();
@@ -949,7 +949,7 @@ static RELOC_PE __HUGE__ * __NEAR__ __FASTCALL__ __found_RPE(__filesize_t laddr)
   return (RELOC_PE*)la_Find(CurrPEChain,&key,compare_pe_reloc_s);
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE __HUGE__ *rpe,int flags)
+static __filesize_t  __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE  *rpe,int flags)
 {
    BFile& handle=*pe_cache,&handle2=*pe_cache4,&handle3=*pe_cache3;
    __filesize_t phys,rva,retrf;
@@ -1070,7 +1070,7 @@ static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE __H
 
 static unsigned long __FASTCALL__ AppendPERef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
-  RELOC_PE __HUGE__ *rpe;
+  RELOC_PE  *rpe;
   __filesize_t retrf;
   BFile* b_cache;
   char buff[400];
@@ -1242,7 +1242,7 @@ static void __FASTCALL__ pe_ReadPubName(BFile& b_cache,const struct PubName *it,
     buff[cb_buff-1] = 0;
 }
 
-static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
+static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
   return fmtFindPubName(*pe_cache4,buff,cb_buff,pa,
 			pe_ReadPubNameList,

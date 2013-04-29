@@ -180,7 +180,7 @@ bool        __FASTCALL__ Get16DigitDlg(const char *title,const char *text,char a
  return ret;
 }
 
-static void __NEAR__ __FASTCALL__ paintJumpDlg(TWindow *wdlg,unsigned long flags)
+static void  __FASTCALL__ paintJumpDlg(TWindow *wdlg,unsigned long flags)
 {
   TWindow *usd;
   usd = twUsedWin();
@@ -342,7 +342,7 @@ bool __FASTCALL__ GetStringDlg(char * buff,const char * title,const char *subtit
   return ret;
 }
 
-static void __NEAR__ __FASTCALL__ FFStaticPaint(TWindow * wdlg,char * fname,char * st,char *end,unsigned long flg)
+static void  __FASTCALL__ FFStaticPaint(TWindow * wdlg,char * fname,char * st,char *end,unsigned long flg)
 {
   int len,i;
   TWindow * _using = twUsedWin();
@@ -558,7 +558,7 @@ bool __FASTCALL__ GetFStoreDlg(const char *title,char * fname,unsigned long * fl
  return !(_lastbyte == KE_ESCAPE || _lastbyte == KE_F(10));
 }
 
-static void __NEAR__ __FASTCALL__ FFStaticPaintInsDel(TWindow * wdlg,char * st,char *end)
+static void  __FASTCALL__ FFStaticPaintInsDel(TWindow * wdlg,char * st,char *end)
 {
   int len,i;
   TWindow * _using = twUsedWin();

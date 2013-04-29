@@ -42,7 +42,7 @@ inline uint16_t AOUT_HALF(const uint16_t* cval) { return FMT_WORD(cval,is_msbf);
 inline uint32_t AOUT_WORD(const uint32_t* cval) { return FMT_DWORD(cval,is_msbf); }
 inline uint64_t AOUT_QWORD(const uint64_t* cval) { return FMT_QWORD(cval,is_msbf); }
 
-static const char * __NEAR__ __FASTCALL__ aout_encode_hdr(uint32_t info)
+static const char *  __FASTCALL__ aout_encode_hdr(uint32_t info)
 {
    switch(N_MAGIC(AOUT_WORD(&info)))
    {
@@ -59,7 +59,7 @@ static const char * __NEAR__ __FASTCALL__ aout_encode_hdr(uint32_t info)
    }
 }
 
-static const char * __NEAR__ __FASTCALL__ aout_encode_machine(uint32_t info,unsigned* id)
+static const char *  __FASTCALL__ aout_encode_machine(uint32_t info,unsigned* id)
 {
    *id=DISASM_DATA;
    switch(N_MACHTYPE(AOUT_WORD(&info)))

@@ -100,7 +100,7 @@ static const char *get_VEX_reg(ix86Param* DisP)
     return rval;
 }
 
-static char * __NEAR__ __FASTCALL__ GetDigitsApp(unsigned char loc_off,
+static char *  __FASTCALL__ GetDigitsApp(unsigned char loc_off,
 						 ix86Param *DisP,
 						 char codelen,DisMode::e_disarg type)
 {
@@ -119,7 +119,7 @@ inline char* Get8DigitApp(unsigned char loc_off,ix86Param* DisP)   { return GetD
 inline char* Get8SignDigApp(unsigned char loc_off,ix86Param* DisP) { return GetDigitsApp(loc_off,DisP,4,DisMode::Arg_Long); }
 inline char* Get16DigitApp(unsigned char loc_off,ix86Param* DisP)   { return GetDigitsApp(loc_off,DisP,8,DisMode::Arg_QWord); }
 inline char* Get16SignDigApp(unsigned char loc_off,ix86Param* DisP) { return GetDigitsApp(loc_off,DisP,8,DisMode::Arg_LLong); }
-static char * __NEAR__ __FASTCALL__ Get2SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign)
+static char *  __FASTCALL__ Get2SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign)
 {
   char *ptr = ix86_apistr;
   char *rets;
@@ -133,7 +133,7 @@ static char * __NEAR__ __FASTCALL__ Get2SquareDig(unsigned char loc_off,ix86Para
   return ix86_apistr;
 }
 
-static char * __NEAR__ __FASTCALL__ Get4SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign, bool is_disponly)
+static char *  __FASTCALL__ Get4SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign, bool is_disponly)
 {
   char *ptr = ix86_apistr;
   char *rets;
@@ -150,7 +150,7 @@ static char * __NEAR__ __FASTCALL__ Get4SquareDig(unsigned char loc_off,ix86Para
   return ix86_apistr;
 }
 
-static char * __NEAR__ __FASTCALL__ Get8SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign,bool is_disponly,bool as_rip)
+static char *  __FASTCALL__ Get8SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign,bool is_disponly,bool as_rip)
 {
   char *ptr = ix86_apistr;
   char *rets;
@@ -168,7 +168,7 @@ static char * __NEAR__ __FASTCALL__ Get8SquareDig(unsigned char loc_off,ix86Para
   return ix86_apistr;
 }
 
-static char * __NEAR__ __FASTCALL__ Get16SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign,bool is_disponly)
+static char *  __FASTCALL__ Get16SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign,bool is_disponly)
 {
   char *ptr = ix86_apistr;
   char *rets;
@@ -295,7 +295,7 @@ the 8-bit or 32-bit displacement value to 64 bits before adding it to the RIP.
   }
 }
 
-static void __NEAR__ __FASTCALL__ getSIBRegs(ix86Param*DisP,char * base,char * scale,char * _index,char *mod,char code)
+static void  __FASTCALL__ getSIBRegs(ix86Param*DisP,char * base,char * scale,char * _index,char *mod,char code)
 {
   char scl = (code & 0xC0) >> 6;
   char bas = code & 0x07;
@@ -352,7 +352,7 @@ static void __NEAR__ __FASTCALL__ getSIBRegs(ix86Param*DisP,char * base,char * s
 #endif
 }
 
-static char * __NEAR__ __FASTCALL__ ConstrSibMod(ix86Param*DisP,char * store,char * scale,char * _index,char * base,char code,char *mod)
+static char *  __FASTCALL__ ConstrSibMod(ix86Param*DisP,char * store,char * scale,char * _index,char * base,char code,char *mod)
 {
    getSIBRegs(DisP,base,scale,_index,mod,code);
    store[0] = 0;
@@ -647,7 +647,7 @@ char * __FASTCALL__ ix86_CStile(ix86Param *DisP,char *str,const char *arg2)
   return str;
 }
 
-static char * __NEAR__ __FASTCALL__ __buildModRegRm(ix86Param *DisP,bool w,bool d)
+static char *  __FASTCALL__ __buildModRegRm(ix86Param *DisP,bool w,bool d)
 {
  char reg = MODRM_REG(DisP->RealCmd[1]);
  char mod = MODRM_MOD(DisP->RealCmd[1]);
@@ -675,7 +675,7 @@ static char * __NEAR__ __FASTCALL__ __buildModRegRm(ix86Param *DisP,bool w,bool 
  return ix86_dtile;
 }
 
-static char * __NEAR__ __FASTCALL__ __buildModRegRmReg(ix86Param *DisP,bool d,unsigned char wrex)
+static char *  __FASTCALL__ __buildModRegRmReg(ix86Param *DisP,bool d,unsigned char wrex)
 {
  char reg = MODRM_REG(DisP->RealCmd[1]);
  char mod = MODRM_MOD(DisP->RealCmd[1]);
@@ -1387,7 +1387,7 @@ void  __FASTCALL__ ix86_ArgMovXRY(char *str,ix86Param *DisP)
 
 /* MMX and SSE(2) opcodes */
 
-static void __NEAR__ __FASTCALL__ ix86_bridge_cpu_simd(char *str,ix86Param *DisP,bool direct,bool as_xmmx)
+static void  __FASTCALL__ ix86_bridge_cpu_simd(char *str,ix86Param *DisP,bool direct,bool as_xmmx)
 {
    unsigned long mode=DisP->mode;
    if(as_xmmx) DisP->mode|=MOD_SSE;
@@ -1431,7 +1431,7 @@ void __FASTCALL__  bridge_simd_cpu_imm8(char *str,ix86Param *DisP)
     arg_imm8(str,DisP);
 }
 
-static void __NEAR__ __FASTCALL__ ix86_bridge_sse_mmx(char *str,ix86Param *DisP,bool xmmx_first)
+static void  __FASTCALL__ ix86_bridge_sse_mmx(char *str,ix86Param *DisP,bool xmmx_first)
 {
    unsigned long mode=DisP->mode;
    if(xmmx_first) DisP->mode|=MOD_SSE;
@@ -1487,7 +1487,7 @@ void __FASTCALL__ arg_simd(char *str,ix86Param *DisP)
     DisP->mode=mode;
 }
 
-static void __NEAR__ __FASTCALL__ ix86_ArgxMMXGroup(char *str,const char *name,ix86Param *DisP,bool as_xmmx)
+static void  __FASTCALL__ ix86_ArgxMMXGroup(char *str,const char *name,ix86Param *DisP,bool as_xmmx)
 {
   unsigned long mode=DisP->mode;
   bool brex,wrex;

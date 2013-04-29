@@ -35,7 +35,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 
 namespace beye {
-static void __NEAR__ __FASTCALL__ ShowFunKey(const char * key,const char * text)
+static void  __FASTCALL__ ShowFunKey(const char * key,const char * text)
 {
  twSetColorAttr(prompt_cset.digit);
  twPutS(key);
@@ -45,7 +45,7 @@ static void __NEAR__ __FASTCALL__ ShowFunKey(const char * key,const char * text)
 
 static const char * ftext[] = { "1"," 2"," 3"," 4"," 5"," 6"," 7"," 8"," 9","10" };
 
-static void __NEAR__ __FASTCALL__ drawControlKeys(int flg)
+static void  __FASTCALL__ drawControlKeys(int flg)
 {
   char ckey;
   if(flg & KS_SHIFT) ckey = 'S';
@@ -124,7 +124,7 @@ static const char * FxText[] =
   "Quit  "
 };
 
-static void __NEAR__ fillFxText( void )
+static void  fillFxText( void )
 {
   FxText[3] = beye_context().active_mode()->misckey_name();
   FxText[7] = beye_context().active_format()->showHdr || IsNewExe() ? "Header" : NULL;

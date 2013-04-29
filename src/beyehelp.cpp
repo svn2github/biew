@@ -149,7 +149,7 @@ void __FASTCALL__ hlpPaintLine(TWindow *win,unsigned i,const char *name,bool is_
   twClrEOL();
 }
 
-static void __NEAR__ __FASTCALL__ Paint(TWindow *win,char * * names,unsigned nlist,unsigned start,unsigned height,unsigned width)
+static void  __FASTCALL__ Paint(TWindow *win,char * * names,unsigned nlist,unsigned start,unsigned height,unsigned width)
 {
  unsigned i, pos = 0;
  twUseWin(win);
@@ -177,7 +177,7 @@ static void __NEAR__ __FASTCALL__ Paint(TWindow *win,char * * names,unsigned nli
 
 typedef char *lpstr;
 
-static int __NEAR__ __FASTCALL__ __hlpListBox(char * * names,unsigned nlist,const char * title)
+static int  __FASTCALL__ __hlpListBox(char * * names,unsigned nlist,const char * title)
 {
  TWindow * wlist;
  unsigned i,j,height,mwidth = strlen(title);
@@ -338,7 +338,7 @@ unsigned long   __FASTCALL__ hlpGetItemSize(unsigned long item_id)
   return ret;
 }
 
-bool   __FASTCALL__ hlpLoadItem(unsigned long item_id, void __HUGE__* buffer)
+bool   __FASTCALL__ hlpLoadItem(unsigned long item_id, void * buffer)
 {
   unsigned long hlp_off,hlp_size;
   bool ret = false;
@@ -359,7 +359,7 @@ bool   __FASTCALL__ hlpLoadItem(unsigned long item_id, void __HUGE__* buffer)
   return ret;
 }
 
-char **   __FASTCALL__ hlpPointStrings(char __HUGE__ *data,unsigned long data_size,unsigned long *nstr)
+char **   __FASTCALL__ hlpPointStrings(char  *data,unsigned long data_size,unsigned long *nstr)
 {
   char **str_ptr,**new_ptr;
   unsigned long i;
@@ -388,7 +388,7 @@ char **   __FASTCALL__ hlpPointStrings(char __HUGE__ *data,unsigned long data_si
 void __FASTCALL__ hlpDisplay( unsigned long item_id )
 {
   char **str_ptr = 0;
-  char __HUGE__ *data = 0;
+  char  *data = 0;
   char *title;
   unsigned long data_size,nstr;
   if(!hlpOpen(true)) return;

@@ -154,13 +154,13 @@ struct tag_elfVAMap
 #define ELF_ADDR(cval) ELF_XWORD(cval)
 #define ELF_OFF(cval) ELF_XWORD(cval)
 
-static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
+static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
 static void __FASTCALL__ elf_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *));
 static __filesize_t __FASTCALL__ elfVA2PA(__filesize_t va);
 static __filesize_t __FASTCALL__ elfPA2VA(__filesize_t pa);
 static bool IsSectionsPresent;
 
-static __filesize_t __NEAR__ __FASTCALL__ findPHEntry(unsigned long type,unsigned *nitems)
+static __filesize_t  __FASTCALL__ findPHEntry(unsigned long type,unsigned *nitems)
 {
   __filesize_t fpos,dynptr;
   ElfXX_External_Phdr phdr;
@@ -184,7 +184,7 @@ static __filesize_t __NEAR__ __FASTCALL__ findPHEntry(unsigned long type,unsigne
   return dynptr;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ findPHDynEntry(unsigned long type,
+static __filesize_t  __FASTCALL__ findPHDynEntry(unsigned long type,
 							__filesize_t dynptr,
 							unsigned long nitems)
 {
@@ -205,7 +205,7 @@ static __filesize_t __NEAR__ __FASTCALL__ findPHDynEntry(unsigned long type,
   return is_found ? ELF_XWORD(ELF_EDYN(dyntab,d_un.d_ptr)) : 0L;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ findPHPubSyms(unsigned long *number,
+static __filesize_t  __FASTCALL__ findPHPubSyms(unsigned long *number,
 							unsigned long *ent_size,
 							__filesize_t *act_shtbl)
 {
@@ -251,7 +251,7 @@ static __filesize_t __NEAR__ __FASTCALL__ findPHPubSyms(unsigned long *number,
   return dynptr;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__
+static __filesize_t  __FASTCALL__
 		     findSHEntry(BFile& b_cache, unsigned long type,
 				 unsigned long *nitems,__filesize_t *link,
 				 unsigned long *ent_size)
@@ -286,19 +286,19 @@ static BFile& elfcache = bNull;
 
 static linearArray *va_map_phys,* va_map_virt;
 
-static tCompare __FASTCALL__ vamap_comp_virt(const void __HUGE__ *v1,const void __HUGE__ *v2)
+static tCompare __FASTCALL__ vamap_comp_virt(const void  *v1,const void  *v2)
 {
-  const struct tag_elfVAMap __HUGE__ *pnam1,__HUGE__ *pnam2;
-  pnam1 = (const struct tag_elfVAMap __HUGE__ *)v1;
-  pnam2 = (const struct tag_elfVAMap __HUGE__ *)v2;
+  const struct tag_elfVAMap  *pnam1, *pnam2;
+  pnam1 = (const struct tag_elfVAMap  *)v1;
+  pnam2 = (const struct tag_elfVAMap  *)v2;
   return pnam1->va<pnam2->va?-1:pnam1->va>pnam2->va?1:0;
 }
 
-static tCompare __FASTCALL__ vamap_comp_phys(const void __HUGE__ *v1,const void __HUGE__ *v2)
+static tCompare __FASTCALL__ vamap_comp_phys(const void  *v1,const void  *v2)
 {
-  const struct tag_elfVAMap __HUGE__ *pnam1,__HUGE__ *pnam2;
-  pnam1 = (const struct tag_elfVAMap __HUGE__ *)v1;
-  pnam2 = (const struct tag_elfVAMap __HUGE__ *)v2;
+  const struct tag_elfVAMap  *pnam1, *pnam2;
+  pnam1 = (const struct tag_elfVAMap  *)v1;
+  pnam2 = (const struct tag_elfVAMap  *)v2;
   return pnam1->foff<pnam2->foff?-1:pnam1->foff>pnam2->foff?1:0;
 }
 
@@ -308,8 +308,8 @@ static __filesize_t __FASTCALL__ elfVA2PA(__filesize_t va)
   if(va_map_virt)
   for(i = 0; i < va_map_virt->nItems;i++)
   {
-    struct tag_elfVAMap __HUGE__ *evm;
-    evm = &((struct tag_elfVAMap __HUGE__ *)va_map_virt->data)[i];
+    struct tag_elfVAMap  *evm;
+    evm = &((struct tag_elfVAMap  *)va_map_virt->data)[i];
     if(va >= evm->va && va < evm->va + evm->size) return evm->foff + (va - evm->va);
   }
   return 0L;
@@ -322,8 +322,8 @@ static __filesize_t __FASTCALL__ elfPA2VA(__filesize_t pa)
   ret = 0L;
   for(i = 0; i < va_map_phys->nItems;i++)
   {
-    struct tag_elfVAMap __HUGE__ *evm;
-    evm = &((struct tag_elfVAMap __HUGE__ *)va_map_phys->data)[i];
+    struct tag_elfVAMap  *evm;
+    evm = &((struct tag_elfVAMap  *)va_map_phys->data)[i];
     if(pa >= evm->foff && pa < evm->foff + evm->size)
     {
       ret = evm->va + (pa - evm->foff);
@@ -333,7 +333,7 @@ static __filesize_t __FASTCALL__ elfPA2VA(__filesize_t pa)
   return ret;
 }
 
-static void __NEAR__ __FASTCALL__ elf386_readnametable(__filesize_t off,char *buf,unsigned blen)
+static void  __FASTCALL__ elf386_readnametable(__filesize_t off,char *buf,unsigned blen)
 {
   __filesize_t foff;
   ElfXX_External_Shdr sh;
@@ -355,7 +355,7 @@ static void __NEAR__ __FASTCALL__ elf386_readnametable(__filesize_t off,char *bu
   }
 }
 
-static void __NEAR__ __FASTCALL__ elf386_readnametableex(__filesize_t off,char *buf,unsigned blen)
+static void  __FASTCALL__ elf386_readnametableex(__filesize_t off,char *buf,unsigned blen)
 {
   __filesize_t foff;
   ElfXX_External_Shdr sh;
@@ -382,7 +382,7 @@ static void __NEAR__ __FASTCALL__ elf386_readnametableex(__filesize_t off,char *
   }
 }
 
-static const char * __NEAR__ __FASTCALL__ elf_class(unsigned char id)
+static const char *  __FASTCALL__ elf_class(unsigned char id)
 {
   switch(id)
   {
@@ -393,7 +393,7 @@ static const char * __NEAR__ __FASTCALL__ elf_class(unsigned char id)
   }
 }
 
-static const char * __NEAR__ __FASTCALL__ elf_data(unsigned char id)
+static const char *  __FASTCALL__ elf_data(unsigned char id)
 {
   switch(id)
   {
@@ -404,7 +404,7 @@ static const char * __NEAR__ __FASTCALL__ elf_data(unsigned char id)
   }
 }
 
-static const char *__NEAR__ __FASTCALL__ elf_otype(unsigned id)
+static const char * __FASTCALL__ elf_otype(unsigned id)
 {
   switch(id)
   {
@@ -425,7 +425,7 @@ static const char *__NEAR__ __FASTCALL__ elf_otype(unsigned id)
     only common machine types are used, add remaining if needed
 */
 
-static const char *__NEAR__ __FASTCALL__ elf_machine(unsigned id,unsigned *disasm)
+static const char * __FASTCALL__ elf_machine(unsigned id,unsigned *disasm)
 {
   *disasm=DISASM_DATA;
   switch(id)
@@ -553,7 +553,7 @@ static const char *__NEAR__ __FASTCALL__ elf_machine(unsigned id,unsigned *disas
   }
 }
 
-static const char *__NEAR__ __FASTCALL__ elf_version(unsigned long id)
+static const char * __FASTCALL__ elf_version(unsigned long id)
 {
   switch(id)
   {
@@ -563,7 +563,7 @@ static const char *__NEAR__ __FASTCALL__ elf_version(unsigned long id)
   }
 }
 
-static const char *__NEAR__ __FASTCALL__ elf_osabi(unsigned char id)
+static const char * __FASTCALL__ elf_osabi(unsigned char id)
 {
   switch(id)
   {
@@ -666,7 +666,7 @@ static __filesize_t __FASTCALL__ ShowELFHeader( void )
   return fpos;
 }
 
-static const char * __NEAR__ __FASTCALL__ elf_encode_p_type(long p_type)
+static const char *  __FASTCALL__ elf_encode_p_type(long p_type)
 {
    switch(p_type)
    {
@@ -714,7 +714,7 @@ static bool __FASTCALL__ __elfReadPrgHdr(BFile& handle,memArray *obj,unsigned nn
   return true;
 }
 
-static const char * __NEAR__ __FASTCALL__ elf_encode_sh_type(long sh_type)
+static const char *  __FASTCALL__ elf_encode_sh_type(long sh_type)
 {
    switch(sh_type)
    {
@@ -777,7 +777,7 @@ static bool __FASTCALL__ __elfReadSecHdr(BFile& handle,memArray *obj,unsigned nn
   return true;
 }
 
-static const char * __NEAR__ __FASTCALL__ elf_SymTabType(char type)
+static const char *  __FASTCALL__ elf_SymTabType(char type)
 {
   switch(ELF_ST_TYPE(type))
   {
@@ -793,7 +793,7 @@ static const char * __NEAR__ __FASTCALL__ elf_SymTabType(char type)
   }
 }
 
-static const char * __NEAR__ __FASTCALL__ elf_SymTabBind(char type)
+static const char *  __FASTCALL__ elf_SymTabBind(char type)
 {
   switch(ELF_ST_BIND(type))
   {
@@ -807,7 +807,7 @@ static const char * __NEAR__ __FASTCALL__ elf_SymTabBind(char type)
   }
 }
 
-static const char * __NEAR__ __FASTCALL__ elf_SymTabShNdx(unsigned idx)
+static const char *  __FASTCALL__ elf_SymTabShNdx(unsigned idx)
 {
   static char ret[10];
   switch(idx)
@@ -822,7 +822,7 @@ static const char * __NEAR__ __FASTCALL__ elf_SymTabShNdx(unsigned idx)
   }
 }
 
-static bool __NEAR__ __FASTCALL__ ELF_IS_SECTION_PHYSICAL(unsigned sec_num)
+static bool  __FASTCALL__ ELF_IS_SECTION_PHYSICAL(unsigned sec_num)
 {
   return !(sec_num == SHN_UNDEF || sec_num == SHN_LOPROC ||
 	   sec_num == SHN_HIPROC || sec_num == SHN_ABS ||
@@ -877,7 +877,7 @@ static bool __FASTCALL__ __elfReadSymTab(BFile& handle,memArray *obj,unsigned ns
   return true;
 }
 
-static bool __NEAR__ __FASTCALL__ __elfReadDynTab(BFile& handle,memArray *obj, unsigned ntbl,__filesize_t entsize)
+static bool  __FASTCALL__ __elfReadDynTab(BFile& handle,memArray *obj, unsigned ntbl,__filesize_t entsize)
 {
  size_t i;
  char sout[80];
@@ -996,7 +996,7 @@ static __filesize_t __calcSymEntry(BFile& handle,__filesize_t num,bool display_m
    return fpos;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ displayELFsymtab( void )
+static __filesize_t  __FASTCALL__ displayELFsymtab( void )
 {
   __filesize_t fpos;
   int ret;
@@ -1013,7 +1013,7 @@ static __filesize_t __NEAR__ __FASTCALL__ displayELFsymtab( void )
   return fpos;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ displayELFdyntab(__filesize_t dynptr,
+static __filesize_t  __FASTCALL__ displayELFdyntab(__filesize_t dynptr,
 							unsigned long nitem,
 							long entsize)
 {
@@ -1093,11 +1093,11 @@ typedef struct tagElfRefChain
 }Elf_Reloc;
 static linearArray *CurrElfChain = NULL;
 
-static tCompare __FASTCALL__ compare_elf_reloc(const void __HUGE__ *e1,const void __HUGE__ *e2)
+static tCompare __FASTCALL__ compare_elf_reloc(const void  *e1,const void  *e2)
 {
-  const Elf_Reloc __HUGE__ *p1,__HUGE__ *p2;
-  p1 = (const Elf_Reloc __HUGE__ *)e1;
-  p2 = (const Elf_Reloc __HUGE__ *)e2;
+  const Elf_Reloc  *p1, *p2;
+  p1 = (const Elf_Reloc  *)e1;
+  p2 = (const Elf_Reloc  *)e2;
   return p1->offset<p2->offset?-1:p1->offset>p2->offset?1:0;
 }
 
@@ -1291,7 +1291,7 @@ static void __elf_ppc_read_erc(BFile& handle2,Elf_Reloc *erc)
     }
 }
 
-static void __NEAR__ __FASTCALL__ __elfReadRelSection(__filesize_t offset,
+static void  __FASTCALL__ __elfReadRelSection(__filesize_t offset,
 							__filesize_t size,
 							__filesize_t sh_link,
 							__filesize_t info,
@@ -1334,7 +1334,7 @@ static void __NEAR__ __FASTCALL__ __elfReadRelSection(__filesize_t offset,
   handle.seek(fp,SEEKF_START);
 }
 
-static void __NEAR__ __FASTCALL__ __elfReadRelaSection(__filesize_t offset,
+static void  __FASTCALL__ __elfReadRelaSection(__filesize_t offset,
 							__filesize_t size,
 							__filesize_t sh_link,
 							__filesize_t info,
@@ -1364,7 +1364,7 @@ static void __NEAR__ __FASTCALL__ __elfReadRelaSection(__filesize_t offset,
   handle.seek(fp,SEEKF_START);
 }
 
-static void __NEAR__ __FASTCALL__ buildElf386RelChain( void )
+static void  __FASTCALL__ buildElf386RelChain( void )
 {
   size_t i,_nitems;
   TWindow *w,*usd;
@@ -1466,7 +1466,7 @@ static void __NEAR__ __FASTCALL__ buildElf386RelChain( void )
   return;
 }
 
-static Elf_Reloc __HUGE__ * __NEAR__ __FASTCALL__ __found_ElfRel(__filesize_t offset)
+static Elf_Reloc  *  __FASTCALL__ __found_ElfRel(__filesize_t offset)
 {
   Elf_Reloc key;
   if(!CurrElfChain) buildElf386RelChain();
@@ -1474,7 +1474,7 @@ static Elf_Reloc __HUGE__ * __NEAR__ __FASTCALL__ __found_ElfRel(__filesize_t of
   return (Elf_Reloc*)la_Find(CurrElfChain,&key,compare_elf_reloc);
 }
 
-static bool __NEAR__ __FASTCALL__ __readRelocName(Elf_Reloc __HUGE__ *erl, char *buff, size_t cbBuff)
+static bool  __FASTCALL__ __readRelocName(Elf_Reloc  *erl, char *buff, size_t cbBuff)
 {
   __filesize_t r_sym;
   ElfXX_External_Shdr shdr;
@@ -1536,8 +1536,8 @@ static bool __NEAR__ __FASTCALL__ __readRelocName(Elf_Reloc __HUGE__ *erl, char 
   return ret;
 }
 
-static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_arm(char *str,
-							Elf_Reloc __HUGE__ *erl,
+static unsigned long  __FASTCALL__ BuildReferStrElf_arm(char *str,
+							Elf_Reloc  *erl,
 							int flags,unsigned codelen,
 							__filesize_t defval)
 {
@@ -1612,8 +1612,8 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_arm(char *str,
   return retval;
 }
 
-static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_i386(char *str,
-							Elf_Reloc __HUGE__ *erl,
+static unsigned long  __FASTCALL__ BuildReferStrElf_i386(char *str,
+							Elf_Reloc  *erl,
 							int flags,unsigned codelen,
 							__filesize_t defval)
 {
@@ -1695,8 +1695,8 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_i386(char *str,
   return retval;
 }
 
-static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_x86_64(char *str,
-							Elf_Reloc __HUGE__ *erl,
+static unsigned long  __FASTCALL__ BuildReferStrElf_x86_64(char *str,
+							Elf_Reloc  *erl,
 							int flags,unsigned codelen,
 							__filesize_t defval)
 {
@@ -1792,8 +1792,8 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_x86_64(char *str,
   return retval;
 }
 
-static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_ppc(char *str,
-							Elf_Reloc __HUGE__ *erl,
+static unsigned long  __FASTCALL__ BuildReferStrElf_ppc(char *str,
+							Elf_Reloc  *erl,
 							int flags,unsigned codelen,
 							__filesize_t defval)
 {
@@ -1887,8 +1887,8 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf_ppc(char *str,
   return retval;
 }
 
-static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf(char *str,
-							Elf_Reloc __HUGE__ *erl,
+static unsigned long  __FASTCALL__ BuildReferStrElf(char *str,
+							Elf_Reloc  *erl,
 							int flags,unsigned codelen,
 							__filesize_t defval)
 {
@@ -1905,7 +1905,7 @@ static unsigned long __NEAR__ __FASTCALL__ BuildReferStrElf(char *str,
 
 #define S_INTERPRETER "Interpreter : "
 
-static void __NEAR__ __FASTCALL__ displayELFdyninfo(__filesize_t f_off,unsigned nitems)
+static void  __FASTCALL__ displayELFdyninfo(__filesize_t f_off,unsigned nitems)
 {
   ElfXX_External_Dyn dyntab;
   __filesize_t curroff,stroff;
@@ -1976,7 +1976,7 @@ static unsigned long __FASTCALL__ AppendELFRef(const DisMode& parent,char *str,_
 {
   char buff[400];
   unsigned long ret = RAPREF_NONE;
-  Elf_Reloc __HUGE__ *erl;
+  Elf_Reloc  *erl;
   __filesize_t defval;
   switch(codelen) {
     default:
@@ -2150,8 +2150,8 @@ static void __FASTCALL__ ELFinit(CodeGuider& _code_guider)
    if(va_map_virt)
    for(i = 0; i < va_map_virt->nItems;i++)
    {
-     struct tag_elfVAMap __HUGE__ *evm;
-     evm = &((struct tag_elfVAMap __HUGE__ *)va_map_virt->data)[i];
+     struct tag_elfVAMap  *evm;
+     evm = &((struct tag_elfVAMap  *)va_map_virt->data)[i];
      if(evm->va < elf_min_va) elf_min_va = evm->va;
    }
    BFile& main_handle = bmbioHandle();
@@ -2210,15 +2210,15 @@ static bool __FASTCALL__ ELFAddrResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static tCompare __FASTCALL__ compare_pubnames(const void __HUGE__ *v1,const void __HUGE__ *v2)
+static tCompare __FASTCALL__ compare_pubnames(const void  *v1,const void  *v2)
 {
-  const struct PubName __HUGE__ *pnam1,__HUGE__ *pnam2;
-  pnam1 = (const struct PubName __HUGE__ *)v1;
-  pnam2 = (const struct PubName __HUGE__ *)v2;
+  const struct PubName  *pnam1, *pnam2;
+  pnam1 = (const struct PubName  *)v1;
+  pnam2 = (const struct PubName  *)v2;
   return __CmpLong__(pnam1->pa,pnam2->pa);
 }
 
-static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
+static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
   struct PubName *ret,key;
   key.pa = pa;

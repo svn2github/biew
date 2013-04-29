@@ -23,11 +23,11 @@ using namespace beye;
 
 static linearArray *class_set = NULL;
 
-static tCompare __FASTCALL__ comp_class(const void __HUGE__ *e1,const void __HUGE__ *e2)
+static tCompare __FASTCALL__ comp_class(const void  *e1,const void  *e2)
 {
-  const TwClass __HUGE__ *t1, __HUGE__ *t2;
-  t1 = (const TwClass __HUGE__ *)e1;
-  t2 = (const TwClass __HUGE__ *)e2;
+  const TwClass  *t1,  *t2;
+  t1 = (const TwClass  *)e1;
+  t2 = (const TwClass  *)e2;
   return stricmp(t1->name, t2->name);
 }
 
@@ -59,10 +59,10 @@ bool __FASTCALL__ twcRegisterClass(const char *name, unsigned flags, twClassFunc
   return false;
 }
 
-static void __FASTCALL__ del_class(void __HUGE__ *it)
+static void __FASTCALL__ del_class(void  *it)
 {
-  const TwClass __HUGE__ *t1;
-  t1 = (const TwClass __HUGE__ *)it;
+  const TwClass  *t1;
+  t1 = (const TwClass  *)it;
   delete t1->name;
 }
 

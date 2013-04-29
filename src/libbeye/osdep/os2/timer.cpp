@@ -30,7 +30,7 @@ static HTIMER   timerID = 0;
 static TID      timerThread = 0;
 static          timer_callback *user_callback = NULL;
 
-static VOID __NORETURN__ _Syscall thread_callback( ULONG threadMsg )
+static VOID _Syscall thread_callback( ULONG threadMsg )
 {
   ULONG recv;
   UNUSED(threadMsg);

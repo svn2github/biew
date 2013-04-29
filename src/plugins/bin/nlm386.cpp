@@ -43,7 +43,7 @@ namespace beye {
 static CodeGuider* code_guider;
 static Nlm_Internal_Fixed_Header nlm;
 
-static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
+static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
 static void __FASTCALL__ nlm_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *));
 static __filesize_t __FASTCALL__ NLMPA2VA(__filesize_t pa);
 
@@ -296,7 +296,7 @@ static bool __FASTCALL__ __ReadExtRefNamesNLM(BFile& handle,memArray * obj,unsig
  return true;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ CalcEntryNLM(unsigned ord,bool dispmsg)
+static __filesize_t  __FASTCALL__ CalcEntryNLM(unsigned ord,bool dispmsg)
 {
  unsigned char length;
  unsigned i;
@@ -425,23 +425,23 @@ typedef struct tagRELOC_NLM
 
 static linearArray *RelocNlm = NULL;
 
-static tCompare __FASTCALL__ nlm_compare_s(const void __HUGE__ *e1,const void __HUGE__ *e2)
+static tCompare __FASTCALL__ nlm_compare_s(const void  *e1,const void  *e2)
 {
-  const RELOC_NLM __HUGE__ *r1,__HUGE__ *r2;
+  const RELOC_NLM  *r1, *r2;
   r1 = reinterpret_cast<const RELOC_NLM*>(e1);
   r2 = reinterpret_cast<const RELOC_NLM*>(e2);
   return __CmpLong__(r1->offset,r2->offset);
 }
 
-static tCompare __FASTCALL__ nlm_compare_f(const void __HUGE__ *e1,const void __HUGE__ *e2)
+static tCompare __FASTCALL__ nlm_compare_f(const void  *e1,const void  *e2)
 {
-  const RELOC_NLM __HUGE__ *r1,__HUGE__ *r2;
+  const RELOC_NLM  *r1, *r2;
   r1 = reinterpret_cast<const RELOC_NLM*>(e1);
   r2 = reinterpret_cast<const RELOC_NLM*>(e2);
   return __CmpLong__(r1->offset,r2->offset);
 }
 
-static void __NEAR__ __FASTCALL__ BuildRelocNlm( void )
+static void  __FASTCALL__ BuildRelocNlm( void )
 {
   unsigned i,j;
   unsigned long val,niter,noff;
@@ -491,7 +491,7 @@ static void __NEAR__ __FASTCALL__ BuildRelocNlm( void )
   CloseWnd(w);
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrNLM(char *str,RELOC_NLM*rne,int flags)
+static __filesize_t  __FASTCALL__ BuildReferStrNLM(char *str,RELOC_NLM*rne,int flags)
 {
   __filesize_t val;
   __filesize_t retrf;
@@ -620,7 +620,7 @@ static void __FASTCALL__ nlm_ReadPubName(BFile& b_cache,const struct PubName *it
     buff[length] = 0;
 }
 
-static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
+static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
   return fmtFindPubName(*nlm_cache,buff,cb_buff,pa,
 			nlm_ReadPubNameList,

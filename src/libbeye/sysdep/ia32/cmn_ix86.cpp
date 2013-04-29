@@ -35,7 +35,7 @@ static void __timer_callback( void )
    timer_trigger = timer_trigger ? 0 : 1;
 }
 
-static unsigned long __NEAR__ __FASTCALL__ break_long(unsigned long lval,unsigned short *lmod)
+static unsigned long  __FASTCALL__ break_long(unsigned long lval,unsigned short *lmod)
 {
  unsigned long lhi;
  lhi = lval / 1000;
@@ -43,9 +43,9 @@ static unsigned long __NEAR__ __FASTCALL__ break_long(unsigned long lval,unsigne
  return lhi;
 }
 
-typedef unsigned long (__NEAR__ __FASTCALL__ *perf_func)(volatile unsigned *counter,char *ctrl_arr);
+typedef unsigned long ( __FASTCALL__ *perf_func)(volatile unsigned *counter,char *ctrl_arr);
 
-static unsigned long __NEAR__ __FASTCALL__ __get_perf(perf_func fnc,unsigned n_insn)
+static unsigned long  __FASTCALL__ __get_perf(perf_func fnc,unsigned n_insn)
 {
   unsigned long freq_count;
   char c_arr[300], *ctrl_arr;

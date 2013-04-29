@@ -49,9 +49,9 @@ static BFile* ne_cache1 = &bNull;
 static BFile* ne_cache2 = &bNull;
 static BFile* ne_cache3 = &bNull;
 
-static __filesize_t __NEAR__ __FASTCALL__ CalcEntryPointNE( unsigned,unsigned );
+static __filesize_t  __FASTCALL__ CalcEntryPointNE( unsigned,unsigned );
 static void __FASTCALL__ ne_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *));
-static bool  __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
+static bool   __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
 static void __FASTCALL__ rd_ImpName(char *buff,int blen,unsigned idx,bool useasoff);
 static __filesize_t __FASTCALL__ nePA2VA(__filesize_t pa);
 
@@ -93,7 +93,7 @@ const char * __FASTCALL__ GetPMWinAPI(unsigned flag)
  return PMWinAPI[flag];
 }
 
-static void __NEAR__ PaintNewHeaderNE_1( void )
+static void  PaintNewHeaderNE_1( void )
 {
   twPrintF("Signature                      = '%c%c'\n"
 	   "Linker Version.Revision        = %hd.%hd\n"
@@ -143,7 +143,7 @@ static void __NEAR__ PaintNewHeaderNE_1( void )
 
 static __filesize_t entryNE;
 
-static void __NEAR__ PaintNewHeaderNE_2( void )
+static void  PaintNewHeaderNE_2( void )
 {
   twPrintF("SS : SP                        = %04hXH:%04hXH\n"
 	   "Segment Table Count            = %hu\n"
@@ -203,7 +203,7 @@ static void __NEAR__ PaintNewHeaderNE_2( void )
   twSetColorAttr(dialog_cset.main);
 }
 
-static void (__NEAR__ * nephead[])( void ) =
+static void ( * nephead[])( void ) =
 {
   PaintNewHeaderNE_1,
   PaintNewHeaderNE_2
@@ -239,7 +239,7 @@ static __filesize_t __FASTCALL__ ShowNewHeaderNE( void )
   return pos;
 }
 
-static void __NEAR__ __FASTCALL__ entpaintNE(const ENTRY *nam,unsigned flags)
+static void  __FASTCALL__ entpaintNE(const ENTRY *nam,unsigned flags)
 {
   twGotoXY(1,1);
   twPrintF("Entry Point for %s segment\n"
@@ -256,7 +256,7 @@ static void __NEAR__ __FASTCALL__ entpaintNE(const ENTRY *nam,unsigned flags)
 	   ,((unsigned)((unsigned char)(nam->eSegNum))));
 }
 
-static void __NEAR__ __FASTCALL__ paintdummyentryNE( void )
+static void  __FASTCALL__ paintdummyentryNE( void )
 {
     twGotoXY(1,3);
     twPrintF("   Entry point not present ( Dummy bungle )");
@@ -390,7 +390,7 @@ static __filesize_t __FASTCALL__ ShowModRefNE( void )
  return fret;
 }
 
-static bool __NEAR__ __FASTCALL__ isPresent(memArray *arr,unsigned nentry,char *_tmpl)
+static bool  __FASTCALL__ isPresent(memArray *arr,unsigned nentry,char *_tmpl)
 {
    unsigned i;
    bool ret = false;
@@ -540,7 +540,7 @@ static bool __FASTCALL__ NENRNamesReadItems(BFile& handle,memArray * names,unsig
    return RNamesReadItems(handle,names,nnames,ne.neOffsetNonResidentNameTable);
 }
 
-static bool __NEAR__ __FASTCALL__ __ReadSegTableNE(BFile& handle,memArray * obj,unsigned nnames)
+static bool  __FASTCALL__ __ReadSegTableNE(BFile& handle,memArray * obj,unsigned nnames)
 {
  unsigned i;
  for(i = 0;i < nnames;i++)
@@ -602,7 +602,7 @@ static void __FASTCALL__ ReadEntryItemNE(BFile& handle,ENTRY * obj,unsigned char
  if(etype != 0xFE && etype != 0xFF) obj->eSegNum = etype;
 }
 
-static void __NEAR__ __FASTCALL__ SkipEntryItemNE(BFile& handle,unsigned char etype)
+static void  __FASTCALL__ SkipEntryItemNE(BFile& handle,unsigned char etype)
 {
  if(etype)
  {
@@ -647,7 +647,7 @@ static bool __FASTCALL__ ReadSegDefNE(SEGDEF * obj,unsigned segnum)
   return true;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ CalcEntryPointNE( unsigned segnum, unsigned offset )
+static __filesize_t  __FASTCALL__ CalcEntryPointNE( unsigned segnum, unsigned offset )
 {
   SEGDEF seg;
   __filesize_t shift;
@@ -656,7 +656,7 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcEntryPointNE( unsigned segnum, uns
   return shift;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ CalcEntryNE(unsigned ord,bool dispmsg)
+static __filesize_t  __FASTCALL__ CalcEntryNE(unsigned ord,bool dispmsg)
 {
   ENTRY entr;
   SEGDEF segd;
@@ -705,7 +705,7 @@ static __filesize_t __FASTCALL__ ShowSegDefNE( void )
  return fpos;
 }
 
-static bool __NEAR__ __FASTCALL__ __ReadEntryTableNE(BFile& handle,memArray * obj)
+static bool  __FASTCALL__ __ReadEntryTableNE(BFile& handle,memArray * obj)
 {
  unsigned i;
  unsigned char j,nentry;
@@ -791,7 +791,7 @@ const char * ResourceGrNames[] =
   "VERSIONINFO"
 };
 
-static char * __NEAR__ __FASTCALL__ GetResourceIDNE(BFile& handle,unsigned rid,__filesize_t BegResTab)
+static char *  __FASTCALL__ GetResourceIDNE(BFile& handle,unsigned rid,__filesize_t BegResTab)
 {
  static char buff[30];
  unsigned char nByte;
@@ -815,7 +815,7 @@ static char * __NEAR__ __FASTCALL__ GetResourceIDNE(BFile& handle,unsigned rid,_
  return buff;
 }
 
-static bool __NEAR__ __FASTCALL__ __ReadResourceGroupNE(BFile& handle,memArray *obj,unsigned nitems,long * addr)
+static bool  __FASTCALL__ __ReadResourceGroupNE(BFile& handle,memArray *obj,unsigned nitems,long * addr)
 {
  unsigned i,j;
  uint_fast16_t rcAlign,rTypeID,rcount;
@@ -860,7 +860,7 @@ static bool __NEAR__ __FASTCALL__ __ReadResourceGroupNE(BFile& handle,memArray *
  return true;
 }
 
-static unsigned int __NEAR__ __FASTCALL__ GetResourceGroupCountNE(BFile& handle)
+static unsigned int  __FASTCALL__ GetResourceGroupCountNE(BFile& handle)
 {
  uint_fast16_t rcount, rTypeID;
  int count = 0;
@@ -970,16 +970,16 @@ static int           CurrSegmentHasReloc = -1;
 static linearArray *CurrNEChain = NULL;
 static char __codelen,__type;
 
-static tCompare __FASTCALL__ compare_chains(const void __HUGE__ *v1,const void __HUGE__ *v2)
+static tCompare __FASTCALL__ compare_chains(const void  *v1,const void  *v2)
 {
-  const NERefChain __HUGE__ * c1,__HUGE__ * c2;
-  c1 = (const NERefChain __HUGE__ *)v1;
-  c2 = (const NERefChain __HUGE__ *)v2;
+  const NERefChain  * c1, * c2;
+  c1 = (const NERefChain  *)v1;
+  c2 = (const NERefChain  *)v2;
   return __CmpLong__(c1->offset,c2->offset);
 }
 
 
-static void __NEAR__ __FASTCALL__ BuildNERefChain(__filesize_t segoff,__filesize_t slength)
+static void  __FASTCALL__ BuildNERefChain(__filesize_t segoff,__filesize_t slength)
 {
   unsigned nchains,i;
   __filesize_t reloc_off;
@@ -1011,9 +1011,9 @@ static void __NEAR__ __FASTCALL__ BuildNERefChain(__filesize_t segoff,__filesize
        while(1)
        {
 	 unsigned next_off;
-	 next_off = bmReadWordEx(segoff + (__filesize_t)((NERefChain __HUGE__ *)CurrNEChain->data)[CurrNEChain->nItems - 1].offset,SEEKF_START);
+	 next_off = bmReadWordEx(segoff + (__filesize_t)((NERefChain  *)CurrNEChain->data)[CurrNEChain->nItems - 1].offset,SEEKF_START);
 	 if(bmEOF()) break;
-	 if(next_off > slength || next_off == 0xFFFF || next_off == ((NERefChain __HUGE__ *)CurrNEChain->data)[CurrNEChain->nItems - 1].offset) break;
+	 if(next_off > slength || next_off == 0xFFFF || next_off == ((NERefChain  *)CurrNEChain->data)[CurrNEChain->nItems - 1].offset) break;
 	 nrc.offset = next_off;
 	 nrc.number = i;
 	 if(!la_AddData(CurrNEChain,&nrc,MemOutBox)) goto OutOfMem;
@@ -1024,9 +1024,9 @@ static void __NEAR__ __FASTCALL__ BuildNERefChain(__filesize_t segoff,__filesize
   CloseWnd(w);
 }
 
-static tCompare __FASTCALL__ compare_ne_spec(const void __HUGE__ *e1,const void __HUGE__ *e2)
+static tCompare __FASTCALL__ compare_ne_spec(const void  *e1,const void  *e2)
 {
-  const NERefChain __HUGE__ *r1,__HUGE__ *r2;
+  const NERefChain  *r1, *r2;
   RELOC_NE rne;
   tCompare ret;
   r1 = reinterpret_cast<const NERefChain*>(e1);
@@ -1041,9 +1041,9 @@ static tCompare __FASTCALL__ compare_ne_spec(const void __HUGE__ *e1,const void 
   return ret;
 }
 
-static tCompare __FASTCALL__ compare_ne(const void __HUGE__ *e1,const void __HUGE__ *e2)
+static tCompare __FASTCALL__ compare_ne(const void  *e1,const void  *e2)
 {
-  const NERefChain __HUGE__ *r1,__HUGE__ *r2;
+  const NERefChain  *r1, *r2;
   int ret;
   r1 = reinterpret_cast<const NERefChain*>(e1);
   r2 = reinterpret_cast<const NERefChain*>(e2);
@@ -1054,7 +1054,7 @@ static tCompare __FASTCALL__ compare_ne(const void __HUGE__ *e1,const void __HUG
   return ret;
 }
 
-static RELOC_NE * __NEAR__ __FASTCALL__ __found_RNE(__filesize_t segoff,__filesize_t slength,unsigned segnum,unsigned keyoff,char codelen)
+static RELOC_NE *  __FASTCALL__ __found_RNE(__filesize_t segoff,__filesize_t slength,unsigned segnum,unsigned keyoff,char codelen)
 {
   NERefChain *found,key;
   static RELOC_NE rne;
@@ -1071,7 +1071,7 @@ static RELOC_NE * __NEAR__ __FASTCALL__ __found_RNE(__filesize_t segoff,__filesi
   else      return 0;
 }
 
-static RELOC_NE * __NEAR__ __FASTCALL__ __found_RNE_spec(__filesize_t segoff,__filesize_t slength,unsigned segnum,unsigned keyoff,char codelen,int type)
+static RELOC_NE *  __FASTCALL__ __found_RNE_spec(__filesize_t segoff,__filesize_t slength,unsigned segnum,unsigned keyoff,char codelen,int type)
 {
   NERefChain *found,key;
   static RELOC_NE rne;
@@ -1096,7 +1096,7 @@ static RELOC_NE * __NEAR__ __FASTCALL__ __found_RNE_spec(__filesize_t segoff,__f
   else      return 0;
 }
 
-static unsigned __NEAR__ __FASTCALL__ __findSpecType(__filesize_t sstart,__filesize_t ssize,unsigned segnum,__filesize_t target,char codelen,char type,unsigned defval)
+static unsigned  __FASTCALL__ __findSpecType(__filesize_t sstart,__filesize_t ssize,unsigned segnum,__filesize_t target,char codelen,char type,unsigned defval)
 {
    unsigned ret;
    RELOC_NE * rne;
@@ -1106,7 +1106,7 @@ static unsigned __NEAR__ __FASTCALL__ __findSpecType(__filesize_t sstart,__files
    return ret;
 }
 
-static void __NEAR__ __FASTCALL__ rdImpNameNELX(char *buff,int blen,unsigned idx,bool useasoff,__filesize_t OffTable)
+static void  __FASTCALL__ rdImpNameNELX(char *buff,int blen,unsigned idx,bool useasoff,__filesize_t OffTable)
 {
   unsigned char len;
   __filesize_t name_off;
@@ -1134,7 +1134,7 @@ static void __FASTCALL__ rd_ImpName(char *buff,int blen,unsigned idx,bool useaso
   rdImpNameNELX(buff,blen,idx,useasoff,beye_context().headshift + ne.neOffsetImportTable);
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrNE(const DisMode& parent,char *str,RELOC_NE *rne,int flags,__filesize_t ulShift)
+static __filesize_t  __FASTCALL__ BuildReferStrNE(const DisMode& parent,char *str,RELOC_NE *rne,int flags,__filesize_t ulShift)
 {
   char buff[256];
   const char *pref;
@@ -1279,7 +1279,7 @@ static unsigned long __FASTCALL__ AppendNERef(const DisMode& parent,char *str,__
 }
 
 /** return false if unsuccess true otherwise */
-static bool __NEAR__ __FASTCALL__ ReadPubNames(BFile& handle,__filesize_t offset,void (__FASTCALL__ *mem_out)(const char *))
+static bool  __FASTCALL__ ReadPubNames(BFile& handle,__filesize_t offset,void (__FASTCALL__ *mem_out)(const char *))
 {
  struct PubName pnam;
  ENTRY ent;
@@ -1336,7 +1336,7 @@ static void __FASTCALL__ ne_ReadPubName(BFile& b_cache,const struct PubName *it,
       buff[rlen] = 0;
 }
 
-static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
+static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
   return fmtFindPubName(*ne_cache2,buff,cb_buff,pa,
 			ne_ReadPubNameList,

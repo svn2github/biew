@@ -29,7 +29,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 namespace beye {
-static int __NEAR__ __FASTCALL__ GetFullBin(uintmax_t value,char * buff)
+static int  __FASTCALL__ GetFullBin(uintmax_t value,char * buff)
 {
  char byte,*b;
  bool started = false;
@@ -69,7 +69,7 @@ static int __NEAR__ __FASTCALL__ GetFullBin(uintmax_t value,char * buff)
  return strlen(buff);
 }
 
-static int __NEAR__ __FASTCALL__ Dig2Str(uintmax_t value,char * buff,int action)
+static int  __FASTCALL__ Dig2Str(uintmax_t value,char * buff,int action)
 {
  if(action == 0) return strlen(ulltoa(value,buff,16));
  if(action == 1) return strlen(lltoa(value,buff,8));
@@ -80,7 +80,7 @@ static int __NEAR__ __FASTCALL__ Dig2Str(uintmax_t value,char * buff,int action)
  return 0;
 }
 
-static uintmax_t __NEAR__ __FASTCALL__ Str2Dig(char * buff,int action)
+static uintmax_t  __FASTCALL__ Str2Dig(char * buff,int action)
 {
  if(action == 0) return strtoull(buff,NULL,16);
  if(action == 1) return strtoull(buff,NULL,8);
@@ -90,7 +90,7 @@ static uintmax_t __NEAR__ __FASTCALL__ Str2Dig(char * buff,int action)
  return 0;
 }
 
-static void __NEAR__ __FASTCALL__ DCStaticPaint(TWindow * wdlg,char * wbuff,intmax_t digit,unsigned *mlen)
+static void  __FASTCALL__ DCStaticPaint(TWindow * wdlg,char * wbuff,intmax_t digit,unsigned *mlen)
 {
  int rlen;
  tAbsCoord x1,y1,x2,y2;

@@ -217,7 +217,7 @@ static const struct tagbeyeArg {
   { "-?", "display this screen" }
 };
 
-static int __NEAR__ __FASTCALL__ queryKey(const std::string& arg)
+static int  __FASTCALL__ queryKey(const std::string& arg)
 {
   int ret = -1;
   size_t i;
@@ -300,8 +300,6 @@ void BeyeContext::detect_binfmt()
      break;
    }
  }
- /* Special case: mz initialization */
- mzTable.check_format();
 }
 
 void PaintTitle( void )
@@ -682,8 +680,6 @@ BeyeContext::BeyeContext(const std::vector<std::string>& _argv, const std::map<s
     formats.push_back(&rdoffTable);
     formats.push_back(&rdoff2Table);
     formats.push_back(&lmfTable);
-    formats.push_back(&mzTable);
-    formats.push_back(&dossysTable);
     formats.push_back(&sisTable);
     formats.push_back(&sisxTable);
     formats.push_back(&aviTable);
@@ -695,6 +691,8 @@ BeyeContext::BeyeContext(const std::vector<std::string>& _argv, const std::map<s
     formats.push_back(&movTable);
     formats.push_back(&rmTable);
     formats.push_back(&mp3Table);
+    formats.push_back(&mzTable);
+    formats.push_back(&dossysTable);
     formats.push_back(&binTable);
 
     codepage="CP866";

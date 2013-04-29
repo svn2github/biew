@@ -43,7 +43,7 @@ const char * beyeGetHelpName( void )
   return beye_context().help_name.c_str();
 }
 
-static const char * __NEAR__ __FASTCALL__ beyeGetColorSetName( void )
+static const char *  __FASTCALL__ beyeGetColorSetName( void )
 {
   if(!beye_context().skin_name[0])
   {
@@ -52,7 +52,7 @@ static const char * __NEAR__ __FASTCALL__ beyeGetColorSetName( void )
   return beye_context().skin_name.c_str();
 }
 
-static const char * __NEAR__ __FASTCALL__ beyeGetSyntaxName( void )
+static const char *  __FASTCALL__ beyeGetSyntaxName( void )
 {
   if(!beye_context().syntax_name[0])
   {
@@ -122,7 +122,7 @@ static void drawSetupPrompt( void )
    __drawSinglePrompt(setuptxt);
 }
 
-static void __NEAR__ __FASTCALL__ setup_paint( TWindow *twin )
+static void  __FASTCALL__ setup_paint( TWindow *twin )
 {
   TWindow *usd;
   usd = twUsedWin();

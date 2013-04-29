@@ -188,7 +188,7 @@ char * __FASTCALL__ Get16SignDig(int64_t val)
   return rstr;
 }
 
-static char __NEAR__ __FASTCALL__ GetHexAnalog(char val)
+static char  __FASTCALL__ GetHexAnalog(char val)
 {
   return val >= '0' && val <= '9' ? val-'0' : ((toupper(val)-'A'+10)) & 0x0F;
 }

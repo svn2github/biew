@@ -35,7 +35,7 @@ using namespace beye;
 
 #if !defined(__DISABLE_ASM) && (defined(__GNUC__) && defined(NDEBUG))
 
-static unsigned __NEAR__ __FASTCALL__ __cpu_type( void )
+static unsigned  __FASTCALL__ __cpu_type( void )
 {
   register unsigned retval;
   __asm __volatile(
@@ -96,7 +96,7 @@ static unsigned __NEAR__ __FASTCALL__ __cpu_type( void )
    return retval;
 }
 
-static void __NEAR__ __FASTCALL__ __cpu_name(char *buff)
+static void  __FASTCALL__ __cpu_name(char *buff)
 {
   __asm __volatile("xorl	%%eax, %%eax\n"
       "	.short	0xA20F\n" /* cpuid */
@@ -113,7 +113,7 @@ static void __NEAR__ __FASTCALL__ __cpu_name(char *buff)
       "eax","ebx","ecx","edx");
 }
 
-static void __NEAR__ __FASTCALL__ __extended_name(char *buff)
+static void  __FASTCALL__ __extended_name(char *buff)
 {
    __asm __volatile("movl	$0x80000002, %%eax\n"
       ".short	0xA20F\n" /* cpuid */
@@ -149,7 +149,7 @@ static void __NEAR__ __FASTCALL__ __extended_name(char *buff)
       "eax","ebx","ecx","edx");
 }
 
-static unsigned long __NEAR__ __FASTCALL__ __cpuid_edx(unsigned long *__r_eax)
+static unsigned long  __FASTCALL__ __cpuid_edx(unsigned long *__r_eax)
 {
   register unsigned long r_eax,r_edx,r_ecx,r_ebx;
   r_eax=*__r_eax;
@@ -161,7 +161,7 @@ static unsigned long __NEAR__ __FASTCALL__ __cpuid_edx(unsigned long *__r_eax)
   return r_edx;
 }
 
-static unsigned long __NEAR__ __FASTCALL__ __cpuid_ebxecx(unsigned long *__r_eax)
+static unsigned long  __FASTCALL__ __cpuid_ebxecx(unsigned long *__r_eax)
 {
   register unsigned long r_eax,r_edx,r_ecx,r_ebx;
   r_eax=*__r_eax;
@@ -173,7 +173,7 @@ static unsigned long __NEAR__ __FASTCALL__ __cpuid_ebxecx(unsigned long *__r_eax
   return r_ebx;
 }
 
-static unsigned __NEAR__ __FASTCALL__ __fpu_type( void )
+static unsigned  __FASTCALL__ __fpu_type( void )
 {
   unsigned __cw;
   register unsigned retval;
@@ -201,7 +201,7 @@ static unsigned __NEAR__ __FASTCALL__ __fpu_type( void )
    return retval;
 }
 
-static unsigned long __NEAR__ __FASTCALL__ __OPS_nop(volatile unsigned *time_val)
+static unsigned long  __FASTCALL__ __OPS_nop(volatile unsigned *time_val)
 {
   register unsigned long retval;
    __asm __volatile(
@@ -320,7 +320,7 @@ static unsigned long __NEAR__ __FASTCALL__ __OPS_nop(volatile unsigned *time_val
   return retval;
 }
 
-static unsigned long __NEAR__ __FASTCALL__ __OPS_std(volatile unsigned *counter,char *arr8byte)
+static unsigned long  __FASTCALL__ __OPS_std(volatile unsigned *counter,char *arr8byte)
 {
   register unsigned long retval;
    __asm __volatile("xorl	%0, %0\n"
@@ -424,7 +424,7 @@ static unsigned long __NEAR__ __FASTCALL__ __OPS_std(volatile unsigned *counter,
   return retval;
 }
 
-static unsigned long __NEAR__ __FASTCALL__ __FOPS_nowait(volatile unsigned *counter,char *arr18bytes)
+static unsigned long  __FASTCALL__ __FOPS_nowait(volatile unsigned *counter,char *arr18bytes)
 {
   register unsigned long retval;
    __asm __volatile("xorl	%0, %0\n"
@@ -528,12 +528,12 @@ static unsigned long __NEAR__ __FASTCALL__ __FOPS_nowait(volatile unsigned *coun
   return retval;
 }
 
-static unsigned long __NEAR__ __FASTCALL__ __FOPS_w_wait(volatile unsigned *counter,char *arr14bytes)
+static unsigned long  __FASTCALL__ __FOPS_w_wait(volatile unsigned *counter,char *arr14bytes)
 {
   return __FOPS_nowait(counter,arr14bytes);
 }
 
-static unsigned long __NEAR__ __FASTCALL__ __MOPS_std(volatile unsigned *counter,char *arr)
+static unsigned long  __FASTCALL__ __MOPS_std(volatile unsigned *counter,char *arr)
 {
   register unsigned long retval;
    retval=0;
@@ -633,7 +633,7 @@ static unsigned long __NEAR__ __FASTCALL__ __MOPS_std(volatile unsigned *counter
   return retval;
 }
 
-static unsigned long __NEAR__ __FASTCALL__ __SSEOPS_std(volatile unsigned *counter,char *arr)
+static unsigned long  __FASTCALL__ __SSEOPS_std(volatile unsigned *counter,char *arr)
 {
   register unsigned long retval;
    retval=0;

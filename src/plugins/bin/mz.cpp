@@ -50,7 +50,7 @@ static __filesize_t __FASTCALL__ mzPA2VA(__filesize_t pa)
   return pa >= HeadSize ? pa - HeadSize : 0L;
 }
 
-static const char * __NEAR__ __FASTCALL__ __QueryAddInfo( unsigned char *memmap )
+static const char *  __FASTCALL__ __QueryAddInfo( unsigned char *memmap )
 {
   static char rbuff[41];
   unsigned long idl;
@@ -109,7 +109,7 @@ static const char * __NEAR__ __FASTCALL__ __QueryAddInfo( unsigned char *memmap 
  return 0;
 }
 
-static const char * __NEAR__ __FASTCALL__ QueryAddInfo( void )
+static const char *  __FASTCALL__ QueryAddInfo( void )
 {
    unsigned char *memmap;
    memmap = new unsigned char[1000];
@@ -198,19 +198,19 @@ static __filesize_t __FASTCALL__ ShowMZHeader( void )
  return fpos;
 }
 
-long __HUGE__ * CurrMZChain = 0;
+long  * CurrMZChain = 0;
 static unsigned long CurrMZCount;
 static char __codelen;
 
-static tCompare __FASTCALL__ compare_ptr(const void __HUGE__ *e1,const void __HUGE__ *e2)
+static tCompare __FASTCALL__ compare_ptr(const void  *e1,const void  *e2)
 {
   unsigned long v1,v2;
-  v1 = *((const unsigned long __HUGE__ *)e1);
-  v2 = *((const unsigned long __HUGE__ *)e2);
+  v1 = *((const unsigned long  *)e1);
+  v2 = *((const unsigned long  *)e2);
   return __CmpLong__(v1,v2);
 }
 
-static void __NEAR__ __FASTCALL__ BuildMZChain( void )
+static void  __FASTCALL__ BuildMZChain( void )
 {
   unsigned i;
   __filesize_t fpos;
@@ -227,7 +227,7 @@ static void __NEAR__ __FASTCALL__ BuildMZChain( void )
   {
     unsigned off,seg,j;
     __filesize_t ptr;
-    void __HUGE__ * tptr;
+    void  * tptr;
     if(!CurrMZChain) tptr = mp_malloc(sizeof(any_t*));
     else             tptr = mp_realloc(CurrMZChain,(CurrMZCount + 1)*sizeof(any_t*));
     if(!tptr) break;
@@ -244,12 +244,12 @@ static void __NEAR__ __FASTCALL__ BuildMZChain( void )
   CloseWnd(w);
 }
 
-static tCompare __FASTCALL__ compare_mz(const void __HUGE__ *e1,const void __HUGE__ *e2)
+static tCompare __FASTCALL__ compare_mz(const void  *e1,const void  *e2)
 {
   long l1,l2;
   tCompare ret;
-  l1 = *(const long __HUGE__ *)e1;
-  l2 = *(const long __HUGE__ *)e2;
+  l1 = *(const long  *)e1;
+  l2 = *(const long  *)e2;
   if(l1 >= l2 && l1 < l2 + __codelen) ret = 0;
   else
     if(l1 < l2) ret = -1;
@@ -257,7 +257,7 @@ static tCompare __FASTCALL__ compare_mz(const void __HUGE__ *e1,const void __HUG
   return ret;
 }
 
-static bool __NEAR__ __FASTCALL__ isMZReferenced(__filesize_t shift,char len)
+static bool  __FASTCALL__ isMZReferenced(__filesize_t shift,char len)
 {
   if(mz.mzRelocationCount)
   {

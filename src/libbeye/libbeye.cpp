@@ -373,11 +373,11 @@ static  long		mthresh;		/**< MTHRESHold in chars */
  * All data swaps are done in-line, which is space-losing but time-saving.
  * (And there are only three places where this is done).
  */
-static void __NEAR__ qst(char __HUGE__ *base, char __HUGE__ *max)
+static void  qst(char  *base, char  *max)
 {
   long ii,lo,hi;
-  char __HUGE__ *i, __HUGE__ *j,__HUGE__ *jj;
-  char __HUGE__ *mid, __HUGE__ *tmp;
+  char  *i,  *j, *jj;
+  char  *mid,  *tmp;
 
   /*
    * At the top here, lo is the number of characters of elements in the
@@ -488,12 +488,12 @@ static void __NEAR__ qst(char __HUGE__ *base, char __HUGE__ *max)
  * with qst(), and then a cleanup insertion sort ourselves.  Sound simple?
  * It's not...
  */
-void __FASTCALL__ HQSort(void __HUGE__ *base0,unsigned long num, unsigned width,
+void __FASTCALL__ HQSort(void  *base0,unsigned long num, unsigned width,
 			 func_compare compare)
 {
-  char __HUGE__ *base = (char __HUGE__ *)base0;
-  char __HUGE__ *i, __HUGE__ *j, __HUGE__ *lo, __HUGE__ *hi;
-  char __HUGE__ *min, __HUGE__ *max;
+  char  *base = (char  *)base0;
+  char  *i,  *j,  *lo,  *hi;
+  char  *min,  *max;
   register char c;
 
   if (num <= 1)
@@ -553,18 +553,18 @@ void __FASTCALL__ HQSort(void __HUGE__ *base0,unsigned long num, unsigned width,
   }
 }
 
-void __HUGE__ * __FASTCALL__ HLFind(const any_t*key,void __HUGE__ *base,unsigned long nelem,unsigned width,
+void  * __FASTCALL__ HLFind(const any_t*key,void  *base,unsigned long nelem,unsigned width,
 				    func_compare compare)
 {
   unsigned long iter,start,end;
-  void __HUGE__ *it;
+  void  *it;
   tCompare comp_result;
   start = 0;
   end = nelem;
   iter = nelem >> 1;
   while(1)
   {
-     it = (char __HUGE__ *)base + iter*width;
+     it = (char  *)base + iter*width;
      comp_result = (*compare)(key,it);
      if(!comp_result)  return it;
      if(end - start < 5) break;
@@ -574,13 +574,13 @@ void __HUGE__ * __FASTCALL__ HLFind(const any_t*key,void __HUGE__ *base,unsigned
   }
   for(iter = start;iter < end;iter++)
   {
-     it = (char __HUGE__ *)base + iter*width;
+     it = (char  *)base + iter*width;
      if(!(*compare)(key,it)) return it;
   }
   return NULL;
 }
 
-unsigned long __FASTCALL__ HLFindNearest(const any_t*key,void __HUGE__ *base,unsigned long nelem,
+unsigned long __FASTCALL__ HLFindNearest(const any_t*key,void  *base,unsigned long nelem,
 			    unsigned width,
 			    func_compare compare)
 {
@@ -591,7 +591,7 @@ unsigned long __FASTCALL__ HLFindNearest(const any_t*key,void __HUGE__ *base,uns
   iter = nelem >> 1;
   while(1)
   {
-     comp_result = (*compare)(key,(char __HUGE__ *)base + iter*width);
+     comp_result = (*compare)(key,(char  *)base + iter*width);
      if(!comp_result) return iter;
      if(end - start < 5) break;
      if(comp_result > 0) start = iter;
@@ -600,8 +600,8 @@ unsigned long __FASTCALL__ HLFindNearest(const any_t*key,void __HUGE__ *base,uns
   }
   for(iter = start;iter < end;iter++)
   {
-     comp_result = (*compare)(key,(char __HUGE__ *)base + iter*width);
-     comp_result2 = iter < (nelem-1) ? (*compare)(key,(char __HUGE__ *)base + (iter+1)*width):
+     comp_result = (*compare)(key,(char  *)base + iter*width);
+     comp_result2 = iter < (nelem-1) ? (*compare)(key,(char  *)base + (iter+1)*width):
 			       -1;
      if(comp_result >= 0 && comp_result2 < 0) return iter;
   }
@@ -641,7 +641,7 @@ linearArray * __FASTCALL__ la_Build( unsigned long nitems, unsigned size_of_item
   return ret;
 }
 
-void  __FASTCALL__ la_ForEach(linearArray *obj,void (__FASTCALL__ *iter_func)(void __HUGE__ *))
+void  __FASTCALL__ la_ForEach(linearArray *obj,void (__FASTCALL__ *iter_func)(void  *))
 {
   unsigned long i;
   for(i = 0;i < obj->nItems;i++)
@@ -650,7 +650,7 @@ void  __FASTCALL__ la_ForEach(linearArray *obj,void (__FASTCALL__ *iter_func)(vo
   }
 }
 
-void  __FASTCALL__ la_IterDestroy(linearArray *obj,void (__FASTCALL__ *del_it)(void __HUGE__ *))
+void  __FASTCALL__ la_IterDestroy(linearArray *obj,void (__FASTCALL__ *del_it)(void  *))
 {
   la_ForEach(obj,del_it);
   delete obj->data;
@@ -668,9 +668,9 @@ void  __FASTCALL__ la_Destroy(linearArray *obj)
 
 static const unsigned LST_STEP=16;
 
-void __HUGE__*  __FASTCALL__ la_AddData(linearArray *obj,const any_t*udata,void (__FASTCALL__ *mem_out)(const char *))
+void *  __FASTCALL__ la_AddData(linearArray *obj,const any_t*udata,void (__FASTCALL__ *mem_out)(const char *))
 {
-  void __HUGE__*to;
+  void *to;
   if(obj->nSize > ULONG_MAX - (LST_STEP+1)) return 0;
   if(obj->nItems + 1 > obj->nSize)
   {
@@ -688,18 +688,18 @@ void __HUGE__*  __FASTCALL__ la_AddData(linearArray *obj,const any_t*udata,void 
       return NULL;
     }
   }
-  to = ((char __HUGE__ *)obj->data) + obj->nItems*obj->itemSize;
-  HMemCpy(to,udata,obj->itemSize);
+  to = ((char  *)obj->data) + obj->nItems*obj->itemSize;
+  memcpy(to,udata,obj->itemSize);
   obj->nItems++;
   return to;
 }
 
 void __FASTCALL__ la_DeleteData(linearArray *obj,unsigned long idx) {
-    char __HUGE__ *from;
-    char __HUGE__ *to;
+    char  *from;
+    char  *to;
     if(idx >= obj->nItems) return;
-    to = ((char __HUGE__ *)obj->data) + idx*obj->itemSize;
-    from = ((char __HUGE__ *)obj->data) + (idx+1)*obj->itemSize;
+    to = ((char  *)obj->data) + idx*obj->itemSize;
+    from = ((char  *)obj->data) + (idx+1)*obj->itemSize;
     memmove(to,from,(obj->nItems-(idx+1))*obj->itemSize);
     obj->nItems--;
 }
@@ -711,10 +711,10 @@ void         __FASTCALL__ la_Sort(linearArray *obj,func_compare compare)
       HQSort(obj->data,obj->nItems,obj->itemSize,compare);
 }
 
-void __HUGE__ *__FASTCALL__ la_Find(linearArray * obj,const any_t*key,
+void  *__FASTCALL__ la_Find(linearArray * obj,const any_t*key,
 				    func_compare compare)
 {
-  void __HUGE__ * ret = NULL;
+  void  * ret = NULL;
   if(obj)
     if(obj->nItems)
      ret = HLFind(key,obj->data,obj->nItems,obj->itemSize,compare);

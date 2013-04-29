@@ -60,7 +60,7 @@ static bool __FASTCALL__ __ReadMapTblLE(BFile& handle,memArray * obj,unsigned n)
   return true;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ __calcPageEntryLE(LE_PAGE *mt,unsigned long idx)
+static __filesize_t  __FASTCALL__ __calcPageEntryLE(LE_PAGE *mt,unsigned long idx)
 {
   __filesize_t ret;
   __filesize_t dataoff;
@@ -158,7 +158,7 @@ __filesize_t __FASTCALL__ CalcEntryLE(const LX_ENTRY *lxent)
   return ret;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,bool dispmsg)
+static __filesize_t  __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,bool dispmsg)
 {
   BFile* handle;
   bool found;

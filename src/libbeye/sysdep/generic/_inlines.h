@@ -21,41 +21,6 @@
 extern "C" {
 #endif
 
-#ifndef __NEAR__
-#define __NEAR__           /**< Not usable for generic platform modifier of near call and data */
-#endif
-#ifndef __FAR__
-#define __FAR__            /**< Not usable for generic platform modifier of far call and data */
-#endif
-#ifndef __HUGE__
-#define __HUGE__           /**< Not usable for generic platform modifier of huge pointer */
-#endif
-#ifndef __INTERRUPT__
-#define __INTERRUPT__      /**< Not usable for generic platform modifier of interrupt call */
-#endif
-#ifndef halloc
-#define halloc malloc      /**< For generic platform is alias of huge malloc */
-#endif
-#ifndef hrealloc
-#define hrealloc realloc   /**< For generic platform is alias of huge realloc */
-#endif
-#ifndef hfree
-#define hfree free         /**< For generic platform is alias of huge free */
-#endif
-#ifndef HMemCpy
-#define HMemCpy memcpy     /**< For generic platform is alias of huge memcpy */
-#endif
-
-#ifndef __FASTCALL__
-#define __FASTCALL__       /**< Impossible for definition on generic platform modifier of fast call */
-#endif
-#ifndef __NORETURN__
-#define __NORETURN__       /**< Impossible for definition on generic platform modifier of function that never return contol */
-#endif
-#ifndef __CONSTFUNC__
-#define __CONSTFUNC__      /**< Impossible for definition on generic platform modifier of constant function */
-#endif
-
 		/** Changes byte order in 32-bit number */
 #ifndef ByteSwapL
 #define ByteSwapL(_val)\

@@ -69,7 +69,7 @@ static Color __FASTCALL__ getColorByName(const char *name,Color defval,bool *has
   return defval;
 }
 
-static ColorAttr __NEAR__ __FASTCALL__ getColorPairByName(const char *name, ColorAttr defval,bool* has_err)
+static ColorAttr  __FASTCALL__ getColorPairByName(const char *name, ColorAttr defval,bool* has_err)
 {
   char wstr[80];
   char *p;
@@ -96,7 +96,7 @@ static ColorAttr __NEAR__ __FASTCALL__ getColorPairByName(const char *name, Colo
   return retval;
 }
 
-static bool __NEAR__ __FASTCALL__ readColorPair(hIniProfile *ini,const char *section,
+static bool  __FASTCALL__ readColorPair(hIniProfile *ini,const char *section,
 				   const char *subsection,
 				   const char *item,
 				   ColorAttr *value)
@@ -111,7 +111,7 @@ static bool __NEAR__ __FASTCALL__ readColorPair(hIniProfile *ini,const char *sec
   return has_err;
 }
 
-static bool __NEAR__ __FASTCALL__ readButton(hIniProfile *ini,const char *section,
+static bool  __FASTCALL__ readButton(hIniProfile *ini,const char *section,
 					      const char *subsection,
 					      ButtonCSet *to)
 {

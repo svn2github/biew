@@ -43,11 +43,11 @@ void __FASTCALL__ fmtSetState(int state)
    else  { if(fmtActiveState) fmtActiveState--; }
 }
 
-tCompare __FASTCALL__ fmtComparePubNames(const void __HUGE__ *v1,const void __HUGE__ *v2)
+tCompare __FASTCALL__ fmtComparePubNames(const void  *v1,const void  *v2)
 {
-  const struct PubName __HUGE__ *pnam1,__HUGE__ *pnam2;
-  pnam1 = (const struct PubName __HUGE__ *)v1;
-  pnam2 = (const struct PubName __HUGE__ *)v2;
+  const struct PubName  *pnam1, *pnam2;
+  pnam1 = (const struct PubName  *)v1;
+  pnam2 = (const struct PubName  *)v2;
   return __CmpLong__(pnam1->pa,pnam2->pa);
 }
 
@@ -89,7 +89,7 @@ __filesize_t __FASTCALL__ fmtGetPubSym(BFile& fmt_cache,char *str,unsigned cb_st
   {
     static unsigned long multiref_i = 0;
     get_next:
-    while((cur_addr = ((struct PubName __HUGE__ *)PubNames->data)[i].pa) <= pa)
+    while((cur_addr = ((struct PubName  *)PubNames->data)[i].pa) <= pa)
     {
       i++;
       if((cur_addr == pa && i > multiref_i) || (i >= nitems - 1)) break;
@@ -106,15 +106,15 @@ __filesize_t __FASTCALL__ fmtGetPubSym(BFile& fmt_cache,char *str,unsigned cb_st
   }
   if(idx < PubNames->nItems)
   {
-    ret_addr = ((struct PubName __HUGE__ *)PubNames->data)[idx].pa;
-    *func_class = ((struct PubName __HUGE__ *)PubNames->data)[idx].attr;
+    ret_addr = ((struct PubName  *)PubNames->data)[idx].pa;
+    *func_class = ((struct PubName  *)PubNames->data)[idx].attr;
     if(!idx && pa < ret_addr && as_prev)
     {
       ret_addr = 0;
     }
     else
     {
-      it = &((struct PubName __HUGE__ *)PubNames->data)[idx];
+      it = &((struct PubName  *)PubNames->data)[idx];
       (*fmt_readpub)(fmt_cache,it,str,cb_str);
       str[cb_str-1] = 0;
     }
@@ -123,7 +123,7 @@ __filesize_t __FASTCALL__ fmtGetPubSym(BFile& fmt_cache,char *str,unsigned cb_st
   return ret_addr;
 }
 
-static BFile* __NEAR__ __FASTCALL__ ReopenSeek(__filesize_t dist)
+static BFile*  __FASTCALL__ ReopenSeek(__filesize_t dist)
 {
  BFile* handle;
  handle = bmbioHandle().dup_ex(BBIO_SMALL_CACHE_SIZE);
@@ -178,10 +178,10 @@ typedef struct tagUDN {
     __filesize_t	offset;
 }udn;
 
-static tCompare __FASTCALL__ udn_compare(const void __HUGE__ *e1,const void __HUGE__ *e2)
+static tCompare __FASTCALL__ udn_compare(const void  *e1,const void  *e2)
 {
-    const udn __HUGE__ *p1 = (const udn __HUGE__ *)e1;
-    const udn __HUGE__ *p2 = (const udn __HUGE__ *)e2;
+    const udn  *p1 = (const udn  *)e1;
+    const udn  *p2 = (const udn  *)e2;
     return p1->offset<p2->offset?-1:p1->offset>p2->offset?1:0;
 }
 

@@ -123,7 +123,7 @@ int                     evaluate(char *, intmax_t *,int *);
 
 /** Modified for using with BEYE by Nickols_K (2000) */
 
-static char * __NEAR__ __FASTCALL__ rmallws(char *str)
+static char *  __FASTCALL__ rmallws(char *str)
 {
       char *obuf, *nbuf;
 
@@ -136,16 +136,16 @@ static char * __NEAR__ __FASTCALL__ rmallws(char *str)
       return str;
 }
 
-static int __NEAR__ __FASTCALL__ do_op(void);
-static int __NEAR__ __FASTCALL__ do_paren(void);
-static void __NEAR__ __FASTCALL__ push_op(char);
-static void __NEAR__ __FASTCALL__ push_arg(intmax_t);
-static int __NEAR__ __FASTCALL__ pop_arg(intmax_t *);
-static int __NEAR__ __FASTCALL__ pop_op(int *);
-static char *__NEAR__ __FASTCALL__ get_exp(char *);
-static struct Operator * __NEAR__ __FASTCALL__ get_op(char *);
-static int __NEAR__ __FASTCALL__ getprec(char);
-static int __NEAR__ __FASTCALL__ getTOSprec(void);
+static int  __FASTCALL__ do_op(void);
+static int  __FASTCALL__ do_paren(void);
+static void  __FASTCALL__ push_op(char);
+static void  __FASTCALL__ push_arg(intmax_t);
+static int  __FASTCALL__ pop_arg(intmax_t *);
+static int  __FASTCALL__ pop_op(int *);
+static char * __FASTCALL__ get_exp(char *);
+static struct Operator *  __FASTCALL__ get_op(char *);
+static int  __FASTCALL__ getprec(char);
+static int  __FASTCALL__ getTOSprec(void);
 
 #ifdef TEST
 
@@ -373,7 +373,7 @@ int evaluate(char *line, intmax_t *val,int *result_base)
 **  Evaluate stacked arguments and operands
 */
 
-static int __NEAR__ __FASTCALL__ do_op(void)
+static int  __FASTCALL__ do_op(void)
 {
       intmax_t arg1, arg2;
       int op;
@@ -442,7 +442,7 @@ static int __NEAR__ __FASTCALL__ do_op(void)
 **  Evaluate one level
 */
 
-static int __NEAR__ __FASTCALL__ do_paren(void)
+static int  __FASTCALL__ do_paren(void)
 {
       int op;
 
@@ -460,25 +460,25 @@ static int __NEAR__ __FASTCALL__ do_paren(void)
 **  Stack operations
 */
 
-static void __NEAR__ __FASTCALL__ push_op(char op)
+static void  __FASTCALL__ push_op(char op)
 {
       if (!getprec(op))
 	    ++parens;
       op_stack[op_sptr++] = op;
 }
 
-static void __NEAR__ __FASTCALL__ push_arg(intmax_t arg)
+static void  __FASTCALL__ push_arg(intmax_t arg)
 {
       arg_stack[arg_sptr++] = arg;
 }
 
-static int __NEAR__ __FASTCALL__ pop_arg(intmax_t *arg)
+static int  __FASTCALL__ pop_arg(intmax_t *arg)
 {
       *arg = arg_stack[--arg_sptr];
       return 0 > arg_sptr ? S_ERROR : SUCCESS;
 }
 
-static int __NEAR__ __FASTCALL__ pop_op(int *op)
+static int  __FASTCALL__ pop_op(int *op)
 {
       if (!op_sptr)
 	    return S_ERROR;
@@ -490,7 +490,7 @@ static int __NEAR__ __FASTCALL__ pop_op(int *op)
 **  Get an expression
 */
 
-static char * __NEAR__ __FASTCALL__ get_exp(char *str)
+static char *  __FASTCALL__ get_exp(char *str)
 {
       char *ptr = str, *tptr = token;
       struct Operator *op;
@@ -531,7 +531,7 @@ static char * __NEAR__ __FASTCALL__ get_exp(char *str)
 **  Get an Operator
 */
 
-static struct Operator * __NEAR__ __FASTCALL__ get_op(char *str)
+static struct Operator *  __FASTCALL__ get_op(char *str)
 {
       struct Operator *op;
 
@@ -547,7 +547,7 @@ static struct Operator * __NEAR__ __FASTCALL__ get_op(char *str)
 **  Get precedence of a token
 */
 
-static int __NEAR__ __FASTCALL__ getprec(char _token)
+static int  __FASTCALL__ getprec(char _token)
 {
       struct Operator *op;
 
@@ -563,7 +563,7 @@ static int __NEAR__ __FASTCALL__ getprec(char _token)
 **  Get precedence of TOS token
 */
 
-static int __NEAR__ __FASTCALL__ getTOSprec(void)
+static int  __FASTCALL__ getTOSprec(void)
 {
       if (!op_sptr)
 	    return 0;

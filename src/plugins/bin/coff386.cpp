@@ -56,7 +56,7 @@ static void __FASTCALL__ coff_ReadPubName(BFile& b_cache,const struct PubName *i
 static unsigned __FASTCALL__ coff386_GetObjAttr(__filesize_t pa,char *name,unsigned cb_name,
 			     __filesize_t *start,__filesize_t *end,int *_class,int *bitness);
 
-static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
+static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
   return fmtFindPubName(*coff_cache,buff,cb_buff,pa,
 			coff_ReadPubNameList,
@@ -64,7 +64,7 @@ static bool __NEAR__ __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__file
 }
 
 
-static void __NEAR__ __FASTCALL__ coffReadLongName(BFile& handle,__filesize_t offset,
+static void  __FASTCALL__ coffReadLongName(BFile& handle,__filesize_t offset,
 				      char *str, unsigned slen)
 {
   unsigned i;
@@ -151,7 +151,7 @@ static void __FASTCALL__ coffObjPaint(TWindow * win,const any_t** names,unsigned
  twRefreshFullWin(win);
 }
 
-static bool __NEAR__ __FASTCALL__ __coffReadObjects(BFile& handle,memArray * obj,unsigned n)
+static bool  __FASTCALL__ __coffReadObjects(BFile& handle,memArray * obj,unsigned n)
 {
  size_t i;
   for(i = 0;i < n;i++)
@@ -188,7 +188,7 @@ static __filesize_t __FASTCALL__ coffShowObjects( void )
  return fpos;
 }
 
-static const char * __NEAR__ __FASTCALL__ coff386_encode_hdr(unsigned info)
+static const char *  __FASTCALL__ coff386_encode_hdr(unsigned info)
 {
    switch(info)
    {
@@ -252,7 +252,7 @@ static __filesize_t __FASTCALL__ ShowCoff386Header( void )
   return fpos;
 }
 
-static const char * __NEAR__ __FASTCALL__ coffEncodeType(unsigned type)
+static const char *  __FASTCALL__ coffEncodeType(unsigned type)
 {
   const char *ret;
   switch(type)
@@ -279,7 +279,7 @@ static const char * __NEAR__ __FASTCALL__ coffEncodeType(unsigned type)
   return ret;
 }
 
-static const char * __NEAR__ __FASTCALL__ coffEncodeClass(unsigned _class)
+static const char *  __FASTCALL__ coffEncodeClass(unsigned _class)
 {
   const char *ret;
   switch(_class)
@@ -358,7 +358,7 @@ static bool  __FASTCALL__ coffSymTabReadItems(BFile& handle,memArray * obj,unsig
  return true;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ CalcEntryCoff(unsigned long idx,bool display_msg)
+static __filesize_t  __FASTCALL__ CalcEntryCoff(unsigned long idx,bool display_msg)
 {
   struct external_syment cse;
   uint_fast16_t sec_num;
@@ -410,15 +410,15 @@ typedef struct tagRELOC_COFF386
 
 static linearArray *RelocCoff386 = NULL;
 
-static tCompare __FASTCALL__ coff386_compare_rels(const void __HUGE__ *e1,const void __HUGE__ *e2)
+static tCompare __FASTCALL__ coff386_compare_rels(const void  *e1,const void  *e2)
 {
-  const RELOC_COFF386 __HUGE__ *r1,__HUGE__ *r2;
+  const RELOC_COFF386  *r1, *r2;
   r1 = reinterpret_cast<const RELOC_COFF386*>(e1);
   r2 = reinterpret_cast<const RELOC_COFF386*>(e2);
   return __CmpLong__(r1->offset,r2->offset);
 }
 
-static void __NEAR__ __FASTCALL__ BuildRelocCoff386( void )
+static void  __FASTCALL__ BuildRelocCoff386( void )
 {
   TWindow * w,*usd;
   size_t j,segcount, nr;
@@ -454,7 +454,7 @@ static void __NEAR__ __FASTCALL__ BuildRelocCoff386( void )
   CloseWnd(w);
 }
 
-static bool  __NEAR__ __FASTCALL__ coffSymTabReadItemsIdx(BFile& handle,unsigned long idx,
+static bool   __FASTCALL__ coffSymTabReadItemsIdx(BFile& handle,unsigned long idx,
 					    char *name,unsigned cb_name,
 					    unsigned *secnum,
 					    __filesize_t *offset)
@@ -476,7 +476,7 @@ static bool  __NEAR__ __FASTCALL__ coffSymTabReadItemsIdx(BFile& handle,unsigned
  return true;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ BuildReferStrCoff386(const DisMode& parent,char *str,RELOC_COFF386 *rne,int flags)
+static __filesize_t  __FASTCALL__ BuildReferStrCoff386(const DisMode& parent,char *str,RELOC_COFF386 *rne,int flags)
 {
   __filesize_t offset,retval,s,e;
   unsigned long val;

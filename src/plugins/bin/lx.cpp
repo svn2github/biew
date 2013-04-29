@@ -44,7 +44,7 @@ int LXType;
 
 BFile* lx_cache = &bNull;
 
-static __filesize_t __NEAR__ __FASTCALL__ CalcEntryPointLX(unsigned long objnum,__filesize_t _offset);
+static __filesize_t  __FASTCALL__ CalcEntryPointLX(unsigned long objnum,__filesize_t _offset);
 
 static const char * LXordering[] =
 {
@@ -90,30 +90,30 @@ const char * __osModType[] =
 
 static __filesize_t LXEntryPoint = 0;
 
-static const char * __NEAR__ __FASTCALL__ GetOrderingLX(unsigned char type)
+static const char *  __FASTCALL__ GetOrderingLX(unsigned char type)
 {
  if(type < 2) return LXordering[type];
  else         return "";
 }
 
-static const char * __NEAR__ __FASTCALL__ GetCPUTypeLX(int num)
+static const char *  __FASTCALL__ GetCPUTypeLX(int num)
 {
  if(num > 5) num = 0;
  return LXcputype[num];
 }
 
-static const char * __NEAR__ __FASTCALL__ GetOSTypeLX(int num)
+static const char *  __FASTCALL__ GetOSTypeLX(int num)
 {
   if(num > 4) num = 0;
   return LXostype[num];
 }
 
-static const char * __NEAR__ __FASTCALL__ __getOSModType(char type)
+static const char *  __FASTCALL__ __getOSModType(char type)
 {
   return __osModType[type & 0x07];
 }
 
-static void __NEAR__ PaintNewHeaderLX_1(void)
+static void  PaintNewHeaderLX_1(void)
 {
   twPrintF("Signature                        = '%c%c'\n"
 	   "Byte order                       = %02XH (%s)\n"
@@ -161,7 +161,7 @@ static void __NEAR__ PaintNewHeaderLX_1(void)
 	   ,lxe.lx.lxESP);
 }
 
-static void __NEAR__ PaintNewHeaderLX_2( void )
+static void  PaintNewHeaderLX_2( void )
 {
   twPrintF("Page size                        = %08lXH\n"
 	   "Page offset shift                = %08lXH\n"
@@ -207,7 +207,7 @@ static void __NEAR__ PaintNewHeaderLX_2( void )
 	   ,lxe.lx.lxImportProcedureTableOffset);
 }
 
-static void __NEAR__ PaintNewHeaderLX_3( void )
+static void  PaintNewHeaderLX_3( void )
 {
   twPrintF("Per - page checksum  offset      = %08lXH\n"
 	   "Data pages offset                = %08lXH\n"
@@ -251,7 +251,7 @@ static void __NEAR__ PaintNewHeaderLX_3( void )
   twSetColorAttr(dialog_cset.main);
 }
 
-static void (__NEAR__ * lxphead[])( void ) =
+static void ( * lxphead[])( void ) =
 {
   PaintNewHeaderLX_1,
   PaintNewHeaderLX_2,
@@ -381,7 +381,7 @@ static bool __FASTCALL__  __ReadModRefNamesLX(BFile& handle,memArray * obj,unsig
  return true;
 }
 
-static void __NEAR__ __FASTCALL__ objpaintLX(const LX_OBJECT *nam)
+static void  __FASTCALL__ objpaintLX(const LX_OBJECT *nam)
 {
  twGotoXY(1,1);
  twPrintF("Virtual Size                         = %lX bytes\n"
@@ -442,7 +442,7 @@ static void __FASTCALL__ ObjPaintLX(TWindow * win,const any_t** names,unsigned s
  twRefreshFullWin(win);
 }
 
-static bool __NEAR__ __FASTCALL__ __ReadObjectsLX(BFile& handle,memArray * obj,unsigned n)
+static bool  __FASTCALL__ __ReadObjectsLX(BFile& handle,memArray * obj,unsigned n)
 {
  size_t i;
   for(i = 0;i < n;i++)
@@ -455,7 +455,7 @@ static bool __NEAR__ __FASTCALL__ __ReadObjectsLX(BFile& handle,memArray * obj,u
   return true;
 }
 
-static bool __NEAR__ __FASTCALL__ __ReadEntriesLX(BFile& handle,memArray *obj)
+static bool  __FASTCALL__ __ReadEntriesLX(BFile& handle,memArray *obj)
 {
  unsigned i;
  unsigned char j;
@@ -508,7 +508,7 @@ static void __FASTCALL__ lxReadPageDesc(BFile& handle,LX_MAP_TABLE *mt,unsigned 
   handle.read_buffer((any_t*)mt,sizeof(LX_MAP_TABLE));
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ __calcPageEntry(LX_MAP_TABLE *mt)
+static __filesize_t  __FASTCALL__ __calcPageEntry(LX_MAP_TABLE *mt)
 {
   __filesize_t dataoff;
   __filesize_t ret;
@@ -529,7 +529,7 @@ static __filesize_t __NEAR__ __FASTCALL__ __calcPageEntry(LX_MAP_TABLE *mt)
   return ret + dataoff;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ CalcPageEntry(unsigned long pageidx)
+static __filesize_t  __FASTCALL__ CalcPageEntry(unsigned long pageidx)
 {
   BFile& handle = *lx_cache;
   LX_MAP_TABLE mt;
@@ -538,7 +538,7 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcPageEntry(unsigned long pageidx)
   return __calcPageEntry(&mt);
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ CalcEntryPointLX(unsigned long objnum,__filesize_t _offset)
+static __filesize_t  __FASTCALL__ CalcEntryPointLX(unsigned long objnum,__filesize_t _offset)
 {
   BFile& handle = *lx_cache;
   unsigned long i,diff;
@@ -600,7 +600,7 @@ void __FASTCALL__ ShowFwdModOrdLX(const LX_ENTRY *lxent)
   TMessageBox(buff," Forwarder entry point ");
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ CalcEntryLX(const LX_ENTRY *lxent)
+static __filesize_t  __FASTCALL__ CalcEntryLX(const LX_ENTRY *lxent)
 {
   __filesize_t ret;
   ret = BMGetCurrFilePos();
@@ -619,7 +619,7 @@ static __filesize_t __NEAR__ __FASTCALL__ CalcEntryLX(const LX_ENTRY *lxent)
   return ret;
 }
 
-static __filesize_t __NEAR__ __FASTCALL__ CalcEntryBungleLX(unsigned ordinal,bool dispmsg)
+static __filesize_t  __FASTCALL__ CalcEntryBungleLX(unsigned ordinal,bool dispmsg)
 {
   BFile* handle;
   bool found;
@@ -717,7 +717,7 @@ const char * __FASTCALL__ lxeGetMapAttr(unsigned long attr)
   else  return mapattr[attr];
 }
 #if 0
-static void __NEAR__ __FASTCALL__ iterpaintLX(const LX_ITER *nam)
+static void  __FASTCALL__ iterpaintLX(const LX_ITER *nam)
 {
  twGotoXY(1,1);
  twPrintF("Number of iteration                  = %hu\n"
@@ -738,13 +738,13 @@ const char *__e32type[] =
   "TypeInfo"
 };
 
-static const char * __NEAR__ __FASTCALL__ entryTypeLX(unsigned char type)
+static const char *  __FASTCALL__ entryTypeLX(unsigned char type)
 {
    if(type < 6) return __e32type[type];
    else         return "Unknown";
 }
 
-static void __NEAR__ __FASTCALL__ entrypaintLX(const LX_ENTRY *nam)
+static void  __FASTCALL__ entrypaintLX(const LX_ENTRY *nam)
 {
  if(!nam->b32_type)
  {
@@ -854,7 +854,7 @@ static bool __FASTCALL__ __ReadMapTblLX(BFile& handle,memArray * obj,unsigned n)
   return true;
 }
 #if 0
-static bool __NEAR__ __FASTCALL__ __ReadIterTblLX(BFile& handle,memArray * obj,unsigned n)
+static bool  __FASTCALL__ __ReadIterTblLX(BFile& handle,memArray * obj,unsigned n)
 {
  int i;
   for(i = 0;i < n;i++)
@@ -935,7 +935,7 @@ const char * ResourceGrNamesLX[] =
   "DBCS font drive"
 };
 
-static bool __NEAR__ __FASTCALL__ __ReadResourceGroupLX(BFile& handle,memArray *obj,unsigned nitems,long * addr)
+static bool  __FASTCALL__ __ReadResourceGroupLX(BFile& handle,memArray *obj,unsigned nitems,long * addr)
 {
  unsigned i;
  LXResource lxr;

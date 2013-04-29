@@ -96,8 +96,8 @@ const char* HexMode::prompt(unsigned idx) const {
     return (idx < 10) ? txt[idx] : "";
 }
 
-typedef char *(__NEAR__ __FASTCALL__ *hexFunc)(__filesize_t);
-typedef unsigned char (__NEAR__ __FASTCALL__ *sizeFunc) ( void );
+typedef char *( __FASTCALL__ *hexFunc)(__filesize_t);
+typedef unsigned char ( __FASTCALL__ *sizeFunc) ( void );
 
 typedef struct tag_hexView {
     const char *  name;
@@ -107,9 +107,9 @@ typedef struct tag_hexView {
     unsigned char hardlen;
 }hexView;
 
-static char * __NEAR__ __FASTCALL__ GetB(__filesize_t val) { return GetBinary(BMReadByteEx(val,BM_SEEK_SET)); }
-static char * __NEAR__ __FASTCALL__ Get2D(__filesize_t val) { return Get2Digit(BMReadByteEx(val,BM_SEEK_SET)); }
-static char * __NEAR__ __FASTCALL__ Get4D(__filesize_t val)
+static char *  __FASTCALL__ GetB(__filesize_t val) { return GetBinary(BMReadByteEx(val,BM_SEEK_SET)); }
+static char *  __FASTCALL__ Get2D(__filesize_t val) { return Get2Digit(BMReadByteEx(val,BM_SEEK_SET)); }
+static char *  __FASTCALL__ Get4D(__filesize_t val)
 {
     unsigned short v;
     v = BMReadWordEx(val,BM_SEEK_SET);
@@ -118,7 +118,7 @@ static char * __NEAR__ __FASTCALL__ Get4D(__filesize_t val)
     if(hendian==2) v=be2me_16(v);
     return Get4Digit(v);
 }
-static char * __NEAR__ __FASTCALL__ Get8D(__filesize_t val)
+static char *  __FASTCALL__ Get8D(__filesize_t val)
 {
     unsigned long v;
     v = BMReadDWordEx(val,BM_SEEK_SET);
@@ -128,10 +128,10 @@ static char * __NEAR__ __FASTCALL__ Get8D(__filesize_t val)
     return Get8Digit(v);
 }
 
-static unsigned char __NEAR__ __FASTCALL__ sizeBit( void )  { return (tvioWidth-HA_LEN())/(8+1+1); }
-static unsigned char __NEAR__ __FASTCALL__ sizeByte( void ) { return ((tvioWidth-HA_LEN())/(12+1+4)*4); } /* always round on four-column boundary */
-static unsigned char __NEAR__ __FASTCALL__ sizeWord( void ) { return (tvioWidth-HA_LEN())/(4+1+2); }
-static unsigned char __NEAR__ __FASTCALL__ sizeDWord( void ){ return (tvioWidth-HA_LEN())/(8+1+4); }
+static unsigned char  __FASTCALL__ sizeBit( void )  { return (tvioWidth-HA_LEN())/(8+1+1); }
+static unsigned char  __FASTCALL__ sizeByte( void ) { return ((tvioWidth-HA_LEN())/(12+1+4)*4); } /* always round on four-column boundary */
+static unsigned char  __FASTCALL__ sizeWord( void ) { return (tvioWidth-HA_LEN())/(4+1+2); }
+static unsigned char  __FASTCALL__ sizeDWord( void ){ return (tvioWidth-HA_LEN())/(8+1+4); }
 
 static const hexView hexViewer[] =
 {

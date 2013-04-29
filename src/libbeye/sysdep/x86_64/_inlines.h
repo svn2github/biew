@@ -24,26 +24,12 @@
 #ifndef ___INLINES_H
 #define ___INLINES_H 1
 
-#define __NEAR__           /**< Obsolete for x86_64 platform modifier of near call and data */
-#define __FAR__            /**< Obsolete for x86_64 platform modifier of far call and data */
-#define __HUGE__           /**< Obsolete for x86_64 platform modifier of huge pointer */
-#define __INTERRUPT__      /**< Impossible for definition with gcc modifier of interrupt call */
-#define halloc malloc      /**< For x86_64 platform is alias of huge malloc */
-#define hrealloc realloc   /**< For x86_64 platform is alias of huge realloc */
-#define hfree free         /**< For x86_64 platform is alias of huge free */
-#define HMemCpy memcpy     /**< For x86_64 platform is alias of huge memcpy */
-
-#ifndef __FASTCALL__
-#define __FASTCALL__       /**< defined in config.h */
-#endif
-#define __NORETURN__ __attribute__ (( __noreturn__ ))                 /**< Noreturn modifier for x86_64 */
-#define __CONSTFUNC__ __attribute__ (( __const__ ))                   /**< Modifier of contant function for x86_64 */
 #ifdef __clpusplus
 extern "C" {
 #endif
 
 		/** Changes byte order in 16-bit number */
-__inline static uint16_t __FASTCALL__ __CONSTFUNC__ ByteSwapS(uint16_t _val)
+__inline static uint16_t __FASTCALL__ ByteSwapS(uint16_t _val)
 {
   __asm("rorw $8, %w0"	:
 	"=r" (_val)	:
@@ -54,7 +40,7 @@ __inline static uint16_t __FASTCALL__ __CONSTFUNC__ ByteSwapS(uint16_t _val)
 #define ByteSwapS ByteSwapS
 
 		/** Changes byte order in 32-bit number */
-__inline static uint32_t __FASTCALL__ __CONSTFUNC__ ByteSwapL(uint32_t _val)
+__inline static uint32_t __FASTCALL__ ByteSwapL(uint32_t _val)
 {
  __asm("bswapl	%0":
       "=r" (_val)  :
@@ -64,7 +50,7 @@ __inline static uint32_t __FASTCALL__ __CONSTFUNC__ ByteSwapL(uint32_t _val)
 #define ByteSwapL ByteSwapL
 
 		/** Changes byte order in 64-bit number */
-__inline static uint64_t __FASTCALL__ __CONSTFUNC__ ByteSwapLL(uint64_t x)
+__inline static uint64_t __FASTCALL__ ByteSwapLL(uint64_t x)
 {
  __asm("bswapq	%0":
       "=r" (x)     :

@@ -28,21 +28,21 @@ using namespace beye;
 namespace beye {
 extern char *ix86_appstr;
 
-static char * __NEAR__ __FASTCALL__ SetNameTab(char * str,const char * name)
+static char *  __FASTCALL__ SetNameTab(char * str,const char * name)
 {
  strcpy(str,name);
  TabSpace(str,TAB_POS);
  return str;
 }
 
-static char * __NEAR__ __FASTCALL__ SC(const char * name1,const char * name2)
+static char *  __FASTCALL__ SC(const char * name1,const char * name2)
 {
  SetNameTab(ix86_appstr,name1);
  strcat(ix86_appstr,name2);
  return ix86_appstr;
 }
 
-static char * __NEAR__ __FASTCALL__ SetNameTabD(char * str,const char * name,unsigned char size,ix86Param *DisP)
+static char *  __FASTCALL__ SetNameTabD(char * str,const char * name,unsigned char size,ix86Param *DisP)
 {
  strcpy(str,name);
  strcat(str," ");
@@ -51,7 +51,7 @@ static char * __NEAR__ __FASTCALL__ SetNameTabD(char * str,const char * name,uns
  return str;
 }
 
-typedef char * (__NEAR__ __FASTCALL__ * FPUroutine)(char *,const char *,ix86Param *);
+typedef char * ( __FASTCALL__ * FPUroutine)(char *,const char *,ix86Param *);
 typedef struct tagFPUcall
 {
   FPUroutine   f;
@@ -67,7 +67,7 @@ typedef struct tgDualStr
 static char stx[] = "st(x)";
 #define MakeST(str,num) { stx[3] = (num)+'0'; strcat(str,stx); }
 
-static char * __NEAR__ __FASTCALL__ __UniFPUfunc(char * str,const char * cmd,char opsize,char direct,ix86Param *DisP)
+static char *  __FASTCALL__ __UniFPUfunc(char * str,const char * cmd,char opsize,char direct,ix86Param *DisP)
 {
  char mod = ( DisP->RealCmd[1] & 0xC0 ) >> 6;
  char reg = DisP->RealCmd[1] & 0x07;
@@ -82,7 +82,7 @@ static char * __NEAR__ __FASTCALL__ __UniFPUfunc(char * str,const char * cmd,cha
  return str;
 }
 
-static char * __NEAR__ __FASTCALL__ __MemFPUfunc(char * str,const char * cmd,char opsize,ix86Param *DisP)
+static char *  __FASTCALL__ __MemFPUfunc(char * str,const char * cmd,char opsize,ix86Param *DisP)
 {
  char mod = ( DisP->RealCmd[1] & 0xC0 ) >> 6;
  char reg = DisP->RealCmd[1] & 0x07;
@@ -93,52 +93,52 @@ static char * __NEAR__ __FASTCALL__ __MemFPUfunc(char * str,const char * cmd,cha
  return str;
 }
 
-static char * __NEAR__ __FASTCALL__ FPUmem(char * str,const char * cmd,ix86Param *DisP)
+static char *  __FASTCALL__ FPUmem(char * str,const char * cmd,ix86Param *DisP)
 {
   return __MemFPUfunc(str,cmd,DUMMY_PTR,DisP);
 }
 
-static char * __NEAR__ __FASTCALL__ FPUmem64mem32(char * str,const char * cmd,ix86Param *DisP)
+static char *  __FASTCALL__ FPUmem64mem32(char * str,const char * cmd,ix86Param *DisP)
 {
  return __UniFPUfunc(str,cmd,DisP->RealCmd[0] & 0x04 ? QWORD_PTR : DWORD_PTR,0,DisP);
 }
 
-static char * __NEAR__ __FASTCALL__ FPUmem64mem32st(char * str,const char * cmd,ix86Param *DisP)
+static char *  __FASTCALL__ FPUmem64mem32st(char * str,const char * cmd,ix86Param *DisP)
 {
  return __UniFPUfunc(str,cmd,DisP->RealCmd[0] & 0x04 ? QWORD_PTR : DWORD_PTR,1,DisP);
 }
 
-static char * __NEAR__ __FASTCALL__ FPUint16int32(char * str,const char * cmd,ix86Param *DisP)
+static char *  __FASTCALL__ FPUint16int32(char * str,const char * cmd,ix86Param *DisP)
 {
  return __UniFPUfunc(str,cmd,DisP->RealCmd[0] & 0x04 ? WORD_PTR : DWORD_PTR,0,DisP);
 }
 
-static char * __NEAR__ __FASTCALL__ FPUint16int32st(char * str,const char * cmd,ix86Param *DisP)
+static char *  __FASTCALL__ FPUint16int32st(char * str,const char * cmd,ix86Param *DisP)
 {
  return __UniFPUfunc(str,cmd,DisP->RealCmd[0] & 0x04 ? WORD_PTR : DWORD_PTR,1,DisP);
 }
 
-static char * __NEAR__ __FASTCALL__ FPUint64(char * str,const char * cmd,ix86Param *DisP)
+static char *  __FASTCALL__ FPUint64(char * str,const char * cmd,ix86Param *DisP)
 {
  return __UniFPUfunc(str,cmd,QWORD_PTR,0,DisP);
 }
 
-static char * __NEAR__ __FASTCALL__ FPUint64st(char * str,const char * cmd,ix86Param *DisP)
+static char *  __FASTCALL__ FPUint64st(char * str,const char * cmd,ix86Param *DisP)
 {
  return __UniFPUfunc(str,cmd,QWORD_PTR,1,DisP);
 }
 
-static char * __NEAR__ __FASTCALL__ FPUstint32(char * str,const char * cmd,ix86Param *DisP)
+static char *  __FASTCALL__ FPUstint32(char * str,const char * cmd,ix86Param *DisP)
 {
  return __UniFPUfunc(str,cmd,DWORD_PTR,0,DisP);
 }
 
-static char * __NEAR__ __FASTCALL__ FPUld(char * str,const char * cmd,ix86Param *DisP)
+static char *  __FASTCALL__ FPUld(char * str,const char * cmd,ix86Param *DisP)
 {
  return __UniFPUfunc(str,cmd,DUMMY_PTR,0,DisP);
 }
 
-static char * __NEAR__ __FASTCALL__ FPUstisti(char * str,const char * cmd,char code1,char code2)
+static char *  __FASTCALL__ FPUstisti(char * str,const char * cmd,char code1,char code2)
 {
  SetNameTab(str,cmd);
  MakeST(str,code1 & 0x07);
@@ -147,49 +147,49 @@ static char * __NEAR__ __FASTCALL__ FPUstisti(char * str,const char * cmd,char c
  return str;
 }
 
-static char * __NEAR__ __FASTCALL__ FPUst0sti(char * str,const char * cmd,char code1)
+static char *  __FASTCALL__ FPUst0sti(char * str,const char * cmd,char code1)
 {
  return FPUstisti(str,cmd,0,code1);
 }
 
-static char * __NEAR__ __FASTCALL__ FPUstist0(char * str,const char * cmd,char code1)
+static char *  __FASTCALL__ FPUstist0(char * str,const char * cmd,char code1)
 {
  return FPUstisti(str,cmd,code1,0);
 }
 
-static char * __NEAR__ __FASTCALL__ FPUldtword(char * str,const char * cmd,ix86Param *DisP)
+static char *  __FASTCALL__ FPUldtword(char * str,const char * cmd,ix86Param *DisP)
 {
  return __UniFPUfunc(str,cmd,TWORD_PTR,0,DisP);
 }
 
-static char * __NEAR__ __FASTCALL__ FPUsttword(char * str,const char * cmd,ix86Param *DisP)
+static char *  __FASTCALL__ FPUsttword(char * str,const char * cmd,ix86Param *DisP)
 {
   return __UniFPUfunc(str,cmd,TWORD_PTR,1,DisP);
 }
 
-static char * __NEAR__ __FASTCALL__ FPUcmdsti(char * str,const char * name,char code)
+static char *  __FASTCALL__ FPUcmdsti(char * str,const char * name,char code)
 {
   SetNameTab(str,name);
   MakeST(str,code & 0x07);
   return str;
 }
 
-static char * __NEAR__ __FASTCALL__ FPUcmdst0(char * str,const char * name)
+static char *  __FASTCALL__ FPUcmdst0(char * str,const char * name)
 {
   return FPUcmdsti(str,name,0);
 }
 
-static char * __NEAR__ __FASTCALL__ FPUcmdsti_2(char * str,const char * name1,const char * name2,char code)
+static char *  __FASTCALL__ FPUcmdsti_2(char * str,const char * name1,const char * name2,char code)
 {
   return FPUcmdsti(str,code & 0x08 ? name2 : name1,code);
 }
 
-static char * __NEAR__ __FASTCALL__ FPUst0sti_2(char * str,const char * name1,const char * name2,char code)
+static char *  __FASTCALL__ FPUst0sti_2(char * str,const char * name1,const char * name2,char code)
 {
  return FPUst0sti(str,code & 0x08 ? name2 : name1,code);
 }
 
-static char * __NEAR__ __FASTCALL__ FPUstist0_2(char * str,const char * name1,const char * name2,char code)
+static char *  __FASTCALL__ FPUstist0_2(char * str,const char * name1,const char * name2,char code)
 {
  return FPUstist0(str,code & 0x08 ? name2 : name1,code);
 }
