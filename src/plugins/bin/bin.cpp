@@ -39,7 +39,6 @@ extern const REGISTRY_BIN binTable =
   bin_destroy_fmt,
   NULL,
   NULL,
-  NULL,
   bin_platform,
   NULL,
   NULL,

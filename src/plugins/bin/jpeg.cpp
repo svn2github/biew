@@ -62,7 +62,6 @@ extern const REGISTRY_BIN jpegTable =
   jpeg_destroy_fmt,
   Show_JPEG_Header,
   NULL,
-  NULL,
   jpeg_platform,
   NULL,
   NULL,

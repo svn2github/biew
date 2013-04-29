@@ -47,12 +47,10 @@ namespace beye {
     };
 
     extern linearArray *PubNames;
-    extern unsigned fmtActiveState;
 
     typedef void (__FASTCALL__ *ReadPubName)(BFile& b_cache,const struct PubName *it,char *buff,unsigned cb_buff);
     typedef void (__FASTCALL__ *ReadPubNameList)(BFile& fmt_chahe,void (__FASTCALL__ *mem_out)(const char *));
 
-    void  __FASTCALL__ fmtSetState(int state);
     tCompare __FASTCALL__ fmtComparePubNames(const void  *v1,const void  *v2);
     bool __FASTCALL__ fmtFindPubName(BFile& fmt_cache,char *buff,unsigned cb_buff,
 					 __filesize_t pa,

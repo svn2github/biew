@@ -79,7 +79,6 @@ extern const REGISTRY_BIN mpegTable =
   mpeg_destroy_fmt,
   NULL,
   NULL,
-  NULL,
   mpeg_platform,
   NULL,
   NULL,

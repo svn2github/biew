@@ -1357,7 +1357,6 @@ extern const REGISTRY_BIN peTable =
   IsPE, initPE, destroyPE,
   NULL,
   AppendPERef,
-  fmtSetState,
   pePlatform,
   bitnessPE,
   NULL,

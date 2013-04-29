@@ -90,7 +90,6 @@ extern const REGISTRY_BIN bmpTable =
   bmp_destroy_fmt,
   Show_BMP_Header,
   NULL,
-  NULL,
   bmp_platform,
   NULL,
   NULL,

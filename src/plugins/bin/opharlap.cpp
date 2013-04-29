@@ -130,7 +130,6 @@ extern const REGISTRY_BIN OldPharLapTable =
   OPharLapDestroy,
   ShowOPharLapHeader,
   NULL,
-  NULL,
   OldPharLapPlatform,
   NULL,
   NULL,

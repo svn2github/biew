@@ -59,7 +59,6 @@ extern const REGISTRY_BIN rmTable =
   rm_destroy_fmt,
   Show_RM_Header,
   NULL,
-  NULL,
   rm_platform,
   NULL,
   NULL,

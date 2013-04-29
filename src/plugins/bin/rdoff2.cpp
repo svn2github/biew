@@ -95,7 +95,6 @@ extern const REGISTRY_BIN rdoff2Table =
   rdoff2_destroy_fmt,
   rdoff2_ShowHeader,
   NULL,
-  NULL,
   rdoff2_platform,
   NULL,
   NULL,

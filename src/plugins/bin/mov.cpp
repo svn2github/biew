@@ -79,7 +79,6 @@ extern const REGISTRY_BIN movTable =
   mov_destroy_fmt,
   Show_MOV_Header,
   NULL,
-  NULL,
   mov_platform,
   NULL,
   NULL,

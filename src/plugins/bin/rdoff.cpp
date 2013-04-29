@@ -772,7 +772,6 @@ extern const REGISTRY_BIN rdoffTable =
   rdoff_destroy_fmt,
   rdoff_ShowHeader,
   rdoff_AppendRef,
-  fmtSetState,
   rdoff_platform,
   rdoff_bitness,
   NULL,

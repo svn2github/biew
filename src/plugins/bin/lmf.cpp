@@ -509,7 +509,6 @@ extern const REGISTRY_BIN lmfTable=
 	lmf_destroy_fmt,
 	lmf_ShowHeader,
 	NULL,
-	NULL,
 	lmf_platform,
 	lmf_bitness,
 	NULL,

@@ -1209,7 +1209,6 @@ extern const REGISTRY_BIN lxTable =
   isLX, LXinit, LXdestroy,
   NULL,
   NULL,
-  NULL,
   lxPlatform,
   lxBitness,
   NULL,

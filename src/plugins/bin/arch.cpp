@@ -198,7 +198,6 @@ extern const REGISTRY_BIN archTable =
   IsArch, ArchInit, ArchDestroy,
   ShowARCHHeader,
   NULL,
-  NULL,
   arch_platform,
   NULL,
   NULL,

@@ -33,15 +33,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 
 namespace beye {
-unsigned fmtActiveState = 0;
-
 linearArray *PubNames = NULL;
-
-void __FASTCALL__ fmtSetState(int state)
-{
-   if(state == PS_ACTIVE) { if(fmtActiveState < UINT_MAX) fmtActiveState++; }
-   else  { if(fmtActiveState) fmtActiveState--; }
-}
 
 tCompare __FASTCALL__ fmtComparePubNames(const void  *v1,const void  *v2)
 {

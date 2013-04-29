@@ -443,7 +443,6 @@ bool DisMode::action_F8() /* disReferenceResolving */
 	disNeedRef = e_ref(retval);
 	ret = true;
     } else ret = false;
-    if(bctx.active_format()->set_state) bctx.active_format()->set_state(disNeedRef ? PS_ACTIVE : PS_INACTIVE);
     return ret;
 }
 

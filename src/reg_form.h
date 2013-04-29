@@ -82,23 +82,7 @@ enum {
     OC_DATA      =1, /**< for any data objects */
     OC_NOOBJECT =-1 /**< for non objects (means: relocs, resources, tables ...) */
 };
-/*
-   Binary plugins state constants:
-     First called 'check_format' - plugin in UNPLUGGED state.
-     Second called 'init' - plugin turn into PLUGGED IN state.
-     Last called 'destroy' - plugin turn into UNPLUGGED state.
-     These foundamental state is not defined through PS_XXX constants,
-     because it meaningless.
-     General purpose for PS_XXX state is activating of preemptive memory
-     allocation mechanism. Means: when plugin in PS_INACTIVE state (when
-     references resolving is 'None') then on low memory it can freed some
-     buffers. (This need for prevent of infinity loop of memory
-     allocation/freing, that possible in some case).
-*/
-enum {
-    PS_INACTIVE    =0,
-    PS_ACTIVE      =1
-};
+
 class CodeGuider;
 struct REGISTRY_BIN
 {
@@ -110,13 +94,6 @@ struct REGISTRY_BIN
   void    (__FASTCALL__ *destroy)( void );      /**< Destroys plugin (destructor) */
   BinFunc   showHdr;                            /**< if not an MZ style format */
   AppRefs   bind;                               /**< for show references */
-
-			 /** This function is called, when activity of plugin is changed.
-			   * @param state      See PS_XXX constants.
-			   * @note             Plugin must support counter of
-			   *                   states. (For multiple call purpose)
-			  **/
-  void    (__FASTCALL__ *set_state)(int state);
 
 			 /** Returns CPU platform, that required by format.
 			   * @note           Full list of platform please see in

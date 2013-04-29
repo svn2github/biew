@@ -124,7 +124,6 @@ extern const REGISTRY_BIN dossysTable =
   dossys_destroy_fmt,
   ShowSysHeader,
   NULL,
-  NULL,
   dossys_platform,
   NULL,
   NULL,

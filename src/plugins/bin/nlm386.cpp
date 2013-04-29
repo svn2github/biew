@@ -718,7 +718,6 @@ extern const REGISTRY_BIN nlm386Table =
   IsNLM, NLMinit, NLMdestroy,
   ShowNLMHeader,
   AppendNLMRef,
-  fmtSetState,
   NLMPlatform,
   NLMbitness,
   NULL,

@@ -742,7 +742,6 @@ extern const REGISTRY_BIN coff386Table =
   coff386_destroy_fmt,
   ShowCoff386Header,
   coff386_AppendRef,
-  fmtSetState,
   coff386_platform,
   coff386_bitness,
   NULL,

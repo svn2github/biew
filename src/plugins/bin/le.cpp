@@ -339,7 +339,6 @@ extern const REGISTRY_BIN leTable =
   isLE, LEinit, LEdestroy,
   NULL,
   NULL,
-  NULL,
   lePlatform,
   NULL,
   NULL,

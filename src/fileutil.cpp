@@ -369,7 +369,6 @@ static bool FStore( void )
 
 		DisMode* dismode = static_cast<DisMode*>(disMode.query_interface(bctx.codeguider()));
 		if(flags & FSDLG_STRUCTS) {
-		    if(bctx.active_format()->set_state) bctx.active_format()->set_state(PS_ACTIVE);
 		    if(bctx.active_format()->prepare_structs) bctx.active_format()->prepare_structs(ff_startpos,ff_startpos+ff_len);
 		}
 		MaxInsnLen = dismode->get_max_symbol_size();
@@ -593,7 +592,6 @@ static bool FStore( void )
 		if(tmp_buff2) delete tmp_buff2;
 		if(flags & FSDLG_STRUCTS) {
 		    if(bctx.active_format()->drop_structs) bctx.active_format()->drop_structs();
-		    if(bctx.active_format()->set_state) bctx.active_format()->set_state(PS_INACTIVE);
 		}
 		delete dismode;
 	    } /** END: Write in disassembler mode */

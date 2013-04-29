@@ -462,7 +462,6 @@ extern const REGISTRY_BIN mp3Table =
   mp3_destroy_fmt,
   Show_MP3_Header,
   NULL,
-  NULL,
   mp3_platform,
   NULL,
   NULL,

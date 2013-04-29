@@ -62,7 +62,6 @@ extern const REGISTRY_BIN asfTable =
   asf_destroy_fmt,
   Show_ASF_Header,
   NULL,
-  NULL,
   asf_platform,
   NULL,
   NULL,

@@ -261,7 +261,6 @@ extern const REGISTRY_BIN wavTable =
   wav_destroy_fmt,
   Show_WAV_Header,
   NULL,
-  NULL,
   wav_platform,
   NULL,
   NULL,

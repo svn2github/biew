@@ -298,7 +298,6 @@ extern const REGISTRY_BIN PharLapTable =
   PharLapDestroy,
   ShowPharLapHeader,
   NULL,
-  NULL,
   PharLapPlatform,
   NULL,
   NULL,

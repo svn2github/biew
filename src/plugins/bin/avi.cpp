@@ -347,7 +347,6 @@ extern const REGISTRY_BIN aviTable =
   avi_destroy_fmt,
   Show_AVI_Header,
   NULL,
-  NULL,
   avi_platform,
   NULL,
   NULL,

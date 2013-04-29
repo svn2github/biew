@@ -976,7 +976,6 @@ extern const REGISTRY_BIN jvmTable =
   jvm_destroy_fmt,
   ShowJvmHeader,
   jvm_AppendRef,
-  fmtSetState,
   jvm_platform,
   jvm_bitness,
   NULL,

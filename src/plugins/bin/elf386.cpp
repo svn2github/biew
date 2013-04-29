@@ -2369,7 +2369,6 @@ extern const REGISTRY_BIN elf386Table =
   IsELF32, ELFinit, ELFdestroy,
   ShowELFHeader,
   AppendELFRef,
-  fmtSetState,
   ELFplatform,
   ELFbitness,
   ELFendian,

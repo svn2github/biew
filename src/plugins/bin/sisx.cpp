@@ -180,7 +180,6 @@ extern const REGISTRY_BIN sisxTable =
   sisx_destroy_fmt,
   Show_SisX_Header,
   NULL,
-  NULL,
   sisx_platform,
   NULL,
   NULL,

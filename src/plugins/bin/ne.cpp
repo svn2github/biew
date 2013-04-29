@@ -1539,7 +1539,6 @@ extern const REGISTRY_BIN neTable =
   IsNEFormat, NE_init, NE_destroy,
   NULL,
   AppendNERef,
-  fmtSetState,
   platformNE,
   bitnessNE,
   NULL,

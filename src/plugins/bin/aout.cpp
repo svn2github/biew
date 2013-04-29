@@ -188,7 +188,6 @@ extern const REGISTRY_BIN aoutTable =
   aout_destroy_fmt,
   ShowAOutHeader,
   NULL,
-  NULL,
   aout_platform,
   aout_bitness,
   aout_endian,

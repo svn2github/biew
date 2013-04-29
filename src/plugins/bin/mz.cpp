@@ -351,7 +351,6 @@ extern const REGISTRY_BIN mzTable =
   mz_destroy_fmt,
   ShowMZHeader,
   AppendMZRef,
-  NULL,
   mz_platform,
   NULL,
   NULL,

@@ -155,7 +155,6 @@ extern const REGISTRY_BIN sisTable =
   sis_destroy_fmt,
   Show_Sis_Header,
   NULL,
-  NULL,
   sis_platform,
   NULL,
   NULL,
