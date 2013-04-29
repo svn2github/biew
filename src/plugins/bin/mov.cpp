@@ -26,7 +26,7 @@ using namespace beye;
 #include "beyeutil.h"
 #include "reg_form.h"
 #include "bmfile.h"
-#include "bswap.h"
+#include "libbeye/bswap.h"
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"

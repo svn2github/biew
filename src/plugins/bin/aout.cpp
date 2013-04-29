@@ -20,7 +20,7 @@ using namespace beye;
 #include <stdio.h>
 #include <string.h>
 
-#include "bswap.h"
+#include "libbeye/bswap.h"
 #include "colorset.h"
 #include "bmfile.h"
 #include "beyeutil.h"

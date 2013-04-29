@@ -21,48 +21,6 @@
 extern "C" {
 #endif
 
-		/** Changes byte order in 32-bit number */
-#ifndef ByteSwapL
-#define ByteSwapL(_val)\
-  (((uint32_t)_val << 24) | (((uint32_t)_val & 0xFF00) << 8) |\
-  (((uint32_t)_val & 0xFF0000L) >> 8) | ((uint32_t)_val >> 24))
-#endif
-		/** Changes byte order in 16-bit number */
-#ifndef ByteSwapS
-#define ByteSwapS(_val)\
-  (((uint16_t)_val << 8) | ((uint16_t)_val >> 8))
-#endif
-
-		/** Changes byte order in 64-bit number */
-#ifndef ByteSwapLL
-__inline static uint64_t __ByteSwapLL(uint64_t x)\
-{ union { uint64_t __ll;		     		\
-	  uint32_t __l[2]; } __w, __r;		\
-	 __w.__ll = (x);			\
-	 __r.__l[0] = ByteSwapL (__w.__l[1]);	\
-	 __r.__l[1] = ByteSwapL (__w.__l[0]);	\
-	 return __r.__ll; }
-#define ByteSwapLL(x) __ByteSwapLL(x)
-#endif
-
-		/** Exchanges two bytes in memory.
-		  * @return         none
-		  * @param _val1    specified pointer to the first byte to be exchanged
-		  * @param _val2    specified pointer to the second byte to be exchanged
-		  * @note           Main difference from ByteSwap function family -
-				    it is work with different number, rather than
-				    changing byte order within given number.
-		 **/
-#ifndef __XchgB__
-#define __XchgB__(_val1,_val2)\
-    {\
-      register uint8_t _charv;\
-      _charv = *((uint8_t *)_val2);\
-      *((uint8_t *)_val2) = *((uint8_t *)_val1);\
-      *((uint8_t *)_val1) = _charv;\
-    }
-#endif
-
 		/** Performs interleaving of two buffers into destinition one.
 		  * @return         none
 		  * @param limit    specified size of evenbuffer and oddbuffer

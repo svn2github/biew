@@ -505,19 +505,18 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
     size_t i;
     show_usage:
     BeyeCtx->show_usage();
-    printm("%s\n",BEYE_VER_MSG);
-    printm(" Usage: beye [OPTIONS] file...\n\n");
-    for(i = 0;i < sizeof(beyeArg)/sizeof(struct tagbeyeArg);i++)
-    {
-      printm("  %s\t%s\n",beyeArg[i].key,beyeArg[i].prompt);
+    std::cerr<<BEYE_VER_MSG<<std::endl;
+    std::cerr<<" Usage: beye [OPTIONS] file...<<"<<std::endl<<std::endl;
+    for(i = 0;i < sizeof(beyeArg)/sizeof(struct tagbeyeArg);i++) {
+	std::cerr<<beyeArg[i].key<<" "<<beyeArg[i].prompt<<std::endl;
     }
-    printm("\n");
+    std::cerr<<std::endl;
     return EXIT_FAILURE;
  }
  udnInit(ini);
  ErrorWnd = WindowOpen(1,1,50,16,TWS_NONE | TWS_NLSOEM);
  if(ErrorWnd) twSetTitleAttr(ErrorWnd," Error ",TW_TMODE_CENTER,error_cset.border);
- else { printm("fatal error: can't create window"); return EXIT_FAILURE; }
+ else { std::cerr<<"fatal error: can't create window"<<std::endl; return EXIT_FAILURE; }
  twCentredWin(ErrorWnd,NULL);
  twSetColorAttr(error_cset.main);
  twSetFrameAttr(ErrorWnd,TW_DOUBLE_FRAME,error_cset.border);

@@ -221,15 +221,6 @@ namespace beye {
 		    **/
     char *__FASTCALL__ szKillSpaceAround(char *str,char *point_to);
 
-		   /** Prints formatted message into standard error stream
-		     * @return                number of printed characters
-		     * @param str             pointer to formatted string
-		     * @warning               Only this function must be used
-		     *                        for error reporting. (do not use
-		     *                        printf, fprintf, etc. !)
-		    **/
-    int  printm(const char *str,...);
-
     /** Internal structure of Linear memory container */
     typedef struct tag_linearArray {
 	unsigned long   nItems;    /**< Number of stored items */

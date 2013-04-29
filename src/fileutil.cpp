@@ -38,6 +38,7 @@ using namespace beye;
 #include "bconsole.h"
 #include "reg_form.h"
 #include "libbeye/bbio.h"
+#include "libbeye/bswap.h"
 #include "libbeye/twin.h"
 #include "libbeye/kbd_code.h"
 
@@ -813,10 +814,8 @@ static void  __FASTCALL__ EndianifyBlock(char * buff,unsigned len, int type)
   switch(type)
   {
     default:
-#ifdef INT64_C
     case 3: step = 8;
 	    break;
-#endif
     case 2: step = 4;
 	    break;
     case 1:
@@ -830,16 +829,12 @@ static void  __FASTCALL__ EndianifyBlock(char * buff,unsigned len, int type)
     switch(type)
     {
       default:
-
-#ifdef INT64_C
-      case 3: *((uint64_t *)buff) = ByteSwapLL(*((uint64_t *)buff));
+      case 3: *((uint64_t *)buff) = bswap_64(*((uint64_t *)buff));
 	      break;
-#endif
-
-      case 2: *((uint32_t *)buff) = ByteSwapL(*((uint32_t *)buff));
+      case 2: *((uint32_t *)buff) = bswap_32(*((uint32_t *)buff));
 	      break;
       case 1:
-	      *((uint16_t *)buff) = ByteSwapS(*((uint16_t *)buff));
+	      *((uint16_t *)buff) = bswap_16(*((uint16_t *)buff));
 	      break;
     }
   }
@@ -921,7 +916,7 @@ static void  __FASTCALL__ TranslateBlock(char * buff,unsigned len, const unsigne
   unsigned i;
   for(i = 0;i < len;i++)
   {
-    buff[i] = __Xlat__(xlt, (int)buff[i]);
+    buff[i] = xlt[(int)buff[i]];
   }
 }
 

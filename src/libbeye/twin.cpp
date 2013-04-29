@@ -21,6 +21,7 @@ using namespace beye;
  * @todo        Accelerate windows interaction algorithm
 **/
 #include <algorithm>
+#include <iostream>
 
 #include <string.h>
 #include <stdlib.h>
@@ -73,7 +74,7 @@ enum {
 
 TWindow *active;
 
-static void  __FASTCALL__ winerr(const char *str) { printm("\n\nInternal twin library error: %s\n",str); _exit(EXIT_FAILURE); }
+static void  __FASTCALL__ winerr(const char *str) { std::cerr<<std::endl<<std::endl<<"Internal twin library error: "<<str<<std::endl; _exit(EXIT_FAILURE); }
 static void  __FASTCALL__ wputc_oem(char ch,char oempg,char color,bool update);
 static void  __FASTCALL__ paint_internal(void);
 

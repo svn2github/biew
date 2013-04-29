@@ -24,6 +24,7 @@ using namespace beye;
     $Id: keyboard.c,v 1.14 2009/09/24 09:12:13 nickols_k Exp $
 */
 #include <algorithm>
+#include <iostream>
 
 #ifndef lint
 static const char rcs_id[] = "$Id: keyboard.c,v 1.14 2009/09/24 09:12:13 nickols_k Exp $";
@@ -465,7 +466,7 @@ void __FASTCALL__ ReadNextEvent(void)
 	mouse.pressed = 1;
 	key = KE_MOUSE;
 #ifdef	DEBUG
-	printm("mouse at %02X, %02X - %02X\n", mouse.x, mouse.y, mouse.buttons);
+	std::cerr<<"mouse at "<<std::hex<<mouse.x<<", "<<std::hex<<mouse.y<<" - "<<std::hex<<mouse.buttons<<std::endl;
 #endif
 	goto place_key;
     }
@@ -597,10 +598,8 @@ void __FASTCALL__ __init_keyboard(const char *user_cp)
 
     if (fcntl(in_fd, F_SETFL, fcntl(in_fd, F_GETFL) | _MODE_) < 0)
     {
-	printm("Can't set %X for %d: %s\nExiting..\n",
-		_MODE_,
-		in_fd,
-		strerror(errno));
+	std::cerr<<"Can't set "<<std::hex<<(_MODE_)<<" for "<<in_fd<<": "<<strerror(errno)<<std::endl;
+	std::cerr<<"Exiting..."<<std::endl;
 	exit(EXIT_FAILURE);
     }
 
@@ -614,7 +613,8 @@ void __FASTCALL__ __init_keyboard(const char *user_cp)
     tcsetattr(in_fd, TCSANOW, &tattr);
 
     if (on_console && (ioctl(in_fd, KDSKBMODE, K_RAW) < 0)) {
-	printm("Can't set keyboard raw mode: %s\nUsing VT100 emulation..\n", strerror(errno));
+	std::cerr<<"Can't set keyboard raw mode: "<<strerror(errno)<<std::endl;
+	std::cerr<<"Using VT100 emulation..."<<std::endl;
 	on_console = 0;
     }
 

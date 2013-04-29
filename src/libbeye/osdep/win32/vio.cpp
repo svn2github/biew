@@ -18,6 +18,7 @@ using namespace beye;
  * @note        Development, fixes and improvements
 **/
 #include <algorithm>
+#include <iostream>
 /* Reduce include size */
 #define WIN32_LEAN_AND_MEAN
 /* More strict type checking */
@@ -225,7 +226,8 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x,tAbsCoord y,const tvioBuff *buff,un
     {
       if(!(obuff = new CHAR_INFO[len]))
       {
-	printm("Memory allocation failed: %s\nExiting..", strerror(errno));
+	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
+	std::cerr<<"Exiting..."<<std::endl;
 	exit(EXIT_FAILURE);
       }
     }
@@ -282,7 +284,8 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x,tAbsCoord y,const tvioBuff *buff,un
     {
       if(!(attr = new unsigned short[len]))
       {
-	printm("Memory allocation failed: %s\nExiting..", strerror(errno));
+	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
+	std::cerr<<"Exiting..."<<std::endl;
 	exit(EXIT_FAILURE);
       }
     }
@@ -323,7 +326,8 @@ void __FASTCALL__ __vioReadBuff(tAbsCoord x,tAbsCoord y,tvioBuff *buff,unsigned 
     {
       if(!(obuff = new CHAR_INFO[len]))
       {
-	printm("Memory allocation failed: %s\nExiting..", strerror(errno));
+	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
+	std::cerr<<"Exiting..."<<std::endl;
 	exit(EXIT_FAILURE);
       }
     }
@@ -380,7 +384,8 @@ void __FASTCALL__ __vioReadBuff(tAbsCoord x,tAbsCoord y,tvioBuff *buff,unsigned 
     {
       if(!(attr = new unsigned short[len]))
       {
-	printm("Memory allocation failed: %s\nExiting..", strerror(errno));
+	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
+	std::cerr<<"Exiting..."<<std::endl;
 	exit(EXIT_FAILURE);
       }
     }

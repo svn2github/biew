@@ -20,7 +20,8 @@ using namespace beye;
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "bswap.h"
+
+#include "ppc.h"
 
 #include "beye.h"
 #include "reg_form.h"
@@ -32,7 +33,6 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/file_ini.h"
 
-#include "ppc.h"
 
 namespace beye {
 static DisMode* parent;
@@ -1400,21 +1400,6 @@ static const ppc_opcode ppc_table[] =
   {  "xoris",   D_FORM(27),           D_MASK, PPC_CPU, {D_RA,D_RS,D_UI,PPC_0} },
 };
 
-#if 0
-static uint32_t __FASTCALL__ biswap_32(uint32_t code) {
-   unsigned i;
-   uint32_t rval=0x00;
-   for(i=0;i<32;i++) if((code&(1<<i))==(1<<i)) rval = rval | (1<<(31-i));
-   return rval;
-}
-#if __BYTE_ORDER != __LITTLE_ENDIAN
-#define bie2mie_32(a) (a)
-#define lie2mie_32(a) (biswap_32(a))
-#else
-#define bie2mie_32(a) (biswap_32(a))
-#define lie2mie_32(a) (a)
-#endif
-#endif
 static DisasmRet __FASTCALL__ ppcDisassembler(__filesize_t ulShift,
 					      MBuffer buffer,
 					      unsigned flags)

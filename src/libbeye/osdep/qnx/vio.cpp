@@ -17,6 +17,7 @@ using namespace beye;
  * @since       2001
  * @note        Development, fixes and improvements
 **/
+#include <iostream>
 
 #include <stdlib.h>
 #include <string.h>
@@ -148,7 +149,8 @@ void __FASTCALL__ __init_vio(const char *user_cp,unsigned long flags)
 	violen=tvioWidth*tvioHeight;
 	if((viomem=malloc(violen*3))==NULL)
 	{
-		printm("Can't allocate memory for output: %s\nExiting..",strerror(errno));
+		std::cerr<<"Can't allocate memory for output: "<<strerror(errno)<<std::endl;
+		std::cerr<<"Exiting..."<<std::endl;
 		exit(errno);
 	}
 	memset(viomem,0,violen*3);

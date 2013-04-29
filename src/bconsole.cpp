@@ -21,6 +21,7 @@ using namespace beye;
  * @note        Added "ungotstring" function to enable inline assemblers
 **/
 #include <algorithm>
+#include <iostream>
 
 #include "libbeye/kbd_code.h"
 #include <stdarg.h>
@@ -77,8 +78,8 @@ void __FASTCALL__ initBConsole( unsigned long vio_flg,unsigned long twin_flg )
     }
     done:
     twDestroy();
-    printm("Size of video buffer must be larger than 79x2\n"
-	   "Current size of video buffer is: w=%u h=%u\n",tvioWidth,tvioHeight);
+    std::cerr<<"Size of video buffer must be larger than 79x2"<<std::endl;
+    std::cerr<<"Current size of video buffer is: w="<<tvioWidth<<" h="<<tvioHeight<<std::endl;
     exit(EXIT_FAILURE);
   }
 }

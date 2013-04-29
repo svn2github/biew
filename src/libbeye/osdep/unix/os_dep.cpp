@@ -27,6 +27,7 @@ using namespace beye;
 
     $Id: os_dep.c,v 1.10 2009/09/03 16:57:40 nickols_k Exp $
 */
+#include <iostream>
 
 #ifndef lint
 static const char rcs_id[] = "$Id: os_dep.c,v 1.10 2009/09/03 16:57:40 nickols_k Exp $";
@@ -156,7 +157,7 @@ static void cleanup(int sig)
     __term_keyboard();
     __term_vio();
     __term_sys();
-    printm("Terminated by signal %d\n", sig);
+    std::cerr<<"Terminated by signal "<<sig<<std::endl;
     _exit(EXIT_FAILURE);
 }
 
@@ -172,7 +173,9 @@ void __FASTCALL__ __init_sys(void)
     terminal = &termtab[i];
 
     if (terminal->type == TERM_UNKNOWN) {
-	printm("Sorry, I can't handle terminal type '%s'.\nIf you are sure it is vt100 compatible, try setting TERM to vt100:\n\n$ TERM=vt100 beye filename\n", t);
+	std::cerr<<"Sorry, I can't handle terminal type '"<<t<<"'."<<std::endl;
+	std::cerr<<"If you are sure it is vt100 compatible, try setting TERM to vt100:"<<std::endl<<std::endl;
+	std::cerr<<"$ TERM=vt100 beye filename"<<std::endl;
 	exit(2);
     }
 

@@ -18,6 +18,7 @@ using namespace beye;
  * @note        Development, fixes and improvements
  * @note        Big thanks to Mike Gorchak for tvision source codes.
 **/
+#include <iostream>
 
 #include <Ph.h>
 #include <stdio.h>
@@ -377,25 +378,25 @@ void __FASTCALL__ __init_vio(const char *user_cp,unsigned long flags)
 
 	if(!isatty(fileno(stdout)))
 	{
-		printm("Do not redirect output!\n");
+		std::cerr<<"Do not redirect output!"<<std::endl;
 		exit(-1);
 	}
 	tty_name=ttyname(fileno(stdout));
 	if(!tty_name)
 	{
-		printm("Can't get the name of the current terminal!\n");
+		std::cerr<<"Can't get the name of the current terminal!"<<std::endl;
 		exit(-1);
 	}
 	tty_file=fopen(tty_name,"w+b");
 	if(!tty_file)
 	{
-		printm("Can't open the %s terminal!\n",tty_name);
+		std::cerr<<"Can't open the "<<tty_name<<" terminal!"<<std::endl;
 		exit(-1);
 	}
 	tty_fd=fileno(tty_file);
 	if(!newterm(terminal,tty_file,stdin))
 	{
-		printm("Not connected to a terminal %s!\n",terminal);
+		std::cerr<<"Not connected to a terminal "<<terminal<<"!"<<std::endl;
 		exit(-1);
 	}
 
@@ -421,7 +422,8 @@ void __FASTCALL__ __init_vio(const char *user_cp,unsigned long flags)
 	violen=tvioWidth*tvioHeight;
 	if((viomem=malloc(violen*3))==NULL)
 	{
-		printm("Can't allocate memory for output: %s\nExiting..",strerror(errno));
+		std::cerr<<"Can't allocate memory for output: "<<strerror(errno)<<std::endl;
+		std::cerr<<"Exiting..."<<std::endl;
 		exit(errno);
 	}
 	memset(viomem,0,violen*3);

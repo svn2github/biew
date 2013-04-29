@@ -297,27 +297,6 @@ char * __FASTCALL__ szKillSpaceAround(char *str,char *place)
   return &str[idx-nmoves];
 }
 
-int printm(const char *str,...)
-{
-
-#define _out_ stderr
-
-    int i;
-    va_list args;
-
-
-    va_start(args,str);
-    i = vfprintf(_out_,str,args);
-    va_end(args);
-
-    fflush(_out_);
-
-    return i;
-
-#undef _out_
-
-}
-
 /*
    Using own code for qsort and bsearch functions is guarantee of stable work */
 
@@ -359,6 +338,29 @@ static  int		qsz;			/**< size of each record */
 static  long		thresh;			/**< THRESHold in chars */
 static  long		mthresh;		/**< MTHRESHold in chars */
 
+		/** Exchanges two bytes in memory.
+		  * @return         none
+		  * @param _val1    specified pointer to the first byte to be exchanged
+		  * @param _val2    specified pointer to the second byte to be exchanged
+		  * @note           Main difference from ByteSwap function family -
+				    it is work with different number, rather than
+				    changing byte order within given number.
+		 **/
+inline void __XchgB__(uint8_t* _val1,uint8_t* _val2) {
+#if defined(__i386__) || defined(__x86_64__)
+    register char _tmp;
+    __asm("xchgb	%b1,(%2)":
+	"=q"(_tmp):
+	"0"(*_val2),
+	"r"(_val1));
+    *_val2 = _tmp;
+#else
+    register uint8_t _charv;
+    _charv = *((uint8_t *)_val2);
+    *((uint8_t *)_val2) = *((uint8_t *)_val1);
+    *((uint8_t *)_val1) = _charv;
+#endif
+}
 /**
  * qst:
  * Do a quicksort

@@ -23,7 +23,7 @@ using namespace beye;
 #include <string.h>
 #include <stdio.h>
 
-#include "bswap.h"
+#include "libbeye/bswap.h"
 #include "bconsole.h"
 #include "beyehelp.h"
 #include "colorset.h"

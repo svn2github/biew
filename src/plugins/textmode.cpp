@@ -619,7 +619,7 @@ static const char * mod_names[] =
 void __FASTCALL__ txt_cvt_full(char * str,int size,const unsigned char *tmpl)
 {
   int i;
-  for(i = 0;i < size;i++) str[i] = __Xlat__(tmpl,(unsigned char)str[i]);
+  for(i = 0;i < size;i++) str[i] = tmpl[(unsigned char)str[i]];
 }
 
 void __FASTCALL__ txt_cvt_hi80(char * str,unsigned size,const unsigned char *tmpl)
@@ -629,7 +629,7 @@ void __FASTCALL__ txt_cvt_hi80(char * str,unsigned size,const unsigned char *tmp
  for(i = 0;i < size;i++)
  {
    cc = str[i];
-   str[i] = cc >= 0x80 ? __Xlat__(tmpl,cc-0x80) : cc;
+   str[i] = cc >= 0x80 ? tmpl[cc-0x80] : cc;
  }
 }
 
@@ -640,7 +640,7 @@ void __FASTCALL__ txt_cvt_lo80(char * str,unsigned size,const unsigned char *tmp
  for(i = 0;i < size;i++)
  {
    cc = str[i];
-   str[i] = cc < 0x80 ? __Xlat__(tmpl,cc) : cc;
+   str[i] = cc < 0x80 ? tmpl[cc] : cc;
  }
 }
 

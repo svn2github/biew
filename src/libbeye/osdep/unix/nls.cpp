@@ -28,6 +28,7 @@ using namespace beye;
 
     $Id: nls.c,v 1.11 2009/09/20 14:37:19 nickols_k Exp $
 */
+#include <iostream>
 
 #ifndef lint
 static const char copyright[] = "$Id: nls.c,v 1.11 2009/09/20 14:37:19 nickols_k Exp $";
@@ -122,7 +123,7 @@ void __FASTCALL__ __nls_OemToFs(unsigned char *buff, unsigned int len)
     if (code != NULL)
     {
 	for (i = 0; i < len; i++)
-	    if (buff[i] >= 0x80) buff[i] = __Xlat__((const uint8_t*)code, buff[i] - 0x80);
+	    if (buff[i] >= 0x80) buff[i] = code[buff[i] - 0x80];
     }
 }
 
@@ -161,7 +162,7 @@ any_t* nls_init(const char *to_cp,const char *src_cp) {
     errno=0;
     ic=iconv_open(to_cp,src_cp);
     if(errno) {
-	printm("ICONV(%s,%s): Open with error: %s\n",to_cp,src_cp,strerror(errno));
+	std::cerr<<"ICONV("<<to_cp<<","<<src_cp<<"): Open with error: "<<strerror(errno)<<std::endl;
     }
     return ic;
 #else
@@ -201,7 +202,7 @@ char *nls_recode2screen_cp(any_t* ic,const char *srcb,unsigned* len)
 	{
 	    delete obuff;
 	    if(warned<2) {
-		printm("ICONV: Can't recode: %s\n",strerror(errno));
+		std::cerr<<"ICONV: Can't recode: "<<strerror(errno)<<std::endl;
 		warned++;
 	    }
 	    goto do_def;

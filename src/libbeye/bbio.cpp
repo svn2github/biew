@@ -20,6 +20,7 @@ using namespace beye;
  *              one opened stream
 **/
 #include <algorithm>
+#include <iostream>
 
 #include <sys/stat.h>
 #include <stdio.h>
@@ -534,7 +535,7 @@ bool BFile::reread()
       FLength  = __mmfSize(b.mmb->mmf);
     }
     /** @todo Most reliable code */
-    else { printm("Internal error occured in __mmfSync\n"); exit(EXIT_FAILURE); }
+    else { std::cerr<<"Internal error occured in __mmfSync"<<std::endl; exit(EXIT_FAILURE); }
   }
   else
   {

@@ -23,6 +23,7 @@ using namespace beye;
 
     $Id: vio.c,v 1.16 2009/09/20 14:39:37 nickols_k Exp $
 */
+#include <iostream>
 
 #ifndef lint
 static const char rcs_id[] = "$Id: vio.c,v 1.16 2009/09/20 14:39:37 nickols_k Exp $";
@@ -190,7 +191,8 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x, tAbsCoord y, const tvioBuff *buff,
     unsigned slen;
 
     if (pb == NULL) {
-	printm("Memory allocation failed: %s\nExiting..", strerror(errno));
+	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
+	std::cerr<<"Exiting..."<<std::endl;
 	exit(errno);
     }
     dpb=pb;
@@ -288,7 +290,8 @@ void __FASTCALL__ __init_vio(const char *user_cp,unsigned long flags)
     do_nls = 1;
 
     if ((vtmp = new char [VTMP_LEN]) == NULL) {
-	printm("Can't allocate memory for output: %s\nExiting..", strerror(errno));
+	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
+	std::cerr<<"Exiting..."<<std::endl;
 	exit(errno);
     }
     memset(vtmp, 0, VTMP_LEN);
@@ -309,7 +312,8 @@ void __FASTCALL__ __init_vio(const char *user_cp,unsigned long flags)
     violen = tvioWidth * tvioHeight;
 
     if ((viomem = new unsigned char[(violen << 1) + violen]) == NULL) {
-	printm("Can't allocate memory for output: %s\nExiting..", strerror(errno));
+	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
+	std::cerr<<"Exiting..."<<std::endl;
 	exit(errno);
     }
     memset(viomem, 0, (violen << 1) + violen);

@@ -17,6 +17,8 @@ using namespace beye;
  * @since       1999
  * @note        Development, fixes and improvements
 **/
+#include <iostream>
+
 #include <dos.h>
 #include <string.h>
 #include <stdlib.h>
@@ -202,7 +204,8 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x,tAbsCoord y,const tvioBuff *buff,un
     {
       if(!(resbuff = new uint16_t[len]))
       {
-	printm("Memory allocation failed: %s\nExiting..", strerror(errno));
+	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
+	std::cerr<<"Exiting..."<<std::endl;
 	exit(EXIT_FAILURE);
       }
     }
@@ -257,7 +260,8 @@ void __FASTCALL__ __vioReadBuff(tAbsCoord x,tAbsCoord y,tvioBuff *buff,unsigned 
     {
       if(!(resbuff = new uint16_t[len]))
       {
-	printm("Memory allocation failed: %s\nExiting..", strerror(errno));
+	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
+	std::cerr<<"Exiting..."<<std::endl;
 	exit(EXIT_FAILURE);
       }
     }

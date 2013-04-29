@@ -18,29 +18,25 @@
 #ifndef __BIN_UTIL__H
 #define __BIN_UTIL__H
 
-#ifndef __BBIO_H
+#include "libbeye/bswap.h"
 #include "libbeye/bbio.h"
-#endif
-
-#ifndef __BEYEUTIL__H
 #include "beyeutil.h"
-#endif
 
 namespace beye {
-#if __BYTE_ORDER == __LITTLE_ENDIAN
+#if __BYTE_ORDER == __BIG_ENDIAN
 #define  FMT_WORD(cval,is_big)\
- (uint16_t)((bool)is_big ? ByteSwapS(*(uint16_t *)(uint8_t *)cval) : *(uint16_t *)(uint8_t *)cval)
+ (uint16_t)(!(bool)is_big ? bswap_16(*(uint16_t *)(uint8_t *)cval) : *(uint16_t *)(uint8_t *)cval)
 #define  FMT_DWORD(cval,is_big)\
- (uint32_t)((bool)is_big ? ByteSwapL(*(uint32_t *)(uint8_t *)cval) : *(uint32_t *)(uint8_t *)cval)
+ (uint32_t)(!(bool)is_big ? bswap_32(*(uint32_t *)(uint8_t *)cval) : *(uint32_t *)(uint8_t *)cval)
 #define  FMT_QWORD(cval,is_big)\
- (uint64_t)((bool)is_big ? ByteSwapLL(*(uint64_t *)(uint8_t *)cval) : *(uint64_t *)(uint8_t *)cval)
+ (uint64_t)(!(bool)is_big ? bswap_64(*(uint64_t *)(uint8_t *)cval) : *(uint64_t *)(uint8_t *)cval)
 #else
 #define  FMT_WORD(cval,is_big)\
- (uint16_t)(!(bool)is_big ? ByteSwapS(*(uint16_t *)(uint8_t *)cval) : *(uint16_t *)(uint8_t *)cval)
+ (uint16_t)((bool)is_big ? bswap_16(*(uint16_t *)(uint8_t *)cval) : *(uint16_t *)(uint8_t *)cval)
 #define  FMT_DWORD(cval,is_big)\
- (uint32_t)(!(bool)is_big ? ByteSwapL(*(uint32_t *)(uint8_t *)cval) : *(uint32_t *)(uint8_t *)cval)
+ (uint32_t)((bool)is_big ? bswap_32(*(uint32_t *)(uint8_t *)cval) : *(uint32_t *)(uint8_t *)cval)
 #define  FMT_QWORD(cval,is_big)\
- (uint64_t)(!(bool)is_big ? ByteSwapLL(*(uint64_t *)(uint8_t *)cval) : *(uint64_t *)(uint8_t *)cval)
+ (uint64_t)((bool)is_big ? bswap_64(*(uint64_t *)(uint8_t *)cval) : *(uint64_t *)(uint8_t *)cval)
 #endif
 
     struct PubName {

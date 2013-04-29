@@ -21,7 +21,7 @@ using namespace beye;
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "bswap.h"
+#include "libbeye/bswap.h"
 #include "reg_form.h"
 #include "plugins/disasm.h"
 #include "beyehelp.h"

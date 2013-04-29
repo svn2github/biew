@@ -27,6 +27,7 @@ using namespace beye;
 
     $Id: vio.c,v 1.18 2009/09/03 16:57:40 nickols_k Exp $
 */
+#include <iostream>
 
 #ifndef lint
 static const char rcs_id[] = "$Id: vio.c,v 1.18 2009/09/03 16:57:40 nickols_k Exp $";
@@ -92,7 +93,7 @@ static any_t*nls_handle;
 #define _addr(x, y)	(viomem + (x) + (y) * tvioWidth)
 #define _bg(x)		((x) >> 4)
 #define _fg(x)		((x) & 0x0f)
-#define _2color(x)	__Xlat__(__ansi_color, (x) & 7)
+#define _2color(x)	__ansi_color[(x)&7]
 /* #define _2color(x) (char)__ansi_color[((x) & 7)] */
 
 #define VT100_CLEARSCREEN	"\033[2J"
@@ -210,7 +211,8 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x, tAbsCoord y, const tvioBuff *buff,
 
     pb = len > VMAX_X ? new unsigned char [LEN(len)] : cache_pb;
     if (pb == NULL) {
-	printm("Memory allocation failed: %s\nExiting..", strerror(errno));
+	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
+	std::cerr<<"Exiting..."<<std::endl;
 	exit(errno);
     }
 
@@ -245,8 +247,8 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x, tAbsCoord y, const tvioBuff *buff,
 #define ca buff->attrs[i]
 
 	    if (cp && cp >= _PSMIN && cp <= _PSMAX && !is_unicode) {
-		c = (output_7 || no_frames) ? __Xlat__(frames_dumb,cp - _PSMIN) :
-		    (output_G1)	? __Xlat__(frames_vt100,cp - _PSMIN) : cp;
+		c = (output_7 || no_frames) ? frames_dumb[cp - _PSMIN] :
+		    (output_G1)	? frames_vt100[cp - _PSMIN] : cp;
 /*
 		c = (output_7)	? frames_dumb[cp - _PSMIN] :
 		    (output_G1)	? frames_vt100[cp - _PSMIN] : cp;
@@ -337,7 +339,8 @@ void __FASTCALL__ __init_vio(const char *user_cp,unsigned long flags)
 	if ((viohandle = open(vcsa_name, O_RDWR)) < 0) {
 	    sprintf(vcsa_name, "/dev/vcsa");
 	    if ((viohandle = open(vcsa_name, O_RDWR)) < 0) {
-		printm("Can't open %s: %s\nDirect console access disabled..\n", vcsa_name, strerror(errno));
+		std::cerr<<"Can't open "<<vcsa_name<<": "<<strerror(errno)<<std::endl;
+		std::cerr<<"Direct console access disabled..."<<std::endl;
 		on_console = 0;
 	    }
 	}
@@ -374,7 +377,8 @@ void __FASTCALL__ __init_vio(const char *user_cp,unsigned long flags)
     vtmp = new char [VTMP_LEN];
     viomem = new unsigned char[(violen << 1) + violen];
     if (vtmp == NULL || viomem == NULL) {
-	printm("Can't allocate memory for output: %s\nExiting..\n", strerror(errno));
+	std::cerr<<"Can't allocate memory for output: "<<strerror(errno)<<std::endl;
+	std::cerr<<"Exiting..."<<std::endl;
 	exit(errno);
     }
     memset(viomem, 0, (violen << 1) + violen);

@@ -362,6 +362,7 @@ print_config HAVE_ config.h config.mak popen
 check_func2 stdio.h pclose
 print_config HAVE_ config.h config.mak pclose
 
+
 check_header sys/resource.h
 print_config HAVE_ config.h config.mak sys_resource_h
 
@@ -370,6 +371,9 @@ print_config HAVE_ config.h config.mak mprotect
 
 check_header endian.h
 print_config HAVE_ config.h config.mak endian_h
+
+check_header byteswap.h
+print_config HAVE_ config.h config.mak byteswap_h
 
 if disabled endian_h; then
 disable bigendian

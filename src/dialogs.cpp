@@ -377,13 +377,7 @@ static void  __FASTCALL__ FFStaticPaint(TWindow * wdlg,char * fname,char * st,ch
     {
       twSetColorAttr(dialog_cset.group.active);
       for(i = 0;i < 4;i++) { twGotoXY(54,i + 1); twPutS(msgTypeBitness[i]); }
-#ifndef INT64_C
-      twSetColorAttr(dialog_cset.group.disabled);
-#endif
       twGotoXY(54,5); twPutS(msgTypeBitness[i]);
-#ifndef INT64_C
-      twSetColorAttr(dialog_cset.group.active);
-#endif
       twGotoXY(56,2); twPutChar((flg & FSDLG_BTNSMASK) == 0 ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
       twGotoXY(56,3); twPutChar((flg & FSDLG_BTNSMASK) == 1 ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
       twGotoXY(56,4); twPutChar((flg & FSDLG_BTNSMASK) == 2 ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
@@ -531,9 +525,6 @@ bool __FASTCALL__ GetFStoreDlg(const char *title,char * fname,unsigned long * fl
 			      unsigned long val;
 			      val = ((*flags) & FSDLG_BTNSMASK);
 			      val++;
-#ifndef INT64_C
-			      if(val > 2) val = 0;
-#endif
 			      val &= FSDLG_BTNSMASK;
 			      (*flags) &= ~FSDLG_BTNSMASK;
 			      (*flags) |= val;

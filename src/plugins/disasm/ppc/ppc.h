@@ -1,6 +1,8 @@
 #ifndef POWER_PC_G5
 #define POWER_PC_G5 1
 
+#include "libbeye/bswap.h"
+
 namespace beye {
 enum {
     TAB_POS		=10,
@@ -43,7 +45,7 @@ enum {
     PPC_SPE		=0x00000200UL,
     PPC_DIALECT		=0x0000FF00UL
 };
-#if __BYTE_ORDER != __LITTLE_ENDIAN
+#if __BYTE_ORDER == __BIG_ENDIAN
 /* Native endian versions: */
 #define PPC_GET_BITS(opcode,off,len) (((uint32_t)(opcode)>>off)&((1<<len)-1))
 #define PPC_PUT_BITS(bits,off,len) (((uint32_t)(bits)&((1<<len)-1))<<off)

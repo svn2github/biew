@@ -23,6 +23,7 @@ using namespace beye;
 
     $Id: keyboard.c,v 1.9 2009/09/20 13:43:37 nickols_k Exp $
 */
+#include <iostam>
 
 #ifndef lint
 static const char rcs_id[] = "$Id: keyboard.c,v 1.9 2009/09/20 13:43:37 nickols_k Exp $";
@@ -469,11 +470,9 @@ void __FASTCALL__ __init_keyboard(const char *user_cp)
 
     if (fcntl(in_fd, F_SETFL, fcntl(in_fd, F_GETFL) | _MODE_) < 0)
     {
-	    printm("Can't set %X for %d: %s\nExiting..\n",
-		_MODE_,
-		in_fd,
-		strerror(errno));
-	    exit(EXIT_FAILURE);
+	std::cerr<<"Can't set "<<std::hex<<(_MODE_)<<" for "<<in_fd<<": "<<strerror(errno)<<std::endl;
+	std::cerr<<"Exiting..."<<std::endl;
+	exit(EXIT_FAILURE);
     }
 
     tcgetattr(in_fd, &tattr);

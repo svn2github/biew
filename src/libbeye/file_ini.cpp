@@ -20,6 +20,7 @@ using namespace beye;
  * @todo        Reentrance ini library
 **/
 #include <algorithm>
+#include <iostream>
 
 #include <string.h>
 #include <stdlib.h>
@@ -191,7 +192,7 @@ static int __FASTCALL__ StdError(int ne,int row,const char *addinfo)
     if(FiUserMessage) fprintf(herr,"User message : %s\n",FiUserMessage);
     if(fi_Debug_Str) if(*fi_Debug_Str) fprintf(herr,"Debug info: '%s'\n",fi_Debug_Str);
     fclose(herr);
-    printm("\nError in .ini file.\nFile fi_syser.$$$ created.\n");
+    std::cerr<<std::endl<<"Error in .ini file."<<std::endl<<"File fi_syser.$$$ created."<<std::endl;
     return __FI_EXITPROC;
 }
 

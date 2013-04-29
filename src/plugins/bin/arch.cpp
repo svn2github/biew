@@ -24,7 +24,7 @@ using namespace beye;
 #include <stdio.h>
 #include <time.h>
 
-#include "bswap.h"
+#include "libbeye/bswap.h"
 #include "bmfile.h"
 #include "bin_util.h"
 #include "beyehelp.h"

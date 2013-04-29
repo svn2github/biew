@@ -21,6 +21,7 @@ using namespace beye;
  * @since       11.2007
  * @note        Added __get_home_dir() and some optimizations
 **/
+#include <iostream>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -119,7 +120,7 @@ static void cleanup(int sig)
 	__term_keyboard();
 	__term_vio();
 	__term_sys();
-	printm("Terminated by signal %d\n", sig);
+	std::cerr<<"Terminated by signal" <<sig<<std::endl;
 	_exit(1);
 }
 
