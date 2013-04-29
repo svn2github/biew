@@ -358,8 +358,6 @@ extern const REGISTRY_BIN mzTable =
   mzVA2PA,
   mzPA2VA,
   NULL,
-  NULL,
-  NULL,
   NULL
 };
 } // namespace beye

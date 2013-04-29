@@ -983,8 +983,6 @@ extern const REGISTRY_BIN jvmTable =
   jvm_VA2PA,
   jvm_PA2VA,
   jvm_GetPubSym,
-  jvm_GetObjAttr,
-  NULL,
-  NULL
+  jvm_GetObjAttr
 };
 } // namespace beye

@@ -305,8 +305,6 @@ extern const REGISTRY_BIN PharLapTable =
   NULL,
   NULL,
   NULL,
-  NULL,
-  NULL,
   NULL
 };
 } // namespace beye

@@ -749,8 +749,6 @@ extern const REGISTRY_BIN coff386Table =
   coff386_VA2PA,
   coff386_PA2VA,
   coff386_GetPubSym,
-  coff386_GetObjAttr,
-  NULL,
-  NULL
+  coff386_GetObjAttr
 };
 } // namespace beye

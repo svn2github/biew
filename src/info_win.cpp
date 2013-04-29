@@ -558,8 +558,6 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
   twGotoXY(1,1);
   wait_wnd = PleaseWaitWnd();
   cfpos = BMGetCurrFilePos();
-  if(beye_context().active_format()->prepare_structs)
-	   beye_context().active_format()->prepare_structs(ctrl_pos,ctrl_pos);
   va = beye_context().active_format()->pa2va ? beye_context().active_format()->pa2va(ctrl_pos) : ctrl_pos;
   vaddr[0] = '\0';
   sprintf(&vaddr[strlen(vaddr)],"%016llXH",va);
@@ -649,7 +647,6 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
     }
   }
   exit:
-  if(beye_context().active_format()->drop_structs) beye_context().active_format()->drop_structs();
   BMSeek(cfpos,BM_SEEK_SET);
   CloseWnd(hwnd);
   return ret_addr;

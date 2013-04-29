@@ -1546,8 +1546,6 @@ extern const REGISTRY_BIN neTable =
   neVA2PA,
   nePA2VA,
   neGetPubSym,
-  neGetObjAttr,
-  NULL,
-  NULL
+  neGetObjAttr
 };
 } // namespace beye

@@ -725,8 +725,6 @@ extern const REGISTRY_BIN nlm386Table =
   NLMVA2PA,
   NLMPA2VA,
   NLMGetPubSym,
-  NLMGetObjAttr,
-  NULL,
-  NULL
+  NLMGetObjAttr
 };
 } // namespace beye

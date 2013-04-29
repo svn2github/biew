@@ -346,8 +346,6 @@ extern const REGISTRY_BIN leTable =
   NULL,
   NULL,
   NULL,
-  NULL,
-  NULL,
   NULL
 };
 } // namespace beye

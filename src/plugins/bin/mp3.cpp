@@ -469,8 +469,6 @@ extern const REGISTRY_BIN mp3Table =
   NULL,
   NULL,
   NULL,
-  NULL,
-  NULL,
   NULL
 };
 } // namespace beye

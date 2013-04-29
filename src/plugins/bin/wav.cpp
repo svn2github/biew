@@ -268,8 +268,6 @@ extern const REGISTRY_BIN wavTable =
   NULL,
   NULL,
   NULL,
-  NULL,
-  NULL,
   NULL
 };
 } // namespace beye

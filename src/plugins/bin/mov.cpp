@@ -86,8 +86,6 @@ extern const REGISTRY_BIN movTable =
   NULL,
   NULL,
   NULL,
-  NULL,
-  NULL,
   NULL
 };
 } // namespace beye

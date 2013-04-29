@@ -516,8 +516,6 @@ extern const REGISTRY_BIN lmfTable=
 	lmf_va2pa,
 	lmf_pa2va,
 	NULL,
-	NULL,
-	NULL,
 	NULL
 };
 } // namespace beye

@@ -46,8 +46,6 @@ extern const REGISTRY_BIN binTable =
   NULL,
   NULL,
   NULL,
-  NULL,
-  NULL,
   NULL
 };
 } // namespace beye

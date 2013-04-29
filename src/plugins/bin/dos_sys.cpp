@@ -131,8 +131,6 @@ extern const REGISTRY_BIN dossysTable =
   NULL,
   NULL,
   NULL,
-  NULL,
-  NULL,
   NULL
 };
 } // namespace beye

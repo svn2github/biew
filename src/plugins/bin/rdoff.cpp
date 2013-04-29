@@ -779,8 +779,6 @@ extern const REGISTRY_BIN rdoffTable =
   rdoffVA2PA,
   rdoffPA2VA,
   rdoffGetPubSym,
-  rdoffGetObjAttr,
-  NULL,
-  NULL
+  rdoffGetObjAttr
 };
 } // namespace beye

@@ -69,8 +69,6 @@ extern const REGISTRY_BIN asfTable =
   NULL,
   NULL,
   NULL,
-  NULL,
-  NULL,
   NULL
 };
 } // namespace beye

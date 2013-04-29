@@ -102,8 +102,6 @@ extern const REGISTRY_BIN rdoff2Table =
   NULL,
   NULL,
   NULL,
-  NULL,
-  NULL,
   NULL
 };
 } // namespace beye

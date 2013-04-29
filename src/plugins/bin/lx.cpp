@@ -1216,8 +1216,6 @@ extern const REGISTRY_BIN lxTable =
   lxVA2PA,
   lxPA2VA,
   NULL,
-  NULL,
-  NULL,
   NULL
 };
 } // namespace beye

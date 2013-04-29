@@ -86,8 +86,6 @@ extern const REGISTRY_BIN mpegTable =
   NULL,
   NULL,
   NULL,
-  NULL,
-  NULL,
   NULL
 };
 } // namespace beye

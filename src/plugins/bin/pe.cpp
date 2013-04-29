@@ -1364,8 +1364,6 @@ extern const REGISTRY_BIN peTable =
   peVA2PA,
   pePA2VA,
   peGetPubSym,
-  peGetObjAttr,
-  NULL,
-  NULL
+  peGetObjAttr
 };
 } // namespace beye

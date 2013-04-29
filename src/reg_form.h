@@ -163,17 +163,6 @@ struct REGISTRY_BIN
 			  **/
   unsigned    (__FASTCALL__ *GetObjAttr)(__filesize_t pa,char *name,unsigned cb_name,
 			      __filesize_t *start,__filesize_t *end,int *_class,int *bitness);
-
-			 /** Prepares internal buffers for work file structures.
-			   * @param start     indicates start position in the file, that is required for disassembler
-			   * @param end       indicates end position in the file, that is required for disassembler
-			   * return           false if success, true if an error
-			   *                  is occured (sample: out of memory)
-			   * @note            It is called before GetPubSym and GetObjAttr
-			  **/
-  bool         (__FASTCALL__ *prepare_structs)(__filesize_t start,__filesize_t end);
-			 /** Cleans internal buffers after stopping of structural disassembler */
-  void          (__FASTCALL__ *drop_structs)( void );
 };
 
 typedef struct tag_REGISTRY_TOOL

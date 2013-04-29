@@ -187,8 +187,6 @@ extern const REGISTRY_BIN sisxTable =
   NULL,
   NULL,
   NULL,
-  NULL,
-  NULL,
   NULL
 };
 } // namespace beye

@@ -354,8 +354,6 @@ extern const REGISTRY_BIN aviTable =
   NULL,
   NULL,
   NULL,
-  NULL,
-  NULL,
   NULL
 };
 } // namespace beye

@@ -2376,8 +2376,6 @@ extern const REGISTRY_BIN elf386Table =
   elfVA2PA,
   elfPA2VA,
   elfGetPubSym,
-  elfGetObjAttr,
-  NULL,
-  NULL
+  elfGetObjAttr
 };
 } // namespace beye

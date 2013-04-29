@@ -137,8 +137,6 @@ extern const REGISTRY_BIN OldPharLapTable =
   NULL,
   NULL,
   NULL,
-  NULL,
-  NULL,
   NULL
 };
 } // namespace beye
