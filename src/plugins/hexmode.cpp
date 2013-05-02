@@ -261,7 +261,7 @@ void HexMode::misckey_action () /* EditHex */
     }
     CloseWnd(ewnd[0]);
     CloseWnd(ewnd[1]);
-    PaintTitle();
+    beye_context().PaintTitle();
 }
 
 void HexMode::check_width_corr()

@@ -95,8 +95,6 @@ extern char last_skin_error[];
 static volatile char antiviral_hole1[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 
 static BeyeContext* BeyeCtx=NULL;
-static addendum* addons=NULL;
-static sysinfo*  sysinfo=NULL;
 
 static volatile char antiviral_hole2[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 
@@ -217,7 +215,7 @@ static const struct tagbeyeArg {
   { "-?", "display this screen" }
 };
 
-static int  __FASTCALL__ queryKey(const std::string& arg)
+int BeyeContext::queryKey(const std::string& arg)
 {
   int ret = -1;
   size_t i;
@@ -302,7 +300,7 @@ void BeyeContext::detect_binfmt()
  }
 }
 
-void PaintTitle( void )
+void BeyeContext::PaintTitle() const
 {
  twUseWin(TitleWnd);
  twFreezeWin(TitleWnd);
@@ -548,20 +546,16 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  }
  BeyeCtx->detect_binfmt();
  BeyeCtx->init_modes(ini);
- addons = new(zeromem) addendum;
- sysinfo= new(zeromem) class sysinfo;
  if(ini) iniCloseFile(ini);
  MainWnd = WindowOpen(1,2,tvioWidth,tvioHeight-1,TWS_NONE);
  twSetColorAttr(browser_cset.main);
  twClearWin();
- PaintTitle();
+ BeyeCtx->PaintTitle();
  if(!BeyeCtx->is_valid_ini_args() || BeyeCtx->LastOffset > BMGetFLength()) BeyeCtx->LastOffset = 0;
  twShowWin(MainWnd);
  BeyeCtx->main_loop();
  BeyeCtx->LastOffset = BMGetCurrFilePos();
  BeyeCtx->save_ini_info();
- delete sysinfo;
- delete addons;
  if(BeyeCtx->iniPreserveTime && ftim_ok) __OsSetFTime(BeyeCtx->ArgVector1.c_str(),&ftim);
  Bye:
  return retval;
@@ -659,6 +653,9 @@ BeyeContext::BeyeContext(const std::vector<std::string>& _argv, const std::map<s
 	    new_file_size(FILESIZE_MAX),
 	    code_guider(new(zeromem) CodeGuider)
 {
+    addons = new(zeromem) addendum;
+    sysinfo= new(zeromem) class sysinfo;
+
     modes.push_back(&textMode);
     modes.push_back(&binMode);
     modes.push_back(&hexMode);
@@ -706,6 +703,8 @@ BeyeContext::~BeyeContext() {
     delete activeMode;
     if(active_format()->destroy) active_format()->destroy();
 
+    delete sysinfo;
+    delete addons;
     delete LastOpenFileName;
     delete _shortname;
     delete code_guider;

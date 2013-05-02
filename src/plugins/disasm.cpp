@@ -420,7 +420,7 @@ void DisMode::misckey_action() /* disEdit */
     }
     EditMode = EditMode ? false : true;
     CloseWnd(ewnd);
-    PaintTitle();
+    beye_context().PaintTitle();
 }
 
 static const char *refsdepth_names[] =

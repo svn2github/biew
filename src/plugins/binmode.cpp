@@ -266,7 +266,7 @@ void BinMode::misckey_action() /* EditBin */
 	editDestroyBuffs();
     }
     CloseWnd(ewin);
-    PaintTitle();
+    beye_context().PaintTitle();
 }
 
 void BinMode::read_ini(hIniProfile *ini)

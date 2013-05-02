@@ -12,6 +12,8 @@
 #include <string>
 
 namespace beye {
+    class addendum;
+    class sysinfo;
     class BeyeContext : public Opaque {
 	public:
 	    BeyeContext(const std::vector<std::string>& argv, const std::map<std::string,std::string>& envm);
@@ -61,6 +63,8 @@ namespace beye {
 
 	    CodeGuider&		codeguider() const { return *code_guider; }
 
+	    void		PaintTitle() const;
+
 	    std::string ArgVector1;
 	    char ini_ver[32];
 	    std::string help_name;
@@ -79,6 +83,7 @@ namespace beye {
 	    __filesize_t LastOffset;
 	private:
 	    void		auto_detect_mode();
+	    int			queryKey(const std::string& arg);
 
 	    Opaque		opaque;
 	    Plugin*		activeMode;
@@ -97,6 +102,8 @@ namespace beye {
 	    std::vector<const REGISTRY_BIN*> formats;
 	    std::vector<const Plugin_Info*> modes;
 	    CodeGuider*		code_guider;
+	    addendum*		addons;
+	    class sysinfo*	sysinfo;
     };
     BeyeContext& beye_context();
 } // namespace beye
