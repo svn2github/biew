@@ -19,9 +19,8 @@
 #ifndef __FILE_INI_RUNTIME_SUPPORT_SYSTEM__
 #define __FILE_INI_RUNTIME_SUPPORT_SYSTEM__ 1
 
-#ifndef __BBIO_H
 #include "libbeye/bbio.h"
-#endif
+using namespace beye;
 
 /**
     List of possible errors that are generic

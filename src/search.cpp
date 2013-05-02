@@ -108,7 +108,7 @@ static __filesize_t  __FASTCALL__  ___lfind(const char *sfrom,
   unsigned char __search_len;
   unsigned char ch,ch1;
   char cbuff[MAX_SEARCH_SIZE];
-  symb_size = beye_context().active_mode()->get_symbol_size();
+  symb_size = beye_context().active_mode().get_symbol_size();
   /*
    * Cache initialization for adapted Boyer-Moore search algorithm
   */
@@ -163,7 +163,7 @@ static __filesize_t  __FASTCALL__  ___lfind(const char *sfrom,
       memcpy(nbuff,&sfrom[start],symb_size);
     else
       BMReadBufferEx(nbuff,symb_size,start,BFile::Seek_Set);
-    if((beye_context().active_mode()->flags() & Plugin::Text) == Plugin::Text) beye_context().active_mode()->convert_cp(nbuff,symb_size,false);
+    if((beye_context().active_mode().flags() & Plugin::Text) == Plugin::Text) beye_context().active_mode().convert_cp(nbuff,symb_size,false);
     ch = nbuff[0];
     if(!(beyeFlg & SF_CASESENS)) ch = toupper(ch);
     if(cache[ch])
@@ -176,8 +176,8 @@ static __filesize_t  __FASTCALL__  ___lfind(const char *sfrom,
 	  memcpy(fbuff,&sfrom[findptr],pattern_size*symb_size);
 	else
 	  BMReadBufferEx((any_t*)fbuff,pattern_size*symb_size,findptr,BFile::Seek_Set);
-	if((beye_context().active_mode()->flags() & Plugin::Text) == Plugin::Text)
-	     __search_len = beye_context().active_mode()->convert_cp((char *)fbuff,pattern_size*symb_size,false);
+	if((beye_context().active_mode().flags() & Plugin::Text) == Plugin::Text)
+	     __search_len = beye_context().active_mode().convert_cp((char *)fbuff,pattern_size*symb_size,false);
 	else __search_len = pattern_size;
 	if(!(beyeFlg & SF_CASESENS)) memupr((any_t*)fbuff,__search_len);
 	if(memcmp(fbuff,cbuff,__search_len) == 0) cond = true;
@@ -201,7 +201,7 @@ static __filesize_t  __FASTCALL__  ___lfind(const char *sfrom,
 	    memcpy(nbuff,&sfrom[findptr-symb_size],symb_size);
 	  else
 	    BMReadBufferEx(nbuff,symb_size,findptr - symb_size,BFile::Seek_Set);
-	  if((beye_context().active_mode()->flags() & Plugin::Text) == Plugin::Text) beye_context().active_mode()->convert_cp(nbuff,symb_size,false);
+	  if((beye_context().active_mode().flags() & Plugin::Text) == Plugin::Text) beye_context().active_mode().convert_cp(nbuff,symb_size,false);
 	  ch = nbuff[0];
 	}
 	else      ch = ' ';
@@ -211,7 +211,7 @@ static __filesize_t  __FASTCALL__  ___lfind(const char *sfrom,
 	    memcpy(nbuff,&sfrom[findptr + (pattern_size*symb_size)],symb_size);
 	  else
 	    BMReadBufferEx(nbuff,symb_size,findptr + (pattern_size*symb_size),BFile::Seek_Set);
-	  if((beye_context().active_mode()->flags() & Plugin::Text) == Plugin::Text) beye_context().active_mode()->convert_cp(nbuff,symb_size,false);
+	  if((beye_context().active_mode().flags() & Plugin::Text) == Plugin::Text) beye_context().active_mode().convert_cp(nbuff,symb_size,false);
 	  ch1 = nbuff[0];
 	}
 	else      ch1 = ' ';
@@ -417,7 +417,7 @@ static void  __FASTCALL__ SearchPaint(TWindow *wdlg,int flags,
  twGotoXY(46,4); twPutChar(Gebool(sf_flags & SF_ASHEX));
  twSetColorAttr((!(flags & SD_ALLFEATURES) || sf_flags & SF_ASHEX)?dialog_cset.group.disabled:dialog_cset.group.active);
  twGotoXY(46,5); twPutChar(Gebool(sf_flags & SF_WILDCARDS));
- twSetColorAttr(!((flags & SD_ALLFEATURES) && (beye_context().active_mode()->flags()&Plugin::Has_SearchEngine))?dialog_cset.group.disabled:dialog_cset.group.active);
+ twSetColorAttr(!((flags & SD_ALLFEATURES) && (beye_context().active_mode().flags()&Plugin::Has_SearchEngine))?dialog_cset.group.disabled:dialog_cset.group.active);
  twGotoXY(46,6); twPutChar(Gebool(sf_flags & SF_PLUGINS));
  twSetColorAttr(dialog_cset.main);
  twUseWin(_using);
@@ -436,7 +436,7 @@ static void  __FASTCALL__ SearchUpdate(TWindow *wdlg,int _flags,
  twGotoXY(44,4); twPutS(msgFindOpt2[0]);
  twSetColorAttr((!(_flags & SD_ALLFEATURES) || sf_flags & SF_ASHEX)?dialog_cset.group.disabled:dialog_cset.group.active);
  twGotoXY(44,5); twPutS(msgFindOpt2[1]);
- twSetColorAttr(!((_flags & SD_ALLFEATURES) && (beye_context().active_mode()->flags() & Plugin::Has_SearchEngine))?dialog_cset.group.disabled:dialog_cset.group.active);
+ twSetColorAttr(!((_flags & SD_ALLFEATURES) && (beye_context().active_mode().flags() & Plugin::Has_SearchEngine))?dialog_cset.group.disabled:dialog_cset.group.active);
  twGotoXY(44,6); twPutS(msgFindOpt2[2]);
  twSetColorAttr(dialog_cset.main);
  twUseWin(_using);
@@ -542,7 +542,7 @@ bool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
        case KE_F(6)     : if(!(*sf_flags&SF_ASHEX) && (_flags & SD_ALLFEATURES)) *sf_flags ^= SF_WILDCARDS;
 			  update = 0;
 			  break;
-       case KE_F(7)     : if(_flags & SD_ALLFEATURES && (beye_context().active_mode()->flags() & Plugin::Has_SearchEngine))
+       case KE_F(7)     : if(_flags & SD_ALLFEATURES && (beye_context().active_mode().flags() & Plugin::Has_SearchEngine))
 			  *sf_flags ^= SF_PLUGINS;
 			  update = 0;
 			  break;

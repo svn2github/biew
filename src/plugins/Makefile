@@ -9,10 +9,10 @@ DO_ALL  = @ for i in $(SUBDIRS); do $(MAKE) -C $$i all || exit; done
 LIBNAME = $(LIBPREFIX)plugins.a
 SUBDIRS = bin disasm nls
 
-SRCS=\
-    binmode.cpp\
-    disasm.cpp\
-    hexmode.cpp\
+SRCS=plugin.cpp \
+    binmode.cpp \
+    disasm.cpp  \
+    hexmode.cpp \
     textmode.cpp
 
 OBJS=$(SRCS:.cpp=.o)

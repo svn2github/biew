@@ -16,11 +16,9 @@
 **/
 #ifndef __BBIO_H
 #define __BBIO_H 1
-
-#ifndef __BEYELIB_H
-#include "libbeye/libbeye.h"
-#endif
 #include <string>
+
+#include "libbeye/libbeye.h"
 /******************************************************************\
 *  Buffered binary file streams input/output section               *
 *  Helpful for read/write small size objects from/to file          *

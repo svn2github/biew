@@ -1,5 +1,7 @@
 #ifndef __PLUGIN_HPP_INCLUDED
 #define __PLUGIN_HPP_INCLUDED 1
+#include <vector>
+
 #include "libbeye/libbeye.h"
 
 struct hIniProfile;
@@ -84,5 +86,101 @@ namespace beye {
 	const char* name;
 	Plugin* (*query_interface)(CodeGuider& code_guider);
     };
+
+    class DisMode;
+    struct REGISTRY_BIN;
+    class Bin_Format : public Opaque {
+	public:
+	    static const __filesize_t Bad_Address = __filesize_t(-1);
+
+	    Bin_Format(CodeGuider& parent);
+	    virtual ~Bin_Format();
+
+	    virtual void		detect_format();
+
+	    virtual const char*		name() const;
+
+	    virtual const char*		prompt(unsigned idx) const;	/**< on Alt-Fx selection */
+	    virtual __filesize_t	action_F1() const;
+	    virtual __filesize_t	action_F2() const;
+	    virtual __filesize_t	action_F3() const;
+	    virtual __filesize_t	action_F4() const;
+	    virtual __filesize_t	action_F5() const;
+	    virtual __filesize_t	action_F6() const;
+	    virtual __filesize_t	action_F7() const;
+	    virtual __filesize_t	action_F8() const;
+	    virtual __filesize_t	action_F9() const;
+	    virtual __filesize_t	action_F10() const;
+
+	    virtual __filesize_t	show_header() const;
+	    virtual bool		bind(const DisMode& parent,char *str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift) const;
+
+	    virtual int			query_platform() const;
+
+			 /** Returns DAB_XXX. Quick version for disassembler */
+	    virtual int			query_bitness(__filesize_t off) const;
+
+			 /** Returns DAE_XXX. */
+	    virtual int			query_endian(__filesize_t off) const;
+
+			 /** For displaying offset within struct in left address column.
+			   * @return         false if string is not modified.
+			  **/
+	    virtual bool		address_resolving(char * str,__filesize_t off) const;
+
+			 /** Converts virtual address to physical (means file offset).
+			   * @param va       indicates virtual address to be converted
+			   * @return         0 if operation meaningless
+			  **/
+	    virtual __filesize_t	va2pa(__filesize_t va) const;
+
+			 /** Converts physical address to virtual.
+			   * @param pa       indicates physical address to be converted
+			   * @note           seg pointer can be NULL
+			  **/
+	    virtual __filesize_t	pa2va(__filesize_t pa) const;
+
+
+	    /*-- Below placed functions for 'put structures' method of save as dialog --*/
+
+			 /** Fills the string with public symbol
+			   * @param str       pointer to the string to be filled
+			   * @param cb_str    indicates maximal length of string
+			   * @param _class    pointer to the memory where can be stored class of symbol (See SC_* conatnts)
+			   * @param pa        indicates physical offset within file
+			   * @param as_prev   indicates direction of symbol searching from given physical offset
+			   * @return          Bad_Address - if no symbol name available
+			   *                  in given direction (as_prev)
+			   *                  physical address of public symbol
+			   *                  which is found in given direction
+			  **/
+	    virtual __filesize_t	get_public_symbol(char *str,unsigned cb_str,unsigned *_class,__filesize_t pa,bool as_prev) const;
+
+			 /** Determines attributes of object at given physical file address.
+			   * @param pa        indicates physical file offset of object
+			   * @param name      pointer to the string which is to be filled with object name
+			   * @param cb_name   indicates maximal length of string
+			   * @param start     pointer to the memory where must be stored start of given object, as file offset.
+			   * @param end       pointer to the memory where must be stored end of given object, as file offset.
+			   * @param _class    pointer to the memory where must be stored _class of object (See OC_* constants).
+			   * @param bitness   pointer to the memory where must be stored bitness of object (See DAB_* constants).
+			   * @return          logical number of object or 0 if at given offset is no object.
+			   * @note            all arguments exclude name of object
+			   *                  must be filled.
+			   * @remark          For example: if exe-format - new
+			   *                  exe i.e. contains MZ and NEW
+			   *                  header and given file offset
+			   *                  points to old exe stub then start
+			   *                  = 0, end = begin of first data or
+			   *                  code object).
+			  **/
+	    virtual unsigned		get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,__filesize_t *start,__filesize_t *end,int *_class,int *bitness) const;
+	private:
+	    std::vector<const REGISTRY_BIN*>	formats;
+	    const REGISTRY_BIN*		detectedFormat;
+	    const REGISTRY_BIN*		mz_format;
+	    CodeGuider&			parent;
+    };
+
 } //namespace beye
 #endif

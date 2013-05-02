@@ -14,7 +14,7 @@ namespace beye {
     class Plugin;
     struct Plugin_Info;
     class CodeGuider;
-    struct REGISTRY_BIN;
+    class Bin_Format;
     class BFile;
     class BeyeContext : public Opaque {
 	public:
@@ -45,10 +45,9 @@ namespace beye {
 	    void		init_modes( hIniProfile *ini );
 	    void		quick_select_mode();
 	    bool		select_mode();
-	    Plugin*		active_mode() const { return activeMode; }
+	    Plugin&		active_mode() const { return *activeMode; }
+	    Bin_Format&		bin_format() const { return *_bin_format; }
 	    const Plugin_Info*	mode_info() const { return modes[defMainModeSel]; }
-	    const REGISTRY_BIN*	active_format() const { return detectedFormat; }
-	    void		detect_binfmt();
 	    void		show_usage() const;
 	    void		main_loop();
 		   /** Main search routine
@@ -96,7 +95,7 @@ namespace beye {
 
 	    Opaque		opaque;
 	    Plugin*		activeMode;
-	    const REGISTRY_BIN*	detectedFormat;
+	    Bin_Format*		_bin_format;
 	    const std::vector<std::string>& argv;
 	    const std::map<std::string,std::string>& envm;
 	    std::vector<std::string> ListFile;
@@ -108,7 +107,6 @@ namespace beye {
 	    unsigned int	beye_mode;
 	    unsigned		defMainModeSel;
 	    __filesize_t	new_file_size;
-	    std::vector<const REGISTRY_BIN*> formats;
 	    std::vector<const Plugin_Info*> modes;
 	    CodeGuider*		code_guider;
 	    addendum*		addons;

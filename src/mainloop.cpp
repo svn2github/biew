@@ -150,22 +150,16 @@ void BeyeContext::main_loop()
 	    case KE_CTL_F(8): if(activeMode->action_F8()) { ch = KE_SUPERKEY; drawPrompt(); } break;
 	    case KE_CTL_F(9): if(activeMode->action_F9()) { ch = KE_SUPERKEY; drawPrompt(); } break;
 	    case KE_CTL_F(10):if(activeMode->action_F10()) { ch = KE_SUPERKEY; drawPrompt(); } break;
-	    case KE_ALT_F(1):
-	    case KE_ALT_F(2):
-	    case KE_ALT_F(3):
-	    case KE_ALT_F(4):
-	    case KE_ALT_F(5):
-	    case KE_ALT_F(6):
-	    case KE_ALT_F(7):
-	    case KE_ALT_F(8):
-	    case KE_ALT_F(9):
-	    case KE_ALT_F(10):
-		{
-		    unsigned i;
-		    i = (ch - KE_ALT_F(1)) >> 8;
-		    if(detectedFormat->action[i]) nfp = detectedFormat->action[i]();
-		}
-		break;
+	    case KE_ALT_F(1): nfp=_bin_format->action_F1(); break;
+	    case KE_ALT_F(2): nfp=_bin_format->action_F2(); break;
+	    case KE_ALT_F(3): nfp=_bin_format->action_F3(); break;
+	    case KE_ALT_F(4): nfp=_bin_format->action_F4(); break;
+	    case KE_ALT_F(5): nfp=_bin_format->action_F5(); break;
+	    case KE_ALT_F(6): nfp=_bin_format->action_F6(); break;
+	    case KE_ALT_F(7): nfp=_bin_format->action_F7(); break;
+	    case KE_ALT_F(8): nfp=_bin_format->action_F8(); break;
+	    case KE_ALT_F(9): nfp=_bin_format->action_F9(); break;
+	    case KE_ALT_F(10):nfp=_bin_format->action_F10(); break;
 	    case KE_SUPERKEY: goto DRAW;
 	    case KE_F(1) : About();  continue;
 	    default : continue;
@@ -216,12 +210,11 @@ void BeyeContext::main_loop()
 				nfp = BMGetFLength()+(long)shift;
 				break;
 			case GJDLG_VIRTUAL:
-				if(detectedFormat->va2pa) {
-				    __filesize_t temp_fp;
-				    temp_fp = detectedFormat->va2pa(shift);
-				    if(!temp_fp) ErrMessageBox(NOT_ENTRY,NULL);
-				    else nfp = temp_fp;
-				} else nfp = shift;
+				__filesize_t temp_fp;
+				nfp = shift;
+				temp_fp = _bin_format->va2pa(shift);
+				if(temp_fp==Bin_Format::Bad_Address) ErrMessageBox(NOT_ENTRY,NULL);
+				else nfp = temp_fp;
 				break;
 		    }
 		    if((activeMode->flags() & Plugin::UseCodeGuide) == Plugin::UseCodeGuide)
@@ -240,8 +233,7 @@ void BeyeContext::main_loop()
 	    case KE_F(7): nfp = search(false); ch = KE_JUSTFIND; break;
 	    case KE_SHIFT_F(7): nfp = search(true); ch = KE_JUSTFIND; break;
 	    case KE_F(8):
-		    if(detectedFormat->showHdr) nfp = detectedFormat->showHdr();
-		    else if(IsNewExe()) nfp = mzTable.showHdr();
+		    nfp = _bin_format->show_header();
 		    break;
 	    case KE_SHIFT_F(8): select_tool(); break;
 	    case KE_F(9): Setup(); break;
@@ -308,7 +300,7 @@ void BeyeContext::main_loop()
 		continue;
 	}
 	GO:
-	if(cfp != nfp) {
+	if(cfp != nfp && nfp != Bin_Format::Bad_Address) {
 	    unsigned long twidth = ( activeMode->flags() & Plugin::Text ) == Plugin::Text ?
 			   activeMode->get_symbol_size() :
 			   ( activeMode->flags() & Plugin::Disasm ) == Plugin::Disasm ?

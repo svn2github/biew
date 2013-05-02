@@ -407,15 +407,12 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
     unsigned func_class;
     vartail_flags=jflags;
     /* Sorry! We really need to know method offset to compute padding bytes */
-    if(beye_context().active_format()->GetPubSym)
-    {
-	prev_pa = beye_context().active_format()->GetPubSym(prev_func,sizeof(prev_func),
+    prev_pa = beye_context().bin_format().get_public_symbol(prev_func,sizeof(prev_func),
 					    &func_class,ulShift,true);
-	next_pa = beye_context().active_format()->GetPubSym(prev_func,sizeof(prev_func),
+    next_pa = beye_context().bin_format().get_public_symbol(prev_func,sizeof(prev_func),
 					    &func_class,ulShift,false);
-    }
-    else next_pa=prev_pa=0;
-    if(!next_pa) next_pa=bmGetFLength();
+    if(next_pa==Bin_Format::Bad_Address) next_pa=bmGetFLength();
+    if(prev_pa==Bin_Format::Bad_Address) prev_pa=0;
     if(!(prev_pa%4)) npadds = (ulShift+1-prev_pa)%4; /* align only if method is aligned */
     else npadds=0;
     vartail_base=ulShift;

@@ -5643,7 +5643,7 @@ static DisasmRet __FASTCALL__ ix86Disassembler(__filesize_t ulShift,
  up = ua = ud = 0;
  ix86_da_out[0] = 0;
 
- if(BITNESS == DAB_AUTO && beye_context().active_format()->query_bitness) x86_Bitness = beye_context().active_format()->query_bitness(ulShift);
+ if(BITNESS == DAB_AUTO) x86_Bitness = beye_context().bin_format().query_bitness(ulShift);
  else x86_Bitness = BITNESS;
 
  if(x86_Bitness > DAB_USE16)

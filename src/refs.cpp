@@ -22,25 +22,13 @@ using namespace beye;
 #include <stdlib.h>
 
 #include "beye.h"
-#include "reg_form.h"
+#include "plugins/plugin.h"
 #include "beyeutil.h"
 #include "bconsole.h"
 
 namespace beye {
-extern REGISTRY_BIN binTable;
 bool __FASTCALL__ AppendAsmRef(const DisMode& parent,char *str,__filesize_t ulShift,int mode,char codelen,__filesize_t r_sh)
 {
-  static bool warn_displayed = false;
-  bool ret = false;
-  if(beye_context().active_format()->bind) ret = beye_context().active_format()->bind(parent,str,ulShift,mode,codelen,r_sh);
-  else
-  {
-    if(beye_context().active_format() != &binTable && !warn_displayed)
-    {
-      WarnMessageBox("Sorry! Reference resolving for this format is still not supported",NULL);
-      warn_displayed = true;
-    }
-  }
-  return ret;
+  return beye_context().bin_format().bind(parent,str,ulShift,mode,codelen,r_sh);
 }
 } // namespace beye

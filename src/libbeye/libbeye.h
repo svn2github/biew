@@ -22,23 +22,10 @@
 #include <stdlib.h>
 
 #ifndef __NORECURSIVE
-
-#ifndef __CONFIG_H
 #include "libbeye/sysdep/__config.h"
-#endif
-
-#ifndef __SYS_DEP_H
 #include "libbeye/sysdep/_sys_dep.h"
-#endif
-
-#ifndef __OS_DEP_H
 #include "libbeye/osdep/__os_dep.h"
-#endif
-
-#ifndef __HRD_INF_H
 #include "libbeye/sysdep/_hrd_inf.h"
-#endif
-
 #endif
 #include "libbeye/mp_malloc.h"
 

@@ -47,7 +47,7 @@ using namespace beye;
 #include "codeguid.h"
 #include "editor.h"
 #include "tstrings.h"
-#include "reg_form.h"
+//#include "reg_form.h"
 #include "beyeutil.h"
 #include "search.h"
 #include "setup.h"
@@ -58,36 +58,6 @@ using namespace beye;
 #include "plugins/plugin.h"
 
 namespace beye {
-extern const REGISTRY_BIN binTable;
-extern const REGISTRY_BIN rmTable;
-extern const REGISTRY_BIN movTable;
-extern const REGISTRY_BIN mp3Table;
-extern const REGISTRY_BIN mpegTable;
-extern const REGISTRY_BIN jpegTable;
-extern const REGISTRY_BIN wavTable;
-extern const REGISTRY_BIN aviTable;
-extern const REGISTRY_BIN asfTable;
-extern const REGISTRY_BIN bmpTable;
-extern const REGISTRY_BIN neTable;
-extern const REGISTRY_BIN peTable;
-extern const REGISTRY_BIN leTable;
-extern const REGISTRY_BIN lxTable;
-extern const REGISTRY_BIN nlm386Table;
-extern const REGISTRY_BIN elf386Table;
-extern const REGISTRY_BIN jvmTable;
-extern const REGISTRY_BIN coff386Table;
-extern const REGISTRY_BIN archTable;
-extern const REGISTRY_BIN aoutTable;
-extern const REGISTRY_BIN OldPharLapTable;
-extern const REGISTRY_BIN PharLapTable;
-extern const REGISTRY_BIN rdoffTable;
-extern const REGISTRY_BIN rdoff2Table;
-extern const REGISTRY_BIN sisTable;
-extern const REGISTRY_BIN sisxTable;
-extern const REGISTRY_BIN lmfTable;
-extern const REGISTRY_BIN mzTable;
-extern const REGISTRY_BIN dossysTable;
-
 extern const Plugin_Info binMode;
 extern const Plugin_Info textMode;
 extern const Plugin_Info hexMode;
@@ -281,25 +251,6 @@ bool BeyeContext::LoadInfo( )
 	else defMainModeSel = LastMode;
     }
     return true;
-}
-
-void BeyeContext::detect_binfmt()
-{
- size_t i,sz=formats.size();
- if(!bmGetFLength())
- {
-   detectedFormat = &binTable;
-   return;
- }
- for(i = 0;i < sz;i++)
- {
-   if(formats[i]->check_format())
-   {
-     detectedFormat = formats[i];
-     if(detectedFormat->init) detectedFormat->init(*code_guider);
-     break;
-   }
- }
 }
 
 void BeyeContext::PaintTitle() const
@@ -545,7 +496,7 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
    retval = EXIT_FAILURE;
    goto Bye;
  }
- BeyeCtx->detect_binfmt();
+ BeyeCtx->bin_format().detect_format();
  BeyeCtx->init_modes(ini);
  if(ini) iniCloseFile(ini);
  MainWnd = WindowOpen(1,2,tvioWidth,tvioHeight-1,TWS_NONE);
@@ -593,18 +544,20 @@ bool BeyeContext::new_source()
 	ftim_ok = __OsGetFTime(ListFile[i].c_str(),&ftim);
 	if(BMOpen(ListFile[i]) == true) {
 	    ArgVector1 = ListFile[i];
-	    if(detectedFormat->destroy) detectedFormat->destroy();
+	    delete _bin_format;
 	    delete activeMode;
 	    make_shortname();
-	    detect_binfmt();
+	    _bin_format = new(zeromem) Bin_Format(*code_guider);
+	    _bin_format->detect_format();
 	    activeMode=modes[defMainModeSel]->query_interface(*code_guider);
 	    ret = true;
 	} else {
 	    if(BMOpen(ArgVector1) != true) ::exit(EXIT_FAILURE);
-	    if(detectedFormat->destroy) detectedFormat->destroy();
+	    delete _bin_format;
 	    delete activeMode;
 	    make_shortname();
-	    detect_binfmt();
+	    _bin_format = new(zeromem) Bin_Format(*code_guider);
+	    _bin_format->detect_format();
 	    activeMode=modes[defMainModeSel]->query_interface(*code_guider);
 	    ret = false;
 	}
@@ -645,7 +598,6 @@ BeyeContext::BeyeContext(const std::vector<std::string>& _argv, const std::map<s
 	    iniUseExtProgs(false),
 	    headshift(0L),
 	    LastOffset(0L),
-	    detectedFormat(0),
 	    argv(_argv),
 	    envm(_envm),
 	    UseIniFile(true),
@@ -664,35 +616,7 @@ BeyeContext::BeyeContext(const std::vector<std::string>& _argv, const std::map<s
     modes.push_back(&hexMode);
     modes.push_back(&disMode);
 
-    formats.push_back(&neTable);
-    formats.push_back(&peTable);
-    formats.push_back(&leTable);
-    formats.push_back(&lxTable);
-    formats.push_back(&nlm386Table);
-    formats.push_back(&elf386Table);
-    formats.push_back(&jvmTable);
-    formats.push_back(&coff386Table);
-    formats.push_back(&archTable);
-    formats.push_back(&aoutTable);
-    formats.push_back(&OldPharLapTable);
-    formats.push_back(&PharLapTable);
-    formats.push_back(&rdoffTable);
-    formats.push_back(&rdoff2Table);
-    formats.push_back(&lmfTable);
-    formats.push_back(&sisTable);
-    formats.push_back(&sisxTable);
-    formats.push_back(&aviTable);
-    formats.push_back(&asfTable);
-    formats.push_back(&bmpTable);
-    formats.push_back(&mpegTable);
-    formats.push_back(&jpegTable);
-    formats.push_back(&wavTable);
-    formats.push_back(&movTable);
-    formats.push_back(&rmTable);
-    formats.push_back(&mp3Table);
-    formats.push_back(&mzTable);
-    formats.push_back(&dossysTable);
-    formats.push_back(&binTable);
+    _bin_format = new(zeromem) Bin_Format(*code_guider);
 
     codepage="CP866";
     scheme_name="Built-in";
@@ -704,7 +628,7 @@ BeyeContext::BeyeContext(const std::vector<std::string>& _argv, const std::map<s
 
 BeyeContext::~BeyeContext() {
     delete activeMode;
-    if(active_format()->destroy) active_format()->destroy();
+    delete _bin_format;
 
     delete sysinfo;
     delete addons;

@@ -134,7 +134,7 @@ void CodeGuider::reset_go_address( int keycode )
 void CodeGuider::add_go_address(const DisMode& parent,char *str,__filesize_t addr)
 {
     tAbsCoord width = twGetClientWidth(MainWnd);
-    unsigned bytecodes=beye_context().active_mode()->get_max_symbol_size()*2;
+    unsigned bytecodes=beye_context().active_mode().get_max_symbol_size()*2;
     int len,where;
     if(parent.prepare_mode()) return;
     len = strlen((char *)str);
@@ -195,8 +195,7 @@ char* CodeGuider::encode_address(__filesize_t cfpos,bool AddressDetail) const
 {
     static char addr[11];
     strcpy(addr,is_BMUse64()?Get16Digit(cfpos):Get8Digit(cfpos));
-    if(AddressDetail && beye_context().active_format()->AddressResolving)
-	beye_context().active_format()->AddressResolving(addr,cfpos);
+    if(AddressDetail) beye_context().bin_format().address_resolving(addr,cfpos);
     strcat(addr,": ");
     return addr;
 }

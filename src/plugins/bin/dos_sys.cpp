@@ -114,6 +114,16 @@ static __filesize_t __FASTCALL__ SYSHelp( void )
   return BMGetCurrFilePos();
 }
 
+static __filesize_t __FASTCALL__ sysVA2PA(__filesize_t va)
+{
+  return va;
+}
+
+static __filesize_t __FASTCALL__ sysPA2VA(__filesize_t pa)
+{
+  return pa;
+}
+
 extern const REGISTRY_BIN dossysTable =
 {
   "DOS driver",
@@ -128,8 +138,8 @@ extern const REGISTRY_BIN dossysTable =
   NULL,
   NULL,
   dossys_AddressResolv,
-  NULL,
-  NULL,
+  sysVA2PA,
+  sysPA2VA,
   NULL,
   NULL
 };

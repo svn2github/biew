@@ -218,7 +218,7 @@ static void  __FASTCALL__ printObject(FILE *fout,unsigned obj_num,char *oname,in
 	      ,size);
 }
 
-static void  __FASTCALL__ printHdr(FILE * fout,const REGISTRY_BIN *fmt)
+static void  __FASTCALL__ printHdr(FILE * fout,const Bin_Format& fmt)
 {
   const char *cptr,*cptr1,*cptr2;
   time_t tim;
@@ -234,7 +234,7 @@ static void  __FASTCALL__ printHdr(FILE * fout,const REGISTRY_BIN *fmt)
 	      ,cptr,ff_startpos,ff_startpos+ff_len
 	      ,cptr,BEYE_VER_MSG
 	      ,cptr,ctime(&tim)
-	      ,cptr,fmt->name
+	      ,cptr,fmt.name()
 	      ,cptr2);
 }
 
@@ -258,10 +258,10 @@ inline const char* GET_FUNC_CLASS(unsigned x) { return x == SC_LOCAL ? "private"
 
 static void  __FASTCALL__ make_addr_column(char *buff,__filesize_t offset)
 {
-   if(hexAddressResolv && beye_context().active_format()->AddressResolving)
+   if(hexAddressResolv)
    {
      buff[0] = 0;
-     beye_context().active_format()->AddressResolving(buff,offset);
+     beye_context().bin_format().address_resolving(buff,offset);
    }
    else sprintf(buff,"L%s",Get8Digit(offset));
    strcat(buff,":");
@@ -336,7 +336,7 @@ static bool FStore( void )
 			delete _bioHandle;
 			goto Exit;
 		    }
-		    real_size = (bctx.active_mode()->flags()&Plugin::Has_ConvertCP) ? bctx.active_mode()->convert_cp((char *)tmp_buff,rem,true) : rem;
+		    real_size = (bctx.active_mode().flags()&Plugin::Has_ConvertCP) ? bctx.active_mode().convert_cp((char *)tmp_buff,rem,true) : rem;
 		    if(!_bioHandle->write_buffer(tmp_buff,real_size)) {
 			errnoMessageBox(WRITE_FAIL,NULL,errno);
 			delete _bioHandle;
@@ -372,7 +372,7 @@ static bool FStore( void )
 		if(bctx.mode_info()!=&disMode)
 		    dismode = static_cast<DisMode*>(disMode.query_interface(bctx.codeguider()));
 		else
-		    dismode = static_cast<DisMode*>(bctx.active_mode());
+		    dismode = static_cast<DisMode*>(&bctx.active_mode());
 		MaxInsnLen = dismode->get_max_symbol_size();
 		codebuff = new unsigned char [MaxInsnLen];
 		if(!codebuff) {
@@ -389,15 +389,16 @@ static bool FStore( void )
 		}
 		if(file_cache) setvbuf(fout,file_cache,_IOFBF,BBIO_SMALL_CACHE_SIZE);
 		if(flags & FSDLG_COMMENT) {
-		    printHdr(fout,bctx.active_format());
+		    printHdr(fout,bctx.bin_format());
 		}
 		if(flags & FSDLG_STRUCTS) {
-		    if(bctx.active_format()->GetObjAttr) {
-			obj_num = bctx.active_format()->GetObjAttr(ff_startpos,obj_name,
+		    obj_num = bctx.bin_format().get_object_attribute(ff_startpos,obj_name,
 						sizeof(obj_name),&obj_start,
 						&obj_end,&obj_class,&obj_bitness);
-			obj_name[sizeof(obj_name)-1] = 0;
-		    } else goto defobj;
+		    obj_name[sizeof(obj_name)-1] = 0;
+		}
+#if 0
+		    if(!obj_num) goto defobj;
 		} else {
 		    defobj:
 		    obj_num = 0;
@@ -405,27 +406,27 @@ static bool FStore( void )
 		    obj_end = BMGetFLength();
 		    obj_name[0] = 0;
 		    obj_class = OC_CODE;
-		    obj_bitness = bctx.active_format()->query_bitness ? bctx.active_format()->query_bitness(ff_startpos) : DAB_USE16;
+		    obj_bitness = bctx.bin_format().query_bitness(ff_startpos);
 		}
+#endif
 		if(flags & FSDLG_STRUCTS) printObject(fout,obj_num,obj_name,obj_class,obj_bitness,obj_end - obj_start);
 		func_pa = 0;
 		if(flags & FSDLG_STRUCTS) {
-		    if(bctx.active_format()->GetPubSym) {
-			func_pa = bctx.active_format()->GetPubSym(func_name,sizeof(func_name),
+		    func_pa = bctx.bin_format().get_public_symbol(func_name,sizeof(func_name),
 						&func_class,ff_startpos,true);
-			func_name[sizeof(func_name)-1] = 0;
-			if(func_pa) {
-			    fprintf(fout,"%s %s:\n"
+		    func_name[sizeof(func_name)-1] = 0;
+		    if(func_pa!=Bin_Format::Bad_Address) {
+			fprintf(fout,"%s %s:\n"
 					,GET_FUNC_CLASS(func_class)
 					,func_name);
-			    if(func_pa < ff_startpos && flags & FSDLG_COMMENT) {
+			if(func_pa < ff_startpos && flags & FSDLG_COMMENT) {
 				fprintf(fout,"; ...\n");
-			    }
 			}
-			func_pa = bctx.active_format()->GetPubSym(func_name,sizeof(func_name),
-						&func_class,ff_startpos,false);
-			func_name[sizeof(func_name)-1] = 0;
 		    }
+		    func_pa = bctx.bin_format().get_public_symbol(func_name,sizeof(func_name),
+						&func_class,ff_startpos,false);
+		    if(func_pa==Bin_Format::Bad_Address) func_pa=0;
+		    func_name[sizeof(func_name)-1] = 0;
 		}
 		prcnt_counter = oprcnt_counter = 0;
 		awsize = endpos - ff_startpos;
@@ -435,15 +436,13 @@ static bool FStore( void )
 		    DisasmRet dret;
 		    int len;
 		    if(flags & FSDLG_STRUCTS) {
-			if(bctx.active_format()->GetObjAttr) {
-			    if(ff_startpos >= obj_end) {
-				obj_num = bctx.active_format()->GetObjAttr(ff_startpos,obj_name,
+			if(ff_startpos >= obj_end) {
+			    obj_num = bctx.bin_format().get_object_attribute(ff_startpos,obj_name,
 						sizeof(obj_name),&obj_start,
 						&obj_end,&obj_class,
 						&obj_bitness);
-				obj_name[sizeof(obj_name)-1] = 0;
-				printObject(fout,obj_num,obj_name,obj_class,obj_bitness,obj_end - obj_start);
-			    }
+			    obj_name[sizeof(obj_name)-1] = 0;
+			    printObject(fout,obj_num,obj_name,obj_class,obj_bitness,obj_end - obj_start);
 			}
 			if(obj_class == OC_NOOBJECT) {
 			    __filesize_t diff;
@@ -459,8 +458,9 @@ static bool FStore( void )
 					,func_name
 					,func_pa);
 				ff_startpos = func_pa;
-				func_pa = bctx.active_format()->GetPubSym(func_name,sizeof(func_name),
+				func_pa = bctx.bin_format().get_public_symbol(func_name,sizeof(func_name),
 						&func_class,ff_startpos,false);
+				if(func_pa==Bin_Format::Bad_Address) func_pa=0;
 				func_name[sizeof(func_name)-1] = 0;
 				if(func_pa == ff_startpos) {
 				    fprintf(fout,"...Probably internal error of beye...\n");
@@ -472,7 +472,7 @@ static bool FStore( void )
 			    ff_startpos = obj_end;
 			    goto next_obj;
 			}
-			if(bctx.active_format()->GetPubSym && func_pa) {
+			if(func_pa) {
 			    int not_silly;
 			    not_silly = 0;
 			    while(ff_startpos == func_pa) {
@@ -480,8 +480,9 @@ static bool FStore( void )
 				fprintf(fout,"%s %s:\n"
 					,GET_FUNC_CLASS(func_class)
 					,func_name);
-				func_pa = bctx.active_format()->GetPubSym(func_name,sizeof(func_name),
+				func_pa = bctx.bin_format().get_public_symbol(func_name,sizeof(func_name),
 						&func_class,ff_startpos,false);
+				if(func_pa==Bin_Format::Bad_Address) func_pa=0;
 				func_name[sizeof(func_name)-1] = 0;
 				not_silly++;
 				if(not_silly > 100) {
@@ -491,7 +492,7 @@ static bool FStore( void )
 			    }
 			}
 		    }
-		    memset(codebuff,0,sizeof(codebuff));
+		    memset(codebuff,0,MaxInsnLen);
 		    BMReadBufferEx((any_t*)codebuff,MaxInsnLen,ff_startpos,BFile::Seek_Set);
 		    if(obj_class == OC_CODE) dret = dismode->disassembler(ff_startpos,codebuff,__DISF_NORMAL);
 		    else { /** Data object */
@@ -535,7 +536,7 @@ static bool FStore( void )
 		    }
 		    stop = func_pa ? std::min(func_pa,obj_end) : obj_end;
 		    if(flags & FSDLG_STRUCTS) {
-			if(bctx.active_format()->GetPubSym && stop && stop > ff_startpos && ff_startpos + dret.codelen > stop) {
+			if(stop && stop > ff_startpos && ff_startpos + dret.codelen > stop) {
 			    unsigned lim,ii;
 			    make_addr_column(tmp_buff,ff_startpos);
 			    strcat(tmp_buff," db ");
@@ -570,7 +571,7 @@ static bool FStore( void )
 			goto dis_exit;
 		    }
 		    if(flags & FSDLG_STRUCTS) {
-			if(bctx.active_format()->GetPubSym && stop && ff_startpos != stop && ff_startpos + dret.codelen > stop)
+			if(stop && ff_startpos != stop && ff_startpos + dret.codelen > stop)
 			    dret.codelen = stop - ff_startpos;
 		    }
 		    if(!dret.codelen) {
@@ -1105,7 +1106,7 @@ static bool FileInfo( void )
 	   "User ID of the file owner     = %u\n"
 	   "Group ID of the file owner    = %u"
 	   ,beye_context().short_name()
-	   ,beye_context().active_format()->name ? beye_context().active_format()->name : "Not detected"
+	   ,beye_context().bin_format().name()
 	   ,BMGetFLength()
 	   ,attr
 	   ,stimes[0]

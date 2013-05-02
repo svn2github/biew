@@ -20,9 +20,7 @@
 #ifndef __TWIN_H
 #define __TWIN_H 1
 
-#ifndef __BEYELIB_H
 #include "libbeye/libbeye.h"
-#endif
 
 /** Enumerates all colors used in twin library */
 typedef enum

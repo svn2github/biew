@@ -83,7 +83,7 @@ DisMode::DisMode(CodeGuider& _code_guider)
 	::exit(EXIT_FAILURE);
     }
     def_platform = DISASM_DATA;
-    if(beye_context().active_format()->query_platform) def_platform = beye_context().active_format()->query_platform();
+    def_platform = beye_context().bin_format().query_platform();
     activeDisasm = list[0];
     DefDisasmSel = DISASM_DATA;
     sz=list.size();
@@ -854,7 +854,7 @@ bool DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,
      }
   }
 #endif
-  if(hexAddressResolv && beye_context().active_format()->AddressResolving) flg |= APREF_SAVE_VIRT;
+  if(hexAddressResolv) flg |= APREF_SAVE_VIRT;
   app = disNeedRef >= Ref_All ? AppendAsmRef(*this,str,ulShift,flg,codelen,0L) : false;
   if(app != true)
   {
@@ -882,17 +882,14 @@ bool DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,
       }
       if(_defval)         /* Do not perform operation on NULL */
       {
-      __filesize_t pa,psym;
+      __filesize_t pa,psym,__tmp;
       unsigned _class;
       if(type & Arg_Rip) {
-	_defval += (beye_context().active_format()->pa2va ?
-		    beye_context().active_format()->pa2va(ulShift) :
-		    ulShift)+fld_len;
+	__tmp=beye_context().bin_format().pa2va(ulShift);
+	_defval += ((__tmp!=Bin_Format::Bad_Address) ? __tmp : ulShift)+fld_len;
       }
-      if(!app) pa = beye_context().active_format()->va2pa ? beye_context().active_format()->va2pa(_defval) :
-					   _defval;
-      else pa = __filesize_t(-1);
-      if(pa)
+      pa = beye_context().bin_format().va2pa(_defval);
+      if(pa!=Bin_Format::Bad_Address)
       {
 	/* 1. Try to determine immediate as offset to public symbol */
 	if(type & Arg_Rip) app = AppendAsmRef(*this,str,pa,flg,codelen,0L);
@@ -900,10 +897,8 @@ bool DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,
 	if(dis_severity < CommSev_Func)
 	{
 	  strcpy(comments,".*");
-	  if(beye_context().active_format()->GetPubSym)
-	  {
-	    psym = beye_context().active_format()->GetPubSym(&comments[2],sizeof(comments)-2,
-					     &_class,pa,false);
+	  psym = beye_context().bin_format().get_public_symbol(&comments[2],sizeof(comments)-2,&_class,pa,false);
+	  if(psym!=Bin_Format::Bad_Address) {
 	    if(psym != pa) comments[0] = 0;
 	    else
 	    {
@@ -1106,7 +1101,7 @@ bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__f
  {
    if(dret.pro_clone == __INSNT_JMPPIC || dret.pro_clone == __INSNT_JMPRIP) goto try_pic; /* skip defaults for PIC */
    flg = APREF_TRY_LABEL;
-   if(hexAddressResolv && beye_context().active_format()->AddressResolving) flg |= APREF_SAVE_VIRT;
+   if(hexAddressResolv) flg |= APREF_SAVE_VIRT;
    appended=AppendAsmRef(*this,str,ulShift,flg,codelen,r_sh);
    if(!appended)
    {
@@ -1143,18 +1138,19 @@ bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__f
        else
        if(dret.pro_clone == __INSNT_JMPRIP) /* calln *(jmp [rip+offset]) */
        {
-	__filesize_t _defval,_fpos,pa;
+	__filesize_t _defval,_fpos,pa,__tmp;
 	unsigned long app;
 		try_rip:
 		_fpos = BMGetCurrFilePos();
 		_defval = dret.codelen==8 ? BMReadQWordEx(r_sh+dret.field,SEEKF_START):
 					    BMReadDWordEx(r_sh+dret.field,SEEKF_START);
 		BMSeek(_fpos,SEEKF_START);
-	_defval += (beye_context().active_format()->pa2va ?
-		    beye_context().active_format()->pa2va(r_sh+dret.field) :
+	__tmp=beye_context().bin_format().pa2va(r_sh+dret.field);
+	_defval += (__tmp!=Bin_Format::Bad_Address ?
+		    __tmp :
 		    r_sh+dret.field)+dret.codelen;
-	pa = beye_context().active_format()->va2pa ? beye_context().active_format()->va2pa(_defval) :
-					   _defval;
+	__tmp = beye_context().bin_format().va2pa(_defval);
+	pa = (__tmp!=Bin_Format::Bad_Address) ? __tmp : _defval;
 	app=AppendAsmRef(*this,str,pa,APREF_TRY_LABEL,dret.codelen,0L);
 	if(app)
 	{
@@ -1176,10 +1172,10 @@ bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__f
    */
  if(!appended)
  {
-   if(hexAddressResolv && beye_context().active_format()->AddressResolving)
+   if(hexAddressResolv)
    {
      r_sh = r_sh ? r_sh : (__filesize_t)ulShift;
-     appended = beye_context().active_format()->AddressResolving(&str[strlen(str)],r_sh) ? true : false;
+     appended = beye_context().bin_format().address_resolving(&str[strlen(str)],r_sh);
    }
    if(!appended)
    {

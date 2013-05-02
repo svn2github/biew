@@ -20,6 +20,7 @@
 #include <limits>
 #include <limits.h>
 
+#include "libbeye/libbeye.h"
 #include "libbeye/twin.h"
 #include "libbeye/bbio.h"
 #include "libbeye/file_ini.h"
@@ -120,7 +121,7 @@ typedef struct tag_memArray
 
     int      __FASTCALL__ ExpandHex(char * dest,const unsigned char * src,int size,char hard);
 
-    void		PaintTitle( void );
-    __filesize_t       IsNewExe(void);
+    void		PaintTitle();
+    __filesize_t       IsNewExe();
 } // namespace beye
 #endif

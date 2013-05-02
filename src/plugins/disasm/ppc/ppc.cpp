@@ -1409,8 +1409,8 @@ static DisasmRet __FASTCALL__ ppcDisassembler(__filesize_t ulShift,
     unsigned ix,n;
     uint32_t opcode;
     memset(&dret,0,sizeof(DisasmRet));
-    if(beye_context().active_format()->query_bitness) ppcBitness = beye_context().active_format()->query_bitness(ulShift);
-    if(beye_context().active_format()->query_endian) ppcBigEndian = beye_context().active_format()->query_endian(ulShift)==DAE_BIG?1:0;
+    ppcBitness = beye_context().bin_format().query_bitness(ulShift);
+    ppcBigEndian = beye_context().bin_format().query_endian(ulShift)==DAE_BIG?1:0;
     opcode=ppcBigEndian?be2me_32(*((uint32_t *)buffer)):le2me_32(*((uint32_t *)buffer));
     n = sizeof(ppc_table)/sizeof(ppc_opcode);
     done=0;
