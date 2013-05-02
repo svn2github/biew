@@ -60,7 +60,7 @@ static bool ChSize( void )
        int my_errno = 0;
        const char *fname = BMName();
        BFile* bHandle;
-       bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
+       bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
        if(bHandle == &bNull)
        {
 	 err:
@@ -172,7 +172,7 @@ static bool InsDelBlock( void )
     if(!psize) return 0;
     if(psize < 0) if(start+labs(psize) > BMGetFLength()) { ErrMessageBox("Use change size operation instead of block deletion",NULL); return 0; }
     fname = BMName();
-    bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
+    bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
     if(bHandle == &bNull)
     {
       errnoMessageBox(OPEN_FAIL,NULL,errno);
@@ -651,7 +651,7 @@ static bool FRestore( void )
        return false;
      }
      fname = BMName();
-     bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
+     bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
      if(bHandle != &bNull)
      {
        while(wsize)
@@ -767,7 +767,7 @@ static bool CryptBlock( void )
        return false;
      }
      fname = BMName();
-     bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
+     bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
      if(bHandle != &bNull)
      {
        bHandle->seek(ff_startpos,SEEK_SET);
@@ -871,7 +871,7 @@ static bool ReverseBlock( void )
        return false;
      }
      fname = BMName();
-     bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
+     bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
      if(bHandle != &bNull)
      {
        bHandle->seek(ff_startpos,SEEK_SET);
@@ -952,7 +952,7 @@ static bool XLatBlock( void )
      wsize = endpos - ff_startpos;
      cwpos = ff_startpos;
      /* Parse xlat file */
-     xHandle = beyeOpenRO(xlat_fname,BBIO_SMALL_CACHE_SIZE);
+     xHandle = BeyeContext::beyeOpenRO(xlat_fname,BBIO_SMALL_CACHE_SIZE);
      if(xHandle == &bNull)
      {
        ErrMessageBox("Can't open xlat file", NULL);
@@ -981,7 +981,7 @@ static bool XLatBlock( void )
        return false;
      }
      fname = BMName();
-     bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
+     bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
      if(bHandle != &bNull)
      {
        bHandle->seek(ff_startpos,SEEK_SET);

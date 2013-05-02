@@ -163,7 +163,7 @@ void __FASTCALL__ editSaveContest( void )
   BFile* bHandle;
   const char *fname;
   fname = BMName();
-  bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
+  bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
   if(bHandle == &bNull)
   {
       err:

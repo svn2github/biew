@@ -194,7 +194,7 @@ __filesize_t CodeGuider::get_go_address(unsigned keycode)
 char* CodeGuider::encode_address(__filesize_t cfpos,bool AddressDetail) const
 {
     static char addr[11];
-    strcpy(addr,((BMFileFlags&BMFF_USE64)?Get16Digit(cfpos):Get8Digit(cfpos)));
+    strcpy(addr,is_BMUse64()?Get16Digit(cfpos):Get8Digit(cfpos));
     if(AddressDetail && beye_context().active_format()->AddressResolving)
 	beye_context().active_format()->AddressResolving(addr,cfpos);
     strcat(addr,": ");

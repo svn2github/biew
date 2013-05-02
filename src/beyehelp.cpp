@@ -283,7 +283,7 @@ bool __FASTCALL__ hlpOpen( bool interact )
   char hlp_id[sizeof(BEYE_HELP_VER)];
   if(bHelp != &bNull) return false; /*means: help file is already opened */
   help_name = beyeGetHelpName();
-  bHelp = beyeOpenRO(help_name,BBIO_SMALL_CACHE_SIZE);
+  bHelp = BeyeContext::beyeOpenRO(help_name,BBIO_SMALL_CACHE_SIZE);
   if(bHelp == &bNull)
   {
     if(interact) errnoMessageBox("Can't open help file",NULL,errno);

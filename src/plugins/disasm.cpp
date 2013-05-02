@@ -635,7 +635,7 @@ int DisMode::full_asm_edit(TWindow * ewnd)
 		    BFile* bHandle;
 		    const char *fname;
 		    fname = BMName();
-		    if((bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE)) != &bNull) {
+		    if((bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE)) != &bNull) {
 			bHandle->seek(edit_cp,BFile::Seek_Set);
 			if(!bHandle->write_buffer((any_t*)EditorMem.buff,rlen))
 			    errnoMessageBox(WRITE_FAIL,NULL,errno);
@@ -1192,7 +1192,7 @@ int DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__fi
        char lbuf[20];
        cptr = DumpMode ? "L" : "file:";
        strcat(str,cptr);
-	if((BMFileFlags&BMFF_USE64))
+	if(is_BMUse64())
 	    sprintf(lbuf,"%016llX",r_sh);
 	else
 	    sprintf(lbuf,"%08lX",(unsigned long)r_sh);

@@ -44,7 +44,6 @@ bconsole.cpp\
 beyehelp.cpp\
 beyeutil.cpp\
 bin_util.cpp\
-bmfile.cpp\
 codeguid.cpp\
 colorset.cpp\
 dialogs.cpp\

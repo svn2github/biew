@@ -216,7 +216,7 @@ void BinMode::save_video(Opaque& _this,unsigned char *buff,unsigned size)
     const char *fname;
     unsigned i;
     fname = BMName();
-    bHandle = beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
+    bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
     if(bHandle == &bNull) {
 	err:
 	errnoMessageBox(WRITE_FAIL,NULL,errno);

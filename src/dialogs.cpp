@@ -227,7 +227,7 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
  char declegals[13];
  unsigned attr;
  _using = twUsedWin();
- hwnd = CrtDlgWndnls(" Jump within file ",(BMFileFlags&BMFF_USE64)?34:26,6);
+ hwnd = CrtDlgWndnls(" Jump within file ",is_BMUse64()?34:26,6);
  twUseWin(hwnd);
  memcpy(declegals,legalchars,12);
  twGetWinPos(hwnd,&x1,&y1,&x2,&y2);
@@ -268,8 +268,8 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
 		     update = false;
 		     break;
       case KE_F(5):  if(udnSelectName(addr)) {
-			if(BMFileFlags&BMFF_USE64) sprintf(str,"%016llX",*addr);
-			else			   sprintf(str,"%08lX",(unsigned long)*addr);
+			if(is_BMUse64()) sprintf(str,"%016llX",*addr);
+			else		 sprintf(str,"%08lX",(unsigned long)*addr);
 		     }
 		     break;
       case KE_F(2):  if(((*flags)&0xFF) < GJDLG_PERCENTS) (*flags)++;
@@ -291,7 +291,7 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
  CloseWnd(hwnd);
  if(ret)
  {
- if(BMFileFlags&BMFF_USE64)
+ if(is_BMUse64())
     *addr = (*flags) == GJDLG_RELATIVE ||
 	    (*flags) == GJDLG_REL_EOF ? (unsigned long long int)strtoll(str,NULL,(*flags)==GJDLG_PERCENTS?10:16):
 					strtoull(str,NULL,(*flags)==GJDLG_PERCENTS?10:16);

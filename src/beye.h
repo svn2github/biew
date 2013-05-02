@@ -3,6 +3,7 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/file_ini.h"
+#include "libbeye/bbio.h"
 #include "codeguid.h"
 #include "reg_form.h"
 #include "plugins/plugin.h"
@@ -65,6 +66,13 @@ namespace beye {
 
 	    void		PaintTitle() const;
 
+	    BFile&		bm_file() const { return bm_file_handle; }
+	    BFile&		sc_bm_file() const { return sc_bm_file_handle; }
+	    bool		BMOpen(const std::string& fname);
+	    void		BMClose();
+	    static BFile*	beyeOpenRO(const std::string& fname,unsigned cache_size);
+	    static BFile*	beyeOpenRW(const std::string& fname,unsigned cache_size);
+
 	    std::string ArgVector1;
 	    char ini_ver[32];
 	    std::string help_name;
@@ -104,6 +112,8 @@ namespace beye {
 	    CodeGuider*		code_guider;
 	    addendum*		addons;
 	    class sysinfo*	sysinfo;
+	    BFile&		bm_file_handle;
+	    BFile&		sc_bm_file_handle;
     };
     BeyeContext& beye_context();
 } // namespace beye
