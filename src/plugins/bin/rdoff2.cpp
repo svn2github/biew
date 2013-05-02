@@ -36,7 +36,7 @@ static __filesize_t __FASTCALL__ rdoff2_ShowHeader( void )
   unsigned long hs_len,im_len;
   TWindow *w;
   fpos = BMGetCurrFilePos();
-  endian = bmReadByteEx(5,BM_SEEK_SET);
+  endian = bmReadByteEx(5,BFile::Seek_Set);
   im_len = bmReadDWord();
   hs_len = bmReadDWord();
   w = CrtDlgWndnls(endian == 0x02 ? " RDOFFv2 big endian " : " RDOFFv2 little endian ",54,5);
@@ -75,7 +75,7 @@ static __filesize_t __FASTCALL__ rdoff2_Help( void )
 static bool __FASTCALL__ rdoff2_check_fmt( void )
 {
   char rbuff[6];
-  bmReadBufferEx(rbuff,sizeof(rbuff),0L,BM_SEEK_SET);
+  bmReadBufferEx(rbuff,sizeof(rbuff),0L,BFile::Seek_Set);
   return memcmp(rbuff,"RDOFF2",sizeof(rbuff)) == 0 ||
 	 memcmp(rbuff,"RDOFF\x2",sizeof(rbuff)) == 0;
 }

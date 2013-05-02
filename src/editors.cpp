@@ -112,8 +112,8 @@ bool __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size
  else
  {
     EditorMem.size = (unsigned)((__filesize_t)msize > (flen-cfp) ? (flen-cfp) : msize);
-    BMReadBufferEx(EditorMem.buff,EditorMem.size,cfp,BM_SEEK_SET);
-    BMSeek(cfp,BM_SEEK_SET);
+    BMReadBufferEx(EditorMem.buff,EditorMem.size,cfp,BFile::Seek_Set);
+    BMSeek(cfp,BFile::Seek_Set);
  }
  memcpy(EditorMem.save,EditorMem.buff,EditorMem.size);
  /** initialize EditorMem.alen */

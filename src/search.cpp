@@ -162,7 +162,7 @@ static __filesize_t  __FASTCALL__  ___lfind(const char *sfrom,
     if(sfrom)
       memcpy(nbuff,&sfrom[start],symb_size);
     else
-      BMReadBufferEx(nbuff,symb_size,start,BM_SEEK_SET);
+      BMReadBufferEx(nbuff,symb_size,start,BFile::Seek_Set);
     if((beye_context().active_mode()->flags() & Plugin::Text) == Plugin::Text) beye_context().active_mode()->convert_cp(nbuff,symb_size,false);
     ch = nbuff[0];
     if(!(beyeFlg & SF_CASESENS)) ch = toupper(ch);
@@ -175,7 +175,7 @@ static __filesize_t  __FASTCALL__  ___lfind(const char *sfrom,
 	if(sfrom)
 	  memcpy(fbuff,&sfrom[findptr],pattern_size*symb_size);
 	else
-	  BMReadBufferEx((any_t*)fbuff,pattern_size*symb_size,findptr,BM_SEEK_SET);
+	  BMReadBufferEx((any_t*)fbuff,pattern_size*symb_size,findptr,BFile::Seek_Set);
 	if((beye_context().active_mode()->flags() & Plugin::Text) == Plugin::Text)
 	     __search_len = beye_context().active_mode()->convert_cp((char *)fbuff,pattern_size*symb_size,false);
 	else __search_len = pattern_size;
@@ -200,7 +200,7 @@ static __filesize_t  __FASTCALL__  ___lfind(const char *sfrom,
 	  if(sfrom)
 	    memcpy(nbuff,&sfrom[findptr-symb_size],symb_size);
 	  else
-	    BMReadBufferEx(nbuff,symb_size,findptr - symb_size,BM_SEEK_SET);
+	    BMReadBufferEx(nbuff,symb_size,findptr - symb_size,BFile::Seek_Set);
 	  if((beye_context().active_mode()->flags() & Plugin::Text) == Plugin::Text) beye_context().active_mode()->convert_cp(nbuff,symb_size,false);
 	  ch = nbuff[0];
 	}
@@ -210,7 +210,7 @@ static __filesize_t  __FASTCALL__  ___lfind(const char *sfrom,
 	  if(sfrom)
 	    memcpy(nbuff,&sfrom[findptr + (pattern_size*symb_size)],symb_size);
 	  else
-	    BMReadBufferEx(nbuff,symb_size,findptr + (pattern_size*symb_size),BM_SEEK_SET);
+	    BMReadBufferEx(nbuff,symb_size,findptr + (pattern_size*symb_size),BFile::Seek_Set);
 	  if((beye_context().active_mode()->flags() & Plugin::Text) == Plugin::Text) beye_context().active_mode()->convert_cp(nbuff,symb_size,false);
 	  ch1 = nbuff[0];
 	}
@@ -616,7 +616,7 @@ __filesize_t BeyeContext::search( bool is_continue )
     }
     else  ErrMessageBox(STR_NOT_FOUND,SEARCH_MSG);
   }
-  BMSeek(fmem,BM_SEEK_SET);
+  BMSeek(fmem,BFile::Seek_Set);
   return fmem;
 }
 } // namespace beye

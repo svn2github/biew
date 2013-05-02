@@ -184,7 +184,7 @@ static bool InsDelBlock( void )
       delete bHandle;
       BMReRead();
     }
-    BMSeek(fpos,BM_SEEK_SET);
+    BMSeek(fpos,BFile::Seek_Set);
  }
  return ret;
 }
@@ -331,7 +331,7 @@ static bool FStore( void )
 		while(wsize) {
 		    unsigned real_size;
 		    rem = (unsigned)std::min(wsize,__filesize_t(4096));
-		    if(!BMReadBufferEx(tmp_buff,rem,crpos,BM_SEEK_SET)) {
+		    if(!BMReadBufferEx(tmp_buff,rem,crpos,BFile::Seek_Set)) {
 			errnoMessageBox(READ_FAIL,NULL,errno);
 			delete _bioHandle;
 			goto Exit;
@@ -492,7 +492,7 @@ static bool FStore( void )
 			}
 		    }
 		    memset(codebuff,0,sizeof(codebuff));
-		    BMReadBufferEx((any_t*)codebuff,MaxInsnLen,ff_startpos,BM_SEEK_SET);
+		    BMReadBufferEx((any_t*)codebuff,MaxInsnLen,ff_startpos,BFile::Seek_Set);
 		    if(obj_class == OC_CODE) dret = dismode->disassembler(ff_startpos,codebuff,__DISF_NORMAL);
 		    else { /** Data object */
 			unsigned dis_data_len,ifreq,data_len;
@@ -596,7 +596,7 @@ static bool FStore( void )
 	    } /** END: Write in disassembler mode */
 	    Exit:
 	    CloseWnd(progress_wnd);
-	    BMSeek(cpos,BM_SEEK_SET);
+	    BMSeek(cpos,BFile::Seek_Set);
 	} else  ErrMessageBox("Start position > end position!",NULL);
     }
     delete tmp_buff;
@@ -681,7 +681,7 @@ static bool FRestore( void )
      else errnoMessageBox(OPEN_FAIL,NULL,errno);
      delete (char*)tmp_buff;
      __OsClose(handle);
-     BMSeek(cpos,BM_SEEK_SET);
+     BMSeek(cpos,BFile::Seek_Set);
      ret = true;
    }
    else ErrMessageBox("Start position > end position!",NULL);
@@ -796,7 +796,7 @@ static bool CryptBlock( void )
        BMReRead();
      }
      delete (char*)tmp_buff;
-     BMSeek(cpos,BM_SEEK_SET);
+     BMSeek(cpos,BFile::Seek_Set);
      ret = true;
    }
    else ErrMessageBox("Start position > end position!",NULL);
@@ -900,7 +900,7 @@ static bool ReverseBlock( void )
        BMReRead();
      }
      delete (char*)tmp_buff;
-     BMSeek(cpos,BM_SEEK_SET);
+     BMSeek(cpos,BFile::Seek_Set);
      ret = true;
    }
    else ErrMessageBox("Start position > end position!",NULL);
@@ -1010,7 +1010,7 @@ static bool XLatBlock( void )
        BMReRead();
      }
      delete (char*)tmp_buff;
-     BMSeek(cpos,BM_SEEK_SET);
+     BMSeek(cpos,BFile::Seek_Set);
      ret = true;
    }
    else ErrMessageBox("Start position > end position!",NULL);

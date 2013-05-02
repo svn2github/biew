@@ -364,7 +364,7 @@ static __filesize_t  __FASTCALL__ CalcEntryCoff(unsigned long idx,bool display_m
   uint_fast16_t sec_num;
   __filesize_t fpos;
   fpos = 0L;
-  bmSeek(COFF_DWORD(coff386hdr.f_symptr)+idx*sizeof(struct external_syment),BM_SEEK_SET);
+  bmSeek(COFF_DWORD(coff386hdr.f_symptr)+idx*sizeof(struct external_syment),BFile::Seek_Set);
   bmReadBuffer(&cse,sizeof(struct external_syment));
   sec_num = COFF_WORD(cse.e_scnum);
   if(sec_num && sec_num <= COFF_WORD(coff386hdr.f_nscns) &&
@@ -435,7 +435,7 @@ static void  __FASTCALL__ BuildRelocCoff386( void )
   {
     bool is_eof;
     is_eof = false;
-    bmSeek(COFF_DWORD(coff386so[segcount].s_relptr),BM_SEEK_SET);
+    bmSeek(COFF_DWORD(coff386so[segcount].s_relptr),BFile::Seek_Set);
     nr = COFF_WORD(coff386so[segcount].s_nreloc);
     for(j = 0;j < nr;j++)
     {
@@ -486,7 +486,7 @@ static __filesize_t  __FASTCALL__ BuildReferStrCoff386(const DisMode& parent,cha
   int c,b;
   char name[256],pubname[256],secname[256];
   retval = true;
-  val = bmReadDWordEx(rne->offset,BM_SEEK_SET);
+  val = bmReadDWordEx(rne->offset,BFile::Seek_Set);
   /* rne->nameoff it's only pointer to name descriptor */
   is_idx = coffSymTabReadItemsIdx(*coff_cache,rne->nameoff,name,sizeof(name),(unsigned*)&secnum,&offset);
   val_assigned = false;

@@ -247,7 +247,7 @@ static __filesize_t __FASTCALL__ PharLapRunTimeParms( void )
 static bool __FASTCALL__ IsPharLap( void )
 {
    char sign[2];
-   bmReadBufferEx(sign,2,0,BM_SEEK_SET);
+   bmReadBufferEx(sign,2,0,BFile::Seek_Set);
    if(sign[0] == 'P' && (sign[1] == '2' || sign[1] == '3')) return true;
    return false;
 }
@@ -256,7 +256,7 @@ static void __FASTCALL__ PharLapInit(CodeGuider& code_guider)
 {
     UNUSED(code_guider);
   BFile& main_handle = bmbioHandle();
-  bmReadBufferEx(&nph,sizeof(nph),0,BM_SEEK_SET);
+  bmReadBufferEx(&nph,sizeof(nph),0,BFile::Seek_Set);
   if((pl_cache = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) pl_cache = &main_handle;
 }
 

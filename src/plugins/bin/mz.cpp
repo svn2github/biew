@@ -118,8 +118,8 @@ static const char *  __FASTCALL__ QueryAddInfo( void )
      const char *ret;
      __filesize_t fpos;
      fpos = bmGetCurrFilePos();
-     bmReadBufferEx(memmap,1000,0x1C,BM_SEEK_SET);
-     bmSeek(fpos,BM_SEEK_SET);
+     bmReadBufferEx(memmap,1000,0x1C,BFile::Seek_Set);
+     bmSeek(fpos,BFile::Seek_Set);
      ret = __QueryAddInfo(memmap);
      delete memmap;
      return ret;
@@ -233,14 +233,14 @@ static void  __FASTCALL__ BuildMZChain( void )
     if(!tptr) break;
     CurrMZChain = (long*)tptr;
     j = mz.mzTableOffset + i*4;
-    bmSeek(j,BM_SEEK_SET);
+    bmSeek(j,BFile::Seek_Set);
     off = bmReadWord();
     seg = bmReadWord();
     ptr = (((long)seg) << 4) + off + (((long)mz.mzHeaderSize) << 4);
     CurrMZChain[CurrMZCount++] = ptr;
   }
   HQSort(CurrMZChain,CurrMZCount,sizeof(any_t*),compare_ptr);
-  bmSeek(fpos,BM_SEEK_SET);
+  bmSeek(fpos,BFile::Seek_Set);
   CloseWnd(w);
 }
 
@@ -280,7 +280,7 @@ static bool __FASTCALL__ AppendMZRef(const DisMode& parent,char *str,__filesize_
   if(isMZReferenced(ulShift,codelen))
   {
      unsigned wrd;
-     wrd = bmReadWordEx(ulShift,BM_SEEK_SET);
+     wrd = bmReadWordEx(ulShift,BFile::Seek_Set);
      strcat(str,Get4Digit(wrd));
      strcat(str,"+PID");
      ret = true;
@@ -300,11 +300,11 @@ static bool  __FASTCALL__ mz_check_fmt( void )
 {
   unsigned char id[2];
   bool ret = false;
-  bmReadBufferEx(id,sizeof(id),0,BM_SEEK_SET);
+  bmReadBufferEx(id,sizeof(id),0,BFile::Seek_Set);
   if((id[0] == 'M' && id[1] == 'Z') ||
      (id[0] == 'Z' && id[1] == 'M'))
   {
-    bmReadBufferEx((any_t*)&mz,sizeof(MZHEADER),2,BM_SEEK_SET);
+    bmReadBufferEx((any_t*)&mz,sizeof(MZHEADER),2,BFile::Seek_Set);
     HeadSize = ((unsigned long)mz.mzHeaderSize) << 4;
     ret = true;
   }

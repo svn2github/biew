@@ -33,8 +33,8 @@ using namespace beye;
 namespace beye {
 static bool  __FASTCALL__ bmp_check_fmt( void )
 {
-    if(	bmReadByteEx(0,BM_SEEK_SET) == 'B' &&
-	bmReadByteEx(1,BM_SEEK_SET) == 'M') return true;
+    if(	bmReadByteEx(0,BFile::Seek_Set) == 'B' &&
+	bmReadByteEx(1,BFile::Seek_Set) == 'M') return true;
     return false;
 }
 static void __FASTCALL__ bmp_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
@@ -48,11 +48,11 @@ static __filesize_t __FASTCALL__ Show_BMP_Header( void )
  BITMAPINFOHEADER bmph;
  __filesize_t fpos,fpos2;
  fpos = BMGetCurrFilePos();
- bmSeek(2,BM_SEEK_SET);
+ bmSeek(2,BFile::Seek_Set);
  /*filesize = */bmReadDWord();
- bmSeek(4,BM_SEEK_CUR);
+ bmSeek(4,BFile::Seek_Cur);
  fpos2=bmReadWord(); /* data offset */
- bmSeek(2,BM_SEEK_CUR);
+ bmSeek(2,BFile::Seek_Cur);
  bmReadBuffer(&bmph,sizeof(BITMAPINFOHEADER));
  hwnd = CrtDlgWndnls(" BMP File Header ",43,6);
  twUseWin(hwnd);

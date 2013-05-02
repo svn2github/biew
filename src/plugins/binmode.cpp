@@ -164,7 +164,7 @@ unsigned BinMode::paint( unsigned keycode,unsigned tshift )
 	    count=BWidth*_b_width;
 	    _index = cfp + j*count;
 	    len = _index < limit ? (int)count : _index < flen ? (int)(flen - _index) : 0;
-	    if(len) { lastbyte = _index + len; BMReadBufferEx((any_t*)buffer,len,_index,BM_SEEK_SET); }
+	    if(len) { lastbyte = _index + len; BMReadBufferEx((any_t*)buffer,len,_index,BFile::Seek_Set); }
 	    if(bin_mode!=MOD_PLAIN) {
 		unsigned i,ii;
 		for(i=ii=0;i<BWidth;i++) {
@@ -251,8 +251,8 @@ void BinMode::misckey_action() /* EditBin */
 	    flen = BMGetFLength();
 	    cfp = BMGetCurrFilePos();
 	    size = (unsigned)((unsigned long)msize > (flen-cfp) ? (flen-cfp) : msize);
-	    BMReadBufferEx(buff,size*2,cfp,BM_SEEK_SET);
-	    BMSeek(cfp,BM_SEEK_SET);
+	    BMReadBufferEx(buff,size*2,cfp,BFile::Seek_Set);
+	    BMSeek(cfp,BFile::Seek_Set);
 	    for(i=0;i<size;i++) buff[i]=bin_mode==MOD_BINARY?buff[i*2]:buff[i*2+1];
 	    inited=editInitBuffs(tvioWidth-virtWidthCorr,buff,size);
 	    delete buff;

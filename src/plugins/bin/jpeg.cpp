@@ -36,8 +36,8 @@ static bool  __FASTCALL__ jpeg_check_fmt( void )
 {
     unsigned long val;
     unsigned char id[4];
-    val=bmReadDWordEx(0,BM_SEEK_SET);
-    bmReadBufferEx(id,4,6,BM_SEEK_SET);
+    val=bmReadDWordEx(0,BFile::Seek_Set);
+    bmReadBufferEx(id,4,6,BFile::Seek_Set);
     if(val==0xE0FFD8FF && memcmp(id,"JFIF",4)==0) return true;
     return false;
 }

@@ -648,7 +648,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
     }
   }
   exit:
-  BMSeek(cfpos,BM_SEEK_SET);
+  BMSeek(cfpos,BFile::Seek_Set);
   CloseWnd(hwnd);
   return ret_addr;
 }

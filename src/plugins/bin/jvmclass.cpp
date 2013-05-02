@@ -95,7 +95,7 @@ inline uint64_t JVM_QWORD(const uint64_t* cval,bool is_msbf) { return FMT_DWORD(
 static bool  __FASTCALL__ jvm_check_fmt( void )
 {
   unsigned char id[4];
-  bmReadBufferEx(id,sizeof(id),0,BM_SEEK_SET);
+  bmReadBufferEx(id,sizeof(id),0,BFile::Seek_Set);
   /* Cafe babe !!! */
   return id[0]==0xCA && id[1]==0xFE && id[2]==0xBA && id[3]==0xBE && bmGetFLength()>=16;
 }
@@ -109,19 +109,19 @@ static unsigned  __FASTCALL__ skip_constant(BFile& handle,unsigned char id)
     {
 	default:
 	case CONSTANT_STRING:
-	case CONSTANT_CLASS: handle.seek(2,BM_SEEK_CUR); break;
+	case CONSTANT_CLASS: handle.seek(2,BFile::Seek_Cur); break;
 	case CONSTANT_INTEGER:
 	case CONSTANT_FLOAT:
 	case CONSTANT_FIELDREF:
 	case CONSTANT_METHODREF:
 	case CONSTANT_NAME_AND_TYPE:
-	case CONSTANT_INTERFACEMETHODREF: handle.seek(4,BM_SEEK_CUR); break;
+	case CONSTANT_INTERFACEMETHODREF: handle.seek(4,BFile::Seek_Cur); break;
 	case CONSTANT_LONG:
-	case CONSTANT_DOUBLE: handle.seek(8,BM_SEEK_CUR); add=1; break;
+	case CONSTANT_DOUBLE: handle.seek(8,BFile::Seek_Cur); add=1; break;
 	case CONSTANT_UTF8:
 			sval=handle.read_word();
 			sval=JVM_WORD(&sval,1);
-			handle.seek(sval,BM_SEEK_CUR);
+			handle.seek(sval,BFile::Seek_Cur);
 			break;
     }
     return add;
@@ -141,7 +141,7 @@ static void  __FASTCALL__ skip_constant_pool(BFile& handle,unsigned nitems)
 static void  __FASTCALL__ get_utf8(BFile& handle,unsigned nidx,char *str,unsigned slen)
 {
     unsigned char id;
-    handle.seek(jvm_header.constants_offset,BM_SEEK_SET);
+    handle.seek(jvm_header.constants_offset,BFile::Seek_Set);
     skip_constant_pool(handle,nidx-1);
     id=handle.read_byte();
     if(id==CONSTANT_UTF8)
@@ -168,7 +168,7 @@ static char *  __FASTCALL__ get_class_name(BFile& handle,unsigned idx,char *str,
     if(idx && idx<(unsigned)jvm_header.constant_pool_count-1)
     {
 	unsigned char id;
-	handle.seek(jvm_header.constants_offset,BM_SEEK_SET);
+	handle.seek(jvm_header.constants_offset,BFile::Seek_Set);
 	skip_constant_pool(handle,idx-1);
 	id=handle.read_byte();
 	if(id==CONSTANT_CLASS) get_name(handle,str,slen);
@@ -182,10 +182,10 @@ static void  __FASTCALL__ skip_attributes(BFile& handle,unsigned nitems)
     for(i=0;i<nitems;i++)
     {
 	uint32_t lval;
-	handle.seek(2,BM_SEEK_CUR);
+	handle.seek(2,BFile::Seek_Cur);
 	lval=handle.read_dword();
 	lval=JVM_DWORD(&lval,1);
-	handle.seek(lval,BM_SEEK_CUR);
+	handle.seek(lval,BFile::Seek_Cur);
     }
 }
 
@@ -196,7 +196,7 @@ static void  __FASTCALL__ skip_fields(unsigned nitems,int attr)
     for(i=0;i<nitems;i++)
     {
 	unsigned short sval;
-	bmSeek(6,BM_SEEK_CUR);
+	bmSeek(6,BFile::Seek_Cur);
 	sval=bmReadWord();
 	sval=JVM_WORD(&sval,1);
 	fpos=bmGetCurrFilePos();
@@ -217,7 +217,7 @@ static bool __FASTCALL__ jvm_read_interfaces(BFile& handle,memArray * names,unsi
     __filesize_t fpos;
     unsigned short id;
     char str[80];
-    handle.seek(jvm_header.interfaces_offset,BM_SEEK_SET);
+    handle.seek(jvm_header.interfaces_offset,BFile::Seek_Set);
     for(i=0;i<nnames;i++)
     {
 	id=handle.read_word();
@@ -225,7 +225,7 @@ static bool __FASTCALL__ jvm_read_interfaces(BFile& handle,memArray * names,unsi
 	id=JVM_WORD(&id,1);
 	get_class_name(handle,id,str,sizeof(str));
 	if(!ma_AddString(names,str,true)) break;
-	handle.seek(fpos,BM_SEEK_SET);
+	handle.seek(fpos,BFile::Seek_Set);
     }
     return true;
 }
@@ -253,17 +253,17 @@ static bool __FASTCALL__ jvm_read_attributes(BFile& handle,memArray * names,unsi
     __filesize_t fpos;
     uint32_t len;
     char str[80],sout[100];
-    handle.seek(jvm_header.attributes_offset,BM_SEEK_SET);
+    handle.seek(jvm_header.attributes_offset,BFile::Seek_Set);
     for(i=0;i<nnames;i++)
     {
 	fpos=handle.tell();
 	get_name(handle,str,sizeof(str));
-	handle.seek(fpos+2,BM_SEEK_SET);
+	handle.seek(fpos+2,BFile::Seek_Set);
 	len=handle.read_dword();
 	len=JVM_DWORD(&len,1);
 	sprintf(sout,"%08lXH %s",(long)len,str);
 	if(!ma_AddString(names,sout,true)) break;
-	handle.seek(len,BM_SEEK_CUR);
+	handle.seek(len,BFile::Seek_Cur);
     }
     return true;
 }
@@ -286,16 +286,16 @@ static __filesize_t  __FASTCALL__ __ShowAttributes(const char *title)
   if(ret!=-1)
   {
     unsigned i;
-    bmSeek(jvm_header.attributes_offset,BM_SEEK_SET);
+    bmSeek(jvm_header.attributes_offset,BFile::Seek_Set);
     for(i=0;i<(unsigned)ret+1;i++)
     {
 	uint32_t len;
 	fpos=bmGetCurrFilePos();
-	bmSeek(fpos+2,BM_SEEK_SET);
+	bmSeek(fpos+2,BFile::Seek_Set);
 	len=bmReadDWord();
 	len=JVM_DWORD(&len,1);
 	fpos+=6;
-	bmSeek(len,BM_SEEK_CUR);
+	bmSeek(len,BFile::Seek_Cur);
     }
   }
   return fpos;
@@ -312,16 +312,16 @@ static bool __FASTCALL__ jvm_read_methods(BFile& handle,memArray * names,unsigne
     __filesize_t fpos;
     unsigned short flg,sval,acount;
     char str[80],str2[80],sout[256];
-    handle.seek(jvm_header.methods_offset,BM_SEEK_SET);
+    handle.seek(jvm_header.methods_offset,BFile::Seek_Set);
     for(i=0;i<nnames;i++)
     {
 	fpos=handle.tell();
 	flg=handle.read_word();
 	flg=JVM_WORD(&flg,1);
 	get_name(handle,str,sizeof(str));
-	handle.seek(fpos+4,BM_SEEK_SET);
+	handle.seek(fpos+4,BFile::Seek_Set);
 	get_name(handle,str2,sizeof(str2));
-	handle.seek(fpos+6,BM_SEEK_SET);
+	handle.seek(fpos+6,BFile::Seek_Set);
 	sval=handle.read_word();
 	acount=JVM_WORD(&sval,1);
 	skip_attributes(handle,acount);
@@ -350,13 +350,13 @@ static __filesize_t __FASTCALL__ ShowMethods(void)
     char str[80];
     unsigned i;
     unsigned short acount=0;
-    bmSeek(jvm_header.methods_offset,BM_SEEK_SET);
+    bmSeek(jvm_header.methods_offset,BFile::Seek_Set);
     for(i=0;i<(unsigned)ret+1;i++)
     {
 	fpos=bmGetCurrFilePos();
-	bmSeek(2,BM_SEEK_CUR);
+	bmSeek(2,BFile::Seek_Cur);
 	get_name(bmbioHandle(),str,sizeof(str));
-	bmSeek(fpos+6,BM_SEEK_SET);
+	bmSeek(fpos+6,BFile::Seek_Set);
 	acount=bmReadWord();
 	acount=JVM_WORD(&acount,1);
 	skip_attributes(bmbioHandle(),acount);
@@ -386,16 +386,16 @@ static bool __FASTCALL__ jvm_read_fields(BFile& handle,memArray * names,unsigned
     __filesize_t fpos;
     unsigned short flg,sval,acount;
     char str[80],str2[80],sout[256];
-    handle.seek(jvm_header.fields_offset,BM_SEEK_SET);
+    handle.seek(jvm_header.fields_offset,BFile::Seek_Set);
     for(i=0;i<nnames;i++)
     {
 	fpos=handle.tell();
 	flg=handle.read_word();
 	flg=JVM_WORD(&flg,1);
 	get_name(handle,str,sizeof(str));
-	handle.seek(fpos+4,BM_SEEK_SET);
+	handle.seek(fpos+4,BFile::Seek_Set);
 	get_name(handle,str2,sizeof(str2));
-	handle.seek(fpos+6,BM_SEEK_SET);
+	handle.seek(fpos+6,BFile::Seek_Set);
 	sval=handle.read_word();
 	acount=JVM_WORD(&sval,1);
 	skip_attributes(handle,acount);
@@ -424,13 +424,13 @@ static __filesize_t __FASTCALL__ ShowFields(void)
     char str[80];
     unsigned i;
     unsigned short acount=0;
-    bmSeek(jvm_header.fields_offset,BM_SEEK_SET);
+    bmSeek(jvm_header.fields_offset,BFile::Seek_Set);
     for(i=0;i<(unsigned)ret+1;i++)
     {
 	fpos=bmGetCurrFilePos();
-	bmSeek(2,BM_SEEK_CUR);
+	bmSeek(2,BFile::Seek_Cur);
 	get_name(bmbioHandle(),str,sizeof(str));
-	bmSeek(fpos+6,BM_SEEK_SET);
+	bmSeek(fpos+6,BFile::Seek_Set);
 	acount=bmReadWord();
 	acount=JVM_WORD(&acount,1);
 	skip_attributes(bmbioHandle(),acount);
@@ -461,7 +461,7 @@ static bool __FASTCALL__ jvm_read_pool(BFile& handle,memArray * names,unsigned n
     unsigned short flg,sval,slen;
     unsigned char utag;
     char str[80],str2[80],sout[256];
-    handle.seek(jvm_header.constants_offset,BM_SEEK_SET);
+    handle.seek(jvm_header.constants_offset,BFile::Seek_Set);
     for(i=0;i<nnames;i++)
     {
 	fpos=handle.tell();
@@ -472,7 +472,7 @@ static bool __FASTCALL__ jvm_read_pool(BFile& handle,memArray * names,unsigned n
 	    case CONSTANT_CLASS:
 			fpos=handle.tell();
 			get_name(handle,str,sizeof(str));
-			handle.seek(fpos+2,BM_SEEK_SET);
+			handle.seek(fpos+2,BFile::Seek_Set);
 			sprintf(sout,"%s: %s",utag==CONSTANT_CLASS?"Class":"String",str);
 			break;
 	    case CONSTANT_FIELDREF:
@@ -506,9 +506,9 @@ static bool __FASTCALL__ jvm_read_pool(BFile& handle,memArray * names,unsigned n
 	    case CONSTANT_NAME_AND_TYPE:
 			fpos=handle.tell();
 			get_name(handle,str,sizeof(str));
-			handle.seek(fpos+2,BM_SEEK_SET);
+			handle.seek(fpos+2,BFile::Seek_Set);
 			get_name(handle,str2,sizeof(str2));
-			handle.seek(fpos+4,BM_SEEK_SET);
+			handle.seek(fpos+4,BFile::Seek_Set);
 			sprintf(sout,"Name&Type: %s %s",str,str2);
 			break;
 	    case CONSTANT_UTF8:
@@ -517,7 +517,7 @@ static bool __FASTCALL__ jvm_read_pool(BFile& handle,memArray * names,unsigned n
 			slen=std::min(sizeof(str)-1,size_t(sval));
 			fpos=handle.tell();
 			handle.read_buffer(str,slen);
-			handle.seek(fpos+sval,BM_SEEK_SET);
+			handle.seek(fpos+sval,BFile::Seek_Set);
 			str[slen]='\0';
 			sprintf(sout,"UTF8: %s",str);
 			break;
@@ -557,7 +557,7 @@ static void __FASTCALL__ jvm_init_fmt(CodeGuider& code_guider)
     jvm_header.code_offset=-1;
     jvm_header.data_offset=-1;
     fpos=bmGetCurrFilePos();
-    bmSeek(4,BM_SEEK_SET);
+    bmSeek(4,BFile::Seek_Set);
     sval=bmReadWord();
     jvm_header.minor=JVM_WORD(&sval,1);
     sval=bmReadWord();
@@ -575,7 +575,7 @@ static void __FASTCALL__ jvm_init_fmt(CodeGuider& code_guider)
     sval=bmReadWord();
     jvm_header.interfaces_count=JVM_WORD(&sval,1);
     jvm_header.interfaces_offset=bmGetCurrFilePos();
-    bmSeek(jvm_header.interfaces_count*2,BM_SEEK_CUR);
+    bmSeek(jvm_header.interfaces_count*2,BFile::Seek_Cur);
     sval=bmReadWord();
     jvm_header.fields_count=JVM_WORD(&sval,1);
     jvm_header.fields_offset=bmGetCurrFilePos();
@@ -591,7 +591,7 @@ static void __FASTCALL__ jvm_init_fmt(CodeGuider& code_guider)
     if(jvm_header.attributes_count) jvm_header.attrcode_offset=jvm_header.attributes_offset;
     skip_attributes(bmbioHandle(),sval);
     jvm_header.header_length=bmGetCurrFilePos();
-    bmSeek(fpos,BM_SEEK_SET);
+    bmSeek(fpos,BFile::Seek_Set);
     BFile& bh = bmbioHandle();
     if((jvm_cache = bh.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) jvm_cache = &bh;
     if((pool_cache = bh.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) pool_cache = &bh;
@@ -699,7 +699,7 @@ static bool __FASTCALL__ jvm_AddressResolv(char *addr,__filesize_t cfpos)
 static void __FASTCALL__ jvm_ReadPubName(BFile& b_cache,const struct PubName *it,
 			    char *buff,unsigned cb_buff)
 {
-    b_cache.seek(it->nameoff,BM_SEEK_SET);
+    b_cache.seek(it->nameoff,BFile::Seek_Set);
     get_name(b_cache,buff,cb_buff);
     if(it->addinfo)
     {
@@ -720,7 +720,7 @@ static void __FASTCALL__ jvm_ReadPubNameList(BFile& handle,void (__FASTCALL__ *m
  if(!PubNames)
    if(!(PubNames = la_Build(0,sizeof(struct PubName),mem_out))) return;
 /* Lookup fields */
- handle.seek(jvm_header.fields_offset,BM_SEEK_SET);
+ handle.seek(jvm_header.fields_offset,BFile::Seek_Set);
  for(i = 0;i < jvm_header.fields_count;i++)
  {
     fpos=handle.tell();
@@ -728,7 +728,7 @@ static void __FASTCALL__ jvm_ReadPubNameList(BFile& handle,void (__FASTCALL__ *m
     flg=JVM_WORD(&flg,1);
     jvm_pn.nameoff = handle.tell();
     jvm_pn.addinfo=0;
-    handle.seek(fpos+6,BM_SEEK_SET);
+    handle.seek(fpos+6,BFile::Seek_Set);
     acount=handle.read_word();
     acount=JVM_WORD(&acount,1);
     for(i=0;i<acount;i++)
@@ -736,13 +736,13 @@ static void __FASTCALL__ jvm_ReadPubNameList(BFile& handle,void (__FASTCALL__ *m
 	uint32_t jlen;
 	fpos=handle.tell();
 	jvm_pn.addinfo=fpos;
-	handle.seek(fpos+2,BM_SEEK_SET);
+	handle.seek(fpos+2,BFile::Seek_Set);
 	jlen=handle.read_dword();
 	jlen=JVM_DWORD(&jlen,1);
 	jvm_pn.pa = handle.tell();
 	jvm_pn.attr    = flg & 0x0008 ? SC_LOCAL : SC_GLOBAL;
 	if(!la_AddData(PubNames,&jvm_pn,mem_out)) break;
-	handle.seek(jlen,BM_SEEK_CUR);
+	handle.seek(jlen,BFile::Seek_Cur);
 	if(handle.eof()) break;
     }
     if(!acount)
@@ -754,14 +754,14 @@ static void __FASTCALL__ jvm_ReadPubNameList(BFile& handle,void (__FASTCALL__ *m
     if(handle.eof()) break;
  }
 /* Lookup methods */
- handle.seek(jvm_header.methods_offset,BM_SEEK_SET);
+ handle.seek(jvm_header.methods_offset,BFile::Seek_Set);
  for(i=0;i<jvm_header.fields_count;i++)
  {
     fpos=handle.tell();
     flg=handle.read_word();
     flg=JVM_WORD(&flg,1);
     jvm_pn.nameoff = handle.tell();
-    handle.seek(fpos+6,BM_SEEK_SET);
+    handle.seek(fpos+6,BFile::Seek_Set);
     acount=handle.read_word();
     acount=JVM_WORD(&acount,1);
     for(i=0;i<acount;i++)
@@ -769,13 +769,13 @@ static void __FASTCALL__ jvm_ReadPubNameList(BFile& handle,void (__FASTCALL__ *m
 	uint32_t jlen;
 	fpos=handle.tell();
 	jvm_pn.addinfo=fpos;
-	handle.seek(fpos+2,BM_SEEK_SET);
+	handle.seek(fpos+2,BFile::Seek_Set);
 	jlen=handle.read_dword();
 	jlen=JVM_DWORD(&jlen,1);
 	jvm_pn.pa = handle.tell();
 	jvm_pn.attr    = flg & 0x0008 ? SC_LOCAL : SC_GLOBAL;
 	if(!la_AddData(PubNames,&jvm_pn,mem_out)) break;
-	handle.seek(jlen,BM_SEEK_CUR);
+	handle.seek(jlen,BFile::Seek_Cur);
 	if(handle.eof()) break;
     }
     if(!acount)
@@ -849,12 +849,12 @@ static unsigned __FASTCALL__ jvm_GetObjAttr(__filesize_t pa,char *name,unsigned 
       __filesize_t fpos;
       uint32_t len;
       fpos=bmGetCurrFilePos();
-      bmSeek(jvm_header.attributes_offset,BM_SEEK_SET);
+      bmSeek(jvm_header.attributes_offset,BFile::Seek_Set);
       get_name(bmbioHandle(),name,cb_name);
-      bmSeek(fpos+2,BM_SEEK_SET);
+      bmSeek(fpos+2,BFile::Seek_Set);
       len=bmReadDWord();
       len=JVM_DWORD(&len,1);
-      bmSeek(fpos,BM_SEEK_SET);
+      bmSeek(fpos,BFile::Seek_Set);
       *_class = OC_CODE;
       *start = jvm_header.attributes_offset+6;
       *end = *start+len;
@@ -881,7 +881,7 @@ static bool __FASTCALL__ jvm_AppendRef(const DisMode& parent,char *str,__filesiz
 	unsigned sl;
 	unsigned short sval,sval2;
 	unsigned char utag;
-	jvm_cache->seek(ulShift,BM_SEEK_SET);
+	jvm_cache->seek(ulShift,BFile::Seek_Set);
 	switch(codelen)
 	{
 	    case 4: lidx=jvm_cache->read_dword(); lidx=JVM_DWORD(&lidx,1); break;
@@ -889,7 +889,7 @@ static bool __FASTCALL__ jvm_AppendRef(const DisMode& parent,char *str,__filesiz
 	    default:
 	    case 1: lidx=jvm_cache->read_byte(); break;
 	}
-	pool_cache->seek(jvm_header.constants_offset,BM_SEEK_SET);
+	pool_cache->seek(jvm_header.constants_offset,BFile::Seek_Set);
 	if(lidx<1 || lidx>jvm_header.constant_pool_count) { retrf = false; goto bye; }
 	skip_constant_pool(*pool_cache,lidx-1);
 	utag=pool_cache->read_byte();
@@ -908,13 +908,13 @@ static bool __FASTCALL__ jvm_AppendRef(const DisMode& parent,char *str,__filesiz
 			sval=JVM_WORD(&sval,1);
 			sval2=pool_cache->read_word();
 			sval2=JVM_WORD(&sval2,1);
-			pool_cache->seek(jvm_header.constants_offset,BM_SEEK_SET);
+			pool_cache->seek(jvm_header.constants_offset,BFile::Seek_Set);
 			get_class_name(*pool_cache,sval,str,slen);
 			strcat(str,".");
 			sl=strlen(str);
 			slen-=sl;
 			str+=sl;
-			pool_cache->seek(jvm_header.constants_offset,BM_SEEK_SET);
+			pool_cache->seek(jvm_header.constants_offset,BFile::Seek_Set);
 			skip_constant_pool(*pool_cache,sval2-1);
 			utag=pool_cache->read_byte();
 			if(utag!=CONSTANT_NAME_AND_TYPE) break;
@@ -942,7 +942,7 @@ static bool __FASTCALL__ jvm_AppendRef(const DisMode& parent,char *str,__filesiz
 	    name_type:
 			fpos=pool_cache->tell();
 			get_name(*pool_cache,str,slen);
-			pool_cache->seek(fpos+2,BM_SEEK_SET);
+			pool_cache->seek(fpos+2,BFile::Seek_Set);
 			strcat(str," ");
 			sl=strlen(str);
 			slen-=sl;

@@ -158,7 +158,7 @@ void DisMode::fill_prev_asm_page(__filesize_t bound,unsigned predist)
     for(j = 0;;j++) {
 	DisasmRet dret;
 	addr = distin + totallen;
-	BMReadBufferEx(disCodeBuffer,disMaxCodeLen,addr,BM_SEEK_SET);
+	BMReadBufferEx(disCodeBuffer,disMaxCodeLen,addr,BFile::Seek_Set);
 	dret = disassembler(distin,(unsigned char*)disCodeBuffer,__DISF_SIZEONLY);
 	if(addr >= bound) break;
 	totallen += dret.codelen;
@@ -240,7 +240,7 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 	showref = disNeedRef;
 	addrdet = hexAddressResolv;
 	disNeedRef = Ref_None; hexAddressResolv = 0;
-	BMReadBufferEx(disCodeBuffer,disMaxCodeLen,cfpos,BM_SEEK_SET);
+	BMReadBufferEx(disCodeBuffer,disMaxCodeLen,cfpos,BFile::Seek_Set);
 	DisasmPrepareMode = true;
 	dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_SIZEONLY);
 	if(cfpos + dret.codelen != amocpos && cfpos && amocpos) keycode = KE_SUPERKEY;
@@ -286,7 +286,7 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 	    if(cfpos < flen) {
 		len = cfpos + disMaxCodeLen < flen ? disMaxCodeLen : (int)(flen - cfpos);
 		::memset(disCodeBuffer,0,disMaxCodeLen);
-		BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,BM_SEEK_SET);
+		BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,BFile::Seek_Set);
 		dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
 		if(i == 0) CurrStrLen = dret.codelen;
 		CurrStrLenBuff[i] = dret.codelen;
@@ -378,7 +378,7 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 		    twClrEOL();
 		}
 		cfpos += dret.codelen;
-		BMSeek(cfpos,BM_SEEK_SET);
+		BMSeek(cfpos,BFile::Seek_Set);
 	    } else {
 		twDirectWrite(1,i + 1,outstr,width);
 		CurrStrLenBuff[i] = 0;
@@ -575,7 +575,7 @@ int DisMode::full_asm_edit(TWindow * ewnd)
     start = 0;
 
     rlen = (__filesize_t)edit_cp + max_buff_size < flen ? max_buff_size : (unsigned)(flen - edit_cp);
-    BMReadBufferEx((any_t*)EditorMem.buff,rlen,edit_cp,BM_SEEK_SET);
+    BMReadBufferEx((any_t*)EditorMem.buff,rlen,edit_cp,BFile::Seek_Set);
     ::memcpy(EditorMem.save,EditorMem.buff,max_buff_size);
     ::memset(EditorMem.alen,TWC_DEF_FILLER,height);
 
@@ -761,7 +761,7 @@ __filesize_t DisMode::search_engine(TWindow *pwnd, __filesize_t start,
 		len = cfpos + disMaxCodeLen < flen ? disMaxCodeLen : (int)(flen - cfpos);
 		::memset(disCodeBuffer,0,disMaxCodeLen);
 		dfpos = cfpos;
-		BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,BM_SEEK_SET);
+		BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,BFile::Seek_Set);
 		dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
 		cfpos -= lw;
 	    } else break;
@@ -769,7 +769,7 @@ __filesize_t DisMode::search_engine(TWindow *pwnd, __filesize_t start,
 	    len = cfpos + disMaxCodeLen < flen ? disMaxCodeLen : (int)(flen - cfpos);
 	    ::memset(disCodeBuffer,0,disMaxCodeLen);
 	    dfpos = cfpos;
-	    BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,BM_SEEK_SET);
+	    BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,BFile::Seek_Set);
 	    dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
 	    cfpos += dret.codelen;
 	    if(cfpos >= flen) break;
@@ -922,7 +922,7 @@ bool DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,
 	  strcat(comments,"->\"");
 	  for(_index = 3;_index < sizeof(comments)-5;_index++)
 	  {
-	    bmSeek(pa+_index-3,BM_SEEK_SET);
+	    bmSeek(pa+_index-3,BFile::Seek_Set);
 	    rch = bmReadByte();
 	    if(isprint(rch)) comments[_index] = rch;
 	    else break;
@@ -1062,7 +1062,7 @@ bool DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,
      strcpy(dis_comments,comments);
    }
   }
-  bmSeek(fpos,BM_SEEK_SET);
+  bmSeek(fpos,BFile::Seek_Set);
   return app;
 }
 
@@ -1237,7 +1237,7 @@ bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__f
    }
    if(appended && !DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
  }
- bmSeek(fpos,BM_SEEK_SET);
+ bmSeek(fpos,BFile::Seek_Set);
  return appended;
 }
 

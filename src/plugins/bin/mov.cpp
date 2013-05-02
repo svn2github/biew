@@ -36,14 +36,14 @@ namespace beye {
 static __filesize_t __FASTCALL__ mov_find_chunk(__filesize_t off,unsigned long id)
 {
     unsigned long ids,size;
-    bmSeek(off,BM_SEEK_SET);
+    bmSeek(off,BFile::Seek_Set);
     while(!bmEOF())
     {
 	size=be2me_32(bmReadDWord());
 	if(size < 8) return -1;
 	ids=be2me_32(bmReadDWord());
 	if(ids==id) return bmGetCurrFilePos()-8;
-	bmSeek(size-8,BM_SEEK_CUR);
+	bmSeek(size-8,BFile::Seek_Cur);
     }
     return -1;
 }

@@ -642,7 +642,7 @@ static bool __FASTCALL__ ReadSegDefNE(SEGDEF * obj,unsigned segnum)
  BFile* handle;
   handle = ne_cache3;
   if(segnum > ne.neSegmentTableCount || !segnum) return false;
-  handle->seek((__fileoff_t)beye_context().headshift + ne.neOffsetSegmentTable + (segnum - 1)*sizeof(SEGDEF),BM_SEEK_SET);
+  handle->seek((__fileoff_t)beye_context().headshift + ne.neOffsetSegmentTable + (segnum - 1)*sizeof(SEGDEF),BFile::Seek_Set);
   handle->read_buffer((any_t*)obj,sizeof(SEGDEF));
   return true;
 }

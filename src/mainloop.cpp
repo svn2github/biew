@@ -118,11 +118,11 @@ void BeyeContext::main_loop()
     int ch;
     __filesize_t savep = 0,cfp,nfp,flen;
     unsigned long lwidth;
-    BMSeek(LastOffset,BM_SEEK_SET);
+    BMSeek(LastOffset,BFile::Seek_Set);
     drawPrompt();
     twUseWin(MainWnd);
     textshift = activeMode->paint(KE_SUPERKEY,textshift);
-    BMSeek(LastOffset,BM_SEEK_SET);
+    BMSeek(LastOffset,BFile::Seek_Set);
     drawTitle();
     while(1) {
 	unsigned che;
@@ -193,7 +193,7 @@ void BeyeContext::main_loop()
 		ch = KE_SUPERKEY;
 		PaintTitle();
 		drawPrompt();
-		BMSeek(sfp,BM_SEEK_SET);
+		BMSeek(sfp,BFile::Seek_Set);
 		break;
 	    case KE_F(5):
 		{
@@ -316,13 +316,13 @@ void BeyeContext::main_loop()
 	    __filesize_t p = flen - twidth;
 	    if((__fileoff_t)nfp < 0) nfp = 0;
 	    if(nfp > 0) if(nfp > p) nfp = p;
-	    BMSeek(nfp,BM_SEEK_SET);
+	    BMSeek(nfp,BFile::Seek_Set);
 	}
 	DRAW:
 	twUseWin(MainWnd);
 	if((activeMode->flags() & Plugin::Text) != Plugin::Text) savep = BMGetCurrFilePos();
 	textshift = activeMode->paint(ch,textshift);
-	if((activeMode->flags() & Plugin::Text) != Plugin::Text) BMSeek(savep,BM_SEEK_SET);
+	if((activeMode->flags() & Plugin::Text) != Plugin::Text) BMSeek(savep,BFile::Seek_Set);
 	drawTitle();
     }
 }

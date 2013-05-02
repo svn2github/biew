@@ -35,7 +35,7 @@ namespace beye {
 
 static bool  __FASTCALL__ rm_check_fmt( void )
 {
-    if(bmReadDWordEx(0,BM_SEEK_SET)==MKTAG('.', 'R', 'M', 'F')) return true;
+    if(bmReadDWordEx(0,BFile::Seek_Set)==MKTAG('.', 'R', 'M', 'F')) return true;
     return false;
 }
 

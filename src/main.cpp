@@ -164,7 +164,7 @@ __filesize_t IsNewExe()
 {
   __filesize_t ret;
   char id[2];
-  bmReadBufferEx(id,sizeof(id),0,BM_SEEK_SET);
+  bmReadBufferEx(id,sizeof(id),0,BFile::Seek_Set);
 #if 0
    /*
       It is well documented technology, but it correctly working
@@ -176,11 +176,11 @@ __filesize_t IsNewExe()
       Fixed by Kostya Nosov <k-nosov@yandex.ru>.
    */
    if(!( id[0] == 'M' && id[1] == 'Z' &&
-	bmReadWordEx(0x18,BM_SEEK_SET) >= 0x40 &&
-	(ret=bmReadDWordEx(0x3C,BM_SEEK_SET)) > 0x40L)) ret = 0;
+	bmReadWordEx(0x18,BFile::Seek_Set) >= 0x40 &&
+	(ret=bmReadDWordEx(0x3C,BFile::Seek_Set)) > 0x40L)) ret = 0;
 #endif
    if(!( id[0] == 'M' && id[1] == 'Z' &&
-	(ret=bmReadDWordEx(0x3C,BM_SEEK_SET)) > 0x02L)) ret = 0;
+	(ret=bmReadDWordEx(0x3C,BFile::Seek_Set)) > 0x02L)) ret = 0;
    return (__filesize_t)ret;
 }
 
@@ -198,7 +198,7 @@ void BeyeContext::auto_detect_mode()
     }
     if(mode) delete mode;
     activeMode = modes[defMainModeSel]->query_interface(*code_guider);
-    BMSeek(0,BM_SEEK_SET);
+    BMSeek(0,BFile::Seek_Set);
 }
 
 static const struct tagbeyeArg {

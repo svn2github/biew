@@ -120,7 +120,7 @@ static int  __FASTCALL__ avi_platform( void) { return DISASM_DEFAULT; }
 static __filesize_t __FASTCALL__ avi_find_chunk(__filesize_t off,unsigned long id)
 {
     unsigned long ids,size,type;
-    bmSeek(off,BM_SEEK_SET);
+    bmSeek(off,BFile::Seek_Set);
     while(!bmEOF())
     {
 /*	fpos=bmGetCurrFilePos();*/
@@ -135,7 +135,7 @@ static __filesize_t __FASTCALL__ avi_find_chunk(__filesize_t off,unsigned long i
 	    if(type==id) return bmGetCurrFilePos();
 	    continue;
 	}
-	bmSeek(size,BM_SEEK_CUR);
+	bmSeek(size,BFile::Seek_Cur);
     }
     return -1;
 }
@@ -149,7 +149,7 @@ static __filesize_t __FASTCALL__ Show_AVI_Header( void )
  fpos = BMGetCurrFilePos();
  fpos2 = avi_find_chunk(12,mmioFOURCC('a','v','i','h'));
  if((__fileoff_t)fpos2==-1) { ErrMessageBox("Main AVI Header not found",NULL); return fpos; }
- bmSeek(fpos2,BM_SEEK_SET);
+ bmSeek(fpos2,BFile::Seek_Set);
  bmReadDWord(); /* skip section size */
  bmReadBuffer(&avih,sizeof(MainAVIHeader));
  fpos2 = avi_find_chunk(12,mmioFOURCC('m','o','v','i'));
@@ -201,7 +201,7 @@ static __filesize_t __FASTCALL__ Show_A_Header( void )
  {
     fpos2 = avi_find_chunk(fpos2,mmioFOURCC('s','t','r','h'));
     if((__fileoff_t)fpos2==-1) { ErrMessageBox("Audio Stream Header not found",NULL); return fpos; }
-    bmSeek(fpos2,BM_SEEK_SET);
+    bmSeek(fpos2,BFile::Seek_Set);
     newcpos=bmReadDWord();
     bmReadBuffer(&strh,sizeof(AVIStreamHeader));
     fpos2+=newcpos+4;
@@ -274,7 +274,7 @@ static __filesize_t __FASTCALL__ Show_V_Header( void )
  {
     fpos2 = avi_find_chunk(fpos2,mmioFOURCC('s','t','r','h'));
     if((__fileoff_t)fpos2==-1) { ErrMessageBox("Video Stream Header not found",NULL); return fpos; }
-    bmSeek(fpos2,BM_SEEK_SET);
+    bmSeek(fpos2,BFile::Seek_Set);
     newcpos=bmReadDWord(); /* skip section size */
     bmReadBuffer(&strh,sizeof(AVIStreamHeader));
     fpos2+=newcpos+4;

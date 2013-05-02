@@ -141,11 +141,11 @@ static __filesize_t __FASTCALL__ ShowNewNLM( void )
   fpos = BMGetCurrFilePos();
   w = CrtDlgWndnls(" NetWare Loadable Module ",74,23);
   twGotoXY(1,1);
-  bmSeek(sizeof(Nlm_Internal_Fixed_Header),BM_SEEK_SET);
+  bmSeek(sizeof(Nlm_Internal_Fixed_Header),BFile::Seek_Set);
   len = bmReadByte();
   bmReadBuffer(modName,len + 1);
   ssize = bmReadDWord();
-  bmSeek(4,BM_SEEK_CUR); /** skip reserved */
+  bmSeek(4,BFile::Seek_Cur); /** skip reserved */
   twPrintF("%s\n"
 	   "Stack size                    = %08lXH\n"
 	   ,modName
@@ -166,7 +166,7 @@ static __filesize_t __FASTCALL__ ShowNewNLM( void )
     modName[9] = 0;
     if(memcmp(modName,"VeRsIoN#",8) == 0)
     {
-      bmSeek(-1,BM_SEEK_CUR);
+      bmSeek(-1,BFile::Seek_Cur);
       ssize = bmReadDWord();
       d = bmReadDWord();
       m = bmReadDWord();
@@ -179,7 +179,7 @@ static __filesize_t __FASTCALL__ ShowNewNLM( void )
     else
       if(memcmp(modName,"CoPyRiGhT",9) == 0)
       {
-	bmSeek(1,BM_SEEK_CUR);
+	bmSeek(1,BFile::Seek_Cur);
 	len = bmReadByte();
 	bmReadBuffer(modName,len + 1);
 	twPrintF("\nCopyright = %s",modName);
@@ -187,7 +187,7 @@ static __filesize_t __FASTCALL__ ShowNewNLM( void )
       else
 	if(memcmp(modName,"MeSsAgEs",8) == 0)
 	{
-	  bmSeek(-1,BM_SEEK_CUR);
+	  bmSeek(-1,BFile::Seek_Cur);
 	  ssize = bmReadDWord();
 	  twPrintF("\nLanguage                      = %08lXH\n",ssize);
 	  ssize = bmReadDWord();
@@ -232,7 +232,7 @@ static __filesize_t __FASTCALL__ ShowNewNLM( void )
 	  if(memcmp(modName,"CuStHeAd",8) == 0)
 	  {
 	    unsigned long hdr;
-	    bmSeek(-1,BM_SEEK_CUR);
+	    bmSeek(-1,BFile::Seek_Cur);
 	    ssize = bmReadDWord();
 	    d = bmReadDWord();
 	    m = bmReadDWord();
@@ -244,7 +244,7 @@ static __filesize_t __FASTCALL__ ShowNewNLM( void )
 	  else
 	    if(memcmp(modName,"CyGnUsEx",8) == 0)
 	    {
-	      bmSeek(-1,BM_SEEK_CUR);
+	      bmSeek(-1,BFile::Seek_Cur);
 	      d = bmReadDWord();
 	      m = bmReadDWord();
 	      twPrintF("\nCygnus (offset/length) = %08lXH/%08lXH",d,m);
@@ -499,7 +499,7 @@ static bool  __FASTCALL__ BuildReferStrNLM(char *str,RELOC_NLM*rne,int flags)
   BFile* b_cache;
   unsigned char len;
   b_cache = nlm_cache;
-  b_cache->seek(rne->nameoff,BM_SEEK_SET);
+  b_cache->seek(rne->nameoff,BFile::Seek_Set);
   retrf = true;
   if(rne->nameoff != 0xFFFFFFFFUL)
   {
@@ -558,7 +558,7 @@ static bool __FASTCALL__ AppendNLMRef(const DisMode& parent,char *str,__filesize
 static bool __FASTCALL__ IsNLM( void )
 {
   char ctrl[NLM_SIGNATURE_SIZE];
-  bmReadBufferEx(ctrl,NLM_SIGNATURE_SIZE,0,BM_SEEK_SET);
+  bmReadBufferEx(ctrl,NLM_SIGNATURE_SIZE,0,BFile::Seek_Set);
   return memcmp(ctrl,NLM_SIGNATURE,NLM_SIGNATURE_SIZE) == 0;
 }
 

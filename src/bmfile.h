@@ -28,12 +28,6 @@ namespace beye {
 	BBIO_SMALL_CACHE_SIZE  =0x4000  /* 16k */
     };
 
-    enum {
-	BM_SEEK_SET=BFile::Seek_Set,
-	BM_SEEK_CUR=BFile::Seek_Cur,
-	BM_SEEK_END=BFile::Seek_End
-    };
-
     inline bool		is_BMUse64() { return beye_context().bm_file().flength() > std::numeric_limits<uint32_t>::max(); }
     inline unsigned	HA_LEN() { return is_BMUse64()?18:10; }
 
