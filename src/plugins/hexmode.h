@@ -17,10 +17,7 @@
 #ifndef __HEXMODE_H
 #define __HEXMODE_H
 
-#ifndef __FILE_INI_RUNTIME_SUPPORT_SYSTEM__
-#include "libbeye/file_ini.h"
-#endif
-
+struct hIniProfile;
 namespace beye {
     extern unsigned		hexAddressResolv;
     bool __FASTCALL__		hexAddressResolution(unsigned& hexAddressResolv);

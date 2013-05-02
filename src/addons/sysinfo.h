@@ -1,9 +1,8 @@
 #ifndef __SYSINFO_HPP_INCLUDED
 #define __SYSINFO_HPP_INCLUDED 1
-#include "libbeye/libbeye.h"
-#include "reg_form.h"
-
 #include <vector>
+
+#include "libbeye/libbeye.h"
 
 namespace beye {
     struct Addon_Info;

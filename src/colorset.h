@@ -17,9 +17,7 @@
 #ifndef __COLORSET__H
 #define __COLORSET__H
 
-#ifndef __TWIN_H
 #include "libbeye/twin.h"
-#endif
 
 namespace beye {
     typedef struct tag_namedColorDef {

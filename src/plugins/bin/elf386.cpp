@@ -67,6 +67,7 @@ using namespace beye;
 #include "bconsole.h"
 #include "reg_form.h"
 #include "libbeye/libbeye.h"
+#include "libbeye/file_ini.h"
 #include "libbeye/kbd_code.h"
 
 namespace beye {

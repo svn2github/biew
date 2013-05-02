@@ -32,6 +32,7 @@ using namespace beye;
 #include "setup.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
+#include "plugins/plugin.h"
 
 namespace beye {
 extern REGISTRY_BIN mzTable;

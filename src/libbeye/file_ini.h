@@ -232,13 +232,14 @@ enum {
     HINI_FULLCACHED=0x0001,
     HINI_UPDATED   =0x0002
 };
-typedef struct tag_iniProfile
+
+struct hIniProfile
 {
    FiHandler     handler;
    char*         fname;
    any_t*        cache;
    unsigned      flags;
-}hIniProfile;
+};
 
 /** For internal purposes */
 extern void __FASTCALL__ hlFiProgress(hIniProfile *ini,FiUserFunc usrproc);

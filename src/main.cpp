@@ -55,6 +55,8 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
 
+#include "plugins/plugin.h"
+
 namespace beye {
 extern const REGISTRY_BIN binTable;
 extern const REGISTRY_BIN rmTable;

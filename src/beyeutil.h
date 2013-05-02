@@ -20,17 +20,9 @@
 #include <limits>
 #include <limits.h>
 
-#ifndef __TWIN_H
 #include "libbeye/twin.h"
-#endif
-
-#ifndef __BBIO_H
 #include "libbeye/bbio.h"
-#endif
-
-#ifndef __FILE_INI_RUNTIME_SUPPORT_SYSTEM__
 #include "libbeye/file_ini.h"
-#endif
 
 namespace beye {
     class DisMode;

@@ -18,10 +18,6 @@
 #define __CODEGUID__H
 #include <vector>
 
-#ifndef __SYS_DEP_H
-#include "_sys_dep.h"
-#endif
-
 namespace beye {
     class DisMode;
     class CodeGuider : public Opaque {

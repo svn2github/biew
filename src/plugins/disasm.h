@@ -19,20 +19,11 @@
 
 #include <vector>
 
-#ifndef __COLORSET__H
-#include "colorset.h"
-#endif
-
-#ifndef __TWIN_H
-#include "libbeye/twin.h"
-#endif
-
-#ifndef __FILE_INI_RUNTIME_SUPPORT_SYSTEM__
-#include "libbeye/file_ini.h"
-#endif
-
 #include "plugin.h"
+#include "colorset.h"
+#include "libbeye/twin.h"
 
+struct hIniProfile;
 namespace beye {
 /*
    This struct is ordered as it documented in Athlon manual
@@ -46,8 +37,7 @@ typedef struct tagDisasmRet
   unsigned char codelen;   /**< contains length of instruction when normal disassembling; length of field for binding on __DISF_GETTYPE */
 }DisasmRet;
 typedef unsigned char * MBuffer;
-struct REGISTRY_DISASM;
-
+    struct REGISTRY_DISASM;
     class DisMode : public Plugin {
 	public:
 	    /* New features: commentaries */

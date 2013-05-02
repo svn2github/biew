@@ -18,14 +18,6 @@
 #ifndef __REG_FORM__H
 #define __REG_FORM__H
 
-#ifndef __FILE_INI_RUNTIME_SUPPORT_SYSTEM__
-#include "libbeye/file_ini.h"
-#endif
-
-#ifndef __TWIN_H
-#include "libbeye/twin.h"
-#endif
-
 namespace beye {
 typedef __filesize_t  (__FASTCALL__ *BinFunc)( void );
 typedef bool         (__FASTCALL__ *ModFunc)( void );

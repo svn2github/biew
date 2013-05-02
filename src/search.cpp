@@ -34,6 +34,7 @@ using namespace beye;
 #include "reg_form.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/bbio.h"
+#include "plugins/plugin.h"
 
 extern void ReReadFile( int );
 

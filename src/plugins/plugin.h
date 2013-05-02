@@ -2,6 +2,8 @@
 #define __PLUGIN_HPP_INCLUDED 1
 #include "libbeye/libbeye.h"
 
+struct hIniProfile;
+struct TWindow;
 namespace beye {
     class CodeGuider;
     class Plugin : public Opaque {

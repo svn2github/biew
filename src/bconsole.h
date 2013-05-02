@@ -20,9 +20,7 @@
 #ifndef __BCONSOLE__H
 #define __BCONSOLE__H
 
-#ifndef __TWIN_H
 #include "libbeye/twin.h"
-#endif
 
 namespace beye {
 

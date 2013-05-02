@@ -33,6 +33,7 @@ using namespace beye;
 #include "beyehelp.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
+#include "plugins/plugin.h"
 
 namespace beye {
 static void  __FASTCALL__ ShowFunKey(const char * key,const char * text)

@@ -208,7 +208,7 @@ inline void PHYS_TO_LOGFB(ColorAttr attr,Color& fore,Color& back) { fore = FORE_
    Publication # 22007 Rev: D
 */
 /** Internal structure of text window */
-typedef struct tagTWindow
+struct TWindow
 {
   char           Frame[8];    /**< Buffer, contaning frame component */
 			      /* Frame encoding:   1---2---3 */
@@ -217,7 +217,7 @@ typedef struct tagTWindow
 			      /*                   |       | */
 			      /*                   6---7---8 */
   unsigned long  iflags;      /**< contains internal flags of window state */
-  struct tagTWindow *next;    /**< pointer to next window in list */
+  struct TWindow*next;        /**< pointer to next window in list */
   any_t*         usrData;     /**< user data pointer */
   tvioBuff       body;        /**< Buffer containing image of window frame */
   tvioBuff       saved;       /**< Buffer containing saved image under window */
@@ -237,7 +237,7 @@ typedef struct tagTWindow
   DefColor       frame;       /**< default color of frame */
   DefColor       title;       /**< default color of title */
   DefColor       footer;      /**< default color of footer text */
-}TWindow;
+};
 
 /* Below located list of window messages. Prefix WM_ was imported from
    MSWindows SDK, but I hope it so understandable. */

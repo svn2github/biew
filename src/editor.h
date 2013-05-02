@@ -18,10 +18,8 @@
 #define __EDITOR__H
 
 #include "libbeye/libbeye.h"
-#ifndef __TWIN_H
-#include "libbeye/twin.h"
-#endif
 
+struct TWindow;
 namespace beye {
     struct tag_emem {
 	unsigned char *buff;

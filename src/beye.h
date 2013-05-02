@@ -2,19 +2,20 @@
 #define BEYE_HPP_INCLUDED 1
 #include "config.h"
 #include "libbeye/libbeye.h"
-#include "libbeye/file_ini.h"
-#include "libbeye/bbio.h"
-#include "codeguid.h"
-#include "reg_form.h"
-#include "plugins/plugin.h"
 
 #include <map>
 #include <vector>
 #include <string>
 
+struct hIniProfile;
 namespace beye {
     class addendum;
     class sysinfo;
+    class Plugin;
+    struct Plugin_Info;
+    class CodeGuider;
+    struct REGISTRY_BIN;
+    class BFile;
     class BeyeContext : public Opaque {
 	public:
 	    BeyeContext(const std::vector<std::string>& argv, const std::map<std::string,std::string>& envm);
