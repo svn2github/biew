@@ -869,9 +869,9 @@ static int __FASTCALL__ jvm_bitness(__filesize_t off)
     return DAB_USE16;
 }
 
-static unsigned long __FASTCALL__ jvm_AppendRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+static bool __FASTCALL__ jvm_AppendRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
- unsigned long  retrf = RAPREF_DONE;
+ bool retrf = true;
  unsigned slen=1000; /* According on disasm/java/java.c */
  UNUSED(r_sh);
     if((flags & APREF_TRY_LABEL)!=APREF_TRY_LABEL)
@@ -890,7 +890,7 @@ static unsigned long __FASTCALL__ jvm_AppendRef(const DisMode& parent,char *str,
 	    case 1: lidx=jvm_cache->read_byte(); break;
 	}
 	pool_cache->seek(jvm_header.constants_offset,BM_SEEK_SET);
-	if(lidx<1 || lidx>jvm_header.constant_pool_count) { retrf = RAPREF_NONE; goto bye; }
+	if(lidx<1 || lidx>jvm_header.constant_pool_count) { retrf = false; goto bye; }
 	skip_constant_pool(*pool_cache,lidx-1);
 	utag=pool_cache->read_byte();
 	str=&str[strlen(str)];
@@ -957,11 +957,11 @@ static unsigned long __FASTCALL__ jvm_AppendRef(const DisMode& parent,char *str,
 			pool_cache->read_buffer(str,sl);
 			str[sl]='\0';
 			break;
-	    default:	retrf = RAPREF_NONE;
+	    default:	retrf = false;
 			break;
 	}
     }
-    else retrf = RAPREF_NONE;
+    else retrf = false;
     bye:
     return retrf;
 }

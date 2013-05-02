@@ -1537,12 +1537,12 @@ static bool  __FASTCALL__ __readRelocName(Elf_Reloc  *erl, char *buff, size_t cb
   return ret;
 }
 
-static unsigned long  __FASTCALL__ BuildReferStrElf_arm(char *str,
+static bool  __FASTCALL__ BuildReferStrElf_arm(char *str,
 							Elf_Reloc  *erl,
 							int flags,unsigned codelen,
 							__filesize_t defval)
 {
-  unsigned long retval = RAPREF_DONE;
+  bool retval = true;
   uint32_t r_type;
   bool ret=false, use_addend = false;
   char buff[300];
@@ -1556,7 +1556,7 @@ static unsigned long  __FASTCALL__ BuildReferStrElf_arm(char *str,
     case R_ARM_RELATIVE: /* BVA + addendum */
     case R_ARM_NONE: /* nothing to do */
     case R_ARM_COPY: /* nothing to do */
-		   retval = RAPREF_NONE;
+		   retval = false;
 		   break;
     case R_ARM_THM_ABS5:
     case R_ARM_ABS8:
@@ -1569,7 +1569,7 @@ static unsigned long  __FASTCALL__ BuildReferStrElf_arm(char *str,
 		     strcat(str,buff);
 		     use_addend = true;
 		   }
-		   else retval = RAPREF_NONE;
+		   else retval = false;
 		   break;
     case R_ARM_THM_PC8:
     case R_ARM_THM_PC12:
@@ -1581,7 +1581,7 @@ static unsigned long  __FASTCALL__ BuildReferStrElf_arm(char *str,
 		     /* strcat(str,"-.here"); <- it's commented for readability */
 		     use_addend = true;
 		   }
-		   else retval = RAPREF_NONE;
+		   else retval = false;
 		   break;
     case R_ARM_PLT32: /* PLT[offset] + addendum - this */
 		   strcat(str,"PLT-");
@@ -1601,7 +1601,7 @@ static unsigned long  __FASTCALL__ BuildReferStrElf_arm(char *str,
 		     strcat(str,"-GOT");
 		     use_addend = true;
 		   }
-		   else retval = RAPREF_NONE;
+		   else retval = false;
 		   break;
   }
   if(erl->addend && use_addend && ret &&
@@ -1613,12 +1613,12 @@ static unsigned long  __FASTCALL__ BuildReferStrElf_arm(char *str,
   return retval;
 }
 
-static unsigned long  __FASTCALL__ BuildReferStrElf_i386(char *str,
+static bool  __FASTCALL__ BuildReferStrElf_i386(char *str,
 							Elf_Reloc  *erl,
 							int flags,unsigned codelen,
 							__filesize_t defval)
 {
-  unsigned long retval = RAPREF_DONE;
+  bool retval = true;
   uint32_t r_type;
   bool ret=false, use_addend = false;
   char buff[300];
@@ -1632,7 +1632,7 @@ static unsigned long  __FASTCALL__ BuildReferStrElf_i386(char *str,
     case R_386_RELATIVE: /* BVA + addend. Ignoring it is best choice */
     case R_386_NONE: /* nothing to do */
     case R_386_COPY: /* nothing to do */
-		   retval = RAPREF_NONE;
+		   retval = false;
 		   break;
     case R_386_GNU_8:
     case R_386_GNU_16:
@@ -1643,7 +1643,7 @@ static unsigned long  __FASTCALL__ BuildReferStrElf_i386(char *str,
 		     strcat(str,buff);
 		     use_addend = true;
 		   }
-		   else retval = RAPREF_NONE;
+		   else retval = false;
 		   break;
     case R_386_GNU_PC8:
     case R_386_GNU_PC16:
@@ -1655,7 +1655,7 @@ static unsigned long  __FASTCALL__ BuildReferStrElf_i386(char *str,
 		     /* strcat(str,"-.here"); <- it's commented for readability */
 		     use_addend = true;
 		   }
-		   else retval = RAPREF_NONE;
+		   else retval = false;
 		   break;
     case R_386_GOT32: /* GOT[offset] + addendum - this */
 		   strcat(str,"GOT-");
@@ -1680,7 +1680,7 @@ static unsigned long  __FASTCALL__ BuildReferStrElf_i386(char *str,
 		     strcat(str,"-GOT");
 		     use_addend = true;
 		   }
-		   else retval = RAPREF_NONE;
+		   else retval = false;
 		   break;
     case R_386_GOTPC: /* GOT + addendum - this */
 		   strcat(str,"GOT-.here");
@@ -1696,12 +1696,12 @@ static unsigned long  __FASTCALL__ BuildReferStrElf_i386(char *str,
   return retval;
 }
 
-static unsigned long  __FASTCALL__ BuildReferStrElf_x86_64(char *str,
+static bool  __FASTCALL__ BuildReferStrElf_x86_64(char *str,
 							Elf_Reloc  *erl,
 							int flags,unsigned codelen,
 							__filesize_t defval)
 {
-  unsigned long retval = RAPREF_DONE;
+  bool retval = true;
   uint32_t r_type;
   bool ret=false, use_addend = false;
   char buff[300];
@@ -1715,7 +1715,7 @@ static unsigned long  __FASTCALL__ BuildReferStrElf_x86_64(char *str,
     case R_X86_64_RELATIVE: /* BVA + addendum */
     case R_X86_64_NONE: /* nothing to do */
     case R_X86_64_COPY: /* nothing to do */
-		   retval = RAPREF_NONE;
+		   retval = false;
 		   break;
     case R_X86_64_8:
     case R_X86_64_16:
@@ -1727,7 +1727,7 @@ static unsigned long  __FASTCALL__ BuildReferStrElf_x86_64(char *str,
 		     strcat(str,buff);
 		     use_addend = true;
 		   }
-		   else retval = RAPREF_NONE;
+		   else retval = false;
 		   break;
     case R_X86_64_PC8:
     case R_X86_64_PC16:
@@ -1740,7 +1740,7 @@ static unsigned long  __FASTCALL__ BuildReferStrElf_x86_64(char *str,
 		     /* strcat(str,"-.here"); <- it's commented for readability */
 		     use_addend = true;
 		   }
-		   else retval = RAPREF_NONE;
+		   else retval = false;
 		   break;
     case R_X86_64_GOT32:
 		   strcat(str,"GOT-");
@@ -1777,7 +1777,7 @@ static unsigned long  __FASTCALL__ BuildReferStrElf_x86_64(char *str,
 		     strcat(str,"-GOT");
 		     use_addend = true;
 		   }
-		   else retval = RAPREF_NONE;
+		   else retval = false;
 		   break;
     case R_X86_64_GOTPCREL64: /* GOT + addendum - this */
 		   strcat(str,"GOT-.here");
@@ -1793,12 +1793,12 @@ static unsigned long  __FASTCALL__ BuildReferStrElf_x86_64(char *str,
   return retval;
 }
 
-static unsigned long  __FASTCALL__ BuildReferStrElf_ppc(char *str,
+static bool  __FASTCALL__ BuildReferStrElf_ppc(char *str,
 							Elf_Reloc  *erl,
 							int flags,unsigned codelen,
 							__filesize_t defval)
 {
-  unsigned long retval = RAPREF_DONE;
+  bool retval = true;
   uint32_t r_type;
   bool ret=false, use_addend = false;
   char buff[300];
@@ -1812,7 +1812,7 @@ static unsigned long  __FASTCALL__ BuildReferStrElf_ppc(char *str,
     case R_PPC_RELATIVE: /* BVA + addendum */
     case R_PPC_NONE: /* nothing to do */
     case R_PPC_COPY: /* nothing to do */
-		   retval = RAPREF_NONE;
+		   retval = false;
 		   break;
     case R_PPC_ADDR14:
     case R_PPC_ADDR14_BRTAKEN:
@@ -1832,7 +1832,7 @@ static unsigned long  __FASTCALL__ BuildReferStrElf_ppc(char *str,
 		     strcat(str,buff);
 		     use_addend = true;
 		   }
-		   else retval = RAPREF_NONE;
+		   else retval = false;
 		   break;
     case R_PPC_REL14:
     case R_PPC_REL14_BRTAKEN:
@@ -1851,7 +1851,7 @@ static unsigned long  __FASTCALL__ BuildReferStrElf_ppc(char *str,
 		     /* strcat(str,"-.here"); <- it's commented for readability */
 		     use_addend = true;
 		   }
-		   else retval = RAPREF_NONE;
+		   else retval = false;
 		   break;
     case R_PPC_GOT16_LO:
     case R_PPC_GOT16_HI:
@@ -1888,14 +1888,14 @@ static unsigned long  __FASTCALL__ BuildReferStrElf_ppc(char *str,
   return retval;
 }
 
-static unsigned long  __FASTCALL__ BuildReferStrElf(char *str,
+static bool  __FASTCALL__ BuildReferStrElf(char *str,
 							Elf_Reloc  *erl,
 							int flags,unsigned codelen,
 							__filesize_t defval)
 {
     switch(ELF_HALF(ELF_EHDR(elf,e_machine)))
     {
-      default: return RAPREF_NONE;
+      default: return false;
       case EM_ARM: return BuildReferStrElf_arm(str,erl,flags,codelen,defval);
       case EM_386: return BuildReferStrElf_i386(str,erl,flags,codelen,defval);
       case EM_X86_64: return BuildReferStrElf_x86_64(str,erl,flags,codelen,defval);
@@ -1973,10 +1973,10 @@ static __filesize_t __FASTCALL__ ShowELFDynInfo( void )
   return fpos;
 }
 
-static unsigned long __FASTCALL__ AppendELFRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+static bool __FASTCALL__ AppendELFRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
   char buff[400];
-  unsigned long ret = RAPREF_NONE;
+  bool ret = false;
   Elf_Reloc  *erl;
   __filesize_t defval;
   switch(codelen) {
@@ -2003,7 +2003,7 @@ static unsigned long __FASTCALL__ AppendELFRef(const DisMode& parent,char *str,_
 	   return AppendELFRef(parent,str, got_off + off_in_got, flags & ~APREF_TRY_PIC, codelen, r_sh);
 	 }
        }
-       return RAPREF_NONE;
+       return false;
   }
   if(!PubNames) elf_ReadPubNameList(bmbioHandle(),MemOutBox);
   if((erl = __found_ElfRel(ulShift)) != NULL)
@@ -2028,12 +2028,12 @@ static unsigned long __FASTCALL__ AppendELFRef(const DisMode& parent,char *str,_
 	 {
 	   strcat(str,buff);
 	   if(!DumpMode && !EditMode) code_guider->add_go_address(parent,str,r_sh);
-	   ret = RAPREF_DONE;
+	   ret = true;
 	 }
        }
     }
   }
-  return flags & APREF_TRY_LABEL ? ret ? RAPREF_DONE : RAPREF_NONE : ret;
+  return ret;
 }
 
 static bool __FASTCALL__ IsELF32( void )

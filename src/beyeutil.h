@@ -71,10 +71,7 @@ namespace beye {
     void   About( void );
 
     __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos);
-    enum {
-	RAPREF_NONE=0,  /**< means reference is not appended */
-	RAPREF_DONE=UINT_MAX /**< means reference is appended */
-    };
+
 		   /** Appends disassembler reference to string.
 		     * @paran parent       reference to class DisMode
 		     * @param str          string buffer for append to
@@ -82,13 +79,11 @@ namespace beye {
 		     * @param mode         see reg_form.h for detail
 		     * @param codelen      length of field, that required binding
 		     * @param r_shift      used only if APPREF_TRY_LABEL mode is set, contains real value of field, that required binding
-		     * @return             one of RAPREF_* constants or physical
-					   offset of target which is applied to
-					   fixing field.
+		     * @return             true if reference was appended
 		    **/
-    unsigned long __FASTCALL__ AppendAsmRef(const DisMode& parent,char *str,__filesize_t ulShift,
-					       int mode,char codelen,
-					       __filesize_t r_shift);
+    bool __FASTCALL__ AppendAsmRef(const DisMode& parent,char *str,__filesize_t ulShift,
+				       int mode,char codelen,
+				       __filesize_t r_shift);
 
     void  ShowSysInfo( void );
 

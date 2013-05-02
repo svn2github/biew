@@ -130,7 +130,7 @@ typedef unsigned char * MBuffer;
     @param r_sh      real shift to begin of insn (for pass to CodeGuider as return addr)
     @param type      see above (DISARG_SHORT - DISARG_FAR32 family)
     @param seg       contains segment value (optional)
-    @return          see RAPREF_* constants in beyeutil.h for detail
+    @return          true if appended
     @remark
     Examples:
     *** 1 ***
@@ -148,7 +148,7 @@ typedef unsigned char * MBuffer;
     strcpy(outstr,"calln32 ");
     disAppendFAddr(outstr, 0x1004, 0x12345678, 0x1002, DISADR_NEAR32, 0, 4);
 **/
-	    virtual int			append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__filesize_t r_sh,e_disaddr type,unsigned seg,char codelen);
+	    virtual bool		append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__filesize_t r_sh,e_disaddr type,unsigned seg,char codelen);
 /** Appends symbolic information instead digits to instruction string
     @param str       string to be appended
     @param flags     same as described in reg_form.h (APREF_* family)
@@ -156,7 +156,7 @@ typedef unsigned char * MBuffer;
     @param codelen   contains length of field for binding
     @param defval    contains default value if not binding
     @param type      see above (DISARG_LONG - DISARG_DWORD family)
-    @return          see RAPREF_* constants in beyeutil.h for detail
+    @return          true if appended
     @remark
     Examples:
     *** 1 ***
@@ -175,7 +175,7 @@ typedef unsigned char * MBuffer;
     disAppendDigits(outstr, 0x5680, 1, 2, 0x1234, DISARG_WORD);
     strcat(outstr,"]");
 **/
-	    virtual int			append_digits(char *str,__filesize_t ulShift,int flags,char codelen,any_t*defval,e_disarg type);
+	    virtual bool		append_digits(char *str,__filesize_t ulShift,int flags,char codelen,any_t*defval,e_disarg type);
 
 	    virtual e_panel		panel_mode() const { return disPanelMode; }
 	    virtual bool		prepare_mode() const { return DisasmPrepareMode; }

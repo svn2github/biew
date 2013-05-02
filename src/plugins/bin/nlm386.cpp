@@ -491,16 +491,16 @@ static void  __FASTCALL__ BuildRelocNlm( void )
   CloseWnd(w);
 }
 
-static __filesize_t  __FASTCALL__ BuildReferStrNLM(char *str,RELOC_NLM*rne,int flags)
+static bool  __FASTCALL__ BuildReferStrNLM(char *str,RELOC_NLM*rne,int flags)
 {
   __filesize_t val;
-  __filesize_t retrf;
+  bool retrf;
   char name[256];
   BFile* b_cache;
   unsigned char len;
   b_cache = nlm_cache;
   b_cache->seek(rne->nameoff,BM_SEEK_SET);
-  retrf = RAPREF_DONE;
+  retrf = true;
   if(rne->nameoff != 0xFFFFFFFFUL)
   {
     len = b_cache->read_byte();
@@ -520,27 +520,27 @@ static __filesize_t  __FASTCALL__ BuildReferStrNLM(char *str,RELOC_NLM*rne,int f
      {
        strcat(str,"(*this)+");
        strcat(str,Get8Digit(val));
-       retrf = val;
+       retrf = true;
      }
-     else retrf = RAPREF_NONE;
+     else retrf = false;
   }
   return retrf;
 }
 
-static unsigned long __FASTCALL__ AppendNLMRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+static bool __FASTCALL__ AppendNLMRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
   RELOC_NLM *rnlm,key;
-  unsigned long retrf;
+  bool retrf;
   char buff[400];
-  if(flags & APREF_TRY_PIC) return RAPREF_NONE;
-  if(!nlm.nlm_numberOfExternalReferences || nlm.nlm_externalReferencesOffset >= bmGetFLength()) retrf = RAPREF_NONE;
+  if(flags & APREF_TRY_PIC) return false;
+  if(!nlm.nlm_numberOfExternalReferences || nlm.nlm_externalReferencesOffset >= bmGetFLength()) retrf = false;
   else
   {
     if(!RelocNlm) BuildRelocNlm();
     key.offset = ulShift;
     __codelen = codelen;
     rnlm = (RELOC_NLM*)la_Find(RelocNlm,&key,nlm_compare_f);
-    retrf = rnlm ? BuildReferStrNLM(str,rnlm,flags) : RAPREF_NONE;
+    retrf = rnlm ? BuildReferStrNLM(str,rnlm,flags) : false;
   }
   if(!retrf && (flags & APREF_TRY_LABEL))
   {
@@ -549,7 +549,7 @@ static unsigned long __FASTCALL__ AppendNLMRef(const DisMode& parent,char *str,_
      {
        strcat(str,buff);
        if(!DumpMode && !EditMode) code_guider->add_go_address(parent,str,r_sh);
-       retrf = RAPREF_DONE;
+       retrf = true;
      }
   }
   return retrf;

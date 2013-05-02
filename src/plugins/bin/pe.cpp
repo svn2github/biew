@@ -949,10 +949,11 @@ static RELOC_PE  *  __FASTCALL__ __found_RPE(__filesize_t laddr)
   return (RELOC_PE*)la_Find(CurrPEChain,&key,compare_pe_reloc_s);
 }
 
-static __filesize_t  __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE  *rpe,int flags)
+static bool __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE  *rpe,int flags)
 {
    BFile& handle=*pe_cache,&handle2=*pe_cache4,&handle3=*pe_cache3;
-   __filesize_t phys,rva,retrf;
+   __filesize_t phys,rva;
+   bool retrf;
    unsigned long magic;
    uint64_t Hint;
    ImportDirPE ipe;
@@ -960,7 +961,7 @@ static __filesize_t  __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE  *rpe,int f
    phys = RVA2Phys(peDir[PE_IMPORT].rva);
    handle.seek(phys + 20L*rpe->modidx,SEEKF_START);
    rva = fioReadDWord(handle,12L,SEEKF_CUR);
-   retrf = RAPREF_DONE;
+   retrf = true;
    if(rpe->modidx != std::numeric_limits<uint64_t>::max())
    {
      char *is_ext;
@@ -1054,30 +1055,31 @@ static __filesize_t  __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE  *rpe,int f
 		  pe_how = "((mips)";
 		  break;
      }
-     retrf = point_to ? point_to : value-delta;
+     delta = point_to ? point_to : value-delta;
      if(!(flags & APREF_SAVE_VIRT))
      {
        strcat(str,"*this.");
        if(flags & APREF_USE_TYPE) strcat(str,pe_how);
        /** if out of physical image */
-       strcat(str,Get8Digit(retrf));
+       strcat(str,Get8Digit(delta));
        if(flags & APREF_USE_TYPE)  strcat(str,")");
+       retrf=true;
      }
      else strcat(str,Get8Digit(value));
    }
    return retrf;
 }
 
-static unsigned long __FASTCALL__ AppendPERef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+static bool __FASTCALL__ AppendPERef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
   RELOC_PE  *rpe;
-  __filesize_t retrf;
+  bool retrf;
   BFile* b_cache;
   char buff[400];
   UNUSED(codelen);
   b_cache = pe_cache3;
-  retrf = RAPREF_NONE;
-  if(flags & APREF_TRY_PIC) return RAPREF_NONE;
+  retrf = false;
+  if(flags & APREF_TRY_PIC) return false;
   if(peDir[PE_IMPORT].rva || peDir[PE_FIXUP].rva)
   {
     b_cache->seek(RVA2Phys(bmReadDWordEx(ulShift,SEEK_SET) - PE32_HDR(pe32,peImageBase)),
@@ -1093,7 +1095,7 @@ static unsigned long __FASTCALL__ AppendPERef(const DisMode& parent,char *str,__
      {
        strcat(str,buff);
        if(!DumpMode && !EditMode) code_guider->add_go_address(parent,str,r_sh);
-       retrf = RAPREF_DONE;
+       retrf = true;
      }
   }
   return retrf;

@@ -272,18 +272,18 @@ static bool  __FASTCALL__ isMZReferenced(__filesize_t shift,char len)
   }
   return false;
 }
-static unsigned long __FASTCALL__ AppendMZRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+static bool __FASTCALL__ AppendMZRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
   char stmp[256];
-  unsigned long ret = RAPREF_NONE;
-  if(flags & APREF_TRY_PIC) return RAPREF_NONE;
+  bool ret = false;
+  if(flags & APREF_TRY_PIC) return false;
   if(isMZReferenced(ulShift,codelen))
   {
      unsigned wrd;
      wrd = bmReadWordEx(ulShift,BM_SEEK_SET);
      strcat(str,Get4Digit(wrd));
      strcat(str,"+PID");
-     ret = RAPREF_DONE;
+     ret = true;
   }
   if(!DumpMode && !EditMode && (flags & APREF_TRY_LABEL) && codelen == 4)
   {
@@ -291,7 +291,7 @@ static unsigned long __FASTCALL__ AppendMZRef(const DisMode& parent,char *str,__
     if(udnFindName(r_sh,stmp,sizeof(stmp))==true) strcat(str,stmp);
     else strcat(str,Get8Digit(r_sh));
     code_guider->add_go_address(parent,str,r_sh);
-    ret = RAPREF_DONE;
+    ret = true;
   }
   return ret;
 }

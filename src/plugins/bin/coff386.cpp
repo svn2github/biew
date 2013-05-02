@@ -478,13 +478,14 @@ static bool   __FASTCALL__ coffSymTabReadItemsIdx(BFile& handle,unsigned long id
 
 static __filesize_t  __FASTCALL__ BuildReferStrCoff386(const DisMode& parent,char *str,RELOC_COFF386 *rne,int flags)
 {
-  __filesize_t offset,retval,s,e;
+  __filesize_t offset,s,e;
+  bool retval;
   unsigned long val;
   uint_fast16_t secnum=0;
   bool is_idx,val_assigned;
   int c,b;
   char name[256],pubname[256],secname[256];
-  retval = RAPREF_DONE;
+  retval = true;
   val = bmReadDWordEx(rne->offset,BM_SEEK_SET);
   /* rne->nameoff it's only pointer to name descriptor */
   is_idx = coffSymTabReadItemsIdx(*coff_cache,rne->nameoff,name,sizeof(name),(unsigned*)&secnum,&offset);
@@ -516,8 +517,8 @@ static __filesize_t  __FASTCALL__ BuildReferStrCoff386(const DisMode& parent,cha
   {
      strcat(str,"+");
      strcat(str,Get8Digit(val));
-     if(secnum) retval = COFF_DWORD(coff386so[secnum-1].s_scnptr)+val;
-     else       retval = RAPREF_NONE;
+     if(secnum) retval = (COFF_DWORD(coff386so[secnum-1].s_scnptr)+val)?true:false;
+     else       retval = false;
   }
   if(rne->type == RELOC_REL32 && (flags & APREF_TRY_LABEL) != APREF_TRY_LABEL)
   {
@@ -531,13 +532,13 @@ static __filesize_t  __FASTCALL__ BuildReferStrCoff386(const DisMode& parent,cha
   return retval;
 }
 
-static unsigned long __FASTCALL__ coff386_AppendRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+static bool __FASTCALL__ coff386_AppendRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
   RELOC_COFF386 *rcoff386,key;
-  __filesize_t ret;
+  bool ret;
   char buff[400];
-  ret = RAPREF_NONE;
-  if(flags & APREF_TRY_PIC) return RAPREF_NONE;
+  ret = false;
+  if(flags & APREF_TRY_PIC) return ret;
   if(!PubNames) coff_ReadPubNameList(bmbioHandle(),MemOutBox);
   if((COFF_WORD(coff386hdr.f_flags) & F_RELFLG) == F_RELFLG) goto try_pub;
   if(!RelocCoff386) BuildRelocCoff386();
@@ -552,10 +553,10 @@ static unsigned long __FASTCALL__ coff386_AppendRef(const DisMode& parent,char *
      {
        strcat(str,buff);
        if(!DumpMode && !EditMode) code_guider->add_go_address(parent,str,r_sh);
-       ret = RAPREF_DONE;
+       ret = true;
      }
   }
-  return flags & APREF_TRY_LABEL ? ret ? RAPREF_DONE : RAPREF_NONE : ret;
+  return ret;
 }
 
 static bool __FASTCALL__ coff386_check_fmt( void )

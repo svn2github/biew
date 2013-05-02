@@ -396,11 +396,12 @@ static void  __FASTCALL__ BuildRelocRDOFF( void )
 
 static unsigned char __codelen;
 
-static __filesize_t __FASTCALL__ rdoffBuildReferStr(const DisMode& parent,char *str,RDOFF_RELOC *reloc,__filesize_t ulShift,int flags)
+static bool __FASTCALL__ rdoffBuildReferStr(const DisMode& parent,char *str,RDOFF_RELOC *reloc,__filesize_t ulShift,int flags)
 {
    char name[400],ch,buff[400];
    const char *ptr_type;
-   __filesize_t field_val,foff,base_seg_off, retrf;
+   __filesize_t field_val,foff,base_seg_off;
+   bool retrf;
    unsigned i;
    if(flags & APREF_USE_TYPE)
    {
@@ -448,7 +449,7 @@ static __filesize_t __FASTCALL__ rdoffBuildReferStr(const DisMode& parent,char *
 		 }
 	      }
    }
-   retrf = RAPREF_DONE;
+   retrf = true;
    if(reloc->segto >= 3) strcat(str,ptr_type); /** case extern symbol */
    if(reloc->segto < 3 || reloc->is_rel)
    {
@@ -478,11 +479,11 @@ static __filesize_t __FASTCALL__ rdoffBuildReferStr(const DisMode& parent,char *
        else
        {
 	 unnamed:
-	 retrf = field_val;
 	 strcat(str,ptr_type);
 	 strcat(str,Get8Digit(field_val));
 	 if(!EditMode && !DumpMode && (flags & APREF_TRY_LABEL))
 	   code_guider->add_go_address(parent,str,reloc->segto ? ds_start + field_val : cs_start + field_val);
+	 retrf = true;
        }
      }
      if(reloc->is_rel)
@@ -500,26 +501,26 @@ static __filesize_t __FASTCALL__ rdoffBuildReferStr(const DisMode& parent,char *
    return retrf;
 }
 
-static unsigned long __FASTCALL__ rdoff_AppendRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+static bool __FASTCALL__ rdoff_AppendRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
   RDOFF_RELOC *rrdoff,key;
-  unsigned long ret;
+  bool ret;
   char buff[400];
-  if(flags & APREF_TRY_PIC) return RAPREF_NONE;
+  if(flags & APREF_TRY_PIC) return false;
   if(!rdoffReloc) BuildRelocRDOFF();
   if(!rdoffImpNames) ReadImpNameList(bmbioHandle(),MemOutBox);
   if(!PubNames) rdoff_ReadPubNameList(bmbioHandle(),MemOutBox);
   key.offset = ulShift;
   __codelen = codelen;
   rrdoff = (RDOFF_RELOC*)la_Find(rdoffReloc,&key,rdoff_compare_reloc);
-  ret = rrdoff ? rdoffBuildReferStr(parent,str,rrdoff,ulShift,flags) : RAPREF_NONE;
+  ret = rrdoff ? rdoffBuildReferStr(parent,str,rrdoff,ulShift,flags) : false;
   if(!ret && (flags & APREF_TRY_LABEL))
   {
      if(FindPubName(buff,sizeof(buff),r_sh))
      {
        strcat(str,buff);
        if(!DumpMode && !EditMode) code_guider->add_go_address(parent,str,r_sh);
-       ret = RAPREF_DONE;
+       ret = true;
      }
   }
   return ret;

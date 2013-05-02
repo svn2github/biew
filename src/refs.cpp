@@ -28,10 +28,10 @@ using namespace beye;
 
 namespace beye {
 extern REGISTRY_BIN binTable;
-unsigned long __FASTCALL__ AppendAsmRef(const DisMode& parent,char *str,__filesize_t ulShift,int mode,char codelen,__filesize_t r_sh)
+bool __FASTCALL__ AppendAsmRef(const DisMode& parent,char *str,__filesize_t ulShift,int mode,char codelen,__filesize_t r_sh)
 {
   static bool warn_displayed = false;
-  unsigned long ret = RAPREF_NONE;
+  bool ret = false;
   if(beye_context().active_format()->bind) ret = beye_context().active_format()->bind(parent,str,ulShift,mode,codelen,r_sh);
   else
   {

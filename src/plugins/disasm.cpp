@@ -830,9 +830,9 @@ void  __FASTCALL__ disSetModifier(char *str,const char *modf)
   if(i+mlen > len) { str[i+mlen] = TWC_DEF_FILLER; str[i+mlen+1] = 0; }
 }
 
-int DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,any_t*defval,e_disarg type)
+bool DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,any_t*defval,e_disarg type)
 {
- unsigned long app;
+ bool app;
  char comments[Comm_Size];
  const char *appstr;
  unsigned dig_type;
@@ -855,9 +855,8 @@ int DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,a
   }
 #endif
   if(hexAddressResolv && beye_context().active_format()->AddressResolving) flg |= APREF_SAVE_VIRT;
-  app = disNeedRef >= Ref_All ? AppendAsmRef(*this,str,ulShift,flg,codelen,0L) :
-				    RAPREF_NONE;
-  if(app != RAPREF_DONE)
+  app = disNeedRef >= Ref_All ? AppendAsmRef(*this,str,ulShift,flg,codelen,0L) : false;
+  if(app != true)
   {
     dig_type = type & 0x00FFU;
     comments[0] = 0;
@@ -892,12 +891,12 @@ int DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,a
       }
       if(!app) pa = beye_context().active_format()->va2pa ? beye_context().active_format()->va2pa(_defval) :
 					   _defval;
-      else pa = app;
+      else pa = __filesize_t(-1);
       if(pa)
       {
 	/* 1. Try to determine immediate as offset to public symbol */
 	if(type & Arg_Rip) app = AppendAsmRef(*this,str,pa,flg,codelen,0L);
-	if(app == RAPREF_DONE) goto next_step;
+	if(app == true) goto next_step;
 	if(dis_severity < CommSev_Func)
 	{
 	  strcpy(comments,".*");
@@ -941,7 +940,7 @@ int DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,a
     }
     next_step:
     comments[0] = 0;
-    if(app == RAPREF_NONE)
+    if(app == false)
     {
      switch(dig_type)
      {
@@ -1067,13 +1066,13 @@ int DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,a
   return app;
 }
 
-int DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__filesize_t r_sh,e_disaddr type,unsigned seg,char codelen)
+bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__filesize_t r_sh,e_disaddr type,unsigned seg,char codelen)
 {
  e_ref needref;
  __filesize_t fpos;
  char *modif_to;
  DisasmRet dret;
- int appended = RAPREF_NONE;
+ bool appended = false;
  int flg;
  fpos = bmGetCurrFilePos();
  memset(&dret,0,sizeof(DisasmRet));
@@ -1108,8 +1107,8 @@ int DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__fi
    if(dret.pro_clone == __INSNT_JMPPIC || dret.pro_clone == __INSNT_JMPRIP) goto try_pic; /* skip defaults for PIC */
    flg = APREF_TRY_LABEL;
    if(hexAddressResolv && beye_context().active_format()->AddressResolving) flg |= APREF_SAVE_VIRT;
-   if(AppendAsmRef(*this,str,ulShift,flg,codelen,r_sh)) appended = RAPREF_DONE;
-   else
+   appended=AppendAsmRef(*this,str,ulShift,flg,codelen,r_sh);
+   if(!appended)
    {
       /*
 	 Forwarding references.
@@ -1120,7 +1119,7 @@ int DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__fi
        {
 	    if(AppendAsmRef(*this,str,r_sh+dret.field,APREF_TRY_LABEL,dret.codelen,r_sh))
 	    {
-	      appended = RAPREF_DONE;
+	      appended = true;
 	      modif_to = strchr(str,' ');
 	      if(modif_to)
 	      {
@@ -1137,7 +1136,7 @@ int DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__fi
 	    if(dret.pro_clone == __INSNT_JMPRIP) goto try_rip;
 	    if(AppendAsmRef(*this,str,r_sh+dret.field,APREF_TRY_PIC,dret.codelen,r_sh))
 	    {
-	      appended = RAPREF_DONE; /* terminate appending any info anyway */
+	      appended = true; /* terminate appending any info anyway */
 	      if(!DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
 	    }
        }
@@ -1159,7 +1158,7 @@ int DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__fi
 	app=AppendAsmRef(*this,str,pa,APREF_TRY_LABEL,dret.codelen,0L);
 	if(app)
 	{
-	  appended = RAPREF_DONE; /* terminate appending any info anyway */
+	  appended = true; /* terminate appending any info anyway */
 	  modif_to = strchr(str,' ');
 	  if(modif_to)
 	  {
@@ -1180,7 +1179,7 @@ int DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__fi
    if(hexAddressResolv && beye_context().active_format()->AddressResolving)
    {
      r_sh = r_sh ? r_sh : (__filesize_t)ulShift;
-     appended = beye_context().active_format()->AddressResolving(&str[strlen(str)],r_sh) ? RAPREF_DONE : RAPREF_NONE;
+     appended = beye_context().active_format()->AddressResolving(&str[strlen(str)],r_sh) ? true : false;
    }
    if(!appended)
    {
@@ -1197,7 +1196,7 @@ int DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__fi
 	else
 	    sprintf(lbuf,"%08lX",(unsigned long)r_sh);
        strcat(str,lbuf);
-       appended = RAPREF_DONE;
+       appended = true;
      }
      else
      {

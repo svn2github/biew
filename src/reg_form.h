@@ -41,9 +41,9 @@ class DisMode;
    * @param flags        see above
    * @param codelen      length of field, that required binding
    * @param r_shift      used only if APPREF_TRY_LABEL mode is set, contains real value of field, that required binding
-   * @return             one of RAPREF_* constants (see beyeutil.h file for detail)
+   * @return             true if reference was appended
 */
-typedef unsigned long (__FASTCALL__ *AppRefs)(const DisMode& parent,char *str,__filesize_t shift,int flags,int codelen,__filesize_t r_shift);
+typedef bool (__FASTCALL__ *AppRefs)(const DisMode& parent,char *str,__filesize_t shift,int flags,int codelen,__filesize_t r_shift);
 
 /***************************************************************\
 *  This form registry binary file formats                       *

@@ -1134,16 +1134,16 @@ static void __FASTCALL__ rd_ImpName(char *buff,int blen,unsigned idx,bool useaso
   rdImpNameNELX(buff,blen,idx,useasoff,beye_context().headshift + ne.neOffsetImportTable);
 }
 
-static __filesize_t  __FASTCALL__ BuildReferStrNE(const DisMode& parent,char *str,RELOC_NE *rne,int flags,__filesize_t ulShift)
+static bool  __FASTCALL__ BuildReferStrNE(const DisMode& parent,char *str,RELOC_NE *rne,int flags,__filesize_t ulShift)
 {
   char buff[256];
   const char *pref;
-  __filesize_t retrf;
+  bool retrf;
   char reflen;
   bool need_virt;
   reflen = 0;
   pref = "";
-  retrf = RAPREF_NONE;
+  retrf = false;
   need_virt = (flags & APREF_SAVE_VIRT);
   switch(rne->AddrType)
   {
@@ -1158,7 +1158,7 @@ static __filesize_t  __FASTCALL__ BuildReferStrNE(const DisMode& parent,char *st
   if(flags & APREF_USE_TYPE) strcat(str,pref);
   if((rne->Type & 3) == 1 || (rne->Type & 3) == 2) /** imported type */
   {
-    retrf = RAPREF_DONE;
+    retrf = true;
     rd_ImpName(buff,sizeof(buff),rne->idx,0);
     sprintf(&str[strlen(str)],"<%s>.",buff);
     if((rne->Type & 3) == 1) sprintf(&str[strlen(str)],"@%hu",rne->ordinal);
@@ -1179,7 +1179,7 @@ static __filesize_t  __FASTCALL__ BuildReferStrNE(const DisMode& parent,char *st
 	  sprintf(&str[strlen(str)],"%s",buff);
        else
        {
-	 retrf = ea;
+	 retrf = ea?true:false;
 	 sprintf(&str[strlen(str)],"(*this).@%hu",rne->ordinal);
        }
        if(!DumpMode && !EditMode && !(flags & APREF_USE_TYPE)) code_guider->add_go_address(parent,str,ea);
@@ -1194,7 +1194,7 @@ static __filesize_t  __FASTCALL__ BuildReferStrNE(const DisMode& parent,char *st
        {
 	 if(need_virt) sprintf(&str[strlen(str)],".%08lX",(unsigned long)nePA2VA(ep));
 	 else sprintf(&str[strlen(str)],"(*this).seg<#%hu>:%sH",rne->idx,Get4Digit(rne->ordinal));
-	 retrf = ep;
+	 retrf = ep?true:false;
        }
        if(!DumpMode && !EditMode && !(flags & APREF_USE_TYPE)) code_guider->add_go_address(parent,str,ep);
      }
@@ -1217,12 +1217,12 @@ static __filesize_t  __FASTCALL__ BuildReferStrNE(const DisMode& parent,char *st
    return retrf;
 }
 
-static unsigned long __FASTCALL__ AppendNERef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+static bool __FASTCALL__ AppendNERef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
     unsigned i;
     __filesize_t segpos,slength;
     char buff[256];
-    if(flags & APREF_TRY_PIC) return RAPREF_NONE;
+    if(flags & APREF_TRY_PIC) return false;
     if(ulShift >= CurrSegmentStart && ulShift <= CurrSegmentStart + CurrSegmentLength)
     {
        i = CurrChainSegment - 1;
@@ -1243,7 +1243,7 @@ static unsigned long __FASTCALL__ AppendNERef(const DisMode& parent,char *str,__
 	 CurrSegmentStart = segpos;
 	 CurrSegmentLength = slength;
 	 CurrSegmentHasReloc = (sd.sdFlags >> 8) & 1;
-	 if(!CurrSegmentHasReloc) return RAPREF_NONE;
+	 if(!CurrSegmentHasReloc) return false;
 	 Direct:
 	 rne = __found_RNE(CurrSegmentStart,CurrSegmentLength,i + 1,(unsigned)(ulShift - CurrSegmentStart),codelen);
 	 if(rne)
@@ -1268,14 +1268,14 @@ static unsigned long __FASTCALL__ AppendNERef(const DisMode& parent,char *str,__
 	      {
 		strcat(str,buff);
 		if(!DumpMode && !EditMode) code_guider->add_go_address(parent,str,r_sh);
-		return RAPREF_DONE;
+		return true;
 	      }
 	   }
 	 }
-	 return RAPREF_NONE;
+	 return false;
       }
     }
-  return RAPREF_NONE;
+  return false;
 }
 
 /** return false if unsuccess true otherwise */
