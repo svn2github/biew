@@ -42,6 +42,7 @@ namespace beye {
 	    void		quick_select_mode();
 	    bool		select_mode();
 	    Plugin*		active_mode() const { return activeMode; }
+	    const Plugin_Info*	mode_info() const { return modes[defMainModeSel]; }
 	    const REGISTRY_BIN*	active_format() const { return detectedFormat; }
 	    void		detect_binfmt();
 	    void		show_usage() const;

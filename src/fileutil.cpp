@@ -367,7 +367,12 @@ static bool FStore( void )
 		int obj_class,obj_bitness;
 		unsigned obj_num;
 
-		DisMode* dismode = static_cast<DisMode*>(disMode.query_interface(bctx.codeguider()));
+		extern const Plugin_Info disMode;
+		DisMode* dismode;
+		if(bctx.mode_info()!=&disMode)
+		    dismode = static_cast<DisMode*>(disMode.query_interface(bctx.codeguider()));
+		else
+		    dismode = static_cast<DisMode*>(bctx.active_mode());
 		MaxInsnLen = dismode->get_max_symbol_size();
 		codebuff = new unsigned char [MaxInsnLen];
 		if(!codebuff) {
@@ -587,7 +592,7 @@ static bool FStore( void )
 		fclose(fout);
 		if(file_cache) delete file_cache;
 		if(tmp_buff2) delete tmp_buff2;
-		delete dismode;
+		if(bctx.mode_info()!=&disMode)	delete dismode;
 	    } /** END: Write in disassembler mode */
 	    Exit:
 	    CloseWnd(progress_wnd);
