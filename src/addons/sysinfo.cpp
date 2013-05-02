@@ -19,15 +19,16 @@ using namespace beye;
 **/
 #include <stddef.h>
 
+#include "addon.h"
 #include "sysinfo.h"
 #include "bconsole.h"
 #include "beyeutil.h"
 
 namespace beye {
-extern const REGISTRY_SYSINFO AsciiTable;
-extern const REGISTRY_SYSINFO CPUPerformance;
-extern const REGISTRY_SYSINFO InputViewer;
-extern const REGISTRY_SYSINFO ConsoleInfo;
+extern const Addon_Info AsciiTable;
+extern const Addon_Info CPUPerformance;
+extern const Addon_Info InputViewer;
+extern const Addon_Info ConsoleInfo;
 
 void sysinfo::select()
 {
@@ -39,7 +40,10 @@ void sysinfo::select()
     for(i = 0;i < nTools;i++) toolName[i] = list[i]->name;
     retval = SelBoxA(const_cast<char**>(toolName),nTools," Select tool: ",defToolSel);
     if(retval != -1) {
-	list[retval]->sysinfo();
+	const Addon_Info* addon_info = list[retval];
+	Addon* addon = addon_info->query_interface();
+	addon->run();
+	delete addon;
 	defToolSel = retval;
     }
 }
@@ -51,18 +55,8 @@ sysinfo::sysinfo()
     list.push_back(&CPUPerformance);
     list.push_back(&InputViewer);
     list.push_back(&ConsoleInfo);
-    size_t i,sz=list.size();
-    for(i = 0;i < sz;i++) {
-	if(list[i]->read_ini) list[i]->read_ini();
-    }
 }
 
-sysinfo::~sysinfo()
-{
-    size_t i,sz=list.size();
-    for(i = 0;i < sz;i++) {
-	if(list[i]->save_ini) list[i]->save_ini();
-    }
-}
+sysinfo::~sysinfo() {}
 } // namespace beye
 

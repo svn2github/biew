@@ -6,6 +6,7 @@
 #include <vector>
 
 namespace beye {
+    struct Addon_Info;
     class sysinfo : public Opaque {
 	public:
 	    sysinfo();
@@ -14,7 +15,7 @@ namespace beye {
 	    void	select();
 	private:
 	    size_t	defToolSel;
-	    std::vector<const REGISTRY_SYSINFO*> list;
+	    std::vector<const Addon_Info*> list;
     };
 } // namespace beye
 #endif

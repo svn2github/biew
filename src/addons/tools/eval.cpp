@@ -50,6 +50,8 @@ using namespace beye;
 #include <math.h>
 #include <stdio.h>
 
+#include "addons/addon.h"
+
 #include "colorset.h"
 #include "reg_form.h"
 #include "beyeutil.h"
@@ -58,29 +60,63 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 namespace beye {
-#define LAST_CHAR(string) (((char *)string)[strlen(string)-1])
-
-/*
-   This struct is ordered as it documented in Athlon manual
-   Publication # 22007 Rev: D
-*/
-struct Operator {
-      const char  *tag;
-      size_t      taglen;
-      int         precedence;
-      const char  token;
+    inline char LAST_CHAR(const char* string) { return (((char *)string)[strlen(string)-1]); }
+    /*
+	This struct is ordered as it documented in Athlon manual
+	Publication # 22007 Rev: D
+    */
+    struct Operator {
+	const char* tag;
+	size_t      taglen;
+	int         precedence;
+	const char  token;
 };
+    class Calculator_Addon : public Addon {
+	public:
+	    Calculator_Addon();
+	    virtual ~Calculator_Addon();
+	
+	    virtual void	run();
+	private:
+	    char*		rmallws(char *str) const;
+	    int			evaluate(char *line, intmax_t *val,int *result_base);
+	    int			do_op();
+	    int			do_paren();
+	    void		push_op(char op);
+	    void		push_arg(intmax_t arg);
+	    int			pop_arg(intmax_t *arg);
+	    int			pop_op(int *op);
+	    char*		get_exp(const char *str);
+	    const struct Operator*	get_op(const char *str);
+	    int			getprec(char _token);
+	    int			getTOSprec();
 
-static const char NUL='\0';
+	    typedef enum {
+		E_MEM = -4,
+		O_ERROR = -3,
+		R_ERROR = -2, /** range */
+		S_ERROR, /** syntax */
+		SUCCESS
+	    } STATUS;
+	    static const char NUL='\0';
+	    static const unsigned EVAL_STACK_SIZE=256;
 
+	    static const struct Operator verbs[];
 
-typedef enum { E_MEM = -4,
-	       O_ERROR = -3,
-	       R_ERROR = -2, /** range */
-	       S_ERROR, /** syntax */
-	       SUCCESS} STATUS;
+	    char*		op_stack;	/** Operator stack       */
+	    intmax_t*		arg_stack;	/** Argument stack       */
+	    char*		token;		/** Token buffer         */
+	    int			op_sptr;	/** op_stack pointer     */
+	    int			arg_sptr;	/** arg_stack pointer    */
+	    int			parens;		/** Nesting level        */
+	    int			state;		/** 0 = Awaiting expression
+						    1 = Awaiting Operator */
+    };
 
-static struct Operator verbs[] = {
+Calculator_Addon::Calculator_Addon():op_stack(NULL),token(NULL) {}
+Calculator_Addon::~Calculator_Addon() {}
+
+const struct Operator Calculator_Addon::verbs[] = {
       {"+", 1, 2, '+' },
       {"-", 1, 3, '-' },
       {"*", 1, 4, '*' },
@@ -96,20 +132,6 @@ static struct Operator verbs[] = {
       {")", 1, 99,')' },
       {NULL,0, 0, NUL }
 };
-
-static const unsigned EVAL_STACK_SIZE=256;
-
-static char   *op_stack;                        /** Operator stack       */
-static intmax_t*arg_stack;                       /** Argument stack       */
-static char   *token;                           /** Token buffer         */
-static int    op_sptr,                          /** op_stack pointer     */
-	      arg_sptr,                         /** arg_stack pointer    */
-	      parens,                           /** Nesting level        */
-	      state;                            /** 0 = Awaiting expression
-						     1 = Awaiting Operator
-						*/
-int                     evaluate(char *, intmax_t *,int *);
-
 /*
 **  Originally published as part of the MicroFirm Function Library
 **
@@ -122,8 +144,7 @@ int                     evaluate(char *, intmax_t *,int *);
 */
 
 /** Modified for using with BEYE by Nickols_K (2000) */
-
-static char *  __FASTCALL__ rmallws(char *str)
+char* Calculator_Addon::rmallws(char *str) const
 {
       char *obuf, *nbuf;
 
@@ -135,56 +156,6 @@ static char *  __FASTCALL__ rmallws(char *str)
       *nbuf = NUL;
       return str;
 }
-
-static int  __FASTCALL__ do_op(void);
-static int  __FASTCALL__ do_paren(void);
-static void  __FASTCALL__ push_op(char);
-static void  __FASTCALL__ push_arg(intmax_t);
-static int  __FASTCALL__ pop_arg(intmax_t *);
-static int  __FASTCALL__ pop_op(int *);
-static char * __FASTCALL__ get_exp(char *);
-static struct Operator *  __FASTCALL__ get_op(char *);
-static int  __FASTCALL__ getprec(char);
-static int  __FASTCALL__ getTOSprec(void);
-
-#ifdef TEST
-
-#include <stdio.h>
-
-int main(int argc, char *argv[])
-{
-      int retval,base;
-      intmax_t val;
-      char sout[100];
-      if(argc < 2)
-      {
-	printf("Usage : eval <expr>\n");
-	return 0;
-      }
-      printf("evaluate(%s)\n", argv[1]);
-      retval = evaluate(argv[1], &val, &base);
-      sout[0] = 0;
-      switch(base)
-      {
-	case 16: strcpy(sout,"0x"); break;
-	case 8:  strcpy(sout,"0"); break;
-	default: break;
-      }
-      ltoa(val,&sout[strlen(sout)],base);
-      switch(base)
-      {
-	case 2: strcat(sout,"b"); break;
-	default: break;
-      }
-      if (retval == 0) printf("%s\n",sout);
-      else             printf(retval == S_ERROR ? "syntax error\n" :
-			      retval == R_ERROR ? "runtime error\n":
-			      retval == O_ERROR ? "bad operand\n":
-						  "out of memory\n");
-      return 0;
-}
-
-#endif
 
 /************************************************************************/
 /*                                                                      */
@@ -206,13 +177,13 @@ int main(int argc, char *argv[])
 /*                                                                      */
 /************************************************************************/
 
-int evaluate(char *line, intmax_t *val,int *result_base)
+int Calculator_Addon::evaluate(char *line, intmax_t *val,int *result_base)
 {
       intmax_t arg;
       char *ptr = line, *str, *endptr;
       int ercode;
       int retval;
-      struct Operator *op;
+      const struct Operator *op;
       op_stack = new char[EVAL_STACK_SIZE];
       arg_stack = new intmax_t[EVAL_STACK_SIZE];
       token = new char[EVAL_STACK_SIZE];
@@ -373,7 +344,7 @@ int evaluate(char *line, intmax_t *val,int *result_base)
 **  Evaluate stacked arguments and operands
 */
 
-static int  __FASTCALL__ do_op(void)
+int Calculator_Addon::do_op()
 {
       intmax_t arg1, arg2;
       int op;
@@ -441,8 +412,7 @@ static int  __FASTCALL__ do_op(void)
 /**
 **  Evaluate one level
 */
-
-static int  __FASTCALL__ do_paren(void)
+int Calculator_Addon::do_paren()
 {
       int op;
 
@@ -459,29 +429,27 @@ static int  __FASTCALL__ do_paren(void)
 /**
 **  Stack operations
 */
-
-static void  __FASTCALL__ push_op(char op)
+void Calculator_Addon::push_op(char op)
 {
       if (!getprec(op))
 	    ++parens;
       op_stack[op_sptr++] = op;
 }
 
-static void  __FASTCALL__ push_arg(intmax_t arg)
+void Calculator_Addon::push_arg(intmax_t arg)
 {
       arg_stack[arg_sptr++] = arg;
 }
 
-static int  __FASTCALL__ pop_arg(intmax_t *arg)
+int Calculator_Addon::pop_arg(intmax_t *arg)
 {
       *arg = arg_stack[--arg_sptr];
       return 0 > arg_sptr ? S_ERROR : SUCCESS;
 }
 
-static int  __FASTCALL__ pop_op(int *op)
+int Calculator_Addon::pop_op(int *op)
 {
-      if (!op_sptr)
-	    return S_ERROR;
+      if (!op_sptr) return S_ERROR;
       *op = op_stack[--op_sptr];
       return SUCCESS;
 }
@@ -489,11 +457,11 @@ static int  __FASTCALL__ pop_op(int *op)
 /**
 **  Get an expression
 */
-
-static char *  __FASTCALL__ get_exp(char *str)
+char* Calculator_Addon::get_exp(const char *str)
 {
-      char *ptr = str, *tptr = token;
-      struct Operator *op;
+      const char* ptr = str;
+      char* tptr = token;
+      const struct Operator *op;
 
       while (*ptr)
       {
@@ -530,10 +498,9 @@ static char *  __FASTCALL__ get_exp(char *str)
 /**
 **  Get an Operator
 */
-
-static struct Operator *  __FASTCALL__ get_op(char *str)
+const struct Operator* Calculator_Addon::get_op(const char* str)
 {
-      struct Operator *op;
+      const struct Operator *op;
 
       for (op = verbs; op->token; ++op)
       {
@@ -547,9 +514,9 @@ static struct Operator *  __FASTCALL__ get_op(char *str)
 **  Get precedence of a token
 */
 
-static int  __FASTCALL__ getprec(char _token)
+int Calculator_Addon::getprec(char _token)
 {
-      struct Operator *op;
+      const struct Operator *op;
 
       for (op = verbs; op->token; ++op)
       {
@@ -562,15 +529,14 @@ static int  __FASTCALL__ getprec(char _token)
 /**
 **  Get precedence of TOS token
 */
-
-static int  __FASTCALL__ getTOSprec(void)
+int Calculator_Addon::getTOSprec()
 {
       if (!op_sptr)
 	    return 0;
       return getprec(op_stack[op_sptr - 1]);
 }
 
-static void CalculatorFunc(void)
+void Calculator_Addon::run()
 {
   tAbsCoord x1_,y1_,x2_,y2_;
   tRelCoord X1,Y1,X2,Y2;
@@ -640,11 +606,9 @@ static void CalculatorFunc(void)
   CloseWnd(wdlg);
 }
 
-extern const REGISTRY_TOOL Calculator =
-{
-  "~String calculator",
-  CalculatorFunc,
-  NULL,
-  NULL
+static Addon* query_interface() { return new(zeromem) Calculator_Addon(); }
+extern const Addon_Info Calculator = {
+    "~String calculator",
+    query_interface
 };
 } // namespace beye

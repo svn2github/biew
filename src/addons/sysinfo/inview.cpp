@@ -20,6 +20,8 @@ using namespace beye;
 #include <string.h>
 #include <stddef.h>
 
+#include "addons/addon.h"
+
 #include "colorset.h"
 #include "bconsole.h"
 #include "beyeutil.h"
@@ -28,7 +30,18 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 namespace beye {
-static void InputViewLoop( void )
+    class InputView_Addon : public Addon {
+	public:
+	    InputView_Addon();
+	    virtual ~InputView_Addon();
+	
+	    virtual void	run();
+    };
+
+InputView_Addon::InputView_Addon() {}
+InputView_Addon::~InputView_Addon() {}
+
+void InputView_Addon::run()
 {
   TWindow * hwnd = CrtDlgWndnls(" Input viewer ",78,2);
   int rval, do_exit;
@@ -59,11 +72,9 @@ static void InputViewLoop( void )
   CloseWnd(hwnd);
 }
 
-extern const REGISTRY_SYSINFO InputViewer =
-{
-  "~Input viewer",
-  InputViewLoop,
-  NULL,
-  NULL
+static Addon* query_interface() { return new(zeromem) InputView_Addon(); }
+extern const Addon_Info InputViewer = {
+    "~Input viewer",
+    query_interface
 };
 } // namespace beye

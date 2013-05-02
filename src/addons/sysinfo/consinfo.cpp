@@ -22,6 +22,8 @@ using namespace beye;
 #include <string.h>
 #include <stddef.h>
 
+#include "addons/addon.h"
+
 #include "beye.h"
 #include "colorset.h"
 #include "bconsole.h"
@@ -31,8 +33,18 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 namespace beye {
+    class ConsoleInfo_Addon : public Addon {
+	public:
+	    ConsoleInfo_Addon();
+	    virtual ~ConsoleInfo_Addon();
+	
+	    virtual void	run();
+    };
 
-static void ShowConsInfo( void )
+ConsoleInfo_Addon::ConsoleInfo_Addon() {}
+ConsoleInfo_Addon::~ConsoleInfo_Addon() {}
+
+void ConsoleInfo_Addon::run()
 {
   TWindow * hwnd = CrtDlgWndnls(" Console information ",63,std::min(tAbsCoord(21),tvioHeight-2));
   unsigned evt;
@@ -86,11 +98,9 @@ static void ShowConsInfo( void )
   CloseWnd(hwnd);
 }
 
-extern const REGISTRY_SYSINFO ConsoleInfo =
-{
-  "~Console information",
-  ShowConsInfo,
-  NULL,
-  NULL
+static Addon* query_interface() { return new(zeromem) ConsoleInfo_Addon(); }
+extern const Addon_Info ConsoleInfo = {
+    "~Console information",
+    query_interface
 };
 } // namespace beye

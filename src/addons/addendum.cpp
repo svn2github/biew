@@ -19,13 +19,14 @@ using namespace beye;
 **/
 #include <stddef.h>
 
+#include "addon.h"
 #include "addendum.h"
 #include "bconsole.h"
 #include "beyeutil.h"
 
 namespace beye {
-extern const REGISTRY_TOOL DigitalConvertor;
-extern const REGISTRY_TOOL Calculator;
+extern const Addon_Info DigitalConvertor;
+extern const Addon_Info Calculator;
 
 void addendum::select()
 {
@@ -37,7 +38,10 @@ void addendum::select()
     for(i = 0;i < nTools;i++) toolName[i] = list[i]->name;
     retval = SelBoxA(const_cast<char**>(toolName),nTools," Select tool: ",defToolSel);
     if(retval != -1) {
-	list[retval]->tool();
+	const Addon_Info* addon_info = list[retval];
+	Addon* addon = addon_info->query_interface();
+	addon->run();
+	delete addon;
 	defToolSel = retval;
     }
 }
@@ -47,18 +51,8 @@ addendum::addendum()
 {
     list.push_back(&DigitalConvertor);
     list.push_back(&Calculator);
-    size_t i,sz=list.size();
-    for(i = 0;i < sz;i++) {
-	if(list[i]->read_ini) list[i]->read_ini();
-    }
 }
 
-addendum::~addendum()
-{
-    size_t i,sz=list.size();
-    for(i = 0;i < sz;i++) {
-	if(list[i]->save_ini) list[i]->save_ini();
-    }
-}
+addendum::~addendum() {}
 } // namespace beye
 

@@ -24,6 +24,8 @@ using namespace beye;
 #include <stdio.h>
 #include <limits.h>
 
+#include "addons/addon.h"
+
 #include "bconsole.h"
 #include "beyeutil.h"
 #include "reg_form.h"
@@ -31,7 +33,20 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 namespace beye {
-static TWindow *pwnd;
+    class CPUPerformance_Addon : public Addon {
+	public:
+	    CPUPerformance_Addon();
+	    virtual ~CPUPerformance_Addon();
+	
+	    virtual void	run();
+	private:
+	    char**		cpuPointStrings(char  *data,unsigned long data_size,unsigned long *nstr);
+    };
+
+static TWindow*	pwnd;
+
+CPUPerformance_Addon::CPUPerformance_Addon() {}
+CPUPerformance_Addon::~CPUPerformance_Addon() {}
 
 static void paint_prcnt(int n_prcnt)
 {
@@ -39,7 +54,7 @@ static void paint_prcnt(int n_prcnt)
   ShowPercentInWnd(pwnd,n_prcnt);
 }
 
-char ** __FASTCALL__ cpuPointStrings(char  *data,unsigned long data_size,unsigned long *nstr)
+char** __FASTCALL__ CPUPerformance_Addon::cpuPointStrings(char  *data,unsigned long data_size,unsigned long *nstr)
 {
   char **str_ptr,**new_ptr;
   unsigned long i;
@@ -66,7 +81,7 @@ char ** __FASTCALL__ cpuPointStrings(char  *data,unsigned long data_size,unsigne
   return str_ptr;
 }
 
-static void ShowCPUInfo( void )
+void CPUPerformance_Addon::run()
 {
    char *cpu_info;
    char **str_ptr;
@@ -85,11 +100,9 @@ static void ShowCPUInfo( void )
    PFREE(cpu_info);
 }
 
-extern const REGISTRY_SYSINFO CPUPerformance =
-{
-  "CPU ~performance",
-  ShowCPUInfo,
-  NULL,
-  NULL
+static Addon* query_interface() { return new(zeromem) CPUPerformance_Addon(); }
+extern const Addon_Info CPUPerformance = {
+    "CPU ~performance",
+    query_interface
 };
 } // namespace beye

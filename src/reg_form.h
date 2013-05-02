@@ -164,21 +164,5 @@ struct REGISTRY_BIN
   unsigned    (__FASTCALL__ *GetObjAttr)(__filesize_t pa,char *name,unsigned cb_name,
 			      __filesize_t *start,__filesize_t *end,int *_class,int *bitness);
 };
-
-typedef struct tag_REGISTRY_TOOL
-{
-  const char *  name;                /**< Tool name */
-  void          (*tool)( void );     /**< Tool body */
-  void          (*read_ini)( void ); /**< read beye.ini if need */
-  void          (*save_ini)( void ); /**< write to beye.ini if need */
-}REGISTRY_TOOL;
-
-typedef struct tag_REGISTRY_SYSINFO
-{
-  const char *  name;                /**< System depended information name */
-  void          (*sysinfo)( void );  /**< System depended information body */
-  void          (*read_ini)( void ); /**< reads beye.ini if need */
-  void          (*save_ini)( void ); /**< writes to beye.ini if need */
-}REGISTRY_SYSINFO;
 } // namespace beye
 #endif

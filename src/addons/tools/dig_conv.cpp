@@ -20,6 +20,8 @@ using namespace beye;
 #include <string.h>
 #include <stdlib.h>
 
+#include "addons/addon.h"
+
 #include "bconsole.h"
 #include "beyeutil.h"
 #include "colorset.h"
@@ -29,7 +31,23 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 namespace beye {
-static int  __FASTCALL__ GetFullBin(uintmax_t value,char * buff)
+    class DigitalConverter_Addon : public Addon {
+	public:
+	    DigitalConverter_Addon();
+	    virtual ~DigitalConverter_Addon();
+	
+	    virtual void	run();
+	private:
+	    int			GetFullBin(uintmax_t value,char* buff);
+	    int			Dig2Str(uintmax_t value,char * buff,int action);
+	    uintmax_t		Str2Dig(char * buff,int action);
+	    void		DCStaticPaint(TWindow * wdlg,char * wbuff,intmax_t digit,unsigned *mlen);
+    };
+
+DigitalConverter_Addon::DigitalConverter_Addon() {}
+DigitalConverter_Addon::~DigitalConverter_Addon() {}
+
+int DigitalConverter_Addon::GetFullBin(uintmax_t value,char * buff)
 {
  char byte,*b;
  bool started = false;
@@ -69,7 +87,7 @@ static int  __FASTCALL__ GetFullBin(uintmax_t value,char * buff)
  return strlen(buff);
 }
 
-static int  __FASTCALL__ Dig2Str(uintmax_t value,char * buff,int action)
+int DigitalConverter_Addon::Dig2Str(uintmax_t value,char * buff,int action)
 {
  if(action == 0) return strlen(ulltoa(value,buff,16));
  if(action == 1) return strlen(lltoa(value,buff,8));
@@ -80,7 +98,7 @@ static int  __FASTCALL__ Dig2Str(uintmax_t value,char * buff,int action)
  return 0;
 }
 
-static uintmax_t  __FASTCALL__ Str2Dig(char * buff,int action)
+uintmax_t DigitalConverter_Addon::Str2Dig(char * buff,int action)
 {
  if(action == 0) return strtoull(buff,NULL,16);
  if(action == 1) return strtoull(buff,NULL,8);
@@ -90,7 +108,7 @@ static uintmax_t  __FASTCALL__ Str2Dig(char * buff,int action)
  return 0;
 }
 
-static void  __FASTCALL__ DCStaticPaint(TWindow * wdlg,char * wbuff,intmax_t digit,unsigned *mlen)
+void DigitalConverter_Addon::DCStaticPaint(TWindow * wdlg,char * wbuff,intmax_t digit,unsigned *mlen)
 {
  int rlen;
  tAbsCoord x1,y1,x2,y2;
@@ -112,7 +130,7 @@ static void  __FASTCALL__ DCStaticPaint(TWindow * wdlg,char * wbuff,intmax_t dig
     twUseWin(_using);
 }
 
-static void DigConv( void )
+void DigitalConverter_Addon::run()
 {
  tAbsCoord x1,y1,x2,y2;
  tRelCoord X1,Y1,XX1,XX2,YY1,YY2;
@@ -217,11 +235,9 @@ static void DigConv( void )
  for(i = 0;i < 5;i++) CloseWnd(ewnd[i]);
 }
 
-extern const REGISTRY_TOOL DigitalConvertor =
-{
-  "~Digital convertor",
-  DigConv,
-  NULL,
-  NULL
+static Addon* query_interface() { return new(zeromem) DigitalConverter_Addon(); }
+extern const Addon_Info DigitalConvertor = {
+    "~Digital convertor",
+    query_interface
 };
 } // namespace beye

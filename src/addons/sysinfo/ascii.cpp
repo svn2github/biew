@@ -23,6 +23,8 @@ using namespace beye;
 **/
 #include <string.h>
 
+#include "addons/addon.h"
+
 #include "bconsole.h"
 #include "reg_form.h"
 #include "beyeutil.h"
@@ -31,7 +33,20 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 namespace beye {
-static TWindow *  __FASTCALL__ CreatePanelNF(tAbsCoord x1,tAbsCoord y1,tAbsCoord x2,tAbsCoord y2)
+    class ASCII_Addon : public Addon {
+	public:
+	    ASCII_Addon();
+	    virtual ~ASCII_Addon();
+	
+	    virtual void	run();
+	private:
+	    TWindow*		CreatePanelNF(tAbsCoord x1,tAbsCoord y1,tAbsCoord x2,tAbsCoord y2);
+    };
+
+ASCII_Addon::ASCII_Addon() {}
+ASCII_Addon::~ASCII_Addon() {}
+
+TWindow*  ASCII_Addon::CreatePanelNF(tAbsCoord x1,tAbsCoord y1,tAbsCoord x2,tAbsCoord y2)
 {
  TWindow *win;
  unsigned flags = 0;
@@ -42,7 +57,7 @@ static TWindow *  __FASTCALL__ CreatePanelNF(tAbsCoord x1,tAbsCoord y1,tAbsCoord
  return win;
 }
 
-static void ShowASCII( void )
+void ASCII_Addon::run()
 {
   TWindow * hwnd = CrtDlgWndnls(" ASCII table ",34,18);
   TWindow * hpnl = CreatePanelNF(hwnd->X1+4,hwnd->Y1+4,hwnd->X2-1,hwnd->Y2-1);
@@ -80,12 +95,10 @@ static void ShowASCII( void )
   CloseWnd(hwnd);
 }
 
-extern const REGISTRY_SYSINFO AsciiTable =
-{
-  "~ASCII table",
-  ShowASCII,
-  NULL,
-  NULL
+static Addon* query_interface() { return new(zeromem) ASCII_Addon(); }
+extern const Addon_Info AsciiTable = {
+    "~ASCII table",
+    query_interface
 };
 } // namespace beye
 
