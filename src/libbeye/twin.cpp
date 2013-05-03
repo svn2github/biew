@@ -61,9 +61,9 @@ static bool  __FASTCALL__ test_win(TWindow *win)
        *((any_t**)(win->saved.attrs + win->wsize)) == win->saved.attrs ? true : false;
  return ret;
 }
-#define CHECK_WINS(x) { if(!test_win(x)) winInternalError(); }
+static void CHECK_WINS(TWindow* x) { if(!test_win(x)) winInternalError(); }
 #else
-#define CHECK_WINS(x)
+static void CHECK_WINS(TWindow* x) { UNUSED(x); }
 #endif
 
 enum {
@@ -72,60 +72,54 @@ enum {
     IFLG_CURSORBEENOFF=0x80000000UL
 };
 
-TWindow *active;
-
 static void  __FASTCALL__ winerr(const char *str) { std::cerr<<std::endl<<std::endl<<"Internal twin library error: "<<str<<std::endl; _exit(EXIT_FAILURE); }
-static void  __FASTCALL__ wputc_oem(char ch,char oempg,char color,bool update);
-static void  __FASTCALL__ paint_internal(void);
+static void  __FASTCALL__ wputc_oem(TWindow* win,char ch,char oempg,char color,bool update);
+static void  __FASTCALL__ paint_internal(TWindow* win);
 
-#define wputc(ch,color,update) wputc_oem((char)ch,(char)0,(char)color,(bool)update)
+inline void wputc(TWindow* win,char ch,char color,bool update) { wputc_oem(win,ch,0,color,update); }
 
 static TWindow *head = NULL;
 static TWindow *cursorwin = NULL;
 
 static unsigned long twin_flags = 0L;
 
-#define __FIND_OVER(ret,win,x,y)\
-{\
-  TWindow *iter;\
-  tAbsCoord xx,yy;\
-  iter = head;\
-  ret = NULL;\
-  xx = win->X1+x;\
-  yy = win->Y1+y;\
-  while( iter && iter != win )\
-  {\
-    if((iter->iflags & IFLG_VISIBLE) == IFLG_VISIBLE)\
-    {\
-      if((yy >= iter->Y1) && (yy < iter->Y2) &&\
-	 (xx >= iter->X1) && (xx < iter->X2))\
-		       ret = iter;\
-    }\
-    iter = iter->next;\
-  }\
+static TWindow* __FIND_OVER(TWindow* win,tAbsCoord x,tAbsCoord y) {
+  TWindow *iter,*ret;
+  tAbsCoord xx,yy;
+  iter = head;
+  ret = NULL;
+  xx = win->X1+x;
+  yy = win->Y1+y;
+  while( iter && iter != win )
+  {
+    if((iter->iflags & IFLG_VISIBLE) == IFLG_VISIBLE)
+    {
+      if((yy >= iter->Y1) && (yy < iter->Y2) &&
+	 (xx >= iter->X1) && (xx < iter->X2))
+		       ret = iter;
+    }
+    iter = iter->next;
+  }
+  return ret;
 }
 
-#define IS_VALID_XY(win,x,y)\
-  ((win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE ?\
-   (tAbsCoord)x &&\
-   (tAbsCoord)x < win->wwidth-1 &&\
-   (tAbsCoord)y &&\
-   (tAbsCoord)y < win->wheight-1 :\
-   (tAbsCoord)x < win->wwidth &&\
-   (tAbsCoord)y < win->wheight)
+inline bool IS_VALID_XY(TWindow* win,tAbsCoord x,tAbsCoord y) {
+    return ((win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE ?
+	    x && x < win->wwidth-1 && y && y < win->wheight-1 :
+	    x < win->wwidth && y < win->wheight);
+}
 
-#define IS_VALID_X(win,x)\
-  ((win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE ?\
-   (tAbsCoord)x &&\
-   (tAbsCoord)x < win->wwidth-1:\
-   (tAbsCoord)x < win->wwidth)
+inline bool IS_VALID_X(TWindow* win,tAbsCoord x) {
+    return ((win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE ?
+	    x && x < win->wwidth-1:
+	    x < win->wwidth);
+}
 
-#define IS_VALID_Y(win,y)\
-  ((win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE ?\
-   (tAbsCoord)y &&\
-   (tAbsCoord)y < win->wheight-1 :\
-   (tAbsCoord)y < win->wheight)
-
+inline bool IS_VALID_Y(TWindow* win,tAbsCoord y) {
+    return ((win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE ?
+	    y && y < win->wheight-1 :
+	    y < win->wheight);
+}
 static bool  __FASTCALL__ isOverlapped(TWindow *win)
 {
   TWindow *iter;
@@ -154,37 +148,35 @@ static bool  __FASTCALL__ isOverlapped(TWindow *win)
    accelerate all output by computing non overlapped lines of window or parts
    of lines, but I don't want to do such complex task.
 */
-#define __TOPMOST(win) (!isOverlapped(win))
+inline bool __TOPMOST(TWindow* win) { return !isOverlapped(win); }
 
-#define __ATHEAD(win)\
-{\
-  if(head) ((TWindow *)win)->next = head;\
-  head = (TWindow *)win;\
+inline void __ATHEAD(TWindow* win) {
+  if(head) win->next = head;
+  head = win;
 }
 
-#define __ATWIN(win,prev)\
-{\
-  if(!prev) __ATHEAD(win)\
-  else\
-  {\
-     ((TWindow *)win)->next = ((TWindow *)prev)->next;\
-     ((TWindow *)prev)->next = (TWindow *)win;\
-  }\
+inline void __ATWIN(TWindow* win,TWindow* prev) {
+  if(!prev) __ATHEAD(win);
+  else
+  {
+     win->next = prev->next;
+     prev->next = win;
+  }
 }
 
-#define __AT_POINT(iter,x,y)\
-{\
-  iter = head;\
-  while( iter )\
-  {\
-    if((iter->iflags & IFLG_VISIBLE) == IFLG_VISIBLE)\
-    {\
-      if(((tAbsCoord)y >= iter->Y1) && ((tAbsCoord)y < iter->Y2) &&\
-	 ((tAbsCoord)x >= iter->X1) && ((tAbsCoord)x < iter->X2))\
-		       break;\
-    }\
-    iter = iter->next;\
-  }\
+inline TWindow* __AT_POINT(TWindow* iter,tAbsCoord x,tAbsCoord y) {
+  iter = head;
+  while( iter )
+  {
+    if((iter->iflags & IFLG_VISIBLE) == IFLG_VISIBLE)
+    {
+      if((y >= iter->Y1) && (y < iter->Y2) &&
+	 (x >= iter->X1) && (x < iter->X2))
+		       break;
+    }
+    iter = iter->next;
+  }
+  return iter;
 }
 
 static int c_type = -1;
@@ -197,7 +189,7 @@ void __FASTCALL__ twSetCursorType(int type)
   }
 }
 
-int __FASTCALL__ twGetCursorType( void )
+int __FASTCALL__ twGetCursorType()
 {
   if(c_type == -1) c_type = __vioGetCursorType();
   return c_type;
@@ -220,7 +212,7 @@ void __FASTCALL__ twInit(const char *user_cp, unsigned long vio_flags, unsigned 
   twSetCursorType(TW_CUR_OFF);
 }
 
-void __FASTCALL__ twDestroy( void )
+void __FASTCALL__ twDestroy()
 {
   twSetCursorType(TW_CUR_NORM);
   twcDestroyClassSet();
@@ -306,59 +298,55 @@ static void  __FASTCALL__ __set_color(DefColor *to,Color fore,Color back)
   to->system = LOGFB_TO_PHYS(fore,back);
 }
 
-ColorAttr __FASTCALL__ twSetColor(Color fore,Color back)
+ColorAttr __FASTCALL__ twSetColor(TWindow* win,Color fore,Color back)
 {
   ColorAttr ret;
-  ret = active->text.user;
-  __set_color(&active->text,fore,back);
+  ret = win->text.user;
+  __set_color(&win->text,fore,back);
   return ret;
 }
 
-ColorAttr __FASTCALL__ twSetColorAttr(ColorAttr ca)
+ColorAttr __FASTCALL__ twSetColorAttr(TWindow* win,ColorAttr ca)
 {
-  return twSetColor(FORE_COLOR(ca),BACK_COLOR(ca));
+  return twSetColor(win,FORE_COLOR(ca),BACK_COLOR(ca));
 }
 
-ColorAttr __FASTCALL__ twGetColorAttr( void ) { return active->text.user; }
+ColorAttr __FASTCALL__ twGetColorAttr( TWindow*  win ) { return win->text.user; }
 
-void __FASTCALL__ twGetColor(Color *fore,Color *back)
+void __FASTCALL__ twGetColor(TWindow*  win,Color *fore,Color *back)
 {
-  ColorAttr ca = twGetColorAttr();
+  ColorAttr ca = twGetColorAttr(win);
   PHYS_TO_LOGFB(ca,*fore,*back);
 }
 
-Color __FASTCALL__ twTextColor( Color col )
+Color __FASTCALL__ twTextColor(TWindow*  win, Color col )
 {
   Color back,ret;
   ColorAttr attr;
-  attr = twGetColorAttr();
+  attr = twGetColorAttr(win);
   back = BACK_COLOR(attr);
   ret = FORE_COLOR(attr);
-  twSetColor(col, back);
+  twSetColor(win,col, back);
   return ret;
 }
 
-Color __FASTCALL__ twTextBkGnd( Color col )
+Color __FASTCALL__ twTextBkGnd(TWindow*  win, Color col )
 {
    Color fore,ret;
    ColorAttr attr;
-   attr = twGetColorAttr();
+   attr = twGetColorAttr(win);
    fore = FORE_COLOR(attr);
    ret = BACK_COLOR(attr);
-   twSetColor(fore, col);
+   twSetColor(win,fore, col);
    return ret;
 }
 
 void __FASTCALL__ twSetFrame(TWindow *win,const unsigned char *frame,Color fore,Color back)
 {
-  TWindow *tmp;
   win->flags |= TWS_FRAMEABLE;
   memcpy(win->Frame,frame,8);
   __set_color(&win->frame,fore,back);
-  tmp = active;
-  active = win;
-  paint_internal();
-  active = tmp;
+  paint_internal(win);
 }
 
 void __FASTCALL__ twSetFrameAttr(TWindow *win,const unsigned char *frame,ColorAttr attr)
@@ -370,14 +358,14 @@ void __FASTCALL__ twGetFrameAttr(TWindow *win,unsigned char *frame,ColorAttr* at
 {
   if((win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE)
   {
-    memcpy(frame,active->Frame,8);
+    memcpy(frame,win->Frame,8);
     *attr = win->frame.user;
   }
 }
 
 void __FASTCALL__ twGetFrame(TWindow *win,unsigned char *frame,Color* fore,Color* back)
 {
-  ColorAttr attr;
+  ColorAttr attr = 0;
   twGetFrameAttr(win,frame,&attr);
   *fore = FORE_COLOR(attr);
   *back = BACK_COLOR(attr);
@@ -385,7 +373,6 @@ void __FASTCALL__ twGetFrame(TWindow *win,unsigned char *frame,Color* fore,Color
 
 void __FASTCALL__ twSetTitle(TWindow *win,const char *title,tTitleMode mode,Color fore,Color back)
 {
-  TWindow *tmp;
   unsigned slen;
   slen = strlen(title);
   if(win->Title) delete win->Title;
@@ -396,10 +383,7 @@ void __FASTCALL__ twSetTitle(TWindow *win,const char *title,tTitleMode mode,Colo
 	 __nls_OemToOsdep((unsigned char *)win->Title,slen);
   win->TitleMode = mode;
   __set_color(&win->title,fore,back);
-  tmp = active;
-  active = win;
-  paint_internal();
-  active = tmp;
+  paint_internal(win);
 }
 
 void __FASTCALL__ twSetTitleAttr(TWindow *win,const char *title,tTitleMode mode,ColorAttr attr)
@@ -432,7 +416,6 @@ tTitleMode __FASTCALL__ twGetTitle(TWindow *win,char *title,unsigned cb_title,Co
 
 void __FASTCALL__ twSetFooter(TWindow *win,const char *footer,tTitleMode mode,Color fore,Color back)
 {
-  TWindow *tmp;
   unsigned slen;
   slen = strlen(footer);
   if(win->Footer) delete win->Footer;
@@ -443,10 +426,7 @@ void __FASTCALL__ twSetFooter(TWindow *win,const char *footer,tTitleMode mode,Co
        __nls_OemToOsdep((unsigned char *)win->Footer,slen);
   win->FooterMode = mode;
   __set_color(&win->footer,fore,back);
-  tmp = active;
-  active = win;
-  paint_internal();
-  active = tmp;
+  paint_internal(win);
 }
 
 void __FASTCALL__ twSetFooterAttr(TWindow *win,const char *footer,tTitleMode mode,ColorAttr attr)
@@ -528,7 +508,7 @@ TWindow * __FASTCALL__ twGetWinAtPos(tAbsCoord x,tAbsCoord y)
   tAbsCoord xx,yy;
   xx = x-1;
   yy = y-1;
-  __AT_POINT(ret,xx,yy);
+  ret=__AT_POINT(ret,xx,yy);
   return ret;
 }
 
@@ -551,44 +531,44 @@ bool __FASTCALL__ twIsPieceVisible(TWindow *win,tRelCoord x, tRelCoord y)
 {
   TWindow *over;
   if(win->flags & TWS_FRAMEABLE) { x++; y++; }
-  __FIND_OVER(over,win,win->X1+x,win->Y1+y);
+  over=__FIND_OVER(win,win->X1+x,win->Y1+y);
   return over ? true : false;
 }
 
-static void  __FASTCALL__ iGotoXY(tRelCoord x,tRelCoord y)
+static void  __FASTCALL__ iGotoXY(TWindow*  win,tRelCoord x,tRelCoord y)
 {
   if(x && y)
   {
-    active->cur_x = x-1;
-    active->cur_y = y-1;
-    if(active->cur_x >= active->wwidth) active->cur_x = active->wwidth-1;
-    if(active->cur_y >= active->wheight) active->cur_y = active->wheight-1;
+    win->cur_x = x-1;
+    win->cur_y = y-1;
+    if(win->cur_x >= win->wwidth) win->cur_x = win->wwidth-1;
+    if(win->cur_y >= win->wheight) win->cur_y = win->wheight-1;
   }
 }
 
-static void  __FASTCALL__ set_xy(tRelCoord x,tRelCoord y)
+static void  __FASTCALL__ set_xy(TWindow* win,tRelCoord x,tRelCoord y)
 {
   tRelCoord width,height;
   if(x && y)
   {
     x--; y--;
-    active->cur_x = x;
-    active->cur_y = y;
-    width = active->wwidth;
-    height = active->wheight;
-    if((active->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE)
+    win->cur_x = x;
+    win->cur_y = y;
+    width = win->wwidth;
+    height = win->wheight;
+    if((win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE)
     {
       width--;
       height--;
-      active->cur_x++;
-      active->cur_y++;
+      win->cur_x++;
+      win->cur_y++;
     }
-    if(active->cur_x > width) active->cur_x = width-1;
-    if(active->cur_y > height) active->cur_y = height-1;
+    if(win->cur_x > width) win->cur_x = width-1;
+    if(win->cur_y > height) win->cur_y = height-1;
   }
 }
 
-static void  __FASTCALL__ paint_cursor( void )
+static void  __FASTCALL__ paint_cursor(TWindow* win)
 {
   TWindow * top=NULL;
   static tAbsCoord c_x = UCHAR_MAX, c_y = UCHAR_MAX;
@@ -597,8 +577,8 @@ static void  __FASTCALL__ paint_cursor( void )
   int type;
   if(cursorwin && (cursorwin->iflags & IFLG_ENABLED) == IFLG_ENABLED)
   {
-    __FIND_OVER(top,cursorwin,cursorwin->cur_x,cursorwin->cur_y-1);
-    if(!top && (cursorwin->iflags & IFLG_VISIBLE) == IFLG_VISIBLE && cursorwin == active)
+    top=__FIND_OVER(cursorwin,cursorwin->cur_x,cursorwin->cur_y-1);
+    if(!top && (cursorwin->iflags & IFLG_VISIBLE) == IFLG_VISIBLE && cursorwin == win)
     {
 	type = twGetCursorType();
 	if(type == TW_CUR_OFF)
@@ -606,8 +586,8 @@ static void  __FASTCALL__ paint_cursor( void )
 	 twSetCursorType(_c_type == -1 ? TW_CUR_NORM : _c_type);
 	 _c_type = _c_type == -1 ? TW_CUR_NORM : _c_type;
 	}
-	x = active->X1 + active->cur_x;
-	y = active->Y1 + active->cur_y;
+	x = win->X1 + win->cur_x;
+	y = win->Y1 + win->cur_y;
 	if(!(x == c_x && y == c_y))
 	{
 	  __vioSetCursorPos(x,y);
@@ -630,10 +610,10 @@ static void  __FASTCALL__ paint_cursor( void )
   }
 }
 
-void __FASTCALL__ twGotoXY(tRelCoord x,tRelCoord y)
+void __FASTCALL__ twGotoXY(TWindow *win,tRelCoord x,tRelCoord y)
 {
-  set_xy(x,y);
-  paint_cursor();
+  set_xy(win,x,y);
+  paint_cursor(win);
 }
 
 static TWindow *  __FASTCALL__ makewin(tAbsCoord x1, tAbsCoord y1, tAbsCoord width, tAbsCoord height)
@@ -713,7 +693,7 @@ static void  __FASTCALL__ updatescreencharfrombuff(TWindow *win,
     TWindow * top;
     idx = y*win->wwidth+x;
     aidx = x;
-    __FIND_OVER(top,win,x,y);
+    top=__FIND_OVER(win,x,y);
     if(top)
     {
       unsigned tidx;
@@ -730,7 +710,7 @@ static void  __FASTCALL__ updatescreencharfrombuff(TWindow *win,
 	tAbsCoord xx,yy;
 	xx = x+win->X1;
 	yy = y+win->Y1;
-	__AT_POINT(vis,xx,yy);
+	vis=__AT_POINT(vis,xx,yy);
 	tx = xx - vis->X1;
 	ty = yy - vis->Y1;
 	tidx = tx + ty*vis->wwidth;
@@ -783,19 +763,8 @@ static void  __FASTCALL__ updatescreencharfrombuff(TWindow *win,
   }
 }
 
-#define updatescreenchar(win,x,y,accel)\
-   updatescreencharfrombuff((TWindow *)win,\
-			    (tRelCoord)x-1,\
-			    (tRelCoord)y-1,\
-			    &((TWindow *)win)->body,\
-			    (tvioBuff *)accel)
-
-#define restorescreenchar(win,x,y,accel)\
-   updatescreencharfrombuff((TWindow *)win,\
-			    (tRelCoord)x-1,\
-			    (tRelCoord)y-1,\
-			    &((TWindow *)win)->saved,\
-			    (tvioBuff *)accel)
+inline void updatescreenchar(TWindow* win,tRelCoord x,tRelCoord y,tvioBuff* accel) { updatescreencharfrombuff(win,x-1,y-1,&win->body,accel); }
+inline void restorescreenchar(TWindow* win,tRelCoord x,tRelCoord y,tvioBuff* accel) { updatescreencharfrombuff(win,x-1,y-1,&win->saved,accel); }
 /**
  *  Three basic functions for copying from buffer to screen:
  *  ========================================================
@@ -813,7 +782,7 @@ static void  __FASTCALL__ updatewinmemcharfromscreen(TWindow *win,tRelCoord x,tR
     TWindow * top;
     idx = y*win->wwidth+x;
     aidx = x;
-    __FIND_OVER(top,win,x,y);
+    top=__FIND_OVER(win,x,y);
     if(top)
     {
       unsigned tidx;
@@ -1238,9 +1207,9 @@ static tRelCoord  __FASTCALL__ calc_title_off(tTitleMode mode,unsigned w,unsigne
    return stx;
 }
 
-#define DO_OEM_PG(ch) ((active->flags & TWS_NLSOEM) == TWS_NLSOEM ? NLS_IS_OEMPG(ch) ? ch : 0 : 0)
+inline char DO_OEM_PG(TWindow* win,char ch) { return ((win->flags & TWS_NLSOEM) == TWS_NLSOEM ? NLS_IS_OEMPG(ch) ? ch : 0 : 0); }
 
-static void  __FASTCALL__ __draw_frame( tRelCoord xs, tRelCoord ys, tRelCoord xe, tRelCoord ye,
+static void  __FASTCALL__ __draw_frame(TWindow* win, tRelCoord xs, tRelCoord ys, tRelCoord xe, tRelCoord ye,
 				   const any_t*_frame, DefColor color)
 {
  unsigned i;
@@ -1249,8 +1218,8 @@ static void  __FASTCALL__ __draw_frame( tRelCoord xs, tRelCoord ys, tRelCoord xe
  char frm[8],frame[8];
  char up,oem_ch;
  ColorAttr lt = 0,gr = 0,bl = 0;
- sx = active->cur_x;
- sy = active->cur_y;
+ sx = win->cur_x;
+ sy = win->cur_y;
  cfr = color.system;
  up = 0;
  memcpy(frame,_frame,8);
@@ -1270,120 +1239,120 @@ static void  __FASTCALL__ __draw_frame( tRelCoord xs, tRelCoord ys, tRelCoord xe
    }
  }
  memcpy(frm,frame,8);
- if((active->flags & TWS_NLSOEM) == TWS_NLSOEM)
+ if((win->flags & TWS_NLSOEM) == TWS_NLSOEM)
    __nls_OemToOsdep((unsigned char *)frm,sizeof(frm));
- iGotoXY(xs,ys);
+ iGotoXY(win,xs,ys);
  csel = up ? up == 1 ? lt : bl : cfr;
  oem_ch = frame[0];
- wputc_oem(frm[0],DO_OEM_PG(oem_ch),csel,false);
+ wputc_oem(win,frm[0],DO_OEM_PG(win,oem_ch),csel,false);
  for(i = xs+1;i < xe; i++)
  {
-   iGotoXY(i,ys);
+   iGotoXY(win,i,ys);
    oem_ch = frame[1];
-   wputc_oem(frm[1],DO_OEM_PG(oem_ch),csel,false);
+   wputc_oem(win,frm[1],DO_OEM_PG(win,oem_ch),csel,false);
  }
- iGotoXY(xe,ys);
+ iGotoXY(win,xe,ys);
  oem_ch = frame[2];
- wputc_oem(frm[2],DO_OEM_PG(oem_ch),up ? gr : cfr,false);
+ wputc_oem(win,frm[2],DO_OEM_PG(win,oem_ch),up ? gr : cfr,false);
  for(i = ys+1;i < ye;i++)
  {
-   iGotoXY(xs,i);
+   iGotoXY(win,xs,i);
    oem_ch = frame[3];
-   wputc_oem(frm[3],DO_OEM_PG(oem_ch),csel,true);
+   wputc_oem(win,frm[3],DO_OEM_PG(win,oem_ch),csel,true);
  }
  csel = up ? up == 1 ? bl : lt : cfr;
  for(i = ys+1;i < ye;i++)
  {
-   iGotoXY(xe,i);
+   iGotoXY(win,xe,i);
    oem_ch = frame[4];
-   wputc_oem(frm[4],DO_OEM_PG(oem_ch),csel,true);
+   wputc_oem(win,frm[4],DO_OEM_PG(win,oem_ch),csel,true);
  }
- iGotoXY(xs,ye);
+ iGotoXY(win,xs,ye);
  oem_ch = frame[5];
- wputc_oem(frm[5],DO_OEM_PG(oem_ch),up ? gr : cfr,false);
+ wputc_oem(win,frm[5],DO_OEM_PG(win,oem_ch),up ? gr : cfr,false);
  for(i = xs+1;i < xe; i++)
  {
-   iGotoXY(i,ye);
+   iGotoXY(win,i,ye);
    oem_ch = frame[6];
-   wputc_oem(frm[6],DO_OEM_PG(oem_ch),csel,false);
+   wputc_oem(win,frm[6],DO_OEM_PG(win,oem_ch),csel,false);
  }
- iGotoXY(xe,ye);
+ iGotoXY(win,xe,ye);
  oem_ch = frame[7];
- wputc_oem(frm[7],DO_OEM_PG(oem_ch),csel,false);
- active->cur_x = sx;
- active->cur_y = sy;
+ wputc_oem(win,frm[7],DO_OEM_PG(win,oem_ch),csel,false);
+ win->cur_x = sx;
+ win->cur_y = sy;
 
 }
 
-static void  __FASTCALL__ make_frame( void )
+static void  __FASTCALL__ make_frame(TWindow* win)
 {
  unsigned i,w,h;
  tRelCoord sx,sy;
- w = active->wwidth;
- h = active->wheight;
- sx = active->cur_x;
- sy = active->cur_y;
- __draw_frame(1,1,w,h,active->Frame,active->frame);
- if(active->Title)
+ w = win->wwidth;
+ h = win->wheight;
+ sx = win->cur_x;
+ sy = win->cur_y;
+ __draw_frame(win,1,1,w,h,win->Frame,win->frame);
+ if(win->Title)
  {
    unsigned slen;
    tRelCoord stx;
-   slen = strlen(active->Title);
+   slen = strlen(win->Title);
    if(slen > w) slen = w;
-   stx = calc_title_off(active->TitleMode,w,slen);
+   stx = calc_title_off(win->TitleMode,w,slen);
    for(i = 0;i < slen;i++)
    {
-      iGotoXY(stx+i,1);
-      wputc(active->Title[i],active->title.system,false);
+      iGotoXY(win,stx+i,1);
+      wputc(win,win->Title[i],win->title.system,false);
    }
  }
- if(active->Footer)
+ if(win->Footer)
  {
    unsigned slen;
    tRelCoord stx;
-   slen = strlen(active->Footer);
+   slen = strlen(win->Footer);
    if(slen > w) slen = w;
-   stx = calc_title_off(active->FooterMode,w,slen);
+   stx = calc_title_off(win->FooterMode,w,slen);
    for(i = 0;i < slen;i++)
    {
-      iGotoXY(stx+i,h);
-      wputc(active->Footer[i],active->footer.system,false);
+      iGotoXY(win,stx+i,h);
+      wputc(win,win->Footer[i],win->footer.system,false);
    }
  }
- updatescreenpiece(active,0,active->wwidth,1);
- updatescreenpiece(active,0,active->wwidth,h);
- active->cur_x = sx;
- active->cur_y = sy;
+ updatescreenpiece(win,0,win->wwidth,1);
+ updatescreenpiece(win,0,win->wwidth,h);
+ win->cur_x = sx;
+ win->cur_y = sy;
 }
 
-static void  __FASTCALL__ paint_internal( void )
+static void  __FASTCALL__ paint_internal(TWindow* win)
 {
-  if((active->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE) make_frame();
+  if((win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE) make_frame(win);
 }
 
-void __FASTCALL__ twinDrawFrame(tRelCoord x1, tRelCoord y1, tRelCoord x2, tRelCoord y2,const unsigned char *frame,Color fore, Color back)
+void __FASTCALL__ twinDrawFrame(TWindow* win,tRelCoord x1, tRelCoord y1, tRelCoord x2, tRelCoord y2,const unsigned char *frame,Color fore, Color back)
 {
  DefColor dcol;
  tRelCoord sx,sy;
- sx = active->cur_x;
- sy = active->cur_y;
+ sx = win->cur_x;
+ sy = win->cur_y;
  if(memcmp(frame,TW_UP3D_FRAME,8) == 0 ||
     memcmp(frame,TW_DN3D_FRAME,8) == 0) __set_color(&dcol,fore,back);
- else dcol = active->text;
- if((active->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE)
+ else dcol = win->text;
+ if((win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE)
  {
    x1++; y1++; x2++; y2++;
  }
- __draw_frame(x1,y1,x2,y2,frame,dcol);
- updatescreenpiece(active,x1-1,x2,y1);
- updatescreenpiece(active,x1-1,x2,y2);
- active->cur_x = sx;
- active->cur_y = sy;
+ __draw_frame(win,x1,y1,x2,y2,frame,dcol);
+ updatescreenpiece(win,x1-1,x2,y1);
+ updatescreenpiece(win,x1-1,x2,y2);
+ win->cur_x = sx;
+ win->cur_y = sy;
 }
 
-void __FASTCALL__ twinDrawFrameAttr(tRelCoord x1, tRelCoord y1, tRelCoord x2, tRelCoord y2,const unsigned char *frame,ColorAttr attr)
+void __FASTCALL__ twinDrawFrameAttr(TWindow* win,tRelCoord x1, tRelCoord y1, tRelCoord x2, tRelCoord y2,const unsigned char *frame,ColorAttr attr)
 {
-  twinDrawFrame(x1,y1,x2,y2,frame,FORE_COLOR(attr),BACK_COLOR(attr));
+  twinDrawFrame(win,x1,y1,x2,y2,frame,FORE_COLOR(attr),BACK_COLOR(attr));
 }
 
 TWindow * __FASTCALL__ twCreateWin(tAbsCoord x1, tAbsCoord y1, tAbsCoord width, tAbsCoord height, unsigned flags)
@@ -1404,8 +1373,8 @@ TWindow * __FASTCALL__ twCreateWin(tAbsCoord x1, tAbsCoord y1, tAbsCoord width, 
     __set_color(&win->title,LightGray,Black);
     __set_color(&win->footer,LightGray,Black);
     win->cur_x = win->cur_y = 0;
-    twUseWin(win);
-    paint_internal();
+    twFocusWin(win);
+    paint_internal(win);
     if((flags & TWS_VISIBLE) == TWS_VISIBLE) twShowWin(win);
   }
   return win;
@@ -1447,7 +1416,7 @@ void __FASTCALL__ twShowWin(TWindow* w)
     {
       cursorwin = w;
     }
-    paint_cursor();
+    paint_cursor(w);
   }
 }
 
@@ -1464,7 +1433,7 @@ void __FASTCALL__ twShowWinOnTop(TWindow* w)
   {
     cursorwin = w;
   }
-  paint_cursor();
+  paint_cursor(w);
 }
 
 void __FASTCALL__ twShowWinBeneath(TWindow* w,TWindow *prev)
@@ -1498,14 +1467,9 @@ void __FASTCALL__ twDestroyWin(TWindow *win)
   delete win->saved.chars;
   delete win->saved.oem_pg;
   delete win->saved.attrs;
-  if(active == win)
-  {
-     if(win == head)   active = win->next;
-     else              active = __prevwin(win);
-  }
   __unlistwin(win);
   if(cursorwin == win) cursorwin = __findcursorablewin();
-  paint_cursor();
+  if(cursorwin) paint_cursor(cursorwin);
   delete win;
 }
 
@@ -1548,8 +1512,8 @@ void __FASTCALL__ twMoveWin(TWindow *win,tAbsCoord dx,tAbsCoord dy)
   tRelCoord x,y;
   int vis;
   vis = (win->iflags & IFLG_VISIBLE) == IFLG_VISIBLE;
-  x = twWhereX();
-  y = twWhereY();
+  x = twWhereX(win);
+  y = twWhereY(win);
   prev = __prevwin(win);
   if(vis) twHideWin(win);
   win->X1 += dx;
@@ -1557,20 +1521,20 @@ void __FASTCALL__ twMoveWin(TWindow *win,tAbsCoord dx,tAbsCoord dy)
   win->X2 += dx;
   win->Y2 += dy;
   if(vis) twShowWinBeneath(win,prev);
-  twGotoXY(x,y);
+  twGotoXY(win,x,y);
 }
 
 void __FASTCALL__ twResizeWin(TWindow *win,tAbsCoord width,tAbsCoord height)
 {
-  TWindow * tmp,*prev;
+  TWindow *prev;
   tvioBuff newbody;
   size_t ncopy,delta,fillsize;
   size_t from,to,size,i,loop,start,idx;
   tAbsCoord oldw,oldh;
   tRelCoord x,y;
   bool vis;
-  x = twWhereX();
-  y = twWhereY();
+  x = twWhereX(win);
+  y = twWhereY(win);
   vis = (win->iflags & IFLG_VISIBLE) == IFLG_VISIBLE;
   prev = __prevwin(win);
   if(vis) twHideWin(win);
@@ -1653,12 +1617,9 @@ void __FASTCALL__ twResizeWin(TWindow *win,tAbsCoord width,tAbsCoord height)
   win->X2 = win->X1 + width;
   win->Y2 = win->Y1 + height;
   CHECK_WINS(win);
-  tmp = active;
-  active = win;
-  paint_internal();
-  active = tmp;
+  paint_internal(win);
   if(vis) twShowWinBeneath(win,prev);
-  twGotoXY(x,y);
+  twGotoXY(win,x,y);
 }
 
 void __FASTCALL__ twCentredWin(TWindow * win,const TWindow *parent)
@@ -1685,22 +1646,22 @@ void __FASTCALL__ twCentredWin(TWindow * win,const TWindow *parent)
   if(vis) twShowWin(win);
 }
 
-void __FASTCALL__ twClearWinEx( unsigned char filler )
+void __FASTCALL__ twClearWinEx(TWindow* win, unsigned char filler )
 {
   size_t to,size,i,loop,start,delta,idx,fillsize;
   tRelCoord cx,cy;
   char oempg = 0;
-  cx = active->cur_x;
-  cy = active->cur_y;
-  to = (active->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE ? 1 : 0;
-  size = active->wwidth;
+  cx = win->cur_x;
+  cy = win->cur_y;
+  to = (win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE ? 1 : 0;
+  size = win->wwidth;
   delta = 0;
-  if((active->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE) delta = 2;
-  start = (active->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE ? 1 : 0;
-  loop = active->wheight;
-  if((active->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE) loop--;
+  if((win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE) delta = 2;
+  start = (win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE ? 1 : 0;
+  loop = win->wheight;
+  if((win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE) loop--;
   fillsize = size-delta;
-  if((active->flags & TWS_NLSOEM) == TWS_NLSOEM)
+  if((win->flags & TWS_NLSOEM) == TWS_NLSOEM)
   {
     oempg = filler;
     __nls_OemToOsdep(&filler,1);
@@ -1708,115 +1669,115 @@ void __FASTCALL__ twClearWinEx( unsigned char filler )
   for(i = start;i < loop;i++)
   {
       idx = to+i*size;
-      memset(&active->body.chars[idx],filler,fillsize);
-      memset(&active->body.oem_pg[idx],((active->flags & TWS_NLSOEM) == TWS_NLSOEM ? NLS_IS_OEMPG(oempg) ? oempg : 0 : 0),fillsize);
-      memset(&active->body.attrs[idx],active->text.system,fillsize);
-      CHECK_WINS(active);
-      updatescreenpiece(active,0,active->wwidth,i+1);
+      memset(&win->body.chars[idx],filler,fillsize);
+      memset(&win->body.oem_pg[idx],((win->flags & TWS_NLSOEM) == TWS_NLSOEM ? NLS_IS_OEMPG(oempg) ? oempg : 0 : 0),fillsize);
+      memset(&win->body.attrs[idx],win->text.system,fillsize);
+      CHECK_WINS(win);
+      updatescreenpiece(win,0,win->wwidth,i+1);
   }
-  active->cur_x = cx;
-  active->cur_y = cy;
+  win->cur_x = cx;
+  win->cur_y = cy;
 }
 
-void __FASTCALL__ twClearWin( void )
+void __FASTCALL__ twClearWin(TWindow* win)
 {
-  twClearWinEx(TWC_DEF_FILLER);
+  twClearWinEx(win,TWC_DEF_FILLER);
 }
 
-void __FASTCALL__ twClrEOLEx(unsigned char filler )
+void __FASTCALL__ twClrEOLEx(TWindow* win,unsigned char filler )
 {
   size_t size,idx;
   char oempg = 0;
-  size = active->wwidth - active->cur_x;
-  if((active->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE) size--;
-  idx = active->cur_x + active->cur_y*active->wwidth;
-  if((active->flags & TWS_NLSOEM) == TWS_NLSOEM)
+  size = win->wwidth - win->cur_x;
+  if((win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE) size--;
+  idx = win->cur_x + win->cur_y*win->wwidth;
+  if((win->flags & TWS_NLSOEM) == TWS_NLSOEM)
   {
     oempg = filler;
     __nls_OemToOsdep(&filler,1);
   }
-  memset(&active->body.chars[idx],filler,size);
-  memset(&active->body.oem_pg[idx],((active->flags & TWS_NLSOEM) == TWS_NLSOEM ? NLS_IS_OEMPG(oempg) ? oempg : 0 : 0),size);
-  memset(&active->body.attrs[idx],active->text.system,size);
-  CHECK_WINS(active);
-  updatescreenpiece(active,active->cur_x,active->wwidth,active->cur_y+1);
+  memset(&win->body.chars[idx],filler,size);
+  memset(&win->body.oem_pg[idx],((win->flags & TWS_NLSOEM) == TWS_NLSOEM ? NLS_IS_OEMPG(oempg) ? oempg : 0 : 0),size);
+  memset(&win->body.attrs[idx],win->text.system,size);
+  CHECK_WINS(win);
+  updatescreenpiece(win,win->cur_x,win->wwidth,win->cur_y+1);
 }
 
-void __FASTCALL__ twClrEOL( void )
+void __FASTCALL__ twClrEOL( TWindow* win )
 {
-  twClrEOLEx(TWC_DEF_FILLER);
+  twClrEOLEx(win,TWC_DEF_FILLER);
 }
 
-TWindow * __FASTCALL__ twUseWin( TWindow * win)
+TWindow * __FASTCALL__ twFocusWin( TWindow * win)
 {
   TWindow *ret;
-  ret = active;
-  active = win;
-  if((active->flags & TWS_CURSORABLE) == TWS_CURSORABLE)
+  ret = cursorwin;
+  if(win)
+  if((win->flags & TWS_CURSORABLE) == TWS_CURSORABLE)
   {
      cursorwin = win;
   }
-  paint_cursor();
+  paint_cursor(win);
   return ret;
 }
 
-TWindow * __FASTCALL__ twUsedWin( void )
+TWindow * __FASTCALL__ twFocusedWin()
 {
-  return active;
+  return cursorwin;
 }
 
-tRelCoord __FASTCALL__ twWhereX( void )
+tRelCoord __FASTCALL__ twWhereX( TWindow* win )
 {
-  return (active->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE ? active->cur_x : active->cur_x+1;
+  return (win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE ? win->cur_x : win->cur_x+1;
 }
 
-tRelCoord __FASTCALL__ twWhereY( void )
+tRelCoord __FASTCALL__ twWhereY( TWindow* win )
 {
-  return (active->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE ? active->cur_y : active->cur_y+1;
+  return (win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE ? win->cur_y : win->cur_y+1;
 }
 
-static void  __FASTCALL__ wputc_oem(char ch,char oempg,char color,bool update)
+static void  __FASTCALL__ wputc_oem(TWindow* win,char ch,char oempg,char color,bool update)
 {
   unsigned idx;
-  idx = active->cur_x + active->cur_y*active->wwidth;
-  active->body.chars[idx] = ch;
-  active->body.oem_pg[idx] = oempg;
-  active->body.attrs[idx] = color;
-  CHECK_WINS(active);
-  if(update) updatescreenchar(active,active->cur_x+1,active->cur_y+1,NULL);
+  idx = win->cur_x + win->cur_y*win->wwidth;
+  win->body.chars[idx] = ch;
+  win->body.oem_pg[idx] = oempg;
+  win->body.attrs[idx] = color;
+  CHECK_WINS(win);
+  if(update) updatescreenchar(win,win->cur_x+1,win->cur_y+1,NULL);
 }
 
-void __FASTCALL__ twPutChar(char ch)
+void __FASTCALL__ twPutChar(TWindow* win,char ch)
 {
   tRelCoord cx,cy;
   char as_oem = 0;
-  cx = active->cur_x;
-  cy = active->cur_y;
-  if(IS_VALID_XY(active,cx,cy))
+  cx = win->cur_x;
+  cy = win->cur_y;
+  if(IS_VALID_XY(win,cx,cy))
   {
-    if((active->flags & TWS_NLSOEM) == TWS_NLSOEM)
+    if((win->flags & TWS_NLSOEM) == TWS_NLSOEM)
     {
        as_oem = ch;
        __nls_OemToOsdep((unsigned char *)&ch,1);
        if(!NLS_IS_OEMPG(as_oem)) as_oem = 0;
-       wputc_oem(ch,as_oem,active->text.system,true);
+       wputc_oem(win,ch,as_oem,win->text.system,true);
     }
-    else wputc(ch,active->text.system,true);
-    active->cur_x++;
+    else wputc(win,ch,win->text.system,true);
+    win->cur_x++;
   }
 }
 
-char __FASTCALL__ twGetChar( void )
+char __FASTCALL__ twGetChar(TWindow* win)
 {
   unsigned idx;
   tRelCoord cx,cy;
-  cx = active->X1 + active->cur_x;
-  cy = active->Y1 + active->cur_y;
-  idx = cx + cy*active->wwidth;
-  return active->body.chars[idx];
+  cx = win->X1 + win->cur_x;
+  cy = win->Y1 + win->cur_y;
+  idx = cx + cy*win->wwidth;
+  return win->body.chars[idx];
 }
 
-int __FASTCALL__ twPutS(const char *str)
+int __FASTCALL__ twPutS(TWindow* win,const char *str)
 {
   char *__nls = NULL,* __nls_ptr;
   const char *__oem_ptr;
@@ -1825,7 +1786,7 @@ int __FASTCALL__ twPutS(const char *str)
   tAbsCoord usx;
   tRelCoord cx,cy;
   char ch,as_oem;
-  if((active->flags & TWS_NLSOEM) == TWS_NLSOEM)
+  if((win->flags & TWS_NLSOEM) == TWS_NLSOEM)
   {
      unsigned len;
      len = strlen(str);
@@ -1840,46 +1801,46 @@ int __FASTCALL__ twPutS(const char *str)
   else __nls = const_cast<char*>(str);
   __nls_ptr = __nls;
   __oem_ptr = str;
-  vidx = active->cur_x + active->cur_y*active->wwidth;
-  usx = active->cur_x;
+  vidx = win->cur_x + win->cur_y*win->wwidth;
+  usx = win->cur_x;
   while((ch=*__nls++)!=0)
   {
     as_oem=*__oem_ptr++;
     if(ch == '\n')
     {
-	updatescreenpiece(active,usx,active->cur_x,active->cur_y+1);
-	set_xy(1,active->cur_y+1);
-	usx = active->cur_x;
-	vidx = active->cur_x + active->cur_y*active->wwidth;
+	updatescreenpiece(win,usx,win->cur_x,win->cur_y+1);
+	set_xy(win,1,win->cur_y+1);
+	usx = win->cur_x;
+	vidx = win->cur_x + win->cur_y*win->wwidth;
 	continue;
     }
     if(ch == '\r')
     {
-	set_xy(1,active->cur_y);
-	usx = active->cur_x;
-	vidx = active->cur_x + active->cur_y*active->wwidth;
+	set_xy(win,1,win->cur_y);
+	usx = win->cur_x;
+	vidx = win->cur_x + win->cur_y*win->wwidth;
 	continue;
     }
-    cx = active->cur_x;
-    cy = active->cur_y;
-    if(IS_VALID_XY(active,cx,cy))
+    cx = win->cur_x;
+    cy = win->cur_y;
+    if(IS_VALID_XY(win,cx,cy))
     {
-	active->body.chars[vidx] = ch;
-	if((active->flags & TWS_NLSOEM) == TWS_NLSOEM && NLS_IS_OEMPG(as_oem))
-	     active->body.oem_pg[vidx] = as_oem;
-	else active->body.oem_pg[vidx] = 0;
-	active->body.attrs[vidx++] = active->text.system;
-	active->cur_x++;
+	win->body.chars[vidx] = ch;
+	if((win->flags & TWS_NLSOEM) == TWS_NLSOEM && NLS_IS_OEMPG(as_oem))
+	     win->body.oem_pg[vidx] = as_oem;
+	else win->body.oem_pg[vidx] = 0;
+	win->body.attrs[vidx++] = win->text.system;
+	win->cur_x++;
 	freq++;
     }
   }
-  updatescreenpiece(active,usx,active->cur_x,active->cur_y+1);
-  paint_cursor();
+  updatescreenpiece(win,usx,win->cur_x,win->cur_y+1);
+  paint_cursor(win);
   if(__nls_ptr != str) delete __nls_ptr;
   return freq;
 }
 
-int __FASTCALL__ twPrintF(const char *fmt,...)
+int __FASTCALL__ twPrintF(TWindow* win,const char *fmt,...)
 {
   char *buff;
   int ret;
@@ -1892,28 +1853,28 @@ int __FASTCALL__ twPrintF(const char *fmt,...)
     va_start(args,fmt);
     vsprintf(buff,fmt,args);
     va_end(args);
-    ret = twPutS(buff);
+    ret = twPutS(win,buff);
     delete buff;
   }
   return ret;
 }
 
-int __FASTCALL__ twDirectWrite(tRelCoord x, tRelCoord y,const any_t*str,unsigned len)
+int __FASTCALL__ twDirectWrite(TWindow* win,tRelCoord x, tRelCoord y,const any_t*str,unsigned len)
 {
   unsigned i,rlen,ioff;
   const char *__nls = NULL,*__oem = NULL;
   char nlsBuff[__TVIO_MAXSCREENWIDTH];
   char oemBuff[__TVIO_MAXSCREENWIDTH];
-  if(!((active->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE))
+  if(!((win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE))
   {
     x--;  y--;
   }
-  if(!IS_VALID_XY(active,x,y)) return 0;
-  rlen = active->wwidth;
-  if((active->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE) rlen-=1;
+  if(!IS_VALID_XY(win,x,y)) return 0;
+  rlen = win->wwidth;
+  if((win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE) rlen-=1;
   rlen -= x;
   rlen = std::min(rlen,len);
-  if((active->flags & TWS_NLSOEM) == TWS_NLSOEM)
+  if((win->flags & TWS_NLSOEM) == TWS_NLSOEM)
   {
      memcpy(nlsBuff,str,rlen);
      memcpy(oemBuff,str,rlen);
@@ -1923,13 +1884,13 @@ int __FASTCALL__ twDirectWrite(tRelCoord x, tRelCoord y,const any_t*str,unsigned
      __oem = oemBuff;
   }
   else __nls = (const char*)str;
-  ioff = x+y*active->wwidth;
-  memcpy(&active->body.chars[ioff],__nls,rlen);
-  if(__oem) memcpy(&active->body.oem_pg[ioff],__oem,rlen);
-  else      memset(&active->body.oem_pg[ioff],0,rlen);
-  memset(&active->body.attrs[ioff],active->text.system,rlen);
-  CHECK_WINS(active);
-  updatescreenpiece(active,x,x+rlen,y+1);
+  ioff = x+y*win->wwidth;
+  memcpy(&win->body.chars[ioff],__nls,rlen);
+  if(__oem) memcpy(&win->body.oem_pg[ioff],__oem,rlen);
+  else      memset(&win->body.oem_pg[ioff],0,rlen);
+  memset(&win->body.attrs[ioff],win->text.system,rlen);
+  CHECK_WINS(win);
+  updatescreenpiece(win,x,x+rlen,y+1);
   return rlen;
 }
 
@@ -1962,7 +1923,7 @@ void __FASTCALL__ twWriteBuffer(TWindow *win,tRelCoord x,tRelCoord y,const tvioB
     memcpy(&win->body.attrs[i],pbuff,rlen);
     CHECK_WINS(win);
     updatescreenpiece(win,x-1,x-1+rlen,y);
-    paint_cursor();
+    paint_cursor(win);
   }
 }
 
@@ -1977,7 +1938,7 @@ void __FASTCALL__ twReadBuffer(TWindow *win,tRelCoord x,tRelCoord y,tvioBuff *bu
     memcpy(buff->oem_pg,&win->body.oem_pg[idx],rlen);
     memcpy(buff->attrs,&win->body.attrs[idx],rlen);
     CHECK_WINS(win);
-    paint_cursor();
+    paint_cursor(win);
   }
 }
 
@@ -1991,7 +1952,7 @@ void __FASTCALL__ twRefreshLine(TWindow *win,tRelCoord y)
   win->iflags |= IFLG_ENABLED;
   if((win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE) y++;
   updatescreenpiece(win,0,win->wwidth,y);
-  paint_cursor();
+  paint_cursor(win);
 }
 
 void __FASTCALL__ twRefreshPiece(TWindow *win,tRelCoord stx,tRelCoord endx,tRelCoord y)
@@ -1999,21 +1960,21 @@ void __FASTCALL__ twRefreshPiece(TWindow *win,tRelCoord stx,tRelCoord endx,tRelC
   win->iflags |= IFLG_ENABLED;
   if((win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE) { stx++; endx++; y++; }
   updatescreenpiece(win,stx-1,endx-1,y);
-  paint_cursor();
+  paint_cursor(win);
 }
 
 void __FASTCALL__ twRefreshWin(TWindow *win)
 {
   win->iflags |= IFLG_ENABLED;
   updatescreen(win,(win->flags & TWS_FRAMEABLE) == TWS_FRAMEABLE ? false : true);
-  paint_cursor();
+  paint_cursor(win);
 }
 
 void __FASTCALL__ twRefreshFullWin(TWindow *win)
 {
   win->iflags |= IFLG_ENABLED;
   updatescreen(win,true);
-  paint_cursor();
+  paint_cursor(win);
 }
 
 any_t* __FASTCALL__ twGetUsrData(TWindow *win) { return win->usrData; }

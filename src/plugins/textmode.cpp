@@ -926,12 +926,12 @@ void TextMode::paint_search(HLInfo * cptr,unsigned int shift,int i,int size,int 
     FoundTextEnd = savee;
 }
 
-static void  __FASTCALL__ drawBound(int x,int y,char ch)
+static void  __FASTCALL__ drawBound(TWindow* w,int x,int y,char ch)
 {
-  twGotoXY(x,y);
-  twSetColorAttr(browser_cset.bound);
-  twPutChar(ch);
-  twSetColorAttr(browser_cset.main);
+  twGotoXY(w,x,y);
+  twSetColorAttr(w,browser_cset.bound);
+  twPutChar(w,ch);
+  twSetColorAttr(w,browser_cset.main);
 }
 
 TextMode::TextMode(CodeGuider& code_guider)
@@ -1070,18 +1070,18 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 		else                       hli.buff = it;
 		paint_search(&hli,shift,i,size,bin_mode == MOD_BINARY);
 	    } else {
-		if(bin_mode == MOD_BINARY) twDirectWrite(1,i+1,buff,size);
-		else                       twWriteBuffer(twUsedWin(),1,i + 1,&it,size);
+		if(bin_mode == MOD_BINARY) twDirectWrite(MainWnd,1,i+1,buff,size);
+		else                       twWriteBuffer(MainWnd,1,i + 1,&it,size);
 	    }
 	    if(rsize < tvioWidth) {
-		twGotoXY(1 + rsize,i + 1);
-		twClrEOL();
-	    } else if(rsize > tvioWidth) drawBound(tvioWidth,i + 1,TWC_RT_ARROW);
+		twGotoXY(MainWnd,1 + rsize,i + 1);
+		twClrEOL(MainWnd);
+	    } else if(rsize > tvioWidth) drawBound(MainWnd,tvioWidth,i + 1,TWC_RT_ARROW);
 	} else {
-	    twGotoXY(1,i + 1);
-	    twClrEOL();
+	    twGotoXY(MainWnd,1,i + 1);
+	    twClrEOL(MainWnd);
 	}
-	if(shift) drawBound(1,i + 1,TWC_LT_ARROW);
+	if(shift) drawBound(MainWnd,1,i + 1,TWC_LT_ARROW);
 	lastbyte = tlines[i].st;
 	lastbyte += bin_mode == MOD_BINARY ? shift + size : rshift + len;
     }

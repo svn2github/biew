@@ -113,9 +113,10 @@ static const char *  __FASTCALL__ __getOSModType(char type)
   return __osModType[type & 0x07];
 }
 
-static void  PaintNewHeaderLX_1(void)
+static void  PaintNewHeaderLX_1(TWindow* w)
 {
-  twPrintF("Signature                        = '%c%c'\n"
+  twPrintF(w,
+	   "Signature                        = '%c%c'\n"
 	   "Byte order                       = %02XH (%s)\n"
 	   "Word order                       = %02XH (%s)\n"
 	   "Format level                     = %08lXH\n"
@@ -161,17 +162,19 @@ static void  PaintNewHeaderLX_1(void)
 	   ,lxe.lx.lxESP);
 }
 
-static void  PaintNewHeaderLX_2( void )
+static void  PaintNewHeaderLX_2(TWindow* w)
 {
-  twPrintF("Page size                        = %08lXH\n"
+  twPrintF(w,
+	   "Page size                        = %08lXH\n"
 	   "Page offset shift                = %08lXH\n"
 	   "Fixup section size               = %08lXH\n"
 	   ,lxe.lx.lxPageSize
 	   ,lxe.lx.lxPageOffsetShift
 	   ,lxe.lx.lxFixupSectionSize);
-  if(LXType == FILE_LX) twPrintF("Fixup section checksum           = %08lXH\n",lxe.lx.lxFixupSectionChecksum);
-  else                  twPrintF("Page checksum                    = %08lXH\n",lxe.lx.lxFixupSectionChecksum);
-  twPrintF("Loader section size              = %08lXH\n"
+  if(LXType == FILE_LX) twPrintF(w,"Fixup section checksum           = %08lXH\n",lxe.lx.lxFixupSectionChecksum);
+  else                  twPrintF(w,"Page checksum                    = %08lXH\n",lxe.lx.lxFixupSectionChecksum);
+  twPrintF(w,
+	   "Loader section size              = %08lXH\n"
 	   "Loader section checksum          = %08lXH\n"
 	   "Object table offset              = %08lXH\n"
 	   "Number of objects in module      = %08lXH\n"
@@ -207,9 +210,10 @@ static void  PaintNewHeaderLX_2( void )
 	   ,lxe.lx.lxImportProcedureTableOffset);
 }
 
-static void  PaintNewHeaderLX_3( void )
+static void  PaintNewHeaderLX_3(TWindow* w)
 {
-  twPrintF("Per - page checksum  offset      = %08lXH\n"
+  twPrintF(w,
+	   "Per - page checksum  offset      = %08lXH\n"
 	   "Data pages offset                = %08lXH\n"
 	   "Number of preload pages          = %08lXH\n"
 	   "Non resident name table offset   = %08lXH\n"
@@ -223,7 +227,8 @@ static void  PaintNewHeaderLX_3( void )
 	   ,lxe.lx.lxNonResidentNameTableChecksum);
   if(LXType == FILE_LX)
   {
-    twPrintF("Auto DS objects number           = %08lXH\n"
+    twPrintF(w,
+	     "Auto DS objects number           = %08lXH\n"
 	     "Debug info offset                = %08lXH\n"
 	     "Debug info length                = %08lXH\n"
 	     "Number instance preload          = %08lXH\n"
@@ -240,18 +245,19 @@ static void  PaintNewHeaderLX_3( void )
   }
   else
   {
-    twPrintF("Debug info offset                = %08lXH\n"
+    twPrintF(w,
+	     "Debug info offset                = %08lXH\n"
 	     "Debug info length                = %08lXH\n"
 	     ,lxe.lx.lxAutoDSObjectNumber
 	     ,lxe.lx.lxDebugInfoOffset);
   }
-  twSetColorAttr(dialog_cset.entry);
-  twPrintF(">Entry Point                     = %08lXH",LXEntryPoint);
-  twClrEOL();
-  twSetColorAttr(dialog_cset.main);
+  twSetColorAttr(w,dialog_cset.entry);
+  twPrintF(w,">Entry Point                     = %08lXH",LXEntryPoint);
+  twClrEOL(w);
+  twSetColorAttr(w,dialog_cset.main);
 }
 
-static void ( * lxphead[])( void ) =
+static void ( * lxphead[])(TWindow*) =
 {
   PaintNewHeaderLX_1,
   PaintNewHeaderLX_2,
@@ -262,16 +268,16 @@ static void __FASTCALL__ PaintNewHeaderLX(TWindow * win,const any_t**ptr,unsigne
 {
   char text[80];
   UNUSED(ptr);
-  twUseWin(win);
+  twFocusWin(win);
   twFreezeWin(win);
-  twClearWin();
+  twClearWin(win);
   sprintf(text," Linear eXecutable Header [%d/%d] ",npage + 1,tpage);
   twSetTitleAttr(win,text,TW_TMODE_CENTER,dialog_cset.title);
   twSetFooterAttr(win,PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
   if(npage < 3)
   {
-    twGotoXY(1,1);
-    (*(lxphead[npage]))();
+    twGotoXY(win,1,1);
+    (*(lxphead[npage]))(win);
   }
   twRefreshFullWin(win);
 }
@@ -381,10 +387,11 @@ static bool __FASTCALL__  __ReadModRefNamesLX(BFile& handle,memArray * obj,unsig
  return true;
 }
 
-static void  __FASTCALL__ objpaintLX(const LX_OBJECT *nam)
+static void  __FASTCALL__ objpaintLX(TWindow* w,const LX_OBJECT *nam)
 {
- twGotoXY(1,1);
- twPrintF("Virtual Size                         = %lX bytes\n"
+ twGotoXY(w,1,1);
+ twPrintF(w,
+	  "Virtual Size                         = %lX bytes\n"
 	  "BVA (base virtual address)           = %08lX\n"
 	  "FLAGS: %lX\n"
 	  "   [%c] Readable object\n"
@@ -432,13 +439,13 @@ static void __FASTCALL__ ObjPaintLX(TWindow * win,const any_t** names,unsigned s
 {
  char buffer[81];
  const LX_OBJECT ** nam = (const LX_OBJECT **)names;
- twUseWin(win);
+ twFocusWin(win);
  twFreezeWin(win);
- twClearWin();
+ twClearWin(win);
  sprintf(buffer," Object Table [ %u / %u ] ",start + 1,nlist);
  twSetTitleAttr(win,buffer,TW_TMODE_CENTER,dialog_cset.title);
  twSetFooterAttr(win,PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
- objpaintLX(nam[start]);
+ objpaintLX(win,nam[start]);
  twRefreshFullWin(win);
 }
 
@@ -716,18 +723,7 @@ const char * __FASTCALL__ lxeGetMapAttr(unsigned long attr)
   if (attr > 5) return "Unknown";
   else  return mapattr[attr];
 }
-#if 0
-static void  __FASTCALL__ iterpaintLX(const LX_ITER *nam)
-{
- twGotoXY(1,1);
- twPrintF("Number of iteration                  = %hu\n"
-	  "Number of bytes                      = %hu\n"
-	  "Iterated data bytes                  = %hu"
-	  ,nam->LX_nIter
-	  ,nam->LX_nBytes
-	  ,(int)nam->LX_Iterdata);
-}
-#endif
+
 const char *__e32type[] =
 {
   "Empty",
@@ -744,17 +740,18 @@ static const char *  __FASTCALL__ entryTypeLX(unsigned char type)
    else         return "Unknown";
 }
 
-static void  __FASTCALL__ entrypaintLX(const LX_ENTRY *nam)
+static void  __FASTCALL__ entrypaintLX(TWindow* w,const LX_ENTRY *nam)
 {
  if(!nam->b32_type)
  {
-   twGotoXY(35,4);
-   twPrintF("Unused");
+   twGotoXY(w,35,4);
+   twPrintF(w,"Unused");
  }
  else
  {
-   twGotoXY(1,1);
-   twPrintF("Entry type: %s\n"
+   twGotoXY(w,1,1);
+   twPrintF(w,
+	    "Entry type: %s\n"
 	    "Object number : %hd\n"
 	    "Flags: %02XH\n"
 	    ,entryTypeLX(nam->b32_type)
@@ -762,7 +759,8 @@ static void  __FASTCALL__ entrypaintLX(const LX_ENTRY *nam)
 	    ,(int)nam->entry.e32_flags);
    if(nam->b32_type != 4)
    {
-     twPrintF("   [%c] Exported Entry\n"
+     twPrintF(w,
+	      "   [%c] Exported Entry\n"
 	      "   [%c] Used Shared Data\n"
 	      "   %02XH - parameter word count mask\n"
 	      ,Gebool((nam->entry.e32_flags & 0x01) == 0x01)
@@ -771,28 +769,32 @@ static void  __FASTCALL__ entrypaintLX(const LX_ENTRY *nam)
    }
    else
    {
-     twPrintF("\n"
+     twPrintF(w,
+	      "\n"
 	      "   [%c] Import by ordinal\n"
 	      "\n"
 	      ,Gebool((nam->entry.e32_flags & 0x01) == 0x01));
    }
    if(nam->b32_type == 1)
    {
-     twPrintF("Entry offset : %04hXH\n"
+     twPrintF(w,
+	      "Entry offset : %04hXH\n"
 	      "\n"
 	      ,nam->entry.e32_variant.e32_offset.offset16);
    }
    else
       if(nam->b32_type == 3)
       {
-	twPrintF("Entry offset : %08XH\n"
+	twPrintF(w,
+		"Entry offset : %08XH\n"
 		 "\n"
 		 ,nam->entry.e32_variant.e32_offset.offset32);
       }
       else
       if(nam->b32_type == 2)
       {
-       twPrintF("Callgate offset : %04hXH\n"
+       twPrintF(w,
+		"Callgate offset : %04hXH\n"
 		"Callgate selector : %04hXH\n"
 		,nam->entry.e32_variant.e32_callgate.offset
 		,nam->entry.e32_variant.e32_callgate.callgate);
@@ -800,38 +802,26 @@ static void  __FASTCALL__ entrypaintLX(const LX_ENTRY *nam)
       else
        if(nam->b32_type == 4)
        {
-	 twPrintF("Module ordinal number : %04hXH\n"
+	 twPrintF(w,
+		  "Module ordinal number : %04hXH\n"
 		  "Proc name offset or ordinal : %04hXH\n"
 		  ,nam->entry.e32_variant.e32_fwd.modord
 		  ,nam->entry.e32_variant.e32_fwd.value);
        }
    }
 }
-#if 0
-static void __FASTCALL__ IterPaintLX(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
-{
- char buffer[81];
- const LX_ITER ** nam = (const LX_ITER **)names;
- twUseWin(win);
- twFreezeWin(win);
- twClearWin();
- sprintf(buffer," Iter Table [ %u / %u ] ",start + 1,nlist);
- twSetTitleAttr(win,buffer,TW_TMODE_CENTER,dialog_cset.title);
- iterpaintLX(nam[start]);
- twRefreshFullWin(win);
-}
-#endif
+
 static void __FASTCALL__ PaintEntriesLX(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
 {
  char buffer[81];
  const LX_ENTRY ** nam = (const LX_ENTRY **)names;
- twUseWin(win);
+ twFocusWin(win);
  twFreezeWin(win);
- twClearWin();
+ twClearWin(win);
  sprintf(buffer," Entries Table [ %u / %u ] ",start + 1,nlist);
  twSetTitleAttr(win,buffer,TW_TMODE_CENTER,dialog_cset.title);
  twSetFooterAttr(win,PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
- entrypaintLX(nam[start]);
+ entrypaintLX(win,nam[start]);
  twRefreshFullWin(win);
 }
 

@@ -50,28 +50,28 @@ static __filesize_t __FASTCALL__ ShowARCHHeader( void )
   char sout[50];
   fpos = BMGetCurrFilePos();
   w = CrtDlgWndnls(" This is COFF or a.out archive ",54,6);
-  twGotoXY(1,1);
+  twGotoXY(w,1,1);
   strncpy(sout,(char *)arch.ar_name,16);
   sout[16] = 0;
-  twPrintF("Name           = %s\n",sout);
+  twPrintF(w,"Name           = %s\n",sout);
   strncpy(sout,(char *)arch.ar_date,12);
   sout[12] = 0;
   ldat = atol(sout);
   tm = localtime(&ldat);
   strftime(sout,sizeof(sout),"%X %x",tm);
-  twPrintF("Date           = %s\n",sout);
+  twPrintF(w,"Date           = %s\n",sout);
   strncpy(sout,(char *)arch.ar_uid,6);
   sout[6] = 0;
-  twPrintF("Owner UID      = %s\n",sout);
+  twPrintF(w,"Owner UID      = %s\n",sout);
   strncpy(sout,(char *)arch.ar_gid,6);
   sout[6] = 0;
-  twPrintF("Owner GID      = %s\n",sout);
+  twPrintF(w,"Owner GID      = %s\n",sout);
   strncpy(sout,(char *)arch.ar_mode,8);
   sout[8] = 0;
-  twPrintF("File mode      = %s\n",sout);
+  twPrintF(w,"File mode      = %s\n",sout);
   strncpy(sout,(char *)arch.ar_size,10);
   sout[10] = 0;
-  twPrintF("File size      = %s bytes",sout);
+  twPrintF(w,"File size      = %s bytes",sout);
   do
   {
     evt = GetEvent(drawEmptyPrompt,NULL,w);

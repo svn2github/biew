@@ -141,9 +141,10 @@ static __filesize_t __FASTCALL__ ShowMZHeader( void )
  if(addinfo) keycode++;
  hwnd = CrtDlgWndnls(" Old Exe Header ",43,keycode-1);
  FPageCnt =  ((long)mz.mzPageCount - 1)*512;
- twUseWin(hwnd);
- twGotoXY(1,1);
- twPrintF("Signature            = 'MZ'\n"
+ twFocusWin(hwnd);
+ twGotoXY(hwnd,1,1);
+ twPrintF(hwnd,
+	  "Signature            = 'MZ'\n"
 	  "Part Last Page       = %hu [ bytes ]\n"
 	  "Page count           = %hu [ pages ]\n"
 	  "Relocations count    = %hu\n"
@@ -168,24 +169,24 @@ static __filesize_t __FASTCALL__ ShowMZHeader( void )
 	  ,mz.mzOverlayNumber);
  newcpos = HeadSize;
  newcpos += (((unsigned long)mz.mzRelocationCS) << 4) + (unsigned long)mz.mzExeIP;
- twSetColorAttr(dialog_cset.entry);
- twPrintF(">Entry Point         = %08lXH",newcpos); twClrEOL();
- twSetColorAttr(dialog_cset.addinfo);
- twPrintF("\nModule Length        = %lu [ bytes ]",(FPageCnt - HeadSize) + mz.mzPartLastPage);
- twClrEOL();
- twSetColorAttr(dialog_cset.main);
- twPrintF("\nImage offset         = %08lXH",(long)HeadSize);
+ twSetColorAttr(hwnd,dialog_cset.entry);
+ twPrintF(hwnd,">Entry Point         = %08lXH",newcpos); twClrEOL(hwnd);
+ twSetColorAttr(hwnd,dialog_cset.addinfo);
+ twPrintF(hwnd,"\nModule Length        = %lu [ bytes ]",(FPageCnt - HeadSize) + mz.mzPartLastPage);
+ twClrEOL(hwnd);
+ twSetColorAttr(hwnd,dialog_cset.main);
+ twPrintF(hwnd,"\nImage offset         = %08lXH",(long)HeadSize);
  if(beye_context().headshift)
  {
-   twSetColorAttr(dialog_cset.altinfo);
-   twPrintF("\nNew EXE header shift = %08lXH",(long)beye_context().headshift);
-   twClrEOL();
+   twSetColorAttr(hwnd,dialog_cset.altinfo);
+   twPrintF(hwnd,"\nNew EXE header shift = %08lXH",(long)beye_context().headshift);
+   twClrEOL(hwnd);
  }
  if(addinfo)
  {
-   twSetColorAttr(dialog_cset.extrainfo);
-   twPrintF("\n%s",addinfo);
-   twClrEOL();
+   twSetColorAttr(hwnd,dialog_cset.extrainfo);
+   twPrintF(hwnd,"\n%s",addinfo);
+   twClrEOL(hwnd);
  }
  while(1)
  {
@@ -215,12 +216,12 @@ static void  __FASTCALL__ BuildMZChain( void )
   unsigned i;
   __filesize_t fpos;
   TWindow * w,*usd;
-  usd = twUsedWin();
+  usd = twFocusedWin();
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
-  twUseWin(w);
-  twGotoXY(1,1);
-  twPutS(BUILD_REFS);
-  twUseWin(usd);
+  twFocusWin(w);
+  twGotoXY(w,1,1);
+  twPutS(w,BUILD_REFS);
+  twFocusWin(usd);
   CurrMZCount = 0;
   fpos = bmGetCurrFilePos();
   for(i = 0;i < mz.mzRelocationCount;i++)

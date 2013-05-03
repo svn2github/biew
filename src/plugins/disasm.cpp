@@ -278,7 +278,7 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 	}
 	if(cfpos > flen) cfpos = flen;
 	amocpos = cfpos;
-	twUseWin(MainWnd);
+	twFocusWin(MainWnd);
 	for(i = I;i != Limit;i+=1*dir) {
 	    DisasmRet dret;
 	    ::memset(outstr,TWC_DEF_FILLER,__TVIO_MAXSCREENWIDTH);
@@ -290,19 +290,19 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 		dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
 		if(i == 0) CurrStrLen = dret.codelen;
 		CurrStrLenBuff[i] = dret.codelen;
-		twSetColorAttr(browser_cset.main);
+		twSetColorAttr(MainWnd,browser_cset.main);
 		len_64=HA_LEN();
 		::memcpy(outstr,code_guider.encode_address(cfpos,hexAddressResolv),len_64);
 		len = 0;
 		if(disPanelMode < Panel_Full) {
 		    static char _clone;
 		    len = len_64;
-		    twDirectWrite(1,i + 1,outstr,len);
+		    twDirectWrite(MainWnd,1,i + 1,outstr,len);
 		    if(!hexAddressResolv) {
-			twSetColorAttr(disasm_cset.family_id);
+			twSetColorAttr(MainWnd,disasm_cset.family_id);
 			_clone = activeDisasm->CloneShortName(dret.pro_clone);
-			twDirectWrite(len_64,i + 1,&_clone,1);
-			twSetColorAttr(browser_cset.main);
+			twDirectWrite(MainWnd,len_64,i + 1,&_clone,1);
+			twSetColorAttr(MainWnd,browser_cset.main);
 		    }
 		}
 		if(disPanelMode < Panel_Medium) {
@@ -317,8 +317,8 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 			opc =	HiLight == 2 ? activeDisasm->altGetOpcodeColor(dret.pro_clone) :
 				HiLight == 1 ? activeDisasm->GetOpcodeColor(dret.pro_clone) : disasm_cset.opcodes;
 		    else	opc = disasm_cset.opcodes;
-		    twSetColorAttr(opc);
-		    twDirectWrite(disPanelMode < Panel_Full ? len_64+1 : 1,
+		    twSetColorAttr(MainWnd,opc);
+		    twDirectWrite(MainWnd,disPanelMode < Panel_Full ? len_64+1 : 1,
 				i + 1,
 				&outstr[len_64],
 				disPanelMode < Panel_Full ? len - (len_64+1) : len - 1);
@@ -327,12 +327,12 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 			HiLightSearch(MainWnd,cfpos,len_64,dret.codelen,i,&hli,HLS_USE_DOUBLE_WIDTH);
 		    }
 		}
-		twSetColorAttr(browser_cset.main);
-		twDirectWrite(len,i + 1," ",1);  len++;
+		twSetColorAttr(MainWnd,browser_cset.main);
+		twDirectWrite(MainWnd,len,i + 1," ",1);  len++;
 		cattr =	HiLight == 2 ?  activeDisasm->altGetInsnColor(dret.pro_clone) :
 			HiLight == 1 ?  activeDisasm->GetInsnColor(dret.pro_clone) :
 					browser_cset.main;
-		twSetColorAttr(cattr);
+		twSetColorAttr(MainWnd,cattr);
 		j = strlen(dret.str);
 		/* Here adding commentaries */
 		savstring[0] = 0;
@@ -354,38 +354,38 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 			    dret.str[new_idx] = 0;
 			    j = ::strlen(dret.str);
 		    }
-		twDirectWrite(len,i+1,dret.str,j); len += j;
+		twDirectWrite(MainWnd,len,i+1,dret.str,j); len += j;
 		if(dis_severity > DisMode::CommSev_None) {
-		    twSetColorAttr(disasm_cset.comments);
-		    twGotoXY(len,i+1);
-		    twPutS(" ; "); len+=3;
+		    twSetColorAttr(MainWnd,disasm_cset.comments);
+		    twGotoXY(MainWnd,len,i+1);
+		    twPutS(MainWnd," ; "); len+=3;
 		    j = orig_commpos-len;
 		    j = std::min(j,strlen(dis_comments));
-		    twDirectWrite(len,i+1,dis_comments,j);
+		    twDirectWrite(MainWnd,len,i+1,dis_comments,j);
 		    len += j;
 		    if(savstring[0]) {
-			twGotoXY(len,i+1);
-			twClrEOL();
-			twSetColorAttr(cattr);
+			twGotoXY(MainWnd,len,i+1);
+			twClrEOL(MainWnd);
+			twSetColorAttr(MainWnd,cattr);
 			len = orig_commoff + orig_commpos;
-			twDirectWrite(len,i+1,savstring,5);
+			twDirectWrite(MainWnd,len,i+1,savstring,5);
 			len += 5;
 		    }
 		}
-		twSetColorAttr(browser_cset.main);
+		twSetColorAttr(MainWnd,browser_cset.main);
 		if(len < width) {
-		    twGotoXY(len,i + 1);
-		    twClrEOL();
+		    twGotoXY(MainWnd,len,i + 1);
+		    twClrEOL(MainWnd);
 		}
 		cfpos += dret.codelen;
 		BMSeek(cfpos,BFile::Seek_Set);
 	    } else {
-		twDirectWrite(1,i + 1,outstr,width);
+		twDirectWrite(MainWnd,1,i + 1,outstr,width);
 		CurrStrLenBuff[i] = 0;
 	    }
 	}
 	twRefreshWin(MainWnd);
-	twSetColorAttr(browser_cset.main);
+	twSetColorAttr(MainWnd,browser_cset.main);
 	lastbyte = TopCFPos + Summ(CurrStrLenBuff,height);
 	CurrPageSize = lastbyte-TopCFPos;
     }
@@ -411,7 +411,7 @@ void DisMode::misckey_action() /* disEdit */
     len_64=HA_LEN();
     if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,NULL); return; }
     ewnd = WindowOpen(len_64+1,2,disMaxCodeLen*2+len_64+1,tvioHeight-1,TWS_CURSORABLE);
-    twSetColorAttr(browser_cset.edit.main); twClearWin();
+    twSetColorAttr(ewnd,browser_cset.edit.main); twClearWin(ewnd);
     edit_x = edit_y = 0;
     EditMode = EditMode ? false : true;
     if(editInitBuffs(disMaxCodeLen,NULL,0)) {
@@ -433,7 +433,6 @@ static const char *refsdepth_names[] =
 
 bool DisMode::action_F8() /* disReferenceResolving */
 {
-    BeyeContext& bctx = beye_context();
     size_t nModes;
     int retval;
     bool ret;
@@ -524,36 +523,36 @@ void DisMode::disasm_screen(TWindow* ewnd,__filesize_t cp,__filesize_t flen,int 
 	if(start + cp < flen) {
 	    len_64=HA_LEN();
 	    ::memcpy(outstr,code_guider.encode_address(cp + start,hexAddressResolv),len_64);
-	    twUseWin(MainWnd);
-	    twSetColorAttr(browser_cset.main);
-	    twDirectWrite(1,i + 1,outstr,len_64-1);
+	    twFocusWin(MainWnd);
+	    twSetColorAttr(MainWnd,browser_cset.main);
+	    twDirectWrite(MainWnd,1,i + 1,outstr,len_64-1);
 	    dret = disassembler(cp + start,&EditorMem.buff[start],__DISF_NORMAL);
 	    EditorMem.alen[i] = dret.codelen;
 	    ::memset(outstr,TWC_DEF_FILLER,width);
 	    ::memset(outstr1,TWC_DEF_FILLER,width);
 	    len = 0; for(j = 0;j < EditorMem.alen[i];j++) { ::memcpy(&outstr1[len],Get2Digit(EditorMem.save[start + j]),2); len += 2; }
 	    len = 0; for(j = 0;j < EditorMem.alen[i];j++) { ::memcpy(&outstr[len],Get2Digit(EditorMem.buff[start + j]),2); len += 2; }
-	    twUseWin(ewnd);
+	    twFocusWin(ewnd);
 	    len = disMaxCodeLen*2;
 	    for(j = 0;j < len;j++) {
-		twSetColorAttr(outstr[j] == outstr1[j] ? browser_cset.edit.main : browser_cset.edit.change);
-		twDirectWrite(j + 1,i + 1,&outstr[j],1);
+		twSetColorAttr(ewnd,outstr[j] == outstr1[j] ? browser_cset.edit.main : browser_cset.edit.change);
+		twDirectWrite(ewnd,j + 1,i + 1,&outstr[j],1);
 	    }
 	    len = ::strlen(dret.str);
 	    ::memset(outstr,TWC_DEF_FILLER,width);
 	    ::memcpy(outstr,dret.str,len);
-	    twUseWin(MainWnd);
-	    twSetColorAttr(browser_cset.main);
+	    twFocusWin(MainWnd);
+	    twSetColorAttr(MainWnd,browser_cset.main);
 	    lim = disMaxCodeLen*2+len_64+1;
-	    twDirectWrite(lim+1,i + 1,outstr,width-lim);
+	    twDirectWrite(MainWnd,lim+1,i + 1,outstr,width-lim);
 	    start += EditorMem.alen[i];
 	} else {
-	    twUseWin(MainWnd);
-	    twGotoXY(1,i + 1);
-	    twClrEOL();
-	    twUseWin(ewnd);
-	    twGotoXY(1,i + 1);
-	    twClrEOL();
+	    twFocusWin(MainWnd);
+	    twGotoXY(MainWnd,1,i + 1);
+	    twClrEOL(MainWnd);
+	    twFocusWin(ewnd);
+	    twGotoXY(ewnd,1,i + 1);
+	    twClrEOL(ewnd);
 	    EditorMem.alen[i] = 0;
 	}
     }
@@ -585,13 +584,13 @@ int DisMode::full_asm_edit(TWindow * ewnd)
     twShowWin(ewnd);
     twSetCursorType(TW_CUR_NORM);
     while(1) {
-	twUseWin(ewnd);
+	twFocusWin(ewnd);
 
 	len = 0; for(j = 0;j < EditorMem.alen[edit_y];j++) { ::memcpy(&owork[len],Get2Digit(EditorMem.save[start + j]),2); len += 2; }
 	len = 0; for(j = 0;j < EditorMem.alen[edit_y];j++) { ::memcpy(&outstr[len],Get2Digit(EditorMem.buff[start + j]),2); len += 2; }
 	flg = __ESS_FILLER_7BIT | __ESS_WANTRETURN | __ESS_HARDEDIT;
 	if(!redraw) flg |= __ESS_NOREDRAW;
-	_lastbyte = eeditstring(outstr,&legalchars[2],&len,(unsigned)(edit_y + 1),(unsigned *)&edit_x,flg,owork,NULL);
+	_lastbyte = eeditstring(ewnd,outstr,&legalchars[2],&len,(unsigned)(edit_y + 1),(unsigned *)&edit_x,flg,owork,NULL);
 	CompressHex(&EditorMem.buff[start],outstr,EditorMem.alen[edit_y],false);
 	switch(_lastbyte) {
 	    case KE_CTL_F(4):

@@ -554,19 +554,19 @@ void Calculator_Addon::run()
   Y1 += 2;
   Y2 = Y1;
   ewnd = WindowOpen(X1,Y1,X2,Y2,TWS_VISIBLE | TWS_CURSORABLE | TWS_NLSOEM);
-  twSetColorAttr(dialog_cset.editor.active);
-  twUseWin(wdlg);
-  twGotoXY(2,1); twPutS("Input an integer expression :");
-  twinDrawFrameAttr(1,3,78,7,TW_UP3D_FRAME,dialog_cset.main);
-  twGotoXY(2,4); twPutS("Supported operators: + - * / ( ) % << >> & ^ | ~");
-  twGotoXY(2,5); twPutS("Supported bases: 0x - hexadecimal, 0 - octal, 1b - binary, default - decimal");
-  twGotoXY(2,6); twPutS("Result has the base of the first operand");
+  twSetColorAttr(ewnd,dialog_cset.editor.active);
+  twFocusWin(wdlg);
+  twGotoXY(wdlg,2,1); twPutS(wdlg,"Input an integer expression :");
+  twinDrawFrameAttr(wdlg,1,3,78,7,TW_UP3D_FRAME,dialog_cset.main);
+  twGotoXY(wdlg,2,4); twPutS(wdlg,"Supported operators: + - * / ( ) % << >> & ^ | ~");
+  twGotoXY(wdlg,2,5); twPutS(wdlg,"Supported bases: 0x - hexadecimal, 0 - octal, 1b - binary, default - decimal");
+  twGotoXY(wdlg,2,6); twPutS(wdlg,"Result has the base of the first operand");
   memset(estr,0,sizeof(estr));
   twShowWin(ewnd);
-  twUseWin(ewnd);
+  twFocusWin(ewnd);
   while(1)
   {
-   ret = xeditstring(estr,NULL,76,NULL);
+   ret = xeditstring(ewnd,estr,NULL,76,NULL);
    if(ret == KE_ESCAPE || ret == KE_F(10)) break;
    else
      if(ret == KE_ENTER)

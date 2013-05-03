@@ -49,8 +49,9 @@ static __filesize_t __FASTCALL__ ShowPharLapHeader( void )
   strncpy(sign,(char *)nph.plSignature,2);
   sign[2] = 0;
   w = CrtDlgWndnls(" New PharLap executable ",59,23);
-  twGotoXY(1,1);
-  twPrintF("Signature                        = %s\n"
+  twGotoXY(w,1,1);
+  twPrintF(w,
+	   "Signature                        = %s\n"
 	   "Level                            = %s\n"
 	   "Header size                      = %04XH\n"
 	   "File size                        = %08lXH\n"
@@ -111,14 +112,15 @@ static void __FASTCALL__ PLSegPaint(TWindow * win,const any_t** names,unsigned s
 {
  char buffer[81];
  const PLSegInfo ** nam = (const PLSegInfo **)names;
- twUseWin(win);
+ twFocusWin(win);
  twFreezeWin(win);
- twClearWin();
+ twClearWin(win);
  sprintf(buffer," Segment Table [ %u / %u ] ",start + 1,nlist);
  twSetTitleAttr(win,buffer,TW_TMODE_CENTER,dialog_cset.title);
  twSetFooterAttr(win,PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
- twGotoXY(1,1);
- twPrintF("Selector number            = %04hXH\n"
+ twGotoXY(win,1,1);
+ twPrintF(win,
+	  "Selector number            = %04hXH\n"
 	  "Flags                      = %04hXH\n"
 	  "Base offset of selector    = %08lXH\n"
 	  "Min extra memory alloc     = %08lXH"
@@ -172,16 +174,17 @@ static void __FASTCALL__ PLRunTimePaint(TWindow * win,const any_t** names,unsign
  char buffer[81];
  char sign[3];
  const PLRunTimeParms ** nam = (const PLRunTimeParms **)names;
- twUseWin(win);
+ twFocusWin(win);
  twFreezeWin(win);
- twClearWin();
+ twClearWin(win);
  sprintf(buffer," Run-time Parameters Table [ %u / %u ] ",start + 1,nlist);
  twSetTitleAttr(win,buffer,TW_TMODE_CENTER,dialog_cset.title);
  twSetFooterAttr(win,PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
  strncpy(sign,(const char *)nam[start]->rtSignature,2);
  sign[2] = 0;
- twGotoXY(1,1);
- twPrintF("Signature                      = %s\n"
+ twGotoXY(win,1,1);
+ twPrintF(win,
+	  "Signature                      = %s\n"
 	  "Min. number of real-mode parms = %04hXH\n"
 	  "Max. number of real-mode parms = %04hXH\n"
 	  "Min. interrupt buffer size     = %04hXH\n"

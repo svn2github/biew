@@ -121,9 +121,10 @@ static __filesize_t __FASTCALL__ Show_SisX_Header( void )
  }
  sprintf(head," E32Image Header (%s) ",exetype);
  hwnd = CrtDlgWndnls(head,68,15);
- twUseWin(hwnd);
- twGotoXY(1,1);
- twPrintF("Module/Tool Version  = 0x%08X/0x%08X\n"
+ twFocusWin(hwnd);
+ twGotoXY(hwnd,1,1);
+ twPrintF(hwnd,
+	  "Module/Tool Version  = 0x%08X/0x%08X\n"
 	  "Compression Type     = 0x%08X\n"
 	  "Flags                = 0x%08X (%s %s %s %s %s)\n"
 	  "Code/Data size       = 0x%08X/0x%08X\n"

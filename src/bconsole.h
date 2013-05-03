@@ -77,11 +77,11 @@ enum {
 	       restore contest on CtrlBkSpace
      func    - if not NULL then called to display prompt string
 */
-    int         __FASTCALL__ eeditstring(char *s,const char *legal,
+    int         __FASTCALL__ eeditstring(TWindow* w,char *s,const char *legal,
 					unsigned *maxlength, unsigned y,
 					unsigned *stx,unsigned attr,char *undo,
 					void (*func)(void));
-    int          __FASTCALL__ xeditstring(char *s,const char *legal,
+    int          __FASTCALL__ xeditstring(TWindow* w,char *s,const char *legal,
 					unsigned maxlength, void(*func)(void));
     void         __FASTCALL__ ErrMessageBox(const char * text,const char * title);
     void         __FASTCALL__ WarnMessageBox(const char * text,const char * title);

@@ -314,8 +314,9 @@ static __filesize_t __FASTCALL__ rdoff_ShowHeader( void )
   cs_start = hs_len + 14;
   ds_start = cs_start + cs_len + 4;
   w = CrtDlgWndnls(endian == 0x01 ? " RDOFF big endian " : " RDOFF little endian ",54,6);
-  twGotoXY(1,1);
-  twPrintF("Length of header section    = %08lXH\n"
+  twGotoXY(w,1,1);
+  twPrintF(w,
+	   "Length of header section    = %08lXH\n"
 	   "Length of code section      = %08lXH\n"
 	   "segment .code               = %08lXH\n"
 	   "Length of data secion       = %08lXH\n"
@@ -325,12 +326,13 @@ static __filesize_t __FASTCALL__ rdoff_ShowHeader( void )
 	   ,cs_start
 	   ,ds_len
 	   ,ds_start);
-  twSetColorAttr(dialog_cset.entry);
+  twSetColorAttr(w,dialog_cset.entry);
   entry = rdoff_FindExport("_main");
-  twPrintF("Entry point                 = %08lXH"
+  twPrintF(w,
+	   "Entry point                 = %08lXH"
 	   ,entry);
-  twClrEOL();
-  twSetColorAttr(dialog_cset.main);
+  twClrEOL(w);
+  twSetColorAttr(w,dialog_cset.main);
   while(1)
   {
     int keycode;

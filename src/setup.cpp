@@ -125,48 +125,48 @@ static void drawSetupPrompt( void )
 static void  __FASTCALL__ setup_paint( TWindow *twin )
 {
   TWindow *usd;
-  usd = twUsedWin();
-  twUseWin(twin);
-  twSetColorAttr(dialog_cset.group.active);
-  twGotoXY(2,9);
-  twPrintF(" [%c] - Direct console access "
+  usd = twFocusedWin();
+  twFocusWin(twin);
+  twSetColorAttr(twin,dialog_cset.group.active);
+  twGotoXY(twin,2,9);
+  twPrintF(twin," [%c] - Direct console access "
 	   ,Gebool((beye_context().vioIniFlags & __TVIO_FLG_DIRECT_CONSOLE_ACCESS) == __TVIO_FLG_DIRECT_CONSOLE_ACCESS));
-  twGotoXY(2,10);
-  twPrintF(" [%c] - Mouse sensitivity     "
+  twGotoXY(twin,2,10);
+  twPrintF(twin," [%c] - Mouse sensitivity     "
 	   ,Gebool((beye_context().kbdFlags & KBD_NONSTOP_ON_MOUSE_PRESS) == KBD_NONSTOP_ON_MOUSE_PRESS));
-  twGotoXY(2,11);
-  twPrintF(" [%c] - Force mono            "
+  twGotoXY(twin,2,11);
+  twPrintF(twin," [%c] - Force mono            "
 	   ,Gebool((beye_context().twinIniFlags & TWIF_FORCEMONO) == TWIF_FORCEMONO));
-  twGotoXY(2,12);
+  twGotoXY(twin,2,12);
 #ifdef __QNX4__
   if(photon)
   {
-    twSetColorAttr(dialog_cset.group.disabled);
-    twPrintF(" [%c] - Force 7-bit output    "
+    twSetColorAttr(twin,dialog_cset.group.disabled);
+    twPrintF(twin," [%c] - Force 7-bit output    "
 	    ,Gebool(bit7));
-    twSetColorAttr(dialog_cset.group.active);
+    twSetColorAttr(twin,dialog_cset.group.active);
   }
   else
 #endif
-  twPrintF(" [%c] - Force 7-bit output    "
+  twPrintF(twin," [%c] - Force 7-bit output    "
 	   ,Gebool((beye_context().vioIniFlags & __TVIO_FLG_USE_7BIT) == __TVIO_FLG_USE_7BIT));
-  twGotoXY(32,9);
-  twPrintF(" [%c] - Apply plugin settings to all files     "
+  twGotoXY(twin,32,9);
+  twPrintF(twin," [%c] - Apply plugin settings to all files     "
 	   ,Gebool(beye_context().iniSettingsAnywhere));
-  twGotoXY(32,10);
-  if(!__mmfIsWorkable()) twSetColorAttr(dialog_cset.group.disabled);
-  twPrintF(" [%c] - Use MMF                                "
+  twGotoXY(twin,32,10);
+  if(!__mmfIsWorkable()) twSetColorAttr(twin,dialog_cset.group.disabled);
+  twPrintF(twin," [%c] - Use MMF                                "
 	   ,Gebool(beye_context().fioUseMMF));
-  twSetColorAttr(dialog_cset.group.active);
-  twGotoXY(32,11);
-  twPrintF(" [%c] - Preserve timestamp                     "
+  twSetColorAttr(twin,dialog_cset.group.active);
+  twGotoXY(twin,32,11);
+  twPrintF(twin," [%c] - Preserve timestamp                     "
 	   ,Gebool(beye_context().iniPreserveTime));
-  twGotoXY(32,12);
-  twPrintF(" [%c] - Enable usage of external programs      "
+  twGotoXY(twin,32,12);
+  twPrintF(twin," [%c] - Enable usage of external programs      "
 	   ,Gebool(beye_context().iniUseExtProgs));
-  twSetColorAttr(dialog_cset.main);
-  twGotoXY(50,7); twPutS(beye_context().codepage.c_str());
-  twUseWin(usd);
+  twSetColorAttr(twin,dialog_cset.main);
+  twGotoXY(twin,50,7); twPutS(twin,beye_context().codepage.c_str());
+  twFocusWin(usd);
 }
 
 void Setup(void)
@@ -193,47 +193,47 @@ void Setup(void)
   Y2 = Y1;
   ewnd[0] = CreateEditor(X1,Y1,X2,Y2,TWS_CURSORABLE | TWS_NLSOEM);
   twShowWin(ewnd[0]);
-  twUseWin(ewnd[0]);
+  twFocusWin(ewnd[0]);
   PostEvent(KE_ENTER);
-  xeditstring(estr[0],NULL,sizeof(estr[0]), NULL);
+  xeditstring(ewnd[0],estr[0],NULL,sizeof(estr[0]), NULL);
   Y1 += 2;
   Y2 = Y1;
   ewnd[1] = CreateEditor(X1,Y1,X2,Y2,TWS_CURSORABLE | TWS_NLSOEM);
   twShowWin(ewnd[1]);
-  twUseWin(ewnd[1]);
+  twFocusWin(ewnd[1]);
   PostEvent(KE_ENTER);
-  xeditstring(estr[1],NULL,sizeof(estr[1]), NULL);
+  xeditstring(ewnd[1],estr[1],NULL,sizeof(estr[1]), NULL);
 
   Y1 += 2;
   Y2 = Y1;
   ewnd[2] = CreateEditor(X1,Y1,X2,Y2,TWS_CURSORABLE | TWS_NLSOEM);
   twShowWin(ewnd[2]);
-  twUseWin(ewnd[2]);
+  twFocusWin(ewnd[2]);
   PostEvent(KE_ENTER);
-  xeditstring(estr[2],NULL,sizeof(estr[2]), NULL);
+  xeditstring(ewnd[2],estr[2],NULL,sizeof(estr[2]), NULL);
 
   Y1 += 2;
   Y2 = Y1;
   ewnd[3] = WindowOpen(60,Y1,61,Y2,TWS_NLSOEM);
 
-  twUseWin(wdlg);
-  twGotoXY(2,1); twPutS("Enter help file name (including full path):");
-  twGotoXY(2,3); twPutS("Enter color skin name (including full path):");
-  twGotoXY(2,5); twPutS("Enter syntax name (including full path):");
-  twGotoXY(2,7); twPutS("Enter OEM codepage (for utf-based terminals):");
+  twFocusWin(wdlg);
+  twGotoXY(wdlg,2,1); twPutS(wdlg,"Enter help file name (including full path):");
+  twGotoXY(wdlg,2,3); twPutS(wdlg,"Enter color skin name (including full path):");
+  twGotoXY(wdlg,2,5); twPutS(wdlg,"Enter syntax name (including full path):");
+  twGotoXY(wdlg,2,7); twPutS(wdlg,"Enter OEM codepage (for utf-based terminals):");
   twSetFooterAttr(wdlg," [Enter] - Accept changes ",TW_TMODE_CENTER,dialog_cset.footer);
-  twinDrawFrameAttr(1,8,78,13,TW_UP3D_FRAME,dialog_cset.main);
+  twinDrawFrameAttr(wdlg,1,8,78,13,TW_UP3D_FRAME,dialog_cset.main);
 
   setup_paint(wdlg);
   active = 0;
-  twUseWin(ewnd[active]);
+  twFocusWin(ewnd[active]);
   while(1)
   {
    if(active==3) {
 	if(select_codepage() == true) setup_paint(wdlg);
 	ret = KE_TAB;
    }
-   else ret = xeditstring(estr[active],NULL,sizeof(estr[active]),drawSetupPrompt);
+   else ret = xeditstring(ewnd[active],estr[active],NULL,sizeof(estr[active]),drawSetupPrompt);
    switch(ret)
    {
      case KE_F(10):
@@ -242,7 +242,7 @@ void Setup(void)
      case KE_SHIFT_TAB:
      case KE_TAB:   active++;
 		    if(active>3) active=0;
-		    twUseWin(ewnd[active]);
+		    twFocusWin(ewnd[active]);
 		    continue;
      case KE_F(1):  hlpDisplay(5);
 		    break;

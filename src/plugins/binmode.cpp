@@ -187,7 +187,7 @@ unsigned BinMode::paint( unsigned keycode,unsigned tshift )
 		HiLightSearch(MainWnd,_index,0,BWidth,j,&hli,HLS_NORMAL);
 	    } else {
 		if(bin_mode==MOD_PLAIN)
-		    twDirectWrite(1,j + 1,buffer,width);
+		    twDirectWrite(MainWnd,1,j + 1,buffer,width);
 		else
 		    twWriteBuffer(MainWnd,1,j + 1,&it,width);
 	    }
@@ -238,9 +238,9 @@ void BinMode::misckey_action() /* EditBin */
     bool inited;
     if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,NULL); return; }
     ewin = WindowOpen(1,2,tvioWidth-virtWidthCorr,tvioHeight-1,TWS_CURSORABLE);
-    twSetColorAttr(browser_cset.edit.main); twClearWin();
+    twSetColorAttr(ewin,browser_cset.edit.main); twClearWin(ewin);
     drawEditPrompt();
-    twUseWin(ewin);
+    twFocusWin(ewin);
     edit_x = edit_y = 0;
     if(bin_mode==MOD_PLAIN) inited=editInitBuffs(tvioWidth-virtWidthCorr,NULL,0);
     else {
@@ -262,7 +262,7 @@ void BinMode::misckey_action() /* EditBin */
 	}
     }
     if(inited) {
-	FullEdit(NULL,*this,bin_mode==MOD_PLAIN?NULL:save_video);
+	FullEdit(ewin,NULL,*this,bin_mode==MOD_PLAIN?NULL:save_video);
 	editDestroyBuffs();
     }
     CloseWnd(ewin);

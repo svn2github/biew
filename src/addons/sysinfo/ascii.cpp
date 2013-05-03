@@ -51,8 +51,8 @@ TWindow*  ASCII_Addon::CreatePanelNF(tAbsCoord x1,tAbsCoord y1,tAbsCoord x2,tAbs
  TWindow *win;
  unsigned flags = 0;
  win = WindowOpen(x1,y1,x2,y2,flags);
- twSetColorAttr(dialog_cset.main);
- twClearWin();
+ twSetColorAttr(win,dialog_cset.main);
+ twClearWin(win);
  twShowWin(win);
  return win;
 }
@@ -64,25 +64,25 @@ void ASCII_Addon::run()
   unsigned evt;
   int i,j;
   unsigned char str[35];
-  twUseWin(hwnd);
+  twFocusWin(hwnd);
   twFreezeWin(hwnd);
   strcpy((char *)str,"°³0 1 2 3 4 5 6 7 8 9 A B C D E F");
-  twDirectWrite(1,1,str,34);
+  twDirectWrite(hwnd,1,1,str,34);
   str[0] = TWC_SH;
   str[1] = 0;
-  for(i = 0;i < 34;i++)  twDirectWrite(i+1,2,str,1);
+  for(i = 0;i < 34;i++)  twDirectWrite(hwnd,i+1,2,str,1);
   str[1] = TWC_SV;
   str[2] = 0;
-  for(i = 0;i < 16;i++) { str[0] = i < 0x0A ? i + '0' : i - 0x0A + 'A'; twDirectWrite(1,i+3,str,2); }
+  for(i = 0;i < 16;i++) { str[0] = i < 0x0A ? i + '0' : i - 0x0A + 'A'; twDirectWrite(hwnd,1,i+3,str,2); }
   str[0] = TWC_SV_SH;
   str[1] = 0;
-  twDirectWrite(2,2,str,1);
-  twUseWin(hpnl);
+  twDirectWrite(hwnd,2,2,str,1);
+  twFocusWin(hpnl);
   twFreezeWin(hpnl);
   for(i = 0;i < 16;i++)
   {
     for(j = 0;j < 16;j++) { str[j*2] = i*16 + j; str[j*2 + 1] = ' '; }
-    twDirectWrite(1,i+1,str,31);
+    twDirectWrite(hpnl,1,i+1,str,31);
   }
   twRefreshWin(hpnl);
   twRefreshWin(hwnd);

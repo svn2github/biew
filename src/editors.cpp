@@ -42,45 +42,45 @@ unsigned char edit_XX = 0;
 
 void ExtHelp( void )
 {
- TWindow * _using = twUsedWin();
+ TWindow * _using = twFocusedWin();
  hlpDisplay(2);
- twUseWin(_using);
+ twFocusWin(_using);
 }
 
 void __FASTCALL__ PaintETitle( int shift,bool use_shift )
 {
-  TWindow * _using = twUsedWin();
+  TWindow * _using = twFocusedWin();
   unsigned eidx;
   char byte,obyte;
-  twUseWin(TitleWnd);
+  twFocusWin(TitleWnd);
   twFreezeWin(TitleWnd);
-  twGotoXY(1,1);
-  twClrEOL();
-  twPrintF("%08lX: ",edit_cp + shift);
+  twGotoXY(TitleWnd,1,1);
+  twClrEOL(TitleWnd);
+  twPrintF(TitleWnd,"%08lX: ",edit_cp + shift);
   eidx = use_shift ? (unsigned)shift : edit_y*EditorMem.width+edit_x;
   byte  = EditorMem.buff[eidx];
   obyte = EditorMem.save[eidx];
-  if(byte != obyte) twSetColorAttr(title_cset.change);
-  twPrintF("%c %02XH %sH %sB "
+  if(byte != obyte) twSetColorAttr(TitleWnd,title_cset.change);
+  twPrintF(TitleWnd,"%c %02XH %sH %sB "
 	   ,byte ? byte : ' '
 	   ,byte & 0x00FF
 	   ,Get2SignDig(byte)
 	   ,GetBinary(byte));
-  twSetColorAttr(title_cset.main);
+  twSetColorAttr(TitleWnd,title_cset.main);
   if(byte != obyte)
   {
-    twPrintF("ORIGINAL: %c %02XH %sH %sB "
+    twPrintF(TitleWnd,"ORIGINAL: %c %02XH %sH %sB "
 	     ,obyte ? obyte : ' '
 	     ,obyte & 0x00FF
 	     ,Get2SignDig(obyte)
 	     ,GetBinary(obyte));
   }
   else
-    twPrintF("                                ");
-  twPrintF("MASK: %sH"
+    twPrintF(TitleWnd,"                                ");
+  twPrintF(TitleWnd,"MASK: %sH"
 	   ,Get2Digit(edit_XX));
   twRefreshWin(TitleWnd);
-  twUseWin(_using);
+  twFocusWin(_using);
 }
 
 bool __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size)
@@ -214,94 +214,80 @@ bool __FASTCALL__ editDefAction(int _lastbyte)
    return redraw;
 }
 
-int __FASTCALL__ FullEdit(TWindow * txtwnd,Opaque& _this,void (*save_func)(Opaque& _this,unsigned char *,unsigned))
+int __FASTCALL__ FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*save_func)(Opaque& _this,unsigned char *,unsigned))
 {
- size_t i,j;
- unsigned mlen;
- unsigned int _lastbyte;
- unsigned flags;
- tAbsCoord height = twGetClientHeight(MainWnd);
- bool redraw;
- char attr = __ESS_HARDEDIT | __ESS_WANTRETURN;
- twSetColorAttr(browser_cset.edit.main);
- __MsSetState(false);
- for(i = 0;i < height;i++)
- {
-   for(j = 0;j < EditorMem.alen[i];j++)
-   {
-     unsigned eidx;
-     eidx = i*EditorMem.width+j;
-     twSetColorAttr(EditorMem.buff[eidx] == EditorMem.save[eidx] ? browser_cset.edit.main : browser_cset.edit.change);
-     twDirectWrite(j + 1,i + 1,&EditorMem.buff[eidx],1);
-   }
-   if((unsigned)EditorMem.alen[i] + 1 < EditorMem.width)
-   {
-      twGotoXY(EditorMem.alen[i] + 1,i + 1); twClrEOL();
-   }
- }
- __MsSetState(true);
- PaintETitle(edit_y*EditorMem.width + edit_x,0);
- twShowWin(twUsedWin());
- twSetCursorType(TW_CUR_NORM);
- redraw = true;
- if(txtwnd)
- {
-   char work[__TVIO_MAXSCREENWIDTH];
-   int len;
-   TWindow * _using = twUsedWin();
-   twUseWin(txtwnd);
-   twSetColorAttr(browser_cset.main);
-   twFreezeWin(txtwnd);
-   for(i = 0;i < height;i++)
-   {
-      mlen = EditorMem.alen[i];
-      len = ExpandHex(work,&EditorMem.buff[i*EditorMem.width],mlen,2);
-      twDirectWrite(11,i + 1,work,len);
-      if((unsigned)EditorMem.alen[i] + 1 < EditorMem.width)
-      {
-	twGotoXY(11+len,i + 1); twClrEOL();
-      }
-   }
-   twRefreshWin(txtwnd);
-   twUseWin(_using);
- }
- while(1)
- {
-   unsigned eidx;
-   eidx = edit_y*EditorMem.width;
-   mlen = EditorMem.alen[edit_y];
-   flags = attr;
-   if(!redraw) flags |= __ESS_NOREDRAW;
-   _lastbyte = eeditstring((char *)&EditorMem.buff[eidx],NULL,&mlen,(unsigned)(edit_y + 1),
-			   (unsigned *)&edit_x,flags,(char *)&EditorMem.save[eidx], NULL);
-   switch(_lastbyte)
-   {
-     case KE_F(1)   : ExtHelp(); continue;
-     case KE_F(2)   : save_func?save_func(_this,EditorMem.buff,EditorMem.size):editSaveContest();
-     case KE_F(10)  :
-     case KE_ESCAPE : goto bye;
-     case KE_TAB : if(txtwnd) goto bye;
-     default     : redraw = editDefAction(_lastbyte); break;
-   }
-   CheckBounds();
-   if(redraw)
-   {
-     if(txtwnd)
-     {
-      char work[__TVIO_MAXSCREENWIDTH];
-      int len;
-      TWindow * _using = twUsedWin();
-      twUseWin(txtwnd);
-      len = ExpandHex(work,&EditorMem.buff[edit_y*EditorMem.width],mlen,2);
-      twDirectWrite(11,edit_y + 1,work,len);
-      twUseWin(_using);
-     }
-   }
-   PaintETitle(edit_y*EditorMem.width + edit_x,0);
- }
- bye:
- twSetCursorType(TW_CUR_OFF);
- return _lastbyte;
+    size_t i,j;
+    unsigned mlen;
+    unsigned int _lastbyte;
+    unsigned flags;
+    tAbsCoord height = twGetClientHeight(MainWnd);
+    bool redraw;
+    char attr = __ESS_HARDEDIT | __ESS_WANTRETURN;
+    twSetColorAttr(ewnd,browser_cset.edit.main);
+    __MsSetState(false);
+    for(i = 0;i < height;i++) {
+	for(j = 0;j < EditorMem.alen[i];j++) {
+	    unsigned eidx;
+	    eidx = i*EditorMem.width+j;
+	    twSetColorAttr(ewnd,EditorMem.buff[eidx] == EditorMem.save[eidx] ? browser_cset.edit.main : browser_cset.edit.change);
+	    twDirectWrite(ewnd,j + 1,i + 1,&EditorMem.buff[eidx],1);
+	}
+	if((unsigned)EditorMem.alen[i] + 1 < EditorMem.width) {
+	    twGotoXY(ewnd,EditorMem.alen[i] + 1,i + 1); twClrEOL(MainWnd);
+	}
+    }
+    __MsSetState(true);
+    PaintETitle(edit_y*EditorMem.width + edit_x,0);
+    twSetCursorType(TW_CUR_NORM);
+    redraw = true;
+    if(hexwnd) {
+	char work[__TVIO_MAXSCREENWIDTH];
+	int len;
+	twSetColorAttr(hexwnd,browser_cset.main);
+	twFreezeWin(hexwnd);
+	for(i = 0;i < height;i++) {
+	    mlen = EditorMem.alen[i];
+	    len = ExpandHex(work,&EditorMem.buff[i*EditorMem.width],mlen,2);
+	    twDirectWrite(hexwnd,11,i + 1,work,len);
+	    if((unsigned)EditorMem.alen[i] + 1 < EditorMem.width) {
+		twGotoXY(hexwnd,11+len,i + 1);
+		twClrEOL(hexwnd);
+	    }
+	}
+	twRefreshWin(hexwnd);
+    }
+    twShowWin(ewnd);
+    twFocusWin(ewnd);
+    while(1) {
+	unsigned eidx;
+	eidx = edit_y*EditorMem.width;
+	mlen = EditorMem.alen[edit_y];
+	flags = attr;
+	if(!redraw) flags |= __ESS_NOREDRAW;
+	_lastbyte = eeditstring(ewnd,(char *)&EditorMem.buff[eidx],NULL,&mlen,(unsigned)(edit_y + 1),
+				(unsigned *)&edit_x,flags,(char *)&EditorMem.save[eidx], NULL);
+	switch(_lastbyte) {
+	    case KE_F(1)   : ExtHelp(); continue;
+	    case KE_F(2)   : save_func?save_func(_this,EditorMem.buff,EditorMem.size):editSaveContest();
+	    case KE_F(10)  :
+	    case KE_ESCAPE : goto bye;
+	    case KE_TAB : if(ewnd) goto bye;
+	    default     : redraw = editDefAction(_lastbyte); break;
+	}
+	CheckBounds();
+	if(redraw) {
+	    if(hexwnd) {
+		char work[__TVIO_MAXSCREENWIDTH];
+		int len;
+		len = ExpandHex(work,&EditorMem.buff[edit_y*EditorMem.width],mlen,2);
+		twDirectWrite(hexwnd,11,edit_y + 1,work,len);
+	    }
+	}
+	PaintETitle(edit_y*EditorMem.width + edit_x,0);
+    }
+bye:
+    twSetCursorType(TW_CUR_OFF);
+    return _lastbyte;
 }
 } // namespace beye
 

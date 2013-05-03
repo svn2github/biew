@@ -51,8 +51,9 @@ static __filesize_t __FASTCALL__ ShowOPharLapHeader( void )
   fpos = BMGetCurrFilePos();
   entrypoint = oph.plHeadSize*16 + oph.plEIP;
   w = CrtDlgWndnls(" Old PharLap executable ",54,11);
-  twGotoXY(1,1);
-  twPrintF("Image size reminder on last page   = %04XH\n"
+  twGotoXY(w,1,1);
+  twPrintF(w,
+	   "Image size reminder on last page   = %04XH\n"
 	   "Image size in pages                = %04XH\n"
 	   "Number of relocation items         = %04XH\n"
 	   "Header size in paragraphs          = %04XH\n"
@@ -74,9 +75,9 @@ static __filesize_t __FASTCALL__ ShowOPharLapHeader( void )
 	   ,oph.plEIP
 	   ,oph.plFirstReloc
 	   ,oph.plNOverlay);
-  twSetColorAttr(dialog_cset.entry);
-  twPrintF("Entry Point                        = %08lXH",entrypoint);
-  twClrEOL();
+  twSetColorAttr(w,dialog_cset.entry);
+  twPrintF(w,"Entry Point                        = %08lXH",entrypoint);
+  twClrEOL(w);
   while(1)
   {
     keycode = GetEvent(drawEmptyPrompt,NULL,w);

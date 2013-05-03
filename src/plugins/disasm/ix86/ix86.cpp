@@ -6138,7 +6138,7 @@ static void __FASTCALL__ ix86HelpAsm( void )
  if(!(strs = hlpPointStrings(msgAsmText,size,&nstrs))) goto mem_off;
  title = msgAsmText;
  hwnd = CrtHlpWndnls(title,72,21);
- twUseWin(hwnd);
+ twFocusWin(hwnd);
  for(i = 0;i < nstrs;i++)
  {
    unsigned rlen;
@@ -6154,50 +6154,50 @@ static void __FASTCALL__ ix86HelpAsm( void )
    twWriteBuffer(hwnd,2,i+2,&it,rlen);
  }
  delete msgAsmText;
- twGotoXY(5,3);
+ twGotoXY(hwnd,5,3);
  if(x86_Bitness == DAB_USE64 || color_mode==1)
  {
-   twGotoXY(5,3);
+   twGotoXY(hwnd,5,3);
    i=0;
 //   for(i = 0;i < 10;i++)
    {
-     twSetColorAttr(disasm_cset.engine[0].engine);
-     twPutS((x86_Bitness == DAB_USE64)?CPU64Names[0]:altPipesNames[0]);
-     twClrEOL();
+     twSetColorAttr(hwnd,disasm_cset.engine[0].engine);
+     twPutS(hwnd,(x86_Bitness == DAB_USE64)?CPU64Names[0]:altPipesNames[0]);
+     twClrEOL(hwnd);
    }
-   twGotoXY(5,4);
+   twGotoXY(hwnd,5,4);
 //   for(i = 0;i < 10;i++)
    {
-     twSetColorAttr(disasm_cset.engine[1].engine);
-     twPutS((x86_Bitness == DAB_USE64)?CPU64Names[1]:altPipesNames[1]);
-     twClrEOL();
+     twSetColorAttr(hwnd,disasm_cset.engine[1].engine);
+     twPutS(hwnd,(x86_Bitness == DAB_USE64)?CPU64Names[1]:altPipesNames[1]);
+     twClrEOL(hwnd);
    }
-   twGotoXY(5,5);
+   twGotoXY(hwnd,5,5);
 //   for(i = 0;i < 10;i++)
    {
-     twSetColorAttr(disasm_cset.engine[2].engine);
-     twPutS((x86_Bitness == DAB_USE64)?CPU64Names[2]:altPipesNames[2]);
-     twClrEOL();
+     twSetColorAttr(hwnd,disasm_cset.engine[2].engine);
+     twPutS(hwnd,(x86_Bitness == DAB_USE64)?CPU64Names[2]:altPipesNames[2]);
+     twClrEOL(hwnd);
    }
  }
  else
  {
  for(i = 0;i < 10;i++)
  {
-   twSetColorAttr(disasm_cset.cpu_cset[0].clone[i]);
-   twPutS(CPUNames[i]);
+   twSetColorAttr(hwnd,disasm_cset.cpu_cset[0].clone[i]);
+   twPutS(hwnd,CPUNames[i]);
  }
- twGotoXY(5,4);
+ twGotoXY(hwnd,5,4);
  for(i = 0;i < 10;i++)
  {
-   twSetColorAttr(disasm_cset.cpu_cset[1].clone[i]);
-   twPutS(FPUNames[i]);
+   twSetColorAttr(hwnd,disasm_cset.cpu_cset[1].clone[i]);
+   twPutS(hwnd,FPUNames[i]);
  }
- twGotoXY(5,5);
+ twGotoXY(hwnd,5,5);
  for(i = 0;i < 10;i++)
  {
-   twSetColorAttr(disasm_cset.cpu_cset[2].clone[i]);
-   twPutS(MMXNames[i]);
+   twSetColorAttr(hwnd,disasm_cset.cpu_cset[2].clone[i]);
+   twPutS(hwnd,MMXNames[i]);
  }
  }
  do

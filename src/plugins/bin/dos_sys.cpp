@@ -42,9 +42,10 @@ static __filesize_t __FASTCALL__ ShowSysHeader( void )
  fpos = BMGetCurrFilePos();
  hwnd = CrtDlgWndnls(" DOS Device Driver Header ",57,13);
  charun = (drv.ddAttribute & 0x8000) == 0x8000;
- if(charun) twPrintF("Device Name               = %8s\n",drv.ddName);
- else       twPrintF("Device Supports             %u Block Units\n",(unsigned)drv.ddName[0]);
- twPrintF("Attributes :\n"
+ if(charun) twPrintF(hwnd,"Device Name               = %8s\n",drv.ddName);
+ else       twPrintF(hwnd,"Device Supports             %u Block Units\n",(unsigned)drv.ddName[0]);
+ twPrintF(hwnd,
+	  "Attributes :\n"
 	  "  [%c]  STDIN\n"
 	  "  [%c]  STDOUT\n"
 	  "  [%c]  STDNUL\n"
@@ -63,12 +64,12 @@ static __filesize_t __FASTCALL__ ShowSysHeader( void )
 	 ,Gebool(drv.ddAttribute & 0x2000)
 	 ,Gebool(drv.ddAttribute & 0x4000)
 	 ,(drv.ddAttribute & 0x8000 ? "CHARACTERS" : "BLOCKS"));
- twSetColorAttr(dialog_cset.entry);
- twPrintF(">STRATEGY routine offset  = %04hXH bytes [Enter]",drv.ddStrategyOff);
- twClrEOL(); twPrintF("\n");
- twSetColorAttr(dialog_cset.altentry);
- twPrintF(">INTERRUPT routine offset = %04hXH bytes [Ctrl+Enter | F5]",drv.ddInterruptOff);
- twClrEOL();
+ twSetColorAttr(hwnd,dialog_cset.entry);
+ twPrintF(hwnd,">STRATEGY routine offset  = %04hXH bytes [Enter]",drv.ddStrategyOff);
+ twClrEOL(hwnd); twPrintF(hwnd,"\n");
+ twSetColorAttr(hwnd,dialog_cset.altentry);
+ twPrintF(hwnd,">INTERRUPT routine offset = %04hXH bytes [Ctrl+Enter | F5]",drv.ddInterruptOff);
+ twClrEOL(hwnd);
  while(1)
  {
    keycode = GetEvent(drawEmptyPrompt,NULL,hwnd);

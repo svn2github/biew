@@ -113,21 +113,21 @@ void DigitalConverter_Addon::DCStaticPaint(TWindow * wdlg,char * wbuff,intmax_t 
  int rlen;
  tAbsCoord x1,y1,x2,y2;
  unsigned i,w;
- TWindow * _using = twUsedWin();
-    twUseWin(wdlg);
+ TWindow * _using = twFocusedWin();
+    twFocusWin(wdlg);
     twGetWinPos(wdlg,&x1,&y1,&x2,&y2);
     w=x2-x1;
     rlen = Dig2Str(digit,wbuff,0);
-    twGotoXY(3,4); twPutS(wbuff); for(i = rlen;i < mlen[0];i++)  twPutChar('±'); twPutS("   [Hex]");
+    twGotoXY(wdlg,3,4); twPutS(wdlg,wbuff); for(i = rlen;i < mlen[0];i++)  twPutChar(wdlg,'±'); twPutS(wdlg,"   [Hex]");
     rlen = Dig2Str(digit,wbuff,1);
-    twGotoXY(w-11-mlen[0],4); twPutS(wbuff); for(i = rlen;i < mlen[1];i++)  twPutChar('±'); twPutS(" [Oct]");
+    twGotoXY(wdlg,w-11-mlen[0],4); twPutS(wdlg,wbuff); for(i = rlen;i < mlen[1];i++)  twPutChar(wdlg,'±'); twPutS(wdlg," [Oct]");
     rlen = Dig2Str(digit,wbuff,2);
-    twGotoXY(3,6); twPutS(wbuff); for(i = rlen;i < mlen[2];i++)  twPutChar('±'); twPutS(" [Dec]");
+    twGotoXY(wdlg,3,6); twPutS(wdlg,wbuff); for(i = rlen;i < mlen[2];i++)  twPutChar(wdlg,'±'); twPutS(wdlg," [Dec]");
     rlen = Dig2Str(digit,wbuff,3);
-    twGotoXY(w-11-mlen[0],6); twPutS(wbuff); for(i = rlen;i < mlen[3];i++) twPutChar('±'); twPutS(" [+-Dec]");
+    twGotoXY(wdlg,w-11-mlen[0],6); twPutS(wdlg,wbuff); for(i = rlen;i < mlen[3];i++) twPutChar(wdlg,'±'); twPutS(wdlg," [+-Dec]");
     rlen = Dig2Str(digit,wbuff,4);
-    twGotoXY(5,8); twPutS(wbuff); for(i = rlen;i < mlen[4];i++)  twPutChar('±'); twPutS(" [Bin]");
-    twUseWin(_using);
+    twGotoXY(wdlg,5,8); twPutS(wdlg,wbuff); for(i = rlen;i < mlen[4];i++)  twPutChar(wdlg,'±'); twPutS(wdlg," [Bin]");
+    twFocusWin(_using);
 }
 
 void DigitalConverter_Addon::run()
@@ -164,30 +164,30 @@ void DigitalConverter_Addon::run()
  XX2 = XX1 + (mlen[0]-1);
  YY2 = YY1;
  ewnd[0] = WindowOpen(XX1,YY1,XX2,YY2,TWS_CURSORABLE | TWS_NLSOEM);
- twSetColorAttr(dialog_cset.editor.active);
+ twSetColorAttr(ewnd[0],dialog_cset.editor.active);
  XX1 = X1 + (w-11-mlen[0]);
  XX2 = XX1 + (mlen[1]-1);
  ewnd[1] = WindowOpen(XX1,YY1,XX2,YY2,TWS_CURSORABLE | TWS_NLSOEM);
- twSetColorAttr(dialog_cset.editor.active);
+ twSetColorAttr(ewnd[1],dialog_cset.editor.active);
  XX1 = X1 + 3;
  YY1 = Y1 + 6;
  XX2 = XX1 + (mlen[2]-1);
  YY2 = YY1;
  ewnd[2] = WindowOpen(XX1,YY1,XX2,YY2,TWS_CURSORABLE | TWS_NLSOEM);
- twSetColorAttr(dialog_cset.editor.active);
+ twSetColorAttr(ewnd[2],dialog_cset.editor.active);
  XX1 = X1 + (w-11-mlen[0]);
  XX2 = XX1 + (mlen[3]-1);
  ewnd[3] = WindowOpen(XX1,YY1,XX2,YY2,TWS_CURSORABLE | TWS_NLSOEM);
- twSetColorAttr(dialog_cset.editor.active);
+ twSetColorAttr(ewnd[3],dialog_cset.editor.active);
  XX1 = X1 + 5;
  YY1 = Y1 + 8;
  XX2 = XX1 + (mlen[4]-1);
  YY2 = YY1;
  ewnd[4] = WindowOpen(XX1,YY1,XX2,YY2,TWS_CURSORABLE | TWS_NLSOEM);
- twSetColorAttr(dialog_cset.editor.active);
- twUseWin(wdlg);
+ twSetColorAttr(ewnd[4],dialog_cset.editor.active);
+ twFocusWin(wdlg);
  digit = 0;
- twGotoXY(3,2); twPutS("Convert numbers between bases [16, 10, 8, 2]");
+ twGotoXY(wdlg,3,2); twPutS(wdlg,"Convert numbers between bases [16, 10, 8, 2]");
  DCStaticPaint(wdlg,wbuff,digit,mlen);
  oactive = 1;
  active =
@@ -200,7 +200,7 @@ void DigitalConverter_Addon::run()
    {
      twHideWin(ewnd[oactive]);
      twShowWin(ewnd[active]);
-     twUseWin(ewnd[active]);
+     twFocusWin(ewnd[active]);
      oactive = active;
      stx = 0;
    }
@@ -211,7 +211,7 @@ void DigitalConverter_Addon::run()
    rlen = Dig2Str(digit,wbuff,active == 4 ? 5 : active);
    if(stx > rlen) stx = rlen;
    NextCh:
-   _lastbyte = eeditstring(wbuff,legal[active],&mlen[active],1,&stx,attr,
+   _lastbyte = eeditstring(ewnd[active],wbuff,legal[active],&mlen[active],1,&stx,attr,
 			  NULL,NULL);
    if((char)_lastbyte == '-' || (char)_lastbyte == '+') goto NextCh;
    if(_lastbyte == KE_ESCAPE || _lastbyte == KE_F(10)) break;

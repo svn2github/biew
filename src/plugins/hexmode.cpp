@@ -71,7 +71,7 @@ namespace beye {
 	    virtual void		save_ini(hIniProfile *);
 	private:
 	    void		check_width_corr();
-	    int			full_hex_edit(TWindow * txtwnd);
+	    int			full_hex_edit(TWindow * txtwnd,TWindow *hexwnd);
 
 	    CodeGuider&	code_guider;
 	    unsigned	virtWidthCorr;
@@ -200,13 +200,13 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 		}
 		BMReadBufferEx((any_t*)&outstr[width - scrHWidth],rwidth*__inc,sindex,BFile::Seek_Set);
 		xmin = tvioWidth-scrHWidth;
-		twDirectWrite(1,i + 1,outstr,xmin);
+		twDirectWrite(MainWnd,1,i + 1,outstr,xmin);
 		if(isHOnLine(sindex,scrHWidth)) {
 		    HLInfo hli;
 		    hli.text = &outstr[xmin];
 		    HiLightSearch(MainWnd,sindex,xmin,width,i,&hli,HLS_NORMAL);
-		} else  twDirectWrite(xmin + 1,i + 1,&outstr[xmin],width - xmin);
-	    } else twDirectWrite(1,i + 1,outstr,width);
+		} else  twDirectWrite(MainWnd,xmin + 1,i + 1,&outstr[xmin],width - xmin);
+	    } else twDirectWrite(MainWnd,1,i + 1,outstr,width);
 	}
 	lastbyte = lindex + __inc;
 	twRefreshWin(MainWnd);
@@ -236,9 +236,9 @@ void HexMode::misckey_action () /* EditHex */
     if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,NULL); return; }
     bound = width-(hexViewer[hmode].width()-virtWidthCorr);
     ewnd[0] = WindowOpen(HA_LEN()+1,2,bound,tvioHeight-1,TWS_CURSORABLE);
-    twSetColorAttr(browser_cset.edit.main); twClearWin();
+    twSetColorAttr(ewnd[0],browser_cset.edit.main); twClearWin(ewnd[0]);
     ewnd[1] = WindowOpen(bound+1,2,width,tvioHeight-1,TWS_CURSORABLE);
-    twSetColorAttr(browser_cset.edit.main); twClearWin();
+    twSetColorAttr(ewnd[1],browser_cset.edit.main); twClearWin(ewnd[1]);
     drawEditPrompt();
     has_show[0] = has_show[1] = false;
     if(editInitBuffs(hexViewer[hmode].width()-virtWidthCorr,NULL,0)) {
@@ -250,9 +250,9 @@ void HexMode::misckey_action () /* EditHex */
 		if(has_show[active]) twShowWin(ewnd[active]);
 		oactive = active;
 	    }
-	    twUseWin(ewnd[active]);
-	    if(!active) _lastbyte = full_hex_edit(MainWnd);
-	    else        _lastbyte = FullEdit(MainWnd,*this,NULL);
+	    twFocusWin(ewnd[active]);
+	    if(!active) _lastbyte = full_hex_edit(MainWnd,ewnd[0]);
+	    else        _lastbyte = FullEdit(ewnd[1],MainWnd,*this,NULL);
 	    has_show[active] = true;
 	    if(_lastbyte == KE_TAB) active = active ? 0 : 1;
 	    else break;
@@ -341,7 +341,7 @@ bool HexMode::action_F10() { return udnUserNames(); }
 
 bool HexMode::detect() { return true; }
 
-int HexMode::full_hex_edit(TWindow * txtwnd)
+int HexMode::full_hex_edit(TWindow* txtwnd,TWindow* hexwnd)
 {
     size_t i,j;
     unsigned mlen;
@@ -352,37 +352,35 @@ int HexMode::full_hex_edit(TWindow * txtwnd)
     char work[__TVIO_MAXSCREENWIDTH],owork[__TVIO_MAXSCREENWIDTH];
     bool redraw;
 
-    TWindow * _using = twUsedWin();
-    twUseWin(txtwnd);
-    twSetColorAttr(browser_cset.main);
+    twFocusWin(txtwnd);
+    twSetColorAttr(txtwnd,browser_cset.main);
     twFreezeWin(txtwnd);
     for(i = 0;i < height;i++) {
-	twDirectWrite(width - EditorMem.width + 1,i + 1,&EditorMem.buff[i*EditorMem.width],EditorMem.alen[i]);
+	twDirectWrite(txtwnd,width - EditorMem.width + 1,i + 1,&EditorMem.buff[i*EditorMem.width],EditorMem.alen[i]);
 	if((unsigned)EditorMem.alen[i] + 1 < EditorMem.width) {
-	    twGotoXY(width - EditorMem.width + EditorMem.alen[i] + 2,i + 1); twClrEOL();
+	    twGotoXY(txtwnd,width - EditorMem.width + EditorMem.alen[i] + 2,i + 1); twClrEOL(txtwnd);
         }
     }
     twRefreshWin(txtwnd);
-    twUseWin(_using);
 
-    twSetColorAttr(browser_cset.edit.main);
+    twSetColorAttr(hexwnd,browser_cset.edit.main);
     for(i = 0;i < height;i++) {
 	unsigned eidx;
 	eidx = i*EditorMem.width;
 	ExpandHex(work,&EditorMem.buff[eidx],EditorMem.alen[i],1);
 	mlen = ExpandHex(owork,&EditorMem.save[eidx],EditorMem.alen[i],1);
 	for(j = 0;j < mlen;j++) {
-	    twSetColorAttr(work[j] == owork[j] ? browser_cset.edit.main : browser_cset.edit.change);
-	    twDirectWrite(j + 1,i + 1,&work[j],1);
+	    twSetColorAttr(hexwnd,work[j] == owork[j] ? browser_cset.edit.main : browser_cset.edit.change);
+	    twDirectWrite(hexwnd,j + 1,i + 1,&work[j],1);
 	}
 	if(mlen + 1 < EditorMem.width) {
-	    twGotoXY(mlen + 1,i + 1);
-	    twClrEOL();
+	    twGotoXY(hexwnd,mlen + 1,i + 1);
+	    twClrEOL(hexwnd);
 	}
     }
     redraw = true;
     PaintETitle(edit_y*EditorMem.width + edit_x,0);
-    twShowWin(twUsedWin());
+    twShowWin(hexwnd);
     twSetCursorType(TW_CUR_NORM);
     while(1) {
 	unsigned eidx;
@@ -393,7 +391,7 @@ int HexMode::full_hex_edit(TWindow * txtwnd)
 	edit_x*=3;
 	flg = __ESS_WANTRETURN | __ESS_HARDEDIT | __ESS_ASHEX;
 	if(!redraw) flg |= __ESS_NOREDRAW;
-	_lastbyte = eeditstring(work,&legalchars[2],&mlen,(unsigned)(edit_y + 1),(unsigned *)&edit_x,
+	_lastbyte = eeditstring(hexwnd,work,&legalchars[2],&mlen,(unsigned)(edit_y + 1),(unsigned *)&edit_x,
 			  flg,owork,NULL);
 	edit_x/=3;
 	CompressHex(&EditorMem.buff[eidx],work,mlen/3,true);
@@ -406,13 +404,8 @@ int HexMode::full_hex_edit(TWindow * txtwnd)
 	    default     : redraw = editDefAction(_lastbyte); break;
 	}
 	CheckBounds();
-	if(redraw) {
-	    TWindow * __using = twUsedWin();
-	    twUseWin(txtwnd);
-	    twDirectWrite(width - EditorMem.width + 1,edit_y + 1,&EditorMem.buff[edit_y*EditorMem.width],mlen/3);
-	    twUseWin(__using);
-	}
-	PaintETitle(edit_y*EditorMem.width + edit_x,0);
+	if(redraw) twDirectWrite(txtwnd,width - EditorMem.width + 1,edit_y + 1,&EditorMem.buff[eidx],mlen/3);
+	PaintETitle(eidx + edit_x,0);
     }
     bye:
     twSetCursorType(TW_CUR_OFF);

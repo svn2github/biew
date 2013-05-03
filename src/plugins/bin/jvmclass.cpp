@@ -624,12 +624,13 @@ static __filesize_t __FASTCALL__ ShowJvmHeader( void )
     char sinfo[70],sinfo2[70],sinfo3[70];
     entry=BMGetCurrFilePos();
     hwnd = CrtDlgWndnls(" ClassFile Header ",78,11);
-    twUseWin(hwnd);
-    twGotoXY(1,1);
+    twFocusWin(hwnd);
+    twGotoXY(hwnd,1,1);
     decode_acc_flags(jvm_header.access_flags,sinfo);
     get_class_name(bmbioHandle(),jvm_header.this_class,sinfo2,sizeof(sinfo2));
     get_class_name(bmbioHandle(),jvm_header.super_class,sinfo3,sizeof(sinfo3));
-    twPrintF("Signature     = 'CAFEBABE'\n"
+    twPrintF(hwnd,
+	     "Signature     = 'CAFEBABE'\n"
 	     "Version       = %u.%u\n"
 	     "# Constants   = %u\n"
 	     "Access flags  = %04X (%s)\n"

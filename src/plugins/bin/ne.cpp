@@ -93,9 +93,10 @@ const char * __FASTCALL__ GetPMWinAPI(unsigned flag)
  return PMWinAPI[flag];
 }
 
-static void  PaintNewHeaderNE_1( void )
+static void  PaintNewHeaderNE_1(TWindow* w)
 {
-  twPrintF("Signature                      = '%c%c'\n"
+  twPrintF(w,
+	   "Signature                      = '%c%c'\n"
 	   "Linker Version.Revision        = %hd.%hd\n"
 	   "Offset of Entry Table          = %XH\n"
 	   "Length of Entry Table          = %hu  [ bytes ]\n"
@@ -143,9 +144,10 @@ static void  PaintNewHeaderNE_1( void )
 
 static __filesize_t entryNE;
 
-static void  PaintNewHeaderNE_2( void )
+static void  PaintNewHeaderNE_2(TWindow* w)
 {
-  twPrintF("SS : SP                        = %04hXH:%04hXH\n"
+  twPrintF(w,
+	   "SS : SP                        = %04hXH:%04hXH\n"
 	   "Segment Table Count            = %hu\n"
 	   "Module Reference Table Count   = %hu\n"
 	   "Length Non Resident Name Table = %hu\n"
@@ -188,22 +190,22 @@ static void  PaintNewHeaderNE_2( void )
     high = ne.neWindowsVersion >> 8;
     low  = ne.neWindowsVersion & 0xFF;
 	/* End of correction */
-    twSetColorAttr(dialog_cset.addinfo);
-    twPrintF("Offset of Fast Load Area       = %04hXH"
-	     ,ne.neOffsetFastLoadArea); twClrEOL();
-    twPrintF("\nLength of Fast Load Area       = %hu"
-	     ,ne.neLengthFastLoadArea); twClrEOL();
-    twPrintF("\nWindows version                = %02hu.%02hu"
-	     ,(unsigned int)high,(unsigned int)low); twClrEOL();
-    twPrintF("\n");
+    twSetColorAttr(w,dialog_cset.addinfo);
+    twPrintF(w,"Offset of Fast Load Area       = %04hXH"
+	     ,ne.neOffsetFastLoadArea); twClrEOL(w);
+    twPrintF(w,"\nLength of Fast Load Area       = %hu"
+	     ,ne.neLengthFastLoadArea); twClrEOL(w);
+    twPrintF(w,"\nWindows version                = %02hu.%02hu"
+	     ,(unsigned int)high,(unsigned int)low); twClrEOL(w);
+    twPrintF(w,"\n");
   }
-  twSetColorAttr(dialog_cset.entry);
-  twPrintF(">Entry Point   %s = %08XH",( ne.neContestEXE & 32768L ) ? "[ LibEntry ]   " : "[ EXEEntry ] ",entryNE);
-  twClrEOL();
-  twSetColorAttr(dialog_cset.main);
+  twSetColorAttr(w,dialog_cset.entry);
+  twPrintF(w,">Entry Point   %s = %08XH",( ne.neContestEXE & 32768L ) ? "[ LibEntry ]   " : "[ EXEEntry ] ",entryNE);
+  twClrEOL(w);
+  twSetColorAttr(w,dialog_cset.main);
 }
 
-static void ( * nephead[])( void ) =
+static void ( * nephead[])(TWindow* w) =
 {
   PaintNewHeaderNE_1,
   PaintNewHeaderNE_2
@@ -213,16 +215,16 @@ static void __FASTCALL__ PaintNewHeaderNE(TWindow * win,const any_t**ptr,unsigne
 {
   char text[80];
   UNUSED(ptr);
-  twUseWin(win);
+  twFocusWin(win);
   twFreezeWin(win);
-  twClearWin();
+  twClearWin(win);
   sprintf(text," New Executable Header [%d/%d] ",npage + 1,tpage);
   twSetTitleAttr(win,text,TW_TMODE_CENTER,dialog_cset.title);
   twSetFooterAttr(win,PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
   if(npage < 2)
   {
-    twGotoXY(1,1);
-    (*(nephead[npage]))();
+    twGotoXY(win,1,1);
+    (*(nephead[npage]))(win);
   }
   twRefreshFullWin(win);
 }
@@ -239,10 +241,11 @@ static __filesize_t __FASTCALL__ ShowNewHeaderNE( void )
   return pos;
 }
 
-static void  __FASTCALL__ entpaintNE(const ENTRY *nam,unsigned flags)
+static void  __FASTCALL__ entpaintNE(TWindow* w,const ENTRY *nam,unsigned flags)
 {
-  twGotoXY(1,1);
-  twPrintF("Entry Point for %s segment\n"
+  twGotoXY(w,1,1);
+  twPrintF(w,
+	   "Entry Point for %s segment\n"
 	   "Entry point is %s EXPORTED\n"
 	   "The Entry %s uses SHARED data segment\n"
 	   "Numbers of word that compose the stack %u\n"
@@ -256,10 +259,10 @@ static void  __FASTCALL__ entpaintNE(const ENTRY *nam,unsigned flags)
 	   ,((unsigned)((unsigned char)(nam->eSegNum))));
 }
 
-static void  __FASTCALL__ paintdummyentryNE( void )
+static void  __FASTCALL__ paintdummyentryNE(TWindow* w)
 {
-    twGotoXY(1,3);
-    twPrintF("   Entry point not present ( Dummy bungle )");
+    twGotoXY(w,1,3);
+    twPrintF(w,"   Entry point not present ( Dummy bungle )");
 }
 
 static void __FASTCALL__ SegPaintNE(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
@@ -267,19 +270,20 @@ static void __FASTCALL__ SegPaintNE(TWindow * win,const any_t** names,unsigned s
  char buffer[81];
  const SEGDEF ** nam = (const SEGDEF **)names;
  unsigned flags = nam[start]->sdFlags;
- twUseWin(win);
+ twFocusWin(win);
  twFreezeWin(win);
- twClearWin();
+ twClearWin(win);
  sprintf(buffer," Segment Table [ %u / %u ] ",start + 1,nlist);
  twSetTitleAttr(win,buffer,TW_TMODE_CENTER,dialog_cset.title);
  twSetFooterAttr(win,PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
- twGotoXY(1,1);
+ twGotoXY(win,1,1);
  if(nam[start]->sdOffset)
-   twPrintF("Relative offset from begining in sectors     = %04hXH\n"
+   twPrintF(win,"Relative offset from begining in sectors     = %04hXH\n"
 	    ,nam[start]->sdOffset);
  else
-   twPrintF("No data of segment in the file\n");
- twPrintF("Length of segments                           = %hu bytes\n"
+   twPrintF(win,"No data of segment in the file\n");
+ twPrintF(win,
+	  "Length of segments                           = %hu bytes\n"
 	  "Minimum allocated memory for segment         = %hu bytes\n"
 	  "Segment is :                                   %s\n"
 	  " [%c] - Loader has allocated memory for segment\n"
@@ -319,14 +323,14 @@ static void __FASTCALL__ EntPaintNE(TWindow * win,const any_t** names,unsigned s
  char buffer[81];
  const ENTRY ** nam = (const ENTRY **)names;
  unsigned flags = nam[start]->eFlags;
- twUseWin(win);
+ twFocusWin(win);
  twFreezeWin(win);
- twClearWin();
+ twClearWin(win);
  sprintf(buffer," Entry Point [ %u / %u ] ",start + 1,nlist);
  twSetTitleAttr(win,buffer,TW_TMODE_CENTER,dialog_cset.title);
  twSetFooterAttr(win,PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
- if(nam[start]->eFixed) entpaintNE(nam[start],flags);
- else paintdummyentryNE();
+ if(nam[start]->eFixed) entpaintNE(win,nam[start],flags);
+ else paintdummyentryNE(win);
  twRefreshFullWin(win);
 }
 
@@ -984,13 +988,13 @@ static void  __FASTCALL__ BuildNERefChain(__filesize_t segoff,__filesize_t sleng
   unsigned nchains,i;
   __filesize_t reloc_off;
   TWindow * w,*usd;
-  usd = twUsedWin();
+  usd = twFocusedWin();
   if(!(CurrNEChain = la_Build(0,sizeof(NERefChain),MemOutBox))) return;
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
-  twUseWin(w);
-  twGotoXY(1,1);
-  twPrintF(" Building reference chains for segment #%u",CurrChainSegment);
-  twUseWin(usd);
+  twFocusWin(w);
+  twGotoXY(w,1,1);
+  twPrintF(w," Building reference chains for segment #%u",CurrChainSegment);
+  twFocusWin(usd);
   if(!PubNames) ne_ReadPubNameList(bmbioHandle(),MemOutBox);
   reloc_off = segoff + slength;
   nchains = bmReadWordEx(reloc_off,SEEKF_START);

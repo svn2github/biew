@@ -461,7 +461,7 @@ mem_off:
   title = msgAsmText;
 
   hwnd = CrtHlpWndnls(title, 72, 21);
-  twUseWin(hwnd);
+  twFocusWin(hwnd);
   for (i = 0; i < nstrs; i++)
   {
     unsigned rlen;
@@ -481,11 +481,11 @@ mem_off:
   }
 
   delete msgAsmText;
-  twGotoXY(5, 3);
+  twGotoXY(hwnd,5, 3);
   for (i = 0; i < 10; i++)
   {
-    twSetColorAttr(disasm_cset.cpu_cset[0].clone[i]);
-    twPutS(AVRCoreNames[i]);
+    twSetColorAttr(hwnd,disasm_cset.cpu_cset[0].clone[i]);
+    twPutS(hwnd,AVRCoreNames[i]);
   }
 
   do

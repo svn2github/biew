@@ -1487,7 +1487,7 @@ static void __FASTCALL__ ppcHelpAsm( void )
  if(!(strs = hlpPointStrings(msgAsmText,size,&nstrs))) goto mem_off;
  title = msgAsmText;
  hwnd = CrtHlpWndnls(title,72,21);
- twUseWin(hwnd);
+ twFocusWin(hwnd);
  for(i = 0;i < nstrs;i++)
  {
    unsigned rlen;
@@ -1503,26 +1503,26 @@ static void __FASTCALL__ ppcHelpAsm( void )
    twWriteBuffer(hwnd,2,i+2,&it,rlen);
  }
  delete msgAsmText;
- twGotoXY(2,3);
+ twGotoXY(hwnd,2,3);
  {
-   twGotoXY(2,3);
+   twGotoXY(hwnd,2,3);
    i=0;
    {
-     twSetColorAttr(disasm_cset.engine[0].engine);
-     twPutS("PPC CPU");
-     twClrEOL();
+     twSetColorAttr(hwnd,disasm_cset.engine[0].engine);
+     twPutS(hwnd,"PPC CPU");
+     twClrEOL(hwnd);
    }
-   twGotoXY(2,4);
+   twGotoXY(hwnd,2,4);
    {
-     twSetColorAttr(disasm_cset.engine[1].engine);
-     twPutS("PPC FPU");
-     twClrEOL();
+     twSetColorAttr(hwnd,disasm_cset.engine[1].engine);
+     twPutS(hwnd,"PPC FPU");
+     twClrEOL(hwnd);
    }
-   twGotoXY(2,5);
+   twGotoXY(hwnd,2,5);
    {
-     twSetColorAttr(disasm_cset.engine[2].engine);
-     twPutS("AltiVec");
-     twClrEOL();
+     twSetColorAttr(hwnd,disasm_cset.engine[2].engine);
+     twPutS(hwnd,"AltiVec");
+     twClrEOL(hwnd);
    }
  }
  do

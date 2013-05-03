@@ -145,31 +145,31 @@ void __FASTCALL__ hlpPaintLine(TWindow *win,unsigned i,const char *name,bool is_
   rlen = strlen(name);
   rlen = hlpFillBuffer(&it,__TVIO_MAXSCREENWIDTH,name,rlen,0,NULL,is_hl);
   twWriteBuffer(win,4,i+2,&it,rlen);
-  twGotoXY(3+rlen,i+1);
-  twClrEOL();
+  twGotoXY(win,3+rlen,i+1);
+  twClrEOL(win);
 }
 
 static void  __FASTCALL__ Paint(TWindow *win,char * * names,unsigned nlist,unsigned start,unsigned height,unsigned width)
 {
  unsigned i, pos = 0;
- twUseWin(win);
+ twFocusWin(win);
  twFreezeWin(win);
  width -= 3;
  if (height>2 && height<nlist)
      pos = 1 + start*(height-2)/nlist;
- twSetColorAttr(help_cset.main);
+ twSetColorAttr(win,help_cset.main);
  for(i = 0;i < height;i++)
  {
-   twGotoXY(1,i + 1);
+   twGotoXY(win,1,i + 1);
    if (i == 0)
-       twPutChar(start ? TWC_UP_ARROW : TWC_DEF_FILLER);
+       twPutChar(win,start ? TWC_UP_ARROW : TWC_DEF_FILLER);
    else if(i == height-1)
-       twPutChar(start + height < nlist ? TWC_DN_ARROW : TWC_DEF_FILLER);
+       twPutChar(win,start + height < nlist ? TWC_DN_ARROW : TWC_DEF_FILLER);
    else if (i == pos)
-       twPutChar(TWC_THUMB);
-   else twPutChar(TWC_DEF_FILLER);
-  twGotoXY(2,i + 1);
-   twPutChar(TWC_SV);
+       twPutChar(win,TWC_THUMB);
+   else twPutChar(win,TWC_DEF_FILLER);
+  twGotoXY(win,2,i + 1);
+   twPutChar(win,TWC_SV);
    hlpPaintLine(win,i,names[i + start],0);
  }
  twRefreshWin(win);
@@ -265,7 +265,7 @@ static int  __FASTCALL__ __hlpListBox(char * * names,unsigned nlist,const char *
    }
    if(scursor >= 0)
    {
-     twSetColorAttr(menu_cset.highlight);
+     twSetColorAttr(wlist,menu_cset.highlight);
      if(scursor >= start && (unsigned)scursor < start + height) hlpPaintLine(wlist,scursor - start,names[scursor],true);
    }
  }

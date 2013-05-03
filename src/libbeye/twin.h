@@ -193,11 +193,11 @@ typedef struct tagDefColor
 }DefColor;
 
 		      /** Converts logical foreground and background into physical color attributes */
-inline ColorAttr LOGFB_TO_PHYS(Color fore,Color back) { return (((back) << 4) & 0xF0) | ((fore) & 0x0F); }
+inline ColorAttr LOGFB_TO_PHYS(Color fore,Color back) { return ((back << 4) & 0xF0) | (fore & 0x0F); }
 		      /** Gets background color from physical attributes */
-inline Color BACK_COLOR(ColorAttr attr) { return Color(((attr) >> 4) & 0x0F); }
+inline Color BACK_COLOR(ColorAttr attr) { return Color((attr >> 4) & 0x0F); }
 		      /** Gets foreground color from physical attributes */
-inline Color FORE_COLOR(ColorAttr attr) { return Color((attr) & 0x0F); }
+inline Color FORE_COLOR(ColorAttr attr) { return Color(attr & 0x0F); }
 		      /** Converts physical color attributes into logical foreground and background */
 inline void PHYS_TO_LOGFB(ColorAttr attr,Color& fore,Color& back) { fore = FORE_COLOR(attr); back = BACK_COLOR(attr); }
 
@@ -264,7 +264,7 @@ long __FASTCALL__ twinSendMessage(TWindow *win,unsigned event,unsigned long even
 		     * @param fore,back       indicate logical foreground and background attributes
 		     * @see                   twinDrawFrameAttr
 		    **/
-void __FASTCALL__ twinDrawFrame(tRelCoord x1_, tRelCoord y1_, tRelCoord x2_, tRelCoord y2_,const unsigned char *frame,Color fore, Color back);
+void __FASTCALL__ twinDrawFrame(TWindow* win,tRelCoord x1_, tRelCoord y1_, tRelCoord x2_, tRelCoord y2_,const unsigned char *frame,Color fore, Color back);
 
 		   /** Draws frame of given type in active window
 		     * @return                none
@@ -273,7 +273,7 @@ void __FASTCALL__ twinDrawFrame(tRelCoord x1_, tRelCoord y1_, tRelCoord x2_, tRe
 		     * @param attr            indicates physical color attributes
 		     * @see                   twinDrawFrame
 		    **/
-void __FASTCALL__ twinDrawFrameAttr(tRelCoord x1_, tRelCoord y1_, tRelCoord x2_, tRelCoord y2_,const unsigned char *frame,ColorAttr attr);
+void __FASTCALL__ twinDrawFrameAttr(TWindow* win,tRelCoord x1_, tRelCoord y1_, tRelCoord x2_, tRelCoord y2_,const unsigned char *frame,ColorAttr attr);
 enum {
     TWIF_FORCEMONO   =0x00000001L, /**< forces monochrome mode of video output @see twInit */
 };
@@ -292,7 +292,7 @@ void              __FASTCALL__ twInit(const char *user_cp, unsigned long vio_fla
 		     * @note              Call this function after all other
 		     * @see               twInit
 		    **/
-void              __FASTCALL__ twDestroy( void );
+void              __FASTCALL__ twDestroy();
 
 		   /** Creates window
 		     * @param x1_,y1_      indicate upper-left cornen of window
@@ -366,24 +366,24 @@ void              __FASTCALL__ twShowWinOnTop(TWindow *win);
 		    **/
 void              __FASTCALL__ twSnapShot(TWindow *win);
 
-		   /** Causes all subsequent output to appear in the given window.
+		   /** Set cursor into the given window.
 		     * @param win          handle of window to be used
 		     * @return             none
 		     * @note               \e win need not be the top window; not
 		     *                     does \e win even have to be visible on
 		     *                     the screen.
-		     * @see                twUsedWin
+		     * @see                twFocusedWin
 		    **/
-TWindow *         __FASTCALL__ twUseWin(TWindow *);
+TWindow *         __FASTCALL__ twFocusWin(TWindow *);
 
-		   /** Returns the window currently being used for output.
+		   /** Returns the window currently being under focus.
 		     * @return             handle of window currently being used
 		     * @note               If no window has been assigned by
 		     *                     twUse, then handle of last created
 		     *                     window is returned.
-		     * @see                twUseWin
+		     * @see                twFocusWin
 		    **/
-TWindow *         __FASTCALL__ twUsedWin( void );
+TWindow *         __FASTCALL__ twFocusedWin();
 
 		   /** Alters position of given window.
 		     * @param win          handle of window to be moved
@@ -602,27 +602,27 @@ bool            __FASTCALL__ twCvtScreenCoords(TWindow *win,tAbsCoord x, tAbsCoo
 		     * @return             none
 		     * @see                twClearWinEx
 		    **/
-void              __FASTCALL__ twClearWin(void);
+void              __FASTCALL__ twClearWin(TWindow* win);
 
 		   /** Clears the current window window with given filler.
 		     * @param filler       character for filling the window
 		     * @return             none
 		     * @see                twClearWin
 		    **/
-void              __FASTCALL__ twClearWinEx(unsigned char filler);
+void              __FASTCALL__ twClearWinEx(TWindow* win,unsigned char filler);
 
 		   /** Clears the current window from current position to the end of line with default filler.
 		     * @return             none
 		     * @see                twClrEOLEx
 		    **/
-void              __FASTCALL__ twClrEOL(void);
+void              __FASTCALL__ twClrEOL(TWindow* win);
 
 		   /** Clears the current window from current position to the end of line with given filler.
 		     * @param filler       character for filling the window
 		     * @return             none
 		     * @see                twClrEOL
 		    **/
-void              __FASTCALL__ twClrEOLEx(unsigned char filler);
+void              __FASTCALL__ twClrEOLEx(TWindow* win,unsigned char filler);
 
 		   /** Sets logical foreground and background colors of the text.
 		     * @param fore,back    specify colors to be set.
@@ -634,7 +634,7 @@ void              __FASTCALL__ twClrEOLEx(unsigned char filler);
 		     *                     already displayed.
 		     * @see                twSetColorAttr twGetColor twGetColorAttr twTextColor twTextBkGnd
 		    **/
-ColorAttr         __FASTCALL__ twSetColor(Color fore,Color back);
+ColorAttr         __FASTCALL__ twSetColor(TWindow* win,Color fore,Color back);
 
 		   /** Sets physical color attributes of the text.
 		     * @param attr         specifies color attributes.
@@ -646,20 +646,20 @@ ColorAttr         __FASTCALL__ twSetColor(Color fore,Color back);
 		     *                     already displayed.
 		     * @see                twSetColor twGetColor twGetColorAttr twTextColor twTextBkGnd
 		    **/
-ColorAttr         __FASTCALL__ twSetColorAttr(ColorAttr attr);
+ColorAttr         __FASTCALL__ twSetColorAttr(TWindow* win,ColorAttr attr);
 
 		   /** Returns logical foreground and background colors of the text.
 		     * @param fore,back    specify pointers to memory where will be saved logical background and foreground of the text.
 		     * @return             none
 		     * @see                twSetColorAttr twSetColor twGetColorAttr twTextColor twTextBkGnd
 		    **/
-void              __FASTCALL__ twGetColor(Color *fore, Color *back );
+void              __FASTCALL__ twGetColor(TWindow* win,Color *fore, Color *back );
 
 		   /** Returns physical color attributes of the text.
 		     * @return             physical attributes of the text
 		     * @see                twSetColorAttr twSetColor twGetColor twTextColor twTextBkGnd
 		    **/
-ColorAttr         __FASTCALL__ twGetColorAttr( void );
+ColorAttr         __FASTCALL__ twGetColorAttr(TWindow* win);
 
 		   /** Sets logical foreground color of the text.
 		     * @param col          specifies color to be set.
@@ -671,7 +671,7 @@ ColorAttr         __FASTCALL__ twGetColorAttr( void );
 		     *                     displayed.
 		     * @see                twSetColorAttr twSetColor twGetColor twTextBkGnd
 		    **/
-Color             __FASTCALL__ twTextColor( Color col );
+Color             __FASTCALL__ twTextColor(TWindow*  win, Color col );
 
 		   /** Sets logical background color of the text.
 		     * @param col          specifies color to be set.
@@ -683,7 +683,7 @@ Color             __FASTCALL__ twTextColor( Color col );
 		     *                     displayed.
 		     * @see                twSetColorAttr twSetColor twGetColor twTextColor
 		    **/
-Color             __FASTCALL__ twTextBkGnd( Color col );
+Color             __FASTCALL__ twTextBkGnd(TWindow* win, Color col );
 
 		   /** Returns frame and frame attributes of given window.
 		     * @param win          handle of window.
@@ -852,7 +852,7 @@ void              __FASTCALL__ twSetCursorType(int type);
 		     *                    to the OS.
 		     * @see               twSetCursorType
 		    **/
-int               __FASTCALL__ twGetCursorType( void );
+int               __FASTCALL__ twGetCursorType();
 
 		   /** Sets the cursor coordiantes relative to the used window
 		     * @param x,y         specify horizontal and vertical coordinates for the location
@@ -861,7 +861,7 @@ int               __FASTCALL__ twGetCursorType( void );
 		     *                    they will be clipped.
 		     * @see               twWhereX twWhereY
 		    **/
-void              __FASTCALL__ twGotoXY(tRelCoord x,tRelCoord y);
+void              __FASTCALL__ twGotoXY(TWindow* win,tRelCoord x,tRelCoord y);
 
 		   /** Returns the x coordinate of the current cursor position, within currently used window.
 		     * @return            none
@@ -869,7 +869,7 @@ void              __FASTCALL__ twGotoXY(tRelCoord x,tRelCoord y);
 		     *                    they will be clipped.
 		     * @see               twWhereX twWhereY
 		    **/
-tRelCoord         __FASTCALL__ twWhereX( void );
+tRelCoord         __FASTCALL__ twWhereX( TWindow* win );
 
 		   /** Returns the y coordinate of the current cursor position, within currently used window.
 		     * @return            none
@@ -877,21 +877,21 @@ tRelCoord         __FASTCALL__ twWhereX( void );
 		     *                    they will be clipped.
 		     * @see               twWhereX twWhereY
 		    **/
-tRelCoord         __FASTCALL__ twWhereY( void );
+tRelCoord         __FASTCALL__ twWhereY( TWindow* win );
 
 		   /** Outputs the character to the active window at current cursor position.
 		     * @param ch          character to be written
 		     * @return            none
 		     * @see               twGetChar twPutS twPrintF twDirectWrite twWriteBuffer
 		    **/
-void              __FASTCALL__ twPutChar(char ch);
+void              __FASTCALL__ twPutChar(TWindow* win,char ch);
 
 		   /** Reads the character from the active window at current cursor position.
 		     * @return            character read
 		     * @note              there is no error return value.
 		     * @see               twPutChar twPutS twPrintF twDirectWrite twWriteBuffer twReadBuffer
 		    **/
-char              __FASTCALL__ twGetChar( void );
+char              __FASTCALL__ twGetChar(TWindow* win);
 
 		   /** Writes the null-terminated string to the active window at current cursor position.
 		     * @param str         null-terminated string to be written
@@ -909,7 +909,7 @@ char              __FASTCALL__ twGetChar( void );
 		     *                    it will be clipped.
 		     * @see               twGetChar twPutChar twPrintF twDirectWrite twWriteBuffer
 		    **/
-int               __FASTCALL__ twPutS(const char *str);
+int               __FASTCALL__ twPutS(TWindow* win,const char *str);
 
 		   /** Writes buffer directly to the active window at specified location.
 		     * @param x,y         specify location of output
@@ -923,7 +923,7 @@ int               __FASTCALL__ twPutS(const char *str);
 		     *                    it will be clipped.
 		     * @see               twGetChar twPutChar twPrintF twPutS twWriteBuffer
 		    **/
-int               __FASTCALL__ twDirectWrite(tRelCoord x,tRelCoord y,const any_t*buff,unsigned len);
+int               __FASTCALL__ twDirectWrite(TWindow* win,tRelCoord x,tRelCoord y,const any_t*buff,unsigned len);
 
 		   /** Provides formatted output directly to the active window at current cursor position.
 		     * @param fmt         specifies formatted string
@@ -939,7 +939,7 @@ int               __FASTCALL__ twDirectWrite(tRelCoord x,tRelCoord y,const any_t
 		     *                    screen. I.e. greated than tvioWidth*tvioHeight
 		     * @see               twGetChar twPutChar twDirectWrite twPutS twWriteBuffer
 		    **/
-int               __FASTCALL__ twPrintF(const char *fmt,...);
+int               __FASTCALL__ twPrintF(TWindow* win,const char *fmt,...);
 
 		   /** Accesses to the active window directly, writing a single line.
 		     * @param win         handle of window

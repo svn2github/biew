@@ -103,7 +103,7 @@ static void __FASTCALL__ armHelpAsm( void )
  if(!(strs = hlpPointStrings(msgAsmText,size,&nstrs))) goto mem_off;
  title = msgAsmText;
  hwnd = CrtHlpWndnls(title,72,21);
- twUseWin(hwnd);
+ twFocusWin(hwnd);
  for(i = 0;i < nstrs;i++)
  {
    unsigned rlen;
@@ -119,26 +119,26 @@ static void __FASTCALL__ armHelpAsm( void )
    twWriteBuffer(hwnd,2,i+2,&it,rlen);
  }
  delete msgAsmText;
- twGotoXY(2,3);
+ twGotoXY(hwnd,2,3);
  {
-   twGotoXY(2,3);
+   twGotoXY(hwnd,2,3);
    i=0;
    {
-     twSetColorAttr(disasm_cset.engine[0].engine);
-     twPutS("ARM CPU");
-     twClrEOL();
+     twSetColorAttr(hwnd,disasm_cset.engine[0].engine);
+     twPutS(hwnd,"ARM CPU");
+     twClrEOL(hwnd);
    }
-   twGotoXY(2,4);
+   twGotoXY(hwnd,2,4);
    {
-     twSetColorAttr(disasm_cset.engine[1].engine);
-     twPutS("VFP extension");
-     twClrEOL();
+     twSetColorAttr(hwnd,disasm_cset.engine[1].engine);
+     twPutS(hwnd,"VFP extension");
+     twClrEOL(hwnd);
    }
-   twGotoXY(2,5);
+   twGotoXY(hwnd,2,5);
    {
-     twSetColorAttr(disasm_cset.engine[2].engine);
-     twPutS("XScale extensions");
-     twClrEOL();
+     twSetColorAttr(hwnd,disasm_cset.engine[2].engine);
+     twPutS(hwnd,"XScale extensions");
+     twClrEOL(hwnd);
    }
  }
  do

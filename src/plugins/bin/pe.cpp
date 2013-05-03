@@ -184,13 +184,14 @@ static const char *  __FASTCALL__ PECPUType(void)
 static __filesize_t entryPE = 0L;
 static __fileoff_t overlayPE = -1L;
 
-static void  PaintNewHeaderPE_1( void )
+static void  PaintNewHeaderPE_1(TWindow* w)
 {
   const char *fmt;
   time_t tval;
   entryPE = RVA2Phys(pe.peEntryPointRVA);
   tval = pe.peTimeDataStamp;
-  twPrintF("Signature                      = '%c%c' (Type: %04X)\n"
+  twPrintF(w,
+	   "Signature                      = '%c%c' (Type: %04X)\n"
 	   "Required CPU Type              = %s\n"
 	   "Number of object entries       = %hu\n"
 	   "Time/Data Stamp                = %s"
@@ -226,21 +227,21 @@ static void  PaintNewHeaderPE_1( void )
 	   ,Gebool(pe.peFlags & 0x1000)
 	   ,Gebool(pe.peFlags & 0x2000)
 	   ,(int)pe.peLMajor,(int)pe.peLMinor);
-  twSetColorAttr(dialog_cset.entry);
-  twPrintF("EntryPoint RVA    %s = %08lXH (Offset: %08lXH)",pe.peFlags & 0x2000 ? "[ LibEntry ]" : "[ EXEEntry ]",pe.peEntryPointRVA,entryPE); twClrEOL();
-  twSetColorAttr(dialog_cset.main);
+  twSetColorAttr(w,dialog_cset.entry);
+  twPrintF(w,"EntryPoint RVA    %s = %08lXH (Offset: %08lXH)",pe.peFlags & 0x2000 ? "[ LibEntry ]" : "[ EXEEntry ]",pe.peEntryPointRVA,entryPE); twClrEOL(w);
+  twSetColorAttr(w,dialog_cset.main);
   if(is_64bit)
     fmt = "\nImage base                   = %016llXH\n"
 	  "Object aligning                = %08lXH";
   else
     fmt = "\nImage base                   = %08lXH\n"
 	  "Object aligning                = %08lXH";
-  twPrintF(fmt
+  twPrintF(w,fmt
 	   ,PE32_HDR(pe32,peImageBase)
 	   ,PE32_HDR(pe32,peObjectAlign));
 }
 
-static void  PaintNewHeaderPE_2( void )
+static void  PaintNewHeaderPE_2(TWindow* w)
 {
   const char *fmt;
   static const char * subSystem[] =
@@ -262,7 +263,7 @@ static void  PaintNewHeaderPE_2( void )
     "X-Box",
   };
 
-  twPrintF(
+  twPrintF(w,
 	   "Size of Text                   = %08lXH\n"
 	   "Size of Data                   = %08lXH\n"
 	   "Size of BSS                    = %08lXH\n"
@@ -305,20 +306,20 @@ static void  PaintNewHeaderPE_2( void )
 	   "Stack commit size              = %lu bytes\n"
 	   "Heap reserve size              = %lu bytes\n"
 	   "Heap commit size               = %lu bytes";
-   twPrintF(fmt
+   twPrintF(w,fmt
 	   ,PE32_HDR(pe32,peStackReserveSize)
 	   ,PE32_HDR(pe32,peStackCommitSize)
 	   ,PE32_HDR(pe32,peHeapReserveSize)
 	   ,PE32_HDR(pe32,peHeapCommitSize));
   if (CalcOverlayOffset() != -1) {
     entryPE = overlayPE;
-    twSetColorAttr(dialog_cset.entry);
-    twPrintF("\nOverlay                        = %08lXH", entryPE); twClrEOL();
-    twSetColorAttr(dialog_cset.main);
+    twSetColorAttr(w,dialog_cset.entry);
+    twPrintF(w,"\nOverlay                        = %08lXH", entryPE); twClrEOL(w);
+    twSetColorAttr(w,dialog_cset.main);
   }
 }
 
-static void ( * const pephead[])(void) = /* [dBorca] the table is const, not the any_t*/
+static void ( * const pephead[])(TWindow*) = /* [dBorca] the table is const, not the any_t*/
 {
     PaintNewHeaderPE_1,
     PaintNewHeaderPE_2
@@ -328,16 +329,16 @@ static void __FASTCALL__ PaintNewHeaderPE(TWindow * win,const any_t**ptr,unsigne
 {
   char text[80];
   UNUSED(ptr);
-  twUseWin(win);
+  twFocusWin(win);
   twFreezeWin(win);
-  twClearWin();
+  twClearWin(win);
   sprintf(text," Portable Executable Header [%d/%d] ",npage + 1,tpage);
   twSetTitleAttr(win,text,TW_TMODE_CENTER,dialog_cset.title);
   twSetFooterAttr(win,PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
   if(npage < 2)
   {
-    twGotoXY(1,1);
-    (*(pephead[npage]))();
+    twGotoXY(win,1,1);
+    (*(pephead[npage]))(win);
   }
   twRefreshFullWin(win);
 }
@@ -355,18 +356,19 @@ static void __FASTCALL__ ObjPaintPE(TWindow * win,const any_t** names,unsigned s
  char buffer[81];
  const PE_OBJECT ** nam = (const PE_OBJECT **)names;
  const PE_OBJECT *  objs = nam[start];
- twUseWin(win);
+ twFocusWin(win);
  twFreezeWin(win);
- twClearWin();
+ twClearWin(win);
  sprintf(buffer," Object Table [ %u / %u ] ",start + 1,nlist);
  twSetTitleAttr(win,buffer,TW_TMODE_CENTER,dialog_cset.title);
  twSetFooterAttr(win,PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
- twGotoXY(1,1);
+ twGotoXY(win,1,1);
 
  memcpy(buffer, objs->oName, 8);
  buffer[8] = 0;
 
- twPrintF("Object Name                    = %8s\n"
+ twPrintF(win,
+	  "Object Name                    = %8s\n"
 	  "Virtual Size                   = %lX bytes\n"
 	  "RVA (relative virtual address) = %08lX\n"
 	  "Physical size                  = %08lX bytes\n"
@@ -852,14 +854,14 @@ static void  __FASTCALL__ BuildPERefChain( void )
   ImportDirPE ipe;
   unsigned nnames;
   TWindow *w,*usd;
-  usd = twUsedWin();
+  usd = twFocusedWin();
   if(!(CurrPEChain = la_Build(0,sizeof(RELOC_PE),MemOutBox))) return;
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
   if(!PubNames) pe_ReadPubNameList(bmbioHandle(),MemOutBox);
-  twUseWin(w);
-  twGotoXY(1,1);
-  twPutS(BUILD_REFS);
-  twUseWin(usd);
+  twFocusWin(w);
+  twGotoXY(w,1,1);
+  twPutS(w,BUILD_REFS);
+  twFocusWin(usd);
   BFile& handle = *pe_cache;
   handle.seek(0L,SEEK_SET);
   /**

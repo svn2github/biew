@@ -42,7 +42,7 @@ namespace beye {
     bool  __FASTCALL__ edit_defaction(int _lastbyte);
     void   __FASTCALL__ editSaveContest( void );
     bool  __FASTCALL__ editDefAction(int _lastbyte);
-    int    __FASTCALL__ FullEdit(TWindow * txtwnd,Opaque& _this,void (*save)(Opaque& _this,unsigned char *,unsigned));
+    int    __FASTCALL__ FullEdit(TWindow * ewnd,TWindow* hexwnd,Opaque& _this,void (*save)(Opaque& _this,unsigned char *,unsigned));
     bool  __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size);
     void   __FASTCALL__ editDestroyBuffs( void );
 } // namespace beye

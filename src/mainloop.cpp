@@ -105,10 +105,10 @@ static void  __FASTCALL__ drawTitle( void )
   flen = BMGetFLength();
   percent = flen ? (unsigned)(( lastbyte*100 )/flen) : 100;
   if(percent > 100) percent = 100;
-  twUseWin(TitleWnd);
-  twGotoXY(twGetClientWidth(TitleWnd)-4,1);
-  twPrintF("%u%%",percent);
-  twClrEOL();
+  twFocusWin(TitleWnd);
+  twGotoXY(TitleWnd,twGetClientWidth(TitleWnd)-4,1);
+  twPrintF(TitleWnd,"%u%%",percent);
+  twClrEOL(TitleWnd);
 }
 
 const char legalchars[] = "+-0123456789ABCDEFabcdef";
@@ -119,8 +119,8 @@ void BeyeContext::main_loop()
     __filesize_t savep = 0,cfp,nfp,flen;
     unsigned long lwidth;
     BMSeek(LastOffset,BFile::Seek_Set);
+    twFocusWin(MainWnd);
     drawPrompt();
-    twUseWin(MainWnd);
     textshift = activeMode->paint(KE_SUPERKEY,textshift);
     BMSeek(LastOffset,BFile::Seek_Set);
     drawTitle();
@@ -311,7 +311,7 @@ void BeyeContext::main_loop()
 	    BMSeek(nfp,BFile::Seek_Set);
 	}
 	DRAW:
-	twUseWin(MainWnd);
+	twFocusWin(MainWnd);
 	if((activeMode->flags() & Plugin::Text) != Plugin::Text) savep = BMGetCurrFilePos();
 	textshift = activeMode->paint(ch,textshift);
 	if((activeMode->flags() & Plugin::Text) != Plugin::Text) BMSeek(savep,BFile::Seek_Set);

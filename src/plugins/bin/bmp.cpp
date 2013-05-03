@@ -55,9 +55,10 @@ static __filesize_t __FASTCALL__ Show_BMP_Header( void )
  bmSeek(2,BFile::Seek_Cur);
  bmReadBuffer(&bmph,sizeof(BITMAPINFOHEADER));
  hwnd = CrtDlgWndnls(" BMP File Header ",43,6);
- twUseWin(hwnd);
- twGotoXY(1,1);
- twPrintF("WxH                  = %lux%lu\n"
+ twFocusWin(hwnd);
+ twGotoXY(hwnd,1,1);
+ twPrintF(hwnd,
+	  "WxH                  = %lux%lu\n"
 	  "PlanesxBitCount      = %ux%u\n"
 	  "Compression          = %c%c%c%c\n"
 	  "ImageSize            = %lu\n"

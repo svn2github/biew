@@ -114,14 +114,15 @@ static void __FASTCALL__ coffObjPaint(TWindow * win,const any_t** names,unsigned
  char buffer[81];
  const SCNHDR ** obj = (const SCNHDR **)names;
  const SCNHDR *  objs = obj[start];
- twUseWin(win);
+ twFocusWin(win);
  twFreezeWin(win);
- twClearWin();
+ twClearWin(win);
  sprintf(buffer," Object Table [ %u / %u ] ",start + 1,nlist);
  twSetTitleAttr(win,buffer,TW_TMODE_CENTER,dialog_cset.title);
  twSetFooterAttr(win,PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
- twGotoXY(1,1);
- twPrintF("Object Name                    = %8s\n"
+ twGotoXY(win,1,1);
+ twPrintF(win,
+	  "Object Name                    = %8s\n"
 	  "Physical address               = %08lXH\n"
 	  "Virtual address                = %08lXH\n"
 	  "Section size                   = %08lXH\n"
@@ -213,8 +214,9 @@ static __filesize_t __FASTCALL__ ShowCoff386Header( void )
     entry = coff386_VA2PA(v_entry);
   }
   w = CrtDlgWndnls(coff386_encode_hdr(COFF_WORD(coff386hdr.f_magic)),54,12);
-  twGotoXY(1,1);
-  twPrintF("Number of sections          = %04XH\n"
+  twGotoXY(w,1,1);
+  twPrintF(w,
+	   "Number of sections          = %04XH\n"
 	   "Time & date stamp           = %08lXH\n"
 	   "File pointer to symtab      = %08lXH\n"
 	   "Number of symtab entries    = %08lXH\n"
@@ -236,11 +238,11 @@ static __filesize_t __FASTCALL__ ShowCoff386Header( void )
 	   ,Gebool((COFF_WORD(coff386hdr.f_flags) & F_LNNO) == F_LNNO)
 	   ,Gebool((COFF_WORD(coff386hdr.f_flags) & F_LSYMS) == F_LSYMS)
 	   ,Gebool((COFF_WORD(coff386hdr.f_flags) & F_AR32WR) == F_AR32WR));
-  twSetColorAttr(dialog_cset.entry);
-  twPrintF("Entry point                 = %08lXH (VA=%08lXH)"
+  twSetColorAttr(w,dialog_cset.entry);
+  twPrintF(w,"Entry point                 = %08lXH (VA=%08lXH)"
 	   ,entry,v_entry);
-  twClrEOL();
-  twSetColorAttr(dialog_cset.main);
+  twClrEOL(w);
+  twSetColorAttr(w,dialog_cset.main);
   while(1)
   {
     keycode = GetEvent(drawEmptyPrompt,NULL,w);
@@ -423,14 +425,14 @@ static void  __FASTCALL__ BuildRelocCoff386( void )
   TWindow * w,*usd;
   size_t j,segcount, nr;
   RELOC_COFF386 rel;
-  usd = twUsedWin();
+  usd = twFocusedWin();
   if(!(RelocCoff386 = la_Build(0,sizeof(RELOC_COFF386),MemOutBox))) return;
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
   if(!PubNames) coff_ReadPubNameList(bmbioHandle(),MemOutBox);
-  twUseWin(w);
-  twGotoXY(1,1);
-  twPutS(BUILD_REFS);
-  twUseWin(usd);
+  twFocusWin(w);
+  twGotoXY(w,1,1);
+  twPutS(w,BUILD_REFS);
+  twFocusWin(usd);
   for(segcount = 0;segcount < COFF_WORD(coff386hdr.f_nscns);segcount++)
   {
     bool is_eof;

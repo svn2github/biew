@@ -85,8 +85,8 @@ static __filesize_t __FASTCALL__ ShowAOutHeader( void )
   bmReadBufferEx(&aout,sizeof(struct external_exec),0,SEEKF_START);
   uint32_t* p_info = (uint32_t*)&aout.e_info;
   w = CrtDlgWndnls(aout_encode_hdr(*p_info),54,7);
-  twGotoXY(1,1);
-  twPrintF("Flags & CPU                 = %02XH %s(%s)\n"
+  twGotoXY(w,1,1);
+  twPrintF(w,"Flags & CPU                 = %02XH %s(%s)\n"
 	   "Length of text section      = %08lXH\n"
 	   "Length of data section      = %08lXH\n"
 	   "Length of bss area          = %08lXH\n"
@@ -96,12 +96,12 @@ static __filesize_t __FASTCALL__ ShowAOutHeader( void )
 	   ,AOUT_WORD((uint32_t *)&aout.e_data)
 	   ,AOUT_WORD((uint32_t *)&aout.e_bss)
 	   ,AOUT_WORD((uint32_t *)&aout.e_syms));
-  twSetColorAttr(dialog_cset.entry);
-  twPrintF("Start address               = %08lXH"
+  twSetColorAttr(w,dialog_cset.entry);
+  twPrintF(w,"Start address               = %08lXH"
 	   ,AOUT_WORD((uint32_t *)&aout.e_entry));
-  twClrEOL(); twPrintF("\n");
-  twSetColorAttr(dialog_cset.main);
-  twPrintF("Length of text relocation   = %08lXH\n"
+  twClrEOL(w); twPrintF(w,"\n");
+  twSetColorAttr(w,dialog_cset.main);
+  twPrintF(w,"Length of text relocation   = %08lXH\n"
 	   "Length of data relocation   = %08lXH"
 	   ,AOUT_WORD((uint32_t *)&aout.e_trsize)
 	   ,AOUT_WORD((uint32_t *)&aout.e_drsize));

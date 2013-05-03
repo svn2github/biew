@@ -228,9 +228,10 @@ static __filesize_t __FASTCALL__ Show_WAV_Header( void )
  fpos2 = wav_find_chunk(12,mmioFOURCC('d','a','t','a'));
  if((__fileoff_t)fpos2!=-1) fpos2-=4;
  hwnd = CrtDlgWndnls(" WAV File Header ",43,5);
- twUseWin(hwnd);
- twGotoXY(1,1);
- twPrintF("FormatTag            = 0x%04X (%s)\n"
+ twFocusWin(hwnd);
+ twGotoXY(hwnd,1,1);
+ twPrintF(hwnd,
+	  "FormatTag            = 0x%04X (%s)\n"
 	  "ChannelsxSampleSecs  = %ux%u\n"
 	  "AvgBytesSecs         = %lu\n"
 	  "BlockAlign           = %u\n"

@@ -405,41 +405,41 @@ int __FASTCALL__ ExpandHex(char * dest,const unsigned char * src,int size,char h
 static void  __FASTCALL__ SearchPaint(TWindow *wdlg,int flags,
 					      unsigned sf_flags)
 {
- TWindow *_using = twUsedWin();
- twUseWin(wdlg);
- twSetColorAttr(dialog_cset.group.active);
- if(sf_flags & SF_ASHEX) twSetColorAttr(dialog_cset.group.disabled);
- else twSetColorAttr(dialog_cset.group.active);
- twGotoXY(4,4); twPutChar(Gebool(sf_flags & SF_CASESENS));
- twSetColorAttr(dialog_cset.group.active);
- twGotoXY(4,5); twPutChar(Gebool(sf_flags & SF_WORDONLY));
- twGotoXY(4,6); twPutChar(Gebool(sf_flags & SF_REVERSE));
- twGotoXY(46,4); twPutChar(Gebool(sf_flags & SF_ASHEX));
- twSetColorAttr((!(flags & SD_ALLFEATURES) || sf_flags & SF_ASHEX)?dialog_cset.group.disabled:dialog_cset.group.active);
- twGotoXY(46,5); twPutChar(Gebool(sf_flags & SF_WILDCARDS));
- twSetColorAttr(!((flags & SD_ALLFEATURES) && (beye_context().active_mode().flags()&Plugin::Has_SearchEngine))?dialog_cset.group.disabled:dialog_cset.group.active);
- twGotoXY(46,6); twPutChar(Gebool(sf_flags & SF_PLUGINS));
- twSetColorAttr(dialog_cset.main);
- twUseWin(_using);
+ TWindow *_using = twFocusedWin();
+ twFocusWin(wdlg);
+ twSetColorAttr(wdlg,dialog_cset.group.active);
+ if(sf_flags & SF_ASHEX) twSetColorAttr(wdlg,dialog_cset.group.disabled);
+ else twSetColorAttr(wdlg,dialog_cset.group.active);
+ twGotoXY(wdlg,4,4); twPutChar(wdlg,Gebool(sf_flags & SF_CASESENS));
+ twSetColorAttr(wdlg,dialog_cset.group.active);
+ twGotoXY(wdlg,4,5); twPutChar(wdlg,Gebool(sf_flags & SF_WORDONLY));
+ twGotoXY(wdlg,4,6); twPutChar(wdlg,Gebool(sf_flags & SF_REVERSE));
+ twGotoXY(wdlg,46,4); twPutChar(wdlg,Gebool(sf_flags & SF_ASHEX));
+ twSetColorAttr(wdlg,(!(flags & SD_ALLFEATURES) || sf_flags & SF_ASHEX)?dialog_cset.group.disabled:dialog_cset.group.active);
+ twGotoXY(wdlg,46,5); twPutChar(wdlg,Gebool(sf_flags & SF_WILDCARDS));
+ twSetColorAttr(wdlg,!((flags & SD_ALLFEATURES) && (beye_context().active_mode().flags()&Plugin::Has_SearchEngine))?dialog_cset.group.disabled:dialog_cset.group.active);
+ twGotoXY(wdlg,46,6); twPutChar(wdlg,Gebool(sf_flags & SF_PLUGINS));
+ twSetColorAttr(wdlg,dialog_cset.main);
+ twFocusWin(_using);
 }
 
 static void  __FASTCALL__ SearchUpdate(TWindow *wdlg,int _flags,
 					      unsigned sf_flags)
 {
- TWindow *_using = twUsedWin();
- twUseWin(wdlg);
- twSetColorAttr((sf_flags & SF_ASHEX)?dialog_cset.group.disabled:dialog_cset.group.active);
- twGotoXY(2,4); twPutS(msgFindOpt[0]);
- twSetColorAttr(dialog_cset.group.active);
- twGotoXY(2,5); twPutS(msgFindOpt[1]);
- twGotoXY(2,6); twPutS(msgFindOpt[2]);
- twGotoXY(44,4); twPutS(msgFindOpt2[0]);
- twSetColorAttr((!(_flags & SD_ALLFEATURES) || sf_flags & SF_ASHEX)?dialog_cset.group.disabled:dialog_cset.group.active);
- twGotoXY(44,5); twPutS(msgFindOpt2[1]);
- twSetColorAttr(!((_flags & SD_ALLFEATURES) && (beye_context().active_mode().flags() & Plugin::Has_SearchEngine))?dialog_cset.group.disabled:dialog_cset.group.active);
- twGotoXY(44,6); twPutS(msgFindOpt2[2]);
- twSetColorAttr(dialog_cset.main);
- twUseWin(_using);
+ TWindow *_using = twFocusedWin();
+ twFocusWin(wdlg);
+ twSetColorAttr(wdlg,(sf_flags & SF_ASHEX)?dialog_cset.group.disabled:dialog_cset.group.active);
+ twGotoXY(wdlg,2,4); twPutS(wdlg,msgFindOpt[0]);
+ twSetColorAttr(wdlg,dialog_cset.group.active);
+ twGotoXY(wdlg,2,5); twPutS(wdlg,msgFindOpt[1]);
+ twGotoXY(wdlg,2,6); twPutS(wdlg,msgFindOpt[2]);
+ twGotoXY(wdlg,44,4); twPutS(wdlg,msgFindOpt2[0]);
+ twSetColorAttr(wdlg,(!(_flags & SD_ALLFEATURES) || sf_flags & SF_ASHEX)?dialog_cset.group.disabled:dialog_cset.group.active);
+ twGotoXY(wdlg,44,5); twPutS(wdlg,msgFindOpt2[1]);
+ twSetColorAttr(wdlg,!((_flags & SD_ALLFEATURES) && (beye_context().active_mode().flags() & Plugin::Has_SearchEngine))?dialog_cset.group.disabled:dialog_cset.group.active);
+ twGotoXY(wdlg,44,6); twPutS(wdlg,msgFindOpt2[2]);
+ twSetColorAttr(wdlg,dialog_cset.main);
+ twFocusWin(_using);
 }
 
 static const char * searchtxt[] =
@@ -487,11 +487,11 @@ bool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
   X2 = X1+75;
   Y2 = Y1;
   ewnd = CreateEditor(X1,Y1,X2,Y2,TWS_CURSORABLE | TWS_VISIBLE);
-  twUseWin(hwnd);
-  twinDrawFrameAttr(1,3,78,7,TW_DN3D_FRAME,dialog_cset.main);
-  twinDrawFrameAttr(37,4,42,6,TW_UP3D_FRAME,dialog_cset.main);
-  twGotoXY(38,5); twPutS("BASE");
-  twGotoXY(2,1);  twPutS(TYPE_STR);
+  twFocusWin(hwnd);
+  twinDrawFrameAttr(hwnd,1,3,78,7,TW_DN3D_FRAME,dialog_cset.main);
+  twinDrawFrameAttr(hwnd,37,4,42,6,TW_UP3D_FRAME,dialog_cset.main);
+  twGotoXY(hwnd,38,5); twPutS(hwnd,"BASE");
+  twGotoXY(hwnd,2,1);  twPutS(hwnd,TYPE_STR);
   SearchUpdate(hwnd,_flags,*sf_flags);
   legal[0] = NULL;
   legal[1] = &legalchars[2];
@@ -514,8 +514,8 @@ bool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
     active = *sf_flags & SF_ASHEX ? 1 : 0;
     flags = attr[active];
     if(!update) flags |= __ESS_NOREDRAW;
-    twUseWin(ewnd);
-    ch = eeditstring(ebuff[active],legal[active],&mlen[active],
+    twFocusWin(ewnd);
+    ch = eeditstring(ewnd,ebuff[active],legal[active],&mlen[active],
 		     active ? (*searchlen)*3 : *searchlen,
 		     &x[active],flags,NULL, drawSearchPrompt);
     update = 1;
@@ -553,7 +553,7 @@ bool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
        default : break;
     }
     if(rret != 2) break;
-    twUseWin(hwnd);
+    twFocusWin(hwnd);
     if(!active) { *searchlen = mlen[0]; memcpy(searchbuff,ebuff[0],mlen[0]); }
     else  { *searchlen = mlen[1] / 3; CompressHex((unsigned char *)searchbuff,ebuff[1],*searchlen,true); }
     if(searchlen) memcpy(ebuff[0],searchbuff,*searchlen);
