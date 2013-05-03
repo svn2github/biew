@@ -130,13 +130,14 @@ namespace beye {
 
 			 /** Converts virtual address to physical (means file offset).
 			   * @param va       indicates virtual address to be converted
-			   * @return         0 if operation meaningless
+			   * @return         Bad_Address if operation is meaningless
 			  **/
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 
 			 /** Converts physical address to virtual.
 			   * @param pa       indicates physical address to be converted
 			   * @note           seg pointer can be NULL
+			   * @return         Bad_Address if operation is meaningless
 			  **/
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 
@@ -164,7 +165,7 @@ namespace beye {
 			   * @param end       pointer to the memory where must be stored end of given object, as file offset.
 			   * @param _class    pointer to the memory where must be stored _class of object (See OC_* constants).
 			   * @param bitness   pointer to the memory where must be stored bitness of object (See DAB_* constants).
-			   * @return          logical number of object or 0 if at given offset is no object.
+			   * @return          logical number of object or Bad_Address if at given offset is no object.
 			   * @note            all arguments exclude name of object
 			   *                  must be filled.
 			   * @remark          For example: if exe-format - new

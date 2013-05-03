@@ -112,7 +112,7 @@ class BFile : public Opaque {
 		     *                        memory entire.
 		     * @see                   bioClose
 		    **/
-	bool	open(const std::string& fname,unsigned openmode,unsigned buffSize,unsigned optimization);
+	virtual bool	open(const std::string& fname,unsigned openmode,unsigned buffSize,unsigned optimization);
 
 		   /** Changes size of opened file.
 		     * @return                true if operation was succesfully performed
@@ -121,23 +121,23 @@ class BFile : public Opaque {
 		     *                        the new end of file to the original
 		     *                        end of the file are lost.
 		    **/
-	bool	chsize(__filesize_t newsize);
+	virtual bool	chsize(__filesize_t newsize);
 
 		   /** Closes opened stream.
 		     * @return                true if operation was succesfully performed
 		     * @see                   bioOpen
 		    **/
-	bool	close();
+	virtual bool	close();
 
 		   /** Determines whether a opened stream has reached the End of File.
 		     * @return                true if EOF has reached
 		    **/
-	bool	eof() const;
+	virtual bool	eof() const;
 
 		   /** Returns the length (in bytes) of file associated with opened stream.
 		     * @return                file length
 		    **/
-	__filesize_t flength() const;
+	virtual __filesize_t flength() const;
 
 		   /** Flushes buffer onto disk.
 		     * @return                true if operation was succesfully performed
@@ -148,7 +148,7 @@ class BFile : public Opaque {
 		     *                        file position is out of buffer.
 		     * @see                   bioReRead
 		    **/
-	bool	flush();
+	virtual bool	flush();
 
 		   /** Reads one byte from stream.
 		     * @return                Readed byte
@@ -156,7 +156,7 @@ class BFile : public Opaque {
 		     *                        incremented after operation.
 		     * @see                   bioWriteByte bioReadWord bioReadDWord bioReadBuffer
 		    **/
-	uint8_t	read_byte();
+	virtual uint8_t	read_byte();
 
 		   /** Reads two bytes from stream.
 		     * @return                Readed word
@@ -164,7 +164,7 @@ class BFile : public Opaque {
 		     *                        incremented after operation.
 		     * @see                   bioWriteWord bioReadByte bioReadDWord bioReadBuffer
 		    **/
-	uint16_t read_word();
+	virtual uint16_t read_word();
 
 		   /** Reads four bytes from stream.
 		     * @return                Readed double word
@@ -172,7 +172,7 @@ class BFile : public Opaque {
 		     *                        incremented after operation.
 		     * @see                   bioWriteDWord bioReadByte bioReadWord bioReadBuffer
 		    **/
-	uint32_t read_dword();
+	virtual uint32_t read_dword();
 
 		   /** Reads 8 bytes from stream.
 		     * @return                Readed double word
@@ -180,7 +180,7 @@ class BFile : public Opaque {
 		     *                        incremented after operation.
 		     * @see                   bioWriteDWord bioReadByte bioReadWord bioReadBuffer
 		    **/
-	uint64_t read_qword();
+	virtual uint64_t read_qword();
 
 		   /** Reads specified number of bytes from stream.
 		     * @return                true if operation was succesfully performed
@@ -190,13 +190,13 @@ class BFile : public Opaque {
 		     *                        position by the number of bytes read.
 		     * @see                   bioWriteBuffer bioReadByte bioReadWord bioReadByte
 		    **/
-	bool	read_buffer(any_t* buffer,unsigned cbBuffer);
+	virtual bool	read_buffer(any_t* buffer,unsigned cbBuffer);
 
 		   /** Rereads opened file from disk.
 		     * @return                true if operation was succesfully performed
 		     * @see                   bioFlush
 		    **/
-	bool	reread();
+	virtual bool	reread();
 
 		   /** Positions logical file pointer at the specified position.
 		     * @return                true if operation was succesfully performed
@@ -204,25 +204,25 @@ class BFile : public Opaque {
 		     * @param origin          specifies reference location from which offset will be computed
 		     * @see                   bioTell BIO_SEEK_SET BIO_SEEK_CUR BIO_SEEK_END
 		    **/
-	bool	seek(__fileoff_t offset,int origin);
+	virtual bool	seek(__fileoff_t offset,int origin);
 
 		   /** Returns current optimization of buffering.
 		     * @return                optimization (BIO_OPT_*)
 		     * @see                   bioSetOptimization
 		    **/
-	unsigned get_optimization() const;
+	virtual unsigned get_optimization() const;
 
 		   /** Sets new optimization of buffering and returns previous.
 		     * @return                optimization (BIO_OPT_*)
 		     * @see                   bioGetOptimization
 		    **/
-	unsigned set_optimization(unsigned flags);
+	virtual unsigned set_optimization(unsigned flags);
 
 		   /** Returns logical file position of opened stream.
 		     * @return                offset from begin of file
 		     * @see                   bioSeek
 		    **/
-	__filesize_t tell() const;
+	virtual __filesize_t tell() const;
 
 		   /** Writes one byte to stream.
 		     * @return                true if operation was succesfully performed
@@ -231,7 +231,7 @@ class BFile : public Opaque {
 		     *                        incremented after operation.
 		     * @see                   bioReadByte bioWriteWord bioWriteWord bioWriteBuffer
 		    **/
-	bool	write_byte(uint8_t bVal);
+	virtual bool	write_byte(uint8_t bVal);
 
 		   /** Writes two bytes to stream.
 		     * @return                true if operation was succesfully performed
@@ -240,7 +240,7 @@ class BFile : public Opaque {
 		     *                        incremented after operation.
 		     * @see                   bioReadWord bioWriteWord bioWriteWord bioWriteBuffer
 		    **/
-	bool	write_word(uint16_t wVal);
+	virtual bool	write_word(uint16_t wVal);
 
 		   /** Writes four bytes to stream.
 		     * @return                true if operation was succesfully performed
@@ -249,7 +249,7 @@ class BFile : public Opaque {
 		     *                        incremented after operation.
 		     * @see                   bioReadDWord bioWriteWord bioWriteWord bioWriteBuffer
 		    **/
-	bool	write_dword(uint32_t dwVal);
+	virtual bool	write_dword(uint32_t dwVal);
 
 		   /** Writes 8 bytes to stream.
 		     * @return                true if operation was succesfully performed
@@ -258,7 +258,7 @@ class BFile : public Opaque {
 		     *                        incremented after operation.
 		     * @see                   bioReadDWord bioWriteWord bioWriteWord bioWriteBuffer
 		    **/
-	bool	write_qword(uint64_t dwVal);
+	virtual bool	write_qword(uint64_t dwVal);
 
 		   /** Writes specified number of bytes opened to stream.
 		     * @return                true if operation was succesfully performed
@@ -268,12 +268,12 @@ class BFile : public Opaque {
 		     *                        position by the number of bytes writed.
 		     * @see                   bioReadBuffer bioWriteWord bioWriteWord bioByte
 		    **/
-	bool	write_buffer(const any_t* buffer,unsigned cbBuffer);
+	virtual bool	write_buffer(const any_t* buffer,unsigned cbBuffer);
 
 		   /** Returns name of file associated with opened stream.
 		     * @return                name of file
 		    **/
-	const char* filename() const;
+	virtual const char* filename() const;
 
 		   /** Causes opened stream to be duplicated.
 		     * @return                handle of duplicted stream
@@ -282,7 +282,7 @@ class BFile : public Opaque {
 		     *                        characteristics.
 		     * @see                   bioDupEx
 		    **/
-	BFile*	dup() const;
+	virtual BFile*	dup() const;
 
 		   /** Causes opened stream to be duplicated.
 		     * @return                handle of duplicted stream
@@ -293,12 +293,12 @@ class BFile : public Opaque {
 		     *                        possible characteristics.
 		     * @see                   bioDup
 		    **/
-	BFile*	dup_ex(unsigned buffSize) const;
+	virtual BFile*	dup_ex(unsigned buffSize) const;
 
 		   /** Returns low-level OS handle of opened stream.
 		     * @return                OS handle of opened stream
 		    **/
-	bhandle_t handle() const;
+	virtual bhandle_t handle() const;
 
 		   /** Returns pointer to buffer of opened stream.
 		     * @return                pointer to buffer
@@ -306,7 +306,7 @@ class BFile : public Opaque {
 		     *                        access to file cache.
 		     * @see                   bioBuffLen bioBuffPos
 		    **/
-	any_t*	buffer() const;
+	virtual any_t*	buffer() const;
 
 		   /** Returns length of opened stream buffer.
 		     * @return                length of buffer
@@ -314,7 +314,7 @@ class BFile : public Opaque {
 		     *                        access to file cache.
 		     * @see                   bioBuff bioBuffPos
 		    **/
-	unsigned bufflen() const;
+	virtual unsigned bufflen() const;
 
 		   /** Returns logical buffer position.
 		     * @return                length of buffer
@@ -324,7 +324,7 @@ class BFile : public Opaque {
 		     *                        logical file position.
 		     * @see                   bioBuff bioBuffLen
 		    **/
-	unsigned buffpos() const;
+	virtual unsigned buffpos() const;
     private:
 	bool is_cache_valid() const { return (b.vfb.MBuffer && !(optimize & Opt_NoCache)); }
 	bool is_writeable(unsigned _openmode) const { return ((_openmode & FO_READWRITE) || (_openmode & FO_WRITEONLY)); }
