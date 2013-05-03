@@ -21,6 +21,8 @@ using namespace beye;
 **/
 #include <algorithm>
 #include <iostream>
+#include <vector>
+#include <string>
 
 #include <string.h>
 #include <stdlib.h>
@@ -30,8 +32,6 @@ using namespace beye;
 
 #include "libbeye/bbio.h"
 #include "libbeye/file_ini.h"
-
-inline void rewind_ini(FiHandler h) { h->seek(0L,BFile::Seek_Set); }
 
 #if 0
 static void dump_BFILE(BFILE *h) {
@@ -58,7 +58,7 @@ fprintf(stderr,
 static unsigned char CaseSens = 2; /**< 2 - case 1 - upper 0 - lower */
 static FiUserFunc proc;
 static pVar FirstVar = NULL;
-FiHandler ActiveFile = 0;
+static Ini_io* ActiveFile = NULL;
 bool ifSmarting = true;
 const char *fi_Debug_Str = NULL;
 
@@ -68,67 +68,19 @@ const char *fi_Debug_Str = NULL;
 
 
 static const unsigned __C_EOF=0x1A;
-static const unsigned __FI_MAXFILES=200;
 
-unsigned int  *FinCurrString;
-char ** FiFileNames;
-unsigned int  FiFilePtr = 0;
-char *  FiUserMessage = NULL;
-const char iniLegalSet[] = " _0123456789"
+static std::vector<std::pair<size_t,std::string> > file_info;
+const char*  FiUserMessage = NULL;
+static const char iniLegalSet[] = " _0123456789"
 			   "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 			   "abcdefghijklmnopqrstuvwxyz";
 
-#define IS_VALID_NAME(name) (strspn(name,iniLegalSet) == strlen(name))
-#define IS_SECT(str,ch) (str[0] == ch)
-#define FiisSection( str ) (IS_SECT(str,'['))
-#define FiisSubSection( str ) (IS_SECT(str,'<'))
-#define FiisCommand( str ) (IS_SECT(str,'#'))
-#define FiisItem(str) (!(FiisSection(str) || FiisSubSection(str) || FiisCommand(str)))
-
-static char *  __FASTCALL__ GETS(char *str,unsigned num,BFile* h)
-{
-  char *ret;
-  unsigned i;
-  char ch,ch1;
-  ret = str;
-  for(i = 0;i < num;i++)
-  {
-     ch = h->read_byte();
-     if(ch == '\n' || ch == '\r')
-     {
-       *str = ch;  str++;
-       ch1 = h->read_byte();
-       if((ch1 == '\n' || ch1 == '\r') && ch != ch1)
-       {
-	 *str = ch; str++;
-       }
-       else
-       {
-	 if(h->eof())
-	 {
-	   if((signed char)ch1 != -1 && ch1 != __C_EOF)
-	   {
-	     *str = ch1; str++;
-	   }
-	   break;
-	 }
-	 h->seek(-1,SEEK_CUR);
-       }
-       break;
-     }
-     if(h->eof())
-     {
-       if((signed char)ch != -1 && ch != __C_EOF)
-       {
-	 *str = ch; str++;
-       }
-       break;
-     }
-     *str = ch; str++;
-  }
-  *str = 0;
-  return ret;
-}
+inline bool IS_VALID_NAME(const char* name) { return strspn(name,iniLegalSet) == strlen(name); }
+inline bool IS_SECT(const char* str,char ch) { return str[0] == ch; }
+inline bool FiisSection(const char* str ) { return IS_SECT(str,'['); }
+inline bool FiisSubSection(const char* str ) { return IS_SECT(str,'<'); }
+inline bool FiisCommand(const char* str ) { return IS_SECT(str,'#'); }
+inline bool FiisItem(const char* str) { return !(FiisSection(str) || FiisSubSection(str) || FiisCommand(str)); }
 
 void __FASTCALL__ FiAError(int nError,int row,const char *addinfo)
 {
@@ -137,7 +89,7 @@ void __FASTCALL__ FiAError(int nError,int row,const char *addinfo)
  if(eret == __FI_EXITPROC) exit(255);
 }
 
-void __FASTCALL__ FiAErrorCL(int nError) { FiAError(nError,FinCurrString[FiFilePtr-1],NULL); }
+void __FASTCALL__ FiAErrorCL(int nError) { FiAError(nError,file_info.back().first,NULL); }
 
 static const char * list[] = {
  "No errors",
@@ -179,9 +131,9 @@ static int __FASTCALL__ StdError(int ne,int row,const char *addinfo)
     if((herr = fopen("fi_syserr.$$$","wt")) == NULL) herr = stderr;
     fprintf(herr,"About : [.Ini] file run-time support library. Written by Nickols_K\n"
 		 "Detected ");
-    if(ne != __FI_TOOMANY && FiFilePtr)
+    if(ne != __FI_TOOMANY && ~file_info.empty())
     {
-      fprintf(herr,"%s error in : %s",row ? "fatal" : "",FiFileNames[FiFilePtr - 1]);
+      fprintf(herr,"%s error in : %s",row ? "fatal" : "",file_info.back().second.c_str());
     }
     fprintf(herr,"\n");
     if(row)  fprintf(herr,"At line : %i\n",row);
@@ -198,307 +150,31 @@ static int __FASTCALL__ StdError(int ne,int row,const char *addinfo)
 
 int (__FASTCALL__ *FiError)(int nError,int row,const char *) = StdError;
 
-FiHandler __FASTCALL__ FiOpen( const char * filename)
+namespace beye {
+Ini_io::Ini_io():_opened(false),handler(bNull) {}
+Ini_io::~Ini_io() { if(&handler!=&bNull) close(); }
+bool Ini_io::open(const std::string& filename)
 {
-  char * activeFile;
-  FiHandler ret = new BFile;
-  bool rc;
-  /* Try to load .ini file entire into memory */
-  rc = ret->open(filename,FO_READONLY | SO_DENYWRITE,UINT_MAX,BFile::Opt_UseMMF);
-  /* Note! All OSes except DOS-DOS386 allows opening of empty filenames as /dev/null */
-  if(rc == false && filename[0]) FiAError(__FI_BADFILENAME,0,filename);
-  activeFile = (char *)mp_malloc((strlen(filename) + 1));
-  if(activeFile == NULL) FiAError(__FI_NOTMEM,0,NULL);
-  strcpy(activeFile,filename);
-  if(!FiFilePtr)
-  {
-    FiFileNames = (char**)mp_malloc(sizeof(char *));
-    FinCurrString = (unsigned*)mp_malloc(sizeof(unsigned int));
-  }
-  else
-  {
-    FiFileNames = (char**)mp_realloc(FiFileNames,sizeof(char *)*(FiFilePtr+1));
-    FinCurrString = (unsigned*)mp_realloc(FinCurrString,sizeof(unsigned int)*(FiFilePtr+1));
-  }
-  if(!FiFileNames || !FinCurrString) FiAError(__FI_NOTMEM,0,NULL);
-  FiFileNames[FiFilePtr] = activeFile;
-  FinCurrString[FiFilePtr++] = 0;
-  if(FiFilePtr > __FI_MAXFILES-1) FiAError(__FI_TOOMANY,0,NULL);
-  return ret;
+    handler = *new BFile;
+    bool rc;
+    /* Try to load .ini file entire into memory */
+    rc = handler.open(filename,FO_READONLY | SO_DENYWRITE,UINT_MAX,BFile::Opt_UseMMF);
+    /* Note! All OSes except DOS-DOS386 allows opening of empty filenames as /dev/null */
+    if(rc == false && filename[0]) FiAError(__FI_BADFILENAME,0,filename.c_str());
+    file_info.push_back(std::make_pair(0,filename));
+    _opened=rc;
+    return rc;
 }
 
-void __FASTCALL__ FiClose(FiHandler h)
+void Ini_io::close()
 {
-  PFREE(FiFileNames[FiFilePtr-1]);
-  if(FiFilePtr)
-  {
-    FiFileNames = (char**)mp_realloc(FiFileNames,sizeof(char *)*(FiFilePtr));
-    FinCurrString = (unsigned*)mp_realloc(FinCurrString,sizeof(unsigned int)*(FiFilePtr));
-    if(!FiFileNames || !FinCurrString) FiAError(__FI_NOTMEM,0,NULL);
-    FiFilePtr--;
-  }
-  else
-  {
-    PFREE(FiFileNames);
-    PFREE(FinCurrString);
-  }
-  delete h;
+    file_info.pop_back();
+    if(&handler!=&bNull) {
+	delete &handler;
+	handler=bNull;
+    }
 }
 
-static unsigned int  __FASTCALL__ __GetLengthBrStr(const char * src,char obr,char cbr)
-{
- char *ends;
- unsigned ret = 0;
- if(*src == obr)
- {
-   src++;
-   ends = (char*)strchr(src,cbr);
-   if(!ends) goto err;
-   if(*(ends+1)) FiAErrorCL(__FI_BADCHAR);
-   ret = ends-src;
- }
- else
- {
-   err:
-   FiAErrorCL(__FI_OPENSECT);
- }
- return ret;
-}
-
-static char *  __FASTCALL__ __GetBrStrName(const char * src,char * store,char obr,char cbr)
-{
- char *ends;
- if(*src == obr)
- {
-   unsigned len;
-   src++;
-   ends = (char*)strchr(src,cbr);
-   if(!ends) goto err;
-   if(*(ends+1)) FiAErrorCL(__FI_BADCHAR);
-   len = ends-src;
-   memcpy(store,src,len);
-   store[len] = 0;
- }
- else
- {
-   err:
-   FiAErrorCL(__FI_OPENSECT);
- }
- return store;
-}
-
-#define FiGetLengthBracketString( str ) (__GetLengthBrStr(str,'"','"'))
-#define FiGetBracketString( str, store) (__GetBrStrName(str,store,'"','"'))
-#define FiGetSectionName( src, store) (__GetBrStrName(src,store,'[',']'))
-#define FiGetSubSectionName( src, store) (__GetBrStrName(src,store,'<','>'))
-#define FiGetLengthSection( src ) (__GetLengthBrStr(src,'[',']'))
-#define FiGetLengthSubSection( src ) (__GetLengthBrStr(src,'<','>'))
-
-unsigned int  __FASTCALL__ FiGetLengthItem( const char * src )
-{
-  char *sret;
-  sret = (char*)strchr(src,'=');
-  if(!sret) FiAErrorCL(__FI_NOTEQU);
-  return sret - src;
-}
-
-unsigned int  __FASTCALL__ FiGetLengthValue( const char * src )
-{
-  char *sptr;
-  unsigned len;
-  len = strlen(src);
-  sptr = (char*)strchr(src,'=');
-  if(!sptr) FiAErrorCL(__FI_NOTEQU);
-  return len-(sptr-src+1);
-}
-
-char *    __FASTCALL__ FiGetValueOfItem(const char * src,char * store)
-{
-  char *from;
-  from = (char*)strchr(src,'=');
-  if(from) strcpy(store,++from);
-  else     FiAErrorCL(__FI_NOTEQU);
-  return store;
-}
-
-unsigned int  __FASTCALL__ FiGetLengthCommandString( const char * src )
-{
-   unsigned i;
-   i = strspn(src," #");
-   return strlen(src) - i;
-}
-
-char *    __FASTCALL__ FiGetItemName(const char * src,char * store)
-{
-  char *sptr;
-  unsigned len;
-  sptr = (char*)strchr(src,'=');
-  if(sptr)
-  {
-    len = sptr-src;
-    memcpy(store,src,len);
-    store[len] = 0;
-    if(!IS_VALID_NAME(store)) FiAErrorCL(__FI_BADCHAR);
-  }
-  return store;
-}
-
-char *   __FASTCALL__ FiGetCommandString(const char * src,char * store)
-{
-  unsigned i;
-  i = strspn(src," #");
-  strcpy(store,&src[i]);
-  return store;
-}
-
-unsigned int  __FASTCALL__ FiGetLengthNextWord( STRING * str, const char * illegal_symbols)
-{
- unsigned int j,i;
- i = strspn(&str->str[str->iptr],illegal_symbols);
- j = strcspn(&str->str[i+str->iptr],illegal_symbols);
- return j;
-}
-
-char * __FASTCALL__ FiGetNextWord( STRING * str,const char * illegal_symbols,char * store)
-{
- unsigned int j;
- str->iptr += strspn(&str->str[str->iptr],illegal_symbols);
- j = strcspn(&str->str[str->iptr],illegal_symbols);
- memcpy(store,&str->str[str->iptr],j);
- store[j] = 0;
- str->iptr += j;
- return store;
-}
-
-static unsigned int  __FASTCALL__ FiGetLengthNextLegWord( STRING * str, const char * legal_symbols)
-{
- unsigned int j,i;
- i = strcspn(&str->str[str->iptr],legal_symbols);
- j = strspn(&str->str[i+str->iptr],legal_symbols);
- return j;
-}
-
-static char * __FASTCALL__ FiGetNextLegWord( STRING * str,const char * legal_symbols,char * store)
-{
- unsigned int j;
- str->iptr += strcspn(&str->str[str->iptr],legal_symbols);
- j = strspn(&str->str[str->iptr],legal_symbols);
- memcpy(store,&str->str[str->iptr],j);
- store[j] = 0;
- str->iptr += j;
- return store;
-}
-/************** BEGIN of Construct section ********************/
-
-/*
-   These functions protect library from stack overflow in 16-bit mode,
-   because #include statement does recursion.
-*/
-
-static char *  __FASTCALL__ __FiCMaxStr( void )
-{
-  char * ret;
-  ret = (char *)mp_malloc(FI_MAXSTRLEN + 1);
-  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
-  return ret;
-}
-
-static char *  __FASTCALL__ __FiCNWord( STRING *str , const char * illegal_set)
-{
-  char * ret;
-  unsigned int lword;
-  lword = FiGetLengthNextWord(str,illegal_set);
-  ret = (char *)mp_malloc(lword + 1);
-  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
-  if(lword) FiGetNextWord(str,illegal_set,ret);
-  else      ret[0] = 0;
-  return ret;
-}
-
-static char *  __FASTCALL__ __FiCNLegWord( STRING *str , const char * legal_set)
-{
-  char * ret;
-  unsigned int lword;
-  lword = FiGetLengthNextLegWord(str,legal_set);
-  ret = (char *)mp_malloc(lword + 1);
-  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
-  if(lword) FiGetNextLegWord(str,legal_set,ret);
-  else      ret[0] = 0;
-  return ret;
-}
-
-static char *  __FASTCALL__ __FiCBString( const char * src )
-{
-  char * ret;
-  unsigned int lbr;
-  lbr = FiGetLengthBracketString(src);
-  ret = (char *)mp_malloc(lbr + 1);
-  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
-  if(lbr) FiGetBracketString(src,ret);
-  else    ret[0] = 0;
-  return ret;
-}
-
-static char *  __FASTCALL__ __FiCItem( const char * src )
-{
-  char * ret;
-  unsigned int li;
-  li = FiGetLengthItem(src);
-  ret = (char *)mp_malloc(li + 1);
-  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
-  if(li) FiGetItemName(src,ret);
-  else   ret[0] = 0;
-  return ret;
-}
-
-static char *  __FASTCALL__ __FiCValue( const char * src )
-{
-  char * ret;
-  unsigned int lv;
-  lv = FiGetLengthValue(src);
-  ret = (char *)mp_malloc(lv + 1);
-  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
-  if(lv) FiGetValueOfItem(src,ret);
-  else   ret[0] = 0;
-  return ret;
-}
-
-static char *  __FASTCALL__ __FiCSection( const char * src )
-{
-  char * ret;
-  unsigned int ls;
-  ls = FiGetLengthSection(src);
-  ret = (char *)mp_malloc(ls + 1);
-  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
-  if(ls) FiGetSectionName(src,ret);
-  else   ret[0] = 0;
-  return ret;
-}
-
-static char *  __FASTCALL__ __FiCSubSection( const char * src )
-{
-  char * ret;
-  unsigned int lss;
-  lss = FiGetLengthSubSection(src);
-  ret = (char *)mp_malloc(lss + 1);
-  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
-  if(lss) FiGetSubSectionName(src,ret);
-  else    ret[0] = 0;
-  return ret;
-}
-
-static char *  __FASTCALL__ __FiCCmd( const char * src )
-{
-  char * ret;
-  unsigned int lc;
-  lc = FiGetLengthCommandString(src);
-  ret = (char *)mp_malloc(lc + 1);
-  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
-  if(lc) FiGetCommandString(src,ret);
-  else   ret[0] = 0;
-  return ret;
-}
-/************* END of Construct section *********************/
 #if 0 /* Uncomment it later */
 void __FASTCALL__ FiSeekTo( FiHandler h, unsigned int nSection, unsigned int nSubSection, unsigned int nItem )
 {
@@ -685,21 +361,21 @@ unsigned int  __FASTCALL__ FiGetLocalNumberOfItems( FiHandler h,int nSection, in
   PFREE(buff);
   return eret;
 }
-#endif
+#endif // #if 0
 
-#define FiOpenComment ';'
+const char FiOpenComment=';';
 bool  FiAllWantInput = false;
 
-char * __FASTCALL__ FiGetNextString(FiHandler h, char * str,unsigned int size,char *original)
+char* Ini_io::get_next_string(char * str,unsigned int size,char *original)
 {
   unsigned char *sret;
   unsigned len;
   unsigned char ch;
   str[0] = 0;
-  while(!h->eof())
+  while(!handler.eof())
   {
     str[0] = 0;
-    sret = (unsigned char*)GETS(str,size,h);
+    sret = (unsigned char*)GETS(str,size);
     len = strlen(str);
     while(len)
     {
@@ -708,8 +384,8 @@ char * __FASTCALL__ FiGetNextString(FiHandler h, char * str,unsigned int size,ch
       else break;
     }
     if(original) strcpy(original,str);
-    FinCurrString[FiFilePtr - 1]++;
-    if((sret == NULL && !h->eof()))  FiAError(__FI_BADFILENAME,0,str);
+    file_info.back().first++;
+    if((sret == NULL && !handler.eof()))  FiAError(__FI_BADFILENAME,0,str);
     sret = (unsigned char*)strchr(str,FiOpenComment);
     if(sret) *sret = 0;
     if(!FiAllWantInput)
@@ -744,11 +420,311 @@ char * __FASTCALL__ FiGetNextString(FiHandler h, char * str,unsigned int size,ch
   return str;
 }
 
+char* Ini_io::GETS(char *str,unsigned num)
+{
+  char *ret;
+  unsigned i;
+  char ch,ch1;
+  ret = str;
+  for(i = 0;i < num;i++)
+  {
+     ch = handler.read_byte();
+     if(ch == '\n' || ch == '\r')
+     {
+       *str = ch;  str++;
+       ch1 = handler.read_byte();
+       if((ch1 == '\n' || ch1 == '\r') && ch != ch1)
+       {
+	 *str = ch; str++;
+       }
+       else
+       {
+	 if(handler.eof())
+	 {
+	   if((signed char)ch1 != -1 && ch1 != __C_EOF)
+	   {
+	     *str = ch1; str++;
+	   }
+	   break;
+	 }
+	 handler.seek(-1,SEEK_CUR);
+       }
+       break;
+     }
+     if(handler.eof())
+     {
+       if((signed char)ch != -1 && ch != __C_EOF)
+       {
+	 *str = ch; str++;
+       }
+       break;
+     }
+     *str = ch; str++;
+  }
+  *str = 0;
+  return ret;
+}
+
+} // namespace beye
+
+static size_t  __FASTCALL__ __GetLengthBrStr(const char * src,char obr,char cbr)
+{
+ char *ends;
+ size_t ret = 0;
+ if(*src == obr)
+ {
+   src++;
+   ends = (char*)strchr(src,cbr);
+   if(!ends) goto err;
+   if(*(ends+1)) FiAErrorCL(__FI_BADCHAR);
+   ret = ends-src;
+ }
+ else
+ {
+   err:
+   FiAErrorCL(__FI_OPENSECT);
+ }
+ return ret;
+}
+
+static char *  __FASTCALL__ __GetBrStrName(const char * src,char * store,char obr,char cbr)
+{
+ char *ends;
+ if(*src == obr)
+ {
+   unsigned len;
+   src++;
+   ends = (char*)strchr(src,cbr);
+   if(!ends) goto err;
+   if(*(ends+1)) FiAErrorCL(__FI_BADCHAR);
+   len = ends-src;
+   memcpy(store,src,len);
+   store[len] = 0;
+ }
+ else
+ {
+   err:
+   FiAErrorCL(__FI_OPENSECT);
+ }
+ return store;
+}
+
+inline size_t FiGetLengthBracketString(const char* str ) { return __GetLengthBrStr(str,'"','"'); }
+inline char*  FiGetBracketString(const char* str,char* store) { return __GetBrStrName(str,store,'"','"'); }
+inline char*  FiGetSectionName(const char* src,char* store) { return __GetBrStrName(src,store,'[',']'); }
+inline char*  FiGetSubSectionName(const char* src,char* store) { return __GetBrStrName(src,store,'<','>'); }
+inline size_t FiGetLengthSection(const char* src ) { return __GetLengthBrStr(src,'[',']'); }
+inline size_t FiGetLengthSubSection(const char* src ) { return __GetLengthBrStr(src,'<','>'); }
+
+size_t  __FASTCALL__ FiGetLengthItem( const char * src )
+{
+  char *sret;
+  sret = (char*)strchr(src,'=');
+  if(!sret) FiAErrorCL(__FI_NOTEQU);
+  return sret - src;
+}
+
+size_t  __FASTCALL__ FiGetLengthValue( const char * src )
+{
+  char *sptr;
+  size_t len;
+  len = strlen(src);
+  sptr = (char*)strchr(src,'=');
+  if(!sptr) FiAErrorCL(__FI_NOTEQU);
+  return len-(sptr-src+1);
+}
+
+char *    __FASTCALL__ FiGetValueOfItem(const char * src,char * store)
+{
+  char *from;
+  from = (char*)strchr(src,'=');
+  if(from) strcpy(store,++from);
+  else     FiAErrorCL(__FI_NOTEQU);
+  return store;
+}
+
+size_t  __FASTCALL__ FiGetLengthCommandString( const char * src )
+{
+   size_t i;
+   i = strspn(src," #");
+   return strlen(src) - i;
+}
+
+char *    __FASTCALL__ FiGetItemName(const char * src,char * store)
+{
+  char *sptr;
+  unsigned len;
+  sptr = (char*)strchr(src,'=');
+  if(sptr)
+  {
+    len = sptr-src;
+    memcpy(store,src,len);
+    store[len] = 0;
+    if(!IS_VALID_NAME(store)) FiAErrorCL(__FI_BADCHAR);
+  }
+  return store;
+}
+
+char *   __FASTCALL__ FiGetCommandString(const char * src,char * store)
+{
+  unsigned i;
+  i = strspn(src," #");
+  strcpy(store,&src[i]);
+  return store;
+}
+
+unsigned int  __FASTCALL__ FiGetLengthNextWord( STRING * str, const char * illegal_symbols)
+{
+ unsigned int j,i;
+ i = strspn(&str->str[str->iptr],illegal_symbols);
+ j = strcspn(&str->str[i+str->iptr],illegal_symbols);
+ return j;
+}
+
+char * __FASTCALL__ FiGetNextWord( STRING * str,const char * illegal_symbols,char * store)
+{
+ unsigned int j;
+ str->iptr += strspn(&str->str[str->iptr],illegal_symbols);
+ j = strcspn(&str->str[str->iptr],illegal_symbols);
+ memcpy(store,&str->str[str->iptr],j);
+ store[j] = 0;
+ str->iptr += j;
+ return store;
+}
+
+static unsigned int  __FASTCALL__ FiGetLengthNextLegWord( STRING * str, const char * legal_symbols)
+{
+ unsigned int j,i;
+ i = strcspn(&str->str[str->iptr],legal_symbols);
+ j = strspn(&str->str[i+str->iptr],legal_symbols);
+ return j;
+}
+
+static char * __FASTCALL__ FiGetNextLegWord( STRING * str,const char * legal_symbols,char * store)
+{
+ unsigned int j;
+ str->iptr += strcspn(&str->str[str->iptr],legal_symbols);
+ j = strspn(&str->str[str->iptr],legal_symbols);
+ memcpy(store,&str->str[str->iptr],j);
+ store[j] = 0;
+ str->iptr += j;
+ return store;
+}
+/************** BEGIN of Construct section ********************/
+
+/*
+   These functions protect library from stack overflow in 16-bit mode,
+   because #include statement does recursion.
+*/
+
+static char *  __FASTCALL__ __FiCMaxStr( void )
+{
+  char * ret;
+  ret = (char *)mp_malloc(FI_MAXSTRLEN + 1);
+  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
+  return ret;
+}
+
+static char *  __FASTCALL__ __FiCNWord( STRING *str , const char * illegal_set)
+{
+  char * ret;
+  unsigned int lword;
+  lword = FiGetLengthNextWord(str,illegal_set);
+  ret = (char *)mp_malloc(lword + 1);
+  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
+  if(lword) FiGetNextWord(str,illegal_set,ret);
+  else      ret[0] = 0;
+  return ret;
+}
+
+static char *  __FASTCALL__ __FiCNLegWord( STRING *str , const char * legal_set)
+{
+  char * ret;
+  unsigned int lword;
+  lword = FiGetLengthNextLegWord(str,legal_set);
+  ret = (char *)mp_malloc(lword + 1);
+  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
+  if(lword) FiGetNextLegWord(str,legal_set,ret);
+  else      ret[0] = 0;
+  return ret;
+}
+
+static char *  __FASTCALL__ __FiCBString( const char * src )
+{
+  char * ret;
+  unsigned int lbr;
+  lbr = FiGetLengthBracketString(src);
+  ret = (char *)mp_malloc(lbr + 1);
+  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
+  if(lbr) FiGetBracketString(src,ret);
+  else    ret[0] = 0;
+  return ret;
+}
+
+static char *  __FASTCALL__ __FiCItem( const char * src )
+{
+  char * ret;
+  unsigned int li;
+  li = FiGetLengthItem(src);
+  ret = (char *)mp_malloc(li + 1);
+  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
+  if(li) FiGetItemName(src,ret);
+  else   ret[0] = 0;
+  return ret;
+}
+
+static char *  __FASTCALL__ __FiCValue( const char * src )
+{
+  char * ret;
+  unsigned int lv;
+  lv = FiGetLengthValue(src);
+  ret = (char *)mp_malloc(lv + 1);
+  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
+  if(lv) FiGetValueOfItem(src,ret);
+  else   ret[0] = 0;
+  return ret;
+}
+
+static char *  __FASTCALL__ __FiCSection( const char * src )
+{
+  char * ret;
+  unsigned int ls;
+  ls = FiGetLengthSection(src);
+  ret = (char *)mp_malloc(ls + 1);
+  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
+  if(ls) FiGetSectionName(src,ret);
+  else   ret[0] = 0;
+  return ret;
+}
+
+static char *  __FASTCALL__ __FiCSubSection( const char * src )
+{
+  char * ret;
+  unsigned int lss;
+  lss = FiGetLengthSubSection(src);
+  ret = (char *)mp_malloc(lss + 1);
+  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
+  if(lss) FiGetSubSectionName(src,ret);
+  else    ret[0] = 0;
+  return ret;
+}
+
+static char *  __FASTCALL__ __FiCCmd( const char * src )
+{
+  char * ret;
+  unsigned int lc;
+  lc = FiGetLengthCommandString(src);
+  ret = (char *)mp_malloc(lc + 1);
+  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
+  if(lc) FiGetCommandString(src,ret);
+  else   ret[0] = 0;
+  return ret;
+}
+/************* END of Construct section *********************/
 
 /*************************************************************\
 *                  Middle level support                       *
 \*************************************************************/
-
 
 /************* BEGIN of List Var section ********************/
 
@@ -962,7 +938,7 @@ bool __FASTCALL__ FiGetConditionStd( const char *condstr)
   return ret;
 }
 
-bool __FASTCALL__ FiCommandProcessorStd( const char * cmd )
+bool __FASTCALL__ FiCommandParserStd( const char * cmd )
 {
  char *word,*a,*v;
  const char *fdeb_save;
@@ -981,13 +957,13 @@ bool __FASTCALL__ FiCommandProcessorStd( const char * cmd )
    FiExpandAllVar(bracket,_v);
    fdeb_save = fi_Debug_Str;
    /* make path if no path specified */
-   strcpy(pfile,FiFileNames[FiFilePtr-1]);
+   strcpy(pfile,file_info.back().second.c_str());
    pfp=strrchr(pfile,'\\');
    pfp2=strrchr(pfile,'/');
    pfp=std::max(pfp,pfp2);
    if(pfp && !(strchr(_v,'\\') || strchr(_v,'/'))) strcpy(pfp+1,_v);
    else    strcpy(pfile,_v);
-   (*FiFileProcessor)(pfile);
+   (*FiFileParser)(pfile);
    fi_Debug_Str = fdeb_save;
    PFREE(bracket);
    goto Exit_CP;
@@ -1084,13 +1060,13 @@ bool __FASTCALL__ FiCommandProcessorStd( const char * cmd )
    bool Condition,BeenElse;
    int nLabel;
    sstore = __FiCMaxStr();
-   nsave = FinCurrString[FiFilePtr - 1];
+   nsave = file_info.back().first;
    cond_ret = Condition = (*FiGetCondition)(&cmd[str.iptr]);
    nLabel = 1;
    BeenElse = false;
    while(!ActiveFile->eof())
    {
-     FiGetNextString(ActiveFile,sstore,FI_MAXSTRLEN,NULL);
+     ActiveFile->get_next_string(sstore,FI_MAXSTRLEN,NULL);
      if(sstore[0] == '\0') { PFREE(sstore); goto Exit_CP; }
      if(FiisCommand(sstore))
      {
@@ -1133,11 +1109,11 @@ bool __FASTCALL__ FiCommandProcessorStd( const char * cmd )
 	   PFREE(a);
 	   continue;
        }
-       if(Condition) (*FiCommandProcessor)(a);
+       if(Condition) (*FiCommandParser)(a);
        PFREE(v);
        PFREE(a);
      }
-     else { if(Condition) (*FiStringProcessor)(sstore); }
+     else { if(Condition) (*FiStringParser)(sstore); }
    }
    PFREE(sstore)
    FiAError(__FI_OPENCOND,nsave,NULL);
@@ -1148,31 +1124,28 @@ bool __FASTCALL__ FiCommandProcessorStd( const char * cmd )
  return cond_ret;
 }
 
-static  char * curr_sect = NULL;
-static  char * curr_subsect = NULL;
+static std::string curr_sect;
+static std::string curr_subsect;
 
-bool __FASTCALL__ FiStringProcessorStd(char * curr_str)
+bool __FASTCALL__ FiStringParserStd(char * curr_str)
 {
   char *item,*val;
     if(FiisCommand(curr_str))
     {
       item = __FiCCmd(curr_str);
-      (*FiCommandProcessor)(item);
+      (*FiCommandParser)(item);
       PFREE(item);
       return false;
     }
     else
     if(FiisSection(curr_str))
     {
-      if(curr_sect) PFREE(curr_sect);
-      if(curr_subsect) PFREE(curr_subsect);
       curr_sect = __FiCSection(curr_str);
       return false;
     }
     else
     if(FiisSubSection(curr_str))
     {
-      if(curr_subsect) PFREE(curr_subsect);
       curr_subsect = __FiCSubSection(curr_str);
       return false;
     }
@@ -1188,9 +1161,9 @@ bool __FASTCALL__ FiStringProcessorStd(char * curr_str)
       if(item[0])
       {
        val = __FiCValue(buffer);
-       if(curr_sect) info.section = curr_sect;
+       if(!curr_sect.empty()) info.section = curr_sect.c_str();
        else info.section = "";
-       if(curr_subsect) info.subsection = curr_subsect;
+       if(!curr_subsect.empty()) info.subsection = curr_subsect.c_str();
        else info.subsection = "";
        info.item = item;
        info.value = val;
@@ -1204,27 +1177,26 @@ bool __FASTCALL__ FiStringProcessorStd(char * curr_str)
   return false;
 }
 
-void __FASTCALL__ FiFileProcessorStd(const char * filename)
+void __FASTCALL__ FiFileParserStd(const char * filename)
 {
   char * work_str, * ondelete;
-  FiHandler h;
-  FiHandler oldh;
+  Ini_io& h = *new(zeromem) Ini_io;
+  Ini_io* oldh = ActiveFile;
   bool done;
-  oldh = ActiveFile;
-  h = FiOpen(filename);
-  ActiveFile = h;
+  h.open(filename);
+  ActiveFile = &h;
   work_str = __FiCMaxStr();
   fi_Debug_Str = ondelete = work_str;
-  while(!h->eof())
+  while(!h.eof())
   {
-      FiGetNextString(h,work_str,FI_MAXSTRLEN,NULL);
+      h.get_next_string(work_str,FI_MAXSTRLEN,NULL);
       if(!work_str || !work_str[0]) break;
       if(CaseSens == 1) strupr(work_str);
       if(CaseSens == 0) strlwr(work_str);
-      done = (*FiStringProcessor)(work_str);
+      done = (*FiStringParser)(work_str);
       if(done) break;
   }
-  FiClose(h);
+  h.close();
   if(work_str) PFREE(work_str)
   else PFREE(ondelete)
   ActiveFile = oldh;
@@ -1235,31 +1207,28 @@ void __FASTCALL__  FiProgress(const char * filename,FiUserFunc usrproc)
   if(!usrproc) return;
   proc = usrproc;
 
-  (*FiFileProcessor)(filename);
+  (*FiFileParser)(filename);
 
   proc = NULL;
-  if(curr_sect) PFREE(curr_sect);
-  if(curr_subsect) PFREE(curr_subsect);
   FiDeleteAllVar();
 }
 
-static void __FASTCALL__ hlFiFileProcessorStd(hIniProfile *ini)
+static void __FASTCALL__ hlFiFileParserStd(hIniProfile *ini)
 {
   char * work_str, * ondelete;
-  FiHandler oldh;
+  Ini_io* oldh = ActiveFile;
   bool done;
-  oldh = ActiveFile;
   ActiveFile = ini->handler;
   work_str = __FiCMaxStr();
   fi_Debug_Str = ondelete = work_str;
-  rewind_ini(ini->handler);
+  ini->handler->rewind_ini();
   while(!ini->handler->eof())
   {
-      FiGetNextString(ini->handler,work_str,FI_MAXSTRLEN,NULL);
+      ini->handler->get_next_string(work_str,FI_MAXSTRLEN,NULL);
       if(!work_str || !work_str[0]) break;
       if(CaseSens == 1) strupr(work_str);
       if(CaseSens == 0) strlwr(work_str);
-      done = (*FiStringProcessor)(work_str);
+      done = (*FiStringParser)(work_str);
       if(done) break;
   }
   if(work_str) PFREE(work_str)
@@ -1273,26 +1242,24 @@ void __FASTCALL__ hlFiProgress(hIniProfile *ini,FiUserFunc usrproc)
   if(!usrproc) return;
   proc = usrproc;
 
-  hlFiFileProcessorStd(ini);
+  hlFiFileParserStd(ini);
 
   proc = NULL;
-  if(curr_sect) PFREE(curr_sect);
-  if(curr_subsect) PFREE(curr_subsect);
   FiDeleteAllVar();
 }
 
-void  (__FASTCALL__ *FiFileProcessor)(const char *fname) = FiFileProcessorStd;
-bool (__FASTCALL__ *FiStringProcessor)(char * curr_str) = FiStringProcessorStd;
-bool (__FASTCALL__ *FiCommandProcessor)(const char * cmd) = FiCommandProcessorStd;
+void  (__FASTCALL__ *FiFileParser)(const char *fname) = FiFileParserStd;
+bool (__FASTCALL__ *FiStringParser)(char * curr_str) = FiStringParserStd;
+bool (__FASTCALL__ *FiCommandParser)(const char * cmd) = FiCommandParserStd;
 bool (__FASTCALL__ *FiGetCondition)( const char *condstr) = FiGetConditionStd;
 
 /*****************************************************************\
 *                      High level support                          *
 \******************************************************************/
 
-static hIniProfile *opening;
+static hIniProfile *opened_ini;
 
-#define IC_STRING 0x0001
+static const unsigned IC_STRING=0x0001;
 
 typedef struct tag_ini_Cache
 {
@@ -1316,7 +1283,8 @@ static tCompare __FASTCALL__ __full_compare_cache(const any_t*v1,const any_t*v2)
   i_ret = strcmp(c1->item,c2->item);
   return i_ret ? i_ret : iflg;
 }
-#define __compare_cache __full_compare_cache
+
+inline tCompare __compare_cache(const any_t*v1,const any_t*v2) { return __full_compare_cache(v1,v2); }
 
 static bool  __FASTCALL__ __addCache(const char *section,const char *subsection,
 			       const char *item,const char *value)
@@ -1326,28 +1294,28 @@ static bool  __FASTCALL__ __addCache(const char *section,const char *subsection,
   ini_cache ic;
   ic.item = const_cast<char*>(section);
   ic.flags = 0;
-  if(!(found =la_Find((linearArray *)opening->cache,&ic,__full_compare_cache)))
+  if(!(found =la_Find((linearArray *)opened_ini->cache,&ic,__full_compare_cache)))
   {
       ic.item = (char*)mp_malloc(strlen(section)+1);
-      if(!ic.item) { opening->flags &= ~HINI_FULLCACHED; return true; }
+      if(!ic.item) { opened_ini->flags &= ~HINI_FULLCACHED; return true; }
       strcpy(ic.item,section);
       if(!(ic.v.leaf = la_Build(0,sizeof(ini_cache),0)))
       {
 	 mp_free(ic.item);
-	 opening->flags &= ~HINI_FULLCACHED;
+	 opened_ini->flags &= ~HINI_FULLCACHED;
 	 return true;
       }
       ic.flags = 0;
-      if(!(la_AddData((linearArray *)opening->cache,&ic,NULL)))
+      if(!(la_AddData((linearArray *)opened_ini->cache,&ic,NULL)))
       {
 	mp_free(ic.item);
 	la_Destroy(ic.v.leaf);
-	opening->flags &= ~HINI_FULLCACHED;
+	opened_ini->flags &= ~HINI_FULLCACHED;
 	return true;
       }
-      opening->flags |= HINI_UPDATED;
-      la_Sort((linearArray *)opening->cache,__compare_cache);
-      found = la_Find((linearArray *)opening->cache,&ic,__full_compare_cache);
+      opened_ini->flags |= HINI_UPDATED;
+      la_Sort((linearArray *)opened_ini->cache,__compare_cache);
+      found = la_Find((linearArray *)opened_ini->cache,&ic,__full_compare_cache);
       goto do_subsect;
   }
   else
@@ -1358,12 +1326,12 @@ static bool  __FASTCALL__ __addCache(const char *section,const char *subsection,
       if(!(found=la_Find(it->v.leaf,&ic,__full_compare_cache)))
       {
 	ic.item = (char*)mp_malloc(strlen(subsection)+1);
-	if(!ic.item) { opening->flags &= ~HINI_FULLCACHED; return true; }
+	if(!ic.item) { opened_ini->flags &= ~HINI_FULLCACHED; return true; }
 	strcpy(ic.item,subsection);
 	if(!(ic.v.leaf = la_Build(0,sizeof(ini_cache),0)))
 	{
 	   mp_free(ic.item);
-	   opening->flags &= ~HINI_FULLCACHED;
+	   opened_ini->flags &= ~HINI_FULLCACHED;
 	   return true;
 	}
 	ic.flags = 0;
@@ -1371,10 +1339,10 @@ static bool  __FASTCALL__ __addCache(const char *section,const char *subsection,
 	{
 	  mp_free(ic.item);
 	  la_Destroy(ic.v.leaf);
-	  opening->flags &= ~HINI_FULLCACHED;
+	  opened_ini->flags &= ~HINI_FULLCACHED;
 	  return true;
 	}
-	opening->flags |= HINI_UPDATED;
+	opened_ini->flags |= HINI_UPDATED;
 	la_Sort(it->v.leaf,__compare_cache);
 	found = la_Find(it->v.leaf,&ic,__full_compare_cache);
 	goto do_item;
@@ -1388,19 +1356,19 @@ static bool  __FASTCALL__ __addCache(const char *section,const char *subsection,
 	if(!(found=la_Find(it->v.leaf,&ic,__full_compare_cache)))
 	{
 	  ic.item = (char*)mp_malloc(strlen(item)+1);
-	  if(!ic.item) { opening->flags &= ~HINI_FULLCACHED; return true; }
+	  if(!ic.item) { opened_ini->flags &= ~HINI_FULLCACHED; return true; }
 	  strcpy(ic.item,item);
 	  ic.v.value = (char*)mp_malloc(strlen(value)+1);
-	  if(!ic.v.value) { mp_free(ic.item); opening->flags &= ~HINI_FULLCACHED; return true; }
+	  if(!ic.v.value) { mp_free(ic.item); opened_ini->flags &= ~HINI_FULLCACHED; return true; }
 	  strcpy(ic.v.value,value);
 	  if(!(la_AddData(it->v.leaf,&ic,NULL)))
 	  {
 	    mp_free(ic.item);
 	    mp_free(ic.v.value);
-	    opening->flags &= ~HINI_FULLCACHED;
+	    opened_ini->flags &= ~HINI_FULLCACHED;
 	    return true;
 	  }
-	  opening->flags |= HINI_UPDATED;
+	  opened_ini->flags |= HINI_UPDATED;
 	  la_Sort(it->v.leaf,__compare_cache);
 	}
 	else
@@ -1413,14 +1381,14 @@ static bool  __FASTCALL__ __addCache(const char *section,const char *subsection,
 	     newval = (char*)mp_malloc(strlen(value)+1);
 	     if(!newval)
 	     {
-	       opening->flags &= ~HINI_FULLCACHED;
+	       opened_ini->flags &= ~HINI_FULLCACHED;
 	       return true;
 	     }
 	     strcpy(newval,value);
 	     oldval = it->v.value;
 	     it->v.value = newval;
 	     mp_free(oldval);
-	     opening->flags |= HINI_UPDATED;
+	     opened_ini->flags |= HINI_UPDATED;
 	  }
 	}
       }
@@ -1436,7 +1404,7 @@ static bool __FASTCALL__ __buildCache(IniInfo *ini)
 
 static void __FASTCALL__ __iter_destroy(any_t*it);
 
-#define __destroyCache(it) (la_IterDestroy(it,__iter_destroy))
+static void __destroyCache(linearArray* it) { la_IterDestroy(it,__iter_destroy); }
 
 static void __FASTCALL__ __iter_destroy(any_t*it)
 {
@@ -1457,7 +1425,7 @@ static void __FASTCALL__ __iter_destroy(any_t*it)
 static unsigned ret;
 static unsigned buf_len;
 static char *buf_ptr;
-static const char *sect,* subsect,* item;
+static std::string sect,subsect,item;
 
 static bhandle_t  __FASTCALL__ make_temp(const char *path,char *name_ptr)
 {
@@ -1497,11 +1465,11 @@ static bhandle_t  __FASTCALL__ make_temp(const char *path,char *name_ptr)
 
 static bool __FASTCALL__ MyCallback(IniInfo * ini)
 {
-  int cond;
-  cond = 0;
-  if(sect) cond = strcmp(ini->section,sect) == 0;
-  if(subsect) cond &= strcmp(ini->subsection,subsect) == 0;
-  if(item) cond &= strcmp(ini->item,item) == 0;
+  bool cond;
+  cond = false;
+  if(!sect.empty()) cond = sect==ini->section;
+  if(!subsect.empty()) cond &= subsect==ini->subsection;
+  if(!item.empty()) cond &= item==ini->item;
   if(cond)
   {
     ret = std::min(strlen(ini->value),size_t(buf_len));
@@ -1547,34 +1515,23 @@ static void  __FASTCALL__ out_item(FILE * handle,unsigned nled,const char *_item
 
 hIniProfile * __FASTCALL__ iniOpenFile(const char *fname,bool *has_error)
 {
-  hIniProfile *_ret;
-  unsigned fname_size;
-  _ret = (hIniProfile*)mp_malloc(sizeof(hIniProfile));
-  if(has_error) *has_error = true;
-  if(_ret)
-  {
-    fname_size = strlen(fname)+1;
-    _ret->fname = (char*)mp_malloc(fname_size);
-    if(_ret->fname) strcpy(_ret->fname,fname);
-    else
-    {
-      mp_free(_ret);
-      return NULL;
+    bool rc=false;
+    hIniProfile *_ret = new(zeromem) hIniProfile;
+    if(has_error) *has_error = true;
+    _ret->handler=new(zeromem) Ini_io;
+    _ret->fname=fname;
+    if(__IsFileExists(_ret->fname.c_str())) rc=_ret->handler->open(fname);
+
+    opened_ini = _ret;
+    _ret->flags |= HINI_FULLCACHED;
+    _ret->cache = (any_t*)la_Build(0,sizeof(ini_cache),NULL);
+    if(_ret->cache) {
+	hlFiProgress(_ret,__buildCache);
+	_ret->flags &= ~HINI_UPDATED;
     }
-    if(__IsFileExists(_ret->fname)) _ret->handler = FiOpen(fname);
-    else                            _ret->handler = &bNull;
-  }
-  opening = _ret;
-  _ret->flags |= HINI_FULLCACHED;
-  _ret->cache = (any_t*)la_Build(0,sizeof(ini_cache),NULL);
-  if(_ret->cache)
-  {
-    hlFiProgress(_ret,__buildCache);
-    _ret->flags &= ~HINI_UPDATED;
-  }
-  else          _ret->flags = 0;
-  if(has_error) *has_error = _ret->handler == &bNull;
-  return _ret;
+    else          _ret->flags = 0;
+    if(has_error) *has_error = !rc;
+    return _ret;
 }
 
 static bool  __FASTCALL__ __flushCache(hIniProfile *ini);
@@ -1588,9 +1545,8 @@ void __FASTCALL__ iniCloseFile(hIniProfile *ini)
       __flushCache(ini);
       __destroyCache((linearArray *)ini->cache);
     }
-    if(ini->handler != &bNull) FiClose(ini->handler);
-    mp_free(ini->fname);
-    mp_free(ini);
+    delete ini->handler;
+    delete ini;
   }
 }
 
@@ -1609,7 +1565,7 @@ unsigned __FASTCALL__ iniReadProfileString(hIniProfile *ini,const char *section,
    else         buffer[0] = 0;
    if(ini)
    {
-     if(ini->handler != &bNull)
+     if(ini->handler->opened())
      {
        bool v_found;
        v_found = false;
@@ -1646,12 +1602,12 @@ unsigned __FASTCALL__ iniReadProfileString(hIniProfile *ini,const char *section,
    return ret;
 }
 
-#define HINI_HEADER "; This file was generated automatically by BEYELIB.\n; WARNING: Any changes made by hands may be lost the next time you run the program.\n"
+static const char* HINI_HEADER="; This file was generated automatically by BEYELIB.\n; WARNING: Any changes made by hands may be lost the next time you run the program.\n";
 
 static FILE *  __FASTCALL__ __makeIni(hIniProfile *ini)
 {
   FILE *hout;
-  hout = fopen(ini->fname,"wt");
+  hout = fopen(ini->fname.c_str(),"wt");
   if(hout != NULL)
   {
      fprintf(hout,HINI_HEADER);
@@ -1709,7 +1665,7 @@ static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
    prev_val = (char*)mp_malloc(prev_val_size);
    need_write = true;
    if(!ini) return false;
-   if(prev_val && ini->handler != &bNull)
+   if(prev_val && ini->handler->opened())
    {
      const char *def_val;
      if(strcmp(_value,"y") == 0) def_val = "n";
@@ -1719,17 +1675,17 @@ static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
      mp_free(prev_val);
    }
    if(!need_write) return true;
-   tmpname = (char*)mp_malloc((strlen(ini->fname)+1)*2);
+   tmpname = new char [(ini->fname.length()+1)*2];
    if(!tmpname) return false;
-   if(ini->handler == &bNull) /* if file does not exist make it. */
+   if(!ini->handler->opened()) /* if file does not exist make it. */
    {
      _ret = __createIni(ini,_section,_subsection,_item,_value);
-     if(_ret) ini->handler = FiOpen(ini->fname);
+     if(_ret) ini->handler->open(ini->fname);
      goto Exit_WS;
    }
    ini->handler->seek(0L,BFile::Seek_Set);
    ActiveFile = ini->handler;
-   hsrc = make_temp(ini->fname,tmpname);
+   hsrc = make_temp(ini->fname.c_str(),tmpname);
    if(hsrc == NULL_HANDLE) { _ret = false; goto Exit_WS; }
    __OsClose(hsrc);
    tmphandle = fopen(tmpname,"wt");
@@ -1757,7 +1713,7 @@ static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
    while(1)
    {
      written = false;
-     FiGetNextString(ini->handler,workstr,FI_MAXSTRLEN,original);
+     ini->handler->get_next_string(workstr,FI_MAXSTRLEN,original);
      if(workstr[0] == 0) break;
      if(FiisCommand(workstr))
      {
@@ -1861,10 +1817,10 @@ static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
      done = true;
    }
    fclose(tmphandle);
-   FiClose(ini->handler);
-   __OsDelete(ini->fname);
-   __OsRename(tmpname,ini->fname);
-   ini->handler = FiOpen(ini->fname);
+   ini->handler->close();
+   __OsDelete(ini->fname.c_str());
+   __OsRename(tmpname,ini->fname.c_str());
+   ini->handler->open(ini->fname);
    PFREE(workstr);
    PFREE(wstr2);
    PFREE(original);
@@ -1916,7 +1872,7 @@ bool __FASTCALL__ iniWriteProfileString(hIniProfile *ini, const char *_section,
 					 const char *_item, const char *_value)
 {
    bool _ret;
-   opening = ini;
+   opened_ini = ini;
    _ret = false;
    if(ini->cache)
    {
@@ -1972,12 +1928,12 @@ static bool  __FASTCALL__ __flushCache(hIniProfile *ini)
 {
   if((ini->flags & HINI_UPDATED) == HINI_UPDATED && ini->cache)
   {
-    if(ini->handler != &bNull) FiClose(ini->handler);
+    if(ini->handler->opened()) ini->handler->close();
     flush_handler = __makeIni(ini);
     if(!flush_handler) return true;
     la_ForEach((linearArray *)ini->cache,flush_sect);
     fclose(flush_handler);
-    ini->handler = FiOpen(ini->fname);
+    ini->handler->open(ini->fname);
   }
   return false;
 }

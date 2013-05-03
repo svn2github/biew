@@ -63,7 +63,6 @@ enum {
     __FI_SUBSECTION =2, /**< required string is subsection */
     __FI_ITEM       =3  /**< required string is item */
 };
-typedef BFile* FiHandler; /**< This is the data type used to represent ini stream objects */
 
 /** Contains information about current record in ini file */
 typedef struct tagIniInfo
@@ -87,16 +86,16 @@ typedef bool      (__FASTCALL__ *FiUserFunc)(IniInfo * info);
 *                                                      *
 * Chematic disgramm :                                  *
 *                                                      *
-*   FiFileProcessor   -- call --> FiStringProcessor    *
-*   FiStringProcessor -- call --> FiCommandProcessor   *
-*   FiCommandProcessor - call --> FiFileProcessor &    *
-*                                 FiStringProcessor    *
+*   FiFileParser      -- call --> FiStringParser       *
+*   FiStringParser    -- call --> FiCommandParser      *
+*   FiCommandParser   -- call --> FiFileParser    &    *
+*                                 FiStringParser       *
 \******************************************************/
 
 extern  int    (__FASTCALL__ *FiError)(int nError,int row,const char *addinfo); /**< Default error handler */
-extern  void   (__FASTCALL__ *FiFileProcessor)(const char *fname); /**< Default file processor */
-extern  bool  (__FASTCALL__ *FiStringProcessor)(char * curr_str); /**< Default string processor */
-extern  bool  (__FASTCALL__ *FiCommandProcessor)(const char * cmd); /**< Default command processor */
+extern  void   (__FASTCALL__ *FiFileParser)(const char *fname); /**< Default file processor */
+extern  bool  (__FASTCALL__ *FiStringParser)(char * curr_str); /**< Default string processor */
+extern  bool  (__FASTCALL__ *FiCommandParser)(const char * cmd); /**< Default command processor */
 extern  bool  (__FASTCALL__ *FiGetCondition)(const char * cond);    /**< Default processor of conditions */
 
 enum {
@@ -106,10 +105,10 @@ enum {
 		     * @return                String, that described error
 		     * @param nError          Specifies error number
 		    **/
-extern const char *  __FASTCALL__ FiDecodeError(int nError);
-extern bool         FiAllWantInput ; /**< Flags indicating, that all input exclude commentaries, i.e. carriage return and line feed and space characters will be returned */
-extern char *        FiUserMessage;   /**< Pointer to user defined message string */
-extern char          FiOpenComment;   /**< Character to be used as opening comment. @note comment always start with FiOpenComment symbol and termonated at end of line */
+extern const char*   __FASTCALL__ FiDecodeError(int nError);
+extern bool          FiAllWantInput ; /**< Flags indicating, that all input exclude commentaries, i.e. carriage return and line feed and space characters will be returned */
+extern const char*   FiUserMessage;   /**< Pointer to user defined message string */
+extern const char    FiOpenComment;   /**< Character to be used as opening comment. @note comment always start with FiOpenComment symbol and terminated at end of line */
 
 		   /** Creates file with error description.
 		     * @return                none
@@ -151,28 +150,46 @@ void          __FASTCALL__ FiProgress(const char * filename,FiUserFunc fuser);
 /******************************************************************\
 * Low level routines                                               *
 \******************************************************************/
+namespace beye {
+    class Ini_io : public Opaque {
+	public:
+	    Ini_io();
+	    virtual ~Ini_io();
 
-FiHandler     __FASTCALL__ FiOpen( const char * filename );
-void          __FASTCALL__ FiClose( FiHandler h );
-int           __FASTCALL__ FiSearch( FiHandler h, const char * Name );
-void          __FASTCALL__ FiSeekTo( FiHandler h, int nSection, int nSubSection, int nItem );
-char *        __FASTCALL__ FiGetNextString( FiHandler h, char * store, unsigned int len, char *original );
-unsigned int  __FASTCALL__ FiGetNumberOfSections( FiHandler h);
-unsigned int  __FASTCALL__ FiGetTotalNumberOfSubSections( FiHandler h );
-unsigned int  __FASTCALL__ FiGetLocalNumberOfSubSections( FiHandler h, int nSection );
-unsigned int  __FASTCALL__ FiGetTotalNumberOfItems( FiHandler h);
-unsigned int  __FASTCALL__ FiGetLocalNumberOfItems( FiHandler h,int nSection , int nSubSection);
+	    virtual bool		open( const std::string& filename );
+	    virtual void		close();
+	    virtual char*		get_next_string(char* store, unsigned int len, char *original );
+#if 0
+	    virtual int			search(const char * name);
+	    virtual void		seek_to(int nSection, int nSubSection, int nItem);
+	    virtual size_t		get_number_sections() const;
+	    virtual size_t		get_total_number_subsections() const;
+	    virtual size_t		get_local_number_subsections(int nSection) const;
+	    virtual size_t		get_total_number_items() const;
+	    virtual size_t		get_local_number_items(int nSection, int nSubSection);
+#endif
+	    virtual int			eof() const { return handler.eof(); }
+	    virtual bool		seek(__fileoff_t off,int origin) const { return handler.seek(off,origin); }
+	    inline void			rewind_ini() const { handler.seek(0L,BFile::Seek_Set); }
+	    inline bool			opened() const { return _opened; }
+	private:
+	    char*			GETS(char *str,unsigned num);
+
+	    bool		_opened;
+	    BFile&		handler;
+    };
+} // namespace beye
 
 bool         __FASTCALL__ FiisSection( const char * str );
 bool         __FASTCALL__ FiisSubSection( const char * str );
 bool         __FASTCALL__ FiisItem( const char * str);
 bool         __FASTCALL__ FiisCommand( const char * str);
 
-unsigned int  __FASTCALL__ FiGetLengthSection( const char * src );
-unsigned int  __FASTCALL__ FiGetLengthSubSection( const char * src );
-unsigned int  __FASTCALL__ FiGetLengthItem( const char * src );
-unsigned int  __FASTCALL__ FiGetLengthValue( const char * src );
-unsigned int  __FASTCALL__ FiGetLengthCommandString( const char * src );
+size_t        __FASTCALL__ FiGetLengthSection( const char * src );
+size_t        __FASTCALL__ FiGetLengthSubSection( const char * src );
+size_t        __FASTCALL__ FiGetLengthItem( const char * src );
+size_t        __FASTCALL__ FiGetLengthValue( const char * src );
+size_t        __FASTCALL__ FiGetLengthCommandString( const char * src );
 
 char *        __FASTCALL__ FiGetSectionName(const char * src,char * store);
 char *        __FASTCALL__ FiGetSubSectionName(const char * src, char * store);
@@ -180,9 +197,9 @@ char *        __FASTCALL__ FiGetItemName(const char * src, char * store);
 char *        __FASTCALL__ FiGetValueOfItem(const char * src, char * store);
 char *        __FASTCALL__ FiGetCommandString(const char * src, char * store);
 
-void          __FASTCALL__ FiFileProcessorStd( const char * filename );
-bool         __FASTCALL__ FiStringProcessorStd( char * string );
-bool         __FASTCALL__ FiCommandProcessorStd( const char * cmd );
+void          __FASTCALL__ FiFileParserStd( const char * filename );
+bool         __FASTCALL__ FiStringParserStd( char * string );
+bool         __FASTCALL__ FiCommandParserStd( const char * cmd );
 
 /**
     WORD processor
@@ -194,7 +211,7 @@ typedef struct tagSTRING
   unsigned int iptr;
 }STRING;
 
-unsigned int  __FASTCALL__ FiGetLengthBracketString( const char * src );
+size_t        __FASTCALL__ FiGetLengthBracketString( const char * src );
 char *        __FASTCALL__ FiGetBracketString(const char * str, char * store);
 int           __FASTCALL__ FiisLegal(const char * illegal,char c);
 unsigned int  __FASTCALL__ FiGetLengthNextWord( STRING * str, const char * illegal_symbols);
@@ -234,10 +251,10 @@ enum {
 
 struct hIniProfile
 {
-   FiHandler     handler;
-   char*         fname;
-   any_t*        cache;
-   unsigned      flags;
+   Ini_io*	handler;
+   std::string	fname;
+   any_t*	cache;
+   unsigned	flags;
 };
 
 /** For internal purposes */
