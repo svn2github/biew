@@ -57,10 +57,20 @@ fprintf(stderr,
 
 static unsigned char CaseSens = 2; /**< 2 - case 1 - upper 0 - lower */
 static FiUserFunc proc;
-static pVar FirstVar = NULL;
 static Ini_io* ActiveFile = NULL;
-bool ifSmarting = true;
 const char *fi_Debug_Str = NULL;
+
+static int __FASTCALL__ StdError(int ne,int row,const std::string& addinfo);
+static void __FASTCALL__ FiFileParserStd(const std::string& filename);
+static bool __FASTCALL__ FiStringParserStd(const std::string& curr_str);
+static bool __FASTCALL__ FiCommandParserStd( const std::string& cmd );
+static bool __FASTCALL__ FiGetConditionStd( const std::string& condstr);
+
+static int (__FASTCALL__ *FiError)(int nError,int row,const std::string& ) = StdError;
+static void  (__FASTCALL__ *FiFileParser)(const std::string& fname) = FiFileParserStd;
+static bool (__FASTCALL__ *FiStringParser)(const std::string& curr_str) = FiStringParserStd;
+static bool (__FASTCALL__ *FiCommandParser)(const std::string& cmd) = FiCommandParserStd;
+static bool (__FASTCALL__ *FiGetCondition)( const std::string& condstr) = FiGetConditionStd;
 
 /**************************************************************\
 *                      Low level support                       *
@@ -70,26 +80,26 @@ const char *fi_Debug_Str = NULL;
 static const unsigned __C_EOF=0x1A;
 
 static std::vector<std::pair<size_t,std::string> > file_info;
-const char*  FiUserMessage = NULL;
+static const char*  FiUserMessage = NULL;
 static const char iniLegalSet[] = " _0123456789"
 			   "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 			   "abcdefghijklmnopqrstuvwxyz";
 
-inline bool IS_VALID_NAME(const char* name) { return strspn(name,iniLegalSet) == strlen(name); }
-inline bool IS_SECT(const std::string& str,char ch) { return str[0] == ch; }
-inline bool FiisSection(const std::string& str ) { return IS_SECT(str,'['); }
-inline bool FiisSubSection(const std::string& str ) { return IS_SECT(str,'<'); }
-inline bool FiisCommand(const std::string& str ) { return IS_SECT(str,'#'); }
-inline bool FiisItem(const std::string& str) { return !(FiisSection(str) || FiisSubSection(str) || FiisCommand(str)); }
+static inline bool IS_VALID_NAME(const std::string& name) { return name.find_first_not_of(iniLegalSet) == std::string::npos; }
+static inline bool IS_SECT(const std::string& str,char ch) { return str[0] == ch; }
+static inline bool FiisSection(const std::string& str ) { return IS_SECT(str,'['); }
+static inline bool FiisSubSection(const std::string& str ) { return IS_SECT(str,'<'); }
+static inline bool FiisCommand(const std::string& str ) { return IS_SECT(str,'#'); }
+static inline bool FiisItem(const std::string& str) { return !(FiisSection(str) || FiisSubSection(str) || FiisCommand(str)); }
 
-void __FASTCALL__ FiAError(int nError,int row,const std::string& addinfo)
+static void __FASTCALL__ FiAError(int nError,int row,const std::string& addinfo)
 {
  int eret = 0;
  if(FiError) eret = (*FiError)(nError,row,addinfo);
  if(eret == __FI_EXITPROC) exit(255);
 }
 
-void __FASTCALL__ FiAErrorCL(int nError) { FiAError(nError,file_info.back().first,""); }
+static void __FASTCALL__ FiAErrorCL(int nError) { FiAError(nError,file_info.back().first,""); }
 
 static const char * list[] = {
  "No errors",
@@ -114,7 +124,7 @@ static const char * list[] = {
  "User error."
 };
 
-const char * __FASTCALL__ FiDecodeError(int nError)
+static const char * __FASTCALL__ FiDecodeError(int nError)
 {
  const char *ret;
  nError = abs(nError);
@@ -148,8 +158,6 @@ static int __FASTCALL__ StdError(int ne,int row,const std::string& addinfo)
     return __FI_EXITPROC;
 }
 
-int (__FASTCALL__ *FiError)(int nError,int row,const std::string& ) = StdError;
-
 namespace beye {
 Ini_io::Ini_io():_opened(false),handler(bNull) {}
 Ini_io::~Ini_io() { if(&handler!=&bNull) close(); }
@@ -175,196 +183,8 @@ void Ini_io::close()
     }
 }
 
-#if 0 /* Uncomment it later */
-void __FASTCALL__ FiSeekTo( FiHandler h, unsigned int nSection, unsigned int nSubSection, unsigned int nItem )
-{
-  unsigned int ns = 0,nss = 0,ni = 0;
-  h->seek(0L,SEEKF_START);
-  FinCurrString[FiFilePtr - 1] = 0;
-  if(nSection)
-  {
-    char * buff;
-    buff = __FiCMaxStr();
-    while(!h->eof())
-    {
-      FiGetNextString(h,buff,FI_MAXSTRLEN,NULL);
-      if(FiisSection(buff)) ns++;
-      if(ns < nSection) continue;
-    }
-    PFREE(buff);
-  }
-  if(nSubSection)
-  {
-   char * buff;
-   buff = __FiCMaxStr();
-   while(!h->eof())
-   {
-     FiGetNextString(h,buff,FI_MAXSTRLEN,NULL);
-     if(FiisSubSection(buff)) nss++;
-     if(nss < nSubSection) continue;
-   }
-   PFREE(buff);
-  }
-  if(nItem)
-  {
-   char * buff;
-   buff = __FiCMaxStr();
-   while(!h->eof())
-   {
-     FiGetNextString(h,buff,FI_MAXSTRLEN,NULL);
-     if(FiisItem(buff)) ni++;
-     if(nss < nItem) continue;
-   }
-   PFREE(buff);
-  }
-}
-
-int __FASTCALL__ FiSearch(FiHandler h, const std::string& str )
-{
-  char *tmp,*buff;
-  tmp  = __FiCMaxStr();
-  buff = __FiCMaxStr();
-  h->seek(0L,SEEKF_START);
-  FinCurrString[FiFilePtr - 1] = 0;
-  while(!h->eof())
-  {
-   FiGetNextString(h,buff,FI_MAXSTRLEN,NULL);
-   if(FiisSection(buff))
-   {
-     FiGetSectionName(buff,tmp);
-     if(strcmp(tmp,str) == 0) { PFREE(tmp); PFREE(buff); return __FI_SECTION;}
-   }
-   if(FiisSubSection(buff))
-   {
-     FiGetSubSectionName(buff,tmp);
-     if(strcmp(tmp,str) == 0) { PFREE(buff); PFREE(tmp); return __FI_SUBSECTION; }
-   }
-   if(FiisItem(buff))
-   {
-     FiGetItemName(buff,tmp);
-     if(strcmp(tmp,str) == 0) { PFREE(tmp); PFREE(buff); return __FI_ITEM; }
-   }
-  }
-  h->seek(0L,SEEKF_START);
-  FinCurrString[FiFilePtr - 1] = 0;
-  PFREE(tmp);
-  PFREE(buff);
-  return __FI_NOTFOUND;
-}
-
-unsigned int  __FASTCALL__ FiGetNumberOfSections( FiHandler h)
-{
- __fileoff_t curr;
- unsigned int eret;
- unsigned int save;
- char * buff;
- eret = 0;
- save = FinCurrString[FiFilePtr -1];
- curr = bioTell(h);
- buff = __FiCMaxStr();
- h->seek(0L,SEEKF_START);
- while(!h->eof())
- {
-   FiGetNextString(h,buff,FI_MAXSTRLEN,NULL);
-   if(FiisSection(buff)) eret++;
- }
- h->seek(curr,SEEKF_START);
- FinCurrString[FiFilePtr - 1] = save;
- PFREE(buff);
- return eret;
-}
-
-unsigned int __FASTCALL__ FiGetTotalNumberOfSubSections( FiHandler h )
-{
- __fileoff_t curr;
- unsigned int eret;
- unsigned int save;
- char * buff;
- eret = 0;
- curr = bioTell(h);
- buff = __FiCMaxStr();
- save = FinCurrString[FiFilePtr - 1];
- h->seek(0L,SEEKF_START);
- while(!h->eof())
- {
-   FiGetNextString(h,buff,FI_MAXSTRLEN,NULL);
-   if(FiisSubSection(buff)) eret++;
- }
- h->seek(curr,SEEKF_START);
- FinCurrString[FiFilePtr - 1] = save;
- PFREE(buff);
- return eret;
-}
-
-unsigned int __FASTCALL__ FiGetLocalNumberOfSubSections( FiHandler h, unsigned unsigned int nSection )
-{
-  __fileoff_t curr;
-  unsigned int eret;
-  unsigned int save;
-  char * buff;
-  save = FinCurrString[FiFilePtr - 1];
-  curr = bioTell(h);
-  eret = 0;
-  buff = __FiCMaxStr();
-  FiSeekTo(h,nSection,0,0);
-  while(!h->eof())
-  {
-    FiGetNextString(h,buff,FI_MAXSTRLEN,NULL);
-    if(FiisItem(buff)) eret++;
-  }
-  h->seek(curr,SEEKF_START);
-  FinCurrString[FiFilePtr - 1] = save;
-  PFREE(buff);
-  return eret;
-}
-
-unsigned int  __FASTCALL__ FiGetTotalNumberOfItems( FiHandler h)
-{
- __fileoff_t curr;
- unsigned int eret;
- unsigned int save;
- char * buff;
- eret = 0;
- curr = bioTell(h);
- save = FinCurrString[FiFilePtr - 1];
- buff = __FiCMaxStr();
- h->seek(0L,SEEKF_START);
- while(!h->eof())
- {
-   FiGetNextString(h,buff,FI_MAXSTRLEN,NULL);
-   if(FiisItem(buff)) eret++;
- }
- h->seek(curr,SEEKF_START);
- FinCurrString[FiFilePtr - 1] = save;
- PFREE(buff);
- return eret;
-}
-
-unsigned int  __FASTCALL__ FiGetLocalNumberOfItems( FiHandler h,int nSection, int nSubSection)
-{
-  __fileoff_t curr;
-  unsigned int eret;
-  unsigned int save;
-  char * buff;
-  save = FinCurrString[FiFilePtr - 1];
-  curr = bioTell(h);
-  eret = 0;
-  buff = __FiCMaxStr();
-  FiSeekTo(h,nSection,nSubSection,0);
-  while(!h->eof())
-  {
-    FiGetNextString(h,buff,FI_MAXSTRLEN,NULL);
-    if(FiisItem(buff)) eret++;
-  }
-  h->seek(curr,SEEKF_START);
-  FinCurrString[FiFilePtr - 1] = save;
-  PFREE(buff);
-  return eret;
-}
-#endif // #if 0
-
-const char FiOpenComment=';';
-bool  FiAllWantInput = false;
+static const char FiOpenComment=';';
+static bool  FiAllWantInput = false;
 
 char* Ini_io::get_next_string(char * str,unsigned int size,char *original)
 {
@@ -418,6 +238,12 @@ char* Ini_io::get_next_string(char * str,unsigned int size,char *original)
     }
   }
   return str;
+}
+
+std::string Ini_io::get_next_string() {
+    char tmp[FI_MAXSTRLEN];
+    get_next_string(tmp,sizeof(tmp),NULL);
+    return std::string(tmp);
 }
 
 char* Ini_io::GETS(char *str,unsigned num)
@@ -507,14 +333,36 @@ static char *  __FASTCALL__ __GetBrStrName(const std::string& src,char * store,c
  return store;
 }
 
-inline size_t FiGetLengthBracketString(const std::string& str ) { return __GetLengthBrStr(str,'"','"'); }
-inline char*  FiGetBracketString(const std::string& str,char* store) { return __GetBrStrName(str,store,'"','"'); }
-inline char*  FiGetSectionName(const std::string& src,char* store) { return __GetBrStrName(src,store,'[',']'); }
-inline char*  FiGetSubSectionName(const std::string& src,char* store) { return __GetBrStrName(src,store,'<','>'); }
-inline size_t FiGetLengthSection(const std::string& src ) { return __GetLengthBrStr(src,'[',']'); }
-inline size_t FiGetLengthSubSection(const std::string& src ) { return __GetLengthBrStr(src,'<','>'); }
+static inline size_t FiGetLengthBracketString(const std::string& str ) { return __GetLengthBrStr(str,'"','"'); }
+static inline char*  FiGetBracketString(const std::string& str,char* store) { return __GetBrStrName(str,store,'"','"'); }
+static inline char*  FiGetSectionName(const std::string& src,char* store) { return __GetBrStrName(src,store,'[',']'); }
+static inline char*  FiGetSubSectionName(const std::string& src,char* store) { return __GetBrStrName(src,store,'<','>'); }
+static inline size_t FiGetLengthSection(const std::string& src ) { return __GetLengthBrStr(src,'[',']'); }
+static inline size_t FiGetLengthSubSection(const std::string& src ) { return __GetLengthBrStr(src,'<','>'); }
 
-size_t  __FASTCALL__ FiGetLengthItem( const std::string& src )
+static std::string __FASTCALL__ __GetBrStrName(const std::string& src,char obr,char cbr)
+{
+    std::string rc;
+    size_t ends;
+    if(src[0] == obr) {
+	unsigned len;
+	ends = src.find(cbr,1);
+	if(ends==std::string::npos) goto err;
+	if(src[ends+1]) FiAErrorCL(__FI_BADCHAR);
+	len = ends-1;
+	rc=src.substr(1,len);
+    } else {
+err:
+	FiAErrorCL(__FI_OPENSECT);
+    }
+    return rc;
+}
+
+static inline std::string FiGetBracketString(const std::string& str) { return __GetBrStrName(str,'"','"'); }
+static inline std::string FiGetSectionName(const std::string& src) { return __GetBrStrName(src,'[',']'); }
+static inline std::string FiGetSubSectionName(const std::string& src) { return __GetBrStrName(src,'<','>'); }
+
+static size_t  __FASTCALL__ FiGetLengthItem( const std::string& src )
 {
   size_t sret;
   sret = src.find('=');
@@ -522,7 +370,7 @@ size_t  __FASTCALL__ FiGetLengthItem( const std::string& src )
   return sret;
 }
 
-size_t  __FASTCALL__ FiGetLengthValue( const std::string& src )
+static size_t  __FASTCALL__ FiGetLengthValue( const std::string& src )
 {
   size_t sptr;
   size_t len;
@@ -532,7 +380,7 @@ size_t  __FASTCALL__ FiGetLengthValue( const std::string& src )
   return len-(sptr+1);
 }
 
-char *    __FASTCALL__ FiGetValueOfItem(const std::string& src,char * store)
+static char *    __FASTCALL__ FiGetValueOfItem(const std::string& src,char * store)
 {
   size_t from;
   from = src.find('=');
@@ -541,14 +389,14 @@ char *    __FASTCALL__ FiGetValueOfItem(const std::string& src,char * store)
   return store;
 }
 
-size_t  __FASTCALL__ FiGetLengthCommandString( const std::string& src )
+static size_t  __FASTCALL__ FiGetLengthCommandString( const std::string& src )
 {
    size_t i;
    i = strspn(src.c_str()," #");
    return src.length() - i;
 }
 
-char *    __FASTCALL__ FiGetItemName(const std::string& src,char * store)
+static char *    __FASTCALL__ FiGetItemName(const std::string& src,char * store)
 {
   size_t sptr;
   unsigned len;
@@ -563,7 +411,7 @@ char *    __FASTCALL__ FiGetItemName(const std::string& src,char * store)
   return store;
 }
 
-char *   __FASTCALL__ FiGetCommandString(const std::string& src,char * store)
+static char *   __FASTCALL__ FiGetCommandString(const std::string& src,char * store)
 {
   unsigned i;
   i = strspn(src.c_str()," #");
@@ -571,43 +419,15 @@ char *   __FASTCALL__ FiGetCommandString(const std::string& src,char * store)
   return store;
 }
 
-unsigned int  __FASTCALL__ FiGetLengthNextWord( STRING * str, const std::string& illegal_symbols)
+static std::string  __FASTCALL__ FiGetCommandString(const std::string& src)
 {
- unsigned int j,i;
- i = strspn(&str->str[str->iptr],illegal_symbols.c_str());
- j = strcspn(&str->str[i+str->iptr],illegal_symbols.c_str());
- return j;
+    std::string rc;
+    unsigned i;
+    i = strspn(src.c_str()," #");
+    rc=src.substr(i);
+    return rc;
 }
 
-char * __FASTCALL__ FiGetNextWord( STRING * str,const std::string& illegal_symbols,char * store)
-{
- unsigned int j;
- str->iptr += strspn(&str->str[str->iptr],illegal_symbols.c_str());
- j = strcspn(&str->str[str->iptr],illegal_symbols.c_str());
- memcpy(store,&str->str[str->iptr],j);
- store[j] = 0;
- str->iptr += j;
- return store;
-}
-
-static unsigned int  __FASTCALL__ FiGetLengthNextLegWord( STRING * str, const std::string& legal_symbols)
-{
- unsigned int j,i;
- i = strcspn(&str->str[str->iptr],legal_symbols.c_str());
- j = strspn(&str->str[i+str->iptr],legal_symbols.c_str());
- return j;
-}
-
-static char * __FASTCALL__ FiGetNextLegWord( STRING * str,const std::string& legal_symbols,char * store)
-{
- unsigned int j;
- str->iptr += strcspn(&str->str[str->iptr],legal_symbols.c_str());
- j = strspn(&str->str[str->iptr],legal_symbols.c_str());
- memcpy(store,&str->str[str->iptr],j);
- store[j] = 0;
- str->iptr += j;
- return store;
-}
 /************** BEGIN of Construct section ********************/
 
 /*
@@ -620,42 +440,6 @@ static char *  __FASTCALL__ __FiCMaxStr()
   char* ret;
   ret = new char [FI_MAXSTRLEN + 1];
   if(!ret) FiAError(__FI_NOTMEM,0,NULL);
-  return ret;
-}
-
-static char *  __FASTCALL__ __FiCNWord( STRING *str , const std::string& illegal_set)
-{
-  char * ret;
-  unsigned int lword;
-  lword = FiGetLengthNextWord(str,illegal_set);
-  ret = new char [lword + 1];
-  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
-  if(lword) FiGetNextWord(str,illegal_set,ret);
-  else      ret[0] = 0;
-  return ret;
-}
-
-static char *  __FASTCALL__ __FiCNLegWord( STRING *str , const std::string& legal_set)
-{
-  char * ret;
-  unsigned int lword;
-  lword = FiGetLengthNextLegWord(str,legal_set);
-  ret = new char [lword + 1];
-  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
-  if(lword) FiGetNextLegWord(str,legal_set,ret);
-  else      ret[0] = 0;
-  return ret;
-}
-
-static char *  __FASTCALL__ __FiCBString( const std::string& src )
-{
-  char * ret;
-  unsigned int lbr;
-  lbr = FiGetLengthBracketString(src);
-  ret = new char [lbr + 1];
-  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
-  if(lbr) FiGetBracketString(src,ret);
-  else    ret[0] = 0;
   return ret;
 }
 
@@ -726,406 +510,262 @@ static char *  __FASTCALL__ __FiCCmd( const std::string& src )
 
 /************* BEGIN of List Var section ********************/
 
-pVar __FASTCALL__ FiConstructVar(const std::string& v,const std::string& a)
-{
- char * str;
- pVar vv;
- vv = new Var;
- if(vv == NULL) FiAError(__FI_NOTMEM,0,NULL);
- vv->next = NULL;
- vv->prev = NULL;
- str = new char [v.length() + 1];
- if(str == NULL) FiAError(__FI_NOTMEM,0,NULL);
- strcpy(str,v.c_str());
- vv->variables = str;
- str = new char [a.length() + 1];
- if(str == NULL) FiAError(__FI_NOTMEM,0,NULL);
- strcpy(str,a.c_str());
- vv->associate = str;
- return vv;
+namespace beye {
+Variable_Set::Variable_Set() {}
+Variable_Set::~Variable_Set() {}
+
+void Variable_Set::add(const std::string& var,const std::string& associate) {
+    set[var] = associate;
 }
 
-void __FASTCALL__ FiDeleteVar(pVar pp)
-{
-  PFREE(pp->variables);
-  PFREE(pp->associate);
-  PFREE(pp);
+void Variable_Set::remove(const std::string& var) {
+    std::map<std::string,std::string>::iterator it;
+    it = set.find(var);
+    set.erase(it);
 }
 
-void __FASTCALL__ FiDeleteAllVar()
-{
-  pVar iter;
-  if(FirstVar)
-  {
-    iter = FirstVar;
-    while( iter!= 0 )
-    {
-      pVar temp;
-      temp = iter->next;
-      FiDeleteVar(iter);
-      iter = temp;
-    }
-    FirstVar = 0;
-  }
-}
+void Variable_Set::clear() { set.clear(); }
 
-const char * __FASTCALL__ FiExpandVariables(const std::string& var)
-{
- char *ret = 0;
- pVar iter;
- iter = FirstVar;
- if(FirstVar != NULL)
- {
-  for(;;)
-  {
-   if(var==iter->variables)
-   {
-     ret = iter->associate;
-     break;
-   }
-   if(iter->next == NULL) FiAErrorCL(__FI_NODEFVAR);
-   iter = iter->next;
-  }
- }
- return ret;
-}
+std::string Variable_Set::expand(const std::string& var) { return set[var]; }
 
-bool __FASTCALL__ FiExpandAllVar(const std::string& value,char * store)
-{
-  bool ret;
-  if(ifSmarting && value.find('%')!=std::string::npos)
-  {
-    char tmp[FI_MAXSTRLEN+1];
-    char isVar,npercent;
-    unsigned char buffer_ptr,tmp_ptr;
-    unsigned int i,slen;
-    npercent = 0;
-    buffer_ptr = tmp_ptr = isVar = 0;
-    slen = value.length();
-    for(i = 0;i < slen;i++)
-    {
-	char c;
-	c = value[i];
-	if(c == '%')
-	{
-	  npercent++;
-	  isVar = !isVar;
-	  if(!isVar)
-	  {
-	    tmp[tmp_ptr] = '\0';
-	    strcpy(&store[buffer_ptr],FiExpandVariables(tmp));
-	    buffer_ptr = strlen(store);
-	    tmp_ptr = 0;
-	  }
+std::string Variable_Set::substitute(const std::string& src,char delim) {
+    std::string rc;
+    if(src.find(delim)!=std::string::npos) {
+	char tmp[FI_MAXSTRLEN+1];
+	char npercent;
+	bool isVar;
+	unsigned char tmp_ptr;
+	unsigned int i,slen;
+	npercent = 0;
+	tmp_ptr = 0;
+	isVar = false;
+	slen = src.length();
+	for(i = 0;i < slen;i++) {
+	    char c;
+	    c = src[i];
+	    if(c == delim) {
+		npercent++;
+		isVar = !isVar;
+		if(!isVar) {
+		    tmp[tmp_ptr] = '\0';
+		    rc+=expand(tmp);
+		    tmp_ptr = 0;
+		}
+	    } else {
+		if(isVar)	tmp[tmp_ptr++] = c;
+		else		rc+=c;
+	    }
 	}
-	else
-	{
-	  if(isVar)  tmp[tmp_ptr++] = c;
-	  else store[buffer_ptr++] = c;
-	}
-    }
-    store[buffer_ptr] = '\0';
-    if( npercent%2 ) FiAErrorCL(__FI_OPENVAR);
-    ret = true;
-  }
-  else
-  {
-    strcpy(store,value.c_str());
-    ret = false;
-  }
-  return ret;
+	if( npercent%2 ) FiAErrorCL(__FI_OPENVAR);
+    } else rc=src;
+    return rc;
 }
 
-void __FASTCALL__ FiAddVariables(const std::string& var,const std::string& associate)
-{
- pVar iter,prev;
- if(!FirstVar)
- {
-    FirstVar = FiConstructVar(var,associate);
-    FirstVar->next = NULL;
-    FirstVar->prev = NULL;
- }
- else
- {
-  iter = FirstVar;
-  for(;;)
-  {
-   if(var==iter->variables)
-   {
-     PFREE(iter->associate);
-     iter->associate = new char [associate.length() + 1];
-     if(iter->associate == NULL) FiAError(__FI_NOTMEM,0,NULL);
-     strcpy(iter->associate,associate.c_str());
-     return;
-   }
-   if(iter->next == NULL) break;
-   iter = iter->next;
-  }
-  prev = FiConstructVar(var,associate);
-  iter->next = prev;
-  prev->prev = iter;
- }
+
+Tokenizer::Tokenizer(const std::string& _src):src(_src),iptr(0) {}
+Tokenizer::~Tokenizer() {}
+
+size_t Tokenizer::next_length(const std::string& illegal_symbols) const {
+    size_t j,i;
+    i = strspn(&src[iptr],illegal_symbols.c_str());
+    j = strcspn(&src[i+iptr],illegal_symbols.c_str());
+    return j;
 }
 
-void __FASTCALL__ FiRemoveVariables(const std::string& var)
-{
-  pVar iter,p;
-  if(FirstVar == NULL) return;
-  iter = FirstVar;
-  for(;;)
-  {
-    if(var==iter->variables)
-    {
-      if(iter != FirstVar)
-      {
-	p = iter->prev;
-	p->next = iter->next;
-	FiDeleteVar(iter);
-	return;
-      }
-      else
-      {
-	p = iter->next;
-	FiDeleteVar(iter);
-	FirstVar = p;
-	return;
-      }
-    }
-    if(iter->next == NULL) break;
-    iter = iter->next;
-  }
-  FiAErrorCL(__FI_NOVAR);
+std::string Tokenizer::next_word(const std::string& illegal_symbols) {
+    std::string rc;
+    size_t j;
+    iptr += strspn(&src[iptr],illegal_symbols.c_str());
+    j = strcspn(&src[iptr],illegal_symbols.c_str());
+    rc=src.substr(iptr,j);
+    iptr += j;
+    return rc;
 }
+
+size_t Tokenizer::next_legal_length(const std::string& legal_symbols) const
+{
+    unsigned int j,i;
+    i = strcspn(&src[iptr],legal_symbols.c_str());
+    j = strspn(&src[i+iptr],legal_symbols.c_str());
+    return j;
+}
+
+std::string Tokenizer::next_legal_word(const std::string& legal_symbols)
+{
+    std::string rc;
+    unsigned int j;
+    iptr += strcspn(&src[iptr],legal_symbols.c_str());
+    j = strspn(&src[iptr],legal_symbols.c_str());
+    rc=src.substr(iptr,j);
+    iptr += j;
+    return rc;
+}
+std::string Tokenizer::tail() {
+    std::string rc=src.substr(iptr+1);
+    return rc;
+}
+} // namespace beye
 
 /*************** END of List Var Section ***************/
+static Variable_Set vars;
+static bool ifSmarting = true;
 
-bool __FASTCALL__ FiGetConditionStd( const std::string& condstr)
+static bool __FASTCALL__ FiGetConditionStd( const std::string& condstr)
 {
-  char * var,*user_ass;
-  char * real_ass;
-  const char *rvar;
-  STRING str;
-  bool ret;
-  char cond[3];
+    std::string var;
+    std::string user_ass;
+    std::string real_ass;
+    std::string rvar;
+    Tokenizer tokenizer(condstr);
+    bool ret;
+    char cond[3];
 
-  str.iptr = 0;
-  str.str = condstr.c_str();
-  user_ass = __FiCMaxStr();
-  real_ass = __FiCMaxStr();
+    var = tokenizer.next_word(" !=");
+    real_ass=ifSmarting?vars.substitute(var):var;
+    rvar = vars.expand(real_ass);
+    cond[0] = tokenizer.next_char();
+    cond[1] = tokenizer.next_char();
+    cond[2] = '\0';
 
-  var = __FiCNWord(&str," !=");
-  FiExpandAllVar(var,real_ass);
-  PFREE(var);
-  rvar = FiExpandVariables(real_ass);
-  cond[0] = str.str[str.iptr++];
-  cond[1] = str.str[str.iptr++];
-  cond[2] = '\0';
-
-  var = __FiCNWord(&str," ");
-  FiExpandAllVar(var,user_ass);
-  PFREE(var);
-  if(str.str[str.iptr]) FiAErrorCL(__FI_BADCHAR);
-  ret = false;
-  if(strcmp(cond,"==") == 0)  ret = (strcmp(user_ass,rvar) == 0);
-  else
-   if(strcmp(cond,"!=") == 0)  ret = (strcmp(user_ass,rvar) != 0);
-   else
-     FiAErrorCL(__FI_BADCOND);
-  PFREE(user_ass);
-  PFREE(real_ass);
-  return ret;
+    var = tokenizer.next_word(" ");
+    user_ass=ifSmarting?vars.substitute(var):var;
+    if(tokenizer.curr_char()) FiAErrorCL(__FI_BADCHAR);
+    ret = false;
+    if(strcmp(cond,"==") == 0)  ret = user_ass==rvar;
+    else if(strcmp(cond,"!=") == 0)  ret = user_ass!=rvar;
+    else FiAErrorCL(__FI_BADCOND);
+    return ret;
 }
 
-bool __FASTCALL__ FiCommandParserStd( const std::string& cmd )
+static bool __FASTCALL__ FiCommandParserStd( const std::string& cmd )
 {
- char *word,*a,*v;
- const char *fdeb_save;
- STRING str;
- static bool cond_ret = true;
- str.iptr = 0;
- str.str = cmd.c_str();
- word = __FiCNLegWord(&str,&iniLegalSet[1]);
- strlwr(word);
- if(strcmp(word,"include") == 0)
- {
-   char * bracket;
-   char _v[FI_MAXSTRLEN+1];
-   char pfile[FILENAME_MAX+1],*pfp,*pfp2;
-   bracket = __FiCBString(&str.str[str.iptr]);
-   FiExpandAllVar(bracket,_v);
-   fdeb_save = fi_Debug_Str;
-   /* make path if no path specified */
-   strcpy(pfile,file_info.back().second.c_str());
-   pfp=strrchr(pfile,'\\');
-   pfp2=strrchr(pfile,'/');
-   pfp=std::max(pfp,pfp2);
-   if(pfp && !(strchr(_v,'\\') || strchr(_v,'/'))) strcpy(pfp+1,_v);
-   else    strcpy(pfile,_v);
-   (*FiFileParser)(pfile);
-   fi_Debug_Str = fdeb_save;
-   PFREE(bracket);
-   goto Exit_CP;
- }
- else
- if(strcmp(word,"set") == 0)
- {
-   v = __FiCNLegWord(&str,&iniLegalSet[1]);
-   if(str.str[str.iptr] != '=') FiAErrorCL(__FI_NOTEQU);
-   str.iptr++;
-   a = __FiCNWord(&str," ");
-   if(v[0] == '\0' || v == NULL ) FiAErrorCL(__FI_BADVAR);
-   if(a[0] == '\0' || a == NULL ) FiAErrorCL(__FI_BADVAL);
-   FiAddVariables(v,a);
-   PFREE(a);
-   PFREE(v);
-   if(str.str[str.iptr]) FiAErrorCL(__FI_BADCHAR);
-   goto Exit_CP;
- }
- else
- if(strcmp(word,"delete") == 0)
- {
-   v = __FiCNLegWord(&str,&iniLegalSet[1]);
-   a = __FiCMaxStr();
-   FiExpandAllVar(v,a);
-   if(a[0] == '\0' || a == NULL) FiAErrorCL(__FI_BADVAR);
-   FiRemoveVariables(a);
-   PFREE(v);
-   PFREE(a);
-   if(str.str[str.iptr]) FiAErrorCL(__FI_BADCHAR);
-   goto Exit_CP;
- }
- else
- if(strcmp(word,"reset") == 0)
- {
-   if(str.str[str.iptr]) FiAErrorCL(__FI_BADCHAR);
-   FiDeleteAllVar();
-   goto Exit_CP;
- }
- else
- if(strcmp(word,"case") == 0)
- {
-   if(str.str[str.iptr]) FiAErrorCL(__FI_BADCHAR);
-   CaseSens = 2;
-   goto Exit_CP;
- }
- else
- if(strcmp(word,"smart") == 0)
- {
-   if(str.str[str.iptr]) FiAErrorCL(__FI_BADCHAR);
-   ifSmarting = true;
-   goto Exit_CP;
- }
- else
- if(strcmp(word,"nosmart") == 0)
- {
-   if(str.str[str.iptr]) FiAErrorCL(__FI_BADCHAR);
-   ifSmarting = false;
-   goto Exit_CP;
- }
- else
- if(strcmp(word,"uppercase") == 0)
- {
-   if(str.str[str.iptr]) FiAErrorCL(__FI_BADCHAR);
-   CaseSens = 1;
-   goto Exit_CP;
- }
- else
- if(strcmp(word,"lowercase") == 0)
- {
-   if(str.str[str.iptr]) FiAErrorCL(__FI_BADCHAR);
-   CaseSens = 0;
-   goto Exit_CP;
- }
- else
- if(strcmp(word,"error") == 0)
- {
-   a = __FiCMaxStr();
-   FiExpandAllVar(&str.str[str.iptr+1],a);
-   FiUserMessage = a;
-   FiAErrorCL(__FI_FIUSER);
- }
- else
- if(strcmp(word,"else") == 0) FiAErrorCL(__FI_ELSESTAT);
- else
- if(strcmp(word,"endif") == 0) FiAErrorCL(__FI_IFNOTFOUND);
- else
- if(strcmp(word,"elif") == 0) FiAErrorCL(__FI_ELIFSTAT);
- else
- if(strcmp(word,"if") == 0)
- {
-   char *sstore;
-   unsigned int nsave;
-   bool Condition,BeenElse;
-   int nLabel;
-   sstore = __FiCMaxStr();
-   nsave = file_info.back().first;
-   cond_ret = Condition = (*FiGetCondition)(&cmd[str.iptr]);
-   nLabel = 1;
-   BeenElse = false;
-   while(!ActiveFile->eof())
-   {
-     ActiveFile->get_next_string(sstore,FI_MAXSTRLEN,NULL);
-     if(sstore[0] == '\0') { PFREE(sstore); goto Exit_CP; }
-     if(FiisCommand(sstore))
-     {
-       STRING cStr;
-       a = __FiCCmd(sstore);
-       if(CaseSens == 1) strupr(a);
-       if(CaseSens == 0) strlwr(a);
-       cStr.iptr = 0;
-       cStr.str = a;
-       v = __FiCNWord(&cStr," ");
-       strlwr(v);
-       if(strcmp(v,"if") == 0 && !Condition) nLabel++;
-       if(strcmp(v,"endif") == 0 )
-       {
-	 nLabel--;
-	 if(nLabel == 0)
-	 {
-	   PFREE(sstore);
-	   PFREE(a);
-	   PFREE(v);
-	   goto Exit_CP;
-	 }
-	 if(nLabel <  0) FiAErrorCL(__FI_IFNOTFOUND);
-       }
-       if(strcmp(v,"else") == 0 && nLabel == 1)
-       {
-	   if( BeenElse ) FiAErrorCL(__FI_ELSESTAT);
-	   if( nLabel == 1 ) cond_ret = Condition = (Condition ? false : true);
-	   if( nLabel == 1 ) BeenElse = true;
-	   PFREE(v);
-	   PFREE(a);
-	   continue;
-       }
-       if(strcmp(v,"elif") == 0 && nLabel == 1)
-       {
-	   if( BeenElse ) FiAErrorCL(__FI_ELIFSTAT);
-	   if( nLabel == 1 ) cond_ret = Condition = (*FiGetCondition)(&a[cStr.iptr]);
-	   if( nLabel == 1 ) BeenElse = true;
-	   PFREE(v);
-	   PFREE(a);
-	   continue;
-       }
-       if(Condition) (*FiCommandParser)(a);
-       PFREE(v);
-       PFREE(a);
-     }
-     else { if(Condition) (*FiStringParser)(sstore); }
-   }
-   PFREE(sstore)
-   FiAError(__FI_OPENCOND,nsave,NULL);
- }
- FiAErrorCL(__FI_UNRECOGN);
- Exit_CP:
- PFREE(word);
- return cond_ret;
+    std::string word,a,v;
+    const char *fdeb_save;
+    Tokenizer tokenizer(cmd);
+    static bool cond_ret = true;
+    word = tokenizer.next_legal_word(&iniLegalSet[1]);
+    std::transform(word.begin(),word.end(),word.begin(),::tolower);
+    if(word=="include") {
+	std::string bracket;
+	std::string _v;
+	char pfile[FILENAME_MAX+1],*pfp,*pfp2;
+	bracket = FiGetBracketString(tokenizer.data());
+	_v=ifSmarting?vars.substitute(bracket):bracket;
+	fdeb_save = fi_Debug_Str;
+	/* make path if no path specified */
+	strcpy(pfile,file_info.back().second.c_str());
+	pfp=strrchr(pfile,'\\');
+	pfp2=strrchr(pfile,'/');
+	pfp=std::max(pfp,pfp2);
+	if(pfp && (_v.find('\\')==std::string::npos || _v.find('/')==std::string::npos)) strcpy(pfp+1,_v.c_str());
+	else    strcpy(pfile,_v.c_str());
+	(*FiFileParser)(pfile);
+	fi_Debug_Str = fdeb_save;
+	goto Exit_CP;
+    } else if(word=="set") {
+	v = tokenizer.next_legal_word(&iniLegalSet[1]);
+	if(tokenizer.curr_char() != '=') FiAErrorCL(__FI_NOTEQU);
+	tokenizer.next_char();
+	a = tokenizer.next_word(" ");
+	if(v[0] == '\0') FiAErrorCL(__FI_BADVAR);
+	if(a[0] == '\0') FiAErrorCL(__FI_BADVAL);
+	vars.add(v,a);
+	if(tokenizer.curr_char()) FiAErrorCL(__FI_BADCHAR);
+	goto Exit_CP;
+    } else if(word=="delete") {
+	std::string _a;
+	v = tokenizer.next_legal_word(&iniLegalSet[1]);
+	_a=ifSmarting?vars.substitute(v):v;
+	if(_a[0] == '\0') FiAErrorCL(__FI_BADVAR);
+	vars.remove(_a);
+	if(tokenizer.curr_char()) FiAErrorCL(__FI_BADCHAR);
+	goto Exit_CP;
+    } else if(word=="reset") {
+	if(tokenizer.curr_char()) FiAErrorCL(__FI_BADCHAR);
+	vars.clear();
+	goto Exit_CP;
+     } else if(word=="case") {
+	if(tokenizer.curr_char()) FiAErrorCL(__FI_BADCHAR);
+	CaseSens = 2;
+	goto Exit_CP;
+    } else if(word=="smart") {
+	if(tokenizer.curr_char()) FiAErrorCL(__FI_BADCHAR);
+	ifSmarting = true;
+	goto Exit_CP;
+    } else if(word=="nosmart") {
+	if(tokenizer.curr_char()) FiAErrorCL(__FI_BADCHAR);
+	ifSmarting = false;
+	goto Exit_CP;
+    } else if(word=="uppercase") {
+	if(tokenizer.curr_char()) FiAErrorCL(__FI_BADCHAR);
+	CaseSens = 1;
+	goto Exit_CP;
+    } else if(word=="lowercase") {
+	if(tokenizer.curr_char()) FiAErrorCL(__FI_BADCHAR);
+	CaseSens = 0;
+	goto Exit_CP;
+    } else if(word=="error") {
+	std::string _a;
+	std::string sptr=tokenizer.tail();
+	_a=ifSmarting?vars.substitute(sptr):sptr;
+	FiUserMessage = _a.c_str();
+	FiAErrorCL(__FI_FIUSER);
+    } else if(word=="else") FiAErrorCL(__FI_ELSESTAT);
+    else if(word=="endif") FiAErrorCL(__FI_IFNOTFOUND);
+    else if(word=="elif") FiAErrorCL(__FI_ELIFSTAT);
+    else if(word=="if") {
+	std::string sstore;
+	unsigned int nsave;
+	bool Condition,BeenElse;
+	int nLabel;
+	nsave = file_info.back().first;
+	cond_ret = Condition = (*FiGetCondition)(tokenizer.data());
+	nLabel = 1;
+	BeenElse = false;
+	while(!ActiveFile->eof()) {
+	    sstore=ActiveFile->get_next_string();
+	    if(sstore[0] == '\0') goto Exit_CP;
+	    if(FiisCommand(sstore)) {
+		a = FiGetCommandString(sstore);
+		if(CaseSens == 1) std::transform(a.begin(),a.end(),a.begin(),::toupper);
+		if(CaseSens == 0) std::transform(a.begin(),a.end(),a.begin(),::tolower);
+		Tokenizer c_tokenizer(a);
+		v = c_tokenizer.next_word(" ");
+		std::transform(v.begin(),v.end(),v.begin(),::tolower);
+		if(v=="if" && !Condition) nLabel++;
+		if(v=="endif") {
+		    nLabel--;
+		    if(nLabel == 0) goto Exit_CP;
+		    if(nLabel <  0) FiAErrorCL(__FI_IFNOTFOUND);
+		}
+		if(v=="else" && nLabel == 1) {
+		    if( BeenElse ) FiAErrorCL(__FI_ELSESTAT);
+		    if( nLabel == 1 ) cond_ret = Condition = (Condition ? false : true);
+		    if( nLabel == 1 ) BeenElse = true;
+		    continue;
+		}
+		if(v=="elif" && nLabel == 1) {
+		    if( BeenElse ) FiAErrorCL(__FI_ELIFSTAT);
+		    if( nLabel == 1 ) cond_ret = Condition = (*FiGetCondition)(c_tokenizer.data());
+		    if( nLabel == 1 ) BeenElse = true;
+		    continue;
+		}
+		if(Condition) (*FiCommandParser)(a);
+	    } else {
+		if(Condition) (*FiStringParser)(sstore);
+	    }
+	} // while
+	FiAError(__FI_OPENCOND,nsave,NULL);
+    } // if word==if
+    FiAErrorCL(__FI_UNRECOGN);
+    Exit_CP:
+    return cond_ret;
 }
 
 static std::string curr_sect;
 static std::string curr_subsect;
 
-bool __FASTCALL__ FiStringParserStd(const std::string& curr_str)
+static bool __FASTCALL__ FiStringParserStd(const std::string& curr_str)
 {
   char *item,*val;
     if(FiisCommand(curr_str))
@@ -1150,15 +790,15 @@ bool __FASTCALL__ FiStringParserStd(const std::string& curr_str)
     else
     if(FiisItem(curr_str))
     {
-      char buffer[FI_MAXSTRLEN+1];
+      std::string buffer;
       bool retval;
       IniInfo info;
-      FiExpandAllVar(curr_str,buffer);
-      item = __FiCItem(buffer);
+      buffer=ifSmarting?vars.substitute(curr_str):curr_str;
+      item = __FiCItem(buffer.c_str());
       retval = false;
       if(item[0])
       {
-       val = __FiCValue(buffer);
+       val = __FiCValue(buffer.c_str());
        if(!curr_sect.empty()) info.section = curr_sect.c_str();
        else info.section = "";
        if(!curr_subsect.empty()) info.subsection = curr_subsect.c_str();
@@ -1175,7 +815,7 @@ bool __FASTCALL__ FiStringParserStd(const std::string& curr_str)
   return false;
 }
 
-void __FASTCALL__ FiFileParserStd(const std::string& filename)
+static void __FASTCALL__ FiFileParserStd(const std::string& filename)
 {
   char * work_str, * ondelete;
   Ini_io& h = *new(zeromem) Ini_io;
@@ -1208,7 +848,7 @@ void __FASTCALL__  FiProgress(const std::string& filename,FiUserFunc usrproc)
   (*FiFileParser)(filename);
 
   proc = NULL;
-  FiDeleteAllVar();
+  vars.clear();
 }
 
 static void __FASTCALL__ hlFiFileParserStd(hIniProfile *ini)
@@ -1234,7 +874,7 @@ static void __FASTCALL__ hlFiFileParserStd(hIniProfile *ini)
   ActiveFile = oldh;
 }
 
-void __FASTCALL__ hlFiProgress(hIniProfile *ini,FiUserFunc usrproc)
+static void __FASTCALL__ hlFiProgress(hIniProfile *ini,FiUserFunc usrproc)
 {
 
   if(!usrproc) return;
@@ -1243,13 +883,8 @@ void __FASTCALL__ hlFiProgress(hIniProfile *ini,FiUserFunc usrproc)
   hlFiFileParserStd(ini);
 
   proc = NULL;
-  FiDeleteAllVar();
+  vars.clear();
 }
-
-void  (__FASTCALL__ *FiFileParser)(const std::string& fname) = FiFileParserStd;
-bool (__FASTCALL__ *FiStringParser)(const std::string& curr_str) = FiStringParserStd;
-bool (__FASTCALL__ *FiCommandParser)(const std::string& cmd) = FiCommandParserStd;
-bool (__FASTCALL__ *FiGetCondition)( const std::string& condstr) = FiGetConditionStd;
 
 /*****************************************************************\
 *                      High level support                          *

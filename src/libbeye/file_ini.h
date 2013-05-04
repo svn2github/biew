@@ -18,6 +18,7 @@
 **/
 #ifndef __FILE_INI_RUNTIME_SUPPORT_SYSTEM__
 #define __FILE_INI_RUNTIME_SUPPORT_SYSTEM__ 1
+#include <map>
 
 #include "libbeye/bbio.h"
 using namespace beye;
@@ -73,66 +74,24 @@ typedef struct tagIniInfo
   const char * value;        /**< value of item */
 }IniInfo;
 
-		   /** Pointer to a user supplied function that receive readed record from ini file.
-		     * @return                For continue of scaning - false
-					      For terminating scaning - true (means: all done)
-		     * @param info            pointers to current record from inni file
-		    **/
-typedef bool      (__FASTCALL__ *FiUserFunc)(IniInfo * info);
-
-/******************************************************\
-* You can exchange all this pointers to self routines  *
-*    and release virtual access to the methods         *
-*                                                      *
-* Chematic disgramm :                                  *
-*                                                      *
-*   FiFileParser      -- call --> FiStringParser       *
-*   FiStringParser    -- call --> FiCommandParser      *
-*   FiCommandParser   -- call --> FiFileParser    &    *
-*                                 FiStringParser       *
-\******************************************************/
-
-extern  int    (__FASTCALL__ *FiError)(int nError,int row,const std::string& addinfo); /**< Default error handler */
-extern  void   (__FASTCALL__ *FiFileParser)(const std::string& fname); /**< Default file processor */
-extern  bool  (__FASTCALL__ *FiStringParser)(const std::string& curr_str); /**< Default string processor */
-extern  bool  (__FASTCALL__ *FiCommandParser)(const std::string& cmd); /**< Default command processor */
-extern  bool  (__FASTCALL__ *FiGetCondition)(const std::string& cond);    /**< Default processor of conditions */
-
 enum {
     FI_MAXSTRLEN=255 /**< Specifies maximal length of string, that can be readed from ini file */
 };
-		   /** Decodes error of ini library and return it string equivalent.
-		     * @return                String, that described error
-		     * @param nError          Specifies error number
-		    **/
-extern const char*   __FASTCALL__ FiDecodeError(int nError);
-extern bool          FiAllWantInput ; /**< Flags indicating, that all input exclude commentaries, i.e. carriage return and line feed and space characters will be returned */
-extern const char*   FiUserMessage;   /**< Pointer to user defined message string */
-extern const char    FiOpenComment;   /**< Character to be used as opening comment. @note comment always start with FiOpenComment symbol and terminated at end of line */
-
-		   /** Creates file with error description.
-		     * @return                none
-		     * @param nError          Specifies error number
-		     * @param row             Specifies row at which error occured
-		     * @see                   FiAErrorCL
-		    **/
-void         __FASTCALL__ FiAError(int nError,int row,const std::string& addinfo);
-
-		   /** Creates file with error description and treated error as occured at current line.
-		     * @return                none
-		     * @param nError          Specifies error number
-		     * @see                   FiAError
-		    **/
-void         __FASTCALL__ FiAErrorCL(int nError); /**< error in curent line */
 
 /********************************************************************\
-* High Level procedure                                               *
+* Middle Level procedure                                             *
 *++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*
 * Use only this function.                                            *
 * This function calls UserFunc as CALLBACK routine.                  *
 * All internal variables will be expanded, and command processor     *
 * will be done. Unknown instruction and hotkeys should be ignored.   *
 \********************************************************************/
+		   /** Pointer to a user supplied function that receive readed record from ini file.
+		     * @return                For continue of scaning - false
+					      For terminating scaning - true (means: all done)
+		     * @param info            pointers to current record from inni file
+		    **/
+typedef bool      (__FASTCALL__ *FiUserFunc)(IniInfo * info);
 
 		   /** Performs ini-file scanning.
 		     * @return                none
@@ -159,15 +118,8 @@ namespace beye {
 	    virtual bool		open( const std::string& filename );
 	    virtual void		close();
 	    virtual char*		get_next_string(char* store, unsigned int len, char *original );
-#if 0
-	    virtual int			search(const char * name);
-	    virtual void		seek_to(int nSection, int nSubSection, int nItem);
-	    virtual size_t		get_number_sections() const;
-	    virtual size_t		get_total_number_subsections() const;
-	    virtual size_t		get_local_number_subsections(int nSection) const;
-	    virtual size_t		get_total_number_items() const;
-	    virtual size_t		get_local_number_items(int nSection, int nSubSection);
-#endif
+	    virtual std::string		get_next_string();
+
 	    virtual int			eof() const { return handler.eof(); }
 	    virtual bool		seek(__fileoff_t off,int origin) const { return handler.seek(off,origin); }
 	    inline void			rewind_ini() const { handler.seek(0L,BFile::Seek_Set); }
@@ -178,72 +130,46 @@ namespace beye {
 	    bool		_opened;
 	    BFile&		handler;
     };
-} // namespace beye
 
-bool         __FASTCALL__ FiisSection( const std::string& str );
-bool         __FASTCALL__ FiisSubSection( const std::string& str );
-bool         __FASTCALL__ FiisItem( const std::string& str);
-bool         __FASTCALL__ FiisCommand( const std::string& str);
+    class Tokenizer : public Opaque {
+	public:
+	    Tokenizer(const std::string& _src);
+	    virtual ~Tokenizer();
 
-size_t        __FASTCALL__ FiGetLengthSection( const std::string& src );
-size_t        __FASTCALL__ FiGetLengthSubSection( const std::string& src );
-size_t        __FASTCALL__ FiGetLengthItem( const std::string& src );
-size_t        __FASTCALL__ FiGetLengthValue( const std::string& src );
-size_t        __FASTCALL__ FiGetLengthCommandString( const std::string& src );
-
-char *        __FASTCALL__ FiGetSectionName(const std::string& src,char * store);
-char *        __FASTCALL__ FiGetSubSectionName(const std::string& src, char * store);
-char *        __FASTCALL__ FiGetItemName(const std::string& src, char * store);
-char *        __FASTCALL__ FiGetValueOfItem(const std::string& src, char * store);
-char *        __FASTCALL__ FiGetCommandString(const std::string& src, char * store);
-
-void          __FASTCALL__ FiFileParserStd( const std::string& filename );
-bool         __FASTCALL__ FiStringParserStd( const std::string& string );
-bool         __FASTCALL__ FiCommandParserStd( const std::string& cmd );
-
-/**
-    WORD processor
-*/
-
-typedef struct tagSTRING
-{
-  const char * str;
-  unsigned int iptr;
-}STRING;
-
-size_t        __FASTCALL__ FiGetLengthBracketString( const std::string& src );
-char *        __FASTCALL__ FiGetBracketString(const std::string& str, char * store);
-int           __FASTCALL__ FiisLegal(const std::string& illegal,char c);
-unsigned int  __FASTCALL__ FiGetLengthNextWord( STRING * str, const std::string& illegal_symbols);
-char *        __FASTCALL__ FiGetNextWord( STRING * str,const std::string& illegal_symbols,char * store );
+	    virtual size_t	next_length(const std::string& illegal_symbols) const;
+	    virtual std::string	next_word(const std::string& illegal_symbols);
+	    virtual size_t	next_legal_length(const std::string& legal_symbols) const;
+	    virtual std::string	next_legal_word(const std::string& legal_symbols);
+	    virtual char	next_char() { return src[iptr++]; }
+	    virtual char	curr_char() const { return src[iptr]; }
+	    virtual std::string	tail();
+	    virtual const char*	data() const { return &src.c_str()[iptr]; }
+	private:
+	    std::string src;
+	    size_t iptr;
+    };
 
 /**
     variables set
 */
+    class Variable_Set : public Opaque {
+	public:
+	    Variable_Set();
+	    virtual ~Variable_Set();
 
-typedef struct tagVar
-{
-  char * variables;
-  char * associate;
-  struct tagVar * next;
-  struct tagVar * prev;
-}Var;
+	    virtual void	add(const std::string& var,const std::string& asociate);
+	    virtual void	remove(const std::string& var);
+	    virtual void	clear();
+	    virtual std::string	expand(const std::string& var);
+	    virtual std::string	substitute(const std::string& src,char delim='%');
+	private:
+	    std::map<std::string,std::string> set;
+    };
+}// namespace beye
 
-typedef Var * pVar;
-
-pVar            __FASTCALL__ FiConstructVar(const std::string& v,const std::string& a);
-void            __FASTCALL__ FiDeleteVar(pVar pp);
-void            __FASTCALL__ FiDeleteAllVar();
-const char    * __FASTCALL__ FiExpandVariables(const std::string& var);
-bool           __FASTCALL__ FiExpandAllVar(const std::string& value,char * store);
-void            __FASTCALL__ FiAddVariables(const std::string& var,const std::string& associate);
-void            __FASTCALL__ FiRemoveVariables(const std::string& var);
-
-bool           __FASTCALL__ FiGetConditionStd( const std::string& condstr);
-
-/**
-    High level routines (similar to MS WIN SDK)
-*/
+/******************************************************************\
+* High level routines (similar to MS WIN SDK)                      *
+\******************************************************************/
 enum {
     HINI_FULLCACHED=0x0001,
     HINI_UPDATED   =0x0002
@@ -257,10 +183,6 @@ struct hIniProfile
    unsigned	flags;
 };
 
-/** For internal purposes */
-extern void __FASTCALL__ hlFiProgress(hIniProfile *ini,FiUserFunc usrproc);
-
-/* For public use */
 		   /** Opens ini file for using with iniReadProfileString and iniWriteProfileString functions.
 		     * @return                handle of opened stream
 		     * @param filename        Specifies name of file to be open
@@ -317,7 +239,3 @@ extern bool __FASTCALL__ iniWriteProfileString(hIniProfile *ini,
 				     const std::string& value);
 
 #endif
-
-
-
-
