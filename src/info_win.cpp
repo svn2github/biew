@@ -157,7 +157,7 @@ int MainActionFromMenu( void )
   unsigned nModes;
   int i;
   nModes = sizeof(amenu_names)/sizeof(char *);
-  i = SelBoxA(const_cast<char**>(amenu_names),nModes," Select action: ",0);
+  i = SelBoxA(amenu_names,nModes," Select action: ",0);
   if(i != -1)
   {
     switch(i)
@@ -165,21 +165,21 @@ int MainActionFromMenu( void )
 	default:
 	case 0:
 		fillFxText();
-		i = SelBoxA(const_cast<char**>(FxText),10," Select base action: ",0);
+		i = SelBoxA(FxText,10," Select base action: ",0);
 		if(i!=-1) return KE_F(i+1);
 		break;
 	case 1:
-		i = SelBoxA(const_cast<char**>(ShiftFxText),10," Select alternative action: ",0);
+		i = SelBoxA(ShiftFxText,10," Select alternative action: ",0);
 		if(i!=-1) return KE_SHIFT_F(i+1);
 		break;
 	case 2:
 		for(j=0;j<10;j++) prmt[j]=beye_context().bin_format().prompt(i);
-		i = SelBoxA(const_cast<char**>(prmt),10," Select format-depended action: ",0);
+		i = SelBoxA(prmt,10," Select format-depended action: ",0);
 		if(i!=-1) return KE_ALT_F(i+1);
 		break;
 	case 3:
 		for(j=0;j<10;j++) prmt[j]=beye_context().active_mode().prompt(i);
-		i = SelBoxA(const_cast<char**>(prmt),10," Select mode-depended action: ",0);
+		i = SelBoxA(prmt,10," Select mode-depended action: ",0);
 		if(i!=-1) return KE_CTL_F(i+1);
 		break;
     }
@@ -275,7 +275,7 @@ void drawAsmEdPrompt( void )
 int EditAsmActionFromMenu( void )
 {
   int i;
-  i = SelBoxA(const_cast<char**>(amenu_names),2," Select asm editor's action: ",0);
+  i = SelBoxA(amenu_names,2," Select asm editor's action: ",0);
   if(i != -1)
   {
     switch(i)
@@ -283,11 +283,11 @@ int EditAsmActionFromMenu( void )
 	default:
 	case 0:
 		fillFxText();
-		i = SelBoxA(const_cast<char**>(fetext),10," Select base action: ",0);
+		i = SelBoxA(fetext,10," Select base action: ",0);
 		if(i!=-1) return KE_F(i+1);
 		break;
 	case 1:
-		i = SelBoxA(const_cast<char**>(casmtext),10," Select alternative action: ",0);
+		i = SelBoxA(casmtext,10," Select alternative action: ",0);
 		if(i!=-1) return KE_CTL_F(i+1);
 		break;
     }
@@ -402,7 +402,7 @@ void drawHelpPrompt( void )
 int HelpActionFromMenu( void )
 {
   int i;
-  i = SelBoxA(const_cast<char**>(helptxt),10," Select help action: ",0);
+  i = SelBoxA(helptxt,10," Select help action: ",0);
   if(i != -1) return KE_F(i+1);
   return 0;
 }

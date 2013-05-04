@@ -389,7 +389,7 @@ bool __FASTCALL__ udnUserNames( void ) {
   int i;
   nModes = sizeof(udn_operations)/sizeof(char *);
   i = 0;
-  i = SelBoxA(const_cast<char**>(udn_operations),nModes," Select operation: ",i);
+  i = SelBoxA(udn_operations,nModes," Select operation: ",i);
   if(i != -1)
   {
      int ret;

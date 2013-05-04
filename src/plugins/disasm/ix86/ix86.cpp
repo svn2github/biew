@@ -6224,7 +6224,7 @@ static bool __FASTCALL__ x86Select_Bitness( void )
   int i;
   nModes = sizeof(use_names)/sizeof(char *);
   if(BITNESS == DAB_AUTO) BITNESS = 3;
-  i = SelBoxA(const_cast<char**>(use_names),nModes," Select bitness mode: ",BITNESS);
+  i = SelBoxA(use_names,nModes," Select bitness mode: ",BITNESS);
   if(i != -1)
   {
     if(i == 3) i = DAB_AUTO;

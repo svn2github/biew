@@ -46,7 +46,7 @@ static bool __FASTCALL__ nulSelect_width( void )
   unsigned nModes;
   int i;
   nModes = sizeof(width_names)/sizeof(char *);
-  i = SelBoxA(const_cast<char**>(width_names),nModes," Select bitness mode: ",nulWidth);
+  i = SelBoxA(width_names,nModes," Select bitness mode: ",nulWidth);
   if(i != -1)
   {
     nulWidth = i;

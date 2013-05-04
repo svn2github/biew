@@ -103,7 +103,7 @@ static bool __FASTCALL__ select_codepage( void )
   unsigned nModes;
   int i;
   nModes = sizeof(cp_list)/sizeof(char *);
-  i = SelBoxA(const_cast<char**>(cp_list),nModes," Select single-byte codepage: ",default_cp);
+  i = SelBoxA(cp_list,nModes," Select single-byte codepage: ",default_cp);
   if(i != -1)
   {
     unsigned len;

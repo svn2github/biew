@@ -44,7 +44,7 @@ namespace beye {
     TWindow *    __FASTCALL__ CrtHlpWndnls(const std::string&,tAbsCoord,tAbsCoord);
     TWindow *    __FASTCALL__ CreateEditor(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsCoord Y2,unsigned flags);
     TWindow *    __FASTCALL__ WindowOpen(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsCoord Y2,unsigned flags);
-    void         __FASTCALL__ DisplayBox(char **names,unsigned nlist,const std::string& title);
+    void         __FASTCALL__ DisplayBox(const char **names,unsigned nlist,const std::string& title);
 
 /** Edit string styles */
 enum {
@@ -136,13 +136,13 @@ enum {
 
     LB_ORD_DELIMITER =0x7F
 };
-    int          __FASTCALL__ CommonListBox(char** names,unsigned nlist,const std::string& title,
+    int          __FASTCALL__ CommonListBox(const char** names,unsigned nlist,const std::string& title,
 				      int acc,unsigned defsel);
-    int          __FASTCALL__ SelBox(char** names,unsigned nlist,const std::string& title,
+    int          __FASTCALL__ SelBox(const char** names,unsigned nlist,const std::string& title,
 			       unsigned defsel);
-    int          __FASTCALL__ SelBoxA(char** names,unsigned nlist,const std::string& title,
+    int          __FASTCALL__ SelBoxA(const char** names,unsigned nlist,const std::string& title,
 				unsigned defsel);
-    int         __FASTCALL__ SelListBox(char** names,unsigned nlist,const std::string& title,
+    int         __FASTCALL__ SelListBox(const char** names,unsigned nlist,const std::string& title,
 				   unsigned defsel);
 
     TWindow *    __FASTCALL__ PercentWnd(const std::string& text,const std::string& title);

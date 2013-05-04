@@ -1563,7 +1563,7 @@ static bool __FASTCALL__ ppcSelect_bitness( void )
   unsigned nModes;
   int i;
   nModes = sizeof(ppc_bitness_names)/sizeof(char *);
-  i = SelBoxA(const_cast<char**>(ppc_bitness_names),nModes," Select bitness mode: ",ppcBitness);
+  i = SelBoxA(ppc_bitness_names,nModes," Select bitness mode: ",ppcBitness);
   if(i != -1)
   {
     ppcBitness = ((i==0)?DAB_USE32:DAB_USE64);
@@ -1583,7 +1583,7 @@ static bool __FASTCALL__ ppcSelect_endian( void )
   unsigned nModes;
   int i;
   nModes = sizeof(ppc_endian_names)/sizeof(char *);
-  i = SelBoxA(const_cast<char**>(ppc_endian_names),nModes," Select endian mode: ",ppcBigEndian);
+  i = SelBoxA(ppc_endian_names,nModes," Select endian mode: ",ppcBigEndian);
   if(i != -1)
   {
     ppcBigEndian = i;
@@ -1603,7 +1603,7 @@ static bool __FASTCALL__ ppcSelectDialect( void )
   unsigned nModes;
   int i;
   nModes = sizeof(ppc_dialect_names)/sizeof(char *);
-  i = SelBoxA(const_cast<char**>(ppc_dialect_names),nModes," Select PPC dialect: ",ppcDialect);
+  i = SelBoxA(ppc_dialect_names,nModes," Select PPC dialect: ",ppcDialect);
   if(i != -1)
   {
     ppcDialect = i;

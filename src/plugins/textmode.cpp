@@ -1115,7 +1115,7 @@ bool TextMode::action_F3() /* txtSelectMode */
     unsigned nModes;
     int i;
     nModes = sizeof(mod_names)/sizeof(char *);
-    i = SelBoxA(const_cast<char**>(mod_names),nModes," Select text mode: ",bin_mode);
+    i = SelBoxA(mod_names,nModes," Select text mode: ",bin_mode);
     if(i != -1) {
 	bin_mode = i;
 	return true;
@@ -1133,7 +1133,7 @@ bool TextMode::action_F9() /* txtSelectHiLight */
     unsigned nModes;
     int i;
     nModes = sizeof(hilight_names)/sizeof(char *);
-    i = SelBoxA(const_cast<char**>(hilight_names),nModes," Select highlight mode: ",HiLight);
+    i = SelBoxA(hilight_names,nModes," Select highlight mode: ",HiLight);
     if(i != -1) {
 	HiLight = i;
 	return true;
@@ -1149,7 +1149,7 @@ bool TextMode::action_F4() /* txtSelectNLS */
 
     nModes = sizeof(nls_set)/sizeof(REGISTRY_NLS *);
     for(i = 0;i < nModes;i++) modeName[i] = nls_set[i]->set_name;
-    retval = SelBoxA(const_cast<char**>(modeName),nModes," Select NLS set: ",defNLSSet);
+    retval = SelBoxA(modeName,nModes," Select NLS set: ",defNLSSet);
     if(retval != -1) {
 	if(activeNLS->term) activeNLS->term();
 	activeNLS = nls_set[retval];

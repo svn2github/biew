@@ -59,11 +59,11 @@ char * __FASTCALL__ GetBinary(char val)
   return bstr;
 }
 
-#define GET2DIGIT(str,legs,val)\
-{\
-  char *s = (char *)str;\
-  s[0] = legs[(((unsigned char)val) >> 4) & 0x0F];\
-  s[1] = legs[((unsigned char)val) & 0x0F];\
+inline void GET2DIGIT(char* str,const char* legs,unsigned char val)
+{
+  char *s = (char *)str;
+  s[0] = legs[(((unsigned char)val) >> 4) & 0x0F];
+  s[1] = legs[((unsigned char)val) & 0x0F];
 }
 
 char * __FASTCALL__ Get2Digit(uint8_t val)
@@ -281,6 +281,6 @@ bool __FASTCALL__ ma_AddString(memArray *obj,const std::string& udata,bool inter
 
 int __FASTCALL__ ma_Display(memArray *obj,const std::string& title,int flg, unsigned defsel)
 {
-  return CommonListBox((char**)obj->data,obj->nItems,title,flg,defsel);
+  return CommonListBox((const char**)obj->data,obj->nItems,title,flg,defsel);
 }
 } // namespace beye

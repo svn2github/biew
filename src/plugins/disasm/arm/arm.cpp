@@ -221,7 +221,7 @@ static bool __FASTCALL__ armSelect_bitness( void )
   unsigned nModes;
   int i;
   nModes = sizeof(arm_bitness_names)/sizeof(char *);
-  i = SelBoxA(const_cast<char**>(arm_bitness_names),nModes," Select bitness mode: ",armBitness);
+  i = SelBoxA(arm_bitness_names,nModes," Select bitness mode: ",armBitness);
   if(i != -1)
   {
     armBitness = ((i==0)?DAB_USE16:DAB_USE32);
@@ -241,7 +241,7 @@ static bool __FASTCALL__ armSelect_endian( void )
   unsigned nModes;
   int i;
   nModes = sizeof(arm_endian_names)/sizeof(char *);
-  i = SelBoxA(const_cast<char**>(arm_endian_names),nModes," Select endian mode: ",armBigEndian);
+  i = SelBoxA(arm_endian_names,nModes," Select endian mode: ",armBigEndian);
   if(i != -1)
   {
     armBigEndian = i;

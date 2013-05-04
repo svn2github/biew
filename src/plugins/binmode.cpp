@@ -103,7 +103,7 @@ bool BinMode::action_F2() /* select mode */
     unsigned nModes;
     int i;
     nModes = sizeof(mod_names)/sizeof(char *);
-    i = SelBoxA(const_cast<char**>(mod_names),nModes," Select binary mode: ",bin_mode);
+    i = SelBoxA(mod_names,nModes," Select binary mode: ",bin_mode);
     if(i != -1) {
 	bin_mode = i;
 	return true;

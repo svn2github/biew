@@ -38,7 +38,7 @@ void sysinfo::select()
 
     nTools = list.size();
     for(i = 0;i < nTools;i++) toolName[i] = list[i]->name;
-    retval = SelBoxA(const_cast<char**>(toolName),nTools," Select tool: ",defToolSel);
+    retval = SelBoxA(toolName,nTools," Select tool: ",defToolSel);
     if(retval != -1) {
 	const Addon_Info* addon_info = list[retval];
 	Addon* addon = addon_info->query_interface();

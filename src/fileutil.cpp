@@ -1160,7 +1160,7 @@ bool FileUtils( void )
   bool ret;
   static unsigned def_sel = 0;
   nUtils = sizeof(fu_names)/sizeof(char *);
-  retval = SelBoxA(const_cast<char**>(fu_names),nUtils," File utilities: ",def_sel);
+  retval = SelBoxA(fu_names,nUtils," File utilities: ",def_sel);
   if(retval != -1)
   {
      TWindow * w;

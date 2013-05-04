@@ -748,7 +748,7 @@ static tCompare __FASTCALL__ listcompare(const any_t* v1,const any_t* v2)
   return ret;
 }
 
-static int  __FASTCALL__ __ListBox(char** names,unsigned nlist,unsigned defsel,const std::string& title,int assel)
+static int  __FASTCALL__ __ListBox(const char** names,unsigned nlist,unsigned defsel,const std::string& title,int assel)
 {
  TWindow * wlist;
  char *acctable = 0;
@@ -793,7 +793,7 @@ static int  __FASTCALL__ __ListBox(char** names,unsigned nlist,unsigned defsel,c
    }
  else
  {
-   char *ord_delimiter;
+   const char *ord_delimiter;
    for(i = 0;i < nlist;i++)
    {
      ord_delimiter = names[i]?strrchr(names[i], LB_ORD_DELIMITER):NULL;
@@ -872,12 +872,15 @@ static int  __FASTCALL__ __ListBox(char** names,unsigned nlist,unsigned defsel,c
 		    for(i = 0;i < nlist;i++)
 		    {
 		      char *p;
-		      p = names[i]?strchr(names[i],LB_ORD_DELIMITER):NULL;
+		      char stmp[4096];
+		      stmp[0]='\0';
+		      if(names[i]) strcpy(stmp,names[i]);
+		      p = names[i]?strchr(stmp,LB_ORD_DELIMITER):NULL;
 		      if(p)
 		      {
 			*p = 0;
-			fprintf(out,"%s",names[i]);
-			for(j = p - names[i];j < 50;j++) fprintf(out," ");
+			fprintf(out,"%s",stmp);
+			for(j = p - stmp;j < 50;j++) fprintf(out," ");
 			fprintf(out," @%s",p+1);
 			if(p) *p = LB_ORD_DELIMITER;
 		      }
@@ -997,32 +1000,32 @@ static int  __FASTCALL__ __ListBox(char** names,unsigned nlist,unsigned defsel,c
  return ret;
 }
 
-int __FASTCALL__ CommonListBox(char** names,unsigned nlist,const std::string& title,int acc,unsigned defsel)
+int __FASTCALL__ CommonListBox(const char** names,unsigned nlist,const std::string& title,int acc,unsigned defsel)
 {
   return __ListBox(names,nlist,defsel,title,acc);
 }
 
-void __FASTCALL__ DisplayBox(char** names,unsigned nlist,const std::string& title)
+void __FASTCALL__ DisplayBox(const char** names,unsigned nlist,const std::string& title)
 {
   __ListBox(names,nlist,UINT_MAX,title,0); /** not sortable & not selective */
 }
 
-void __FASTCALL__ ListBox(char** names,unsigned nlist,const std::string& title)
+void __FASTCALL__ ListBox(const char** names,unsigned nlist,const std::string& title)
 {
   __ListBox(names,nlist,UINT_MAX,title,LB_SORTABLE);
 }
 
-int __FASTCALL__ SelListBox(char** names,unsigned nlist,const std::string& title,unsigned defsel)
+int __FASTCALL__ SelListBox(const char** names,unsigned nlist,const std::string& title,unsigned defsel)
 {
   return __ListBox(names,nlist,defsel,title,LB_SELECTIVE | LB_SORTABLE);
 }
 
-int __FASTCALL__ SelBox(char** names,unsigned nlist,const std::string& title,unsigned defsel)
+int __FASTCALL__ SelBox(const char** names,unsigned nlist,const std::string& title,unsigned defsel)
 {
   return __ListBox(names,nlist,defsel,title,LB_SELECTIVE);
 }
 
-int __FASTCALL__ SelBoxA(char** names,unsigned nlist,const std::string& title,unsigned defsel)
+int __FASTCALL__ SelBoxA(const char** names,unsigned nlist,const std::string& title,unsigned defsel)
 {
   return __ListBox(names,nlist,defsel,title,LB_SELECTIVE | LB_USEACC);
 }

@@ -88,7 +88,7 @@ bool BeyeContext::select_mode()
     int retval;
 
     for(i = 0;i < nModes;i++) modeName[i] = modes[i]->name;
-    retval = SelBoxA(const_cast<char**>(modeName),nModes," Select translation mode: ",defMainModeSel);
+    retval = SelBoxA(modeName,nModes," Select translation mode: ",defMainModeSel);
     if(retval != -1) {
 	defMainModeSel = retval;
 	delete activeMode;
@@ -533,7 +533,7 @@ bool BeyeContext::new_source()
 	::memcpy(nlsListFile[freq],ListFile[freq].c_str(),ls+1);
 	__nls_CmdlineToOem((unsigned char *)nlsListFile[freq],ls);
     }
-    i = SelBoxA(nlsListFile,j," Select new file: ",prev_file);
+    i = SelBoxA(const_cast<const char**>(nlsListFile),j," Select new file: ",prev_file);
     ret = 0;
     for(freq = 0;freq < j;freq++) delete nlsListFile[freq];
     delete nlsListFile;
