@@ -619,7 +619,7 @@ unsigned long __FASTCALL__ HLFindNearest(const any_t*key,any_t*base,unsigned lon
 */
 
 linearArray * __FASTCALL__ la_Build( unsigned long nitems, unsigned size_of_item,
-			void (__FASTCALL__ *mem_out)(const char *) )
+			void (__FASTCALL__ *mem_out)(const std::string& ) )
 {
   linearArray * ret;
   ret = new linearArray;
@@ -670,7 +670,7 @@ void  __FASTCALL__ la_Destroy(linearArray *obj)
 
 static const unsigned LST_STEP=16;
 
-any_t*  __FASTCALL__ la_AddData(linearArray *obj,const any_t*udata,void (__FASTCALL__ *mem_out)(const char *))
+any_t*  __FASTCALL__ la_AddData(linearArray *obj,const any_t*udata,void (__FASTCALL__ *mem_out)(const std::string& ))
 {
   any_t* to;
   if(obj->nSize > ULONG_MAX - (LST_STEP+1)) return 0;

@@ -226,7 +226,7 @@ namespace beye {
 		     * @see                   la_Destroy la_IterDestroy
 		    **/
     linearArray *__FASTCALL__ la_Build( unsigned long maxitems,unsigned size_of_item,
-					   void (__FASTCALL__ *mem_out)(const char *));
+					   void (__FASTCALL__ *mem_out)(const std::string&));
 
 		   /** Adds new element to linear array
 		     * @return                location of new element or NULL if no memory
@@ -235,7 +235,7 @@ namespace beye {
 		     * @param mem_out         specifies user-defined function to be called when low-memory. May be NULL.
 		     * @see                   la_Build la_Find
 		    **/
-    any_t* __FASTCALL__ la_AddData(linearArray *obj,const any_t*data,void (__FASTCALL__ *mem_out)(const char *));
+    any_t* __FASTCALL__ la_AddData(linearArray *obj,const any_t*data,void (__FASTCALL__ *mem_out)(const std::string&));
 
 		   /** Removes given element from linear array
 		     * @param obj             specifies linear array where element will be removed

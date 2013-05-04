@@ -274,12 +274,12 @@ bool  __FASTCALL__ ma_AddData(memArray *obj,const any_t*udata,unsigned len,bool 
   return false;
 }
 
-bool __FASTCALL__ ma_AddString(memArray *obj,const char *udata,bool interact)
+bool __FASTCALL__ ma_AddString(memArray *obj,const std::string& udata,bool interact)
 {
-  return ma_AddData(obj,udata,strlen(udata)+1,interact);
+  return ma_AddData(obj,udata.c_str(),udata.size()+1,interact);
 }
 
-int __FASTCALL__ ma_Display(memArray *obj,const char *title,int flg, unsigned defsel)
+int __FASTCALL__ ma_Display(memArray *obj,const std::string& title,int flg, unsigned defsel)
 {
   return CommonListBox((char**)obj->data,obj->nItems,title,flg,defsel);
 }

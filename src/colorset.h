@@ -209,7 +209,7 @@ typedef struct tag_HelpCSet
 
     extern HelpCSet help_cset;
 
-    bool   csetReadIniFile(const char *pal_name);
+    bool   csetReadIniFile(const std::string& pal_name);
 } // namespace beye
 
 #endif

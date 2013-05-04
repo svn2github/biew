@@ -275,7 +275,7 @@ static unsigned __FASTCALL__ jvm_get_num_attributes(BFile& handle)
 }
 
 
-static __filesize_t  __FASTCALL__ __ShowAttributes(const char *title)
+static __filesize_t  __FASTCALL__ __ShowAttributes(const std::string& title)
 {
   __filesize_t fpos;
   int ret;
@@ -712,7 +712,7 @@ static void __FASTCALL__ jvm_ReadPubName(BFile& b_cache,const struct PubName *it
     }
 }
 
-static void __FASTCALL__ jvm_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *))
+static void __FASTCALL__ jvm_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const std::string&))
 {
  __filesize_t fpos;
  unsigned i;

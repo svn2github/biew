@@ -50,7 +50,7 @@ static BFile* ne_cache2 = &bNull;
 static BFile* ne_cache3 = &bNull;
 
 static __filesize_t  __FASTCALL__ CalcEntryPointNE( unsigned,unsigned );
-static void __FASTCALL__ ne_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *));
+static void __FASTCALL__ ne_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const std::string&));
 static bool   __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
 static void __FASTCALL__ rd_ImpName(char *buff,int blen,unsigned idx,bool useasoff);
 static __filesize_t __FASTCALL__ nePA2VA(__filesize_t pa);
@@ -1283,7 +1283,7 @@ static bool __FASTCALL__ AppendNERef(const DisMode& parent,char *str,__filesize_
 }
 
 /** return false if unsuccess true otherwise */
-static bool  __FASTCALL__ ReadPubNames(BFile& handle,__filesize_t offset,void (__FASTCALL__ *mem_out)(const char *))
+static bool  __FASTCALL__ ReadPubNames(BFile& handle,__filesize_t offset,void (__FASTCALL__ *mem_out)(const std::string&))
 {
  struct PubName pnam;
  ENTRY ent;
@@ -1348,7 +1348,7 @@ static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t p
 }
 
 
-static void __FASTCALL__ ne_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *))
+static void __FASTCALL__ ne_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const std::string&))
 {
    if((PubNames = la_Build(0,sizeof(struct PubName),mem_out)) != NULL)
    {

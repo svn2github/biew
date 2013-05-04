@@ -50,8 +50,8 @@ static __filesize_t cs_start,ds_start;
 static linearArray *rdoffReloc = NULL;
 static linearArray *rdoffImpNames = NULL;
 
-static void  __FASTCALL__ ReadImpNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *));
-static void __FASTCALL__ rdoff_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *));
+static void  __FASTCALL__ ReadImpNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const std::string&));
+static void __FASTCALL__ rdoff_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const std::string&));
 static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
 
 static tCompare __FASTCALL__ compare_impnames(const any_t*v1,const any_t*v2);
@@ -168,7 +168,7 @@ static __filesize_t __FASTCALL__ rdoff_ShowExport( void )
   return fpos;
 }
 
-static __filesize_t __FASTCALL__ rdoff_FindExport(const char *name )
+static __filesize_t __FASTCALL__ rdoff_FindExport(const std::string& name)
 {
   __filesize_t ret;
   unsigned char rec;
@@ -197,7 +197,7 @@ static __filesize_t __FASTCALL__ rdoff_FindExport(const char *name )
 	if(!ch || is_eof) break;
       }
       str[i] = 0;
-      if(strcmp(str,name) == 0)
+      if(name==str)
       {
 	abs_off = segno == 0 ? cs_start : segno == 1 ? ds_start : 0L;
 	if(abs_off != 0L) abs_off += segoff;
@@ -578,7 +578,7 @@ static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t p
 			rdoff_ReadPubName);
 }
 
-static void __FASTCALL__ rdoff_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *))
+static void __FASTCALL__ rdoff_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const std::string&))
 {
  unsigned char segno,rec;
  __filesize_t segoff,abs_off;
@@ -628,7 +628,7 @@ static tCompare __FASTCALL__ compare_impnames(const any_t*v1,const any_t*v2)
   return __CmpLong__(pnam1->lsegno,pnam2->lsegno);
 }
 
-static void  __FASTCALL__ ReadImpNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *))
+static void  __FASTCALL__ ReadImpNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const std::string&))
 {
  unsigned char rec;
  unsigned i;

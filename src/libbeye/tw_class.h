@@ -51,7 +51,7 @@ typedef struct tagTwClass
 		     * @param flags           indicates __CS_* flags family
 		     * @param method          indicates callback routine
 		    **/
-bool __FASTCALL__ twcRegisterClass(const char *name, unsigned flags, twClassFunc method);
+bool __FASTCALL__ twcRegisterClass(const std::string& name, unsigned flags, twClassFunc method);
 
 		   /** Destroys set of classes
 		     * @return                none
@@ -68,7 +68,7 @@ void __FASTCALL__ twcDestroyClassSet(void);
 		     *                        NULL if error occured
 		     * @param name            indicates symbolic name of class
 		    **/
-TwClass * __FASTCALL__ twcFindClass(const char *name);
+TwClass * __FASTCALL__ twcFindClass(const std::string& name);
 
 #endif
 

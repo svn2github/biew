@@ -285,7 +285,7 @@ enum {
 		     * @note              Call this function before any other
 		     * @see               twDestroy
 		    **/
-void              __FASTCALL__ twInit(const char *user_cp, unsigned long vio_flags, unsigned long twin_flgs );
+void              __FASTCALL__ twInit(const std::string& user_cp, unsigned long vio_flags, unsigned long twin_flgs );
 
 		   /** Terminates twin library and video subsystem
 		     * @return            none
@@ -317,7 +317,7 @@ TWindow *         __FASTCALL__ twCreateWin(tAbsCoord x1_, tAbsCoord y1_, tAbsCoo
 TWindow *         __FASTCALL__ twCreateWinEx(tAbsCoord x1_, tAbsCoord y1_,
 					     tAbsCoord width, tAbsCoord height,
 					     unsigned flags, TWindow *parent,
-					     const char *classname);
+					     const std::string& classname);
 
 		   /** Destroys given window
 		     * @param              handle of window
@@ -776,7 +776,7 @@ void              __FASTCALL__ twSetFrame(TWindow *win,const unsigned char *fram
 		     *                     twGetTitle twGetTitleAttr twSetFrame twSetTitleAttr
 		     *                     twGetFooter twSetFooter twSetFooterAttr
 		    **/
-void              __FASTCALL__ twSetTitle(TWindow *win,const char* title,tTitleMode titlemode,Color fore,Color back);
+void              __FASTCALL__ twSetTitle(TWindow *win,const std::string& title,tTitleMode titlemode,Color fore,Color back);
 
 		   /** Updates window footer with specified logical color attributes.
 		     * @param win          handle of window
@@ -788,7 +788,7 @@ void              __FASTCALL__ twSetTitle(TWindow *win,const char* title,tTitleM
 		     *                     twGetTitle twGetTitleAttr twSetFrame twSetTitleAttr
 		     *                     twGetFooter twSetTitle twSetFooterAttr
 		    **/
-void              __FASTCALL__ twSetFooter(TWindow *win,const char* footer,tTitleMode footermode,Color fore,Color back);
+void              __FASTCALL__ twSetFooter(TWindow *win,const std::string& footer,tTitleMode footermode,Color fore,Color back);
 
 		   /** Changes frame around given window with specified physical color attributes.
 		     * @param win          handle of window
@@ -811,7 +811,7 @@ void              __FASTCALL__ twSetFrameAttr(TWindow *win,const unsigned char *
 		     *                     twGetTitle twGetTitleAttr twSetFrame twSetTitle
 		     *                     twGetFooter twSetFooter twSetFooterAttr
 		    **/
-void              __FASTCALL__ twSetTitleAttr(TWindow *win,const char* title,tTitleMode titlemode,ColorAttr attr);
+void              __FASTCALL__ twSetTitleAttr(TWindow *win,const std::string& title,tTitleMode titlemode,ColorAttr attr);
 
 		   /** Updates window footer with specified physical color attributes.
 		     * @param win          handle of window
@@ -823,7 +823,7 @@ void              __FASTCALL__ twSetTitleAttr(TWindow *win,const char* title,tTi
 		     *                     twGetTitle twGetTitleAttr twSetFrame twSetTitleAttr
 		     *                     twGetFooter twSetTitle twSetFooter
 		    **/
-void              __FASTCALL__ twSetFooterAttr(TWindow *win,const char* footer,tTitleMode footermode,ColorAttr attr);
+void              __FASTCALL__ twSetFooterAttr(TWindow *win,const std::string& footer,tTitleMode footermode,ColorAttr attr);
 enum {
     TW_CUR_OFF   =0, /**< Defines that cursor in invisible state */
     TW_CUR_NORM  =1, /**< Defines that cursor in normal state (filles 20% of the character cell) */
@@ -909,7 +909,7 @@ char              __FASTCALL__ twGetChar(TWindow* win);
 		     *                    it will be clipped.
 		     * @see               twGetChar twPutChar twPrintF twDirectWrite twWriteBuffer
 		    **/
-int               __FASTCALL__ twPutS(TWindow* win,const char *str);
+int               __FASTCALL__ twPutS(TWindow* win,const std::string& str);
 
 		   /** Writes buffer directly to the active window at specified location.
 		     * @param x,y         specify location of output
@@ -939,7 +939,7 @@ int               __FASTCALL__ twDirectWrite(TWindow* win,tRelCoord x,tRelCoord 
 		     *                    screen. I.e. greated than tvioWidth*tvioHeight
 		     * @see               twGetChar twPutChar twDirectWrite twPutS twWriteBuffer
 		    **/
-int               __FASTCALL__ twPrintF(TWindow* win,const char *fmt,...);
+int               __FASTCALL__ twPrintF(TWindow* win,const std::string& fmt,...);
 
 		   /** Accesses to the active window directly, writing a single line.
 		     * @param win         handle of window

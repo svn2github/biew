@@ -118,7 +118,7 @@ static bool  __FASTCALL__ readButton(hIniProfile *ini,const char *section,
   return has_err;
 }
 
-bool csetReadIniFile(const char *ini_name)
+bool csetReadIniFile(const std::string& ini_name)
 {
   hIniProfile *cset;
   char cstr[80],cval[80],csec[80],stmp[256];

@@ -32,7 +32,7 @@ using namespace beye;
 #include "libbeye/twin.h"
 
 namespace beye {
-bool __FASTCALL__ Get2DigitDlg(const char *title,const char * text,unsigned char *xx)
+bool __FASTCALL__ Get2DigitDlg(const std::string& title,const std::string& text,unsigned char *xx)
 {
  tAbsCoord x1,y1,x2,y2;
  tRelCoord X1,Y1,X2,Y2;
@@ -77,7 +77,7 @@ enum {
     DECIMAL =0x02
 };
 
-bool __FASTCALL__ Get8DigitDlg(const char *title,const char *text,char attr,unsigned long *xx)
+bool __FASTCALL__ Get8DigitDlg(const std::string& title,const std::string& text,char attr,unsigned long *xx)
 {
  tAbsCoord x1,y1,x2,y2;
  tRelCoord X1,Y1,X2,Y2;
@@ -128,7 +128,7 @@ bool __FASTCALL__ Get8DigitDlg(const char *title,const char *text,char attr,unsi
  return ret;
 }
 
-bool        __FASTCALL__ Get16DigitDlg(const char *title,const char *text,char attr,
+bool        __FASTCALL__ Get16DigitDlg(const std::string& title,const std::string& text,char attr,
 					unsigned long long int *xx)
 {
  tAbsCoord x1,y1,x2,y2;
@@ -208,7 +208,7 @@ static const char * jmptxt[] =
   "Escape"
 };
 
-static void drawJumpPrompt( void )
+static void drawJumpPrompt()
 {
    __drawSinglePrompt(jmptxt);
 }
@@ -304,7 +304,7 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
  return ret;
 }
 
-bool __FASTCALL__ GetStringDlg(char * buff,const char * title,const char *subtitle,const char *prompt)
+bool __FASTCALL__ GetStringDlg(char * buff,const std::string& title,const std::string& subtitle,const std::string& prompt)
 {
   tAbsCoord x1,y1,x2,y2;
   tRelCoord X1,Y1,X2,Y2;
@@ -313,7 +313,7 @@ bool __FASTCALL__ GetStringDlg(char * buff,const char * title,const char *subtit
   TWindow * wdlg,*ewnd;
   char estr[81];
   wdlg = CrtDlgWndnls(title,78,2);
-  if(subtitle) twSetFooterAttr(wdlg,subtitle,TW_TMODE_RIGHT,dialog_cset.footer);
+  if(!subtitle.empty()) twSetFooterAttr(wdlg,subtitle,TW_TMODE_RIGHT,dialog_cset.footer);
   twGetWinPos(wdlg,&x1,&y1,&x2,&y2);
   X1 = x1;
   Y1 = y1;
@@ -342,14 +342,14 @@ bool __FASTCALL__ GetStringDlg(char * buff,const char * title,const char *subtit
   return ret;
 }
 
-static void  __FASTCALL__ FFStaticPaint(TWindow * wdlg,char * fname,char * st,char *end,unsigned long flg)
+static void  __FASTCALL__ FFStaticPaint(TWindow * wdlg,const std::string& fname,char * st,char *end,unsigned long flg)
 {
   int len,i;
   TWindow * _using = twFocusedWin();
     twFocusWin(wdlg);
     if(!(flg & FSDLG_USEBITNS))
     {
-      len = strlen(fname);
+      len = fname.length();
       twGotoXY(wdlg,3,7); twPutS(wdlg,fname); for(i = len;i < 71;i++) twPutChar(wdlg,TWC_MED_SHADE);
     }
     len = strlen(st);
@@ -436,9 +436,9 @@ static void drawFSPrompt( void )
    __drawSinglePrompt(fs_txt);
 }
 
-bool __FASTCALL__ GetFStoreDlg(const char *title,char * fname,unsigned long * flags,
+bool __FASTCALL__ GetFStoreDlg(const std::string& title,char* fname,unsigned long * flags,
 		   __filesize_t * start,__filesize_t * end,
-		   const char *prompt)
+		   const std::string& prompt)
 {
  tAbsCoord x1,y1,x2,y2;
  tRelCoord X1,Y1,XX1,YY1,XX2,YY2;
@@ -486,7 +486,7 @@ bool __FASTCALL__ GetFStoreDlg(const char *title,char * fname,unsigned long * fl
  ewnd[1] = CreateEditor(XX1,YY1,XX2,YY2,TWS_CURSORABLE | TWS_NLSOEM);
  twFocusWin(wdlg);
  twGotoXY(wdlg,1,2);  twPutS(wdlg,TYPE_HEX_FORM);
- if(prompt)    { twGotoXY(wdlg,3,6);  twPutS(wdlg,prompt); }
+ if(!prompt.empty())  { twGotoXY(wdlg,3,6);  twPutS(wdlg,prompt); }
  twGotoXY(wdlg,1,4);  twPutS(wdlg,START_PRMT);
  twGotoXY(wdlg,27,4); twPutS(wdlg,LENGTH_PRMT);
  ultoa(*start,startdig,16);
@@ -549,23 +549,23 @@ bool __FASTCALL__ GetFStoreDlg(const char *title,char * fname,unsigned long * fl
  return !(_lastbyte == KE_ESCAPE || _lastbyte == KE_F(10));
 }
 
-static void  __FASTCALL__ FFStaticPaintInsDel(TWindow * wdlg,char * st,char *end)
+static void  __FASTCALL__ FFStaticPaintInsDel(TWindow * wdlg,const std::string& st,const std::string& end)
 {
   int len,i;
   TWindow * _using = twFocusedWin();
     twFocusWin(wdlg);
-    len = strlen(st);
+    len = st.length();
     twGotoXY(wdlg,8,4); twPutS(wdlg,st);
     for(i = len;i < 18;i++)
 	twPutChar(wdlg,TWC_MED_SHADE);
-    len = strlen(end);
+    len = end.length();
     twGotoXY(wdlg,35,4); twPutS(wdlg,end);
     for(i = len;i < 18;i++)
 	twPutChar(wdlg,TWC_MED_SHADE);
     twFocusWin(_using);
 }
 
-bool __FASTCALL__ GetInsDelBlkDlg(const char *title,__filesize_t * start,__fileoff_t * size)
+bool __FASTCALL__ GetInsDelBlkDlg(const std::string& title,__filesize_t * start,__fileoff_t * size)
 {
  tAbsCoord x1,y1,x2,y2;
  tRelCoord X1,Y1,XX1,YY1,XX2,YY2;

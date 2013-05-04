@@ -44,7 +44,7 @@ static CodeGuider* code_guider;
 static Nlm_Internal_Fixed_Header nlm;
 
 static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
-static void __FASTCALL__ nlm_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *));
+static void __FASTCALL__ nlm_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const std::string&));
 static __filesize_t __FASTCALL__ NLMPA2VA(__filesize_t pa);
 
 static BFile* nlm_cache = &bNull;
@@ -628,7 +628,7 @@ static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t p
 			nlm_ReadPubName);
 }
 
-static void __FASTCALL__ nlm_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *))
+static void __FASTCALL__ nlm_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const std::string&))
 {
  unsigned char length;
  unsigned i;

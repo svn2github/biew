@@ -50,7 +50,7 @@ static uint_fast16_t nsections;
 static BFile* coff_cache;
 static __filesize_t strings_ptr;
 
-static void __FASTCALL__ coff_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *));
+static void __FASTCALL__ coff_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const std::string&));
 static void __FASTCALL__ coff_ReadPubName(BFile& b_cache,const struct PubName *it,
 			   char *buff,unsigned cb_buff);
 static unsigned __FASTCALL__ coff386_GetObjAttr(__filesize_t pa,char *name,unsigned cb_name,
@@ -649,7 +649,7 @@ static void __FASTCALL__ coff_ReadPubName(BFile& b_cache,const struct PubName *i
 }
 
 static void __FASTCALL__ coff_ReadPubNameList(BFile& handle,
-				    void (__FASTCALL__ *mem_out)(const char *))
+				    void (__FASTCALL__ *mem_out)(const std::string&))
 {
  unsigned i,nnames;
  struct PubName pn;

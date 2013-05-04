@@ -49,7 +49,7 @@ namespace beye {
     extern linearArray *PubNames;
 
     typedef void (__FASTCALL__ *ReadPubName)(BFile& b_cache,const struct PubName *it,char *buff,unsigned cb_buff);
-    typedef void (__FASTCALL__ *ReadPubNameList)(BFile& fmt_chahe,void (__FASTCALL__ *mem_out)(const char *));
+    typedef void (__FASTCALL__ *ReadPubNameList)(BFile& fmt_chahe,void (__FASTCALL__ *mem_out)(const std::string&));
 
     tCompare __FASTCALL__ fmtComparePubNames(const any_t* v1,const any_t* v2);
     bool __FASTCALL__ fmtFindPubName(BFile& fmt_cache,char *buff,unsigned cb_buff,
@@ -65,7 +65,7 @@ namespace beye {
     typedef unsigned      (__FASTCALL__ * GetNumItems)(BFile& handle);
     typedef bool         (__FASTCALL__ * ReadItems)(BFile& handle,memArray * names,unsigned nnames);
     typedef __filesize_t  (__FASTCALL__ * CalcEntry)(unsigned,int dispmsg);
-    int           __FASTCALL__ fmtShowList( GetNumItems gni,ReadItems ri,const char * title,int flags,unsigned * ordinal);
+    int           __FASTCALL__ fmtShowList( GetNumItems gni,ReadItems ri,const std::string& title,int flags,unsigned * ordinal);
 
     /** Reads user defined name at given offset!
     **/

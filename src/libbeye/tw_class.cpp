@@ -31,7 +31,7 @@ static tCompare __FASTCALL__ comp_class(const any_t*e1,const any_t*e2)
   return stricmp(t1->name, t2->name);
 }
 
-bool __FASTCALL__ twcRegisterClass(const char *name, unsigned flags, twClassFunc method)
+bool __FASTCALL__ twcRegisterClass(const std::string& name, unsigned flags, twClassFunc method)
 {
   TwClass newest;
   TwClass *exists = twcFindClass(name);
@@ -40,10 +40,10 @@ bool __FASTCALL__ twcRegisterClass(const char *name, unsigned flags, twClassFunc
      if(!class_set) class_set = la_Build(0,sizeof(TwClass),NULL);
      if(class_set)
      {
-	newest.name = new char [strlen(name)+1];
+	newest.name = new char [name.size()];
 	if(newest.name)
 	{
-	  strcpy(newest.name,name);
+	  strcpy(newest.name,name.c_str());
 	  newest.flags = flags;
 	  newest.method= method;
 	  if(!la_AddData(class_set,&newest, NULL))
@@ -71,9 +71,9 @@ void __FASTCALL__ twcDestroyClassSet(void)
   if(class_set) la_IterDestroy(class_set, del_class);
 }
 
-TwClass * __FASTCALL__ twcFindClass(const char *name)
+TwClass * __FASTCALL__ twcFindClass(const std::string& name)
 {
  TwClass key;
- key.name = const_cast<char*>(name);
+ key.name = const_cast<char*>(name.c_str());
  return (TwClass *)la_Find(class_set,&key, comp_class);
 }

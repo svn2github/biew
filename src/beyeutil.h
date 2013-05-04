@@ -114,10 +114,10 @@ typedef struct tag_memArray
 }memArray;
 
     memArray *__FASTCALL__ ma_Build( int maxitems, bool interact );
-    bool     __FASTCALL__ ma_AddString(memArray *obj,const char *data,bool interact);
+    bool     __FASTCALL__ ma_AddString(memArray *obj,const std::string& data,bool interact);
     bool     __FASTCALL__ ma_AddData(memArray *obj,const any_t*data,unsigned size,bool interact);
     void      __FASTCALL__ ma_Destroy(memArray *obj);
-    int       __FASTCALL__ ma_Display(memArray *obj,const char *title,int flg,unsigned defsel);
+    int       __FASTCALL__ ma_Display(memArray *obj,const std::string& title,int flg,unsigned defsel);
 
     int      __FASTCALL__ ExpandHex(char * dest,const unsigned char * src,int size,char hard);
 

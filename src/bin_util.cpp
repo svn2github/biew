@@ -124,7 +124,7 @@ static BFile*  __FASTCALL__ ReopenSeek(__filesize_t dist)
  return handle;
 }
 
-int __FASTCALL__ fmtShowList( GetNumItems gni,ReadItems ri,const char * title,int flags,unsigned * ordinal)
+int __FASTCALL__ fmtShowList( GetNumItems gni,ReadItems ri,const std::string& title,int flags,unsigned * ordinal)
 {
  int ret;
  bool bval;

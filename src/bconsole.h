@@ -34,17 +34,17 @@ namespace beye {
     typedef void (__FASTCALL__ * pagefunc)(TWindow *win,const any_t**__obj,unsigned i__obj,unsigned total_obj);
 
     void         __FASTCALL__ CloseWnd(TWindow *w);
-    TWindow *    __FASTCALL__ CrtDlgWnd(const char *,tAbsCoord,tAbsCoord);
-    TWindow *    __FASTCALL__ CrtDlgWndnls(const char *,tAbsCoord,tAbsCoord);
-    TWindow *    __FASTCALL__ CrtMnuWnd(const char *,tAbsCoord,tAbsCoord,tAbsCoord,tAbsCoord);
-    TWindow *    __FASTCALL__ CrtMnuWndnls(const char *,tAbsCoord,tAbsCoord,tAbsCoord,tAbsCoord);
-    TWindow *    __FASTCALL__ CrtLstWnd(const char *,tAbsCoord,tAbsCoord);
-    TWindow *    __FASTCALL__ CrtLstWndnls(const char *,tAbsCoord,tAbsCoord);
-    TWindow *    __FASTCALL__ CrtHlpWnd(const char *,tAbsCoord,tAbsCoord);
-    TWindow *    __FASTCALL__ CrtHlpWndnls(const char *,tAbsCoord,tAbsCoord);
+    TWindow *    __FASTCALL__ CrtDlgWnd(const std::string&,tAbsCoord,tAbsCoord);
+    TWindow *    __FASTCALL__ CrtDlgWndnls(const std::string&,tAbsCoord,tAbsCoord);
+    TWindow *    __FASTCALL__ CrtMnuWnd(const std::string&,tAbsCoord,tAbsCoord,tAbsCoord,tAbsCoord);
+    TWindow *    __FASTCALL__ CrtMnuWndnls(const std::string&,tAbsCoord,tAbsCoord,tAbsCoord,tAbsCoord);
+    TWindow *    __FASTCALL__ CrtLstWnd(const std::string&,tAbsCoord,tAbsCoord);
+    TWindow *    __FASTCALL__ CrtLstWndnls(const std::string&,tAbsCoord,tAbsCoord);
+    TWindow *    __FASTCALL__ CrtHlpWnd(const std::string&,tAbsCoord,tAbsCoord);
+    TWindow *    __FASTCALL__ CrtHlpWndnls(const std::string&,tAbsCoord,tAbsCoord);
     TWindow *    __FASTCALL__ CreateEditor(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsCoord Y2,unsigned flags);
     TWindow *    __FASTCALL__ WindowOpen(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsCoord Y2,unsigned flags);
-    void         __FASTCALL__ DisplayBox(char **names,unsigned nlist,const char *title);
+    void         __FASTCALL__ DisplayBox(char **names,unsigned nlist,const std::string& title);
 
 /** Edit string styles */
 enum {
@@ -83,24 +83,24 @@ enum {
 					void (*func)(void));
     int          __FASTCALL__ xeditstring(TWindow* w,char *s,const char *legal,
 					unsigned maxlength, void(*func)(void));
-    void         __FASTCALL__ ErrMessageBox(const char * text,const char * title);
-    void         __FASTCALL__ WarnMessageBox(const char * text,const char * title);
-    void         __FASTCALL__ errnoMessageBox(const char * text,const char * title,int __errno__);
-    void         __FASTCALL__ ListBox(const char ** names,unsigned nlist,const char * title);
-    void         __FASTCALL__ TMessageBox(const char * text,const char * title);
-    void         __FASTCALL__ NotifyBox(const char * text,const char * title);
+    void         __FASTCALL__ ErrMessageBox(const std::string& text,const std::string& title);
+    void         __FASTCALL__ WarnMessageBox(const std::string& text,const std::string& title);
+    void         __FASTCALL__ errnoMessageBox(const std::string& text,const std::string& title,int __errno__);
+    void         __FASTCALL__ ListBox(const char ** names,unsigned nlist,const std::string& title);
+    void         __FASTCALL__ TMessageBox(const std::string& text,const std::string& title);
+    void         __FASTCALL__ NotifyBox(const std::string& text,const std::string& title);
     int          __FASTCALL__ PageBox(unsigned width,unsigned height,const any_t** __obj,
 				 unsigned nobj,pagefunc func);
-    void         __FASTCALL__ MemOutBox(const char *user_msg);
+    void         __FASTCALL__ MemOutBox(const std::string& user_msg);
     TWindow *    __FASTCALL__ PleaseWaitWnd( void );
 
-    bool        __FASTCALL__ Get2DigitDlg(const char *title,const char *text,unsigned char *xx);
-    bool        __FASTCALL__ Get16DigitDlg(const char *title,const char *text,char attr,
+    bool        __FASTCALL__ Get2DigitDlg(const std::string& title,const std::string& text,unsigned char *xx);
+    bool        __FASTCALL__ Get16DigitDlg(const std::string& title,const std::string& text,char attr,
 						unsigned long long int *xx);
-    bool        __FASTCALL__ Get8DigitDlg(const char *title,const char *text,char attr,unsigned long *xx);
+    bool        __FASTCALL__ Get8DigitDlg(const std::string& title,const std::string& text,char attr,unsigned long *xx);
 
-    bool        __FASTCALL__ GetStringDlg(char * buff,const char * title,const char *subtitle,
-				     const char *prompt);
+    bool        __FASTCALL__ GetStringDlg(char * buff,const std::string& title,const std::string& subtitle,
+				     const std::string& prompt);
 enum {
     GJDLG_FILE_TOP  =0x00000000UL,
     GJDLG_RELATIVE  =0x00000001UL,
@@ -122,30 +122,30 @@ enum {
     FSDLG_BTNSMASK  =0x00000003UL, /**< 0=8bit 1=16bit 2=32bit 3=64bit */
     FSDLG_USEBITNS  =0x40000000UL
 };
-    bool        __FASTCALL__ GetFStoreDlg(const char *title,char *fname,
+    bool        __FASTCALL__ GetFStoreDlg(const std::string& title,char* fname,
 				     unsigned long *flags,
 				     __filesize_t *start,
 				     __filesize_t *end,
-				     const char *prompt);
-    bool        __FASTCALL__ GetInsDelBlkDlg(const char *title,__filesize_t *start,
+				     const std::string& prompt);
+    bool        __FASTCALL__ GetInsDelBlkDlg(const std::string& title,__filesize_t *start,
 					__fileoff_t *size);
 enum {
     LB_SELECTIVE =0x01U,
     LB_SORTABLE  =0x02U,
     LB_USEACC    =0x04U,
 
-    LB_ORD_DELIMITER =TWC_FL_BLK
+    LB_ORD_DELIMITER =0x7F
 };
-    int          __FASTCALL__ CommonListBox(char** names,unsigned nlist,const char *title,
+    int          __FASTCALL__ CommonListBox(char** names,unsigned nlist,const std::string& title,
 				      int acc,unsigned defsel);
-    int          __FASTCALL__ SelBox(char** names,unsigned nlist,const char * title,
+    int          __FASTCALL__ SelBox(char** names,unsigned nlist,const std::string& title,
 			       unsigned defsel);
-    int          __FASTCALL__ SelBoxA(char** names,unsigned nlist,const char * title,
+    int          __FASTCALL__ SelBoxA(char** names,unsigned nlist,const std::string& title,
 				unsigned defsel);
-    int         __FASTCALL__ SelListBox(char** names,unsigned nlist,const char * title,
+    int         __FASTCALL__ SelListBox(char** names,unsigned nlist,const std::string& title,
 				   unsigned defsel);
 
-    TWindow *    __FASTCALL__ PercentWnd(const char *text,const char *title);
+    TWindow *    __FASTCALL__ PercentWnd(const std::string& text,const std::string& title);
 
 			   /** return true - if can continue
 				     false -  if user want terminate process */
@@ -154,7 +154,7 @@ enum {
     int          __FASTCALL__ GetEvent(void (*)(void),int (*)(void),TWindow *);
     void         __FASTCALL__ PostEvent(int kbdcode);
 
-    bool __FASTCALL__ _lb_searchtext(const char *str,const char *tmpl,
+    bool __FASTCALL__ _lb_searchtext(const char* str,const char *tmpl,
 					 unsigned searchlen,const int *cache,
 					 unsigned flg);
     void __FASTCALL__ __drawSinglePrompt(const char *prmt[]);

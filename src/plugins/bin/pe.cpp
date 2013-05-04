@@ -72,7 +72,7 @@ static BFile* pe_cache3 = &bNull;
 static BFile* pe_cache4 = &bNull;
 
 static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
-static void __FASTCALL__ pe_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *));
+static void __FASTCALL__ pe_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const std::string&));
 static __filesize_t __FASTCALL__ peVA2PA(__filesize_t va);
 static __filesize_t __FASTCALL__ pePA2VA(__filesize_t pa);
 static __fileoff_t  CalcOverlayOffset( void );
@@ -132,7 +132,7 @@ static __filesize_t  __FASTCALL__ fioReadDWord2Phys(BFile& handle,__filesize_t o
  return RVA2Phys(dword);
 }
 
-static const char *  __FASTCALL__ PECPUType(void)
+static const char *  __FASTCALL__ PECPUType()
 {
     static const struct {
        int code;
@@ -1253,7 +1253,7 @@ static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t p
 			pe_ReadPubName);
 }
 
-static void __FASTCALL__ pe_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *))
+static void __FASTCALL__ pe_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const std::string&))
 {
   unsigned long i,nitems,expaddr,nameptr,nameaddr,entry_pa;
   unsigned ord;

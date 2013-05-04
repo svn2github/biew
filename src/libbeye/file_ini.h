@@ -92,11 +92,11 @@ typedef bool      (__FASTCALL__ *FiUserFunc)(IniInfo * info);
 *                                 FiStringParser       *
 \******************************************************/
 
-extern  int    (__FASTCALL__ *FiError)(int nError,int row,const char *addinfo); /**< Default error handler */
-extern  void   (__FASTCALL__ *FiFileParser)(const char *fname); /**< Default file processor */
-extern  bool  (__FASTCALL__ *FiStringParser)(char * curr_str); /**< Default string processor */
-extern  bool  (__FASTCALL__ *FiCommandParser)(const char * cmd); /**< Default command processor */
-extern  bool  (__FASTCALL__ *FiGetCondition)(const char * cond);    /**< Default processor of conditions */
+extern  int    (__FASTCALL__ *FiError)(int nError,int row,const std::string& addinfo); /**< Default error handler */
+extern  void   (__FASTCALL__ *FiFileParser)(const std::string& fname); /**< Default file processor */
+extern  bool  (__FASTCALL__ *FiStringParser)(const std::string& curr_str); /**< Default string processor */
+extern  bool  (__FASTCALL__ *FiCommandParser)(const std::string& cmd); /**< Default command processor */
+extern  bool  (__FASTCALL__ *FiGetCondition)(const std::string& cond);    /**< Default processor of conditions */
 
 enum {
     FI_MAXSTRLEN=255 /**< Specifies maximal length of string, that can be readed from ini file */
@@ -116,7 +116,7 @@ extern const char    FiOpenComment;   /**< Character to be used as opening comme
 		     * @param row             Specifies row at which error occured
 		     * @see                   FiAErrorCL
 		    **/
-void         __FASTCALL__ FiAError(int nError,int row,const char *addinfo);
+void         __FASTCALL__ FiAError(int nError,int row,const std::string& addinfo);
 
 		   /** Creates file with error description and treated error as occured at current line.
 		     * @return                none
@@ -145,7 +145,7 @@ void         __FASTCALL__ FiAErrorCL(int nError); /**< error in curent line */
 		     *                        be ignored.
 		     * @see                   FiUserFunc
 		    **/
-void          __FASTCALL__ FiProgress(const char * filename,FiUserFunc fuser);
+void          __FASTCALL__ FiProgress(const std::string& filename,FiUserFunc fuser);
 
 /******************************************************************\
 * Low level routines                                               *
@@ -180,26 +180,26 @@ namespace beye {
     };
 } // namespace beye
 
-bool         __FASTCALL__ FiisSection( const char * str );
-bool         __FASTCALL__ FiisSubSection( const char * str );
-bool         __FASTCALL__ FiisItem( const char * str);
-bool         __FASTCALL__ FiisCommand( const char * str);
+bool         __FASTCALL__ FiisSection( const std::string& str );
+bool         __FASTCALL__ FiisSubSection( const std::string& str );
+bool         __FASTCALL__ FiisItem( const std::string& str);
+bool         __FASTCALL__ FiisCommand( const std::string& str);
 
-size_t        __FASTCALL__ FiGetLengthSection( const char * src );
-size_t        __FASTCALL__ FiGetLengthSubSection( const char * src );
-size_t        __FASTCALL__ FiGetLengthItem( const char * src );
-size_t        __FASTCALL__ FiGetLengthValue( const char * src );
-size_t        __FASTCALL__ FiGetLengthCommandString( const char * src );
+size_t        __FASTCALL__ FiGetLengthSection( const std::string& src );
+size_t        __FASTCALL__ FiGetLengthSubSection( const std::string& src );
+size_t        __FASTCALL__ FiGetLengthItem( const std::string& src );
+size_t        __FASTCALL__ FiGetLengthValue( const std::string& src );
+size_t        __FASTCALL__ FiGetLengthCommandString( const std::string& src );
 
-char *        __FASTCALL__ FiGetSectionName(const char * src,char * store);
-char *        __FASTCALL__ FiGetSubSectionName(const char * src, char * store);
-char *        __FASTCALL__ FiGetItemName(const char * src, char * store);
-char *        __FASTCALL__ FiGetValueOfItem(const char * src, char * store);
-char *        __FASTCALL__ FiGetCommandString(const char * src, char * store);
+char *        __FASTCALL__ FiGetSectionName(const std::string& src,char * store);
+char *        __FASTCALL__ FiGetSubSectionName(const std::string& src, char * store);
+char *        __FASTCALL__ FiGetItemName(const std::string& src, char * store);
+char *        __FASTCALL__ FiGetValueOfItem(const std::string& src, char * store);
+char *        __FASTCALL__ FiGetCommandString(const std::string& src, char * store);
 
-void          __FASTCALL__ FiFileParserStd( const char * filename );
-bool         __FASTCALL__ FiStringParserStd( char * string );
-bool         __FASTCALL__ FiCommandParserStd( const char * cmd );
+void          __FASTCALL__ FiFileParserStd( const std::string& filename );
+bool         __FASTCALL__ FiStringParserStd( const std::string& string );
+bool         __FASTCALL__ FiCommandParserStd( const std::string& cmd );
 
 /**
     WORD processor
@@ -211,11 +211,11 @@ typedef struct tagSTRING
   unsigned int iptr;
 }STRING;
 
-size_t        __FASTCALL__ FiGetLengthBracketString( const char * src );
-char *        __FASTCALL__ FiGetBracketString(const char * str, char * store);
-int           __FASTCALL__ FiisLegal(const char * illegal,char c);
-unsigned int  __FASTCALL__ FiGetLengthNextWord( STRING * str, const char * illegal_symbols);
-char *        __FASTCALL__ FiGetNextWord( STRING * str,const char * illegal_symbols,char * store );
+size_t        __FASTCALL__ FiGetLengthBracketString( const std::string& src );
+char *        __FASTCALL__ FiGetBracketString(const std::string& str, char * store);
+int           __FASTCALL__ FiisLegal(const std::string& illegal,char c);
+unsigned int  __FASTCALL__ FiGetLengthNextWord( STRING * str, const std::string& illegal_symbols);
+char *        __FASTCALL__ FiGetNextWord( STRING * str,const std::string& illegal_symbols,char * store );
 
 /**
     variables set
@@ -231,15 +231,15 @@ typedef struct tagVar
 
 typedef Var * pVar;
 
-pVar            __FASTCALL__ FiConstructVar(const char *v,const char *a);
+pVar            __FASTCALL__ FiConstructVar(const std::string& v,const std::string& a);
 void            __FASTCALL__ FiDeleteVar(pVar pp);
-void            __FASTCALL__ FiDeleteAllVar( void );
-const char    * __FASTCALL__ FiExpandVariables(const char * var);
-bool           __FASTCALL__ FiExpandAllVar(const char * value,char * store);
-void            __FASTCALL__ FiAddVariables(const char * var,const char * associate);
-void            __FASTCALL__ FiRemoveVariables(const char * var);
+void            __FASTCALL__ FiDeleteAllVar();
+const char    * __FASTCALL__ FiExpandVariables(const std::string& var);
+bool           __FASTCALL__ FiExpandAllVar(const std::string& value,char * store);
+void            __FASTCALL__ FiAddVariables(const std::string& var,const std::string& associate);
+void            __FASTCALL__ FiRemoveVariables(const std::string& var);
 
-bool           __FASTCALL__ FiGetConditionStd( const char *condstr);
+bool           __FASTCALL__ FiGetConditionStd( const std::string& condstr);
 
 /**
     High level routines (similar to MS WIN SDK)
@@ -270,7 +270,7 @@ extern void __FASTCALL__ hlFiProgress(hIniProfile *ini,FiUserFunc usrproc);
 		     *                        non NULL value.
 		     * @see                   iniCloseFile
 		    **/
-extern hIniProfile*    __FASTCALL__ iniOpenFile(const char *fname,bool *has_error);
+extern hIniProfile*    __FASTCALL__ iniOpenFile(const std::string& fname,bool *has_error);
 
 		   /** Closes ini file stream.
 		     * @return                none
@@ -294,10 +294,10 @@ extern void            __FASTCALL__ iniCloseFile(hIniProfile *ini);
 		     * @see                   iniWriteProfileString
 		    **/
 extern unsigned __FASTCALL__ iniReadProfileString(hIniProfile *ini,
-				     const char *section,
-				     const char *subsection,
-				     const char *_item,
-				     const char *def_value,
+				     const std::string& section,
+				     const std::string& subsection,
+				     const std::string& _item,
+				     const std::string& def_value,
 				     char *buffer,
 				     unsigned cbBuffer);
 
@@ -311,10 +311,10 @@ extern unsigned __FASTCALL__ iniReadProfileString(hIniProfile *ini,
 		     * @see                   iniReadProfileString
 		    **/
 extern bool __FASTCALL__ iniWriteProfileString(hIniProfile *ini,
-				     const char *section,
-				     const char *subsection,
-				     const char *item,
-				     const char *value);
+				     const std::string& section,
+				     const std::string& subsection,
+				     const std::string& item,
+				     const std::string& value);
 
 #endif
 

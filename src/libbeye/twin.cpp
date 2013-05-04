@@ -72,7 +72,7 @@ enum {
     IFLG_CURSORBEENOFF=0x80000000UL
 };
 
-static void  __FASTCALL__ winerr(const char *str) { std::cerr<<std::endl<<std::endl<<"Internal twin library error: "<<str<<std::endl; _exit(EXIT_FAILURE); }
+static void  __FASTCALL__ winerr(const std::string& str) { std::cerr<<std::endl<<std::endl<<"Internal twin library error: "<<str<<std::endl; _exit(EXIT_FAILURE); }
 static void  __FASTCALL__ wputc_oem(TWindow* win,char ch,char oempg,char color,bool update);
 static void  __FASTCALL__ paint_internal(TWindow* win);
 
@@ -195,11 +195,11 @@ int __FASTCALL__ twGetCursorType()
   return c_type;
 }
 
-void __FASTCALL__ twInit(const char *user_cp, unsigned long vio_flags, unsigned long twin_flgs )
+void __FASTCALL__ twInit(const std::string& user_cp, unsigned long vio_flags, unsigned long twin_flgs )
 {
   const char *nls_cp;
   twin_flags = twin_flgs;
-  nls_cp=user_cp?user_cp:"IBM866";
+  nls_cp=!user_cp.empty()?user_cp.c_str():"IBM866";
   __init_vio(nls_cp,vio_flags);
   __init_keyboard(nls_cp);
   if(tvioWidth > __TVIO_MAXSCREENWIDTH)
@@ -371,14 +371,14 @@ void __FASTCALL__ twGetFrame(TWindow *win,unsigned char *frame,Color* fore,Color
   *back = BACK_COLOR(attr);
 }
 
-void __FASTCALL__ twSetTitle(TWindow *win,const char *title,tTitleMode mode,Color fore,Color back)
+void __FASTCALL__ twSetTitle(TWindow *win,const std::string& title,tTitleMode mode,Color fore,Color back)
 {
   unsigned slen;
-  slen = strlen(title);
+  slen = title.length();
   if(win->Title) delete win->Title;
   win->Title = new char [slen+1];
   if(!win->Title) winerr("Out of memory!");
-  strcpy(win->Title,title);
+  strcpy(win->Title,title.c_str());
   if((win->flags & TWS_NLSOEM) == TWS_NLSOEM)
 	 __nls_OemToOsdep((unsigned char *)win->Title,slen);
   win->TitleMode = mode;
@@ -386,7 +386,7 @@ void __FASTCALL__ twSetTitle(TWindow *win,const char *title,tTitleMode mode,Colo
   paint_internal(win);
 }
 
-void __FASTCALL__ twSetTitleAttr(TWindow *win,const char *title,tTitleMode mode,ColorAttr attr)
+void __FASTCALL__ twSetTitleAttr(TWindow *win,const std::string& title,tTitleMode mode,ColorAttr attr)
 {
   twSetTitle(win,title,mode,FORE_COLOR(attr),BACK_COLOR(attr));
 }
@@ -414,14 +414,14 @@ tTitleMode __FASTCALL__ twGetTitle(TWindow *win,char *title,unsigned cb_title,Co
   return ret;
 }
 
-void __FASTCALL__ twSetFooter(TWindow *win,const char *footer,tTitleMode mode,Color fore,Color back)
+void __FASTCALL__ twSetFooter(TWindow *win,const std::string& footer,tTitleMode mode,Color fore,Color back)
 {
   unsigned slen;
-  slen = strlen(footer);
+  slen = footer.length();
   if(win->Footer) delete win->Footer;
   win->Footer = new char [slen+1];
   if(!win->Footer) winerr("Out of memory!");
-  strcpy(win->Footer,footer);
+  strcpy(win->Footer,footer.c_str());
   if((win->flags & TWS_NLSOEM) == TWS_NLSOEM)
        __nls_OemToOsdep((unsigned char *)win->Footer,slen);
   win->FooterMode = mode;
@@ -429,7 +429,7 @@ void __FASTCALL__ twSetFooter(TWindow *win,const char *footer,tTitleMode mode,Co
   paint_internal(win);
 }
 
-void __FASTCALL__ twSetFooterAttr(TWindow *win,const char *footer,tTitleMode mode,ColorAttr attr)
+void __FASTCALL__ twSetFooterAttr(TWindow *win,const std::string& footer,tTitleMode mode,ColorAttr attr)
 {
   twSetFooter(win,footer,mode,FORE_COLOR(attr),BACK_COLOR(attr));
 }
@@ -1383,7 +1383,7 @@ TWindow * __FASTCALL__ twCreateWin(tAbsCoord x1, tAbsCoord y1, tAbsCoord width, 
 TWindow *  __FASTCALL__ twCreateWinEx(tAbsCoord x1_, tAbsCoord y1_,
 				      tAbsCoord width, tAbsCoord height,
 				      unsigned flags, TWindow *parent,
-				      const char *classname)
+				      const std::string& classname)
 {
   TWindow *ret;
   UNUSED(parent);
@@ -1777,7 +1777,7 @@ char __FASTCALL__ twGetChar(TWindow* win)
   return win->body.chars[idx];
 }
 
-int __FASTCALL__ twPutS(TWindow* win,const char *str)
+int __FASTCALL__ twPutS(TWindow* win,const std::string& str)
 {
   char *__nls = NULL,* __nls_ptr;
   const char *__oem_ptr;
@@ -1789,18 +1789,18 @@ int __FASTCALL__ twPutS(TWindow* win,const char *str)
   if((win->flags & TWS_NLSOEM) == TWS_NLSOEM)
   {
      unsigned len;
-     len = strlen(str);
+     len = str.length();
      __nls = new char [len+1];
      if(__nls)
      {
-       strcpy(__nls,str);
+       strcpy(__nls,str.c_str());
        __nls_OemToOsdep((unsigned char *)__nls,len);
      }
-     else __nls = const_cast<char*>(str);
+     else __nls = const_cast<char*>(str.c_str());
   }
-  else __nls = const_cast<char*>(str);
+  else __nls = const_cast<char*>(str.c_str());
   __nls_ptr = __nls;
-  __oem_ptr = str;
+  __oem_ptr = str.c_str();
   vidx = win->cur_x + win->cur_y*win->wwidth;
   usx = win->cur_x;
   while((ch=*__nls++)!=0)
@@ -1840,7 +1840,7 @@ int __FASTCALL__ twPutS(TWindow* win,const char *str)
   return freq;
 }
 
-int __FASTCALL__ twPrintF(TWindow* win,const char *fmt,...)
+int __FASTCALL__ twPrintF(TWindow* win,const std::string& fmt,...)
 {
   char *buff;
   int ret;
@@ -1851,7 +1851,7 @@ int __FASTCALL__ twPrintF(TWindow* win,const char *fmt,...)
   if(buff)
   {
     va_start(args,fmt);
-    vsprintf(buff,fmt,args);
+    vsprintf(buff,fmt.c_str(),args);
     va_end(args);
     ret = twPutS(win,buff);
     delete buff;

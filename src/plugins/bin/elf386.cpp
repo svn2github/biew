@@ -156,7 +156,7 @@ struct tag_elfVAMap
 #define ELF_OFF(cval) ELF_XWORD(cval)
 
 static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
-static void __FASTCALL__ elf_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *));
+static void __FASTCALL__ elf_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const std::string&));
 static __filesize_t __FASTCALL__ elfVA2PA(__filesize_t va);
 static __filesize_t __FASTCALL__ elfPA2VA(__filesize_t pa);
 static bool IsSectionsPresent;
@@ -2235,7 +2235,7 @@ static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t p
   return udnFindName(pa,buff,cb_buff);
 }
 
-static void __FASTCALL__ elf_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const char *))
+static void __FASTCALL__ elf_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const std::string&))
 {
   __filesize_t fpos,fp,tableptr,pubname_shtbl;
   unsigned long i,number,ent_size,nitems;

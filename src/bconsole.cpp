@@ -128,9 +128,9 @@ int __FASTCALL__ xeditstring(TWindow* w,char *s,const char *legal,unsigned maxle
   return eeditstring(w,s,legal,&maxlength,1,NULL,__ESS_ENABLEINSERT,NULL,func);
 }
 
-#define isSpace(val) (((int)val+1)%3 ? 0 : 1)
-#define isFirstD(pos) (isSpace(pos-1))
-#define isSecondD(pos) (isSpace(pos+1))
+inline bool isSpace(int val) { return ((val+1)%3 ? 0 : 1); }
+inline bool isFirstD(int pos) { return isSpace(pos-1); }
+inline bool isSecondD(int pos) { return isSpace(pos+1); }
 
 static bool insert = true;
 
@@ -314,7 +314,7 @@ TWindow *__FASTCALL__ PleaseWaitWnd( void )
    return w;
 }
 
-void __FASTCALL__ MemOutBox(const char *user_msg)
+void __FASTCALL__ MemOutBox(const std::string& user_msg)
 {
   ErrMessageBox(user_msg," Not enough memory! ");
 }
@@ -350,7 +350,7 @@ static long __FASTCALL__ PercentWndCallBack(TWindow *it,unsigned event, unsigned
 }
 
 
-TWindow *__FASTCALL__ PercentWnd(const char *text,const char *title)
+TWindow *__FASTCALL__ PercentWnd(const std::string& text,const std::string& title)
 {
   TWindow *ret,*usd;
   static time_t sttime;
@@ -444,7 +444,7 @@ void __FASTCALL__ CloseWnd(TWindow *w)
    twDestroyWin(w);
 }
 
-static TWindow *  __FASTCALL__ _CreateWindowDD(const char * title,tAbsCoord x2,tAbsCoord y2,bool is_nls)
+static TWindow *  __FASTCALL__ _CreateWindowDD(const std::string& title,tAbsCoord x2,tAbsCoord y2,bool is_nls)
 {
  TWindow *win;
  unsigned flags;
@@ -458,24 +458,24 @@ static TWindow *  __FASTCALL__ _CreateWindowDD(const char * title,tAbsCoord x2,t
  memcpy(frame,TW_DOUBLE_FRAME,8);
  if(!is_nls) __nls_OemToOsdep((unsigned char *)frame,8);
  twSetFrameAttr(win,frame,dialog_cset.border);
- if(title) twSetTitleAttr(win,title,TW_TMODE_CENTER,dialog_cset.title);
+ if(!title.empty()) twSetTitleAttr(win,title,TW_TMODE_CENTER,dialog_cset.title);
  twShowWin(win);
  return win;
 }
 
-#define _CreateWindowDDnls(title,x2,y2) (_CreateWindowDD(title,x2,y2,true))
+inline TWindow* _CreateWindowDDnls(const std::string& title,tAbsCoord x2,tAbsCoord y2) { return _CreateWindowDD(title,x2,y2,true); }
 
-TWindow * __FASTCALL__ CrtDlgWnd(const char * title,tAbsCoord width,tAbsCoord height )
+TWindow * __FASTCALL__ CrtDlgWnd(const std::string& title,tAbsCoord width,tAbsCoord height )
 {
   return _CreateWindowDD(title,width,height,false);
 }
 
-TWindow * __FASTCALL__ CrtDlgWndnls(const char * title,tAbsCoord width,tAbsCoord height )
+TWindow * __FASTCALL__ CrtDlgWndnls(const std::string& title,tAbsCoord width,tAbsCoord height )
 {
   return _CreateWindowDDnls(title,width,height);
 }
 
-static TWindow *  __FASTCALL__ _CrtMnuWindowDD(const char *title,tAbsCoord x1, tAbsCoord y1, tAbsCoord x2,tAbsCoord y2,bool is_nls)
+static TWindow *  __FASTCALL__ _CrtMnuWindowDD(const std::string& title,tAbsCoord x1, tAbsCoord y1, tAbsCoord x2,tAbsCoord y2,bool is_nls)
 {
  TWindow *win;
  unsigned flags;
@@ -486,32 +486,32 @@ static TWindow *  __FASTCALL__ _CrtMnuWindowDD(const char *title,tAbsCoord x1, t
  twSetColorAttr(win,menu_cset.main);
  twClearWin(win);
  twSetFrameAttr(win,TW_DOUBLE_FRAME,menu_cset.border);
- if(title) twSetTitleAttr(win,title,TW_TMODE_CENTER,menu_cset.title);
+ if(!title.empty()) twSetTitleAttr(win,title,TW_TMODE_CENTER,menu_cset.title);
  twShowWin(win);
  return win;
 }
 
-TWindow * __FASTCALL__ CrtMnuWnd(const char * title,tAbsCoord x1, tAbsCoord y1,tAbsCoord x2,tAbsCoord y2)
+TWindow * __FASTCALL__ CrtMnuWnd(const std::string& title,tAbsCoord x1, tAbsCoord y1,tAbsCoord x2,tAbsCoord y2)
 {
   return _CrtMnuWindowDD(title,x1,y1,x2,y2,false);
 }
 
-TWindow * __FASTCALL__ CrtMnuWndnls(const char * title,tAbsCoord x1, tAbsCoord y1,tAbsCoord x2,tAbsCoord y2)
+TWindow * __FASTCALL__ CrtMnuWndnls(const std::string& title,tAbsCoord x1, tAbsCoord y1,tAbsCoord x2,tAbsCoord y2)
 {
   return _CrtMnuWindowDD(title,x1,y1,x2,y2,true);
 }
 
-TWindow * __FASTCALL__ CrtLstWnd(const char * title,tAbsCoord x2,tAbsCoord y2)
+TWindow * __FASTCALL__ CrtLstWnd(const std::string& title,tAbsCoord x2,tAbsCoord y2)
 {
   return _CrtMnuWindowDD(title,0,0,x2,y2,false);
 }
 
-TWindow * __FASTCALL__ CrtLstWndnls(const char * title,tAbsCoord x2,tAbsCoord y2)
+TWindow * __FASTCALL__ CrtLstWndnls(const std::string& title,tAbsCoord x2,tAbsCoord y2)
 {
   return _CrtMnuWindowDD(title,0,0,x2,y2,true);
 }
 
-static TWindow *  __FASTCALL__ _CreateHlpWnd(const char * title,tAbsCoord x2,tAbsCoord y2,bool is_nls)
+static TWindow *  __FASTCALL__ _CreateHlpWnd(const std::string& title,tAbsCoord x2,tAbsCoord y2,bool is_nls)
 {
  TWindow *win;
  unsigned flags;
@@ -522,17 +522,17 @@ static TWindow *  __FASTCALL__ _CreateHlpWnd(const char * title,tAbsCoord x2,tAb
  twSetColorAttr(win,help_cset.main);
  twClearWin(win);
  twSetFrameAttr(win,TW_DOUBLE_FRAME,help_cset.border);
- if(title) twSetTitleAttr(win,title,TW_TMODE_CENTER,help_cset.title);
+ if(!title.empty()) twSetTitleAttr(win,title,TW_TMODE_CENTER,help_cset.title);
  twShowWin(win);
  return win;
 }
 
-TWindow * __FASTCALL__ CrtHlpWnd(const char * title,tAbsCoord x2,tAbsCoord y2)
+TWindow * __FASTCALL__ CrtHlpWnd(const std::string& title,tAbsCoord x2,tAbsCoord y2)
 {
   return _CreateHlpWnd(title,x2,y2,false);
 }
 
-TWindow * __FASTCALL__ CrtHlpWndnls(const char * title,tAbsCoord x2,tAbsCoord y2)
+TWindow * __FASTCALL__ CrtHlpWndnls(const std::string& title,tAbsCoord x2,tAbsCoord y2)
 {
   return _CreateHlpWnd(title,x2,y2,true);
 }
@@ -546,12 +546,12 @@ TWindow * __FASTCALL__ CreateEditor(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsC
  return ret;
 }
 
-static void  __FASTCALL__ __MB(const char * text,const char * title,
+static void  __FASTCALL__ __MB(const std::string& text,const std::string& title,
 				       ColorAttr base,ColorAttr frame)
 {
  unsigned slen,tlen;
- slen = strlen(text) + 3;
- tlen = strlen(title) + 2;
+ slen = text.length() + 3;
+ tlen = title.length() + 2;
  slen = std::min(std::max(slen,tlen)+1,unsigned(78));
  twResizeWin(ErrorWnd,slen,3);
  twCentredWin(ErrorWnd,NULL);
@@ -564,7 +564,7 @@ static void  __FASTCALL__ __MB(const char * text,const char * title,
  twPutS(ErrorWnd,text);
 }
 
-static void  __FASTCALL__ __MessageBox(const char * text,const char * title,
+static void  __FASTCALL__ __MessageBox(const std::string& text,const std::string& title,
 					       ColorAttr base,ColorAttr frame)
 {
  TWindow *prev;
@@ -583,34 +583,34 @@ static void  __FASTCALL__ __MessageBox(const char * text,const char * title,
 }
 
 
-void __FASTCALL__ TMessageBox(const char * text,const char * title)
+void __FASTCALL__ TMessageBox(const std::string& text,const std::string& title)
 {
- __MessageBox(text,title ? title : "",dialog_cset.main,dialog_cset.title);
+ __MessageBox(text,title,dialog_cset.main,dialog_cset.title);
 }
 
-void __FASTCALL__ NotifyBox(const char * text,const char * title)
+void __FASTCALL__ NotifyBox(const std::string& text,const std::string& title)
 {
- __MessageBox(text,title ? title : NOTE_MSG,notify_cset.main,notify_cset.border);
+ __MessageBox(text,!title.empty() ? title : NOTE_MSG,notify_cset.main,notify_cset.border);
 }
 
-void __FASTCALL__ ErrMessageBox(const char * text,const char * title)
+void __FASTCALL__ ErrMessageBox(const std::string& text,const std::string& title)
 {
- __MessageBox(text,title ? title : ERROR_MSG,error_cset.main,error_cset.border);
+ __MessageBox(text,!title.empty() ? title : ERROR_MSG,error_cset.main,error_cset.border);
 }
 
-void __FASTCALL__ WarnMessageBox(const char * text,const char * title)
+void __FASTCALL__ WarnMessageBox(const std::string& text,const std::string& title)
 {
- __MessageBox(text,title ? title : WARN_MSG,warn_cset.main,warn_cset.border);
+ __MessageBox(text,!title.empty() ? title : WARN_MSG,warn_cset.main,warn_cset.border);
 }
 
-void __FASTCALL__ errnoMessageBox(const char *text,const char *title,int __errno__)
+void __FASTCALL__ errnoMessageBox(const std::string& text,const std::string& title,int __errno__)
 {
   char stmp[256];
-  sprintf(stmp,"%s: %i (%s)",text,__errno__,strerror(__errno__));
+  sprintf(stmp,"%s: %i (%s)",text.c_str(),__errno__,strerror(__errno__));
   ErrMessageBox(stmp,title);
 }
 
-static void  __FASTCALL__ PaintLine(TWindow* w,unsigned i,const char *name,
+static void  __FASTCALL__ PaintLine(TWindow* w,unsigned i,const std::string& name,
 					unsigned width,unsigned mord_width,
 					bool isOrdinal,
 					bool useAcc,bool is_hl)
@@ -619,33 +619,33 @@ static void  __FASTCALL__ PaintLine(TWindow* w,unsigned i,const char *name,
   char buffer[__TVIO_MAXSCREENWIDTH + 1];
   memset(buffer,TWC_DEF_FILLER,sizeof(buffer));
   buffer[__TVIO_MAXSCREENWIDTH] = 0; /* [dBorca] play it safe for strchr below */
-  namelen = name?strlen(name):0;
+  namelen = name.length();
   if(isOrdinal)
   {
-    const char* endptr;
-    endptr = name?strrchr(name,LB_ORD_DELIMITER):NULL;
-    if(endptr)
+    size_t endptr;
+    endptr = name.rfind(LB_ORD_DELIMITER);
+    if(endptr!=std::string::npos)
     {
       unsigned len, rlen;
       // write name
-      len = endptr - name;
+      len = endptr;
       rlen = len;
       if(len > width - mord_width-1)
 	  rlen = width - mord_width-3;
-      memcpy(buffer,name,rlen);
+      memcpy(buffer,name.c_str(),rlen);
       if(len > rlen) memcpy(buffer+rlen,"..", 2);           // using 2 dots now -XF
       // write ordinal. it's left aligned now -XF
       buffer[width - mord_width - 1] = '@';
       len = rlen = namelen - (len+1);
       if(rlen > mord_width) rlen = mord_width - 2;
-      memcpy(&buffer[width - mord_width], endptr+1, rlen);
+      memcpy(&buffer[width - mord_width], &name.c_str()[endptr+1], rlen);
       if(len > rlen) memcpy(buffer+width-mord_width+rlen,"..", 2);
     }
   }
-  else if(name) memcpy(buffer,name,std::min(namelen,size_t(width)));
+  else if(!name.empty()) memcpy(buffer,name.c_str(),std::min(namelen,size_t(width)));
   if(useAcc)
   {
-    char *st,*ends,*ptr;
+    const char *st,*ends,*ptr;
     char ch;
     twGotoXY(w,3,i+1);
     st = buffer;
@@ -748,11 +748,11 @@ static tCompare __FASTCALL__ listcompare(const any_t* v1,const any_t* v2)
   return ret;
 }
 
-static int  __FASTCALL__ __ListBox(char** names,unsigned nlist,unsigned defsel,const char * title,int assel)
+static int  __FASTCALL__ __ListBox(char** names,unsigned nlist,unsigned defsel,const std::string& title,int assel)
 {
  TWindow * wlist;
  char *acctable = 0;
- unsigned i,j,width,height,mwidth = strlen(title);
+ unsigned i,j,width,height,mwidth = title.length();
  unsigned mordstr_width, mord_width;
  int ret,start,ostart,cursor,ocursor,scursor;
  bool isOrdinal,sf;
@@ -863,7 +863,7 @@ static int  __FASTCALL__ __ListBox(char** names,unsigned nlist,unsigned defsel,c
 		  out = fopen(ofname,"wt");
 		  if(out)
 		  {
-		    strncpy(ofname,title,sizeof(ofname));
+		    strncpy(ofname,title.c_str(),sizeof(ofname));
 		    ofname[sizeof(ofname)-1] = '\0';
 		    if(GetStringDlg(ofname," User comments : "," [ENTER] - Proceed "," Description : "))
 		    {
@@ -997,32 +997,32 @@ static int  __FASTCALL__ __ListBox(char** names,unsigned nlist,unsigned defsel,c
  return ret;
 }
 
-int __FASTCALL__ CommonListBox(char** names,unsigned nlist,const char *title,int acc,unsigned defsel)
+int __FASTCALL__ CommonListBox(char** names,unsigned nlist,const std::string& title,int acc,unsigned defsel)
 {
   return __ListBox(names,nlist,defsel,title,acc);
 }
 
-void __FASTCALL__ DisplayBox(char** names,unsigned nlist,const char *title)
+void __FASTCALL__ DisplayBox(char** names,unsigned nlist,const std::string& title)
 {
   __ListBox(names,nlist,UINT_MAX,title,0); /** not sortable & not selective */
 }
 
-void __FASTCALL__ ListBox(char** names,unsigned nlist,const char * title)
+void __FASTCALL__ ListBox(char** names,unsigned nlist,const std::string& title)
 {
   __ListBox(names,nlist,UINT_MAX,title,LB_SORTABLE);
 }
 
-int __FASTCALL__ SelListBox(char** names,unsigned nlist,const char * title,unsigned defsel)
+int __FASTCALL__ SelListBox(char** names,unsigned nlist,const std::string& title,unsigned defsel)
 {
   return __ListBox(names,nlist,defsel,title,LB_SELECTIVE | LB_SORTABLE);
 }
 
-int __FASTCALL__ SelBox(char** names,unsigned nlist,const char * title,unsigned defsel)
+int __FASTCALL__ SelBox(char** names,unsigned nlist,const std::string& title,unsigned defsel)
 {
   return __ListBox(names,nlist,defsel,title,LB_SELECTIVE);
 }
 
-int __FASTCALL__ SelBoxA(char** names,unsigned nlist,const char * title,unsigned defsel)
+int __FASTCALL__ SelBoxA(char** names,unsigned nlist,const std::string& title,unsigned defsel)
 {
   return __ListBox(names,nlist,defsel,title,LB_SELECTIVE | LB_USEACC);
 }
