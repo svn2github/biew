@@ -362,47 +362,23 @@ static inline std::string FiGetBracketString(const std::string& str) { return __
 static inline std::string FiGetSectionName(const std::string& src) { return __GetBrStrName(src,'[',']'); }
 static inline std::string FiGetSubSectionName(const std::string& src) { return __GetBrStrName(src,'<','>'); }
 
-static size_t  __FASTCALL__ FiGetLengthItem( const std::string& src )
+static std::string __FASTCALL__ FiGetValueOfItem(const std::string& src)
 {
-  size_t sret;
-  sret = src.find('=');
-  if(sret==std::string::npos) FiAErrorCL(__FI_NOTEQU);
-  return sret;
+    std::string rc;
+    size_t from;
+    from = src.find('=');
+    if(from!=std::string::npos) rc=&src.c_str()[++from];
+    else     FiAErrorCL(__FI_NOTEQU);
+    return rc;
 }
 
-static size_t  __FASTCALL__ FiGetLengthValue( const std::string& src )
-{
-  size_t sptr;
-  size_t len;
-  len = src.length();
-  sptr = src.find('=');
-  if(sptr==std::string::npos) FiAErrorCL(__FI_NOTEQU);
-  return len-(sptr+1);
-}
-
-static char *    __FASTCALL__ FiGetValueOfItem(const std::string& src,char * store)
-{
-  size_t from;
-  from = src.find('=');
-  if(from!=std::string::npos) strcpy(store,&src.c_str()[++from]);
-  else     FiAErrorCL(__FI_NOTEQU);
-  return store;
-}
-
-static size_t  __FASTCALL__ FiGetLengthCommandString( const std::string& src )
-{
-   size_t i;
-   i = strspn(src.c_str()," #");
-   return src.length() - i;
-}
 
 static char *    __FASTCALL__ FiGetItemName(const std::string& src,char * store)
 {
   size_t sptr;
   unsigned len;
   sptr = src.find('=');
-  if(sptr!=std::string::npos)
-  {
+  if(sptr!=std::string::npos) {
     len = sptr;
     memcpy(store,src.c_str(),len);
     store[len] = 0;
@@ -411,12 +387,18 @@ static char *    __FASTCALL__ FiGetItemName(const std::string& src,char * store)
   return store;
 }
 
-static char *   __FASTCALL__ FiGetCommandString(const std::string& src,char * store)
+static std::string  __FASTCALL__ FiGetItemName(const std::string& src)
 {
-  unsigned i;
-  i = strspn(src.c_str()," #");
-  strcpy(store,&src.c_str()[i]);
-  return store;
+    std::string rc;
+    size_t sptr;
+    unsigned len;
+    sptr = src.find('=');
+    if(sptr!=std::string::npos) {
+	len = sptr;
+	rc=src.substr(0,len);
+	if(!IS_VALID_NAME(rc)) FiAErrorCL(__FI_BADCHAR);
+    }
+    return rc;
 }
 
 static std::string  __FASTCALL__ FiGetCommandString(const std::string& src)
@@ -443,65 +425,6 @@ static char *  __FASTCALL__ __FiCMaxStr()
   return ret;
 }
 
-static char *  __FASTCALL__ __FiCItem( const std::string& src )
-{
-  char * ret;
-  unsigned int li;
-  li = FiGetLengthItem(src);
-  ret = new char [li + 1];
-  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
-  if(li) FiGetItemName(src,ret);
-  else   ret[0] = 0;
-  return ret;
-}
-
-static char *  __FASTCALL__ __FiCValue( const std::string& src )
-{
-  char * ret;
-  unsigned int lv;
-  lv = FiGetLengthValue(src);
-  ret = new char [lv + 1];
-  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
-  if(lv) FiGetValueOfItem(src,ret);
-  else   ret[0] = 0;
-  return ret;
-}
-
-static char *  __FASTCALL__ __FiCSection( const std::string& src )
-{
-  char * ret;
-  unsigned int ls;
-  ls = FiGetLengthSection(src);
-  ret = new char [ls + 1];
-  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
-  if(ls) FiGetSectionName(src,ret);
-  else   ret[0] = 0;
-  return ret;
-}
-
-static char *  __FASTCALL__ __FiCSubSection( const std::string& src )
-{
-  char * ret;
-  unsigned int lss;
-  lss = FiGetLengthSubSection(src);
-  ret = new char [lss + 1];
-  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
-  if(lss) FiGetSubSectionName(src,ret);
-  else    ret[0] = 0;
-  return ret;
-}
-
-static char *  __FASTCALL__ __FiCCmd( const std::string& src )
-{
-  char * ret;
-  unsigned int lc;
-  lc = FiGetLengthCommandString(src);
-  ret = new char [lc + 1];
-  if(ret == NULL) FiAError(__FI_NOTMEM,0,NULL);
-  if(lc) FiGetCommandString(src,ret);
-  else   ret[0] = 0;
-  return ret;
-}
 /************* END of Construct section *********************/
 
 /*************************************************************\
@@ -764,27 +687,26 @@ static bool __FASTCALL__ FiCommandParserStd( const std::string& cmd )
 
 static std::string curr_sect;
 static std::string curr_subsect;
-
 static bool __FASTCALL__ FiStringParserStd(const std::string& curr_str)
 {
-  char *item,*val;
+    std::string item,val;
     if(FiisCommand(curr_str))
     {
-      item = __FiCCmd(curr_str);
-      (*FiCommandParser)(item);
-      PFREE(item);
+      std::string _item;
+      _item = FiGetCommandString(curr_str);
+      (*FiCommandParser)(_item);
       return false;
     }
     else
     if(FiisSection(curr_str))
     {
-      curr_sect = __FiCSection(curr_str);
+      curr_sect = FiGetSectionName(curr_str);
       return false;
     }
     else
     if(FiisSubSection(curr_str))
     {
-      curr_subsect = __FiCSubSection(curr_str);
+      curr_subsect = FiGetSubSectionName(curr_str);
       return false;
     }
     else
@@ -794,22 +716,20 @@ static bool __FASTCALL__ FiStringParserStd(const std::string& curr_str)
       bool retval;
       IniInfo info;
       buffer=ifSmarting?vars.substitute(curr_str):curr_str;
-      item = __FiCItem(buffer.c_str());
+      item = FiGetItemName(buffer);
       retval = false;
       if(item[0])
       {
-       val = __FiCValue(buffer.c_str());
+       val = FiGetValueOfItem(buffer);
        if(!curr_sect.empty()) info.section = curr_sect.c_str();
        else info.section = "";
        if(!curr_subsect.empty()) info.subsection = curr_subsect.c_str();
        else info.subsection = "";
-       info.item = item;
-       info.value = val;
+       info.item = item.c_str();
+       info.value = val.c_str();
        retval = (*proc)(&info);
-       PFREE(val);
       }
       else FiAErrorCL(__FI_BADCHAR);
-      PFREE(item);
       return retval;
     }
   return false;
@@ -1350,14 +1270,13 @@ static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
      if(workstr[0] == 0) break;
      if(FiisCommand(workstr))
      {
-       char *cstr;
-       cstr = __FiCCmd(workstr);
-       if(strncmp(cstr,"if",2) == 0 ||
-	  strncmp(cstr,"elif",4) == 0 ||
-	  strncmp(cstr,"else",4) == 0 )
+       std::string cstr;
+       cstr = FiGetCommandString(workstr);
+       if(cstr.substr(0,2)=="if" ||
+	  cstr.substr(0,4)=="elif" ||
+	  cstr.substr(0,4)=="else")
        if_on = true;
-       if(strncmp(cstr,"endif",5) == 0) if_on = false;
-       PFREE(cstr);
+       if(cstr.substr(0,5)=="endif") if_on = false;
      }
      if(Cond)
      {
