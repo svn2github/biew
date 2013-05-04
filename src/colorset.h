@@ -25,7 +25,7 @@ namespace beye {
 	Color  color;
     }namedColorDef;
 
-    extern namedColorDef named_color_def[16];
+    extern const namedColorDef named_color_def[16];
 
 typedef struct tag_MultiEditCSet
 {

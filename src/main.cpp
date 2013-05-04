@@ -63,7 +63,6 @@ extern const Plugin_Info textMode;
 extern const Plugin_Info hexMode;
 extern const Plugin_Info disMode;
 
-extern char last_skin_error[];
 static volatile char antiviral_hole1[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 
 static BeyeContext* BeyeCtx=NULL;
@@ -484,7 +483,7 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  if(skin_err)
  {
    char sout[256];
-   sprintf(sout,"Error in skin file detected: '%s'",last_skin_error);
+   sprintf(sout,"Error in skin file detected: '%s'",BeyeCtx->last_skin_error.c_str());
    ErrMessageBox(sout,NULL);
  }
  /* We must do it before opening a file because of some RTL has bug

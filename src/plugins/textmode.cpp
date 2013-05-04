@@ -104,8 +104,6 @@ static unsigned char	wset[UCHAR_MAX+1];
 static char*		escape;
 static char		detected_syntax_name[FILENAME_MAX+1];
 
-extern char last_skin_error[];
-
     class TextMode : public Plugin {
 	public:
 	    TextMode(CodeGuider& code_guider);
@@ -493,7 +491,7 @@ static bool __FASTCALL__ txtFiUserFunc2(IniInfo * info)
 	    syntax_hl.context[syntax_hl.context_num].end_seq=new char [strlen(p)+1];
 	    ::strcpy(syntax_hl.context[syntax_hl.context_num].end_seq,p);
 	    syntax_hl.context_num++;
-	} else last_syntax_err=last_skin_error;
+	} else last_syntax_err=beye_context().last_skin_error.c_str();
     }
     if(::strcmp(info->section,"Keywords")==0) {
 	Color col;
@@ -510,7 +508,7 @@ static bool __FASTCALL__ txtFiUserFunc2(IniInfo * info)
 		syntax_hl.maxkwd_len=syntax_hl.keyword[syntax_hl.keyword_num].len;
 	    syntax_hl.keyword_num++;
 	}
-	else last_syntax_err=last_skin_error;
+	else last_syntax_err=beye_context().last_skin_error.c_str();
     }
     if(::strcmp(info->section,"Operators")==0) {
 	Color col;
@@ -519,7 +517,7 @@ static bool __FASTCALL__ txtFiUserFunc2(IniInfo * info)
 	    unfmt_str((unsigned char*)info->value);
 	    if(::strlen(info->value)>1) { last_syntax_err="Too long operator has been found"; return true; }
 	    syntax_hl.op_hash[(unsigned char)info->value[0]]=LOGFB_TO_PHYS(col,BACK_COLOR(text_cset.normal));
-	} else last_syntax_err=last_skin_error;
+	} else last_syntax_err=beye_context().last_skin_error.c_str();
     }
     return err?true:false;
 }

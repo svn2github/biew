@@ -80,6 +80,7 @@ namespace beye {
 	    std::string syntax_name;
 	    std::string codepage;
 	    std::string scheme_name;
+	    std::string last_skin_error;
 	    unsigned long vioIniFlags;
 	    unsigned long twinIniFlags;
 	    unsigned long kbdFlags;

@@ -29,10 +29,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 
 namespace beye {
-
-char last_skin_error[50];
-
-namedColorDef named_color_def[16] =
+extern const namedColorDef named_color_def[16] =
 {
    { "Black",        Black        },
    { "Blue",         Blue         },
@@ -63,8 +60,7 @@ static Color __FASTCALL__ getColorByName(const char *name,Color defval,bool *has
       return named_color_def[i].color;
     }
   }
-  strncpy(last_skin_error,name,sizeof(last_skin_error));
-  last_skin_error[sizeof(last_skin_error)-1] = 0;
+  beye_context().last_skin_error=name;
   *has_err = true;
   return defval;
 }
@@ -84,7 +80,7 @@ static ColorAttr  __FASTCALL__ getColorPairByName(const char *name, ColorAttr de
   if(!p)
   {
     *has_err = true;
-    strcpy(last_skin_error,"':' is missing");
+    beye_context().last_skin_error="':' is missing";
     return defval;
   }
   *p = 0;
@@ -130,7 +126,7 @@ bool csetReadIniFile(const char *ini_name)
   bool has_err,cur_err;
   has_err = false;
   cset = iniOpenFile(ini_name,&has_err);
-  last_skin_error[0] = 0;
+  beye_context().last_skin_error.clear();
   if(has_err) return false; /** return no error, because ini_name was not found or unavailable */
   iniReadProfileString(cset,"Skin info","","Name","Unnamed",stmp,sizeof(stmp));
   beye_context().scheme_name=stmp;
