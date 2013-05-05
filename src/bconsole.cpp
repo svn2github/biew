@@ -889,7 +889,7 @@ static int  __FASTCALL__ __ListBox(const char** names,unsigned nlist,unsigned de
 		    }
 		    fclose(out);
 		  }
-		  else errnoMessageBox(WRITE_FAIL,NULL,errno);
+		  else errnoMessageBox(WRITE_FAIL,"",errno);
 		}
 	      }
 	      break;

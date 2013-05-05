@@ -121,7 +121,7 @@ namespace beye {
 	    virtual std::string		get_next_string();
 
 	    virtual int			eof() const { return handler.eof(); }
-	    virtual bool		seek(__fileoff_t off,int origin) const { return handler.seek(off,origin); }
+	    virtual bool		seek(__fileoff_t off,BFile::e_seek origin) const { return handler.seek(off,origin); }
 	    inline void			rewind_ini() const { handler.seek(0L,BFile::Seek_Set); }
 	    inline bool			opened() const { return _opened; }
 	private:

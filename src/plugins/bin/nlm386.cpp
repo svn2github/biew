@@ -280,7 +280,7 @@ static unsigned __FASTCALL__ NLMExtRefNumItems(BFile& handle)
 static bool __FASTCALL__ __ReadExtRefNamesNLM(BFile& handle,memArray * obj,unsigned n)
 {
  unsigned i;
- handle.seek(nlm.nlm_externalReferencesOffset,SEEKF_START);
+ handle.seek(nlm.nlm_externalReferencesOffset,BFile::Seek_Set);
  for(i = 0;i < n;i++)
  {
    char stmp[256];
@@ -288,10 +288,10 @@ static bool __FASTCALL__ __ReadExtRefNamesNLM(BFile& handle,memArray * obj,unsig
    unsigned long nrefs;
    length = handle.read_byte();
    if(IsKbdTerminate() || handle.eof()) break;
-   handle.read_buffer(stmp,length);
+   handle.read(stmp,length);
    stmp[length] = 0;
    nrefs = handle.read_dword();
-   handle.seek(nrefs*4,SEEKF_CUR);
+   handle.seek(nrefs*4,BFile::Seek_Cur);
    if(!ma_AddString(obj,stmp,true)) break;
  }
  return true;
@@ -306,17 +306,17 @@ static __filesize_t  __FASTCALL__ CalcEntryNLM(unsigned ord,bool dispmsg)
  cpos = nlm.nlm_publicsOffset;
  for(i = 0;i < ord;i++)
  {
-   length = bmReadByteEx(cpos,SEEKF_START); cpos+=length + 5;
+   length = bmReadByteEx(cpos,BFile::Seek_Set); cpos+=length + 5;
  }
- length = bmReadByteEx(cpos,SEEKF_START); cpos+=length + 1;
- ret = bmReadDWordEx(cpos,SEEKF_START);
+ length = bmReadByteEx(cpos,BFile::Seek_Set); cpos+=length + 1;
+ ret = bmReadDWordEx(cpos,BFile::Seek_Set);
  ret &= 0x00FFFFFFL;
  ret += nlm.nlm_codeImageOffset;
- bmSeek(fpos,SEEKF_START);
+ bmSeek(fpos,BFile::Seek_Set);
  if(ret > bmGetFLength())
  {
     ret = fpos;
-    if(dispmsg) ErrMessageBox(NO_ENTRY,NULL);
+    if(dispmsg) ErrMessageBox(NO_ENTRY,"");
  }
  return ret;
 }
@@ -331,7 +331,7 @@ static bool __FASTCALL__ NLMNamesReadItems(BFile& handle,memArray * obj,unsigned
 {
  unsigned char length;
  unsigned i;
- handle.seek(nlm.nlm_publicsOffset,SEEKF_START);
+ handle.seek(nlm.nlm_publicsOffset,BFile::Seek_Set);
  for(i = 0;i < nnames;i++)
  {
    char stmp[256];
@@ -339,12 +339,12 @@ static bool __FASTCALL__ NLMNamesReadItems(BFile& handle,memArray * obj,unsigned
    if(IsKbdTerminate() || handle.eof()) break;
    if(length > 66)
    {
-     handle.read_buffer(stmp,66);
-     handle.seek(length - 66,SEEKF_CUR);
+     handle.read(stmp,66);
+     handle.seek(length - 66,BFile::Seek_Cur);
      strcat(stmp,">>>");
    }
-   else { handle.read_buffer(stmp,length); stmp[length] = 0; }
-   handle.seek(4L,SEEKF_CUR);
+   else { handle.read(stmp,length); stmp[length] = 0; }
+   handle.seek(4L,BFile::Seek_Cur);
    if(!ma_AddString(obj,stmp,true)) break;
  }
  return true;
@@ -370,7 +370,7 @@ static bool __FASTCALL__ __ReadModRefNamesNLM(BFile& handle,memArray * obj,unsig
 {
  unsigned char length;
  unsigned i;
- handle.seek(nlm.nlm_moduleDependencyOffset,SEEKF_START);
+ handle.seek(nlm.nlm_moduleDependencyOffset,BFile::Seek_Set);
  for(i = 0;i < nnames;i++)
  {
    char stmp[256];
@@ -378,11 +378,11 @@ static bool __FASTCALL__ __ReadModRefNamesNLM(BFile& handle,memArray * obj,unsig
    if(IsKbdTerminate() || handle.eof()) break;
    if(length > 66)
    {
-     handle.read_buffer(stmp,66);
-     handle.seek(length - 66,SEEKF_CUR);
+     handle.read(stmp,66);
+     handle.seek(length - 66,BFile::Seek_Cur);
      strcat(stmp,">>>");
    }
-   else { handle.read_buffer(stmp,length); stmp[length] = 0; }
+   else { handle.read(stmp,length); stmp[length] = 0; }
    if(!ma_AddString(obj,stmp,true)) break;
  }
  return true;
@@ -465,11 +465,11 @@ static void  __FASTCALL__ BuildRelocNlm( void )
     bool is_eof;
     noff = cpos;
     is_eof = false;
-    len = bmReadByteEx(cpos,SEEKF_START); cpos += len + 1;
-    niter = bmReadDWordEx(cpos,SEEKF_START); cpos += 4;
+    len = bmReadByteEx(cpos,BFile::Seek_Set); cpos += len + 1;
+    niter = bmReadDWordEx(cpos,BFile::Seek_Set); cpos += 4;
     for(i = 0;i < niter;i++)
     {
-      val = bmReadDWordEx(cpos,SEEKF_START); cpos += 4;
+      val = bmReadDWordEx(cpos,BFile::Seek_Set); cpos += 4;
       if((is_eof = bmEOF()) != 0) break;
       rel.offset = (val&0x00FFFFFFL) + nlm.nlm_codeImageOffset;
       rel.nameoff = noff;
@@ -505,13 +505,13 @@ static bool  __FASTCALL__ BuildReferStrNLM(char *str,RELOC_NLM*rne,int flags)
   if(rne->nameoff != 0xFFFFFFFFUL)
   {
     len = b_cache->read_byte();
-    b_cache->read_buffer(name,len);
+    b_cache->read(name,len);
     name[len] = 0;
     strcat(str,name);
   }
   else
   {
-    val = bmReadDWordEx(rne->offset,SEEKF_START);
+    val = bmReadDWordEx(rne->offset,BFile::Seek_Set);
     if(FindPubName(name,sizeof(name),val))
     {
       strcat(str,name);
@@ -567,8 +567,8 @@ static void __FASTCALL__ NLMinit(CodeGuider& _code_guider)
 {
     code_guider=&_code_guider;
   BFile& main_handle = bmbioHandle();
-  bmReadBufferEx(&nlm,sizeof(Nlm_Internal_Fixed_Header),0,SEEKF_START);
-  if((nlm_cache = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) nlm_cache = &main_handle;
+  bmReadBufferEx(&nlm,sizeof(Nlm_Internal_Fixed_Header),0,BFile::Seek_Set);
+  if((nlm_cache = main_handle.dup()) == &bNull) nlm_cache = &main_handle;
 }
 
 static void __FASTCALL__ NLMdestroy( void )
@@ -614,10 +614,10 @@ static void __FASTCALL__ nlm_ReadPubName(BFile& b_cache,const struct PubName *it
 			    char *buff,unsigned cb_buff)
 {
     unsigned char length;
-    b_cache.seek(it->nameoff,SEEK_SET);
+    b_cache.seek(it->nameoff,BFile::Seek_Set);
     length = b_cache.read_byte();
     length = std::min(unsigned(length),cb_buff);
-    b_cache.read_buffer(buff,length);
+    b_cache.read(buff,length);
     buff[length] = 0;
 }
 
@@ -635,13 +635,13 @@ static void __FASTCALL__ nlm_ReadPubNameList(BFile& handle,void (__FASTCALL__ *m
  unsigned nnames = (unsigned)nlm.nlm_numberOfPublics;
  if(!PubNames)
    if(!(PubNames = la_Build(0,sizeof(struct PubName),mem_out))) return;
- handle.seek(nlm.nlm_publicsOffset,SEEKF_START);
+ handle.seek(nlm.nlm_publicsOffset,BFile::Seek_Set);
  for(i = 0;i < nnames;i++)
  {
    struct PubName nlm_pn;
    nlm_pn.nameoff = handle.tell();
    length         = handle.read_byte();
-   handle.seek(length,SEEK_CUR);
+   handle.seek(length,BFile::Seek_Cur);
    nlm_pn.pa      = (handle.read_dword() & 0x00FFFFFFL) + nlm.nlm_codeImageOffset;
    nlm_pn.attr    = SC_GLOBAL;
    if(!la_AddData(PubNames,&nlm_pn,mem_out)) break;

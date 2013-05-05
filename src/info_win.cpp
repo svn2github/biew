@@ -629,7 +629,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
 		      {
 			ret_addr = prev_func_pa;
 		      }
-		      else ErrMessageBox(NOT_ENTRY,NULL);
+		      else ErrMessageBox(NOT_ENTRY,"");
 		    }
 		    goto exit;
       case KE_F(5):
@@ -639,7 +639,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
 		      {
 			ret_addr = next_func_pa;
 		      }
-		      else ErrMessageBox(NOT_ENTRY,NULL);
+		      else ErrMessageBox(NOT_ENTRY,"");
 		    }
 		    goto exit;
       default: break;

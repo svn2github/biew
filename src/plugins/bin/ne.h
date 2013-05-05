@@ -17,13 +17,8 @@
 #ifndef __NE_INC
 #define __NE_INC
 
-#ifndef __BEYEUTIL__H
 #include "beyeutil.h"
-#endif
-
-#ifndef __BBIO_H
-#include "bbio.h"
-#endif
+#include "libbeye/bbio.h"
 
 namespace beye {
 #ifdef __HAVE_PRAGMA_PACK__

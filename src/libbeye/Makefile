@@ -6,23 +6,22 @@ LDXXFLAGS = $(HOST_LDFLAGS)
 LIBNAME = $(LIBPREFIX)beye.a
 
 SRCS= bbio.cpp \
+      bfile.cpp \
       file_ini.cpp \
       libbeye.cpp \
+      mmfile.cpp \
       mp_malloc.cpp \
       tw_class.cpp \
       twin.cpp \
       sysdep/$(MACHINE)/aclib.cpp \
       sysdep/$(MACHINE)/cpu_info.cpp \
-      osdep/$(HOST)/fileio.cpp \
       osdep/$(HOST)/keyboard.cpp \
-      osdep/$(HOST)/mmfio.cpp \
       osdep/$(HOST)/mouse.cpp \
       osdep/$(HOST)/misc.cpp \
       osdep/$(HOST)/nls.cpp \
       osdep/$(HOST)/os_dep.cpp \
       osdep/$(HOST)/timer.cpp \
       osdep/$(HOST)/vio.cpp
-
 
 ifeq ($(HOST),qnx)
 ASMS = \

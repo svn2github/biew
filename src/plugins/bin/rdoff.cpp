@@ -101,7 +101,7 @@ static bool  __FASTCALL__ rdoff_skiprec(unsigned char type)
 	    bmSeek(4,BFile::Seek_Cur);
 	    break;
     default: /** unknown ??? */
-	    ErrMessageBox("Broken RDOFF file",NULL);
+	    ErrMessageBox("Broken RDOFF file","");
 	    ret = false;
 	    break;
   }
@@ -561,7 +561,7 @@ static void __FASTCALL__ rdoff_ReadPubName(BFile& b_cache,const struct PubName *
 {
     unsigned char ch;
     unsigned i;
-    b_cache.seek(it->nameoff,SEEK_SET);
+    b_cache.seek(it->nameoff,BFile::Seek_Set);
     for(i = 0;i < cb_buff;i++)
     {
       ch = bmReadByte();

@@ -166,7 +166,7 @@ bool Ini_io::open(const std::string& filename)
     handler = *new BFile;
     bool rc;
     /* Try to load .ini file entire into memory */
-    rc = handler.open(filename,FO_READONLY | SO_DENYWRITE,UINT_MAX,BFile::Opt_UseMMF);
+    rc = handler.open(filename,O_RDONLY | BFile::SO_DENYWRITE);
     /* Note! All OSes except DOS-DOS386 allows opening of empty filenames as /dev/null */
     if(rc == false && filename[0]) FiAError(__FI_BADFILENAME,0,filename.c_str());
     file_info.push_back(std::make_pair(0,filename));
@@ -273,7 +273,7 @@ char* Ini_io::GETS(char *str,unsigned num)
 	   }
 	   break;
 	 }
-	 handler.seek(-1,SEEK_CUR);
+	 handler.seek(-1,BFile::Seek_Cur);
        }
        break;
      }
@@ -980,18 +980,18 @@ static unsigned buf_len;
 static char *buf_ptr;
 static std::string sect,subsect,item;
 
-static bhandle_t  __FASTCALL__ make_temp(const std::string& path,char *name_ptr)
+static int __FASTCALL__ make_temp(const std::string& path,char *name_ptr)
 {
   char *fullname, *nptr;
   unsigned i,len;
-  bhandle_t handle;
+  int handle;
   fullname = new char [(path.length()+1)*2];
-  if(!fullname) return NULL_HANDLE;
+  if(!fullname) return -1;
   strcpy(fullname,path.c_str());
   len = strlen(fullname);
   if(fullname[len-4] == '.') nptr = &fullname[len-4];
   else                       nptr = &fullname[len];
-  handle = NULL_HANDLE;
+  handle = -1;
   for(i = 0;i < 100;i++)
   {
   /*
@@ -1000,12 +1000,12 @@ static bhandle_t  __FASTCALL__ make_temp(const std::string& path,char *name_ptr)
      (it's only for compatibilities between different OS FS)
   */
     sprintf(nptr,".t%i",i);
-    handle = __OsOpen(fullname,FO_READONLY | SO_DENYNONE);
-    if(handle == NULL_HANDLE) handle = __OsOpen(fullname,FO_READONLY | SO_COMPAT);
-    if(handle == NULL_HANDLE)
+    handle = ::open(fullname,O_RDONLY | BFile::SO_DENYNONE);
+    if(handle == -1) handle = ::open(fullname,O_RDONLY | BFile::SO_COMPAT);
+    if(handle == -1)
     {
-      handle = __OsCreate(fullname);
-      if(handle != NULL_HANDLE)
+      handle = ::open(fullname,O_RDWR | O_CREAT | O_TRUNC, BFile::SO_COMPAT);
+      if(handle != -1)
       {
 	strcpy(name_ptr,fullname);
 	goto bye;
@@ -1073,7 +1073,7 @@ hIniProfile * __FASTCALL__ iniOpenFile(const std::string& fname,bool *has_error)
     if(has_error) *has_error = true;
     _ret->handler=new(zeromem) Ini_io;
     _ret->fname=fname;
-    if(__IsFileExists(_ret->fname.c_str())) rc=_ret->handler->open(fname);
+    if(BFile::exists(_ret->fname)) rc=_ret->handler->open(fname);
 
     opened_ini = _ret;
     _ret->flags |= HINI_FULLCACHED;
@@ -1211,7 +1211,7 @@ static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
    char * workstr, *wstr2;
    char *original;
    unsigned nled,prev_val_size;
-   bhandle_t hsrc;
+   int hsrc;
    bool _ret,need_write,s_ok,ss_ok,i_ok,done,sb_ok,ssb_ok,written,Cond,if_on;
    /* test for no change of value */
    prev_val_size = _value.length()+2;
@@ -1239,8 +1239,8 @@ static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
    ini->handler->seek(0L,BFile::Seek_Set);
    ActiveFile = ini->handler;
    hsrc = make_temp(ini->fname.c_str(),tmpname);
-   if(hsrc == NULL_HANDLE) { _ret = false; goto Exit_WS; }
-   __OsClose(hsrc);
+   if(hsrc == -1) { _ret = false; goto Exit_WS; }
+   ::close(hsrc);
    tmphandle = fopen(tmpname,"wt");
    if(tmphandle == NULL) { _ret = false; goto Exit_WS; }
    fprintf(tmphandle,HINI_HEADER);
@@ -1250,7 +1250,7 @@ static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
    if(!workstr || !wstr2 || !original)
    {
      fclose(tmphandle);
-     __OsDelete(tmpname);
+     BFile::unlink(tmpname);
      if(workstr) PFREE(workstr);
      if(wstr2) PFREE(wstr2);
      if(original) PFREE(original);
@@ -1370,8 +1370,8 @@ static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
    }
    fclose(tmphandle);
    ini->handler->close();
-   __OsDelete(ini->fname.c_str());
-   __OsRename(tmpname,ini->fname.c_str());
+   BFile::unlink(ini->fname.c_str());
+   BFile::rename(tmpname,ini->fname.c_str());
    ini->handler->open(ini->fname);
    PFREE(workstr);
    PFREE(wstr2);

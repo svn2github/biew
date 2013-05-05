@@ -286,17 +286,16 @@ bool __FASTCALL__ hlpOpen( bool interact )
   bHelp = BeyeContext::beyeOpenRO(help_name,BBIO_SMALL_CACHE_SIZE);
   if(bHelp == &bNull)
   {
-    if(interact) errnoMessageBox("Can't open help file",NULL,errno);
+    if(interact) errnoMessageBox("Can't open help file","",errno);
     return false;
   }
-  bHelp->set_optimization(BFile::Opt_Random);
-  bHelp->seek(0L,SEEK_SET);
-  bHelp->read_buffer(hlp_id,sizeof(hlp_id));
+  bHelp->seek(0L,BFile::Seek_Set);
+  bHelp->read(hlp_id,sizeof(hlp_id));
   if(memcmp(hlp_id,BEYE_HELP_VER,strlen(BEYE_HELP_VER)) != 0)
   {
     if(interact)
     {
-      ErrMessageBox("Incorrect help version",NULL);
+      ErrMessageBox("Incorrect help version","");
     }
     delete bHelp;
     bHelp = &bNull;
@@ -318,12 +317,12 @@ static bool __FASTCALL__ find_item(unsigned long item_id)
 {
   unsigned long i,nsize,lval;
   char sout[HLP_SLONG_LEN];
-  bHelp->seek(HLP_VER_LEN,SEEK_SET);
-  bHelp->read_buffer(sout,sizeof(sout));
+  bHelp->seek(HLP_VER_LEN,BFile::Seek_Set);
+  bHelp->read(sout,sizeof(sout));
   nsize = strtoul(sout,NULL,16);
   for(i = 0;i < nsize;i++)
   {
-    bHelp->read_buffer(&bhi,sizeof(BEYE_HELP_ITEM));
+    bHelp->read(&bhi,sizeof(BEYE_HELP_ITEM));
     lval = strtoul(bhi.item_id,NULL,16);
     if(lval == item_id) return true;
   }
@@ -334,7 +333,7 @@ unsigned long   __FASTCALL__ hlpGetItemSize(unsigned long item_id)
 {
   unsigned long ret = 0;
   if(find_item(item_id)) ret = strtoul(bhi.item_decomp_size,NULL,16);
-  else                   ErrMessageBox("Find: Item not found",NULL);
+  else                   ErrMessageBox("Find: Item not found","");
   return ret;
 }
 
@@ -354,7 +353,7 @@ bool   __FASTCALL__ hlpLoadItem(unsigned long item_id, any_t* buffer)
       }
       else ret = true;
     }
-    else ErrMessageBox("Load: Item not found",NULL);
+    else ErrMessageBox("Load: Item not found","");
   }
   return ret;
 }

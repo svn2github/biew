@@ -213,13 +213,13 @@ void BinMode::save_video(Opaque& _this,unsigned char *buff,unsigned size)
 {
     BinMode& it = static_cast<BinMode&>(_this);
     BFile* bHandle;
-    const char *fname;
+    std::string fname;
     unsigned i;
     fname = BMName();
     bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
     if(bHandle == &bNull) {
 	err:
-	errnoMessageBox(WRITE_FAIL,NULL,errno);
+	errnoMessageBox(WRITE_FAIL,"",errno);
 	return;
     }
     bHandle->seek(BMGetCurrFilePos(),BFile::Seek_Set);
@@ -236,7 +236,7 @@ void BinMode::misckey_action() /* EditBin */
 {
     TWindow *ewin;
     bool inited;
-    if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,NULL); return; }
+    if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,""); return; }
     ewin = WindowOpen(1,2,tvioWidth-virtWidthCorr,tvioHeight-1,TWS_CURSORABLE);
     twSetColorAttr(ewin,browser_cset.edit.main); twClearWin(ewin);
     drawEditPrompt();

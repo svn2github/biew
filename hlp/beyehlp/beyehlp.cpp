@@ -24,6 +24,9 @@ using namespace beye;
 #include <string.h>
 #include <stdlib.h>
 
+#include <fcntl.h>
+#include <unistd.h>
+
 #include "libbeye/bbio.h"
 #include "libbeye/file_ini.h"
 #include "beyehelp.h"
@@ -160,7 +163,7 @@ bool __FASTCALL__ MyCallOut(IniInfo *ini)
 	unsigned copysize;
 	BEYE_HELP_ITEM bhi;
 	BFile* bIn;
-	bhandle_t handle;
+	int handle;
 	fpos = bOutput->tell();
 	printf("Processing: %s\n",ini->value);
 	litem = strtoul(ini->item,NULL,10);
@@ -178,35 +181,35 @@ bool __FASTCALL__ MyCallOut(IniInfo *ini)
 	}
 	bIn = new BFile;
 	bool rc;
-	rc = bIn->open(TEMPFNAME,FO_READONLY | SO_DENYNONE,BBIO_CACHE_SIZE,BFile::Opt_Db);
+	rc = bIn->open(TEMPFNAME,BFile::FO_READONLY | BFile::SO_DENYNONE);
 	 if(rc == false)
-	 rc = bIn->open(TEMPFNAME,FO_READONLY | SO_COMPAT,BBIO_CACHE_SIZE,BFile::Opt_Db);
+	 rc = bIn->open(TEMPFNAME,BFile::FO_READONLY | BFile::SO_COMPAT);
 	  if(rc == false)
 	  {
 	      fprintf(stderr,"Can not open %s",TEMPFNAME);
 	      exit(EXIT_FAILURE);
 	  }
-	litem = __FileLength(bIn->handle());
+	litem = bIn->flength();
 	sprintf(bhi.item_length,"%08lX",litem);
-	handle = __OsOpen(COMPNAME,FO_READONLY | SO_DENYNONE);
-	if(handle == NULL_HANDLE)
+	handle = ::open(COMPNAME,BFile::FO_READONLY | BFile::SO_DENYNONE);
+	if(handle == -1)
 	{
 	      fprintf(stderr,"Can not open %s",ini->value);
 	      exit(EXIT_FAILURE);
 	}
-	litem = __FileLength(handle);
-	__OsClose(handle);
+	litem = ::lseek(handle,0L,SEEK_END);
+	::close(handle);
 	sprintf(bhi.item_decomp_size,"%08lX",litem);
 	sprintf(bhi.item_off,"%08lX",bOutput->flength());
-	bOutput->seek(items_freq*sizeof(BEYE_HELP_ITEM)+strlen(id_string)+1+HLP_SLONG_LEN,SEEK_SET);
-	bOutput->write_buffer(&bhi,sizeof(BEYE_HELP_ITEM));
-	bOutput->seek(fpos,SEEK_SET);
-	litem = __FileLength(bIn->handle());
+	bOutput->seek(items_freq*sizeof(BEYE_HELP_ITEM)+strlen(id_string)+1+HLP_SLONG_LEN,BFile::Seek_Set);
+	bOutput->write(&bhi,sizeof(BEYE_HELP_ITEM));
+	bOutput->seek(fpos,BFile::Seek_Set);
+	litem = bIn->flength();
 	do
 	{
 	   copysize = std::min((unsigned long)0x1000,litem);
-	   bIn->read_buffer(tmp_buff,copysize);
-	   bOutput->write_buffer(tmp_buff,copysize);
+	   bIn->read(tmp_buff,copysize);
+	   bOutput->write(tmp_buff,copysize);
 	   litem -= copysize;
 	} while(litem);
 	delete bIn;
@@ -223,7 +226,6 @@ char **ArgVector;
 int main( int argc, char *argv[] )
 {
   BEYE_HELP_ITEM bhi;
-  bhandle_t handle;
   unsigned long i;
   char sout[HLP_SLONG_LEN];
   if(argc < 3)
@@ -245,33 +247,31 @@ int main( int argc, char *argv[] )
 	, argv[2]
 	, outfname);
   memset(&bhi,0,sizeof(BEYE_HELP_ITEM));
-  if(__IsFileExists(outfname)) if(__OsDelete(outfname)) { fprintf(stderr,"Can not delete %s\n",argv[2]); return -1; }
-  handle = __OsCreate(outfname);
-  __OsClose(handle);
-  bOutput = new BFile;
+  if(BFile::exists(outfname)) if(BFile::unlink(outfname)) { fprintf(stderr,"Can not delete %s\n",argv[2]); return -1; }
+  bOutput = new BBio_File;
   bool rc;
-  rc = bOutput->open(outfname,FO_READWRITE | SO_DENYNONE,BBIO_CACHE_SIZE,BFile::Opt_Db);
+  rc = bOutput->create(outfname);
   if(rc == false)
-    rc = bOutput->open(outfname,FO_READWRITE | SO_COMPAT,BBIO_CACHE_SIZE,BFile::Opt_Db);
+    rc = bOutput->open(outfname,BFile::FO_READWRITE | BFile::SO_COMPAT);
     if(rc == false)
-      rc = bOutput->open(outfname,FO_READONLY | SO_DENYNONE,BBIO_CACHE_SIZE,BFile::Opt_Db);
+      rc = bOutput->open(outfname,BFile::FO_READONLY | BFile::SO_DENYNONE);
       if(rc == false)
-	rc = bOutput->open(outfname,FO_READONLY | SO_COMPAT,BBIO_CACHE_SIZE,BFile::Opt_Db);
+	rc = bOutput->open(outfname,BFile::FO_READONLY | BFile::SO_COMPAT);
 	if(rc == false)
 	{
 	  fprintf(stderr,"Can not work with %s",outfname);
 	  return -1;
 	}
-  bOutput->set_optimization(BFile::Opt_Random);
-  bOutput->write_buffer(id_string,strlen(id_string)+1);
+  bOutput->set_optimization(BBio_File::Opt_Random);
+  bOutput->write(id_string,strlen(id_string)+1);
   sprintf(sout,"%08lX",items_freq);
-  bOutput->write_buffer(sout,HLP_SLONG_LEN);
-  for(i = 0;i < items_freq;i++) bOutput->write_buffer(&bhi,sizeof(BEYE_HELP_ITEM));
+  bOutput->write(sout,HLP_SLONG_LEN);
+  for(i = 0;i < items_freq;i++) bOutput->write(&bhi,sizeof(BEYE_HELP_ITEM));
   items_freq = 0;
   FiProgress(argv[2],MyCallOut);
   delete bOutput;
-  __OsDelete(TEMPFNAME);
-  __OsDelete(COMPNAME);
+  BFile::unlink(TEMPFNAME);
+  BFile::unlink(COMPNAME);
   printf("Help file looks - ok\n");
   return 0;
 }

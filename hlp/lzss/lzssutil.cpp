@@ -128,7 +128,7 @@ static int Encode(void)
 	time_t sttime,endtime;
 	long tval,tval2;
 #endif
-	long flen;
+	__filesize_t flen;
 	unsigned char  code_buf[17], mask;
 
 	text_buf = new unsigned char [N+F-1];
@@ -148,9 +148,9 @@ static int Encode(void)
 	time(&sttime);
 	ppercent = -1;
 #endif
-	infile->seek(0L,SEEK_END);
+	infile->seek(0L,BFile::Seek_End);
 	flen = infile->tell();
-	infile->seek(0L,SEEK_SET);
+	infile->seek(0L,BFile::Seek_Set);
 	InitTree();  /** initialize trees */
 	code_buf[0] = 0;  /** code_buf[1..16] saves eight units of code, and
 		code_buf[0] works as eight flags, "1" representing that the unit
@@ -282,7 +282,7 @@ static int Decode(BFile* instream,any_t* buff,unsigned long off, unsigned long l
 	  time(&sttime);
 	}
 #endif
-	instream->seek(off,SEEK_SET);
+	instream->seek(off,BFile::Seek_Set);
 	for (i = 0; i < N - F; i++) text_buf[i] = ' ';
 	r = N - F;  flags = 0;
 	for ( ; ; )

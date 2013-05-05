@@ -82,7 +82,7 @@ static __filesize_t __FASTCALL__ ShowAOutHeader( void )
   unsigned keycode,dummy;
   TWindow *w;
   fpos = BMGetCurrFilePos();
-  bmReadBufferEx(&aout,sizeof(struct external_exec),0,SEEKF_START);
+  bmReadBufferEx(&aout,sizeof(struct external_exec),0,BFile::Seek_Set);
   uint32_t* p_info = (uint32_t*)&aout.e_info;
   w = CrtDlgWndnls(aout_encode_hdr(*p_info),54,7);
   twGotoXY(w,1,1);
@@ -128,7 +128,7 @@ static bool __FASTCALL__ __aout_check_fmt( uint32_t id )
 static bool __FASTCALL__ aout_check_fmt( void )
 {
   uint32_t id;
-  id = bmReadDWordEx(0,SEEKF_START);
+  id = bmReadDWordEx(0,BFile::Seek_Set);
   if(__aout_check_fmt(id)) return 1;
   id=be2me_32(id);
   if(__aout_check_fmt(id)) { is_msbf=1; return 1; }
@@ -173,7 +173,7 @@ static __filesize_t __FASTCALL__ aout_help( void )
 static int __FASTCALL__ aout_platform( void ) {
  unsigned id;
  struct external_exec aout;
- bmReadBufferEx(&aout,sizeof(struct external_exec),0,SEEKF_START);
+ bmReadBufferEx(&aout,sizeof(struct external_exec),0,BFile::Seek_Set);
  aout_encode_machine(*((uint32_t *)aout.e_info),&id);
  return id;
 }

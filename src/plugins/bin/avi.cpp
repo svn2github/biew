@@ -106,8 +106,8 @@ static const uint32_t ckidAVIPADDING          =mmioFOURCC('J', 'U', 'N', 'K');
 static bool  __FASTCALL__ avi_check_fmt( void )
 {
     unsigned long id;
-    id=bmReadDWordEx(8,SEEKF_START);
-    if(	bmReadDWordEx(0,SEEKF_START)==mmioFOURCC('R','I','F','F') &&
+    id=bmReadDWordEx(8,BFile::Seek_Set);
+    if(	bmReadDWordEx(0,BFile::Seek_Set)==mmioFOURCC('R','I','F','F') &&
 	(id==mmioFOURCC('A','V','I',' ') || id==mmioFOURCC('O','N','2',' ')))
 	return true;
     return false;
@@ -148,7 +148,7 @@ static __filesize_t __FASTCALL__ Show_AVI_Header( void )
  __filesize_t fpos,fpos2;
  fpos = BMGetCurrFilePos();
  fpos2 = avi_find_chunk(12,mmioFOURCC('a','v','i','h'));
- if((__fileoff_t)fpos2==-1) { ErrMessageBox("Main AVI Header not found",NULL); return fpos; }
+ if((__fileoff_t)fpos2==-1) { ErrMessageBox("Main AVI Header not found",""); return fpos; }
  bmSeek(fpos2,BFile::Seek_Set);
  bmReadDWord(); /* skip section size */
  bmReadBuffer(&avih,sizeof(MainAVIHeader));
@@ -201,7 +201,7 @@ static __filesize_t __FASTCALL__ Show_A_Header( void )
  do
  {
     fpos2 = avi_find_chunk(fpos2,mmioFOURCC('s','t','r','h'));
-    if((__fileoff_t)fpos2==-1) { ErrMessageBox("Audio Stream Header not found",NULL); return fpos; }
+    if((__fileoff_t)fpos2==-1) { ErrMessageBox("Audio Stream Header not found",""); return fpos; }
     bmSeek(fpos2,BFile::Seek_Set);
     newcpos=bmReadDWord();
     bmReadBuffer(&strh,sizeof(AVIStreamHeader));
@@ -275,7 +275,7 @@ static __filesize_t __FASTCALL__ Show_V_Header( void )
  do
  {
     fpos2 = avi_find_chunk(fpos2,mmioFOURCC('s','t','r','h'));
-    if((__fileoff_t)fpos2==-1) { ErrMessageBox("Video Stream Header not found",NULL); return fpos; }
+    if((__fileoff_t)fpos2==-1) { ErrMessageBox("Video Stream Header not found",""); return fpos; }
     bmSeek(fpos2,BFile::Seek_Set);
     newcpos=bmReadDWord(); /* skip section size */
     bmReadBuffer(&strh,sizeof(AVIStreamHeader));

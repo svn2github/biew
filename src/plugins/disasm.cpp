@@ -409,7 +409,7 @@ void DisMode::misckey_action() /* disEdit */
     unsigned len_64;
     TWindow * ewnd;
     len_64=HA_LEN();
-    if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,NULL); return; }
+    if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,""); return; }
     ewnd = WindowOpen(len_64+1,2,disMaxCodeLen*2+len_64+1,tvioHeight-1,TWS_CURSORABLE);
     twSetColorAttr(ewnd,browser_cset.edit.main); twClearWin(ewnd);
     edit_x = edit_y = 0;
@@ -607,7 +607,7 @@ int DisMode::full_asm_edit(TWindow * ewnd)
 				if (aret.insn[0]) {
 				    message=(const char*)aret.insn;
 				}
-				ErrMessageBox(message,NULL);
+				ErrMessageBox(message,"");
 				continue;
 			    } else {
 				int i;
@@ -621,7 +621,7 @@ int DisMode::full_asm_edit(TWindow * ewnd)
 			}
 			break;
 		    } else {
-			ErrMessageBox("Sorry, no assembler available",NULL);
+			ErrMessageBox("Sorry, no assembler available","");
 			continue;
 		    }
 		}
@@ -632,15 +632,15 @@ int DisMode::full_asm_edit(TWindow * ewnd)
 	    case KE_F(2)    :
 		{
 		    BFile* bHandle;
-		    const char *fname;
+		    std::string fname;
 		    fname = BMName();
 		    if((bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE)) != &bNull) {
 			bHandle->seek(edit_cp,BFile::Seek_Set);
-			if(!bHandle->write_buffer((any_t*)EditorMem.buff,rlen))
-			    errnoMessageBox(WRITE_FAIL,NULL,errno);
+			if(!bHandle->write((any_t*)EditorMem.buff,rlen))
+			    errnoMessageBox(WRITE_FAIL,"",errno);
 			delete bHandle;
 			BMReRead();
-		    } else errnoMessageBox("Can't reopen",NULL,errno);
+		    } else errnoMessageBox("Can't reopen","",errno);
 		}
 	    case KE_F(10):
 	    case KE_ESCAPE: goto bye;
@@ -784,7 +784,7 @@ __filesize_t DisMode::search_engine(TWindow *pwnd, __filesize_t start,
     }
     delete disSearchBuff;
     bye:
-    BMSeek(sfpos, SEEK_SET);
+    BMSeek(sfpos, BFile::Seek_Set);
     DumpMode = false;
     return retval;
 }
@@ -1076,7 +1076,7 @@ bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__f
    /* Forward prediction: ulShift = offset of binded field but r_sh is
       pointer where this field is referenced. */
    memset(disCodeBufPredict,0,disMaxCodeLen*PREDICT_DEPTH);
-   bmSeek(r_sh, SEEK_SET);
+   bmSeek(r_sh, BFile::Seek_Set);
    bmReadBuffer(disCodeBufPredict,disMaxCodeLen*PREDICT_DEPTH);
    dret = disassembler(r_sh,(MBuffer)disCodeBufPredict,__DISF_GETTYPE);
  }
@@ -1141,9 +1141,9 @@ bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__f
 	unsigned long app;
 		try_rip:
 		_fpos = BMGetCurrFilePos();
-		_defval = dret.codelen==8 ? BMReadQWordEx(r_sh+dret.field,SEEKF_START):
-					    BMReadDWordEx(r_sh+dret.field,SEEKF_START);
-		BMSeek(_fpos,SEEKF_START);
+		_defval = dret.codelen==8 ? BMReadQWordEx(r_sh+dret.field,BFile::Seek_Set):
+					    BMReadDWordEx(r_sh+dret.field,BFile::Seek_Set);
+		BMSeek(_fpos,BFile::Seek_Set);
 	__tmp=beye_context().bin_format().pa2va(r_sh+dret.field);
 	_defval += (__tmp!=Bin_Format::Bad_Address ?
 		    __tmp :

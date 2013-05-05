@@ -375,7 +375,7 @@ static bool __FASTCALL__ txtFiUserFunc1(IniInfo * info)
 	int found,softmode;
 	off = atol(info->item);
 	char* value=strstr((char*)info->value,"-->");
-	if(!p) { ErrMessageBox("Missing separator in main context definition",NULL); return true; }
+	if(!p) { ErrMessageBox("Missing separator in main context definition",""); return true; }
 	*value=0;
 	softmode=0;
 	if(strcmp(info->subsection,"Soft")==0) softmode=1;
@@ -548,7 +548,7 @@ static tCompare __FASTCALL__ cmp_kwd(const any_t* e1,const any_t* e2)
 
 void TextMode::read_syntaxes()
 {
-    if(__IsFileExists(beye_context().syntax_name.c_str())) {
+    if(BFile::exists(beye_context().syntax_name)) {
 	FiProgress(beye_context().syntax_name.c_str(),txtFiUserFunc1);
 	if(detected_syntax_name[0]) {
 	    char tmp[FILENAME_MAX+1];
@@ -560,12 +560,12 @@ void TextMode::read_syntaxes()
 	    p=std::max(p,pp);
 	    if(p) { p++; ::strcpy(p,detected_syntax_name); }
 	    ::strcpy(detected_syntax_name,tmp);
-	    if(__IsFileExists(detected_syntax_name)) {
+	    if(BFile::exists(detected_syntax_name)) {
 		unsigned i,total;
 		int phash;
 		::memset(word_set,0,sizeof(word_set));
 		FiProgress(detected_syntax_name,txtFiUserFunc2);
-		if(last_syntax_err[0]) ErrMessageBox(last_syntax_err,NULL);
+		if(last_syntax_err[0]) ErrMessageBox(last_syntax_err,"");
 		/* put longest strings on top */
 		HQSort(syntax_hl.context,syntax_hl.context_num,sizeof(context_hl_t),cmp_ctx);
 		HQSort(syntax_hl.keyword,syntax_hl.keyword_num,sizeof(keyword_hl_t),cmp_kwd);
@@ -647,8 +647,8 @@ unsigned char TextMode::nls_read_byte(__filesize_t cp)
     char nls_buff[256];
     unsigned sym_size;
     sym_size = activeNLS->get_symbol_size();
-    txtHandle->seek(cp,SEEK_SET);
-    txtHandle->read_buffer(nls_buff,sym_size);
+    txtHandle->seek(cp,BFile::Seek_Set);
+    txtHandle->read(nls_buff,sym_size);
     activeNLS->convert_buffer(nls_buff,sym_size,true);
     return (unsigned char)nls_buff[0];
 }

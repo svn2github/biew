@@ -579,7 +579,7 @@ void Calculator_Addon::run()
 	 ErrMessageBox(_ret == O_ERROR ? "Bad operand" :
 		       _ret == R_ERROR ? "Runtime error" :
 		       _ret == E_MEM ? "Not enough memory!" :
-		       "Syntax error",NULL);
+		       "Syntax error","");
        }
        else
        {

@@ -172,7 +172,7 @@ static __filesize_t  __FASTCALL__ findPHEntry(unsigned long type,unsigned *nitem
   limit = ELF_HALF(ELF_EHDR(elf,e_phnum));
   for(i = 0;i < limit;i++)
   {
-   bmReadBufferEx(&phdr,sizeof(phdr),ELF_OFF(ELF_EHDR(elf,e_phoff)) + i*ELF_HALF(ELF_EHDR(elf,e_phentsize)),SEEKF_START);
+   bmReadBufferEx(&phdr,sizeof(phdr),ELF_OFF(ELF_EHDR(elf,e_phoff)) + i*ELF_HALF(ELF_EHDR(elf,e_phentsize)),BFile::Seek_Set);
    if(bmEOF()) break;
    if(ELF_WORD(ELF_PHDR(phdr,p_type)) == type)
    {
@@ -181,7 +181,7 @@ static __filesize_t  __FASTCALL__ findPHEntry(unsigned long type,unsigned *nitem
      break;
    }
   }
-  bmSeek(fpos,SEEKF_START);
+  bmSeek(fpos,BFile::Seek_Set);
   return dynptr;
 }
 
@@ -194,15 +194,15 @@ static __filesize_t  __FASTCALL__ findPHDynEntry(unsigned long type,
   bool is_found = false;
   ElfXX_External_Dyn dyntab;
   fpos = bmGetCurrFilePos();
-  bmSeek(dynptr,SEEKF_START);
+  bmSeek(dynptr,BFile::Seek_Set);
   for(i = 0;i < nitems;i++)
   {
-    bmReadBufferEx(&dyntab,ELF_EDYN_SIZE(),dynptr,SEEKF_START);
+    bmReadBufferEx(&dyntab,ELF_EDYN_SIZE(),dynptr,BFile::Seek_Set);
     if(bmEOF()) break;
     dynptr += ELF_EDYN_SIZE();
     if(ELF_XWORD(ELF_EDYN(dyntab,d_tag)) == type) { is_found = true; break; }
   }
-  bmSeek(fpos,SEEKF_START);
+  bmSeek(fpos,BFile::Seek_Set);
   return is_found ? ELF_XWORD(ELF_EDYN(dyntab,d_un.d_ptr)) : 0L;
 }
 
@@ -233,22 +233,22 @@ static __filesize_t  __FASTCALL__ findPHPubSyms(unsigned long *number,
 	  ElfXX_External_Dyn dyntab;
 	  _fpos = bmGetCurrFilePos();
 	  dptr = dyn_ptr;
-	  bmSeek(dptr,SEEKF_START);
+	  bmSeek(dptr,BFile::Seek_Set);
 	  max_val = bmGetFLength(); /* if section is last */
 	  for(i = 0;i < nitems;i++)
 	  {
-	    bmReadBufferEx(&dyntab,sizeof(dyntab),dptr,SEEKF_START);
+	    bmReadBufferEx(&dyntab,sizeof(dyntab),dptr,BFile::Seek_Set);
 	    if(bmEOF()) break;
 	    dptr += ELF_EDYN_SIZE();
 	    cur_ptr = elfVA2PA(ELF_XWORD(ELF_EDYN(dyntab,d_un.d_ptr)));
 	    if(cur_ptr > dynptr && cur_ptr < max_val) max_val = cur_ptr;
 	  }
-	  bmSeek(_fpos,SEEKF_START);
+	  bmSeek(_fpos,BFile::Seek_Set);
 	  *number = (max_val - dynptr) / *ent_size;
 	}
       }
     }
-  bmSeek(fpos, SEEKF_START);
+  bmSeek(fpos, BFile::Seek_Set);
   return dynptr;
 }
 
@@ -265,8 +265,8 @@ static __filesize_t  __FASTCALL__
   limit = ELF_HALF(ELF_EHDR(elf,e_shnum));
   for(i = 0;i < limit;i++)
   {
-   b_cache.seek(ELF_OFF(ELF_EHDR(elf,e_shoff)) + i*ELF_HALF(ELF_EHDR(elf,e_shentsize)),SEEKF_START);
-   b_cache.read_buffer(&shdr,sizeof(shdr));
+   b_cache.seek(ELF_OFF(ELF_EHDR(elf,e_shoff)) + i*ELF_HALF(ELF_EHDR(elf,e_shentsize)),BFile::Seek_Set);
+   b_cache.read(&shdr,sizeof(shdr));
    if(b_cache.eof()) break;
    if(ELF_WORD(ELF_SHDR(shdr,sh_type)) == type)
    {
@@ -277,7 +277,7 @@ static __filesize_t  __FASTCALL__
      break;
    }
   }
-  b_cache.seek(fpos, SEEKF_START);
+  b_cache.seek(fpos, BFile::Seek_Set);
   return tableptr;
 }
 
@@ -343,13 +343,13 @@ static void  __FASTCALL__ elf386_readnametable(__filesize_t off,char *buf,unsign
 
   BFile& b_cache = namecache,&b_cache2 = namecache2;
   foff = ELF_OFF(ELF_EHDR(elf,e_shoff))+ELF_HALF(ELF_EHDR(elf,e_shstrndx))*ELF_HALF(ELF_EHDR(elf, e_shentsize));
-  b_cache2.seek(foff,SEEKF_START);
-  b_cache2.read_buffer(&sh,sizeof(sh));
+  b_cache2.seek(foff,BFile::Seek_Set);
+  b_cache2.read(&sh,sizeof(sh));
   foff = ELF_OFF(ELF_SHDR(sh,sh_offset)) + off;
   freq = 0;
   while(1)
   {
-     b_cache.seek(foff++,SEEKF_START);
+     b_cache.seek(foff++,BFile::Seek_Set);
      ch = b_cache.read_byte();
      buf[freq++] = ch;
      if(!ch || freq >= blen || b_cache.eof()) break;
@@ -366,8 +366,8 @@ static void  __FASTCALL__ elf386_readnametableex(__filesize_t off,char *buf,unsi
   if(ELF_OFF(ELF_EHDR(elf,e_shoff)))
   {
     foff = ELF_OFF(ELF_EHDR(elf,e_shoff))+active_shtbl*ELF_HALF(ELF_EHDR(elf, e_shentsize));
-    b_cache2.seek(foff,SEEKF_START);
-    b_cache2.read_buffer(&sh,sizeof(sh));
+    b_cache2.seek(foff,BFile::Seek_Set);
+    b_cache2.read(&sh,sizeof(sh));
     foff = ELF_OFF(ELF_SHDR(sh,sh_offset)) + off;
   }
   /* if section headers are lost then active_shtbl should directly point to
@@ -376,7 +376,7 @@ static void  __FASTCALL__ elf386_readnametableex(__filesize_t off,char *buf,unsi
   freq = 0;
   while(1)
   {
-     b_cache.seek(foff++,SEEKF_START);
+     b_cache.seek(foff++,BFile::Seek_Set);
      ch = b_cache.read_byte();
      buf[freq++] = ch;
      if(!ch || freq >= blen || b_cache.eof()) break;
@@ -689,7 +689,7 @@ static const char *  __FASTCALL__ elf_encode_p_type(long p_type)
 static bool __FASTCALL__ __elfReadPrgHdr(BFile& handle,memArray *obj,unsigned nnames)
 {
  size_t i;
-  handle.seek(ELF_OFF(ELF_EHDR(elf,e_phoff)),SEEKF_START);
+  handle.seek(ELF_OFF(ELF_EHDR(elf,e_phoff)),BFile::Seek_Set);
   for(i = 0;i < nnames;i++)
   {
    __filesize_t fp;
@@ -697,8 +697,8 @@ static bool __FASTCALL__ __elfReadPrgHdr(BFile& handle,memArray *obj,unsigned nn
    ElfXX_External_Phdr phdr;
    if(IsKbdTerminate() || handle.eof()) break;
    fp = handle.tell();
-   handle.read_buffer(&phdr,sizeof(phdr));
-   handle.seek(fp+ELF_HALF(ELF_EHDR(elf,e_phentsize)),SEEKF_START);
+   handle.read(&phdr,sizeof(phdr));
+   handle.seek(fp+ELF_HALF(ELF_EHDR(elf,e_phentsize)),BFile::Seek_Set);
    sprintf(stmp,"%-15s %08lX %08lX %08lX %08lX %08lX %c%c%c %08lX",
 		elf_encode_p_type(ELF_WORD(ELF_PHDR(phdr,p_type))),
 		(unsigned long)ELF_OFF(ELF_PHDR(phdr,p_offset)),
@@ -747,7 +747,7 @@ static const char *  __FASTCALL__ elf_encode_sh_type(long sh_type)
 static bool __FASTCALL__ __elfReadSecHdr(BFile& handle,memArray *obj,unsigned nnames)
 {
  size_t i;
-  handle.seek(ELF_OFF(ELF_EHDR(elf,e_shoff)),SEEKF_START);
+  handle.seek(ELF_OFF(ELF_EHDR(elf,e_shoff)),BFile::Seek_Set);
   for(i = 0;i < nnames;i++)
   {
    ElfXX_External_Shdr shdr;
@@ -756,9 +756,9 @@ static bool __FASTCALL__ __elfReadSecHdr(BFile& handle,memArray *obj,unsigned nn
    char stmp[80];
    if(IsKbdTerminate() || handle.eof()) break;
    fp = handle.tell();
-   handle.read_buffer(&shdr,sizeof(shdr));
+   handle.read(&shdr,sizeof(shdr));
    elf386_readnametable(ELF_WORD(ELF_SHDR(shdr,sh_name)),tmp,sizeof(tmp));
-   handle.seek(fp+ELF_HALF(ELF_EHDR(elf,e_shentsize)),SEEKF_START);
+   handle.seek(fp+ELF_HALF(ELF_EHDR(elf,e_shentsize)),BFile::Seek_Set);
    tmp[16] = 0;
    sprintf(stmp,"%-16s %-6s %c%c%c %08lX %08lX %08lX %04hX %04hX %04hX %04hX",
 		tmp,
@@ -842,7 +842,7 @@ static bool __FASTCALL__ __elfReadSymTab(BFile& handle,memArray *obj,unsigned ns
  size_t i,tlen;
  char text[37];
   tlen=is_64bit?29:37;
-  handle.seek(__elfSymPtr,SEEK_SET);
+  handle.seek(__elfSymPtr,BFile::Seek_Set);
   for(i = 0;i < nsym;i++)
   {
    __filesize_t fp;
@@ -850,8 +850,8 @@ static bool __FASTCALL__ __elfReadSymTab(BFile& handle,memArray *obj,unsigned ns
    ElfXX_External_Sym sym;
    if(IsKbdTerminate() || handle.eof()) break;
    fp = handle.tell();
-   handle.read_buffer(&sym,sizeof(sym));
-   handle.seek(fp+__elfSymEntSize,SEEKF_START);
+   handle.read(&sym,sizeof(sym));
+   handle.seek(fp+__elfSymEntSize,BFile::Seek_Set);
    elf386_readnametableex(ELF_WORD(ELF_SYM(sym,st_name)),text,tlen);
    text[tlen-1] = 0;
    if(is_64bit)
@@ -890,8 +890,8 @@ static bool  __FASTCALL__ __elfReadDynTab(BFile& handle,memArray *obj, unsigned 
    char stmp[80];
    ElfXX_External_Dyn pdyn;
    fp = handle.tell();
-   handle.read_buffer(&pdyn,sizeof(pdyn));
-   handle.seek(fp+entsize,SEEKF_START);
+   handle.read(&pdyn,sizeof(pdyn));
+   handle.seek(fp+entsize,BFile::Seek_Set);
    fp = handle.tell();
    /* Note: elf-64 specs requre ELF_XWORD here! But works ELF_WORD !!! */
    elf386_readnametableex(ELF_WORD(ELF_EDYN(pdyn,d_tag)),sout,sizeof(sout));
@@ -909,7 +909,7 @@ static bool  __FASTCALL__ __elfReadDynTab(BFile& handle,memArray *obj, unsigned 
    else
     sprintf(&stmp[strlen(stmp)]," vma=%08lXH",(unsigned long)ELF_XWORD(ELF_EDYN(pdyn,d_un.d_val)));
    if(!ma_AddString(obj,stmp,true)) break;
-   handle.seek(fp,SEEKF_START);
+   handle.seek(fp,BFile::Seek_Set);
   }
   return true;
 }
@@ -931,7 +931,7 @@ static __filesize_t __FASTCALL__ ShowPrgHdrElf(void)
   if(ret != -1)
   {
     ElfXX_External_Phdr it;
-    bmSeek(ELF_OFF(ELF_EHDR(elf,e_phoff))+ELF_PHDR_SIZE()*ret,SEEKF_START);
+    bmSeek(ELF_OFF(ELF_EHDR(elf,e_phoff))+ELF_PHDR_SIZE()*ret,BFile::Seek_Set);
     bmReadBuffer(&it,sizeof(it));
     fpos = ELF_OFF(ELF_PHDR(it,p_offset));
   }
@@ -955,8 +955,8 @@ static __filesize_t __FASTCALL__ ShowSecHdrElf(void)
   if(ret != -1)
   {
     ElfXX_External_Shdr it;
-//    bmSeek(ELF_OFF(ELF_EHDR(elf,e_shoff))+ELF_SHDR_SIZE()*ret,SEEKF_START);
-    bmSeek(ELF_OFF(ELF_EHDR(elf,e_shoff))+ELF_HALF(ELF_EHDR(elf, e_shentsize))*ret,SEEKF_START);
+//    bmSeek(ELF_OFF(ELF_EHDR(elf,e_shoff))+ELF_SHDR_SIZE()*ret,BFile::Seek_Set);
+    bmSeek(ELF_OFF(ELF_EHDR(elf,e_shoff))+ELF_HALF(ELF_EHDR(elf, e_shentsize))*ret,BFile::Seek_Set);
     bmReadBuffer(&it,sizeof(it));
     fpos = ELF_OFF(ELF_SHDR(it,sh_offset));
   }
@@ -969,12 +969,12 @@ static __filesize_t __calcSymEntry(BFile& handle,__filesize_t num,bool display_m
    ElfXX_External_Shdr sec;
    __filesize_t ffpos,fpos = 0L;
    ffpos = handle.tell();
-   handle.seek(__elfSymPtr+__elfSymEntSize*num,SEEKF_START);
-   handle.read_buffer(&it,sizeof(it));
-//   handle.seek(ELF_OFF(ELF_EHDR(elf,e_shoff))+ELF_SHDR_SIZE()*ELF_HALF(ELF_SYM(it,st_shndx)),SEEKF_START);
-   handle.seek(ELF_OFF(ELF_EHDR(elf,e_shoff))+ELF_HALF(ELF_EHDR(elf, e_shentsize))*ELF_HALF(ELF_SYM(it,st_shndx)),SEEKF_START);
-   handle.read_buffer(&sec,sizeof(sec));
-   handle.seek(ffpos,SEEKF_START);
+   handle.seek(__elfSymPtr+__elfSymEntSize*num,BFile::Seek_Set);
+   handle.read(&it,sizeof(it));
+//   handle.seek(ELF_OFF(ELF_EHDR(elf,e_shoff))+ELF_SHDR_SIZE()*ELF_HALF(ELF_SYM(it,st_shndx)),BFile::Seek_Set);
+   handle.seek(ELF_OFF(ELF_EHDR(elf,e_shoff))+ELF_HALF(ELF_EHDR(elf, e_shentsize))*ELF_HALF(ELF_SYM(it,st_shndx)),BFile::Seek_Set);
+   handle.read(&sec,sizeof(sec));
+   handle.seek(ffpos,BFile::Seek_Set);
    if(ELF_IS_SECTION_PHYSICAL(ELF_HALF(ELF_SYM(it,st_shndx))))
 /*
    In relocatable files, st_value holds alignment constraints for a
@@ -1026,7 +1026,7 @@ static __filesize_t  __FASTCALL__ displayELFdyntab(__filesize_t dynptr,
   fpos = BMGetCurrFilePos();
   ndyn = (unsigned)nitem;
   if(!(obj = ma_Build(ndyn,true))) return fpos;
-  handle.seek(dynptr,SEEK_SET);
+  handle.seek(dynptr,BFile::Seek_Set);
   if(__elfReadDynTab(handle,obj,ndyn,entsize))
   {
     int ret;
@@ -1050,7 +1050,7 @@ static __filesize_t  __FASTCALL__ displayELFdyntab(__filesize_t dynptr,
        else
        {
 	 not_entry:
-	 ErrMessageBox(NOT_ENTRY,NULL);
+	 ErrMessageBox(NOT_ENTRY,"");
        }
     }
   }
@@ -1121,10 +1121,10 @@ static __filesize_t get_f_offset(__filesize_t r_offset,__filesize_t sh_link)
 		  ElfXX_External_Shdr shdr;
 		  __filesize_t fp;
 		  fp = handle.tell();
-//                  handle->seek(ELF_OFF(ELF_EHDR(elf,e_shoff))+sh_link*ELF_SHDR_SIZE(),SEEKF_START);
-		  handle.seek(ELF_OFF(ELF_EHDR(elf,e_shoff))+sh_link*ELF_HALF(ELF_EHDR(elf, e_shentsize)),SEEKF_START);
-		  handle.read_buffer(&shdr,sizeof(shdr));
-		  handle.seek(fp,SEEKF_START);
+//                  handle->seek(ELF_OFF(ELF_EHDR(elf,e_shoff))+sh_link*ELF_SHDR_SIZE(),BFile::Seek_Set);
+		  handle.seek(ELF_OFF(ELF_EHDR(elf,e_shoff))+sh_link*ELF_HALF(ELF_EHDR(elf, e_shentsize)),BFile::Seek_Set);
+		  handle.read(&shdr,sizeof(shdr));
+		  handle.seek(fp,BFile::Seek_Set);
 		  f_offset = ELF_OFF(ELF_SHDR(shdr,sh_offset)) + r_offset;
 		}
      default: f_offset = elfVA2PA(r_offset);
@@ -1305,21 +1305,21 @@ static void  __FASTCALL__ __elfReadRelSection(__filesize_t offset,
   __filesize_t fp, sfp, lfp;
   if(!entsize) return;
   fp = handle.tell();
-  handle.seek(offset,SEEKF_START);
+  handle.seek(offset,BFile::Seek_Set);
   nitems = (size_t)(size / entsize);
   sfp = handle2.tell();
   for(i = 0;i < nitems;i++)
   {
     Elf_Reloc erc;
     lfp=handle.tell();
-    handle.read_buffer(&relent,sizeof(relent));
-    handle.seek(lfp+ELF_REL_SIZE(),SEEKF_START);
-    if(entsize > ELF_REL_SIZE()) handle.seek(entsize-ELF_REL_SIZE(),SEEKF_CUR);
+    handle.read(&relent,sizeof(relent));
+    handle.seek(lfp+ELF_REL_SIZE(),BFile::Seek_Set);
+    if(entsize > ELF_REL_SIZE()) handle.seek(entsize-ELF_REL_SIZE(),BFile::Seek_Cur);
     erc.offset = get_f_offset(ELF_OFF(ELF_REL(relent,r_offset)),info);
     erc.info = ELF_XWORD(ELF_REL(relent,r_info));
     /* Entries of type Elf32_Rel store an implicit addend in the
        location to be modified */
-    handle2.seek(erc.offset, SEEKF_START);
+    handle2.seek(erc.offset, BFile::Seek_Set);
     switch(ELF_HALF(ELF_EHDR(elf,e_machine)))
     {
       default: erc.addend = 0;
@@ -1332,8 +1332,8 @@ static void  __FASTCALL__ __elfReadRelSection(__filesize_t offset,
     erc.sh_idx = sh_link;
     if(!la_AddData(CurrElfChain,&erc,NULL)) break;
   }
-  handle2.seek(sfp,SEEKF_START);
-  handle.seek(fp,SEEKF_START);
+  handle2.seek(sfp,BFile::Seek_Set);
+  handle.seek(fp,BFile::Seek_Set);
 }
 
 static void  __FASTCALL__ __elfReadRelaSection(__filesize_t offset,
@@ -1348,22 +1348,22 @@ static void  __FASTCALL__ __elfReadRelaSection(__filesize_t offset,
   __filesize_t fp, lfp;
   if(!entsize) return;
   fp = handle.tell();
-  handle.seek(offset,SEEKF_START);
+  handle.seek(offset,BFile::Seek_Set);
   nitems = (size_t)(size / entsize);
   for(i = 0;i < nitems;i++)
   {
     Elf_Reloc erc;
     lfp=handle.tell();
-    handle.read_buffer(&relent,sizeof(relent));
-    handle.seek(lfp+ELF_RELA_SIZE(), SEEKF_START);
-    if(entsize > ELF_RELA_SIZE()) handle.seek(entsize-ELF_RELA_SIZE(),SEEKF_CUR);
+    handle.read(&relent,sizeof(relent));
+    handle.seek(lfp+ELF_RELA_SIZE(), BFile::Seek_Set);
+    if(entsize > ELF_RELA_SIZE()) handle.seek(entsize-ELF_RELA_SIZE(),BFile::Seek_Cur);
     erc.offset = get_f_offset(ELF_OFF(ELF_RELA(relent,r_offset)),info);
     erc.info = ELF_XWORD(ELF_RELA(relent,r_info));
     erc.addend = ELF_XWORD(ELF_RELA(relent,r_addend));
     erc.sh_idx = sh_link;
     if(!la_AddData(CurrElfChain,&erc,NULL)) break;
   }
-  handle.seek(fp,SEEKF_START);
+  handle.seek(fp,BFile::Seek_Set);
 }
 
 static void  __FASTCALL__ buildElf386RelChain( void )
@@ -1382,7 +1382,7 @@ static void  __FASTCALL__ buildElf386RelChain( void )
   fp = handle.tell();
   if(IsSectionsPresent) /* Section headers are present */
   {
-    handle.seek(ELF_OFF(ELF_EHDR(elf,e_shoff)),SEEKF_START);
+    handle.seek(ELF_OFF(ELF_EHDR(elf,e_shoff)),BFile::Seek_Set);
     _nitems = ELF_HALF(ELF_EHDR(elf,e_shnum));
     for(i = 0;i < _nitems;i++)
     {
@@ -1390,9 +1390,9 @@ static void  __FASTCALL__ buildElf386RelChain( void )
       __filesize_t _fp;
       if(IsKbdTerminate() || handle.eof()) break;
       _fp=handle.tell();
-      handle.read_buffer(&shdr,sizeof(shdr));
-//      handle.seek(_fp+ELF_SHDR_SIZE(),SEEKF_START);
-      handle.seek(_fp+ELF_HALF(ELF_EHDR(elf, e_shentsize)),SEEKF_START);
+      handle.read(&shdr,sizeof(shdr));
+//      handle.seek(_fp+ELF_SHDR_SIZE(),BFile::Seek_Set);
+      handle.seek(_fp+ELF_HALF(ELF_EHDR(elf, e_shentsize)),BFile::Seek_Set);
       switch(ELF_WORD(ELF_SHDR(shdr,sh_type)))
       {
 	case SHT_REL: __elfReadRelSection(ELF_OFF(ELF_SHDR(shdr,sh_offset)),
@@ -1463,7 +1463,7 @@ static void  __FASTCALL__ buildElf386RelChain( void )
     }
   }
   la_Sort(CurrElfChain,compare_elf_reloc);
-  handle.seek(fp,SEEKF_START);
+  handle.seek(fp,BFile::Seek_Set);
   CloseWnd(w);
   return;
 }
@@ -1488,15 +1488,15 @@ static bool  __FASTCALL__ __readRelocName(Elf_Reloc  *erl, char *buff, size_t cb
   fp = handle.tell();
   if(IsSectionsPresent) /* Section headers are present */
   {
-//     handle->seek(ELF_OFF(ELF_EHDR(elf,e_shoff))+erl->sh_idx*ELF_SHDR_SIZE(),SEEKF_START);
-     handle.seek(ELF_OFF(ELF_EHDR(elf,e_shoff))+erl->sh_idx*ELF_HALF(ELF_EHDR(elf, e_shentsize)),SEEKF_START);
+//     handle->seek(ELF_OFF(ELF_EHDR(elf,e_shoff))+erl->sh_idx*ELF_SHDR_SIZE(),BFile::Seek_Set);
+     handle.seek(ELF_OFF(ELF_EHDR(elf,e_shoff))+erl->sh_idx*ELF_HALF(ELF_EHDR(elf, e_shentsize)),BFile::Seek_Set);
 
-     handle.read_buffer(&shdr,sizeof(shdr));
-     handle.seek(ELF_OFF(ELF_SHDR(shdr,sh_offset)),SEEKF_START);
+     handle.read(&shdr,sizeof(shdr));
+     handle.seek(ELF_OFF(ELF_SHDR(shdr,sh_offset)),BFile::Seek_Set);
      /* Minor integrity test */
      ret = ELF_WORD(ELF_SHDR(shdr,sh_type)) == SHT_SYMTAB || ELF_WORD(ELF_SHDR(shdr,sh_type)) == SHT_DYNSYM;
   }
-  else handle.seek(erl->sh_idx,SEEKF_START);
+  else handle.seek(erl->sh_idx,BFile::Seek_Set);
   if(ret)
   {
     /* We assume that dynsym and symtab are equal */
@@ -1510,8 +1510,8 @@ static bool  __FASTCALL__ __readRelocName(Elf_Reloc  *erl, char *buff, size_t cb
       dynptr = findPHEntry(PT_DYNAMIC,&nitems);
       active_shtbl = elfVA2PA(findPHDynEntry(DT_STRTAB,dynptr,nitems));
     }
-    handle.seek(r_sym*ELF_SYM_SIZE(),SEEKF_CUR);
-    handle.read_buffer(&sym,sizeof(sym));
+    handle.seek(r_sym*ELF_SYM_SIZE(),BFile::Seek_Cur);
+    handle.read(&sym,sizeof(sym));
     elf386_readnametableex(ELF_WORD(ELF_SYM(sym,st_name)),buff,cbBuff);
     buff[cbBuff-1] = '\0';
     active_shtbl = old_active;
@@ -1524,9 +1524,9 @@ static bool  __FASTCALL__ __readRelocName(Elf_Reloc  *erl, char *buff, size_t cb
 	  ELF_HALF(ELF_SYM(sym,st_shndx)) &&
 	  ELF_IS_SECTION_PHYSICAL(ELF_HALF(ELF_SYM(sym,st_shndx))))
        {
-//         handle->seek(ELF_OFF(ELF_EHDR(elf,e_shoff))+ELF_HALF(ELF_SYM(sym,st_shndx))*ELF_SHDR_SIZE(),SEEKF_START);
-	 handle.seek(ELF_OFF(ELF_EHDR(elf,e_shoff))+ELF_HALF(ELF_SYM(sym,st_shndx))*ELF_HALF(ELF_EHDR(elf, e_shentsize)),SEEKF_START);
-	 handle.read_buffer(&shdr,sizeof(shdr));
+//         handle->seek(ELF_OFF(ELF_EHDR(elf,e_shoff))+ELF_HALF(ELF_SYM(sym,st_shndx))*ELF_SHDR_SIZE(),BFile::Seek_Set);
+	 handle.seek(ELF_OFF(ELF_EHDR(elf,e_shoff))+ELF_HALF(ELF_SYM(sym,st_shndx))*ELF_HALF(ELF_EHDR(elf, e_shentsize)),BFile::Seek_Set);
+	 handle.read(&shdr,sizeof(shdr));
 	 if(!FindPubName(buff, cbBuff, ELF_OFF(ELF_SHDR(shdr,sh_offset))+erl->addend))
 		      elf386_readnametable(ELF_WORD(ELF_SHDR(shdr,sh_name)),buff,cbBuff);
        }
@@ -1534,7 +1534,7 @@ static bool  __FASTCALL__ __readRelocName(Elf_Reloc  *erl, char *buff, size_t cb
       if(!buff[0]) strcpy(buff,"?noname");
     }
   }
-  handle.seek(fp,SEEKF_START);
+  handle.seek(fp,BFile::Seek_Set);
   return ret;
 }
 
@@ -1918,17 +1918,17 @@ static void  __FASTCALL__ displayELFdyninfo(__filesize_t f_off,unsigned nitems)
   stroff = 0;
   stroff = elfVA2PA(findPHDynEntry(DT_STRTAB,f_off,nitems));
   if(!stroff) { NotifyBox(" String information not found!",NULL); return; }
-  bmSeek(f_off,SEEKF_START);
+  bmSeek(f_off,BFile::Seek_Set);
   if(!(obj = ma_Build(0,true))) return;
   strcpy(stmp,S_INTERPRETER);
   curroff = findPHEntry(PT_INTERP, &i);
   if(curroff) bmReadBufferEx(&stmp[sizeof(S_INTERPRETER) - 1],sizeof(stmp)-sizeof(S_INTERPRETER)-1,
-			     curroff,SEEKF_START);
+			     curroff,BFile::Seek_Set);
   if(!ma_AddString(obj,stmp,true)) goto dyn_end;
-  bmSeek(f_off,SEEKF_START);
+  bmSeek(f_off,BFile::Seek_Set);
   for(i = 0;i < nitems;i++)
   {
-    bmReadBufferEx(&dyntab,sizeof(dyntab),f_off,SEEKF_START);
+    bmReadBufferEx(&dyntab,sizeof(dyntab),f_off,BFile::Seek_Set);
     if(bmEOF()) break;
     f_off += ELF_EDYN_SIZE();
     is_add = true;
@@ -1938,19 +1938,19 @@ static void  __FASTCALL__ displayELFdyninfo(__filesize_t f_off,unsigned nitems)
       case DT_NEEDED:
 		    {
 		      strcpy(stmp,"Needed : ");
-		      bmReadBufferEx(&stmp[strlen(stmp)],70,ELF_XWORD(ELF_EDYN(dyntab,d_un.d_ptr)) + stroff,SEEKF_START);
+		      bmReadBufferEx(&stmp[strlen(stmp)],70,ELF_XWORD(ELF_EDYN(dyntab,d_un.d_ptr)) + stroff,BFile::Seek_Set);
 		    }
 		    break;
       case DT_SONAME:
 		    {
 		      strcpy(stmp,"SO name: ");
-		      bmReadBufferEx(&stmp[strlen(stmp)],70,ELF_XWORD(ELF_EDYN(dyntab,d_un.d_ptr)) + stroff,SEEKF_START);
+		      bmReadBufferEx(&stmp[strlen(stmp)],70,ELF_XWORD(ELF_EDYN(dyntab,d_un.d_ptr)) + stroff,BFile::Seek_Set);
 		    }
 		    break;
       case DT_RPATH:
 		    {
 		      strcpy(stmp,"LibPath: ");
-		      bmReadBufferEx(&stmp[strlen(stmp)],70,ELF_XWORD(ELF_EDYN(dyntab,d_un.d_ptr)) + stroff,SEEKF_START);
+		      bmReadBufferEx(&stmp[strlen(stmp)],70,ELF_XWORD(ELF_EDYN(dyntab,d_un.d_ptr)) + stroff,BFile::Seek_Set);
 		    }
 		    break;
        default:     is_add = false; break;
@@ -1970,7 +1970,7 @@ static __filesize_t __FASTCALL__ ShowELFDynInfo( void )
   dynptr = findPHEntry(PT_DYNAMIC,&number);
   if(!dynptr) { NotifyBox(NOT_ENTRY," ELF dynamic linking information "); return fpos; }
   displayELFdyninfo(dynptr,number);
-  BMSeek(fpos, SEEKF_START);
+  BMSeek(fpos, BFile::Seek_Set);
   return fpos;
 }
 
@@ -1982,10 +1982,10 @@ static bool __FASTCALL__ AppendELFRef(const DisMode& parent,char *str,__filesize
   __filesize_t defval;
   switch(codelen) {
     default:
-    case 1: defval = bmReadByteEx(ulShift, SEEKF_START); break;
-    case 2: defval = bmReadWordEx(ulShift, SEEKF_START); break;
-    case 4: defval = bmReadDWordEx(ulShift, SEEKF_START); break;
-    case 8: defval = bmReadQWordEx(ulShift, SEEKF_START); break;
+    case 1: defval = bmReadByteEx(ulShift, BFile::Seek_Set); break;
+    case 2: defval = bmReadWordEx(ulShift, BFile::Seek_Set); break;
+    case 4: defval = bmReadDWordEx(ulShift, BFile::Seek_Set); break;
+    case 8: defval = bmReadQWordEx(ulShift, BFile::Seek_Set); break;
   }
   if(flags & APREF_TRY_PIC)
   {
@@ -2013,7 +2013,7 @@ static bool __FASTCALL__ AppendELFRef(const DisMode& parent,char *str,__filesize
   }
   if(!ret && ELF_HALF(ELF_EHDR(elf,e_type))>ET_REL && codelen>=4)
   {
-    if((erl = __found_ElfRel(elfVA2PA(bmReadDWordEx(ulShift,SEEKF_START)))) != NULL)
+    if((erl = __found_ElfRel(elfVA2PA(bmReadDWordEx(ulShift,BFile::Seek_Set)))) != NULL)
     {
       ret = BuildReferStrElf(str,erl,flags,codelen,defval);
     }
@@ -2040,7 +2040,7 @@ static bool __FASTCALL__ AppendELFRef(const DisMode& parent,char *str,__filesize
 static bool __FASTCALL__ IsELF32( void )
 {
   char id[4];
-  bmReadBufferEx(id,sizeof(id),0,SEEKF_START);
+  bmReadBufferEx(id,sizeof(id),0,BFile::Seek_Set);
   return IS_ELF(id);
 //  [0] == EI_MAG0 && id[1] == EI_MAG1 && id[2] == 'L' && id[3] == 'F';
 }
@@ -2066,13 +2066,13 @@ static void __FASTCALL__ __elfReadSegments(linearArray **to, bool is_virt )
      {
        exit(EXIT_FAILURE);
      }
-     bmSeek(ELF_OFF(ELF_EHDR(elf,e_shoff)),SEEKF_START);
+     bmSeek(ELF_OFF(ELF_EHDR(elf,e_shoff)),BFile::Seek_Set);
      for(i = 0;i < va_map_count;i++)
      {
        __filesize_t flg,x_flags;
        fp = bmGetCurrFilePos();
        bmReadBuffer(&shdr,sizeof(shdr));
-       bmSeek(fp+ELF_HALF(ELF_EHDR(elf,e_shentsize)),SEEKF_START);
+       bmSeek(fp+ELF_HALF(ELF_EHDR(elf,e_shentsize)),BFile::Seek_Set);
        vamap.va = ELF_OFF(ELF_SHDR(shdr,sh_addr));
        vamap.size = ELF_XWORD(ELF_SHDR(shdr,sh_size));
        vamap.foff = ELF_OFF(ELF_SHDR(shdr,sh_offset));
@@ -2106,12 +2106,12 @@ static void __FASTCALL__ __elfReadSegments(linearArray **to, bool is_virt )
       {
 	exit(EXIT_FAILURE);
       }
-      bmSeek(ELF_OFF(ELF_EHDR(elf,e_phoff)),SEEKF_START);
+      bmSeek(ELF_OFF(ELF_EHDR(elf,e_phoff)),BFile::Seek_Set);
       for(i = 0;i < va_map_count;i++)
       {
 	fp = bmGetCurrFilePos();
 	bmReadBuffer(&phdr,sizeof(phdr));
-	bmSeek(fp+ELF_HALF(ELF_EHDR(elf,e_phentsize)),SEEKF_START);
+	bmSeek(fp+ELF_HALF(ELF_EHDR(elf,e_phentsize)),BFile::Seek_Set);
 	vamap.va = ELF_ADDR(ELF_PHDR(phdr,p_vaddr));
 	vamap.size = std::max(ELF_OFF(ELF_PHDR(phdr,p_filesz)), ELF_OFF(ELF_PHDR(phdr,p_memsz)));
 	vamap.foff = ELF_OFF(ELF_PHDR(phdr,p_offset));
@@ -2137,7 +2137,7 @@ static void __FASTCALL__ ELFinit(CodeGuider& _code_guider)
     code_guider=&_code_guider;
  __filesize_t fs;
  size_t i;
-   bmReadBufferEx(&elf,sizeof(ElfXX_External_Ehdr),0,SEEKF_START);
+   bmReadBufferEx(&elf,sizeof(ElfXX_External_Ehdr),0,BFile::Seek_Set);
    is_msbf = ELF_EHDR(elf,e_ident[EI_DATA]) == ELFDATA2MSB;
    is_64bit = ELF_EHDR(elf,e_ident[EI_CLASS]) == ELFCLASS64;
    fs = bmGetFLength();
@@ -2157,9 +2157,9 @@ static void __FASTCALL__ ELFinit(CodeGuider& _code_guider)
      if(evm->va < elf_min_va) elf_min_va = evm->va;
    }
    BFile& main_handle = bmbioHandle();
-   namecache = *main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE);
-   namecache2 = *main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE);
-   elfcache = *main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE);
+   namecache = *main_handle.dup();
+   namecache2 = *main_handle.dup();
+   elfcache = *main_handle.dup();
    if(&namecache == &bNull) namecache = main_handle;
    if(&namecache2 == &bNull) namecache2 = main_handle;
    if(&elfcache == &bNull) elfcache = main_handle;
@@ -2252,14 +2252,14 @@ static void __FASTCALL__ elf_ReadPubNameList(BFile& handle,void (__FASTCALL__ *m
   if(!(PubNames = la_Build(0,sizeof(struct PubName),mem_out))) return;
   if(tableptr)
   {
-    b_cache.seek(tableptr,SEEK_SET);
+    b_cache.seek(tableptr,BFile::Seek_Set);
     for(i = 0;i < number;i++)
     {
      ElfXX_External_Dyn pdyn;
      fp = b_cache.tell();
-     b_cache.read_buffer(&pdyn,sizeof(pdyn));
+     b_cache.read(&pdyn,sizeof(pdyn));
      if(b_cache.eof()) break;
-     b_cache.seek(fp+ent_size,SEEKF_START);
+     b_cache.seek(fp+ent_size,BFile::Seek_Set);
      epn.nameoff = ELF_XWORD(ELF_EDYN(pdyn,d_tag));
      epn.pa = elfVA2PA(ELF_XWORD(ELF_EDYN(pdyn,d_un.d_val)));
      epn.addinfo = pubname_shtbl;
@@ -2271,14 +2271,14 @@ static void __FASTCALL__ elf_ReadPubNameList(BFile& handle,void (__FASTCALL__ *m
 
   if(__elfNumSymTab)
   {
-    handle.seek(__elfSymPtr,SEEK_SET);
+    handle.seek(__elfSymPtr,BFile::Seek_Set);
     for(i = 0;i < __elfNumSymTab;i++)
     {
       ElfXX_External_Sym sym;
       fp = handle.tell();
-      handle.read_buffer(&sym,sizeof(sym));
+      handle.read(&sym,sizeof(sym));
       if(handle.eof() || IsKbdTerminate()) break;
-      handle.seek(fp+__elfSymEntSize,SEEKF_START);
+      handle.seek(fp+__elfSymEntSize,BFile::Seek_Set);
       if(ELF_IS_SECTION_PHYSICAL(ELF_HALF(ELF_SYM(sym,st_shndx))) &&
 	 ELF_ST_TYPE(ELF_SYM(sym,st_info[0])) != STT_SECTION)
       {
@@ -2291,7 +2291,7 @@ static void __FASTCALL__ elf_ReadPubNameList(BFile& handle,void (__FASTCALL__ *m
     }
   }
   la_Sort(PubNames,compare_pubnames);
-  b_cache.seek(fpos,SEEK_SET);
+  b_cache.seek(fpos,BFile::Seek_Set);
 }
 
 static void __FASTCALL__ elf_ReadPubName(BFile& b_cache,const struct PubName *it,

@@ -213,7 +213,7 @@ void BeyeContext::main_loop()
 				__filesize_t temp_fp;
 				nfp = shift;
 				temp_fp = _bin_format->va2pa(shift);
-				if(temp_fp==Bin_Format::Bad_Address) ErrMessageBox(NOT_ENTRY,NULL);
+				if(temp_fp==Bin_Format::Bad_Address) ErrMessageBox(NOT_ENTRY,"");
 				else nfp = temp_fp;
 				break;
 		    }

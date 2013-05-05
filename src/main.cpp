@@ -51,6 +51,8 @@ using namespace beye;
 #include "beyeutil.h"
 #include "search.h"
 #include "setup.h"
+#include "libbeye/bbio.h"
+#include "libbeye/mmfile.h"
 #include "libbeye/file_ini.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
@@ -229,19 +231,14 @@ bool BeyeContext::LoadInfo( )
 {
     make_shortname();
     if(new_file_size != FILESIZE_MAX) {
-	bhandle_t handle;
-	if(__IsFileExists(beye_context().ArgVector1.c_str()) == false) handle = __OsCreate(beye_context().ArgVector1.c_str());
+	BFile* h = new(zeromem) BFile;
+	if(BFile::exists(beye_context().ArgVector1) == false) h->create(beye_context().ArgVector1);
 	else {
-	    handle = __OsOpen(beye_context().ArgVector1.c_str(),FO_READWRITE | SO_DENYNONE);
-	    if(handle == NULL_HANDLE) handle = __OsOpen(ArgVector1.c_str(),FO_READWRITE | SO_COMPAT);
+	    if(!h->open(beye_context().ArgVector1,BFile::FO_READWRITE | BFile::SO_DENYNONE))
+		h->open(ArgVector1,BFile::FO_READWRITE | BFile::SO_COMPAT);
 	}
-	if(handle != NULL_HANDLE) {
-	    __OsChSize(handle,new_file_size);
-	    __OsClose(handle);
-	} else {
-	    errnoMessageBox(OPEN_FAIL,NULL,errno);
-	    return false;
-        }
+	h->chsize(new_file_size);
+        delete h;
     }
     if(BMOpen(ArgVector1) != true) return false;
     if(beye_mode != UINT_MAX) defMainModeSel = beye_mode;
@@ -331,7 +328,7 @@ hIniProfile* BeyeContext::load_ini_info()
   if(stricmp(tmp,"yes") == 0) iniSettingsAnywhere = true;
   read_profile_string(ini,"Beye","Setup","FioUseMMF","no",tmp,sizeof(tmp));
   if(stricmp(tmp,"yes") == 0) fioUseMMF = true;
-  if(!__mmfIsWorkable()) fioUseMMF = false;
+  if(!MMFile::has_mmio) fioUseMMF = false;
   read_profile_string(ini,"Beye","Setup","PreserveTimeStamp","no",tmp,sizeof(tmp));
   if(stricmp(tmp,"yes") == 0) iniPreserveTime = true;
   read_profile_string(ini,"Beye","Setup","UseExternalProgs","no",tmp,sizeof(tmp));
@@ -385,7 +382,7 @@ void BeyeContext::save_ini_info() const
   iniCloseFile(ini);
 }
 
-static FTime ftim;
+static BFile::ftime ftim;
 static bool ftim_ok = false;
 
 void BeyeContext::show_usage() const {
@@ -484,11 +481,11 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  {
    char sout[256];
    sprintf(sout,"Error in skin file detected: '%s'",BeyeCtx->last_skin_error.c_str());
-   ErrMessageBox(sout,NULL);
+   ErrMessageBox(sout,"");
  }
  /* We must do it before opening a file because of some RTL has bug
     when are trying to open already open file with no sharing access */
- ftim_ok = __OsGetFTime(BeyeCtx->ArgVector1.c_str(),&ftim);
+ ftim_ok = BFile::get_ftime(BeyeCtx->ArgVector1,ftim);
  if(!BeyeCtx->LoadInfo())
  {
    if(ini) iniCloseFile(ini);
@@ -507,7 +504,7 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  BeyeCtx->main_loop();
  BeyeCtx->LastOffset = BMGetCurrFilePos();
  BeyeCtx->save_ini_info();
- if(BeyeCtx->iniPreserveTime && ftim_ok) __OsSetFTime(BeyeCtx->ArgVector1.c_str(),&ftim);
+ if(BeyeCtx->iniPreserveTime && ftim_ok) BFile::set_ftime(BeyeCtx->ArgVector1,ftim);
  Bye:
  return retval;
 }
@@ -538,9 +535,9 @@ bool BeyeContext::new_source()
     for(freq = 0;freq < j;freq++) delete nlsListFile[freq];
     delete nlsListFile;
     if(i != -1) {
-	if(iniPreserveTime && ftim_ok) __OsSetFTime(ArgVector1.c_str(),&ftim);
+	if(iniPreserveTime && ftim_ok) BFile::set_ftime(ArgVector1,ftim);
 	BMClose();
-	ftim_ok = __OsGetFTime(ListFile[i].c_str(),&ftim);
+	ftim_ok = BFile::get_ftime(ListFile[i],ftim);
 	if(BMOpen(ListFile[i]) == true) {
 	    ArgVector1 = ListFile[i];
 	    delete _bin_format;
@@ -643,26 +640,28 @@ void BeyeContext::select_sysinfo() const { sysinfo->select(); }
 
 BFile* BeyeContext::beyeOpenRO(const std::string& fname,unsigned cache_size)
 {
-  BFile* fret;
-  fret=new BFile;
-  bool rc;
-  rc = fret->open(fname,FO_READONLY | SO_DENYNONE,cache_size,beye_context().fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
-  if(rc == false)
-    rc = fret->open(fname,FO_READONLY | SO_COMPAT,cache_size,beye_context().fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
-  if(rc==false) { delete fret; fret=&bNull; }
-  return fret;
+    BFile* fret;
+    if(beye_context().fioUseMMF)fret= new(zeromem) MMFile;
+    else			fret= new(zeromem) BBio_File;
+    bool rc;
+    rc = fret->open(fname,BFile::FO_READONLY | BFile::SO_DENYNONE,cache_size);
+    if(rc == false)
+	rc = fret->open(fname,BFile::FO_READONLY | BFile::SO_COMPAT,cache_size);
+    if(rc==false) { delete fret; fret=&bNull; }
+    return fret;
 }
 
 BFile* BeyeContext:: beyeOpenRW(const std::string& fname,unsigned cache_size)
 {
-  BFile* fret;
-  fret=new BFile;
-  bool rc;
-  rc = fret->open(fname,FO_READWRITE | SO_DENYNONE,cache_size,beye_context().fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
-  if(rc == false)
-    rc = fret->open(fname,FO_READWRITE | SO_COMPAT,cache_size,beye_context().fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
-  if(rc==false) { delete fret; fret=&bNull; }
-  return fret;
+    BFile* fret;
+    if(beye_context().fioUseMMF)fret= new(zeromem) MMFile;
+    else			fret= new(zeromem) BBio_File;
+    bool rc;
+    rc = fret->open(fname,BFile::FO_READWRITE | BFile::SO_DENYNONE,cache_size);
+    if(rc == false)
+	rc = fret->open(fname,BFile::FO_READWRITE | BFile::SO_COMPAT,cache_size);
+    if(rc==false) { delete fret; fret=&bNull; }
+    return fret;
 }
 
 bool BeyeContext::BMOpen(const std::string& fname)
@@ -671,21 +670,19 @@ bool BeyeContext::BMOpen(const std::string& fname)
   bm = beyeOpenRO(fname,BBIO_CACHE_SIZE);
   if(bm == &bNull)
   {
-    errnoMessageBox(OPEN_FAIL,NULL,errno);
+    errnoMessageBox(OPEN_FAIL,"",errno);
     return false;
   }
   if(&bm_file_handle != &bNull) delete &bm_file_handle;
   bm_file_handle = *bm;
-  sc = bm_file_handle.dup_ex(BBIO_SMALL_CACHE_SIZE);
+  sc = bm_file_handle.dup(/*BBIO_SMALL_CACHE_SIZE*/);
   if(sc == &bNull)
   {
-    errnoMessageBox(DUP_FAIL,NULL,errno);
+    errnoMessageBox(DUP_FAIL,"",errno);
     return false;
   }
   if(&sc_bm_file_handle != &bNull) delete &sc_bm_file_handle;
   sc_bm_file_handle = *sc;
-  bm_file_handle.set_optimization(BFile::Opt_Random);
-  sc_bm_file_handle.set_optimization(BFile::Opt_Random);
   return true;
 }
 

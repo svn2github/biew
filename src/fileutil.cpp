@@ -58,13 +58,13 @@ static bool ChSize( void )
     {
        bool ret;
        int my_errno = 0;
-       const char *fname = BMName();
+       std::string fname = BMName();
        BFile* bHandle;
        bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
        if(bHandle == &bNull)
        {
 	 err:
-	 errnoMessageBox(RESIZE_FAIL,NULL,my_errno);
+	 errnoMessageBox(RESIZE_FAIL,"",my_errno);
 	 return false;
        }
        ret = bHandle->chsize(psize);
@@ -74,7 +74,7 @@ static bool ChSize( void )
        BMReRead();
        return ret;
     }
-    else ErrMessageBox("Invalid new length",NULL);
+    else ErrMessageBox("Invalid new length","");
   }
  }
  return false;
@@ -92,7 +92,7 @@ static bool  __FASTCALL__ InsBlock(BFile* bHandle,__filesize_t start,__fileoff_t
    if(!buffer) return 0;
    if(!bHandle->chsize(oflen+psize))
    {
-     ErrMessageBox(EXPAND_FAIL,NULL);
+     ErrMessageBox(EXPAND_FAIL,"");
      delete buffer;
      return false;
    }
@@ -102,9 +102,9 @@ static bool  __FASTCALL__ InsBlock(BFile* bHandle,__filesize_t start,__fileoff_t
    while(tile)
    {
      bHandle->seek(crpos,BFile::Seek_Set);
-     bHandle->read_buffer(buffer,numtowrite);
+     bHandle->read(buffer,numtowrite);
      bHandle->seek(cwpos,BFile::Seek_Set);
-     bHandle->write_buffer(buffer,numtowrite);
+     bHandle->write(buffer,numtowrite);
      tile -= numtowrite;
      numtowrite = (unsigned)std::min(tile,__filesize_t(51200U));
      crpos -= numtowrite;
@@ -117,7 +117,7 @@ static bool  __FASTCALL__ InsBlock(BFile* bHandle,__filesize_t start,__fileoff_t
    {
      numtowrite = (unsigned)std::min(psize,__fileoff_t(51200U));
      bHandle->seek(cwpos,BFile::Seek_Set);
-     bHandle->write_buffer(buffer,numtowrite);
+     bHandle->write(buffer,numtowrite);
      psize -= numtowrite;
      cwpos += numtowrite;
    }
@@ -140,9 +140,9 @@ static bool  __FASTCALL__ DelBlock(BFile* bHandle,__filesize_t start,__fileoff_t
    {
      numtowrite = (unsigned)std::min(tile,__filesize_t(51200U));
      bHandle->seek(crpos,BFile::Seek_Set);
-     bHandle->read_buffer(buffer,numtowrite);
+     bHandle->read(buffer,numtowrite);
      bHandle->seek(cwpos,BFile::Seek_Set);
-     bHandle->write_buffer(buffer,numtowrite);
+     bHandle->write(buffer,numtowrite);
      tile -= numtowrite;
      crpos += numtowrite;
      cwpos += numtowrite;
@@ -150,7 +150,7 @@ static bool  __FASTCALL__ DelBlock(BFile* bHandle,__filesize_t start,__fileoff_t
    delete buffer;
    if(!bHandle->chsize(oflen+psize))
    {
-     ErrMessageBox(TRUNC_FAIL,NULL);
+     ErrMessageBox(TRUNC_FAIL,"");
      delete buffer;
    }
    return true;
@@ -166,16 +166,16 @@ static bool InsDelBlock( void )
  {
     __filesize_t fpos;
     BFile* bHandle;
-    const char *fname;
+    std::string fname;
     fpos = BMGetCurrFilePos();
-    if(start > BMGetFLength()) { ErrMessageBox("Start is outside of file",NULL); return 0; }
+    if(start > BMGetFLength()) { ErrMessageBox("Start is outside of file",""); return 0; }
     if(!psize) return 0;
-    if(psize < 0) if(start+labs(psize) > BMGetFLength()) { ErrMessageBox("Use change size operation instead of block deletion",NULL); return 0; }
+    if(psize < 0) if(start+labs(psize) > BMGetFLength()) { ErrMessageBox("Use change size operation instead of block deletion",""); return 0; }
     fname = BMName();
     bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
     if(bHandle == &bNull)
     {
-      errnoMessageBox(OPEN_FAIL,NULL,errno);
+      errnoMessageBox(OPEN_FAIL,"",errno);
     }
     else
     {
@@ -230,7 +230,7 @@ static void  __FASTCALL__ printHdr(FILE * fout,const Bin_Format& fmt)
 	       "%sDumped : %s\n"
 	       "%sFormat : %s\n"
 	       "%s\n\n"
-	      ,cptr1,cptr,BMName()
+	      ,cptr1,cptr,BMName().c_str()
 	      ,cptr,ff_startpos,ff_startpos+ff_len
 	      ,cptr,BEYE_VER_MSG
 	      ,cptr,ctime(&tim)
@@ -271,7 +271,7 @@ static void __make_dump_name(const char *end)
 {
  /* construct name */
  char *p;
- strcpy(ff_fname,BMName());
+ strcpy(ff_fname,BMName().c_str());
  p = strrchr(ff_fname,'.');
  if(!p) p = &ff_fname[strlen(ff_fname)];
  strcpy(p,end);
@@ -302,29 +302,31 @@ static bool FStore( void )
 	    cpos = BMGetCurrFilePos();
 	    progress_wnd = PercentWnd("Saving ..."," Save block to file ");
 	    if(!(flags & FSDLG_ASMMODE)) { /** Write in binary mode */
-		BFile* _bioHandle;
-		bhandle_t handle;
+		BBio_File* _bioHandle;
+		BFile* h;
 		__filesize_t wsize,crpos,pwsize,awsize;
 		unsigned rem;
 		wsize = endpos - ff_startpos;
-		if(__IsFileExists(ff_fname) == false) handle = __OsCreate(ff_fname);
+		h = new(zeromem)BFile;
+		if(BFile::exists(ff_fname) == false) h->create(ff_fname);
 		else {
-		    handle = __OsOpen(ff_fname,FO_READWRITE | SO_DENYNONE);
-		    if(handle == NULL_HANDLE) handle = __OsOpen(ff_fname,FO_READWRITE | SO_COMPAT);
-		    if(handle == NULL_HANDLE) {
-			use_err:
-			errnoMessageBox("Can't use file",NULL,errno);
-			goto Exit;
+		    if(!h->open(ff_fname,BFile::FO_READWRITE | BFile::SO_DENYNONE)) {
+			if(!h->open(ff_fname,BFile::FO_READWRITE | BFile::SO_COMPAT)) {
+			    use_err:
+			    errnoMessageBox("Can't use file","",errno);
+			    delete h;
+			    goto Exit;
+			}
+			h->truncate(0L);
 		    }
-		    __OsTruncFile(handle,0L);
 		}
-		__OsClose(handle);
-		_bioHandle = new BFile;
-		bool rc = _bioHandle->open(ff_fname,FO_READWRITE | SO_DENYNONE,BBIO_CACHE_SIZE,bctx.fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
-		if(rc == false)  rc = _bioHandle->open(ff_fname,FO_READWRITE | SO_COMPAT,BBIO_CACHE_SIZE,bctx.fioUseMMF ? BFile::Opt_UseMMF : BFile::Opt_Db);
+		delete h;
+		_bioHandle = new BBio_File;
+		bool rc = _bioHandle->open(ff_fname,BFile::FO_READWRITE | BFile::SO_DENYNONE,BBIO_CACHE_SIZE,BBio_File::Opt_Db);
+		if(rc == false)  rc = _bioHandle->open(ff_fname,BFile::FO_READWRITE | BFile::SO_COMPAT,BBIO_CACHE_SIZE,BBio_File::Opt_Db);
 		if(rc == false)  goto use_err;
 		crpos = ff_startpos;
-		_bioHandle->seek(0L,SEEKF_START);
+		_bioHandle->seek(0L,BFile::Seek_Set);
 		prcnt_counter = oprcnt_counter = 0;
 		pwsize = 0;
 		awsize = wsize;
@@ -332,13 +334,13 @@ static bool FStore( void )
 		    unsigned real_size;
 		    rem = (unsigned)std::min(wsize,__filesize_t(4096));
 		    if(!BMReadBufferEx(tmp_buff,rem,crpos,BFile::Seek_Set)) {
-			errnoMessageBox(READ_FAIL,NULL,errno);
+			errnoMessageBox(READ_FAIL,"",errno);
 			delete _bioHandle;
 			goto Exit;
 		    }
 		    real_size = (bctx.active_mode().flags()&Plugin::Has_ConvertCP) ? bctx.active_mode().convert_cp((char *)tmp_buff,rem,true) : rem;
-		    if(!_bioHandle->write_buffer(tmp_buff,real_size)) {
-			errnoMessageBox(WRITE_FAIL,NULL,errno);
+		    if(!_bioHandle->write(tmp_buff,real_size)) {
+			errnoMessageBox(WRITE_FAIL,"",errno);
 			delete _bioHandle;
 			goto Exit;
 		    }
@@ -383,7 +385,7 @@ static bool FStore( void )
 		file_cache = new char [BBIO_SMALL_CACHE_SIZE];
 		fout = fopen(ff_fname,"wt");
 		if(fout == NULL) {
-		    errnoMessageBox(WRITE_FAIL,NULL,errno);
+		    errnoMessageBox(WRITE_FAIL,"",errno);
 		    delete codebuff;
 		    goto Exit;
 		}
@@ -567,7 +569,7 @@ static bool FStore( void )
 		    }
 		    strcat(tmp_buff2 ? tmp_buff2 : tmp_buff,"\n");
 		    if(fputs(tmp_buff2 ? tmp_buff2 : tmp_buff,fout) == EOF) {
-			errnoMessageBox(WRITE_FAIL,NULL,errno);
+			errnoMessageBox(WRITE_FAIL,"",errno);
 			goto dis_exit;
 		    }
 		    if(flags & FSDLG_STRUCTS) {
@@ -598,7 +600,7 @@ static bool FStore( void )
 	    Exit:
 	    CloseWnd(progress_wnd);
 	    BMSeek(cpos,BFile::Seek_Set);
-	} else  ErrMessageBox("Start position > end position!",NULL);
+	} else  ErrMessageBox("Start position > end position!","");
     }
     delete tmp_buff;
     DumpMode = false;
@@ -616,15 +618,17 @@ static bool FRestore( void )
  if(GetFStoreDlg(" Restore information from file ",ff_fname,&flags,&ff_startpos,&ff_len,FILE_PRMT))
  {
    __filesize_t flen,lval;
-   bhandle_t handle;
+   BFile* h = new(zeromem) BFile;
    BFile* bHandle;
-   const char *fname;
+   std::string fname;
    endpos = ff_startpos + ff_len;
-   handle = __OsOpen(ff_fname,FO_READONLY | SO_DENYNONE);
-   if(handle == NULL_HANDLE) handle = __OsOpen(ff_fname,FO_READONLY | SO_COMPAT);
-   if(handle == NULL_HANDLE) goto err;
-   flen = __FileLength(handle);
-   __OsClose(handle);
+   if(!h->open(ff_fname,BFile::FO_READONLY | BFile::SO_DENYNONE)) {
+	if(!h->open(ff_fname,BFile::FO_READONLY | BFile::SO_COMPAT)) {
+	    goto err;
+	}
+    }
+   flen = h->flength();
+   delete h;
    lval = endpos - ff_startpos;
    endpos = lval > flen ? flen + ff_startpos : endpos;
    endpos = endpos > BMGetFLength() ? BMGetFLength() : endpos;
@@ -633,18 +637,19 @@ static bool FRestore( void )
      __filesize_t wsize,cwpos;
      unsigned remaind;
      any_t*tmp_buff;
-     handle = __OsOpen(ff_fname,FO_READONLY | SO_DENYNONE);
-     if(handle == NULL_HANDLE) handle = __OsOpen(ff_fname,FO_READONLY | SO_COMPAT);
-     if(handle == NULL_HANDLE)
-     {
-	err:
-	errnoMessageBox(OPEN_FAIL,NULL,errno);
-	return false;
+     h = new(zeromem) BFile;
+     if(!h->open(ff_fname,BFile::FO_READONLY | BFile::SO_DENYNONE)) {
+        if(!h->open(ff_fname,BFile::FO_READONLY | BFile::SO_COMPAT)) {
+	    err:
+	    delete h;
+	    errnoMessageBox(OPEN_FAIL,"",errno);
+	    return false;
+        }
      }
      cpos = BMGetCurrFilePos();
      wsize = endpos - ff_startpos;
      cwpos = ff_startpos;
-     __OsSeek(handle,0L,SEEKF_START);
+     h->seek(0L,BFile::Seek_Set);
      tmp_buff = new char [4096];
      if(!tmp_buff)
      {
@@ -658,17 +663,16 @@ static bool FRestore( void )
        while(wsize)
        {
 	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
-	 if((unsigned)__OsRead(handle,tmp_buff,remaind) != remaind)
-	 {
-	   errnoMessageBox(READ_FAIL,NULL,errno);
-	   __OsClose(handle);
+	 if(!h->read(tmp_buff,remaind)) {
+	   errnoMessageBox(READ_FAIL,"",errno);
+	   delete h;
 	   ret = false;
 	   goto bye;
 	 }
 	 bHandle->seek(cwpos,BFile::Seek_Set);
-	 if(!bHandle->write_buffer(tmp_buff,remaind))
+	 if(!bHandle->write(tmp_buff,remaind))
 	 {
-	   errnoMessageBox(WRITE_FAIL,NULL,errno);
+	   errnoMessageBox(WRITE_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
 	 }
@@ -679,13 +683,13 @@ static bool FRestore( void )
        delete bHandle;
        BMReRead();
      }
-     else errnoMessageBox(OPEN_FAIL,NULL,errno);
+     else errnoMessageBox(OPEN_FAIL,"",errno);
      delete (char*)tmp_buff;
-     __OsClose(handle);
+     delete h;
      BMSeek(cpos,BFile::Seek_Set);
      ret = true;
    }
-   else ErrMessageBox("Start position > end position!",NULL);
+   else ErrMessageBox("Start position > end position!","");
  }
  return ret;
 }
@@ -750,12 +754,12 @@ static bool CryptBlock( void )
    lval = endpos - ff_startpos;
    endpos = lval > flen ? flen + ff_startpos : endpos;
    endpos = endpos > BMGetFLength() ? BMGetFLength() : endpos;
-   if(!pass[0]) { ErrMessageBox("Password can't be empty",NULL); return false; }
+   if(!pass[0]) { ErrMessageBox("Password can't be empty",""); return false; }
    if(endpos > ff_startpos)
    {
      __filesize_t wsize,cwpos;
      unsigned remaind;
-     const char *fname;
+     std::string fname;
      BFile* bHandle;
      any_t*tmp_buff;
      cpos = BMGetCurrFilePos();
@@ -771,21 +775,21 @@ static bool CryptBlock( void )
      bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
      if(bHandle != &bNull)
      {
-       bHandle->seek(ff_startpos,SEEK_SET);
+       bHandle->seek(ff_startpos,BFile::Seek_Set);
        while(wsize)
        {
 	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
-	 if(!bHandle->read_buffer(tmp_buff,remaind))
+	 if(!bHandle->read(tmp_buff,remaind))
 	 {
-	   errnoMessageBox(READ_FAIL,NULL,errno);
+	   errnoMessageBox(READ_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
 	 }
 	 CryptFunc((char*)tmp_buff,remaind,pass);
 	 bHandle->seek(cwpos,BFile::Seek_Set);
-	 if(!(bHandle->write_buffer(tmp_buff,remaind)))
+	 if(!(bHandle->write(tmp_buff,remaind)))
 	 {
-	   errnoMessageBox(WRITE_FAIL,NULL,errno);
+	   errnoMessageBox(WRITE_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
 	 }
@@ -800,7 +804,7 @@ static bool CryptBlock( void )
      BMSeek(cpos,BFile::Seek_Set);
      ret = true;
    }
-   else ErrMessageBox("Start position > end position!",NULL);
+   else ErrMessageBox("Start position > end position!","");
  }
  return ret;
 }
@@ -859,7 +863,7 @@ static bool ReverseBlock( void )
    {
      __filesize_t wsize,cwpos;
      unsigned remaind;
-     const char *fname;
+     std::string fname;
      BFile* bHandle;
      any_t*tmp_buff;
      cpos = BMGetCurrFilePos();
@@ -875,21 +879,21 @@ static bool ReverseBlock( void )
      bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
      if(bHandle != &bNull)
      {
-       bHandle->seek(ff_startpos,SEEK_SET);
+       bHandle->seek(ff_startpos,BFile::Seek_Set);
        while(wsize)
        {
 	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
-	 if(!bHandle->read_buffer(tmp_buff,remaind))
+	 if(!bHandle->read(tmp_buff,remaind))
 	 {
-	   errnoMessageBox(READ_FAIL,NULL,errno);
+	   errnoMessageBox(READ_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
 	 }
 	 EndianifyBlock((char*)tmp_buff,remaind, flags & FSDLG_BTNSMASK);
 	 bHandle->seek(cwpos,BFile::Seek_Set);
-	 if(!(bHandle->write_buffer(tmp_buff,remaind)))
+	 if(!(bHandle->write(tmp_buff,remaind)))
 	 {
-	   errnoMessageBox(WRITE_FAIL,NULL,errno);
+	   errnoMessageBox(WRITE_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
 	 }
@@ -904,7 +908,7 @@ static bool ReverseBlock( void )
      BMSeek(cpos,BFile::Seek_Set);
      ret = true;
    }
-   else ErrMessageBox("Start position > end position!",NULL);
+   else ErrMessageBox("Start position > end position!","");
  }
  return ret;
 }
@@ -946,7 +950,7 @@ static bool XLatBlock( void )
    {
      __filesize_t wsize,cwpos;
      unsigned remaind;
-     const char *fname;
+     std::string fname;
      BFile* bHandle,* xHandle;
      any_t*tmp_buff;
      cpos = BMGetCurrFilePos();
@@ -956,24 +960,24 @@ static bool XLatBlock( void )
      xHandle = BeyeContext::beyeOpenRO(xlat_fname,BBIO_SMALL_CACHE_SIZE);
      if(xHandle == &bNull)
      {
-       ErrMessageBox("Can't open xlat file", NULL);
+       ErrMessageBox("Can't open xlat file", "");
        return false;
      }
      if(xHandle->flength() != 320)
      {
-       ErrMessageBox("Size of xlat file is not 320 bytes", NULL);
+       ErrMessageBox("Size of xlat file is not 320 bytes", "");
        delete xHandle;
        return false;
      }
-     xHandle->read_buffer(xlt, 16);
+     xHandle->read(xlt, 16);
      if(memcmp(xlt, "Beye Xlat Table.", 16) != 0)
      {
-       ErrMessageBox("It seems that xlat file is corrupt", NULL);
+       ErrMessageBox("It seems that xlat file is corrupt", "");
        delete xHandle;
        return false;
      }
-     xHandle->seek(0x40, SEEKF_START);
-     xHandle->read_buffer(xlt, 256);
+     xHandle->seek(0x40, BFile::Seek_Set);
+     xHandle->read(xlt, 256);
      delete xHandle;
      tmp_buff = new char [4096];
      if(!tmp_buff)
@@ -985,21 +989,21 @@ static bool XLatBlock( void )
      bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
      if(bHandle != &bNull)
      {
-       bHandle->seek(ff_startpos,SEEK_SET);
+       bHandle->seek(ff_startpos,BFile::Seek_Set);
        while(wsize)
        {
 	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
-	 if(!bHandle->read_buffer(tmp_buff,remaind))
+	 if(!bHandle->read(tmp_buff,remaind))
 	 {
-	   errnoMessageBox(READ_FAIL,NULL,errno);
+	   errnoMessageBox(READ_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
 	 }
 	 TranslateBlock((char*)tmp_buff,remaind, xlt);
 	 bHandle->seek(cwpos,BFile::Seek_Set);
-	 if(!(bHandle->write_buffer(tmp_buff,remaind)))
+	 if(!(bHandle->write(tmp_buff,remaind)))
 	 {
-	   errnoMessageBox(WRITE_FAIL,NULL,errno);
+	   errnoMessageBox(WRITE_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
 	 }
@@ -1014,7 +1018,7 @@ static bool XLatBlock( void )
      BMSeek(cpos,BFile::Seek_Set);
      ret = true;
    }
-   else ErrMessageBox("Start position > end position!",NULL);
+   else ErrMessageBox("Start position > end position!","");
  }
  return ret;
 }
@@ -1027,7 +1031,7 @@ static bool FileInfo( void )
   char attr[14];
   char stimes[3][80];
   memset(&statbuf,0,sizeof(struct stat));
-  stat(BMName(),&statbuf);
+  stat(BMName().c_str(),&statbuf);
   memset(attr,'-',sizeof(attr));
   attr[sizeof(attr)-1] = 0;
 #ifdef S_IXOTH /** Execute by other */

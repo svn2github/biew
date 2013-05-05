@@ -47,13 +47,13 @@ static __filesize_t __FASTCALL__ ShowNewHeaderLE( void )
 static bool __FASTCALL__ __ReadMapTblLE(BFile& handle,memArray * obj,unsigned n)
 {
  size_t i;
-  handle.seek(lxe.le.leObjectPageMapTableOffset + beye_context().headshift,SEEKF_START);
+  handle.seek(lxe.le.leObjectPageMapTableOffset + beye_context().headshift,BFile::Seek_Set);
   for(i = 0;i < n;i++)
   {
     LE_PAGE lep;
     char stmp[80];
     if(IsKbdTerminate() || handle.eof()) break;
-    handle.read_buffer(&lep,sizeof(LE_PAGE));
+    handle.read(&lep,sizeof(LE_PAGE));
     sprintf(stmp,"#=%08lXH Flags: %04hX = %s",(long)lep.number,lep.flags,lxeGetMapAttr(lep.flags));
     if(!ma_AddString(obj,stmp,true)) break;
   }
@@ -80,11 +80,11 @@ __filesize_t __FASTCALL__ CalcPageEntryLE(unsigned long pageidx)
   LE_PAGE mt;
   if(!pageidx) return -1;
   handle = lx_cache;
-  handle->seek(lxe.le.leObjectPageMapTableOffset + beye_context().headshift,SEEK_SET);
+  handle->seek(lxe.le.leObjectPageMapTableOffset + beye_context().headshift,BFile::Seek_Set);
   found = false;
   for(i = 0;i < lxe.le.lePageCount;i++)
   {
-    handle->read_buffer((any_t*)&mt,sizeof(LE_PAGE));
+    handle->read((any_t*)&mt,sizeof(LE_PAGE));
     if(handle->eof()) break;
     if(mt.number == pageidx)
     {
@@ -105,9 +105,9 @@ __filesize_t __FASTCALL__ CalcEntryPointLE(unsigned long objnum,__filesize_t _of
   LE_PAGE mt;
   if(!objnum) return -1;
   handle = lx_cache;
-  handle->seek(lxe.le.leObjectTableOffset + beye_context().headshift,SEEK_SET);
-  handle->seek(sizeof(LX_OBJECT)*(objnum - 1),SEEKF_CUR);
-  handle->read_buffer((any_t*)&lo,sizeof(LX_OBJECT));
+  handle->seek(lxe.le.leObjectTableOffset + beye_context().headshift,BFile::Seek_Set);
+  handle->seek(sizeof(LX_OBJECT)*(objnum - 1),BFile::Seek_Cur);
+  handle->read((any_t*)&lo,sizeof(LX_OBJECT));
 /*  if((lo.o32_flags & 0x00002000L) == 0x00002000L) USE16 = 0;
   else                                            USE16 = 0xFF; */
   pageoff = lxe.le.leObjectPageMapTableOffset + beye_context().headshift;
@@ -120,12 +120,12 @@ __filesize_t __FASTCALL__ CalcEntryPointLE(unsigned long objnum,__filesize_t _of
     if(_offset >= start && _offset < start + lxe.le.lePageSize)
     {
       bool found;
-      handle->seek(pageoff,SEEKF_START);
+      handle->seek(pageoff,BFile::Seek_Set);
       pidx = i + lo.o32_pagemap;
       found = false;
       for(j = 0;j < lxe.le.lePageCount;j++)
       {
-	handle->read_buffer((any_t*)&mt,sizeof(LE_PAGE));
+	handle->read((any_t*)&mt,sizeof(LE_PAGE));
 	if((is_eof = handle->eof()) != 0) break;
 	if(mt.number == pidx) { found = true; break; }
       }
@@ -170,7 +170,7 @@ static __filesize_t  __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,bool dispms
   __filesize_t ret;
   ret = BMGetCurrFilePos();
   handle = lx_cache;
-  handle->seek(lxe.le.leEntryTableOffset + beye_context().headshift,SEEK_SET);
+  handle->seek(lxe.le.leEntryTableOffset + beye_context().headshift,BFile::Seek_Set);
   i = 0;
   found = false;
   while(1)
@@ -200,18 +200,18 @@ static __filesize_t  __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,bool dispms
        {
 	 lxent.b32_obj = numobj;
 	 lxent.entry.e32_flags = handle->read_byte();
-	 handle->read_buffer((any_t*)&lxent.entry.e32_variant,size);
+	 handle->read((any_t*)&lxent.entry.e32_variant,size);
        }
        break;
      }
      else
-       if(size) handle->seek(size + sizeof(char),SEEKF_CUR);
+       if(size) handle->seek(size + sizeof(char),BFile::Seek_Cur);
      if(handle->eof()) break;
    }
    if(found) break;
  }
  if(found) ret = CalcEntryLE((LX_ENTRY *)&lxent);
- else      if(dispmsg) ErrMessageBox(NOT_ENTRY,NULL);
+ else      if(dispmsg) ErrMessageBox(NOT_ENTRY,"");
  return ret;
 }
 
@@ -274,7 +274,7 @@ static bool __FASTCALL__ isLE( void )
    beye_context().headshift = IsNewExe();
    if(beye_context().headshift)
    {
-     bmReadBufferEx(id,sizeof(id),beye_context().headshift,SEEKF_START);
+     bmReadBufferEx(id,sizeof(id),beye_context().headshift,BFile::Seek_Set);
      if(id[0] == 'L' && id[1] == 'E') return true;
    }
    return false;
@@ -285,8 +285,8 @@ static void __FASTCALL__ LEinit(CodeGuider& code_guider)
     UNUSED(code_guider);
    BFile& main_handle = bmbioHandle();
    LXType = FILE_LE;
-   bmReadBufferEx(&lxe.le,sizeof(LEHEADER),beye_context().headshift,SEEKF_START);
-   if((lx_cache = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) lx_cache = &main_handle;
+   bmReadBufferEx(&lxe.le,sizeof(LEHEADER),beye_context().headshift,BFile::Seek_Set);
+   if((lx_cache = main_handle.dup()) == &bNull) lx_cache = &main_handle;
 }
 
 static void __FASTCALL__ LEdestroy( void )

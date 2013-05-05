@@ -161,17 +161,17 @@ void __FASTCALL__ CheckXYBounds( void )
 void __FASTCALL__ editSaveContest( void )
 {
   BFile* bHandle;
-  const char *fname;
+  std::string fname;
   fname = BMName();
   bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
   if(bHandle == &bNull)
   {
       err:
-      errnoMessageBox(WRITE_FAIL,NULL,errno);
+      errnoMessageBox(WRITE_FAIL,"",errno);
       return;
   }
   bHandle->seek(edit_cp,BFile::Seek_Set);
-  if(!bHandle->write_buffer((any_t*)EditorMem.buff,EditorMem.size)) goto err;
+  if(!bHandle->write((any_t*)EditorMem.buff,EditorMem.size)) goto err;
   delete bHandle;
   BMReRead();
 }

@@ -72,6 +72,10 @@ extern char *        lltoa(long long int _value, char *_s, int _radix);
 extern char *        ulltoa(unsigned long long int _value, char *_s, int _radix);
 #endif
 namespace beye {
+    typedef int64_t __fileoff_t;
+    typedef uint64_t __filesize_t;
+#define FILEOFF_MAX std::numeric_limits<int64_t>::max()
+#define FILESIZE_MAX std::numeric_limits<uint64_t>::max()
     template <typename T> class LocalPtr {
 	public:
 	    LocalPtr(T* value):ptr(value) {}

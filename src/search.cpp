@@ -101,7 +101,7 @@ static __filesize_t  __FASTCALL__  ___lfind(const char *sfrom,
   __filesize_t flen, endscan, orig_start;
   __filesize_t tsize,cpos,findptr = FILESIZE_MAX,retval;
   char fbuff[MAX_SEARCH_SIZE*__MAX_SYMBOL_SIZE], nbuff[__MAX_SYMBOL_SIZE];
-  unsigned proc,pproc,pmult,bio_opt=0,symb_size;
+  unsigned proc,pproc,pmult,symb_size,bio_opt=0;
   int direct,icache[UCHAR_MAX+1];
   const int *cache;
   bool cond;
@@ -134,8 +134,8 @@ static __filesize_t  __FASTCALL__  ___lfind(const char *sfrom,
   if(!sfrom)
   {
     bio_opt = BMbioHandle().get_optimization();
-    BMbioHandle().set_optimization((bio_opt & (~BFile::Opt_DirMask)) |
-		      (beyeFlg & SF_REVERSE ? BFile::Opt_RBackScan : BFile::Opt_RForward));
+    BMbioHandle().set_optimization((bio_opt & (~BBio_File::Opt_DirMask)) |
+		      (beyeFlg & SF_REVERSE ? BBio_File::Opt_RBackScan : BBio_File::Opt_RForward));
   }
   start = (start/symb_size)*symb_size; /** align on symbol boundary */
   memcpy(cbuff,pattern,pattern_size);

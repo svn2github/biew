@@ -118,9 +118,9 @@ __filesize_t __FASTCALL__ fmtGetPubSym(BFile& fmt_cache,char *str,unsigned cb_st
 static BFile*  __FASTCALL__ ReopenSeek(__filesize_t dist)
 {
  BFile* handle;
- handle = bmbioHandle().dup_ex(BBIO_SMALL_CACHE_SIZE);
+ handle = bmbioHandle().dup();
  if(handle != &bNull) handle->seek(dist,BFile::Seek_Set);
- else                 errnoMessageBox(READ_FAIL,NULL,errno);
+ else                 errnoMessageBox(READ_FAIL,"",errno);
  return handle;
 }
 
@@ -244,7 +244,7 @@ static bool __FASTCALL__ udnDeleteItem( void ) {
 	udn_modified=true;
     }
   }
-  else ErrMessageBox("UDN list is empty!",NULL);
+  else ErrMessageBox("UDN list is empty!","");
   return rval==-1?false:true;
 }
 
@@ -256,7 +256,7 @@ bool __FASTCALL__ udnSelectName(__filesize_t *off) {
 		    LB_SELECTIVE,NULL);
     if(rval!=-1) *off = ((udn *)udn_list->data)[rval].offset;
   }
-  else ErrMessageBox("UDN list is empty!",NULL);
+  else ErrMessageBox("UDN list is empty!","");
   return rval==-1?false:true;
 }
 
@@ -285,7 +285,7 @@ bool __FASTCALL__ __udnSaveList( void )
 	    fprintf(out,"; This is an automatically generated list of user-defined names\n"
 			"; for: %s\n"
 			"; by Beye-%s\n"
-			,BMName()
+			,BMName().c_str()
 			,BEYE_VERSION);
 	    for(i=0;i<udn_list->nItems;i++)
 		fprintf(out,"%016llX:%s\n"
@@ -309,7 +309,7 @@ bool __FASTCALL__ udnSaveList( void ) {
     if(GetStringDlg(udn_fname," Please enter file name: "," [ENTER] - Proceed ",NAME_MSG))
     {
 	if(udn_list)	return __udnSaveList();
-	else		ErrMessageBox("UDN list is empty!",NULL);
+	else		ErrMessageBox("UDN list is empty!","");
     }
     return false;
 }
@@ -331,7 +331,7 @@ bool __FASTCALL__  __udnLoadList( void ) {
 		if(!brk) {
 		    char stmp[256];
 		    sprintf(stmp,"Can't recognize line: %u",i);
-		    ErrMessageBox(stmp,NULL);
+		    ErrMessageBox(stmp,"");
 		    return true;
 		}
 		*brk='\0';
@@ -362,7 +362,7 @@ bool __FASTCALL__ udnLoadList( void ) {
     if(GetStringDlg(udn_fname," Please enter file name: "," [ENTER] - Proceed ",NAME_MSG))
     {
 	if(udn_list)	return __udnLoadList();
-	else		ErrMessageBox("UDN list is empty!",NULL);
+	else		ErrMessageBox("UDN list is empty!","");
     }
     return false;
 }

@@ -179,8 +179,8 @@ const char *wtag_find_name(unsigned short wtag)
 static bool  __FASTCALL__ wav_check_fmt( void )
 {
     unsigned long id;
-    id=bmReadDWordEx(8,SEEKF_START);
-    if(	bmReadDWordEx(0,SEEKF_START)==mmioFOURCC('R','I','F','F') &&
+    id=bmReadDWordEx(8,BFile::Seek_Set);
+    if(	bmReadDWordEx(0,BFile::Seek_Set)==mmioFOURCC('R','I','F','F') &&
 	id==mmioFOURCC('W','A','V','E'))
 	return true;
     return false;
@@ -221,7 +221,7 @@ static __filesize_t __FASTCALL__ Show_WAV_Header( void )
  __filesize_t fpos,fpos2;
  fpos = BMGetCurrFilePos();
  fpos2 = wav_find_chunk(12,mmioFOURCC('f','m','t',' '));
- if((__fileoff_t)fpos2==-1) { ErrMessageBox("Main WAV Header not found",NULL); return fpos; }
+ if((__fileoff_t)fpos2==-1) { ErrMessageBox("Main WAV Header not found",""); return fpos; }
  bmSeek(fpos2,BFile::Seek_Set);
  bmReadDWord(); /* skip section size */
  bmReadBuffer(&wavf,sizeof(WAVEFORMATEX));

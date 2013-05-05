@@ -26,6 +26,7 @@ using namespace beye;
 #include "setup.h"
 #include "bconsole.h"
 #include "beyeutil.h"
+#include "libbeye/mmfile.h"
 #include "libbeye/twin.h"
 #include "libbeye/kbd_code.h"
 
@@ -154,7 +155,7 @@ static void  __FASTCALL__ setup_paint( TWindow *twin )
   twPrintF(twin," [%c] - Apply plugin settings to all files     "
 	   ,Gebool(beye_context().iniSettingsAnywhere));
   twGotoXY(twin,32,10);
-  if(!__mmfIsWorkable()) twSetColorAttr(twin,dialog_cset.group.disabled);
+  if(!MMFile::has_mmio) twSetColorAttr(twin,dialog_cset.group.disabled);
   twPrintF(twin," [%c] - Use MMF                                "
 	   ,Gebool(beye_context().fioUseMMF));
   twSetColorAttr(twin,dialog_cset.group.active);
@@ -256,7 +257,7 @@ void Setup(void)
 		    break;
      case KE_F(6):  beye_context().iniSettingsAnywhere = beye_context().iniSettingsAnywhere ? false : true;
 		    break;
-     case KE_F(7):  if(__mmfIsWorkable()) beye_context().fioUseMMF = beye_context().fioUseMMF ? false : true;
+     case KE_F(7):  if(MMFile::has_mmio) beye_context().fioUseMMF = beye_context().fioUseMMF ? false : true;
 		    break;
      case KE_F(8):  beye_context().iniPreserveTime = beye_context().iniPreserveTime ? false : true;
 		    break;

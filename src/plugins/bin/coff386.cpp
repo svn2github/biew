@@ -159,7 +159,7 @@ static bool  __FASTCALL__ __coffReadObjects(BFile& handle,memArray * obj,unsigne
   {
     SCNHDR po;
     if(IsKbdTerminate() || handle.eof()) break;
-    handle.read_buffer(&po,sizeof(SCNHDR));
+    handle.read(&po,sizeof(SCNHDR));
     if(!ma_AddData(obj,&po,sizeof(SCNHDR),true)) break;
   }
   return true;
@@ -178,7 +178,7 @@ static __filesize_t __FASTCALL__ coffShowObjects( void )
  handle = coff_cache;
  off = sizeof(coff386hdr);
  if(COFF_WORD(coff386hdr.f_opthdr)) off += COFF_WORD(coff386hdr.f_opthdr);
- handle->seek(off,SEEK_SET);
+ handle->seek(off,BFile::Seek_Set);
  if(__coffReadObjects(*handle,obj,nnames))
  {
   int ret;
@@ -331,13 +331,13 @@ static bool  __FASTCALL__ coffSymTabReadItems(BFile& handle,memArray * obj,unsig
 {
  unsigned i;
  unsigned length;
- handle.seek(COFF_DWORD(coff386hdr.f_symptr),SEEKF_START);
+ handle.seek(COFF_DWORD(coff386hdr.f_symptr),BFile::Seek_Set);
  for(i = 0;i < nnames;i++)
  {
    struct external_syment cse;
    char stmp[256];
    memset(stmp,0,sizeof(stmp));
-   handle.read_buffer(&cse,sizeof(struct external_syment));
+   handle.read(&cse,sizeof(struct external_syment));
    if(COFF_DWORD(cse.e.e.e_zeroes) == 0L &&
       COFF_DWORD(cse.e.e.e_offset) >= 4)
 	coffReadLongName(handle,COFF_DWORD(cse.e.e.e_offset),stmp,sizeof(stmp));
@@ -380,7 +380,7 @@ static __filesize_t  __FASTCALL__ CalcEntryCoff(unsigned long idx,bool display_m
   }
   else
     if(display_msg)
-      ErrMessageBox(NO_ENTRY,NULL);
+      ErrMessageBox(NO_ENTRY,"");
   return fpos;
 }
 
@@ -463,8 +463,8 @@ static bool   __FASTCALL__ coffSymTabReadItemsIdx(BFile& handle,unsigned long id
 {
  struct external_syment cse;
  if(idx >= COFF_DWORD(coff386hdr.f_nsyms)) return false;
- handle.seek(COFF_DWORD(coff386hdr.f_symptr) + idx*sizeof(struct external_syment),SEEKF_START);
- handle.read_buffer(&cse,sizeof(struct external_syment));
+ handle.seek(COFF_DWORD(coff386hdr.f_symptr) + idx*sizeof(struct external_syment),BFile::Seek_Set);
+ handle.read(&cse,sizeof(struct external_syment));
  if(COFF_DWORD(cse.e.e.e_zeroes) == 0L &&
     COFF_DWORD(cse.e.e.e_offset) >= 4)
 	  coffReadLongName(handle,COFF_DWORD(cse.e.e.e_offset),name,cb_name);
@@ -564,7 +564,7 @@ static bool __FASTCALL__ coff386_AppendRef(const DisMode& parent,char *str,__fil
 static bool __FASTCALL__ coff386_check_fmt( void )
 {
   uint_fast16_t id;
-  id = bmReadWordEx(0,SEEKF_START);
+  id = bmReadWordEx(0,BFile::Seek_Set);
   return !(I386BADMAG(id));
 }
 
@@ -574,7 +574,7 @@ static void __FASTCALL__ coff386_init_fmt(CodeGuider& _code_guider)
   BFile& main_handle=bNull;
   __filesize_t s_off = sizeof(coff386hdr);
   uint_fast16_t i;
-  bmReadBufferEx(&coff386hdr,sizeof(struct external_filehdr),0,SEEKF_START);
+  bmReadBufferEx(&coff386hdr,sizeof(struct external_filehdr),0,BFile::Seek_Set);
   if(COFF_WORD(coff386hdr.f_opthdr)) bmReadBuffer(&coff386ahdr,sizeof(AOUTHDR));
   nsections = COFF_WORD(coff386hdr.f_nscns);
   if(!(coff386so = new SCNHDR[nsections]))
@@ -583,12 +583,12 @@ static void __FASTCALL__ coff386_init_fmt(CodeGuider& _code_guider)
      exit(EXIT_FAILURE);
   }
   main_handle = bmbioHandle();
-  if((coff_cache = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) coff_cache = &main_handle;
+  if((coff_cache = main_handle.dup()) == &bNull) coff_cache = &main_handle;
   if(COFF_WORD(coff386hdr.f_opthdr)) s_off += COFF_WORD(coff386hdr.f_opthdr);
   coff_cache->seek(s_off,BFile::Seek_Set);
   for(i = 0;i < nsections;i++)
   {
-    coff_cache->read_buffer(&coff386so[i],sizeof(SCNHDR));
+    coff_cache->read(&coff386so[i],sizeof(SCNHDR));
   }
   strings_ptr = COFF_DWORD(coff386hdr.f_symptr)+COFF_DWORD(coff386hdr.f_nsyms)*sizeof(struct external_syment);
 }
@@ -643,7 +643,7 @@ static void __FASTCALL__ coff_ReadPubName(BFile& b_cache,const struct PubName *i
     else
     {
       b_cache.seek(it->nameoff,BFile::Seek_Set);
-      b_cache.read_buffer(buff,it->addinfo);
+      b_cache.read(buff,it->addinfo);
       buff[it->addinfo] = 0;
     }
 }
@@ -654,7 +654,7 @@ static void __FASTCALL__ coff_ReadPubNameList(BFile& handle,
  unsigned i,nnames;
  struct PubName pn;
  if(!(PubNames = la_Build(0,sizeof(struct PubName),mem_out))) return;
- handle.seek(COFF_DWORD(coff386hdr.f_symptr),SEEKF_START);
+ handle.seek(COFF_DWORD(coff386hdr.f_symptr),BFile::Seek_Set);
  nnames = coffSymTabNumItems(handle);
  for(i = 0;i < nnames;i++)
  {
@@ -662,7 +662,7 @@ static void __FASTCALL__ coff_ReadPubNameList(BFile& handle,
    __filesize_t where;
    uint_fast16_t sec_num;
    where = handle.tell();
-   handle.read_buffer(&cse,sizeof(struct external_syment));
+   handle.read(&cse,sizeof(struct external_syment));
    sec_num = COFF_WORD(cse.e_scnum);
    if(sec_num && sec_num <= COFF_WORD(coff386hdr.f_nscns) &&
      (cse.e_sclass[0] == C_EXT ||

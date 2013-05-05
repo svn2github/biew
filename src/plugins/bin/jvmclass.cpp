@@ -149,7 +149,7 @@ static void  __FASTCALL__ get_utf8(BFile& handle,unsigned nidx,char *str,unsigne
 	nidx=handle.read_word();
 	nidx=JVM_WORD((uint16_t*)&nidx,1);
 	nidx=std::min(nidx,slen-1);
-	handle.read_buffer(str,nidx);
+	handle.read(str,nidx);
 	str[nidx]=0;
     }
 }
@@ -516,7 +516,7 @@ static bool __FASTCALL__ jvm_read_pool(BFile& handle,memArray * names,unsigned n
 			sval=JVM_WORD(&sval,1);
 			slen=std::min(sizeof(str)-1,size_t(sval));
 			fpos=handle.tell();
-			handle.read_buffer(str,slen);
+			handle.read(str,slen);
 			handle.seek(fpos+sval,BFile::Seek_Set);
 			str[slen]='\0';
 			sprintf(sout,"UTF8: %s",str);
@@ -593,8 +593,8 @@ static void __FASTCALL__ jvm_init_fmt(CodeGuider& code_guider)
     jvm_header.header_length=bmGetCurrFilePos();
     bmSeek(fpos,BFile::Seek_Set);
     BFile& bh = bmbioHandle();
-    if((jvm_cache = bh.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) jvm_cache = &bh;
-    if((pool_cache = bh.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) pool_cache = &bh;
+    if((jvm_cache = bh.dup()) == &bNull) jvm_cache = &bh;
+    if((pool_cache = bh.dup()) == &bNull) pool_cache = &bh;
 }
 
 static void __FASTCALL__ jvm_destroy_fmt(void)
@@ -707,7 +707,7 @@ static void __FASTCALL__ jvm_ReadPubName(BFile& b_cache,const struct PubName *it
 	char *s_end;
 	strcat(buff,".");
 	s_end=buff+strlen(buff);
-	b_cache.seek(it->addinfo,SEEK_SET);
+	b_cache.seek(it->addinfo,BFile::Seek_Set);
 	get_name(b_cache,s_end,cb_buff-(s_end-buff));
     }
 }
@@ -955,7 +955,7 @@ static bool __FASTCALL__ jvm_AppendRef(const DisMode& parent,char *str,__filesiz
 			sval=JVM_WORD(&sval,1);
 			sl=std::min(slen,unsigned(sval));
 			fpos=pool_cache->tell();
-			pool_cache->read_buffer(str,sl);
+			pool_cache->read(str,sl);
 			str[sl]='\0';
 			break;
 	    default:	retrf = false;

@@ -233,7 +233,7 @@ void HexMode::misckey_action () /* EditHex */
     unsigned bound;
     tAbsCoord width = twGetClientWidth(MainWnd);
     if(hmode != 1) return;
-    if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,NULL); return; }
+    if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,""); return; }
     bound = width-(hexViewer[hmode].width()-virtWidthCorr);
     ewnd[0] = WindowOpen(HA_LEN()+1,2,bound,tvioHeight-1,TWS_CURSORABLE);
     twSetColorAttr(ewnd[0],browser_cset.edit.main); twClearWin(ewnd[0]);

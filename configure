@@ -366,6 +366,9 @@ print_config HAVE_ config.h config.mak pclose
 check_header sys/resource.h
 print_config HAVE_ config.h config.mak sys_resource_h
 
+check_func2 sys/mman.h mmap
+print_config HAVE_ config.h config.mak mmap
+
 check_func2 sys/mman.h mprotect
 print_config HAVE_ config.h config.mak mprotect
 

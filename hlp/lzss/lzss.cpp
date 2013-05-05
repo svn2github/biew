@@ -43,7 +43,6 @@ char **ArgVector;
 int main(int argc, char *argv[])
 {
 	char  *s;
-	bhandle_t handle;
 	int retcode;
 	if (argc != 4)
 	{
@@ -55,18 +54,16 @@ int main(int argc, char *argv[])
 	infile = new BFile;
 	bool rc;
 	if ((s = argv[1], s[1] || strpbrk(s, "DEde") == NULL)
-	    || (s = argv[2], (rc = infile->open(s,O_RDONLY,0xFFFF,BFile::Opt_Db)) == false))
+	    || (s = argv[2], (rc = infile->open(s,O_RDONLY)) == false))
 	{
 		printf("??? %s\n", s);
 		return EXIT_FAILURE;
 	}
 	__init_sys();
 	s = argv[3];
-	if(__IsFileExists(s)) if(__OsDelete(s)) { Err: printf("Problem with %s\n",s); return EXIT_FAILURE; }
-	handle = __OsCreate(s);
-	__OsClose(handle);
+	if(BFile::exists(s)) if(BFile::unlink(s)) { Err: printf("Problem with %s\n",s); return EXIT_FAILURE; }
 	outfile = new BFile;
-	if((rc = outfile->open(s,O_RDWR,0x1000,BFile::Opt_Db)) == false) goto Err;
+	if(outfile->create(s) == false) goto Err;
 	if (toupper(*argv[1]) == 'E') retcode = Encode();
 	else                          retcode = Decode(infile,NULL,0L,infile->flength());
 	if(!retcode) fprintf(stderr,"Error allocating memory during operation\n");

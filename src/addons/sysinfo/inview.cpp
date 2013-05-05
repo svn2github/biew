@@ -57,7 +57,7 @@ void InputView_Addon::run()
     rval = __inputRawInfo(head,text);
     if(rval==-1)
     {
-	ErrMessageBox("Not implemented yet!",NULL);
+	ErrMessageBox("Not implemented yet!","");
 	break;
     }
     twGotoXY(hwnd,1,1);

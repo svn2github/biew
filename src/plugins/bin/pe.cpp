@@ -113,19 +113,19 @@ static __filesize_t  __FASTCALL__ RVA2Phys(__filesize_t rva)
  return ret;
 }
 
-static __filesize_t  __FASTCALL__ fioReadDWord(BFile& handle,__filesize_t offset,int origin)
+static __filesize_t  __FASTCALL__ fioReadDWord(BFile& handle,__filesize_t offset,BFile::e_seek origin)
 {
  handle.seek(offset,origin);
  return handle.read_dword();
 }
 
-static unsigned  __FASTCALL__ fioReadWord(BFile& handle,__filesize_t offset,int origin)
+static unsigned  __FASTCALL__ fioReadWord(BFile& handle,__filesize_t offset,BFile::e_seek origin)
 {
  handle.seek(offset,origin);
  return handle.read_word();
 }
 
-static __filesize_t  __FASTCALL__ fioReadDWord2Phys(BFile& handle,__filesize_t offset,int origin)
+static __filesize_t  __FASTCALL__ fioReadDWord2Phys(BFile& handle,__filesize_t offset,BFile::e_seek origin)
 {
  unsigned long dword;
  dword = fioReadDWord(handle,offset,origin);
@@ -423,7 +423,7 @@ static bool  __FASTCALL__ __ReadObjectsPE(BFile& handle,memArray * obj,unsigned 
   {
     PE_OBJECT po;
     if(IsKbdTerminate() || handle.eof()) break;
-    handle.read_buffer(&po,sizeof(PE_OBJECT));
+    handle.read(&po,sizeof(PE_OBJECT));
     if(!ma_AddData(obj,&po,sizeof(PE_OBJECT),true)) break;
   }
   return true;
@@ -434,7 +434,7 @@ static __fileoff_t  CalcOverlayOffset( void )
   if (overlayPE == -1 && pe.peObjects) {
     memArray *obj;
     if ((obj = ma_Build(pe.peObjects, true))) {
-      pe_cache->seek(0x18 + pe.peNTHdrSize + beye_context().headshift, SEEK_SET);
+      pe_cache->seek(0x18 + pe.peNTHdrSize + beye_context().headshift, BFile::Seek_Set);
       if (__ReadObjectsPE(*pe_cache, obj, pe.peObjects)) {
 	int i;
 	for (i = 0; i < pe.peObjects; i++) {
@@ -461,7 +461,7 @@ static __filesize_t __FASTCALL__ ShowObjectsPE( void )
  nnames = pe.peObjects;
  if(!nnames) { NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
- handle.seek(0x18 + pe.peNTHdrSize + beye_context().headshift,SEEK_SET);
+ handle.seek(0x18 + pe.peNTHdrSize + beye_context().headshift,BFile::Seek_Set);
  if(__ReadObjectsPE(handle,obj,nnames))
  {
   int ret;
@@ -478,15 +478,15 @@ static unsigned  __FASTCALL__ GetImportCountPE(BFile& handle,__filesize_t phys)
   __filesize_t fpos = handle.tell();
   unsigned long ctrl;
   count = 0;
-  handle.seek(phys,SEEKF_START);
+  handle.seek(phys,BFile::Seek_Set);
   while(1)
   {
-    ctrl = fioReadDWord(handle,12L,SEEKF_CUR);
-    handle.seek(4L,SEEKF_CUR);
+    ctrl = fioReadDWord(handle,12L,BFile::Seek_Cur);
+    handle.seek(4L,BFile::Seek_Cur);
     if(ctrl == 0 || count > 0xFFFD || IsKbdTerminate() || handle.eof()) break;
     count++;
   }
-  handle.seek(fpos,SEEKF_START);
+  handle.seek(fpos,BFile::Seek_Set);
   return count;
 }
 
@@ -498,7 +498,7 @@ unsigned  __FASTCALL__ __peReadASCIIZName(BFile& handle,__filesize_t offset,char
   __filesize_t fpos;
   fpos = handle.tell();
   j = 0;
-  handle.seek(offset,SEEKF_START);
+  handle.seek(offset,BFile::Seek_Set);
   while(1)
   {
     ch = handle.read_byte();
@@ -506,7 +506,7 @@ unsigned  __FASTCALL__ __peReadASCIIZName(BFile& handle,__filesize_t offset,char
     if(!ch || j >= cb_buff || handle.eof()) break;
   }
   if(j) buff[j-1]=0;
-  handle.seek(fpos,SEEKF_START);
+  handle.seek(fpos,BFile::Seek_Set);
   return j;
 }
 
@@ -515,13 +515,13 @@ static unsigned  __FASTCALL__ __ReadImportPE(BFile& handle,__filesize_t phys,mem
   unsigned i;
   __filesize_t fpos = handle.tell();
   __filesize_t rva,addr;
-  handle.seek(phys,SEEKF_START);
+  handle.seek(phys,BFile::Seek_Set);
   for(i = 0;i < nnames;i++)
   {
     char tmp[300];
     bool is_eof;
-    rva = fioReadDWord(handle,12L,SEEKF_CUR);
-    handle.seek(4L,SEEKF_CUR);
+    rva = fioReadDWord(handle,12L,BFile::Seek_Cur);
+    handle.seek(4L,BFile::Seek_Cur);
     addr = RVA2Phys(rva);
     __peReadASCIIZName(handle,addr,tmp,sizeof(tmp));
     if(IsKbdTerminate()) break;
@@ -529,7 +529,7 @@ static unsigned  __FASTCALL__ __ReadImportPE(BFile& handle,__filesize_t phys,mem
     if(!ma_AddString(obj,is_eof ? CORRUPT_BIN_MSG : tmp,true)) break;
     if(is_eof) break;
   }
-  handle.seek(fpos,SEEKF_START);
+  handle.seek(fpos,BFile::Seek_Set);
   return obj->nItems;
 }
 
@@ -542,7 +542,7 @@ static unsigned __FASTCALL__ GetImpCountPE(BFile& handle)
  count = 0;
  if(addr_shift_pe)
  {
-   handle.seek(addr_shift_pe,SEEKF_START);
+   handle.seek(addr_shift_pe,BFile::Seek_Set);
    while(1)
    {
      Hint = is_64bit ? handle.read_qword():handle.read_dword();
@@ -559,7 +559,7 @@ static bool __FASTCALL__  __ReadImpContPE(BFile& handle,memArray * obj,unsigned 
   uint64_t Hint;
   int cond;
   __filesize_t rphys;
-  handle.seek(addr_shift_pe,SEEKF_START);
+  handle.seek(addr_shift_pe,BFile::Seek_Set);
   VA = pePA2VA(addr_shift_pe);
   for(i = 0;i < nnames;i++)
   {
@@ -608,7 +608,7 @@ static __filesize_t __FASTCALL__ ShowModRefPE( void )
   __filesize_t phys,fret;
   fret = BMGetCurrFilePos();
   if(!peDir[PE_IMPORT].rva) { not_found: NotifyBox(NOT_ENTRY," Module References "); return fret; }
-  handle.seek(0L,SEEK_SET);
+  handle.seek(0L,BFile::Seek_Set);
   phys = RVA2Phys(peDir[PE_IMPORT].rva);
   if(!(nnames = GetImportCountPE(handle,phys))) goto not_found;
   if(!(obj = ma_Build(nnames,true))) goto exit;
@@ -624,8 +624,8 @@ static __filesize_t __FASTCALL__ ShowModRefPE( void )
      i = ma_Display(obj,MOD_REFER,LB_SELECTIVE,i);
      if(i == -1) break;
      sprintf(petitle,"%s%s ",IMPPROC_TABLE,(char *)obj->data[i]);
-     handle.seek(phys + i*sizeof(ImportDirPE),SEEKF_START);
-     handle.read_buffer(&imp_pe,sizeof(ImportDirPE));
+     handle.seek(phys + i*sizeof(ImportDirPE),BFile::Seek_Set);
+     handle.read(&imp_pe,sizeof(ImportDirPE));
      if(handle.eof()) break;
      if(!(imp_pe.idMajVer == 0 && imp_pe.idMinVer == 0 && imp_pe.idDateTime != 0xFFFFFFFFUL))
 				   magic = imp_pe.idFlags;
@@ -661,17 +661,17 @@ static bool __FASTCALL__ PEExportReadItems(BFile& handle,memArray * obj,unsigned
   nameptr = RVA2Phys(et.etNamePtrTableRVA);
   expaddr = RVA2Phys(et.etOrdinalTableRVA);
   if(!(addr = new unsigned long[nnames])) return true;
-  handle.seek(RVA2Phys(et.etAddressTableRVA),SEEKF_START);
-  handle.read_buffer(addr,sizeof(unsigned long)*nnames);
+  handle.seek(RVA2Phys(et.etAddressTableRVA),BFile::Seek_Set);
+  handle.read(addr,sizeof(unsigned long)*nnames);
 
   for(i = 0;i < et.etNumNamePtrs;i++)
   {
     char stmp[300];
     bool is_eof;
-    nameaddr = fioReadDWord2Phys(handle,nameptr + 4*i,SEEKF_START);
+    nameaddr = fioReadDWord2Phys(handle,nameptr + 4*i,BFile::Seek_Set);
     __peReadASCIIZName(handle,nameaddr, stmp, sizeof(stmp)-sizeof(buff)-1);
     if(IsKbdTerminate()) break;
-    ord = fioReadWord(handle,expaddr + i*2,SEEKF_START);
+    ord = fioReadWord(handle,expaddr + i*2,BFile::Seek_Set);
     is_eof = handle.eof();
     sprintf(buff,"%c%-9lu ", LB_ORD_DELIMITER, ord+(unsigned long)et.etOrdinalBase);
     writeExportVA(addr[ord], handle, buff+11, sizeof(buff)-11);
@@ -701,8 +701,8 @@ static unsigned __FASTCALL__ PEExportNumItems(BFile& handle)
   __filesize_t addr;
   if(!peDir[PE_EXPORT].rva) return 0;
   addr = RVA2Phys(peDir[PE_EXPORT].rva);
-  handle.seek(addr,SEEKF_START);
-  handle.read_buffer((any_t*)&et,sizeof(et));
+  handle.seek(addr,BFile::Seek_Set);
+  handle.read((any_t*)&et,sizeof(et));
   return (unsigned)(et.etNumEATEntries);
 }
 
@@ -716,7 +716,7 @@ static __filesize_t  __FASTCALL__ CalcEntryPE(unsigned ordinal,bool dispmsg)
    __filesize_t eret;
    rva = RVA2Phys(et.etAddressTableRVA);
    ord = (unsigned)ordinal - (unsigned)et.etOrdinalBase;
-   eret = fioReadDWord2Phys(handle,rva + 4*ord,SEEKF_START);
+   eret = fioReadDWord2Phys(handle,rva + 4*ord,BFile::Seek_Set);
    if(eret && eret < bmGetFLength()) fret = eret;
    else if(dispmsg) ErrMessageBox(NO_ENTRY,BAD_ENTRY);
  }
@@ -735,7 +735,7 @@ static __filesize_t __FASTCALL__ ShowExpNamPE( void )
   if(peDir[PE_EXPORT].rva)
   {
     addr = RVA2Phys(peDir[PE_EXPORT].rva);
-    bmSeek(addr,SEEKF_START);
+    bmSeek(addr,BFile::Seek_Set);
     bmReadBuffer((any_t*)&et,sizeof(et));
     if(et.etNameRVA)
     {
@@ -863,7 +863,7 @@ static void  __FASTCALL__ BuildPERefChain( void )
   twPutS(w,BUILD_REFS);
   twFocusWin(usd);
   BFile& handle = *pe_cache;
-  handle.seek(0L,SEEK_SET);
+  handle.seek(0L,BFile::Seek_Set);
   /**
      building references chain for external
   */
@@ -880,8 +880,8 @@ static void  __FASTCALL__ BuildPERefChain( void )
   for(i = 0;i < nnames;i++)
   {
     unsigned long magic,Hint;
-    handle.seek(phys + i*sizeof(ImportDirPE),SEEKF_START);
-    handle.read_buffer(&ipe,sizeof(ImportDirPE));
+    handle.seek(phys + i*sizeof(ImportDirPE),BFile::Seek_Set);
+    handle.read(&ipe,sizeof(ImportDirPE));
     if(!(ipe.idMajVer == 0 && ipe.idMinVer == 0 && ipe.idDateTime != 0xFFFFFFFFUL))
 				 magic = ipe.idLookupTableRVA;
     else                         magic = ipe.idFlags;
@@ -890,7 +890,7 @@ static void  __FASTCALL__ BuildPERefChain( void )
     if(addr_shift_pe)
     {
       bool is_eof;
-      handle.seek(addr_shift_pe,SEEKF_START);
+      handle.seek(addr_shift_pe,BFile::Seek_Set);
       j = 0;
       is_eof = false;
       while(1)
@@ -913,7 +913,7 @@ static void  __FASTCALL__ BuildPERefChain( void )
   if(peDir[PE_FIXUP].size)
   {
     phys = RVA2Phys(peDir[PE_FIXUP].rva);
-    handle.seek(phys,SEEKF_START);
+    handle.seek(phys,BFile::Seek_Set);
     cpos = handle.tell();
     while(handle.tell() < cpos + peDir[PE_FIXUP].size)
     {
@@ -961,15 +961,15 @@ static bool __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE  *rpe,int flags)
    ImportDirPE ipe;
    char buff[400];
    phys = RVA2Phys(peDir[PE_IMPORT].rva);
-   handle.seek(phys + 20L*rpe->modidx,SEEKF_START);
-   rva = fioReadDWord(handle,12L,SEEKF_CUR);
+   handle.seek(phys + 20L*rpe->modidx,BFile::Seek_Set);
+   rva = fioReadDWord(handle,12L,BFile::Seek_Cur);
    retrf = true;
    if(rpe->modidx != std::numeric_limits<uint64_t>::max())
    {
      char *is_ext;
      if(flags & APREF_USE_TYPE) strcat(str," off32");
-     handle2.seek(RVA2Phys(rva),SEEKF_START);
-     handle2.read_buffer(buff,400);
+     handle2.seek(RVA2Phys(rva),BFile::Seek_Set);
+     handle2.read(buff,400);
      buff[399] = 0;
      /*
 	Removing extension .dll from import name.
@@ -983,8 +983,8 @@ static bool __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE  *rpe,int flags)
      }
      else
        sprintf(&str[strlen(str)]," <%s>.",buff);
-     handle3.seek(phys + rpe->modidx*sizeof(ImportDirPE),SEEKF_START);
-     handle3.read_buffer(&ipe,sizeof(ImportDirPE));
+     handle3.seek(phys + rpe->modidx*sizeof(ImportDirPE),BFile::Seek_Set);
+     handle3.read(&ipe,sizeof(ImportDirPE));
      if(!(ipe.idMajVer == 0 && ipe.idMinVer == 0 && ipe.idDateTime != 0xFFFFFFFFUL))
 				  magic = ipe.idFlags;
      else                         magic = ipe.idLookupTableRVA;
@@ -993,7 +993,7 @@ static bool __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE  *rpe,int flags)
      if(magic)
      {
        int cond;
-       handle.seek(magic + rpe->import.funcidx*sizeof(long),SEEKF_START);
+       handle.seek(magic + rpe->import.funcidx*sizeof(long),BFile::Seek_Set);
        Hint = is_64bit?handle.read_qword():handle.read_dword();
        cond=0;
        if(is_64bit) { if(Hint & 0x8000000000000000ULL) cond=1; }
@@ -1014,8 +1014,8 @@ static bool __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE  *rpe,int flags)
 	 if(phys > bmGetFLength()) strcat(str,"???");
 	 else
 	 {
-	   handle2.seek(phys + 2,SEEKF_START);
-	   handle2.read_buffer(buff,400);
+	   handle2.seek(phys + 2,BFile::Seek_Set);
+	   handle2.read(buff,400);
 	   buff[399] = 0;
 	   strcat(str,buff);
 	 }
@@ -1026,7 +1026,7 @@ static bool __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE  *rpe,int flags)
    {
      unsigned long delta,value,point_to;
      const char *pe_how;
-     handle3.seek(rpe->laddr,SEEKF_START);
+     handle3.seek(rpe->laddr,BFile::Seek_Set);
      value = handle.read_dword();
      delta = PE32_HDR(pe32,peImageBase);
      point_to = 0;
@@ -1048,7 +1048,7 @@ static bool __FASTCALL__ BuildReferStrPE(char *str,RELOC_PE  *rpe,int flags)
 		  pe_how = "((off32)";
 		  break;
 	  case 4: /** HIGHADJUST */
-		  handle.seek(value,SEEK_SET);
+		  handle.seek(value,BFile::Seek_Set);
 		  value = handle.read_dword();
 		  point_to = peVA2PA(value);
 		  pe_how = "((full32)";
@@ -1084,8 +1084,8 @@ static bool __FASTCALL__ AppendPERef(const DisMode& parent,char *str,__filesize_
   if(flags & APREF_TRY_PIC) return false;
   if(peDir[PE_IMPORT].rva || peDir[PE_FIXUP].rva)
   {
-    b_cache->seek(RVA2Phys(bmReadDWordEx(ulShift,SEEK_SET) - PE32_HDR(pe32,peImageBase)),
-	    SEEK_SET);
+    b_cache->seek(RVA2Phys(bmReadDWordEx(ulShift,BFile::Seek_Set) - PE32_HDR(pe32,peImageBase)),
+	    BFile::Seek_Set);
     rpe = __found_RPE(b_cache->read_dword());
     if(!rpe) rpe = __found_RPE(ulShift);
     if(rpe)  retrf = BuildReferStrPE(str,rpe,flags);
@@ -1109,7 +1109,7 @@ static bool __FASTCALL__ IsPE( void )
    beye_context().headshift = IsNewExe();
    if(beye_context().headshift)
    {
-     bmReadBufferEx(id,sizeof(id),beye_context().headshift,SEEKF_START);
+     bmReadBufferEx(id,sizeof(id),beye_context().headshift,BFile::Seek_Set);
      if(id[0] == 'P' && id[1] == 'E') return true;
    }
    return false;
@@ -1120,9 +1120,9 @@ static void __FASTCALL__ initPE(CodeGuider& _code_guider)
     code_guider=&_code_guider;
    int i;
 
-   bmReadBufferEx(&pe,sizeof(PEHEADER),beye_context().headshift,SEEKF_START);
+   bmReadBufferEx(&pe,sizeof(PEHEADER),beye_context().headshift,BFile::Seek_Set);
    is_64bit = pe.peMagic==0x20B?1:0;
-   bmReadBufferEx(&pe32,PE32_HDR_SIZE(),beye_context().headshift+sizeof(PEHEADER),SEEKF_START);
+   bmReadBufferEx(&pe32,PE32_HDR_SIZE(),beye_context().headshift+sizeof(PEHEADER),BFile::Seek_Set);
 
    if(!(peDir = new PERVA[PE32_HDR(pe32,peDirSize)]))
    {
@@ -1136,20 +1136,20 @@ static void __FASTCALL__ initPE(CodeGuider& _code_guider)
      MemOutBox("PE initialization");
      exit(EXIT_FAILURE);
    }
-   bmSeek(0x18 + pe.peNTHdrSize + beye_context().headshift,SEEKF_START);
+   bmSeek(0x18 + pe.peNTHdrSize + beye_context().headshift,BFile::Seek_Set);
    for(i = 0;i < pe.peObjects;i++)
    {
-     peVA[i].rva = bmReadDWordEx(12L,SEEKF_CUR);
-     peVA[i].phys = bmReadDWordEx(4L,SEEKF_CUR);
-     bmSeek(16L,SEEKF_CUR);
+     peVA[i].rva = bmReadDWordEx(12L,BFile::Seek_Cur);
+     peVA[i].phys = bmReadDWordEx(4L,BFile::Seek_Cur);
+     bmSeek(16L,BFile::Seek_Cur);
    }
 
    BFile& main_handle = bmbioHandle();
-   if((pe_cache = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache = &main_handle;
-   if((pe_cache1 = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache1 = &main_handle;
-   if((pe_cache2 = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache2 = &main_handle;
-   if((pe_cache3 = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache3 = &main_handle;
-   if((pe_cache4 = main_handle.dup_ex(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache4 = &main_handle;
+   if((pe_cache = main_handle.dup()) == &bNull) pe_cache = &main_handle;
+   if((pe_cache1 = main_handle.dup()) == &bNull) pe_cache1 = &main_handle;
+   if((pe_cache2 = main_handle.dup()) == &bNull) pe_cache2 = &main_handle;
+   if((pe_cache3 = main_handle.dup()) == &bNull) pe_cache3 = &main_handle;
+   if((pe_cache4 = main_handle.dup()) == &bNull) pe_cache4 = &main_handle;
 }
 
 static void __FASTCALL__ destroyPE( void )
@@ -1219,7 +1219,7 @@ static __filesize_t __FASTCALL__ pePA2VA(__filesize_t pa)
 {
   int i;
   __filesize_t ret_addr;
-  bmSeek(0x18 + pe.peNTHdrSize + beye_context().headshift,SEEK_SET);
+  bmSeek(0x18 + pe.peNTHdrSize + beye_context().headshift,BFile::Seek_Set);
   ret_addr = 0;
   for(i = 0;i < pe.peObjects;i++)
   {
@@ -1265,8 +1265,8 @@ static void __FASTCALL__ pe_ReadPubNameList(BFile& handle,void (__FASTCALL__ *me
   nameptr = RVA2Phys(et.etNamePtrTableRVA);
   for(i = 0;i < nitems;i++)
   {
-    nameaddr = fioReadDWord2Phys(handle,nameptr + 4*i,SEEKF_START);
-    ord = fioReadWord(b_cache,expaddr + i*2,SEEKF_START) + (unsigned)et.etOrdinalBase;
+    nameaddr = fioReadDWord2Phys(handle,nameptr + 4*i,BFile::Seek_Set);
+    ord = fioReadWord(b_cache,expaddr + i*2,BFile::Seek_Set) + (unsigned)et.etOrdinalBase;
     entry_pa = CalcEntryPE((unsigned)ord,false);
     pn.pa = entry_pa;
     pn.nameoff = nameaddr;
@@ -1295,7 +1295,7 @@ static unsigned __FASTCALL__ peGetObjAttr(__filesize_t pa,char *name,unsigned cb
   name[0] = 0;
   nitems = pe.peObjects;
   ret = 0;
-  bmSeek(0x18 + pe.peNTHdrSize + beye_context().headshift,SEEK_SET);
+  bmSeek(0x18 + pe.peNTHdrSize + beye_context().headshift,BFile::Seek_Set);
   for(i = 0;i < nitems;i++)
   {
     PE_OBJECT po;
