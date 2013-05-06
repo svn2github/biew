@@ -375,13 +375,15 @@ static bool __FASTCALL__ txtFiUserFunc1(IniInfo * info,any_t* data)
 	unsigned i,ilen;
 	int found,softmode;
 	off = atol(info->item);
-	char* value=strstr((char*)info->value,"-->");
-	if(!p) { ErrMessageBox("Missing separator in main context definition",""); return true; }
+	char stmp[4096];
+	strncpy(stmp,info->value,sizeof(stmp));
+	char* value=strstr(stmp,"-->");
+	if(!value) { ErrMessageBox("Missing separator in main context definition",""); return true; }
 	*value=0;
 	softmode=0;
 	if(strcmp(info->subsection,"Soft")==0) softmode=1;
-	unfmt_str((unsigned char*)info->value);
-	ilen=strlen(info->value);
+	unfmt_str((unsigned char*)stmp);
+	ilen=strlen(stmp);
 	fpos=BMGetCurrFilePos();
 	BMSeek(off,BFile::Seek_Set);
 	found=1;
@@ -389,7 +391,7 @@ static bool __FASTCALL__ txtFiUserFunc1(IniInfo * info,any_t* data)
 	    unsigned char ch;
 	    ch=BMReadByte();
 	    if(softmode) while(isspace(ch)) { ch=BMReadByte(); if(BMEOF()) { found = 0; break; }}
-	    if(ch != info->value[i]) {
+	    if(ch != stmp[i]) {
 		found=0;
 		break;
 	    }

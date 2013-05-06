@@ -347,7 +347,7 @@ std::string Tokenizer::tail() {
 *                  Middle level support                       *
 \*************************************************************/
 /*************** END of List Var Section ***************/
-Ini_Parser::Ini_Parser(ini_user_func usr,any_t* data):user_proc(usr),user_data(data),case_sens(2),vars(*this) {}
+Ini_Parser::Ini_Parser(ini_user_func usr,any_t* data):user_proc(usr),user_data(data),case_sens(2),ifSmarting(true),vars(*this) {}
 Ini_Parser::~Ini_Parser() { vars.clear(); }
 
 void Ini_Parser::Ini_Parser::aerror(int nError,int row,const std::string& addinfo)
@@ -400,7 +400,7 @@ int Ini_Parser::error(int ne,int row,const std::string& addinfo)
 	herr<<(row ? "fatal" : "")<<" error in : "<<file_info.back().second;
     }
     herr<<std::endl;
-    if(row) herr<<"At line : <<"<<row<<std::endl;
+    if(row) herr<<"At line : "<<row<<std::endl;
     what = decode_error(ne);
     if(!addinfo.empty()) sprintf(sout,what.c_str(),addinfo.c_str());
     else strncpy(sout,what.c_str(),sizeof(sout));
