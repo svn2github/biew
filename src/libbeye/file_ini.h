@@ -18,9 +18,9 @@
 **/
 #ifndef __FILE_INI_RUNTIME_SUPPORT_SYSTEM__
 #define __FILE_INI_RUNTIME_SUPPORT_SYSTEM__ 1
+#include <fstream>
 #include <map>
 
-#include "libbeye/bbio.h"
 using namespace beye;
 
 namespace beye {
@@ -74,15 +74,14 @@ namespace beye {
 	    virtual std::string		get_next_string();
 	    virtual std::string		get_next_string(std::string& original);
 
-	    virtual int			eof() const { return handler.eof(); }
-	    virtual bool		seek(__fileoff_t off,BFile::e_seek origin) const { return handler.seek(off,origin); }
-	    inline void			rewind_ini() const { handler.seek(0L,BFile::Seek_Set); }
-	    inline bool			opened() const { return _opened; }
+	    virtual int			eof() const { return fs.eof(); }
+	    virtual bool		seek(__fileoff_t off,std::ios_base::seekdir origin) { return fs.seekg(off,origin); }
+	    inline void			rewind_ini() { fs.seekg(0L,std::ios_base::beg); }
+	    inline bool			opened() const { return fs.is_open(); }
 	private:
 	    char*			GETS(char *str,unsigned num);
 
-	    bool		_opened;
-	    BFile&		handler;
+	    std::fstream		fs;
     };
 
     class Tokenizer : public Opaque {

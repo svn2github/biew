@@ -182,51 +182,43 @@ static const char * __FASTCALL__ FiDecodeError(int nError)
 
 static int __FASTCALL__ StdError(int ne,int row,const std::string& addinfo)
 {
-    FILE * herr;
+    std::fstream herr;
     const char * what;
     char sout[4096];
-    if((herr = fopen("fi_syserr.$$$","wt")) == NULL) herr = stderr;
-    fprintf(herr,"About : [.Ini] file run-time support library. Written by Nickols_K\n"
-		 "Detected ");
-    if(ne != __FI_TOOMANY && ~file_info.empty())
-    {
-      fprintf(herr,"%s error in : %s",row ? "fatal" : "",file_info.back().second.c_str());
+    herr.open("fi_syserr.$$$",std::ios_base::out);
+    herr<<"About : [.Ini] file run-time support library. Written by Nickols_K"<<std::endl<<"Detected ";
+    if(ne != __FI_TOOMANY && ~file_info.empty()) {
+	herr<<(row ? "fatal" : "")<<" error in : "<<file_info.back().second;
     }
-    fprintf(herr,"\n");
-    if(row)  fprintf(herr,"At line : %i\n",row);
+    herr<<std::endl;
+    if(row) herr<<"At line : <<"<<row<<std::endl;
     what = FiDecodeError(ne);
     if(!addinfo.empty()) sprintf(sout,what,addinfo.c_str());
     else strncpy(sout,what,sizeof(sout));
-    fprintf(herr,"Message : %s\n",sout);
-    if(FiUserMessage) fprintf(herr,"User message : %s\n",FiUserMessage);
-    if(!fi_Debug_Str.empty()) fprintf(herr,"Debug info: '%s'\n",fi_Debug_Str.c_str());
-    fclose(herr);
+    herr<<"Message : "<<sout<<std::endl;
+    if(FiUserMessage) herr<<"User message : "<<FiUserMessage<<std::endl;
+    if(!fi_Debug_Str.empty()) herr<<"Debug info: '"<<fi_Debug_Str<<"'"<<std::endl;
+    herr.close();
     std::cerr<<std::endl<<"Error in .ini file."<<std::endl<<"File fi_syser.$$$ created."<<std::endl;
     return __FI_EXITPROC;
 }
 
-Ini_io::Ini_io():_opened(false),handler(bNull) {}
-Ini_io::~Ini_io() { if(&handler!=&bNull) close(); }
+Ini_io::Ini_io() {}
+Ini_io::~Ini_io() { if(fs.is_open()) close(); }
 bool Ini_io::open(const std::string& filename)
 {
-    handler = *new BFile;
-    bool rc;
     /* Try to load .ini file entire into memory */
-    rc = handler.open(filename,O_RDONLY | BFile::SO_DENYWRITE);
+    fs.open(filename.c_str(),std::ios_base::in|std::ios_base::binary);
     /* Note! All OSes except DOS-DOS386 allows opening of empty filenames as /dev/null */
-    if(rc == false && filename[0]) FiAError(__FI_BADFILENAME,0,filename.c_str());
+    if(!fs.is_open() && filename[0]) FiAError(__FI_BADFILENAME,0,filename.c_str());
     file_info.push_back(std::make_pair(0,filename));
-    _opened=rc;
-    return rc;
+    return true;
 }
 
 void Ini_io::close()
 {
     file_info.pop_back();
-    if(&handler!=&bNull) {
-	delete &handler;
-	handler=bNull;
-    }
+    if(fs.is_open()) fs.close();
 }
 
 static const char FiOpenComment=';';
@@ -238,7 +230,7 @@ char* Ini_io::get_next_string(char * str,unsigned int size,char *original)
   unsigned len;
   unsigned char ch;
   str[0] = 0;
-  while(!handler.eof())
+  while(!fs.eof())
   {
     str[0] = 0;
     sret = (unsigned char*)GETS(str,size);
@@ -251,7 +243,7 @@ char* Ini_io::get_next_string(char * str,unsigned int size,char *original)
     }
     if(original) strcpy(original,str);
     file_info.back().first++;
-    if((sret == NULL && !handler.eof()))  FiAError(__FI_BADFILENAME,0,str);
+    if((sret == NULL && !fs.eof()))  FiAError(__FI_BADFILENAME,0,str);
     sret = (unsigned char*)strchr(str,FiOpenComment);
     if(sret) *sret = 0;
     if(!FiAllWantInput)
@@ -308,18 +300,18 @@ char* Ini_io::GETS(char *str,unsigned num)
   ret = str;
   for(i = 0;i < num;i++)
   {
-     ch = handler.read_byte();
+     fs.read(&ch,sizeof(char));
      if(ch == '\n' || ch == '\r')
      {
        *str = ch;  str++;
-       ch1 = handler.read_byte();
+       fs.read(&ch1,sizeof(char));
        if((ch1 == '\n' || ch1 == '\r') && ch != ch1)
        {
 	 *str = ch; str++;
        }
        else
        {
-	 if(handler.eof())
+	 if(fs.eof())
 	 {
 	   if((signed char)ch1 != -1 && ch1 != __C_EOF)
 	   {
@@ -327,11 +319,11 @@ char* Ini_io::GETS(char *str,unsigned num)
 	   }
 	   break;
 	 }
-	 handler.seek(-1,BFile::Seek_Cur);
+	 fs.seekg(-1,std::ios_base::cur);
        }
        break;
      }
-     if(handler.eof())
+     if(fs.eof())
      {
        if((signed char)ch != -1 && ch != __C_EOF)
        {
@@ -1023,38 +1015,29 @@ static bool __FASTCALL__ MyCallback(IniInfo * ini)
   return false;
 }
 
-static int  __FASTCALL__ out_sect(FILE * handle,const std::string& section)
+static int  __FASTCALL__ out_sect(std::fstream& fs,const std::string& section)
 {
-   fprintf(handle,"[ %s ]\n",section.c_str());
-   return 2;
+    fs<<"[ "<<section<<" ]"<<std::endl;
+    return 2;
 }
 
-static int  __FASTCALL__ out_subsect(FILE * handle,const std::string& subsection)
+static int  __FASTCALL__ out_subsect(std::fstream& fs,const std::string& subsection)
 {
-   fprintf(handle,"  < %s >\n",subsection.c_str());
-   return 2;
+    fs<<"< "<<subsection<<" >"<<std::endl;
+    return 2;
 }
 
-static void  __FASTCALL__ out_item(FILE * handle,unsigned nled,const std::string& _item,const std::string& value)
+static void  __FASTCALL__ out_item(std::fstream& fs,unsigned nled,const std::string& _item,const std::string& value)
 {
-  char *sm_char;
-  unsigned i;
-  sm_char = (char*)strchr(value.c_str(),'%');
-  if(sm_char && ifSmarting)
-  {
-    fprintf(handle,"#nosmart\n");
-  }
-  for(i = 0;i < nled;i++)
-  {
-    fprintf(handle," ");
-  }
-  fprintf(handle,"%s = ",_item.c_str());
-  fwrite(value.c_str(),value.length(),1,handle);
-  fprintf(handle,"\n");
-  if(sm_char && ifSmarting)
-  {
-    fprintf(handle,"#smart\n");
-  }
+    char *sm_char;
+    unsigned i;
+    sm_char = (char*)strchr(value.c_str(),'%');
+    if(sm_char && ifSmarting) fs<<"#nosmart"<<std::endl;
+    for(i = 0;i < nled;i++) fs<<" ";
+    fs<<_item<<" = ";
+    fs.write(value.c_str(),value.length());
+    fs<<std::endl;
+    if(sm_char && ifSmarting) fs<<"#smart"<<std::endl;
 }
 
 hIniProfile * __FASTCALL__ iniOpenFile(const std::string& fname,bool *has_error)
@@ -1146,17 +1129,16 @@ unsigned __FASTCALL__ iniReadProfileString(hIniProfile *ini,const std::string& s
    return ret;
 }
 
-static const char* HINI_HEADER="; This file was generated automatically by BEYELIB.\n; WARNING: Any changes made by hands may be lost the next time you run the program.\n";
+static const char* HINI_HEADER[]={
+"; This file was generated automatically by BEYELIB.",
+"; WARNING: Any changes made by hands may be lost the next time you run the program."
+};
 
-static FILE *  __FASTCALL__ __makeIni(hIniProfile *ini)
+static bool __FASTCALL__ __makeIni(std::fstream& hout,hIniProfile *ini)
 {
-  FILE *hout;
-  hout = fopen(ini->fname.c_str(),"wt");
-  if(hout != NULL)
-  {
-     fprintf(hout,HINI_HEADER);
-  }
-  return hout;
+    hout.open(ini->fname.c_str(),std::ios_base::out);
+    if(hout.is_open()) for(unsigned i=0;i<2;i++) hout<<HINI_HEADER[i]<<std::endl;
+    return hout;
 }
 
 static bool  __FASTCALL__ __createIni(hIniProfile *ini,
@@ -1165,30 +1147,20 @@ static bool  __FASTCALL__ __createIni(hIniProfile *ini,
 				const std::string& _item,
 				const std::string& _value)
 {
-  FILE *hout;
-  unsigned nled;
-  bool _ret;
-  hout = __makeIni(ini);
-  _ret = true;
-  if(hout == NULL) _ret = false;
-  else
-  {
-     nled = 0;
-     if(!_section.empty())
-     {
-       nled += out_sect(hout,_section);
-     }
-     if(!_subsection.empty())
-     {
-       nled += out_subsect(hout,_subsection);
-     }
-     if(!_item.empty())
-     {
-       out_item(hout,nled,_item,_value);
-     }
-     fclose(hout);
-  }
-  return _ret;
+    std::fstream hout;
+    unsigned nled;
+    bool _ret;
+    __makeIni(hout,ini);
+    _ret = true;
+    if(!hout.is_open()) _ret = false;
+    else {
+	nled = 0;
+	if(!_section.empty()) nled += out_sect(hout,_section);
+	if(!_subsection.empty()) nled += out_subsect(hout,_subsection);
+	if(!_item.empty()) out_item(hout,nled,_item,_value);
+	hout.close();
+    }
+    return _ret;
 }
 
 static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
@@ -1197,164 +1169,138 @@ static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
 					       const std::string& _item,
 					       const std::string& _value)
 {
-   FILE * tmphandle;
-   char *tmpname, *prev_val;
-   std::string workstr, wstr2, original;
-   unsigned nled,prev_val_size;
-   int hsrc;
-   bool _ret,need_write,s_ok,ss_ok,i_ok,done,sb_ok,ssb_ok,written,Cond,if_on;
-   /* test for no change of value */
-   prev_val_size = _value.length()+2;
-   prev_val = new char [prev_val_size];
-   need_write = true;
-   if(!ini) return false;
-   if(prev_val && ini->handler->opened())
-   {
-     const char *def_val;
-     if(_value=="y") def_val = "n";
-     else            def_val = "y";
-     iniReadProfileString(ini,_section,_subsection,_item,def_val,prev_val,prev_val_size);
-     if(_value==_value) need_write = false;
-     delete prev_val;
-   }
-   if(!need_write) return true;
-   tmpname = new char [(ini->fname.length()+1)*2];
-   if(!tmpname) return false;
-   if(!ini->handler->opened()) /* if file does not exist make it. */
-   {
-     _ret = __createIni(ini,_section,_subsection,_item,_value);
-     if(_ret) ini->handler->open(ini->fname);
-     goto Exit_WS;
-   }
-   ini->handler->seek(0L,BFile::Seek_Set);
-   ActiveFile = ini->handler;
-   hsrc = make_temp(ini->fname.c_str(),tmpname);
-   if(hsrc == -1) { _ret = false; goto Exit_WS; }
-   ::close(hsrc);
-   tmphandle = fopen(tmpname,"wt");
-   if(tmphandle == NULL) { _ret = false; goto Exit_WS; }
-   fprintf(tmphandle,HINI_HEADER);
-
-   sb_ok = ssb_ok = s_ok = ss_ok = i_ok = done = false;
-   nled = 0;
-   if(_section.empty()) { s_ok = sb_ok = true; if(_subsection.empty()) ss_ok = ssb_ok = true; }
-   wstr2[0] = 1;
-   Cond = true;
-   if_on = false;
-   while(1)
-   {
-     written = false;
-     workstr=ini->handler->get_next_string(original);
-     if(workstr[0] == 0) break;
-     if(FiisCommand(workstr))
-     {
-       std::string cstr;
-       cstr = FiGetCommandString(workstr);
-       if(cstr.substr(0,2)=="if" ||
-	  cstr.substr(0,4)=="elif" ||
-	  cstr.substr(0,4)=="else")
-       if_on = true;
-       if(cstr.substr(0,5)=="endif") if_on = false;
-     }
-     if(Cond)
-     {
-       if(FiisSection(workstr))
-       {
-	  if(!_section.empty())
-	  {
-	    wstr2=FiGetSectionName(workstr);
-	    if(_section==wstr2)
-	    {
-	      s_ok = sb_ok = true;
-	      nled = 2;
-	      ss_ok = ssb_ok = _subsection.empty();
-	    }
-	    else s_ok = false;
-	  }
-	  else s_ok = false;
-       }
-       else
-       if(FiisSubSection(workstr))
-       {
-	  if(!_subsection.empty())
-	  {
-	    wstr2=FiGetSubSectionName(workstr);
-	    if(_subsection==wstr2)
-	    {
-	      ss_ok = ssb_ok = true;
-	      nled = 4;
-	    }
-	    else ss_ok = false;
-	  }
-	  else ss_ok = false;
-       }
-       else
-       if(FiisItem(workstr))
-       {
-	  wstr2=FiGetItemName(workstr);
-	  if(_item==wstr2) i_ok = true;
-	  if(i_ok && s_ok && ss_ok)
-	  {
-	    if(!done || if_on)
-	    {
-	       out_item(tmphandle,nled,_item,_value);
-	       written = true;
-	       done = true;
-	    }
-	  }
-	  else i_ok = false;
-      }
-      /**********************************************/
-      if(sb_ok && !s_ok)
-      {
-	  if(!done)
-	  {
-	    if(!ssb_ok && !ss_ok && !_subsection.empty()) { nled += 2; out_subsect(tmphandle,_subsection); }
-	    out_item(tmphandle,nled,_item,_value);
-	    written = false;
-	    done = true;
-	  }
-      }
-      if(s_ok && ssb_ok && !ss_ok)
-      {
-	 if(!done)
-	 {
-	     out_item(tmphandle,nled,_item,_value);
-	     written = false;
-	     done = true;
-	 }
-      }
+    std::fstream tmpfs;
+    char *tmpname, *prev_val;
+    std::string workstr, wstr2, original;
+    unsigned nled,prev_val_size;
+    int hsrc;
+    bool _ret,need_write,s_ok,ss_ok,i_ok,done,sb_ok,ssb_ok,written,Cond,if_on;
+    /* test for no change of value */
+    prev_val_size = _value.length()+2;
+    prev_val = new char [prev_val_size];
+    need_write = true;
+    if(!ini) return false;
+    if(prev_val && ini->handler->opened()) {
+	const char *def_val;
+	if(_value=="y") def_val = "n";
+	else            def_val = "y";
+	iniReadProfileString(ini,_section,_subsection,_item,def_val,prev_val,prev_val_size);
+	if(_value==_value) need_write = false;
+	delete prev_val;
     }
-    if(!written) fprintf(tmphandle,"%s\n",original.c_str());
-   }
-   /************ this is end of loop *************/
-   if(!done)
-   {
-     if(!sb_ok && !_section.empty())
-     {
-	nled = out_sect(tmphandle,_section);
-	if(!_subsection.empty())
-	{
-	  ssb_ok = true;
-	  nled+=out_subsect(tmphandle,_subsection);
+    if(!need_write) return true;
+    tmpname = new char [(ini->fname.length()+1)*2];
+    if(!tmpname) return false;
+    if(!ini->handler->opened()) { /* if file does not exist make it. */
+	_ret = __createIni(ini,_section,_subsection,_item,_value);
+	if(_ret) ini->handler->open(ini->fname);
+	goto Exit_WS;
+    }
+    ini->handler->seek(0L,std::ios_base::beg);
+    ActiveFile = ini->handler;
+    hsrc = make_temp(ini->fname.c_str(),tmpname);
+    if(hsrc == -1) { _ret = false; goto Exit_WS; }
+    ::close(hsrc);
+    tmpfs.open(tmpname,std::ios_base::out);
+    if(!tmpfs.is_open()) { _ret = false; goto Exit_WS; }
+    for(unsigned i=0;i<2;i++) tmpfs<<HINI_HEADER[i]<<std::endl;
+
+    sb_ok = ssb_ok = s_ok = ss_ok = i_ok = done = false;
+    nled = 0;
+    if(_section.empty()) { s_ok = sb_ok = true; if(_subsection.empty()) ss_ok = ssb_ok = true; }
+    wstr2[0] = 1;
+    Cond = true;
+    if_on = false;
+    while(1) {
+	written = false;
+	workstr=ini->handler->get_next_string(original);
+	if(workstr[0] == 0) break;
+	if(FiisCommand(workstr)) {
+	    std::string cstr;
+	    cstr = FiGetCommandString(workstr);
+	    if(cstr.substr(0,2)=="if" ||
+		cstr.substr(0,4)=="elif" ||
+		cstr.substr(0,4)=="else")
+		if_on = true;
+	    if(cstr.substr(0,5)=="endif") if_on = false;
 	}
-     }
-     if(!ssb_ok && !_subsection.empty())
-     {
-	nled+=out_subsect(tmphandle,_subsection);
-     }
-     out_item(tmphandle,nled,_item,_value);
-     done = true;
-   }
-   fclose(tmphandle);
-   ini->handler->close();
-   BFile::unlink(ini->fname.c_str());
-   BFile::rename(tmpname,ini->fname.c_str());
-   ini->handler->open(ini->fname);
-   _ret = true;
-   Exit_WS:
-   PFREE(tmpname);
-   return _ret;
+	if(Cond) {
+	    if(FiisSection(workstr)) {
+		if(!_section.empty()) {
+		    wstr2=FiGetSectionName(workstr);
+		    if(_section==wstr2) {
+			s_ok = sb_ok = true;
+			nled = 2;
+			ss_ok = ssb_ok = _subsection.empty();
+		    }
+		    else s_ok = false;
+		}
+		else s_ok = false;
+	    } else if(FiisSubSection(workstr)) {
+		if(!_subsection.empty()) {
+		    wstr2=FiGetSubSectionName(workstr);
+		    if(_subsection==wstr2) {
+			ss_ok = ssb_ok = true;
+			nled = 4;
+		    }
+		    else ss_ok = false;
+		}
+		else ss_ok = false;
+	    } else if(FiisItem(workstr)) {
+		wstr2=FiGetItemName(workstr);
+		if(_item==wstr2) i_ok = true;
+		if(i_ok && s_ok && ss_ok) {
+		    if(!done || if_on) {
+			out_item(tmpfs,nled,_item,_value);
+			written = true;
+			done = true;
+		    }
+		}
+		else i_ok = false;
+	    }
+	    /**********************************************/
+	    if(sb_ok && !s_ok) {
+		if(!done) {
+		    if(!ssb_ok && !ss_ok && !_subsection.empty()) { nled += 2; out_subsect(tmpfs,_subsection); }
+		    out_item(tmpfs,nled,_item,_value);
+		    written = false;
+		    done = true;
+		}
+	    }
+	    if(s_ok && ssb_ok && !ss_ok) {
+		if(!done) {
+		    out_item(tmpfs,nled,_item,_value);
+		    written = false;
+		    done = true;
+		}
+	    }
+	}
+	if(!written) tmpfs<<original<<std::endl;
+    }
+    /************ this is end of loop *************/
+    if(!done) {
+	if(!sb_ok && !_section.empty()) {
+	    nled = out_sect(tmpfs,_section);
+	    if(!_subsection.empty()) {
+		ssb_ok = true;
+		nled+=out_subsect(tmpfs,_subsection);
+	    }
+	}
+	if(!ssb_ok && !_subsection.empty()) {
+	    nled+=out_subsect(tmpfs,_subsection);
+	}
+	out_item(tmpfs,nled,_item,_value);
+	done = true;
+    }
+    tmpfs.close();
+    ini->handler->close();
+    BFile::unlink(ini->fname.c_str());
+    BFile::rename(tmpname,ini->fname.c_str());
+    ini->handler->open(ini->fname);
+    _ret = true;
+    Exit_WS:
+    PFREE(tmpname);
+    return _ret;
 }
 
 static char *__partSect,*__partSubSect;
@@ -1424,13 +1370,13 @@ bool __FASTCALL__ iniWriteProfileString(hIniProfile *ini,
 }
 
 static int __nled;
-static FILE * flush_handler = NULL;
+static std::fstream flush_fs;
 
 static void __FASTCALL__ flush_item(any_t*data)
 {
   ini_cache  *it;
   it = (ini_cache  *)data;
-  out_item(flush_handler,__nled,it->item,it->v.value);
+  out_item(flush_fs,__nled,it->item,it->v.value);
 }
 
 static void __FASTCALL__ flush_subsect(any_t*data)
@@ -1439,7 +1385,7 @@ static void __FASTCALL__ flush_subsect(any_t*data)
   int _has_led;
   it = (ini_cache  *)data;
   _has_led = __nled;
-  if(strlen(it->item)) __nled += out_subsect(flush_handler,it->item);
+  if(strlen(it->item)) __nled += out_subsect(flush_fs,it->item);
   la_ForEach(it->v.leaf,flush_item);
   __nled = _has_led;
 }
@@ -1449,7 +1395,7 @@ static void __FASTCALL__ flush_sect(any_t*data)
   ini_cache  *it;
   it = (ini_cache  *)data;
   __nled = 0;
-  if(strlen(it->item)) __nled += out_sect(flush_handler,it->item);
+  if(strlen(it->item)) __nled += out_sect(flush_fs,it->item);
   la_ForEach(it->v.leaf,flush_subsect);
 }
 
@@ -1458,10 +1404,10 @@ static bool  __FASTCALL__ __flushCache(hIniProfile *ini)
   if((ini->flags & HINI_UPDATED) == HINI_UPDATED && ini->cache)
   {
     if(ini->handler->opened()) ini->handler->close();
-    flush_handler = __makeIni(ini);
-    if(!flush_handler) return true;
+    __makeIni(flush_fs,ini);
+    if(!flush_fs.is_open()) return true;
     la_ForEach((linearArray *)ini->cache,flush_sect);
-    fclose(flush_handler);
+    flush_fs.close();
     ini->handler->open(ini->fname);
   }
   return false;
