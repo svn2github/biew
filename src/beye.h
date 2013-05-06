@@ -7,7 +7,6 @@
 #include <vector>
 #include <string>
 
-struct hIniProfile;
 namespace beye {
     class addendum;
     class sysinfo;
@@ -16,6 +15,7 @@ namespace beye {
     class CodeGuider;
     class Bin_Format;
     class BFile;
+    struct hIniProfile;
     class BeyeContext : public Opaque {
 	public:
 	    BeyeContext(const std::vector<std::string>& argv, const std::map<std::string,std::string>& envm);

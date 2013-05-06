@@ -33,6 +33,52 @@ using namespace beye;
 #include "libbeye/bbio.h"
 #include "libbeye/file_ini.h"
 
+enum {
+    FI_MAXSTRLEN=255 /**< Specifies maximal length of string, that can be readed from ini file */
+};
+
+/**
+    List of possible errors that are generic
+*/
+enum {
+    __FI_NOERRORS     = 0, /**< No errors */
+    __FI_BADFILENAME  =-1, /**< Can not open file */
+    __FI_TOOMANY      =-2, /**< Too many opened files */
+    __FI_NOTMEM       =-3, /**< Memory exhausted */
+    __FI_OPENCOND     =-4, /**< Opened 'if' (missing '#endif') */
+    __FI_IFNOTFOUND   =-5, /**< Missing 'if' for 'endif' statement */
+    __FI_ELSESTAT     =-6, /**< Missing 'if' for 'else' statement */
+    __FI_UNRECOGN     =-7, /**< Unknown '#' directive */
+    __FI_BADCOND      =-8, /**< Syntax error in 'if' statement */
+    __FI_OPENSECT     =-9, /**< Expected opened section or subsection or invalid string */
+    __FI_BADCHAR      =-10, /**< Bad character on line (possible lost comment) */
+    __FI_BADVAR       =-11, /**< Bad variable in 'set' or 'delete' statement */
+    __FI_BADVAL       =-12, /**< Bad value of variable in 'set' statement */
+    __FI_NOVAR        =-13, /**< Unrecognized name of variable in 'delete' statement */
+    __FI_NODEFVAR     =-14, /**< Detected undefined variable (case sensitivity?) */
+    __FI_ELIFSTAT     =-15, /**< Missing 'if' for 'elif' statement */
+    __FI_OPENVAR      =-16, /**< Opened variable on line (use even number of '%' characters) */
+    __FI_NOTEQU       =-17, /**< Lost or mismatch character '=' in assigned expression */
+    __FI_USER         =-18, /**< User defined message */
+    __FI_FIUSER       =-19  /**< User error */
+};
+/**
+    possible answers to the errors
+*/
+enum {
+    __FI_IGNORE   =0, /**< Ignore error and continue */
+    __FI_EXITPROC =1 /**< Terminate the program execution */
+};
+/**
+    return constants for FiSearch
+*/
+enum {
+    __FI_NOTFOUND   =0, /**< Required string is not found */
+    __FI_SECTION    =1, /**< Required string is section */
+    __FI_SUBSECTION =2, /**< required string is subsection */
+    __FI_ITEM       =3  /**< required string is item */
+};
+
 #if 0
 static void dump_BFILE(BFILE *h) {
 fprintf(stderr,
@@ -55,10 +101,11 @@ fprintf(stderr,
 }
 #endif
 
+namespace beye {
 static unsigned char CaseSens = 2; /**< 2 - case 1 - upper 0 - lower */
 static FiUserFunc proc;
 static Ini_io* ActiveFile = NULL;
-const char *fi_Debug_Str = NULL;
+static std::string fi_Debug_Str;
 
 static int __FASTCALL__ StdError(int ne,int row,const std::string& addinfo);
 static void __FASTCALL__ FiFileParserStd(const std::string& filename);
@@ -152,13 +199,12 @@ static int __FASTCALL__ StdError(int ne,int row,const std::string& addinfo)
     else strncpy(sout,what,sizeof(sout));
     fprintf(herr,"Message : %s\n",sout);
     if(FiUserMessage) fprintf(herr,"User message : %s\n",FiUserMessage);
-    if(fi_Debug_Str) if(*fi_Debug_Str) fprintf(herr,"Debug info: '%s'\n",fi_Debug_Str);
+    if(!fi_Debug_Str.empty()) fprintf(herr,"Debug info: '%s'\n",fi_Debug_Str.c_str());
     fclose(herr);
     std::cerr<<std::endl<<"Error in .ini file."<<std::endl<<"File fi_syser.$$$ created."<<std::endl;
     return __FI_EXITPROC;
 }
 
-namespace beye {
 Ini_io::Ini_io():_opened(false),handler(bNull) {}
 Ini_io::~Ini_io() { if(&handler!=&bNull) close(); }
 bool Ini_io::open(const std::string& filename)
@@ -246,6 +292,14 @@ std::string Ini_io::get_next_string() {
     return std::string(tmp);
 }
 
+std::string Ini_io::get_next_string(std::string& original) {
+    char tmp[FI_MAXSTRLEN];
+    char org[FI_MAXSTRLEN];
+    get_next_string(tmp,sizeof(tmp),org);
+    original=org;
+    return std::string(tmp);
+}
+
 char* Ini_io::GETS(char *str,unsigned num)
 {
   char *ret;
@@ -291,8 +345,6 @@ char* Ini_io::GETS(char *str,unsigned num)
   return ret;
 }
 
-} // namespace beye
-
 static size_t  __FASTCALL__ __GetLengthBrStr(const std::string& src,char obr,char cbr)
 {
  size_t ends;
@@ -312,31 +364,7 @@ static size_t  __FASTCALL__ __GetLengthBrStr(const std::string& src,char obr,cha
  return ret;
 }
 
-static char *  __FASTCALL__ __GetBrStrName(const std::string& src,char * store,char obr,char cbr)
-{
- size_t ends;
- if(src[0] == obr)
- {
-   unsigned len;
-   ends = src.find(cbr,1);
-   if(ends==std::string::npos) goto err;
-   if(src[ends+1]) FiAErrorCL(__FI_BADCHAR);
-   len = ends-1;
-   memcpy(store,&src.c_str()[1],len);
-   store[len] = 0;
- }
- else
- {
-   err:
-   FiAErrorCL(__FI_OPENSECT);
- }
- return store;
-}
-
 static inline size_t FiGetLengthBracketString(const std::string& str ) { return __GetLengthBrStr(str,'"','"'); }
-static inline char*  FiGetBracketString(const std::string& str,char* store) { return __GetBrStrName(str,store,'"','"'); }
-static inline char*  FiGetSectionName(const std::string& src,char* store) { return __GetBrStrName(src,store,'[',']'); }
-static inline char*  FiGetSubSectionName(const std::string& src,char* store) { return __GetBrStrName(src,store,'<','>'); }
 static inline size_t FiGetLengthSection(const std::string& src ) { return __GetLengthBrStr(src,'[',']'); }
 static inline size_t FiGetLengthSubSection(const std::string& src ) { return __GetLengthBrStr(src,'<','>'); }
 
@@ -372,21 +400,6 @@ static std::string __FASTCALL__ FiGetValueOfItem(const std::string& src)
     return rc;
 }
 
-
-static char *    __FASTCALL__ FiGetItemName(const std::string& src,char * store)
-{
-  size_t sptr;
-  unsigned len;
-  sptr = src.find('=');
-  if(sptr!=std::string::npos) {
-    len = sptr;
-    memcpy(store,src.c_str(),len);
-    store[len] = 0;
-    if(!IS_VALID_NAME(store)) FiAErrorCL(__FI_BADCHAR);
-  }
-  return store;
-}
-
 static std::string  __FASTCALL__ FiGetItemName(const std::string& src)
 {
     std::string rc;
@@ -410,30 +423,12 @@ static std::string  __FASTCALL__ FiGetCommandString(const std::string& src)
     return rc;
 }
 
-/************** BEGIN of Construct section ********************/
-
-/*
-   These functions protect library from stack overflow in 16-bit mode,
-   because #include statement does recursion.
-*/
-
-static char *  __FASTCALL__ __FiCMaxStr()
-{
-  char* ret;
-  ret = new char [FI_MAXSTRLEN + 1];
-  if(!ret) FiAError(__FI_NOTMEM,0,NULL);
-  return ret;
-}
-
-/************* END of Construct section *********************/
-
 /*************************************************************\
 *                  Middle level support                       *
 \*************************************************************/
 
 /************* BEGIN of List Var section ********************/
 
-namespace beye {
 Variable_Set::Variable_Set() {}
 Variable_Set::~Variable_Set() {}
 
@@ -527,7 +522,6 @@ std::string Tokenizer::tail() {
     std::string rc=src.substr(iptr+1);
     return rc;
 }
-} // namespace beye
 
 /*************** END of List Var Section ***************/
 static Variable_Set vars;
@@ -563,7 +557,7 @@ static bool __FASTCALL__ FiGetConditionStd( const std::string& condstr)
 static bool __FASTCALL__ FiCommandParserStd( const std::string& cmd )
 {
     std::string word,a,v;
-    const char *fdeb_save;
+    std::string fdeb_save;
     Tokenizer tokenizer(cmd);
     static bool cond_ret = true;
     word = tokenizer.next_legal_word(&iniLegalSet[1]);
@@ -737,26 +731,23 @@ static bool __FASTCALL__ FiStringParserStd(const std::string& curr_str)
 
 static void __FASTCALL__ FiFileParserStd(const std::string& filename)
 {
-  char * work_str, * ondelete;
+  std::string work_str, ondelete;
   Ini_io& h = *new(zeromem) Ini_io;
   Ini_io* oldh = ActiveFile;
   bool done;
   h.open(filename);
   ActiveFile = &h;
-  work_str = __FiCMaxStr();
   fi_Debug_Str = ondelete = work_str;
   while(!h.eof())
   {
-      h.get_next_string(work_str,FI_MAXSTRLEN,NULL);
-      if(!work_str || !work_str[0]) break;
-      if(CaseSens == 1) strupr(work_str);
-      if(CaseSens == 0) strlwr(work_str);
+      work_str=h.get_next_string();
+      if(!work_str[0]) break;
+      if(CaseSens == 1) std::transform(work_str.begin(),work_str.end(),work_str.begin(),::toupper);
+      if(CaseSens == 0) std::transform(work_str.begin(),work_str.end(),work_str.begin(),::tolower);
       done = (*FiStringParser)(work_str);
       if(done) break;
   }
   h.close();
-  if(work_str) PFREE(work_str)
-  else PFREE(ondelete)
   ActiveFile = oldh;
 }
 
@@ -773,24 +764,20 @@ void __FASTCALL__  FiProgress(const std::string& filename,FiUserFunc usrproc)
 
 static void __FASTCALL__ hlFiFileParserStd(hIniProfile *ini)
 {
-  char * work_str, * ondelete;
+  std::string work_str, ondelete;
   Ini_io* oldh = ActiveFile;
   bool done;
   ActiveFile = ini->handler;
-  work_str = __FiCMaxStr();
-  fi_Debug_Str = ondelete = work_str;
   ini->handler->rewind_ini();
   while(!ini->handler->eof())
   {
-      ini->handler->get_next_string(work_str,FI_MAXSTRLEN,NULL);
-      if(!work_str || !work_str[0]) break;
-      if(CaseSens == 1) strupr(work_str);
-      if(CaseSens == 0) strlwr(work_str);
+      work_str=ini->handler->get_next_string();
+      if(!work_str[0]) break;
+      if(CaseSens == 1) std::transform(work_str.begin(),work_str.end(),work_str.begin(),::toupper);
+      if(CaseSens == 0) std::transform(work_str.begin(),work_str.end(),work_str.begin(),::tolower);
       done = (*FiStringParser)(work_str);
       if(done) break;
   }
-  if(work_str) PFREE(work_str)
-  else PFREE(ondelete)
   ActiveFile = oldh;
 }
 
@@ -809,6 +796,10 @@ static void __FASTCALL__ hlFiProgress(hIniProfile *ini,FiUserFunc usrproc)
 /*****************************************************************\
 *                      High level support                          *
 \******************************************************************/
+enum {
+	HINI_FULLCACHED=0x0001,
+	HINI_UPDATED   =0x0002
+};
 
 static hIniProfile *opened_ini;
 
@@ -1208,8 +1199,7 @@ static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
 {
    FILE * tmphandle;
    char *tmpname, *prev_val;
-   char * workstr, *wstr2;
-   char *original;
+   std::string workstr, wstr2, original;
    unsigned nled,prev_val_size;
    int hsrc;
    bool _ret,need_write,s_ok,ss_ok,i_ok,done,sb_ok,ssb_ok,written,Cond,if_on;
@@ -1244,19 +1234,7 @@ static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
    tmphandle = fopen(tmpname,"wt");
    if(tmphandle == NULL) { _ret = false; goto Exit_WS; }
    fprintf(tmphandle,HINI_HEADER);
-   workstr = __FiCMaxStr();
-   wstr2 = __FiCMaxStr();
-   original = __FiCMaxStr();
-   if(!workstr || !wstr2 || !original)
-   {
-     fclose(tmphandle);
-     BFile::unlink(tmpname);
-     if(workstr) PFREE(workstr);
-     if(wstr2) PFREE(wstr2);
-     if(original) PFREE(original);
-     _ret = false;
-     goto Exit_WS;
-   }
+
    sb_ok = ssb_ok = s_ok = ss_ok = i_ok = done = false;
    nled = 0;
    if(_section.empty()) { s_ok = sb_ok = true; if(_subsection.empty()) ss_ok = ssb_ok = true; }
@@ -1266,7 +1244,7 @@ static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
    while(1)
    {
      written = false;
-     ini->handler->get_next_string(workstr,FI_MAXSTRLEN,original);
+     workstr=ini->handler->get_next_string(original);
      if(workstr[0] == 0) break;
      if(FiisCommand(workstr))
      {
@@ -1284,7 +1262,7 @@ static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
        {
 	  if(!_section.empty())
 	  {
-	    FiGetSectionName(workstr,wstr2);
+	    wstr2=FiGetSectionName(workstr);
 	    if(_section==wstr2)
 	    {
 	      s_ok = sb_ok = true;
@@ -1300,7 +1278,7 @@ static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
        {
 	  if(!_subsection.empty())
 	  {
-	    FiGetSubSectionName(workstr,wstr2);
+	    wstr2=FiGetSubSectionName(workstr);
 	    if(_subsection==wstr2)
 	    {
 	      ss_ok = ssb_ok = true;
@@ -1313,7 +1291,7 @@ static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
        else
        if(FiisItem(workstr))
        {
-	  FiGetItemName(workstr,wstr2);
+	  wstr2=FiGetItemName(workstr);
 	  if(_item==wstr2) i_ok = true;
 	  if(i_ok && s_ok && ss_ok)
 	  {
@@ -1347,7 +1325,7 @@ static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
 	 }
       }
     }
-    if(!written) fprintf(tmphandle,"%s\n",original);
+    if(!written) fprintf(tmphandle,"%s\n",original.c_str());
    }
    /************ this is end of loop *************/
    if(!done)
@@ -1373,9 +1351,6 @@ static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
    BFile::unlink(ini->fname.c_str());
    BFile::rename(tmpname,ini->fname.c_str());
    ini->handler->open(ini->fname);
-   PFREE(workstr);
-   PFREE(wstr2);
-   PFREE(original);
    _ret = true;
    Exit_WS:
    PFREE(tmpname);
@@ -1491,3 +1466,4 @@ static bool  __FASTCALL__ __flushCache(hIniProfile *ini)
   }
   return false;
 }
+} // namespace beye

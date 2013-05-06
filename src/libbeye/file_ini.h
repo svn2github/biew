@@ -23,60 +23,14 @@
 #include "libbeye/bbio.h"
 using namespace beye;
 
-/**
-    List of possible errors that are generic
-*/
-enum {
-    __FI_NOERRORS     = 0, /**< No errors */
-    __FI_BADFILENAME  =-1, /**< Can not open file */
-    __FI_TOOMANY      =-2, /**< Too many opened files */
-    __FI_NOTMEM       =-3, /**< Memory exhausted */
-    __FI_OPENCOND     =-4, /**< Opened 'if' (missing '#endif') */
-    __FI_IFNOTFOUND   =-5, /**< Missing 'if' for 'endif' statement */
-    __FI_ELSESTAT     =-6, /**< Missing 'if' for 'else' statement */
-    __FI_UNRECOGN     =-7, /**< Unknown '#' directive */
-    __FI_BADCOND      =-8, /**< Syntax error in 'if' statement */
-    __FI_OPENSECT     =-9, /**< Expected opened section or subsection or invalid string */
-    __FI_BADCHAR      =-10, /**< Bad character on line (possible lost comment) */
-    __FI_BADVAR       =-11, /**< Bad variable in 'set' or 'delete' statement */
-    __FI_BADVAL       =-12, /**< Bad value of variable in 'set' statement */
-    __FI_NOVAR        =-13, /**< Unrecognized name of variable in 'delete' statement */
-    __FI_NODEFVAR     =-14, /**< Detected undefined variable (case sensitivity?) */
-    __FI_ELIFSTAT     =-15, /**< Missing 'if' for 'elif' statement */
-    __FI_OPENVAR      =-16, /**< Opened variable on line (use even number of '%' characters) */
-    __FI_NOTEQU       =-17, /**< Lost or mismatch character '=' in assigned expression */
-    __FI_USER         =-18, /**< User defined message */
-    __FI_FIUSER       =-19  /**< User error */
-};
-/**
-    possible answers to the errors
-*/
-enum {
-    __FI_IGNORE   =0, /**< Ignore error and continue */
-    __FI_EXITPROC =1 /**< Terminate the program execution */
-};
-/**
-    return constants for FiSearch
-*/
-enum {
-    __FI_NOTFOUND   =0, /**< Required string is not found */
-    __FI_SECTION    =1, /**< Required string is section */
-    __FI_SUBSECTION =2, /**< required string is subsection */
-    __FI_ITEM       =3  /**< required string is item */
-};
-
-/** Contains information about current record in ini file */
-typedef struct tagIniInfo
-{
-  const char * section;      /**< section name */
-  const char * subsection;   /**< subsection name */
-  const char * item;         /**< item name */
-  const char * value;        /**< value of item */
-}IniInfo;
-
-enum {
-    FI_MAXSTRLEN=255 /**< Specifies maximal length of string, that can be readed from ini file */
-};
+namespace beye {
+    /** Contains information about current record in ini file */
+    struct IniInfo {
+	const char* section;	/**< section name */
+	const char* subsection;	/**< subsection name */
+	const char* item;	/**< item name */
+	const char* value;	/**< value of item */
+    };
 
 /********************************************************************\
 * Middle Level procedure                                             *
@@ -91,7 +45,7 @@ enum {
 					      For terminating scaning - true (means: all done)
 		     * @param info            pointers to current record from inni file
 		    **/
-typedef bool      (__FASTCALL__ *FiUserFunc)(IniInfo * info);
+    typedef bool      (__FASTCALL__ *FiUserFunc)(IniInfo * info);
 
 		   /** Performs ini-file scanning.
 		     * @return                none
@@ -104,12 +58,11 @@ typedef bool      (__FASTCALL__ *FiUserFunc)(IniInfo * info);
 		     *                        be ignored.
 		     * @see                   FiUserFunc
 		    **/
-void          __FASTCALL__ FiProgress(const std::string& filename,FiUserFunc fuser);
+    void          __FASTCALL__ FiProgress(const std::string& filename,FiUserFunc fuser);
 
 /******************************************************************\
 * Low level routines                                               *
 \******************************************************************/
-namespace beye {
     class Ini_io : public Opaque {
 	public:
 	    Ini_io();
@@ -119,6 +72,7 @@ namespace beye {
 	    virtual void		close();
 	    virtual char*		get_next_string(char* store, unsigned int len, char *original );
 	    virtual std::string		get_next_string();
+	    virtual std::string		get_next_string(std::string& original);
 
 	    virtual int			eof() const { return handler.eof(); }
 	    virtual bool		seek(__fileoff_t off,BFile::e_seek origin) const { return handler.seek(off,origin); }
@@ -165,23 +119,16 @@ namespace beye {
 	private:
 	    std::map<std::string,std::string> set;
     };
-}// namespace beye
 
 /******************************************************************\
 * High level routines (similar to MS WIN SDK)                      *
 \******************************************************************/
-enum {
-    HINI_FULLCACHED=0x0001,
-    HINI_UPDATED   =0x0002
-};
-
-struct hIniProfile
-{
-   Ini_io*	handler;
-   std::string	fname;
-   any_t*	cache;
-   unsigned	flags;
-};
+    struct hIniProfile {
+	Ini_io*		handler;
+	std::string	fname;
+	any_t*		cache;
+	unsigned	flags;
+    };
 
 		   /** Opens ini file for using with iniReadProfileString and iniWriteProfileString functions.
 		     * @return                handle of opened stream
@@ -192,14 +139,14 @@ struct hIniProfile
 		     *                        non NULL value.
 		     * @see                   iniCloseFile
 		    **/
-extern hIniProfile*    __FASTCALL__ iniOpenFile(const std::string& fname,bool *has_error);
+    extern hIniProfile*    __FASTCALL__ iniOpenFile(const std::string& fname,bool *has_error);
 
 		   /** Closes ini file stream.
 		     * @return                none
 		     * @param ini             handle of opened stream
 		     * @see                   iniOpenFile
 		    **/
-extern void            __FASTCALL__ iniCloseFile(hIniProfile *ini);
+    extern void            __FASTCALL__ iniCloseFile(hIniProfile *ini);
 
 		   /** Performs search of given item in ini file and reads it value if found.
 		     * @return                length of readed value
@@ -215,7 +162,7 @@ extern void            __FASTCALL__ iniCloseFile(hIniProfile *ini);
 		     *                        returned.
 		     * @see                   iniWriteProfileString
 		    **/
-extern unsigned __FASTCALL__ iniReadProfileString(hIniProfile *ini,
+    extern unsigned __FASTCALL__ iniReadProfileString(hIniProfile *ini,
 				     const std::string& section,
 				     const std::string& subsection,
 				     const std::string& _item,
@@ -232,10 +179,10 @@ extern unsigned __FASTCALL__ iniReadProfileString(hIniProfile *ini,
 		     * @param value           specifies value of item
 		     * @see                   iniReadProfileString
 		    **/
-extern bool __FASTCALL__ iniWriteProfileString(hIniProfile *ini,
+    extern bool __FASTCALL__ iniWriteProfileString(hIniProfile *ini,
 				     const std::string& section,
 				     const std::string& subsection,
 				     const std::string& item,
 				     const std::string& value);
-
+}// namespace beye
 #endif
