@@ -1034,7 +1034,7 @@ static void __FASTCALL__ LXinit(CodeGuider& code_guider)
    BFile& main_handle = bmbioHandle();
    LXType = FILE_LX;
    bmReadBufferEx(&lxe.lx,sizeof(LXHEADER),beye_context().headshift,BFile::Seek_Set);
-   if((lx_cache = main_handle.dup()) == &bNull) lx_cache = &main_handle;
+   if((lx_cache = main_handle.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) lx_cache = &main_handle;
 }
 
 static void __FASTCALL__ LXdestroy( void )

@@ -181,8 +181,9 @@ std::string BFile::filename() const
     return fname;
 }
 
-bool BFile::dup(BFile& it) const
+bool BFile::dup(BFile& it,unsigned info) const
 {
+    UNUSED(info);
     if(fname.empty()) return false;
     if((it._handle=::dup(_handle))==-1) {
 	return false;
@@ -192,10 +193,10 @@ bool BFile::dup(BFile& it) const
     return true;
 }
 
-BFile* BFile::dup() const
+BFile* BFile::dup(unsigned info) const
 {
     BFile* ret = new(zeromem) BFile;
-    if(!dup(*ret)) return &bNull;
+    if(!dup(*ret,info)) return &bNull;
     return ret;
 }
 

@@ -466,21 +466,11 @@ bool BBio_File::dup(BBio_File& it,unsigned buff_size) const
     return rc;
 }
 
-bool BBio_File::dup(BBio_File& it) const
-{
-    return dup(it,vfb.bufsize);
-}
-
 BFile* BBio_File::dup(unsigned buff_size) const
 {
     BBio_File* ret = new(zeromem) BBio_File;
     if(!dup(*ret,buff_size)) return &bNull;
     return ret;
-}
-
-BFile* BBio_File::dup() const
-{
-    return dup(vfb.bufsize);
 }
 
 bool BBio_File::eof() const

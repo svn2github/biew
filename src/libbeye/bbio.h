@@ -84,9 +84,7 @@ namespace beye {
 	    virtual bool		write_dword(uint32_t dwVal);
 	    virtual bool		write_qword(uint64_t dwVal);
 	    virtual bool		write(const any_t* buffer,unsigned cbBuffer);
-	    virtual bool		dup(BBio_File&) const;
 	    virtual bool		dup(BBio_File&,unsigned buffSize) const;
-	    virtual BFile*		dup() const;
 	    virtual BFile*		dup(unsigned buffSize) const;
 	    virtual any_t*		buffer() const;
 	    virtual unsigned		bufflen() const;

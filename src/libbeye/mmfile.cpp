@@ -34,8 +34,9 @@ any_t* MMFile::buffer() const
     return addr;
 }
 
-bool MMFile::dup(MMFile& it) const
+bool MMFile::dup(MMFile& it,unsigned info) const
 {
+    UNUSED(info);
     bool rc;
     if(!(rc=BFile::dup(it))) return rc;
     it.addr=addr;
@@ -45,10 +46,10 @@ bool MMFile::dup(MMFile& it) const
     return true;
 }
 
-BFile* MMFile::dup() const
+BFile* MMFile::dup(unsigned info) const
 {
     MMFile* ret = new(zeromem) MMFile;
-    if(!dup(*ret)) return &bNull;
+    if(!dup(*ret,info)) return &bNull;
     return ret;
 }
 

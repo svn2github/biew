@@ -667,7 +667,7 @@ bool BeyeContext::BMOpen(const std::string& fname)
   }
   if(&bm_file_handle != &bNull) delete &bm_file_handle;
   bm_file_handle = *bm;
-  sc = bm_file_handle.dup(/*BBIO_SMALL_CACHE_SIZE*/);
+  sc = bm_file_handle.dup(BBIO_SMALL_CACHE_SIZE);
   if(sc == &bNull)
   {
     errnoMessageBox(DUP_FAIL,"",errno);

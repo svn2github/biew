@@ -286,7 +286,7 @@ static void __FASTCALL__ LEinit(CodeGuider& code_guider)
    BFile& main_handle = bmbioHandle();
    LXType = FILE_LE;
    bmReadBufferEx(&lxe.le,sizeof(LEHEADER),beye_context().headshift,BFile::Seek_Set);
-   if((lx_cache = main_handle.dup()) == &bNull) lx_cache = &main_handle;
+   if((lx_cache = main_handle.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) lx_cache = &main_handle;
 }
 
 static void __FASTCALL__ LEdestroy( void )

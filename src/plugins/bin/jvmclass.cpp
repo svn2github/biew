@@ -593,8 +593,8 @@ static void __FASTCALL__ jvm_init_fmt(CodeGuider& code_guider)
     jvm_header.header_length=bmGetCurrFilePos();
     bmSeek(fpos,BFile::Seek_Set);
     BFile& bh = bmbioHandle();
-    if((jvm_cache = bh.dup()) == &bNull) jvm_cache = &bh;
-    if((pool_cache = bh.dup()) == &bNull) pool_cache = &bh;
+    if((jvm_cache = bh.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) jvm_cache = &bh;
+    if((pool_cache = bh.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) pool_cache = &bh;
 }
 
 static void __FASTCALL__ jvm_destroy_fmt(void)

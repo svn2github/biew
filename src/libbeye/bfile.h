@@ -194,8 +194,8 @@ namespace beye {
 		     *                        of stream and buffer with all
 		     *                        characteristics.
 		    **/
-	    virtual bool		dup(BFile&) const;
-	    virtual BFile*		dup() const;
+	    virtual bool		dup(BFile&,unsigned info=0) const;
+	    virtual BFile*		dup(unsigned info=0) const;
 
 		   /** Returns low-level OS handle of opened stream.
 		     * @return                OS handle of opened stream

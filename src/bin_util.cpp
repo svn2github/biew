@@ -118,7 +118,7 @@ __filesize_t __FASTCALL__ fmtGetPubSym(BFile& fmt_cache,char *str,unsigned cb_st
 static BFile*  __FASTCALL__ ReopenSeek(__filesize_t dist)
 {
  BFile* handle;
- handle = bmbioHandle().dup();
+ handle = bmbioHandle().dup(BBIO_SMALL_CACHE_SIZE);
  if(handle != &bNull) handle->seek(dist,BFile::Seek_Set);
  else                 errnoMessageBox(READ_FAIL,"",errno);
  return handle;
