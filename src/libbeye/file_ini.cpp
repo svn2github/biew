@@ -775,7 +775,6 @@ static void __FASTCALL__ hlFiFileParserStd(hIniProfile *ini)
 
 static void __FASTCALL__ hlFiProgress(hIniProfile *ini,FiUserFunc usrproc)
 {
-
   if(!usrproc) return;
   proc = usrproc;
 
@@ -788,148 +787,17 @@ static void __FASTCALL__ hlFiProgress(hIniProfile *ini,FiUserFunc usrproc)
 /*****************************************************************\
 *                      High level support                          *
 \******************************************************************/
-enum {
-	HINI_FULLCACHED=0x0001,
-	HINI_UPDATED   =0x0002
-};
-
 static hIniProfile *opened_ini;
-
-static const unsigned IC_STRING=0x0001;
-
-typedef struct tag_ini_Cache
-{
-  unsigned flags;
-  char *   item;
-  union
-  {
-    linearArray *leaf;
-    char        *value;
-  }v;
-}ini_cache;
-
-static tCompare __FASTCALL__ __full_compare_cache(const any_t*v1,const any_t*v2)
-{
-  const ini_cache  *c1,  *c2;
-  int iflg;
-  tCompare i_ret;
-  c1 = (const ini_cache  *)v1;
-  c2 = (const ini_cache  *)v2;
-  iflg = __CmpLong__(c1->flags,c2->flags);
-  i_ret = strcmp(c1->item,c2->item);
-  return i_ret ? i_ret : iflg;
-}
-
-inline tCompare __compare_cache(const any_t*v1,const any_t*v2) { return __full_compare_cache(v1,v2); }
 
 static bool  __FASTCALL__ __addCache(const std::string& section,const std::string& subsection,
 			       const std::string& item,const std::string& value)
 {
-  any_t*found;
-  ini_cache  *it;
-  ini_cache ic;
-  ic.item = const_cast<char*>(section.c_str());
-  ic.flags = 0;
-  if(!(found =la_Find((linearArray *)opened_ini->cache,&ic,__full_compare_cache)))
-  {
-      ic.item = new char [section.size()+1];
-      if(!ic.item) { opened_ini->flags &= ~HINI_FULLCACHED; return true; }
-      strcpy(ic.item,section.c_str());
-      if(!(ic.v.leaf = la_Build(0,sizeof(ini_cache),0)))
-      {
-	 delete ic.item;
-	 opened_ini->flags &= ~HINI_FULLCACHED;
-	 return true;
-      }
-      ic.flags = 0;
-      if(!(la_AddData((linearArray *)opened_ini->cache,&ic,NULL)))
-      {
-	delete ic.item;
-	la_Destroy(ic.v.leaf);
-	opened_ini->flags &= ~HINI_FULLCACHED;
-	return true;
-      }
-      opened_ini->flags |= HINI_UPDATED;
-      la_Sort((linearArray *)opened_ini->cache,__compare_cache);
-      found = la_Find((linearArray *)opened_ini->cache,&ic,__full_compare_cache);
-      goto do_subsect;
-  }
-  else
-  {
-    do_subsect:
-      it = (ini_cache  *)found;
-      ic.item = const_cast<char*>(subsection.c_str());
-      if(!(found=la_Find(it->v.leaf,&ic,__full_compare_cache)))
-      {
-	ic.item = new char [subsection.size()+1];
-	if(!ic.item) { opened_ini->flags &= ~HINI_FULLCACHED; return true; }
-	strcpy(ic.item,subsection.c_str());
-	if(!(ic.v.leaf = la_Build(0,sizeof(ini_cache),0)))
-	{
-	   delete ic.item;
-	   opened_ini->flags &= ~HINI_FULLCACHED;
-	   return true;
-	}
-	ic.flags = 0;
-	if(!(la_AddData(it->v.leaf,&ic,NULL)))
-	{
-	  delete ic.item;
-	  la_Destroy(ic.v.leaf);
-	  opened_ini->flags &= ~HINI_FULLCACHED;
-	  return true;
-	}
-	opened_ini->flags |= HINI_UPDATED;
-	la_Sort(it->v.leaf,__compare_cache);
-	found = la_Find(it->v.leaf,&ic,__full_compare_cache);
-	goto do_item;
-      }
-      else
-      {
-	do_item:
-	it = (ini_cache  *)found;
-	ic.item = const_cast<char*>(item.c_str());
-	ic.flags = IC_STRING;
-	if(!(found=la_Find(it->v.leaf,&ic,__full_compare_cache)))
-	{
-	  ic.item = new char [item.size()+1];
-	  if(!ic.item) { opened_ini->flags &= ~HINI_FULLCACHED; return true; }
-	  strcpy(ic.item,item.c_str());
-	  ic.v.value = new char[value.size()+1];
-	  if(!ic.v.value) { delete ic.item; opened_ini->flags &= ~HINI_FULLCACHED; return true; }
-	  strcpy(ic.v.value,value.c_str());
-	  if(!(la_AddData(it->v.leaf,&ic,NULL)))
-	  {
-	    delete ic.item;
-	    delete ic.v.value;
-	    opened_ini->flags &= ~HINI_FULLCACHED;
-	    return true;
-	  }
-	  opened_ini->flags |= HINI_UPDATED;
-	  la_Sort(it->v.leaf,__compare_cache);
-	}
-	else
-	{
-	  /* item already exists. Try replace it */
-	  it = (ini_cache  *)found;
-	  if(value!=it->v.value)
-	  {
-	     char *newval,*oldval;
-	     newval = new char[value.size()+1];
-	     if(!newval)
-	     {
-	       opened_ini->flags &= ~HINI_FULLCACHED;
-	       return true;
-	     }
-	     strcpy(newval,value.c_str());
-	     oldval = it->v.value;
-	     it->v.value = newval;
-	     delete oldval;
-	     opened_ini->flags |= HINI_UPDATED;
-	  }
-	}
-      }
-  }
-  return false;
+    std::map<std::string,std::map<std::string,std::string> >& inner = opened_ini->cache[section];
+    std::map<std::string,std::string>& in_inner = inner[subsection];
+    std::map<std::string,std::string>::iterator iter=in_inner.find(item);
+    if(iter==in_inner.end()) in_inner.insert(std::make_pair(item,value));
+    else (*iter).second = value;
+    return false;
 }
 
 static bool __FASTCALL__ __buildCache(IniInfo *ini)
@@ -938,91 +806,16 @@ static bool __FASTCALL__ __buildCache(IniInfo *ini)
 		    ini->item,ini->value);
 }
 
-static void __FASTCALL__ __iter_destroy(any_t*it);
-
-static void __destroyCache(linearArray* it) { la_IterDestroy(it,__iter_destroy); }
-
-static void __FASTCALL__ __iter_destroy(any_t*it)
+static int  __FASTCALL__ out_sect(std::fstream& fs,const std::string& section,unsigned nled)
 {
-  ini_cache  *ic;
-  ic = (ini_cache  *)it;
-  if(ic->flags & IC_STRING)
-  {
-    delete ic->item;
-    delete ic->v.value;
-  }
-  else
-  {
-    delete ic->item;
-    la_IterDestroy(ic->v.leaf,__iter_destroy);
-  }
-}
-
-static unsigned ret;
-static unsigned buf_len;
-static char *buf_ptr;
-static std::string sect,subsect,item;
-
-static int __FASTCALL__ make_temp(const std::string& path,char *name_ptr)
-{
-  char *fullname, *nptr;
-  unsigned i,len;
-  int handle;
-  fullname = new char [(path.length()+1)*2];
-  if(!fullname) return -1;
-  strcpy(fullname,path.c_str());
-  len = strlen(fullname);
-  if(fullname[len-4] == '.') nptr = &fullname[len-4];
-  else                       nptr = &fullname[len];
-  handle = -1;
-  for(i = 0;i < 100;i++)
-  {
-  /*
-     in this loop we are change only extension:
-     file.tmp file.t1 ... file.t99
-     (it's only for compatibilities between different OS FS)
-  */
-    sprintf(nptr,".t%i",i);
-    handle = ::open(fullname,O_RDONLY | BFile::SO_DENYNONE);
-    if(handle == -1) handle = ::open(fullname,O_RDONLY | BFile::SO_COMPAT);
-    if(handle == -1)
-    {
-      handle = ::open(fullname,O_RDWR | O_CREAT | O_TRUNC, BFile::SO_COMPAT);
-      if(handle != -1)
-      {
-	strcpy(name_ptr,fullname);
-	goto bye;
-      }
-    }
-  }
-  bye:
-  return handle;
-}
-
-static bool __FASTCALL__ MyCallback(IniInfo * ini)
-{
-  bool cond;
-  cond = false;
-  if(!sect.empty()) cond = sect==ini->section;
-  if(!subsect.empty()) cond &= subsect==ini->subsection;
-  if(!item.empty()) cond &= item==ini->item;
-  if(cond)
-  {
-    ret = std::min(strlen(ini->value),size_t(buf_len));
-    strncpy(buf_ptr,ini->value,buf_len);
-    return true;
-  }
-  return false;
-}
-
-static int  __FASTCALL__ out_sect(std::fstream& fs,const std::string& section)
-{
+    for(unsigned i = 0;i < nled;i++) fs<<" ";
     fs<<"[ "<<section<<" ]"<<std::endl;
     return 2;
 }
 
-static int  __FASTCALL__ out_subsect(std::fstream& fs,const std::string& subsection)
+static int  __FASTCALL__ out_subsect(std::fstream& fs,const std::string& subsection,unsigned nled)
 {
+    for(unsigned i = 0;i < nled;i++) fs<<" ";
     fs<<"< "<<subsection<<" >"<<std::endl;
     return 2;
 }
@@ -1047,16 +840,11 @@ hIniProfile * __FASTCALL__ iniOpenFile(const std::string& fname,bool *has_error)
     if(has_error) *has_error = true;
     _ret->handler=new(zeromem) Ini_io;
     _ret->fname=fname;
+    _ret->updated=false;
     if(BFile::exists(_ret->fname)) rc=_ret->handler->open(fname);
 
     opened_ini = _ret;
-    _ret->flags |= HINI_FULLCACHED;
-    _ret->cache = (any_t*)la_Build(0,sizeof(ini_cache),NULL);
-    if(_ret->cache && rc) {
-	hlFiProgress(_ret,__buildCache);
-	_ret->flags &= ~HINI_UPDATED;
-    }
-    else          _ret->flags = 0;
+    if(rc) hlFiProgress(_ret,__buildCache);
     if(has_error) *has_error = !rc;
     return _ret;
 }
@@ -1065,68 +853,38 @@ static bool  __FASTCALL__ __flushCache(hIniProfile *ini);
 
 void __FASTCALL__ iniCloseFile(hIniProfile *ini)
 {
-  if(ini)
-  {
-    if(ini->cache)
-    {
-      __flushCache(ini);
-      __destroyCache((linearArray *)ini->cache);
+    if(ini) {
+	 __flushCache(ini);
+	ini->cache.clear();
+	delete ini->handler;
+	delete ini;
     }
-    delete ini->handler;
-    delete ini;
-  }
 }
 
 unsigned __FASTCALL__ iniReadProfileString(hIniProfile *ini,const std::string& section,const std::string& subsection,
 			   const std::string& _item,const std::string& def_value,char *buffer,
 			   unsigned cbBuffer)
 {
-   if(!buffer) return 0;
-   ret = 1;
-   buf_len = cbBuffer;
-   buf_ptr = buffer;
-   sect = section;
-   subsect = subsection;
-   item = _item;
-   if(cbBuffer) strncpy(buffer,def_value.c_str(),cbBuffer);
-   else         buffer[0] = 0;
-   if(ini)
-   {
-     if(ini->handler->opened())
-     {
-       bool v_found;
-       v_found = false;
-       if(ini->cache)
-       {
-	  ini_cache ic;
-	  any_t*found, *foundi, *foundv;
-	  ini_cache  *fi;
-	  ic.item = const_cast<char*>(section.c_str());
-	  ic.flags = 0;
-	  if((found=la_Find((linearArray*)ini->cache,&ic,__full_compare_cache))!=NULL)
-	  {
-	    ic.item=const_cast<char*>(subsection.c_str());
-	    fi = (ini_cache  *)found;
-	    if((foundi=la_Find(fi->v.leaf,&ic,__full_compare_cache))!=NULL)
-	    {
-	       ic.item = const_cast<char*>(_item.c_str());
-	       ic.flags = IC_STRING;
-	       fi = (ini_cache  *)foundi;
-	       if((foundv=la_Find(fi->v.leaf,&ic,__full_compare_cache))!=NULL)
-	       {
-		  fi = (ini_cache  *)foundv;
-		  strncpy(buffer,fi->v.value,cbBuffer);
-		  ret = std::min(strlen(fi->v.value),size_t(cbBuffer));
-		  v_found = true;
-	       }
+    unsigned ret;
+    std::string value;
+    if(!buffer) return 0;
+    if(cbBuffer) strncpy(buffer,def_value.c_str(),cbBuffer);
+    else         buffer[0] = 0;
+    if(ini) {
+	if(ini->handler->opened()) {
+	    std::map<std::string,std::map<std::string,std::map<std::string,std::string> > >::const_iterator inner = ini->cache.find(section);
+	    if(inner!=ini->cache.end()) {
+		std::map<std::string,std::map<std::string,std::string> >::const_iterator in = (*inner).second.find(subsection);
+		if(in!=(*inner).second.end()) {
+		    for(std::map<std::string,std::string>::const_iterator it=(*in).second.begin();it!=(*in).second.end();++it) {
+			if((*it).first==_item) { value=(*it).second; strncpy(buffer,value.c_str(),cbBuffer); break; }
+		    }
+		}
 	    }
-	  }
-       }
-       if(!v_found && (ini->flags & HINI_FULLCACHED) != HINI_FULLCACHED) hlFiProgress(ini,MyCallback);
-     }
-   }
-   buffer[cbBuffer-1] = 0;
-   return ret;
+	}
+    }
+    buffer[cbBuffer-1] = 0;
+    return ret;
 }
 
 static const char* HINI_HEADER[]={
@@ -1136,209 +894,11 @@ static const char* HINI_HEADER[]={
 
 static bool __FASTCALL__ __makeIni(std::fstream& hout,hIniProfile *ini)
 {
+    if(BFile::exists(ini->fname)) BFile::unlink(ini->fname);
     hout.open(ini->fname.c_str(),std::ios_base::out);
     if(hout.is_open()) for(unsigned i=0;i<2;i++) hout<<HINI_HEADER[i]<<std::endl;
     return hout;
 }
-
-static bool  __FASTCALL__ __createIni(hIniProfile *ini,
-				const std::string& _section,
-				const std::string& _subsection,
-				const std::string& _item,
-				const std::string& _value)
-{
-    std::fstream hout;
-    unsigned nled;
-    bool _ret;
-    __makeIni(hout,ini);
-    _ret = true;
-    if(!hout.is_open()) _ret = false;
-    else {
-	nled = 0;
-	if(!_section.empty()) nled += out_sect(hout,_section);
-	if(!_subsection.empty()) nled += out_subsect(hout,_subsection);
-	if(!_item.empty()) out_item(hout,nled,_item,_value);
-	hout.close();
-    }
-    return _ret;
-}
-
-static bool  __FASTCALL__ __directWriteProfileString(hIniProfile *ini,
-					       const std::string& _section,
-					       const std::string& _subsection,
-					       const std::string& _item,
-					       const std::string& _value)
-{
-    std::fstream tmpfs;
-    char *tmpname, *prev_val;
-    std::string workstr, wstr2, original;
-    unsigned nled,prev_val_size;
-    int hsrc;
-    bool _ret,need_write,s_ok,ss_ok,i_ok,done,sb_ok,ssb_ok,written,Cond,if_on;
-    /* test for no change of value */
-    prev_val_size = _value.length()+2;
-    prev_val = new char [prev_val_size];
-    need_write = true;
-    if(!ini) return false;
-    if(prev_val && ini->handler->opened()) {
-	const char *def_val;
-	if(_value=="y") def_val = "n";
-	else            def_val = "y";
-	iniReadProfileString(ini,_section,_subsection,_item,def_val,prev_val,prev_val_size);
-	if(_value==_value) need_write = false;
-	delete prev_val;
-    }
-    if(!need_write) return true;
-    tmpname = new char [(ini->fname.length()+1)*2];
-    if(!tmpname) return false;
-    if(!ini->handler->opened()) { /* if file does not exist make it. */
-	_ret = __createIni(ini,_section,_subsection,_item,_value);
-	if(_ret) ini->handler->open(ini->fname);
-	goto Exit_WS;
-    }
-    ini->handler->seek(0L,std::ios_base::beg);
-    ActiveFile = ini->handler;
-    hsrc = make_temp(ini->fname.c_str(),tmpname);
-    if(hsrc == -1) { _ret = false; goto Exit_WS; }
-    ::close(hsrc);
-    tmpfs.open(tmpname,std::ios_base::out);
-    if(!tmpfs.is_open()) { _ret = false; goto Exit_WS; }
-    for(unsigned i=0;i<2;i++) tmpfs<<HINI_HEADER[i]<<std::endl;
-
-    sb_ok = ssb_ok = s_ok = ss_ok = i_ok = done = false;
-    nled = 0;
-    if(_section.empty()) { s_ok = sb_ok = true; if(_subsection.empty()) ss_ok = ssb_ok = true; }
-    wstr2[0] = 1;
-    Cond = true;
-    if_on = false;
-    while(1) {
-	written = false;
-	workstr=ini->handler->get_next_string(original);
-	if(workstr[0] == 0) break;
-	if(FiisCommand(workstr)) {
-	    std::string cstr;
-	    cstr = FiGetCommandString(workstr);
-	    if(cstr.substr(0,2)=="if" ||
-		cstr.substr(0,4)=="elif" ||
-		cstr.substr(0,4)=="else")
-		if_on = true;
-	    if(cstr.substr(0,5)=="endif") if_on = false;
-	}
-	if(Cond) {
-	    if(FiisSection(workstr)) {
-		if(!_section.empty()) {
-		    wstr2=FiGetSectionName(workstr);
-		    if(_section==wstr2) {
-			s_ok = sb_ok = true;
-			nled = 2;
-			ss_ok = ssb_ok = _subsection.empty();
-		    }
-		    else s_ok = false;
-		}
-		else s_ok = false;
-	    } else if(FiisSubSection(workstr)) {
-		if(!_subsection.empty()) {
-		    wstr2=FiGetSubSectionName(workstr);
-		    if(_subsection==wstr2) {
-			ss_ok = ssb_ok = true;
-			nled = 4;
-		    }
-		    else ss_ok = false;
-		}
-		else ss_ok = false;
-	    } else if(FiisItem(workstr)) {
-		wstr2=FiGetItemName(workstr);
-		if(_item==wstr2) i_ok = true;
-		if(i_ok && s_ok && ss_ok) {
-		    if(!done || if_on) {
-			out_item(tmpfs,nled,_item,_value);
-			written = true;
-			done = true;
-		    }
-		}
-		else i_ok = false;
-	    }
-	    /**********************************************/
-	    if(sb_ok && !s_ok) {
-		if(!done) {
-		    if(!ssb_ok && !ss_ok && !_subsection.empty()) { nled += 2; out_subsect(tmpfs,_subsection); }
-		    out_item(tmpfs,nled,_item,_value);
-		    written = false;
-		    done = true;
-		}
-	    }
-	    if(s_ok && ssb_ok && !ss_ok) {
-		if(!done) {
-		    out_item(tmpfs,nled,_item,_value);
-		    written = false;
-		    done = true;
-		}
-	    }
-	}
-	if(!written) tmpfs<<original<<std::endl;
-    }
-    /************ this is end of loop *************/
-    if(!done) {
-	if(!sb_ok && !_section.empty()) {
-	    nled = out_sect(tmpfs,_section);
-	    if(!_subsection.empty()) {
-		ssb_ok = true;
-		nled+=out_subsect(tmpfs,_subsection);
-	    }
-	}
-	if(!ssb_ok && !_subsection.empty()) {
-	    nled+=out_subsect(tmpfs,_subsection);
-	}
-	out_item(tmpfs,nled,_item,_value);
-	done = true;
-    }
-    tmpfs.close();
-    ini->handler->close();
-    BFile::unlink(ini->fname.c_str());
-    BFile::rename(tmpname,ini->fname.c_str());
-    ini->handler->open(ini->fname);
-    _ret = true;
-    Exit_WS:
-    PFREE(tmpname);
-    return _ret;
-}
-
-static char *__partSect,*__partSubSect;
-static hIniProfile *part_ini_profile;
-
-static void __FASTCALL__ part_flush_item(any_t*data)
-{
-  ini_cache  *it;
-  it = (ini_cache  *)data;
-  __directWriteProfileString(part_ini_profile,
-			     __partSect,
-			     __partSubSect,
-			     it->item,
-			     it->v.value);
-}
-
-static void __FASTCALL__ part_flush_subsect(any_t*data)
-{
-  ini_cache  *it;
-  it = (ini_cache  *)data;
-  __partSubSect = it->item;
-  la_ForEach(it->v.leaf,part_flush_item);
-}
-
-static void __FASTCALL__ part_flush_sect(any_t*data)
-{
-  ini_cache  *it;
-  it = (ini_cache  *)data;
-  __partSect = it->item;
-  la_ForEach(it->v.leaf,part_flush_subsect);
-}
-
-static void  __FASTCALL__ __flushPartialCache(hIniProfile *ini)
-{
-  part_ini_profile = ini;
-  la_ForEach((linearArray *)ini->cache,part_flush_sect);
-}
-
 
 bool __FASTCALL__ iniWriteProfileString(hIniProfile *ini,
 					 const std::string& _section,
@@ -1346,70 +906,54 @@ bool __FASTCALL__ iniWriteProfileString(hIniProfile *ini,
 					 const std::string& _item,
 					 const std::string& _value)
 {
-   bool _ret;
-   opened_ini = ini;
-   _ret = false;
-   if(ini->cache)
-   {
-     if((ini->flags & HINI_FULLCACHED) != HINI_FULLCACHED) goto flush_it;
-     if(__addCache(_section,_subsection,_item,_value) != 0)
-     {
-       flush_it:
-       __flushPartialCache(ini);
-       __destroyCache((linearArray *)ini->cache);
-       ini->cache = 0;
-       goto do_def;
-     }
-   }
-   else
-   {
-     do_def:
-     _ret = __directWriteProfileString(ini,_section,_subsection,_item,_value);
-   }
-   return _ret;
+    bool _ret;
+    opened_ini = ini;
+    _ret = false;
+    ini->updated=true;
+    __addCache(_section,_subsection,_item,_value);
+    return _ret;
 }
 
 static int __nled;
-static std::fstream flush_fs;
-
-static void __FASTCALL__ flush_item(any_t*data)
+static void __FASTCALL__ flush_item(std::fstream& flush_handler,const std::map<std::string,std::string>& inner)
 {
-  ini_cache  *it;
-  it = (ini_cache  *)data;
-  out_item(flush_fs,__nled,it->item,it->v.value);
+    for(std::map<std::string,std::string>::const_iterator it=inner.begin();it!=inner.end();++it) {
+	out_item(flush_handler,__nled,(*it).first,(*it).second);
+    }
 }
 
-static void __FASTCALL__ flush_subsect(any_t*data)
+static void __FASTCALL__ flush_subsect(std::fstream& flush_handler,const std::map<std::string,std::map<std::string,std::string > >& inner)
 {
-  ini_cache  *it;
-  int _has_led;
-  it = (ini_cache  *)data;
-  _has_led = __nled;
-  if(strlen(it->item)) __nled += out_subsect(flush_fs,it->item);
-  la_ForEach(it->v.leaf,flush_item);
-  __nled = _has_led;
+    int _has_led = __nled;
+    for(std::map<std::string,std::map<std::string,std::string> >::const_iterator it=inner.begin();it!=inner.end();++it) {
+	__nled += out_subsect(flush_handler,(*it).first,__nled);
+	flush_item(flush_handler,(*it).second);
+	__nled=_has_led;
+    }
 }
 
-static void __FASTCALL__ flush_sect(any_t*data)
+static void __FASTCALL__ flush_sect(std::fstream& flush_handler,const std::map<std::string,std::map<std::string,std::map<std::string,std::string> > >& _cache)
 {
-  ini_cache  *it;
-  it = (ini_cache  *)data;
-  __nled = 0;
-  if(strlen(it->item)) __nled += out_sect(flush_fs,it->item);
-  la_ForEach(it->v.leaf,flush_subsect);
+    __nled = 0;
+    int _has_led = __nled;
+    for(std::map<std::string,std::map<std::string,std::map<std::string,std::string> > >::const_iterator it=_cache.begin();it!=_cache.end();++it) {
+	__nled += out_sect(flush_handler,(*it).first,__nled);
+	flush_subsect(flush_handler,(*it).second);
+	__nled=_has_led;
+    }
 }
 
 static bool  __FASTCALL__ __flushCache(hIniProfile *ini)
 {
-  if((ini->flags & HINI_UPDATED) == HINI_UPDATED && ini->cache)
-  {
-    if(ini->handler->opened()) ini->handler->close();
-    __makeIni(flush_fs,ini);
-    if(!flush_fs.is_open()) return true;
-    la_ForEach((linearArray *)ini->cache,flush_sect);
-    flush_fs.close();
-    ini->handler->open(ini->fname);
-  }
-  return false;
+    if(ini->updated) {
+	if(ini->handler->opened()) ini->handler->close();
+	std::fstream flush_fs;
+	__makeIni(flush_fs,ini);
+	if(!flush_fs.is_open()) return true;
+	flush_sect(flush_fs,ini->cache);
+	flush_fs.close();
+	ini->handler->open(ini->fname);
+    }
+    return false;
 }
 } // namespace beye

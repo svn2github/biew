@@ -125,8 +125,8 @@ namespace beye {
     struct hIniProfile {
 	Ini_io*		handler;
 	std::string	fname;
-	any_t*		cache;
-	unsigned	flags;
+	std::map <std::string,std::map<std::string,std::map<std::string,std::string > > > cache;
+	bool		updated;
     };
 
 		   /** Opens ini file for using with iniReadProfileString and iniWriteProfileString functions.
