@@ -100,7 +100,7 @@ bool BeyeContext::select_mode()
     return false;
 }
 
-void BeyeContext::init_modes( hIniProfile *ini )
+void BeyeContext::init_modes( Ini_Profile& ini )
 {
     if(!activeMode) activeMode = modes[defMainModeSel]->query_interface(*code_guider);
     activeMode->read_ini(ini);
@@ -282,68 +282,66 @@ bool BeyeContext::is_valid_ini_args( ) const
 	 false : true : false : false;
 }
 
-hIniProfile* BeyeContext::load_ini_info()
+Ini_Profile& BeyeContext::load_ini_info()
 {
-  char tmp[20], buf[20],stmp[4096];
-  hIniProfile *ini;
+  char buf[20];
+  std::string tmp,stmp;
+  Ini_Profile& ini = *new(zeromem) Ini_Profile;
   ini_name = getenv("BEYE_INI");
   if(!ini_name) ini_name = __get_ini_name("beye");
-  ini = UseIniFile ? iniOpenFile(ini_name,NULL) : NULL;
-  read_profile_string(ini,"Beye","Setup","HelpName","",stmp,sizeof(stmp));
-  help_name=stmp;
-  read_profile_string(ini,"Beye","Setup","SkinName","",stmp,sizeof(stmp));
-  skin_name=stmp;
-  read_profile_string(ini,"Beye","Setup","SyntaxName","",stmp,sizeof(stmp));
-  syntax_name=stmp;
-  read_profile_string(ini,"Beye","Search","String","",(char *)search_buff,sizeof(search_buff));
-  search_len = strlen((char *)search_buff);
-  read_profile_string(ini,"Beye","Search","Case","off",tmp,sizeof(tmp));
-  beyeSearchFlg = stricmp(tmp,"on") == 0 ? SF_CASESENS : SF_NONE;
-  read_profile_string(ini,"Beye","Search","Word","off",tmp,sizeof(tmp));
-  if(stricmp(tmp,"on") == 0) beyeSearchFlg |= SF_WORDONLY;
-  read_profile_string(ini,"Beye","Search","Backward","off",tmp,sizeof(tmp));
-  if(stricmp(tmp,"on") == 0) beyeSearchFlg |= SF_REVERSE;
-  read_profile_string(ini,"Beye","Search","Template","off",tmp,sizeof(tmp));
-  if(stricmp(tmp,"on") == 0) beyeSearchFlg |= SF_WILDCARDS;
-  read_profile_string(ini,"Beye","Search","UsePlugin","off",tmp,sizeof(tmp));
-  if(stricmp(tmp,"on") == 0) beyeSearchFlg |= SF_PLUGINS;
-  read_profile_string(ini,"Beye","Search","AsHex","off",tmp,sizeof(tmp));
-  if(stricmp(tmp,"on") == 0) beyeSearchFlg |= SF_ASHEX;
-  read_profile_string(ini,"Beye","Browser","LastOpen","",LastOpenFileName,4096);
+  if(UseIniFile) ini.open(ini_name);
+  help_name=read_profile_string(ini,"Beye","Setup","HelpName","");
+  skin_name=read_profile_string(ini,"Beye","Setup","SkinName","");
+  syntax_name=read_profile_string(ini,"Beye","Setup","SyntaxName","");
+  stmp=read_profile_string(ini,"Beye","Search","String","");
+  strcpy((char*)search_buff,stmp.c_str());
+  search_len = stmp.length();
+  tmp=read_profile_string(ini,"Beye","Search","Case","off");
+  beyeSearchFlg = stricmp(tmp.c_str(),"on") == 0 ? SF_CASESENS : SF_NONE;
+  tmp=read_profile_string(ini,"Beye","Search","Word","off");
+  if(stricmp(tmp.c_str(),"on") == 0) beyeSearchFlg |= SF_WORDONLY;
+  tmp=read_profile_string(ini,"Beye","Search","Backward","off");
+  if(stricmp(tmp.c_str(),"on") == 0) beyeSearchFlg |= SF_REVERSE;
+  tmp=read_profile_string(ini,"Beye","Search","Template","off");
+  if(stricmp(tmp.c_str(),"on") == 0) beyeSearchFlg |= SF_WILDCARDS;
+  tmp=read_profile_string(ini,"Beye","Search","UsePlugin","off");
+  if(stricmp(tmp.c_str(),"on") == 0) beyeSearchFlg |= SF_PLUGINS;
+  tmp=read_profile_string(ini,"Beye","Search","AsHex","off");
+  if(stricmp(tmp.c_str(),"on") == 0) beyeSearchFlg |= SF_ASHEX;
+  LastOpenFileName=read_profile_string(ini,"Beye","Browser","LastOpen","");
   sprintf(buf,"%u",LastMode); /* [dBorca] so that src and dst won't overlap for strncpy */
-  read_profile_string(ini,"Beye","Browser","LastMode",buf,tmp,sizeof(tmp));
-  LastMode = (size_t)strtoul(tmp,NULL,10);
-  read_profile_string(ini,"Beye","Browser","Offset","0",tmp,sizeof(tmp));
-  LastOffset = atoll(tmp);
-  read_profile_string(ini,"Beye","Setup","Version","",ini_ver,sizeof(ini_ver));
-  read_profile_string(ini,"Beye","Setup","DirectConsole","yes",tmp,sizeof(tmp));
-  if(stricmp(tmp,"yes") == 0) vioIniFlags = __TVIO_FLG_DIRECT_CONSOLE_ACCESS;
-  read_profile_string(ini,"Beye","Setup","ForceMono","no",tmp,sizeof(tmp));
-  if(stricmp(tmp,"yes") == 0) twinIniFlags = TWIF_FORCEMONO;
-  read_profile_string(ini,"Beye","Setup","Force7Bit","no",tmp,sizeof(tmp));
-  if(stricmp(tmp,"yes") == 0) vioIniFlags |= __TVIO_FLG_USE_7BIT;
-  read_profile_string(ini,"Beye","Setup","MouseSens","yes",tmp,sizeof(tmp));
-  if(stricmp(tmp,"yes") == 0) kbdFlags = KBD_NONSTOP_ON_MOUSE_PRESS;
-  read_profile_string(ini,"Beye","Setup","IniSettingsAnywhere","no",tmp,sizeof(tmp));
-  if(stricmp(tmp,"yes") == 0) iniSettingsAnywhere = true;
-  read_profile_string(ini,"Beye","Setup","FioUseMMF","no",tmp,sizeof(tmp));
-  if(stricmp(tmp,"yes") == 0) fioUseMMF = true;
+  tmp=read_profile_string(ini,"Beye","Browser","LastMode",buf);
+  LastMode = (size_t)strtoul(tmp.c_str(),NULL,10);
+  tmp=read_profile_string(ini,"Beye","Browser","Offset","0");
+  LastOffset = atoll(tmp.c_str());
+  ini_ver=read_profile_string(ini,"Beye","Setup","Version","");
+  tmp=read_profile_string(ini,"Beye","Setup","DirectConsole","yes");
+  if(stricmp(tmp.c_str(),"yes") == 0) vioIniFlags = __TVIO_FLG_DIRECT_CONSOLE_ACCESS;
+  tmp=read_profile_string(ini,"Beye","Setup","ForceMono","no");
+  if(stricmp(tmp.c_str(),"yes") == 0) twinIniFlags = TWIF_FORCEMONO;
+  tmp=read_profile_string(ini,"Beye","Setup","Force7Bit","no");
+  if(stricmp(tmp.c_str(),"yes") == 0) vioIniFlags |= __TVIO_FLG_USE_7BIT;
+  tmp=read_profile_string(ini,"Beye","Setup","MouseSens","yes");
+  if(stricmp(tmp.c_str(),"yes") == 0) kbdFlags = KBD_NONSTOP_ON_MOUSE_PRESS;
+  tmp=read_profile_string(ini,"Beye","Setup","IniSettingsAnywhere","no");
+  if(stricmp(tmp.c_str(),"yes") == 0) iniSettingsAnywhere = true;
+  tmp=read_profile_string(ini,"Beye","Setup","FioUseMMF","no");
+  if(stricmp(tmp.c_str(),"yes") == 0) fioUseMMF = true;
   if(!MMFile::has_mmio) fioUseMMF = false;
-  read_profile_string(ini,"Beye","Setup","PreserveTimeStamp","no",tmp,sizeof(tmp));
-  if(stricmp(tmp,"yes") == 0) iniPreserveTime = true;
-  read_profile_string(ini,"Beye","Setup","UseExternalProgs","no",tmp,sizeof(tmp));
-  if(stricmp(tmp,"yes") == 0) iniUseExtProgs = true;
-  read_profile_string(ini,"Beye","Setup","Codepage","CP866",stmp,sizeof(stmp));
-  codepage=stmp;
+  tmp=read_profile_string(ini,"Beye","Setup","PreserveTimeStamp","no");
+  if(stricmp(tmp.c_str(),"yes") == 0) iniPreserveTime = true;
+  tmp=read_profile_string(ini,"Beye","Setup","UseExternalProgs","no");
+  if(stricmp(tmp.c_str(),"yes") == 0) iniUseExtProgs = true;
+  codepage=read_profile_string(ini,"Beye","Setup","Codepage","CP866");
   return ini;
 }
 
 void BeyeContext::save_ini_info() const
 {
   char tmp[20];
-  hIniProfile *ini;
   search_buff[search_len] = 0;
-  ini = iniOpenFile(ini_name,NULL);
+  Ini_Profile& ini = *new(zeromem) Ini_Profile;
+  ini.open(ini_name);
   write_profile_string(ini,"Beye","Setup","HelpName",help_name.c_str());
   write_profile_string(ini,"Beye","Setup","SkinName",skin_name.c_str());
   write_profile_string(ini,"Beye","Setup","SyntaxName",syntax_name.c_str());
@@ -379,7 +377,7 @@ void BeyeContext::save_ini_info() const
   write_profile_string(ini,"Beye","Setup","Codepage",codepage.c_str());
   activeMode->save_ini(ini);
   udnTerm(ini);
-  iniCloseFile(ini);
+  delete &ini;
 }
 
 static BFile::ftime ftim;
@@ -417,7 +415,6 @@ void BeyeContext::show_usage() const {
 
 int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::string>& envm)
 {
- hIniProfile *ini;
  bool skin_err;
  int retval;
 #ifndef NDEBUG
@@ -440,7 +437,7 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
     flg=MPA_FLG_BACKTRACE;
 */
  __init_sys();
- ini=BeyeCtx->load_ini_info();
+ Ini_Profile& ini=BeyeCtx->load_ini_info();
  skin_err = csetReadIniFile(BeyeCtx->skin_name.c_str());
  initBConsole(BeyeCtx->vioIniFlags,BeyeCtx->twinIniFlags);
  if(argv.size() < 2) goto show_usage;
@@ -470,7 +467,7 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  twSetColorAttr(HelpWnd,prompt_cset.digit);
  twClearWin(HelpWnd);
  twShowWin(HelpWnd);
- if(strcmp(BeyeCtx->ini_ver,BEYE_VERSION) != 0) Setup();
+ if(BeyeCtx->ini_ver!=BEYE_VERSION) Setup();
  TitleWnd = WindowOpen(1,1,tvioWidth,1,TWS_NONE);
  twSetColorAttr(TitleWnd,title_cset.main);
  twClearWin(TitleWnd);
@@ -488,13 +485,13 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  ftim_ok = BFile::get_ftime(BeyeCtx->ArgVector1,ftim);
  if(!BeyeCtx->LoadInfo())
  {
-   if(ini) iniCloseFile(ini);
+   delete &ini;
    retval = EXIT_FAILURE;
    goto Bye;
  }
  BeyeCtx->bin_format().detect_format();
  BeyeCtx->init_modes(ini);
- if(ini) iniCloseFile(ini);
+ delete &ini;
  MainWnd = WindowOpen(1,2,tvioWidth,tvioHeight-1,TWS_NONE);
  twSetColorAttr(MainWnd,browser_cset.main);
  twClearWin(MainWnd);
@@ -561,26 +558,23 @@ bool BeyeContext::new_source()
     return ret;
 }
 
-unsigned BeyeContext::read_profile_string(hIniProfile *ini,
-			       const char *section,
-			       const char *subsection,
-			       const char *_item,
-			       const char *def_value,
-			       char *buffer,
-			       unsigned cbBuffer) const
+std::string BeyeContext::read_profile_string(Ini_Profile& ini,
+			       const std::string& section,
+			       const std::string& subsection,
+			       const std::string& _item,
+			       const std::string& def_value) const
 {
-  return UseIniFile ? iniReadProfileString(ini,section,subsection,
-					   _item,def_value,buffer,cbBuffer)
-		    : 1;
+  return UseIniFile ? ini.read(section,subsection,_item,def_value)
+		    : def_value;
 }
 
-bool BeyeContext::write_profile_string(hIniProfile *ini,
-					  const char *section,
-					  const char *subsection,
-					  const char *item,
-					  const char *value) const
+bool BeyeContext::write_profile_string(Ini_Profile& ini,
+					  const std::string& section,
+					  const std::string& subsection,
+					  const std::string& item,
+					  const std::string& value) const
 {
-  return iniWriteProfileString(ini,section,subsection,item,value);
+  return ini.write(section,subsection,item,value);
 }
 
 
@@ -617,7 +611,6 @@ BeyeContext::BeyeContext(const std::vector<std::string>& _argv, const std::map<s
     codepage="CP866";
     scheme_name="Built-in";
     if(argv.size()>1) ArgVector1 = argv[1];
-    LastOpenFileName = new char[4096];
     _shortname = new char[SHORT_PATH_LEN + 1];
     LastMode = modes.size()+10;
 }
@@ -628,7 +621,6 @@ BeyeContext::~BeyeContext() {
 
     delete sysinfo;
     delete addons;
-    delete LastOpenFileName;
     delete _shortname;
     delete code_guider;
     BMClose();

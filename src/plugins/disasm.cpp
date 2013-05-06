@@ -668,23 +668,23 @@ void DisMode::help() const
    if( activeDisasm->ShowShortHelp ) activeDisasm->ShowShortHelp();
 }
 
-void DisMode::read_ini(hIniProfile *ini)
+void DisMode::read_ini(Ini_Profile& ini)
 {
     BeyeContext& bctx = beye_context();
-    char tmps[10];
+    std::string tmps;
     if(bctx.is_valid_ini_args()) {
-	bctx.read_profile_string(ini,"Beye","Browser","LastSubMode","0",tmps,sizeof(tmps));
-	DefDisasmSel = (int)::strtoul(tmps,NULL,10);
+	tmps=bctx.read_profile_string(ini,"Beye","Browser","LastSubMode","0");
+	DefDisasmSel = (int)::strtoul(tmps.c_str(),NULL,10);
 	if(DefDisasmSel >= list.size()) DefDisasmSel = 0;
 	hexAddressResolv=ReadIniAResolv(ini);
-	bctx.read_profile_string(ini,"Beye","Browser","SubSubMode7","0",tmps,sizeof(tmps));
-	disPanelMode = e_panel((int)::strtoul(tmps,NULL,10));
+	tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode7","0");
+	disPanelMode = e_panel((int)::strtoul(tmps.c_str(),NULL,10));
 	if(disPanelMode > Panel_Full) disPanelMode = Panel_Wide;
-	bctx.read_profile_string(ini,"Beye","Browser","SubSubMode8","0",tmps,sizeof(tmps));
-	disNeedRef = e_ref((int)::strtoul(tmps,NULL,10));
+	tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode8","0");
+	disNeedRef = e_ref((int)::strtoul(tmps.c_str(),NULL,10));
 	if(disNeedRef > Ref_Predict) disNeedRef = Ref_None;
-	bctx.read_profile_string(ini,"Beye","Browser","SubSubMode9","0",tmps,sizeof(tmps));
-	HiLight = (int)strtoul(tmps,NULL,10);
+	tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode9","0");
+	HiLight = (int)strtoul(tmps.c_str(),NULL,10);
 	if(HiLight > 2) HiLight = 2;
 	activeDisasm = list[DefDisasmSel];
 	accept_actions();
@@ -692,7 +692,7 @@ void DisMode::read_ini(hIniProfile *ini)
     }
 }
 
-void DisMode::save_ini(hIniProfile *ini)
+void DisMode::save_ini(Ini_Profile& ini)
 {
     BeyeContext& bctx = beye_context();
     char tmps[10];

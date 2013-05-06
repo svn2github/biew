@@ -103,6 +103,7 @@ __filesize_t Bin_Format::action_F10() const { return detectedFormat->action[9]?d
 __filesize_t Bin_Format::show_header() const {
     if(detectedFormat->showHdr) return detectedFormat->showHdr(); /**< if not an MZ style format */
     if(IsNewExe()) return mz_format?mz_format->showHdr():Bad_Address;
+    return BMGetCurrFilePos();
 }
 bool Bin_Format::bind(const DisMode& _parent,char *str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift) const {
     return detectedFormat->bind?detectedFormat->bind(_parent,str,shift,flg,codelen,r_shift):false;
@@ -135,7 +136,7 @@ __filesize_t Bin_Format::get_public_symbol(char *str,unsigned cb_str,unsigned *_
     }
     return rc;
 }
-unsigned Bin_Format::get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,__filesize_t *start,__filesize_t *end,int *_class,int *bitness) const {
-    return detectedFormat->GetObjAttr?detectedFormat->GetObjAttr(pa,name,cb_name,start,end,_class,bitness):0;
+unsigned Bin_Format::get_object_attribute(__filesize_t pa,char *_name,unsigned cb_name,__filesize_t *start,__filesize_t *end,int *_class,int *bitness) const {
+    return detectedFormat->GetObjAttr?detectedFormat->GetObjAttr(pa,_name,cb_name,start,end,_class,bitness):0;
 }
 } // namespace beye

@@ -6350,19 +6350,19 @@ static void __FASTCALL__ ix86Term( void )
    delete ix86_modrm_ret;
 }
 
-static void __FASTCALL__ ix86ReadIni( hIniProfile *ini )
+static void __FASTCALL__ ix86ReadIni( Ini_Profile& ini )
 {
-  char tmps[10];
+  std::string tmps;
   if(beye_context().is_valid_ini_args())
   {
-    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode3","1",tmps,sizeof(tmps));
-    BITNESS = (unsigned)strtoul(tmps,NULL,10);
+    tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode3","1");
+    BITNESS = (unsigned)strtoul(tmps.c_str(),NULL,10);
     if(BITNESS > 2 && BITNESS != DAB_AUTO) BITNESS = 0;
     x86_Bitness = BITNESS;
   }
 }
 
-static void __FASTCALL__ ix86WriteIni( hIniProfile *ini )
+static void __FASTCALL__ ix86WriteIni( Ini_Profile& ini )
 {
   char tmps[10];
   sprintf(tmps,"%u",BITNESS);

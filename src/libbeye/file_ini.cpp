@@ -102,32 +102,8 @@ fprintf(stderr,
 #endif
 
 namespace beye {
-static unsigned char CaseSens = 2; /**< 2 - case 1 - upper 0 - lower */
-static FiUserFunc proc;
-static Ini_io* ActiveFile = NULL;
-static std::string fi_Debug_Str;
-
-static int __FASTCALL__ StdError(int ne,int row,const std::string& addinfo);
-static void __FASTCALL__ FiFileParserStd(const std::string& filename);
-static bool __FASTCALL__ FiStringParserStd(const std::string& curr_str);
-static bool __FASTCALL__ FiCommandParserStd( const std::string& cmd );
-static bool __FASTCALL__ FiGetConditionStd( const std::string& condstr);
-
-static int (__FASTCALL__ *FiError)(int nError,int row,const std::string& ) = StdError;
-static void  (__FASTCALL__ *FiFileParser)(const std::string& fname) = FiFileParserStd;
-static bool (__FASTCALL__ *FiStringParser)(const std::string& curr_str) = FiStringParserStd;
-static bool (__FASTCALL__ *FiCommandParser)(const std::string& cmd) = FiCommandParserStd;
-static bool (__FASTCALL__ *FiGetCondition)( const std::string& condstr) = FiGetConditionStd;
-
-/**************************************************************\
-*                      Low level support                       *
-\**************************************************************/
-
-
 static const unsigned __C_EOF=0x1A;
-
-static std::vector<std::pair<size_t,std::string> > file_info;
-static const char*  FiUserMessage = NULL;
+static const char FiOpenComment=';';
 static const char iniLegalSet[] = " _0123456789"
 			   "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 			   "abcdefghijklmnopqrstuvwxyz";
@@ -138,91 +114,26 @@ static inline bool FiisSection(const std::string& str ) { return IS_SECT(str,'['
 static inline bool FiisSubSection(const std::string& str ) { return IS_SECT(str,'<'); }
 static inline bool FiisCommand(const std::string& str ) { return IS_SECT(str,'#'); }
 static inline bool FiisItem(const std::string& str) { return !(FiisSection(str) || FiisSubSection(str) || FiisCommand(str)); }
-
-static void __FASTCALL__ FiAError(int nError,int row,const std::string& addinfo)
-{
- int eret = 0;
- if(FiError) eret = (*FiError)(nError,row,addinfo);
- if(eret == __FI_EXITPROC) exit(255);
-}
-
-static void __FASTCALL__ FiAErrorCL(int nError) { FiAError(nError,file_info.back().first,""); }
-
-static const char * list[] = {
- "No errors",
- "Can't open file: '%s' (bad '#include' statement?).",
- "Too many open files.",
- "Memory exhausted.",
- "Open 'if' (missing '#endif').",
- "Missing 'if' for 'endif' statement.",
- "Missing 'if' for 'else' statement.",
- "Unknown '#' directive.",
- "Syntax error in 'if' statement.",
- "Expected open section or subsection, or invalid string.",
- "Bad character on line (possible lost comment).",
- "Bad variable in 'set' or 'delete' statement.",
- "Bad value of variable in 'set' statement.",
- "Unrecognized name of variable in 'delete' statement.",
- "Undefined variable detected (case sensitivity?).",
- "Missing 'if' for 'elif' statement.",
- "Open variable on line (use even number of '%' characters).",
- "Lost or mismatch character '=' in assigned expression.",
- "",
- "User error."
-};
-
-static const char * __FASTCALL__ FiDecodeError(int nError)
-{
- const char *ret;
- nError = abs(nError);
- if(nError >= 0 && nError <= abs(__FI_FIUSER)) ret = list[nError];
- else ret = "Unknown Error";
- return ret;
-}
-
-static int __FASTCALL__ StdError(int ne,int row,const std::string& addinfo)
-{
-    std::fstream herr;
-    const char * what;
-    char sout[4096];
-    herr.open("fi_syserr.$$$",std::ios_base::out);
-    herr<<"About : [.Ini] file run-time support library. Written by Nickols_K"<<std::endl<<"Detected ";
-    if(ne != __FI_TOOMANY && ~file_info.empty()) {
-	herr<<(row ? "fatal" : "")<<" error in : "<<file_info.back().second;
-    }
-    herr<<std::endl;
-    if(row) herr<<"At line : <<"<<row<<std::endl;
-    what = FiDecodeError(ne);
-    if(!addinfo.empty()) sprintf(sout,what,addinfo.c_str());
-    else strncpy(sout,what,sizeof(sout));
-    herr<<"Message : "<<sout<<std::endl;
-    if(FiUserMessage) herr<<"User message : "<<FiUserMessage<<std::endl;
-    if(!fi_Debug_Str.empty()) herr<<"Debug info: '"<<fi_Debug_Str<<"'"<<std::endl;
-    herr.close();
-    std::cerr<<std::endl<<"Error in .ini file."<<std::endl<<"File fi_syser.$$$ created."<<std::endl;
-    return __FI_EXITPROC;
-}
-
-Ini_io::Ini_io() {}
+/**************************************************************\
+*                      Low level support                       *
+\**************************************************************/
+Ini_io::Ini_io(Ini_Parser& _parent):parent(_parent) {}
 Ini_io::~Ini_io() { if(fs.is_open()) close(); }
 bool Ini_io::open(const std::string& filename)
 {
     /* Try to load .ini file entire into memory */
     fs.open(filename.c_str(),std::ios_base::in|std::ios_base::binary);
     /* Note! All OSes except DOS-DOS386 allows opening of empty filenames as /dev/null */
-    if(!fs.is_open() && filename[0]) FiAError(__FI_BADFILENAME,0,filename.c_str());
-    file_info.push_back(std::make_pair(0,filename));
+    if(!fs.is_open() && filename[0]) parent.aerror(__FI_BADFILENAME,0,filename);
+    parent.file_info.push_back(std::make_pair(0,filename));
     return true;
 }
 
 void Ini_io::close()
 {
-    file_info.pop_back();
+    parent.file_info.pop_back();
     if(fs.is_open()) fs.close();
 }
-
-static const char FiOpenComment=';';
-static bool  FiAllWantInput = false;
 
 char* Ini_io::get_next_string(char * str,unsigned int size,char *original)
 {
@@ -242,38 +153,37 @@ char* Ini_io::get_next_string(char * str,unsigned int size,char *original)
       else break;
     }
     if(original) strcpy(original,str);
-    file_info.back().first++;
-    if((sret == NULL && !fs.eof()))  FiAError(__FI_BADFILENAME,0,str);
+    parent.file_info.back().first++;
+    if((sret == NULL && !fs.eof())) parent.aerror(__FI_BADFILENAME,0,str);
     sret = (unsigned char*)strchr(str,FiOpenComment);
     if(sret) *sret = 0;
-    if(!FiAllWantInput)
-    {
-      szTrimTrailingSpace(str);
-      szTrimLeadingSpace(str);
+
+    szTrimTrailingSpace(str);
+    szTrimLeadingSpace(str);
       /* kill all spaces around punctuations */
       /*
 	 Correct me: spaces will be sqweezed even inside " " brackets.
 	 But it is language dependent.
 	 For .ini files it is not significant.
       */
-      sret = (unsigned char*)str;
-      while((ch=*sret) != 0)
-      {
+    sret = (unsigned char*)str;
+    while((ch=*sret) != 0)
+    {
 	if(ispunct(ch)) sret = (unsigned char*)szKillSpaceAround(str,(char*)sret);
 	sret++;
-      }
-      len = strlen(str);
-      sret = (unsigned char*)str;
-      while((ch=*sret) != 0)
-      {
+    }
+    len = strlen(str);
+    sret = (unsigned char*)str;
+    while((ch=*sret) != 0)
+    {
 	if(isspace(ch))
 	{
 	  if(isspace(*(sret+1))) sret = (unsigned char*)szKillSpaceAround(str,(char*)sret);
 	}
 	sret++;
-      }
-      if(strlen(str))  break; /* loop while comment */
     }
+    if(strlen(str))  break; /* loop while comment */
+
   }
   return str;
 }
@@ -337,91 +247,9 @@ char* Ini_io::GETS(char *str,unsigned num)
   return ret;
 }
 
-static size_t  __FASTCALL__ __GetLengthBrStr(const std::string& src,char obr,char cbr)
-{
- size_t ends;
- size_t ret = 0;
- if(src[0] == obr)
- {
-   ends = src.find(cbr,1);
-   if(ends==std::string::npos) goto err;
-   if(src[ends+1]) FiAErrorCL(__FI_BADCHAR);
-   ret = ends-1;
- }
- else
- {
-   err:
-   FiAErrorCL(__FI_OPENSECT);
- }
- return ret;
-}
-
-static inline size_t FiGetLengthBracketString(const std::string& str ) { return __GetLengthBrStr(str,'"','"'); }
-static inline size_t FiGetLengthSection(const std::string& src ) { return __GetLengthBrStr(src,'[',']'); }
-static inline size_t FiGetLengthSubSection(const std::string& src ) { return __GetLengthBrStr(src,'<','>'); }
-
-static std::string __FASTCALL__ __GetBrStrName(const std::string& src,char obr,char cbr)
-{
-    std::string rc;
-    size_t ends;
-    if(src[0] == obr) {
-	unsigned len;
-	ends = src.find(cbr,1);
-	if(ends==std::string::npos) goto err;
-	if(src[ends+1]) FiAErrorCL(__FI_BADCHAR);
-	len = ends-1;
-	rc=src.substr(1,len);
-    } else {
-err:
-	FiAErrorCL(__FI_OPENSECT);
-    }
-    return rc;
-}
-
-static inline std::string FiGetBracketString(const std::string& str) { return __GetBrStrName(str,'"','"'); }
-static inline std::string FiGetSectionName(const std::string& src) { return __GetBrStrName(src,'[',']'); }
-static inline std::string FiGetSubSectionName(const std::string& src) { return __GetBrStrName(src,'<','>'); }
-
-static std::string __FASTCALL__ FiGetValueOfItem(const std::string& src)
-{
-    std::string rc;
-    size_t from;
-    from = src.find('=');
-    if(from!=std::string::npos) rc=&src.c_str()[++from];
-    else     FiAErrorCL(__FI_NOTEQU);
-    return rc;
-}
-
-static std::string  __FASTCALL__ FiGetItemName(const std::string& src)
-{
-    std::string rc;
-    size_t sptr;
-    unsigned len;
-    sptr = src.find('=');
-    if(sptr!=std::string::npos) {
-	len = sptr;
-	rc=src.substr(0,len);
-	if(!IS_VALID_NAME(rc)) FiAErrorCL(__FI_BADCHAR);
-    }
-    return rc;
-}
-
-static std::string  __FASTCALL__ FiGetCommandString(const std::string& src)
-{
-    std::string rc;
-    unsigned i;
-    i = strspn(src.c_str()," #");
-    rc=src.substr(i);
-    return rc;
-}
-
-/*************************************************************\
-*                  Middle level support                       *
-\*************************************************************/
-
 /************* BEGIN of List Var section ********************/
 
-Variable_Set::Variable_Set() {}
+Variable_Set::Variable_Set(Ini_Parser& _parent):parent(_parent) {}
 Variable_Set::~Variable_Set() {}
 
 void Variable_Set::add(const std::string& var,const std::string& associate) {
@@ -466,7 +294,7 @@ std::string Variable_Set::substitute(const std::string& src,char delim) {
 		else		rc+=c;
 	    }
 	}
-	if( npercent%2 ) FiAErrorCL(__FI_OPENVAR);
+	if( npercent%2 ) parent.error_cl(__FI_OPENVAR);
     } else rc=src;
     return rc;
 }
@@ -515,11 +343,127 @@ std::string Tokenizer::tail() {
     return rc;
 }
 
+/*************************************************************\
+*                  Middle level support                       *
+\*************************************************************/
 /*************** END of List Var Section ***************/
-static Variable_Set vars;
-static bool ifSmarting = true;
+Ini_Parser::Ini_Parser(ini_user_func usr,any_t* data):user_proc(usr),user_data(data),case_sens(2),vars(*this) {}
+Ini_Parser::~Ini_Parser() { vars.clear(); }
 
-static bool __FASTCALL__ FiGetConditionStd( const std::string& condstr)
+void Ini_Parser::Ini_Parser::aerror(int nError,int row,const std::string& addinfo)
+{
+    int eret = 0;
+    eret = error(nError,row,addinfo);
+    if(eret == __FI_EXITPROC) exit(255);
+}
+
+static const char* list[] = {
+ "No errors",
+ "Can't open file: '%s' (bad '#include' statement?).",
+ "Too many open files.",
+ "Memory exhausted.",
+ "Open 'if' (missing '#endif').",
+ "Missing 'if' for 'endif' statement.",
+ "Missing 'if' for 'else' statement.",
+ "Unknown '#' directive.",
+ "Syntax error in 'if' statement.",
+ "Expected open section or subsection, or invalid string.",
+ "Bad character on line (possible lost comment).",
+ "Bad variable in 'set' or 'delete' statement.",
+ "Bad value of variable in 'set' statement.",
+ "Unrecognized name of variable in 'delete' statement.",
+ "Undefined variable detected (case sensitivity?).",
+ "Missing 'if' for 'elif' statement.",
+ "Open variable on line (use even number of '%' characters).",
+ "Lost or mismatch character '=' in assigned expression.",
+ "",
+ "User error."
+};
+
+std::string Ini_Parser::decode_error(int nError)
+{
+    std::string ret;
+    nError = abs(nError);
+    if(nError >= 0 && nError <= abs(__FI_FIUSER)) ret = list[nError];
+    else ret = "Unknown Error";
+    return ret;
+}
+
+int Ini_Parser::error(int ne,int row,const std::string& addinfo)
+{
+    std::fstream herr;
+    std::string what;
+    char sout[4096];
+    herr.open("fi_syserr.$$$",std::ios_base::out);
+    herr<<"About : [.Ini] file run-time support library. Written by Nickols_K"<<std::endl<<"Detected ";
+    if(ne != __FI_TOOMANY && ~file_info.empty()) {
+	herr<<(row ? "fatal" : "")<<" error in : "<<file_info.back().second;
+    }
+    herr<<std::endl;
+    if(row) herr<<"At line : <<"<<row<<std::endl;
+    what = decode_error(ne);
+    if(!addinfo.empty()) sprintf(sout,what.c_str(),addinfo.c_str());
+    else strncpy(sout,what.c_str(),sizeof(sout));
+    herr<<"Message : "<<sout<<std::endl;
+    if(!user_message.empty()) herr<<"User message : "<<user_message<<std::endl;
+    if(!debug_str.empty()) herr<<"Debug info: '"<<debug_str<<"'"<<std::endl;
+    herr.close();
+    std::cerr<<std::endl<<"Error in .ini file."<<std::endl<<"File fi_syser.$$$ created."<<std::endl;
+    return __FI_EXITPROC;
+}
+
+std::string Ini_Parser::_get_bracket_string(const std::string& src,char obr,char cbr)
+{
+    std::string rc;
+    size_t ends;
+    if(src[0] == obr) {
+	unsigned len;
+	ends = src.find(cbr,1);
+	if(ends==std::string::npos) goto err;
+	if(src[ends+1]) Ini_Parser::error_cl(__FI_BADCHAR);
+	len = ends-1;
+	rc=src.substr(1,len);
+    } else {
+err:
+	Ini_Parser::error_cl(__FI_OPENSECT);
+    }
+    return rc;
+}
+
+std::string Ini_Parser::get_value_of_item(const std::string& src)
+{
+    std::string rc;
+    size_t from;
+    from = src.find('=');
+    if(from!=std::string::npos) rc=&src.c_str()[++from];
+    else     Ini_Parser::error_cl(__FI_NOTEQU);
+    return rc;
+}
+
+std::string Ini_Parser::get_item_name(const std::string& src)
+{
+    std::string rc;
+    size_t sptr;
+    unsigned len;
+    sptr = src.find('=');
+    if(sptr!=std::string::npos) {
+	len = sptr;
+	rc=src.substr(0,len);
+	if(!IS_VALID_NAME(rc)) Ini_Parser::error_cl(__FI_BADCHAR);
+    }
+    return rc;
+}
+
+std::string Ini_Parser::get_command_string(const std::string& src)
+{
+    std::string rc;
+    unsigned i;
+    i = strspn(src.c_str()," #");
+    rc=src.substr(i);
+    return rc;
+}
+
+bool Ini_Parser::get_condition( const std::string& condstr)
 {
     std::string var;
     std::string user_ass;
@@ -538,15 +482,15 @@ static bool __FASTCALL__ FiGetConditionStd( const std::string& condstr)
 
     var = tokenizer.next_word(" ");
     user_ass=ifSmarting?vars.substitute(var):var;
-    if(tokenizer.curr_char()) FiAErrorCL(__FI_BADCHAR);
+    if(tokenizer.curr_char()) error_cl(__FI_BADCHAR);
     ret = false;
     if(strcmp(cond,"==") == 0)  ret = user_ass==rvar;
     else if(strcmp(cond,"!=") == 0)  ret = user_ass!=rvar;
-    else FiAErrorCL(__FI_BADCOND);
+    else error_cl(__FI_BADCOND);
     return ret;
 }
 
-static bool __FASTCALL__ FiCommandParserStd( const std::string& cmd )
+bool Ini_Parser::command_parser( const std::string& cmd )
 {
     std::string word,a,v;
     std::string fdeb_save;
@@ -558,9 +502,9 @@ static bool __FASTCALL__ FiCommandParserStd( const std::string& cmd )
 	std::string bracket;
 	std::string _v;
 	char pfile[FILENAME_MAX+1],*pfp,*pfp2;
-	bracket = FiGetBracketString(tokenizer.data());
+	bracket = get_bracket_string(tokenizer.data());
 	_v=ifSmarting?vars.substitute(bracket):bracket;
-	fdeb_save = fi_Debug_Str;
+	fdeb_save = debug_str;
 	/* make path if no path specified */
 	strcpy(pfile,file_info.back().second.c_str());
 	pfp=strrchr(pfile,'\\');
@@ -568,76 +512,76 @@ static bool __FASTCALL__ FiCommandParserStd( const std::string& cmd )
 	pfp=std::max(pfp,pfp2);
 	if(pfp && (_v.find('\\')==std::string::npos || _v.find('/')==std::string::npos)) strcpy(pfp+1,_v.c_str());
 	else    strcpy(pfile,_v.c_str());
-	(*FiFileParser)(pfile);
-	fi_Debug_Str = fdeb_save;
+	file_parser(pfile);
+	debug_str = fdeb_save;
 	goto Exit_CP;
     } else if(word=="set") {
 	v = tokenizer.next_legal_word(&iniLegalSet[1]);
-	if(tokenizer.curr_char() != '=') FiAErrorCL(__FI_NOTEQU);
+	if(tokenizer.curr_char() != '=') error_cl(__FI_NOTEQU);
 	tokenizer.next_char();
 	a = tokenizer.next_word(" ");
-	if(v[0] == '\0') FiAErrorCL(__FI_BADVAR);
-	if(a[0] == '\0') FiAErrorCL(__FI_BADVAL);
+	if(v[0] == '\0') error_cl(__FI_BADVAR);
+	if(a[0] == '\0') error_cl(__FI_BADVAL);
 	vars.add(v,a);
-	if(tokenizer.curr_char()) FiAErrorCL(__FI_BADCHAR);
+	if(tokenizer.curr_char()) error_cl(__FI_BADCHAR);
 	goto Exit_CP;
     } else if(word=="delete") {
 	std::string _a;
 	v = tokenizer.next_legal_word(&iniLegalSet[1]);
 	_a=ifSmarting?vars.substitute(v):v;
-	if(_a[0] == '\0') FiAErrorCL(__FI_BADVAR);
+	if(_a[0] == '\0') error_cl(__FI_BADVAR);
 	vars.remove(_a);
-	if(tokenizer.curr_char()) FiAErrorCL(__FI_BADCHAR);
+	if(tokenizer.curr_char()) error_cl(__FI_BADCHAR);
 	goto Exit_CP;
     } else if(word=="reset") {
-	if(tokenizer.curr_char()) FiAErrorCL(__FI_BADCHAR);
+	if(tokenizer.curr_char()) error_cl(__FI_BADCHAR);
 	vars.clear();
 	goto Exit_CP;
      } else if(word=="case") {
-	if(tokenizer.curr_char()) FiAErrorCL(__FI_BADCHAR);
-	CaseSens = 2;
+	if(tokenizer.curr_char()) error_cl(__FI_BADCHAR);
+	case_sens = 2;
 	goto Exit_CP;
     } else if(word=="smart") {
-	if(tokenizer.curr_char()) FiAErrorCL(__FI_BADCHAR);
+	if(tokenizer.curr_char()) error_cl(__FI_BADCHAR);
 	ifSmarting = true;
 	goto Exit_CP;
     } else if(word=="nosmart") {
-	if(tokenizer.curr_char()) FiAErrorCL(__FI_BADCHAR);
+	if(tokenizer.curr_char()) error_cl(__FI_BADCHAR);
 	ifSmarting = false;
 	goto Exit_CP;
     } else if(word=="uppercase") {
-	if(tokenizer.curr_char()) FiAErrorCL(__FI_BADCHAR);
-	CaseSens = 1;
+	if(tokenizer.curr_char()) error_cl(__FI_BADCHAR);
+	case_sens = 1;
 	goto Exit_CP;
     } else if(word=="lowercase") {
-	if(tokenizer.curr_char()) FiAErrorCL(__FI_BADCHAR);
-	CaseSens = 0;
+	if(tokenizer.curr_char()) error_cl(__FI_BADCHAR);
+	case_sens = 0;
 	goto Exit_CP;
     } else if(word=="error") {
 	std::string _a;
 	std::string sptr=tokenizer.tail();
 	_a=ifSmarting?vars.substitute(sptr):sptr;
-	FiUserMessage = _a.c_str();
-	FiAErrorCL(__FI_FIUSER);
-    } else if(word=="else") FiAErrorCL(__FI_ELSESTAT);
-    else if(word=="endif") FiAErrorCL(__FI_IFNOTFOUND);
-    else if(word=="elif") FiAErrorCL(__FI_ELIFSTAT);
+	user_message = _a.c_str();
+	error_cl(__FI_FIUSER);
+    } else if(word=="else") error_cl(__FI_ELSESTAT);
+    else if(word=="endif") error_cl(__FI_IFNOTFOUND);
+    else if(word=="elif") error_cl(__FI_ELIFSTAT);
     else if(word=="if") {
 	std::string sstore;
 	unsigned int nsave;
 	bool Condition,BeenElse;
 	int nLabel;
 	nsave = file_info.back().first;
-	cond_ret = Condition = (*FiGetCondition)(tokenizer.data());
+	cond_ret = Condition = get_condition(tokenizer.data());
 	nLabel = 1;
 	BeenElse = false;
-	while(!ActiveFile->eof()) {
-	    sstore=ActiveFile->get_next_string();
+	while(!active_file->eof()) {
+	    sstore=active_file->get_next_string();
 	    if(sstore[0] == '\0') goto Exit_CP;
 	    if(FiisCommand(sstore)) {
-		a = FiGetCommandString(sstore);
-		if(CaseSens == 1) std::transform(a.begin(),a.end(),a.begin(),::toupper);
-		if(CaseSens == 0) std::transform(a.begin(),a.end(),a.begin(),::tolower);
+		a = get_command_string(sstore);
+		if(case_sens == 1) std::transform(a.begin(),a.end(),a.begin(),::toupper);
+		if(case_sens == 0) std::transform(a.begin(),a.end(),a.begin(),::tolower);
 		Tokenizer c_tokenizer(a);
 		v = c_tokenizer.next_word(" ");
 		std::transform(v.begin(),v.end(),v.begin(),::tolower);
@@ -645,54 +589,52 @@ static bool __FASTCALL__ FiCommandParserStd( const std::string& cmd )
 		if(v=="endif") {
 		    nLabel--;
 		    if(nLabel == 0) goto Exit_CP;
-		    if(nLabel <  0) FiAErrorCL(__FI_IFNOTFOUND);
+		    if(nLabel <  0) error_cl(__FI_IFNOTFOUND);
 		}
 		if(v=="else" && nLabel == 1) {
-		    if( BeenElse ) FiAErrorCL(__FI_ELSESTAT);
+		    if( BeenElse ) error_cl(__FI_ELSESTAT);
 		    if( nLabel == 1 ) cond_ret = Condition = (Condition ? false : true);
 		    if( nLabel == 1 ) BeenElse = true;
 		    continue;
 		}
 		if(v=="elif" && nLabel == 1) {
-		    if( BeenElse ) FiAErrorCL(__FI_ELIFSTAT);
-		    if( nLabel == 1 ) cond_ret = Condition = (*FiGetCondition)(c_tokenizer.data());
+		    if( BeenElse ) error_cl(__FI_ELIFSTAT);
+		    if( nLabel == 1 ) cond_ret = Condition = get_condition(c_tokenizer.data());
 		    if( nLabel == 1 ) BeenElse = true;
 		    continue;
 		}
-		if(Condition) (*FiCommandParser)(a);
+		if(Condition) command_parser(a);
 	    } else {
-		if(Condition) (*FiStringParser)(sstore);
+		if(Condition) string_parser(sstore);
 	    }
 	} // while
-	FiAError(__FI_OPENCOND,nsave,NULL);
+	Ini_Parser::aerror(__FI_OPENCOND,nsave,"");
     } // if word==if
-    FiAErrorCL(__FI_UNRECOGN);
+    error_cl(__FI_UNRECOGN);
     Exit_CP:
     return cond_ret;
 }
 
-static std::string curr_sect;
-static std::string curr_subsect;
-static bool __FASTCALL__ FiStringParserStd(const std::string& curr_str)
+bool Ini_Parser::string_parser(const std::string& curr_str)
 {
     std::string item,val;
     if(FiisCommand(curr_str))
     {
       std::string _item;
-      _item = FiGetCommandString(curr_str);
-      (*FiCommandParser)(_item);
+      _item = get_command_string(curr_str);
+      command_parser(_item);
       return false;
     }
     else
     if(FiisSection(curr_str))
     {
-      curr_sect = FiGetSectionName(curr_str);
+      curr_sect = get_section_name(curr_str);
       return false;
     }
     else
     if(FiisSubSection(curr_str))
     {
-      curr_subsect = FiGetSubSectionName(curr_str);
+      curr_subsect = get_subsection_name(curr_str);
       return false;
     }
     else
@@ -702,97 +644,79 @@ static bool __FASTCALL__ FiStringParserStd(const std::string& curr_str)
       bool retval;
       IniInfo info;
       buffer=ifSmarting?vars.substitute(curr_str):curr_str;
-      item = FiGetItemName(buffer);
+      item = get_item_name(buffer);
       retval = false;
       if(item[0])
       {
-       val = FiGetValueOfItem(buffer);
+       val = get_value_of_item(buffer);
        if(!curr_sect.empty()) info.section = curr_sect.c_str();
        else info.section = "";
        if(!curr_subsect.empty()) info.subsection = curr_subsect.c_str();
        else info.subsection = "";
        info.item = item.c_str();
        info.value = val.c_str();
-       retval = (*proc)(&info);
+       if(user_proc) retval = (*user_proc)(&info,user_data);
       }
-      else FiAErrorCL(__FI_BADCHAR);
+      else Ini_Parser::error_cl(__FI_BADCHAR);
       return retval;
     }
   return false;
 }
 
-static void __FASTCALL__ FiFileParserStd(const std::string& filename)
+void Ini_Parser::file_parser(const std::string& filename)
 {
   std::string work_str, ondelete;
-  Ini_io& h = *new(zeromem) Ini_io;
-  Ini_io* oldh = ActiveFile;
+  Ini_io& h = *new(zeromem) Ini_io(*this);
+  Ini_io* oldh = active_file;
   bool done;
   h.open(filename);
-  ActiveFile = &h;
-  fi_Debug_Str = ondelete = work_str;
+  active_file = &h;
+  debug_str = ondelete = work_str;
   while(!h.eof())
   {
       work_str=h.get_next_string();
       if(!work_str[0]) break;
-      if(CaseSens == 1) std::transform(work_str.begin(),work_str.end(),work_str.begin(),::toupper);
-      if(CaseSens == 0) std::transform(work_str.begin(),work_str.end(),work_str.begin(),::tolower);
-      done = (*FiStringParser)(work_str);
+      if(case_sens == 1) std::transform(work_str.begin(),work_str.end(),work_str.begin(),::toupper);
+      if(case_sens == 0) std::transform(work_str.begin(),work_str.end(),work_str.begin(),::tolower);
+      done = string_parser(work_str);
       if(done) break;
   }
   h.close();
-  ActiveFile = oldh;
+  active_file = oldh;
 }
 
-void __FASTCALL__  FiProgress(const std::string& filename,FiUserFunc usrproc)
+void Ini_Parser::scan(const std::string& filename,ini_user_func usrproc,any_t* data)
 {
-  if(!usrproc) return;
-  proc = usrproc;
-
-  (*FiFileParser)(filename);
-
-  proc = NULL;
-  vars.clear();
+    Ini_Parser* parser = new(zeromem) Ini_Parser(usrproc,data);
+    parser->file_parser(filename);
+    delete parser;
 }
 
-static void __FASTCALL__ hlFiFileParserStd(hIniProfile *ini)
+void Ini_Profile::file_scaning()
 {
-  std::string work_str, ondelete;
-  Ini_io* oldh = ActiveFile;
-  bool done;
-  ActiveFile = ini->handler;
-  ini->handler->rewind_ini();
-  while(!ini->handler->eof())
-  {
-      work_str=ini->handler->get_next_string();
-      if(!work_str[0]) break;
-      if(CaseSens == 1) std::transform(work_str.begin(),work_str.end(),work_str.begin(),::toupper);
-      if(CaseSens == 0) std::transform(work_str.begin(),work_str.end(),work_str.begin(),::tolower);
-      done = (*FiStringParser)(work_str);
-      if(done) break;
-  }
-  ActiveFile = oldh;
-}
-
-static void __FASTCALL__ hlFiProgress(hIniProfile *ini,FiUserFunc usrproc)
-{
-  if(!usrproc) return;
-  proc = usrproc;
-
-  hlFiFileParserStd(ini);
-
-  proc = NULL;
-  vars.clear();
+    std::string work_str, ondelete;
+    Ini_io* oldh = active_file;
+    bool done;
+    active_file = handler;
+    handler->rewind_ini();
+    while(!handler->eof()) {
+	work_str=handler->get_next_string();
+	if(!work_str[0]) break;
+	if(case_sens == 1) std::transform(work_str.begin(),work_str.end(),work_str.begin(),::toupper);
+	if(case_sens == 0) std::transform(work_str.begin(),work_str.end(),work_str.begin(),::tolower);
+	done = string_parser(work_str);
+	if(done) break;
+    }
+    active_file = oldh;
 }
 
 /*****************************************************************\
 *                      High level support                          *
 \******************************************************************/
-static hIniProfile *opened_ini;
-
-static bool  __FASTCALL__ __addCache(const std::string& section,const std::string& subsection,
-			       const std::string& item,const std::string& value)
+bool Ini_Profile::__addCache(const std::string& section,const std::string& subsection,
+			const std::string& item,const std::string& value)
 {
-    std::map<std::string,std::map<std::string,std::string> >& inner = opened_ini->cache[section];
+    std::map<std::string,std::map<std::string,std::string> >& inner = cache[section];
     std::map<std::string,std::string>& in_inner = inner[subsection];
     std::map<std::string,std::string>::iterator iter=in_inner.find(item);
     if(iter==in_inner.end()) in_inner.insert(std::make_pair(item,value));
@@ -800,27 +724,27 @@ static bool  __FASTCALL__ __addCache(const std::string& section,const std::strin
     return false;
 }
 
-static bool __FASTCALL__ __buildCache(IniInfo *ini)
+bool Ini_Profile::__buildCache(IniInfo *ini,any_t* data)
 {
-  return __addCache(ini->section,ini->subsection,
-		    ini->item,ini->value);
+    Ini_Profile* self = reinterpret_cast<Ini_Profile*>(data);
+    return self->__addCache(ini->section,ini->subsection,ini->item,ini->value);
 }
 
-static int  __FASTCALL__ out_sect(std::fstream& fs,const std::string& section,unsigned nled)
+int Ini_Profile::out_sect(std::fstream& fs,const std::string& section,unsigned nled)
 {
     for(unsigned i = 0;i < nled;i++) fs<<" ";
     fs<<"[ "<<section<<" ]"<<std::endl;
     return 2;
 }
 
-static int  __FASTCALL__ out_subsect(std::fstream& fs,const std::string& subsection,unsigned nled)
+int Ini_Profile::out_subsect(std::fstream& fs,const std::string& subsection,unsigned nled)
 {
     for(unsigned i = 0;i < nled;i++) fs<<" ";
     fs<<"< "<<subsection<<" >"<<std::endl;
     return 2;
 }
 
-static void  __FASTCALL__ out_item(std::fstream& fs,unsigned nled,const std::string& _item,const std::string& value)
+void Ini_Profile::out_item(std::fstream& fs,unsigned nled,const std::string& _item,const std::string& value)
 {
     char *sm_char;
     unsigned i;
@@ -833,58 +757,46 @@ static void  __FASTCALL__ out_item(std::fstream& fs,unsigned nled,const std::str
     if(sm_char && ifSmarting) fs<<"#smart"<<std::endl;
 }
 
-hIniProfile * __FASTCALL__ iniOpenFile(const std::string& fname,bool *has_error)
+bool Ini_Profile::open(const std::string& _fname)
 {
     bool rc=false;
-    hIniProfile *_ret = new(zeromem) hIniProfile;
-    if(has_error) *has_error = true;
-    _ret->handler=new(zeromem) Ini_io;
-    _ret->fname=fname;
-    _ret->updated=false;
-    if(BFile::exists(_ret->fname)) rc=_ret->handler->open(fname);
+    bool has_error=true;
+    handler=new(zeromem) Ini_io(*this);
+    fname=_fname;
+    updated=false;
+    if(BFile::exists(_fname)) rc=handler->open(fname);
 
-    opened_ini = _ret;
-    if(rc) hlFiProgress(_ret,__buildCache);
-    if(has_error) *has_error = !rc;
-    return _ret;
+    if(rc) file_scaning();
+    has_error = !rc;
+    return has_error;
 }
 
-static bool  __FASTCALL__ __flushCache(hIniProfile *ini);
-
-void __FASTCALL__ iniCloseFile(hIniProfile *ini)
+void Ini_Profile::close()
 {
-    if(ini) {
-	 __flushCache(ini);
-	ini->cache.clear();
-	delete ini->handler;
-	delete ini;
-    }
+    __flushCache();
+    cache.clear();
 }
 
-unsigned __FASTCALL__ iniReadProfileString(hIniProfile *ini,const std::string& section,const std::string& subsection,
-			   const std::string& _item,const std::string& def_value,char *buffer,
-			   unsigned cbBuffer)
+std::string Ini_Profile::read(const std::string& section,const std::string& subsection,
+				const std::string& _item,const std::string& def_value)
 {
     unsigned ret;
-    std::string value;
-    if(!buffer) return 0;
-    if(cbBuffer) strncpy(buffer,def_value.c_str(),cbBuffer);
-    else         buffer[0] = 0;
-    if(ini) {
-	if(ini->handler->opened()) {
-	    std::map<std::string,std::map<std::string,std::map<std::string,std::string> > >::const_iterator inner = ini->cache.find(section);
-	    if(inner!=ini->cache.end()) {
-		std::map<std::string,std::map<std::string,std::string> >::const_iterator in = (*inner).second.find(subsection);
-		if(in!=(*inner).second.end()) {
-		    for(std::map<std::string,std::string>::const_iterator it=(*in).second.begin();it!=(*in).second.end();++it) {
-			if((*it).first==_item) { value=(*it).second; strncpy(buffer,value.c_str(),cbBuffer); break; }
+    std::string value=def_value;
+    if(handler->opened()) {
+	std::map<std::string,std::map<std::string,std::map<std::string,std::string> > >::const_iterator inner = cache.find(section);
+	if(inner!=cache.end()) {
+	    std::map<std::string,std::map<std::string,std::string> >::const_iterator in = (*inner).second.find(subsection);
+	    if(in!=(*inner).second.end()) {
+		for(std::map<std::string,std::string>::const_iterator it=(*in).second.begin();it!=(*in).second.end();++it) {
+		    if((*it).first==_item) {
+			value=(*it).second;
+			break;
 		    }
 		}
 	    }
 	}
     }
-    buffer[cbBuffer-1] = 0;
-    return ret;
+    return value;
 }
 
 static const char* HINI_HEADER[]={
@@ -892,37 +804,32 @@ static const char* HINI_HEADER[]={
 "; WARNING: Any changes made by hands may be lost the next time you run the program."
 };
 
-static bool __FASTCALL__ __makeIni(std::fstream& hout,hIniProfile *ini)
+bool Ini_Profile::__makeIni(std::fstream& hout)
 {
-    if(BFile::exists(ini->fname)) BFile::unlink(ini->fname);
-    hout.open(ini->fname.c_str(),std::ios_base::out);
+    if(BFile::exists(fname)) BFile::unlink(fname);
+    hout.open(fname.c_str(),std::ios_base::out);
     if(hout.is_open()) for(unsigned i=0;i<2;i++) hout<<HINI_HEADER[i]<<std::endl;
-    return hout;
+    return true;
 }
 
-bool __FASTCALL__ iniWriteProfileString(hIniProfile *ini,
-					 const std::string& _section,
-					 const std::string& _subsection,
-					 const std::string& _item,
-					 const std::string& _value)
+bool Ini_Profile::write(const std::string& _section,
+			const std::string& _subsection,
+			const std::string& _item,
+			const std::string& _value)
 {
-    bool _ret;
-    opened_ini = ini;
-    _ret = false;
-    ini->updated=true;
+    updated=true;
     __addCache(_section,_subsection,_item,_value);
-    return _ret;
+    return false;
 }
 
-static int __nled;
-static void __FASTCALL__ flush_item(std::fstream& flush_handler,const std::map<std::string,std::string>& inner)
+void Ini_Profile::flush_item(std::fstream& flush_handler,const std::map<std::string,std::string>& inner)
 {
     for(std::map<std::string,std::string>::const_iterator it=inner.begin();it!=inner.end();++it) {
 	out_item(flush_handler,__nled,(*it).first,(*it).second);
     }
 }
 
-static void __FASTCALL__ flush_subsect(std::fstream& flush_handler,const std::map<std::string,std::map<std::string,std::string > >& inner)
+void Ini_Profile::flush_subsect(std::fstream& flush_handler,const std::map<std::string,std::map<std::string,std::string > >& inner)
 {
     int _has_led = __nled;
     for(std::map<std::string,std::map<std::string,std::string> >::const_iterator it=inner.begin();it!=inner.end();++it) {
@@ -932,7 +839,7 @@ static void __FASTCALL__ flush_subsect(std::fstream& flush_handler,const std::ma
     }
 }
 
-static void __FASTCALL__ flush_sect(std::fstream& flush_handler,const std::map<std::string,std::map<std::string,std::map<std::string,std::string> > >& _cache)
+void Ini_Profile::flush_sect(std::fstream& flush_handler,const std::map<std::string,std::map<std::string,std::map<std::string,std::string> > >& _cache)
 {
     __nled = 0;
     int _has_led = __nled;
@@ -943,17 +850,19 @@ static void __FASTCALL__ flush_sect(std::fstream& flush_handler,const std::map<s
     }
 }
 
-static bool  __FASTCALL__ __flushCache(hIniProfile *ini)
+bool Ini_Profile::__flushCache()
 {
-    if(ini->updated) {
-	if(ini->handler->opened()) ini->handler->close();
+    if(updated) {
+	if(handler->opened()) handler->close();
 	std::fstream flush_fs;
-	__makeIni(flush_fs,ini);
+	__makeIni(flush_fs);
 	if(!flush_fs.is_open()) return true;
-	flush_sect(flush_fs,ini->cache);
+	flush_sect(flush_fs,cache);
 	flush_fs.close();
-	ini->handler->open(ini->fname);
+	handler->open(fname);
     }
     return false;
 }
+Ini_Profile::Ini_Profile():Ini_Parser(Ini_Profile::__buildCache,this),__nled(0) {}
+Ini_Profile::~Ini_Profile() { close(); delete handler; }
 } // namespace beye

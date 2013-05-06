@@ -15,7 +15,7 @@ namespace beye {
     class CodeGuider;
     class Bin_Format;
     class BFile;
-    struct hIniProfile;
+    class Ini_Profile;
     class BeyeContext : public Opaque {
 	public:
 	    BeyeContext(const std::vector<std::string>& argv, const std::map<std::string,std::string>& envm);
@@ -23,26 +23,24 @@ namespace beye {
 
 	    bool		new_source();
 	    void		parse_cmdline( const std::vector<std::string>& ArgVector );
-	    hIniProfile*	load_ini_info();
+	    Ini_Profile&	load_ini_info();
 	    void		save_ini_info() const;
 	    bool		LoadInfo();
 	    bool		is_valid_ini_args() const;
 	    const std::vector<std::string>& list_file() const;
 	    const char*		short_name() const { return _shortname; }
 	    void		make_shortname();
-	    unsigned		read_profile_string(hIniProfile *ini,
-						    const char *section,
-						    const char *subsection,
-						    const char *_item,
-						    const char *def_value,
-						    char *buffer,
-						    unsigned cbBuffer) const;
-	    bool		write_profile_string(hIniProfile *ini,
-						    const char *section,
-						    const char *subsection,
-						    const char *item,
-						    const char *value) const;
-	    void		init_modes( hIniProfile *ini );
+	    std::string		read_profile_string(Ini_Profile& ini,
+						    const std::string& section,
+						    const std::string& subsection,
+						    const std::string& _item,
+						    const std::string& def_value) const;
+	    bool		write_profile_string(Ini_Profile& ini,
+						    const std::string& section,
+						    const std::string& subsection,
+						    const std::string& item,
+						    const std::string& value) const;
+	    void		init_modes(Ini_Profile& ini);
 	    void		quick_select_mode();
 	    bool		select_mode();
 	    Plugin&		active_mode() const { return *activeMode; }
@@ -74,7 +72,7 @@ namespace beye {
 	    static BFile*	beyeOpenRW(const std::string& fname,unsigned cache_size);
 
 	    std::string ArgVector1;
-	    char ini_ver[32];
+	    std::string ini_ver;
 	    std::string help_name;
 	    std::string skin_name;
 	    std::string syntax_name;
@@ -100,7 +98,7 @@ namespace beye {
 	    const std::vector<std::string>& argv;
 	    const std::map<std::string,std::string>& envm;
 	    std::vector<std::string> ListFile;
-	    char*		LastOpenFileName;
+	    std::string		LastOpenFileName;
 	    char*		_shortname;
 	    const char*		ini_name;
 	    bool		UseIniFile;

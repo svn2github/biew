@@ -630,12 +630,12 @@ static void  __FASTCALL__ javaTerm( void )
    delete outstr;
 }
 
-static void __FASTCALL__ javaReadIni( hIniProfile *ini )
+static void __FASTCALL__ javaReadIni( Ini_Profile& ini )
 {
     UNUSED(ini);
 }
 
-static void __FASTCALL__ javaWriteIni( hIniProfile *ini )
+static void __FASTCALL__ javaWriteIni( Ini_Profile& ini )
 {
     UNUSED(ini);
 }

@@ -4,10 +4,10 @@
 
 #include "libbeye/libbeye.h"
 
-struct hIniProfile;
 struct TWindow;
 namespace beye {
     class CodeGuider;
+    class Ini_Profile;
     class Plugin : public Opaque {
 	public:
 	    enum e_flag {
@@ -53,8 +53,8 @@ namespace beye {
 	    virtual unsigned long	prev_line_width() const = 0;	/**< Get previous line width */
 	    virtual unsigned long	curr_line_width() const = 0;	/**< Get current line width */
 	    virtual void		help() const = 0;		/**< display help about mode */
-	    virtual void		read_ini(hIniProfile *) = 0;	/**< reads beye.ini file if need */
-	    virtual void		save_ini(hIniProfile *) = 0;	/**< writes to beye.ini if need */
+	    virtual void		read_ini(Ini_Profile& ) = 0;	/**< reads beye.ini file if need */
+	    virtual void		save_ini(Ini_Profile& ) = 0;	/**< writes to beye.ini if need */
 			/** Converts buffer with using selected NLS as xlat table.
 			  * @param str      string to be converted
 			  * @param len      length of string

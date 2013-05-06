@@ -79,7 +79,7 @@ namespace beye {
     **/
     bool __FASTCALL__ udnUserNames( void );
 
-    void __FASTCALL__ udnInit( hIniProfile *ini );
-    void __FASTCALL__ udnTerm( hIniProfile *ini );
+    void __FASTCALL__ udnInit( Ini_Profile& ini );
+    void __FASTCALL__ udnTerm( Ini_Profile& ini );
 } // namespace beye
 #endif

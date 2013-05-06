@@ -179,7 +179,7 @@ static tCompare __FASTCALL__ udn_compare(const any_t* e1,const any_t* e2)
 
 static linearArray *udn_list=NULL;
 static bool udn_modified=false;
-static char udn_fname[4096];
+static std::string udn_fname;
 
 static bool __FASTCALL__ udnAddItem( void ) {
     __filesize_t off;
@@ -281,7 +281,7 @@ bool __FASTCALL__ __udnSaveList( void )
     unsigned i;
     if(udn_list) {
 	FILE *out;
-	if((out = fopen(udn_fname,"wt"))!=NULL) {
+	if((out = fopen(udn_fname.c_str(),"wt"))!=NULL) {
 	    fprintf(out,"; This is an automatically generated list of user-defined names\n"
 			"; for: %s\n"
 			"; by Beye-%s\n"
@@ -306,8 +306,10 @@ bool __FASTCALL__ __udnSaveList( void )
 
 
 bool __FASTCALL__ udnSaveList( void ) {
-    if(GetStringDlg(udn_fname," Please enter file name: "," [ENTER] - Proceed ",NAME_MSG))
+    char tmps[4096];
+    if(GetStringDlg(tmps," Please enter file name: "," [ENTER] - Proceed ",NAME_MSG))
     {
+	udn_fname=tmps;
 	if(udn_list)	return __udnSaveList();
 	else		ErrMessageBox("UDN list is empty!","");
     }
@@ -318,7 +320,7 @@ bool __FASTCALL__  __udnLoadList( void ) {
     unsigned i;
     udn item;
     FILE *in;
-    if((in = fopen(udn_fname,"rt"))!=NULL) {
+    if((in = fopen(udn_fname.c_str(),"rt"))!=NULL) {
 	    char buff[4096],*brk;
 	    unsigned blen;
 	    i = 0;
@@ -359,8 +361,10 @@ bool __FASTCALL__  __udnLoadList( void ) {
 }
 
 bool __FASTCALL__ udnLoadList( void ) {
-    if(GetStringDlg(udn_fname," Please enter file name: "," [ENTER] - Proceed ",NAME_MSG))
+    char tmps[4096];
+    if(GetStringDlg(tmps," Please enter file name: "," [ENTER] - Proceed ",NAME_MSG))
     {
+	udn_fname=tmps;
 	if(udn_list)	return __udnLoadList();
 	else		ErrMessageBox("UDN list is empty!","");
     }
@@ -402,16 +406,15 @@ bool __FASTCALL__ udnUserNames( void ) {
   return false;
 }
 
-void __FASTCALL__ udnInit( hIniProfile *ini ) {
-  udn_fname[0]='\0';
+void __FASTCALL__ udnInit( Ini_Profile& ini ) {
   if(beye_context().is_valid_ini_args())
   {
-    beye_context().read_profile_string(ini,"Beye","Browser","udn_list","",udn_fname,sizeof(udn_fname));
-    if(udn_fname[0]) __udnLoadList();
+    udn_fname=beye_context().read_profile_string(ini,"Beye","Browser","udn_list","");
+    if(!udn_fname.empty()) __udnLoadList();
   }
 }
 
-void __FASTCALL__ udnTerm( hIniProfile *ini ) {
+void __FASTCALL__ udnTerm( Ini_Profile& ini ) {
   if(udn_list) {
     if(udn_modified) {
 	WarnMessageBox("User-defined list of names was not saved",NULL);

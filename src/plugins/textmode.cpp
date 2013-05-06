@@ -130,8 +130,8 @@ static char		detected_syntax_name[FILENAME_MAX+1];
 	    virtual unsigned long	prev_line_width() const;
 	    virtual unsigned long	curr_line_width() const;
 	    virtual void		help() const;
-	    virtual void		read_ini(hIniProfile *);
-	    virtual void		save_ini(hIniProfile *);
+	    virtual void		read_ini(Ini_Profile& );
+	    virtual void		save_ini(Ini_Profile& );
 	    virtual unsigned		convert_cp(char *str,unsigned len, bool use_fs_nls);
 	private:
 	    unsigned			tab2space(tvioBuff* dest,unsigned int alen,char* str,unsigned int len,unsigned int shift,unsigned* n_tabs,long lstart);
@@ -344,8 +344,9 @@ static void unfmt_str(unsigned char *str)
    *dest=0;
 }
 
-static bool __FASTCALL__ txtFiUserFunc1(IniInfo * info)
+static bool __FASTCALL__ txtFiUserFunc1(IniInfo * info,any_t* data)
 {
+    UNUSED(data);
   const char* p=NULL;
   if(strcmp(info->section,"Extensions")==0) {
 	p = strrchr(beye_context().ArgVector1.c_str(),'.');
@@ -449,8 +450,9 @@ static Color  __FASTCALL__ getOpColorByName(const char *item,Color cdef,bool *er
 }
 
 static const char *last_syntax_err="";
-static bool __FASTCALL__ txtFiUserFunc2(IniInfo * info)
+static bool __FASTCALL__ txtFiUserFunc2(IniInfo * info,any_t* data)
 {
+    UNUSED(data);
     char *p;
     bool err;
     Color cdef=FORE_COLOR(text_cset.normal);
@@ -549,7 +551,7 @@ static tCompare __FASTCALL__ cmp_kwd(const any_t* e1,const any_t* e2)
 void TextMode::read_syntaxes()
 {
     if(BFile::exists(beye_context().syntax_name)) {
-	FiProgress(beye_context().syntax_name.c_str(),txtFiUserFunc1);
+	Ini_Parser::scan(beye_context().syntax_name.c_str(),txtFiUserFunc1,NULL);
 	if(detected_syntax_name[0]) {
 	    char tmp[FILENAME_MAX+1];
 	    char *p;
@@ -564,7 +566,7 @@ void TextMode::read_syntaxes()
 		unsigned i,total;
 		int phash;
 		::memset(word_set,0,sizeof(word_set));
-		FiProgress(detected_syntax_name,txtFiUserFunc2);
+		Ini_Parser::scan(detected_syntax_name,txtFiUserFunc2,NULL);
 		if(last_syntax_err[0]) ErrMessageBox(last_syntax_err,"");
 		/* put longest strings on top */
 		HQSort(syntax_hl.context,syntax_hl.context_num,sizeof(context_hl_t),cmp_ctx);
@@ -1187,31 +1189,31 @@ bool TextMode::detect()
     return bin == false;
 }
 
-void TextMode::read_ini(hIniProfile *ini)
+void TextMode::read_ini(Ini_Profile& ini)
 {
     BeyeContext& bctx = beye_context();
-    char tmps[10];
+    std::string tmps;
     if(bctx.is_valid_ini_args()) {
 	int w_m;
-	bctx.read_profile_string(ini,"Beye","Browser","SubSubMode4","0",tmps,sizeof(tmps));
-	defNLSSet = (unsigned)::strtoul(tmps,NULL,10);
+	tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode4","0");
+	defNLSSet = (unsigned)::strtoul(tmps.c_str(),NULL,10);
 	if(defNLSSet > sizeof(nls_set)/sizeof(REGISTRY_NLS *)) defNLSSet = 0;
 	activeNLS = nls_set[defNLSSet];
 	if(activeNLS->init) activeNLS->init();
 	activeNLS->read_ini(ini);
-	bctx.read_profile_string(ini,"Beye","Browser","SubSubMode3","0",tmps,sizeof(tmps));
-	bin_mode = (unsigned)::strtoul(tmps,NULL,10);
+	tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode3","0");
+	bin_mode = (unsigned)::strtoul(tmps.c_str(),NULL,10);
 	if(bin_mode > MOD_MAXMODE) bin_mode = 0;
-	bctx.read_profile_string(ini,"Beye","Browser","MiscMode","0",tmps,sizeof(tmps));
-	w_m = (int)::strtoul(tmps,NULL,10);
+	tmps=bctx.read_profile_string(ini,"Beye","Browser","MiscMode","0");
+	w_m = (int)::strtoul(tmps.c_str(),NULL,10);
 	wmode = w_m ? true : false;
-	bctx.read_profile_string(ini,"Beye","Browser","SubSubMode9","0",tmps,sizeof(tmps));
-	HiLight = (int)::strtoul(tmps,NULL,10);
+	tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode9","0");
+	HiLight = (int)::strtoul(tmps.c_str(),NULL,10);
 	if(HiLight > 1) HiLight = 1;
     }
 }
 
-void TextMode::save_ini(hIniProfile *ini)
+void TextMode::save_ini(Ini_Profile& ini)
 {
     BeyeContext& bctx = beye_context();
     char tmps[10];

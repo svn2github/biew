@@ -69,8 +69,8 @@ namespace beye {
 	    virtual unsigned long	prev_line_width() const;
 	    virtual unsigned long	curr_line_width() const;
 	    virtual void		help() const;
-	    virtual void		read_ini(hIniProfile *);
-	    virtual void		save_ini(hIniProfile *);
+	    virtual void		read_ini(Ini_Profile& );
+	    virtual void		save_ini(Ini_Profile& );
 	private:
 	    static void	save_video(Opaque& _this,unsigned char *buff,unsigned size);
 
@@ -269,21 +269,21 @@ void BinMode::misckey_action() /* EditBin */
     beye_context().PaintTitle();
 }
 
-void BinMode::read_ini(hIniProfile *ini)
+void BinMode::read_ini(Ini_Profile& ini)
 {
     BeyeContext& bctx = beye_context();
-    char tmps[10];
+    std::string tmps;
     if(bctx.is_valid_ini_args()) {
-	bctx.read_profile_string(ini,"Beye","Browser","LastSubMode","0",tmps,sizeof(tmps));
-	bin_mode = (unsigned)::strtoul(tmps,NULL,10);
+	tmps=bctx.read_profile_string(ini,"Beye","Browser","LastSubMode","0");
+	bin_mode = (unsigned)::strtoul(tmps.c_str(),NULL,10);
 	if(bin_mode > MOD_MAXMODE) bin_mode = MOD_MAXMODE;
-	bctx.read_profile_string(ini,"Beye","Browser","VirtWidthCorr","0",tmps,sizeof(tmps));
-	virtWidthCorr = (unsigned)::strtoul(tmps,NULL,10);
+	tmps=bctx.read_profile_string(ini,"Beye","Browser","VirtWidthCorr","0");
+	virtWidthCorr = (unsigned)::strtoul(tmps.c_str(),NULL,10);
 	if(virtWidthCorr>tvioWidth-1) virtWidthCorr=tvioWidth-1;
     }
 }
 
-void BinMode::save_ini(hIniProfile *ini)
+void BinMode::save_ini(Ini_Profile& ini)
 {
     BeyeContext& bctx = beye_context();
     char tmps[10];

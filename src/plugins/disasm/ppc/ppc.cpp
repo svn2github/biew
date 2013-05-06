@@ -1628,24 +1628,24 @@ static void  __FASTCALL__ ppcTerm( void )
    delete outstr;
 }
 
-static void __FASTCALL__ ppcReadIni( hIniProfile *ini )
+static void __FASTCALL__ ppcReadIni( Ini_Profile& ini )
 {
-  char tmps[10];
+  std::string tmps;
   if(beye_context().is_valid_ini_args())
   {
-    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode3","1",tmps,sizeof(tmps));
-    ppcBitness = (int)strtoul(tmps,NULL,10);
+    tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode3","1");
+    ppcBitness = (int)strtoul(tmps.c_str(),NULL,10);
     if(ppcBitness > 1 && ppcBitness != DAB_AUTO) ppcBitness = 0;
-    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode4","1",tmps,sizeof(tmps));
-    ppcBigEndian = (int)strtoul(tmps,NULL,10);
+    tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode4","1");
+    ppcBigEndian = (int)strtoul(tmps.c_str(),NULL,10);
     if(ppcBigEndian > 1) ppcBigEndian = 0;
-    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode5","0",tmps,sizeof(tmps));
-    ppcDialect = (int)strtoul(tmps,NULL,10);
+    tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode5","0");
+    ppcDialect = (int)strtoul(tmps.c_str(),NULL,10);
     if(ppcDialect > 1) ppcDialect = 0;
   }
 }
 
-static void __FASTCALL__ ppcWriteIni( hIniProfile *ini )
+static void __FASTCALL__ ppcWriteIni( Ini_Profile& ini )
 {
   char tmps[10];
   sprintf(tmps,"%i",ppcBitness);

@@ -125,8 +125,9 @@ void hlpCompile(const char *srcfile)
   fclose(out);
 }
 
-bool __FASTCALL__ MyCallBack(IniInfo *ini)
+bool __FASTCALL__ MyCallBack(IniInfo *ini,any_t* data)
 {
+  UNUSED(data);
   if(strcmp(ini->section,"ITEMS") == 0)
   {
      if(strcmp(ini->subsection,"") == 0)
@@ -153,8 +154,9 @@ bool __FASTCALL__ MyCallBack(IniInfo *ini)
   return false;
 }
 
-bool __FASTCALL__ MyCallOut(IniInfo *ini)
+bool __FASTCALL__ MyCallOut(IniInfo* ini,any_t* data)
 {
+  UNUSED(data);
   if(strcmp(ini->section,"ITEMS") == 0)
   {
      if(strcmp(ini->subsection,"") == 0)
@@ -239,7 +241,7 @@ int main( int argc, char *argv[] )
   atexit(my_atexit);
   __init_sys();
   archiver=argv[1];
-  FiProgress(argv[2],MyCallBack);
+  Ini_Parser::scan(argv[2],MyCallBack,NULL);
   printf("Using %s as archiver\n"
 	"Using %s as project\n"
 	"Using %s as output filename\n"
@@ -268,7 +270,7 @@ int main( int argc, char *argv[] )
   bOutput->write(sout,HLP_SLONG_LEN);
   for(i = 0;i < items_freq;i++) bOutput->write(&bhi,sizeof(BEYE_HELP_ITEM));
   items_freq = 0;
-  FiProgress(argv[2],MyCallOut);
+  Ini_Parser::scan(argv[2],MyCallOut,NULL);
   delete bOutput;
   BFile::unlink(TEMPFNAME);
   BFile::unlink(COMPNAME);

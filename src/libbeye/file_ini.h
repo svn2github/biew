@@ -20,52 +20,18 @@
 #define __FILE_INI_RUNTIME_SUPPORT_SYSTEM__ 1
 #include <fstream>
 #include <map>
+#include <vector>
 
 using namespace beye;
 
 namespace beye {
-    /** Contains information about current record in ini file */
-    struct IniInfo {
-	const char* section;	/**< section name */
-	const char* subsection;	/**< subsection name */
-	const char* item;	/**< item name */
-	const char* value;	/**< value of item */
-    };
-
-/********************************************************************\
-* Middle Level procedure                                             *
-*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*
-* Use only this function.                                            *
-* This function calls UserFunc as CALLBACK routine.                  *
-* All internal variables will be expanded, and command processor     *
-* will be done. Unknown instruction and hotkeys should be ignored.   *
-\********************************************************************/
-		   /** Pointer to a user supplied function that receive readed record from ini file.
-		     * @return                For continue of scaning - false
-					      For terminating scaning - true (means: all done)
-		     * @param info            pointers to current record from inni file
-		    **/
-    typedef bool      (__FASTCALL__ *FiUserFunc)(IniInfo * info);
-
-		   /** Performs ini-file scanning.
-		     * @return                none
-		     * @param filename        Specifies name of file to be processed
-		     * @param fuser           Specifies user-defined callback function
-		     * @note                  Before calling user-defined function
-		     *                        all internal variables will be expanded,
-		     *                        and command processor will be done.
-		     *                        Unknown instruction and hotkeys should
-		     *                        be ignored.
-		     * @see                   FiUserFunc
-		    **/
-    void          __FASTCALL__ FiProgress(const std::string& filename,FiUserFunc fuser);
-
 /******************************************************************\
 * Low level routines                                               *
 \******************************************************************/
+    class Ini_Parser;
     class Ini_io : public Opaque {
 	public:
-	    Ini_io();
+	    Ini_io(Ini_Parser&);
 	    virtual ~Ini_io();
 
 	    virtual bool		open( const std::string& filename );
@@ -82,6 +48,7 @@ namespace beye {
 	    char*			GETS(char *str,unsigned num);
 
 	    std::fstream		fs;
+	    Ini_Parser&			parent;
     };
 
     class Tokenizer : public Opaque {
@@ -107,7 +74,7 @@ namespace beye {
 */
     class Variable_Set : public Opaque {
 	public:
-	    Variable_Set();
+	    Variable_Set(Ini_Parser& parent);
 	    virtual ~Variable_Set();
 
 	    virtual void	add(const std::string& var,const std::string& asociate);
@@ -117,39 +84,108 @@ namespace beye {
 	    virtual std::string	substitute(const std::string& src,char delim='%');
 	private:
 	    std::map<std::string,std::string> set;
+	    Ini_Parser&		parent;
+    };
+/********************************************************************\
+* Middle Level procedure                                             *
+*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*
+* Use only this function.                                            *
+* This function calls UserFunc as CALLBACK routine.                  *
+* All internal variables will be expanded, and command processor     *
+* will be done. Unknown instruction and hotkeys should be ignored.   *
+\********************************************************************/
+    /** Contains information about current record in ini file */
+    struct IniInfo {
+	const char* section;	/**< section name */
+	const char* subsection;	/**< subsection name */
+	const char* item;	/**< item name */
+	const char* value;	/**< value of item */
+    };
+		   /** Pointer to a user supplied function that receive readed record from ini file.
+		     * @return                For continue of scaning - false
+					      For terminating scaning - true (means: all done)
+		     * @param info            pointers to current record from inni file
+		     * @param data            pointers to user's data
+		    **/
+    typedef bool      (__FASTCALL__ *ini_user_func)(IniInfo * info,any_t* data);
+
+    class Ini_Parser : public Opaque {
+	public:
+	    Ini_Parser(ini_user_func usr,any_t* usr_data);
+	    virtual ~Ini_Parser();
+
+	    virtual void		file_parser(const std::string& filename);
+	    virtual bool		string_parser(const std::string& curr_str);
+	    virtual bool		command_parser(const std::string& cmd);
+	    virtual bool		get_condition(const std::string& condstr);
+	    virtual int			error(int ne,int row,const std::string& addinfo);
+	    virtual void		aerror(int nError,int row,const std::string& addinfo="");
+	    void			error_cl(int nError) { aerror(nError,file_info.back().first); }
+
+	    virtual std::string		_get_bracket_string(const std::string& src,char obr,char cbr);
+	    inline std::string		get_bracket_string(const std::string& str) { return _get_bracket_string(str,'"','"'); }
+	    inline std::string		get_section_name(const std::string& src) { return _get_bracket_string(src,'[',']'); }
+	    inline std::string		get_subsection_name(const std::string& src) { return _get_bracket_string(src,'<','>'); }
+
+	    virtual std::string		get_value_of_item(const std::string& src);
+	    virtual std::string		get_item_name(const std::string& src);
+	    virtual std::string		get_command_string(const std::string& src);
+		   /** Performs ini-file scanning.
+		     * @return                none
+		     * @param filename        Specifies name of file to be processed
+		     * @param fuser           Specifies user-defined callback function
+		     * @param data           Specifies user-defined data for callback function
+		     * @note                  Before calling user-defined function
+		     *                        all internal variables will be expanded,
+		     *                        and command processor will be done.
+		     *                        Unknown instruction and hotkeys should
+		     *                        be ignored.
+		    **/
+	    static void			scan(const std::string& filename,ini_user_func fuser,any_t* data);
+	protected:
+	    friend Ini_io;
+	    std::vector<std::pair<size_t,std::string> > file_info;
+	    ini_user_func		user_proc;
+	    any_t*			user_data;
+	    Ini_io*			active_file;
+	    unsigned char		case_sens; /**< 2 - case 1 - upper 0 - lower */
+	    bool			ifSmarting;
+	private:
+	    static std::string		decode_error(int nError);
+
+	    std::string			debug_str;
+	    std::string			user_message;
+	    Variable_Set		vars;
+	    std::string			curr_sect;
+	    std::string			curr_subsect;
     };
 
 /******************************************************************\
 * High level routines (similar to MS WIN SDK)                      *
 \******************************************************************/
-    struct hIniProfile {
-	Ini_io*		handler;
-	std::string	fname;
-	std::map <std::string,std::map<std::string,std::map<std::string,std::string > > > cache;
-	bool		updated;
-    };
-
+    class Ini_Profile : public Ini_Parser {
+	public:
+	    Ini_Profile();
+	    virtual ~Ini_Profile();
 		   /** Opens ini file for using with iniReadProfileString and iniWriteProfileString functions.
-		     * @return                handle of opened stream
+		     * @return                true on success
 		     * @param filename        Specifies name of file to be open
 		     * @param has_error       Pointer to the memory where will be stored error if occured
 		     * @warning               You must not call any other function
 		     *                        If error occured and has_error assigned
 		     *                        non NULL value.
-		     * @see                   iniCloseFile
+		     * @see                   close
 		    **/
-    extern hIniProfile*    __FASTCALL__ iniOpenFile(const std::string& fname,bool *has_error);
+		virtual bool		open(const std::string& fname);
 
 		   /** Closes ini file stream.
 		     * @return                none
-		     * @param ini             handle of opened stream
-		     * @see                   iniOpenFile
+		     * @see                   open
 		    **/
-    extern void            __FASTCALL__ iniCloseFile(hIniProfile *ini);
+		virtual void		close();
 
 		   /** Performs search of given item in ini file and reads it value if found.
 		     * @return                length of readed value
-		     * @param ini             handle of opened stream
 		     * @param section         specifies section name
 		     * @param subsection      specifies subsection name
 		     * @param _item           specifies item name
@@ -159,29 +195,44 @@ namespace beye {
 		     * @note                  if given item is not present in
 		     *                        ini file, then default value will
 		     *                        returned.
-		     * @see                   iniWriteProfileString
+		     * @see                   write
 		    **/
-    extern unsigned __FASTCALL__ iniReadProfileString(hIniProfile *ini,
-				     const std::string& section,
-				     const std::string& subsection,
-				     const std::string& _item,
-				     const std::string& def_value,
-				     char *buffer,
-				     unsigned cbBuffer);
+		virtual std::string	read(const std::string& section,
+					    const std::string& subsection,
+					    const std::string& _item,
+					    const std::string& def_value);
 
 		   /** Writes given item to ini file.
 		     * @return                true if operation performed successfully
-		     * @param ini             handle of opened stream
 		     * @param section         specifies section name
 		     * @param subsection      specifies subsection name
 		     * @param item            specifies item name
 		     * @param value           specifies value of item
-		     * @see                   iniReadProfileString
+		     * @see                   read
 		    **/
-    extern bool __FASTCALL__ iniWriteProfileString(hIniProfile *ini,
-				     const std::string& section,
-				     const std::string& subsection,
-				     const std::string& item,
-				     const std::string& value);
+		virtual bool		write(const std::string& section,
+					    const std::string& subsection,
+					    const std::string& item,
+					    const std::string& value);
+	private:
+	    void		file_scaning();
+	    bool		__addCache(const std::string& section,const std::string& subsection,
+					    const std::string& item,const std::string& value);
+	    static bool	__FASTCALL__ __buildCache(IniInfo *ini,any_t* data);
+	    int			out_sect(std::fstream& fs,const std::string& section,unsigned nled);
+	    int			out_subsect(std::fstream& fs,const std::string& subsection,unsigned nled);
+	    void		out_item(std::fstream& fs,unsigned nled,const std::string& _item,const std::string& value);
+	    bool		__makeIni(std::fstream& hout);
+	    void		flush_item(std::fstream& flush_handler,const std::map<std::string,std::string>& inner);
+	    void		flush_subsect(std::fstream& flush_handler,const std::map<std::string,std::map<std::string,std::string > >& inner);
+	    void		flush_sect(std::fstream& flush_handler,const std::map<std::string,std::map<std::string,std::map<std::string,std::string> > >& _cache);
+	    bool		__flushCache();
+
+	    Ini_io*		handler;
+	    std::string		fname;
+	    std::map <std::string,std::map<std::string,std::map<std::string,std::string > > > cache;
+	    bool		updated;
+	    int			__nled;
+    };
 }// namespace beye
 #endif

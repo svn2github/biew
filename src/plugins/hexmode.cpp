@@ -67,8 +67,8 @@ namespace beye {
 	    virtual unsigned long	prev_line_width() const;
 	    virtual unsigned long	curr_line_width() const;
 	    virtual void		help() const;
-	    virtual void		read_ini(hIniProfile *);
-	    virtual void		save_ini(hIniProfile *);
+	    virtual void		read_ini(Ini_Profile& );
+	    virtual void		save_ini(Ini_Profile& );
 	private:
 	    void		check_width_corr();
 	    int			full_hex_edit(TWindow * txtwnd,TWindow *hexwnd);
@@ -412,16 +412,16 @@ int HexMode::full_hex_edit(TWindow* txtwnd,TWindow* hexwnd)
     return _lastbyte;
 }
 
-unsigned __FASTCALL__ ReadIniAResolv( hIniProfile *ini )
+unsigned __FASTCALL__ ReadIniAResolv( Ini_Profile& ini )
 {
-    char tmps[10];
-    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode6","0",tmps,sizeof(tmps));
-    hexAddressResolv = (unsigned)::strtoul(tmps,NULL,10);
+    std::string tmps;
+    tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode6","0");
+    hexAddressResolv = (unsigned)::strtoul(tmps.c_str(),NULL,10);
     if(hexAddressResolv > 1) hexAddressResolv = 0;
     return hexAddressResolv;
 }
 
-void __FASTCALL__ WriteIniAResolv( hIniProfile *ini, unsigned har, unsigned virt_width_corr)
+void __FASTCALL__ WriteIniAResolv( Ini_Profile& ini, unsigned har, unsigned virt_width_corr)
 {
     char tmps[10];
     ::sprintf(tmps,"%i",har);
@@ -430,22 +430,22 @@ void __FASTCALL__ WriteIniAResolv( hIniProfile *ini, unsigned har, unsigned virt
     beye_context().write_profile_string(ini,"Beye","Browser","VirtWidthCorr",tmps);
 }
 
-void HexMode::read_ini(hIniProfile *ini)
+void HexMode::read_ini(Ini_Profile& ini)
 {
     BeyeContext& bctx = beye_context();
-    char tmps[10];
+    std::string tmps;
     if(bctx.is_valid_ini_args()) {
-	bctx.read_profile_string(ini,"Beye","Browser","LastSubMode","2",tmps,sizeof(tmps));
-	hmode = (unsigned)::strtoul(tmps,NULL,10);
+	tmps=bctx.read_profile_string(ini,"Beye","Browser","LastSubMode","2");
+	hmode = (unsigned)::strtoul(tmps.c_str(),NULL,10);
 	if(hmode > 3) hmode = 1;
 	hexAddressResolv=ReadIniAResolv(ini);
-	bctx.read_profile_string(ini,"Beye","Browser","VirtWidthCorr","0",tmps,sizeof(tmps));
-	virtWidthCorr = (unsigned)::strtoul(tmps,NULL,10);
+	tmps=bctx.read_profile_string(ini,"Beye","Browser","VirtWidthCorr","0");
+	virtWidthCorr = (unsigned)::strtoul(tmps.c_str(),NULL,10);
 	check_width_corr();
     }
 }
 
-void HexMode::save_ini(hIniProfile * ini)
+void HexMode::save_ini(Ini_Profile&  ini)
 {
     BeyeContext& bctx = beye_context();
     char tmps[10];

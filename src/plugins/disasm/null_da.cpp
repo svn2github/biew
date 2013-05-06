@@ -140,18 +140,18 @@ static void  __FASTCALL__ nulTerm( void )
    delete outstr;
 }
 
-static void __FASTCALL__ nulReadIni( hIniProfile *ini )
+static void __FASTCALL__ nulReadIni( Ini_Profile& ini )
 {
-  char tmps[10];
+  std::string tmps;
   if(beye_context().is_valid_ini_args())
   {
-    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode3","1",tmps,sizeof(tmps));
-    nulWidth = (int)strtoul(tmps,NULL,10);
+    tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode3","1");
+    nulWidth = (int)strtoul(tmps.c_str(),NULL,10);
     if(nulWidth > 3) nulWidth = 0;
   }
 }
 
-static void __FASTCALL__ nulWriteIni( hIniProfile *ini )
+static void __FASTCALL__ nulWriteIni( Ini_Profile& ini )
 {
   char tmps[10];
   sprintf(tmps,"%i",nulWidth);

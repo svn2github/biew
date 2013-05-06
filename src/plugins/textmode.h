@@ -28,8 +28,8 @@ typedef struct tag_REGISTRY_NLS
   unsigned       (__FASTCALL__ *convert_buffer)(char *buffer,unsigned len,bool use_fs_nls);
   unsigned       (__FASTCALL__ *get_symbol_size)( void );
   bool          (__FASTCALL__ *select_table)( void );
-  void           (__FASTCALL__ *read_ini)(hIniProfile *);
-  void           (__FASTCALL__ *save_ini)(hIniProfile *);
+  void           (__FASTCALL__ *read_ini)(Ini_Profile& );
+  void           (__FASTCALL__ *save_ini)(Ini_Profile& );
   void           (__FASTCALL__ *init)( void );
   void           (__FASTCALL__ *term)( void );
 }REGISTRY_NLS;

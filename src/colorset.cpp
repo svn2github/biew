@@ -49,12 +49,12 @@ extern const namedColorDef named_color_def[16] =
    { "White",        White        }
 };
 
-static Color __FASTCALL__ getColorByName(const char *name,Color defval,bool *has_err)
+static Color __FASTCALL__ getColorByName(const std::string& name,Color defval,bool *has_err)
 {
   unsigned i;
   for(i = 0;i < sizeof(named_color_def)/sizeof(namedColorDef);i++)
   {
-    if(strcmp(name,named_color_def[i].name) == 0)
+    if(name==named_color_def[i].name)
     {
       *has_err = false;
       return named_color_def[i].color;
@@ -65,7 +65,7 @@ static Color __FASTCALL__ getColorByName(const char *name,Color defval,bool *has
   return defval;
 }
 
-static ColorAttr  __FASTCALL__ getColorPairByName(const char *name, ColorAttr defval,bool* has_err)
+static ColorAttr  __FASTCALL__ getColorPairByName(const std::string& name, ColorAttr defval,bool* has_err)
 {
   char wstr[80];
   char *p;
@@ -73,7 +73,7 @@ static ColorAttr  __FASTCALL__ getColorPairByName(const char *name, ColorAttr de
   unsigned i,j,len;
   ColorAttr retval;
   Color fore,back;
-  len = strlen(name);
+  len = name.length();
   for(j = i = 0;i < len;i++) if(!isspace((unsigned char)name[i])) wstr[j++] = name[i];
   wstr[j] = 0;
   p = strchr(wstr,':');
@@ -92,23 +92,24 @@ static ColorAttr  __FASTCALL__ getColorPairByName(const char *name, ColorAttr de
   return retval;
 }
 
-static bool  __FASTCALL__ readColorPair(hIniProfile *ini,const char *section,
-				   const char *subsection,
-				   const char *item,
+static bool  __FASTCALL__ readColorPair(Ini_Profile& ini,const std::string& section,
+				   const std::string& subsection,
+				   const std::string& item,
 				   ColorAttr *value)
 {
-  char cstr[80],cval[80];
+  char cval[80];
   bool has_err;
+  std::string cstr;
   sprintf(cval,"%s:%s"
 	  ,named_color_def[BACK_COLOR(*value) & 0x0F].name
 	  ,named_color_def[FORE_COLOR(*value) & 0x0F].name);
-  iniReadProfileString(ini,section,subsection,item,cval,cstr,sizeof(cstr));
+  cstr=ini.read(section,subsection,item,cval);
   *value = getColorPairByName(cstr,*value,&has_err);
   return has_err;
 }
 
-static bool  __FASTCALL__ readButton(hIniProfile *ini,const char *section,
-					      const char *subsection,
+static bool  __FASTCALL__ readButton(Ini_Profile& ini,const std::string& section,
+					      const std::string& subsection,
 					      ButtonCSet *to)
 {
   bool has_err;
@@ -120,28 +121,28 @@ static bool  __FASTCALL__ readButton(hIniProfile *ini,const char *section,
 
 bool csetReadIniFile(const std::string& ini_name)
 {
-  hIniProfile *cset;
-  char cstr[80],cval[80],csec[80],stmp[256];
+  Ini_Profile& cset = *new Ini_Profile;
+  char cval[80],csec[80];
+  std::string cstr,stmp;
   unsigned value,i,j;
   bool has_err,cur_err;
-  has_err = false;
-  cset = iniOpenFile(ini_name,&has_err);
+  has_err=cset.open(ini_name);
   beye_context().last_skin_error.clear();
-  if(has_err) return false; /** return no error, because ini_name was not found or unavailable */
-  iniReadProfileString(cset,"Skin info","","Name","Unnamed",stmp,sizeof(stmp));
+  if(has_err) { delete &cset; return false; } /** return no error, because ini_name was not found or unavailable */
+  stmp=cset.read("Skin info","","Name","Unnamed");
   beye_context().scheme_name=stmp;
   for(i = 0;i < 16;i++)
   {
     sprintf(cval,"%i",named_color_def[i].color);
-    iniReadProfileString(cset,"Color map","",named_color_def[i].name,cval,cstr,sizeof(cstr));
-    value = atoi(cstr);
+    cstr=cset.read("Color map","",named_color_def[i].name,cval);
+    value = atoi(cstr.c_str());
     twRemapColor(named_color_def[i].color,value);
   }
   for(i = 0;i < 8;i++)
   {
     sprintf(cval,"Trans%i",i+1);
-    iniReadProfileString(cset,"Terminal","",cval,"",cstr,sizeof(cstr));
-    if(cstr[0])
+    cstr=cset.read("Terminal","",cval,"");
+    if(!cstr.empty())
     {
       Color col;
       col = getColorByName(cstr,Black,&cur_err);
@@ -259,7 +260,7 @@ bool csetReadIniFile(const std::string& ini_name)
   has_err |= readColorPair(cset,"Help","","StrikeThrough",&help_cset.strikethrough);
   has_err |= readColorPair(cset,"Help","","Link",&help_cset.link);
   has_err |= readColorPair(cset,"Help","","SelLink",&help_cset.sellink);
-  iniCloseFile(cset);
+  delete &cset;
   return has_err;
 }
 

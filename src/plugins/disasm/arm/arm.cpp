@@ -187,21 +187,21 @@ static void  __FASTCALL__ armTerm( void )
    delete outstr;
 }
 
-static void __FASTCALL__ armReadIni( hIniProfile *ini )
+static void __FASTCALL__ armReadIni( Ini_Profile& ini )
 {
-  char tmps[10];
+  std::string tmps;
   if(beye_context().is_valid_ini_args())
   {
-    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode3","1",tmps,sizeof(tmps));
-    armBitness = (int)strtoul(tmps,NULL,10);
+    tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode3","1");
+    armBitness = (int)strtoul(tmps.c_str(),NULL,10);
     if(armBitness > 1 && armBitness != DAB_AUTO) armBitness = 0;
-    beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode4","1",tmps,sizeof(tmps));
-    armBigEndian = (int)strtoul(tmps,NULL,10);
+    tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode4","1");
+    armBigEndian = (int)strtoul(tmps.c_str(),NULL,10);
     if(armBigEndian > 1) armBigEndian = 0;
   }
 }
 
-static void __FASTCALL__ armWriteIni( hIniProfile *ini )
+static void __FASTCALL__ armWriteIni( Ini_Profile& ini )
 {
   char tmps[10];
   sprintf(tmps,"%i",armBitness);

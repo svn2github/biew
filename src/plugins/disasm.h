@@ -118,8 +118,8 @@ typedef unsigned char * MBuffer;
 	    virtual unsigned long	prev_line_width() const;
 	    virtual unsigned long	curr_line_width() const;
 	    virtual void		help() const;
-	    virtual void		read_ini(hIniProfile *);
-	    virtual void		save_ini(hIniProfile *);
+	    virtual void		read_ini(Ini_Profile& );
+	    virtual void		save_ini(Ini_Profile& );
 	    virtual __filesize_t	search_engine(TWindow *pwnd, __filesize_t start, __filesize_t *slen, unsigned flg, bool is_continue, bool *is_found);
 	    virtual DisasmRet		disassembler(__filesize_t ulShift,MBuffer buffer,unsigned flags);
 /** Appends symbolic information to address field of jump instructions
@@ -304,8 +304,8 @@ struct REGISTRY_DISASM
   char         (__FASTCALL__ *CloneShortName)(unsigned long clone); /**< returns short clone name of instruction */
   void         (__FASTCALL__ *init)(DisMode& parent);     /**< initializing of plugin */
   void         (__FASTCALL__ *term)(void);     /**< terminating of plugin */
-  void         (__FASTCALL__ *read_ini)(hIniProfile *);  /**< reads settings of plugin from .ini file */
-  void         (__FASTCALL__ *save_ini)(hIniProfile *);  /**< stores settings of plugin into .ini file */
+  void         (__FASTCALL__ *read_ini)(Ini_Profile& );  /**< reads settings of plugin from .ini file */
+  void         (__FASTCALL__ *save_ini)(Ini_Profile& );  /**< stores settings of plugin into .ini file */
 };
 
 /** Common disassembler utility */
