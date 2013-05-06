@@ -41,6 +41,7 @@ namespace beye {
 static const unsigned TEXT_TAB=8;
 
 extern void drawHelpListPrompt( void );
+
 enum {
     HPROP_BOLD                  =0x01,
     HPROP_ITALIC                =0x02,
@@ -49,7 +50,7 @@ enum {
     HPROP_REVERSE               =0x10,
     HPROP_LINK                  =0x20
 };
-unsigned __FASTCALL__ hlpFillBuffer(tvioBuff * dest,unsigned int alen,const char * str,unsigned int len,unsigned int shift,unsigned *n_tabs,bool is_hl)
+unsigned Beye_Help::fill_buffer(tvioBuff * dest,unsigned int alen,const std::string& str,unsigned int len,unsigned int shift,unsigned *n_tabs,bool is_hl)
 {
   t_vchar ch;
   ColorAttr defcol;
@@ -132,7 +133,7 @@ unsigned __FASTCALL__ hlpFillBuffer(tvioBuff * dest,unsigned int alen,const char
   return k;
 }
 
-void __FASTCALL__ hlpPaintLine(TWindow *win,unsigned i,const char *name,bool is_hl)
+void Beye_Help::paint_line(TWindow *win,unsigned i,const std::string& name,bool is_hl)
 {
   tvioBuff it;
   unsigned rlen;
@@ -142,14 +143,14 @@ void __FASTCALL__ hlpPaintLine(TWindow *win,unsigned i,const char *name,bool is_
   it.chars = chars;
   it.oem_pg = oem_pg;
   it.attrs = attrs;
-  rlen = strlen(name);
-  rlen = hlpFillBuffer(&it,__TVIO_MAXSCREENWIDTH,name,rlen,0,NULL,is_hl);
+  rlen = name.length();
+  rlen = fill_buffer(&it,__TVIO_MAXSCREENWIDTH,name,rlen,0,NULL,is_hl);
   twWriteBuffer(win,4,i+2,&it,rlen);
   twGotoXY(win,3+rlen,i+1);
   twClrEOL(win);
 }
 
-static void  __FASTCALL__ Paint(TWindow *win,char * * names,unsigned nlist,unsigned start,unsigned height,unsigned width)
+void Beye_Help::paint(TWindow *win,const char * * names,unsigned nlist,unsigned start,unsigned height,unsigned width)
 {
  unsigned i, pos = 0;
  twFocusWin(win);
@@ -170,22 +171,22 @@ static void  __FASTCALL__ Paint(TWindow *win,char * * names,unsigned nlist,unsig
    else twPutChar(win,TWC_DEF_FILLER);
   twGotoXY(win,2,i + 1);
    twPutChar(win,TWC_SV);
-   hlpPaintLine(win,i,names[i + start],0);
+   paint_line(win,i,names[i + start],0);
  }
  twRefreshWin(win);
 }
 
 typedef char *lpstr;
 
-static int  __FASTCALL__ __hlpListBox(char * * names,unsigned nlist,const char * title)
+int Beye_Help::__ListBox(const char** names,unsigned nlist,const std::string& title)
 {
  TWindow * wlist;
- unsigned i,j,height,mwidth = strlen(title);
+ unsigned i,j,height,mwidth = title.length();
  int ret,start,ostart,cursor,ocursor,scursor;
  scursor = -1;
  for(i = 0;i < nlist;i++)
  {
-    j = hlpFillBuffer(NULL,UINT_MAX,names[i],strlen(names[i]),0,NULL,0);
+    j = fill_buffer(NULL,UINT_MAX,names[i],strlen(names[i]),0,NULL,0);
     if(j > mwidth) mwidth = j;
  }
  mwidth += 4;
@@ -193,7 +194,7 @@ static int  __FASTCALL__ __hlpListBox(char * * names,unsigned nlist,const char *
  height = nlist < (unsigned)(tvioHeight - 4) ? nlist : tvioHeight - 4;
  wlist = CrtHlpWndnls(title,mwidth-1,height);
  ostart = start = cursor = ocursor = 0;
- Paint(wlist,names,nlist,start,height,mwidth);
+ paint(wlist,names,nlist,start,height,mwidth);
  for(;;)
  {
    unsigned ch;
@@ -261,75 +262,63 @@ static int  __FASTCALL__ __hlpListBox(char * * names,unsigned nlist,const char *
    if(start != ostart)
    {
      ostart = start;
-     Paint(wlist,names,nlist,start,height,mwidth);
+     paint(wlist,names,nlist,start,height,mwidth);
    }
    if(scursor >= 0)
    {
      twSetColorAttr(wlist,menu_cset.highlight);
-     if(scursor >= start && (unsigned)scursor < start + height) hlpPaintLine(wlist,scursor - start,names[scursor],true);
+     if(scursor >= start && (unsigned)scursor < start + height) paint_line(wlist,scursor - start,names[scursor],true);
    }
  }
  CloseWnd(wlist);
  return ret;
 }
 
-
-static BFile* bHelp = &bNull;
-static BEYE_HELP_ITEM bhi;
-
-bool __FASTCALL__ hlpOpen( bool interact )
+bool Beye_Help::open( bool interact )
 {
   const char *help_name;
   char hlp_id[sizeof(BEYE_HELP_VER)];
-  if(bHelp != &bNull) return false; /*means: help file is already opened */
+  if(fs.is_open()) return false; /*means: help file is already opened */
   help_name = beyeGetHelpName();
-  bHelp = BeyeContext::beyeOpenRO(help_name,BBIO_SMALL_CACHE_SIZE);
-  if(bHelp == &bNull)
-  {
+  fs.open(help_name,std::ios_base::binary|std::ios_base::in);
+  if(!fs.is_open()) {
     if(interact) errnoMessageBox("Can't open help file","",errno);
     return false;
   }
-  bHelp->seek(0L,BFile::Seek_Set);
-  bHelp->read(hlp_id,sizeof(hlp_id));
-  if(memcmp(hlp_id,BEYE_HELP_VER,strlen(BEYE_HELP_VER)) != 0)
-  {
-    if(interact)
-    {
+  fs.seekg(0L,std::ios_base::beg);
+  fs.read(hlp_id,sizeof(hlp_id));
+  if(memcmp(hlp_id,BEYE_HELP_VER,strlen(BEYE_HELP_VER)) != 0) {
+    if(interact) {
       ErrMessageBox("Incorrect help version","");
     }
-    delete bHelp;
-    bHelp = &bNull;
+    fs.close();
     return false;
   }
   return true;
 }
 
-void __FASTCALL__ hlpClose( void )
+void Beye_Help::close()
 {
-  if(bHelp != &bNull)
-  {
-    delete bHelp;
-    bHelp = &bNull;
-  }
+    fs.close();
 }
 
-static bool __FASTCALL__ find_item(unsigned long item_id)
+bool Beye_Help::find_item(unsigned long item_id)
 {
   unsigned long i,nsize,lval;
   char sout[HLP_SLONG_LEN];
-  bHelp->seek(HLP_VER_LEN,BFile::Seek_Set);
-  bHelp->read(sout,sizeof(sout));
+  fs.seekg(HLP_VER_LEN,std::ios_base::beg);
+  fs.read(sout,sizeof(sout));
   nsize = strtoul(sout,NULL,16);
   for(i = 0;i < nsize;i++)
   {
-    bHelp->read(&bhi,sizeof(BEYE_HELP_ITEM));
+    fs.read((char*)&bhi,sizeof(beye_help_item));
     lval = strtoul(bhi.item_id,NULL,16);
     if(lval == item_id) return true;
   }
   return false;
 }
 
-unsigned long   __FASTCALL__ hlpGetItemSize(unsigned long item_id)
+unsigned long Beye_Help::get_item_size(unsigned long item_id)
 {
   unsigned long ret = 0;
   if(find_item(item_id)) ret = strtoul(bhi.item_decomp_size,NULL,16);
@@ -337,28 +326,27 @@ unsigned long   __FASTCALL__ hlpGetItemSize(unsigned long item_id)
   return ret;
 }
 
-bool   __FASTCALL__ hlpLoadItem(unsigned long item_id, any_t* buffer)
+bool Beye_Help::load_item(unsigned long item_id, any_t* buffer)
 {
-  unsigned long hlp_off,hlp_size;
-  bool ret = false;
-  if(bHelp != &bNull)
-  {
-    if(find_item(item_id))
-    {
-      hlp_off = strtoul(bhi.item_off,NULL,16);
-      hlp_size = strtoul(bhi.item_length,NULL,16);
-      if(!Decode(bHelp,buffer,hlp_off,hlp_size))
-      {
-	MemOutBox("Help uncompression");
-      }
-      else ret = true;
+    unsigned long hlp_off,hlp_size;
+    bool ret = false;
+    if(fs.is_open()) {
+	if(find_item(item_id)) {
+	    hlp_off = strtoul(bhi.item_off,NULL,16);
+	    hlp_size = strtoul(bhi.item_length,NULL,16);
+	    uint8_t* inbuff = new uint8_t[hlp_size];
+	    fs.seekg(hlp_off,std::ios_base::beg);
+	    fs.read((char*)inbuff,hlp_size);
+	    if(!Decode(buffer,inbuff,hlp_size)) MemOutBox("Help uncompression");
+	    else ret = true;
+	    delete inbuff;
+	}
+	else ErrMessageBox("Load: Item not found","");
     }
-    else ErrMessageBox("Load: Item not found","");
-  }
-  return ret;
+    return ret;
 }
 
-char **   __FASTCALL__ hlpPointStrings(char  *data,unsigned long data_size,unsigned long *nstr)
+char** Beye_Help::point_strings(char* data,unsigned long data_size,unsigned long *nstr)
 {
   char **str_ptr,**new_ptr;
   unsigned long i;
@@ -384,14 +372,18 @@ char **   __FASTCALL__ hlpPointStrings(char  *data,unsigned long data_size,unsig
   return str_ptr;
 }
 
+Beye_Help::Beye_Help() {}
+Beye_Help::~Beye_Help() {}
+
 void __FASTCALL__ hlpDisplay( unsigned long item_id )
 {
-  char **str_ptr = 0;
+  const char **str_ptr = 0;
   char  *data = 0;
   char *title;
   unsigned long data_size,nstr;
-  if(!hlpOpen(true)) return;
-  data_size = hlpGetItemSize(item_id);
+  Beye_Help bhelp;
+  if(!bhelp.open(true)) return;
+  data_size = bhelp.get_item_size(item_id);
   if(!data_size) goto hlp_bye;
   data = new char [data_size+1];
   if(!data)
@@ -402,16 +394,16 @@ void __FASTCALL__ hlpDisplay( unsigned long item_id )
     goto hlp_bye;
   }
   data[data_size] = 0;
-  if(hlpLoadItem(item_id,data))
+  if(bhelp.load_item(item_id,data))
   {
-    if(!(str_ptr = hlpPointStrings(data,data_size,&nstr))) goto mem_off;
+    if(!(str_ptr = (const char**)bhelp.point_strings(data,data_size,&nstr))) goto mem_off;
     title = data;
-    __hlpListBox(str_ptr,(unsigned)nstr,title);
+    bhelp.__ListBox(str_ptr,(unsigned)nstr,title);
     delete str_ptr;
   }
   delete data;
   hlp_bye:
-  hlpClose();
+  bhelp.close();
 }
 } // namespace beye
 

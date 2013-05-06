@@ -65,7 +65,9 @@ int main(int argc, char *argv[])
 	outfile = new BFile;
 	if(outfile->create(s) == false) goto Err;
 	if (toupper(*argv[1]) == 'E') retcode = Encode();
+#if 0
 	else                          retcode = Decode(infile,NULL,0L,infile->flength());
+#endif
 	if(!retcode) fprintf(stderr,"Error allocating memory during operation\n");
 	delete infile;
 	delete outfile;

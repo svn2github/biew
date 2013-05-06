@@ -84,8 +84,9 @@ static void __FASTCALL__ armHelpAsm( void )
  unsigned size,i,evt;
  unsigned long nstrs;
  TWindow * hwnd;
- if(!hlpOpen(true)) return;
- size = (unsigned)hlpGetItemSize(20041);
+ Beye_Help bhelp;
+ if(!bhelp.open(true)) return;
+ size = (unsigned)bhelp.get_item_size(20041);
  if(!size) goto armhlp_bye;
  msgAsmText = new char [size+1];
  if(!msgAsmText)
@@ -94,13 +95,13 @@ static void __FASTCALL__ armHelpAsm( void )
    MemOutBox(" Help Display ");
    goto armhlp_bye;
  }
- if(!hlpLoadItem(20041,msgAsmText))
+ if(!bhelp.load_item(20041,msgAsmText))
  {
    delete msgAsmText;
    goto armhlp_bye;
  }
  msgAsmText[size] = 0;
- if(!(strs = hlpPointStrings(msgAsmText,size,&nstrs))) goto mem_off;
+ if(!(strs = bhelp.point_strings(msgAsmText,size,&nstrs))) goto mem_off;
  title = msgAsmText;
  hwnd = CrtHlpWndnls(title,72,21);
  twFocusWin(hwnd);
@@ -115,7 +116,7 @@ static void __FASTCALL__ armHelpAsm( void )
    it.oem_pg = oem_pg;
    it.attrs = attrs;
    rlen = strlen(strs[i]);
-   rlen = hlpFillBuffer(&it,__TVIO_MAXSCREENWIDTH,strs[i],rlen,0,NULL,0);
+   rlen = bhelp.fill_buffer(&it,__TVIO_MAXSCREENWIDTH,strs[i],rlen,0,NULL,0);
    twWriteBuffer(hwnd,2,i+2,&it,rlen);
  }
  delete msgAsmText;
@@ -148,7 +149,7 @@ static void __FASTCALL__ armHelpAsm( void )
  while(!(evt == KE_ESCAPE || evt == KE_F(10)));
  CloseWnd(hwnd);
  armhlp_bye:
- hlpClose();
+ bhelp.close();
 }
 
 static int    __FASTCALL__ armMaxInsnLen( void ) { return 8; }

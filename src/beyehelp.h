@@ -16,70 +16,81 @@
 **/
 #ifndef __BEYEHELP__H
 #define __BEYEHELP__H
+#include <fstream>
 
 #include "libbeye/twin.h"
 
 namespace beye {
 #define BEYE_HELP_VER "BEYE_HLP v6.1.0"
 
-enum {
-    HLP_SLONG_LEN=9,
-    HLP_VER_LEN=16
-};
+    enum {
+	HLP_SLONG_LEN=9,
+	HLP_VER_LEN=16
+    };
 /** Maximal size of help topic - is 0xFFFF bytes */
+    struct beye_help_item {
+	char	item_id[HLP_SLONG_LEN]; /**< character representation of short type. Null-terminated */
+	char	item_off[HLP_SLONG_LEN];
+	char	item_length[HLP_SLONG_LEN];
+	char	item_decomp_size[HLP_SLONG_LEN];
+    };
 
-typedef struct tag_beye_help_item
-{
-  char     item_id[HLP_SLONG_LEN]; /**< character representation of short type. Null-terminated */
-  char     item_off[HLP_SLONG_LEN];
-  char     item_length[HLP_SLONG_LEN];
-  char     item_decomp_size[HLP_SLONG_LEN];
-}BEYE_HELP_ITEM;
-
-typedef struct tag_beye_help
-{
-  char            help_version[HLP_VER_LEN]; /**< identifiaction signature */
-  char            item_count[HLP_SLONG_LEN]; /**< total count of items */
-  BEYE_HELP_ITEM  items[1];         /**< Array of items */
+    struct beye_help {
+	char		help_version[HLP_VER_LEN]; /**< identifiaction signature */
+	char		item_count[HLP_SLONG_LEN]; /**< total count of items */
+	beye_help_item	items[1];         /**< Array of items */
 /**< Binary data of help */
-}BEYE_HELP;
+    };
 
 /** Color definition */
-enum {
-    HLPC_BOLD_ON               =0x01,
-    HLPC_ITALIC_ON             =0x02,
-    HLPC_UNDERLINE_ON          =0x03,
-    HLPC_STRIKETHROUGH_ON      =0x04,
-    HLPC_REVERSE_ON            =0x05,
-    HLPC_LINK_ON               =0x06,
-    HLPC_BOLD_OFF              =0x11,
-    HLPC_ITALIC_OFF            =0x12,
-    HLPC_UNDERLINE_OFF         =0x13,
-    HLPC_STRIKETHROUGH_OFF     =0x14,
-    HLPC_REVERSE_OFF           =0x15,
-    HLPC_LINK_OFF              =0x16
-};
-    bool           __FASTCALL__ hlpOpen( bool interactive );
-    void            __FASTCALL__ hlpClose( void );
+    enum {
+	HLPC_BOLD_ON		=0x01,
+	HLPC_ITALIC_ON		=0x02,
+	HLPC_UNDERLINE_ON	=0x03,
+	HLPC_STRIKETHROUGH_ON	=0x04,
+	HLPC_REVERSE_ON		=0x05,
+	HLPC_LINK_ON		=0x06,
+	HLPC_BOLD_OFF		=0x11,
+	HLPC_ITALIC_OFF		=0x12,
+	HLPC_UNDERLINE_OFF	=0x13,
+	HLPC_STRIKETHROUGH_OFF	=0x14,
+	HLPC_REVERSE_OFF	=0x15,
+	HLPC_LINK_OFF		=0x16
+    };
+
+    class Beye_Help : public Opaque {
+	public:
+	    Beye_Help();
+	    virtual ~Beye_Help();
+
+	    virtual bool	open(bool interactive);
+	    virtual void	close();
 		       /** Return uncompressed size of help item
 			  0 - if error occured */
-    unsigned long   __FASTCALL__ hlpGetItemSize(unsigned long item_id);
-    bool           __FASTCALL__ hlpLoadItem(unsigned long item_id, any_t* buffer);
-		       /** Fully-functionallity utility for displaying help */
-    void            __FASTCALL__ hlpDisplay(unsigned long id);
+	    virtual unsigned long	get_item_size(unsigned long item_id);
+	    virtual bool		load_item(unsigned long item_id, any_t* buffer);
 
 		       /** Returns array of char pointers.
 			  Title always is data[0] */
-    char **         __FASTCALL__ hlpPointStrings(char  *data,unsigned long data_size,
-				       unsigned long *nstr);
+	    virtual char **		point_strings(char* data,unsigned long data_size,
+							unsigned long *nstr);
 		       /** Filles buffer as video memory from string */
-    unsigned        __FASTCALL__ hlpFillBuffer(tvioBuff * dest,unsigned int cw_dest,
-				     const char * str,unsigned int cb_str,
-				     unsigned int shift,unsigned *n_tabs,
-				     bool is_hl);
+	    virtual unsigned		fill_buffer(tvioBuff * dest,unsigned int cw_dest,
+						    const std::string& str,unsigned int cb_str,
+						    unsigned int shift,unsigned *n_tabs,
+						    bool is_hl);
 		       /** Paints line of help */
-    void            __FASTCALL__ hlpPaintLine(TWindow *win,unsigned y,const char *str,
-				    bool is_hl);
+	    virtual void		paint_line(TWindow *win,unsigned y,const std::string& str, bool is_hl);
+	    virtual int			__ListBox(const char** names,unsigned nlist,const std::string& title);
+	private:
+	    void			paint(TWindow *win,const char * * names,unsigned nlist,unsigned start,unsigned height,unsigned width);
+	    bool			find_item(unsigned long item_id);
+
+	    std::fstream		fs;
+	    beye_help_item		bhi;
+    };
+		       /** Fully-functionallity utility for displaying help */
+    void            __FASTCALL__ hlpDisplay(unsigned long id);
 } // namespace beye
 
 #endif

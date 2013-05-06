@@ -436,10 +436,11 @@ static void __FASTCALL__ AVRHelpAsm( void )
   unsigned size,i,evt;
   unsigned long nstrs;
   TWindow * hwnd;
+  Beye_Help bhelp;
 
-  if(!hlpOpen(true)) return;
+  if(!bhelp.open(true)) return;
 
-  size = (unsigned)hlpGetItemSize(20021);
+  size = (unsigned)bhelp.get_item_size(20021);
   if (!size) goto avrhlp_bye;
 
   msgAsmText = new char [size+1];
@@ -450,14 +451,14 @@ mem_off:
     goto avrhlp_bye;
   }
 
-  if (!hlpLoadItem(20021, msgAsmText))
+  if (!bhelp.load_item(20021, msgAsmText))
   {
     delete msgAsmText;
     goto avrhlp_bye;
   }
   msgAsmText[size] = '\0';
 
-  if (!(strs = hlpPointStrings(msgAsmText, size, &nstrs))) goto mem_off;
+  if (!(strs = bhelp.point_strings(msgAsmText, size, &nstrs))) goto mem_off;
   title = msgAsmText;
 
   hwnd = CrtHlpWndnls(title, 72, 21);
@@ -475,7 +476,7 @@ mem_off:
     it.attrs = attrs;
 
     rlen = strlen(strs[i]);
-    rlen = hlpFillBuffer(&it, __TVIO_MAXSCREENWIDTH, strs[i], rlen, 0, NULL, 0);
+    rlen = bhelp.fill_buffer(&it, __TVIO_MAXSCREENWIDTH, strs[i], rlen, 0, NULL, 0);
 
     twWriteBuffer(hwnd, 2, i + 2, &it, rlen);
   }
@@ -497,7 +498,7 @@ mem_off:
   CloseWnd(hwnd);
 
 avrhlp_bye:
-  hlpClose();
+  bhelp.close();
 }
 
 static int __FASTCALL__ AVRMaxInsnLen( void )

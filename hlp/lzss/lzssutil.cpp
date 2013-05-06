@@ -251,15 +251,15 @@ static int Encode(void)
 #endif
 
 /** Just the reverse of Encode(). */
-static int Decode(BFile* instream,any_t* buff,unsigned long off, unsigned long length)
+static int Decode(any_t* buff,const uint8_t* instream,unsigned long length)
 {
+    unsigned long in_idx=0;
 	int  i, j, k, r, c,reach_eof;
 #ifdef INTERACTIVE
 	int percent,ppercent;
 	time_t sttime,endtime;
 	long cfpos;
 #endif
-	unsigned long flen;
 	unsigned int  flags;
 	unsigned long buff_ptr = 0;
 
@@ -275,30 +275,28 @@ static int Decode(BFile* instream,any_t* buff,unsigned long off, unsigned long l
 	  if(dad)  delete dad;
 	  return 0;
 	}
-	flen = off + length;
 #ifdef INTERACTIVE
 	{
 	  ppercent = -1;
 	  time(&sttime);
 	}
 #endif
-	instream->seek(off,BFile::Seek_Set);
 	for (i = 0; i < N - F; i++) text_buf[i] = ' ';
 	r = N - F;  flags = 0;
 	for ( ; ; )
 	{
 		if (((flags >>= 1) & 256) == 0)
 		{
-		   reach_eof = instream->eof() || instream->tell() > flen;
+		   reach_eof = in_idx>=length;
 		   if(reach_eof) break;
-		   c = instream->read_byte();
+		   c = instream[in_idx++];
 		   flags = c | 0xff00;		/** uses higher byte cleverly */
 		}				/** to count eight */
 		if (flags & 1)
 		{
-		   reach_eof = instream->eof() || instream->tell() > flen;
+		   reach_eof = in_idx>=length;
 		   if(reach_eof) break;
-		   c = instream->read_byte();
+		   c = instream[in_idx++];
 		   if(buff) ((char  *)buff)[buff_ptr++] = c;
 		   else outfile->write_byte(c);
 		   text_buf[r++] = c;
@@ -306,12 +304,12 @@ static int Decode(BFile* instream,any_t* buff,unsigned long off, unsigned long l
 		}
 		else
 		{
-		     reach_eof = instream->eof() || instream->tell() > flen;
+		     reach_eof = in_idx>=length;
 		     if(reach_eof) break;
-		     i = instream->read_byte();
-		     reach_eof = instream->eof() || instream->tell() > flen;
+		     i = instream[in_idx++];
+		     reach_eof = in_idx>=length;
 		     if(reach_eof) break;
-		     j = instream->read_byte();
+		     j = instream[in_idx++];
 
 		     i |= ((j & 0xf0) << 4);  j = (j & 0x0f) + THRESHOLD;
 		     for (k = 0; k <= j; k++)
@@ -324,9 +322,9 @@ static int Decode(BFile* instream,any_t* buff,unsigned long off, unsigned long l
 		     }
 		}
 #ifdef INTERACTIVE
-		cfpos = instream->tell();
+		cfpos = in_idx;
 		{
-		  percent = (unsigned)(cfpos*100/flen);
+		  percent = (unsigned)(cfpos*100/length);
 		  if (percent != ppercent)
 		  {
 		    printf("%u%%\r",percent);

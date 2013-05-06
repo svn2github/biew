@@ -163,7 +163,7 @@ bool __FASTCALL__ MyCallOut(IniInfo* ini,any_t* data)
      {
 	unsigned long litem,fpos;
 	unsigned copysize;
-	BEYE_HELP_ITEM bhi;
+	beye_help_item bhi;
 	BFile* bIn;
 	int handle;
 	fpos = bOutput->tell();
@@ -203,8 +203,8 @@ bool __FASTCALL__ MyCallOut(IniInfo* ini,any_t* data)
 	::close(handle);
 	sprintf(bhi.item_decomp_size,"%08lX",litem);
 	sprintf(bhi.item_off,"%08lX",bOutput->flength());
-	bOutput->seek(items_freq*sizeof(BEYE_HELP_ITEM)+strlen(id_string)+1+HLP_SLONG_LEN,BFile::Seek_Set);
-	bOutput->write(&bhi,sizeof(BEYE_HELP_ITEM));
+	bOutput->seek(items_freq*sizeof(beye_help_item)+strlen(id_string)+1+HLP_SLONG_LEN,BFile::Seek_Set);
+	bOutput->write(&bhi,sizeof(beye_help_item));
 	bOutput->seek(fpos,BFile::Seek_Set);
 	litem = bIn->flength();
 	do
@@ -227,7 +227,7 @@ char **ArgVector;
 
 int main( int argc, char *argv[] )
 {
-  BEYE_HELP_ITEM bhi;
+  beye_help_item bhi;
   unsigned long i;
   char sout[HLP_SLONG_LEN];
   if(argc < 3)
@@ -248,7 +248,7 @@ int main( int argc, char *argv[] )
 	, argv[1]
 	, argv[2]
 	, outfname);
-  memset(&bhi,0,sizeof(BEYE_HELP_ITEM));
+  memset(&bhi,0,sizeof(beye_help_item));
   if(BFile::exists(outfname)) if(BFile::unlink(outfname)) { fprintf(stderr,"Can not delete %s\n",argv[2]); return -1; }
   bOutput = new BBio_File;
   bool rc;
@@ -268,7 +268,7 @@ int main( int argc, char *argv[] )
   bOutput->write(id_string,strlen(id_string)+1);
   sprintf(sout,"%08lX",items_freq);
   bOutput->write(sout,HLP_SLONG_LEN);
-  for(i = 0;i < items_freq;i++) bOutput->write(&bhi,sizeof(BEYE_HELP_ITEM));
+  for(i = 0;i < items_freq;i++) bOutput->write(&bhi,sizeof(beye_help_item));
   items_freq = 0;
   Ini_Parser::scan(argv[2],MyCallOut,NULL);
   delete bOutput;
