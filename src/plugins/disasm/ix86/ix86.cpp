@@ -6139,7 +6139,6 @@ static void __FASTCALL__ ix86HelpAsm()
  if(!(strs = bhelp.point_strings(msgAsmText,size,&nstrs))) goto mem_off;
  title = msgAsmText;
  hwnd = CrtHlpWndnls(title,72,21);
- twFocusWin(hwnd);
  for(i = 0;i < nstrs;i++)
  {
    unsigned rlen;
@@ -6152,53 +6151,53 @@ static void __FASTCALL__ ix86HelpAsm()
    it.attrs = attrs;
    rlen = strlen(strs[i]);
    rlen = bhelp.fill_buffer(&it,__TVIO_MAXSCREENWIDTH,strs[i],rlen,0,NULL,0);
-   twWriteBuffer(hwnd,2,i+2,&it,rlen);
+   hwnd->write(2,i+2,&it,rlen);
  }
  delete msgAsmText;
- twGotoXY(hwnd,5,3);
+ hwnd->goto_xy(5,3);
  if(x86_Bitness == DAB_USE64 || color_mode==1)
  {
-   twGotoXY(hwnd,5,3);
+   hwnd->goto_xy(5,3);
    i=0;
 //   for(i = 0;i < 10;i++)
    {
-     twSetColorAttr(hwnd,disasm_cset.engine[0].engine);
-     twPutS(hwnd,(x86_Bitness == DAB_USE64)?CPU64Names[0]:altPipesNames[0]);
-     twClrEOL(hwnd);
+     hwnd->set_color(disasm_cset.engine[0].engine);
+     hwnd->puts((x86_Bitness == DAB_USE64)?CPU64Names[0]:altPipesNames[0]);
+     hwnd->clreol();
    }
-   twGotoXY(hwnd,5,4);
+   hwnd->goto_xy(5,4);
 //   for(i = 0;i < 10;i++)
    {
-     twSetColorAttr(hwnd,disasm_cset.engine[1].engine);
-     twPutS(hwnd,(x86_Bitness == DAB_USE64)?CPU64Names[1]:altPipesNames[1]);
-     twClrEOL(hwnd);
+     hwnd->set_color(disasm_cset.engine[1].engine);
+     hwnd->puts((x86_Bitness == DAB_USE64)?CPU64Names[1]:altPipesNames[1]);
+     hwnd->clreol();
    }
-   twGotoXY(hwnd,5,5);
+   hwnd->goto_xy(5,5);
 //   for(i = 0;i < 10;i++)
    {
-     twSetColorAttr(hwnd,disasm_cset.engine[2].engine);
-     twPutS(hwnd,(x86_Bitness == DAB_USE64)?CPU64Names[2]:altPipesNames[2]);
-     twClrEOL(hwnd);
+     hwnd->set_color(disasm_cset.engine[2].engine);
+     hwnd->puts((x86_Bitness == DAB_USE64)?CPU64Names[2]:altPipesNames[2]);
+     hwnd->clreol();
    }
  }
  else
  {
  for(i = 0;i < 10;i++)
  {
-   twSetColorAttr(hwnd,disasm_cset.cpu_cset[0].clone[i]);
-   twPutS(hwnd,CPUNames[i]);
+   hwnd->set_color(disasm_cset.cpu_cset[0].clone[i]);
+   hwnd->puts(CPUNames[i]);
  }
- twGotoXY(hwnd,5,4);
+ hwnd->goto_xy(5,4);
  for(i = 0;i < 10;i++)
  {
-   twSetColorAttr(hwnd,disasm_cset.cpu_cset[1].clone[i]);
-   twPutS(hwnd,FPUNames[i]);
+   hwnd->set_color(disasm_cset.cpu_cset[1].clone[i]);
+   hwnd->puts(FPUNames[i]);
  }
- twGotoXY(hwnd,5,5);
+ hwnd->goto_xy(5,5);
  for(i = 0;i < 10;i++)
  {
-   twSetColorAttr(hwnd,disasm_cset.cpu_cset[2].clone[i]);
-   twPutS(hwnd,MMXNames[i]);
+   hwnd->set_color(disasm_cset.cpu_cset[2].clone[i]);
+   hwnd->puts(MMXNames[i]);
  }
  }
  do

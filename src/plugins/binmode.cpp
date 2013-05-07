@@ -149,9 +149,9 @@ unsigned BinMode::paint( unsigned keycode,unsigned tshift )
     it.oem_pg=oem_pg;
     it.attrs=attrs;
     cfp  = BMGetCurrFilePos();
-    width = twGetClientWidth(MainWnd);
-    BWidth = twGetClientWidth(MainWnd)-virtWidthCorr;
-    height = twGetClientHeight(MainWnd);
+    width = MainWnd->client_width();
+    BWidth = MainWnd->client_width()-virtWidthCorr;
+    height = MainWnd->client_height();
     if(bin_mode==MOD_PLAIN) _b_width=1;
     else _b_width=2;
     if(cfp != bmocpos || keycode == KE_SUPERKEY || keycode == KE_JUSTFIND) {
@@ -159,7 +159,7 @@ unsigned BinMode::paint( unsigned keycode,unsigned tshift )
 	flen = BMGetFLength();
 	limit = flen - BWidth;
 	if(flen < (__filesize_t)BWidth) BWidth = (int)(limit = flen);
-	twFreezeWin(MainWnd);
+	MainWnd->freeze();
 	for(j = 0;j < height;j++) {
 	    count=BWidth*_b_width;
 	    _index = cfp + j*count;
@@ -187,12 +187,12 @@ unsigned BinMode::paint( unsigned keycode,unsigned tshift )
 		HiLightSearch(MainWnd,_index,0,BWidth,j,&hli,HLS_NORMAL);
 	    } else {
 		if(bin_mode==MOD_PLAIN)
-		    twDirectWrite(MainWnd,1,j + 1,buffer,width);
+		    MainWnd->direct_write(1,j + 1,buffer,width);
 		else
-		    twWriteBuffer(MainWnd,1,j + 1,&it,width);
+		    MainWnd->write(1,j + 1,&it,width);
 	    }
 	}
-	twRefreshWin(MainWnd);
+	MainWnd->refresh();
     }
     return tshift;
 }
@@ -202,10 +202,10 @@ void BinMode::help() const
    hlpDisplay(1000);
 }
 
-unsigned long BinMode::prev_page_size() const { return (twGetClientWidth(MainWnd)-virtWidthCorr)*twGetClientHeight(MainWnd)*(bin_mode==MOD_PLAIN?1:2); }
-unsigned long BinMode::curr_page_size() const { return (twGetClientWidth(MainWnd)-virtWidthCorr)*twGetClientHeight(MainWnd)*(bin_mode==MOD_PLAIN?1:2); }
-unsigned long BinMode::prev_line_width() const{ return (twGetClientWidth(MainWnd)-virtWidthCorr)*(bin_mode==MOD_PLAIN?1:2); }
-unsigned long BinMode::curr_line_width() const{ return (twGetClientWidth(MainWnd)-virtWidthCorr)*(bin_mode==MOD_PLAIN?1:2); }
+unsigned long BinMode::prev_page_size() const { return (MainWnd->client_width()-virtWidthCorr)*MainWnd->client_height()*(bin_mode==MOD_PLAIN?1:2); }
+unsigned long BinMode::curr_page_size() const { return (MainWnd->client_width()-virtWidthCorr)*MainWnd->client_height()*(bin_mode==MOD_PLAIN?1:2); }
+unsigned long BinMode::prev_line_width() const{ return (MainWnd->client_width()-virtWidthCorr)*(bin_mode==MOD_PLAIN?1:2); }
+unsigned long BinMode::curr_line_width() const{ return (MainWnd->client_width()-virtWidthCorr)*(bin_mode==MOD_PLAIN?1:2); }
 
 const char*   BinMode::misckey_name() const { return "Modify"; }
 
@@ -237,10 +237,10 @@ void BinMode::misckey_action() /* EditBin */
     TWindow *ewin;
     bool inited;
     if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,""); return; }
-    ewin = WindowOpen(1,2,tvioWidth-virtWidthCorr,tvioHeight-1,TWS_CURSORABLE);
-    twSetColorAttr(ewin,browser_cset.edit.main); twClearWin(ewin);
+    ewin = WindowOpen(1,2,tvioWidth-virtWidthCorr,tvioHeight-1,TWindow::TWC_CURSORABLE);
+    ewin->set_color(browser_cset.edit.main); ewin->clear();
     drawEditPrompt();
-    twFocusWin(ewin);
+    ewin->set_focus();
     edit_x = edit_y = 0;
     if(bin_mode==MOD_PLAIN) inited=editInitBuffs(tvioWidth-virtWidthCorr,NULL,0);
     else {
@@ -295,7 +295,7 @@ void BinMode::save_ini(Ini_Profile& ini)
 }
 
 unsigned BinMode::get_symbol_size() const { return bin_mode==MOD_PLAIN?1:2; }
-unsigned BinMode::get_max_line_length() const { return twGetClientWidth(MainWnd); }
+unsigned BinMode::get_max_line_length() const { return MainWnd->client_width(); }
 
 static Plugin* query_interface(CodeGuider& code_guider) { return new(zeromem) BinMode(code_guider); }
 

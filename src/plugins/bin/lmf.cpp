@@ -430,15 +430,15 @@ static __filesize_t __FASTCALL__ lmf_ShowHeader()
 	k=seg_num+j+1;
 	if(k<14) k=14;
 	w=CrtDlgWndnls(hdr,64,k);
-	twGotoXY(w,1,1);
-	twPrintF(w,
+	w->goto_xy(1,1);
+	w->printf(
 		"Version       = %d.%02d\n"
 		"Code flags    = %04XH\n"
 		"(%s)\n"
 		"CPU/FPU       = %d/%d\n",
 		DEF.version_no/100,DEF.version_no%100,DEF.cflags,
 		tmp,DEF.cpu,DEF.fpu);
-	twPrintF(w,
+	w->printf(
 		"Code index    = %d\n"
 		"Stack index   = %d\n"
 		"Heap index    = %d\n"
@@ -457,24 +457,24 @@ static __filesize_t __FASTCALL__ lmf_ShowHeader()
 		DEF.heap_nbytes,
 		DEF.flat_offset,
 		DEF.unmapped_size);
-	twGotoXY(w,35,j++);
-	twPrintF(w,"Segments:");
-	twGotoXY(w,35,j++);
-	twPrintF(w,"Num  Length     Type");
+	w->goto_xy(35,j++);
+	w->printf("Segments:");
+	w->goto_xy(35,j++);
+	w->printf("Num  Length     Type");
 	for(i=0;i<seg_num;i++)
 	{
-		twGotoXY(w,35,j+i);
-		twPrintF(w," %2d  %08lXH  %s",i,xdef.seg[i]&0x0fffffff,
+		w->goto_xy(35,j+i);
+		w->printf(" %2d  %08lXH  %s",i,xdef.seg[i]&0x0fffffff,
 			((xdef.seg[i]>>28)==_LMF_CODE)?
 				"code":"data");
 	}
-	twGotoXY(w,1,14);
-	twSetColorAttr(w,dialog_cset.entry);
-	twPrintF(w,
+	w->goto_xy(1,14);
+	w->set_color(dialog_cset.entry);
+	w->printf(
 		"Entry point   = seg:%d, offset:%08lXH",
 		DEF.code_index,DEF.code_offset);
-	twClrEOL(w); twPrintF(w,"\n");
-	twSetColorAttr(w,dialog_cset.main);
+	w->printf("\n"); w->clreol();
+	w->set_color(dialog_cset.main);
 	while(1)
 	{
 		keycode=GetEvent(drawEmptyPrompt,NULL,w);

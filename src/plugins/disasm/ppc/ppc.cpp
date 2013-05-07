@@ -1488,7 +1488,6 @@ static void __FASTCALL__ ppcHelpAsm()
  if(!(strs = bhelp.point_strings(msgAsmText,size,&nstrs))) goto mem_off;
  title = msgAsmText;
  hwnd = CrtHlpWndnls(title,72,21);
- twFocusWin(hwnd);
  for(i = 0;i < nstrs;i++)
  {
    unsigned rlen;
@@ -1501,29 +1500,29 @@ static void __FASTCALL__ ppcHelpAsm()
    it.attrs = attrs;
    rlen = strlen(strs[i]);
    rlen = bhelp.fill_buffer(&it,__TVIO_MAXSCREENWIDTH,strs[i],rlen,0,NULL,0);
-   twWriteBuffer(hwnd,2,i+2,&it,rlen);
+   hwnd->write(2,i+2,&it,rlen);
  }
  delete msgAsmText;
- twGotoXY(hwnd,2,3);
+ hwnd->goto_xy(2,3);
  {
-   twGotoXY(hwnd,2,3);
+   hwnd->goto_xy(2,3);
    i=0;
    {
-     twSetColorAttr(hwnd,disasm_cset.engine[0].engine);
-     twPutS(hwnd,"PPC CPU");
-     twClrEOL(hwnd);
+     hwnd->set_color(disasm_cset.engine[0].engine);
+     hwnd->puts("PPC CPU");
+     hwnd->clreol();
    }
-   twGotoXY(hwnd,2,4);
+   hwnd->goto_xy(2,4);
    {
-     twSetColorAttr(hwnd,disasm_cset.engine[1].engine);
-     twPutS(hwnd,"PPC FPU");
-     twClrEOL(hwnd);
+     hwnd->set_color(disasm_cset.engine[1].engine);
+     hwnd->puts("PPC FPU");
+     hwnd->clreol();
    }
-   twGotoXY(hwnd,2,5);
+   hwnd->goto_xy(2,5);
    {
-     twSetColorAttr(hwnd,disasm_cset.engine[2].engine);
-     twPutS(hwnd,"AltiVec");
-     twClrEOL(hwnd);
+     hwnd->set_color(disasm_cset.engine[2].engine);
+     hwnd->puts("AltiVec");
+     hwnd->clreol();
    }
  }
  do

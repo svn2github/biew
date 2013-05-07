@@ -47,10 +47,9 @@ void InputView_Addon::run()
   int rval, do_exit;
   char head[80], text[80];
   drawEmptyPrompt();
-  twFocusWin(hwnd);
-  twFreezeWin(hwnd);
-  twSetFooterAttr(hwnd," [Escape] - quit ",TW_TMODE_RIGHT,dialog_cset.selfooter);
-  twRefreshWin(hwnd);
+  hwnd->freeze();
+  hwnd->set_footer(" [Escape] - quit ",TW_TMODE_RIGHT,dialog_cset.selfooter);
+  hwnd->refresh();
   do_exit=0;
   do
   {
@@ -60,12 +59,12 @@ void InputView_Addon::run()
 	ErrMessageBox("Not implemented yet!","");
 	break;
     }
-    twGotoXY(hwnd,1,1);
-    twPutS(hwnd,head);
-    twClrEOL(hwnd);
-    twGotoXY(hwnd,1,2);
-    twPutS(hwnd,text);
-    twClrEOL(hwnd);
+    hwnd->goto_xy(1,1);
+    hwnd->puts(head);
+    hwnd->clreol();
+    hwnd->goto_xy(1,2);
+    hwnd->puts(text);
+    hwnd->clreol();
     if(!rval) do_exit++;
   }
   while(do_exit<2);

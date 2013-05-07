@@ -145,35 +145,34 @@ void Beye_Help::paint_line(TWindow *win,unsigned i,const std::string& name,bool 
   it.attrs = attrs;
   rlen = name.length();
   rlen = fill_buffer(&it,__TVIO_MAXSCREENWIDTH,name,rlen,0,NULL,is_hl);
-  twWriteBuffer(win,4,i+2,&it,rlen);
-  twGotoXY(win,3+rlen,i+1);
-  twClrEOL(win);
+  win->write(4,i+2,&it,rlen);
+  win->goto_xy(3+rlen,i+1);
+  win->clreol();
 }
 
 void Beye_Help::paint(TWindow *win,const char * * names,unsigned nlist,unsigned start,unsigned height,unsigned width) const
 {
  unsigned i, pos = 0;
- twFocusWin(win);
- twFreezeWin(win);
+ win->freeze();
  width -= 3;
  if (height>2 && height<nlist)
      pos = 1 + start*(height-2)/nlist;
- twSetColorAttr(win,help_cset.main);
+ win->set_color(help_cset.main);
  for(i = 0;i < height;i++)
  {
-   twGotoXY(win,1,i + 1);
+   win->goto_xy(1,i + 1);
    if (i == 0)
-       twPutChar(win,start ? TWC_UP_ARROW : TWC_DEF_FILLER);
+       win->putch(start ? TWC_UP_ARROW : TWC_DEF_FILLER);
    else if(i == height-1)
-       twPutChar(win,start + height < nlist ? TWC_DN_ARROW : TWC_DEF_FILLER);
+       win->putch(start + height < nlist ? TWC_DN_ARROW : TWC_DEF_FILLER);
    else if (i == pos)
-       twPutChar(win,TWC_THUMB);
-   else twPutChar(win,TWC_DEF_FILLER);
-  twGotoXY(win,2,i + 1);
-   twPutChar(win,TWC_SV);
+       win->putch(TWC_THUMB);
+   else win->putch(TWC_DEF_FILLER);
+  win->goto_xy(2,i + 1);
+   win->putch(TWC_SV);
    paint_line(win,i,names[i + start],0);
  }
- twRefreshWin(win);
+ win->refresh();
 }
 
 typedef char *lpstr;
@@ -266,7 +265,7 @@ int Beye_Help::__ListBox(const char** names,unsigned nlist,const std::string& ti
    }
    if(scursor >= 0)
    {
-     twSetColorAttr(wlist,menu_cset.highlight);
+     wlist->set_color(menu_cset.highlight);
      if(scursor >= start && (unsigned)scursor < start + height) paint_line(wlist,scursor - start,names[scursor],true);
    }
  }

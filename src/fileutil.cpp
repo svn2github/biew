@@ -1092,11 +1092,11 @@ static bool FileInfo()
   if((statbuf.st_mode & S_IFSOCK) == S_IFSOCK) attr[0] = 'S';
 #endif
   wnd = CrtDlgWndnls(" File information: ",tvioWidth-5,13);
-  twGotoXY(wnd,1,1);
+  wnd->goto_xy(1,1);
   strcpy(stimes[0],ctime(&statbuf.st_ctime));
   strcpy(stimes[1],ctime(&statbuf.st_mtime));
   strcpy(stimes[2],ctime(&statbuf.st_atime));
-  twPrintF(wnd,
+  wnd->printf(
 	   "Name                          = %s\n"
 	   "Type                          = %s\n"
 	   "Length                        = %llu bytes\n"

@@ -40,8 +40,8 @@ static __filesize_t __FASTCALL__ rdoff2_ShowHeader()
   im_len = bmReadDWord();
   hs_len = bmReadDWord();
   w = CrtDlgWndnls(endian == 0x02 ? " RDOFFv2 big endian " : " RDOFFv2 little endian ",54,5);
-  twGotoXY(w,1,1);
-  twPrintF(w,
+  w->goto_xy(1,1);
+  w->printf(
 	   "Image length                = %08lXH\n"
 	   "Header length               = %08lXH\n"
 	   ,im_len

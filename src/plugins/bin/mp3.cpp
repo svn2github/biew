@@ -424,9 +424,8 @@ static __filesize_t __FASTCALL__ Show_MP3_Header()
     fpos2=bmGetCurrFilePos();
  }
  hwnd = CrtDlgWndnls(" MP3 File Header ",43,4);
- twFocusWin(hwnd);
- twGotoXY(hwnd,1,1);
- twPrintF(hwnd,
+ hwnd->goto_xy(1,1);
+ hwnd->printf(
 	  "Type                 = MP3v%u:%s\n"
 	  "Bitrate              = %u\n"
 	  "SampleRate           = %u\n"

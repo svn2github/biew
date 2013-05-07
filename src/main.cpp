@@ -118,7 +118,7 @@ void BeyeContext::quick_select_mode()
 void BeyeContext::make_shortname()
 {
   unsigned l;
-  unsigned slen = twGetClientWidth(TitleWnd)-54;
+  unsigned slen = TitleWnd->client_width()-54;
   l = ArgVector1.length();
   if(l <= slen) strcpy(_shortname,ArgVector1.c_str());
   else
@@ -251,14 +251,13 @@ bool BeyeContext::LoadInfo( )
 
 void BeyeContext::PaintTitle() const
 {
- twFocusWin(TitleWnd);
- twFreezeWin(TitleWnd);
- twGotoXY(TitleWnd,1,1);
- twClrEOL(TitleWnd);
- twPrintF(TitleWnd,"File : %s",beye_context().short_name());
- twGotoXY(TitleWnd,twGetClientWidth(TitleWnd)-43,1);
- twPrintF(TitleWnd,"Size : %8llu bytes",BMGetFLength());
- twRefreshWin(TitleWnd);
+ TitleWnd->freeze();
+ TitleWnd->goto_xy(1,1);
+ TitleWnd->clreol();
+ TitleWnd->printf("File : %s",beye_context().short_name());
+ TitleWnd->goto_xy(TitleWnd->client_width()-43,1);
+ TitleWnd->printf("Size : %8llu bytes",BMGetFLength());
+ TitleWnd->refresh();
 }
 
 static void MyAtExit()
@@ -389,26 +388,26 @@ void BeyeContext::show_usage() const {
     nln = sizeof(beyeArg)/sizeof(struct tagbeyeArg);
     h = nln+4;
     y = tvioHeight/2-h/2;
-    win = WindowOpen(2,y,tvioWidth-1,y+h,TWS_NONE | TWS_NLSOEM);
+    win = WindowOpen(2,y,tvioWidth-1,y+h,TWindow::TWC_NONE | TWindow::TWC_NLSOEM);
     if(!win) goto done;
-    twSetTitleAttr(win,BEYE_VER_MSG,TW_TMODE_CENTER,error_cset.border);
-    twCentredWin(win,NULL);
-    twSetColorAttr(win,error_cset.main);
-    twSetFrameAttr(win,TW_DOUBLE_FRAME,error_cset.border);
-    twSetFooterAttr(win," Press [ ESC ] to quit ",TW_TMODE_RIGHT,error_cset.border);
-    twClearWin(win);
-    twGotoXY(win,1,1);
-    twPutS(win," Usage: beye [OPTIONS] file...");
+    win->set_title(BEYE_VER_MSG,TW_TMODE_CENTER,error_cset.border);
+    win->into_center(NULL);
+    win->set_color(error_cset.main);
+    win->set_frame(TWindow::DOUBLE_FRAME,error_cset.border);
+    win->set_footer(" Press [ ESC ] to quit ",TW_TMODE_RIGHT,error_cset.border);
+    win->clear();
+    win->goto_xy(1,1);
+    win->puts(" Usage: beye [OPTIONS] file...");
     for(i = 0;i < nln;i++)
     {
-	twGotoXY(win,1,4+i);
-	twPrintF(win,"  %s     %s\n",beyeArg[i].key,beyeArg[i].prompt);
+	win->goto_xy(1,4+i);
+	win->printf("  %s     %s\n",beyeArg[i].key,beyeArg[i].prompt);
     }
-    twShowWin(win);
+    win->show();
     do {
 	evt = GetEvent(NULL,NULL,ErrorWnd);
     }while(!(evt == KE_ESCAPE || evt == KE_F(10) || evt == KE_ENTER));
-    twDestroyWin(win);
+    delete win;
     done:
     termBConsole();
 }
@@ -457,21 +456,21 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
     return EXIT_FAILURE;
  }
  udnInit(ini);
- ErrorWnd = WindowOpen(1,1,50,16,TWS_NONE | TWS_NLSOEM);
- if(ErrorWnd) twSetTitleAttr(ErrorWnd," Error ",TW_TMODE_CENTER,error_cset.border);
+ ErrorWnd = WindowOpen(1,1,50,16,TWindow::TWC_NONE | TWindow::TWC_NLSOEM);
+ if(ErrorWnd) ErrorWnd->set_title(" Error ",TW_TMODE_CENTER,error_cset.border);
  else { std::cerr<<"fatal error: can't create window"<<std::endl; return EXIT_FAILURE; }
- twCentredWin(ErrorWnd,NULL);
- twSetColorAttr(ErrorWnd,error_cset.main);
- twSetFrameAttr(ErrorWnd,TW_DOUBLE_FRAME,error_cset.border);
- HelpWnd = WindowOpen(1,tvioHeight,tvioWidth,tvioHeight,TWS_NLSOEM);
- twSetColorAttr(HelpWnd,prompt_cset.digit);
- twClearWin(HelpWnd);
- twShowWin(HelpWnd);
+ ErrorWnd->into_center(NULL);
+ ErrorWnd->set_color(error_cset.main);
+ ErrorWnd->set_frame(TWindow::DOUBLE_FRAME,error_cset.border);
+ HelpWnd = WindowOpen(1,tvioHeight,tvioWidth,tvioHeight,TWindow::TWC_NLSOEM);
+ HelpWnd->set_color(prompt_cset.digit);
+ HelpWnd->clear();
+ HelpWnd->show();
  if(BeyeCtx->ini_ver!=BEYE_VERSION) Setup();
- TitleWnd = WindowOpen(1,1,tvioWidth,1,TWS_NONE);
- twSetColorAttr(TitleWnd,title_cset.main);
- twClearWin(TitleWnd);
- twShowWin(TitleWnd);
+ TitleWnd = WindowOpen(1,1,tvioWidth,1,TWindow::TWC_NONE);
+ TitleWnd->set_color(title_cset.main);
+ TitleWnd->clear();
+ TitleWnd->show();
  atexit(MyAtExit);
  retval = EXIT_SUCCESS;
  if(skin_err)
@@ -492,12 +491,12 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  BeyeCtx->bin_format().detect_format();
  BeyeCtx->init_modes(ini);
  delete &ini;
- MainWnd = WindowOpen(1,2,tvioWidth,tvioHeight-1,TWS_NONE);
- twSetColorAttr(MainWnd,browser_cset.main);
- twClearWin(MainWnd);
+ MainWnd = WindowOpen(1,2,tvioWidth,tvioHeight-1,TWindow::TWC_NONE);
+ MainWnd->set_color(browser_cset.main);
+ MainWnd->clear();
  BeyeCtx->PaintTitle();
  if(!BeyeCtx->is_valid_ini_args() || BeyeCtx->LastOffset > BMGetFLength()) BeyeCtx->LastOffset = 0;
- twShowWin(MainWnd);
+ MainWnd->show();
  BeyeCtx->main_loop();
  BeyeCtx->LastOffset = BMGetCurrFilePos();
  BeyeCtx->save_ini_info();

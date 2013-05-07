@@ -57,10 +57,10 @@ static __filesize_t __FASTCALL__ ShowNLMHeader()
   unsigned keycode;
   fpos = BMGetCurrFilePos();
   w = CrtDlgWndnls(" NetWare Loadable Module ",59,23);
-  twGotoXY(w,1,1);
+  w->goto_xy(1,1);
   strncpy(modName,(char *)&nlm.nlm_moduleName[1],(int)nlm.nlm_moduleName[0]);
   modName[(unsigned)nlm.nlm_moduleName[0]] = 0;
-  twPrintF(w,
+  w->printf(
 	   "Module (Version)              = %s (%02hu.%02hu)\n"
 	   "Code image offset             = %08lXH\n"
 	   "Code image size               = %08lXH\n"
@@ -99,14 +99,14 @@ static __filesize_t __FASTCALL__ ShowNLMHeader()
 	   ,nlm.nlm_numberOfPublics
 	   ,nlm.nlm_debugInfoOffset
 	   ,nlm.nlm_numberOfDebugRecords);
-  twSetColorAttr(w,dialog_cset.entry);
-  twPrintF(w,"Code start offset             = %08lXH [Enter]",nlm.nlm_codeStartOffset);
-  twClrEOL(w);
-  twSetColorAttr(w,dialog_cset.altentry);
-  twPrintF(w,"\nExit procedure offset         = %08lXH [Ctrl+Enter | F5]",nlm.nlm_exitProcedureOffset);
-  twClrEOL(w);
-  twSetColorAttr(w,dialog_cset.main);
-  twPrintF(w,"\nCheck unload procedure offset = %08lXH\n"
+  w->set_color(dialog_cset.entry);
+  w->printf("Code start offset             = %08lXH [Enter]",nlm.nlm_codeStartOffset);
+  w->clreol();
+  w->set_color(dialog_cset.altentry);
+  w->printf("\nExit procedure offset         = %08lXH [Ctrl+Enter | F5]",nlm.nlm_exitProcedureOffset);
+  w->clreol();
+  w->set_color(dialog_cset.main);
+  w->printf("\nCheck unload procedure offset = %08lXH\n"
 	   "Module type                   = %08lXH\n"
 	   "Flags                         = %08lXH"
 	   ,nlm.nlm_checkUnloadProcedureOffset
@@ -141,25 +141,25 @@ static __filesize_t __FASTCALL__ ShowNewNLM()
   sharedEntry = sharedExit = 0;
   fpos = BMGetCurrFilePos();
   w = CrtDlgWndnls(" NetWare Loadable Module ",74,23);
-  twGotoXY(w,1,1);
+  w->goto_xy(1,1);
   bmSeek(sizeof(Nlm_Internal_Fixed_Header),BFile::Seek_Set);
   len = bmReadByte();
   bmReadBuffer(modName,len + 1);
   ssize = bmReadDWord();
   bmSeek(4,BFile::Seek_Cur); /** skip reserved */
-  twPrintF(w,"%s\n"
+  w->printf("%s\n"
 	   "Stack size                    = %08lXH\n"
 	   ,modName
 	   ,ssize);
   bmReadBuffer(modName,5);
   modName[5] = 0;
-  twPrintF(w,"Old thread name               = %s\n",modName);
+  w->printf("Old thread name               = %s\n",modName);
   len = bmReadByte();
   bmReadBuffer(modName,len + 1);
-  twPrintF(w,"Screen name                   = %s\n",modName);
+  w->printf("Screen name                   = %s\n",modName);
   len = bmReadByte();
   bmReadBuffer(modName,len + 1);
-  twPrintF(w,"Thread name                   = %s",modName);
+  w->printf("Thread name                   = %s",modName);
   while(1)
   {
     bmReadBuffer(modName,9);
@@ -171,11 +171,11 @@ static __filesize_t __FASTCALL__ ShowNewNLM()
       ssize = bmReadDWord();
       d = bmReadDWord();
       m = bmReadDWord();
-      twPrintF(w,"\nVersion ( Revision )          = %lu.%lu ( %08lXH )\n",ssize,d,m);
+      w->printf("\nVersion ( Revision )          = %lu.%lu ( %08lXH )\n",ssize,d,m);
       ssize = bmReadDWord();
       m     = bmReadDWord();
       d     = bmReadDWord();
-      twPrintF(w,"Date (DD.MM.YY)               = %lu.%lu.%lu",d,m,ssize);
+      w->printf("Date (DD.MM.YY)               = %lu.%lu.%lu",d,m,ssize);
     }
     else
       if(memcmp(modName,"CoPyRiGhT",9) == 0)
@@ -183,51 +183,51 @@ static __filesize_t __FASTCALL__ ShowNewNLM()
 	bmSeek(1,BFile::Seek_Cur);
 	len = bmReadByte();
 	bmReadBuffer(modName,len + 1);
-	twPrintF(w,"\nCopyright = %s",modName);
+	w->printf("\nCopyright = %s",modName);
       }
       else
 	if(memcmp(modName,"MeSsAgEs",8) == 0)
 	{
 	  bmSeek(-1,BFile::Seek_Cur);
 	  ssize = bmReadDWord();
-	  twPrintF(w,"\nLanguage                      = %08lXH\n",ssize);
+	  w->printf("\nLanguage                      = %08lXH\n",ssize);
 	  ssize = bmReadDWord();
 	  m = bmReadDWord();
 	  d = bmReadDWord();
-	  twPrintF(w,"Messages (offset/length/count)= %08lXH/%08lXH/%08lXH\n",ssize,m,d);
+	  w->printf("Messages (offset/length/count)= %08lXH/%08lXH/%08lXH\n",ssize,m,d);
 	  ssize = bmReadDWord();
 	  m = bmReadDWord();
 	  d = bmReadDWord();
-	  twPrintF(w,"Help (offset/length/dataOff)  = %08lXH/%08lXH/%08lXH\n",ssize,m,d);
+	  w->printf("Help (offset/length/dataOff)  = %08lXH/%08lXH/%08lXH\n",ssize,m,d);
 	  ssize = bmReadDWord();
 	  m = bmReadDWord();
-	  twPrintF(w,"SharedCode (offset/length)    = %08lXH/%08lXH\n",ssize,m);
+	  w->printf("SharedCode (offset/length)    = %08lXH/%08lXH\n",ssize,m);
 	  ssize = bmReadDWord();
 	  m = bmReadDWord();
-	  twPrintF(w,"SharedData (offset/length)    = %08lXH/%08lXH\n",ssize,m);
+	  w->printf("SharedData (offset/length)    = %08lXH/%08lXH\n",ssize,m);
 	  ssize = bmReadDWord();
 	  m = bmReadDWord();
-	  twPrintF(w,"SharedReloc (offset/count)    = %08lXH/%08lXH\n",ssize,m);
+	  w->printf("SharedReloc (offset/count)    = %08lXH/%08lXH\n",ssize,m);
 	  ssize = bmReadDWord();
 	  m = bmReadDWord();
-	  twPrintF(w,"SharedExtRef (offset/count)   = %08lXH/%08lXH\n",ssize,m);
+	  w->printf("SharedExtRef (offset/count)   = %08lXH/%08lXH\n",ssize,m);
 	  ssize = bmReadDWord();
 	  m = bmReadDWord();
-	  twPrintF(w,"SharedPublics (offset/count)  = %08lXH/%08lXH\n",ssize,m);
+	  w->printf("SharedPublics (offset/count)  = %08lXH/%08lXH\n",ssize,m);
 	  ssize = bmReadDWord();
 	  m = bmReadDWord();
-	  twPrintF(w,"SharedDebugRec (offset/count) = %08lXH/%08lXH\n",ssize,m);
+	  w->printf("SharedDebugRec (offset/count) = %08lXH/%08lXH\n",ssize,m);
 	  sharedEntry = bmReadDWord();
-	  twSetColorAttr(w,dialog_cset.entry);
-	  twPrintF(w,"Shared initialization offset  = %08lXH [Enter]",sharedEntry);
-	  twClrEOL(w); twPrintF(w,"\n");
+	  w->set_color(dialog_cset.entry);
+	  w->printf("Shared initialization offset  = %08lXH [Enter]",sharedEntry);
+	  w->printf("\n"); w->clreol();
 	  sharedExit = bmReadDWord();
-	  twSetColorAttr(w,dialog_cset.altentry);
-	  twPrintF(w,"Shared exit procedure offset  = %08lXH [Ctrl+Enter | F5]",sharedExit);
-	  twClrEOL(w); twPrintF(w,"\n");
-	  twSetColorAttr(w,dialog_cset.main);
+	  w->set_color(dialog_cset.altentry);
+	  w->printf("Shared exit procedure offset  = %08lXH [Ctrl+Enter | F5]",sharedExit);
+	  w->printf("\n"); w->clreol();
+	  w->set_color(dialog_cset.main);
 	  ssize = bmReadDWord();
-	  twPrintF(w,"Product ID                    = %08lXH",ssize);
+	  w->printf("Product ID                    = %08lXH",ssize);
 	}
 	else
 	  if(memcmp(modName,"CuStHeAd",8) == 0)
@@ -240,7 +240,7 @@ static __filesize_t __FASTCALL__ ShowNewNLM()
 	    bmReadBuffer(modName,8);
 	    modName[8] = 0;
 	    hdr = bmReadDWord();
-	    twPrintF(w,"\nCustHead (name/hdrOff/hdrLen/dataOff/dataLen) = %s/%08lXH/%08lXH/%08lXH/%08lHX",modName,hdr,ssize,d,m);
+	    w->printf("\nCustHead (name/hdrOff/hdrLen/dataOff/dataLen) = %s/%08lXH/%08lXH/%08lXH/%08lHX",modName,hdr,ssize,d,m);
 	  }
 	  else
 	    if(memcmp(modName,"CyGnUsEx",8) == 0)
@@ -248,7 +248,7 @@ static __filesize_t __FASTCALL__ ShowNewNLM()
 	      bmSeek(-1,BFile::Seek_Cur);
 	      d = bmReadDWord();
 	      m = bmReadDWord();
-	      twPrintF(w,"\nCygnus (offset/length) = %08lXH/%08lXH",d,m);
+	      w->printf("\nCygnus (offset/length) = %08lXH/%08lXH",d,m);
 	    }
 	    else break;
   }
@@ -448,16 +448,13 @@ static void  __FASTCALL__ BuildRelocNlm()
   unsigned long val,niter,noff;
   __filesize_t cpos;
   unsigned char len;
-  TWindow * w,*usd;
+  TWindow * w;
   RELOC_NLM rel;
-  usd = twFocusedWin();
   if(!(RelocNlm = la_Build(0,sizeof(RELOC_NLM),MemOutBox))) return;
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
   if(!PubNames) nlm_ReadPubNameList(bmbioHandle(),MemOutBox);
-  twFocusWin(w);
-  twGotoXY(w,1,1);
-  twPutS(w,BUILD_REFS);
-  twFocusWin(usd);
+  w->goto_xy(1,1);
+  w->puts(BUILD_REFS);
   /** -- for external references */
   cpos = nlm.nlm_externalReferencesOffset;
   for(j = 0;j < (unsigned)nlm.nlm_numberOfExternalReferences;j++)

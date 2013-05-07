@@ -49,8 +49,8 @@ static __filesize_t __FASTCALL__ ShowPharLapHeader()
   strncpy(sign,(char *)nph.plSignature,2);
   sign[2] = 0;
   w = CrtDlgWndnls(" New PharLap executable ",59,23);
-  twGotoXY(w,1,1);
-  twPrintF(w,
+  w->goto_xy(1,1);
+  w->printf(
 	   "Signature                        = %s\n"
 	   "Level                            = %s\n"
 	   "Header size                      = %04XH\n"
@@ -112,14 +112,13 @@ static void __FASTCALL__ PLSegPaint(TWindow * win,const any_t** names,unsigned s
 {
  char buffer[81];
  const PLSegInfo ** nam = (const PLSegInfo **)names;
- twFocusWin(win);
- twFreezeWin(win);
- twClearWin(win);
+ win->freeze();
+ win->clear();
  sprintf(buffer," Segment Table [ %u / %u ] ",start + 1,nlist);
- twSetTitleAttr(win,buffer,TW_TMODE_CENTER,dialog_cset.title);
- twSetFooterAttr(win,PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
- twGotoXY(win,1,1);
- twPrintF(win,
+ win->set_title(buffer,TW_TMODE_CENTER,dialog_cset.title);
+ win->set_footer(PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
+ win->goto_xy(1,1);
+ win->printf(
 	  "Selector number            = %04hXH\n"
 	  "Flags                      = %04hXH\n"
 	  "Base offset of selector    = %08lXH\n"
@@ -128,7 +127,7 @@ static void __FASTCALL__ PLSegPaint(TWindow * win,const any_t** names,unsigned s
 	  ,nam[start]->siFlags
 	  ,nam[start]->siBaseOff
 	  ,nam[start]->siMinAlloc);
- twRefreshFullWin(win);
+ win->refresh_full();
 }
 
 static bool __FASTCALL__ __PLReadSegInfo(BFile& handle,memArray * obj,unsigned nnames)
@@ -174,16 +173,15 @@ static void __FASTCALL__ PLRunTimePaint(TWindow * win,const any_t** names,unsign
  char buffer[81];
  char sign[3];
  const PLRunTimeParms ** nam = (const PLRunTimeParms **)names;
- twFocusWin(win);
- twFreezeWin(win);
- twClearWin(win);
+ win->freeze();
+ win->clear();
  sprintf(buffer," Run-time Parameters Table [ %u / %u ] ",start + 1,nlist);
- twSetTitleAttr(win,buffer,TW_TMODE_CENTER,dialog_cset.title);
- twSetFooterAttr(win,PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
+ win->set_title(buffer,TW_TMODE_CENTER,dialog_cset.title);
+ win->set_footer(PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
  strncpy(sign,(const char *)nam[start]->rtSignature,2);
  sign[2] = 0;
- twGotoXY(win,1,1);
- twPrintF(win,
+ win->goto_xy(1,1);
+ win->printf(
 	  "Signature                      = %s\n"
 	  "Min. number of real-mode parms = %04hXH\n"
 	  "Max. number of real-mode parms = %04hXH\n"
@@ -206,7 +204,7 @@ static void __FASTCALL__ PLRunTimePaint(TWindow * win,const any_t** names,unsign
 	  ,nam[start]->rtCallBuffSize
 	  ,nam[start]->rtFlags
 	  ,nam[start]->rtUnprivFlags);
- twRefreshFullWin(win);
+ win->refresh_full();
 }
 
 static bool __FASTCALL__ __PLReadRunTime(BFile& handle,memArray * obj,unsigned nnames)

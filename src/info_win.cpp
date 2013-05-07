@@ -38,10 +38,10 @@ using namespace beye;
 namespace beye {
 static void  __FASTCALL__ ShowFunKey(TWindow* w,const char * key,const char * text)
 {
- twSetColorAttr(w,prompt_cset.digit);
- twPutS(w,key);
- twSetColorAttr(w,prompt_cset.button);
- twPutS(w,text);
+ w->set_color(prompt_cset.digit);
+ w->puts(key);
+ w->set_color(prompt_cset.button);
+ w->puts(text);
 }
 
 static const char * ftext[] = { "1"," 2"," 3"," 4"," 5"," 6"," 7"," 8"," 9","10" };
@@ -55,9 +55,9 @@ static void  __FASTCALL__ drawControlKeys(TWindow* w,int flg)
     else
       if(flg & KS_CTRL) ckey = 'C';
       else              ckey = ' ';
-  twGotoXY(w,1,1);
-  twSetColorAttr(w,prompt_cset.control);
-  twPutChar(w,ckey);
+  w->goto_xy(1,1);
+  w->set_color(prompt_cset.control);
+  w->putch(ckey);
 }
 
 void __FASTCALL__ __drawMultiPrompt(const char * const norm[], const char *const shift[], const char * const alt[], const char * const ctrl[])
@@ -66,10 +66,8 @@ void __FASTCALL__ __drawMultiPrompt(const char * const norm[], const char *const
   int flg = __kbdGetShiftsKey();
   int i;
   const char * cptr;
-  _using = twFocusedWin();
-  twFocusWin(HelpWnd);
-  twFreezeWin(HelpWnd);
-  twGotoXY(HelpWnd,2,1);
+  HelpWnd->freeze();
+  HelpWnd->goto_xy(2,1);
   for(i = 0;i < 10;i++)
   {
     /* todo: it might be better to ensure that if
@@ -77,18 +75,17 @@ void __FASTCALL__ __drawMultiPrompt(const char * const norm[], const char *const
        checking it all the time
      */
     if (flg & KS_SHIFT)
-	cptr = shift && shift[i] ? shift[i] : "      ";
+	cptr = shift && shift[i] && shift[i][0] ? shift[i] : "      ";
     else if (flg & KS_ALT)
-	cptr = alt && alt[i] ? alt[i] : "      ";
+	cptr = alt && alt[i] && alt[i][0] ? alt[i] : "      ";
     else if (flg & KS_CTRL)
-	cptr = ctrl && ctrl[i] ? ctrl[i] : "      ";
-    else cptr = norm && norm[i] ? norm[i] : "      ";
+	cptr = ctrl && ctrl[i] && ctrl[i][0] ? ctrl[i] : "      ";
+    else cptr = norm && norm[i] && norm[i][0] ? norm[i] : "      ";
 
     ShowFunKey(HelpWnd,ftext[i],cptr);
   }
   drawControlKeys(HelpWnd,flg);
-  twRefreshWin(HelpWnd);
-  twFocusWin(_using);
+  HelpWnd->refresh();
 }
 
 void __FASTCALL__ __drawSinglePrompt(const char *prmt[])
@@ -454,82 +451,81 @@ void About()
  unsigned i,j,len;
  char str[2];
  const unsigned char core[8] = { TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, 0x00 };
- hwnd = WindowOpen(0,0,73,13,TWS_FRAMEABLE | TWS_NLSOEM);
- twCentredWin(hwnd,NULL);
- twSetColor(hwnd,LightCyan,Black);
- twClearWin(hwnd);
- twSetFrame(hwnd,TW_DOUBLE_FRAME,White,Black);
- twSetTitle(hwnd,BEYE_VER_MSG,TW_TMODE_CENTER,White,Black);
- twShowWin(hwnd);
+ hwnd = WindowOpen(0,0,73,13,TWindow::TWC_FRAMEABLE | TWindow::TWC_NLSOEM);
+ hwnd->into_center(NULL);
+ hwnd->set_color(LightCyan,Black);
+ hwnd->clear();
+ hwnd->set_frame(TWindow::DOUBLE_FRAME,White,Black);
+ hwnd->set_title(BEYE_VER_MSG,TW_TMODE_CENTER,White,Black);
+ hwnd->show();
 
- twFocusWin(hwnd);
- twFreezeWin(hwnd);
- twGotoXY(hwnd,1,1); twPutS(hwnd,msgAboutText);
- twTextColor(hwnd,White);
- for(i = 0;i < 13;i++)  { twGotoXY(hwnd,47,i + 1); twPutChar(hwnd,TWC_SV); }
- for(i = 0;i < 47;i++) { twGotoXY(hwnd,i + 1,6); twPutChar(hwnd,TWC_SH);  }
- twGotoXY(hwnd,47,6); twPutChar(hwnd,TWC_SV_Sl);
+ hwnd->freeze();
+ hwnd->goto_xy(1,1); hwnd->puts(msgAboutText);
+ hwnd->text_color(White);
+ for(i = 0;i < 13;i++)  { hwnd->goto_xy(47,i + 1); hwnd->putch(TWC_SV); }
+ for(i = 0;i < 47;i++) { hwnd->goto_xy(i + 1,6); hwnd->putch(TWC_SH);  }
+ hwnd->goto_xy(47,6); hwnd->putch(TWC_SV_Sl);
  for(i = 0;i < 5;i++)
  {
    len=strlen(BeyeLogo[i]);
    for(j=0;j<len;j++) {
-    twTextColor(hwnd,BeyeLogo[i][j]=='0'?Green:LightGreen);
-    twGotoXY(hwnd,49+j,i + 1);
-    twPutChar(hwnd,BeyeLogo[i][j]);
+    hwnd->text_color(BeyeLogo[i][j]=='0'?Green:LightGreen);
+    hwnd->goto_xy(49+j,i + 1);
+    hwnd->putch(BeyeLogo[i][j]);
    }
  }
- twTextColor(hwnd,LightGreen); twTextBkGnd(hwnd,Green);
+ hwnd->text_color(LightGreen); hwnd->text_bkgnd(Green);
  for(i = 0;i < 7;i++)
  {
-   twGotoXY(hwnd,1,i+7); twPutS(hwnd,MBoardPicture[i]);
+   hwnd->goto_xy(1,i+7); hwnd->puts(MBoardPicture[i]);
  }
- twinDrawFrame(hwnd,3,8,13,12,TW_UP3D_FRAME,White,LightGray);
- twinDrawFrame(hwnd,4,9,12,11,TW_DN3D_FRAME,Black,LightGray);
- twGotoXY(hwnd,5,10);
- twPutS(hwnd,(const char*)core);
- twTextColor(hwnd,Brown); twTextBkGnd(hwnd,Black);
+ hwnd->draw_frame(3,8,13,12,TWindow::UP3D_FRAME,White,LightGray);
+ hwnd->draw_frame(4,9,12,11,TWindow::DN3D_FRAME,Black,LightGray);
+ hwnd->goto_xy(5,10);
+ hwnd->puts((const char*)core);
+ hwnd->text_color(Brown); hwnd->text_bkgnd(Black);
  for(i = 0;i < 7;i++)
  {
-   twGotoXY(hwnd,17,i+7); twPutS(hwnd,ConnectorPicture[i]);
+   hwnd->goto_xy(17,i+7); hwnd->puts(ConnectorPicture[i]);
  }
- twTextColor(hwnd,Gray); twTextBkGnd(hwnd,Black);
+ hwnd->text_color(Gray); hwnd->text_bkgnd(Black);
  for(i = 0;i < 7;i++)
  {
-   twGotoXY(hwnd,22,i+7); twPutS(hwnd,BitStreamPicture[i]);
+   hwnd->goto_xy(22,i+7); hwnd->puts(BitStreamPicture[i]);
  }
- twTextColor(hwnd,LightGray); twTextBkGnd(hwnd,Black);
+ hwnd->text_color(LightGray); hwnd->text_bkgnd(Black);
  for(i = 0;i < 7;i++)
  {
-   twGotoXY(hwnd,31,i+7); twPutS(hwnd,BeyePicture[i]);
+   hwnd->goto_xy(31,i+7); hwnd->puts(BeyePicture[i]);
  }
- twTextColor(hwnd,LightCyan); twTextBkGnd(hwnd,Blue);
+ hwnd->text_color(LightCyan); hwnd->text_bkgnd(Blue);
  for(i = 0;i < 5;i++)
  {
-   twGotoXY(hwnd,32,i+8); twPutS(hwnd,BeyeScreenPicture[i]);
+   hwnd->goto_xy(32,i+8); hwnd->puts(BeyeScreenPicture[i]);
  }
- twTextBkGnd(hwnd,Black);   twTextColor(hwnd,LightCyan);
- for(i = 0;i < 10;i++) twDirectWrite(hwnd,stars[i].x,stars[i].y,&stars[i].image,1);
- twTextColor(hwnd,LightGray);
+ hwnd->text_bkgnd(Black);   hwnd->text_color(LightCyan);
+ for(i = 0;i < 10;i++) hwnd->direct_write(stars[i].x,stars[i].y,&stars[i].image,1);
+ hwnd->text_color(LightGray);
  for(i = 0;i < 7;i++)
  {
-   twGotoXY(hwnd,52,i + 6);
-   twPutS(hwnd,CompPicture[i]);
+   hwnd->goto_xy(52,i + 6);
+   hwnd->puts(CompPicture[i]);
  }
- twTextBkGnd(hwnd,LightGray);
+ hwnd->text_bkgnd(LightGray);
  for(i = 0;i < 5;i++)
  {
-   twTextColor(hwnd,buttons[i].color);
+   hwnd->text_color(buttons[i].color);
    str[0] = buttons[i].image;
    str[1] = 0;
-   twDirectWrite(hwnd,buttons[i].x,buttons[i].y,str,1);
+   hwnd->direct_write(buttons[i].x,buttons[i].y,str,1);
  }
- twSetColor(hwnd,LightCyan,Black);
+ hwnd->set_color(LightCyan,Black);
  for(i = 0;i < 4;i++)
  {
-   twGotoXY(hwnd,54,i + 7);
-   twPutS(hwnd,CompScreenPicture[i]);
+   hwnd->goto_xy(54,i + 7);
+   hwnd->puts(CompScreenPicture[i]);
  }
- twRefreshWin(hwnd);
+ hwnd->refresh();
  while(1)
  {
    int ch;
@@ -558,8 +554,8 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
   __filesize_t obj_start,obj_end;
   __filesize_t cfpos,ret_addr,va,prev_func_pa,next_func_pa;
   hwnd = CrtDlgWndnls(" Current position information ",78,5);
-  twSetFooterAttr(hwnd,"[Enter] - Prev. entry [Ctrl-Enter | F5] - Next entry]",TW_TMODE_RIGHT,dialog_cset.selfooter);
-  twGotoXY(hwnd,1,1);
+  hwnd->set_footer("[Enter] - Prev. entry [Ctrl-Enter | F5] - Next entry]",TW_TMODE_RIGHT,dialog_cset.selfooter);
+  hwnd->goto_xy(1,1);
   wait_wnd = PleaseWaitWnd();
   cfpos = BMGetCurrFilePos();
   va = beye_context().bin_format().pa2va(ctrl_pos);
@@ -596,7 +592,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
     case DAB_USE256:btn = "USE256"; break;
     default: btn = "";
   }
-  twPrintF(hwnd,
+  hwnd->printf(
 	   "File  offset : %016llXH\n"
 	   "Virt. address: %s\n"
 	   "%s entry  : %s\n"

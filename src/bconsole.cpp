@@ -62,19 +62,19 @@ void __FASTCALL__ initBConsole( unsigned long vio_flg,unsigned long twin_flg )
 	TWindow *win;
 	x = (tvioWidth-17)/2;
 	y = (tvioHeight-3)/2;
-	win = WindowOpen(x,y,x+16,y+2,TWS_NONE | TWS_NLSOEM);
+	win = new(zeromem) TWindow(x,y,x+16,y+2,TWindow::TWC_NONE | TWindow::TWC_NLSOEM);
 	if(!win) goto done;
-	twSetTitleAttr(win," Error ",TW_TMODE_CENTER,error_cset.border);
-	twCentredWin(win,NULL);
-	twSetColorAttr(win,error_cset.main);
-	twSetFrameAttr(win,TW_DOUBLE_FRAME,error_cset.border);
-	twGotoXY(win,1,1);
-	twPutS(win,"Screensize<80x3");
-	twShowWin(win);
+	win->set_title(" Error ",TW_TMODE_CENTER,error_cset.border);
+	win->into_center(NULL);
+	win->set_color(error_cset.main);
+	win->set_frame(TWindow::DOUBLE_FRAME,error_cset.border);
+	win->goto_xy(1,1);
+	win->puts("Screensize<80x3");
+	win->show();
 	do {
 	    evt = GetEvent(NULL,NULL,ErrorWnd);
 	}while(!(evt == KE_ESCAPE || evt == KE_F(10) || evt == KE_ENTER));
-	twDestroyWin(win);
+	delete win;
     }
     done:
     twDestroy();
@@ -145,38 +145,38 @@ int __FASTCALL__ eeditstring(TWindow* w,char *s,const char *legal, unsigned *max
  bool freq = (attr & __ESS_HARDEDIT) == __ESS_HARDEDIT;
  if(stx) pos = *stx;
  if(!(attr & __ESS_HARDEDIT))
-   twSetCursorType(attr & __ESS_ENABLEINSERT ? insert ? TW_CUR_NORM : TW_CUR_SOLID : TW_CUR_NORM);
+   TWindow::set_cursor_type(attr & __ESS_ENABLEINSERT ? insert ? TWindow::CUR_NORM : TWindow::CUR_SOLID : TWindow::CUR_NORM);
  do
  {
   unsigned i;
   Loop:
-  twFreezeWin(w);
+  w->freeze();
   if(!(attr & __ESS_NOREDRAW))
   {
-    if(!undo) twDirectWrite(w,1,y,s,len);
+    if(!undo) w->direct_write(1,y,s,len);
     else
     {
       for(i = 0;i < len;i++)
       {
-	twSetColorAttr(w,s[i] == undo[i] ? browser_cset.edit.main : browser_cset.edit.change);
-	twDirectWrite(w,i+1,y,&s[i],1);
+	w->set_color(s[i] == undo[i] ? browser_cset.edit.main : browser_cset.edit.change);
+	w->direct_write(i+1,y,&s[i],1);
       }
     }
     if(!(attr & __ESS_HARDEDIT))
     {
-      twGotoXY(w,len + 1,y);
+      w->goto_xy(len + 1,y);
       if(ashex)
 	if(isSecondD(pos) && pos >= len)
 	{
-	  twPutChar(w,'.');
-	  twGotoXY(w,len + 2,y);
+	  w->putch('.');
+	  w->goto_xy(len + 2,y);
 	}
       for(i = len; i < *maxlength;i++)
-	 twPutChar(w,(attr & __ESS_FILLER_7BIT) == __ESS_FILLER_7BIT ? TWC_DEF_FILLER : TWC_MED_SHADE);
+	 w->putch((attr & __ESS_FILLER_7BIT) == __ESS_FILLER_7BIT ? TWC_DEF_FILLER : TWC_MED_SHADE);
     }
   }
-  twRefreshLine(w,y);
-  twGotoXY(w,pos + 1, y);
+  w->refresh(y);
+  w->goto_xy(pos + 1, y);
   func_getkeys = attr & __ESS_HARDEDIT ? attr & 0x0020 ? 2 : 1 : 0;
   new_keycode:
   c = getkey(func_getkeys, func);
@@ -249,7 +249,7 @@ int __FASTCALL__ eeditstring(TWindow* w,char *s,const char *legal, unsigned *max
 		      !(attr & __ESS_HARDEDIT) &&
 		      !ashex)
 			    insert = insert ? false : true;
-		    twSetCursorType(attr & __ESS_ENABLEINSERT ? insert ? TW_CUR_NORM : TW_CUR_SOLID : TW_CUR_NORM);
+		    TWindow::set_cursor_type(attr & __ESS_ENABLEINSERT ? insert ? TWindow::CUR_NORM : TWindow::CUR_SOLID : TWindow::CUR_NORM);
 		    break;
    case KE_ENTER  : break;
    case KE_ESCAPE : len = 0; break;
@@ -298,7 +298,7 @@ int __FASTCALL__ eeditstring(TWindow* w,char *s,const char *legal, unsigned *max
   if(attr & __ESS_WANTRETURN) if(!(ashex && isSecondD(pos))) break;
  }
  while ( (c != KE_ENTER) && (c != KE_ESCAPE));
- if(!(attr & __ESS_HARDEDIT)) twSetCursorType(TW_CUR_OFF);
+ if(!(attr & __ESS_HARDEDIT)) TWindow::set_cursor_type(TWindow::CUR_OFF);
  if(!(attr & __ESS_WANTRETURN && attr & __ESS_NOTUPDATELEN)) *maxlength = len;
  if(stx) *stx = pos;
  return lastkey;
@@ -306,11 +306,9 @@ int __FASTCALL__ eeditstring(TWindow* w,char *s,const char *legal, unsigned *max
 
 TWindow *__FASTCALL__ PleaseWaitWnd()
 {
-   TWindow *w,*usd;
-   usd = twFocusedWin();
+   TWindow *w;
    w = CrtDlgWndnls(SYSTEM_BUSY,14,1);
-   twGotoXY(w,1,1); twPutS(w,PLEASE_WAIT);
-   twFocusWin(usd);
+   w->goto_xy(1,1); w->puts(PLEASE_WAIT);
    return w;
 }
 
@@ -327,7 +325,7 @@ struct percent_data
   bool    is_first;
 };
 
-static long __FASTCALL__ PercentWndCallBack(TWindow *it,unsigned event, unsigned long param, any_t*data)
+static long PercentWndCallBack(TWindow *it,unsigned event, unsigned long param,const any_t*data)
 {
   struct percent_data *my_data;
   UNUSED(param);
@@ -337,11 +335,11 @@ static long __FASTCALL__ PercentWndCallBack(TWindow *it,unsigned event, unsigned
     case WM_CREATE:
 		     if((my_data=new percent_data) != NULL)
 		     {
-			twSetUsrData(it,my_data);
+			it->set_user_data(my_data);
 		     }
 		     break;
     case WM_DESTROY:
-		     my_data = (percent_data*)twGetUsrData(it);
+		     my_data = (percent_data*)it->get_user_data();
 		     if(my_data) delete my_data;
 		     break;
      default: break;
@@ -352,24 +350,22 @@ static long __FASTCALL__ PercentWndCallBack(TWindow *it,unsigned event, unsigned
 
 TWindow *__FASTCALL__ PercentWnd(const std::string& text,const std::string& title)
 {
-  TWindow *ret,*usd;
+  TWindow *ret;
   static time_t sttime;
   struct percent_data* my_data;
-  usd = twFocusedWin();
   twcRegisterClass("PERCENT_WND", __CS_ORDINAL, PercentWndCallBack);
-  ret = twCreateWinEx(1,1,53,6,TWS_FRAMEABLE | TWS_NLSOEM,NULL,"PERCENT_WND");
-  twCentredWin(ret,NULL);
-  twSetColorAttr(ret,dialog_cset.main);
-  twSetFrameAttr(ret,TW_UP3D_FRAME,dialog_cset.main);
-  twSetTitleAttr(ret,title,TW_TMODE_CENTER,dialog_cset.title);
-  twSetFooterAttr(ret," [ Ctrl-Break ] - Abort ",TW_TMODE_RIGHT,dialog_cset.footer);
-  twClearWin(ret);
-  twGotoXY(ret,1,1); twPutS(ret,text);
-  twinDrawFrameAttr(ret,1,2,52,4,TW_DN3D_FRAME,dialog_cset.main);
-  twShowWin(ret);
-  twFocusWin(usd);
+  ret = new(zeromem) TWindow(1,1,53,6,TWindow::TWC_FRAMEABLE | TWindow::TWC_NLSOEM,NULL,"PERCENT_WND");
+  ret->into_center(NULL);
+  ret->set_color(dialog_cset.main);
+  ret->set_frame(TWindow::UP3D_FRAME,dialog_cset.main);
+  ret->set_title(title,TW_TMODE_CENTER,dialog_cset.title);
+  ret->set_footer(" [ Ctrl-Break ] - Abort ",TW_TMODE_RIGHT,dialog_cset.footer);
+  ret->clear();
+  ret->goto_xy(1,1); ret->puts(text);
+  ret->draw_frame(1,2,52,4,TWindow::DN3D_FRAME,dialog_cset.main);
+  ret->show();
   time(&sttime);
-  my_data = (percent_data*)twGetUsrData(ret);
+  my_data = (percent_data*)ret->get_user_data();
   if(my_data)
   {
      my_data->_time = my_data->prev_time = sttime;
@@ -381,7 +377,6 @@ TWindow *__FASTCALL__ PercentWnd(const std::string& text,const std::string& titl
 
 bool __FASTCALL__ ShowPercentInWnd(TWindow *pw,unsigned percents)
 {
-  TWindow *usd;
   unsigned cells,remaind, prev_prcnt = 0;
   time_t sttime =0,curtime,deltat, prev_time = 0;
   struct tm *tm;
@@ -389,9 +384,7 @@ bool __FASTCALL__ ShowPercentInWnd(TWindow *pw,unsigned percents)
   bool is_first = true;
   char outb[50];
   bool ret;
-  usd = twFocusedWin();
-  twFocusWin(pw);
-  my_data = (percent_data*)twGetUsrData(pw);
+  my_data = (percent_data*)pw->get_user_data();
   if(my_data)
   {
     prev_prcnt = my_data->_percents;
@@ -407,7 +400,7 @@ bool __FASTCALL__ ShowPercentInWnd(TWindow *pw,unsigned percents)
     memset(outb,TWC_FL_BLK,cells);
     if(remaind) outb[cells++] = TWC_LF_HBLK;
     if(cells < sizeof(outb)) memset(&outb[cells],TWC_DEF_FILLER,sizeof(outb)-cells);
-    twDirectWrite(pw,2,3,outb,sizeof(outb));
+    pw->direct_write(2,3,outb,sizeof(outb));
   }
   time(&curtime);
   if(prev_time != curtime || is_first)
@@ -415,9 +408,9 @@ bool __FASTCALL__ ShowPercentInWnd(TWindow *pw,unsigned percents)
     deltat = curtime - sttime;
     tm = gmtime(&deltat);
     strftime(outb,sizeof(outb),"%X",tm);
-    twGotoXY(pw,1,5);
-    twPutS(pw,"Elapsed time: ");
-    twPutS(pw,outb);
+    pw->goto_xy(1,5);
+    pw->puts("Elapsed time: ");
+    pw->puts(outb);
   }
   if(my_data)
   {
@@ -425,41 +418,27 @@ bool __FASTCALL__ ShowPercentInWnd(TWindow *pw,unsigned percents)
     my_data->is_first = false;
     my_data->prev_time = curtime;
   }
-  twFocusWin(usd);
   ret = !IsKbdTerminate();
   CleanKbdTermSig();
   return ret;
 }
 
-TWindow * __FASTCALL__ WindowOpen(tAbsCoord x1,tAbsCoord y1,tAbsCoord x2,tAbsCoord y2,unsigned flags)
-{
-  TWindow *ret;
-  ret = twCreateWin(x1,y1,x2-x1+1,y2-y1+1,flags);
-  if(!ret) { MemOutBox(NULL); exit(EXIT_FAILURE); }
-  return ret;
-}
-
-void __FASTCALL__ CloseWnd(TWindow *w)
-{
-   twDestroyWin(w);
-}
-
 static TWindow *  __FASTCALL__ _CreateWindowDD(const std::string& title,tAbsCoord x2,tAbsCoord y2,bool is_nls)
 {
  TWindow *win;
- unsigned flags;
+ TWindow::twc_flag flags;
  unsigned char frame[8];
- flags = TWS_FRAMEABLE;
- if(is_nls) flags |= TWS_NLSOEM;
- win = WindowOpen(0,0,x2,y2,flags);
- twCentredWin(win,NULL);
- twSetColorAttr(win,dialog_cset.main);
- twClearWin(win);
- memcpy(frame,TW_DOUBLE_FRAME,8);
+ flags = TWindow::TWC_FRAMEABLE;
+ if(is_nls) flags |= TWindow::TWC_NLSOEM;
+ win = WindowOpen(0,0,x2+1,y2+1,flags);
+ win->into_center(NULL);
+ win->set_color(dialog_cset.main);
+ win->clear();
+ memcpy(frame,TWindow::DOUBLE_FRAME,8);
  if(!is_nls) __nls_OemToOsdep((unsigned char *)frame,8);
- twSetFrameAttr(win,frame,dialog_cset.border);
- if(!title.empty()) twSetTitleAttr(win,title,TW_TMODE_CENTER,dialog_cset.title);
- twShowWin(win);
+ win->set_frame(frame,dialog_cset.border);
+ if(!title.empty()) win->set_title(title,TW_TMODE_CENTER,dialog_cset.title);
+ win->show();
  return win;
 }
 
@@ -478,16 +457,15 @@ TWindow * __FASTCALL__ CrtDlgWndnls(const std::string& title,tAbsCoord width,tAb
 static TWindow *  __FASTCALL__ _CrtMnuWindowDD(const std::string& title,tAbsCoord x1, tAbsCoord y1, tAbsCoord x2,tAbsCoord y2,bool is_nls)
 {
  TWindow *win;
- unsigned flags;
- flags = TWS_FRAMEABLE;
- if(is_nls) flags |= TWS_NLSOEM;
- win = WindowOpen(x1,y1,x2,y2,flags);
- if(!x1 && !y1) twCentredWin(win,NULL);
- twSetColorAttr(win,menu_cset.main);
- twClearWin(win);
- twSetFrameAttr(win,TW_DOUBLE_FRAME,menu_cset.border);
- if(!title.empty()) twSetTitleAttr(win,title,TW_TMODE_CENTER,menu_cset.title);
- twShowWin(win);
+ TWindow::twc_flag flags = TWindow::TWC_FRAMEABLE;
+ if(is_nls) flags |= TWindow::TWC_NLSOEM;
+ win = WindowOpen(x1,y1,x2+1,y2+1,flags);
+ if(!x1 && !y1) win->into_center(NULL);
+ win->set_color(menu_cset.main);
+ win->clear();
+ win->set_frame(TWindow::DOUBLE_FRAME,menu_cset.border);
+ if(!title.empty()) win->set_title(title,TW_TMODE_CENTER,menu_cset.title);
+ win->show();
  return win;
 }
 
@@ -514,16 +492,15 @@ TWindow * __FASTCALL__ CrtLstWndnls(const std::string& title,tAbsCoord x2,tAbsCo
 static TWindow *  __FASTCALL__ _CreateHlpWnd(const std::string& title,tAbsCoord x2,tAbsCoord y2,bool is_nls)
 {
  TWindow *win;
- unsigned flags;
- flags = TWS_FRAMEABLE;
- if(is_nls) flags |= TWS_NLSOEM;
+ TWindow::twc_flag flags = TWindow::TWC_FRAMEABLE;
+ if(is_nls) flags |= TWindow::TWC_NLSOEM;
  win = WindowOpen(0,0,x2,y2,flags);
- twCentredWin(win,NULL);
- twSetColorAttr(win,help_cset.main);
- twClearWin(win);
- twSetFrameAttr(win,TW_DOUBLE_FRAME,help_cset.border);
- if(!title.empty()) twSetTitleAttr(win,title,TW_TMODE_CENTER,help_cset.title);
- twShowWin(win);
+ win->into_center(NULL);
+ win->set_color(help_cset.main);
+ win->clear();
+ win->set_frame(TWindow::DOUBLE_FRAME,help_cset.border);
+ if(!title.empty()) win->set_title(title,TW_TMODE_CENTER,help_cset.title);
+ win->show();
  return win;
 }
 
@@ -537,12 +514,12 @@ TWindow * __FASTCALL__ CrtHlpWndnls(const std::string& title,tAbsCoord x2,tAbsCo
   return _CreateHlpWnd(title,x2,y2,true);
 }
 
-TWindow * __FASTCALL__ CreateEditor(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsCoord Y2,unsigned flags)
+TWindow * __FASTCALL__ CreateEditor(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsCoord Y2,TWindow::twc_flag flags)
 {
  TWindow *ret;
  ret = WindowOpen(X1,Y1,X2,Y2,flags);
- twSetColorAttr(ret,dialog_cset.editor.active);
- twClearWin(ret);
+ ret->set_color(dialog_cset.editor.active);
+ ret->clear();
  return ret;
 }
 
@@ -553,33 +530,29 @@ static void  __FASTCALL__ __MB(const std::string& text,const std::string& title,
  slen = text.length() + 3;
  tlen = title.length() + 2;
  slen = std::min(std::max(slen,tlen)+1,unsigned(78));
- twResizeWin(ErrorWnd,slen,3);
- twCentredWin(ErrorWnd,NULL);
- twSetFrameAttr(ErrorWnd,TW_DOUBLE_FRAME,frame);
- twSetTitleAttr(ErrorWnd,title,TW_TMODE_CENTER,frame);
- twSetColorAttr(ErrorWnd,base);
- twClearWin(ErrorWnd);
- twShowWinOnTop(ErrorWnd);
- twGotoXY(ErrorWnd,2,1);
- twPutS(ErrorWnd,text);
+ ErrorWnd->resize(slen,3);
+ ErrorWnd->into_center(NULL);
+ ErrorWnd->set_frame(TWindow::DOUBLE_FRAME,frame);
+ ErrorWnd->set_title(title,TW_TMODE_CENTER,frame);
+ ErrorWnd->set_color(base);
+ ErrorWnd->clear();
+ ErrorWnd->show_on_top();
+ ErrorWnd->goto_xy(2,1);
+ ErrorWnd->puts(text);
 }
 
 static void  __FASTCALL__ __MessageBox(const std::string& text,const std::string& title,
 					       ColorAttr base,ColorAttr frame)
 {
- TWindow *prev;
  unsigned evt;
- prev = twFocusedWin();
- twFocusWin(ErrorWnd);
  __MB(text,title,base,frame);
  do
  {
    evt = GetEvent(drawEmptyPrompt,NULL,ErrorWnd);
  }
  while(!(evt == KE_ESCAPE || evt == KE_F(10) || evt == KE_SPACE || evt == KE_ENTER));
- twHideWin(ErrorWnd);
- twFocusWin(prev);
- twResizeWin(ErrorWnd,tvioWidth,tvioHeight); /* It for reserving memory */
+ ErrorWnd->hide();
+ ErrorWnd->resize(tvioWidth,tvioHeight); /* It for reserving memory */
 }
 
 
@@ -647,7 +620,7 @@ static void  __FASTCALL__ PaintLine(TWindow* w,unsigned i,const std::string& nam
   {
     const char *st,*ends,*ptr;
     char ch;
-    twGotoXY(w,3,i+1);
+    w->goto_xy(3,i+1);
     st = buffer;
     ends = buffer+width;
     while(1)
@@ -657,28 +630,28 @@ static void  __FASTCALL__ PaintLine(TWindow* w,unsigned i,const std::string& nam
       {
 	unsigned outlen;
 	outlen = ptr-st;
-	twDirectWrite(w,twWhereX(w),twWhereY(w),st,outlen);
-	twGotoXY(w,twWhereX(w)+outlen,twWhereY(w));
+	w->direct_write(w->where_x(),w->where_y(),st,outlen);
+	w->goto_xy(w->where_x()+outlen,w->where_y());
 	st = ptr;
 	ch = *(++st);
 	if(ch != '~')
 	{
 	  ColorAttr ca;
-	  ca = twGetColorAttr(w);
-	  twSetColorAttr(w,is_hl ? menu_cset.hotkey.focused : menu_cset.hotkey.active);
-	  twPutChar(w,ch);
-	  twSetColorAttr(w,ca);
+	  ca = w->get_color();
+	  w->set_color(is_hl ? menu_cset.hotkey.focused : menu_cset.hotkey.active);
+	  w->putch(ch);
+	  w->set_color(ca);
 	}
 	st++;
       }
       else
       {
-	twDirectWrite(w,twWhereX(w),twWhereY(w),st,(unsigned)(ends-st));
+	w->direct_write(w->where_x(),w->where_y(),st,(unsigned)(ends-st));
 	break;
       }
     }
   }
-  else  twDirectWrite(w,3,i+1,buffer,width);
+  else  w->direct_write(3,i+1,buffer,width);
 }
 
 static void  __FASTCALL__ Paint(TWindow *win,const char ** names,
@@ -689,28 +662,27 @@ static void  __FASTCALL__ Paint(TWindow *win,const char ** names,
 					unsigned cursor)
 {
  unsigned i, pos = 0;
- twFocusWin(win);
- twFreezeWin(win);
+ win->freeze();
  width -= 3;
  if (height>2 && height<nlist)
      pos = 1 + (start+cursor)*(height-2)/nlist;
  for(i = 0;i < height;i++)
  {
-   twSetColorAttr(win,menu_cset.main);
-   twGotoXY(win,1,i + 1);
+   win->set_color(menu_cset.main);
+   win->goto_xy(1,i + 1);
    if (i == 0)
-       twPutChar(win,start ? TWC_UP_ARROW : TWC_DEF_FILLER);
+       win->putch(start ? TWC_UP_ARROW : TWC_DEF_FILLER);
    else if(i == height-1)
-       twPutChar(win,start + height < nlist ? TWC_DN_ARROW : TWC_DEF_FILLER);
+       win->putch(start + height < nlist ? TWC_DN_ARROW : TWC_DEF_FILLER);
    else if (i == pos)
-       twPutChar(win,TWC_THUMB);
-   else twPutChar(win,TWC_DEF_FILLER);
-   twGotoXY(win,2,i + 1);
-   twPutChar(win,TWC_SV);
-   twSetColorAttr(win,menu_cset.item.active);
+       win->putch(TWC_THUMB);
+   else win->putch(TWC_DEF_FILLER);
+   win->goto_xy(2,i + 1);
+   win->putch(TWC_SV);
+   win->set_color(menu_cset.item.active);
    PaintLine(win,i,names[i + start],width,mord_width,isOrdinal,useAcc,cursor == i);
  }
- twRefreshWin(win);
+ win->refresh();
 }
 
 static char byNam;
@@ -816,7 +788,7 @@ static int  __FASTCALL__ __ListBox(const char** names,unsigned nlist,unsigned de
  if(mwidth > (unsigned)(tvioWidth-1)) mwidth = tvioWidth-1;         // maximal width increased to tvioWidth-1 -XF
  height = nlist < (unsigned)(tvioHeight - 4) ? nlist : tvioHeight - 4;
  wlist = CrtLstWndnls(title,mwidth-1,height);
- if((assel & LB_SELECTIVE) == LB_SELECTIVE) twSetFooterAttr(wlist," [ENTER] - Go ",TW_TMODE_RIGHT,dialog_cset.selfooter);
+ if((assel & LB_SELECTIVE) == LB_SELECTIVE) wlist->set_footer(" [ENTER] - Go ",TW_TMODE_RIGHT,dialog_cset.selfooter);
  restart:
  ostart = start = cursor = ocursor = 0;
  if(defsel != UINT_MAX && defsel < nlist)
@@ -830,7 +802,7 @@ static int  __FASTCALL__ __ListBox(const char** names,unsigned nlist,unsigned de
  width = mwidth - 3;
  if((assel & LB_SELECTIVE) == LB_SELECTIVE)
  {
-   twSetColorAttr(wlist,menu_cset.item.focused);
+   wlist->set_color(menu_cset.item.focused);
    PaintLine(wlist,(unsigned)cursor,names[cursor + start],width,mord_width,isOrdinal,(assel & LB_USEACC) == LB_USEACC,true);
  }
  sf = false;
@@ -980,16 +952,16 @@ static int  __FASTCALL__ __ListBox(const char** names,unsigned nlist,unsigned de
    }
    if((cursor != ocursor || sf) && (assel & LB_SELECTIVE) == LB_SELECTIVE)
    {
-     twSetColorAttr(wlist,menu_cset.item.active);
+     wlist->set_color(menu_cset.item.active);
      PaintLine(wlist,(unsigned)ocursor,names[ocursor + start],width,mord_width,isOrdinal,(assel & LB_USEACC) == LB_USEACC,false);
-     twSetColorAttr(wlist,menu_cset.item.focused);
+     wlist->set_color(menu_cset.item.focused);
      PaintLine(wlist,(unsigned)cursor,names[cursor + start],width,mord_width,isOrdinal,(assel & LB_USEACC) == LB_USEACC,true);
      ocursor = cursor;
      sf = false;
    }
    if(scursor != -1)
    {
-     twSetColorAttr(wlist,menu_cset.highlight);
+     wlist->set_color(menu_cset.highlight);
      if(scursor >= start && (unsigned)scursor < start + height)
 	 PaintLine(wlist,(unsigned)(scursor - start),names[scursor],width,mord_width,isOrdinal,(assel & LB_USEACC) == LB_USEACC,true);
    }
@@ -1057,7 +1029,7 @@ int __FASTCALL__ PageBox(unsigned width,unsigned height,const any_t** __obj,unsi
    if(start != ostart)
    {
      ostart = start;
-     twGotoXY(wlist,1,1);
+     wlist->goto_xy(1,1);
      (*func)(wlist,__obj,(unsigned)start,nobj);
    }
  }

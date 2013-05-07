@@ -101,9 +101,8 @@ static __filesize_t __FASTCALL__ Show_Sis_Header()
     default:     TypeName="unknown"; break;
  }
  hwnd = CrtDlgWndnls(" Sis Header ",78,13);
- twFocusWin(hwnd);
- twGotoXY(hwnd,1,1);
- twPrintF(hwnd,
+ hwnd->goto_xy(1,1);
+ hwnd->printf(
 	  "Number of Lang/Files/Req   = %u/%u/%u\n"
 	  "Installation Lang/Files/Drv= %u/%u/%u\n"
 	  "Number of capabilities     = %u\n"

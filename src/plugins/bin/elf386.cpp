@@ -599,8 +599,8 @@ static __filesize_t __FASTCALL__ ShowELFHeader()
   entrya = elfVA2PA(ELF_ADDR(ELF_EHDR(elf,e_entry)));
   sprintf(hdr," ELF (Executable and Linking Format) ");
   w = CrtDlgWndnls(hdr,74,19);
-  twGotoXY(w,1,1);
-  twPrintF(w,
+  w->goto_xy(1,1);
+  w->printf(
 	   "Signature                         = %02X %02X %02X %02XH (%c%c%c%c)\n"
 	   "File class                        = %02XH (%s)\n"
 	   "Data encoding                     = %02XH (%s)\n"
@@ -623,26 +623,26 @@ static __filesize_t __FASTCALL__ ShowELFHeader()
 	    ,ELF_HALF(ELF_EHDR(elf,e_machine)),	elf_machine(ELF_HALF(ELF_EHDR(elf,e_machine)),&dummy)
 	    ,ELF_WORD(ELF_EHDR(elf,e_version)),	elf_version(ELF_WORD(ELF_EHDR(elf,e_version)))
   );
-  twSetColorAttr(w,dialog_cset.entry);
+  w->set_color(dialog_cset.entry);
   if(is_64bit)
-    twPrintF(w,"Entry point VA             = %016llXH (offset: %016llXH)"
+    w->printf("Entry point VA             = %016llXH (offset: %016llXH)"
 	   ,(unsigned long long)ELF_ADDR(ELF_EHDR(elf,e_entry)),(unsigned long long)entrya);
   else
-    twPrintF(w,"Entry point VA                    = %08lXH (offset: %08lXH)"
+    w->printf("Entry point VA                    = %08lXH (offset: %08lXH)"
 	   ,(unsigned)ELF_ADDR(ELF_EHDR(elf,e_entry)),(unsigned)entrya);
-  twClrEOL(w); twPrintF(w,"\n");
-  twSetColorAttr(w,dialog_cset.main);
+  w->printf("\n"); w->clreol();
+  w->set_color(dialog_cset.main);
   if(is_64bit)
-    twPrintF(w,"Program header table offset       = %016llXH\n"
+    w->printf("Program header table offset       = %016llXH\n"
 	   "Section header table offset       = %016llXH\n"
 	   ,ELF_OFF(ELF_EHDR(elf,e_phoff))
 	   ,ELF_OFF(ELF_EHDR(elf,e_shoff)));
   else
-    twPrintF(w,"Program header table offset       = %08lXH\n"
+    w->printf("Program header table offset       = %08lXH\n"
 	   "Section header table offset       = %08lXH\n"
 	   ,ELF_OFF(ELF_EHDR(elf,e_phoff))
 	   ,ELF_OFF(ELF_EHDR(elf,e_shoff)));
-  twPrintF(w,
+  w->printf(
 	   "Processor specific flag           = %08lXH\n"
 	   "ELF header size (bytes)           = %04XH\n"
 	   "Program header table entry size   = %04XH\n"
@@ -1369,16 +1369,13 @@ static void  __FASTCALL__ __elfReadRelaSection(__filesize_t offset,
 static void  __FASTCALL__ buildElf386RelChain()
 {
   size_t i,_nitems;
-  TWindow *w,*usd;
+  TWindow *w;
   BFile& handle = elfcache;
   __filesize_t fp;
-  usd = twFocusedWin();
   if(!(CurrElfChain = la_Build(0,sizeof(Elf_Reloc),MemOutBox))) return;
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
-  twFocusWin(w);
-  twGotoXY(w,1,1);
-  twPutS(w,BUILD_REFS);
-  twFocusWin(usd);
+  w->goto_xy(1,1);
+  w->puts(BUILD_REFS);
   fp = handle.tell();
   if(IsSectionsPresent) /* Section headers are present */
   {

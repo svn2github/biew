@@ -33,7 +33,6 @@ namespace beye {
 
     typedef void (__FASTCALL__ * pagefunc)(TWindow *win,const any_t**__obj,unsigned i__obj,unsigned total_obj);
 
-    void         __FASTCALL__ CloseWnd(TWindow *w);
     TWindow *    __FASTCALL__ CrtDlgWnd(const std::string&,tAbsCoord,tAbsCoord);
     TWindow *    __FASTCALL__ CrtDlgWndnls(const std::string&,tAbsCoord,tAbsCoord);
     TWindow *    __FASTCALL__ CrtMnuWnd(const std::string&,tAbsCoord,tAbsCoord,tAbsCoord,tAbsCoord);
@@ -42,9 +41,11 @@ namespace beye {
     TWindow *    __FASTCALL__ CrtLstWndnls(const std::string&,tAbsCoord,tAbsCoord);
     TWindow *    __FASTCALL__ CrtHlpWnd(const std::string&,tAbsCoord,tAbsCoord);
     TWindow *    __FASTCALL__ CrtHlpWndnls(const std::string&,tAbsCoord,tAbsCoord);
-    TWindow *    __FASTCALL__ CreateEditor(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsCoord Y2,unsigned flags);
-    TWindow *    __FASTCALL__ WindowOpen(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsCoord Y2,unsigned flags);
+    TWindow *    __FASTCALL__ CreateEditor(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsCoord Y2,TWindow::twc_flag flags);
     void         __FASTCALL__ DisplayBox(const char **names,unsigned nlist,const std::string& title);
+
+    inline TWindow*	WindowOpen(tAbsCoord x1,tAbsCoord y1,tAbsCoord x2,tAbsCoord y2,TWindow::twc_flag flags=TWindow::TWC_NONE) { return new(zeromem) TWindow(x1,y1,x2-x1+1,y2-y1+1,flags); }
+    inline void		CloseWnd(TWindow *w) { delete w; }
 
 /** Edit string styles */
 enum {

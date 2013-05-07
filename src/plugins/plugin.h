@@ -4,8 +4,8 @@
 
 #include "libbeye/libbeye.h"
 
-struct TWindow;
 namespace beye {
+    class TWindow;
     class CodeGuider;
     class Ini_Profile;
     class Plugin : public Opaque {

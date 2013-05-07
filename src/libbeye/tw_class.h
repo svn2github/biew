@@ -14,11 +14,10 @@
  * @since       2000
  * @note        Development, fixes and improvements
 **/
-
 #ifndef __TW_CLASS_H
 #define __TW_CLASS_H 1
 
-#ifndef __TWIN_H
+#ifndef __TWINDOW_HPP_INCLUDED
 #error Never use this header file directly. Use twin.h instead
 #endif
 
@@ -31,8 +30,7 @@
 		     * @param event_param     indicates parameters of event
 		     * @param event_data      indicates data of event
 		    **/
-typedef long (__FASTCALL__ *twClassFunc)(TWindow *win,unsigned event,
-				  unsigned long event_param, any_t*event_data);
+typedef long (*twClassFunc)(TWindow* win,unsigned event,unsigned long event_param,const any_t*event_data);
 
 enum {
     __CS_ORDINAL=0x0000 /**< Indicates ordinal type of callback function */

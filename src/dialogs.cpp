@@ -36,15 +36,13 @@ bool __FASTCALL__ Get2DigitDlg(const std::string& title,const std::string& text,
 {
  tAbsCoord x1,y1,x2,y2;
  tRelCoord X1,Y1,X2,Y2;
- TWindow * hwnd,*ewnd,*_using;
+ TWindow * hwnd,*ewnd;
  bool ret;
  int retval;
  char str[3] = "";
- _using = twFocusedWin();
  hwnd = CrtDlgWndnls(title,24,1);
- twFocusWin(hwnd);
- twGetWinPos(hwnd,&x1,&y1,&x2,&y2);
- twGotoXY(hwnd,1,1); twPutS(hwnd,text);
+ hwnd->get_pos(&x1,&y1,&x2,&y2);
+ hwnd->goto_xy(1,1); hwnd->puts(text);
  X1 = x1;
  Y1 = y1;
  X2 = x2;
@@ -53,8 +51,8 @@ bool __FASTCALL__ Get2DigitDlg(const std::string& title,const std::string& text,
  Y1 += 1;
  X2 = X1 + 1;
  Y2 = Y1;
- ewnd = CreateEditor(X1,Y1,X2,Y2,TWS_VISIBLE | TWS_CURSORABLE | TWS_NLSOEM);
- twFocusWin(ewnd);
+ ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::TWC_VISIBLE | TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+ ewnd->set_focus();
  if(*xx) sprintf(str,"%X",(unsigned int)*xx);
  while(1)
  {
@@ -66,7 +64,6 @@ bool __FASTCALL__ Get2DigitDlg(const std::string& title,const std::string& text,
  CloseWnd(ewnd);
  CloseWnd(hwnd);
  if(ret) *xx = (unsigned char)strtoul(str,NULL,16);
- twFocusWin(_using);
  return ret;
 }
 
@@ -82,7 +79,7 @@ bool __FASTCALL__ Get8DigitDlg(const std::string& title,const std::string& text,
  tAbsCoord x1,y1,x2,y2;
  tRelCoord X1,Y1,X2,Y2;
  int key;
- TWindow * hwnd,*ewnd,*_using;
+ TWindow * hwnd,*ewnd;
  char base = attr & DECIMAL ? 10 : 16;
  char len  = attr & DECIMAL ? 10 : 8;
  bool ret;
@@ -92,11 +89,9 @@ bool __FASTCALL__ Get8DigitDlg(const std::string& title,const std::string& text,
  memcpy(decleg,legalchars,12);
  decleg[12] = '\0';
  len += attr & SIGN ? 1 : 0;
- _using = twFocusedWin();
  hwnd = CrtDlgWndnls(title,34,1);
- twFocusWin(hwnd);
- twGetWinPos(hwnd,&x1,&y1,&x2,&y2);
- twGotoXY(hwnd,1,1); twPutS(hwnd,text);
+ hwnd->get_pos(&x1,&y1,&x2,&y2);
+ hwnd->goto_xy(1,1); hwnd->puts(text);
  X1 = x1;
  Y1 = y1;
  X2 = x2;
@@ -105,8 +100,8 @@ bool __FASTCALL__ Get8DigitDlg(const std::string& title,const std::string& text,
  X2 = X1 + 33;
  X1 = X2 - (len - 1);
  Y2 = Y1;
- ewnd = CreateEditor(X1,Y1,X2,Y2,TWS_VISIBLE | TWS_CURSORABLE | TWS_NLSOEM);
- twFocusWin(ewnd);
+ ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::TWC_VISIBLE | TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+ ewnd->set_focus();
  if(attr & DECIMAL) legals = attr & SIGN ? decleg : &decleg[2];
  else               legals = attr & SIGN ? legalchars : &legalchars[2];
  if(*xx)
@@ -124,7 +119,6 @@ bool __FASTCALL__ Get8DigitDlg(const std::string& title,const std::string& text,
  CloseWnd(ewnd);
  CloseWnd(hwnd);
  if(ret) *xx = attr & SIGN ? (unsigned long)strtol(str,NULL,base) : strtoul(str,NULL,base);
- twFocusWin(_using);
  return ret;
 }
 
@@ -134,7 +128,7 @@ bool        __FASTCALL__ Get16DigitDlg(const std::string& title,const std::strin
  tAbsCoord x1,y1,x2,y2;
  tRelCoord X1,Y1,X2,Y2;
  int key;
- TWindow * hwnd,*ewnd,*_using;
+ TWindow * hwnd,*ewnd;
  char base = attr & DECIMAL ? 10 : 16;
  char len  = attr & DECIMAL ? 20 : 16;
  bool ret;
@@ -144,11 +138,9 @@ bool        __FASTCALL__ Get16DigitDlg(const std::string& title,const std::strin
  memcpy(decleg,legalchars,12);
  decleg[12] = '\0';
  len += attr & SIGN ? 1 : 0;
- _using = twFocusedWin();
  hwnd = CrtDlgWndnls(title,44,1);
- twFocusWin(hwnd);
- twGetWinPos(hwnd,&x1,&y1,&x2,&y2);
- twGotoXY(hwnd,1,1); twPutS(hwnd,text);
+ hwnd->get_pos(&x1,&y1,&x2,&y2);
+ hwnd->goto_xy(1,1); hwnd->puts(text);
  X1 = x1;
  Y1 = y1;
  X2 = x2;
@@ -157,8 +149,8 @@ bool        __FASTCALL__ Get16DigitDlg(const std::string& title,const std::strin
  X2 = X1 + 43;
  X1 = X2 - (len - 1);
  Y2 = Y1;
- ewnd = CreateEditor(X1,Y1,X2,Y2,TWS_VISIBLE | TWS_CURSORABLE | TWS_NLSOEM);
- twFocusWin(ewnd);
+ ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::TWC_VISIBLE | TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+ ewnd->set_focus();
  if(attr & DECIMAL) legals = attr & SIGN ? decleg : &decleg[2];
  else               legals = attr & SIGN ? legalchars : &legalchars[2];
  if(*xx)
@@ -176,22 +168,17 @@ bool        __FASTCALL__ Get16DigitDlg(const std::string& title,const std::strin
  CloseWnd(ewnd);
  CloseWnd(hwnd);
  if(ret) *xx = attr & SIGN ? (unsigned long long int)strtoll(str,NULL,base) : strtoull(str,NULL,base);
- twFocusWin(_using);
  return ret;
 }
 
 static void  __FASTCALL__ paintJumpDlg(TWindow *wdlg,unsigned long flags)
 {
-  TWindow *usd;
-  usd = twFocusedWin();
-  twFocusWin(wdlg);
-  twSetColorAttr(wdlg,dialog_cset.group.active);
-  twGotoXY(wdlg,4,2); twPutChar(wdlg,flags == GJDLG_FILE_TOP ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
-  twGotoXY(wdlg,4,3); twPutChar(wdlg,flags == GJDLG_RELATIVE ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
-  twGotoXY(wdlg,4,4); twPutChar(wdlg,flags == GJDLG_REL_EOF  ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
-  twGotoXY(wdlg,4,5); twPutChar(wdlg,flags == GJDLG_VIRTUAL  ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
-  twGotoXY(wdlg,4,6); twPutChar(wdlg,flags == GJDLG_PERCENTS ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
-  twFocusWin(usd);
+  wdlg->set_color(dialog_cset.group.active);
+  wdlg->goto_xy(4,2); wdlg->putch(flags == GJDLG_FILE_TOP ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
+  wdlg->goto_xy(4,3); wdlg->putch(flags == GJDLG_RELATIVE ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
+  wdlg->goto_xy(4,4); wdlg->putch(flags == GJDLG_REL_EOF  ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
+  wdlg->goto_xy(4,5); wdlg->putch(flags == GJDLG_VIRTUAL  ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
+  wdlg->goto_xy(4,6); wdlg->putch(flags == GJDLG_PERCENTS ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
 }
 
 static const char * jmptxt[] =
@@ -219,26 +206,24 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
  tAbsCoord x1,y1,x2,y2;
  tRelCoord X1,Y1,X2,Y2;
  int key;
- TWindow * hwnd,*ewnd,*_using;
+ TWindow * hwnd,*ewnd;
  unsigned len = HA_LEN()-1,stx = 0;
  bool ret,update;
  static char str[21] = "";
  const char * legals;
  char declegals[13];
  unsigned attr;
- _using = twFocusedWin();
  hwnd = CrtDlgWndnls(" Jump within file ",is_BMUse64()?34:26,6);
- twFocusWin(hwnd);
  memcpy(declegals,legalchars,12);
- twGetWinPos(hwnd,&x1,&y1,&x2,&y2);
- twGotoXY(hwnd,2,1); twPutS(hwnd,"Enter offset :");
- twSetColorAttr(hwnd,dialog_cset.group.active);
- twGotoXY(hwnd,2,2); twPutS(hwnd," ( ) - From top of file ");
- twGotoXY(hwnd,2,3); twPutS(hwnd," ( ) - From current pos ");
- twGotoXY(hwnd,2,4); twPutS(hwnd," ( ) - Relatively EOF   ");
- twGotoXY(hwnd,2,5); twPutS(hwnd," ( ) - Virtual          ");
- twGotoXY(hwnd,2,6); twPutS(hwnd," ( ) - Percents         ");
- twSetColorAttr(hwnd,dialog_cset.main);
+ hwnd->get_pos(&x1,&y1,&x2,&y2);
+ hwnd->goto_xy(2,1); hwnd->puts("Enter offset :");
+ hwnd->set_color(dialog_cset.group.active);
+ hwnd->goto_xy(2,2); hwnd->puts(" ( ) - From top of file ");
+ hwnd->goto_xy(2,3); hwnd->puts(" ( ) - From current pos ");
+ hwnd->goto_xy(2,4); hwnd->puts(" ( ) - Relatively EOF   ");
+ hwnd->goto_xy(2,5); hwnd->puts(" ( ) - Virtual          ");
+ hwnd->goto_xy(2,6); hwnd->puts(" ( ) - Percents         ");
+ hwnd->set_color(dialog_cset.main);
  X1 = x1;
  Y1 = y1;
  X2 = x2;
@@ -247,8 +232,8 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
  X1 += 17;
  X2 = X1 + len - 1;
  Y2 = Y1;
- ewnd = CreateEditor(X1,Y1,X2,Y2,TWS_VISIBLE | TWS_CURSORABLE | TWS_NLSOEM);
- twFocusWin(ewnd);
+ ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::TWC_VISIBLE | TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+ ewnd->set_focus();
  legals = *flags == GJDLG_RELATIVE ? legalchars : &legalchars[2];
  paintJumpDlg(hwnd,*flags);
  update = true;
@@ -300,7 +285,6 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
 	    (*flags) == GJDLG_REL_EOF ? (unsigned long)strtol(str,NULL,(*flags)==GJDLG_PERCENTS?10:16):
 	    strtoul(str,NULL,(*flags)==GJDLG_PERCENTS?10:16);
  }
- twFocusWin(_using);
  return ret;
 }
 
@@ -313,8 +297,8 @@ bool __FASTCALL__ GetStringDlg(char * buff,const std::string& title,const std::s
   TWindow * wdlg,*ewnd;
   char estr[81];
   wdlg = CrtDlgWndnls(title,78,2);
-  if(!subtitle.empty()) twSetFooterAttr(wdlg,subtitle,TW_TMODE_RIGHT,dialog_cset.footer);
-  twGetWinPos(wdlg,&x1,&y1,&x2,&y2);
+  if(!subtitle.empty()) wdlg->set_footer(subtitle,TW_TMODE_RIGHT,dialog_cset.footer);
+  wdlg->get_pos(&x1,&y1,&x2,&y2);
   X1 = x1;
   Y1 = y1;
   X2 = x2;
@@ -323,12 +307,11 @@ bool __FASTCALL__ GetStringDlg(char * buff,const std::string& title,const std::s
   X2 -= 2;
   Y1 += 2;
   Y2 = Y1;
-  ewnd = CreateEditor(X1,Y1,X2,Y2,TWS_CURSORABLE | TWS_NLSOEM);
-  twFocusWin(wdlg);
-  twGotoXY(wdlg,2,1); twPutS(wdlg,prompt);
+  ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+  wdlg->goto_xy(2,1); wdlg->puts(prompt);
   strcpy(estr,buff);
-  twShowWin(ewnd);
-  twFocusWin(ewnd);
+  ewnd->show();
+  ewnd->set_focus();
   while(1)
   {
    key = xeditstring(ewnd,estr,NULL,76,NULL);
@@ -345,46 +328,43 @@ bool __FASTCALL__ GetStringDlg(char * buff,const std::string& title,const std::s
 static void  __FASTCALL__ FFStaticPaint(TWindow * wdlg,const std::string& fname,char * st,char *end,unsigned long flg)
 {
   int len,i;
-  TWindow * _using = twFocusedWin();
-    twFocusWin(wdlg);
     if(!(flg & FSDLG_USEBITNS))
     {
       len = fname.length();
-      twGotoXY(wdlg,3,7); twPutS(wdlg,fname); for(i = len;i < 71;i++) twPutChar(wdlg,TWC_MED_SHADE);
+      wdlg->goto_xy(3,7); wdlg->puts(fname); for(i = len;i < 71;i++) wdlg->putch(TWC_MED_SHADE);
     }
     len = strlen(st);
-    twGotoXY(wdlg,8,4); twPutS(wdlg,st);
+    wdlg->goto_xy(8,4); wdlg->puts(st);
     for(i = len;i < 18;i++)
-	twPutChar(wdlg,TWC_MED_SHADE);
+	wdlg->putch(TWC_MED_SHADE);
     len = strlen(end);
-    twGotoXY(wdlg,35,4); twPutS(wdlg,end);
+    wdlg->goto_xy(35,4); wdlg->puts(end);
     for(i = len;i < 18;i++)
-	twPutChar(wdlg,TWC_MED_SHADE);
+	wdlg->putch(TWC_MED_SHADE);
     if(flg & FSDLG_USEMODES)
     {
-      twSetColorAttr(wdlg,dialog_cset.group.active);
-      twGotoXY(wdlg,54,1); twPutS(wdlg,msgTypeComments[0]);
-      twGotoXY(wdlg,61,1); twPutS(wdlg,flg & FSDLG_ASMMODE ? " Asm              " : " Bin              ");
-      if(!(flg & FSDLG_ASMMODE)) twSetColorAttr(wdlg,dialog_cset.group.disabled);
-      for(i = 1;i < 5;i++) { twGotoXY(wdlg,54,i + 1); twPutS(wdlg,msgTypeComments[i]); }
-      twGotoXY(wdlg,56,2); twPutChar(wdlg,flg & FSDLG_STRUCTS ? TWC_CHECK_CHAR : TWC_DEF_FILLER);
-      twGotoXY(wdlg,56,4); twPutChar(wdlg,flg & FSDLG_COMMENT ? TWC_DEF_FILLER : TWC_RADIO_CHAR);
-      twGotoXY(wdlg,56,5); twPutChar(wdlg,flg & FSDLG_COMMENT ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
-      twSetColorAttr(wdlg,dialog_cset.main);
+      wdlg->set_color(dialog_cset.group.active);
+      wdlg->goto_xy(54,1); wdlg->puts(msgTypeComments[0]);
+      wdlg->goto_xy(61,1); wdlg->puts(flg & FSDLG_ASMMODE ? " Asm              " : " Bin              ");
+      if(!(flg & FSDLG_ASMMODE)) wdlg->set_color(dialog_cset.group.disabled);
+      for(i = 1;i < 5;i++) { wdlg->goto_xy(54,i + 1); wdlg->puts(msgTypeComments[i]); }
+      wdlg->goto_xy(56,2); wdlg->putch(flg & FSDLG_STRUCTS ? TWC_CHECK_CHAR : TWC_DEF_FILLER);
+      wdlg->goto_xy(56,4); wdlg->putch(flg & FSDLG_COMMENT ? TWC_DEF_FILLER : TWC_RADIO_CHAR);
+      wdlg->goto_xy(56,5); wdlg->putch(flg & FSDLG_COMMENT ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
+      wdlg->set_color(dialog_cset.main);
     }
     else
     if(flg & FSDLG_USEBITNS)
     {
-      twSetColorAttr(wdlg,dialog_cset.group.active);
-      for(i = 0;i < 4;i++) { twGotoXY(wdlg,54,i + 1); twPutS(wdlg,msgTypeBitness[i]); }
-      twGotoXY(wdlg,54,5); twPutS(wdlg,msgTypeBitness[i]);
-      twGotoXY(wdlg,56,2); twPutChar(wdlg,(flg & FSDLG_BTNSMASK) == 0 ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
-      twGotoXY(wdlg,56,3); twPutChar(wdlg,(flg & FSDLG_BTNSMASK) == 1 ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
-      twGotoXY(wdlg,56,4); twPutChar(wdlg,(flg & FSDLG_BTNSMASK) == 2 ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
-      twGotoXY(wdlg,56,5); twPutChar(wdlg,(flg & FSDLG_BTNSMASK) == 3 ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
-      twSetColorAttr(wdlg,dialog_cset.main);
+      wdlg->set_color(dialog_cset.group.active);
+      for(i = 0;i < 4;i++) { wdlg->goto_xy(54,i + 1); wdlg->puts(msgTypeBitness[i]); }
+      wdlg->goto_xy(54,5); wdlg->puts(msgTypeBitness[i]);
+      wdlg->goto_xy(56,2); wdlg->putch((flg & FSDLG_BTNSMASK) == 0 ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
+      wdlg->goto_xy(56,3); wdlg->putch((flg & FSDLG_BTNSMASK) == 1 ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
+      wdlg->goto_xy(56,4); wdlg->putch((flg & FSDLG_BTNSMASK) == 2 ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
+      wdlg->goto_xy(56,5); wdlg->putch((flg & FSDLG_BTNSMASK) == 3 ? TWC_RADIO_CHAR : TWC_DEF_FILLER);
+      wdlg->set_color(dialog_cset.main);
     }
-    twFocusWin(_using);
 }
 
 static const char * fs1_txt[] =
@@ -456,9 +436,9 @@ bool __FASTCALL__ GetFStoreDlg(const std::string& title,char* fname,unsigned lon
  else
  if((*flags) & FSDLG_USEBITNS) fs_txt = fs2_txt;
  else                          fs_txt = fs3_txt;
- twSetFooterAttr(wdlg," [Enter] - Run ",TW_TMODE_CENTER,dialog_cset.footer);
+ wdlg->set_footer(" [Enter] - Run ",TW_TMODE_CENTER,dialog_cset.footer);
 
- twGetWinPos(wdlg,&x1,&y1,&x2,&y2);
+ wdlg->get_pos(&x1,&y1,&x2,&y2);
  X1 = x1;
  Y1 = y1;
 
@@ -473,22 +453,21 @@ bool __FASTCALL__ GetFStoreDlg(const std::string& title,char* fname,unsigned lon
  YY2 = YY1;
  if(!((*flags) & FSDLG_USEBITNS))
  {
-   ewnd[2] = CreateEditor(XX1,YY1,XX2,YY2,TWS_CURSORABLE | TWS_NLSOEM);
+   ewnd[2] = CreateEditor(XX1,YY1,XX2,YY2,TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
    neditors++;
  }
  XX1 += 5;
  XX2  = XX1 + 17;
  YY1 -= 3;
  YY2  = YY1;
- ewnd[0] = CreateEditor(XX1,YY1,XX2,YY2,TWS_CURSORABLE | TWS_NLSOEM);
+ ewnd[0] = CreateEditor(XX1,YY1,XX2,YY2,TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
  XX1 += 27;
  XX2 = XX1 + 17;
- ewnd[1] = CreateEditor(XX1,YY1,XX2,YY2,TWS_CURSORABLE | TWS_NLSOEM);
- twFocusWin(wdlg);
- twGotoXY(wdlg,1,2);  twPutS(wdlg,TYPE_HEX_FORM);
- if(!prompt.empty())  { twGotoXY(wdlg,3,6);  twPutS(wdlg,prompt); }
- twGotoXY(wdlg,1,4);  twPutS(wdlg,START_PRMT);
- twGotoXY(wdlg,27,4); twPutS(wdlg,LENGTH_PRMT);
+ ewnd[1] = CreateEditor(XX1,YY1,XX2,YY2,TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+ wdlg->goto_xy(1,2);  wdlg->puts(TYPE_HEX_FORM);
+ if(!prompt.empty())  { wdlg->goto_xy(3,6);  wdlg->puts(prompt); }
+ wdlg->goto_xy(1,4);  wdlg->puts(START_PRMT);
+ wdlg->goto_xy(27,4); wdlg->puts(LENGTH_PRMT);
  ultoa(*start,startdig,16);
  ultoa(*end,enddig,16);
  FFStaticPaint(wdlg,fname,startdig,enddig,*flags);
@@ -500,9 +479,9 @@ bool __FASTCALL__ GetFStoreDlg(const std::string& title,char* fname,unsigned lon
  {
    if(active != oactive)
    {
-     twHideWin(ewnd[oactive]);
-     twShowWin(ewnd[active]);
-     twFocusWin(ewnd[active]);
+     ewnd[oactive]->hide();
+     ewnd[active]->show();
+     ewnd[active]->set_focus();
      oactive = active;
      stx = 0;
    }
@@ -552,17 +531,14 @@ bool __FASTCALL__ GetFStoreDlg(const std::string& title,char* fname,unsigned lon
 static void  __FASTCALL__ FFStaticPaintInsDel(TWindow * wdlg,const std::string& st,const std::string& end)
 {
   int len,i;
-  TWindow * _using = twFocusedWin();
-    twFocusWin(wdlg);
     len = st.length();
-    twGotoXY(wdlg,8,4); twPutS(wdlg,st);
+    wdlg->goto_xy(8,4); wdlg->puts(st);
     for(i = len;i < 18;i++)
-	twPutChar(wdlg,TWC_MED_SHADE);
+	wdlg->putch(TWC_MED_SHADE);
     len = end.length();
-    twGotoXY(wdlg,35,4); twPutS(wdlg,end);
+    wdlg->goto_xy(35,4); wdlg->puts(end);
     for(i = len;i < 18;i++)
-	twPutChar(wdlg,TWC_MED_SHADE);
-    twFocusWin(_using);
+	wdlg->putch(TWC_MED_SHADE);
 }
 
 bool __FASTCALL__ GetInsDelBlkDlg(const std::string& title,__filesize_t * start,__fileoff_t * size)
@@ -579,7 +555,7 @@ bool __FASTCALL__ GetInsDelBlkDlg(const std::string& title,__filesize_t * start,
  unsigned mlen[2] = { 19, 19 };
  char *wbuff[2];
 
- twGetWinPos(wdlg,&x1,&y1,&x2,&y2);
+ wdlg->get_pos(&x1,&y1,&x2,&y2);
  X1 = x1;
  Y1 = y1;
 
@@ -588,18 +564,17 @@ bool __FASTCALL__ GetInsDelBlkDlg(const std::string& title,__filesize_t * start,
  XX1 = X1 + 8;
  YY2 = YY1 = Y1 + 4;
  XX2 = XX1 + 17;
- ewnd[0] = CreateEditor(XX1,YY1,XX2,YY2,TWS_CURSORABLE | TWS_NLSOEM);
+ ewnd[0] = CreateEditor(XX1,YY1,XX2,YY2,TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
  XX1 += 27;
  XX2 = XX1 + 17;
- ewnd[1] = CreateEditor(XX1,YY1,XX2,YY2,TWS_CURSORABLE | TWS_NLSOEM);
- twFocusWin(wdlg);
- twGotoXY(wdlg,1,2); twPutS(wdlg,TYPE_HEX_FORM);
- twGotoXY(wdlg,1,4);  twPutS(wdlg,START_PRMT);
- twGotoXY(wdlg,27,4); twPutS(wdlg,LENGTH_PRMT);
- twinDrawFrameAttr(wdlg,53,1,78,5,TW_UP3D_FRAME,dialog_cset.main);
- twGotoXY(wdlg,55,2); twPutS(wdlg,"Remarks:             ");
- twGotoXY(wdlg,55,3); twPutS(wdlg,"+(pos) - insert block");
- twGotoXY(wdlg,55,4); twPutS(wdlg,"-(neg) - delete block");
+ ewnd[1] = CreateEditor(XX1,YY1,XX2,YY2,TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+ wdlg->goto_xy(1,2); wdlg->puts(TYPE_HEX_FORM);
+ wdlg->goto_xy(1,4);  wdlg->puts(START_PRMT);
+ wdlg->goto_xy(27,4); wdlg->puts(LENGTH_PRMT);
+ wdlg->draw_frame(53,1,78,5,TWindow::UP3D_FRAME,dialog_cset.main);
+ wdlg->goto_xy(55,2); wdlg->puts("Remarks:             ");
+ wdlg->goto_xy(55,3); wdlg->puts("+(pos) - insert block");
+ wdlg->goto_xy(55,4); wdlg->puts("-(neg) - delete block");
  ultoa(*start,startdig,16);
  if(*size < 0)
  {
@@ -615,9 +590,9 @@ bool __FASTCALL__ GetInsDelBlkDlg(const std::string& title,__filesize_t * start,
  {
    if(active != oactive)
    {
-     twHideWin(ewnd[oactive]);
-     twShowWin(ewnd[active]);
-     twFocusWin(ewnd[active]);
+     ewnd[oactive]->hide();
+     ewnd[active]->show();
+     ewnd[active]->set_focus();
      oactive = active;
      stx = 0;
    }

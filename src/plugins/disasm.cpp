@@ -78,7 +78,6 @@ DisMode::DisMode(CodeGuider& _code_guider)
     PrevStrLenAddr = new unsigned long [tvioHeight];
     dis_comments   = new char [Comm_Size];
     if((!CurrStrLenBuff) || (!PrevStrLenAddr) || (!dis_comments)) {
-	err:
 	MemOutBox("Disassembler initialization");
 	::exit(EXIT_FAILURE);
     }
@@ -141,7 +140,7 @@ void DisMode::fill_prev_asm_page(__filesize_t bound,unsigned predist)
     __filesize_t distin,addr;
     unsigned j;
     unsigned totallen;
-    tAbsCoord height = twGetClientHeight(MainWnd);
+    tAbsCoord height = MainWnd->client_height();
     char addrdet;
     e_ref showref;
     if(!predist) predist = height*disMaxCodeLen;
@@ -177,7 +176,7 @@ void DisMode::fill_prev_asm_page(__filesize_t bound,unsigned predist)
 
 void DisMode::prepare_asm_lines(int keycode,__filesize_t cfpos)
 {
-    tAbsCoord height = twGetClientHeight(MainWnd);
+    tAbsCoord height = MainWnd->client_height();
     switch(keycode) {
 	case KE_DOWNARROW:
 		PrevStrLen = CurrStrLenBuff[0];
@@ -250,16 +249,16 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
     }
     prepare_asm_lines(keycode,cfpos);
     if(amocpos != cfpos || keycode == KE_SUPERKEY || keycode == KE_JUSTFIND) {
-	tAbsCoord height = twGetClientHeight(MainWnd);
-	tAbsCoord width = twGetClientWidth(MainWnd);
+	tAbsCoord height = MainWnd->client_height();
+	tAbsCoord width = MainWnd->client_width();
 	code_guider.reset_go_address(keycode);
 	I = 0;
-	twFreezeWin(MainWnd);
+	MainWnd->freeze();
 	if(keycode == KE_UPARROW) {
 	    dir = -1;
 	    Limit = -1;
 	    /* All checks we have done above */
-	    twScrollWinDn(MainWnd,1,1);
+	    MainWnd->scroll_down(1,1);
 	    ::memmove(&CurrStrLenBuff[1],CurrStrLenBuff,height-1);
 	} else {
 	    dir = 1;
@@ -268,17 +267,16 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 	if(keycode == KE_DOWNARROW) {
 	    if(CurrStrLenBuff[1]) {
 		I = height-1;
-		twScrollWinUp(MainWnd,I,1);
+		MainWnd->scroll_up(I,1);
 		::memmove(CurrStrLenBuff,&CurrStrLenBuff[1],I);
 		cfpos += Summ(CurrStrLenBuff,I);
 	    } else {
-		twRefreshWin(MainWnd);
+		MainWnd->refresh();
 		goto bye;
 	    }
 	}
 	if(cfpos > flen) cfpos = flen;
 	amocpos = cfpos;
-	twFocusWin(MainWnd);
 	for(i = I;i != Limit;i+=1*dir) {
 	    DisasmRet dret;
 	    ::memset(outstr,TWC_DEF_FILLER,__TVIO_MAXSCREENWIDTH);
@@ -290,19 +288,19 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 		dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
 		if(i == 0) CurrStrLen = dret.codelen;
 		CurrStrLenBuff[i] = dret.codelen;
-		twSetColorAttr(MainWnd,browser_cset.main);
+		MainWnd->set_color(browser_cset.main);
 		len_64=HA_LEN();
 		::memcpy(outstr,code_guider.encode_address(cfpos,hexAddressResolv),len_64);
 		len = 0;
 		if(disPanelMode < Panel_Full) {
 		    static char _clone;
 		    len = len_64;
-		    twDirectWrite(MainWnd,1,i + 1,outstr,len);
+		    MainWnd->direct_write(1,i + 1,outstr,len);
 		    if(!hexAddressResolv) {
-			twSetColorAttr(MainWnd,disasm_cset.family_id);
+			MainWnd->set_color(disasm_cset.family_id);
 			_clone = activeDisasm->CloneShortName(dret.pro_clone);
-			twDirectWrite(MainWnd,len_64,i + 1,&_clone,1);
-			twSetColorAttr(MainWnd,browser_cset.main);
+			MainWnd->direct_write(len_64,i + 1,&_clone,1);
+			MainWnd->set_color(browser_cset.main);
 		    }
 		}
 		if(disPanelMode < Panel_Medium) {
@@ -317,8 +315,8 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 			opc =	HiLight == 2 ? activeDisasm->altGetOpcodeColor(dret.pro_clone) :
 				HiLight == 1 ? activeDisasm->GetOpcodeColor(dret.pro_clone) : disasm_cset.opcodes;
 		    else	opc = disasm_cset.opcodes;
-		    twSetColorAttr(MainWnd,opc);
-		    twDirectWrite(MainWnd,disPanelMode < Panel_Full ? len_64+1 : 1,
+		    MainWnd->set_color(opc);
+		    MainWnd->direct_write(disPanelMode < Panel_Full ? len_64+1 : 1,
 				i + 1,
 				&outstr[len_64],
 				disPanelMode < Panel_Full ? len - (len_64+1) : len - 1);
@@ -327,12 +325,12 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 			HiLightSearch(MainWnd,cfpos,len_64,dret.codelen,i,&hli,HLS_USE_DOUBLE_WIDTH);
 		    }
 		}
-		twSetColorAttr(MainWnd,browser_cset.main);
-		twDirectWrite(MainWnd,len,i + 1," ",1);  len++;
+		MainWnd->set_color(browser_cset.main);
+		MainWnd->direct_write(len,i + 1," ",1);  len++;
 		cattr =	HiLight == 2 ?  activeDisasm->altGetInsnColor(dret.pro_clone) :
 			HiLight == 1 ?  activeDisasm->GetInsnColor(dret.pro_clone) :
 					browser_cset.main;
-		twSetColorAttr(MainWnd,cattr);
+		MainWnd->set_color(cattr);
 		j = strlen(dret.str);
 		/* Here adding commentaries */
 		savstring[0] = 0;
@@ -354,38 +352,38 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 			    dret.str[new_idx] = 0;
 			    j = ::strlen(dret.str);
 		    }
-		twDirectWrite(MainWnd,len,i+1,dret.str,j); len += j;
+		MainWnd->direct_write(len,i+1,dret.str,j); len += j;
 		if(dis_severity > DisMode::CommSev_None) {
-		    twSetColorAttr(MainWnd,disasm_cset.comments);
-		    twGotoXY(MainWnd,len,i+1);
-		    twPutS(MainWnd," ; "); len+=3;
+		    MainWnd->set_color(disasm_cset.comments);
+		    MainWnd->goto_xy(len,i+1);
+		    MainWnd->puts(" ; "); len+=3;
 		    j = orig_commpos-len;
 		    j = std::min(j,strlen(dis_comments));
-		    twDirectWrite(MainWnd,len,i+1,dis_comments,j);
+		    MainWnd->direct_write(len,i+1,dis_comments,j);
 		    len += j;
 		    if(savstring[0]) {
-			twGotoXY(MainWnd,len,i+1);
-			twClrEOL(MainWnd);
-			twSetColorAttr(MainWnd,cattr);
+			MainWnd->goto_xy(len,i+1);
+			MainWnd->clreol();
+			MainWnd->set_color(cattr);
 			len = orig_commoff + orig_commpos;
-			twDirectWrite(MainWnd,len,i+1,savstring,5);
+			MainWnd->direct_write(len,i+1,savstring,5);
 			len += 5;
 		    }
 		}
-		twSetColorAttr(MainWnd,browser_cset.main);
+		MainWnd->set_color(browser_cset.main);
 		if(len < width) {
-		    twGotoXY(MainWnd,len,i + 1);
-		    twClrEOL(MainWnd);
+		    MainWnd->goto_xy(len,i + 1);
+		    MainWnd->clreol();
 		}
 		cfpos += dret.codelen;
 		BMSeek(cfpos,BFile::Seek_Set);
 	    } else {
-		twDirectWrite(MainWnd,1,i + 1,outstr,width);
+		MainWnd->direct_write(1,i + 1,outstr,width);
 		CurrStrLenBuff[i] = 0;
 	    }
 	}
-	twRefreshWin(MainWnd);
-	twSetColorAttr(MainWnd,browser_cset.main);
+	MainWnd->refresh();
+	MainWnd->set_color(browser_cset.main);
 	lastbyte = TopCFPos + Summ(CurrStrLenBuff,height);
 	CurrPageSize = lastbyte-TopCFPos;
     }
@@ -410,8 +408,8 @@ void DisMode::misckey_action() /* disEdit */
     TWindow * ewnd;
     len_64=HA_LEN();
     if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,""); return; }
-    ewnd = WindowOpen(len_64+1,2,disMaxCodeLen*2+len_64+1,tvioHeight-1,TWS_CURSORABLE);
-    twSetColorAttr(ewnd,browser_cset.edit.main); twClearWin(ewnd);
+    ewnd = WindowOpen(len_64+1,2,disMaxCodeLen*2+len_64+1,tvioHeight-1,TWindow::TWC_CURSORABLE);
+    ewnd->set_color(browser_cset.edit.main); ewnd->clear();
     edit_x = edit_y = 0;
     EditMode = EditMode ? false : true;
     if(editInitBuffs(disMaxCodeLen,NULL,0)) {
@@ -516,47 +514,44 @@ void DisMode::disasm_screen(TWindow* ewnd,__filesize_t cp,__filesize_t flen,int 
 {
     int i,j,len,lim,len_64;
     char outstr[__TVIO_MAXSCREENWIDTH+1],outstr1[__TVIO_MAXSCREENWIDTH+1];
-    tAbsCoord width = twGetClientWidth(MainWnd);
+    tAbsCoord width = MainWnd->client_width();
     DisasmRet dret;
-    twFreezeWin(ewnd);
+    ewnd->freeze();
     for(i = st;i < stop;i++) {
 	if(start + cp < flen) {
 	    len_64=HA_LEN();
 	    ::memcpy(outstr,code_guider.encode_address(cp + start,hexAddressResolv),len_64);
-	    twFocusWin(MainWnd);
-	    twSetColorAttr(MainWnd,browser_cset.main);
-	    twDirectWrite(MainWnd,1,i + 1,outstr,len_64-1);
+	    MainWnd->set_color(browser_cset.main);
+	    MainWnd->direct_write(1,i + 1,outstr,len_64-1);
 	    dret = disassembler(cp + start,&EditorMem.buff[start],__DISF_NORMAL);
 	    EditorMem.alen[i] = dret.codelen;
 	    ::memset(outstr,TWC_DEF_FILLER,width);
 	    ::memset(outstr1,TWC_DEF_FILLER,width);
 	    len = 0; for(j = 0;j < EditorMem.alen[i];j++) { ::memcpy(&outstr1[len],Get2Digit(EditorMem.save[start + j]),2); len += 2; }
 	    len = 0; for(j = 0;j < EditorMem.alen[i];j++) { ::memcpy(&outstr[len],Get2Digit(EditorMem.buff[start + j]),2); len += 2; }
-	    twFocusWin(ewnd);
+	    ewnd->set_focus();
 	    len = disMaxCodeLen*2;
 	    for(j = 0;j < len;j++) {
-		twSetColorAttr(ewnd,outstr[j] == outstr1[j] ? browser_cset.edit.main : browser_cset.edit.change);
-		twDirectWrite(ewnd,j + 1,i + 1,&outstr[j],1);
+		ewnd->set_color(outstr[j] == outstr1[j] ? browser_cset.edit.main : browser_cset.edit.change);
+		ewnd->direct_write(j + 1,i + 1,&outstr[j],1);
 	    }
 	    len = ::strlen(dret.str);
 	    ::memset(outstr,TWC_DEF_FILLER,width);
 	    ::memcpy(outstr,dret.str,len);
-	    twFocusWin(MainWnd);
-	    twSetColorAttr(MainWnd,browser_cset.main);
+	    MainWnd->set_color(browser_cset.main);
 	    lim = disMaxCodeLen*2+len_64+1;
-	    twDirectWrite(MainWnd,lim+1,i + 1,outstr,width-lim);
+	    MainWnd->direct_write(lim+1,i + 1,outstr,width-lim);
 	    start += EditorMem.alen[i];
 	} else {
-	    twFocusWin(MainWnd);
-	    twGotoXY(MainWnd,1,i + 1);
-	    twClrEOL(MainWnd);
-	    twFocusWin(ewnd);
-	    twGotoXY(ewnd,1,i + 1);
-	    twClrEOL(ewnd);
+	    MainWnd->goto_xy(1,i + 1);
+	    MainWnd->clreol();
+	    ewnd->set_focus();
+	    ewnd->goto_xy(1,i + 1);
+	    ewnd->clreol();
 	    EditorMem.alen[i] = 0;
 	}
     }
-    twRefreshWin(ewnd);
+    ewnd->refresh();
 }
 
 int DisMode::full_asm_edit(TWindow * ewnd)
@@ -565,7 +560,7 @@ int DisMode::full_asm_edit(TWindow * ewnd)
     unsigned rlen,len,flg;
     __filesize_t flen;
     unsigned max_buff_size = disMaxCodeLen*tvioHeight;
-    tAbsCoord height = twGetClientHeight(MainWnd);
+    tAbsCoord height = MainWnd->client_height();
     bool redraw = false;
     char outstr[__TVIO_MAXSCREENWIDTH],owork[__TVIO_MAXSCREENWIDTH];
 
@@ -581,10 +576,10 @@ int DisMode::full_asm_edit(TWindow * ewnd)
     disasm_screen(ewnd,edit_cp,flen,0,height,start);
     PaintETitle(0,true);
     start = 0;
-    twShowWin(ewnd);
-    twSetCursorType(TW_CUR_NORM);
+    ewnd->show();
+    TWindow::set_cursor_type(TWindow::CUR_NORM);
     while(1) {
-	twFocusWin(ewnd);
+	ewnd->set_focus();
 
 	len = 0; for(j = 0;j < EditorMem.alen[edit_y];j++) { ::memcpy(&owork[len],Get2Digit(EditorMem.save[start + j]),2); len += 2; }
 	len = 0; for(j = 0;j < EditorMem.alen[edit_y];j++) { ::memcpy(&outstr[len],Get2Digit(EditorMem.buff[start + j]),2); len += 2; }
@@ -659,7 +654,7 @@ int DisMode::full_asm_edit(TWindow * ewnd)
 	start = edit_y ? Summ(EditorMem.alen,edit_y) : 0;
     }
     bye:
-    twSetCursorType(TW_CUR_OFF);
+    TWindow::set_cursor_type(TWindow::CUR_OFF);
     return _lastbyte;
 }
 

@@ -117,17 +117,17 @@ static int  __FASTCALL__ __GetEvent( void (*prompt)() ,TWindow *win)
 		    unsigned wdh,hght;
 		    if(win)
 		    {
-		      twGetWinPos(win,&X1,&Y1,&X2,&Y2);
+		      win->get_pos(&X1,&Y1,&X2,&Y2);
 		      X1--; Y1--; X2--; Y2--;
 		    }
 		    else
 		    {
-		      X1 = 0; X2 = twGetClientWidth(MainWnd); Y1 = 1; Y2 = twGetClientHeight(MainWnd) - 1;
+		      X1 = 0; X2 = MainWnd->client_width(); Y1 = 1; Y2 = MainWnd->client_height() - 1;
 		      TWindow* wnd=
 		        MainWnd ? MainWnd : /*XXX:drop this line? */
-		        twGetWinAtPos(mx,my);
+		        TWindow::at_pos(mx,my);
 		        if(!wnd) return KE_MOUSE;
-		        X1 = 0; X2 = twGetClientWidth(wnd); Y1 = 1; Y2 = twGetClientHeight(wnd) - 1;
+		        X1 = 0; X2 = wnd->client_width(); Y1 = 1; Y2 = wnd->client_height() - 1;
 		    }
 		    wdh = X2 - X1;
 		    hght = Y2 - Y1;

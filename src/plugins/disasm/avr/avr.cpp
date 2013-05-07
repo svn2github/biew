@@ -462,7 +462,6 @@ mem_off:
   title = msgAsmText;
 
   hwnd = CrtHlpWndnls(title, 72, 21);
-  twFocusWin(hwnd);
   for (i = 0; i < nstrs; i++)
   {
     unsigned rlen;
@@ -478,15 +477,15 @@ mem_off:
     rlen = strlen(strs[i]);
     rlen = bhelp.fill_buffer(&it, __TVIO_MAXSCREENWIDTH, strs[i], rlen, 0, NULL, 0);
 
-    twWriteBuffer(hwnd, 2, i + 2, &it, rlen);
+    hwnd->write(2, i + 2, &it, rlen);
   }
 
   delete msgAsmText;
-  twGotoXY(hwnd,5, 3);
+  hwnd->goto_xy(5, 3);
   for (i = 0; i < 10; i++)
   {
-    twSetColorAttr(hwnd,disasm_cset.cpu_cset[0].clone[i]);
-    twPutS(hwnd,AVRCoreNames[i]);
+    hwnd->set_color(disasm_cset.cpu_cset[0].clone[i]);
+    hwnd->puts(AVRCoreNames[i]);
   }
 
   do

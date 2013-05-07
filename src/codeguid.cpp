@@ -118,7 +118,7 @@ void CodeGuider::reset_go_address( int keycode )
 		char dig;
 		GoAddr[i].second=GoAddr[i].second-1;
 		dig = gidGetAddressKey(i);
-		twDirectWrite(MainWnd,twGetClientWidth(MainWnd)-1,GoAddr[i].second+2,&dig,1);
+		MainWnd->direct_write(MainWnd->client_width()-1,GoAddr[i].second+2,&dig,1);
 	    }
 	}
     } else if(keycode == KE_UPARROW) {
@@ -126,14 +126,14 @@ void CodeGuider::reset_go_address( int keycode )
 	Alarm = UCHAR_MAX;
 	if(sz) {
 	    for(i = 0;i < sz;i++) GoAddr[i].second=GoAddr[i].second+1;
-	    if(GoAddr.back().second >= twGetClientHeight(MainWnd)) GoAddr.pop_back();
+	    if(GoAddr.back().second >= MainWnd->client_height()) GoAddr.pop_back();
 	}
     } else GoAddr.clear();
 }
 
 void CodeGuider::add_go_address(const DisMode& parent,char *str,__filesize_t addr)
 {
-    tAbsCoord width = twGetClientWidth(MainWnd);
+    tAbsCoord width = MainWnd->client_width();
     unsigned bytecodes=beye_context().active_mode().get_max_symbol_size()*2;
     int len,where;
     if(parent.prepare_mode()) return;
@@ -153,7 +153,7 @@ void CodeGuider::add_go_address(const DisMode& parent,char *str,__filesize_t add
 	for(i = 1;i < sz;i++) {
 	    char dig;
 	    dig = gidGetAddressKey(i);
-	    twDirectWrite(MainWnd,width-1,GoAddr[i].second+1,&dig,1);
+	    MainWnd->direct_write(width-1,GoAddr[i].second+1,&dig,1);
 	}
     } else {
 	GoAddr.push_back(std::make_pair(addr,parent.get_curr_line_num()));

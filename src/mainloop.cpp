@@ -95,7 +95,7 @@ void __FASTCALL__ HiLightSearch(TWindow *out,__filesize_t cfp,tRelCoord minx,tRe
    attr = browser_cset.hlight;
    memset(&attrs[st],attr,end-st);
  }
- twWriteBuffer(out,minx + 1,y + 1,&it,width);
+ out->write(minx + 1,y + 1,&it,width);
 }
 
 static void  __FASTCALL__ drawTitle()
@@ -105,10 +105,9 @@ static void  __FASTCALL__ drawTitle()
   flen = BMGetFLength();
   percent = flen ? (unsigned)(( lastbyte*100 )/flen) : 100;
   if(percent > 100) percent = 100;
-  twFocusWin(TitleWnd);
-  twGotoXY(TitleWnd,twGetClientWidth(TitleWnd)-4,1);
-  twPrintF(TitleWnd,"%u%%",percent);
-  twClrEOL(TitleWnd);
+  TitleWnd->goto_xy(TitleWnd->client_width()-4,1);
+  TitleWnd->printf("%u%%",percent);
+  TitleWnd->clreol();
 }
 
 const char legalchars[] = "+-0123456789ABCDEFabcdef";
@@ -119,7 +118,6 @@ void BeyeContext::main_loop()
     __filesize_t savep = 0,cfp,nfp,flen;
     unsigned long lwidth;
     BMSeek(LastOffset,BFile::Seek_Set);
-    twFocusWin(MainWnd);
     drawPrompt();
     textshift = activeMode->paint(KE_SUPERKEY,textshift);
     BMSeek(LastOffset,BFile::Seek_Set);
@@ -288,14 +286,14 @@ void BeyeContext::main_loop()
 	    case KE_CTL_(O): /** User screen */
 		{
 		    unsigned evt;
-		    twHideWin(MainWnd);
-		    twHideWin(TitleWnd);
+		    MainWnd->hide();
+		    TitleWnd->hide();
 		    do {
 			evt = GetEvent(drawEmptyPrompt,NULL,NULL);
 		    }
 		    while(!(evt == KE_ESCAPE || evt == KE_F(10) || evt == KE_CTL_(O)));
-		    twShowWin(MainWnd);
-		    twShowWin(TitleWnd);
+		    MainWnd->show();
+		    TitleWnd->show();
 		}
 		continue;
 	}
@@ -311,7 +309,6 @@ void BeyeContext::main_loop()
 	    BMSeek(nfp,BFile::Seek_Set);
 	}
 	DRAW:
-	twFocusWin(MainWnd);
 	if((activeMode->flags() & Plugin::Text) != Plugin::Text) savep = BMGetCurrFilePos();
 	textshift = activeMode->paint(ch,textshift);
 	if((activeMode->flags() & Plugin::Text) != Plugin::Text) BMSeek(savep,BFile::Seek_Set);

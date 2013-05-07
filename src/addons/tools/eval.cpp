@@ -544,7 +544,7 @@ void Calculator_Addon::run()
   TWindow * wdlg,*ewnd;
   char estr[81];
   wdlg = CrtDlgWndnls(" Calculator ",78,7);
-  twGetWinPos(wdlg,&x1_,&y1_,&x2_,&y2_);
+  wdlg->get_pos(&x1_,&y1_,&x2_,&y2_);
   X1 = x1_;
   Y1 = y1_;
   X2 = x2_;
@@ -553,17 +553,16 @@ void Calculator_Addon::run()
   X2 -= 1;
   Y1 += 2;
   Y2 = Y1;
-  ewnd = WindowOpen(X1,Y1,X2,Y2,TWS_VISIBLE | TWS_CURSORABLE | TWS_NLSOEM);
-  twSetColorAttr(ewnd,dialog_cset.editor.active);
-  twFocusWin(wdlg);
-  twGotoXY(wdlg,2,1); twPutS(wdlg,"Input an integer expression :");
-  twinDrawFrameAttr(wdlg,1,3,78,7,TW_UP3D_FRAME,dialog_cset.main);
-  twGotoXY(wdlg,2,4); twPutS(wdlg,"Supported operators: + - * / ( ) % << >> & ^ | ~");
-  twGotoXY(wdlg,2,5); twPutS(wdlg,"Supported bases: 0x - hexadecimal, 0 - octal, 1b - binary, default - decimal");
-  twGotoXY(wdlg,2,6); twPutS(wdlg,"Result has the base of the first operand");
+  ewnd = WindowOpen(X1,Y1,X2,Y2,TWindow::TWC_VISIBLE | TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+  ewnd->set_color(dialog_cset.editor.active);
+  wdlg->goto_xy(2,1); wdlg->puts("Input an integer expression :");
+  wdlg->draw_frame(1,3,78,7,TWindow::UP3D_FRAME,dialog_cset.main);
+  wdlg->goto_xy(2,4); wdlg->puts("Supported operators: + - * / ( ) % << >> & ^ | ~");
+  wdlg->goto_xy(2,5); wdlg->puts("Supported bases: 0x - hexadecimal, 0 - octal, 1b - binary, default - decimal");
+  wdlg->goto_xy(2,6); wdlg->puts("Result has the base of the first operand");
   memset(estr,0,sizeof(estr));
-  twShowWin(ewnd);
-  twFocusWin(ewnd);
+  ewnd->show();
+  ewnd->set_focus();
   while(1)
   {
    ret = xeditstring(ewnd,estr,NULL,76,NULL);

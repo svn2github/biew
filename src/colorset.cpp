@@ -136,7 +136,7 @@ bool csetReadIniFile(const std::string& ini_name)
     sprintf(cval,"%i",named_color_def[i].color);
     cstr=cset.read("Color map","",named_color_def[i].name,cval);
     value = atoi(cstr.c_str());
-    twRemapColor(named_color_def[i].color,value);
+    TWindow::remap_color(named_color_def[i].color,value);
   }
   for(i = 0;i < 8;i++)
   {
@@ -147,7 +147,7 @@ bool csetReadIniFile(const std::string& ini_name)
       Color col;
       col = getColorByName(cstr,Black,&cur_err);
       if(cur_err) has_err = cur_err;
-      else __vioSetTransparentColor(twGetMappedColor(col));
+      else __vioSetTransparentColor(TWindow::get_mapped_color(col));
     }
   }
   has_err |= readColorPair(cset,"Browser","","Main",&browser_cset.main);

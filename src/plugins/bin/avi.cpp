@@ -155,9 +155,8 @@ static __filesize_t __FASTCALL__ Show_AVI_Header()
  fpos2 = avi_find_chunk(12,mmioFOURCC('m','o','v','i'));
  if((__fileoff_t)fpos2!=-1) fpos2-=4;
  hwnd = CrtDlgWndnls(" AVI File Header ",43,9);
- twFocusWin(hwnd);
- twGotoXY(hwnd,1,1);
- twPrintF(hwnd,
+ hwnd->goto_xy(1,1);
+ hwnd->printf(
 	  "MicroSecond per Frame= %lu\n"
 	  "Max bytes per second = %lu\n"
 	  "Padding granularity  = %lu\n"
@@ -213,9 +212,8 @@ static __filesize_t __FASTCALL__ Show_A_Header()
     bmReadBuffer(&wavf,sizeof(WAVEFORMATEX));
  }
  hwnd = CrtDlgWndnls(" Stream File Header ",43,18);
- twFocusWin(hwnd);
- twGotoXY(hwnd,1,1);
- twPrintF(hwnd,
+ hwnd->goto_xy(1,1);
+ hwnd->printf(
 	  "Stream type          = %c%c%c%c\n"
 	  "FOURCC handler       = %c%c%c%c(%08Xh)\n"
 	  "Flags                = %lu\n"
@@ -287,9 +285,8 @@ static __filesize_t __FASTCALL__ Show_V_Header()
     bmReadBuffer(&bmph,sizeof(BITMAPINFOHEADER));
  }
  hwnd = CrtDlgWndnls(" Stream File Header ",43,20);
- twFocusWin(hwnd);
- twGotoXY(hwnd,1,1);
- twPrintF(hwnd,
+ hwnd->goto_xy(1,1);
+ hwnd->printf(
 	  "Stream type          = %c%c%c%c\n"
 	  "FOURCC handler       = %c%c%c%c(%08Xh)\n"
 	  "Flags                = %lu\n"

@@ -141,9 +141,8 @@ static __filesize_t __FASTCALL__ ShowMZHeader()
  if(addinfo) keycode++;
  hwnd = CrtDlgWndnls(" Old Exe Header ",43,keycode-1);
  FPageCnt =  ((long)mz.mzPageCount - 1)*512;
- twFocusWin(hwnd);
- twGotoXY(hwnd,1,1);
- twPrintF(hwnd,
+ hwnd->goto_xy(1,1);
+ hwnd->printf(
 	  "Signature            = 'MZ'\n"
 	  "Part Last Page       = %hu [ bytes ]\n"
 	  "Page count           = %hu [ pages ]\n"
@@ -169,24 +168,24 @@ static __filesize_t __FASTCALL__ ShowMZHeader()
 	  ,mz.mzOverlayNumber);
  newcpos = HeadSize;
  newcpos += (((unsigned long)mz.mzRelocationCS) << 4) + (unsigned long)mz.mzExeIP;
- twSetColorAttr(hwnd,dialog_cset.entry);
- twPrintF(hwnd,">Entry Point         = %08lXH",newcpos); twClrEOL(hwnd);
- twSetColorAttr(hwnd,dialog_cset.addinfo);
- twPrintF(hwnd,"\nModule Length        = %lu [ bytes ]",(FPageCnt - HeadSize) + mz.mzPartLastPage);
- twClrEOL(hwnd);
- twSetColorAttr(hwnd,dialog_cset.main);
- twPrintF(hwnd,"\nImage offset         = %08lXH",(long)HeadSize);
+ hwnd->set_color(dialog_cset.entry);
+ hwnd->printf(">Entry Point         = %08lXH",newcpos); hwnd->clreol();
+ hwnd->set_color(dialog_cset.addinfo);
+ hwnd->printf("\nModule Length        = %lu [ bytes ]",(FPageCnt - HeadSize) + mz.mzPartLastPage);
+ hwnd->clreol();
+ hwnd->set_color(dialog_cset.main);
+ hwnd->printf("\nImage offset         = %08lXH",(long)HeadSize);
  if(beye_context().headshift)
  {
-   twSetColorAttr(hwnd,dialog_cset.altinfo);
-   twPrintF(hwnd,"\nNew EXE header shift = %08lXH",(long)beye_context().headshift);
-   twClrEOL(hwnd);
+   hwnd->set_color(dialog_cset.altinfo);
+   hwnd->printf("\nNew EXE header shift = %08lXH",(long)beye_context().headshift);
+   hwnd->clreol();
  }
  if(addinfo)
  {
-   twSetColorAttr(hwnd,dialog_cset.extrainfo);
-   twPrintF(hwnd,"\n%s",addinfo);
-   twClrEOL(hwnd);
+   hwnd->set_color(dialog_cset.extrainfo);
+   hwnd->printf("\n%s",addinfo);
+   hwnd->clreol();
  }
  while(1)
  {
@@ -215,13 +214,10 @@ static void  __FASTCALL__ BuildMZChain()
 {
   unsigned i;
   __filesize_t fpos;
-  TWindow * w,*usd;
-  usd = twFocusedWin();
+  TWindow * w;
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
-  twFocusWin(w);
-  twGotoXY(w,1,1);
-  twPutS(w,BUILD_REFS);
-  twFocusWin(usd);
+  w->goto_xy(1,1);
+  w->puts(BUILD_REFS);
   CurrMZCount = 0;
   fpos = bmGetCurrFilePos();
   for(i = 0;i < mz.mzRelocationCount;i++)

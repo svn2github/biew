@@ -42,45 +42,40 @@ unsigned char edit_XX = 0;
 
 void ExtHelp()
 {
- TWindow * _using = twFocusedWin();
- hlpDisplay(2);
- twFocusWin(_using);
+    hlpDisplay(2);
 }
 
 void __FASTCALL__ PaintETitle( int shift,bool use_shift )
 {
-  TWindow * _using = twFocusedWin();
   unsigned eidx;
   char byte,obyte;
-  twFocusWin(TitleWnd);
-  twFreezeWin(TitleWnd);
-  twGotoXY(TitleWnd,1,1);
-  twClrEOL(TitleWnd);
-  twPrintF(TitleWnd,"%08lX: ",edit_cp + shift);
+  TitleWnd->freeze();
+  TitleWnd->goto_xy(1,1);
+  TitleWnd->clreol();
+  TitleWnd->printf("%08lX: ",edit_cp + shift);
   eidx = use_shift ? (unsigned)shift : edit_y*EditorMem.width+edit_x;
   byte  = EditorMem.buff[eidx];
   obyte = EditorMem.save[eidx];
-  if(byte != obyte) twSetColorAttr(TitleWnd,title_cset.change);
-  twPrintF(TitleWnd,"%c %02XH %sH %sB "
+  if(byte != obyte) TitleWnd->set_color(title_cset.change);
+  TitleWnd->printf("%c %02XH %sH %sB "
 	   ,byte ? byte : ' '
 	   ,byte & 0x00FF
 	   ,Get2SignDig(byte)
 	   ,GetBinary(byte));
-  twSetColorAttr(TitleWnd,title_cset.main);
+  TitleWnd->set_color(title_cset.main);
   if(byte != obyte)
   {
-    twPrintF(TitleWnd,"ORIGINAL: %c %02XH %sH %sB "
+    TitleWnd->printf("ORIGINAL: %c %02XH %sH %sB "
 	     ,obyte ? obyte : ' '
 	     ,obyte & 0x00FF
 	     ,Get2SignDig(obyte)
 	     ,GetBinary(obyte));
   }
   else
-    twPrintF(TitleWnd,"                                ");
-  twPrintF(TitleWnd,"MASK: %sH"
+    TitleWnd->printf("                                ");
+  TitleWnd->printf("MASK: %sH"
 	   ,Get2Digit(edit_XX));
-  twRefreshWin(TitleWnd);
-  twFocusWin(_using);
+  TitleWnd->refresh();
 }
 
 bool __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size)
@@ -135,7 +130,7 @@ void __FASTCALL__ editDestroyBuffs()
 
 void __FASTCALL__ CheckBounds()
 {
-  tAbsCoord height = twGetClientHeight(MainWnd);
+  tAbsCoord height = MainWnd->client_height();
   if(edit_y < 0) edit_y = 0;
   if((unsigned)edit_y > height - 1) edit_y = height - 1;
   if(!EditorMem.alen[edit_y]) edit_y--;
@@ -144,7 +139,7 @@ void __FASTCALL__ CheckBounds()
 
 void __FASTCALL__ CheckYBounds()
 {
-  tAbsCoord height = twGetClientHeight(MainWnd);
+  tAbsCoord height = MainWnd->client_height();
   if(edit_y < 0) edit_y = 0;
   if((unsigned)edit_y > height - 1) edit_y = height - 1;
   while(!EditorMem.alen[edit_y]) edit_y--;
@@ -220,44 +215,44 @@ int __FASTCALL__ FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*sav
     unsigned mlen;
     unsigned int _lastbyte;
     unsigned flags;
-    tAbsCoord height = twGetClientHeight(MainWnd);
+    tAbsCoord height = MainWnd->client_height();
     bool redraw;
     char attr = __ESS_HARDEDIT | __ESS_WANTRETURN;
-    twSetColorAttr(ewnd,browser_cset.edit.main);
+    ewnd->set_color(browser_cset.edit.main);
     __MsSetState(false);
     for(i = 0;i < height;i++) {
 	for(j = 0;j < EditorMem.alen[i];j++) {
 	    unsigned eidx;
 	    eidx = i*EditorMem.width+j;
-	    twSetColorAttr(ewnd,EditorMem.buff[eidx] == EditorMem.save[eidx] ? browser_cset.edit.main : browser_cset.edit.change);
-	    twDirectWrite(ewnd,j + 1,i + 1,&EditorMem.buff[eidx],1);
+	    ewnd->set_color(EditorMem.buff[eidx] == EditorMem.save[eidx] ? browser_cset.edit.main : browser_cset.edit.change);
+	    ewnd->direct_write(j + 1,i + 1,&EditorMem.buff[eidx],1);
 	}
 	if((unsigned)EditorMem.alen[i] + 1 < EditorMem.width) {
-	    twGotoXY(ewnd,EditorMem.alen[i] + 1,i + 1); twClrEOL(MainWnd);
+	    ewnd->goto_xy(EditorMem.alen[i] + 1,i + 1); MainWnd->clreol();
 	}
     }
     __MsSetState(true);
     PaintETitle(edit_y*EditorMem.width + edit_x,0);
-    twSetCursorType(TW_CUR_NORM);
+    TWindow::set_cursor_type(TWindow::CUR_NORM);
     redraw = true;
     if(hexwnd) {
 	char work[__TVIO_MAXSCREENWIDTH];
 	int len;
-	twSetColorAttr(hexwnd,browser_cset.main);
-	twFreezeWin(hexwnd);
+	hexwnd->set_color(browser_cset.main);
+	hexwnd->freeze();
 	for(i = 0;i < height;i++) {
 	    mlen = EditorMem.alen[i];
 	    len = ExpandHex(work,&EditorMem.buff[i*EditorMem.width],mlen,2);
-	    twDirectWrite(hexwnd,11,i + 1,work,len);
+	    hexwnd->direct_write(11,i + 1,work,len);
 	    if((unsigned)EditorMem.alen[i] + 1 < EditorMem.width) {
-		twGotoXY(hexwnd,11+len,i + 1);
-		twClrEOL(hexwnd);
+		hexwnd->goto_xy(11+len,i + 1);
+		hexwnd->clreol();
 	    }
 	}
-	twRefreshWin(hexwnd);
+	hexwnd->refresh();
     }
-    twShowWin(ewnd);
-    twFocusWin(ewnd);
+    ewnd->show();
+    ewnd->set_focus();
     while(1) {
 	unsigned eidx;
 	eidx = edit_y*EditorMem.width;
@@ -280,13 +275,13 @@ int __FASTCALL__ FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*sav
 		char work[__TVIO_MAXSCREENWIDTH];
 		int len;
 		len = ExpandHex(work,&EditorMem.buff[edit_y*EditorMem.width],mlen,2);
-		twDirectWrite(hexwnd,11,edit_y + 1,work,len);
+		hexwnd->direct_write(11,edit_y + 1,work,len);
 	    }
 	}
 	PaintETitle(edit_y*EditorMem.width + edit_x,0);
     }
 bye:
-    twSetCursorType(TW_CUR_OFF);
+    TWindow::set_cursor_type(TWindow::CUR_OFF);
     return _lastbyte;
 }
 } // namespace beye

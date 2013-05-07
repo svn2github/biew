@@ -711,7 +711,7 @@ void TextMode::fill_prev_page(__filesize_t lval) const
     unsigned cp_symb_len;
     int i;
     cp_symb_len = activeNLS->get_symbol_size();
-    for(i = twGetClientHeight(MainWnd) - 1;i >= 0;i--) {
+    for(i = MainWnd->client_height() - 1;i >= 0;i--) {
 	ptlines[i].end = lval;
 	if(lval >= cp_symb_len) lval = back_scan_cr(lval - cp_symb_len);
 	ptlines[i].st = lval;
@@ -721,7 +721,7 @@ void TextMode::fill_prev_page(__filesize_t lval) const
 void TextMode::fill_curr_page(__filesize_t lval,__filesize_t flen) const
 {
     size_t i;
-    tAbsCoord height = twGetClientHeight(MainWnd);
+    tAbsCoord height = MainWnd->client_height();
     for(i = 0;i < height;i++) {
 	tlines[i].st = lval;
 	if(lval < flen) lval = forward_scan_cr(lval,flen);
@@ -731,7 +731,7 @@ void TextMode::fill_curr_page(__filesize_t lval,__filesize_t flen) const
 
 void TextMode::prepare_lines(int keycode)
 {
-    int size,size1,h,height = twGetClientHeight(MainWnd);
+    int size,size1,h,height = MainWnd->client_height();
     unsigned cp_symb_len;
     __filesize_t lval,flen,cp = BMGetCurrFilePos();
     cp_symb_len = activeNLS->get_symbol_size();
@@ -930,10 +930,10 @@ void TextMode::paint_search(HLInfo * cptr,unsigned int shift,int i,int size,int 
 
 static void  __FASTCALL__ drawBound(TWindow* w,int x,int y,char ch)
 {
-  twGotoXY(w,x,y);
-  twSetColorAttr(w,browser_cset.bound);
-  twPutChar(w,ch);
-  twSetColorAttr(w,browser_cset.main);
+  w->goto_xy(x,y);
+  w->set_color(browser_cset.bound);
+  w->putch(ch);
+  w->set_color(browser_cset.main);
 }
 
 TextMode::TextMode(CodeGuider& code_guider)
@@ -1000,7 +1000,7 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
     unsigned size,rsize,rshift;
     __filesize_t cpos;
     unsigned cp_symb_len,len,tmp,textmaxlen;
-    tAbsCoord height = twGetClientHeight(MainWnd);
+    tAbsCoord height = MainWnd->client_height();
     HLInfo hli;
     tvioBuff it;
     t_vchar chars[__TVIO_MAXSCREENWIDTH];
@@ -1051,7 +1051,7 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 	}
     }
     textmaxlen = maxstrlen - 2;
-    twFreezeWin(MainWnd);
+    MainWnd->freeze();
     for(i = 0;i < height;i++) {
 	len = (int)(tlines[i].end - tlines[i].st);
 	if(isHOnLine(tlines[i].st,len)) hilightline = i;
@@ -1072,22 +1072,22 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 		else                       hli.buff = it;
 		paint_search(&hli,shift,i,size,bin_mode == MOD_BINARY);
 	    } else {
-		if(bin_mode == MOD_BINARY) twDirectWrite(MainWnd,1,i+1,buff,size);
-		else                       twWriteBuffer(MainWnd,1,i + 1,&it,size);
+		if(bin_mode == MOD_BINARY) MainWnd->direct_write(1,i+1,buff,size);
+		else                       MainWnd->write(1,i + 1,&it,size);
 	    }
 	    if(rsize < tvioWidth) {
-		twGotoXY(MainWnd,1 + rsize,i + 1);
-		twClrEOL(MainWnd);
+		MainWnd->goto_xy(1 + rsize,i + 1);
+		MainWnd->clreol();
 	    } else if(rsize > tvioWidth) drawBound(MainWnd,tvioWidth,i + 1,TWC_RT_ARROW);
 	} else {
-	    twGotoXY(MainWnd,1,i + 1);
-	    twClrEOL(MainWnd);
+	    MainWnd->goto_xy(1,i + 1);
+	    MainWnd->clreol();
 	}
 	if(shift) drawBound(MainWnd,1,i + 1,TWC_LT_ARROW);
 	lastbyte = tlines[i].st;
 	lastbyte += bin_mode == MOD_BINARY ? shift + size : rshift + len;
     }
-    twRefreshWin(MainWnd);
+    MainWnd->refresh();
     tmp = textmaxlen - tvioWidth + 2;
     if(shift > tmp) shift = tmp;
     if(!tlines[1].st) tlines[1].st = tlines[0].end;

@@ -50,47 +50,46 @@ void ConsoleInfo_Addon::run()
   unsigned evt;
   int i,j,len;
   unsigned char str[80];
-  twFocusWin(hwnd);
-  twFreezeWin(hwnd);
+  hwnd->freeze();
   strcpy((char *)str,"°³ 0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F ³Name");
   len = strlen((char *)str);
-  twGotoXY(hwnd,1,1);
-  twPrintF(hwnd,
+  hwnd->goto_xy(1,1);
+  hwnd->printf(
 	   "Console: %ux%ux%u\n"
 	   "Skin:    %s"
 	   ,tvioWidth
 	   ,tvioHeight
 	   ,tvioNumColors
 	   ,beye_context().scheme_name.c_str());
-  twDirectWrite(hwnd,1,3,str,len);
+  hwnd->direct_write(1,3,str,len);
   str[0] = TWC_SH;
-  for(i = 0;i < 63;i++)  twDirectWrite(hwnd,i+1,4,str,1);
+  for(i = 0;i < 63;i++)  hwnd->direct_write(i+1,4,str,1);
   str[1] = TWC_SV;
-  for(i = 0;i < 16;i++) { str[0] = i < 0x0A ? i + '0' : i - 0x0A + 'A'; twDirectWrite(hwnd,1,i+5,str,2); }
+  for(i = 0;i < 16;i++) { str[0] = i < 0x0A ? i + '0' : i - 0x0A + 'A'; hwnd->direct_write(1,i+5,str,2); }
   str[0] = TWC_SH_SV;
-  twDirectWrite(hwnd,2,4,str,1);
+  hwnd->direct_write(2,4,str,1);
   for(i = 0;i < 16;i++)
   {
     for(j = 0;j < 16;j++)
     {
-       twSetColor(hwnd,Color(i),Color(j));
+       hwnd->set_color(Color(i),Color(j));
        str[0] = ' '; str[1] = '*'; str[2] = ' ';
-       twDirectWrite(hwnd,j*3+3,i+5,str,3);
+       hwnd->direct_write(j*3+3,i+5,str,3);
     }
   }
-  twSetColorAttr(hwnd,dialog_cset.main);
+  hwnd->set_color(dialog_cset.main);
   str[0] = TWC_SH;
-  for(i = 0;i < 63;i++) twDirectWrite(hwnd,i+1,21,str,1);
+  for(i = 0;i < 63;i++) hwnd->direct_write(i+1,21,str,1);
   str[0] = TWC_SH_Su;
-  twDirectWrite(hwnd,2,21,str,1);
+  hwnd->direct_write(2,21,str,1);
   str[0] = TWC_SV;
-  for(i = 0;i < 16;i++) twDirectWrite(hwnd,51,i+5,str,1);
+  for(i = 0;i < 16;i++) hwnd->direct_write(51,i+5,str,1);
   str[0] = TWC_SH_SV;
-  twDirectWrite(hwnd,51,4,str,1);
+  hwnd->direct_write(51,4,str,1);
   str[0] = TWC_SH_Su;
-  twDirectWrite(hwnd,51,21,str,1);
-  for(i = 0;i < 16;i++) { twGotoXY(hwnd,52,i+5); twPutS(hwnd,named_color_def[i].name); }
-  twRefreshWin(hwnd);
+  hwnd->direct_write(51,21,str,1);
+  for(i = 0;i < 16;i++) { hwnd->goto_xy(52,i+5); hwnd->puts(named_color_def[i].name); }
+  hwnd->refresh();
   do
   {
     evt = GetEvent(drawEmptyPrompt,NULL,hwnd);

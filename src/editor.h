@@ -19,8 +19,8 @@
 
 #include "libbeye/libbeye.h"
 
-struct TWindow;
 namespace beye {
+    class TWindow;
     struct tag_emem {
 	unsigned char *buff;
 	unsigned char *save;
