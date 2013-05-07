@@ -76,16 +76,13 @@ namespace beye {
 	    virtual bool		write(const any_t* buffer,unsigned cbBuffer);
 	    virtual bool		dup(BBio_File&) const;
 	    virtual BFile*		dup() const;
-	    virtual any_t*		buffer() const;
-	    virtual unsigned		bufflen() const;
-	    virtual unsigned		buffpos() const;
     private:
 	    /** Virtual file buffer structure */
 	    struct b_cache {
 		b_cache(unsigned size):buffer(new char[size]) {}
 		~b_cache() {}
 		__filesize_t	f_start; /**< logical position of mirror the buffer onto file */
-		char*		buffer;  /**< NULL - not buffered i/o */
+		LocalPtr<char>	buffer;  /**< NULL - is illegal case */
 		unsigned	buflen;  /**< length data, actually contains in buffer */
 		unsigned	bufsize; /**< real size of buffer */
 		bool		updated; /**< true if buffer contains data, that not pesent in file */

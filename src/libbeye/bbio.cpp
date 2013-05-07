@@ -51,7 +51,8 @@ BBio_File::~BBio_File() { if(!filename().empty()) close(); }
 
 bool BBio_File::__fill(__fileoff_t pos)
 {
-    any_t* mbuff;
+    char& ptr = *vfb.buffer;
+    any_t* mbuff = &ptr;
     __filesize_t remaind;
     bool ret;
     if(pos < 0) pos = 0;
@@ -63,7 +64,6 @@ bool BBio_File::__fill(__fileoff_t pos)
 	vfb.f_start = pos;
 	remaind = _flength - pos;
 	vfb.buflen = (__filesize_t)vfb.bufsize < remaind ? vfb.bufsize : (unsigned)remaind;
-	mbuff = vfb.buffer;
 	BFile::seek(pos,Seek_Set);
 	ret = (unsigned)BFile::read(mbuff,vfb.buflen) == vfb.buflen;
     }
@@ -72,11 +72,11 @@ bool BBio_File::__fill(__fileoff_t pos)
 
 bool BBio_File::__flush()
 {
-    any_t* mbuff;
+    char& ptr = *vfb.buffer;
+    any_t* mbuff = &ptr;
     bool ret;
     ret = true;
     if(!vfb.updated) {
-	mbuff = vfb.buffer;
 	BFile::seek(vfb.f_start,Seek_Set);
 	if(vfb.buflen)	ret = (unsigned)BFile::write(mbuff,vfb.buflen) == vfb.buflen;
 	if(ret)		vfb.updated = true;
@@ -116,7 +116,8 @@ bool BBio_File::__seek(__fileoff_t pos,e_seek origin)
 
 unsigned char BBio_File::__getc()
 {
-    char* buff = vfb.buffer;
+    char& ptr = *vfb.buffer;
+    char* buff = &ptr;
     unsigned _buffpos;
     bool ret;
     unsigned char ch;
@@ -141,12 +142,13 @@ unsigned char BBio_File::__getc()
 
 bool BBio_File::__putc(unsigned char ch)
 {
-    char *  buff;
+    char* buff;
     unsigned _buffpos;
     bool ret;
     if(is_writeable(openmode)) {
 	ret = true;
-	buff = vfb.buffer;
+	char& ptr = *vfb.buffer;
+	buff = &ptr;
 	if(__isOutOfBuffer(filepos)) __seek(filepos,Seek_Set);
 	_buffpos = (unsigned)(filepos - vfb.f_start);
 	buff[_buffpos++] = ch;
@@ -208,7 +210,9 @@ bool BBio_File::__getbuff(char* buff,unsigned cbBuff)
 	    break;
 	}
 	diffsize = std::min(MBufRem,cbBuff);
-	::memcpy(buff,&vfb.buffer[MBufStart],diffsize);
+	char& ptr = *vfb.buffer;
+	char* pptr = &ptr;
+	::memcpy(buff,&pptr[MBufStart],diffsize);
 	filepos += diffsize;
 	if(filepos > _flength) filepos = _flength;
 	cbBuff -= diffsize;
@@ -242,7 +246,9 @@ bool BBio_File::__putbuff(const char* buff,unsigned cbBuff)
 		break;
 	    }
 	    diffsize = std::min(MBufRem,cbBuff);
-	    ::memcpy(&vfb.buffer[MBufStart],buff,diffsize);
+	    char& ptr = *vfb.buffer;
+	    char* pptr = &ptr;
+	    ::memcpy(&pptr[MBufStart],buff,diffsize);
 	    vfb.updated = false;
 	    if(vfb.buflen < MBufStart + diffsize) vfb.buflen = MBufStart + diffsize;
 	    if(_flength < filepos + diffsize) _flength = filepos + diffsize;
@@ -260,7 +266,7 @@ bool BBio_File::open(const std::string& _fname,unsigned _openmode)
     openmode = _openmode;
 
     if(!BFile::open(_fname,openmode)) return false;
-    if(vfb.buffer) __fill(0L);
+    __fill(0L);
     is_eof=false;
     return true;
 }
@@ -272,7 +278,6 @@ bool BBio_File::close()
 	/* For compatibility with DOS-32: don't try to close stderr */
 	BFile::close();
     }
-    if(vfb.buffer) delete vfb.buffer;
     return true;
 }
 
@@ -386,21 +391,6 @@ unsigned BBio_File::get_optimization() const
     return optimize;
 }
 
-any_t* BBio_File::buffer() const
-{
-    return vfb.buffer;
-}
-
-unsigned BBio_File::bufflen() const
-{
-    return vfb.buflen;
-}
-
-unsigned BBio_File::buffpos() const
-{
-    return vfb.buflen - (unsigned)(filepos - vfb.f_start);
-}
-
 bool BBio_File::dup(BBio_File& it) const
 {
     bool rc = BFile::dup(it);
@@ -409,12 +399,13 @@ bool BBio_File::dup(BBio_File& it) const
     it.is_eof = is_eof;
     it.vfb.updated  = vfb.updated;
     it._flength  = _flength;
-    it.vfb.buffer = new char [vfb.bufsize];
     it.vfb.buflen = std::min(vfb.bufsize,vfb.buflen);
     it.vfb.bufsize = vfb.bufsize;
     it.filepos = std::min(filepos,vfb.f_start+(vfb.bufsize/2));
     it.vfb.f_start = vfb.f_start;
-    ::memcpy(it.vfb.buffer,vfb.buffer,it.vfb.buflen);
+    char& ptr = *it.vfb.buffer;
+    const char& sptr = *vfb.buffer;
+    ::memcpy(&ptr,&sptr,it.vfb.buflen);
     return rc;
 }
 
