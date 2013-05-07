@@ -27,9 +27,9 @@ namespace beye {
     extern TWindow *MainWnd,*HelpWnd,*TitleWnd,*CritErrWnd;
 
     void         __FASTCALL__ initBConsole( unsigned long vio_flg,unsigned long twin_flg );
-    void         __FASTCALL__ termBConsole( void );
-    bool        __FASTCALL__ IsKbdTerminate( void );
-    void         __FASTCALL__ CleanKbdTermSig( void );
+    void         __FASTCALL__ termBConsole();
+    bool        __FASTCALL__ IsKbdTerminate();
+    void         __FASTCALL__ CleanKbdTermSig();
 
     typedef void (__FASTCALL__ * pagefunc)(TWindow *win,const any_t**__obj,unsigned i__obj,unsigned total_obj);
 
@@ -80,9 +80,9 @@ enum {
     int         __FASTCALL__ eeditstring(TWindow* w,char *s,const char *legal,
 					unsigned *maxlength, unsigned y,
 					unsigned *stx,unsigned attr,char *undo,
-					void (*func)(void));
+					void (*func)());
     int          __FASTCALL__ xeditstring(TWindow* w,char *s,const char *legal,
-					unsigned maxlength, void(*func)(void));
+					unsigned maxlength, void(*func)());
     void         __FASTCALL__ ErrMessageBox(const std::string& text,const std::string& title);
     void         __FASTCALL__ WarnMessageBox(const std::string& text,const std::string& title);
     void         __FASTCALL__ errnoMessageBox(const std::string& text,const std::string& title,int __errno__);
@@ -92,7 +92,7 @@ enum {
     int          __FASTCALL__ PageBox(unsigned width,unsigned height,const any_t** __obj,
 				 unsigned nobj,pagefunc func);
     void         __FASTCALL__ MemOutBox(const std::string& user_msg);
-    TWindow *    __FASTCALL__ PleaseWaitWnd( void );
+    TWindow *    __FASTCALL__ PleaseWaitWnd();
 
     bool        __FASTCALL__ Get2DigitDlg(const std::string& title,const std::string& text,unsigned char *xx);
     bool        __FASTCALL__ Get16DigitDlg(const std::string& title,const std::string& text,char attr,
@@ -151,7 +151,7 @@ enum {
 				     false -  if user want terminate process */
     bool        __FASTCALL__ ShowPercentInWnd(TWindow *prcntwnd,unsigned n);
 
-    int          __FASTCALL__ GetEvent(void (*)(void),int (*)(void),TWindow *);
+    int          __FASTCALL__ GetEvent(void (*)(),int (*)(),TWindow *);
     void         __FASTCALL__ PostEvent(int kbdcode);
 
     bool __FASTCALL__ _lb_searchtext(const char* str,const char *tmpl,

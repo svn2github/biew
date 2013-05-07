@@ -92,7 +92,7 @@ inline uint32_t JVM_DWORD(const uint32_t* cval,bool is_msbf) { return FMT_DWORD(
 inline uint64_t JVM_QWORD(const uint64_t* cval,bool is_msbf) { return FMT_DWORD(cval,is_msbf); }
 
 
-static bool  __FASTCALL__ jvm_check_fmt( void )
+static bool  __FASTCALL__ jvm_check_fmt()
 {
   unsigned char id[4];
   bmReadBufferEx(id,sizeof(id),0,BFile::Seek_Set);
@@ -237,7 +237,7 @@ static unsigned __FASTCALL__ jvm_get_num_interfaces(BFile& handle)
 }
 
 
-static __filesize_t __FASTCALL__ ShowInterfaces(void)
+static __filesize_t __FASTCALL__ ShowInterfaces()
 {
   __filesize_t fpos;
   fpos = BMGetCurrFilePos();
@@ -301,7 +301,7 @@ static __filesize_t  __FASTCALL__ __ShowAttributes(const std::string& title)
   return fpos;
 }
 
-static __filesize_t __FASTCALL__ ShowAttributes(void)
+static __filesize_t __FASTCALL__ ShowAttributes()
 {
     return __ShowAttributes(" length   attributes ");
 }
@@ -337,7 +337,7 @@ static unsigned __FASTCALL__ jvm_get_num_methods(BFile& handle)
     return jvm_header.methods_count;
 }
 
-static __filesize_t __FASTCALL__ ShowMethods(void)
+static __filesize_t __FASTCALL__ ShowMethods()
 {
   __filesize_t fpos;
   int ret;
@@ -411,7 +411,7 @@ static unsigned __FASTCALL__ jvm_get_num_fields(BFile& handle)
     return jvm_header.fields_count;
 }
 
-static __filesize_t __FASTCALL__ ShowFields(void)
+static __filesize_t __FASTCALL__ ShowFields()
 {
   __filesize_t fpos;
   int ret;
@@ -537,7 +537,7 @@ static unsigned __FASTCALL__ jvm_get_num_pools(BFile& handle)
     return jvm_header.constant_pool_count;
 }
 
-static __filesize_t __FASTCALL__ ShowPool(void)
+static __filesize_t __FASTCALL__ ShowPool()
 {
   __filesize_t fpos;
   fpos = BMGetCurrFilePos();
@@ -597,14 +597,14 @@ static void __FASTCALL__ jvm_init_fmt(CodeGuider& code_guider)
     if((pool_cache = bh.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) pool_cache = &bh;
 }
 
-static void __FASTCALL__ jvm_destroy_fmt(void)
+static void __FASTCALL__ jvm_destroy_fmt()
 {
   BFile& bh=bmbioHandle();
   if(jvm_cache != &bNull && jvm_cache != &bh) delete jvm_cache;
   if(pool_cache != &bNull && pool_cache != &bh) delete pool_cache;
 }
 
-static int  __FASTCALL__ jvm_platform( void) { return DISASM_JAVA; }
+static int  __FASTCALL__ jvm_platform() { return DISASM_JAVA; }
 
 static void  __FASTCALL__ decode_acc_flags(unsigned flags, char *str)
 {
@@ -616,7 +616,7 @@ static void  __FASTCALL__ decode_acc_flags(unsigned flags, char *str)
     strcat(str," ");
 }
 
-static __filesize_t __FASTCALL__ ShowJvmHeader( void )
+static __filesize_t __FASTCALL__ ShowJvmHeader()
 {
     __filesize_t entry;
     TWindow * hwnd;

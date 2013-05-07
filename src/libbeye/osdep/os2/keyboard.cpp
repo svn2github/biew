@@ -37,7 +37,7 @@ void __FASTCALL__ __init_keyboard( const char *user_cp )
    }
 }
 
-void __FASTCALL__ __term_keyboard( void )
+void __FASTCALL__ __term_keyboard()
 {
   KbdFreeFocus(kbdHandle);
   KbdClose(kbdHandle);
@@ -126,7 +126,7 @@ int __FASTCALL__ __kbdTestKey( unsigned long flg )
   return __test_key(flg,0);
 }
 
-int __FASTCALL__ __kbdGetShiftsKey( void )
+int __FASTCALL__ __kbdGetShiftsKey()
 {
 	USHORT retval = 0;
 	USHORT save;

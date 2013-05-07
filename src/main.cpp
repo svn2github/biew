@@ -261,7 +261,7 @@ void BeyeContext::PaintTitle() const
  twRefreshWin(TitleWnd);
 }
 
-static void MyAtExit( void )
+static void MyAtExit()
 {
   if(MainWnd) CloseWnd(MainWnd);
   if(HelpWnd) CloseWnd(HelpWnd);

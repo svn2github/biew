@@ -40,7 +40,7 @@ namespace beye {
     void               FFreeArr(any_t**arr,unsigned n);
     void               CriticalExit(int code);
 
-    bool               FileUtils( void );
+    bool               FileUtils();
 
     char * __FASTCALL__ Get2Digit(uint8_t);
     char * __FASTCALL__ Get2SignDig(int8_t);
@@ -55,21 +55,21 @@ namespace beye {
     void     __FASTCALL__ CompressHex(unsigned char * dest,const char * src,unsigned sizedest,bool usespace);
     unsigned __FASTCALL__ Summ(unsigned char *array,unsigned size);
 
-    void   ExtHelp(void);
-    void   drawEditPrompt( void );
-    void   drawEmptyPrompt( void );
-    void   drawEmptyListPrompt( void );
-    void   drawAsmEdPrompt( void );
-    int    EditAsmActionFromMenu( void );
-    void   drawListPrompt( void );
-    void   drawOrdListPrompt( void );
-    void   drawSearchListPrompt( void );
-    void   drawHelpPrompt( void );
-    int    HelpActionFromMenu( void );
-    void   drawHelpListPrompt( void );
-    void   drawPrompt( void );
-    int    MainActionFromMenu(void);
-    void   About( void );
+    void   ExtHelp();
+    void   drawEditPrompt();
+    void   drawEmptyPrompt();
+    void   drawEmptyListPrompt();
+    void   drawAsmEdPrompt();
+    int    EditAsmActionFromMenu();
+    void   drawListPrompt();
+    void   drawOrdListPrompt();
+    void   drawSearchListPrompt();
+    void   drawHelpPrompt();
+    int    HelpActionFromMenu();
+    void   drawHelpListPrompt();
+    void   drawPrompt();
+    int    MainActionFromMenu();
+    void   About();
 
     __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos);
 
@@ -86,7 +86,7 @@ namespace beye {
 				       int mode,char codelen,
 				       __filesize_t r_shift);
 
-    void  ShowSysInfo( void );
+    void  ShowSysInfo();
 
     int  __FASTCALL__ isHOnLine(__filesize_t cp,int width);
     enum {

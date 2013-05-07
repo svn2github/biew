@@ -61,7 +61,7 @@ bool __FASTCALL__ twcRegisterClass(const std::string& name, unsigned flags, twCl
 					      DeregisterClass function from
 					      safety reasons.
 		    **/
-void __FASTCALL__ twcDestroyClassSet(void);
+void __FASTCALL__ twcDestroyClassSet();
 
 		   /** Finds class descriptor
 		     * @return                pointer to class descriptor or

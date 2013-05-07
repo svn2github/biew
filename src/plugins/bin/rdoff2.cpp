@@ -29,7 +29,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 namespace beye {
-static __filesize_t __FASTCALL__ rdoff2_ShowHeader( void )
+static __filesize_t __FASTCALL__ rdoff2_ShowHeader()
 {
   int endian;
   __filesize_t fpos;
@@ -67,13 +67,13 @@ static __filesize_t __FASTCALL__ rdoff2_ShowHeader( void )
   return fpos;
 }
 
-static __filesize_t __FASTCALL__ rdoff2_Help( void )
+static __filesize_t __FASTCALL__ rdoff2_Help()
 {
   hlpDisplay(10012);
   return BMGetCurrFilePos();
 }
 
-static bool __FASTCALL__ rdoff2_check_fmt( void )
+static bool __FASTCALL__ rdoff2_check_fmt()
 {
   char rbuff[6];
   bmReadBufferEx(rbuff,sizeof(rbuff),0L,BFile::Seek_Set);
@@ -82,9 +82,9 @@ static bool __FASTCALL__ rdoff2_check_fmt( void )
 }
 
 static void __FASTCALL__ rdoff2_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ rdoff2_destroy_fmt( void ) {}
+static void __FASTCALL__ rdoff2_destroy_fmt() {}
 
-static int __FASTCALL__ rdoff2_platform( void ) { return DISASM_CPU_IX86; }
+static int __FASTCALL__ rdoff2_platform() { return DISASM_CPU_IX86; }
 
 extern const REGISTRY_BIN rdoff2Table =
 {

@@ -47,7 +47,7 @@ int		match_position, match_length,  /** of longest match.  These are
 					  parents -- These constitute binary search trees. */
 BFile*	infile, *outfile;  /** input & output files */
 #ifdef INTERACTIVE
-static void InitTree(void)  /** initialize trees */
+static void InitTree()  /** initialize trees */
 {
 	int  i;
 
@@ -120,7 +120,7 @@ static void DeleteNode(int p)
 	dad[p] = NIL;
 }
 
-static int Encode(void)
+static int Encode()
 {
 	int  i, c, len, r, s, last_match_length, code_buf_ptr,reach_eof;
 #ifdef INTERACTIVE

@@ -246,7 +246,7 @@ enum {
     DISASM_DEFAULT	=0  /**< indicates unspecified disassembler: format default */
 };
 
-typedef bool (__FASTCALL__ *DisasmAction)( void );
+typedef bool (__FASTCALL__ *DisasmAction)();
 
 enum {
     ASM_NOERR  =0,
@@ -294,16 +294,16 @@ struct REGISTRY_DISASM
   DisasmAction action[4];	/**< actions on Ctrl-(F1,F3-F5) */
   DisasmFunc   disasm;		/**< main function of disasm */
   AsmFunc      asm_f;		/**< assembler (vice versa of disasm) */
-  void         (__FASTCALL__ *ShowShortHelp)(void); /**< displays short help */
-  int          (__FASTCALL__ *max_insn_len)(void); /**< Max length of 1 disasm instruction */
+  void         (__FASTCALL__ *ShowShortHelp)(); /**< displays short help */
+  int          (__FASTCALL__ *max_insn_len)(); /**< Max length of 1 disasm instruction */
   ColorAttr    (__FASTCALL__ *GetInsnColor)(unsigned long clone); /**< returns color of instruction */
   ColorAttr    (__FASTCALL__ *GetOpcodeColor)(unsigned long clone); /**< returns color of instruction */
   ColorAttr    (__FASTCALL__ *altGetInsnColor)(unsigned long clone); /**< returns color of instruction in alternative mode */
   ColorAttr    (__FASTCALL__ *altGetOpcodeColor)(unsigned long clone); /**< returns color of instruction in alternative mode */
-  int          (__FASTCALL__ *GetDefBitness)(void);               /**< returns currently used bitness */
+  int          (__FASTCALL__ *GetDefBitness)();               /**< returns currently used bitness */
   char         (__FASTCALL__ *CloneShortName)(unsigned long clone); /**< returns short clone name of instruction */
   void         (__FASTCALL__ *init)(DisMode& parent);     /**< initializing of plugin */
-  void         (__FASTCALL__ *term)(void);     /**< terminating of plugin */
+  void         (__FASTCALL__ *term)();     /**< terminating of plugin */
   void         (__FASTCALL__ *read_ini)(Ini_Profile& );  /**< reads settings of plugin from .ini file */
   void         (__FASTCALL__ *save_ini)(Ini_Profile& );  /**< stores settings of plugin into .ini file */
 };

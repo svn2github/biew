@@ -76,7 +76,7 @@ void __FASTCALL__ _putbuf(char **p,char *str)
 	(*p)+=strlen(str);
 }
 
-int __FASTCALL__ __vioGetCursorType(void)
+int __FASTCALL__ __vioGetCursorType()
 {
 	return cursor_status;
 }
@@ -327,7 +327,7 @@ int (*p_PhInputGroup)(PhEvent_t const*);
 int (*p_PhQueryCursor)(unsigned short,PhCursorInfo_t*);
 #define so_PhQueryCursor(a,b) (*p_PhQueryCursor)(a,b)
 
-int init_libph_so(void)
+int init_libph_so()
 {
 	ph_ig=0;
 	so_handle=dlopen("libph.so",RTLD_NOW);
@@ -346,7 +346,7 @@ int init_libph_so(void)
 	return 0;
 }
 
-void done_libph_so(void)
+void done_libph_so()
 {
 	if(so_handle!=NULL) dlclose(so_handle);
 	so_handle=NULL;
@@ -447,7 +447,7 @@ void __FASTCALL__ __init_vio(const char *user_cp,unsigned long flags)
 	initialized=1;
 }
 
-void __FASTCALL__ __term_vio(void)
+void __FASTCALL__ __term_vio()
 {
 	if(!initialized) return;
 	done_libph_so();

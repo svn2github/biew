@@ -181,7 +181,7 @@ static linearArray *udn_list=NULL;
 static bool udn_modified=false;
 static std::string udn_fname;
 
-static bool __FASTCALL__ udnAddItem( void ) {
+static bool __FASTCALL__ udnAddItem() {
     __filesize_t off;
     udn item,*prev;
     char ud_name[256],prompt[256];
@@ -232,7 +232,7 @@ static bool    __FASTCALL__ udnReadItems(BFile& handle,memArray * names,unsigned
     return true;
 }
 
-static bool __FASTCALL__ udnDeleteItem( void ) {
+static bool __FASTCALL__ udnDeleteItem() {
   int rval=-1;
   if(udn_list) {
     rval = fmtShowList(udnGetNumItems,udnReadItems,
@@ -276,7 +276,7 @@ bool __FASTCALL__ udnFindName(__filesize_t pa,char *buff, unsigned cb_buff) {
     return false;
 }
 
-bool __FASTCALL__ __udnSaveList( void )
+bool __FASTCALL__ __udnSaveList()
 {
     unsigned i;
     if(udn_list) {
@@ -305,7 +305,7 @@ bool __FASTCALL__ __udnSaveList( void )
 }
 
 
-bool __FASTCALL__ udnSaveList( void ) {
+bool __FASTCALL__ udnSaveList() {
     char tmps[4096];
     if(GetStringDlg(tmps," Please enter file name: "," [ENTER] - Proceed ",NAME_MSG))
     {
@@ -316,7 +316,7 @@ bool __FASTCALL__ udnSaveList( void ) {
     return false;
 }
 
-bool __FASTCALL__  __udnLoadList( void ) {
+bool __FASTCALL__  __udnLoadList() {
     unsigned i;
     udn item;
     FILE *in;
@@ -360,7 +360,7 @@ bool __FASTCALL__  __udnLoadList( void ) {
     return false;
 }
 
-bool __FASTCALL__ udnLoadList( void ) {
+bool __FASTCALL__ udnLoadList() {
     char tmps[4096];
     if(GetStringDlg(tmps," Please enter file name: "," [ENTER] - Proceed ",NAME_MSG))
     {
@@ -378,7 +378,7 @@ static const char *udn_operations[] =
     "~Load list from file",
     "~Save list to file"
 };
-typedef bool (__FASTCALL__ *udnFunc)( void );
+typedef bool (__FASTCALL__ *udnFunc)();
 
 static udnFunc udn_funcs[] =
 {
@@ -388,7 +388,7 @@ static udnFunc udn_funcs[] =
     udnSaveList
 };
 
-bool __FASTCALL__ udnUserNames( void ) {
+bool __FASTCALL__ udnUserNames() {
   unsigned nModes;
   int i;
   nModes = sizeof(udn_operations)/sizeof(char *);

@@ -63,10 +63,10 @@ void __FASTCALL__ _putbuf(char **p,char *str);
 void __FASTCALL__ _mapcolor(char **p,int col);
 void __FASTCALL__ _insertchar(char **p,unsigned char c);
 
-void __FASTCALL__ _mouse_hide(void);
-void __FASTCALL__ _mouse_show(void);
+void __FASTCALL__ _mouse_hide();
+void __FASTCALL__ _mouse_show();
 
-int __FASTCALL__ __init_mouse(void)
+int __FASTCALL__ __init_mouse()
 {
 	_mouse_fd=open(DEV_MOUSE,O_RDONLY);
 	if(_mouse_fd==-1) return 0;
@@ -75,12 +75,12 @@ int __FASTCALL__ __init_mouse(void)
 	return 0;
 }
 
-void __FASTCALL__ __term_mouse(void)
+void __FASTCALL__ __term_mouse()
 {
 	if(_mouse_fd!=-1) close(_mouse_fd);
 }
 
-bool __FASTCALL__ __MsGetState(void)
+bool __FASTCALL__ __MsGetState()
 {
 	return _mouse_state;
 }
@@ -103,7 +103,7 @@ void __FASTCALL__ __MsGetPos(tAbsCoord *mx, tAbsCoord *my)
 	*my=_mouse_y;
 }
 
-int __FASTCALL__ __MsGetBtns(void)
+int __FASTCALL__ __MsGetBtns()
 {
 	register int m=_mouse_buttons,c;
 	c=__kbdTestKey(0);
@@ -144,7 +144,7 @@ void __FASTCALL__ _write_char(int c,int ca,int x,int y)
 	__putp(line);
 }
 
-void __FASTCALL__ _mouse_hide(void)
+void __FASTCALL__ _mouse_hide()
 {
 	int c,ca;
 	char *addr;
@@ -155,7 +155,7 @@ void __FASTCALL__ _mouse_hide(void)
 	_write_char(c,ca,_mouse_x,_mouse_y);
 }
 
-void __FASTCALL__ _mouse_show(void)
+void __FASTCALL__ _mouse_show()
 {
 	int c,ca;
 	char *addr;
@@ -166,7 +166,7 @@ void __FASTCALL__ _mouse_show(void)
 	_write_char(c,0xff^ca,_mouse_x,_mouse_y);
 }
 
-int __FASTCALL__ getms(void)
+int __FASTCALL__ getms()
 {
 	fd_set fds;
 	int ret;

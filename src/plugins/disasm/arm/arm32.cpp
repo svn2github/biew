@@ -694,5 +694,5 @@ void __FASTCALL__ arm32Init(DisMode* _parent)
     }
 }
 
-void __FASTCALL__ arm32Term(void) {}
+void __FASTCALL__ arm32Term() {}
 } // namespace beye

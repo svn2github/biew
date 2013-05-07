@@ -40,7 +40,7 @@ using namespace beye;
 namespace beye {
 ar_hdr arch;
 
-static __filesize_t __FASTCALL__ ShowARCHHeader( void )
+static __filesize_t __FASTCALL__ ShowARCHHeader()
 {
   __filesize_t fpos;
   unsigned evt;
@@ -106,7 +106,7 @@ static bool  __FASTCALL__ archReadModList(memArray *obj,unsigned nnames,__filesi
   return true;
 }
 
-static __filesize_t __FASTCALL__ archModLst( void )
+static __filesize_t __FASTCALL__ archModLst()
 {
    memArray *obj;
    __filesize_t *addr;
@@ -151,7 +151,7 @@ static __filesize_t __FASTCALL__ archModLst( void )
    return fpos;
 }
 
-static bool __FASTCALL__ IsArch( void )
+static bool __FASTCALL__ IsArch()
 {
   char str[16];
   bmReadBufferEx(str,sizeof(str),0,BFile::Seek_Set);
@@ -164,7 +164,7 @@ static void __FASTCALL__ ArchInit(CodeGuider& code_guider)
     bmReadBufferEx(&arch,sizeof(arch),0,BFile::Seek_Set);
 }
 
-static void __FASTCALL__ ArchDestroy( void )
+static void __FASTCALL__ ArchDestroy()
 {
 }
 
@@ -182,13 +182,13 @@ static bool __FASTCALL__ archAddrResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static __filesize_t __FASTCALL__ archHelp( void )
+static __filesize_t __FASTCALL__ archHelp()
 {
   hlpDisplay(10001);
   return BMGetCurrFilePos();
 }
 
-static int __FASTCALL__ arch_platform( void ) { return DISASM_DEFAULT; }
+static int __FASTCALL__ arch_platform() { return DISASM_DEFAULT; }
 
 extern const REGISTRY_BIN archTable =
 {

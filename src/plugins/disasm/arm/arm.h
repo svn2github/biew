@@ -16,11 +16,11 @@ namespace beye {
 	ARM_XSCALE	=0x00000400UL
     };
     void __FASTCALL__ arm16Init(DisMode*);
-    void __FASTCALL__ arm16Term(void);
+    void __FASTCALL__ arm16Term();
     void __FASTCALL__ arm16Disassembler(DisasmRet *dret,__filesize_t ulShift,
 						uint16_t opcode, unsigned flags);
     void __FASTCALL__ arm32Init(DisMode*);
-    void __FASTCALL__ arm32Term(void);
+    void __FASTCALL__ arm32Term();
     void __FASTCALL__ arm32Disassembler(DisasmRet *dret,__filesize_t ulShift,
 						uint32_t opcode, unsigned flags);
 } // namespace beye

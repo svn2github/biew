@@ -32,7 +32,7 @@ using namespace beye;
 #include "plugins/bin/mmio.h"
 
 namespace beye {
-static bool  __FASTCALL__ jpeg_check_fmt( void )
+static bool  __FASTCALL__ jpeg_check_fmt()
 {
     unsigned long val;
     unsigned char id[4];
@@ -43,10 +43,10 @@ static bool  __FASTCALL__ jpeg_check_fmt( void )
 }
 
 static void __FASTCALL__ jpeg_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ jpeg_destroy_fmt(void) {}
-static int  __FASTCALL__ jpeg_platform( void) { return DISASM_DEFAULT; }
+static void __FASTCALL__ jpeg_destroy_fmt() {}
+static int  __FASTCALL__ jpeg_platform() { return DISASM_DEFAULT; }
 
-static __filesize_t __FASTCALL__ Show_JPEG_Header( void )
+static __filesize_t __FASTCALL__ Show_JPEG_Header()
 {
     ErrMessageBox("Not implemented yet!","JPEG format");
     return BMGetCurrFilePos();

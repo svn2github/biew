@@ -69,7 +69,7 @@ struct E32ImageHeader
     unsigned short iCpuIdentifier;
 };
 
-static bool  __FASTCALL__ sisx_check_fmt( void )
+static bool  __FASTCALL__ sisx_check_fmt()
 {
     unsigned char sign[4];
     unsigned long id;
@@ -80,8 +80,8 @@ static bool  __FASTCALL__ sisx_check_fmt( void )
     return false;
 }
 static void __FASTCALL__ sisx_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ sisx_destroy_fmt(void) {}
-static int  __FASTCALL__ sisx_platform(void) {
+static void __FASTCALL__ sisx_destroy_fmt() {}
+static int  __FASTCALL__ sisx_platform() {
  unsigned id;
  struct E32ImageHeader img;
  bmReadBufferEx(&img,sizeof(img),0,BFile::Seek_Set);
@@ -91,7 +91,7 @@ static int  __FASTCALL__ sisx_platform(void) {
  return id;
 }
 
-static __filesize_t __FASTCALL__ Show_SisX_Header( void )
+static __filesize_t __FASTCALL__ Show_SisX_Header()
 {
  unsigned keycode;
  TWindow * hwnd;

@@ -55,7 +55,7 @@ void __FASTCALL__ __init_vio(const char *user_cp, unsigned long flg )
   __vioRereadState();
 }
 
-void __FASTCALL__ __term_vio( void )
+void __FASTCALL__ __term_vio()
 {
   union REGS reg;
   reg.x.ax = 0x1003;
@@ -64,7 +64,7 @@ void __FASTCALL__ __term_vio( void )
   int86(0x10,&reg,&reg);
 }
 
-void __FASTCALL__ __vioRereadState( void )
+void __FASTCALL__ __vioRereadState()
 {
   union REGS reg;
   reg.h.ah = 0x0F;
@@ -81,7 +81,7 @@ void __FASTCALL__ __vioRereadState( void )
   }
 }
 
-int __FASTCALL__ __vioGetCursorType( void )
+int __FASTCALL__ __vioGetCursorType()
 {
   int ret;
   union REGS reg;

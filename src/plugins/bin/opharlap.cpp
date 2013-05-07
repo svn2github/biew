@@ -35,7 +35,7 @@ using namespace beye;
 namespace beye {
 static oldPharLap oph;
 
-static bool __FASTCALL__ IsOldPharLap( void )
+static bool __FASTCALL__ IsOldPharLap()
 {
    char sign[2];
    bmReadBufferEx(sign,2,0,BFile::Seek_Set);
@@ -43,7 +43,7 @@ static bool __FASTCALL__ IsOldPharLap( void )
    return false;
 }
 
-static __filesize_t __FASTCALL__ ShowOPharLapHeader( void )
+static __filesize_t __FASTCALL__ ShowOPharLapHeader()
 {
   __filesize_t fpos,entrypoint;
   TWindow * w;
@@ -95,7 +95,7 @@ static void __FASTCALL__ OPharLapInit(CodeGuider& code_guider)
   bmReadBufferEx(&oph,sizeof(oph),0,BFile::Seek_Set);
 }
 
-static void __FASTCALL__ OPharLapDestroy( void )
+static void __FASTCALL__ OPharLapDestroy()
 {
 }
 
@@ -113,13 +113,13 @@ static bool __FASTCALL__ OldPharLapAddrResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static __filesize_t __FASTCALL__ HelpOPharLap( void )
+static __filesize_t __FASTCALL__ HelpOPharLap()
 {
   hlpDisplay(10008);
   return BMGetCurrFilePos();
 }
 
-static int __FASTCALL__ OldPharLapPlatform( void ) { return DISASM_CPU_IX86; }
+static int __FASTCALL__ OldPharLapPlatform() { return DISASM_CPU_IX86; }
 
 extern const REGISTRY_BIN OldPharLapTable =
 {

@@ -36,14 +36,14 @@ namespace beye {
     extern __fileoff_t edit_cp;
 
     void   __FASTCALL__ PaintETitle( int shift,bool use_shift );
-    void   __FASTCALL__ CheckBounds( void );
-    void   __FASTCALL__ CheckYBounds( void );
-    void   __FASTCALL__ CheckXYBounds( void );
+    void   __FASTCALL__ CheckBounds();
+    void   __FASTCALL__ CheckYBounds();
+    void   __FASTCALL__ CheckXYBounds();
     bool  __FASTCALL__ edit_defaction(int _lastbyte);
-    void   __FASTCALL__ editSaveContest( void );
+    void   __FASTCALL__ editSaveContest();
     bool  __FASTCALL__ editDefAction(int _lastbyte);
     int    __FASTCALL__ FullEdit(TWindow * ewnd,TWindow* hexwnd,Opaque& _this,void (*save)(Opaque& _this,unsigned char *,unsigned));
     bool  __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size);
-    void   __FASTCALL__ editDestroyBuffs( void );
+    void   __FASTCALL__ editDestroyBuffs();
 } // namespace beye
 #endif

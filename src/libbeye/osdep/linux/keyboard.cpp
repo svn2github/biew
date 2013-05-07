@@ -315,7 +315,7 @@ static void __FASTCALL__ console_enter(int signum)
     ReadNextEvent is non-blocking
 */
 
-void __FASTCALL__ ReadNextEvent(void)
+void __FASTCALL__ ReadNextEvent()
 {
 #define get(x)	read(in_fd,&(x),1)
 #define ret(x)	pushEvent((x)); return;
@@ -501,7 +501,7 @@ place_key:
 #undef ret
 }
 
-int __FASTCALL__ __kbdGetShiftsKey(void)
+int __FASTCALL__ __kbdGetShiftsKey()
 {
 	/* shift_status = 6;ioctl(in_fd,TIOCLINUX,&shift_status); */
     if (on_console) {
@@ -554,7 +554,7 @@ int __FASTCALL__ __kbdGetKey (unsigned long flg)
     return key | s;
 }
 
-bool __FASTCALL__ __MsGetState(void)
+bool __FASTCALL__ __MsGetState()
 {
     return mouse_status;
 }
@@ -570,7 +570,7 @@ void __FASTCALL__ __MsGetPos(tAbsCoord *x, tAbsCoord *y)
     *y = mouse.y;
 }
 
-int __FASTCALL__ __MsGetBtns(void)
+int __FASTCALL__ __MsGetBtns()
 {
 #ifdef	HAVE_MOUSE
     if (gpmhandle) ReadNextEvent();
@@ -659,7 +659,7 @@ void __FASTCALL__ __init_keyboard(const char *user_cp)
     signal(SIGIO, __ReadNextEvent);
 }
 
-void __FASTCALL__ __term_keyboard(void)
+void __FASTCALL__ __term_keyboard()
 {
 #ifdef HAVE_ICONV
     nls_term(nls_handle);

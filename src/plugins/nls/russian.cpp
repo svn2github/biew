@@ -409,9 +409,9 @@ static unsigned __FASTCALL__ ru_convert_buffer(char *buff,unsigned size, bool us
   return size / cp_symb_len;
 }
 
-static unsigned __FASTCALL__ ru_get_symbol_size( void ) { return cp_symb_len; }
+static unsigned __FASTCALL__ ru_get_symbol_size() { return cp_symb_len; }
 
-static bool __FASTCALL__ ru_select_table( void )
+static bool __FASTCALL__ ru_select_table()
 {
   unsigned nModes;
   int i;

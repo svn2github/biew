@@ -58,7 +58,7 @@ struct SisHeader
     unsigned long  ComponentNamePointer;
 };
 
-static bool  __FASTCALL__ sis_check_fmt( void )
+static bool  __FASTCALL__ sis_check_fmt()
 {
     unsigned long id1,id2,id3;
     bmSeek(0,BFile::Seek_Set);
@@ -71,16 +71,16 @@ static bool  __FASTCALL__ sis_check_fmt( void )
     return false;
 }
 static void __FASTCALL__ sis_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ sis_destroy_fmt(void) {}
-static int  __FASTCALL__ sis_platform( void) { return DISASM_CPU_ARM; }
+static void __FASTCALL__ sis_destroy_fmt() {}
+static int  __FASTCALL__ sis_platform() { return DISASM_CPU_ARM; }
 
-static __filesize_t __FASTCALL__ Show_Sis3_Header( void )
+static __filesize_t __FASTCALL__ Show_Sis3_Header()
 {
     ErrMessageBox("Not implemented yet!","Sis v3 header");
     return BMGetCurrFilePos();
 }
 
-static __filesize_t __FASTCALL__ Show_Sis_Header( void )
+static __filesize_t __FASTCALL__ Show_Sis_Header()
 {
  unsigned keycode;
  TWindow * hwnd;

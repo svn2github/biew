@@ -46,7 +46,7 @@ static char* archiver;
 #define COMPNAME  "temp_fil.tmp"
 #define TEMPFNAME "temp_hlp.tmp"
 
-int comp_string( void )
+int comp_string()
 {
   unsigned i,j,slen;
   unsigned char ch;
@@ -222,7 +222,7 @@ bool __FASTCALL__ MyCallOut(IniInfo* ini,any_t* data)
   return false;
 }
 
-static void my_atexit( void ) { __term_sys(); }
+static void my_atexit() { __term_sys(); }
 char **ArgVector;
 
 int main( int argc, char *argv[] )

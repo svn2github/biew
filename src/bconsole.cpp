@@ -84,7 +84,7 @@ void __FASTCALL__ initBConsole( unsigned long vio_flg,unsigned long twin_flg )
   }
 }
 
-void __FASTCALL__ termBConsole( void )
+void __FASTCALL__ termBConsole()
 {
   twDestroy();
 }
@@ -92,7 +92,7 @@ void __FASTCALL__ termBConsole( void )
 /**
    read the next keyboard character
 */
-static int  __FASTCALL__ getkey(int hard, void (*func)(void))
+static int  __FASTCALL__ getkey(int hard, void (*func)())
 {
  return KB_freq ? KB_Buff[--KB_freq] :
 		  GetEvent( func ? func : hard ? hard > 1 ?
@@ -123,7 +123,7 @@ bool __FASTCALL__ ungotstring(char *string)
   return true;
 }
 
-int __FASTCALL__ xeditstring(TWindow* w,char *s,const char *legal,unsigned maxlength, void (*func)(void))
+int __FASTCALL__ xeditstring(TWindow* w,char *s,const char *legal,unsigned maxlength, void (*func)())
 {
   return eeditstring(w,s,legal,&maxlength,1,NULL,__ESS_ENABLEINSERT,NULL,func);
 }
@@ -134,7 +134,7 @@ inline bool isSecondD(int pos) { return isSpace(pos+1); }
 
 static bool insert = true;
 
-int __FASTCALL__ eeditstring(TWindow* w,char *s,const char *legal, unsigned *maxlength,unsigned _y,unsigned *stx,unsigned attr,char *undo, void (*func)(void))
+int __FASTCALL__ eeditstring(TWindow* w,char *s,const char *legal, unsigned *maxlength,unsigned _y,unsigned *stx,unsigned attr,char *undo, void (*func)())
 {
  int c;
  unsigned len = attr & __ESS_HARDEDIT ? *maxlength : attr & __ESS_NON_C_STR ? _y : strlen(s);
@@ -304,7 +304,7 @@ int __FASTCALL__ eeditstring(TWindow* w,char *s,const char *legal, unsigned *max
  return lastkey;
 } /* editstring */
 
-TWindow *__FASTCALL__ PleaseWaitWnd( void )
+TWindow *__FASTCALL__ PleaseWaitWnd()
 {
    TWindow *w,*usd;
    usd = twFocusedWin();

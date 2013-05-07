@@ -98,7 +98,7 @@ void __FASTCALL__ HiLightSearch(TWindow *out,__filesize_t cfp,tRelCoord minx,tRe
  twWriteBuffer(out,minx + 1,y + 1,&it,width);
 }
 
-static void  __FASTCALL__ drawTitle( void )
+static void  __FASTCALL__ drawTitle()
 {
   unsigned percent;
   __filesize_t flen;

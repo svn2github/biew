@@ -30,12 +30,12 @@ namespace beye {
 static int KB_Buff[64];
 static size_t KB_freq = 0;
 
-bool  __FASTCALL__ IsKbdTerminate( void )
+bool  __FASTCALL__ IsKbdTerminate()
 {
   return __OsGetCBreak( );
 }
 
-void __FASTCALL__ CleanKbdTermSig( void )
+void __FASTCALL__ CleanKbdTermSig()
 {
   __OsSetCBreak(false);
 }
@@ -71,10 +71,10 @@ static int  __FASTCALL__ getPromptKey(int flag)
  return ret;
 }
 
-static int  __FASTCALL__ __GetEvent( void (*prompt)(void) ,TWindow *win)
+static int  __FASTCALL__ __GetEvent( void (*prompt)() ,TWindow *win)
 {
  static unsigned char oFlag = UCHAR_MAX;
- static void (* oprompt)(void) = 0;
+ static void (* oprompt)() = 0;
  unsigned char Flag;
  int key;
  /** Unconditional repaint prompt */
@@ -154,14 +154,14 @@ static int  __FASTCALL__ __GetEvent( void (*prompt)(void) ,TWindow *win)
  return key;
 }
 
-static void  __FASTCALL__ __GetEventQue(void (*prompt)(void), TWindow *win)
+static void  __FASTCALL__ __GetEventQue(void (*prompt)(), TWindow *win)
 {
   int key;
   key = __GetEvent(prompt,win);
   if(KB_freq < sizeof(KB_Buff)/sizeof(int)) KB_Buff[KB_freq++] = key;
 }
 
-int __FASTCALL__ GetEvent( void (*prompt)(void),int (*alt_action)(void),TWindow * win)
+int __FASTCALL__ GetEvent( void (*prompt)(),int (*alt_action)(),TWindow * win)
 {
   int key;
   while(!KB_freq) __GetEventQue(prompt,win);

@@ -23,7 +23,7 @@ extern unsigned rawkb_len;
 extern unsigned rawkb_size;
 extern unsigned rawkb_mode;
 extern char * rawkb_name;
-extern void __FASTCALL__ ReadNextEvent(void);
+extern void __FASTCALL__ ReadNextEvent();
 
 int __FASTCALL__ __inputRawInfo(char *head, char *text)
 {

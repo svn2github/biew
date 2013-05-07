@@ -39,7 +39,7 @@ using namespace beye;
 namespace beye {
 extern BFile* lx_cache;
 
-static __filesize_t __FASTCALL__ ShowNewHeaderLE( void )
+static __filesize_t __FASTCALL__ ShowNewHeaderLE()
 {
   return ShowNewHeaderLX();
 }
@@ -221,7 +221,7 @@ static unsigned __FASTCALL__ leMapTblNumEntries(BFile& handle)
   return (unsigned)lxe.le.lePageCount;
 }
 
-static __filesize_t __FASTCALL__ ShowMapTableLE( void )
+static __filesize_t __FASTCALL__ ShowMapTableLE()
 {
  __filesize_t fpos;
  int ret;
@@ -235,7 +235,7 @@ static __filesize_t __FASTCALL__ ShowMapTableLE( void )
  return fpos;
 }
 
-static __filesize_t __FASTCALL__ ShowResNamLE( void )
+static __filesize_t __FASTCALL__ ShowResNamLE()
 {
   __filesize_t fpos = BMGetCurrFilePos();
   int ret;
@@ -250,7 +250,7 @@ static __filesize_t __FASTCALL__ ShowResNamLE( void )
   return fpos;
 }
 
-static __filesize_t __FASTCALL__ ShowNResNmLE( void )
+static __filesize_t __FASTCALL__ ShowNResNmLE()
 {
   __filesize_t fpos;
   fpos = BMGetCurrFilePos();
@@ -268,7 +268,7 @@ static __filesize_t __FASTCALL__ ShowNResNmLE( void )
   return fpos;
 }
 
-static bool __FASTCALL__ isLE( void )
+static bool __FASTCALL__ isLE()
 {
    char id[2];
    beye_context().headshift = IsNewExe();
@@ -289,13 +289,13 @@ static void __FASTCALL__ LEinit(CodeGuider& code_guider)
    if((lx_cache = main_handle.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) lx_cache = &main_handle;
 }
 
-static void __FASTCALL__ LEdestroy( void )
+static void __FASTCALL__ LEdestroy()
 {
    BFile& main_handle = bmbioHandle();
    if(lx_cache != &bNull && lx_cache != &main_handle) delete lx_cache;
 }
 
-static __filesize_t __FASTCALL__ LEHelp( void )
+static __filesize_t __FASTCALL__ LEHelp()
 {
   hlpDisplay(10004);
   return BMGetCurrFilePos();
@@ -329,7 +329,7 @@ static bool __FASTCALL__ leAddressResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static int __FASTCALL__ lePlatform( void ) { return DISASM_CPU_IX86; }
+static int __FASTCALL__ lePlatform() { return DISASM_CPU_IX86; }
 
 extern const REGISTRY_BIN leTable =
 {

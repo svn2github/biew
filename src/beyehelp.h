@@ -73,17 +73,17 @@ namespace beye {
 		       /** Returns array of char pointers.
 			  Title always is data[0] */
 	    virtual char **		point_strings(char* data,unsigned long data_size,
-							unsigned long *nstr);
+							unsigned long *nstr) const;
 		       /** Filles buffer as video memory from string */
 	    virtual unsigned		fill_buffer(tvioBuff * dest,unsigned int cw_dest,
 						    const std::string& str,unsigned int cb_str,
 						    unsigned int shift,unsigned *n_tabs,
-						    bool is_hl);
+						    bool is_hl) const;
 		       /** Paints line of help */
-	    virtual void		paint_line(TWindow *win,unsigned y,const std::string& str, bool is_hl);
-	    virtual int			__ListBox(const char** names,unsigned nlist,const std::string& title);
+	    virtual void		paint_line(TWindow *win,unsigned y,const std::string& str, bool is_hl) const;
+	    virtual int			__ListBox(const char** names,unsigned nlist,const std::string& title) const;
 	private:
-	    void			paint(TWindow *win,const char * * names,unsigned nlist,unsigned start,unsigned height,unsigned width);
+	    void			paint(TWindow *win,const char * * names,unsigned nlist,unsigned start,unsigned height,unsigned width) const;
 	    bool			find_item(unsigned long item_id);
 
 	    std::fstream		fs;

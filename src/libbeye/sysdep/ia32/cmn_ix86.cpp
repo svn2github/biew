@@ -30,7 +30,7 @@ volatile unsigned timer_trigger = 0;
 unsigned time_interval = 0;
 
 
-static void __timer_callback( void )
+static void __timer_callback()
 {
    timer_trigger = timer_trigger ? 0 : 1;
 }

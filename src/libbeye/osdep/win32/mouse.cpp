@@ -30,9 +30,9 @@ static bool ms_visible = false;
 tAbsCoord win32_mx = 0,win32_my = 0;
 int win32_mbuttons = 0;
 extern bool hInputTrigger;
-extern void __FASTCALL__ win32_readNextMessage( void );
+extern void __FASTCALL__ win32_readNextMessage();
 
-int __FASTCALL__ __init_mouse( void )
+int __FASTCALL__ __init_mouse()
 {
   DWORD ret;
   SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE),ENABLE_MOUSE_INPUT);
@@ -40,7 +40,7 @@ int __FASTCALL__ __init_mouse( void )
   return (int)ret; /* return number of mouse button */
 }
 
-void __FASTCALL__ __term_mouse( void )
+void __FASTCALL__ __term_mouse()
 {
   DWORD cmode;
   GetConsoleMode(GetStdHandle(STD_INPUT_HANDLE),&cmode);
@@ -48,7 +48,7 @@ void __FASTCALL__ __term_mouse( void )
   SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE),ENABLE_MOUSE_INPUT);
 }
 
-bool __FASTCALL__ __MsGetState( void )
+bool __FASTCALL__ __MsGetState()
 {
   return ms_visible;
 }
@@ -70,7 +70,7 @@ void __FASTCALL__ __MsGetPos( tAbsCoord *mx, tAbsCoord *my )
   *my = win32_my;
 }
 
-int __FASTCALL__ __MsGetBtns( void )
+int __FASTCALL__ __MsGetBtns()
 {
   int ret;
   ret = 0;

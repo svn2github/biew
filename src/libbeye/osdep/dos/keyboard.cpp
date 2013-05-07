@@ -32,7 +32,7 @@ void __FASTCALL__ __init_keyboard( const char *user_cp )
    }
 }
 
-void __FASTCALL__ __term_keyboard( void )
+void __FASTCALL__ __term_keyboard()
 {
   if(__ms_nbtns != INT_MAX)
   {
@@ -111,7 +111,7 @@ int __FASTCALL__ __kbdTestKey( unsigned long flg )
   return __test_key(flg,0);
 }
 
-int __FASTCALL__ __kbdGetShiftsKey( void )
+int __FASTCALL__ __kbdGetShiftsKey()
 {
   int ret = _bios_keybrd(_KEYBRD_SHIFTSTATUS);
   if(ret & 0x01) ret |= 3; /* return right shift as letf */

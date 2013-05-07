@@ -35,7 +35,7 @@ extern int photon,bit7;
 #endif
 namespace beye {
 
-const char * beyeGetHelpName( void )
+const char * beyeGetHelpName()
 {
   if(!beye_context().help_name[0])
   {
@@ -44,7 +44,7 @@ const char * beyeGetHelpName( void )
   return beye_context().help_name.c_str();
 }
 
-static const char *  __FASTCALL__ beyeGetColorSetName( void )
+static const char *  __FASTCALL__ beyeGetColorSetName()
 {
   if(!beye_context().skin_name[0])
   {
@@ -53,7 +53,7 @@ static const char *  __FASTCALL__ beyeGetColorSetName( void )
   return beye_context().skin_name.c_str();
 }
 
-static const char *  __FASTCALL__ beyeGetSyntaxName( void )
+static const char *  __FASTCALL__ beyeGetSyntaxName()
 {
   if(!beye_context().syntax_name[0])
   {
@@ -99,7 +99,7 @@ static const char * cp_list[] =
   "CP869 - IBM PC Greek-2",
 };
 
-static bool __FASTCALL__ select_codepage( void )
+static bool __FASTCALL__ select_codepage()
 {
   unsigned nModes;
   int i;
@@ -118,7 +118,7 @@ static bool __FASTCALL__ select_codepage( void )
   return false;
 }
 
-static void drawSetupPrompt( void )
+static void drawSetupPrompt()
 {
    __drawSinglePrompt(setuptxt);
 }
@@ -170,7 +170,7 @@ static void  __FASTCALL__ setup_paint( TWindow *twin )
   twFocusWin(usd);
 }
 
-void Setup(void)
+void Setup()
 {
   tAbsCoord x1,y1,x2,y2;
   tRelCoord X1,Y1,X2,Y2;

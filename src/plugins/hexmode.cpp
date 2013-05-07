@@ -97,7 +97,7 @@ const char* HexMode::prompt(unsigned idx) const {
 }
 
 typedef char *( __FASTCALL__ *hexFunc)(__filesize_t);
-typedef unsigned char ( __FASTCALL__ *sizeFunc) ( void );
+typedef unsigned char ( __FASTCALL__ *sizeFunc) ();
 
 typedef struct tag_hexView {
     const char *  name;
@@ -128,10 +128,10 @@ static char *  __FASTCALL__ Get8D(__filesize_t val)
     return Get8Digit(v);
 }
 
-static unsigned char  __FASTCALL__ sizeBit( void )  { return (tvioWidth-HA_LEN())/(8+1+1); }
-static unsigned char  __FASTCALL__ sizeByte( void ) { return ((tvioWidth-HA_LEN())/(12+1+4)*4); } /* always round on four-column boundary */
-static unsigned char  __FASTCALL__ sizeWord( void ) { return (tvioWidth-HA_LEN())/(4+1+2); }
-static unsigned char  __FASTCALL__ sizeDWord( void ){ return (tvioWidth-HA_LEN())/(8+1+4); }
+static unsigned char  __FASTCALL__ sizeBit()  { return (tvioWidth-HA_LEN())/(8+1+1); }
+static unsigned char  __FASTCALL__ sizeByte() { return ((tvioWidth-HA_LEN())/(12+1+4)*4); } /* always round on four-column boundary */
+static unsigned char  __FASTCALL__ sizeWord() { return (tvioWidth-HA_LEN())/(4+1+2); }
+static unsigned char  __FASTCALL__ sizeDWord(){ return (tvioWidth-HA_LEN())/(8+1+4); }
 
 static const hexView hexViewer[] =
 {

@@ -75,7 +75,7 @@ static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t p
 static void __FASTCALL__ pe_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const std::string&));
 static __filesize_t __FASTCALL__ peVA2PA(__filesize_t va);
 static __filesize_t __FASTCALL__ pePA2VA(__filesize_t pa);
-static __fileoff_t  CalcOverlayOffset( void );
+static __fileoff_t  CalcOverlayOffset();
 
 static __filesize_t  __FASTCALL__ CalcPEObjectEntry(__fileoff_t offset)
 {
@@ -343,7 +343,7 @@ static void __FASTCALL__ PaintNewHeaderPE(TWindow * win,const any_t**ptr,unsigne
   twRefreshFullWin(win);
 }
 
-static __filesize_t __FASTCALL__ ShowNewHeaderPE( void )
+static __filesize_t __FASTCALL__ ShowNewHeaderPE()
 {
  __fileoff_t fpos;
  fpos = BMGetCurrFilePos();
@@ -429,7 +429,7 @@ static bool  __FASTCALL__ __ReadObjectsPE(BFile& handle,memArray * obj,unsigned 
   return true;
 }
 
-static __fileoff_t  CalcOverlayOffset( void )
+static __fileoff_t  CalcOverlayOffset()
 {
   if (overlayPE == -1 && pe.peObjects) {
     memArray *obj;
@@ -451,7 +451,7 @@ static __fileoff_t  CalcOverlayOffset( void )
   return overlayPE;
 }
 
-static __filesize_t __FASTCALL__ ShowObjectsPE( void )
+static __filesize_t __FASTCALL__ ShowObjectsPE()
 {
  __filesize_t fpos;
  BFile& handle = *pe_cache;
@@ -599,7 +599,7 @@ static bool __FASTCALL__  __ReadImpContPE(BFile& handle,memArray * obj,unsigned 
   return true;
 }
 
-static __filesize_t __FASTCALL__ ShowModRefPE( void )
+static __filesize_t __FASTCALL__ ShowModRefPE()
 {
   BFile& handle = *pe_cache;
   char petitle[80];
@@ -723,7 +723,7 @@ static __filesize_t  __FASTCALL__ CalcEntryPE(unsigned ordinal,bool dispmsg)
  return fret;
 }
 
-static __filesize_t __FASTCALL__ ShowExpNamPE( void )
+static __filesize_t __FASTCALL__ ShowExpNamPE()
 {
   __filesize_t fpos = BMGetCurrFilePos();
   int ret;
@@ -809,7 +809,7 @@ static unsigned __FASTCALL__ PENumRVAs(BFile& handle)
   return PE32_HDR(pe32,peDirSize);
 }
 
-static __filesize_t __FASTCALL__ ShowPERVAs( void )
+static __filesize_t __FASTCALL__ ShowPERVAs()
 {
   __filesize_t fpos = BMGetCurrFilePos();
   int ret;
@@ -846,7 +846,7 @@ static tCompare __FASTCALL__ compare_pe_reloc_s(const any_t*e1,const any_t*e2)
   return ((p1->laddr) < (p2->laddr) ? -1 : (p1->laddr) > (p2->laddr) ? 1 : 0);
 }
 
-static void  __FASTCALL__ BuildPERefChain( void )
+static void  __FASTCALL__ BuildPERefChain()
 {
   __filesize_t  phys,cpos;
   unsigned long i,j;
@@ -1103,7 +1103,7 @@ static bool __FASTCALL__ AppendPERef(const DisMode& parent,char *str,__filesize_
   return retrf;
 }
 
-static bool __FASTCALL__ IsPE( void )
+static bool __FASTCALL__ IsPE()
 {
    char id[2];
    beye_context().headshift = IsNewExe();
@@ -1152,7 +1152,7 @@ static void __FASTCALL__ initPE(CodeGuider& _code_guider)
    if((pe_cache4 = main_handle.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache4 = &main_handle;
 }
 
-static void __FASTCALL__ destroyPE( void )
+static void __FASTCALL__ destroyPE()
 {
   BFile& main_handle = bmbioHandle();
   if(peVA) delete peVA;
@@ -1176,7 +1176,7 @@ static int __FASTCALL__ bitnessPE(__filesize_t off)
    else return DAB_USE16;
 }
 
-static __filesize_t __FASTCALL__ PEHelp( void )
+static __filesize_t __FASTCALL__ PEHelp()
 {
   hlpDisplay(10009);
   return BMGetCurrFilePos();
@@ -1322,7 +1322,7 @@ static unsigned __FASTCALL__ peGetObjAttr(__filesize_t pa,char *name,unsigned cb
   return ret;
 }
 
-static int __FASTCALL__ pePlatform( void ) {
+static int __FASTCALL__ pePlatform() {
     unsigned id;
     switch(pe.peCPUType) {
 	case 0x8664: /*AMD64*/

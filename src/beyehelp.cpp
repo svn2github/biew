@@ -40,7 +40,7 @@ using namespace beye;
 namespace beye {
 static const unsigned TEXT_TAB=8;
 
-extern void drawHelpListPrompt( void );
+extern void drawHelpListPrompt();
 
 enum {
     HPROP_BOLD                  =0x01,
@@ -50,7 +50,7 @@ enum {
     HPROP_REVERSE               =0x10,
     HPROP_LINK                  =0x20
 };
-unsigned Beye_Help::fill_buffer(tvioBuff * dest,unsigned int alen,const std::string& str,unsigned int len,unsigned int shift,unsigned *n_tabs,bool is_hl)
+unsigned Beye_Help::fill_buffer(tvioBuff * dest,unsigned int alen,const std::string& str,unsigned int len,unsigned int shift,unsigned *n_tabs,bool is_hl) const
 {
   t_vchar ch;
   ColorAttr defcol;
@@ -133,7 +133,7 @@ unsigned Beye_Help::fill_buffer(tvioBuff * dest,unsigned int alen,const std::str
   return k;
 }
 
-void Beye_Help::paint_line(TWindow *win,unsigned i,const std::string& name,bool is_hl)
+void Beye_Help::paint_line(TWindow *win,unsigned i,const std::string& name,bool is_hl) const
 {
   tvioBuff it;
   unsigned rlen;
@@ -150,7 +150,7 @@ void Beye_Help::paint_line(TWindow *win,unsigned i,const std::string& name,bool 
   twClrEOL(win);
 }
 
-void Beye_Help::paint(TWindow *win,const char * * names,unsigned nlist,unsigned start,unsigned height,unsigned width)
+void Beye_Help::paint(TWindow *win,const char * * names,unsigned nlist,unsigned start,unsigned height,unsigned width) const
 {
  unsigned i, pos = 0;
  twFocusWin(win);
@@ -178,7 +178,7 @@ void Beye_Help::paint(TWindow *win,const char * * names,unsigned nlist,unsigned 
 
 typedef char *lpstr;
 
-int Beye_Help::__ListBox(const char** names,unsigned nlist,const std::string& title)
+int Beye_Help::__ListBox(const char** names,unsigned nlist,const std::string& title) const
 {
  TWindow * wlist;
  unsigned i,j,height,mwidth = title.length();
@@ -346,7 +346,7 @@ bool Beye_Help::load_item(unsigned long item_id, any_t* buffer)
     return ret;
 }
 
-char** Beye_Help::point_strings(char* data,unsigned long data_size,unsigned long *nstr)
+char** Beye_Help::point_strings(char* data,unsigned long data_size,unsigned long *nstr) const
 {
   char **str_ptr,**new_ptr;
   unsigned long i;

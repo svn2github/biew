@@ -19,8 +19,8 @@
 #define __REG_FORM__H
 
 namespace beye {
-typedef __filesize_t  (__FASTCALL__ *BinFunc)( void );
-typedef bool         (__FASTCALL__ *ModFunc)( void );
+typedef __filesize_t  (__FASTCALL__ *BinFunc)();
+typedef bool         (__FASTCALL__ *ModFunc)();
 
 enum {
     __MAX_SYMBOL_SIZE=4
@@ -81,9 +81,9 @@ struct REGISTRY_BIN
   const char * name;                            /**< name of binary format */
   const char * prompt[10];                      /**< on ALT-Fx selection */
   const BinFunc  action[10];                         /**< action on ALT-Fx selection */
-  bool   (__FASTCALL__ *check_format)( void ); /**< Checks format */
+  bool   (__FASTCALL__ *check_format)(); /**< Checks format */
   void    (__FASTCALL__ *init)(CodeGuider&);    /**< Inits plugin (if check o'k) (constructor) */
-  void    (__FASTCALL__ *destroy)( void );      /**< Destroys plugin (destructor) */
+  void    (__FASTCALL__ *destroy)();      /**< Destroys plugin (destructor) */
   BinFunc   showHdr;                            /**< if not an MZ style format */
   AppRefs   bind;                               /**< for show references */
 
@@ -93,7 +93,7 @@ struct REGISTRY_BIN
 			   *                 function return -1 then platform is
 			   *                 undefined.
 			  **/
-  int     (__FASTCALL__ *query_platform)( void );
+  int     (__FASTCALL__ *query_platform)();
 
 			 /** Returns DAB_XXX. Quick version for disassembler */
   int     (__FASTCALL__ *query_bitness)(__filesize_t);

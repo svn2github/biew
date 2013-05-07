@@ -123,7 +123,7 @@ extern int on_console, output_7, transparent, do_nls;
 extern bool break_status;
 extern const termdesc* terminal;
 
-extern void __FASTCALL__ ReadNextEvent(void);
+extern void __FASTCALL__ ReadNextEvent();
 
 /*
     console plugin
@@ -139,19 +139,19 @@ typedef struct {
 	unsigned reserved[3];
 
 	void (*initialize)(unsigned long);
-	void (*terminate)(void);
-	void (*update)(void);
+	void (*terminate)();
+	void (*update)();
 
 	void (*ReadBuf)(int, int, any_t*, unsigned);
 	void (*WriteBuf)(int, int, any_t*, unsigned);
 
-	int (*GetCursorType)(void);
+	int (*GetCursorType)();
 	void (*SetCursorType)(int);
 	void (*GetCursorPos)(int *, int *);
 	void (*SetCursorPos)(int, int);
 
-	int (*TestKey)(void);
-	int (*GetKey)(void);
+	int (*TestKey)();
+	int (*GetKey)();
 	int (*GetMouse)(int *, int *, int *);
 
 } Console;
@@ -175,7 +175,7 @@ extern Console console;
 
 extern any_t* nls_init(const char *to,const char *from);
 extern void  nls_term(any_t*);
-extern char *nls_get_screen_cp(void);
+extern char *nls_get_screen_cp();
 extern char *nls_recode2screen_cp(any_t*,const char *srcb,unsigned* len);
 extern int   nls_test(any_t* ic,const char *srcb,unsigned* len);
 

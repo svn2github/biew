@@ -26,12 +26,12 @@ typedef struct tag_REGISTRY_NLS
 {
   const char *   set_name;
   unsigned       (__FASTCALL__ *convert_buffer)(char *buffer,unsigned len,bool use_fs_nls);
-  unsigned       (__FASTCALL__ *get_symbol_size)( void );
-  bool          (__FASTCALL__ *select_table)( void );
+  unsigned       (__FASTCALL__ *get_symbol_size)();
+  bool          (__FASTCALL__ *select_table)();
   void           (__FASTCALL__ *read_ini)(Ini_Profile& );
   void           (__FASTCALL__ *save_ini)(Ini_Profile& );
-  void           (__FASTCALL__ *init)( void );
-  void           (__FASTCALL__ *term)( void );
+  void           (__FASTCALL__ *init)();
+  void           (__FASTCALL__ *term)();
 }REGISTRY_NLS;
 
 /** Below describes function prototypes for small table conversations */

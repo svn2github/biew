@@ -257,7 +257,7 @@ static void __FASTCALL__ pushEvent(unsigned _event)
     ReadNextEvent is non-blocking call
 */
 
-void __FASTCALL__ ReadNextEvent(void)
+void __FASTCALL__ ReadNextEvent()
 {
     unsigned key = 0;
 
@@ -383,7 +383,7 @@ place_key:
 #undef ret
 }
 
-inline int __FASTCALL__ __kbdGetShiftsKey(void)
+inline int __FASTCALL__ __kbdGetShiftsKey()
 {
     return shift_status;
 }
@@ -418,7 +418,7 @@ int __FASTCALL__ __kbdGetKey(unsigned long flg)
 
 */
 
-bool __FASTCALL__ __MsGetState(void)
+bool __FASTCALL__ __MsGetState()
 {
     return mouse_status;
 }
@@ -434,7 +434,7 @@ void __FASTCALL__ __MsGetPos(tAbsCoord *x, tAbsCoord *y)
     *y = mouse.y;
 }
 
-int __FASTCALL__ __MsGetBtns(void)
+int __FASTCALL__ __MsGetBtns()
 {
 #ifdef HAVE_MOUSE
     ReadNextEvent();
@@ -501,7 +501,7 @@ void __FASTCALL__ __init_keyboard(const char *user_cp)
 
 }
 
-void __FASTCALL__ __term_keyboard(void)
+void __FASTCALL__ __term_keyboard()
 {
 #ifdef HAVE_ICONV
     nls_term(nls_handle);

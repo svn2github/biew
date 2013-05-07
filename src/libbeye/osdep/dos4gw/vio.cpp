@@ -46,7 +46,7 @@ void __FASTCALL__ __init_vio(const char *user_cp, unsigned long flg )
   __vioRereadState();
 }
 
-void __FASTCALL__ __term_vio( void )
+void __FASTCALL__ __term_vio()
 {
   union REGS reg;
   reg.x.eax = 0x1003;
@@ -65,7 +65,7 @@ void __FASTCALL__ __term_vio( void )
        B800:0000 corresponds to a linear address of B8000.
 */
 
-void __FASTCALL__ __vioRereadState( void )
+void __FASTCALL__ __vioRereadState()
 {
   unsigned short *tvw;
   unsigned char *tvh;
@@ -86,7 +86,7 @@ void __FASTCALL__ __vioRereadState( void )
   }
 }
 
-int __FASTCALL__ __vioGetCursorType( void )
+int __FASTCALL__ __vioGetCursorType()
 {
   int ret;
   union REGS reg;

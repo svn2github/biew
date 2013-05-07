@@ -99,7 +99,7 @@ void __FASTCALL__ __init_vio(const char *user_cp, unsigned long flg )
   __vioRereadState();
 }
 
-void __FASTCALL__ __term_vio( void )
+void __FASTCALL__ __term_vio()
 {
   /* Added by Olivier Mengu\u00e9 */
   /* Restore console state */
@@ -124,7 +124,7 @@ void __FASTCALL__ __term_vio( void )
   /* End of addition */
 }
 
-void __FASTCALL__ __vioRereadState( void )
+void __FASTCALL__ __vioRereadState()
 {
   CONSOLE_SCREEN_BUFFER_INFO csbinfo;
   win32_use_ansi = false;
@@ -147,7 +147,7 @@ void __FASTCALL__ __vioRereadState( void )
   tvioNumColors = 16;
 }
 
-int __FASTCALL__ __vioGetCursorType( void )
+int __FASTCALL__ __vioGetCursorType()
 {
   CONSOLE_CURSOR_INFO cci;
   GetConsoleCursorInfo(hOut,&cci);

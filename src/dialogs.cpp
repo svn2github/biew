@@ -431,7 +431,7 @@ static const char * fs3_txt[] =
 
 const char ** fs_txt;
 
-static void drawFSPrompt( void )
+static void drawFSPrompt()
 {
    __drawSinglePrompt(fs_txt);
 }

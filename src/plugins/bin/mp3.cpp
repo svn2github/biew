@@ -278,7 +278,7 @@ static int read_id3v24_tags(unsigned flags,unsigned hsize)
     return 1;
 }
 
-static int read_id3v2_tags(void)
+static int read_id3v2_tags()
 {
     char buf[4];
     unsigned vers,rev,flags,hsize;
@@ -354,7 +354,7 @@ static int Xing_test(char *hdr,int *scale,int *lsf,int *srate,long *nframes,long
     return is_xing;
 }
 
-static bool  __FASTCALL__ mp3_check_fmt( void )
+static bool  __FASTCALL__ mp3_check_fmt()
 {
     unsigned i;
     unsigned long off;
@@ -390,7 +390,7 @@ static bool  __FASTCALL__ mp3_check_fmt( void )
     return true;
 }
 
-static __filesize_t __FASTCALL__ Show_MP3_Header( void )
+static __filesize_t __FASTCALL__ Show_MP3_Header()
 {
  unsigned keycode;
  TWindow * hwnd;
@@ -449,8 +449,8 @@ static __filesize_t __FASTCALL__ Show_MP3_Header( void )
 }
 
 static void __FASTCALL__ mp3_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ mp3_destroy_fmt(void) {}
-static int  __FASTCALL__ mp3_platform( void) { return DISASM_DEFAULT; }
+static void __FASTCALL__ mp3_destroy_fmt() {}
+static int  __FASTCALL__ mp3_platform() { return DISASM_DEFAULT; }
 
 
 extern const REGISTRY_BIN mp3Table =

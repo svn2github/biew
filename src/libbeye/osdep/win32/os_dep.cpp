@@ -62,7 +62,7 @@ static BOOL __attribute((stdcall)) MyHandler( DWORD type )
   }
 }
 
-bool __FASTCALL__ __OsGetCBreak( void )
+bool __FASTCALL__ __OsGetCBreak()
 {
   return __c__break;
 }
@@ -79,7 +79,7 @@ extern LONG CALLBACK PageFaultHandler(LPEXCEPTION_POINTERS);
 LPTOP_LEVEL_EXCEPTION_FILTER PrevPageFaultHandler;
 #endif
 
-void __FASTCALL__ __init_sys( void )
+void __FASTCALL__ __init_sys()
 {
   win32_verinfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
   GetVersionEx(&win32_verinfo);
@@ -93,7 +93,7 @@ void __FASTCALL__ __init_sys( void )
   _home_dir_name[0] = '\0';
 }
 
-void __FASTCALL__ __term_sys( void )
+void __FASTCALL__ __term_sys()
 {
 #if !(defined( __DISABLE_MMF ) || defined( __DISABLE_LOWLEVEL_MMF))
   SetUnhandledExceptionFilter(PrevPageFaultHandler);
@@ -101,7 +101,7 @@ void __FASTCALL__ __term_sys( void )
   SetConsoleCtrlHandler(MyHandler,FALSE);
 }
 
-void __FASTCALL__ __OsYield( void )
+void __FASTCALL__ __OsYield()
 {
        WaitForSingleObject(hIn,INFINITE);
        hInputTrigger++;

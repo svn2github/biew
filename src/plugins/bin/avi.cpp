@@ -103,7 +103,7 @@ static const uint32_t cktypeWAVEbytes         =aviTWOCC('w', 'b');
 /* Chunk id to use for extra chunks for padding. */
 static const uint32_t ckidAVIPADDING          =mmioFOURCC('J', 'U', 'N', 'K');
 
-static bool  __FASTCALL__ avi_check_fmt( void )
+static bool  __FASTCALL__ avi_check_fmt()
 {
     unsigned long id;
     id=bmReadDWordEx(8,BFile::Seek_Set);
@@ -114,8 +114,8 @@ static bool  __FASTCALL__ avi_check_fmt( void )
 }
 
 static void __FASTCALL__ avi_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ avi_destroy_fmt(void) {}
-static int  __FASTCALL__ avi_platform( void) { return DISASM_DEFAULT; }
+static void __FASTCALL__ avi_destroy_fmt() {}
+static int  __FASTCALL__ avi_platform() { return DISASM_DEFAULT; }
 
 static __filesize_t __FASTCALL__ avi_find_chunk(__filesize_t off,unsigned long id)
 {
@@ -140,7 +140,7 @@ static __filesize_t __FASTCALL__ avi_find_chunk(__filesize_t off,unsigned long i
     return -1;
 }
 
-static __filesize_t __FASTCALL__ Show_AVI_Header( void )
+static __filesize_t __FASTCALL__ Show_AVI_Header()
 {
  unsigned keycode;
  TWindow * hwnd;
@@ -188,7 +188,7 @@ static __filesize_t __FASTCALL__ Show_AVI_Header( void )
  return fpos;
 }
 
-static __filesize_t __FASTCALL__ Show_A_Header( void )
+static __filesize_t __FASTCALL__ Show_A_Header()
 {
  unsigned keycode;
  TWindow * hwnd;
@@ -262,7 +262,7 @@ static __filesize_t __FASTCALL__ Show_A_Header( void )
  return fpos;
 }
 
-static __filesize_t __FASTCALL__ Show_V_Header( void )
+static __filesize_t __FASTCALL__ Show_V_Header()
 {
  unsigned keycode;
  TWindow * hwnd;

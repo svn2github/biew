@@ -108,7 +108,7 @@ unsigned   __FASTCALL__ __OsSetTimerCallBack(unsigned ms,timer_callback *func)
 }
 			     /* Restore time callback function to original
 				state */
-void   __FASTCALL__ __OsRestoreTimer(void)
+void   __FASTCALL__ __OsRestoreTimer()
 {
   if(uTimerID)
   {

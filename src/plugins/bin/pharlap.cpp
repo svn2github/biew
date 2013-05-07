@@ -39,7 +39,7 @@ static newPharLap nph;
 
 static BFile* pl_cache = &bNull;
 
-static __filesize_t __FASTCALL__ ShowPharLapHeader( void )
+static __filesize_t __FASTCALL__ ShowPharLapHeader()
 {
   __filesize_t fpos;
   TWindow *w;
@@ -144,7 +144,7 @@ static bool __FASTCALL__ __PLReadSegInfo(BFile& handle,memArray * obj,unsigned n
  return true;
 }
 
-static __filesize_t __FASTCALL__ PharLapSegInfo( void )
+static __filesize_t __FASTCALL__ PharLapSegInfo()
 {
  BFile& handle = *pl_cache;
  unsigned nnames;
@@ -222,7 +222,7 @@ static bool __FASTCALL__ __PLReadRunTime(BFile& handle,memArray * obj,unsigned n
  return true;
 }
 
-static __filesize_t __FASTCALL__ PharLapRunTimeParms( void )
+static __filesize_t __FASTCALL__ PharLapRunTimeParms()
 {
  BFile& handle = *pl_cache;
  unsigned nnames;
@@ -247,7 +247,7 @@ static __filesize_t __FASTCALL__ PharLapRunTimeParms( void )
  return fpos;
 }
 
-static bool __FASTCALL__ IsPharLap( void )
+static bool __FASTCALL__ IsPharLap()
 {
    char sign[2];
    bmReadBufferEx(sign,2,0,BFile::Seek_Set);
@@ -263,7 +263,7 @@ static void __FASTCALL__ PharLapInit(CodeGuider& code_guider)
   if((pl_cache = main_handle.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) pl_cache = &main_handle;
 }
 
-static void __FASTCALL__ PharLapDestroy( void )
+static void __FASTCALL__ PharLapDestroy()
 {
   BFile& main_handle = bmbioHandle();
   if(pl_cache != &bNull && pl_cache != &main_handle) delete pl_cache;
@@ -283,13 +283,13 @@ static bool __FASTCALL__ PharLapAddrResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static __filesize_t __FASTCALL__ PharLapHelp( void )
+static __filesize_t __FASTCALL__ PharLapHelp()
 {
   hlpDisplay(10010);
   return BMGetCurrFilePos();
 }
 
-static int __FASTCALL__ PharLapPlatform( void ) { return DISASM_CPU_IX86; }
+static int __FASTCALL__ PharLapPlatform() { return DISASM_CPU_IX86; }
 
 extern const REGISTRY_BIN PharLapTable =
 {

@@ -66,7 +66,7 @@ static void __FASTCALL__ del_class(any_t*it)
   delete t1->name;
 }
 
-void __FASTCALL__ twcDestroyClassSet(void)
+void __FASTCALL__ twcDestroyClassSet()
 {
   if(class_set) la_IterDestroy(class_set, del_class);
 }

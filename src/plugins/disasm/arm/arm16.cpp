@@ -328,5 +328,5 @@ void __FASTCALL__ arm16Init(DisMode* _parent)
     }
 }
 
-void __FASTCALL__ arm16Term(void) {}
+void __FASTCALL__ arm16Term() {}
 } // namespace beye

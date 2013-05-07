@@ -588,7 +588,7 @@ static const char * __FASTCALL__ elf_osabi(unsigned char id)
 }
 
 
-static __filesize_t __FASTCALL__ ShowELFHeader( void )
+static __filesize_t __FASTCALL__ ShowELFHeader()
 {
   __filesize_t fpos;
   TWindow *w;
@@ -920,7 +920,7 @@ static unsigned __FASTCALL__ Elf386PrgHdrNumItems(BFile& handle)
    return ELF_HALF(ELF_EHDR(elf,e_phnum));
 }
 
-static __filesize_t __FASTCALL__ ShowPrgHdrElf(void)
+static __filesize_t __FASTCALL__ ShowPrgHdrElf()
 {
   __filesize_t fpos;
   int ret;
@@ -944,7 +944,7 @@ static unsigned __FASTCALL__ Elf386SecHdrNumItems(BFile& handle)
   return IsSectionsPresent ? ELF_HALF(ELF_EHDR(elf,e_shnum)) : 0;
 }
 
-static __filesize_t __FASTCALL__ ShowSecHdrElf(void)
+static __filesize_t __FASTCALL__ ShowSecHdrElf()
 {
   __filesize_t fpos;
   int ret;
@@ -998,7 +998,7 @@ static __filesize_t __calcSymEntry(BFile& handle,__filesize_t num,bool display_m
    return fpos;
 }
 
-static __filesize_t  __FASTCALL__ displayELFsymtab( void )
+static __filesize_t  __FASTCALL__ displayELFsymtab()
 {
   __filesize_t fpos;
   int ret;
@@ -1058,7 +1058,7 @@ static __filesize_t  __FASTCALL__ displayELFdyntab(__filesize_t dynptr,
   return fpos;
 }
 
-static __filesize_t __FASTCALL__ ShowELFSymTab( void )
+static __filesize_t __FASTCALL__ ShowELFSymTab()
 {
   __filesize_t fpos;
   fpos = BMGetCurrFilePos();
@@ -1067,7 +1067,7 @@ static __filesize_t __FASTCALL__ ShowELFSymTab( void )
   return displayELFsymtab();
 }
 
-static __filesize_t __FASTCALL__ ShowELFDynSec( void )
+static __filesize_t __FASTCALL__ ShowELFDynSec()
 {
   __filesize_t fpos,dynptr;
   unsigned long number;
@@ -1366,7 +1366,7 @@ static void  __FASTCALL__ __elfReadRelaSection(__filesize_t offset,
   handle.seek(fp,BFile::Seek_Set);
 }
 
-static void  __FASTCALL__ buildElf386RelChain( void )
+static void  __FASTCALL__ buildElf386RelChain()
 {
   size_t i,_nitems;
   TWindow *w,*usd;
@@ -1962,7 +1962,7 @@ static void  __FASTCALL__ displayELFdyninfo(__filesize_t f_off,unsigned nitems)
   ma_Destroy(obj);
 }
 
-static __filesize_t __FASTCALL__ ShowELFDynInfo( void )
+static __filesize_t __FASTCALL__ ShowELFDynInfo()
 {
   __filesize_t dynptr,fpos;
   unsigned number;
@@ -2037,7 +2037,7 @@ static bool __FASTCALL__ AppendELFRef(const DisMode& parent,char *str,__filesize
   return ret;
 }
 
-static bool __FASTCALL__ IsELF32( void )
+static bool __FASTCALL__ IsELF32()
 {
   char id[4];
   bmReadBufferEx(id,sizeof(id),0,BFile::Seek_Set);
@@ -2167,7 +2167,7 @@ static void __FASTCALL__ ELFinit(CodeGuider& _code_guider)
    __elfSymPtr = findSHEntry(bmbioHandle(), SHT_SYMTAB, &__elfNumSymTab, &__elfSymShTbl, &__elfSymEntSize);
 }
 
-static void __FASTCALL__ ELFdestroy( void )
+static void __FASTCALL__ ELFdestroy()
 {
    BFile& main_handle = bmbioHandle();
    if(&namecache != &bNull && &namecache != &main_handle) delete &namecache;
@@ -2185,7 +2185,7 @@ static int __FASTCALL__ ELFbitness(__filesize_t off)
   return is_64bit?DAB_USE64:DAB_USE32;
 }
 
-static __filesize_t __FASTCALL__ ELFHelp( void )
+static __filesize_t __FASTCALL__ ELFHelp()
 {
   hlpDisplay(10003);
   return BMGetCurrFilePos();
@@ -2352,7 +2352,7 @@ static unsigned __FASTCALL__ elfGetObjAttr(__filesize_t pa,char *name,unsigned c
   return ret;
 }
 
-static int __FASTCALL__ ELFplatform( void ) {
+static int __FASTCALL__ ELFplatform() {
     unsigned id;
     elf_machine(ELF_HALF(ELF_EHDR(elf,e_machine)),&id);
     return id;

@@ -456,7 +456,7 @@ static const char * searchtxt[] =
   "Escape"
 };
 
-static void drawSearchPrompt( void )
+static void drawSearchPrompt()
 {
    __drawSinglePrompt(searchtxt);
 }

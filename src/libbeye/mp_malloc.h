@@ -27,7 +27,7 @@ namespace beye {
     extern volatile unsigned long long int my_profile_start,my_profile_end,my_profile_total;
 
 #if defined ( ENABLE_PROFILE ) && (defined ( ARCH_X86 ) || defined( ARCH_X86_64 ))
-    inline unsigned long long int read_tsc( void ) {
+    inline unsigned long long int read_tsc() {
 	unsigned long long int retval;
 	__asm __volatile ("rdtsc":"=A"(retval)::"memory");
 	return retval;

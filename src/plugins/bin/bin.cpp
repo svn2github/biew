@@ -24,10 +24,10 @@ using namespace beye;
 #include "plugins/disasm.h"
 
 namespace beye {
-static bool  __FASTCALL__ bin_check_fmt( void ) { return true; }
+static bool  __FASTCALL__ bin_check_fmt() { return true; }
 static void __FASTCALL__ bin_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ bin_destroy_fmt(void) {}
-static int  __FASTCALL__ bin_platform( void) { return DISASM_DEFAULT; }
+static void __FASTCALL__ bin_destroy_fmt() {}
+static int  __FASTCALL__ bin_platform() { return DISASM_DEFAULT; }
 
 extern const REGISTRY_BIN binTable =
 {

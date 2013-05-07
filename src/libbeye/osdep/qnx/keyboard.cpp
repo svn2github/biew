@@ -58,14 +58,14 @@ void __FASTCALL__ __init_keyboard( const char *user_cp )
 	return;
 }
 
-void __FASTCALL__ __term_keyboard( void )
+void __FASTCALL__ __term_keyboard()
 {
 	__term_mouse();
 	dev_mode(0,_old_dev_state,_DEV_MODES);
 	__keypad(0,0);
 	return;
 }
-int __FASTCALL__ __kbdGetShiftsKey( void )
+int __FASTCALL__ __kbdGetShiftsKey()
 {
 	long sbuf[2]={0,0};
 	long rbuf;

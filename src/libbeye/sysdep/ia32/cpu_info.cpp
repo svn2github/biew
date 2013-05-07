@@ -35,7 +35,7 @@ using namespace beye;
 
 #if !defined(__DISABLE_ASM) && (defined(__GNUC__) && defined(NDEBUG))
 
-static unsigned  __FASTCALL__ __cpu_type( void )
+static unsigned  __FASTCALL__ __cpu_type()
 {
   register unsigned retval;
   __asm __volatile(
@@ -173,7 +173,7 @@ static unsigned long  __FASTCALL__ __cpuid_ebxecx(unsigned long *__r_eax)
   return r_ebx;
 }
 
-static unsigned  __FASTCALL__ __fpu_type( void )
+static unsigned  __FASTCALL__ __fpu_type()
 {
   unsigned __cw;
   register unsigned retval;

@@ -142,7 +142,7 @@ typedef struct bt_cache_s {
     unsigned		num_entries;
 }bt_cache_t;
 
-static bt_cache_t*	init_bt_cache(void) { return (bt_cache_t*)calloc(1,sizeof(bt_cache_t)); }
+static bt_cache_t*	init_bt_cache() { return (bt_cache_t*)calloc(1,sizeof(bt_cache_t)); }
 
 static void		uninit_bt_cache(bt_cache_t* cache) {
     unsigned i;

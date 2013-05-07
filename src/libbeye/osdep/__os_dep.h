@@ -52,7 +52,7 @@ extern void      __FASTCALL__ __init_keyboard( const char *user_cp );
 		     * @note                  You must call this function after last call any other keyboard related functions
 		     * @see                   __init_keyboard
 		    **/
-extern void      __FASTCALL__ __term_keyboard( void );
+extern void      __FASTCALL__ __term_keyboard();
 
 		   /** Receives next keyboard event or note about mouse event.
 		     * @return                event. For detail see KE_* flag definitions in keycode.h file.
@@ -80,7 +80,7 @@ extern int       __FASTCALL__ __kbdTestKey( unsigned long flg );
 		     * @return                Current SHIFT key state. For detail see KS_* flag definitions in keycode.h file.
 		     * @see                   __kbdTestKey __kbdGetKey
 		    **/
-extern int       __FASTCALL__ __kbdGetShiftsKey( void );
+extern int       __FASTCALL__ __kbdGetShiftsKey();
 
 		   /** Describes info about input events.
 		     * @param head            Pointer to header to be filled
@@ -104,20 +104,20 @@ enum {
 		     * @note                  You must call this function before calling any other mouse related functions
 		     * @see                   __term_mouse
 		    **/
-extern int       __FASTCALL__ __init_mouse( void );
+extern int       __FASTCALL__ __init_mouse();
 
 		   /** Terminates mouse handler.
 		     * @return                none
 		     * @note                  You must call this function after last call any other mouse related functions
 		     * @see                   __init_mouse
 		    **/
-extern void      __FASTCALL__ __term_mouse( void );
+extern void      __FASTCALL__ __term_mouse();
 
 		   /** Returns mouse cursor visibility.
 		     * @return                true if mouse cursor is in visible state
 		     * @see                   __MsGetPos __MsGetBtns __MsSetState
 		    **/
-extern bool     __FASTCALL__ __MsGetState( void );
+extern bool     __FASTCALL__ __MsGetState();
 
 		   /** Sets mouse cursor visibility.
 		     * @return                none
@@ -138,7 +138,7 @@ extern void      __FASTCALL__ __MsGetPos( tAbsCoord *x, tAbsCoord *y );
 		     * @return                State of mouse button. For detail see MS_ flag definitions.
 		     * @see                   __MsGetState __MsGetPos
 		    **/
-extern int       __FASTCALL__ __MsGetBtns( void );
+extern int       __FASTCALL__ __MsGetBtns();
 
 /* VIDEO subsystem handling */
 
@@ -176,7 +176,7 @@ extern void      __FASTCALL__ __init_vio(const char *user_cp, unsigned long flag
 		     * @note                  You must call this function after last call any other video related functions
 		     * @see                   __init_vio
 		    **/
-extern void      __FASTCALL__ __term_vio( void );
+extern void      __FASTCALL__ __term_vio();
 
 enum {
     __TVIO_CUR_OFF   =0, /** Defines that cursor in invisible state */
@@ -187,7 +187,7 @@ enum {
 		     * @return                cursor type. For detail see __TVIO_CUR* flag definitions.
 		     * @see                   __vioSetCursorType
 		    **/
-extern int       __FASTCALL__ __vioGetCursorType( void );
+extern int       __FASTCALL__ __vioGetCursorType();
 
 		   /** Sets type of cursor.
 		     * @return                none
@@ -218,7 +218,7 @@ extern void      __FASTCALL__ __vioSetCursorPos(tAbsCoord x,tAbsCoord y);
 		     *                        about width and height of video
 		     *                        subsystem, number of colors e.t.c.
 		    **/
-extern void      __FASTCALL__ __vioRereadState( void );
+extern void      __FASTCALL__ __vioRereadState();
 
 		   /** Reads buffer from console (or terminal) video memory at given offset.
 		     * @return                none
@@ -261,14 +261,14 @@ extern void      __FASTCALL__ __vioSetTransparentColor(unsigned char value);
 		     * @note                  You must call this function before calling any other function from libbeye library
 		     * @see                   __term_sys
 		    **/
-extern void      __FASTCALL__ __init_sys( void );
+extern void      __FASTCALL__ __init_sys();
 
 		   /** Terminates system depended part of libbeye.
 		     * @return                none
 		     * @note                  You must call this function after last call any other function from libbeye library
 		     * @see                   __init_sys
 		    **/
-extern void      __FASTCALL__ __term_sys( void );
+extern void      __FASTCALL__ __term_sys();
 
 		   /** Realizes time slice between waiting of input events
 		     * @return                none
@@ -279,7 +279,7 @@ extern void      __FASTCALL__ __term_sys( void );
 		     *                        application must call SLEEP or it
 		     *                        analogs.
 		    **/
-extern void      __FASTCALL__ __OsYield( void );
+extern void      __FASTCALL__ __OsYield();
 
 		   /** Gets ctrl-break signal
 		     * @return                true if occured; false - otherwise
@@ -288,7 +288,7 @@ extern void      __FASTCALL__ __OsYield( void );
 		     * @warning               After getting signal by program
 					      semaphore is not being cleaned.
 		    **/
-extern bool     __FASTCALL__ __OsGetCBreak( void );
+extern bool     __FASTCALL__ __OsGetCBreak();
 
 		   /** Sets control-break signal
 		     * @return                none
@@ -326,7 +326,7 @@ extern char *    __FASTCALL__ __get_ini_name( const char *progname );
 		    **/
 extern char *    __FASTCALL__ __get_rc_dir( const char *progname );
 
-typedef void timer_callback( void ); /**< This is the code type used to represent user supplied function of timer callback */
+typedef void timer_callback(); /**< This is the code type used to represent user supplied function of timer callback */
 
 		   /** Sets user defined function as timer callback with given time interval
 		     * @return                Real call back interval in milliseconds
@@ -340,7 +340,7 @@ extern unsigned  __FASTCALL__ __OsSetTimerCallBack(unsigned ms,timer_callback *f
 		     * @return                none
 		     * @see                   __OsSetTimercallBack
 		    **/
-extern void      __FASTCALL__ __OsRestoreTimer(void);
+extern void      __FASTCALL__ __OsRestoreTimer();
 
 /* National Language Support */
 

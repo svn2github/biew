@@ -60,14 +60,14 @@ namespace beye {
   0x000001FF		- prog_stream_dir
 */
 
-static bool  __FASTCALL__ mpeg_check_fmt( void )
+static bool  __FASTCALL__ mpeg_check_fmt()
 {
     return false;
 }
 
 static void __FASTCALL__ mpeg_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ mpeg_destroy_fmt(void) {}
-static int  __FASTCALL__ mpeg_platform( void) { return DISASM_DEFAULT; }
+static void __FASTCALL__ mpeg_destroy_fmt() {}
+static int  __FASTCALL__ mpeg_platform() { return DISASM_DEFAULT; }
 
 extern const REGISTRY_BIN mpegTable =
 {

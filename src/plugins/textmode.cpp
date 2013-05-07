@@ -134,20 +134,20 @@ static char		detected_syntax_name[FILENAME_MAX+1];
 	    virtual void		save_ini(Ini_Profile& );
 	    virtual unsigned		convert_cp(char *str,unsigned len, bool use_fs_nls);
 	private:
-	    unsigned			tab2space(tvioBuff* dest,unsigned int alen,char* str,unsigned int len,unsigned int shift,unsigned* n_tabs,long lstart);
-	    void			paint_search(HLInfo* cptr,unsigned int shift,int i,int size,int _bin_mode);
+	    unsigned			tab2space(tvioBuff* dest,unsigned int alen,char* str,unsigned int len,unsigned int shift,unsigned* n_tabs,long lstart) const;
+	    void			paint_search(HLInfo* cptr,unsigned int shift,int i,int size,int _bin_mode) const;
 	    void			prepare_lines(int keycode);
-	    void			fill_curr_page(__filesize_t lval,__filesize_t flen);
-	    void			fill_prev_page(__filesize_t lval);
-	    __filesize_t		forward_scan_cr(__filesize_t cp,__filesize_t flen);
-	    __filesize_t		back_scan_cr(__filesize_t cp);
-	    unsigned char		nls_read_byte(__filesize_t cp);
+	    void			fill_curr_page(__filesize_t lval,__filesize_t flen) const;
+	    void			fill_prev_page(__filesize_t lval) const;
+	    __filesize_t		forward_scan_cr(__filesize_t cp,__filesize_t flen) const;
+	    __filesize_t		back_scan_cr(__filesize_t cp) const;
+	    unsigned char		nls_read_byte(__filesize_t cp) const;
 	    ColorAttr			hl_get_ctx(long off,int *is_valid, long *end_ctx) const;
 	    ColorAttr			hl_find_kwd(const char *str,Color col,unsigned *st_len) const;
 	    void			read_syntaxes();
 	    void			markup_ctx();
 	    bool			test_leading_escape(__fileoff_t cpos) const;
-	    bool			is_legal_word_char(unsigned char ch) { return (bool)word_set[(unsigned char)ch]; }
+	    bool			is_legal_word_char(unsigned char ch) const { return (bool)word_set[(unsigned char)ch]; }
 
 	    acontext_hl_t*		acontext; /* means active context*/
 	    unsigned long		acontext_num;
@@ -646,7 +646,7 @@ void __FASTCALL__ txt_cvt_lo80(char * str,unsigned size,const unsigned char *tmp
  }
 }
 
-unsigned char TextMode::nls_read_byte(__filesize_t cp)
+unsigned char TextMode::nls_read_byte(__filesize_t cp) const
 {
     char nls_buff[256];
     unsigned sym_size;
@@ -657,7 +657,7 @@ unsigned char TextMode::nls_read_byte(__filesize_t cp)
     return (unsigned char)nls_buff[0];
 }
 
-__filesize_t TextMode::back_scan_cr( __filesize_t cp )
+__filesize_t TextMode::back_scan_cr( __filesize_t cp ) const
 {
     __filesize_t lval;
     unsigned int freq;
@@ -683,7 +683,7 @@ __filesize_t TextMode::back_scan_cr( __filesize_t cp )
     return lval;
 }
 
-__filesize_t TextMode::forward_scan_cr( __filesize_t cp ,__filesize_t flen)
+__filesize_t TextMode::forward_scan_cr( __filesize_t cp ,__filesize_t flen) const
 {
     __filesize_t lval;
     unsigned int freq = 0;
@@ -706,7 +706,7 @@ __filesize_t TextMode::forward_scan_cr( __filesize_t cp ,__filesize_t flen)
     return flen;
 }
 
-void TextMode::fill_prev_page(__filesize_t lval)
+void TextMode::fill_prev_page(__filesize_t lval) const
 {
     unsigned cp_symb_len;
     int i;
@@ -718,7 +718,7 @@ void TextMode::fill_prev_page(__filesize_t lval)
     }
 }
 
-void TextMode::fill_curr_page(__filesize_t lval,__filesize_t flen)
+void TextMode::fill_curr_page(__filesize_t lval,__filesize_t flen) const
 {
     size_t i;
     tAbsCoord height = twGetClientHeight(MainWnd);
@@ -787,7 +787,7 @@ void TextMode::prepare_lines(int keycode)
     PrevPageSize = ptlines[h].end - ptlines[0].st + cp_symb_len;
 }
 
-unsigned TextMode::tab2space(tvioBuff * dest,unsigned int alen,char * str,unsigned int len,unsigned int shift,unsigned *n_tabs,long lstart)
+unsigned TextMode::tab2space(tvioBuff * dest,unsigned int alen,char * str,unsigned int len,unsigned int shift,unsigned *n_tabs,long lstart) const
 {
     long end_ctx;
     unsigned char ch,defcol;
@@ -904,7 +904,7 @@ unsigned TextMode::tab2space(tvioBuff * dest,unsigned int alen,char * str,unsign
     return k;
 }
 
-void TextMode::paint_search(HLInfo * cptr,unsigned int shift,int i,int size,int _bin_mode)
+void TextMode::paint_search(HLInfo * cptr,unsigned int shift,int i,int size,int _bin_mode) const
 {
     int sh,she;
     __fileoff_t save,savee;

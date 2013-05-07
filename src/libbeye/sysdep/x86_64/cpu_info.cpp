@@ -45,7 +45,7 @@ static inline void do_cpuid(unsigned int ax, unsigned int *p)
 }
 
 
-static unsigned  __FASTCALL__ __cpu_type( void )
+static unsigned  __FASTCALL__ __cpu_type()
 {
    return 8|__HAVE_CPUID|__HAVE_MMX|__HAVE_SSE|__HAVE_FPU;
 }
@@ -131,7 +131,7 @@ static unsigned long  __FASTCALL__ __cpuid_ebxecx(unsigned long *__r_eax)
   return p[1];
 }
 
-static unsigned  __FASTCALL__ __fpu_type( void )
+static unsigned  __FASTCALL__ __fpu_type()
 {
    return 8;
 }

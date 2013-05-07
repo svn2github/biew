@@ -229,7 +229,7 @@ static void __FASTCALL__ PaintNewHeaderNE(TWindow * win,const any_t**ptr,unsigne
   twRefreshFullWin(win);
 }
 
-static __filesize_t __FASTCALL__ ShowNewHeaderNE( void )
+static __filesize_t __FASTCALL__ ShowNewHeaderNE()
 {
   __fileoff_t pos;
   unsigned CS,IP;
@@ -361,7 +361,7 @@ static bool __FASTCALL__ __ReadModRefNamesNE(BFile& handle,memArray * obj)
 
 static void __FASTCALL__ ShowProcListNE(int);
 
-static __filesize_t __FASTCALL__ ShowModRefNE( void )
+static __filesize_t __FASTCALL__ ShowModRefNE()
 {
  BFile& handle = *ne_cache;
  int ret;
@@ -685,7 +685,7 @@ static __filesize_t  __FASTCALL__ CalcEntryNE(unsigned ord,bool dispmsg)
   return 0L;
 }
 
-static __filesize_t __FASTCALL__ ShowSegDefNE( void )
+static __filesize_t __FASTCALL__ ShowSegDefNE()
 {
  BFile& handle = *ne_cache;
  unsigned nnames;
@@ -731,7 +731,7 @@ static bool  __FASTCALL__ __ReadEntryTableNE(BFile& handle,memArray * obj)
  return true;
 }
 
-static unsigned __FASTCALL__ GetEntryCountNE( void )
+static unsigned __FASTCALL__ GetEntryCountNE()
 {
  BFile& handle = *ne_cache;
  unsigned i,j;
@@ -753,7 +753,7 @@ static unsigned __FASTCALL__ GetEntryCountNE( void )
  return i;
 }
 
-static __filesize_t __FASTCALL__ ShowEntriesNE( void )
+static __filesize_t __FASTCALL__ ShowEntriesNE()
 {
  BFile& handle = *ne_cache;
  unsigned nnames;
@@ -888,7 +888,7 @@ static unsigned int  __FASTCALL__ GetResourceGroupCountNE(BFile& handle)
  return count;
 }
 
-static __filesize_t __FASTCALL__ ShowResourcesNE( void )
+static __filesize_t __FASTCALL__ ShowResourcesNE()
 {
  __filesize_t fpos;
  BFile& handle = *ne_cache;
@@ -912,7 +912,7 @@ static __filesize_t __FASTCALL__ ShowResourcesNE( void )
  return fpos;
 }
 
-static __filesize_t __FASTCALL__ ShowResNamNE( void )
+static __filesize_t __FASTCALL__ ShowResNamNE()
 {
   __filesize_t fpos = BMGetCurrFilePos();
   int ret;
@@ -927,7 +927,7 @@ static __filesize_t __FASTCALL__ ShowResNamNE( void )
   return fpos;
 }
 
-static __filesize_t __FASTCALL__ ShowNResNmNE( void )
+static __filesize_t __FASTCALL__ ShowNResNmNE()
 {
   __filesize_t fpos;
   fpos = BMGetCurrFilePos();
@@ -945,7 +945,7 @@ static __filesize_t __FASTCALL__ ShowNResNmNE( void )
   return fpos;
 }
 
-static bool __FASTCALL__ IsNEFormat( void )
+static bool __FASTCALL__ IsNEFormat()
 {
    char id[2];
    beye_context().headshift = IsNewExe();
@@ -1370,7 +1370,7 @@ static void __FASTCALL__ NE_init(CodeGuider& _code_guider)
    if((ne_cache2 = main_handle.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) ne_cache2 = &main_handle;
 }
 
-static void __FASTCALL__ NE_destroy( void )
+static void __FASTCALL__ NE_destroy()
 {
   BFile& main_handle = bmbioHandle();
   if(CurrNEChain) { la_Destroy(CurrNEChain); CurrNEChain = 0; }
@@ -1381,7 +1381,7 @@ static void __FASTCALL__ NE_destroy( void )
   if(ne_cache1 != &bNull && ne_cache1 != &main_handle) delete ne_cache1;
 }
 
-static __filesize_t __FASTCALL__ NEHelp( void )
+static __filesize_t __FASTCALL__ NEHelp()
 {
   hlpDisplay(10006);
   return BMGetCurrFilePos();
@@ -1529,7 +1529,7 @@ static bool __FASTCALL__ neAddressResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static int __FASTCALL__ platformNE( void ) { return DISASM_CPU_IX86; }
+static int __FASTCALL__ platformNE() { return DISASM_CPU_IX86; }
 
 extern const REGISTRY_BIN neTable =
 {

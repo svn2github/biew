@@ -31,17 +31,17 @@ using namespace beye;
 #include "plugins/bin/mmio.h"
 
 namespace beye {
-static bool  __FASTCALL__ bmp_check_fmt( void )
+static bool  __FASTCALL__ bmp_check_fmt()
 {
     if(	bmReadByteEx(0,BFile::Seek_Set) == 'B' &&
 	bmReadByteEx(1,BFile::Seek_Set) == 'M') return true;
     return false;
 }
 static void __FASTCALL__ bmp_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ bmp_destroy_fmt(void) {}
-static int  __FASTCALL__ bmp_platform( void) { return DISASM_DEFAULT; }
+static void __FASTCALL__ bmp_destroy_fmt() {}
+static int  __FASTCALL__ bmp_platform() { return DISASM_DEFAULT; }
 
-static __filesize_t __FASTCALL__ Show_BMP_Header( void )
+static __filesize_t __FASTCALL__ Show_BMP_Header()
 {
  unsigned keycode;
  TWindow * hwnd;

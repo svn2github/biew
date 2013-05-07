@@ -77,7 +77,7 @@ namespace beye {
 
     /** Shows menu with operations for user defined names!
     **/
-    bool __FASTCALL__ udnUserNames( void );
+    bool __FASTCALL__ udnUserNames();
 
     void __FASTCALL__ udnInit( Ini_Profile& ini );
     void __FASTCALL__ udnTerm( Ini_Profile& ini );

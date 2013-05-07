@@ -393,10 +393,10 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
     return textshift;
 }
 
-bool DisMode::action_F1() { return (*activeDisasm->action[0])(); }
-bool DisMode::action_F3() { return (*activeDisasm->action[1])(); }
-bool DisMode::action_F4() { return (*activeDisasm->action[2])(); }
-bool DisMode::action_F5() { return (*activeDisasm->action[3])(); }
+bool DisMode::action_F1() { return (activeDisasm->action[0])?(*activeDisasm->action[0])():false; }
+bool DisMode::action_F3() { return (activeDisasm->action[1])?(*activeDisasm->action[1])():false; }
+bool DisMode::action_F4() { return (activeDisasm->action[2])?(*activeDisasm->action[2])():false; }
+bool DisMode::action_F5() { return (activeDisasm->action[3])?(*activeDisasm->action[3])():false; }
 
 unsigned long DisMode::prev_page_size() const { return PrevPageSize; }
 unsigned long DisMode::curr_page_size() const { return CurrPageSize; }

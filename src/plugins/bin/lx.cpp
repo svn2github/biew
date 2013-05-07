@@ -282,7 +282,7 @@ static void __FASTCALL__ PaintNewHeaderLX(TWindow * win,const any_t**ptr,unsigne
   twRefreshFullWin(win);
 }
 
-__filesize_t __FASTCALL__ ShowNewHeaderLX( void )
+__filesize_t __FASTCALL__ ShowNewHeaderLX()
 {
   __filesize_t fpos;
   LXEntryPoint = LXType == FILE_LX ? CalcEntryPointLX(lxe.lx.lxEIPObjectNumbers,lxe.lx.lxEIP) : CalcEntryPointLE(lxe.lx.lxEIPObjectNumbers,lxe.lx.lxEIP);
@@ -687,7 +687,7 @@ static __filesize_t  __FASTCALL__ CalcEntryBungleLX(unsigned ordinal,bool dispms
  return ret;
 }
 
-__filesize_t __FASTCALL__ ShowObjectsLX( void )
+__filesize_t __FASTCALL__ ShowObjectsLX()
 {
  BFile& handle = *lx_cache;
  __filesize_t fpos;
@@ -863,7 +863,7 @@ static unsigned __FASTCALL__ lxGetPageCount(BFile& handle)
   return (unsigned)lxe.lx.lxPageCount;
 }
 
-static __filesize_t __FASTCALL__ ShowMapTableLX( void )
+static __filesize_t __FASTCALL__ ShowMapTableLX()
 {
  __filesize_t fpos;
  int ret;
@@ -877,7 +877,7 @@ static __filesize_t __FASTCALL__ ShowMapTableLX( void )
  return fpos;
 }
 
-__filesize_t __FASTCALL__ ShowEntriesLX( void )
+__filesize_t __FASTCALL__ ShowEntriesLX()
 {
  BFile& handle = *lx_cache;
  __filesize_t fpos;
@@ -946,7 +946,7 @@ static bool  __FASTCALL__ __ReadResourceGroupLX(BFile& handle,memArray *obj,unsi
  return true;
 }
 
-static __filesize_t __FASTCALL__ ShowResourceLX( void )
+static __filesize_t __FASTCALL__ ShowResourceLX()
 {
  __filesize_t fpos;
  BFile& handle = *lx_cache;
@@ -969,7 +969,7 @@ static __filesize_t __FASTCALL__ ShowResourceLX( void )
  return fpos;
 }
 
-__filesize_t __FASTCALL__ ShowModRefLX( void )
+__filesize_t __FASTCALL__ ShowModRefLX()
 {
   fmtShowList(LXModRefNumItems,
 	      __ReadModRefNamesLX,
@@ -979,7 +979,7 @@ __filesize_t __FASTCALL__ ShowModRefLX( void )
   return BMGetCurrFilePos();
 }
 
-static __filesize_t __FASTCALL__ ShowResNamLX( void )
+static __filesize_t __FASTCALL__ ShowResNamLX()
 {
   __filesize_t fpos = BMGetCurrFilePos();
   int ret;
@@ -994,7 +994,7 @@ static __filesize_t __FASTCALL__ ShowResNamLX( void )
   return fpos;
 }
 
-static __filesize_t __FASTCALL__ ShowNResNmLX( void )
+static __filesize_t __FASTCALL__ ShowNResNmLX()
 {
   __filesize_t fpos;
   fpos = BMGetCurrFilePos();
@@ -1012,14 +1012,14 @@ static __filesize_t __FASTCALL__ ShowNResNmLX( void )
   return fpos;
 }
 
-__filesize_t __FASTCALL__ ShowImpProcLXLE( void )
+__filesize_t __FASTCALL__ ShowImpProcLXLE()
 {
   fmtShowList(LXImpNamesNumItems,LXImpNamesReadItems,
 	      IMPPROC_TABLE,0,NULL);
   return BMGetCurrFilePos();
 }
 
-static bool __FASTCALL__ isLX( void )
+static bool __FASTCALL__ isLX()
 {
    char id[4];
    beye_context().headshift = IsNewExe();
@@ -1037,13 +1037,13 @@ static void __FASTCALL__ LXinit(CodeGuider& code_guider)
    if((lx_cache = main_handle.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) lx_cache = &main_handle;
 }
 
-static void __FASTCALL__ LXdestroy( void )
+static void __FASTCALL__ LXdestroy()
 {
    BFile& main_handle = bmbioHandle();
    if(lx_cache != &bNull && lx_cache != &main_handle) delete lx_cache;
 }
 
-static __filesize_t __FASTCALL__ LXHelp( void )
+static __filesize_t __FASTCALL__ LXHelp()
 {
   hlpDisplay(10005);
   return BMGetCurrFilePos();
@@ -1189,7 +1189,7 @@ static bool __FASTCALL__ lxAddressResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static int __FASTCALL__ lxPlatform( void ) { return DISASM_CPU_IX86; }
+static int __FASTCALL__ lxPlatform() { return DISASM_CPU_IX86; }
 
 extern const REGISTRY_BIN lxTable =
 {

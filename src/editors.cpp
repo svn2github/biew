@@ -40,7 +40,7 @@ struct tag_emem EditorMem;
 int edit_x,edit_y;
 unsigned char edit_XX = 0;
 
-void ExtHelp( void )
+void ExtHelp()
 {
  TWindow * _using = twFocusedWin();
  hlpDisplay(2);
@@ -126,14 +126,14 @@ bool __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size
  return true;
 }
 
-void __FASTCALL__ editDestroyBuffs( void )
+void __FASTCALL__ editDestroyBuffs()
 {
   delete EditorMem.buff;
   delete EditorMem.save;
   delete EditorMem.alen;
 }
 
-void __FASTCALL__ CheckBounds( void )
+void __FASTCALL__ CheckBounds()
 {
   tAbsCoord height = twGetClientHeight(MainWnd);
   if(edit_y < 0) edit_y = 0;
@@ -142,7 +142,7 @@ void __FASTCALL__ CheckBounds( void )
   if(edit_x >= EditorMem.alen[edit_y]) edit_x = EditorMem.alen[edit_y] - 1;
 }
 
-void __FASTCALL__ CheckYBounds( void )
+void __FASTCALL__ CheckYBounds()
 {
   tAbsCoord height = twGetClientHeight(MainWnd);
   if(edit_y < 0) edit_y = 0;
@@ -150,7 +150,7 @@ void __FASTCALL__ CheckYBounds( void )
   while(!EditorMem.alen[edit_y]) edit_y--;
 }
 
-void __FASTCALL__ CheckXYBounds( void )
+void __FASTCALL__ CheckXYBounds()
 {
    CheckYBounds();
    if(edit_x < 0) edit_x = EditorMem.alen[--edit_y]*2;
@@ -158,7 +158,7 @@ void __FASTCALL__ CheckXYBounds( void )
    CheckYBounds();
 }
 
-void __FASTCALL__ editSaveContest( void )
+void __FASTCALL__ editSaveContest()
 {
   BFile* bHandle;
   std::string fname;

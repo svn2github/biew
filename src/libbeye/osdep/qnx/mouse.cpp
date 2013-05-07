@@ -46,11 +46,11 @@ extern unsigned long beye_kbdFlags;
 #define	_addr(x,y) (viomem+((x)+(y)*tvioWidth))
 
 int _mouse_handler(unsigned*,struct mouse_event*);
-void _mouse_hide(void);
-void _mouse_show(void);
+void _mouse_hide();
+void _mouse_show();
 char str[100];
 
-int __FASTCALL__ __init_mouse(void)
+int __FASTCALL__ __init_mouse()
 {
 	if(!(console||photon)) return 0;
 	term_mouse_on();
@@ -63,7 +63,7 @@ int __FASTCALL__ __init_mouse(void)
 	return 0;
 }
 
-void __FASTCALL__ __term_mouse(void)
+void __FASTCALL__ __term_mouse()
 {
 	if(!photon)
 		_mouse_hide();
@@ -71,7 +71,7 @@ void __FASTCALL__ __term_mouse(void)
 	return;
 }
 
-void _mouse_hide(void)
+void _mouse_hide()
 {
 	int c,ca,ch;
 	char s[2];
@@ -99,7 +99,7 @@ void _mouse_hide(void)
 	term_cur(saveY,saveX);
 }
 
-void _mouse_show(void)
+void _mouse_show()
 {
 	int c,ca,ch;
 	char s[2];
@@ -153,7 +153,7 @@ int _mouse_handler(unsigned *key,struct mouse_event *me)
 	return 0;
 }
 
-bool __FASTCALL__ __MsGetState(void)
+bool __FASTCALL__ __MsGetState()
 {
 	return _mouse_state;
 }
@@ -176,7 +176,7 @@ void __FASTCALL__ __MsGetPos(tAbsCoord *mx, tAbsCoord *my)
 	*my=term_state.mouse_row;
 }
 
-int __FASTCALL__ __MsGetBtns(void)
+int __FASTCALL__ __MsGetBtns()
 {
 	register int m=_mouse_buttons,c;
 	c=__kbdTestKey(0);

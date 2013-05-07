@@ -68,7 +68,7 @@ static ULONG APIENTRY MyExceptionHandler(PEXCEPTIONREPORTRECORD p1,
 static EXCEPTIONREGISTRATIONRECORD RegRec = { NULL, MyExceptionHandler };
 #endif
 
-void __FASTCALL__ __init_sys( void )
+void __FASTCALL__ __init_sys()
 {
   APIRET rc;
 #if !(defined( __DISABLE_MMF ) || defined( __DISABLE_LOWLEVEL_MMF))
@@ -90,7 +90,7 @@ void __FASTCALL__ __init_sys( void )
   _home_dir_name[0] = '\0';
 }
 
-void __FASTCALL__ __term_sys( void )
+void __FASTCALL__ __term_sys()
 {
   DosCloseEventSem(beyeSem);
 #if !(defined( __DISABLE_MMF ) || defined( __DISABLE_LOWLEVEL_MMF))
@@ -98,7 +98,7 @@ void __FASTCALL__ __term_sys( void )
 #endif
 }
 
-bool __FASTCALL__ __OsGetCBreak( void )
+bool __FASTCALL__ __OsGetCBreak()
 {
   return __c__break;
 }
@@ -108,7 +108,7 @@ void  __FASTCALL__ __OsSetCBreak( bool state )
   __c__break = state;
 }
 
-void __FASTCALL__ __OsYield( void ) { DosSleep(1); }
+void __FASTCALL__ __OsYield() { DosSleep(1); }
 
 extern char **ArgVector;
 

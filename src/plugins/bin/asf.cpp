@@ -32,7 +32,7 @@ using namespace beye;
 #include "plugins/bin/mmio.h"
 
 namespace beye {
-static bool  __FASTCALL__ asf_check_fmt( void )
+static bool  __FASTCALL__ asf_check_fmt()
 {
     const unsigned char asfhdrguid[16]= {0x30,0x26,0xB2,0x75,0x8E,0x66,0xCF,0x11,0xA6,0xD9,0x00,0xAA,0x00,0x62,0xCE,0x6C};
 /*    const unsigned char asf2hdrguid[16]={0xD1,0x29,0xE2,0xD6,0xDA,0x35,0xD1,0x11,0x90,0x34,0x00,0xA0,0xC9,0x03,0x49,0xBE}; */
@@ -42,15 +42,15 @@ static bool  __FASTCALL__ asf_check_fmt( void )
     return false;
 }
 
-static __filesize_t __FASTCALL__ Show_ASF_Header( void )
+static __filesize_t __FASTCALL__ Show_ASF_Header()
 {
     ErrMessageBox("Not implemented yet!","ASF format");
     return BMGetCurrFilePos();
 }
 
 static void __FASTCALL__ asf_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ asf_destroy_fmt(void) {}
-static int  __FASTCALL__ asf_platform( void) { return DISASM_DEFAULT; }
+static void __FASTCALL__ asf_destroy_fmt() {}
+static int  __FASTCALL__ asf_platform() { return DISASM_DEFAULT; }
 
 extern const REGISTRY_BIN asfTable =
 {

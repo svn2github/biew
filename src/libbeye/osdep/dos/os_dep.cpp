@@ -31,7 +31,7 @@ static char rbuff[FILENAME_MAX+1];
 static char rbuff2[FILENAME_MAX+1];
 static char _home_dir_name[FILENAME_MAX + 1];
 
-void __FASTCALL__ __init_sys( void )
+void __FASTCALL__ __init_sys()
 {
   _go32_want_ctrl_break(0);
 
@@ -40,12 +40,12 @@ void __FASTCALL__ __init_sys( void )
   _home_dir_name[0] = '\0';
 }
 
-void __FASTCALL__ __term_sys( void )
+void __FASTCALL__ __term_sys()
 {
   _go32_want_ctrl_break(1);
 }
 
-void __FASTCALL__ __OsYield( void )
+void __FASTCALL__ __OsYield()
 {
   __dpmi_yield();
 };
@@ -53,7 +53,7 @@ void __FASTCALL__ __OsYield( void )
 static bool __c__break = 0;
 static int   __c_hits = 0;
 
-bool __FASTCALL__ __OsGetCBreak( void )
+bool __FASTCALL__ __OsGetCBreak()
 {
   if(!__c__break)
   {

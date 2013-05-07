@@ -129,7 +129,7 @@ char * __FASTCALL__ __get_rc_dir(const char *progname)
 }
 
 
-bool __FASTCALL__ __OsGetCBreak(void)
+bool __FASTCALL__ __OsGetCBreak()
 {
 #ifndef	__ENABLE_SIGIO
     ReadNextEvent();
@@ -142,7 +142,7 @@ void  __FASTCALL__ __OsSetCBreak(bool state)
     break_status = state;
 }
 
-void __FASTCALL__ __OsYield(void)
+void __FASTCALL__ __OsYield()
 {
 #ifdef	__BEOS__
     /* usleep(10000); */
@@ -163,7 +163,7 @@ static void cleanup(int sig)
 
 /* static struct sigaction sa; */
 
-void __FASTCALL__ __init_sys(void)
+void __FASTCALL__ __init_sys()
 {
     int i = 0;
     const char *t = getenv("TERM");
@@ -204,7 +204,7 @@ void __FASTCALL__ __init_sys(void)
 */
 }
 
-void __FASTCALL__ __term_sys(void)
+void __FASTCALL__ __term_sys()
 {
 }
 

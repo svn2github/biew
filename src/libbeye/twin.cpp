@@ -44,11 +44,11 @@ const unsigned char TW_DN3D_FRAME[8] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF
 #ifndef NDEBUG
 #ifdef __TSC__
 #pragma save , call(inline=>on) /** GPF in protmode */
-static void winInternalError( void ) = { 0xFF, 0xFF };
+static void winInternalError() = { 0xFF, 0xFF };
 #elif defined _MSC_VER
-static inline void winInternalError( void ) {};
+static inline void winInternalError() {};
 #else
-static inline void winInternalError( void ) { (void)0xFFFFFFFF; };
+static inline void winInternalError() { (void)0xFFFFFFFF; };
 #endif
 static bool  __FASTCALL__ test_win(TWindow *win)
 {
@@ -489,7 +489,7 @@ static TWindow *  __FASTCALL__ __prevwin(TWindow *win)
   return ret;
 }
 
-static TWindow *  __FASTCALL__ __findcursorablewin(void)
+static TWindow *  __FASTCALL__ __findcursorablewin()
 {
   TWindow *iter,*ret;
   iter = head;

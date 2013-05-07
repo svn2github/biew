@@ -423,13 +423,13 @@ static const char * AVRCoreNames[] =
   "          "
 };
 
-static bool __FASTCALL__ AVRAsmRef( void )
+static bool __FASTCALL__ AVRAsmRef()
 {
   hlpDisplay(20020);
   return false;
 }
 
-static void __FASTCALL__ AVRHelpAsm( void )
+static void __FASTCALL__ AVRHelpAsm()
 {
   char *msgAsmText,*title;
   char **strs;
@@ -501,7 +501,7 @@ avrhlp_bye:
   bhelp.close();
 }
 
-static int __FASTCALL__ AVRMaxInsnLen( void )
+static int __FASTCALL__ AVRMaxInsnLen()
 {
   const struct avr_opcodes_s *opcode;
   int size = 0;
@@ -525,7 +525,7 @@ static ColorAttr __FASTCALL__ AVRGetAsmColor( unsigned long clone )
   return disasm_cset.cpu_cset[0].clone[clone & 0xff];
 }
 
-static int __FASTCALL__ AVRGetBitness( void )
+static int __FASTCALL__ AVRGetBitness()
 {
   return DAB_USE16;
 }
@@ -575,7 +575,7 @@ static void __FASTCALL__ AVRInit( DisMode& _parent )
   }
 }
 
-static void __FASTCALL__ AVRTerm( void )
+static void __FASTCALL__ AVRTerm()
 {
    delete avr_bin_masks;
    delete outstr;

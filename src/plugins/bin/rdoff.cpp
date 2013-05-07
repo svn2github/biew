@@ -56,7 +56,7 @@ static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t p
 
 static tCompare __FASTCALL__ compare_impnames(const any_t*v1,const any_t*v2);
 
-static __filesize_t __FASTCALL__ rdoff_Help( void )
+static __filesize_t __FASTCALL__ rdoff_Help()
 {
   hlpDisplay(10011);
   return BMGetCurrFilePos();
@@ -108,7 +108,7 @@ static bool  __FASTCALL__ rdoff_skiprec(unsigned char type)
   return ret;
 }
 
-static __filesize_t __FASTCALL__ rdoff_ShowExport( void )
+static __filesize_t __FASTCALL__ rdoff_ShowExport()
 {
   __filesize_t fpos;
   unsigned char rec;
@@ -215,7 +215,7 @@ static __filesize_t __FASTCALL__ rdoff_FindExport(const std::string& name)
   return ret;
 }
 
-static __filesize_t __FASTCALL__ rdoff_ShowModRef( void )
+static __filesize_t __FASTCALL__ rdoff_ShowModRef()
 {
   __filesize_t fpos;
   unsigned char rec;
@@ -256,7 +256,7 @@ static __filesize_t __FASTCALL__ rdoff_ShowModRef( void )
   return fpos;
 }
 
-static __filesize_t __FASTCALL__ rdoff_ShowImport( void )
+static __filesize_t __FASTCALL__ rdoff_ShowImport()
 {
   __filesize_t fpos;
   unsigned char rec;
@@ -298,7 +298,7 @@ static __filesize_t __FASTCALL__ rdoff_ShowImport( void )
   return fpos;
 }
 
-static __filesize_t __FASTCALL__ rdoff_ShowHeader( void )
+static __filesize_t __FASTCALL__ rdoff_ShowHeader()
 {
   int endian;
   __filesize_t fpos,entry;
@@ -358,7 +358,7 @@ static tCompare __FASTCALL__ rdoff_compare_reloc(const any_t*e1,const any_t*e2)
   return __CmpLong__(r1->offset,r2->offset);
 }
 
-static void  __FASTCALL__ BuildRelocRDOFF( void )
+static void  __FASTCALL__ BuildRelocRDOFF()
 {
   unsigned char rec;
   if(!(rdoffReloc = la_Build(0,sizeof(RDOFF_RELOC),MemOutBox))) return;
@@ -528,7 +528,7 @@ static bool __FASTCALL__ rdoff_AppendRef(const DisMode& parent,char *str,__files
   return ret;
 }
 
-static bool __FASTCALL__ rdoff_check_fmt( void )
+static bool __FASTCALL__ rdoff_check_fmt()
 {
   char rbuff[6];
   bmReadBufferEx(rbuff,sizeof(rbuff),0L,BFile::Seek_Set);
@@ -549,7 +549,7 @@ static void __FASTCALL__ rdoff_init_fmt(CodeGuider& _code_guider)
   ds_start = cs_start + cs_len + 4;
 }
 
-static void __FASTCALL__ rdoff_destroy_fmt( void )
+static void __FASTCALL__ rdoff_destroy_fmt()
 {
   if(rdoffReloc) { la_Destroy(rdoffReloc); rdoffReloc = NULL; }
   if(rdoffImpNames) { la_Destroy(rdoffImpNames); rdoffImpNames = NULL; }
@@ -763,7 +763,7 @@ static bool __FASTCALL__ rdoff_AddressResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static int __FASTCALL__ rdoff_platform( void ) { return DISASM_CPU_IX86; }
+static int __FASTCALL__ rdoff_platform() { return DISASM_CPU_IX86; }
 
 extern const REGISTRY_BIN rdoffTable =
 {

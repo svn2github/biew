@@ -34,49 +34,49 @@ using namespace beye;
 #include "libbeye/file_ini.h"
 
 enum {
-    FI_MAXSTRLEN=255 /**< Specifies maximal length of string, that can be readed from ini file */
+    INI_MAXSTRLEN=4096 /**< Specifies maximal length of string, that can be readed from ini file */
 };
 
 /**
     List of possible errors that are generic
 */
 enum {
-    __FI_NOERRORS     = 0, /**< No errors */
-    __FI_BADFILENAME  =-1, /**< Can not open file */
-    __FI_TOOMANY      =-2, /**< Too many opened files */
-    __FI_NOTMEM       =-3, /**< Memory exhausted */
-    __FI_OPENCOND     =-4, /**< Opened 'if' (missing '#endif') */
-    __FI_IFNOTFOUND   =-5, /**< Missing 'if' for 'endif' statement */
-    __FI_ELSESTAT     =-6, /**< Missing 'if' for 'else' statement */
-    __FI_UNRECOGN     =-7, /**< Unknown '#' directive */
-    __FI_BADCOND      =-8, /**< Syntax error in 'if' statement */
-    __FI_OPENSECT     =-9, /**< Expected opened section or subsection or invalid string */
-    __FI_BADCHAR      =-10, /**< Bad character on line (possible lost comment) */
-    __FI_BADVAR       =-11, /**< Bad variable in 'set' or 'delete' statement */
-    __FI_BADVAL       =-12, /**< Bad value of variable in 'set' statement */
-    __FI_NOVAR        =-13, /**< Unrecognized name of variable in 'delete' statement */
-    __FI_NODEFVAR     =-14, /**< Detected undefined variable (case sensitivity?) */
-    __FI_ELIFSTAT     =-15, /**< Missing 'if' for 'elif' statement */
-    __FI_OPENVAR      =-16, /**< Opened variable on line (use even number of '%' characters) */
-    __FI_NOTEQU       =-17, /**< Lost or mismatch character '=' in assigned expression */
-    __FI_USER         =-18, /**< User defined message */
-    __FI_FIUSER       =-19  /**< User error */
+    __INI_NOERRORS     = 0, /**< No errors */
+    __INI_BADFILENAME  =-1, /**< Can not open file */
+    __INI_TOOMANY      =-2, /**< Too many opened files */
+    __INI_NOTMEM       =-3, /**< Memory exhausted */
+    __INI_OPENCOND     =-4, /**< Opened 'if' (missing '#endif') */
+    __INI_IFNOTFOUND   =-5, /**< Missing 'if' for 'endif' statement */
+    __INI_ELSESTAT     =-6, /**< Missing 'if' for 'else' statement */
+    __INI_UNRECOGN     =-7, /**< Unknown '#' directive */
+    __INI_BADCOND      =-8, /**< Syntax error in 'if' statement */
+    __INI_OPENSECT     =-9, /**< Expected opened section or subsection or invalid string */
+    __INI_BADCHAR      =-10, /**< Bad character on line (possible lost comment) */
+    __INI_BADVAR       =-11, /**< Bad variable in 'set' or 'delete' statement */
+    __INI_BADVAL       =-12, /**< Bad value of variable in 'set' statement */
+    __INI_NOVAR        =-13, /**< Unrecognized name of variable in 'delete' statement */
+    __INI_NODEFVAR     =-14, /**< Detected undefined variable (case sensitivity?) */
+    __INI_ELIFSTAT     =-15, /**< Missing 'if' for 'elif' statement */
+    __INI_OPENVAR      =-16, /**< Opened variable on line (use even number of '%' characters) */
+    __INI_NOTEQU       =-17, /**< Lost or mismatch character '=' in assigned expression */
+    __INI_USER         =-18, /**< User defined message */
+    __INI_FIUSER       =-19  /**< User error */
 };
 /**
     possible answers to the errors
 */
 enum {
-    __FI_IGNORE   =0, /**< Ignore error and continue */
-    __FI_EXITPROC =1 /**< Terminate the program execution */
+    __INI_IGNORE   =0, /**< Ignore error and continue */
+    __INI_EXITPROC =1 /**< Terminate the program execution */
 };
 /**
     return constants for FiSearch
 */
 enum {
-    __FI_NOTFOUND   =0, /**< Required string is not found */
-    __FI_SECTION    =1, /**< Required string is section */
-    __FI_SUBSECTION =2, /**< required string is subsection */
-    __FI_ITEM       =3  /**< required string is item */
+    __INI_NOTFOUND   =0, /**< Required string is not found */
+    __INI_SECTION    =1, /**< Required string is section */
+    __INI_SUBSECTION =2, /**< required string is subsection */
+    __INI_ITEM       =3  /**< required string is item */
 };
 
 #if 0
@@ -103,17 +103,17 @@ fprintf(stderr,
 
 namespace beye {
 static const unsigned __C_EOF=0x1A;
-static const char FiOpenComment=';';
+static const char iniOpenComment=';';
 static const char iniLegalSet[] = " _0123456789"
 			   "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 			   "abcdefghijklmnopqrstuvwxyz";
 
 static inline bool IS_VALID_NAME(const std::string& name) { return name.find_first_not_of(iniLegalSet) == std::string::npos; }
 static inline bool IS_SECT(const std::string& str,char ch) { return str[0] == ch; }
-static inline bool FiisSection(const std::string& str ) { return IS_SECT(str,'['); }
-static inline bool FiisSubSection(const std::string& str ) { return IS_SECT(str,'<'); }
-static inline bool FiisCommand(const std::string& str ) { return IS_SECT(str,'#'); }
-static inline bool FiisItem(const std::string& str) { return !(FiisSection(str) || FiisSubSection(str) || FiisCommand(str)); }
+static inline bool is_section(const std::string& str ) { return IS_SECT(str,'['); }
+static inline bool is_subsection(const std::string& str ) { return IS_SECT(str,'<'); }
+static inline bool is_command(const std::string& str ) { return IS_SECT(str,'#'); }
+static inline bool is_item(const std::string& str) { return !(is_section(str) || is_subsection(str) || is_command(str)); }
 /**************************************************************\
 *                      Low level support                       *
 \**************************************************************/
@@ -124,7 +124,7 @@ bool Ini_io::open(const std::string& filename)
     /* Try to load .ini file entire into memory */
     fs.open(filename.c_str(),std::ios_base::in|std::ios_base::binary);
     /* Note! All OSes except DOS-DOS386 allows opening of empty filenames as /dev/null */
-    if(!fs.is_open() && filename[0]) parent.aerror(__FI_BADFILENAME,0,filename);
+    if(!fs.is_open() && filename[0]) parent.aerror(__INI_BADFILENAME,0,filename);
     parent.file_info.push_back(std::make_pair(0,filename));
     return true;
 }
@@ -154,8 +154,8 @@ char* Ini_io::get_next_string(char * str,unsigned int size,char *original)
     }
     if(original) strcpy(original,str);
     parent.file_info.back().first++;
-    if((sret == NULL && !fs.eof())) parent.aerror(__FI_BADFILENAME,0,str);
-    sret = (unsigned char*)strchr(str,FiOpenComment);
+    if((sret == NULL && !fs.eof())) parent.aerror(__INI_BADFILENAME,0,str);
+    sret = (unsigned char*)strchr(str,iniOpenComment);
     if(sret) *sret = 0;
 
     szTrimTrailingSpace(str);
@@ -189,14 +189,14 @@ char* Ini_io::get_next_string(char * str,unsigned int size,char *original)
 }
 
 std::string Ini_io::get_next_string() {
-    char tmp[FI_MAXSTRLEN];
+    char tmp[INI_MAXSTRLEN];
     get_next_string(tmp,sizeof(tmp),NULL);
     return std::string(tmp);
 }
 
 std::string Ini_io::get_next_string(std::string& original) {
-    char tmp[FI_MAXSTRLEN];
-    char org[FI_MAXSTRLEN];
+    char tmp[INI_MAXSTRLEN];
+    char org[INI_MAXSTRLEN];
     get_next_string(tmp,sizeof(tmp),org);
     original=org;
     return std::string(tmp);
@@ -269,7 +269,7 @@ std::string Variable_Set::expand(const std::string& var) { return set[var]; }
 std::string Variable_Set::substitute(const std::string& src,char delim) {
     std::string rc;
     if(src.find(delim)!=std::string::npos) {
-	char tmp[FI_MAXSTRLEN+1];
+	char tmp[INI_MAXSTRLEN+1];
 	char npercent;
 	bool isVar;
 	unsigned char tmp_ptr;
@@ -294,7 +294,7 @@ std::string Variable_Set::substitute(const std::string& src,char delim) {
 		else		rc+=c;
 	    }
 	}
-	if( npercent%2 ) parent.error_cl(__FI_OPENVAR);
+	if( npercent%2 ) parent.error_cl(__INI_OPENVAR);
     } else rc=src;
     return rc;
 }
@@ -354,7 +354,7 @@ void Ini_Parser::Ini_Parser::aerror(int nError,int row,const std::string& addinf
 {
     int eret = 0;
     eret = error(nError,row,addinfo);
-    if(eret == __FI_EXITPROC) exit(255);
+    if(eret == __INI_EXITPROC) exit(255);
 }
 
 static const char* list[] = {
@@ -384,7 +384,7 @@ std::string Ini_Parser::decode_error(int nError)
 {
     std::string ret;
     nError = abs(nError);
-    if(nError >= 0 && nError <= abs(__FI_FIUSER)) ret = list[nError];
+    if(nError >= 0 && nError <= abs(__INI_FIUSER)) ret = list[nError];
     else ret = "Unknown Error";
     return ret;
 }
@@ -396,7 +396,7 @@ int Ini_Parser::error(int ne,int row,const std::string& addinfo)
     char sout[4096];
     herr.open("fi_syserr.$$$",std::ios_base::out);
     herr<<"About : [.Ini] file run-time support library. Written by Nickols_K"<<std::endl<<"Detected ";
-    if(ne != __FI_TOOMANY && ~file_info.empty()) {
+    if(ne != __INI_TOOMANY && ~file_info.empty()) {
 	herr<<(row ? "fatal" : "")<<" error in : "<<file_info.back().second;
     }
     herr<<std::endl;
@@ -409,7 +409,7 @@ int Ini_Parser::error(int ne,int row,const std::string& addinfo)
     if(!debug_str.empty()) herr<<"Debug info: '"<<debug_str<<"'"<<std::endl;
     herr.close();
     std::cerr<<std::endl<<"Error in .ini file."<<std::endl<<"File fi_syser.$$$ created."<<std::endl;
-    return __FI_EXITPROC;
+    return __INI_EXITPROC;
 }
 
 std::string Ini_Parser::_get_bracket_string(const std::string& src,char obr,char cbr)
@@ -420,12 +420,12 @@ std::string Ini_Parser::_get_bracket_string(const std::string& src,char obr,char
 	unsigned len;
 	ends = src.find(cbr,1);
 	if(ends==std::string::npos) goto err;
-	if(src[ends+1]) Ini_Parser::error_cl(__FI_BADCHAR);
+	if(src[ends+1]) Ini_Parser::error_cl(__INI_BADCHAR);
 	len = ends-1;
 	rc=src.substr(1,len);
     } else {
 err:
-	Ini_Parser::error_cl(__FI_OPENSECT);
+	Ini_Parser::error_cl(__INI_OPENSECT);
     }
     return rc;
 }
@@ -436,7 +436,7 @@ std::string Ini_Parser::get_value_of_item(const std::string& src)
     size_t from;
     from = src.find('=');
     if(from!=std::string::npos) rc=&src.c_str()[++from];
-    else     Ini_Parser::error_cl(__FI_NOTEQU);
+    else     Ini_Parser::error_cl(__INI_NOTEQU);
     return rc;
 }
 
@@ -449,7 +449,7 @@ std::string Ini_Parser::get_item_name(const std::string& src)
     if(sptr!=std::string::npos) {
 	len = sptr;
 	rc=src.substr(0,len);
-	if(!IS_VALID_NAME(rc)) Ini_Parser::error_cl(__FI_BADCHAR);
+	if(!IS_VALID_NAME(rc)) Ini_Parser::error_cl(__INI_BADCHAR);
     }
     return rc;
 }
@@ -482,11 +482,11 @@ bool Ini_Parser::get_condition( const std::string& condstr)
 
     var = tokenizer.next_word(" ");
     user_ass=ifSmarting?vars.substitute(var):var;
-    if(tokenizer.curr_char()) error_cl(__FI_BADCHAR);
+    if(tokenizer.curr_char()) error_cl(__INI_BADCHAR);
     ret = false;
     if(strcmp(cond,"==") == 0)  ret = user_ass==rvar;
     else if(strcmp(cond,"!=") == 0)  ret = user_ass!=rvar;
-    else error_cl(__FI_BADCOND);
+    else error_cl(__INI_BADCOND);
     return ret;
 }
 
@@ -517,44 +517,44 @@ bool Ini_Parser::command_parser( const std::string& cmd )
 	goto Exit_CP;
     } else if(word=="set") {
 	v = tokenizer.next_legal_word(&iniLegalSet[1]);
-	if(tokenizer.curr_char() != '=') error_cl(__FI_NOTEQU);
+	if(tokenizer.curr_char() != '=') error_cl(__INI_NOTEQU);
 	tokenizer.next_char();
 	a = tokenizer.next_word(" ");
-	if(v[0] == '\0') error_cl(__FI_BADVAR);
-	if(a[0] == '\0') error_cl(__FI_BADVAL);
+	if(v[0] == '\0') error_cl(__INI_BADVAR);
+	if(a[0] == '\0') error_cl(__INI_BADVAL);
 	vars.add(v,a);
-	if(tokenizer.curr_char()) error_cl(__FI_BADCHAR);
+	if(tokenizer.curr_char()) error_cl(__INI_BADCHAR);
 	goto Exit_CP;
     } else if(word=="delete") {
 	std::string _a;
 	v = tokenizer.next_legal_word(&iniLegalSet[1]);
 	_a=ifSmarting?vars.substitute(v):v;
-	if(_a[0] == '\0') error_cl(__FI_BADVAR);
+	if(_a[0] == '\0') error_cl(__INI_BADVAR);
 	vars.remove(_a);
-	if(tokenizer.curr_char()) error_cl(__FI_BADCHAR);
+	if(tokenizer.curr_char()) error_cl(__INI_BADCHAR);
 	goto Exit_CP;
     } else if(word=="reset") {
-	if(tokenizer.curr_char()) error_cl(__FI_BADCHAR);
+	if(tokenizer.curr_char()) error_cl(__INI_BADCHAR);
 	vars.clear();
 	goto Exit_CP;
      } else if(word=="case") {
-	if(tokenizer.curr_char()) error_cl(__FI_BADCHAR);
+	if(tokenizer.curr_char()) error_cl(__INI_BADCHAR);
 	case_sens = 2;
 	goto Exit_CP;
     } else if(word=="smart") {
-	if(tokenizer.curr_char()) error_cl(__FI_BADCHAR);
+	if(tokenizer.curr_char()) error_cl(__INI_BADCHAR);
 	ifSmarting = true;
 	goto Exit_CP;
     } else if(word=="nosmart") {
-	if(tokenizer.curr_char()) error_cl(__FI_BADCHAR);
+	if(tokenizer.curr_char()) error_cl(__INI_BADCHAR);
 	ifSmarting = false;
 	goto Exit_CP;
     } else if(word=="uppercase") {
-	if(tokenizer.curr_char()) error_cl(__FI_BADCHAR);
+	if(tokenizer.curr_char()) error_cl(__INI_BADCHAR);
 	case_sens = 1;
 	goto Exit_CP;
     } else if(word=="lowercase") {
-	if(tokenizer.curr_char()) error_cl(__FI_BADCHAR);
+	if(tokenizer.curr_char()) error_cl(__INI_BADCHAR);
 	case_sens = 0;
 	goto Exit_CP;
     } else if(word=="error") {
@@ -562,10 +562,10 @@ bool Ini_Parser::command_parser( const std::string& cmd )
 	std::string sptr=tokenizer.tail();
 	_a=ifSmarting?vars.substitute(sptr):sptr;
 	user_message = _a.c_str();
-	error_cl(__FI_FIUSER);
-    } else if(word=="else") error_cl(__FI_ELSESTAT);
-    else if(word=="endif") error_cl(__FI_IFNOTFOUND);
-    else if(word=="elif") error_cl(__FI_ELIFSTAT);
+	error_cl(__INI_FIUSER);
+    } else if(word=="else") error_cl(__INI_ELSESTAT);
+    else if(word=="endif") error_cl(__INI_IFNOTFOUND);
+    else if(word=="elif") error_cl(__INI_ELIFSTAT);
     else if(word=="if") {
 	std::string sstore;
 	unsigned int nsave;
@@ -578,7 +578,7 @@ bool Ini_Parser::command_parser( const std::string& cmd )
 	while(!active_file->eof()) {
 	    sstore=active_file->get_next_string();
 	    if(sstore[0] == '\0') goto Exit_CP;
-	    if(FiisCommand(sstore)) {
+	    if(is_command(sstore)) {
 		a = get_command_string(sstore);
 		if(case_sens == 1) std::transform(a.begin(),a.end(),a.begin(),::toupper);
 		if(case_sens == 0) std::transform(a.begin(),a.end(),a.begin(),::tolower);
@@ -589,16 +589,16 @@ bool Ini_Parser::command_parser( const std::string& cmd )
 		if(v=="endif") {
 		    nLabel--;
 		    if(nLabel == 0) goto Exit_CP;
-		    if(nLabel <  0) error_cl(__FI_IFNOTFOUND);
+		    if(nLabel <  0) error_cl(__INI_IFNOTFOUND);
 		}
 		if(v=="else" && nLabel == 1) {
-		    if( BeenElse ) error_cl(__FI_ELSESTAT);
+		    if( BeenElse ) error_cl(__INI_ELSESTAT);
 		    if( nLabel == 1 ) cond_ret = Condition = (Condition ? false : true);
 		    if( nLabel == 1 ) BeenElse = true;
 		    continue;
 		}
 		if(v=="elif" && nLabel == 1) {
-		    if( BeenElse ) error_cl(__FI_ELIFSTAT);
+		    if( BeenElse ) error_cl(__INI_ELIFSTAT);
 		    if( nLabel == 1 ) cond_ret = Condition = get_condition(c_tokenizer.data());
 		    if( nLabel == 1 ) BeenElse = true;
 		    continue;
@@ -608,9 +608,9 @@ bool Ini_Parser::command_parser( const std::string& cmd )
 		if(Condition) string_parser(sstore);
 	    }
 	} // while
-	Ini_Parser::aerror(__FI_OPENCOND,nsave,"");
+	Ini_Parser::aerror(__INI_OPENCOND,nsave,"");
     } // if word==if
-    error_cl(__FI_UNRECOGN);
+    error_cl(__INI_UNRECOGN);
     Exit_CP:
     return cond_ret;
 }
@@ -618,7 +618,7 @@ bool Ini_Parser::command_parser( const std::string& cmd )
 bool Ini_Parser::string_parser(const std::string& curr_str)
 {
     std::string item,val;
-    if(FiisCommand(curr_str))
+    if(is_command(curr_str))
     {
       std::string _item;
       _item = get_command_string(curr_str);
@@ -626,19 +626,19 @@ bool Ini_Parser::string_parser(const std::string& curr_str)
       return false;
     }
     else
-    if(FiisSection(curr_str))
+    if(is_section(curr_str))
     {
       curr_sect = get_section_name(curr_str);
       return false;
     }
     else
-    if(FiisSubSection(curr_str))
+    if(is_subsection(curr_str))
     {
       curr_subsect = get_subsection_name(curr_str);
       return false;
     }
     else
-    if(FiisItem(curr_str))
+    if(is_item(curr_str))
     {
       std::string buffer;
       bool retval;
@@ -657,7 +657,7 @@ bool Ini_Parser::string_parser(const std::string& curr_str)
        info.value = val.c_str();
        if(user_proc) retval = (*user_proc)(&info,user_data);
       }
-      else Ini_Parser::error_cl(__FI_BADCHAR);
+      else Ini_Parser::error_cl(__INI_BADCHAR);
       return retval;
     }
   return false;
@@ -778,7 +778,7 @@ void Ini_Profile::close()
 }
 
 std::string Ini_Profile::read(const std::string& section,const std::string& subsection,
-				const std::string& _item,const std::string& def_value)
+				const std::string& _item,const std::string& def_value) const
 {
     unsigned ret;
     std::string value=def_value;

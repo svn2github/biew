@@ -60,7 +60,7 @@ void __FASTCALL__ __init_vio(const char *user_cp, unsigned long flg )
     __vioRereadState();
 }
 
-void __FASTCALL__ __term_vio( void )
+void __FASTCALL__ __term_vio()
 {
   unsigned i;
   VIOPALSTATE vpal;
@@ -75,7 +75,7 @@ void __FASTCALL__ __term_vio( void )
     }
 }
 
-void __FASTCALL__ __vioRereadState( void )
+void __FASTCALL__ __vioRereadState()
 {
     int i;
     VIOMODEINFO vminfo;
@@ -89,7 +89,7 @@ void __FASTCALL__ __vioRereadState( void )
     for(i = 0;i < vminfo.color;i++) tvioNumColors *= 2;
 }
 
-int __FASTCALL__ __vioGetCursorType( void )
+int __FASTCALL__ __vioGetCursorType()
 {
   int hcell,ret;
   VIOMODEINFO vminfo;

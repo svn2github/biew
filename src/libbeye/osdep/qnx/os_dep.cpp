@@ -94,7 +94,7 @@ char* __FASTCALL__ __get_rc_dir(const char *progname)
 	return _rc_dir_name;
 }
 
-void __FASTCALL__ __OsYield(void)
+void __FASTCALL__ __OsYield()
 {
 	it.it_value.tv_sec=0;
 	it.it_value.tv_nsec=100000;
@@ -105,7 +105,7 @@ void __FASTCALL__ __OsYield(void)
 	Receive(proxy,NULL,0);
 }
 
-bool __FASTCALL__ __OsGetCBreak(void)
+bool __FASTCALL__ __OsGetCBreak()
 {
 	return break_status;
 }
@@ -126,7 +126,7 @@ static void cleanup(int sig)
 
 /* static struct sigaction sa; */
 
-void __FASTCALL__ __init_sys(void)
+void __FASTCALL__ __init_sys()
 {
 	int i=0;
 	struct sched_param sp;
@@ -163,7 +163,7 @@ void __FASTCALL__ __init_sys(void)
 	_home_dir_name[0] = '\0';
 }
 
-void __FASTCALL__ __term_sys(void)
+void __FASTCALL__ __term_sys()
 {
 	if(t!=-1)
 		timer_delete(t);

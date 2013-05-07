@@ -125,13 +125,13 @@ static const char * FxText[] =
   "Quit  "
 };
 
-static void  fillFxText( void )
+static void  fillFxText()
 {
   FxText[3] = beye_context().active_mode().misckey_name();
   FxText[7] = "Header";
 }
 
-void drawPrompt( void )
+void drawPrompt()
 {
     fillFxText();
     const char* prmt[10];
@@ -150,7 +150,7 @@ static const char * amenu_names[] =
    "~Mode-depended"
 };
 
-int MainActionFromMenu( void )
+int MainActionFromMenu()
 {
     const char* prmt[10];
     size_t j;
@@ -242,13 +242,13 @@ static const char * emptlsttext[] =
   "      "
 };
 
-void drawEditPrompt( void )
+void drawEditPrompt()
 {
   __drawSinglePrompt(fetext);
 }
 
 /*
-int EditActionFromMenu( void )
+int EditActionFromMenu()
 {
   int i;
   i = SelBoxA(fetext,10," Select editor's action: ",0);
@@ -257,22 +257,22 @@ int EditActionFromMenu( void )
 }
 */
 
-void drawEmptyPrompt( void )
+void drawEmptyPrompt()
 {
   __drawSinglePrompt(empttext);
 }
 
-void drawEmptyListPrompt( void )
+void drawEmptyListPrompt()
 {
   __drawSinglePrompt(emptlsttext);
 }
 
-void drawAsmEdPrompt( void )
+void drawAsmEdPrompt()
 {
   __drawMultiPrompt(fetext, NULL, NULL, casmtext);
 }
 
-int EditAsmActionFromMenu( void )
+int EditAsmActionFromMenu()
 {
   int i;
   i = SelBoxA(amenu_names,2," Select asm editor's action: ",0);
@@ -379,27 +379,27 @@ static const char * helplisttxt[] =
   "Escape"
 };
 
-void drawListPrompt( void )
+void drawListPrompt()
 {
   __drawMultiPrompt(listtxt, shlisttxt, NULL, NULL);
 }
 
-void drawOrdListPrompt( void )
+void drawOrdListPrompt()
 {
   __drawMultiPrompt(ordlisttxt, shlisttxt, NULL, NULL);
 }
 
-void drawSearchListPrompt( void )
+void drawSearchListPrompt()
 {
   __drawMultiPrompt(searchlisttxt, shlisttxt, NULL, NULL);
 }
 
-void drawHelpPrompt( void )
+void drawHelpPrompt()
 {
   __drawSinglePrompt(helptxt);
 }
 
-int HelpActionFromMenu( void )
+int HelpActionFromMenu()
 {
   int i;
   i = SelBoxA(helptxt,10," Select help action: ",0);
@@ -407,7 +407,7 @@ int HelpActionFromMenu( void )
   return 0;
 }
 
-void drawHelpListPrompt( void )
+void drawHelpListPrompt()
 {
   __drawMultiPrompt(helplisttxt, shlisttxt, NULL, NULL);
 }
@@ -448,7 +448,7 @@ const cvbyte buttons[] = {
 { 56,12,TWC_SH, Black }
 };
 
-void About( void )
+void About()
 {
  TWindow * hwnd;
  unsigned i,j,len;

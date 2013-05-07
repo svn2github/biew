@@ -45,7 +45,7 @@ using namespace beye;
 
 namespace beye {
 extern const Plugin_Info disMode;
-static bool ChSize( void )
+static bool ChSize()
 {
  __fileoff_t psize,tile = 0;
  if(Get16DigitDlg(" Change size of file ","Num. of bytes (+-dec):",3,(unsigned long long*)&tile))
@@ -156,7 +156,7 @@ static bool  __FASTCALL__ DelBlock(BFile* bHandle,__filesize_t start,__fileoff_t
    return true;
 }
 
-static bool InsDelBlock( void )
+static bool InsDelBlock()
 {
  __filesize_t start;
  static __fileoff_t psize;
@@ -277,7 +277,7 @@ static void __make_dump_name(const char *end)
  strcpy(p,end);
 }
 
-static bool FStore( void )
+static bool FStore()
 {
     BeyeContext& bctx = beye_context();
     unsigned long flags;
@@ -607,7 +607,7 @@ static bool FStore( void )
     return false;
 }
 
-static bool FRestore( void )
+static bool FRestore()
 {
  __filesize_t endpos,cpos;
  unsigned long flags;
@@ -735,7 +735,7 @@ static void  __FASTCALL__ CryptFunc(char * buff,unsigned len,char *pass)
   pass[passlen-1] = ch;
 }
 
-static bool CryptBlock( void )
+static bool CryptBlock()
 {
  __filesize_t endpos,cpos;
  unsigned long flags;
@@ -842,7 +842,7 @@ static void  __FASTCALL__ EndianifyBlock(char * buff,unsigned len, int type)
   }
 }
 
-static bool ReverseBlock( void )
+static bool ReverseBlock()
 {
  __filesize_t endpos,cpos;
  unsigned long flags;
@@ -923,7 +923,7 @@ static void  __FASTCALL__ TranslateBlock(char * buff,unsigned len, const unsigne
 }
 
 
-static bool XLatBlock( void )
+static bool XLatBlock()
 {
  unsigned char xlt[256];
  __filesize_t endpos,cpos;
@@ -1023,7 +1023,7 @@ static bool XLatBlock( void )
  return ret;
 }
 
-static bool FileInfo( void )
+static bool FileInfo()
 {
   TWindow* wnd;
   struct stat statbuf;
@@ -1143,7 +1143,7 @@ static const char* fu_names[] =
   "~Xlat block..."
 };
 
-typedef bool (*FileFunc)( void );
+typedef bool (*FileFunc)();
 
 static FileFunc fu_funcs[] =
 {
@@ -1157,7 +1157,7 @@ static FileFunc fu_funcs[] =
   XLatBlock
 };
 
-bool FileUtils( void )
+bool FileUtils()
 {
   size_t nUtils;
   int retval;

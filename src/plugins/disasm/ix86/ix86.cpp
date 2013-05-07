@@ -6106,13 +6106,13 @@ static ColorAttr  __FASTCALL__ ix86GetOpcodeColor(unsigned long clone)
 }
 
 
-static bool __FASTCALL__ x86AsmRef( void )
+static bool __FASTCALL__ x86AsmRef()
 {
   hlpDisplay(20000);
   return false;
 }
 
-static void __FASTCALL__ ix86HelpAsm( void )
+static void __FASTCALL__ ix86HelpAsm()
 {
  char *msgAsmText,*title;
  char **strs;
@@ -6219,7 +6219,7 @@ static const char *use_names[] =
    "~Auto"
 };
 
-static bool __FASTCALL__ x86Select_Bitness( void )
+static bool __FASTCALL__ x86Select_Bitness()
 {
   unsigned nModes;
   int i;
@@ -6236,8 +6236,8 @@ static bool __FASTCALL__ x86Select_Bitness( void )
   return false;
 }
 
-static int __FASTCALL__ ix86MaxInsnLen( void ) { return MAX_IX86_INSN_LEN; }
-static int __FASTCALL__ ix86GetBitness( void ) { return BITNESS; }
+static int __FASTCALL__ ix86MaxInsnLen() { return MAX_IX86_INSN_LEN; }
+static int __FASTCALL__ ix86GetBitness() { return BITNESS; }
 static char __FASTCALL__ ix86GetClone(unsigned long clone) { if(x86_Bitness == DAB_USE64) return 'a'; else return ix86CloneSNames[((clone&IX86_CLONEMASK)>>8)&0x07]; }
 
 extern char *ix86_Katmai_buff;
@@ -6339,7 +6339,7 @@ static void __FASTCALL__ ix86Init( DisMode& _parent )
 #endif
 }
 
-static void __FASTCALL__ ix86Term( void )
+static void __FASTCALL__ ix86Term()
 {
    delete ix86_voidstr;
    delete ix86_da_out;

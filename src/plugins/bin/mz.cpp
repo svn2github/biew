@@ -109,7 +109,7 @@ static const char *  __FASTCALL__ __QueryAddInfo( unsigned char *memmap )
  return 0;
 }
 
-static const char *  __FASTCALL__ QueryAddInfo( void )
+static const char *  __FASTCALL__ QueryAddInfo()
 {
    unsigned char *memmap;
    memmap = new unsigned char[1000];
@@ -127,7 +127,7 @@ static const char *  __FASTCALL__ QueryAddInfo( void )
    return NULL;
 }
 
-static __filesize_t __FASTCALL__ ShowMZHeader( void )
+static __filesize_t __FASTCALL__ ShowMZHeader()
 {
  unsigned keycode;
  TWindow * hwnd;
@@ -211,7 +211,7 @@ static tCompare __FASTCALL__ compare_ptr(const any_t*e1,const any_t*e2)
   return __CmpLong__(v1,v2);
 }
 
-static void  __FASTCALL__ BuildMZChain( void )
+static void  __FASTCALL__ BuildMZChain()
 {
   unsigned i;
   __filesize_t fpos;
@@ -297,7 +297,7 @@ static bool __FASTCALL__ AppendMZRef(const DisMode& parent,char *str,__filesize_
   return ret;
 }
 
-static bool  __FASTCALL__ mz_check_fmt( void )
+static bool  __FASTCALL__ mz_check_fmt()
 {
   unsigned char id[2];
   bool ret = false;
@@ -314,8 +314,8 @@ static bool  __FASTCALL__ mz_check_fmt( void )
 
 /* Special case: this module must not use init and destroy */
 static void __FASTCALL__ mz_init_fmt(CodeGuider& _code_guider) { code_guider=&_code_guider; }
-static void __FASTCALL__ mz_destroy_fmt(void) {}
-static int  __FASTCALL__ mz_platform( void) { return DISASM_CPU_IX86; }
+static void __FASTCALL__ mz_destroy_fmt() {}
+static int  __FASTCALL__ mz_platform() { return DISASM_CPU_IX86; }
 
 static bool __FASTCALL__ mzAddressResolv(char *addr,__filesize_t cfpos)
 {
@@ -336,7 +336,7 @@ static bool __FASTCALL__ mzAddressResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static __filesize_t __FASTCALL__ MZHelp( void )
+static __filesize_t __FASTCALL__ MZHelp()
 {
   hlpDisplay(10013);
   return BMGetCurrFilePos();

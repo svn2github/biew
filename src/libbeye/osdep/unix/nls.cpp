@@ -138,7 +138,7 @@ void __FASTCALL__ __nls_CmdlineToOem(unsigned char *buff, unsigned int len)
 
 static const char * langs[] = { "LANG", "LANGUAGE", "LINGUAS" };
 
-char *nls_get_screen_cp(void)
+char *nls_get_screen_cp()
 {
     unsigned i;
     char *nls;

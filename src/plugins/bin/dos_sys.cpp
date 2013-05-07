@@ -33,7 +33,7 @@ using namespace beye;
 namespace beye {
 static DOSDRIVER drv;
 
-static __filesize_t __FASTCALL__ ShowSysHeader( void )
+static __filesize_t __FASTCALL__ ShowSysHeader()
 {
  int keycode;
  TWindow *hwnd;
@@ -84,7 +84,7 @@ static __filesize_t __FASTCALL__ ShowSysHeader( void )
 }
 
 
-static bool  __FASTCALL__ dossys_check_fmt( void )
+static bool  __FASTCALL__ dossys_check_fmt()
 {
   unsigned char id[4];
   bool ret = false;
@@ -98,8 +98,8 @@ static bool  __FASTCALL__ dossys_check_fmt( void )
 }
 
 static void __FASTCALL__ dossys_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ dossys_destroy_fmt(void) {}
-static int  __FASTCALL__ dossys_platform( void) { return DISASM_CPU_IX86; }
+static void __FASTCALL__ dossys_destroy_fmt() {}
+static int  __FASTCALL__ dossys_platform() { return DISASM_CPU_IX86; }
 
 static bool __FASTCALL__ dossys_AddressResolv(char *addr,__filesize_t cfpos)
 {
@@ -109,7 +109,7 @@ static bool __FASTCALL__ dossys_AddressResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static __filesize_t __FASTCALL__ SYSHelp( void )
+static __filesize_t __FASTCALL__ SYSHelp()
 {
   hlpDisplay(10014);
   return BMGetCurrFilePos();

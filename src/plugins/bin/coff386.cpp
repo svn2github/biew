@@ -165,7 +165,7 @@ static bool  __FASTCALL__ __coffReadObjects(BFile& handle,memArray * obj,unsigne
   return true;
 }
 
-static __filesize_t __FASTCALL__ coffShowObjects( void )
+static __filesize_t __FASTCALL__ coffShowObjects()
 {
  BFile* handle;
  unsigned nnames;
@@ -201,7 +201,7 @@ static const char *  __FASTCALL__ coff386_encode_hdr(unsigned info)
    }
 }
 
-static __filesize_t __FASTCALL__ ShowCoff386Header( void )
+static __filesize_t __FASTCALL__ ShowCoff386Header()
 {
   __filesize_t fpos,entry,v_entry;
   unsigned keycode;
@@ -384,7 +384,7 @@ static __filesize_t  __FASTCALL__ CalcEntryCoff(unsigned long idx,bool display_m
   return fpos;
 }
 
-static __filesize_t __FASTCALL__ coffShowSymTab( void )
+static __filesize_t __FASTCALL__ coffShowSymTab()
 {
   __filesize_t fpos = BMGetCurrFilePos();
   int ret;
@@ -420,7 +420,7 @@ static tCompare __FASTCALL__ coff386_compare_rels(const any_t*e1,const any_t*e2)
   return __CmpLong__(r1->offset,r2->offset);
 }
 
-static void  __FASTCALL__ BuildRelocCoff386( void )
+static void  __FASTCALL__ BuildRelocCoff386()
 {
   TWindow * w,*usd;
   size_t j,segcount, nr;
@@ -561,7 +561,7 @@ static bool __FASTCALL__ coff386_AppendRef(const DisMode& parent,char *str,__fil
   return ret;
 }
 
-static bool __FASTCALL__ coff386_check_fmt( void )
+static bool __FASTCALL__ coff386_check_fmt()
 {
   uint_fast16_t id;
   id = bmReadWordEx(0,BFile::Seek_Set);
@@ -593,7 +593,7 @@ static void __FASTCALL__ coff386_init_fmt(CodeGuider& _code_guider)
   strings_ptr = COFF_DWORD(coff386hdr.f_symptr)+COFF_DWORD(coff386hdr.f_nsyms)*sizeof(struct external_syment);
 }
 
-static void __FASTCALL__ coff386_destroy_fmt( void )
+static void __FASTCALL__ coff386_destroy_fmt()
 {
   BFile& main_handle=bNull;
   delete coff386so;
@@ -629,7 +629,7 @@ static bool __FASTCALL__ coff386_AddrResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static __filesize_t __FASTCALL__ coff386Help( void )
+static __filesize_t __FASTCALL__ coff386Help()
 {
   hlpDisplay(10002);
   return BMGetCurrFilePos();
@@ -733,7 +733,7 @@ static unsigned __FASTCALL__ coff386_GetObjAttr(__filesize_t pa,char *name,unsig
   return ret;
 }
 
-static int __FASTCALL__ coff386_platform( void ) { return DISASM_CPU_IX86; }
+static int __FASTCALL__ coff386_platform() { return DISASM_CPU_IX86; }
 
 extern const REGISTRY_BIN coff386Table =
 {

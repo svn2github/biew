@@ -79,7 +79,7 @@ const char *lmftypes[]={
 	"ph resource",
 	"unknown"};
 
-static void __FASTCALL__ failed_lmf(void)
+static void __FASTCALL__ failed_lmf()
 {
 	/* lmf corruption message */
 }
@@ -89,7 +89,7 @@ static void __FASTCALL__ failed_lmf(void)
 #define DATSIZE sizeof(lmf_data)
 #define HDRSIZE sizeof(lmf_header)
 
-static bool __FASTCALL__ lmf_check_fmt(void)
+static bool __FASTCALL__ lmf_check_fmt()
 {
 	int32_t i,j,p=0;
 /*	lmf_data d;*/
@@ -190,12 +190,12 @@ outloop:
 
 #undef failed_lmf
 
-static void __FASTCALL__ lmf_destroy_fmt(void)
+static void __FASTCALL__ lmf_destroy_fmt()
 {
 	delete hl;
 }
 
-static int __FASTCALL__ lmf_platform(void)
+static int __FASTCALL__ lmf_platform()
 {
 	return DISASM_CPU_IX86;
 }
@@ -395,7 +395,7 @@ static unsigned __FASTCALL__ lmf_SecHdrNumItems(BFile& handle)
 	return reclast+1;
 }
 
-static __filesize_t __FASTCALL__ lmf_ShowSecLst(void)
+static __filesize_t __FASTCALL__ lmf_ShowSecLst()
 {
 	__filesize_t fpos;
 	int ret;
@@ -408,7 +408,7 @@ static __filesize_t __FASTCALL__ lmf_ShowSecLst(void)
 	return fpos;
 }
 
-static __filesize_t __FASTCALL__ lmf_ShowHeader( void )
+static __filesize_t __FASTCALL__ lmf_ShowHeader()
 {
 	unsigned i,j,k;
 	__filesize_t fpos;
@@ -493,7 +493,7 @@ static __filesize_t __FASTCALL__ lmf_ShowHeader( void )
 	return fpos;
 }
 
-static __filesize_t __FASTCALL__ lmf_LMFHlp( void )
+static __filesize_t __FASTCALL__ lmf_LMFHlp()
 {
   hlpDisplay(10015);
   return BMGetCurrFilePos();

@@ -41,7 +41,7 @@ static const char *width_names[] =
    "~Quad word"
 };
 
-static bool __FASTCALL__ nulSelect_width( void )
+static bool __FASTCALL__ nulSelect_width()
 {
   unsigned nModes;
   int i;
@@ -107,18 +107,18 @@ static DisasmRet __FASTCALL__ nulDisassembler(__filesize_t ulShift,
   return ret;
 }
 
-static void  __FASTCALL__ nulHelpAsm( void )
+static void  __FASTCALL__ nulHelpAsm()
 {
   hlpDisplay(20010);
 }
 
-static int    __FASTCALL__ nulMaxInsnLen( void ) { return 8; }
+static int    __FASTCALL__ nulMaxInsnLen() { return 8; }
 static ColorAttr __FASTCALL__ nulGetAsmColor( unsigned long clone )
 {
   UNUSED(clone);
   return disasm_cset.cpu_cset[0].clone[0];
 }
-static int       __FASTCALL__ nulGetBitness( void ) { return DAB_USE16; }
+static int       __FASTCALL__ nulGetBitness() { return DAB_USE16; }
 static char      __FASTCALL__ nulGetClone( unsigned long clone )
 {
   UNUSED(clone);
@@ -135,7 +135,7 @@ static void      __FASTCALL__ nulInit( DisMode& _parent )
   }
 }
 
-static void  __FASTCALL__ nulTerm( void )
+static void  __FASTCALL__ nulTerm()
 {
    delete outstr;
 }

@@ -58,7 +58,7 @@ char *terms[]={
 /*-1*/	NULL
 };
 
-int __FASTCALL__ __vioGetCursorType(void)
+int __FASTCALL__ __vioGetCursorType()
 {
 	return cursor_status;
 }
@@ -195,7 +195,7 @@ void __FASTCALL__ __init_vio(const char *user_cp,unsigned long flags)
 	initialized=1;
 }
 
-void __FASTCALL__ __term_vio(void)
+void __FASTCALL__ __term_vio()
 {
 	if(!initialized) return;
 	__vioSetCursorPos(firstX,firstY);

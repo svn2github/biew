@@ -83,7 +83,7 @@ static inline void do_cpuid(unsigned int ax, unsigned int *p)
     else p[0]=p[1]=p[2]=p[3]=ax=0;
 }
 
-static void GetCpuCaps( void )
+static void GetCpuCaps()
 {
 	unsigned int regs[4];
 	unsigned int regs2[4];
@@ -111,7 +111,7 @@ static void GetCpuCaps( void )
 #else
 static int _mmx_inited=1;
 static unsigned __mmx_caps=0;
-static void GetCpuCaps( void ) {}
+static void GetCpuCaps() {}
 #endif
 
 #undef HAVE_MMX

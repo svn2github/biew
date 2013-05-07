@@ -176,7 +176,7 @@ const char *wtag_find_name(unsigned short wtag)
     return "Unknown";
 }
 
-static bool  __FASTCALL__ wav_check_fmt( void )
+static bool  __FASTCALL__ wav_check_fmt()
 {
     unsigned long id;
     id=bmReadDWordEx(8,BFile::Seek_Set);
@@ -187,8 +187,8 @@ static bool  __FASTCALL__ wav_check_fmt( void )
 }
 
 static void __FASTCALL__ wav_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ wav_destroy_fmt(void) {}
-static int  __FASTCALL__ wav_platform( void) { return DISASM_DEFAULT; }
+static void __FASTCALL__ wav_destroy_fmt() {}
+static int  __FASTCALL__ wav_platform() { return DISASM_DEFAULT; }
 
 static __filesize_t __FASTCALL__ wav_find_chunk(__filesize_t off,unsigned long id)
 {
@@ -213,7 +213,7 @@ static __filesize_t __FASTCALL__ wav_find_chunk(__filesize_t off,unsigned long i
     return -1;
 }
 
-static __filesize_t __FASTCALL__ Show_WAV_Header( void )
+static __filesize_t __FASTCALL__ Show_WAV_Header()
 {
  unsigned keycode;
  TWindow * hwnd;

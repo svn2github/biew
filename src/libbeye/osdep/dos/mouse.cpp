@@ -24,7 +24,7 @@ using namespace beye;
 static bool ms_visible = false;
 static bool ms_inited = false;
 
-int __FASTCALL__ __init_mouse( void )
+int __FASTCALL__ __init_mouse()
 {
   int ret;
   union REGS inreg,outreg;
@@ -42,12 +42,12 @@ int __FASTCALL__ __init_mouse( void )
   return ret;
 }
 
-void __FASTCALL__ __term_mouse( void )
+void __FASTCALL__ __term_mouse()
 {
   if(ms_visible) __MsSetState(false);
 }
 
-bool __FASTCALL__ __MsGetState( void )
+bool __FASTCALL__ __MsGetState()
 {
   return ms_visible;
 }
@@ -80,7 +80,7 @@ void __FASTCALL__ __MsGetPos( tAbsCoord *mx, tAbsCoord *my )
   }
 }
 
-int __FASTCALL__ __MsGetBtns( void )
+int __FASTCALL__ __MsGetBtns()
 {
   union REGS inreg,outreg;
   if(ms_inited)

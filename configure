@@ -7,6 +7,8 @@ init_functions
 ENABLED_LIST=(
     "gomp|use GNU OpenMP (requires gcc-4.3+)",
     "fastcall|use regparm method on x86 systems",
+    "constfunc|use const modifier for some functions",
+    "purefunc|use pure modifier for some functions",
     "mouse|build mouse support on *nix systems",
     "iconv|build iconv support",
 )
@@ -231,7 +233,42 @@ test $($pkg_config --version 2>/dev/null) || echo "no pkg-config found"
 test_optimizations config.mak config.h
 
 enabled "$profile"	&& disable fastcall
+
+if enabled fastcall; then
+echocheck "__attribute__ ((regparm (3)))"
+cat > $TMPC << EOF
+int __attribute__ ((regparm (3))) func(int a) { return a; }
+int main(void){return func(0);}
+EOF
+disable fastcall
+cc_check && enable fastcall
+echores "$fastcall"
+fi
 print_config USE_ config.h config.mak fastcall
+
+if enabled constfunc; then
+echocheck "__attribute__ ((const))"
+cat > $TMPC << EOF
+int func(int a) { return a; } __attribute__ ((const))
+int main(void){return func(0);}
+EOF
+disable constfunc
+cc_check && enable constfunc
+echores "$constfunc"
+fi
+print_config USE_ config.h config.mak constfunc
+
+if enabled purefunc; then
+echocheck "__attribute__ ((pure))"
+cat > $TMPC << EOF
+int func(int a) { return a; } __attribute__ ((pure))
+int main(void){return func(0);}
+EOF
+disable purefunc
+cc_check && enable purefunc
+echores "$constfunc"
+fi
+print_config USE_ config.h config.mak purefunc
 
 # Checking for GOMP
 enabled gomp && check_ldflags -fopenmp || disable gomp
@@ -361,7 +398,6 @@ print_config HAVE_ config.h config.mak popen
 
 check_func2 stdio.h pclose
 print_config HAVE_ config.h config.mak pclose
-
 
 check_header sys/resource.h
 print_config HAVE_ config.h config.mak sys_resource_h
@@ -540,11 +576,30 @@ cat >> config.h << EOF
 
 /* Defined to some form of __attribute__ ((...)) if the compiler supports
    a different, more efficient calling convention.  */
-#if defined ( USE_FASTCALL ) && defined ( __i386__ )
-/*# define internal_function __attribute__ ((regparm (3), stdcall))*/
+#if defined ( USE_FASTCALL )
+#if defined ( __i386__ )
+/* define internal_function __attribute__ ((regparm (3), stdcall)) */
 # define __FASTCALL__ __attribute__ ((regparm (3)))
 #else
+/* define internal_function __attribute__ ((regparm (6), stdcall)) */
+# define __FASTCALL__ __attribute__ ((regparm (6)))
+#endif
+#else
 # define __FASTCALL__
+#endif
+
+#if defined ( USE_CONSTFUNC )
+/* Example: sin(), cos() */
+# define __CONSTFUNC__ __attribute__ ((const))
+#else
+# define __CONSTFUNC__
+#endif
+
+#if defined ( USE_PUREFUNC )
+/* Example: strlen(), memcmp() */
+# define __PUREFUNC__ __attribute__ ((pure))
+#else
+# define __PUREFUNC__
 #endif
 
 typedef void any_t;

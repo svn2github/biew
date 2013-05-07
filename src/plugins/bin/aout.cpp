@@ -75,7 +75,7 @@ static const char *  __FASTCALL__ aout_encode_machine(uint32_t info,unsigned* id
    }
 }
 
-static __filesize_t __FASTCALL__ ShowAOutHeader( void )
+static __filesize_t __FASTCALL__ ShowAOutHeader()
 {
   struct external_exec aout;
   __filesize_t fpos;
@@ -125,7 +125,7 @@ static bool __FASTCALL__ __aout_check_fmt( uint32_t id )
   return a32 || a64 || N_MAGIC(id)==CMAGIC;
 }
 
-static bool __FASTCALL__ aout_check_fmt( void )
+static bool __FASTCALL__ aout_check_fmt()
 {
   uint32_t id;
   id = bmReadDWordEx(0,BFile::Seek_Set);
@@ -136,7 +136,7 @@ static bool __FASTCALL__ aout_check_fmt( void )
 }
 
 static void __FASTCALL__ aout_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider);}
-static void __FASTCALL__ aout_destroy_fmt( void ) {}
+static void __FASTCALL__ aout_destroy_fmt() {}
 
 static int __FASTCALL__ aout_bitness(__filesize_t off)
 {
@@ -164,13 +164,13 @@ static bool __FASTCALL__ aout_AddrResolv(char *addr,__filesize_t fpos)
   return bret;
 }
 
-static __filesize_t __FASTCALL__ aout_help( void )
+static __filesize_t __FASTCALL__ aout_help()
 {
   hlpDisplay(10000);
   return BMGetCurrFilePos();
 }
 
-static int __FASTCALL__ aout_platform( void ) {
+static int __FASTCALL__ aout_platform() {
  unsigned id;
  struct external_exec aout;
  bmReadBufferEx(&aout,sizeof(struct external_exec),0,BFile::Seek_Set);

@@ -33,21 +33,21 @@ using namespace beye;
 namespace beye {
 #define MKTAG(a, b, c, d) (a | (b << 8) | (c << 16) | (d << 24))
 
-static bool  __FASTCALL__ rm_check_fmt( void )
+static bool  __FASTCALL__ rm_check_fmt()
 {
     if(bmReadDWordEx(0,BFile::Seek_Set)==MKTAG('.', 'R', 'M', 'F')) return true;
     return false;
 }
 
-static __filesize_t __FASTCALL__ Show_RM_Header( void )
+static __filesize_t __FASTCALL__ Show_RM_Header()
 {
     ErrMessageBox("Not implemented yet!","RM format");
     return BMGetCurrFilePos();
 }
 
 static void __FASTCALL__ rm_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ rm_destroy_fmt(void) {}
-static int  __FASTCALL__ rm_platform( void) { return DISASM_DEFAULT; }
+static void __FASTCALL__ rm_destroy_fmt() {}
+static int  __FASTCALL__ rm_platform() { return DISASM_DEFAULT; }
 
 extern const REGISTRY_BIN rmTable =
 {

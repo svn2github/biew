@@ -702,7 +702,7 @@ typedef struct
     {
       int32_t a_val;		/**< Integer value */
       any_t*a_ptr;		/**< Pointer value */
-      void (*a_fcn) (void);	/**< Function pointer value */
+      void (*a_fcn) ();	/**< Function pointer value */
     } a_un;
 } Elf386_auxv_t;
 
@@ -713,7 +713,7 @@ typedef struct
     {
       int32_t a_val;		/**< Integer value */
       any_t*a_ptr;		/**< Pointer value */
-      void (*a_fcn) (void);	/**< Function pointer value */
+      void (*a_fcn) ();	/**< Function pointer value */
     } a_un;
 } Elf64_auxv_t;
 

@@ -71,13 +71,13 @@ static DisasmRet __FASTCALL__ armDisassembler(__filesize_t ulShift,
   return ret;
 }
 
-static bool __FASTCALL__ armAsmRef( void )
+static bool __FASTCALL__ armAsmRef()
 {
   hlpDisplay(20040);
   return false;
 }
 
-static void __FASTCALL__ armHelpAsm( void )
+static void __FASTCALL__ armHelpAsm()
 {
  char *msgAsmText,*title;
  char **strs;
@@ -152,7 +152,7 @@ static void __FASTCALL__ armHelpAsm( void )
  bhelp.close();
 }
 
-static int    __FASTCALL__ armMaxInsnLen( void ) { return 8; }
+static int    __FASTCALL__ armMaxInsnLen() { return 8; }
 static ColorAttr __FASTCALL__ armGetAsmColor( unsigned long clone )
 {
   if((clone & ARM_XSCALE)==ARM_XSCALE) return disasm_cset.engine[2].engine;
@@ -162,7 +162,7 @@ static ColorAttr __FASTCALL__ armGetAsmColor( unsigned long clone )
 	return disasm_cset.engine[0].engine;
 }
 
-static int       __FASTCALL__ armGetBitness( void ) { return armBitness; }
+static int       __FASTCALL__ armGetBitness() { return armBitness; }
 static char      __FASTCALL__ armGetClone( unsigned long clone )
 {
   UNUSED(clone);
@@ -181,7 +181,7 @@ static void      __FASTCALL__ armInit( DisMode& _parent )
   arm32Init(parent);
 }
 
-static void  __FASTCALL__ armTerm( void )
+static void  __FASTCALL__ armTerm()
 {
    arm32Term();
    arm16Term();
@@ -217,7 +217,7 @@ static const char *arm_bitness_names[] =
    "~Full-32"
 };
 
-static bool __FASTCALL__ armSelect_bitness( void )
+static bool __FASTCALL__ armSelect_bitness()
 {
   unsigned nModes;
   int i;
@@ -237,7 +237,7 @@ static const char *arm_endian_names[] =
    "~Big endian"
 };
 
-static bool __FASTCALL__ armSelect_endian( void )
+static bool __FASTCALL__ armSelect_endian()
 {
   unsigned nModes;
   int i;

@@ -49,7 +49,7 @@ static __filesize_t __FASTCALL__ NLMPA2VA(__filesize_t pa);
 
 static BFile* nlm_cache = &bNull;
 
-static __filesize_t __FASTCALL__ ShowNLMHeader( void )
+static __filesize_t __FASTCALL__ ShowNLMHeader()
 {
   __filesize_t fpos;
   char modName[NLM_MODULE_NAME_SIZE];
@@ -131,7 +131,7 @@ static __filesize_t __FASTCALL__ ShowNLMHeader( void )
   return fpos;
 }
 
-static __filesize_t __FASTCALL__ ShowNewNLM( void )
+static __filesize_t __FASTCALL__ ShowNewNLM()
 {
   __filesize_t fpos,ssize,m,d,sharedEntry,sharedExit;
   char modName[256];
@@ -350,7 +350,7 @@ static bool __FASTCALL__ NLMNamesReadItems(BFile& handle,memArray * obj,unsigned
  return true;
 }
 
-static __filesize_t __FASTCALL__ ShowExtRefNLM( void )
+static __filesize_t __FASTCALL__ ShowExtRefNLM()
 {
   fmtShowList(NLMExtRefNumItems,
 	      __ReadExtRefNamesNLM,
@@ -389,7 +389,7 @@ static bool __FASTCALL__ __ReadModRefNamesNLM(BFile& handle,memArray * obj,unsig
 }
 
 
-static __filesize_t __FASTCALL__ ShowModRefNLM( void )
+static __filesize_t __FASTCALL__ ShowModRefNLM()
 {
   fmtShowList(NLMModRefNumItems,
 	      __ReadModRefNamesNLM,
@@ -399,7 +399,7 @@ static __filesize_t __FASTCALL__ ShowModRefNLM( void )
    return BMGetCurrFilePos();
 }
 
-static __filesize_t __FASTCALL__ ShowPubNamNLM( void )
+static __filesize_t __FASTCALL__ ShowPubNamNLM()
 {
   __filesize_t fpos = BMGetCurrFilePos();
   int ret;
@@ -442,7 +442,7 @@ static tCompare __FASTCALL__ nlm_compare_f(const any_t*e1,const any_t*e2)
   return __CmpLong__(r1->offset,r2->offset);
 }
 
-static void  __FASTCALL__ BuildRelocNlm( void )
+static void  __FASTCALL__ BuildRelocNlm()
 {
   unsigned i,j;
   unsigned long val,niter,noff;
@@ -556,7 +556,7 @@ static bool __FASTCALL__ AppendNLMRef(const DisMode& parent,char *str,__filesize
   return retrf;
 }
 
-static bool __FASTCALL__ IsNLM( void )
+static bool __FASTCALL__ IsNLM()
 {
   char ctrl[NLM_SIGNATURE_SIZE];
   bmReadBufferEx(ctrl,NLM_SIGNATURE_SIZE,0,BFile::Seek_Set);
@@ -571,7 +571,7 @@ static void __FASTCALL__ NLMinit(CodeGuider& _code_guider)
   if((nlm_cache = main_handle.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) nlm_cache = &main_handle;
 }
 
-static void __FASTCALL__ NLMdestroy( void )
+static void __FASTCALL__ NLMdestroy()
 {
   BFile& main_handle = bmbioHandle();
   if(nlm_cache != &bNull && nlm_cache != &main_handle) delete nlm_cache;
@@ -604,7 +604,7 @@ static bool __FASTCALL__ NLMAddrResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static __filesize_t __FASTCALL__ HelpNLM( void )
+static __filesize_t __FASTCALL__ HelpNLM()
 {
   hlpDisplay(10007);
   return BMGetCurrFilePos();
@@ -709,7 +709,7 @@ static __filesize_t __FASTCALL__ NLMPA2VA(__filesize_t pa)
   return pa > base ? pa - base : 0L;
 }
 
-static int __FASTCALL__ NLMPlatform( void ) { return DISASM_CPU_IX86; }
+static int __FASTCALL__ NLMPlatform() { return DISASM_CPU_IX86; }
 
 extern const REGISTRY_BIN nlm386Table =
 {

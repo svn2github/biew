@@ -55,7 +55,7 @@ extern int (*p_PhInputGroup)(PhEvent_t const*);
 extern int (*p_PhQueryCursor)(unsigned short,PhCursorInfo_t*);
 #define so_PhQueryCursor(a,b) (*p_PhQueryCursor)(a,b)
 
-int __FASTCALL__ getms(void);
+int __FASTCALL__ getms();
 
 void __FASTCALL__ __init_keyboard( const char *user_cp )
 {
@@ -69,14 +69,14 @@ void __FASTCALL__ __init_keyboard( const char *user_cp )
 	return;
 }
 
-void __FASTCALL__ __term_keyboard( void )
+void __FASTCALL__ __term_keyboard()
 {
 	__term_mouse();
 	keypad(stdscr,FALSE);
 	nodelay(stdscr,FALSE);
 }
 
-int __FASTCALL__ __kbdGetShiftsKey( void )
+int __FASTCALL__ __kbdGetShiftsKey()
 {
 	long dbuf;
 	long rbuf;

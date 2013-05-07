@@ -63,24 +63,24 @@ namespace beye {
 
 /** Below analogs with using small cache size */
 
-    inline bool		bmEOF( void ) { return beye_context().sc_bm_file().eof(); }
+    inline bool		bmEOF() { return beye_context().sc_bm_file().eof(); }
     inline void		bmSeek(__fileoff_t pos,BFile::e_seek origin) { beye_context().sc_bm_file().seek(pos,origin); }
-    inline void		bmReRead( void ) { beye_context().sc_bm_file().reread(); }
-    inline uint8_t	bmReadByte( void ) { return beye_context().sc_bm_file().read_byte(); }
-    inline uint16_t	bmReadWord( void ) { return beye_context().sc_bm_file().read_word(); }
-    inline uint32_t	bmReadDWord( void ) { return beye_context().sc_bm_file().read_dword(); }
-    inline uint64_t	bmReadQWord( void ) { return beye_context().sc_bm_file().read_qword(); }
+    inline void		bmReRead() { beye_context().sc_bm_file().reread(); }
+    inline uint8_t	bmReadByte() { return beye_context().sc_bm_file().read_byte(); }
+    inline uint16_t	bmReadWord() { return beye_context().sc_bm_file().read_word(); }
+    inline uint32_t	bmReadDWord() { return beye_context().sc_bm_file().read_dword(); }
+    inline uint64_t	bmReadQWord() { return beye_context().sc_bm_file().read_qword(); }
     inline bool		bmReadBuffer(any_t* buffer,unsigned len) { return beye_context().sc_bm_file().read(buffer,len); }
     inline uint8_t	bmReadByteEx(__fileoff_t pos,BFile::e_seek origin) { beye_context().sc_bm_file().seek(pos,origin); return beye_context().sc_bm_file().read_byte(); }
     inline uint16_t	bmReadWordEx(__fileoff_t pos,BFile::e_seek origin) { beye_context().sc_bm_file().seek(pos,origin); return beye_context().sc_bm_file().read_word(); }
     inline uint32_t	bmReadDWordEx(__fileoff_t pos,BFile::e_seek origin) { beye_context().sc_bm_file().seek(pos,origin); return beye_context().sc_bm_file().read_dword(); }
     inline uint64_t	bmReadQWordEx(__fileoff_t pos,BFile::e_seek origin) { beye_context().sc_bm_file().seek(pos,origin); return beye_context().sc_bm_file().read_qword(); }
     inline bool		bmReadBufferEx(any_t* buffer,unsigned len,__fileoff_t pos,BFile::e_seek origin) { beye_context().sc_bm_file().seek(pos,origin); return beye_context().sc_bm_file().read(buffer,len); }
-    inline int		bmHandle( void ) { return beye_context().sc_bm_file().handle(); }
-    inline BFile&	bmbioHandle( void ) { return beye_context().sc_bm_file(); }
-    inline std::string	bmName( void ) { return beye_context().sc_bm_file().filename(); }
-    inline __filesize_t	bmGetCurrFilePos( void ) { return beye_context().sc_bm_file().tell(); }
-    inline __filesize_t	bmGetFLength( void ) {  return beye_context().sc_bm_file().flength(); }
+    inline int		bmHandle() { return beye_context().sc_bm_file().handle(); }
+    inline BFile&	bmbioHandle() { return beye_context().sc_bm_file(); }
+    inline std::string	bmName() { return beye_context().sc_bm_file().filename(); }
+    inline __filesize_t	bmGetCurrFilePos() { return beye_context().sc_bm_file().tell(); }
+    inline __filesize_t	bmGetFLength() {  return beye_context().sc_bm_file().flength(); }
     inline bool		bmWriteByte(uint8_t byte) { return beye_context().sc_bm_file().write_byte(byte); }
     inline bool		bmWriteWord(uint16_t word) { return beye_context().sc_bm_file().write_word(word); }
     inline bool		bmWriteDWord(uint32_t dword) { return beye_context().sc_bm_file().write_dword(dword); }

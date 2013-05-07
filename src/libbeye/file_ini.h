@@ -200,7 +200,7 @@ namespace beye {
 		virtual std::string	read(const std::string& section,
 					    const std::string& subsection,
 					    const std::string& _item,
-					    const std::string& def_value);
+					    const std::string& def_value) const;
 
 		   /** Writes given item to ini file.
 		     * @return                true if operation performed successfully

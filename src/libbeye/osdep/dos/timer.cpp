@@ -23,7 +23,7 @@ using namespace beye;
 
 static timer_callback *user_callback = NULL;
 
-static void timer_handler( void )
+static void timer_handler()
 {
   if(user_callback) (*user_callback)();
 }
@@ -39,7 +39,7 @@ unsigned __FASTCALL__ __OsSetTimerCallBack(unsigned ms,timer_callback func)
 
 			     /* Restore time callback function to original
 				state */
-void __FASTCALL__ __OsRestoreTimer(void)
+void __FASTCALL__ __OsRestoreTimer()
 {
   user_callback = NULL;
 }

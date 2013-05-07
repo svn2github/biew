@@ -591,24 +591,24 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
   return ret;
 }
 
-static void  __FASTCALL__ javaHelpAsm( void )
+static void  __FASTCALL__ javaHelpAsm()
 {
   hlpDisplay(20030);
 }
 
-static bool  __FASTCALL__ javaAsmHelp( void )
+static bool  __FASTCALL__ javaAsmHelp()
 {
   hlpDisplay(20031);
   return false;
 }
 
-static int    __FASTCALL__ javaMaxInsnLen( void ) { return 13; }
+static int    __FASTCALL__ javaMaxInsnLen() { return 13; }
 static ColorAttr __FASTCALL__ javaGetAsmColor( unsigned long clone )
 {
   UNUSED(clone);
   return disasm_cset.cpu_cset[0].clone[0];
 }
-static int       __FASTCALL__ javaGetBitness( void ) { return DAB_USE16; }
+static int       __FASTCALL__ javaGetBitness() { return DAB_USE16; }
 static char      __FASTCALL__ javaGetClone( unsigned long clone )
 {
   UNUSED(clone);
@@ -625,7 +625,7 @@ static void      __FASTCALL__ javaInit( DisMode& _parent )
   }
 }
 
-static void  __FASTCALL__ javaTerm( void )
+static void  __FASTCALL__ javaTerm()
 {
    delete outstr;
 }

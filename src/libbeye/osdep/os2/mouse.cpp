@@ -28,7 +28,7 @@ static int mou_btns;
 static bool ms_visible = false;
 static USHORT mouStatus;
 
-int __FASTCALL__ __init_mouse( void )
+int __FASTCALL__ __init_mouse()
 {
    USHORT rc,nbtn,status;
    rc = MouOpen(NULL,&mouHandle);
@@ -42,7 +42,7 @@ int __FASTCALL__ __init_mouse( void )
    return nbtn;
 }
 
-void __FASTCALL__ __term_mouse( void )
+void __FASTCALL__ __term_mouse()
 {
   __MsSetState(false);
   MouSetDevStatus(&mouStatus,mouHandle);
@@ -50,7 +50,7 @@ void __FASTCALL__ __term_mouse( void )
   mouHandle = 0;
 }
 
-bool __FASTCALL__ __MsGetState( void )
+bool __FASTCALL__ __MsGetState()
 {
   return ms_visible;
 }
@@ -103,7 +103,7 @@ void __FASTCALL__ __MsGetPos(tAbsCoord *mx,tAbsCoord *my )
   }
 }
 
-int __FASTCALL__ __MsGetBtns( void )
+int __FASTCALL__ __MsGetBtns()
 {
   static int ret;
   USHORT fwait;

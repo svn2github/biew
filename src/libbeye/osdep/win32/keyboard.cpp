@@ -59,7 +59,7 @@ HANDLE hIn;
 bool hInputTrigger = false;
 extern OSVERSIONINFO win32_verinfo;
 static int is_win9x;
-extern void __FASTCALL__ win32_readNextMessage( void );
+extern void __FASTCALL__ win32_readNextMessage();
 
 static int __mou_nbtns;
 
@@ -73,7 +73,7 @@ static int __FASTCALL__ is_VKCtrl(int code)
 extern tAbsCoord win32_mx,win32_my;
 extern int win32_mbuttons;
 
-void __FASTCALL__ win32_readNextMessage( void )
+void __FASTCALL__ win32_readNextMessage()
 {
   //DWORD total_nread,i;
   int vkeycode,keycode;
@@ -161,7 +161,7 @@ void __FASTCALL__ __init_keyboard( const char *user_cp )
   }
 }
 
-void __FASTCALL__ __term_keyboard( void )
+void __FASTCALL__ __term_keyboard()
 {
   if(__mou_nbtns != INT_MAX)
   {
@@ -177,7 +177,7 @@ int __FASTCALL__ __kbdTestKey( unsigned long flg )
   return KB_freq;
 }
 
-int __FASTCALL__ __kbdGetShiftsKey( void )
+int __FASTCALL__ __kbdGetShiftsKey()
 {
   int ret;
   ret = 0;

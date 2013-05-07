@@ -1455,13 +1455,13 @@ static DisasmRet __FASTCALL__ ppcDisassembler(__filesize_t ulShift,
     return dret;
 }
 
-static bool __FASTCALL__ ppcAsmRef( void )
+static bool __FASTCALL__ ppcAsmRef()
 {
   hlpDisplay(20050);
   return false;
 }
 
-static void __FASTCALL__ ppcHelpAsm( void )
+static void __FASTCALL__ ppcHelpAsm()
 {
  char *msgAsmText,*title;
  char **strs;
@@ -1536,7 +1536,7 @@ static void __FASTCALL__ ppcHelpAsm( void )
  bhelp.close();
 }
 
-static int    __FASTCALL__ ppcMaxInsnLen( void ) { return 8; }
+static int    __FASTCALL__ ppcMaxInsnLen() { return 8; }
 static ColorAttr __FASTCALL__ ppcGetAsmColor( unsigned long clone )
 {
   if((clone & PPC_CLONE_MSK)==PPC_ALTIVEC) return disasm_cset.engine[2].engine;
@@ -1546,7 +1546,7 @@ static ColorAttr __FASTCALL__ ppcGetAsmColor( unsigned long clone )
 	return disasm_cset.engine[0].engine;
 }
 
-static int       __FASTCALL__ ppcGetBitness( void ) { return ppcBitness; }
+static int       __FASTCALL__ ppcGetBitness() { return ppcBitness; }
 static char      __FASTCALL__ ppcGetClone( unsigned long clone )
 {
   UNUSED(clone);
@@ -1559,7 +1559,7 @@ static const char *ppc_bitness_names[] =
    "Use~64"
 };
 
-static bool __FASTCALL__ ppcSelect_bitness( void )
+static bool __FASTCALL__ ppcSelect_bitness()
 {
   unsigned nModes;
   int i;
@@ -1579,7 +1579,7 @@ static const char *ppc_endian_names[] =
    "~Big endian"
 };
 
-static bool __FASTCALL__ ppcSelect_endian( void )
+static bool __FASTCALL__ ppcSelect_endian()
 {
   unsigned nModes;
   int i;
@@ -1599,7 +1599,7 @@ static const char *ppc_dialect_names[] =
    "~SPE (embedded cpu)"
 };
 
-static bool __FASTCALL__ ppcSelectDialect( void )
+static bool __FASTCALL__ ppcSelectDialect()
 {
   unsigned nModes;
   int i;
@@ -1624,7 +1624,7 @@ static void      __FASTCALL__ ppcInit( DisMode& _parent )
   }
 }
 
-static void  __FASTCALL__ ppcTerm( void )
+static void  __FASTCALL__ ppcTerm()
 {
    delete outstr;
 }
