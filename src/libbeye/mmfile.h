@@ -14,7 +14,7 @@ namespace beye {
 
 	    static const bool		has_mmio;
 
-	    virtual bool		open(const std::string& fname,unsigned openmode,unsigned cache_size);
+	    virtual bool		open(const std::string& fname,unsigned openmode);
 	    virtual bool		close();
 	    virtual bool		eof() const;
 	    virtual bool		flush();
@@ -31,8 +31,8 @@ namespace beye {
 	    virtual bool		write_qword(uint64_t dwVal);
 	    virtual bool		write(const any_t* buffer,unsigned cbBuffer);
 	    virtual bool		chsize(__filesize_t newsize);
-	    virtual bool		dup(MMFile&,unsigned info=0) const;
-	    virtual BFile*		dup(unsigned info=0) const;
+	    virtual bool		dup(MMFile&) const;
+	    virtual BFile*		dup() const;
 	    virtual bool		reread();
 	    virtual any_t*		buffer() const;
 	protected:

@@ -19,9 +19,8 @@ BFile::BFile()
 
 BFile::~BFile() { if(!fname.empty()) close(); }
 
-bool BFile::open(const std::string& _fname,unsigned _openmode,unsigned cache_size)
+bool BFile::open(const std::string& _fname,unsigned _openmode)
 {
-    UNUSED(cache_size);
     if(!fname.empty()) return false; // prevent open without close
     _handle = ::open(_fname.c_str(),_openmode);
     if(_handle==-1) return false;
@@ -32,7 +31,7 @@ bool BFile::open(const std::string& _fname,unsigned _openmode,unsigned cache_siz
 
 bool BFile::create(const std::string& name)
 {
-    return open(name,O_RDWR | O_CREAT | O_TRUNC, S_IREAD | S_IWRITE);
+    return open(name,O_RDWR | O_CREAT | O_TRUNC);
 }
 
 bool BFile::close()
@@ -181,9 +180,8 @@ std::string BFile::filename() const
     return fname;
 }
 
-bool BFile::dup(BFile& it,unsigned info) const
+bool BFile::dup(BFile& it) const
 {
-    UNUSED(info);
     if(fname.empty()) return false;
     if((it._handle=::dup(_handle))==-1) {
 	return false;
@@ -193,10 +191,10 @@ bool BFile::dup(BFile& it,unsigned info) const
     return true;
 }
 
-BFile* BFile::dup(unsigned info) const
+BFile* BFile::dup() const
 {
     BFile* ret = new(zeromem) BFile;
-    if(!dup(*ret,info)) return &bNull;
+    if(!dup(*ret)) return &bNull;
     return ret;
 }
 

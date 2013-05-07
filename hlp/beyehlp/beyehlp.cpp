@@ -250,7 +250,7 @@ int main( int argc, char *argv[] )
 	, outfname);
   memset(&bhi,0,sizeof(beye_help_item));
   if(BFile::exists(outfname)) if(BFile::unlink(outfname)) { fprintf(stderr,"Can not delete %s\n",argv[2]); return -1; }
-  bOutput = new BBio_File;
+  bOutput = new BBio_File(0x4000,BBio_File::Opt_Db);
   bool rc;
   rc = bOutput->create(outfname);
   if(rc == false)

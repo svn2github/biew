@@ -32,14 +32,17 @@ using namespace beye;
 #include "libbeye/bbio.h"
 
 namespace beye {
-BBio_File::BBio_File()
+BBio_File::BBio_File(unsigned bSize,unsigned optimization)
 	:filepos(0)
 	,openmode(0)
-	,optimize(0)
+	,optimize(optimization)
+	,vfb(bSize)
 	,is_eof(true)
 	,founderr(false)
 	,_flength(0)
 {
+    vfb.f_start = 0L;
+    vfb.updated  = true;
 }
 
 BBio_File::~BBio_File() { if(!filename().empty()) close(); }
@@ -252,35 +255,14 @@ bool BBio_File::__putbuff(const char* buff,unsigned cbBuff)
     return ret;
 }
 
-bool BBio_File::open(const std::string& _fname,unsigned _openmode,unsigned bSize,unsigned optimization)
+bool BBio_File::open(const std::string& _fname,unsigned _openmode)
 {
-    unsigned len;
     openmode = _openmode;
 
-    optimization = Opt_Db;
     if(!BFile::open(_fname,openmode)) return false;
-    optimize = optimization;
-    vfb.f_start = 0L;
-    vfb.updated  = true;
-    len = bSize;
-    if(bSize == UINT_MAX) len = (unsigned)_flength;
-    if(len) {
-	if((vfb.buffer = new char [len]) != NULL) {
-	    vfb.buflen = 0;
-	    vfb.bufsize = len;
-	} else {
-	    BFile::close();
-	    return false;
-	}
-	__fill(0L);
-    } else vfb.buffer = NULL;
+    if(vfb.buffer) __fill(0L);
     is_eof=false;
     return true;
-}
-
-bool BBio_File::open(const std::string& _fname,unsigned _openmode,unsigned cache_size)
-{
-    return open(_fname,_openmode,cache_size,Opt_Db);
 }
 
 bool BBio_File::close()
@@ -297,95 +279,74 @@ bool BBio_File::close()
 bool BBio_File::seek(__fileoff_t pos,e_seek orig)
 {
     bool ret;
-    if(is_cache_valid()) ret = __seek(pos,orig);
-    else ret = BFile::seek(pos,orig);
+    ret = __seek(pos,orig);
     return ret;
 }
 
 __filesize_t BBio_File::tell() const
 {
-    return is_cache_valid() ? filepos : (__filesize_t)BFile::tell();
+    return filepos;
 }
 
 uint8_t BBio_File::read_byte()
 {
-    return is_cache_valid() ?
-	    __getc() :
-	    BFile::read_byte();
+    return __getc();
 }
 
 uint16_t BBio_File::read_word()
 {
     uint16_t ret;
-    is_cache_valid() ?
-	__getbuff(reinterpret_cast<char*>(&ret),sizeof(uint16_t)) :
-	ret=BFile::read_word();
+    __getbuff(reinterpret_cast<char*>(&ret),sizeof(uint16_t));
     return ret;
 }
 
 uint32_t BBio_File::read_dword()
 {
     uint32_t ret;
-    is_cache_valid() ?
-	__getbuff(reinterpret_cast<char*>(&ret),sizeof(uint32_t)) :
-	ret=BFile::read_dword();
+    __getbuff(reinterpret_cast<char*>(&ret),sizeof(uint32_t));
     return ret;
 }
 
 uint64_t BBio_File::read_qword()
 {
     uint64_t ret;
-    is_cache_valid() ?
-	__getbuff(reinterpret_cast<char*>(&ret),sizeof(uint64_t)) :
-	ret=BFile::read_qword();
+    __getbuff(reinterpret_cast<char*>(&ret),sizeof(uint64_t));
     return ret;
 }
 
 bool BBio_File::read(any_t* _buffer,unsigned cbBuffer)
 {
-    return is_cache_valid() ?
-	    __getbuff(reinterpret_cast<char*>(_buffer),cbBuffer) :
-	    BFile::read(_buffer,cbBuffer);
+    return __getbuff(reinterpret_cast<char*>(_buffer),cbBuffer);
 }
 
 bool BBio_File::write_byte(uint8_t bVal)
 {
-    return is_cache_valid() ?
-	    __putc(bVal) :
-	    BFile::write_byte(bVal);
+    return __putc(bVal);
 }
 
 bool BBio_File::write_word(uint16_t wVal)
 {
-    return is_cache_valid() ?
-	    __putbuff(reinterpret_cast<const char*>(&wVal),sizeof(uint16_t)) :
-	    BFile::write_word(wVal);
+    return __putbuff(reinterpret_cast<const char*>(&wVal),sizeof(uint16_t));
 }
 
 bool BBio_File::write_dword(uint32_t dwVal)
 {
-  return is_cache_valid() ?
-	    __putbuff(reinterpret_cast<const char*>(&dwVal),sizeof(uint32_t)) :
-	    BFile::write_dword(dwVal);
+  return __putbuff(reinterpret_cast<const char*>(&dwVal),sizeof(uint32_t));
 }
 
 bool BBio_File::write_qword(uint64_t dwVal)
 {
-    return is_cache_valid() ?
-	    __putbuff(reinterpret_cast<const char*>(&dwVal),sizeof(uint64_t)) :
-	    BFile::write_qword(dwVal);
+    return __putbuff(reinterpret_cast<const char*>(&dwVal),sizeof(uint64_t));
 }
 
 bool BBio_File::write(const any_t* _buffer,unsigned cbBuffer)
 {
-    return is_cache_valid() ?
-	    __putbuff(reinterpret_cast<const char*>(_buffer),cbBuffer) :
-	    BFile::write(_buffer,cbBuffer);
+    return __putbuff(reinterpret_cast<const char*>(_buffer),cbBuffer);
 }
 
 bool BBio_File::flush()
 {
-    return is_cache_valid() ? __flush() : true;
+    return __flush();
 }
 
 bool BBio_File::reread()
@@ -440,7 +401,7 @@ unsigned BBio_File::buffpos() const
     return vfb.buflen - (unsigned)(filepos - vfb.f_start);
 }
 
-bool BBio_File::dup(BBio_File& it,unsigned buff_size) const
+bool BBio_File::dup(BBio_File& it) const
 {
     bool rc = BFile::dup(it);
     it.openmode = openmode;
@@ -448,37 +409,25 @@ bool BBio_File::dup(BBio_File& it,unsigned buff_size) const
     it.is_eof = is_eof;
     it.vfb.updated  = vfb.updated;
     it._flength  = _flength;
-    if(buff_size) {
-	it.vfb.buffer = new char [buff_size];
-	if(is_cache_valid()) {
-	    it.vfb.buflen = std::min(buff_size,vfb.buflen);
-	    it.vfb.bufsize = buff_size;
-	    it.filepos = std::min(filepos,vfb.f_start+(buff_size/2));
-	    it.vfb.f_start = vfb.f_start;
-	    ::memcpy(it.vfb.buffer,vfb.buffer,it.vfb.buflen);
-	} else {
-	    it.vfb.buflen = 0;
-	    it.vfb.bufsize = 0;
-	    it.filepos = 0L;
-	    it.vfb.f_start = 0;
-	}
-    } else it.vfb.buffer = 0;
+    it.vfb.buffer = new char [vfb.bufsize];
+    it.vfb.buflen = std::min(vfb.bufsize,vfb.buflen);
+    it.vfb.bufsize = vfb.bufsize;
+    it.filepos = std::min(filepos,vfb.f_start+(vfb.bufsize/2));
+    it.vfb.f_start = vfb.f_start;
+    ::memcpy(it.vfb.buffer,vfb.buffer,it.vfb.buflen);
     return rc;
 }
 
-BFile* BBio_File::dup(unsigned buff_size) const
+BFile* BBio_File::dup() const
 {
-    BBio_File* ret = new(zeromem) BBio_File;
-    if(!dup(*ret,buff_size)) return &bNull;
+    BBio_File* ret = new(zeromem) BBio_File(vfb.bufsize,Opt_Db);
+    if(!dup(*ret)) return &bNull;
     return ret;
 }
 
 bool BBio_File::eof() const
 {
-    bool retval;
-    if(is_cache_valid())retval = is_eof;
-    else		retval = BFile::eof();
-    return retval;
+    return is_eof;
 }
 
 __filesize_t BBio_File::flength() const { return _flength; }

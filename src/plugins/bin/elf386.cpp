@@ -2154,9 +2154,9 @@ static void __FASTCALL__ ELFinit(CodeGuider& _code_guider)
      if(evm->va < elf_min_va) elf_min_va = evm->va;
    }
    BFile& main_handle = bmbioHandle();
-   namecache = *main_handle.dup(BBIO_SMALL_CACHE_SIZE);
-   namecache2 = *main_handle.dup(BBIO_SMALL_CACHE_SIZE);
-   elfcache = *main_handle.dup(BBIO_SMALL_CACHE_SIZE);
+   namecache = *main_handle.dup();
+   namecache2 = *main_handle.dup();
+   elfcache = *main_handle.dup();
    if(&namecache == &bNull) namecache = main_handle;
    if(&namecache2 == &bNull) namecache2 = main_handle;
    if(&elfcache == &bNull) elfcache = main_handle;

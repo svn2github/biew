@@ -952,7 +952,7 @@ TextMode::TextMode(CodeGuider& code_guider)
 	::exit(EXIT_FAILURE);
     }
     BFile& bh = BMbioHandle();
-    if((txtHandle = bh.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) txtHandle = &bh;
+    if((txtHandle = bh.dup()) == &bNull) txtHandle = &bh;
     ::memset(&syntax_hl,0,sizeof(syntax_hl));
     /* Fill operator's hash */
     ::memset(syntax_hl.op_hash,text_cset.normal,sizeof(syntax_hl.op_hash));

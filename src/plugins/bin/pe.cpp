@@ -1140,11 +1140,11 @@ static void __FASTCALL__ initPE(CodeGuider& _code_guider)
    }
 
    BFile& main_handle = bmbioHandle();
-   if((pe_cache = main_handle.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache = &main_handle;
-   if((pe_cache1 = main_handle.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache1 = &main_handle;
-   if((pe_cache2 = main_handle.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache2 = &main_handle;
-   if((pe_cache3 = main_handle.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache3 = &main_handle;
-   if((pe_cache4 = main_handle.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) pe_cache4 = &main_handle;
+   if((pe_cache = main_handle.dup()) == &bNull) pe_cache = &main_handle;
+   if((pe_cache1 = main_handle.dup()) == &bNull) pe_cache1 = &main_handle;
+   if((pe_cache2 = main_handle.dup()) == &bNull) pe_cache2 = &main_handle;
+   if((pe_cache3 = main_handle.dup()) == &bNull) pe_cache3 = &main_handle;
+   if((pe_cache4 = main_handle.dup()) == &bNull) pe_cache4 = &main_handle;
 }
 
 static void __FASTCALL__ destroyPE()

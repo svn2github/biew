@@ -51,19 +51,9 @@ namespace beye {
 		Opt_DirMask  =0x000F /**< direction mask */
 	    };
 
-	    /** Virtual file buffer structure */
-	    struct b_cache {
-		__filesize_t	f_start; /**< logical position of mirror the buffer onto file */
-		char*		buffer;  /**< NULL - not buffered i/o */
-		unsigned	buflen;  /**< length data, actually contains in buffer */
-		unsigned	bufsize; /**< real size of buffer */
-		bool		updated; /**< true if buffer contains data, that not pesent in file */
-	    };
-
-	    BBio_File();
+	    BBio_File(unsigned buffSize,unsigned optimization);
 	    virtual ~BBio_File();
-	    virtual bool		open(const std::string& fname,unsigned openmode,unsigned cache_size);
-	    virtual bool		open(const std::string& fname,unsigned openmode,unsigned buffSize,unsigned optimization);
+	    virtual bool		open(const std::string& fname,unsigned openmode);
 	    virtual bool		chsize(__filesize_t newsize);
 	    virtual bool		close();
 	    virtual bool		eof() const;
@@ -84,13 +74,22 @@ namespace beye {
 	    virtual bool		write_dword(uint32_t dwVal);
 	    virtual bool		write_qword(uint64_t dwVal);
 	    virtual bool		write(const any_t* buffer,unsigned cbBuffer);
-	    virtual bool		dup(BBio_File&,unsigned buffSize) const;
-	    virtual BFile*		dup(unsigned buffSize) const;
+	    virtual bool		dup(BBio_File&) const;
+	    virtual BFile*		dup() const;
 	    virtual any_t*		buffer() const;
 	    virtual unsigned		bufflen() const;
 	    virtual unsigned		buffpos() const;
     private:
-	    bool is_cache_valid() const { return vfb.buffer; }
+	    /** Virtual file buffer structure */
+	    struct b_cache {
+		b_cache(unsigned size):buffer(new char[size]) {}
+		~b_cache() {}
+		__filesize_t	f_start; /**< logical position of mirror the buffer onto file */
+		char*		buffer;  /**< NULL - not buffered i/o */
+		unsigned	buflen;  /**< length data, actually contains in buffer */
+		unsigned	bufsize; /**< real size of buffer */
+		bool		updated; /**< true if buffer contains data, that not pesent in file */
+	    };
 	    bool is_writeable(unsigned _openmode) const { return (_openmode & O_RDWR) || (_openmode & O_WRONLY); }
 	    bool __isOutOfBuffer(__filesize_t pos) const { return pos < vfb.f_start || pos >= vfb.f_start + vfb.bufsize; }
 	    bool __isOutOfContents(__filesize_t pos) const { return pos < vfb.f_start || pos >= vfb.f_start + vfb.buflen; }

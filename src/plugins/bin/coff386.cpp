@@ -579,7 +579,7 @@ static void __FASTCALL__ coff386_init_fmt(CodeGuider& _code_guider)
      exit(EXIT_FAILURE);
   }
   main_handle = bmbioHandle();
-  if((coff_cache = main_handle.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) coff_cache = &main_handle;
+  if((coff_cache = main_handle.dup()) == &bNull) coff_cache = &main_handle;
   if(COFF_WORD(coff386hdr.f_opthdr)) s_off += COFF_WORD(coff386hdr.f_opthdr);
   coff_cache->seek(s_off,BFile::Seek_Set);
   for(i = 0;i < nsections;i++)

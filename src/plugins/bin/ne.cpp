@@ -1358,10 +1358,10 @@ static void __FASTCALL__ NE_init(CodeGuider& _code_guider)
     code_guider=&_code_guider;
    BFile& main_handle = bmbioHandle();
    bmReadBufferEx(&ne,sizeof(NEHEADER),beye_context().headshift,BFile::Seek_Set);
-   if((ne_cache3 = main_handle.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) ne_cache3 = &main_handle;
-   if((ne_cache1 = main_handle.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) ne_cache2 = &main_handle;
-   if((ne_cache = main_handle.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) ne_cache = &main_handle;
-   if((ne_cache2 = main_handle.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) ne_cache2 = &main_handle;
+   if((ne_cache3 = main_handle.dup()) == &bNull) ne_cache3 = &main_handle;
+   if((ne_cache1 = main_handle.dup()) == &bNull) ne_cache2 = &main_handle;
+   if((ne_cache = main_handle.dup()) == &bNull) ne_cache = &main_handle;
+   if((ne_cache2 = main_handle.dup()) == &bNull) ne_cache2 = &main_handle;
 }
 
 static void __FASTCALL__ NE_destroy()

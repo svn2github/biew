@@ -321,9 +321,9 @@ static bool FStore()
 		    }
 		}
 		delete h;
-		_bioHandle = new BBio_File;
-		bool rc = _bioHandle->open(ff_fname,BFile::FO_READWRITE | BFile::SO_DENYNONE,BBIO_CACHE_SIZE,BBio_File::Opt_Db);
-		if(rc == false)  rc = _bioHandle->open(ff_fname,BFile::FO_READWRITE | BFile::SO_COMPAT,BBIO_CACHE_SIZE,BBio_File::Opt_Db);
+		_bioHandle = new BBio_File(BBIO_CACHE_SIZE,BBio_File::Opt_Db);
+		bool rc = _bioHandle->open(ff_fname,BFile::FO_READWRITE | BFile::SO_DENYNONE);
+		if(rc == false)  rc = _bioHandle->open(ff_fname,BFile::FO_READWRITE | BFile::SO_COMPAT);
 		if(rc == false)  goto use_err;
 		crpos = ff_startpos;
 		_bioHandle->seek(0L,BFile::Seek_Set);

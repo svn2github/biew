@@ -34,9 +34,8 @@ any_t* MMFile::buffer() const
     return addr;
 }
 
-bool MMFile::dup(MMFile& it,unsigned info) const
+bool MMFile::dup(MMFile& it) const
 {
-    UNUSED(info);
     bool rc;
     if(!(rc=BFile::dup(it))) return rc;
     it.addr=addr;
@@ -46,10 +45,10 @@ bool MMFile::dup(MMFile& it,unsigned info) const
     return true;
 }
 
-BFile* MMFile::dup(unsigned info) const
+BFile* MMFile::dup() const
 {
     MMFile* ret = new(zeromem) MMFile;
-    if(!dup(*ret,info)) return &bNull;
+    if(!dup(*ret)) return &bNull;
     return ret;
 }
 
@@ -140,9 +139,8 @@ int MMFile::mk_flags(int mode)
     return pflg;
 }
 
-bool MMFile::open(const std::string& _fname,unsigned _openmode,unsigned cache_size)
+bool MMFile::open(const std::string& _fname,unsigned _openmode)
 {
-    UNUSED(cache_size);
     mode=_openmode;
     if(!is_writeable(mode)) {
 	if(BFile::open(_fname,_openmode)==true) {

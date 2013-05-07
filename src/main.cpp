@@ -633,11 +633,11 @@ BFile* BeyeContext::beyeOpenRO(const std::string& fname,unsigned cache_size)
 {
     BFile* fret;
     if(beye_context().fioUseMMF)fret= new(zeromem) MMFile;
-    else			fret= new(zeromem) BBio_File;
+    else			fret= new(zeromem) BBio_File(cache_size,BBio_File::Opt_Db);
     bool rc;
-    rc = fret->open(fname,BFile::FO_READONLY | BFile::SO_DENYNONE,cache_size);
+    rc = fret->open(fname,BFile::FO_READONLY | BFile::SO_DENYNONE);
     if(rc == false)
-	rc = fret->open(fname,BFile::FO_READONLY | BFile::SO_COMPAT,cache_size);
+	rc = fret->open(fname,BFile::FO_READONLY | BFile::SO_COMPAT);
     if(rc==false) { delete fret; fret=&bNull; }
     return fret;
 }
@@ -646,11 +646,11 @@ BFile* BeyeContext:: beyeOpenRW(const std::string& fname,unsigned cache_size)
 {
     BFile* fret;
     if(beye_context().fioUseMMF)fret= new(zeromem) MMFile;
-    else			fret= new(zeromem) BBio_File;
+    else			fret= new(zeromem) BBio_File(cache_size,BBio_File::Opt_Db);
     bool rc;
-    rc = fret->open(fname,BFile::FO_READWRITE | BFile::SO_DENYNONE,cache_size);
+    rc = fret->open(fname,BFile::FO_READWRITE | BFile::SO_DENYNONE);
     if(rc == false)
-	rc = fret->open(fname,BFile::FO_READWRITE | BFile::SO_COMPAT,cache_size);
+	rc = fret->open(fname,BFile::FO_READWRITE | BFile::SO_COMPAT);
     if(rc==false) { delete fret; fret=&bNull; }
     return fret;
 }
@@ -666,7 +666,7 @@ bool BeyeContext::BMOpen(const std::string& fname)
   }
   if(&bm_file_handle != &bNull) delete &bm_file_handle;
   bm_file_handle = *bm;
-  sc = bm_file_handle.dup(BBIO_SMALL_CACHE_SIZE);
+  sc = bm_file_handle.dup();
   if(sc == &bNull)
   {
     errnoMessageBox(DUP_FAIL,"",errno);

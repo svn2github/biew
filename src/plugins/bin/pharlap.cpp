@@ -258,7 +258,7 @@ static void __FASTCALL__ PharLapInit(CodeGuider& code_guider)
     UNUSED(code_guider);
   BFile& main_handle = bmbioHandle();
   bmReadBufferEx(&nph,sizeof(nph),0,BFile::Seek_Set);
-  if((pl_cache = main_handle.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) pl_cache = &main_handle;
+  if((pl_cache = main_handle.dup()) == &bNull) pl_cache = &main_handle;
 }
 
 static void __FASTCALL__ PharLapDestroy()

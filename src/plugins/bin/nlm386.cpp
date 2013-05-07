@@ -565,7 +565,7 @@ static void __FASTCALL__ NLMinit(CodeGuider& _code_guider)
     code_guider=&_code_guider;
   BFile& main_handle = bmbioHandle();
   bmReadBufferEx(&nlm,sizeof(Nlm_Internal_Fixed_Header),0,BFile::Seek_Set);
-  if((nlm_cache = main_handle.dup(BBIO_SMALL_CACHE_SIZE)) == &bNull) nlm_cache = &main_handle;
+  if((nlm_cache = main_handle.dup()) == &bNull) nlm_cache = &main_handle;
 }
 
 static void __FASTCALL__ NLMdestroy()
