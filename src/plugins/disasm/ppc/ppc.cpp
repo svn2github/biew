@@ -1530,7 +1530,7 @@ static void __FASTCALL__ ppcHelpAsm()
    evt = GetEvent(drawEmptyPrompt,NULL,hwnd);
  }
  while(!(evt == KE_ESCAPE || evt == KE_F(10)));
- CloseWnd(hwnd);
+ delete hwnd;
  ppchlp_bye:
  bhelp.close();
 }

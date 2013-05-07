@@ -90,8 +90,8 @@ void ASCII_Addon::run()
     evt = GetEvent(drawEmptyPrompt,NULL,hwnd);
   }
   while(!(evt == KE_ESCAPE || evt == KE_F(10)));
-  CloseWnd(hpnl);
-  CloseWnd(hwnd);
+  delete hpnl;
+  delete hwnd;
 }
 
 static Addon* query_interface() { return new(zeromem) ASCII_Addon(); }

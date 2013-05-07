@@ -237,7 +237,7 @@ void BinMode::misckey_action() /* EditBin */
     TWindow *ewin;
     bool inited;
     if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,""); return; }
-    ewin = WindowOpen(1,2,tvioWidth-virtWidthCorr,tvioHeight-1,TWindow::TWC_CURSORABLE);
+    ewin = WindowOpen(1,2,tvioWidth-virtWidthCorr,tvioHeight-1,TWindow::Flag_Has_Cursor);
     ewin->set_color(browser_cset.edit.main); ewin->clear();
     drawEditPrompt();
     ewin->set_focus();
@@ -265,7 +265,7 @@ void BinMode::misckey_action() /* EditBin */
 	FullEdit(ewin,NULL,*this,bin_mode==MOD_PLAIN?NULL:save_video);
 	editDestroyBuffs();
     }
-    CloseWnd(ewin);
+    delete ewin;
     beye_context().PaintTitle();
 }
 

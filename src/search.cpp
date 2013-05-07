@@ -474,13 +474,13 @@ bool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
   unsigned mlen[2],flags;
   int ch,i;
   hwnd = CrtDlgWndnls(FIND_STR,78,7);
-  hwnd->set_footer(" [Enter] - Start ",TW_TMODE_CENTER,dialog_cset.footer);
+  hwnd->set_footer(" [Enter] - Start ",TWindow::TMode_Center,dialog_cset.footer);
   hwnd->get_pos(&x1,&y1,&x2,&y2);
   X1 = x1+2;
   Y1 = y1+2;
   X2 = X1+75;
   Y2 = Y1;
-  ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::TWC_CURSORABLE | TWindow::TWC_VISIBLE);
+  ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::Flag_Has_Cursor | TWindow::Flag_Visible);
   hwnd->draw_frame(1,3,78,7,TWindow::DN3D_FRAME,dialog_cset.main);
   hwnd->draw_frame(37,4,42,6,TWindow::UP3D_FRAME,dialog_cset.main);
   hwnd->goto_xy(38,5); hwnd->puts("BASE");
@@ -562,8 +562,8 @@ bool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
 	 *sf_flags &= ~(SF_WILDCARDS);
 	 *sf_flags |= SF_CASESENS;
   }
-  CloseWnd(ewnd);
-  CloseWnd(hwnd);
+  delete ewnd;
+  delete hwnd;
   return ret;
 }
 
@@ -595,7 +595,7 @@ __filesize_t BeyeContext::search( bool is_continue )
        activeMode->search_engine(prcntswnd,lmem,&slen,beyeSearchFlg,
 				 is_continue,&__found):
        __adv_find(lmem,&slen);
-    CloseWnd(prcntswnd);
+    delete prcntswnd;
     if(__found)
     {
        FoundTextSt = found;

@@ -91,7 +91,7 @@ void CPUPerformance_Addon::run()
    if(!cpu_info) { mem_out: MemOutBox("Show CPU information"); return; }
    pwnd = PercentWnd("Analyze:","");
    __FillCPUInfo(cpu_info,4096,paint_prcnt);
-   CloseWnd(pwnd);
+   delete pwnd;
    data_size = strchr(cpu_info, 0) - cpu_info;
    if(!(str_ptr = cpuPointStrings(cpu_info,data_size,&nstr)))
       { PFREE(cpu_info); goto mem_out; }

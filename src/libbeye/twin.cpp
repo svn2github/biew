@@ -40,7 +40,7 @@ TWindow* TWindow::cursorwin = NULL;
 static unsigned long twin_flags = 0L;
 static void  __FASTCALL__ winerr(const std::string& str) { std::cerr<<std::endl<<std::endl<<"Internal twin library error: "<<str<<std::endl; _exit(EXIT_FAILURE); }
 
-TWindow::e_cursor TWindow::c_type = CUR_UNK;
+TWindow::e_cursor TWindow::c_type = Cursor_Unknown;
 void TWindow::set_cursor_type(TWindow::e_cursor type)
 {
   if(type != c_type)
@@ -52,7 +52,7 @@ void TWindow::set_cursor_type(TWindow::e_cursor type)
 
 TWindow::e_cursor TWindow::get_cursor_type()
 {
-  if(c_type == CUR_UNK) c_type = e_cursor(__vioGetCursorType());
+  if(c_type == Cursor_Unknown) c_type = e_cursor(__vioGetCursorType());
   return c_type;
 }
 
@@ -70,12 +70,12 @@ void __FASTCALL__ twInit(const std::string& user_cp, unsigned long vio_flags, un
     sprintf(outs,"Size of video buffer is too large: %u (max = %u)",tvioWidth,__TVIO_MAXSCREENWIDTH);
     winerr(outs);
   }
-  TWindow::set_cursor_type(TWindow::CUR_OFF);
+  TWindow::set_cursor_type(TWindow::Cursor_Off);
 }
 
 void __FASTCALL__ twDestroy()
 {
-  TWindow::set_cursor_type(TWindow::CUR_NORM);
+  TWindow::set_cursor_type(TWindow::Cursor_Normal);
   twcDestroyClassSet();
   __term_keyboard();
   __term_vio();
@@ -270,7 +270,7 @@ TWindow* TWindow::__at_point(TWindow* iter,tAbsCoord x,tAbsCoord y) {
 
 void TWindow::create(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, unsigned _flags)
 {
-    if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE) { _width ++; _height ++; }
+    if((flags & Flag_Has_Frame) == Flag_Has_Frame) { _width ++; _height ++; }
     makewin(x1-1,y1-1,_width,_height);
     flags = _flags;
     iflags = IFLG_ENABLED;
@@ -286,7 +286,7 @@ void TWindow::create(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _he
     cur_x = cur_y = 0;
     set_focus();
     paint_internal();
-    if((flags & TWC_VISIBLE) == TWC_VISIBLE) show();
+    if((flags & Flag_Visible) == Flag_Visible) show();
 }
 
 TWindow::TWindow(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, twc_flag _flags)
@@ -296,10 +296,8 @@ TWindow::TWindow(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height
 
 TWindow::TWindow(tAbsCoord x1_, tAbsCoord y1_,
 		 tAbsCoord _width, tAbsCoord _height,
-		 twc_flag _flags, const TWindow* parent,
-		 const std::string& classname)
+		 twc_flag _flags, const std::string& classname)
 {
-    UNUSED(parent);
     create(x1_, y1_, _width, _height, _flags);
     TwClass* cls;
     cls = twcFindClass(classname);
@@ -369,7 +367,7 @@ Color TWindow::text_bkgnd(Color col)
 
 void TWindow::set_frame(const unsigned char *_frame,Color fore,Color back)
 {
-    flags |= TWC_FRAMEABLE;
+    flags |= Flag_Has_Frame;
     ::memcpy(Frame,_frame,8);
     __set_color(&frame,fore,back);
     paint_internal();
@@ -382,7 +380,7 @@ void TWindow::set_frame(const unsigned char *_frame,ColorAttr attr)
 
 void TWindow::get_frame(unsigned char *_frame,ColorAttr* attr) const
 {
-    if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE) {
+    if((flags & Flag_Has_Frame) == Flag_Has_Frame) {
 	::memcpy(_frame,Frame,8);
 	*attr = frame.user;
     }
@@ -396,29 +394,29 @@ void TWindow::get_frame(unsigned char *_frame,Color* fore,Color* back) const
     *back = BACK_COLOR(attr);
 }
 
-void TWindow::set_title(const std::string& _title,tTitleMode mode,Color fore,Color back)
+void TWindow::set_title(const std::string& _title,title_mode mode,Color fore,Color back)
 {
     unsigned slen;
     slen = _title.length();
     if(Title) delete Title;
     Title = new char [slen+1];
     ::strcpy(Title,_title.c_str());
-    if((flags & TWC_NLSOEM) == TWC_NLSOEM)
+    if((flags & Flag_NLS) == Flag_NLS)
 	 __nls_OemToOsdep((unsigned char *)Title,slen);
     TitleMode = mode;
     __set_color(&title,fore,back);
     paint_internal();
 }
 
-void TWindow::set_title(const std::string& _title,tTitleMode mode,ColorAttr attr)
+void TWindow::set_title(const std::string& _title,title_mode mode,ColorAttr attr)
 {
     set_title(_title,mode,FORE_COLOR(attr),BACK_COLOR(attr));
 }
 
-tTitleMode TWindow::get_title(char *_title,unsigned cb_title,ColorAttr* attr) const
+TWindow::title_mode TWindow::get_title(char *_title,unsigned cb_title,ColorAttr* attr) const
 {
-    tTitleMode ret = TW_TMODE_LEFT;
-    if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE && Title) {
+    title_mode ret = TMode_Left;
+    if((flags & Flag_Has_Frame) == Flag_Has_Frame && Title) {
 	::strncpy(_title,Title,cb_title);
 	_title[cb_title-1] = '\0';
 	*attr = title.user;
@@ -427,39 +425,39 @@ tTitleMode TWindow::get_title(char *_title,unsigned cb_title,ColorAttr* attr) co
     return ret;
 }
 
-tTitleMode TWindow::get_title(char *_title,unsigned cb_title,Color* fore,Color* back) const
+TWindow::title_mode TWindow::get_title(char *_title,unsigned cb_title,Color* fore,Color* back) const
 {
     ColorAttr attr;
-    tTitleMode ret;
+    title_mode ret;
     ret = get_title(_title,cb_title,&attr);
     *fore = FORE_COLOR(attr);
     *back = BACK_COLOR(attr);
     return ret;
 }
 
-void TWindow::set_footer(const std::string& _footer,tTitleMode mode,Color fore,Color back)
+void TWindow::set_footer(const std::string& _footer,title_mode mode,Color fore,Color back)
 {
     unsigned slen;
     slen = _footer.length();
     if(Footer) delete Footer;
     Footer = new char [slen+1];
     ::strcpy(Footer,_footer.c_str());
-    if((flags & TWC_NLSOEM) == TWC_NLSOEM)
+    if((flags & Flag_NLS) == Flag_NLS)
 	__nls_OemToOsdep((unsigned char *)Footer,slen);
     FooterMode = mode;
     __set_color(&footer,fore,back);
     paint_internal();
 }
 
-void TWindow::set_footer(const std::string& _footer,tTitleMode mode,ColorAttr attr)
+void TWindow::set_footer(const std::string& _footer,title_mode mode,ColorAttr attr)
 {
     set_footer(_footer,mode,FORE_COLOR(attr),BACK_COLOR(attr));
 }
 
-tTitleMode TWindow::get_footer(char *_footer,unsigned cb_footer,ColorAttr* attr) const
+TWindow::title_mode TWindow::get_footer(char *_footer,unsigned cb_footer,ColorAttr* attr) const
 {
-    tTitleMode ret = tTitleMode(0);
-    if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE && Footer) {
+    title_mode ret = title_mode(0);
+    if((flags & Flag_Has_Frame) == Flag_Has_Frame && Footer) {
 	::strncpy(_footer,Footer,cb_footer);
 	_footer[cb_footer-1] = '\0';
 	*attr = footer.user;
@@ -469,10 +467,10 @@ tTitleMode TWindow::get_footer(char *_footer,unsigned cb_footer,ColorAttr* attr)
 }
 
 
-tTitleMode TWindow::get_footer(char *_footer,unsigned cb_footer,Color* fore,Color* back) const
+TWindow::title_mode TWindow::get_footer(char *_footer,unsigned cb_footer,Color* fore,Color* back) const
 {
     ColorAttr attr;
-    tTitleMode ret;
+    title_mode ret;
     ret = get_footer(_footer,cb_footer,&attr);
     *fore = FORE_COLOR(attr);
     *back = BACK_COLOR(attr);
@@ -512,7 +510,7 @@ TWindow* TWindow::__findcursorablewin()
     iter = head;
     ret = NULL;
     while(iter) {
-	if((iter->flags & TWC_CURSORABLE) == TWC_CURSORABLE) { ret = iter; break; }
+	if((iter->flags & Flag_Has_Cursor) == Flag_Has_Cursor) { ret = iter; break; }
 	iter = iter->next;
     }
     return ret;
@@ -530,7 +528,7 @@ TWindow* TWindow::at_pos(tAbsCoord x,tAbsCoord y)
 
 void TWindow::cvt_win_coords(tRelCoord x, tRelCoord y,tAbsCoord *xa,tAbsCoord *ya) const
 {
-    if(flags & TWC_FRAMEABLE) { x++; y++; }
+    if(flags & Flag_Has_Frame) { x++; y++; }
     *xa = X1+x;
     *ya = Y1+y;
 }
@@ -539,14 +537,14 @@ bool TWindow::cvt_screen_coords(tAbsCoord x, tAbsCoord y,tRelCoord *xr,tRelCoord
 {
     *xr = x - X1;
     *yr = y - Y1;
-    if(flags & TWC_FRAMEABLE) { (*xr)--; (*yr)--; }
+    if(flags & Flag_Has_Frame) { (*xr)--; (*yr)--; }
     return is_valid_xy(*xr,*yr) ? true : false;
 }
 
 bool TWindow::is_piece_visible(tRelCoord x, tRelCoord y) const
 {
     TWindow *over;
-    if(flags & TWC_FRAMEABLE) { x++; y++; }
+    if(flags & Flag_Has_Frame) { x++; y++; }
     over=__find_over(X1+x,Y1+y);
     return over ? true : false;
 }
@@ -570,7 +568,7 @@ void TWindow::set_xy(tRelCoord x,tRelCoord y)
 	cur_y = y;
 	_width = wwidth;
 	_height = wheight;
-	if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE) {
+	if((flags & Flag_Has_Frame) == Flag_Has_Frame) {
 	    _width--;
 	    _height--;
 	    cur_x++;
@@ -585,16 +583,16 @@ void TWindow::paint_cursor() const
 {
     TWindow * top=NULL;
     static tAbsCoord c_x = UCHAR_MAX, c_y = UCHAR_MAX;
-    e_cursor _c_type = CUR_UNK;
+    e_cursor _c_type = Cursor_Unknown;
     unsigned x,y;
     e_cursor type;
     if(cursorwin && (cursorwin->iflags & IFLG_ENABLED) == IFLG_ENABLED) {
 	top=cursorwin->__find_over(cursorwin->cur_x,cursorwin->cur_y-1);
 	if(!top && (cursorwin->iflags & IFLG_VISIBLE) == IFLG_VISIBLE && cursorwin == this) {
 	    type = get_cursor_type();
-	    if(type == CUR_OFF) {
-		set_cursor_type(_c_type == CUR_UNK ? CUR_NORM : _c_type);
-		_c_type = _c_type == CUR_UNK ? CUR_NORM : _c_type;
+	    if(type == Cursor_Off) {
+		set_cursor_type(_c_type == Cursor_Unknown ? Cursor_Normal : _c_type);
+		_c_type = _c_type == Cursor_Unknown ? Cursor_Normal : _c_type;
 	    }
 	    x = X1 + cur_x;
 	    y = Y1 + cur_y;
@@ -609,9 +607,9 @@ void TWindow::paint_cursor() const
 	c_x = c_y = UCHAR_MAX;
 hide_cursor:
 	type = get_cursor_type();
-	if(type != CUR_OFF) {
+	if(type != Cursor_Off) {
 	    _c_type = type;
-	    set_cursor_type(CUR_OFF);
+	    set_cursor_type(Cursor_Off);
 	}
     }
 }
@@ -936,7 +934,7 @@ void TWindow::updatescreen(bool full_area)
 	    xe = X2;
 	    ys = Y1;
 	    ye = Y2;
-	    if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE && (!full_area)) {
+	    if((flags & Flag_Has_Frame) == Flag_Has_Frame && (!full_area)) {
 		xs++; xe--; ys++; ye--;
 	    }
 	    __MsGetPos(&mx,&my);
@@ -956,7 +954,7 @@ void TWindow::updatescreen(bool full_area)
 	    cx = X1;
 	    rw = wwidth;
 	    aoff = 0;
-	    if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE && (!full_area)) {
+	    if((flags & Flag_Has_Frame) == Flag_Has_Frame && (!full_area)) {
 		xs++; xe--; ys++; ye--;
 		cx++; rw-=2;
 		aoff = 1;
@@ -1081,18 +1079,18 @@ void TWindow::updatewinmem()
     }
 }
 
-tRelCoord TWindow::calc_title_off(tTitleMode mode,unsigned w,unsigned slen)
+tRelCoord TWindow::calc_title_off(title_mode mode,unsigned w,unsigned slen)
 {
     tRelCoord stx;
     switch(mode) {
-	case TW_TMODE_LEFT:
+	case TMode_Left:
 		stx = 2;
 		break;
-	case TW_TMODE_CENTER:
+	case TMode_Center:
 		stx = ((w - slen)>>1) + 1;
 		break;
 	default:
-	case TW_TMODE_RIGHT:
+	case TMode_Right:
 		stx = w - slen;
 		break;
     }
@@ -1125,7 +1123,7 @@ void TWindow::__draw_frame(tRelCoord xs, tRelCoord ys, tRelCoord xe, tRelCoord y
 	    bl = LOGFB_TO_PHYS(cfbk == LightGray ? Black : Gray,cfbk);
 	}
     }
-    if((flags & TWC_NLSOEM) == TWC_NLSOEM) __nls_OemToOsdep((unsigned char *)frm,sizeof(frm));
+    if((flags & Flag_NLS) == Flag_NLS) __nls_OemToOsdep((unsigned char *)frm,sizeof(frm));
     igoto_xy(xs,ys);
     csel = up ? up == 1 ? lt : bl : cfr;
     oem_ch = ((char*)_frame)[0];
@@ -1203,7 +1201,7 @@ void TWindow::make_frame()
 
 void TWindow::paint_internal()
 {
-    if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE) make_frame();
+    if((flags & Flag_Has_Frame) == Flag_Has_Frame) make_frame();
 }
 
 void TWindow::draw_frame(tRelCoord x1, tRelCoord y1, tRelCoord x2, tRelCoord y2,const unsigned char *_frame,Color fore, Color back)
@@ -1215,7 +1213,7 @@ void TWindow::draw_frame(tRelCoord x1, tRelCoord y1, tRelCoord x2, tRelCoord y2,
     if(::memcmp(_frame,UP3D_FRAME,8) == 0 ||
 	::memcmp(_frame,DN3D_FRAME,8) == 0) __set_color(&dcol,fore,back);
     else dcol = text;
-    if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE) {
+    if((flags & Flag_Has_Frame) == Flag_Has_Frame) {
 	x1++; y1++; x2++; y2++;
     }
     __draw_frame(x1,y1,x2,y2,_frame,dcol);
@@ -1239,7 +1237,7 @@ void TWindow::show()
 	__athead();
 	updatewinmem();
 	updatescreen(true);
-	if((flags & TWC_CURSORABLE) == TWC_CURSORABLE) {
+	if((flags & Flag_Has_Cursor) == Flag_Has_Cursor) {
 	    cursorwin = this;
 	}
 	paint_cursor();
@@ -1255,7 +1253,7 @@ void TWindow::show_on_top()
     __athead();
     screen2win();
     updatescreen(true);
-    if((flags & TWC_CURSORABLE) == TWC_CURSORABLE) {
+    if((flags & Flag_Has_Cursor) == Flag_Has_Cursor) {
 	cursorwin = this;
     }
     paint_cursor();
@@ -1275,7 +1273,7 @@ void TWindow::show_beneath(TWindow& prev)
 void TWindow::hide()
 {
     send_message(WM_HIDE,0L,NULL);
-    if(cursorwin == this) set_cursor_type(CUR_OFF);
+    if(cursorwin == this) set_cursor_type(Cursor_Off);
     savedwin2screen();
     iflags &= ~IFLG_VISIBLE;
 }
@@ -1286,7 +1284,7 @@ void TWindow::get_pos(tAbsCoord *x1,tAbsCoord *y1,tAbsCoord *x2,tAbsCoord *y2)
     *y1 = Y1+1;
     *x2 = X2;
     *y2 = Y2;
-    if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE) {
+    if((flags & Flag_Has_Frame) == Flag_Has_Frame) {
 	(*x2)--;
 	(*y2)--;
     }
@@ -1294,8 +1292,8 @@ void TWindow::get_pos(tAbsCoord *x1,tAbsCoord *y1,tAbsCoord *x2,tAbsCoord *y2)
 
 unsigned TWindow::width() const { return wwidth; }
 unsigned TWindow::height() const { return wheight; }
-unsigned TWindow::client_width() const { return flags & TWC_FRAMEABLE ? wwidth-2 : wwidth; }
-unsigned TWindow::client_height() const {  return flags & TWC_FRAMEABLE ? wheight-2 : wheight; }
+unsigned TWindow::client_width() const { return flags & Flag_Has_Frame ? wwidth-2 : wwidth; }
+unsigned TWindow::client_height() const {  return flags & Flag_Has_Frame ? wheight-2 : wheight; }
 
 void TWindow::move(tAbsCoord dx,tAbsCoord dy)
 {
@@ -1336,11 +1334,11 @@ void TWindow::resize(tAbsCoord _width,tAbsCoord _height)
     oldw = wwidth;
     oldh = wheight;
     /* --- Compute copy parameters --- */
-    to = (flags & TWC_FRAMEABLE) == TWC_FRAMEABLE ? 1 : 0;
-    from = (flags & TWC_FRAMEABLE) == TWC_FRAMEABLE ? 1 : 0;
+    to = (flags & Flag_Has_Frame) == Flag_Has_Frame ? 1 : 0;
+    from = (flags & Flag_Has_Frame) == Flag_Has_Frame ? 1 : 0;
     delta = 0;
-    if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE) delta = 2;
-    start = (flags & TWC_FRAMEABLE) == TWC_FRAMEABLE ? 1 : 0;
+    if((flags & Flag_Has_Frame) == Flag_Has_Frame) delta = 2;
+    start = (flags & Flag_Has_Frame) == Flag_Has_Frame ? 1 : 0;
     loop = std::min(oldh,_height);
     ncopy = std::min(_width,oldw);
     fillsize = _width-oldw;
@@ -1387,26 +1385,24 @@ void TWindow::resize(tAbsCoord _width,tAbsCoord _height)
     goto_xy(x,y);
 }
 
-void TWindow::into_center(const TWindow* parent)
+void TWindow::into_center(tAbsCoord w,tAbsCoord h)
 {
     tAbsCoord ww,wh,pww,pwh;
     int vis = (iflags & IFLG_VISIBLE) == IFLG_VISIBLE;
     if(vis) hide();
     ww = wwidth;
     wh = wheight;
-    if(!parent) {
-	pww = tvioWidth;
-	pwh = tvioHeight;
-    } else {
-	pww = parent->wwidth;
-	pwh = parent->wheight;
-    }
+    pww = w;
+    pwh = h;
     X1 = ( pww - ww )>>1;
     X2 = ( pww + ww )>>1;
     Y1 = ( pwh - wh )>>1;
     Y2 = ( pwh + wh )>>1;
     if(vis) show();
 }
+
+void TWindow::into_center(const TWindow& parent) { into_center(parent.wwidth,parent.wheight); }
+void TWindow::into_center() { into_center(tvioWidth,tvioHeight); }
 
 void TWindow::clear(unsigned char filler)
 {
@@ -1415,22 +1411,22 @@ void TWindow::clear(unsigned char filler)
     char oempg = 0;
     cx = cur_x;
     cy = cur_y;
-    to = (flags & TWC_FRAMEABLE) == TWC_FRAMEABLE ? 1 : 0;
+    to = (flags & Flag_Has_Frame) == Flag_Has_Frame ? 1 : 0;
     size = wwidth;
     delta = 0;
-    if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE) delta = 2;
-    start = (flags & TWC_FRAMEABLE) == TWC_FRAMEABLE ? 1 : 0;
+    if((flags & Flag_Has_Frame) == Flag_Has_Frame) delta = 2;
+    start = (flags & Flag_Has_Frame) == Flag_Has_Frame ? 1 : 0;
     loop = wheight;
-    if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE) loop--;
+    if((flags & Flag_Has_Frame) == Flag_Has_Frame) loop--;
     fillsize = size-delta;
-    if((flags & TWC_NLSOEM) == TWC_NLSOEM) {
+    if((flags & Flag_NLS) == Flag_NLS) {
 	oempg = filler;
 	__nls_OemToOsdep(&filler,1);
     }
     for(i = start;i < loop;i++) {
 	idx = to+i*size;
 	::memset(&body.chars[idx],filler,fillsize);
-	::memset(&body.oem_pg[idx],((flags & TWC_NLSOEM) == TWC_NLSOEM ? NLS_IS_OEMPG(oempg) ? oempg : 0 : 0),fillsize);
+	::memset(&body.oem_pg[idx],((flags & Flag_NLS) == Flag_NLS ? NLS_IS_OEMPG(oempg) ? oempg : 0 : 0),fillsize);
 	::memset(&body.attrs[idx],text.system,fillsize);
 	check_win();
 	updatescreenpiece(0,wwidth,i+1);
@@ -1444,14 +1440,14 @@ void TWindow::clreol(unsigned char filler)
     size_t size,idx;
     char oempg = 0;
     size = wwidth - cur_x;
-    if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE) size--;
+    if((flags & Flag_Has_Frame) == Flag_Has_Frame) size--;
     idx = cur_x + cur_y*wwidth;
-    if((flags & TWC_NLSOEM) == TWC_NLSOEM) {
+    if((flags & Flag_NLS) == Flag_NLS) {
 	oempg = filler;
 	__nls_OemToOsdep(&filler,1);
     }
     ::memset(&body.chars[idx],filler,size);
-    ::memset(&body.oem_pg[idx],((flags & TWC_NLSOEM) == TWC_NLSOEM ? NLS_IS_OEMPG(oempg) ? oempg : 0 : 0),size);
+    ::memset(&body.oem_pg[idx],((flags & Flag_NLS) == Flag_NLS ? NLS_IS_OEMPG(oempg) ? oempg : 0 : 0),size);
     ::memset(&body.attrs[idx],text.system,size);
     check_win();
     updatescreenpiece(cur_x,wwidth,cur_y+1);
@@ -1461,7 +1457,7 @@ TWindow* TWindow::set_focus()
 {
     TWindow *ret;
     ret = cursorwin;
-    if((flags & TWC_CURSORABLE) == TWC_CURSORABLE) {
+    if((flags & Flag_Has_Cursor) == Flag_Has_Cursor) {
 	cursorwin = this;
     }
     paint_cursor();
@@ -1470,8 +1466,8 @@ TWindow* TWindow::set_focus()
 
 TWindow* TWindow::get_focus() { return cursorwin; }
 
-tRelCoord TWindow::where_x() const { return (flags & TWC_FRAMEABLE) == TWC_FRAMEABLE ? cur_x : cur_x+1; }
-tRelCoord TWindow::where_y() const { return (flags & TWC_FRAMEABLE) == TWC_FRAMEABLE ? cur_y : cur_y+1; }
+tRelCoord TWindow::where_x() const { return (flags & Flag_Has_Frame) == Flag_Has_Frame ? cur_x : cur_x+1; }
+tRelCoord TWindow::where_y() const { return (flags & Flag_Has_Frame) == Flag_Has_Frame ? cur_y : cur_y+1; }
 
 void TWindow::wputc_oem(char ch,char oempg,char color,bool update)
 {
@@ -1491,7 +1487,7 @@ void TWindow::putch(char ch)
     cx = cur_x;
     cy = cur_y;
     if(is_valid_xy(cx,cy)) {
-	if((flags & TWC_NLSOEM) == TWC_NLSOEM) {
+	if((flags & Flag_NLS) == Flag_NLS) {
 	    as_oem = ch;
 	    __nls_OemToOsdep((unsigned char *)&ch,1);
 	    if(!NLS_IS_OEMPG(as_oem)) as_oem = 0;
@@ -1521,7 +1517,7 @@ int TWindow::puts(const std::string& str)
     tAbsCoord usx;
     tRelCoord cx,cy;
     char ch,as_oem;
-    if((flags & TWC_NLSOEM) == TWC_NLSOEM) {
+    if((flags & Flag_NLS) == Flag_NLS) {
 	unsigned len;
 	len = str.length();
 	__nls = new char [len+1];
@@ -1554,7 +1550,7 @@ int TWindow::puts(const std::string& str)
 	cy = cur_y;
 	if(is_valid_xy(cx,cy)) {
 	    body.chars[vidx] = ch;
-	    if((flags & TWC_NLSOEM) == TWC_NLSOEM && NLS_IS_OEMPG(as_oem))
+	    if((flags & Flag_NLS) == Flag_NLS && NLS_IS_OEMPG(as_oem))
 		body.oem_pg[vidx] = as_oem;
 	    else body.oem_pg[vidx] = 0;
 	    body.attrs[vidx++] = text.system;
@@ -1592,15 +1588,15 @@ int TWindow::direct_write(tRelCoord x, tRelCoord y,const any_t*str,unsigned len)
     const char *__nls = NULL,*__oem = NULL;
     char nlsBuff[__TVIO_MAXSCREENWIDTH];
     char oemBuff[__TVIO_MAXSCREENWIDTH];
-    if(!((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE)) {
+    if(!((flags & Flag_Has_Frame) == Flag_Has_Frame)) {
 	x--;  y--;
     }
     if(!is_valid_xy(x,y)) return 0;
     rlen = wwidth;
-    if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE) rlen-=1;
+    if((flags & Flag_Has_Frame) == Flag_Has_Frame) rlen-=1;
     rlen -= x;
     rlen = std::min(rlen,len);
-    if((flags & TWC_NLSOEM) == TWC_NLSOEM) {
+    if((flags & Flag_NLS) == Flag_NLS) {
 	::memcpy(nlsBuff,str,rlen);
 	::memcpy(oemBuff,str,rlen);
 	for(i = 0;i < rlen;i++) if(!NLS_IS_OEMPG(oemBuff[i])) oemBuff[i] = 0;
@@ -1668,7 +1664,7 @@ void TWindow::freeze() { iflags &= ~IFLG_ENABLED; }
 void TWindow::refresh(tRelCoord y)
 {
     iflags |= IFLG_ENABLED;
-    if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE) y++;
+    if((flags & Flag_Has_Frame) == Flag_Has_Frame) y++;
     updatescreenpiece(0,wwidth,y);
     paint_cursor();
 }
@@ -1676,7 +1672,7 @@ void TWindow::refresh(tRelCoord y)
 void TWindow::refresh_piece(tRelCoord stx,tRelCoord endx,tRelCoord y)
 {
     iflags |= IFLG_ENABLED;
-    if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE) { stx++; endx++; y++; }
+    if((flags & Flag_Has_Frame) == Flag_Has_Frame) { stx++; endx++; y++; }
     updatescreenpiece(stx-1,endx-1,y);
     paint_cursor();
 }
@@ -1684,7 +1680,7 @@ void TWindow::refresh_piece(tRelCoord stx,tRelCoord endx,tRelCoord y)
 void TWindow::refresh()
 {
     iflags |= IFLG_ENABLED;
-    updatescreen((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE ? false : true);
+    updatescreen((flags & Flag_Has_Frame) == Flag_Has_Frame ? false : true);
     paint_cursor();
 }
 
@@ -1717,7 +1713,7 @@ void TWindow::scroll_up(tRelCoord ypos, unsigned npos)
     accel.oem_pg = oem_pg;
     accel.attrs = attrs;
     _wwidth = wwidth;
-    if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE) _wwidth-=2;
+    if((flags & Flag_Has_Frame) == Flag_Has_Frame) _wwidth-=2;
     for(i = npos-1;i < ypos;i++) {
 	read(1,i+2,&accel,_wwidth);
 	write(1,i+1,&accel,_wwidth);
@@ -1739,7 +1735,7 @@ void TWindow::scroll_down(tRelCoord ypos, unsigned npos)
     lim = ypos > npos ? ypos - npos + 1 : 1;
     _wwidth = wwidth;
     _wheight = wheight;
-    if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE) {
+    if((flags & Flag_Has_Frame) == Flag_Has_Frame) {
 	_wwidth-=2;
 	_wheight-=2;
     }
@@ -1764,7 +1760,7 @@ void TWindow::scroll_left(tRelCoord xpos, unsigned npos)
     accel.attrs = attrs;
     lim = xpos > npos ? xpos - npos : 0;
     _wheight = wheight;
-    if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE) {
+    if((flags & Flag_Has_Frame) == Flag_Has_Frame) {
 	_wheight-=2;
     }
     for(i = lim;i < xpos;i++) {
@@ -1792,7 +1788,7 @@ void TWindow::scroll_right(tRelCoord xpos, unsigned npos)
     lim = xpos > npos ? xpos - npos + 1 : 1;
     _wwidth = wwidth;
     _wheight = wheight;
-    if((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE) {
+    if((flags & Flag_Has_Frame) == Flag_Has_Frame) {
 	_wwidth-=2;
 	_wheight-=2;
     }

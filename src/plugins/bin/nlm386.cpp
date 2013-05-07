@@ -127,7 +127,7 @@ static __filesize_t __FASTCALL__ ShowNLMHeader()
 	break;
       }
   }while(!(keycode == KE_ESCAPE || keycode == KE_F(10)));
-  CloseWnd(w);
+  delete w;
   return fpos;
 }
 
@@ -267,7 +267,7 @@ static __filesize_t __FASTCALL__ ShowNewNLM()
 	break;
       }
   }while(!(keycode == KE_ESCAPE || keycode == KE_F(10)));
-  CloseWnd(w);
+  delete w;
   return fpos;
 }
 
@@ -486,7 +486,7 @@ static void  __FASTCALL__ BuildRelocNlm()
   }
   next:
   la_Sort(RelocNlm,nlm_compare_s);
-  CloseWnd(w);
+  delete w;
 }
 
 static bool  __FASTCALL__ BuildReferStrNLM(char *str,RELOC_NLM*rne,int flags)

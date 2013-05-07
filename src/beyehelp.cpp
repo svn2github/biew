@@ -269,7 +269,7 @@ int Beye_Help::__ListBox(const char** names,unsigned nlist,const std::string& ti
      if(scursor >= start && (unsigned)scursor < start + height) paint_line(wlist,scursor - start,names[scursor],true);
    }
  }
- CloseWnd(wlist);
+ delete wlist;
  return ret;
 }
 

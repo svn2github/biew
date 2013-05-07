@@ -48,7 +48,7 @@ void InputView_Addon::run()
   char head[80], text[80];
   drawEmptyPrompt();
   hwnd->freeze();
-  hwnd->set_footer(" [Escape] - quit ",TW_TMODE_RIGHT,dialog_cset.selfooter);
+  hwnd->set_footer(" [Escape] - quit ",TWindow::TMode_Right,dialog_cset.selfooter);
   hwnd->refresh();
   do_exit=0;
   do
@@ -68,7 +68,7 @@ void InputView_Addon::run()
     if(!rval) do_exit++;
   }
   while(do_exit<2);
-  CloseWnd(hwnd);
+  delete hwnd;
 }
 
 static Addon* query_interface() { return new(zeromem) InputView_Addon(); }

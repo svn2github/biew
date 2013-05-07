@@ -307,7 +307,7 @@ void TextMode::markup_ctx()
 	}
     }
     BMSeek(fpos,BFile::Seek_Set);
-    CloseWnd(hwnd);
+    delete hwnd;
 }
 
 static void unfmt_str(unsigned char *str)

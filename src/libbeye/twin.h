@@ -163,13 +163,6 @@ namespace beye {
     /** Describes window-related coordinate type */
     typedef unsigned tRelCoord;
 
-    /** align modes for title and footer */
-    enum tTitleMode {
-	TW_TMODE_LEFT = 0,      /**< left alignment */
-	TW_TMODE_CENTER,        /**< center alignment */
-	TW_TMODE_RIGHT          /**< right alignment */
-    };
-
     /** Defines color pair that contains original user color and converted system color */
     struct DefColor {
 	ColorAttr user;        /**< Original user color value */
@@ -221,25 +214,31 @@ namespace beye {
     class TWindow : public Opaque {
 	public:
 	    enum twc_flag {
-		TWC_NONE	=0x0000, /**< Indicates no flags */
-		TWC_FRAMEABLE	=0x0001, /**< Indicates that window has frame border */
-		TWC_VISIBLE	=0x0002, /**< Indicates that window creates in visible state */
-		TWC_CURSORABLE	=0x0004, /**< Indicates that window has text cursor */
-		TWC_NLSOEM	=0x0100 /**< Indicates that window works in OEM mode */
+		Flag_None	=0x0000, /**< Indicates no flags */
+		Flag_Has_Frame	=0x0001, /**< Indicates that window has frame border */
+		Flag_Visible	=0x0002, /**< Indicates that window creates in visible state */
+		Flag_Has_Cursor	=0x0004, /**< Indicates that window has text cursor */
+		Flag_NLS	=0x0100  /**< Indicates that window works in OEM mode */
 	    };
+	    /** align modes for title and footer */
+	    enum title_mode {
+		TMode_Left = 0,	/**< left alignment */
+		TMode_Center,	/**< center alignment */
+		TMode_Right	/**< right alignment */
+	    };
+
 		   /** Creates window
 		     * @param x1_,y1_      indicate upper-left cornen of window
 		     * @param width,height indicate width and height of window
 		     * @param flags        indicates TWS_* flags
 		     * @return             handle of window
 		    **/
-	    TWindow(tAbsCoord x1_, tAbsCoord y1_, tAbsCoord width, tAbsCoord height, twc_flag flags=TWC_NONE);
+	    TWindow(tAbsCoord x1_, tAbsCoord y1_, tAbsCoord width, tAbsCoord height, twc_flag flags=Flag_None);
 
 		   /** Creates extended window
 		     * @param x1_,y1_      indicate upper-left cornen of window
 		     * @param width,height indicate width and height of window
 		     * @param flags        indicates TWS_* flags
-		     * @param parent       indicates parent window
 		     * @param classname    indicates name of class
 		     * @return             handle of window
 		     * @note               name of class must be registered before
@@ -247,8 +246,7 @@ namespace beye {
 		    **/
 	    TWindow(tAbsCoord x1_, tAbsCoord y1_,
 			tAbsCoord width, tAbsCoord height,
-			twc_flag flags, const TWindow* parent,
-			const std::string& classname);
+			twc_flag flags, const std::string& classname);
 
 		   /** Destroys given window
 		     * @param              handle of window
@@ -319,7 +317,7 @@ namespace beye {
 
 		   /** Set cursor into the given window.
 		     * @param win          handle of window to be used
-		     * @return             none
+		     * @return             focus of previous window or NULL if none
 		     * @note               \e win need not be the top window; not
 		     *                     does \e win even have to be visible on
 		     *                     the screen.
@@ -381,12 +379,14 @@ namespace beye {
 
 		   /** Does centring of given window relatively other window or screen.
 		     * @param it           handle of window to be centred
-		     * @param parent       handle of centring window.
+		     * @param parent       handle of parent window.
 		     * @return             none
 		     * @note               If \e parent is NULL, the window will
 		     *                     be centred for screen
 		    **/
-	    virtual void		into_center(const TWindow* parent);
+	    virtual void		into_center(const TWindow& parent);
+
+	    virtual void		into_center();
 
 		   /** Freezes redrawing of window.
 		     * @param parent       handle of centring window.
@@ -597,7 +597,7 @@ namespace beye {
 		     * @param fore,back    pointers to memory area where will be stored logical colors of title.
 		     * @return             alignment mode of title
 		    **/
-	    virtual tTitleMode		get_title(char* title,unsigned cb_title,Color* fore,Color* back) const;
+	    virtual title_mode		get_title(char* title,unsigned cb_title,Color* fore,Color* back) const;
 
 		   /** Returns title and title attributes of given window.
 		     * @param win          handle of window.
@@ -606,7 +606,7 @@ namespace beye {
 		     * @param attr         pointers to memory area where will be stored physical color attributes of title.
 		     * @return             alignment mode of title
 		    **/
-	    virtual tTitleMode		get_title(char* title,unsigned cb_title,ColorAttr* attr) const;
+	    virtual title_mode		get_title(char* title,unsigned cb_title,ColorAttr* attr) const;
 
 		   /** Returns footer and footer attributes of given window.
 		     * @param win          handle of window.
@@ -615,7 +615,7 @@ namespace beye {
 		     * @param fore,back    pointers to memory area where will be stored logical colors of footer.
 		     * @return             alignment mode of footer
 		    **/
-	    virtual tTitleMode		get_footer(char* footer,unsigned cb_footer,Color* fore,Color* back) const;
+	    virtual title_mode		get_footer(char* footer,unsigned cb_footer,Color* fore,Color* back) const;
 
 		   /** Returns footer and footer attributes of given window.
 		     * @param win          handle of window.
@@ -624,7 +624,7 @@ namespace beye {
 		     * @param fore,back    pointers to memory area where will be stored physical color attributes of footer.
 		     * @return             alignment mode of footer
 		    **/
-	    virtual tTitleMode		get_footer(char* footer,unsigned cb_footer,ColorAttr* attr) const;
+	    virtual title_mode		get_footer(char* footer,unsigned cb_footer,ColorAttr* attr) const;
 
 		   /** Changes frame around given window with specified logical color attributes.
 		     * @param win          handle of window
@@ -649,7 +649,7 @@ namespace beye {
 		     * @param fore,back    specify new background and foreground colors
 		     * @return             none
 		    **/
-	    virtual void		set_title(const std::string& title,tTitleMode titlemode,Color fore,Color back);
+	    virtual void		set_title(const std::string& title,title_mode titlemode,Color fore,Color back);
 
 		   /** Updates window title with specified physical color attributes.
 		     * @param win          handle of window
@@ -658,7 +658,7 @@ namespace beye {
 		     * @param attr         specifies new color attributes
 		     * @return             none
 		    **/
-	    virtual void		set_title(const std::string& title,tTitleMode titlemode,ColorAttr attr);
+	    virtual void		set_title(const std::string& title,title_mode titlemode,ColorAttr attr);
 
 		   /** Updates window footer with specified logical color attributes.
 		     * @param win          handle of window
@@ -667,7 +667,7 @@ namespace beye {
 		     * @param fore,back    specify new background and foreground colors
 		     * @return             none
 		    **/
-	    virtual void		set_footer(const std::string& footer,tTitleMode footermode,Color fore,Color back);
+	    virtual void		set_footer(const std::string& footer,title_mode footermode,Color fore,Color back);
 
 
 		   /** Updates window footer with specified physical color attributes.
@@ -677,7 +677,7 @@ namespace beye {
 		     * @param attr         specifies new logical color attributes
 		     * @return             none
 		    **/
-	    virtual void		set_footer(const std::string& footer,tTitleMode footermode,ColorAttr attr);
+	    virtual void		set_footer(const std::string& footer,title_mode footermode,ColorAttr attr);
 
 		   /** Sets the cursor coordiantes relative to the used window
 		     * @param x,y         specify horizontal and vertical coordinates for the location
@@ -787,9 +787,7 @@ namespace beye {
 /* Static members */
 		   /** Returns the window currently being under focus.
 		     * @return             handle of window currently being used
-		     * @note               If no window has been assigned by
-		     *                     twUse, then handle of last created
-		     *                     window is returned.
+		     * @note               If no window has focus then return NULL
 		    **/
 	    static TWindow*		get_focus();
 		   /** Returns handle of the window currently displayed at the screen position x and y.
@@ -802,10 +800,10 @@ namespace beye {
 	    static TWindow*		at_pos(tAbsCoord x, tAbsCoord y);
 
 		enum e_cursor {
-		    CUR_UNK   =-1, /**< Defines that cursor in invisible state */
-		    CUR_OFF   =0, /**< Defines that cursor in invisible state */
-		    CUR_NORM  =1, /**< Defines that cursor in normal state (filles 20% of the character cell) */
-		    CUR_SOLID =2 /**< Defines that cursor in solid state (filles 100% of the character cell) */
+		    Cursor_Unknown	=-1, /**< Defines that cursor in invisible state */
+		    Cursor_Off		=0, /**< Defines that cursor in invisible state */
+		    Cursor_Normal	=1, /**< Defines that cursor in normal state (filles 20% of the character cell) */
+		    Cursor_Solid	=2 /**< Defines that cursor in solid state (filles 100% of the character cell) */
 		};
 		   /** Sets the size and visibility of the cursor
 		     * @param  type       indicates type of cursor
@@ -874,23 +872,24 @@ namespace beye {
 	    void		updatescreenpiece(tRelCoord stx,tRelCoord endx,tRelCoord y);
 	    void		updatewinmem();
 	    void		__athead();
+	    void		into_center(tAbsCoord w,tAbsCoord h);
 
-	    inline char		do_oem_pg(char ch) const { return ((flags & TWC_NLSOEM) == TWC_NLSOEM ? NLS_IS_OEMPG(ch) ? ch : 0 : 0); }
+	    inline char		do_oem_pg(char ch) const { return ((flags & Flag_NLS) == Flag_NLS ? NLS_IS_OEMPG(ch) ? ch : 0 : 0); }
 	    inline void		wputc(char ch,char color,bool update) { wputc_oem(ch,0,color,update); }
 	    inline void		__atwin(TWindow* prev) { if(!prev) __athead(); else { next = prev->next; prev->next = this; }}
 	    inline bool		__topmost() const { return !is_overlapped(); }
 	    inline bool		is_valid_xy(tAbsCoord x,tAbsCoord y) const {
-					return ((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE ?
+					return ((flags & Flag_Has_Frame) == Flag_Has_Frame ?
 						x && x < wwidth-1 && y && y < wheight-1 :
 						x < wwidth && y < wheight); }
-	    inline bool		is_valid_x(tAbsCoord x) const { return ((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE ? x && x < wwidth-1: x < wwidth); }
-	    inline bool		is_valid_y(tAbsCoord y) const { return ((flags & TWC_FRAMEABLE) == TWC_FRAMEABLE ? y && y < wheight-1:y < wheight); }
+	    inline bool		is_valid_x(tAbsCoord x) const { return ((flags & Flag_Has_Frame) == Flag_Has_Frame ? x && x < wwidth-1: x < wwidth); }
+	    inline bool		is_valid_y(tAbsCoord y) const { return ((flags & Flag_Has_Frame) == Flag_Has_Frame ? y && y < wheight-1:y < wheight); }
 	    inline void		updatescreenchar(tRelCoord x,tRelCoord y,tvioBuff* accel) const { updatescreencharfrombuff(x-1,y-1,&body,accel); }
 	    inline void		restorescreenchar(tRelCoord x,tRelCoord y,tvioBuff* accel) const { updatescreencharfrombuff(x-1,y-1,&saved,accel); }
 
 	    static TWindow*	__findcursorablewin();
 	    static TWindow*	__at_point(TWindow* iter,tAbsCoord x,tAbsCoord y);
-	    static tRelCoord	calc_title_off(tTitleMode mode,unsigned w,unsigned slen);
+	    static tRelCoord	calc_title_off(title_mode mode,unsigned w,unsigned slen);
 	    static void		adjustColor(Color *fore,Color *back);
 	    static void		__set_color(DefColor *to,Color fore,Color back);
 
@@ -915,8 +914,8 @@ namespace beye {
 	    unsigned		flags;       /**< Window flags */
 	    tAbsCoord		X1,Y1,X2,Y2; /**< coordinates of window on the screen */
 	    tRelCoord		cur_x,cur_y; /**< coordinates of cursor position inside the window */
-	    tTitleMode		TitleMode;   /**< alignment mode of title */
-	    tTitleMode		FooterMode;  /**< alignment mode of footer */
+	    title_mode		TitleMode;   /**< alignment mode of title */
+	    title_mode		FooterMode;  /**< alignment mode of footer */
 	    DefColor		text;        /**< default color of text */
 	    DefColor		frame;       /**< default color of frame */
 	    DefColor		title;       /**< default color of title */

@@ -104,7 +104,7 @@ static __filesize_t __FASTCALL__ ShowPharLapHeader()
     else
       if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
   }
-  CloseWnd(w);
+  delete w;
   return fpos;
 }
 
@@ -115,8 +115,8 @@ static void __FASTCALL__ PLSegPaint(TWindow * win,const any_t** names,unsigned s
  win->freeze();
  win->clear();
  sprintf(buffer," Segment Table [ %u / %u ] ",start + 1,nlist);
- win->set_title(buffer,TW_TMODE_CENTER,dialog_cset.title);
- win->set_footer(PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
+ win->set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+ win->set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
  win->goto_xy(1,1);
  win->printf(
 	  "Selector number            = %04hXH\n"
@@ -176,8 +176,8 @@ static void __FASTCALL__ PLRunTimePaint(TWindow * win,const any_t** names,unsign
  win->freeze();
  win->clear();
  sprintf(buffer," Run-time Parameters Table [ %u / %u ] ",start + 1,nlist);
- win->set_title(buffer,TW_TMODE_CENTER,dialog_cset.title);
- win->set_footer(PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
+ win->set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+ win->set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
  strncpy(sign,(const char *)nam[start]->rtSignature,2);
  sign[2] = 0;
  win->goto_xy(1,1);

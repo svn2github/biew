@@ -494,7 +494,7 @@ mem_off:
   }
   while (!(evt == KE_ESCAPE || evt == KE_F(10)));
 
-  CloseWnd(hwnd);
+  delete hwnd;
 
 avrhlp_bye:
   bhelp.close();

@@ -6205,7 +6205,7 @@ static void __FASTCALL__ ix86HelpAsm()
    evt = GetEvent(drawEmptyPrompt,NULL,hwnd);
  }
  while(!(evt == KE_ESCAPE || evt == KE_F(10)));
- CloseWnd(hwnd);
+ delete hwnd;
  ix86hlp_bye:
  bhelp.close();
 }

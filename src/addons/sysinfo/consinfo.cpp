@@ -95,7 +95,7 @@ void ConsoleInfo_Addon::run()
     evt = GetEvent(drawEmptyPrompt,NULL,hwnd);
   }
   while(!(evt == KE_ESCAPE || evt == KE_F(10)));
-  CloseWnd(hwnd);
+  delete hwnd;
 }
 
 static Addon* query_interface() { return new(zeromem) ConsoleInfo_Addon(); }

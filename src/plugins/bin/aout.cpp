@@ -112,7 +112,7 @@ static __filesize_t __FASTCALL__ ShowAOutHeader()
     else
       if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
   }
-  CloseWnd(w);
+  delete w;
   return fpos;
 }
 

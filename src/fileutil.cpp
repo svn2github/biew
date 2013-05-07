@@ -598,7 +598,7 @@ static bool FStore()
 		if(bctx.mode_info()!=&disMode)	delete dismode;
 	    } /** END: Write in disassembler mode */
 	    Exit:
-	    CloseWnd(progress_wnd);
+	    delete progress_wnd;
 	    BMSeek(cpos,BFile::Seek_Set);
 	} else  ErrMessageBox("Start position > end position!","");
     }
@@ -1127,7 +1127,7 @@ static bool FileInfo()
     evt = GetEvent(drawEmptyPrompt,NULL,wnd);
   }
   while(!(evt == KE_ESCAPE || evt == KE_F(10)));
-  CloseWnd(wnd);
+  delete wnd;
   return false;
 }
 
@@ -1170,7 +1170,7 @@ bool FileUtils()
      TWindow * w;
      w = PleaseWaitWnd();
      ret = (*fu_funcs[retval])();
-     CloseWnd(w);
+     delete w;
      def_sel = retval;
      return ret;
   }

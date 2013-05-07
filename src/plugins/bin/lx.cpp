@@ -271,8 +271,8 @@ static void __FASTCALL__ PaintNewHeaderLX(TWindow * win,const any_t**ptr,unsigne
   win->freeze();
   win->clear();
   sprintf(text," Linear eXecutable Header [%d/%d] ",npage + 1,tpage);
-  win->set_title(text,TW_TMODE_CENTER,dialog_cset.title);
-  win->set_footer(PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
+  win->set_title(text,TWindow::TMode_Center,dialog_cset.title);
+  win->set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
   if(npage < 3)
   {
     win->goto_xy(1,1);
@@ -441,8 +441,8 @@ static void __FASTCALL__ ObjPaintLX(TWindow * win,const any_t** names,unsigned s
  win->freeze();
  win->clear();
  sprintf(buffer," Object Table [ %u / %u ] ",start + 1,nlist);
- win->set_title(buffer,TW_TMODE_CENTER,dialog_cset.title);
- win->set_footer(PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
+ win->set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+ win->set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
  objpaintLX(win,nam[start]);
  win->refresh_full();
 }
@@ -816,8 +816,8 @@ static void __FASTCALL__ PaintEntriesLX(TWindow * win,const any_t** names,unsign
  win->freeze();
  win->clear();
  sprintf(buffer," Entries Table [ %u / %u ] ",start + 1,nlist);
- win->set_title(buffer,TW_TMODE_CENTER,dialog_cset.title);
- win->set_footer(PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
+ win->set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+ win->set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
  entrypaintLX(win,nam[start]);
  win->refresh_full();
 }

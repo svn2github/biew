@@ -117,8 +117,8 @@ static void __FASTCALL__ coffObjPaint(TWindow * win,const any_t** names,unsigned
  win->freeze();
  win->clear();
  sprintf(buffer," Object Table [ %u / %u ] ",start + 1,nlist);
- win->set_title(buffer,TW_TMODE_CENTER,dialog_cset.title);
- win->set_footer(PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
+ win->set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+ win->set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
  win->goto_xy(1,1);
  win->printf(
 	  "Object Name                    = %8s\n"
@@ -249,7 +249,7 @@ static __filesize_t __FASTCALL__ ShowCoff386Header()
     else
       if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
   }
-  CloseWnd(w);
+  delete w;
   return fpos;
 }
 
@@ -449,7 +449,7 @@ static void  __FASTCALL__ BuildRelocCoff386()
   }
   next:
   la_Sort(RelocCoff386,coff386_compare_rels);
-  CloseWnd(w);
+  delete w;
 }
 
 static bool   __FASTCALL__ coffSymTabReadItemsIdx(BFile& handle,unsigned long idx,

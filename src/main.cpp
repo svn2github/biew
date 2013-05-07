@@ -262,10 +262,10 @@ void BeyeContext::PaintTitle() const
 
 static void MyAtExit()
 {
-  if(MainWnd) CloseWnd(MainWnd);
-  if(HelpWnd) CloseWnd(HelpWnd);
-  if(TitleWnd) CloseWnd(TitleWnd);
-  if(ErrorWnd) CloseWnd(ErrorWnd);
+  if(MainWnd) delete MainWnd;
+  if(HelpWnd) delete HelpWnd;
+  if(TitleWnd) delete TitleWnd;
+  if(ErrorWnd) delete ErrorWnd;
   termBConsole();
   __term_sys();
   delete BeyeCtx;
@@ -388,13 +388,13 @@ void BeyeContext::show_usage() const {
     nln = sizeof(beyeArg)/sizeof(struct tagbeyeArg);
     h = nln+4;
     y = tvioHeight/2-h/2;
-    win = WindowOpen(2,y,tvioWidth-1,y+h,TWindow::TWC_NONE | TWindow::TWC_NLSOEM);
+    win = WindowOpen(2,y,tvioWidth-1,y+h,TWindow::Flag_None | TWindow::Flag_NLS);
     if(!win) goto done;
-    win->set_title(BEYE_VER_MSG,TW_TMODE_CENTER,error_cset.border);
-    win->into_center(NULL);
+    win->set_title(BEYE_VER_MSG,TWindow::TMode_Center,error_cset.border);
+    win->into_center();
     win->set_color(error_cset.main);
     win->set_frame(TWindow::DOUBLE_FRAME,error_cset.border);
-    win->set_footer(" Press [ ESC ] to quit ",TW_TMODE_RIGHT,error_cset.border);
+    win->set_footer(" Press [ ESC ] to quit ",TWindow::TMode_Right,error_cset.border);
     win->clear();
     win->goto_xy(1,1);
     win->puts(" Usage: beye [OPTIONS] file...");
@@ -456,18 +456,18 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
     return EXIT_FAILURE;
  }
  udnInit(ini);
- ErrorWnd = WindowOpen(1,1,50,16,TWindow::TWC_NONE | TWindow::TWC_NLSOEM);
- if(ErrorWnd) ErrorWnd->set_title(" Error ",TW_TMODE_CENTER,error_cset.border);
+ ErrorWnd = WindowOpen(1,1,50,16,TWindow::Flag_None | TWindow::Flag_NLS);
+ if(ErrorWnd) ErrorWnd->set_title(" Error ",TWindow::TMode_Center,error_cset.border);
  else { std::cerr<<"fatal error: can't create window"<<std::endl; return EXIT_FAILURE; }
- ErrorWnd->into_center(NULL);
+ ErrorWnd->into_center();
  ErrorWnd->set_color(error_cset.main);
  ErrorWnd->set_frame(TWindow::DOUBLE_FRAME,error_cset.border);
- HelpWnd = WindowOpen(1,tvioHeight,tvioWidth,tvioHeight,TWindow::TWC_NLSOEM);
+ HelpWnd = WindowOpen(1,tvioHeight,tvioWidth,tvioHeight,TWindow::Flag_NLS);
  HelpWnd->set_color(prompt_cset.digit);
  HelpWnd->clear();
  HelpWnd->show();
  if(BeyeCtx->ini_ver!=BEYE_VERSION) Setup();
- TitleWnd = WindowOpen(1,1,tvioWidth,1,TWindow::TWC_NONE);
+ TitleWnd = WindowOpen(1,1,tvioWidth,1,TWindow::Flag_None);
  TitleWnd->set_color(title_cset.main);
  TitleWnd->clear();
  TitleWnd->show();
@@ -491,7 +491,7 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  BeyeCtx->bin_format().detect_format();
  BeyeCtx->init_modes(ini);
  delete &ini;
- MainWnd = WindowOpen(1,2,tvioWidth,tvioHeight-1,TWindow::TWC_NONE);
+ MainWnd = WindowOpen(1,2,tvioWidth,tvioHeight-1,TWindow::Flag_None);
  MainWnd->set_color(browser_cset.main);
  MainWnd->clear();
  BeyeCtx->PaintTitle();

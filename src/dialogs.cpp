@@ -51,7 +51,7 @@ bool __FASTCALL__ Get2DigitDlg(const std::string& title,const std::string& text,
  Y1 += 1;
  X2 = X1 + 1;
  Y2 = Y1;
- ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::TWC_VISIBLE | TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+ ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::Flag_Visible | TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
  ewnd->set_focus();
  if(*xx) sprintf(str,"%X",(unsigned int)*xx);
  while(1)
@@ -61,8 +61,8 @@ bool __FASTCALL__ Get2DigitDlg(const std::string& title,const std::string& text,
    else
      if(retval == KE_ENTER) { ret = true; break; }
  }
- CloseWnd(ewnd);
- CloseWnd(hwnd);
+ delete ewnd;
+ delete hwnd;
  if(ret) *xx = (unsigned char)strtoul(str,NULL,16);
  return ret;
 }
@@ -100,7 +100,7 @@ bool __FASTCALL__ Get8DigitDlg(const std::string& title,const std::string& text,
  X2 = X1 + 33;
  X1 = X2 - (len - 1);
  Y2 = Y1;
- ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::TWC_VISIBLE | TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+ ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::Flag_Visible | TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
  ewnd->set_focus();
  if(attr & DECIMAL) legals = attr & SIGN ? decleg : &decleg[2];
  else               legals = attr & SIGN ? legalchars : &legalchars[2];
@@ -116,8 +116,8 @@ bool __FASTCALL__ Get8DigitDlg(const std::string& title,const std::string& text,
    else
      if(key == KE_ENTER) { ret = true; break; }
  }
- CloseWnd(ewnd);
- CloseWnd(hwnd);
+ delete ewnd;
+ delete hwnd;
  if(ret) *xx = attr & SIGN ? (unsigned long)strtol(str,NULL,base) : strtoul(str,NULL,base);
  return ret;
 }
@@ -149,7 +149,7 @@ bool        __FASTCALL__ Get16DigitDlg(const std::string& title,const std::strin
  X2 = X1 + 43;
  X1 = X2 - (len - 1);
  Y2 = Y1;
- ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::TWC_VISIBLE | TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+ ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::Flag_Visible | TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
  ewnd->set_focus();
  if(attr & DECIMAL) legals = attr & SIGN ? decleg : &decleg[2];
  else               legals = attr & SIGN ? legalchars : &legalchars[2];
@@ -165,8 +165,8 @@ bool        __FASTCALL__ Get16DigitDlg(const std::string& title,const std::strin
    else
      if(key == KE_ENTER) { ret = true; break; }
  }
- CloseWnd(ewnd);
- CloseWnd(hwnd);
+ delete ewnd;
+ delete hwnd;
  if(ret) *xx = attr & SIGN ? (unsigned long long int)strtoll(str,NULL,base) : strtoull(str,NULL,base);
  return ret;
 }
@@ -232,7 +232,7 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
  X1 += 17;
  X2 = X1 + len - 1;
  Y2 = Y1;
- ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::TWC_VISIBLE | TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+ ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::Flag_Visible | TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
  ewnd->set_focus();
  legals = *flags == GJDLG_RELATIVE ? legalchars : &legalchars[2];
  paintJumpDlg(hwnd,*flags);
@@ -272,8 +272,8 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
    }
    paintJumpDlg(hwnd,*flags);
  }
- CloseWnd(ewnd);
- CloseWnd(hwnd);
+ delete ewnd;
+ delete hwnd;
  if(ret)
  {
  if(is_BMUse64())
@@ -297,7 +297,7 @@ bool __FASTCALL__ GetStringDlg(char * buff,const std::string& title,const std::s
   TWindow * wdlg,*ewnd;
   char estr[81];
   wdlg = CrtDlgWndnls(title,78,2);
-  if(!subtitle.empty()) wdlg->set_footer(subtitle,TW_TMODE_RIGHT,dialog_cset.footer);
+  if(!subtitle.empty()) wdlg->set_footer(subtitle,TWindow::TMode_Right,dialog_cset.footer);
   wdlg->get_pos(&x1,&y1,&x2,&y2);
   X1 = x1;
   Y1 = y1;
@@ -307,7 +307,7 @@ bool __FASTCALL__ GetStringDlg(char * buff,const std::string& title,const std::s
   X2 -= 2;
   Y1 += 2;
   Y2 = Y1;
-  ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+  ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
   wdlg->goto_xy(2,1); wdlg->puts(prompt);
   strcpy(estr,buff);
   ewnd->show();
@@ -320,8 +320,8 @@ bool __FASTCALL__ GetStringDlg(char * buff,const std::string& title,const std::s
      if(key == KE_ENTER) { ret = true; break; }
   }
   if(ret) strcpy(buff,estr);
-  CloseWnd(ewnd);
-  CloseWnd(wdlg);
+  delete ewnd;
+  delete wdlg;
   return ret;
 }
 
@@ -436,7 +436,7 @@ bool __FASTCALL__ GetFStoreDlg(const std::string& title,char* fname,unsigned lon
  else
  if((*flags) & FSDLG_USEBITNS) fs_txt = fs2_txt;
  else                          fs_txt = fs3_txt;
- wdlg->set_footer(" [Enter] - Run ",TW_TMODE_CENTER,dialog_cset.footer);
+ wdlg->set_footer(" [Enter] - Run ",TWindow::TMode_Center,dialog_cset.footer);
 
  wdlg->get_pos(&x1,&y1,&x2,&y2);
  X1 = x1;
@@ -453,17 +453,17 @@ bool __FASTCALL__ GetFStoreDlg(const std::string& title,char* fname,unsigned lon
  YY2 = YY1;
  if(!((*flags) & FSDLG_USEBITNS))
  {
-   ewnd[2] = CreateEditor(XX1,YY1,XX2,YY2,TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+   ewnd[2] = CreateEditor(XX1,YY1,XX2,YY2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
    neditors++;
  }
  XX1 += 5;
  XX2  = XX1 + 17;
  YY1 -= 3;
  YY2  = YY1;
- ewnd[0] = CreateEditor(XX1,YY1,XX2,YY2,TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+ ewnd[0] = CreateEditor(XX1,YY1,XX2,YY2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
  XX1 += 27;
  XX2 = XX1 + 17;
- ewnd[1] = CreateEditor(XX1,YY1,XX2,YY2,TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+ ewnd[1] = CreateEditor(XX1,YY1,XX2,YY2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
  wdlg->goto_xy(1,2);  wdlg->puts(TYPE_HEX_FORM);
  if(!prompt.empty())  { wdlg->goto_xy(3,6);  wdlg->puts(prompt); }
  wdlg->goto_xy(1,4);  wdlg->puts(START_PRMT);
@@ -521,8 +521,8 @@ bool __FASTCALL__ GetFStoreDlg(const std::string& title,char* fname,unsigned lon
    if(active > neditors) active = 0;
    if(redraw) FFStaticPaint(wdlg,fname,startdig,enddig,*flags);
  }
- CloseWnd(wdlg);
- for(i = 0;i < neditors+1;i++) CloseWnd(ewnd[i]);
+ delete wdlg;
+ for(i = 0;i < neditors+1;i++) delete ewnd[i];
  *start = strtoul(startdig,NULL,16);
  *end = strtoul(enddig,NULL,16);
  return !(_lastbyte == KE_ESCAPE || _lastbyte == KE_F(10));
@@ -564,10 +564,10 @@ bool __FASTCALL__ GetInsDelBlkDlg(const std::string& title,__filesize_t * start,
  XX1 = X1 + 8;
  YY2 = YY1 = Y1 + 4;
  XX2 = XX1 + 17;
- ewnd[0] = CreateEditor(XX1,YY1,XX2,YY2,TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+ ewnd[0] = CreateEditor(XX1,YY1,XX2,YY2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
  XX1 += 27;
  XX2 = XX1 + 17;
- ewnd[1] = CreateEditor(XX1,YY1,XX2,YY2,TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+ ewnd[1] = CreateEditor(XX1,YY1,XX2,YY2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
  wdlg->goto_xy(1,2); wdlg->puts(TYPE_HEX_FORM);
  wdlg->goto_xy(1,4);  wdlg->puts(START_PRMT);
  wdlg->goto_xy(27,4); wdlg->puts(LENGTH_PRMT);
@@ -613,8 +613,8 @@ bool __FASTCALL__ GetInsDelBlkDlg(const std::string& title,__filesize_t * start,
    if(active != oactive) active = active > 1 ? 0 : 1;
    if(redraw) FFStaticPaintInsDel(wdlg,startdig,enddig);
  }
- CloseWnd(wdlg);
- for(i = 0;i < 2;i++) CloseWnd(ewnd[i]);
+ delete wdlg;
+ for(i = 0;i < 2;i++) delete ewnd[i];
  *start = strtoul(startdig,NULL,16);
  *size = strtol(enddig,NULL,16);
  return !(_lastbyte == KE_ESCAPE || _lastbyte == KE_F(10));

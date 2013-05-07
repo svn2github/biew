@@ -188,14 +188,14 @@ void Setup()
   X2 -= 1;
   Y1 += 2;
   Y2 = Y1;
-  ewnd[0] = CreateEditor(X1,Y1,X2,Y2,TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+  ewnd[0] = CreateEditor(X1,Y1,X2,Y2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
   ewnd[0]->show();
   ewnd[0]->set_focus();
   PostEvent(KE_ENTER);
   xeditstring(ewnd[0],estr[0],NULL,sizeof(estr[0]), NULL);
   Y1 += 2;
   Y2 = Y1;
-  ewnd[1] = CreateEditor(X1,Y1,X2,Y2,TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+  ewnd[1] = CreateEditor(X1,Y1,X2,Y2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
   ewnd[1]->show();
   ewnd[1]->set_focus();
   PostEvent(KE_ENTER);
@@ -203,7 +203,7 @@ void Setup()
 
   Y1 += 2;
   Y2 = Y1;
-  ewnd[2] = CreateEditor(X1,Y1,X2,Y2,TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+  ewnd[2] = CreateEditor(X1,Y1,X2,Y2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
   ewnd[2]->show();
   ewnd[2]->set_focus();
   PostEvent(KE_ENTER);
@@ -211,13 +211,13 @@ void Setup()
 
   Y1 += 2;
   Y2 = Y1;
-  ewnd[3] = WindowOpen(60,Y1,61,Y2,TWindow::TWC_NLSOEM);
+  ewnd[3] = WindowOpen(60,Y1,61,Y2,TWindow::Flag_NLS);
 
   wdlg->goto_xy(2,1); wdlg->puts("Enter help file name (including full path):");
   wdlg->goto_xy(2,3); wdlg->puts("Enter color skin name (including full path):");
   wdlg->goto_xy(2,5); wdlg->puts("Enter syntax name (including full path):");
   wdlg->goto_xy(2,7); wdlg->puts("Enter OEM codepage (for utf-based terminals):");
-  wdlg->set_footer(" [Enter] - Accept changes ",TW_TMODE_CENTER,dialog_cset.footer);
+  wdlg->set_footer(" [Enter] - Accept changes ",TWindow::TMode_Center,dialog_cset.footer);
   wdlg->draw_frame(1,8,78,13,TWindow::UP3D_FRAME,dialog_cset.main);
 
   setup_paint(wdlg);
@@ -269,9 +269,9 @@ void Setup()
     beye_context().skin_name=estr[1];
     beye_context().syntax_name=estr[2];
   }
-  CloseWnd(ewnd[0]);
-  CloseWnd(ewnd[1]);
-  CloseWnd(ewnd[2]);
-  CloseWnd(wdlg);
+  delete ewnd[0];
+  delete ewnd[1];
+  delete ewnd[2];
+  delete wdlg;
 }
 } // namespace beye

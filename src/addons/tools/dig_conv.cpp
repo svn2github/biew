@@ -160,27 +160,27 @@ void DigitalConverter_Addon::run()
  YY1 = Y1 + 4;
  XX2 = XX1 + (mlen[0]-1);
  YY2 = YY1;
- ewnd[0] = WindowOpen(XX1,YY1,XX2,YY2,TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+ ewnd[0] = WindowOpen(XX1,YY1,XX2,YY2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
  ewnd[0]->set_color(dialog_cset.editor.active);
  XX1 = X1 + (w-11-mlen[0]);
  XX2 = XX1 + (mlen[1]-1);
- ewnd[1] = WindowOpen(XX1,YY1,XX2,YY2,TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+ ewnd[1] = WindowOpen(XX1,YY1,XX2,YY2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
  ewnd[1]->set_color(dialog_cset.editor.active);
  XX1 = X1 + 3;
  YY1 = Y1 + 6;
  XX2 = XX1 + (mlen[2]-1);
  YY2 = YY1;
- ewnd[2] = WindowOpen(XX1,YY1,XX2,YY2,TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+ ewnd[2] = WindowOpen(XX1,YY1,XX2,YY2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
  ewnd[2]->set_color(dialog_cset.editor.active);
  XX1 = X1 + (w-11-mlen[0]);
  XX2 = XX1 + (mlen[3]-1);
- ewnd[3] = WindowOpen(XX1,YY1,XX2,YY2,TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+ ewnd[3] = WindowOpen(XX1,YY1,XX2,YY2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
  ewnd[3]->set_color(dialog_cset.editor.active);
  XX1 = X1 + 5;
  YY1 = Y1 + 8;
  XX2 = XX1 + (mlen[4]-1);
  YY2 = YY1;
- ewnd[4] = WindowOpen(XX1,YY1,XX2,YY2,TWindow::TWC_CURSORABLE | TWindow::TWC_NLSOEM);
+ ewnd[4] = WindowOpen(XX1,YY1,XX2,YY2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
  ewnd[4]->set_color(dialog_cset.editor.active);
  digit = 0;
  wdlg->goto_xy(3,2); wdlg->puts("Convert numbers between bases [16, 10, 8, 2]");
@@ -227,8 +227,8 @@ void DigitalConverter_Addon::run()
    if(active > 4) active = 0;
    if(redraw) DCStaticPaint(wdlg,wbuff,digit,mlen);
  }
- CloseWnd(wdlg);
- for(i = 0;i < 5;i++) CloseWnd(ewnd[i]);
+ delete wdlg;
+ for(i = 0;i < 5;i++) delete ewnd[i];
 }
 
 static Addon* query_interface() { return new(zeromem) DigitalConverter_Addon(); }

@@ -63,8 +63,8 @@ DisMode::DisMode(CodeGuider& _code_guider)
 	:Plugin(_code_guider)
 	,DefDisasmSel(__DEFAULT_DISASM)
 	,HiLight(1)
-	,DisasmPrepareMode(false)
 	,code_guider(_code_guider)
+	,DisasmPrepareMode(false)
 {
     size_t i,sz;
     unsigned def_platform;
@@ -408,7 +408,7 @@ void DisMode::misckey_action() /* disEdit */
     TWindow * ewnd;
     len_64=HA_LEN();
     if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,""); return; }
-    ewnd = WindowOpen(len_64+1,2,disMaxCodeLen*2+len_64+1,tvioHeight-1,TWindow::TWC_CURSORABLE);
+    ewnd = WindowOpen(len_64+1,2,disMaxCodeLen*2+len_64+1,tvioHeight-1,TWindow::Flag_Has_Cursor);
     ewnd->set_color(browser_cset.edit.main); ewnd->clear();
     edit_x = edit_y = 0;
     EditMode = EditMode ? false : true;
@@ -417,7 +417,7 @@ void DisMode::misckey_action() /* disEdit */
 	editDestroyBuffs();
     }
     EditMode = EditMode ? false : true;
-    CloseWnd(ewnd);
+    delete ewnd;
     beye_context().PaintTitle();
 }
 
@@ -577,7 +577,7 @@ int DisMode::full_asm_edit(TWindow * ewnd)
     PaintETitle(0,true);
     start = 0;
     ewnd->show();
-    TWindow::set_cursor_type(TWindow::CUR_NORM);
+    TWindow::set_cursor_type(TWindow::Cursor_Normal);
     while(1) {
 	ewnd->set_focus();
 
@@ -654,7 +654,7 @@ int DisMode::full_asm_edit(TWindow * ewnd)
 	start = edit_y ? Summ(EditorMem.alen,edit_y) : 0;
     }
     bye:
-    TWindow::set_cursor_type(TWindow::CUR_OFF);
+    TWindow::set_cursor_type(TWindow::Cursor_Off);
     return _lastbyte;
 }
 

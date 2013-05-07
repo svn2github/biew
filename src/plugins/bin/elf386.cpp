@@ -664,7 +664,7 @@ static __filesize_t __FASTCALL__ ShowELFHeader()
     else
       if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
   }
-  CloseWnd(w);
+  delete w;
   return fpos;
 }
 
@@ -1461,7 +1461,7 @@ static void  __FASTCALL__ buildElf386RelChain()
   }
   la_Sort(CurrElfChain,compare_elf_reloc);
   handle.seek(fp,BFile::Seek_Set);
-  CloseWnd(w);
+  delete w;
   return;
 }
 

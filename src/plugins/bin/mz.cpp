@@ -194,7 +194,7 @@ static __filesize_t __FASTCALL__ ShowMZHeader()
    else
      if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
  }
- CloseWnd(hwnd);
+ delete hwnd;
  return fpos;
 }
 
@@ -238,7 +238,7 @@ static void  __FASTCALL__ BuildMZChain()
   }
   HQSort(CurrMZChain,CurrMZCount,sizeof(any_t*),compare_ptr);
   bmSeek(fpos,BFile::Seek_Set);
-  CloseWnd(w);
+  delete w;
 }
 
 static tCompare __FASTCALL__ compare_mz(const any_t*e1,const any_t*e2)

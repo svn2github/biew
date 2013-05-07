@@ -77,7 +77,7 @@ static __filesize_t __FASTCALL__ ShowARCHHeader()
     evt = GetEvent(drawEmptyPrompt,NULL,w);
   }
   while(!(evt == KE_ESCAPE || evt == KE_F(10)));
-  CloseWnd(w);
+  delete w;
   return fpos;
 }
 

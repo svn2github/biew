@@ -218,8 +218,8 @@ static void __FASTCALL__ PaintNewHeaderNE(TWindow * win,const any_t**ptr,unsigne
   win->freeze();
   win->clear();
   sprintf(text," New Executable Header [%d/%d] ",npage + 1,tpage);
-  win->set_title(text,TW_TMODE_CENTER,dialog_cset.title);
-  win->set_footer(PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
+  win->set_title(text,TWindow::TMode_Center,dialog_cset.title);
+  win->set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
   if(npage < 2)
   {
     win->goto_xy(1,1);
@@ -272,8 +272,8 @@ static void __FASTCALL__ SegPaintNE(TWindow * win,const any_t** names,unsigned s
  win->freeze();
  win->clear();
  sprintf(buffer," Segment Table [ %u / %u ] ",start + 1,nlist);
- win->set_title(buffer,TW_TMODE_CENTER,dialog_cset.title);
- win->set_footer(PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
+ win->set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+ win->set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
  win->goto_xy(1,1);
  if(nam[start]->sdOffset)
    win->printf("Relative offset from begining in sectors     = %04hXH\n"
@@ -324,8 +324,8 @@ static void __FASTCALL__ EntPaintNE(TWindow * win,const any_t** names,unsigned s
  win->freeze();
  win->clear();
  sprintf(buffer," Entry Point [ %u / %u ] ",start + 1,nlist);
- win->set_title(buffer,TW_TMODE_CENTER,dialog_cset.title);
- win->set_footer(PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
+ win->set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+ win->set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
  if(nam[start]->eFixed) entpaintNE(win,nam[start],flags);
  else paintdummyentryNE(win);
  win->refresh_full();
@@ -373,7 +373,7 @@ static __filesize_t __FASTCALL__ ShowModRefNE()
  if(!(obj = ma_Build(nnames,true))) goto exit;
  w = PleaseWaitWnd();
  bval = __ReadModRefNamesNE(handle,obj);
- CloseWnd(w);
+ delete w;
  if(bval)
  {
    while(1)
@@ -464,7 +464,7 @@ static void __FASTCALL__ ShowProcListNE( int modno )
  w = PleaseWaitWnd();
  if(!(obj = ma_Build(0,true))) return;
  __bool = __ReadProcListNE(handle,obj,modno);
- CloseWnd(w);
+ delete w;
  if(__bool)
  {
      if(!obj->nItems)  { NotifyBox(NOT_ENTRY,MOD_REFER); return; }
@@ -1019,7 +1019,7 @@ static void  __FASTCALL__ BuildNERefChain(__filesize_t segoff,__filesize_t sleng
      }
   }
   la_Sort(CurrNEChain,compare_chains);
-  CloseWnd(w);
+  delete w;
 }
 
 static tCompare __FASTCALL__ compare_ne_spec(const any_t*e1,const any_t*e2)

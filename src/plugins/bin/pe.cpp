@@ -332,8 +332,8 @@ static void __FASTCALL__ PaintNewHeaderPE(TWindow * win,const any_t**ptr,unsigne
   win->freeze();
   win->clear();
   sprintf(text," Portable Executable Header [%d/%d] ",npage + 1,tpage);
-  win->set_title(text,TW_TMODE_CENTER,dialog_cset.title);
-  win->set_footer(PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
+  win->set_title(text,TWindow::TMode_Center,dialog_cset.title);
+  win->set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
   if(npage < 2)
   {
     win->goto_xy(1,1);
@@ -358,8 +358,8 @@ static void __FASTCALL__ ObjPaintPE(TWindow * win,const any_t** names,unsigned s
  win->freeze();
  win->clear();
  sprintf(buffer," Object Table [ %u / %u ] ",start + 1,nlist);
- win->set_title(buffer,TW_TMODE_CENTER,dialog_cset.title);
- win->set_footer(PAGEBOX_SUB,TW_TMODE_RIGHT,dialog_cset.selfooter);
+ win->set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+ win->set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
  win->goto_xy(1,1);
 
  memcpy(buffer, objs->oName, 8);
@@ -935,7 +935,7 @@ static void  __FASTCALL__ BuildPERefChain()
   }
   bye:
   la_Sort(CurrPEChain,compare_pe_reloc_s);
-  CloseWnd(w);
+  delete w;
 }
 
 static RELOC_PE  *  __FASTCALL__ __found_RPE(__filesize_t laddr)

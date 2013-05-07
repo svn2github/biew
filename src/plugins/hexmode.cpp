@@ -235,9 +235,9 @@ void HexMode::misckey_action () /* EditHex */
     if(hmode != 1) return;
     if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,""); return; }
     bound = width-(hexViewer[hmode].width()-virtWidthCorr);
-    ewnd[0] = WindowOpen(HA_LEN()+1,2,bound,tvioHeight-1,TWindow::TWC_CURSORABLE);
+    ewnd[0] = WindowOpen(HA_LEN()+1,2,bound,tvioHeight-1,TWindow::Flag_Has_Cursor);
     ewnd[0]->set_color(browser_cset.edit.main); ewnd[0]->clear();
-    ewnd[1] = WindowOpen(bound+1,2,width,tvioHeight-1,TWindow::TWC_CURSORABLE);
+    ewnd[1] = WindowOpen(bound+1,2,width,tvioHeight-1,TWindow::Flag_Has_Cursor);
     ewnd[1]->set_color(browser_cset.edit.main); ewnd[1]->clear();
     drawEditPrompt();
     has_show[0] = has_show[1] = false;
@@ -259,8 +259,8 @@ void HexMode::misckey_action () /* EditHex */
 	}
 	editDestroyBuffs();
     }
-    CloseWnd(ewnd[0]);
-    CloseWnd(ewnd[1]);
+    delete ewnd[0];
+    delete ewnd[1];
     beye_context().PaintTitle();
 }
 
@@ -381,7 +381,7 @@ int HexMode::full_hex_edit(TWindow* txtwnd,TWindow* hexwnd)
     redraw = true;
     PaintETitle(edit_y*EditorMem.width + edit_x,0);
     hexwnd->show();
-    TWindow::set_cursor_type(TWindow::CUR_NORM);
+    TWindow::set_cursor_type(TWindow::Cursor_Normal);
     while(1) {
 	unsigned eidx;
 	mlen = EditorMem.alen[edit_y];
@@ -408,7 +408,7 @@ int HexMode::full_hex_edit(TWindow* txtwnd,TWindow* hexwnd)
 	PaintETitle(eidx + edit_x,0);
     }
     bye:
-    TWindow::set_cursor_type(TWindow::CUR_OFF);
+    TWindow::set_cursor_type(TWindow::Cursor_Off);
     return _lastbyte;
 }
 

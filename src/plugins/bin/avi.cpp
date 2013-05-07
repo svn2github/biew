@@ -183,7 +183,7 @@ static __filesize_t __FASTCALL__ Show_AVI_Header()
    else
      if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
  }
- CloseWnd(hwnd);
+ delete hwnd;
  return fpos;
 }
 
@@ -256,7 +256,7 @@ static __filesize_t __FASTCALL__ Show_A_Header()
    keycode = GetEvent(drawEmptyPrompt,NULL,hwnd);
    if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
  }
- CloseWnd(hwnd);
+ delete hwnd;
  return fpos;
 }
 
@@ -333,7 +333,7 @@ static __filesize_t __FASTCALL__ Show_V_Header()
    keycode = GetEvent(drawEmptyPrompt,NULL,hwnd);
    if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
  }
- CloseWnd(hwnd);
+ delete hwnd;
  return fpos;
 }
 

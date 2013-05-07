@@ -138,7 +138,7 @@ int __FASTCALL__ fmtShowList( GetNumItems gni,ReadItems ri,const std::string& ti
  if(!(obj = ma_Build(nnames,true))) goto exit;
  w = PleaseWaitWnd();
  bval = (*ri)(*handle,obj,nnames);
- CloseWnd(w);
+ delete w;
  if(bval)
  {
    if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -400,7 +400,7 @@ bool __FASTCALL__ udnUserNames() {
      TWindow * w;
      w = PleaseWaitWnd();
      ret = (*udn_funcs[i])();
-     CloseWnd(w);
+     delete w;
      return ret;
   }
   return false;

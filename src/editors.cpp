@@ -233,7 +233,7 @@ int __FASTCALL__ FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*sav
     }
     __MsSetState(true);
     PaintETitle(edit_y*EditorMem.width + edit_x,0);
-    TWindow::set_cursor_type(TWindow::CUR_NORM);
+    TWindow::set_cursor_type(TWindow::Cursor_Normal);
     redraw = true;
     if(hexwnd) {
 	char work[__TVIO_MAXSCREENWIDTH];
@@ -281,7 +281,7 @@ int __FASTCALL__ FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*sav
 	PaintETitle(edit_y*EditorMem.width + edit_x,0);
     }
 bye:
-    TWindow::set_cursor_type(TWindow::CUR_OFF);
+    TWindow::set_cursor_type(TWindow::Cursor_Off);
     return _lastbyte;
 }
 } // namespace beye

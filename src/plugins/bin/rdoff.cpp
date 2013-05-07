@@ -346,7 +346,7 @@ static __filesize_t __FASTCALL__ rdoff_ShowHeader()
     };
   }
   exit:
-  CloseWnd(w);
+  delete w;
   return fpos;
 }
 

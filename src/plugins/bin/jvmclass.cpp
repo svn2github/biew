@@ -658,7 +658,7 @@ static __filesize_t __FASTCALL__ ShowJvmHeader()
 	else
 	if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
     }
-    CloseWnd(hwnd);
+    delete hwnd;
     return entry;
 }
 

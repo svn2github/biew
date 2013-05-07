@@ -443,7 +443,7 @@ static __filesize_t __FASTCALL__ Show_MP3_Header()
    else
      if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
  }
- CloseWnd(hwnd);
+ delete hwnd;
  return fpos;
 }
 

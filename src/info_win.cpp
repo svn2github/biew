@@ -451,12 +451,12 @@ void About()
  unsigned i,j,len;
  char str[2];
  const unsigned char core[8] = { TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, 0x00 };
- hwnd = WindowOpen(0,0,73,13,TWindow::TWC_FRAMEABLE | TWindow::TWC_NLSOEM);
- hwnd->into_center(NULL);
+ hwnd = WindowOpen(0,0,73,13,TWindow::Flag_Has_Frame | TWindow::Flag_NLS);
+ hwnd->into_center();
  hwnd->set_color(LightCyan,Black);
  hwnd->clear();
  hwnd->set_frame(TWindow::DOUBLE_FRAME,White,Black);
- hwnd->set_title(BEYE_VER_MSG,TW_TMODE_CENTER,White,Black);
+ hwnd->set_title(BEYE_VER_MSG,TWindow::TMode_Center,White,Black);
  hwnd->show();
 
  hwnd->freeze();
@@ -541,7 +541,7 @@ void About()
    }
  }
  bye_help:
- CloseWnd(hwnd);
+ delete hwnd;
 }
 
 __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
@@ -554,7 +554,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
   __filesize_t obj_start,obj_end;
   __filesize_t cfpos,ret_addr,va,prev_func_pa,next_func_pa;
   hwnd = CrtDlgWndnls(" Current position information ",78,5);
-  hwnd->set_footer("[Enter] - Prev. entry [Ctrl-Enter | F5] - Next entry]",TW_TMODE_RIGHT,dialog_cset.selfooter);
+  hwnd->set_footer("[Enter] - Prev. entry [Ctrl-Enter | F5] - Next entry]",TWindow::TMode_Right,dialog_cset.selfooter);
   hwnd->goto_xy(1,1);
   wait_wnd = PleaseWaitWnd();
   cfpos = BMGetCurrFilePos();
@@ -582,7 +582,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
     obj_class = OC_CODE;
     obj_bitness = DAB_USE16;
   }
-  CloseWnd(wait_wnd);
+  delete wait_wnd;
   switch(obj_bitness)
   {
     case DAB_USE16: btn = "USE16"; break;
@@ -643,7 +643,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
   }
   exit:
   BMSeek(cfpos,BFile::Seek_Set);
-  CloseWnd(hwnd);
+  delete hwnd;
   return ret_addr;
 }
 } // namespace beye
