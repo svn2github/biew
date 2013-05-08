@@ -430,7 +430,7 @@ static TWindow *  __FASTCALL__ _CreateWindowDD(const std::string& title,tAbsCoor
  unsigned char frame[8];
  flags = TWindow::Flag_Has_Frame;
  if(is_nls) flags |= TWindow::Flag_NLS;
- win = WindowOpen(0,0,x2+1,y2+1,flags);
+ win = WindowOpen(0,0,x2+2,y2+2,flags);
  win->into_center();
  win->set_color(dialog_cset.main);
  win->clear();
