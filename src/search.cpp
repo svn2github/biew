@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        search.c
  * @brief       This file contains implementation of file search interface.
  * @version     -
@@ -38,7 +38,7 @@ using namespace beye;
 
 extern void ReReadFile( int );
 
-namespace beye {
+namespace	usr {
 static TWindow *prcntswnd;
 unsigned char search_buff[MAX_SEARCH_SIZE] = "";
 unsigned char search_len = 0;
@@ -611,4 +611,4 @@ __filesize_t BeyeContext::search( bool is_continue )
   BMSeek(fmem,BFile::Seek_Set);
   return fmem;
 }
-} // namespace beye
+} // namespace	usr

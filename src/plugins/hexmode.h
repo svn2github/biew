@@ -1,5 +1,5 @@
 /**
- * @namespace   beye_plugins_I
+ * @namespace	usr_plugins_I
  * @file        plugins/hexmode.h
  * @brief       This file contains function prototypes for hexadecinal mode.
  * @version     -
@@ -18,10 +18,10 @@
 #define __HEXMODE_H
 
 struct hIniProfile;
-namespace beye {
+namespace	usr {
     extern unsigned		hexAddressResolv;
     bool __FASTCALL__		hexAddressResolution(unsigned& hexAddressResolv);
     unsigned  __FASTCALL__	ReadIniAResolv( Ini_Profile& ini );
     void  __FASTCALL__		WriteIniAResolv( Ini_Profile& ini,unsigned hexAddressResolv, unsigned virt_width_corr);
-} // namespace beye
+} // namespace	usr
 #endif

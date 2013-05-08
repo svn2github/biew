@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/pharlap.c
  * @brief       This file contains implementation of PharLap file format decoder.
  * @version     -
@@ -34,7 +34,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
-namespace beye {
+namespace	usr {
 static newPharLap nph;
 
 static BFile* pl_cache = &bNull;
@@ -308,4 +308,4 @@ extern const REGISTRY_BIN PharLapTable =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

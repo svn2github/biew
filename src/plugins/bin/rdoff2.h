@@ -1,5 +1,5 @@
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/rdoff2.h
  * @brief       This file contains RDOFF v2 file definitions.
  * @version     -
@@ -17,7 +17,7 @@
 #ifndef __RDOFF_INC
 #define __RDOFF_INC
 
-namespace beye {
+namespace	usr {
 #ifndef __SYS_DEP_H
 #include "_sys_dep.h"
 #endif
@@ -38,5 +38,5 @@ typedef struct tag_rdoff2_Header
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
 #endif
-} // namespace beye
+} // namespace	usr
 #endif

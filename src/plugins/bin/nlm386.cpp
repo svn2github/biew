@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/nlm386.c
  * @brief       This file contains implementation of NLM-32 (Novell Loadable
  *              Module) file format decoder.
@@ -39,7 +39,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
-namespace beye {
+namespace	usr {
 static CodeGuider* code_guider;
 static Nlm_Internal_Fixed_Header nlm;
 
@@ -725,4 +725,4 @@ extern const REGISTRY_BIN nlm386Table =
   NLMGetPubSym,
   NLMGetObjAttr
 };
-} // namespace beye
+} // namespace	usr

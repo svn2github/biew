@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/mov.c
  * @brief       This file contains implementation of decoder for MOV
  *              file format.
@@ -30,7 +30,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
-namespace beye {
+namespace	usr {
 #define MOV_FOURCC(a,b,c,d) ((a<<24)|(b<<16)|(c<<8)|(d))
 
 static __filesize_t __FASTCALL__ mov_find_chunk(__filesize_t off,unsigned long id)
@@ -88,4 +88,4 @@ extern const REGISTRY_BIN movTable =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

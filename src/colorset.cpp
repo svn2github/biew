@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        colorset.c
  * @brief       This file contains color part of BEYE project.
  * @version     -
@@ -28,7 +28,7 @@ using namespace beye;
 #include "libbeye/file_ini.h"
 #include "libbeye/libbeye.h"
 
-namespace beye {
+namespace	usr {
 extern const namedColorDef named_color_def[16] =
 {
    { "Black",        Black        },
@@ -510,5 +510,5 @@ HelpCSet help_cset =
   LOGFB_TO_PHYS(Yellow, LightCyan),
   LOGFB_TO_PHYS(White, Black)
 };
-} // namespace beye
+} // namespace	usr
 

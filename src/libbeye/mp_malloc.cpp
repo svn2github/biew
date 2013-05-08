@@ -1,6 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 
 #include <algorithm>
 #include <iostream>
@@ -19,7 +19,7 @@ using namespace beye;
 inline any_t* memalign(size_t b,size_t s) { return malloc(s); }
 #endif
 
-namespace beye {
+namespace	usr {
 
 enum { Max_BackTraces=13 };
 
@@ -536,9 +536,9 @@ int __FASTCALL__ mp_mprotect(any_t* addr,size_t len,enum mp_prot_e flags)
     return ::mprotect(addr,len,flags);
 }
 
-} // namespace beye
+} // namespace	usr
 
-using namespace beye;
+using namespace	usr;
 #include <new>
 
 extern "C" any_t*	SECURE_NAME0(_mp_malloc)(size_t size) {

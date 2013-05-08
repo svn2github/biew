@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/sisx.c
  * @brief       This file contains implementation of decoder for SisX (EPOC)
  *              file format.
@@ -32,7 +32,7 @@ using namespace beye;
 #include "plugins/bin/mmio.h"
 #include "plugins/disasm.h"
 
-namespace beye {
+namespace	usr {
 struct E32ImageHeader
 {
     unsigned long iUid1;
@@ -189,4 +189,4 @@ extern const REGISTRY_BIN sisxTable =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        bconsole.c
  * @brief       This file contains low level BEYE console functions.
  * @version     -
@@ -41,7 +41,7 @@ using namespace beye;
 #include "search.h"
 #include "bconsole.h"
 
-namespace beye {
+namespace	usr {
     extern TWindow * ErrorWnd;
 
 enum {
@@ -1036,5 +1036,5 @@ int __FASTCALL__ PageBox(unsigned width,unsigned height,const any_t** __obj,unsi
  delete wlist;
  return ret;
 }
-} // namespace beye
+} // namespace	usr
 

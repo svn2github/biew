@@ -1,5 +1,5 @@
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/arch.h
  * @brief       This file contains Archive file definitions.
  * @version     -
@@ -21,7 +21,7 @@
 #include "_sys_dep.h"
 #endif
 
-namespace beye {
+namespace	usr {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack(1)
 #endif
@@ -68,5 +68,5 @@ typedef struct tag_ar_sub_hdr {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
 #endif
-} // namespace beye
+} // namespace	usr
 #endif

@@ -1,5 +1,5 @@
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        editor.h
  * @brief       This file contains editing function prototypes.
  * @version     -
@@ -19,7 +19,7 @@
 
 #include "libbeye/libbeye.h"
 
-namespace beye {
+namespace	usr {
     class TWindow;
     struct tag_emem {
 	unsigned char *buff;
@@ -45,5 +45,5 @@ namespace beye {
     int    __FASTCALL__ FullEdit(TWindow * ewnd,TWindow* hexwnd,Opaque& _this,void (*save)(Opaque& _this,unsigned char *,unsigned));
     bool  __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size);
     void   __FASTCALL__ editDestroyBuffs();
-} // namespace beye
+} // namespace	usr
 #endif

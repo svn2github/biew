@@ -1,5 +1,5 @@
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/elf386.h
  * @brief       This file defines standard ELF types, structures, and macros.
  * @version     -
@@ -30,7 +30,7 @@
 #ifndef __SYS_DEP_H
 #include "_sys_dep.h"
 #endif
-namespace beye {
+namespace	usr {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack(1)
 #endif
@@ -1317,5 +1317,5 @@ enum {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
 #endif
-} // namespace beye
+} // namespace	usr
 #endif

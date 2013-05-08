@@ -71,7 +71,7 @@ extern char *        lltoa(long long int _value, char *_s, int _radix);
 #ifndef HAVE_ULLTOA
 extern char *        ulltoa(unsigned long long int _value, char *_s, int _radix);
 #endif
-namespace beye {
+namespace	usr {
     typedef int64_t __fileoff_t;
     typedef uint64_t __filesize_t;
 #define FILEOFF_MAX std::numeric_limits<int64_t>::max()
@@ -322,5 +322,5 @@ namespace beye {
 
 /** Frees pointer and nullifies it */
 #define PFREE(ptr)      { mp_free(ptr); ptr = 0; }
-} // namespace beye
+} // namespace	usr
 #endif

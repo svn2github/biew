@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/wav.c
  * @brief       This file contains implementation of decoder for wav multimedia
  *              streams.
@@ -30,7 +30,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
 
-namespace beye {
+namespace	usr {
 wTagNames wtagNames[] =
 {
  { 0x0000, "MS-Unknown" },
@@ -270,4 +270,4 @@ extern const REGISTRY_BIN wavTable =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        addendum.c
  * @brief       This file contains interface to Addons functions.
  * @version     -
@@ -24,7 +24,7 @@ using namespace beye;
 #include "bconsole.h"
 #include "beyeutil.h"
 
-namespace beye {
+namespace	usr {
 extern const Addon_Info DigitalConvertor;
 extern const Addon_Info Calculator;
 
@@ -54,5 +54,5 @@ addendum::addendum()
 }
 
 addendum::~addendum() {}
-} // namespace beye
+} // namespace	usr
 

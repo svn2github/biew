@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/opharlap.c
  * @brief       This file contains implementation of Old PharLap file format decoder.
  * @version     -
@@ -32,7 +32,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
-namespace beye {
+namespace	usr {
 static oldPharLap oph;
 
 static bool __FASTCALL__ IsOldPharLap()
@@ -140,4 +140,4 @@ extern const REGISTRY_BIN OldPharLapTable =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

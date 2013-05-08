@@ -3,7 +3,7 @@
 
 #include "libbeye/libbeye.h"
 
-namespace beye {
+namespace	usr {
     class Addon : public Opaque {
 	public:
 	    Addon() {}
@@ -17,6 +17,6 @@ namespace beye {
 	Addon* (*query_interface)();
     };
 
-} // namespace beye
+} // namespace	usr
 
 #endif

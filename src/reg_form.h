@@ -1,5 +1,5 @@
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        reg_form.h
  * @brief       This file contains structure prototypes for embededding new
  *              file formats, disassemblers, translation modes e.t.c. in BEYE.
@@ -18,7 +18,7 @@
 #ifndef __REG_FORM__H
 #define __REG_FORM__H
 
-namespace beye {
+namespace	usr {
 typedef __filesize_t  (__FASTCALL__ *BinFunc)();
 typedef bool         (__FASTCALL__ *ModFunc)();
 
@@ -156,5 +156,5 @@ struct REGISTRY_BIN
   unsigned    (__FASTCALL__ *GetObjAttr)(__filesize_t pa,char *name,unsigned cb_name,
 			      __filesize_t *start,__filesize_t *end,int *_class,int *bitness);
 };
-} // namespace beye
+} // namespace	usr
 #endif

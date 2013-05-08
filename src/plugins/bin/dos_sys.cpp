@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/dos_sys.c
  * @brief       This file contains implementation of DOS driver file format.
  * @version     -
@@ -30,7 +30,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "plugins/bin/dos_sys.h"
 
-namespace beye {
+namespace	usr {
 static DOSDRIVER drv;
 
 static __filesize_t __FASTCALL__ ShowSysHeader()
@@ -144,4 +144,4 @@ extern const REGISTRY_BIN dossysTable =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

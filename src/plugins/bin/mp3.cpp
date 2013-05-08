@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/mp3.c
  * @brief       This file contains implementation of decoder for MP3
  *              file format.
@@ -34,7 +34,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
 
-namespace beye {
+namespace	usr {
 //----------------------- mp3 audio frame header parser -----------------------
 static int tabsel_123[2][3][16] = {
    { {0,32,64,96,128,160,192,224,256,288,320,352,384,416,448,},
@@ -471,4 +471,4 @@ extern const REGISTRY_BIN mp3Table =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

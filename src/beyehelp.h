@@ -1,5 +1,5 @@
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        beyehelp.h
  * @brief       This file contains prototypes of BEYE help system.
  * @version     -
@@ -20,7 +20,7 @@
 
 #include "libbeye/twin.h"
 
-namespace beye {
+namespace	usr {
 #define BEYE_HELP_VER "BEYE_HLP v6.1.0"
 
     enum {
@@ -91,6 +91,6 @@ namespace beye {
     };
 		       /** Fully-functionallity utility for displaying help */
     void            __FASTCALL__ hlpDisplay(unsigned long id);
-} // namespace beye
+} // namespace	usr
 
 #endif

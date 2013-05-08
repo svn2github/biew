@@ -1,6 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
  * @namespace   libbeye
  * @file        libbeye/twin.c
@@ -34,7 +34,7 @@ using namespace beye;
 
 #include "libbeye/twin.h"
 
-namespace beye {
+namespace	usr {
 TWindow* TWindow::head = NULL;
 TWindow* TWindow::cursorwin = NULL;
 static unsigned long twin_flags = 0L;
@@ -1806,4 +1806,4 @@ long TWindow::send_message(unsigned event,unsigned long event_param,const any_t*
     if(method) return ((twClassFunc)(method))(this,event,event_param,event_data);
     return 0L;
 }
-} // namespace beye
+} // namespace	usr

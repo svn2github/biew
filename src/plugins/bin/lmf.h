@@ -1,5 +1,5 @@
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/lmf.c
  * @brief       This file contains lmf file structures and constants.
  * @version     -
@@ -22,7 +22,7 @@
 #include "_sys_dep.h"
 #endif
 
-namespace beye {
+namespace	usr {
 #if __WATCOMC__ > 1000
 #pragma pack(__push,1);
 #else
@@ -113,5 +113,5 @@ enum {
 #else
 #pragma pack()
 #endif
-} // namespace beye
+} // namespace	usr
 #endif/*__LMF_INC*/

@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        tstrings.c
  * @brief       This file contains start of work for NLS support by BEYE.
  * @version     -
@@ -19,7 +19,7 @@ using namespace beye;
 **/
 #include "tstrings.h"
 /**   English release for all messages */
-namespace beye {
+namespace	usr {
 const char* BEYE_VERSION=VERSION;
 #if defined(__WIN32__) && defined(_MSC_VER)
 const char* BEYE_VER_MSG=" Binary EYE v "VERSION"-i386.Win32 Build: " __DATE__ " ";
@@ -207,4 +207,4 @@ const char RESIZE_FAIL[]=      " Can't change size of file ";
 const char EXPAND_FAIL[]=      " Can't expand file ";
 const char TRUNC_FAIL[]=       " Can't truncate file ";
 const char NOTHING_EDIT[]=     " Can't edit zero file ";
-} // namespace beye
+} // namespace	usr

@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_I
+ * @namespace	usr_plugins_I
  * @file        plugins/binmode.c
  * @brief       This file contains implementation of binary mode viewer.
  * @version     -
@@ -38,7 +38,7 @@ using namespace beye;
 
 #include "plugin.h"
 
-namespace beye {
+namespace	usr {
     enum {
 	MOD_PLAIN  =0,
 	MOD_BINARY =1,
@@ -304,4 +304,4 @@ extern const Plugin_Info binMode = {
     query_interface
 };
 
-} // namespace beye
+} // namespace	usr

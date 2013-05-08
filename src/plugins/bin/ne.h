@@ -1,5 +1,5 @@
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/ne.h
  * @brief       This file contains NE executable file definitions.
  * @version     -
@@ -20,7 +20,7 @@
 #include "beyeutil.h"
 #include "libbeye/bbio.h"
 
-namespace beye {
+namespace	usr {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack(1)
 #endif
@@ -116,5 +116,5 @@ extern bool __FASTCALL__ RNamesReadItems(BFile&,memArray *,unsigned,__filesize_t
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
 #endif
-} // namespace beye
+} // namespace	usr
 #endif

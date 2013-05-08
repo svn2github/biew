@@ -1,5 +1,5 @@
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        colorset.h
  * @brief       This file contains color function prototypes.
  * @version     -
@@ -19,7 +19,7 @@
 
 #include "libbeye/twin.h"
 
-namespace beye {
+namespace	usr {
     typedef struct tag_namedColorDef {
 	const char  *name;
 	Color  color;
@@ -210,6 +210,6 @@ typedef struct tag_HelpCSet
     extern HelpCSet help_cset;
 
     bool   csetReadIniFile(const std::string& pal_name);
-} // namespace beye
+} // namespace	usr
 
 #endif

@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        beyehelp.c
  * @brief       This file contains LZSS-based help system functions.
  * @version     -
@@ -37,7 +37,7 @@ using namespace beye;
 
 #include "lzss/lzssutil.cpp"
 
-namespace beye {
+namespace	usr {
 static const unsigned TEXT_TAB=8;
 
 extern void drawHelpListPrompt();
@@ -404,5 +404,5 @@ void __FASTCALL__ hlpDisplay( unsigned long item_id )
   hlp_bye:
   bhelp.close();
 }
-} // namespace beye
+} // namespace	usr
 

@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_II
+ * @namespace	usr_plugins_II
  * @file        plugins/nls/russian.c
  * @brief       This file contains support of russian codepages.
  * @version     -
@@ -26,7 +26,7 @@ using namespace beye;
 #include "bconsole.h"
 #include "beyeutil.h"
 
-namespace beye {
+namespace	usr {
 enum {
     TXT_CURRCP      =0,
     TXT_CP866       =1,
@@ -458,5 +458,5 @@ extern const REGISTRY_NLS RussianNLS =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr
 

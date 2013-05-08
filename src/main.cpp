@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        main.cpp
  * @brief       This file contains entry point of BEYE project.
  * @version     -
@@ -59,7 +59,7 @@ using namespace beye;
 
 #include "plugins/plugin.h"
 
-namespace beye {
+namespace	usr {
 extern const Plugin_Info binMode;
 extern const Plugin_Info textMode;
 extern const Plugin_Info hexMode;
@@ -694,7 +694,7 @@ static bool test_antiviral_protection(int* verbose)
     std::cerr<<"Antiviral protection of Beye doesn't work!"<<std::endl;
     return false;
 }
-} // namespace beye
+} // namespace	usr
 
 int main(int argc,char* args[], char *envp[])
 {

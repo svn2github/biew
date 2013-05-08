@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_I
+ * @namespace	usr_plugins_I
  * @file        plugins/hexmode.c
  * @brief       This file contains implementation of hexadecimal mode viewers.
  * @version     -
@@ -40,7 +40,7 @@ using namespace beye;
 
 #include "plugin.h"
 
-namespace beye {
+namespace	usr {
     class HexMode : public Plugin {
 	public:
 	    HexMode(CodeGuider& code_guider);
@@ -466,4 +466,4 @@ extern const Plugin_Info hexMode = {
     query_interface
 };
 
-} // namespace beye
+} // namespace	usr

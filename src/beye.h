@@ -7,7 +7,7 @@
 #include <vector>
 #include <string>
 
-namespace beye {
+namespace	usr {
     class addendum;
     class sysinfo;
     class Plugin;
@@ -114,5 +114,5 @@ namespace beye {
 	    BFile&		sc_bm_file_handle;
     };
     BeyeContext& beye_context();
-} // namespace beye
+} // namespace	usr
 #endif

@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_II
+ * @namespace	usr_plugins_II
  * @file        plugins/disasm/ix86/ix86_fun.c
  * @brief       This file contains implementation common function and utility
  *              for Intel x86 disassembler.
@@ -32,7 +32,7 @@ using namespace beye;
 #include "codeguid.h"
 #include "reg_form.h"
 
-namespace beye {
+namespace	usr {
 extern DisMode* ix86_parent;
 #define MODRM_REG(X) (((X)&0x38)>>3)
 #define MODRM_COP(X) MODRM_REG(X)
@@ -1836,4 +1836,4 @@ void __FASTCALL__ ix86_3dNowPrefetchGrp(char *str,ix86Param *DisP)
    TabSpace(str,TAB_POS);
    arg_cpu_mod_rm(str,DisP);
 }
-} // namespace beye
+} // namespace	usr

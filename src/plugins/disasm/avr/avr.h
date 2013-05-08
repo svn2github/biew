@@ -1,5 +1,5 @@
 /**
- * @namespace   beye_plugins_II
+ * @namespace	usr_plugins_II
  * @file        plugins/disasm/avr/avr_ops.h
  * @brief       This file contains declaration of Atmel AVR opcodes.
  * @version     -

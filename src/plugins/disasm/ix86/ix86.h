@@ -1,5 +1,5 @@
 /**
- * @namespace   beye_plugins_II
+ * @namespace	usr_plugins_II
  * @file        plugins/disasm/ix86/ix86.h
  * @brief       This file contains declaration of internal Intel x86 disassembler functions.
  * @version     -
@@ -23,7 +23,7 @@
 #include "libbeye/libbeye.h"
 #endif
 
-namespace beye {
+namespace	usr {
 enum {
     TAB_POS   =10,
     TILE_SAFE =4000,
@@ -409,5 +409,5 @@ extern const char * ix86_KatmaiGr2Names[];
     void   __FASTCALL__ ix86_VMX(char *str,ix86Param *);
     void   __FASTCALL__ ix86_0FVMX(char *str,ix86Param *DisP);
     void   __FASTCALL__ ix86_660FVMX(char *str,ix86Param *DisP);
-} // namespace beye
+} // namespace	usr
 #endif

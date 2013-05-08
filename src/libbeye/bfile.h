@@ -5,7 +5,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-namespace beye {
+namespace	usr {
     class BFile : public Opaque {
 	public:
 	    enum {
@@ -233,6 +233,6 @@ namespace beye {
 	    __filesize_t		fsize;
     };
     extern BFile bNull; /**< Stream associated with STDERR */
-} // namespace beye
+} // namespace	usr
 
 #endif

@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/mz.c
  * @brief       This file contains implementation of MZ file format.
  * @version     -
@@ -35,7 +35,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "plugins/bin/mz.h"
 
-namespace beye {
+namespace	usr {
 static CodeGuider* code_guider;
 static MZHEADER mz;
 static unsigned long HeadSize;
@@ -357,4 +357,4 @@ extern const REGISTRY_BIN mzTable =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

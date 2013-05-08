@@ -1,6 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/os2/os_dep.c

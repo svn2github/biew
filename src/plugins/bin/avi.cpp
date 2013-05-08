@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/avi.c
  * @brief       This file contains implementation of decoder for AVI multimedia
  *              streams.
@@ -31,7 +31,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
 
-namespace beye {
+namespace	usr {
 typedef struct
 {
     DWORD		dwMicroSecPerFrame;	// frame display rate (or 0L)
@@ -356,4 +356,4 @@ extern const REGISTRY_BIN aviTable =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

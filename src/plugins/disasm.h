@@ -1,5 +1,5 @@
 /**
- * @namespace   beye_plugins_I
+ * @namespace	usr_plugins_I
  * @file        plugins/disasm.h
  * @brief       This file contains function prototypes for disassembler interface.
  * @version     -
@@ -24,7 +24,7 @@
 #include "libbeye/twin.h"
 
 struct hIniProfile;
-namespace beye {
+namespace	usr {
 /*
    This struct is ordered as it documented in Athlon manual
    Publication # 22007 Rev: D
@@ -311,5 +311,5 @@ struct REGISTRY_DISASM
 /** Common disassembler utility */
     char * __FASTCALL__ TabSpace(char * str,unsigned nSpace);
     void   __FASTCALL__ disSetModifier(char *str,const char *modf);
-} // namespace beye
+} // namespace	usr
 #endif

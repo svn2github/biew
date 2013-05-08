@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_tools
+ * @namespace	usr_tools
  * @file        beyehlp.c
  * @brief       This file is maker of BEYE help file.
  * @version     -

@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_II
+ * @namespace	usr_plugins_II
  * @file        plugins/disasm/ix86/ix86_fpu.c
  * @brief       This file contains implementation of Intel x86 disassembler for
  *              FPU instructions set.
@@ -25,7 +25,7 @@ using namespace beye;
 #include "reg_form.h"
 #include "plugins/disasm/ix86/ix86.h"
 
-namespace beye {
+namespace	usr {
 extern char *ix86_appstr;
 
 static char *  __FASTCALL__ SetNameTab(char * str,const char * name)
@@ -491,4 +491,4 @@ void __FASTCALL__ ix86_FPUCmd(char * str,ix86Param *DisP)
 	   break;
  }
 }
-} // namespace beye
+} // namespace	usr

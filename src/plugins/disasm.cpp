@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_I
+ * @namespace	usr_plugins_I
  * @file        plugins/disasm.c
  * @brief       This file contains universal interface for any disassembler.
  * @version     -
@@ -51,7 +51,7 @@ using namespace beye;
 
 #include "plugin.h"
 
-namespace beye {
+namespace	usr {
     extern const REGISTRY_DISASM ix86_Disasm;
     extern const REGISTRY_DISASM Null_Disasm;
     extern const REGISTRY_DISASM AVR_Disasm;
@@ -1242,4 +1242,4 @@ extern const Plugin_Info disMode = {
     query_interface
 };
 
-} // namespace beye
+} // namespace	usr

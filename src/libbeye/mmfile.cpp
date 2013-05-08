@@ -1,13 +1,13 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 
 #include <stdlib.h>
 #include <string.h>
 
 #include "mmfile.h"
 
-namespace beye {
+namespace	usr {
 MMFile::MMFile()
 	:addr(NULL)
 	,mode(0)
@@ -199,4 +199,4 @@ bool MMFile::flush() { return false; }
 bool MMFile::chsize(__filesize_t newsize) { UNUSED(newsize); return false; }
 const bool MMFile::has_mmio=false;
 #endif // HAVE_MMAP
-} // namespace beye
+} // namespace	usr

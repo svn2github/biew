@@ -25,7 +25,7 @@
 *  Helpful for read/write small size objects from/to file          *
 \******************************************************************/
 
-namespace beye {
+namespace	usr {
     class BBio_File : public BFile {
 	public:
 	    enum opt {
@@ -134,6 +134,6 @@ namespace beye {
     inline BBio_File::opt operator|=(BBio_File::opt& a, BBio_File::opt b) { return (a=static_cast<BBio_File::opt>(static_cast<unsigned>(a)|static_cast<unsigned>(b))); }
     inline BBio_File::opt operator&=(BBio_File::opt& a, BBio_File::opt b) { return (a=static_cast<BBio_File::opt>(static_cast<unsigned>(a)&static_cast<unsigned>(b))); }
     inline BBio_File::opt operator^=(BBio_File::opt& a, BBio_File::opt b) { return (a=static_cast<BBio_File::opt>(static_cast<unsigned>(a)^static_cast<unsigned>(b))); }
-} // namespace beye
+} // namespace	usr
 #endif
 

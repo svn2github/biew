@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/jpeg.c
  * @brief       This file contains implementation of decoder for jpeg
  *              file format.
@@ -31,7 +31,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
 
-namespace beye {
+namespace	usr {
 static bool  __FASTCALL__ jpeg_check_fmt()
 {
     unsigned long val;
@@ -71,4 +71,4 @@ extern const REGISTRY_BIN jpegTable =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

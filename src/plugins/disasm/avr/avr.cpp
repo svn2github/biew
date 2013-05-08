@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_II
+ * @namespace	usr_plugins_II
  * @file        plugins/disasm/avr/avr.c
  * @brief       This file contains implementation of Atmel AVR disassembler (main module).
  * @version     -
@@ -35,7 +35,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
 
-namespace beye {
+namespace	usr {
 #define _(STR)     STR
 #define _MAX(A,B)  ( (A) > (B) ? (A) : (B) )
 
@@ -601,4 +601,4 @@ extern const REGISTRY_DISASM AVR_Disasm =
   NULL,                                  /* plugin setting reader (from .ini) */
   NULL                                   /* plugin setting writer (to .ini) */
 };
-} // namespace beye
+} // namespace	usr

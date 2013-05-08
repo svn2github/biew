@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        beyeutil.c
  * @brief       This file contains useful primitives of BEYE project.
  * @version     -
@@ -30,7 +30,7 @@ using namespace beye;
 #include "tstrings.h"
 #include "libbeye/libbeye.h"
 
-namespace beye {
+namespace	usr {
 bool DumpMode = false;
 bool EditMode = false;
 
@@ -283,4 +283,4 @@ int __FASTCALL__ ma_Display(memArray *obj,const std::string& title,int flg, unsi
 {
   return CommonListBox((const char**)obj->data,obj->nItems,title,flg,defsel);
 }
-} // namespace beye
+} // namespace	usr

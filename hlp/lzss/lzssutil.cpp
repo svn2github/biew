@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_tools
+ * @namespace	usr_tools
  * @file        tools/lzss/lzssutil.c
  * @brief       A Data Compression Functions.
  * @version     -

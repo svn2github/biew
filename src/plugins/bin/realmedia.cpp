@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/realmdeia.c
  * @brief       This file contains implementation of decoder for jpeg
  *              file format.
@@ -30,7 +30,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
 
-namespace beye {
+namespace	usr {
 #define MKTAG(a, b, c, d) (a | (b << 8) | (c << 16) | (d << 24))
 
 static bool  __FASTCALL__ rm_check_fmt()
@@ -68,4 +68,4 @@ extern const REGISTRY_BIN rmTable =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

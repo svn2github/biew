@@ -1,5 +1,5 @@
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/rdoff.h
  * @brief       This file contains RDOFF v1 file definitions.
  * @version     -
@@ -21,7 +21,7 @@
 #include "_sys_dep.h"
 #endif
 
-namespace beye {
+namespace	usr {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack(1)
 #endif
@@ -45,5 +45,5 @@ typedef struct tag_RDOFF_RELOC
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
 #endif
-} // namespace beye
+} // namespace	usr
 #endif

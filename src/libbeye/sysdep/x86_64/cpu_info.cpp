@@ -1,6 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
  * @namespace   libbeye
  * @file        libbeye/sysdep/x86_64/cpu_info.c

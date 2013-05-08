@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /*
- * @namespace   beye_plugins_II
+ * @namespace	usr_plugins_II
  * @file        plugins/disasm/ix86/ix86.c
  * @brief       This file contains implementation of Intel x86 disassembler (main module).
  * @version     -
@@ -40,7 +40,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
 
-namespace beye {
+namespace	usr {
 DisMode* ix86_parent;
 static const unsigned MAX_IX86_INSN_LEN=15;
 static const unsigned MAX_DISASM_OUTPUT=1000;
@@ -6543,4 +6543,4 @@ extern const REGISTRY_DISASM ix86_Disasm =
   ix86ReadIni,
   ix86WriteIni
 };
-} // namespace beye
+} // namespace	usr

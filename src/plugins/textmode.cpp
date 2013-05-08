@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_I
+ * @namespace	usr_plugins_I
  * @file        plugins/textmode.c
  * @brief       This file contains implementation of text viewer with different submodes.
  * @version     -
@@ -40,7 +40,7 @@ using namespace beye;
 
 #include "plugin.h"
 
-namespace beye {
+namespace	usr {
 enum {
     TEXT_TAB     =8,
     MOD_PLAIN    =0,
@@ -1249,4 +1249,4 @@ extern const Plugin_Info textMode = {
     query_interface
 };
 
-} // namespace beye
+} // namespace	usr

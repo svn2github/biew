@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_addons
+ * @namespace	usr_addons
  * @file        addons/sys/consinfo.c
  * @brief       This file contains simple implementation console information.
  * @version     -
@@ -32,7 +32,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
-namespace beye {
+namespace	usr {
     class ConsoleInfo_Addon : public Addon {
 	public:
 	    ConsoleInfo_Addon();
@@ -103,4 +103,4 @@ extern const Addon_Info ConsoleInfo = {
     "~Console information",
     query_interface
 };
-} // namespace beye
+} // namespace	usr

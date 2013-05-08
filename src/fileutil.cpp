@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        fileutil.c
  * @brief       This file contains file utilities of BEYE project.
  * @version     -
@@ -43,7 +43,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 
 
-namespace beye {
+namespace	usr {
 extern const Plugin_Info disMode;
 static bool ChSize()
 {
@@ -1176,5 +1176,5 @@ bool FileUtils()
   }
   return false;
 }
-} // namespace beye
+} // namespace	usr
 

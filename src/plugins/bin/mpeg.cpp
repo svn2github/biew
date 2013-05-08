@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/mpeg.c
  * @brief       This file contains implementation of decoder for MPEG-PES
  *              file format.
@@ -30,7 +30,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
 
-namespace beye {
+namespace	usr {
 /*
  headers:
  0x00000100		- picture_start_code
@@ -88,4 +88,4 @@ extern const REGISTRY_BIN mpegTable =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

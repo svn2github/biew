@@ -1,5 +1,5 @@
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        codeguid.h
  * @brief       This file contains prototypes code navigator.
  * @version     -
@@ -18,7 +18,7 @@
 #define __CODEGUID__H
 #include <vector>
 
-namespace beye {
+namespace	usr {
     class DisMode;
     class CodeGuider : public Opaque {
 	public:
@@ -41,5 +41,5 @@ namespace beye {
 	    std::vector<std::pair<__filesize_t,unsigned> > GoAddr;
 	    unsigned char	Alarm;
     };
-} // namespace beye
+} // namespace	usr
 #endif

@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/elf386.c
  * @brief       This file contains implementation of ELF-32 file format decoder.
  * @version     -
@@ -70,7 +70,7 @@ using namespace beye;
 #include "libbeye/file_ini.h"
 #include "libbeye/kbd_code.h"
 
-namespace beye {
+namespace	usr {
 static CodeGuider* code_guider;
 static char is_msbf; /* is most significand byte first */
 static char is_64bit;
@@ -2377,4 +2377,4 @@ extern const REGISTRY_BIN elf386Table =
   elfGetPubSym,
   elfGetObjAttr
 };
-} // namespace beye
+} // namespace	usr

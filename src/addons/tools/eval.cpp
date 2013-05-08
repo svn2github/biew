@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_addons
+ * @namespace	usr_addons
  * @file        addons/tools/eval.c
  * @brief       A simple mathematical expression evaluator in C.
  * @version     -
@@ -59,7 +59,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
-namespace beye {
+namespace	usr {
     inline char LAST_CHAR(const char* string) { return (((char *)string)[strlen(string)-1]); }
     /*
 	This struct is ordered as it documented in Athlon manual
@@ -610,4 +610,4 @@ extern const Addon_Info Calculator = {
     "~String calculator",
     query_interface
 };
-} // namespace beye
+} // namespace	usr

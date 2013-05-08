@@ -1,5 +1,5 @@
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        bin_util.h
  * @brief       This file contains prototypes of common functions of
  *              plugins\bin of BEYE project.
@@ -22,7 +22,7 @@
 #include "libbeye/bbio.h"
 #include "beyeutil.h"
 
-namespace beye {
+namespace	usr {
 #if __BYTE_ORDER == __BIG_ENDIAN
 #define  FMT_WORD(cval,is_big)\
  (uint16_t)(!(bool)is_big ? bswap_16(*(uint16_t *)(uint8_t *)cval) : *(uint16_t *)(uint8_t *)cval)
@@ -81,5 +81,5 @@ namespace beye {
 
     void __FASTCALL__ udnInit( Ini_Profile& ini );
     void __FASTCALL__ udnTerm( Ini_Profile& ini );
-} // namespace beye
+} // namespace	usr
 #endif

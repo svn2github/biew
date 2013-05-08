@@ -1,5 +1,5 @@
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        beyeutil.h
  * @brief       This file contains prototypes of BEYE utilities.
  * @version     -
@@ -25,7 +25,7 @@
 #include "libbeye/bbio.h"
 #include "libbeye/file_ini.h"
 
-namespace beye {
+namespace	usr {
     class DisMode;
     extern const char legalchars[];
     extern bool DumpMode;
@@ -123,5 +123,5 @@ typedef struct tag_memArray
 
     void		PaintTitle();
     __filesize_t       IsNewExe();
-} // namespace beye
+} // namespace	usr
 #endif

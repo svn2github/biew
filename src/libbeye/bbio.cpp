@@ -1,6 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
  * @namespace   libbeye
  * @file        libbeye/bbio.c
@@ -31,7 +31,7 @@ using namespace beye;
 
 #include "libbeye/bbio.h"
 
-namespace beye {
+namespace	usr {
 BBio_File::BBio_File(unsigned bSize,unsigned optimization)
 	:filepos(0)
 	,openmode(0)
@@ -423,4 +423,4 @@ bool BBio_File::eof() const
 
 __filesize_t BBio_File::flength() const { return _flength; }
 
-} // namespace beye
+} // namespace	usr

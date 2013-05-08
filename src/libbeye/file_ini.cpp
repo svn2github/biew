@@ -1,6 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
  * @namespace   libbeye
  * @file        libbeye/file_ini.c
@@ -101,7 +101,7 @@ fprintf(stderr,
 }
 #endif
 
-namespace beye {
+namespace	usr {
 static const unsigned __C_EOF=0x1A;
 static const char iniOpenComment=';';
 static const char iniLegalSet[] = " _0123456789"
@@ -865,4 +865,4 @@ bool Ini_Profile::__flushCache()
 }
 Ini_Profile::Ini_Profile():Ini_Parser(Ini_Profile::__buildCache,this),__nled(0) {}
 Ini_Profile::~Ini_Profile() { close(); delete handler; }
-} // namespace beye
+} // namespace	usr

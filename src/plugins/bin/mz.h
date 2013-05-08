@@ -1,5 +1,5 @@
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/mz.h
  * @brief       This file contains MZ executable file definitions.
  * @version     -
@@ -21,7 +21,7 @@
 #include "beyeutil.h"
 #endif
 
-namespace beye {
+namespace	usr {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack(1)
 #endif
@@ -46,5 +46,5 @@ typedef struct tagMZHEADER
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
 #endif
-} // namespace beye
+} // namespace	usr
 #endif

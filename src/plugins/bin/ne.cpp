@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/ne.c
  * @brief       This file contains implementation of NE (New Executable) file
  *              format decoder.
@@ -40,7 +40,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
-namespace beye {
+namespace	usr {
 static CodeGuider* code_guider;
 static NEHEADER ne;
 
@@ -1542,4 +1542,4 @@ extern const REGISTRY_BIN neTable =
   neGetPubSym,
   neGetObjAttr
 };
-} // namespace beye
+} // namespace	usr

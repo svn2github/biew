@@ -20,9 +20,9 @@
 #define __TWINDOW_HPP_INCLUDED 1
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 
-namespace beye {
+namespace	usr {
     /** Enumerates all colors used in twin library */
     enum Color {
 	Black = 0,	/**< Equivalent of RGB: 0 0 0 */
@@ -934,7 +934,7 @@ namespace beye {
     inline TWindow::twc_flag operator|=(TWindow::twc_flag& a, TWindow::twc_flag b) { return (a=static_cast<TWindow::twc_flag>(static_cast<unsigned>(a)|static_cast<unsigned>(b))); }
     inline TWindow::twc_flag operator&=(TWindow::twc_flag& a, TWindow::twc_flag b) { return (a=static_cast<TWindow::twc_flag>(static_cast<unsigned>(a)&static_cast<unsigned>(b))); }
     inline TWindow::twc_flag operator^=(TWindow::twc_flag& a, TWindow::twc_flag b) { return (a=static_cast<TWindow::twc_flag>(static_cast<unsigned>(a)^static_cast<unsigned>(b))); }
-} // namespace beye
+} // namespace	usr
 #include "libbeye/tw_class.h"
 
 #endif

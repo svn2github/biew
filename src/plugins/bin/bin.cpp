@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/bin.c
  * @brief       This file contains implementation of decoder for any not handled
  *              binary file format.
@@ -23,7 +23,7 @@ using namespace beye;
 #include "reg_form.h"
 #include "plugins/disasm.h"
 
-namespace beye {
+namespace	usr {
 static bool  __FASTCALL__ bin_check_fmt() { return true; }
 static void __FASTCALL__ bin_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
 static void __FASTCALL__ bin_destroy_fmt() {}
@@ -48,4 +48,4 @@ extern const REGISTRY_BIN binTable =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

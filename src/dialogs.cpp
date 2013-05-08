@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        dialogs.c
  * @brief       This file contains common dialogs of BEYE project.
  * @version     -
@@ -31,7 +31,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/twin.h"
 
-namespace beye {
+namespace	usr {
 bool __FASTCALL__ Get2DigitDlg(const std::string& title,const std::string& text,unsigned char *xx)
 {
  tAbsCoord x1,y1,x2,y2;
@@ -619,5 +619,5 @@ bool __FASTCALL__ GetInsDelBlkDlg(const std::string& title,__filesize_t * start,
  *size = strtol(enddig,NULL,16);
  return !(_lastbyte == KE_ESCAPE || _lastbyte == KE_F(10));
 }
-} // namespace beye
+} // namespace	usr
 

@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_addons
+ * @namespace	usr_addons
  * @file        addons/sys/kbdview.c
  * @brief       This file contains simple implementation console information.
  * @version     -
@@ -29,7 +29,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
-namespace beye {
+namespace	usr {
     class InputView_Addon : public Addon {
 	public:
 	    InputView_Addon();
@@ -76,4 +76,4 @@ extern const Addon_Info InputViewer = {
     "~Input viewer",
     query_interface
 };
-} // namespace beye
+} // namespace	usr

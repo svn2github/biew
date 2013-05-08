@@ -1,5 +1,5 @@
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        search.h
  * @brief       This file contains search function prototypes.
  * @version     -
@@ -17,7 +17,7 @@
 #ifndef __SEARCH__H
 #define __SEARCH__H
 
-namespace beye {
+namespace	usr {
 enum {
     SD_SIMPLE       =0x0000,   /**< indicates simple search dialog to be displayed */
     SD_ALLFEATURES  =0x0001    /**< indicates fully featured search dialog to be displayed */
@@ -73,5 +73,5 @@ enum {
 
     extern __filesize_t FoundTextSt; /**< Indicates start of found text */
     extern __filesize_t FoundTextEnd;/**< Indicates end of found text */
-} // namespace beye
+} // namespace	usr
 #endif

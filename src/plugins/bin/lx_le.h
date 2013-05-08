@@ -1,5 +1,5 @@
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/lx_le.h
  * @brief       This file contains LX and LE executable file definitions.
  * @version     -
@@ -20,7 +20,7 @@
 #include "beyeutil.h"
 #include "libbeye/bbio.h"
 
-namespace beye {
+namespace	usr {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack(1)
 #endif
@@ -292,5 +292,5 @@ extern int LXType;
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
 #endif
-} // namespace beye
+} // namespace	usr
 #endif

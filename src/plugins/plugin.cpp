@@ -6,7 +6,7 @@
 
 #include "bmfile.h"
 
-namespace beye {
+namespace	usr {
 extern const REGISTRY_BIN binTable;
 extern const REGISTRY_BIN rmTable;
 extern const REGISTRY_BIN movTable;
@@ -139,4 +139,4 @@ __filesize_t Bin_Format::get_public_symbol(char *str,unsigned cb_str,unsigned *_
 unsigned Bin_Format::get_object_attribute(__filesize_t pa,char *_name,unsigned cb_name,__filesize_t *start,__filesize_t *end,int *_class,int *bitness) const {
     return detectedFormat->GetObjAttr?detectedFormat->GetObjAttr(pa,_name,cb_name,start,end,_class,bitness):0;
 }
-} // namespace beye
+} // namespace	usr

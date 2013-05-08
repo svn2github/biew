@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        editors.c
  * @brief       This file contains low level editor implementation of BEYE project.
  * @version     -
@@ -33,7 +33,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
-namespace beye {
+namespace	usr {
 __fileoff_t edit_cp = 0;
 struct tag_emem EditorMem;
 
@@ -284,5 +284,5 @@ bye:
     TWindow::set_cursor_type(TWindow::Cursor_Off);
     return _lastbyte;
 }
-} // namespace beye
+} // namespace	usr
 

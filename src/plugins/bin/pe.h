@@ -1,5 +1,5 @@
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/pe.h
  * @brief       This file contains PE executable file definitions.
  * @version     -
@@ -21,7 +21,7 @@
 #include "_sys_dep.h"
 #endif
 
-namespace beye {
+namespace	usr {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack(1)
 #endif
@@ -169,5 +169,5 @@ typedef struct tagPE_OBJECT
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
 #endif
-} // namespace beye
+} // namespace	usr
 #endif

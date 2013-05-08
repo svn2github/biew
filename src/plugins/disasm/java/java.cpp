@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_II
+ * @namespace	usr_plugins_II
  * @file        plugins/disasm/java.c
  * @brief       This file contains implementation of Java disassembler.
  * @version     -
@@ -33,7 +33,7 @@ using namespace beye;
 #include "reg_form.h"
 #include "libbeye/file_ini.h"
 
-namespace beye {
+namespace	usr {
 static DisMode* parent;
 static const unsigned TAB_POS=10;
 
@@ -661,4 +661,4 @@ extern const REGISTRY_DISASM Java_Disasm =
   javaReadIni,
   javaWriteIni
 };
-} // namespace beye
+} // namespace	usr

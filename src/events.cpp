@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        events.c
  * @brief       This file contains console event handler of BEYE project.
  * @version     -
@@ -25,7 +25,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
 
-namespace beye {
+namespace	usr {
 
 static int KB_Buff[64];
 static size_t KB_freq = 0;
@@ -176,5 +176,5 @@ void __FASTCALL__ PostEvent(int code)
 {
   if(KB_freq < sizeof(KB_Buff)/sizeof(int)) KB_Buff[KB_freq++] = code;
 }
-} // namespace beye
+} // namespace	usr
 

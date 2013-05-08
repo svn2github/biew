@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/jvmclass.c
  * @brief       This file contains implementation of decoder for Java's ClassFile
  *              file format.
@@ -37,7 +37,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "libbeye/kbd_code.h"
 
-namespace beye {
+namespace	usr {
 enum {
     CONSTANT_UTF8		=1,
     CONSTANT_INTEGER		=3,
@@ -985,4 +985,4 @@ extern const REGISTRY_BIN jvmTable =
   jvm_GetPubSym,
   jvm_GetObjAttr
 };
-} // namespace beye
+} // namespace	usr

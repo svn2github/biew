@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/lx.c
  * @brief       This file contains implementation of LX (Linear eXecutable) file
  *              format decoder.
@@ -38,7 +38,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
 
-namespace beye {
+namespace	usr {
 union LX_LE lxe;
 int LXType;
 
@@ -1205,4 +1205,4 @@ extern const REGISTRY_BIN lxTable =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

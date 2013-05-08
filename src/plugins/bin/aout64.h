@@ -1,5 +1,5 @@
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/aout64.h
  * @brief       This file contains `a.out' object-file definitions, including
  *              extensions to 64-bit fields.
@@ -30,7 +30,7 @@
 #include "_sys_dep.h"
 #endif
 
-namespace beye {
+namespace	usr {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack(1)
 #endif
@@ -475,5 +475,5 @@ enum reloc_type
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
 #endif
-} // namespace beye
+} // namespace	usr
 #endif				/* __A_OUT_64_H__ */

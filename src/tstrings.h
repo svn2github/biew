@@ -1,5 +1,5 @@
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        tstrings.h
  * @brief       This file contains start of work for NLS support by BEYE.
  * @version     -
@@ -19,7 +19,7 @@
 
 #include "../version.h"
 
-namespace beye {
+namespace	usr {
 /** @def BEYE_VERSION
     Ver.SubVer.ExtraVer-ReleaseLevel.Test_FixPak_Level
   */
@@ -115,5 +115,5 @@ extern const char EXPAND_FAIL[];
 extern const char TRUNC_FAIL[];
 
 extern const char NOTHING_EDIT[];
-} // namespace beye
+} // namespace	usr
 #endif

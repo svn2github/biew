@@ -3,7 +3,7 @@
 
 #include "libbeye/bswap.h"
 
-namespace beye {
+namespace	usr {
 enum {
     TAB_POS		=10,
     PPC_LSHIFT_MASK	=0x0F, /* mask for left shift operations */
@@ -328,5 +328,5 @@ enum {
 #define Z22_SH  { '+',16, 6, 0 }
 #define Z22_DCM { '+',16, 6, 0 }
 
-} // namespace beye
+} // namespace	usr
 #endif

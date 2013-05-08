@@ -1,5 +1,5 @@
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        setup.h
  * @brief       This file included BEYE setup functions description.
  * @version     -
@@ -17,8 +17,8 @@
 #ifndef __SETUP__H
 #define __SETUP__H
 
-namespace beye {
+namespace	usr {
     const char*beyeGetHelpName();
     void       Setup();
-} // namespace beye
+} // namespace	usr
 #endif

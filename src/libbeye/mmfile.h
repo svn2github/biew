@@ -6,7 +6,7 @@
 
 #include "bfile.h"
 
-namespace beye {
+namespace	usr {
     class MMFile : public BFile {
 	public:
 	    MMFile();
@@ -59,5 +59,5 @@ namespace beye {
 	    __filesize_t		filepos;
 	    bool			primary;
     };
-} // namespace beye
+} // namespace	usr
 #endif

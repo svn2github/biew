@@ -1,5 +1,5 @@
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        bconsole.h
  * @brief       This file included BEYE console functions description.
  * @version     -
@@ -22,7 +22,7 @@
 
 #include "libbeye/twin.h"
 
-namespace beye {
+namespace	usr {
 
     extern TWindow *MainWnd,*HelpWnd,*TitleWnd,*CritErrWnd;
 
@@ -160,5 +160,5 @@ enum {
     void __FASTCALL__ __drawSinglePrompt(const char *prmt[]);
 
     bool __FASTCALL__ ungotstring(char *string);
-} // namespace beye
+} // namespace	usr
 #endif

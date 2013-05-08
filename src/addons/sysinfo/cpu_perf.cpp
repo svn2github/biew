@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_addons
+ * @namespace	usr_addons
  * @file        addons/sys/cpu_perf.c
  * @brief       This file contains cpu performance utility and tools.
  * @version     -
@@ -32,7 +32,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
-namespace beye {
+namespace	usr {
     class CPUPerformance_Addon : public Addon {
 	public:
 	    CPUPerformance_Addon();
@@ -105,4 +105,4 @@ extern const Addon_Info CPUPerformance = {
     "CPU ~performance",
     query_interface
 };
-} // namespace beye
+} // namespace	usr

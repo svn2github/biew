@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        refs.c
  * @brief       This file contains basic level routines for resolving references.
  * @version     -
@@ -26,9 +26,9 @@ using namespace beye;
 #include "beyeutil.h"
 #include "bconsole.h"
 
-namespace beye {
+namespace	usr {
 bool __FASTCALL__ AppendAsmRef(const DisMode& parent,char *str,__filesize_t ulShift,int mode,char codelen,__filesize_t r_sh)
 {
   return beye_context().bin_format().bind(parent,str,ulShift,mode,codelen,r_sh);
 }
-} // namespace beye
+} // namespace	usr

@@ -1,5 +1,5 @@
 /**
- * @namespace   beye_plugins_I
+ * @namespace	usr_plugins_I
  * @file        plugins/textmode.h
  * @brief       This file contains prototypes for textmode plugins.
  * @version     -
@@ -21,7 +21,7 @@
 #include "libbeye/file_ini.h"
 #endif
 
-namespace beye {
+namespace	usr {
 typedef struct tag_REGISTRY_NLS
 {
   const char *   set_name;
@@ -38,7 +38,7 @@ typedef struct tag_REGISTRY_NLS
     void __FASTCALL__ txt_cvt_full(char * str,int size,const unsigned char *tmpl);
     void __FASTCALL__ txt_cvt_hi80(char * str,unsigned size,const unsigned char *tmpl);
     void __FASTCALL__ txt_cvt_lo80(char * str,unsigned size,const unsigned char *tmpl);
-} // namespace beye
+} // namespace	usr
 #endif
 
 

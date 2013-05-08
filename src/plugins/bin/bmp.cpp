@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/bmp.c
  * @brief       This file contains implementation of decoder for BMP
  *              file format.
@@ -30,7 +30,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
 
-namespace beye {
+namespace	usr {
 static bool  __FASTCALL__ bmp_check_fmt()
 {
     if(	bmReadByteEx(0,BFile::Seek_Set) == 'B' &&
@@ -99,4 +99,4 @@ extern const REGISTRY_BIN bmpTable =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

@@ -1,6 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
  * @namespace   libbeye
  * @file        libbeye/libbeye.c
@@ -168,7 +168,7 @@ char *ulltoa (unsigned long long int value, char *string, int radix)
   return string;
 }
 #endif
-namespace beye {
+namespace	usr {
 bool __FASTCALL__ isseparate(int ch) { return (isspace(ch) || ispunct(ch)); }
 
 int __FASTCALL__ szTrimTrailingSpace(char *str)
@@ -783,4 +783,4 @@ Opaque::Opaque() {
 }
 
 Opaque::~Opaque() {}
-} // namespace beye
+} // namespace	usr

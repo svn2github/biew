@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_addons
+ * @namespace	usr_addons
  * @file        addons/sys/ascii.c
  * @brief       This file contains simple implementation ASCII table viewer.
  * @version     -
@@ -32,7 +32,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
-namespace beye {
+namespace	usr {
     class ASCII_Addon : public Addon {
 	public:
 	    ASCII_Addon();
@@ -99,5 +99,5 @@ extern const Addon_Info AsciiTable = {
     "~ASCII table",
     query_interface
 };
-} // namespace beye
+} // namespace	usr
 

@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/coff386.c
  * @brief       This file contains implementation of COFF-i386 file format decoder.
  * @version     -
@@ -37,7 +37,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "libbeye/kbd_code.h"
 
-namespace beye {
+namespace	usr {
 static CodeGuider* code_guider;
 inline uint16_t COFF_WORD(const uint8_t* cval) { return (uint16_t)(*(const uint16_t *)(const uint8_t *)cval); }
 inline uint32_t COFF_DWORD(const uint8_t* cval) { return (uint32_t)(*(const uint32_t *)(const uint8_t *)cval); }
@@ -750,4 +750,4 @@ extern const REGISTRY_BIN coff386Table =
   coff386_GetPubSym,
   coff386_GetObjAttr
 };
-} // namespace beye
+} // namespace	usr

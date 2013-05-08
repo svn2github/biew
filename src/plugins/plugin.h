@@ -4,7 +4,7 @@
 
 #include "libbeye/libbeye.h"
 
-namespace beye {
+namespace	usr {
     class TWindow;
     class CodeGuider;
     class Ini_Profile;
@@ -183,5 +183,5 @@ namespace beye {
 	    CodeGuider&			parent;
     };
 
-} //namespace beye
+} //namespace	usr
 #endif

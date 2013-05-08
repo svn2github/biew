@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/rdoff2.c
  * @brief       This file contains implementation of decoder for RDOFF v2 file format.
  * @version     -
@@ -28,7 +28,7 @@ using namespace beye;
 #include "beyehelp.h"
 #include "libbeye/kbd_code.h"
 
-namespace beye {
+namespace	usr {
 static __filesize_t __FASTCALL__ rdoff2_ShowHeader()
 {
   int endian;
@@ -105,4 +105,4 @@ extern const REGISTRY_BIN rdoff2Table =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

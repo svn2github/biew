@@ -1,6 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 
 #include <time.h>
 #include <utime.h>
@@ -11,7 +11,7 @@ using namespace beye;
 
 #include "bfile.h"
 
-namespace beye {
+namespace	usr {
 BFile::BFile()
 	:_handle(-1)
 {
@@ -249,4 +249,4 @@ bool BFile::set_ftime(const std::string& name,const ftime& data)
 }
 
 BFile bNull; /**< Stream associated with STDERR */
-} // namespace beye
+} // namespace	usr

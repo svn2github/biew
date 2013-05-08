@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/asf.c
  * @brief       This file contains implementation of decoder for ASF v1
  *              file format.
@@ -31,7 +31,7 @@ using namespace beye;
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
 
-namespace beye {
+namespace	usr {
 static bool  __FASTCALL__ asf_check_fmt()
 {
     const unsigned char asfhdrguid[16]= {0x30,0x26,0xB2,0x75,0x8E,0x66,0xCF,0x11,0xA6,0xD9,0x00,0xAA,0x00,0x62,0xCE,0x6C};
@@ -71,4 +71,4 @@ extern const REGISTRY_BIN asfTable =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

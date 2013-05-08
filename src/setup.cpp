@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        setup.c
  * @brief       This file contains BEYE setup.
  * @version     -
@@ -33,7 +33,7 @@ using namespace beye;
 #ifdef __QNX4__
 extern int photon,bit7;
 #endif
-namespace beye {
+namespace	usr {
 
 const char * beyeGetHelpName()
 {
@@ -274,4 +274,4 @@ void Setup()
   delete ewnd[2];
   delete wdlg;
 }
-} // namespace beye
+} // namespace	usr

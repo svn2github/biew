@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        bin_util.c
  * @brief       This file contains common functions of plugins/bin of BEYE project.
  * @version     -
@@ -32,7 +32,7 @@ using namespace beye;
 #include "tstrings.h"
 #include "plugins/disasm.h"
 
-namespace beye {
+namespace	usr {
 linearArray *PubNames = NULL;
 
 tCompare __FASTCALL__ fmtComparePubNames(const any_t* v1,const any_t* v2)
@@ -424,4 +424,4 @@ void __FASTCALL__ udnTerm( Ini_Profile& ini ) {
   }
   beye_context().write_profile_string(ini,"Beye","Browser","udn_list",udn_fname);
 }
-} // namespace beye
+} // namespace	usr

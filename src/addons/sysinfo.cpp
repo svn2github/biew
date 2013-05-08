@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        sysinfo.c
  * @brief       This file contains system information utility and tools.
  * @version     -
@@ -24,7 +24,7 @@ using namespace beye;
 #include "bconsole.h"
 #include "beyeutil.h"
 
-namespace beye {
+namespace	usr {
 extern const Addon_Info AsciiTable;
 extern const Addon_Info CPUPerformance;
 extern const Addon_Info InputViewer;
@@ -58,5 +58,5 @@ sysinfo::sysinfo()
 }
 
 sysinfo::~sysinfo() {}
-} // namespace beye
+} // namespace	usr
 

@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        mainloop.c
  * @brief       This file is analog of message loop routine.
  * @version     -
@@ -34,7 +34,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "plugins/plugin.h"
 
-namespace beye {
+namespace	usr {
 extern REGISTRY_BIN mzTable;
 
 __filesize_t lastbyte;
@@ -315,5 +315,5 @@ void BeyeContext::main_loop()
 	drawTitle();
     }
 }
-} // namespace beye
+} // namespace	usr
 

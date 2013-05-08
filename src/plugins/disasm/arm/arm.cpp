@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_II
+ * @namespace	usr_plugins_II
  * @file        plugins/disasm/arm.c
  * @brief       This file contains implementation of ARM disassembler.
  * @version     -
@@ -32,7 +32,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/file_ini.h"
 
-namespace beye {
+namespace	usr {
 static char *outstr;
 
 static int armBitness=DAB_USE32;
@@ -271,4 +271,4 @@ extern const REGISTRY_DISASM ARM_Disasm =
   armReadIni,
   armWriteIni
 };
-} // namespace beye
+} // namespace	usr

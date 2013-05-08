@@ -22,9 +22,9 @@
 #include <map>
 #include <vector>
 
-using namespace beye;
+using namespace	usr;
 
-namespace beye {
+namespace	usr {
 /******************************************************************\
 * Low level routines                                               *
 \******************************************************************/
@@ -234,5 +234,5 @@ namespace beye {
 	    bool		updated;
 	    int			__nled;
     };
-}// namespace beye
+}// namespace	usr
 #endif

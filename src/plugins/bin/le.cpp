@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/le.c
  * @brief       This file contains implementation of LE (Linear Executable) file
  *              format decoder.
@@ -36,7 +36,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
-namespace beye {
+namespace	usr {
 extern BFile* lx_cache;
 
 static __filesize_t __FASTCALL__ ShowNewHeaderLE()
@@ -348,4 +348,4 @@ extern const REGISTRY_BIN leTable =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

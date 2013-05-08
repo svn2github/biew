@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/lmf.c
  * @brief       This file contains implementation of lmf (QNX4 executable file)
  *              file format decoder.
@@ -36,7 +36,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
-namespace beye {
+namespace	usr {
 enum {
     MAXREC		=200,
     MINREC		=20,
@@ -518,4 +518,4 @@ extern const REGISTRY_BIN lmfTable=
 	NULL,
 	NULL
 };
-} // namespace beye
+} // namespace	usr

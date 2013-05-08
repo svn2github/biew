@@ -1,5 +1,5 @@
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/coff386.h
  * @brief       This file contains coff-i386 file format definition.
  * @version     -
@@ -26,7 +26,7 @@
 #include "_sys_dep.h"
 #endif
 
-namespace beye {
+namespace	usr {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack(1)
 #endif
@@ -364,4 +364,4 @@ enum {
 #endif
 
 #define RELOC struct external_reloc
-} // namespace beye
+} // namespace	usr

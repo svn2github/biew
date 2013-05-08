@@ -22,7 +22,7 @@ inline int backtrace(any_t** buffer,size_t siz) { return 0; }
 inline int mprotect(any_t* addr,size_t len,int prot) { return -1; }
 #endif
 
-namespace beye {
+namespace	usr {
 
     extern volatile unsigned long long int my_profile_start,my_profile_end,my_profile_total;
 

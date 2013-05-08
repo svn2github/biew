@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_II
+ * @namespace	usr_plugins_II
  * @file        plugins/disasm/arm.c
  * @brief       This file contains implementation of Data disassembler.
  * @version     -
@@ -28,7 +28,7 @@ using namespace beye;
 #include "beyeutil.h"
 #include "plugins/disasm/arm/arm.h"
 
-namespace beye {
+namespace	usr {
 static DisMode* parent;
 enum {
     ARM_USE_SP	=0x00100000UL,
@@ -329,4 +329,4 @@ void __FASTCALL__ arm16Init(DisMode* _parent)
 }
 
 void __FASTCALL__ arm16Term() {}
-} // namespace beye
+} // namespace	usr

@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/aout.c
  * @brief       This file contains implementation of a.out file format decoder.
  * @version     -
@@ -34,7 +34,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
 
-namespace beye {
+namespace	usr {
 static char is_msbf=0; /* is most significand byte first */
 static char is_64bit=0;
 
@@ -197,4 +197,4 @@ extern const REGISTRY_BIN aoutTable =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

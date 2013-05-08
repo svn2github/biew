@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_addons
+ * @namespace	usr_addons
  * @file        addons/tools/dig_conv.c
  * @brief       This file contains implementation of digital convertor.
  * @version     -
@@ -30,7 +30,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
-namespace beye {
+namespace	usr {
     class DigitalConverter_Addon : public Addon {
 	public:
 	    DigitalConverter_Addon();
@@ -236,4 +236,4 @@ extern const Addon_Info DigitalConvertor = {
     "~Digital convertor",
     query_interface
 };
-} // namespace beye
+} // namespace	usr

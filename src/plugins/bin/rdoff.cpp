@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/rdoff.c
  * @brief       This file contains implementation of decoder for RDOFF v1 file format.
  * @version     -
@@ -35,7 +35,7 @@ using namespace beye;
 #include "plugins/bin/rdoff.h"
 #include "libbeye/kbd_code.h"
 
-namespace beye {
+namespace	usr {
 static CodeGuider* code_guider;
 struct rdoff_ImpName
 {
@@ -784,4 +784,4 @@ extern const REGISTRY_BIN rdoffTable =
   rdoffGetPubSym,
   rdoffGetObjAttr
 };
-} // namespace beye
+} // namespace	usr

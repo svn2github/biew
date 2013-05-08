@@ -1,5 +1,5 @@
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        bmfile.h
  * @brief       This file contains prototypes of Buffering streams Manager.
  * @version     -
@@ -22,7 +22,7 @@
 #include "libbeye/bbio.h"
 #include "beye.h"
 
-namespace beye {
+namespace	usr {
     enum {
 	BBIO_CACHE_SIZE        =0xFFFF,  /* 64k */
 	BBIO_SMALL_CACHE_SIZE  =0x4000  /* 16k */
@@ -91,5 +91,5 @@ namespace beye {
     inline bool		bmWriteDWordEx(__fileoff_t pos,BFile::e_seek origin,uint32_t dword) { beye_context().sc_bm_file().seek(pos,origin); return beye_context().sc_bm_file().write_dword(dword); }
     inline bool		bmWriteQWordEx(__fileoff_t pos,BFile::e_seek origin,uint64_t dword) { beye_context().sc_bm_file().seek(pos,origin); return beye_context().sc_bm_file().write_qword(dword); }
     inline bool		bmWriteBuffEx(__fileoff_t pos,BFile::e_seek origin,any_t* buff,unsigned len) { beye_context().sc_bm_file().seek(pos,origin);  return beye_context().sc_bm_file().write(buff,len); }
-} // namespace beye
+} // namespace	usr
 #endif

@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_II
+ * @namespace	usr_plugins_II
  * @file        plugins/disasm/ppc.c
  * @brief       This file contains implementation of PowerPC disassembler.
  * @version     -
@@ -34,7 +34,7 @@ using namespace beye;
 #include "libbeye/file_ini.h"
 
 
-namespace beye {
+namespace	usr {
 static DisMode* parent;
 static char *outstr;
 
@@ -1677,4 +1677,4 @@ extern const REGISTRY_DISASM PPC_Disasm =
   ppcReadIni,
   ppcWriteIni
 };
-} // namespace beye
+} // namespace	usr

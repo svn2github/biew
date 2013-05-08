@@ -1,7 +1,7 @@
 #ifndef ARMV5TE_H
 #define ARMV5TE_H 1
 
-namespace beye {
+namespace	usr {
     enum {
 	TAB_POS		=10,
 	ARM_V1		=0x00000001UL,
@@ -23,5 +23,5 @@ namespace beye {
     void __FASTCALL__ arm32Term();
     void __FASTCALL__ arm32Disassembler(DisasmRet *dret,__filesize_t ulShift,
 						uint32_t opcode, unsigned flags);
-} // namespace beye
+} // namespace	usr
 #endif

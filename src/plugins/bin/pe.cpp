@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/pe.c
  * @brief       This file contains implementation of PE (Portable Executable)
  *              file format decoder.
@@ -44,7 +44,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
-namespace beye {
+namespace	usr {
 static CodeGuider* code_guider;
 #define ARRAY_SIZE(x)       (sizeof(x)/sizeof(x[0]))
 
@@ -1365,4 +1365,4 @@ extern const REGISTRY_BIN peTable =
   peGetPubSym,
   peGetObjAttr
 };
-} // namespace beye
+} // namespace	usr

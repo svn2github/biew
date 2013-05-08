@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/arch.c
  * @brief       This file contains implementation of Archive file format decoder.
  * @version     -
@@ -37,7 +37,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 
-namespace beye {
+namespace	usr {
 ar_hdr arch;
 
 static __filesize_t __FASTCALL__ ShowARCHHeader()
@@ -207,4 +207,4 @@ extern const REGISTRY_BIN archTable =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

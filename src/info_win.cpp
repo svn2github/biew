@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        info_win.c
  * @brief       This file contains information interface of BEYE project.
  * @version     -
@@ -35,7 +35,7 @@ using namespace beye;
 #include "libbeye/libbeye.h"
 #include "plugins/plugin.h"
 
-namespace beye {
+namespace	usr {
 static void  __FASTCALL__ ShowFunKey(TWindow* w,const char * key,const char * text)
 {
  w->set_color(prompt_cset.digit);
@@ -646,4 +646,4 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
   delete hwnd;
   return ret_addr;
 }
-} // namespace beye
+} // namespace	usr

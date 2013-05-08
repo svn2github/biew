@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_auto
+ * @namespace	usr_plugins_auto
  * @file        plugins/bin/sis.c
  * @brief       This file contains implementation of decoder for Sis (EPOC)
  *              file format.
@@ -30,7 +30,7 @@ using namespace beye;
 #include "plugins/bin/mmio.h"
 #include "plugins/disasm.h"
 
-namespace beye {
+namespace	usr {
 struct SisHeader
 {
     unsigned long UID1;
@@ -164,4 +164,4 @@ extern const REGISTRY_BIN sisTable =
   NULL,
   NULL
 };
-} // namespace beye
+} // namespace	usr

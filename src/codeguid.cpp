@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye
+ * @namespace	usr
  * @file        codeguid.c
  * @brief       This file contains code navigation routines.
  * @version     -
@@ -35,7 +35,7 @@ using namespace beye;
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 
-namespace beye {
+namespace	usr {
 CodeGuider::CodeGuider() {
     strcpy(codeguid_image,"=>[X]");
 }
@@ -199,5 +199,5 @@ char* CodeGuider::encode_address(__filesize_t cfpos,bool AddressDetail) const
     strcat(addr,": ");
     return addr;
 }
-} // namespace beye
+} // namespace	usr
 

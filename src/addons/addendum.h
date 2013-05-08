@@ -4,7 +4,7 @@
 
 #include "libbeye/libbeye.h"
 
-namespace beye {
+namespace	usr {
     struct Addon_Info;
     class addendum : public Opaque {
 	public:
@@ -16,5 +16,5 @@ namespace beye {
 	    size_t	defToolSel;
 	    std::vector<const Addon_Info*> list;
     };
-} // namespace beye
+} // namespace	usr
 #endif

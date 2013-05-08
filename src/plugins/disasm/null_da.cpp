@@ -1,8 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
-using namespace beye;
+using namespace	usr;
 /**
- * @namespace   beye_plugins_II
+ * @namespace	usr_plugins_II
  * @file        plugins/disasm/null_da.c
  * @brief       This file contains implementation of Data disassembler.
  * @version     -
@@ -30,7 +30,7 @@ using namespace beye;
 #include "reg_form.h"
 #include "libbeye/file_ini.h"
 
-namespace beye {
+namespace	usr {
 static int nulWidth = 1;
 static DisMode* parent;
 static const char *width_names[] =
@@ -179,4 +179,4 @@ extern const REGISTRY_DISASM Null_Disasm =
   nulReadIni,
   nulWriteIni
 };
-} // namespace beye
+} // namespace	usr
