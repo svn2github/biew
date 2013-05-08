@@ -164,7 +164,7 @@ unsigned BinMode::paint( unsigned keycode,unsigned tshift )
 	    count=BWidth*_b_width;
 	    _index = cfp + j*count;
 	    len = _index < limit ? (int)count : _index < flen ? (int)(flen - _index) : 0;
-	    if(len) { lastbyte = _index + len; BMReadBufferEx((any_t*)buffer,len,_index,BFile::Seek_Set); }
+	    if(len) { lastbyte = _index + len; BMReadBufferEx((any_t*)buffer,len,_index,binary_stream::Seek_Set); }
 	    if(bin_mode!=MOD_PLAIN) {
 		unsigned i,ii;
 		for(i=ii=0;i<BWidth;i++) {
@@ -212,7 +212,7 @@ const char*   BinMode::misckey_name() const { return "Modify"; }
 void BinMode::save_video(Opaque& _this,unsigned char *buff,unsigned size)
 {
     BinMode& it = static_cast<BinMode&>(_this);
-    BFile* bHandle;
+    binary_stream* bHandle;
     std::string fname;
     unsigned i;
     fname = BMName();
@@ -222,11 +222,11 @@ void BinMode::save_video(Opaque& _this,unsigned char *buff,unsigned size)
 	errnoMessageBox(WRITE_FAIL,"",errno);
 	return;
     }
-    bHandle->seek(BMGetCurrFilePos(),BFile::Seek_Set);
-    if(it.bin_mode==MOD_REVERSE) bHandle->seek(1,BFile::Seek_Cur);
+    bHandle->seek(BMGetCurrFilePos(),binary_stream::Seek_Set);
+    if(it.bin_mode==MOD_REVERSE) bHandle->seek(1,binary_stream::Seek_Cur);
     for(i=0;i<size;i++) {
-	if(!bHandle->write_byte(buff[i])) goto err;
-	bHandle->seek(1,BFile::Seek_Cur);
+	if(!bHandle->write((uint8_t)buff[i])) goto err;
+	bHandle->seek(1,binary_stream::Seek_Cur);
     }
     delete bHandle;
     BMReRead();
@@ -251,8 +251,8 @@ void BinMode::misckey_action() /* EditBin */
 	    flen = BMGetFLength();
 	    cfp = BMGetCurrFilePos();
 	    size = (unsigned)((unsigned long)msize > (flen-cfp) ? (flen-cfp) : msize);
-	    BMReadBufferEx(buff,size*2,cfp,BFile::Seek_Set);
-	    BMSeek(cfp,BFile::Seek_Set);
+	    BMReadBufferEx(buff,size*2,cfp,binary_stream::Seek_Set);
+	    BMSeek(cfp,binary_stream::Seek_Set);
 	    for(i=0;i<size;i++) buff[i]=bin_mode==MOD_BINARY?buff[i*2]:buff[i*2+1];
 	    inited=editInitBuffs(tvioWidth-virtWidthCorr,buff,size);
 	    delete buff;

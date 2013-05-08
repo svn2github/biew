@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include <stdlib.h>
+#include <string.h>
 
 #ifndef __NORECURSIVE
 #include "libbeye/sysdep/__config.h"
@@ -46,9 +47,9 @@ extern void __FASTCALL__ memupr(any_t*buffer,unsigned cb_buffer);
 extern void __FASTCALL__ memlwr(any_t*buffer,unsigned cb_buffer);
 
 #if defined(__GLIBC__) || defined (__UNIX__)
-#define strupr(s) memupr(s,strlen(s)) /**< C library of *nix systems lacks strupr function */
-#define strlwr(s) memlwr(s,strlen(s)) /**< C library of *nix systems lacks strlwr function */
-#define stricmp strcasecmp            /**< Alias of stricmp for *nix systems */
+inline void strupr(char* s) { memupr(s,::strlen(s)); } /**< C library of *nix systems lacks strupr function */
+inline void strlwr(char* s) { memlwr(s,::strlen(s)); } /**< C library of *nix systems lacks strlwr function */
+inline int stricmp(const char* s1,const char* s2) { return strcasecmp(s1,s2); } /**< Alias of stricmp for *nix systems */
 #endif
 #ifndef HAVE_LTOA
 extern char *        ltoa(long _value, char *_s, int _radix);
@@ -76,6 +77,11 @@ namespace	usr {
     typedef uint64_t __filesize_t;
 #define FILEOFF_MAX std::numeric_limits<int64_t>::max()
 #define FILESIZE_MAX std::numeric_limits<uint64_t>::max()
+
+enum data_type_qualifier_byte_t{ type_byte=0 };
+enum data_type_qualifier_word_t{ type_word=0 };
+enum data_type_qualifier_dword_t{ type_dword=0 };
+enum data_type_qualifier_qword_t{ type_qword=0 };
 
     class Opaque {
 	public:

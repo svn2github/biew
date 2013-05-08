@@ -61,10 +61,10 @@ struct SisHeader
 static bool  __FASTCALL__ sis_check_fmt()
 {
     unsigned long id1,id2,id3;
-    bmSeek(0,BFile::Seek_Set);
-    id1=bmReadDWordEx(0,BFile::Seek_Set);
-    id2=bmReadDWordEx(4,BFile::Seek_Set);
-    id3=bmReadDWordEx(8,BFile::Seek_Set);
+    bmSeek(0,binary_stream::Seek_Set);
+    id1=bmReadDWordEx(0,binary_stream::Seek_Set);
+    id2=bmReadDWordEx(4,binary_stream::Seek_Set);
+    id3=bmReadDWordEx(8,binary_stream::Seek_Set);
     if((id2==0x10003A12 || id2==0x1000006D) && id3==0x10000419) return true;
     /* try s60 3rd */
     if(id1==0x10201A7A) return true;
@@ -88,7 +88,7 @@ static __filesize_t __FASTCALL__ Show_Sis_Header()
  struct SisHeader sis;
  __filesize_t fpos,fpos2;
  fpos2=fpos = BMGetCurrFilePos();
- bmReadBufferEx(&sis,sizeof(sis),0,BFile::Seek_Set);
+ bmReadBufferEx(&sis,sizeof(sis),0,binary_stream::Seek_Set);
  if(sis.UID1==0x10201A7A) return Show_Sis3_Header();
  switch(sis.Type)
  {

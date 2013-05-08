@@ -107,12 +107,12 @@ typedef struct tag_hexView {
     unsigned char hardlen;
 }hexView;
 
-static char *  __FASTCALL__ GetB(__filesize_t val) { return GetBinary(BMReadByteEx(val,BFile::Seek_Set)); }
-static char *  __FASTCALL__ Get2D(__filesize_t val) { return Get2Digit(BMReadByteEx(val,BFile::Seek_Set)); }
+static char *  __FASTCALL__ GetB(__filesize_t val) { return GetBinary(BMReadByteEx(val,binary_stream::Seek_Set)); }
+static char *  __FASTCALL__ Get2D(__filesize_t val) { return Get2Digit(BMReadByteEx(val,binary_stream::Seek_Set)); }
 static char *  __FASTCALL__ Get4D(__filesize_t val)
 {
     unsigned short v;
-    v = BMReadWordEx(val,BFile::Seek_Set);
+    v = BMReadWordEx(val,binary_stream::Seek_Set);
     if(hendian==1) v=le2me_16(v);
     else
     if(hendian==2) v=be2me_16(v);
@@ -121,7 +121,7 @@ static char *  __FASTCALL__ Get4D(__filesize_t val)
 static char *  __FASTCALL__ Get8D(__filesize_t val)
 {
     unsigned long v;
-    v = BMReadDWordEx(val,BFile::Seek_Set);
+    v = BMReadDWordEx(val,binary_stream::Seek_Set);
     if(hendian==1) v=le2me_32(v);
     else
     if(hendian==2) v=be2me_32(v);
@@ -198,7 +198,7 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 		    len += dlen + 1;
 		    if(hmode == 1) if(freq == 3) { freq = -1; len++; }
 		}
-		BMReadBufferEx((any_t*)&outstr[width - scrHWidth],rwidth*__inc,sindex,BFile::Seek_Set);
+		BMReadBufferEx((any_t*)&outstr[width - scrHWidth],rwidth*__inc,sindex,binary_stream::Seek_Set);
 		xmin = tvioWidth-scrHWidth;
 		MainWnd->direct_write(1,i + 1,outstr,xmin);
 		if(isHOnLine(sindex,scrHWidth)) {

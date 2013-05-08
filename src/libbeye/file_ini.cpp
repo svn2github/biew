@@ -764,7 +764,7 @@ bool Ini_Profile::open(const std::string& _fname)
     handler=new(zeromem) Ini_io(*this);
     fname=_fname;
     updated=false;
-    if(BFile::exists(_fname)) rc=handler->open(fname);
+    if(binary_stream::exists(_fname)) rc=handler->open(fname);
 
     if(rc) file_scaning();
     has_error = !rc;
@@ -806,7 +806,7 @@ static const char* HINI_HEADER[]={
 
 bool Ini_Profile::__makeIni(std::fstream& hout)
 {
-    if(BFile::exists(fname)) BFile::unlink(fname);
+    if(binary_stream::exists(fname)) binary_stream::unlink(fname);
     hout.open(fname.c_str(),std::ios_base::out);
     if(hout.is_open()) for(unsigned i=0;i<2;i++) hout<<HINI_HEADER[i]<<std::endl;
     return true;

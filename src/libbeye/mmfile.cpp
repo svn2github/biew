@@ -18,10 +18,10 @@ MMFile::MMFile()
 
 MMFile::~MMFile() {}
 
-bool MMFile::write_byte(uint8_t bVal) { UNUSED(bVal); return false; }
-bool MMFile::write_word(uint16_t wVal) { UNUSED(wVal); return false; }
-bool MMFile::write_dword(uint32_t dwVal) { UNUSED(dwVal); return false; }
-bool MMFile::write_qword(uint64_t qwVal) { UNUSED(qwVal); return false; }
+bool MMFile::write(uint8_t bVal) { UNUSED(bVal); return false; }
+bool MMFile::write(uint16_t wVal) { UNUSED(wVal); return false; }
+bool MMFile::write(uint32_t dwVal) { UNUSED(dwVal); return false; }
+bool MMFile::write(uint64_t qwVal) { UNUSED(qwVal); return false; }
 bool MMFile::write(const any_t* _buffer,unsigned cbBuffer)
 {
     UNUSED(_buffer);
@@ -37,7 +37,7 @@ any_t* MMFile::buffer() const
 bool MMFile::dup(MMFile& it) const
 {
     bool rc;
-    if(!(rc=BFile::dup(it))) return rc;
+    if(!(rc=binary_stream::dup(it))) return rc;
     it.addr=addr;
     it.mode=mode;
     it.filepos=filepos;
@@ -45,7 +45,7 @@ bool MMFile::dup(MMFile& it) const
     return true;
 }
 
-BFile* MMFile::dup() const
+binary_stream* MMFile::dup() const
 {
     MMFile* ret = new(zeromem) MMFile;
     if(!dup(*ret)) return &bNull;
@@ -64,7 +64,7 @@ __filesize_t MMFile::tell() const
 
 bool MMFile::eof() const { return chk_eof(); }
 
-uint8_t MMFile::read_byte()
+uint8_t MMFile::read(const data_type_qualifier_byte_t&)
 {
     uint8_t rval;
     rval = ((uint8_t*)addr)[filepos++];
@@ -72,7 +72,7 @@ uint8_t MMFile::read_byte()
     return rval;
 }
 
-uint16_t MMFile::read_word()
+uint16_t MMFile::read(const data_type_qualifier_word_t&)
 {
     uint16_t rval=-1;
     read(&rval,sizeof(uint16_t));
@@ -80,7 +80,7 @@ uint16_t MMFile::read_word()
     return rval;
 }
 
-uint32_t MMFile::read_dword()
+uint32_t MMFile::read(const data_type_qualifier_dword_t&)
 {
     uint32_t rval=-1;
     read(&rval,sizeof(uint32_t));
@@ -88,7 +88,7 @@ uint32_t MMFile::read_dword()
     return rval;
 }
 
-uint64_t MMFile::read_qword()
+uint64_t MMFile::read(const data_type_qualifier_qword_t&)
 {
     uint64_t rval=-1;
     read(&rval,sizeof(uint64_t));
@@ -143,7 +143,7 @@ bool MMFile::open(const std::string& _fname,unsigned _openmode)
 {
     mode=_openmode;
     if(!is_writeable(mode)) {
-	if(BFile::open(_fname,_openmode)==true) {
+	if(binary_stream::open(_fname,_openmode)==true) {
 	    /* Attempt open as MMF */
 	    if(flength() <= __filesize_t(std::numeric_limits<long>::max())) {
 		addr = ::mmap(NULL,flength(),mk_prot(_openmode),mk_flags(_openmode),handle(),0L);
@@ -160,7 +160,7 @@ bool MMFile::close()
     if(is_writeable(mode)) flush();
     if(primary) {
 	::munmap(addr,flength());
-	return BFile::close();
+	return binary_stream::close();
     }
     return true;
 }
@@ -177,16 +177,16 @@ bool MMFile::chsize(__filesize_t newsize)
     bool can_continue = false;
     if(newsize < oldsize) { /* truncate */
 	if((new_addr = ::mremap(addr,oldsize,newsize,MREMAP_MAYMOVE)) != (any_t*)-1) can_continue = true;
-	if(can_continue) can_continue = BFile::chsize(newsize);
+	if(can_continue) can_continue = binary_stream::chsize(newsize);
     } else { /* expand */
-	can_continue=BFile::chsize(newsize);
+	can_continue=binary_stream::chsize(newsize);
 	if(can_continue) can_continue = ((new_addr = ::mremap(addr,oldsize,newsize,MREMAP_MAYMOVE)) != (any_t*)-1);
     }
     if(can_continue) {
 	addr = new_addr;
 	return true;
     } else /* Attempt to unroll transaction back */
-	BFile::chsize(oldsize);
+	binary_stream::chsize(oldsize);
     return false;
 }
 const bool MMFile::has_mmio=true;

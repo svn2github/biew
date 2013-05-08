@@ -157,7 +157,7 @@ void DisMode::fill_prev_asm_page(__filesize_t bound,unsigned predist)
     for(j = 0;;j++) {
 	DisasmRet dret;
 	addr = distin + totallen;
-	BMReadBufferEx(disCodeBuffer,disMaxCodeLen,addr,BFile::Seek_Set);
+	BMReadBufferEx(disCodeBuffer,disMaxCodeLen,addr,binary_stream::Seek_Set);
 	dret = disassembler(distin,(unsigned char*)disCodeBuffer,__DISF_SIZEONLY);
 	if(addr >= bound) break;
 	totallen += dret.codelen;
@@ -239,7 +239,7 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 	showref = disNeedRef;
 	addrdet = hexAddressResolv;
 	disNeedRef = Ref_None; hexAddressResolv = 0;
-	BMReadBufferEx(disCodeBuffer,disMaxCodeLen,cfpos,BFile::Seek_Set);
+	BMReadBufferEx(disCodeBuffer,disMaxCodeLen,cfpos,binary_stream::Seek_Set);
 	DisasmPrepareMode = true;
 	dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_SIZEONLY);
 	if(cfpos + dret.codelen != amocpos && cfpos && amocpos) keycode = KE_SUPERKEY;
@@ -284,7 +284,7 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 	    if(cfpos < flen) {
 		len = cfpos + disMaxCodeLen < flen ? disMaxCodeLen : (int)(flen - cfpos);
 		::memset(disCodeBuffer,0,disMaxCodeLen);
-		BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,BFile::Seek_Set);
+		BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,binary_stream::Seek_Set);
 		dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
 		if(i == 0) CurrStrLen = dret.codelen;
 		CurrStrLenBuff[i] = dret.codelen;
@@ -376,7 +376,7 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 		    MainWnd->clreol();
 		}
 		cfpos += dret.codelen;
-		BMSeek(cfpos,BFile::Seek_Set);
+		BMSeek(cfpos,binary_stream::Seek_Set);
 	    } else {
 		MainWnd->direct_write(1,i + 1,outstr,width);
 		CurrStrLenBuff[i] = 0;
@@ -569,7 +569,7 @@ int DisMode::full_asm_edit(TWindow * ewnd)
     start = 0;
 
     rlen = (__filesize_t)edit_cp + max_buff_size < flen ? max_buff_size : (unsigned)(flen - edit_cp);
-    BMReadBufferEx((any_t*)EditorMem.buff,rlen,edit_cp,BFile::Seek_Set);
+    BMReadBufferEx((any_t*)EditorMem.buff,rlen,edit_cp,binary_stream::Seek_Set);
     ::memcpy(EditorMem.save,EditorMem.buff,max_buff_size);
     ::memset(EditorMem.alen,TWC_DEF_FILLER,height);
 
@@ -626,11 +626,11 @@ int DisMode::full_asm_edit(TWindow * ewnd)
 	    case KE_CTL_F(3): beye_context().select_tool(); continue;
 	    case KE_F(2)    :
 		{
-		    BFile* bHandle;
+		    binary_stream* bHandle;
 		    std::string fname;
 		    fname = BMName();
 		    if((bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE)) != &bNull) {
-			bHandle->seek(edit_cp,BFile::Seek_Set);
+			bHandle->seek(edit_cp,binary_stream::Seek_Set);
 			if(!bHandle->write((any_t*)EditorMem.buff,rlen))
 			    errnoMessageBox(WRITE_FAIL,"",errno);
 			delete bHandle;
@@ -755,7 +755,7 @@ __filesize_t DisMode::search_engine(TWindow *pwnd, __filesize_t start,
 		len = cfpos + disMaxCodeLen < flen ? disMaxCodeLen : (int)(flen - cfpos);
 		::memset(disCodeBuffer,0,disMaxCodeLen);
 		dfpos = cfpos;
-		BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,BFile::Seek_Set);
+		BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,binary_stream::Seek_Set);
 		dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
 		cfpos -= lw;
 	    } else break;
@@ -763,7 +763,7 @@ __filesize_t DisMode::search_engine(TWindow *pwnd, __filesize_t start,
 	    len = cfpos + disMaxCodeLen < flen ? disMaxCodeLen : (int)(flen - cfpos);
 	    ::memset(disCodeBuffer,0,disMaxCodeLen);
 	    dfpos = cfpos;
-	    BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,BFile::Seek_Set);
+	    BMReadBufferEx((any_t*)disCodeBuffer,len,cfpos,binary_stream::Seek_Set);
 	    dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
 	    cfpos += dret.codelen;
 	    if(cfpos >= flen) break;
@@ -779,7 +779,7 @@ __filesize_t DisMode::search_engine(TWindow *pwnd, __filesize_t start,
     }
     delete disSearchBuff;
     bye:
-    BMSeek(sfpos, BFile::Seek_Set);
+    BMSeek(sfpos, binary_stream::Seek_Set);
     DumpMode = false;
     return retval;
 }
@@ -911,7 +911,7 @@ bool DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,
 	  strcat(comments,"->\"");
 	  for(_index = 3;_index < sizeof(comments)-5;_index++)
 	  {
-	    bmSeek(pa+_index-3,BFile::Seek_Set);
+	    bmSeek(pa+_index-3,binary_stream::Seek_Set);
 	    rch = bmReadByte();
 	    if(isprint(rch)) comments[_index] = rch;
 	    else break;
@@ -1051,7 +1051,7 @@ bool DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,
      strcpy(dis_comments,comments);
    }
   }
-  bmSeek(fpos,BFile::Seek_Set);
+  bmSeek(fpos,binary_stream::Seek_Set);
   return app;
 }
 
@@ -1071,7 +1071,7 @@ bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__f
    /* Forward prediction: ulShift = offset of binded field but r_sh is
       pointer where this field is referenced. */
    memset(disCodeBufPredict,0,disMaxCodeLen*PREDICT_DEPTH);
-   bmSeek(r_sh, BFile::Seek_Set);
+   bmSeek(r_sh, binary_stream::Seek_Set);
    bmReadBuffer(disCodeBufPredict,disMaxCodeLen*PREDICT_DEPTH);
    dret = disassembler(r_sh,(MBuffer)disCodeBufPredict,__DISF_GETTYPE);
  }
@@ -1136,9 +1136,9 @@ bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__f
 	unsigned long app;
 		try_rip:
 		_fpos = BMGetCurrFilePos();
-		_defval = dret.codelen==8 ? BMReadQWordEx(r_sh+dret.field,BFile::Seek_Set):
-					    BMReadDWordEx(r_sh+dret.field,BFile::Seek_Set);
-		BMSeek(_fpos,BFile::Seek_Set);
+		_defval = dret.codelen==8 ? BMReadQWordEx(r_sh+dret.field,binary_stream::Seek_Set):
+					    BMReadDWordEx(r_sh+dret.field,binary_stream::Seek_Set);
+		BMSeek(_fpos,binary_stream::Seek_Set);
 	__tmp=beye_context().bin_format().pa2va(r_sh+dret.field);
 	_defval += (__tmp!=Bin_Format::Bad_Address ?
 		    __tmp :
@@ -1227,7 +1227,7 @@ bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__f
    }
    if(appended && !DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
  }
- bmSeek(fpos,BFile::Seek_Set);
+ bmSeek(fpos,binary_stream::Seek_Set);
  return appended;
 }
 

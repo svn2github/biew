@@ -64,8 +64,8 @@ bool BBio_File::__fill(__fileoff_t pos)
 	vfb.f_start = pos;
 	remaind = _flength - pos;
 	vfb.buflen = (__filesize_t)vfb.bufsize < remaind ? vfb.bufsize : (unsigned)remaind;
-	BFile::seek(pos,Seek_Set);
-	ret = (unsigned)BFile::read(mbuff,vfb.buflen) == vfb.buflen;
+	binary_stream::seek(pos,Seek_Set);
+	ret = (unsigned)binary_stream::read(mbuff,vfb.buflen) == vfb.buflen;
     }
     return ret;
 }
@@ -77,8 +77,8 @@ bool BBio_File::__flush()
     bool ret;
     ret = true;
     if(!vfb.updated) {
-	BFile::seek(vfb.f_start,Seek_Set);
-	if(vfb.buflen)	ret = (unsigned)BFile::write(mbuff,vfb.buflen) == vfb.buflen;
+	binary_stream::seek(vfb.f_start,Seek_Set);
+	if(vfb.buflen)	ret = (unsigned)binary_stream::write(mbuff,vfb.buflen) == vfb.buflen;
 	if(ret)		vfb.updated = true;
     }
     return ret;
@@ -265,7 +265,7 @@ bool BBio_File::open(const std::string& _fname,unsigned _openmode)
 {
     openmode = _openmode;
 
-    if(!BFile::open(_fname,openmode)) return false;
+    if(!binary_stream::open(_fname,openmode)) return false;
     __fill(0L);
     is_eof=false;
     return true;
@@ -276,7 +276,7 @@ bool BBio_File::close()
     if(!filename().empty()) {
 	if(is_writeable(openmode)) __flush();
 	/* For compatibility with DOS-32: don't try to close stderr */
-	BFile::close();
+	binary_stream::close();
     }
     return true;
 }
@@ -293,26 +293,26 @@ __filesize_t BBio_File::tell() const
     return filepos;
 }
 
-uint8_t BBio_File::read_byte()
+uint8_t BBio_File::read(const data_type_qualifier_byte_t&)
 {
     return __getc();
 }
 
-uint16_t BBio_File::read_word()
+uint16_t BBio_File::read(const data_type_qualifier_word_t&)
 {
     uint16_t ret;
     __getbuff(reinterpret_cast<char*>(&ret),sizeof(uint16_t));
     return ret;
 }
 
-uint32_t BBio_File::read_dword()
+uint32_t BBio_File::read(const data_type_qualifier_dword_t&)
 {
     uint32_t ret;
     __getbuff(reinterpret_cast<char*>(&ret),sizeof(uint32_t));
     return ret;
 }
 
-uint64_t BBio_File::read_qword()
+uint64_t BBio_File::read(const data_type_qualifier_qword_t&)
 {
     uint64_t ret;
     __getbuff(reinterpret_cast<char*>(&ret),sizeof(uint64_t));
@@ -324,22 +324,22 @@ bool BBio_File::read(any_t* _buffer,unsigned cbBuffer)
     return __getbuff(reinterpret_cast<char*>(_buffer),cbBuffer);
 }
 
-bool BBio_File::write_byte(uint8_t bVal)
+bool BBio_File::write(uint8_t bVal)
 {
     return __putc(bVal);
 }
 
-bool BBio_File::write_word(uint16_t wVal)
+bool BBio_File::write(uint16_t wVal)
 {
     return __putbuff(reinterpret_cast<const char*>(&wVal),sizeof(uint16_t));
 }
 
-bool BBio_File::write_dword(uint32_t dwVal)
+bool BBio_File::write(uint32_t dwVal)
 {
   return __putbuff(reinterpret_cast<const char*>(&dwVal),sizeof(uint32_t));
 }
 
-bool BBio_File::write_qword(uint64_t dwVal)
+bool BBio_File::write(uint64_t dwVal)
 {
     return __putbuff(reinterpret_cast<const char*>(&dwVal),sizeof(uint64_t));
 }
@@ -358,7 +358,7 @@ bool BBio_File::reread()
 {
     __filesize_t fpos;
     fpos = tell();
-    BFile::seek(0L,Seek_End);
+    binary_stream::seek(0L,Seek_End);
     return seek(fpos,Seek_Set);
 }
 
@@ -368,13 +368,13 @@ bool BBio_File::chsize(__filesize_t newsize)
     bool ret;
 
     length = _flength;
-    ret=BFile::chsize(newsize);
+    ret=binary_stream::chsize(newsize);
     if(length >= newsize) { /* truncate size */
 	__seek(newsize, Seek_Set);
 	if(vfb.f_start > _flength) { vfb.f_start = _flength; vfb.buflen = 0; }
 	if(vfb.f_start + vfb.buflen > _flength) vfb.buflen = (unsigned)(_flength - vfb.f_start);
     }
-    _flength=BFile::flength();
+    _flength=binary_stream::flength();
     return ret;
 }
 
@@ -393,7 +393,7 @@ unsigned BBio_File::get_optimization() const
 
 bool BBio_File::dup(BBio_File& it) const
 {
-    bool rc = BFile::dup(it);
+    bool rc = binary_stream::dup(it);
     it.openmode = openmode;
     it.optimize = optimize;
     it.is_eof = is_eof;
@@ -409,7 +409,7 @@ bool BBio_File::dup(BBio_File& it) const
     return rc;
 }
 
-BFile* BBio_File::dup() const
+binary_stream* BBio_File::dup() const
 {
     BBio_File* ret = new(zeromem) BBio_File(vfb.bufsize,Opt_Db);
     if(!dup(*ret)) return &bNull;

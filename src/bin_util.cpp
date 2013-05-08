@@ -43,7 +43,7 @@ tCompare __FASTCALL__ fmtComparePubNames(const any_t* v1,const any_t* v2)
   return __CmpLong__(pnam1->pa,pnam2->pa);
 }
 
-bool __FASTCALL__ fmtFindPubName(BFile& fmt_cache,char *buff,unsigned cb_buff,
+bool __FASTCALL__ fmtFindPubName(binary_stream& fmt_cache,char *buff,unsigned cb_buff,
 		   __filesize_t pa,
 		   ReadPubNameList fmt_readlist,
 		   ReadPubName fmt_readpub)
@@ -60,7 +60,7 @@ bool __FASTCALL__ fmtFindPubName(BFile& fmt_cache,char *buff,unsigned cb_buff,
   return udnFindName(pa,buff,cb_buff);
 }
 
-__filesize_t __FASTCALL__ fmtGetPubSym(BFile& fmt_cache,char *str,unsigned cb_str,
+__filesize_t __FASTCALL__ fmtGetPubSym(binary_stream& fmt_cache,char *str,unsigned cb_str,
 			   unsigned *func_class,__filesize_t pa,bool as_prev,
 			   ReadPubNameList fmt_readlist,
 			   ReadPubName fmt_readpub)
@@ -111,15 +111,15 @@ __filesize_t __FASTCALL__ fmtGetPubSym(BFile& fmt_cache,char *str,unsigned cb_st
       str[cb_str-1] = 0;
     }
   }
-  bmSeek(cfpos,BFile::Seek_Set);
+  bmSeek(cfpos,binary_stream::Seek_Set);
   return ret_addr;
 }
 
-static BFile*  __FASTCALL__ ReopenSeek(__filesize_t dist)
+static binary_stream*  __FASTCALL__ ReopenSeek(__filesize_t dist)
 {
- BFile* handle;
+ binary_stream* handle;
  handle = bmbioHandle().dup();
- if(handle != &bNull) handle->seek(dist,BFile::Seek_Set);
+ if(handle != &bNull) handle->seek(dist,binary_stream::Seek_Set);
  else                 errnoMessageBox(READ_FAIL,"",errno);
  return handle;
 }
@@ -128,7 +128,7 @@ int __FASTCALL__ fmtShowList( GetNumItems gni,ReadItems ri,const std::string& ti
 {
  int ret;
  bool bval;
- BFile* handle;
+ binary_stream* handle;
  unsigned nnames;
  memArray * obj;
  TWindow* w;
@@ -213,12 +213,12 @@ static bool __FASTCALL__ udnAddItem() {
     return false;
 }
 
-static unsigned __FASTCALL__ udnGetNumItems(BFile& handle) {
+static unsigned __FASTCALL__ udnGetNumItems(binary_stream& handle) {
     UNUSED(handle);
     return udn_list->nItems;
 }
 
-static bool    __FASTCALL__ udnReadItems(BFile& handle,memArray * names,unsigned nnames)
+static bool    __FASTCALL__ udnReadItems(binary_stream& handle,memArray * names,unsigned nnames)
 {
     char stmp[256];
     unsigned i;

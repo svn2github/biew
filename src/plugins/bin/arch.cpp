@@ -97,7 +97,7 @@ static bool  __FASTCALL__ archReadModList(memArray *obj,unsigned nnames,__filesi
     foff = addr[i];
     if(foff > flen)  foff = be2me_32(foff);
     if(IsKbdTerminate()) break;
-    bmReadBufferEx(stmp,sizeof(ar_sub_hdr),foff,BFile::Seek_Set);
+    bmReadBufferEx(stmp,sizeof(ar_sub_hdr),foff,binary_stream::Seek_Set);
     is_eof = bmEOF();
     stmp[sizeof(ar_sub_hdr)-2] = 0;
     if(!ma_AddString(obj,is_eof ? CORRUPT_BIN_MSG : stmp,true)) break;
@@ -115,7 +115,7 @@ static __filesize_t __FASTCALL__ archModLst()
    __filesize_t fpos,flen;
    fpos = BMGetCurrFilePos();
    flen = bmGetFLength();
-   rnames = bmReadDWordEx(sizeof(ar_hdr),BFile::Seek_Set);
+   rnames = bmReadDWordEx(sizeof(ar_hdr),binary_stream::Seek_Set);
    bnames = be2me_32(rnames);
    /**
       Some archives sometimes have big and sometimes little endian.
@@ -129,7 +129,7 @@ static __filesize_t __FASTCALL__ archModLst()
    if(!(nnames%4)) nnames/=sizeof(unsigned long);
    if(!(obj = ma_Build(nnames,true))) return fpos;
    if(!(addr = new __filesize_t [nnames])) goto exit;
-   bmReadBufferEx(addr,sizeof(unsigned long)*nnames,sizeof(ar_hdr)+sizeof(unsigned long),BFile::Seek_Set);
+   bmReadBufferEx(addr,sizeof(unsigned long)*nnames,sizeof(ar_hdr)+sizeof(unsigned long),binary_stream::Seek_Set);
    if(archReadModList(obj,nnames,addr))
    {
      int ret;
@@ -154,14 +154,14 @@ static __filesize_t __FASTCALL__ archModLst()
 static bool __FASTCALL__ IsArch()
 {
   char str[16];
-  bmReadBufferEx(str,sizeof(str),0,BFile::Seek_Set);
+  bmReadBufferEx(str,sizeof(str),0,binary_stream::Seek_Set);
   return strncmp(str,"!<arch>\012",8) == 0;
 }
 
 static void __FASTCALL__ ArchInit(CodeGuider& code_guider)
 {
     UNUSED(code_guider);
-    bmReadBufferEx(&arch,sizeof(arch),0,BFile::Seek_Set);
+    bmReadBufferEx(&arch,sizeof(arch),0,binary_stream::Seek_Set);
 }
 
 static void __FASTCALL__ ArchDestroy()

@@ -88,10 +88,10 @@ static bool  __FASTCALL__ dossys_check_fmt()
 {
   unsigned char id[4];
   bool ret = false;
-  bmReadBufferEx(id,sizeof(id),0,BFile::Seek_Set);
+  bmReadBufferEx(id,sizeof(id),0,binary_stream::Seek_Set);
   if(id[0] == 0xFF && id[1] == 0xFF && id[2] == 0xFF && id[3] == 0xFF)
   {
-     bmReadBufferEx((any_t*)&drv,sizeof(DOSDRIVER),4,BFile::Seek_Set);
+     bmReadBufferEx((any_t*)&drv,sizeof(DOSDRIVER),4,binary_stream::Seek_Set);
      ret = true;
   }
   return ret;

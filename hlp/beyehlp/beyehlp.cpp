@@ -38,7 +38,7 @@ static char tmp_buff[0x1000];
 static char o_buff[0x4000];
 static char i_cache[0x1000];
 static char o_cache[0x1000];
-static BFile* bOutput;
+static binary_stream* bOutput;
 
 static char* archiver;
 
@@ -164,7 +164,7 @@ bool __FASTCALL__ MyCallOut(IniInfo* ini,any_t* data)
 	unsigned long litem,fpos;
 	unsigned copysize;
 	beye_help_item bhi;
-	BFile* bIn;
+	binary_stream* bIn;
 	int handle;
 	fpos = bOutput->tell();
 	printf("Processing: %s\n",ini->value);
@@ -181,11 +181,11 @@ bool __FASTCALL__ MyCallOut(IniInfo* ini,any_t* data)
 	  fprintf(stderr,"Error %s ocurred while processing: %s",strerror(errno),tmp_buff);
 	  exit(EXIT_FAILURE);
 	}
-	bIn = new BFile;
+	bIn = new binary_stream;
 	bool rc;
-	rc = bIn->open(TEMPFNAME,BFile::FO_READONLY | BFile::SO_DENYNONE);
+	rc = bIn->open(TEMPFNAME,binary_stream::FO_READONLY | binary_stream::SO_DENYNONE);
 	 if(rc == false)
-	 rc = bIn->open(TEMPFNAME,BFile::FO_READONLY | BFile::SO_COMPAT);
+	 rc = bIn->open(TEMPFNAME,binary_stream::FO_READONLY | binary_stream::SO_COMPAT);
 	  if(rc == false)
 	  {
 	      fprintf(stderr,"Can not open %s",TEMPFNAME);
@@ -193,7 +193,7 @@ bool __FASTCALL__ MyCallOut(IniInfo* ini,any_t* data)
 	  }
 	litem = bIn->flength();
 	sprintf(bhi.item_length,"%08lX",litem);
-	handle = ::open(COMPNAME,BFile::FO_READONLY | BFile::SO_DENYNONE);
+	handle = ::open(COMPNAME,binary_stream::FO_READONLY | binary_stream::SO_DENYNONE);
 	if(handle == -1)
 	{
 	      fprintf(stderr,"Can not open %s",ini->value);
@@ -203,9 +203,9 @@ bool __FASTCALL__ MyCallOut(IniInfo* ini,any_t* data)
 	::close(handle);
 	sprintf(bhi.item_decomp_size,"%08lX",litem);
 	sprintf(bhi.item_off,"%08lX",bOutput->flength());
-	bOutput->seek(items_freq*sizeof(beye_help_item)+strlen(id_string)+1+HLP_SLONG_LEN,BFile::Seek_Set);
+	bOutput->seek(items_freq*sizeof(beye_help_item)+strlen(id_string)+1+HLP_SLONG_LEN,binary_stream::Seek_Set);
 	bOutput->write(&bhi,sizeof(beye_help_item));
-	bOutput->seek(fpos,BFile::Seek_Set);
+	bOutput->seek(fpos,binary_stream::Seek_Set);
 	litem = bIn->flength();
 	do
 	{
@@ -249,16 +249,16 @@ int main( int argc, char *argv[] )
 	, argv[2]
 	, outfname);
   memset(&bhi,0,sizeof(beye_help_item));
-  if(BFile::exists(outfname)) if(BFile::unlink(outfname)) { fprintf(stderr,"Can not delete %s\n",argv[2]); return -1; }
+  if(binary_stream::exists(outfname)) if(binary_stream::unlink(outfname)) { fprintf(stderr,"Can not delete %s\n",argv[2]); return -1; }
   bOutput = new BBio_File(0x4000,BBio_File::Opt_Db);
   bool rc;
   rc = bOutput->create(outfname);
   if(rc == false)
-    rc = bOutput->open(outfname,BFile::FO_READWRITE | BFile::SO_COMPAT);
+    rc = bOutput->open(outfname,binary_stream::FO_READWRITE | binary_stream::SO_COMPAT);
     if(rc == false)
-      rc = bOutput->open(outfname,BFile::FO_READONLY | BFile::SO_DENYNONE);
+      rc = bOutput->open(outfname,binary_stream::FO_READONLY | binary_stream::SO_DENYNONE);
       if(rc == false)
-	rc = bOutput->open(outfname,BFile::FO_READONLY | BFile::SO_COMPAT);
+	rc = bOutput->open(outfname,binary_stream::FO_READONLY | binary_stream::SO_COMPAT);
 	if(rc == false)
 	{
 	  fprintf(stderr,"Can not work with %s",outfname);
@@ -272,8 +272,8 @@ int main( int argc, char *argv[] )
   items_freq = 0;
   Ini_Parser::scan(argv[2],MyCallOut,NULL);
   delete bOutput;
-  BFile::unlink(TEMPFNAME);
-  BFile::unlink(COMPNAME);
+  binary_stream::unlink(TEMPFNAME);
+  binary_stream::unlink(COMPNAME);
   printf("Help file looks - ok\n");
   return 0;
 }

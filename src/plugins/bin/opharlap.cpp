@@ -38,7 +38,7 @@ static oldPharLap oph;
 static bool __FASTCALL__ IsOldPharLap()
 {
    char sign[2];
-   bmReadBufferEx(sign,2,0,BFile::Seek_Set);
+   bmReadBufferEx(sign,2,0,binary_stream::Seek_Set);
    if(sign[0] == 'M' && sign[1] == 'P') return true;
    return false;
 }
@@ -92,7 +92,7 @@ static __filesize_t __FASTCALL__ ShowOPharLapHeader()
 static void __FASTCALL__ OPharLapInit(CodeGuider& code_guider)
 {
     UNUSED(code_guider);
-  bmReadBufferEx(&oph,sizeof(oph),0,BFile::Seek_Set);
+  bmReadBufferEx(&oph,sizeof(oph),0,binary_stream::Seek_Set);
 }
 
 static void __FASTCALL__ OPharLapDestroy()

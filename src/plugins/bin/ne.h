@@ -109,8 +109,8 @@ typedef struct tagRELOC_NE
 
 extern const char * __FASTCALL__ GetPMWinAPI(unsigned flag);
 extern const char * __nedata[];
-extern unsigned __FASTCALL__ GetNamCountNE(BFile&,__filesize_t);
-extern bool __FASTCALL__ RNamesReadItems(BFile&,memArray *,unsigned,__filesize_t);
+extern unsigned __FASTCALL__ GetNamCountNE(binary_stream&,__filesize_t);
+extern bool __FASTCALL__ RNamesReadItems(binary_stream&,memArray *,unsigned,__filesize_t);
 
 
 #ifdef __HAVE_PRAGMA_PACK__

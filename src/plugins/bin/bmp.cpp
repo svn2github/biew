@@ -33,8 +33,8 @@ using namespace	usr;
 namespace	usr {
 static bool  __FASTCALL__ bmp_check_fmt()
 {
-    if(	bmReadByteEx(0,BFile::Seek_Set) == 'B' &&
-	bmReadByteEx(1,BFile::Seek_Set) == 'M') return true;
+    if(	bmReadByteEx(0,binary_stream::Seek_Set) == 'B' &&
+	bmReadByteEx(1,binary_stream::Seek_Set) == 'M') return true;
     return false;
 }
 static void __FASTCALL__ bmp_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
@@ -48,11 +48,11 @@ static __filesize_t __FASTCALL__ Show_BMP_Header()
  BITMAPINFOHEADER bmph;
  __filesize_t fpos,fpos2;
  fpos = BMGetCurrFilePos();
- bmSeek(2,BFile::Seek_Set);
+ bmSeek(2,binary_stream::Seek_Set);
  /*filesize = */bmReadDWord();
- bmSeek(4,BFile::Seek_Cur);
+ bmSeek(4,binary_stream::Seek_Cur);
  fpos2=bmReadWord(); /* data offset */
- bmSeek(2,BFile::Seek_Cur);
+ bmSeek(2,binary_stream::Seek_Cur);
  bmReadBuffer(&bmph,sizeof(BITMAPINFOHEADER));
  hwnd = CrtDlgWndnls(" BMP File Header ",43,6);
  hwnd->goto_xy(1,1);

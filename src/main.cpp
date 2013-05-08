@@ -137,7 +137,7 @@ __filesize_t IsNewExe()
 {
   __filesize_t ret;
   char id[2];
-  bmReadBufferEx(id,sizeof(id),0,BFile::Seek_Set);
+  bmReadBufferEx(id,sizeof(id),0,binary_stream::Seek_Set);
 #if 0
    /*
       It is well documented technology, but it correctly working
@@ -149,11 +149,11 @@ __filesize_t IsNewExe()
       Fixed by Kostya Nosov <k-nosov@yandex.ru>.
    */
    if(!( id[0] == 'M' && id[1] == 'Z' &&
-	bmReadWordEx(0x18,BFile::Seek_Set) >= 0x40 &&
-	(ret=bmReadDWordEx(0x3C,BFile::Seek_Set)) > 0x40L)) ret = 0;
+	bmReadWordEx(0x18,binary_stream::Seek_Set) >= 0x40 &&
+	(ret=bmReadDWordEx(0x3C,binary_stream::Seek_Set)) > 0x40L)) ret = 0;
 #endif
    if(!( id[0] == 'M' && id[1] == 'Z' &&
-	(ret=bmReadDWordEx(0x3C,BFile::Seek_Set)) > 0x02L)) ret = 0;
+	(ret=bmReadDWordEx(0x3C,binary_stream::Seek_Set)) > 0x02L)) ret = 0;
    return (__filesize_t)ret;
 }
 
@@ -171,7 +171,7 @@ void BeyeContext::auto_detect_mode()
     }
     if(mode) delete mode;
     activeMode = modes[defMainModeSel]->query_interface(*code_guider);
-    BMSeek(0,BFile::Seek_Set);
+    BMSeek(0,binary_stream::Seek_Set);
 }
 
 static const struct tagbeyeArg {
@@ -233,11 +233,11 @@ bool BeyeContext::LoadInfo( )
 {
     make_shortname();
     if(new_file_size != FILESIZE_MAX) {
-	BFile* h = new(zeromem) BFile;
-	if(BFile::exists(beye_context().ArgVector1) == false) h->create(beye_context().ArgVector1);
+	binary_stream* h = new(zeromem) binary_stream;
+	if(binary_stream::exists(beye_context().ArgVector1) == false) h->create(beye_context().ArgVector1);
 	else {
-	    if(!h->open(beye_context().ArgVector1,BFile::FO_READWRITE | BFile::SO_DENYNONE))
-		h->open(ArgVector1,BFile::FO_READWRITE | BFile::SO_COMPAT);
+	    if(!h->open(beye_context().ArgVector1,binary_stream::FO_READWRITE | binary_stream::SO_DENYNONE))
+		h->open(ArgVector1,binary_stream::FO_READWRITE | binary_stream::SO_COMPAT);
 	}
 	h->chsize(new_file_size);
         delete h;
@@ -381,7 +381,7 @@ void BeyeContext::save_ini_info() const
   delete &ini;
 }
 
-static BFile::ftime ftim;
+static binary_stream::ftime ftim;
 static bool ftim_ok = false;
 
 void BeyeContext::show_usage() const {
@@ -483,7 +483,7 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  }
  /* We must do it before opening a file because of some RTL has bug
     when are trying to open already open file with no sharing access */
- ftim_ok = BFile::get_ftime(BeyeCtx->ArgVector1,ftim);
+ ftim_ok = binary_stream::get_ftime(BeyeCtx->ArgVector1,ftim);
  if(!BeyeCtx->LoadInfo())
  {
    delete &ini;
@@ -502,7 +502,7 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  BeyeCtx->main_loop();
  BeyeCtx->LastOffset = BMGetCurrFilePos();
  BeyeCtx->save_ini_info();
- if(BeyeCtx->iniPreserveTime && ftim_ok) BFile::set_ftime(BeyeCtx->ArgVector1,ftim);
+ if(BeyeCtx->iniPreserveTime && ftim_ok) binary_stream::set_ftime(BeyeCtx->ArgVector1,ftim);
  Bye:
  return retval;
 }
@@ -533,9 +533,9 @@ bool BeyeContext::new_source()
     for(freq = 0;freq < j;freq++) delete nlsListFile[freq];
     delete nlsListFile;
     if(i != -1) {
-	if(iniPreserveTime && ftim_ok) BFile::set_ftime(ArgVector1,ftim);
+	if(iniPreserveTime && ftim_ok) binary_stream::set_ftime(ArgVector1,ftim);
 	BMClose();
-	ftim_ok = BFile::get_ftime(ListFile[i],ftim);
+	ftim_ok = binary_stream::get_ftime(ListFile[i],ftim);
 	if(BMOpen(ListFile[i]) == true) {
 	    ArgVector1 = ListFile[i];
 	    delete _bin_format;
@@ -631,35 +631,35 @@ const std::vector<std::string>& BeyeContext::list_file() const { return ListFile
 void BeyeContext::select_tool() const { addons->select(); }
 void BeyeContext::select_sysinfo() const { sysinfo->select(); }
 
-BFile* BeyeContext::beyeOpenRO(const std::string& fname,unsigned cache_size)
+binary_stream* BeyeContext::beyeOpenRO(const std::string& fname,unsigned cache_size)
 {
-    BFile* fret;
+    binary_stream* fret;
     if(beye_context().fioUseMMF)fret= new(zeromem) MMFile;
     else			fret= new(zeromem) BBio_File(cache_size,BBio_File::Opt_Db);
     bool rc;
-    rc = fret->open(fname,BFile::FO_READONLY | BFile::SO_DENYNONE);
+    rc = fret->open(fname,binary_stream::FO_READONLY | binary_stream::SO_DENYNONE);
     if(rc == false)
-	rc = fret->open(fname,BFile::FO_READONLY | BFile::SO_COMPAT);
+	rc = fret->open(fname,binary_stream::FO_READONLY | binary_stream::SO_COMPAT);
     if(rc==false) { delete fret; fret=&bNull; }
     return fret;
 }
 
-BFile* BeyeContext:: beyeOpenRW(const std::string& fname,unsigned cache_size)
+binary_stream* BeyeContext:: beyeOpenRW(const std::string& fname,unsigned cache_size)
 {
-    BFile* fret;
+    binary_stream* fret;
     if(beye_context().fioUseMMF)fret= new(zeromem) MMFile;
     else			fret= new(zeromem) BBio_File(cache_size,BBio_File::Opt_Db);
     bool rc;
-    rc = fret->open(fname,BFile::FO_READWRITE | BFile::SO_DENYNONE);
+    rc = fret->open(fname,binary_stream::FO_READWRITE | binary_stream::SO_DENYNONE);
     if(rc == false)
-	rc = fret->open(fname,BFile::FO_READWRITE | BFile::SO_COMPAT);
+	rc = fret->open(fname,binary_stream::FO_READWRITE | binary_stream::SO_COMPAT);
     if(rc==false) { delete fret; fret=&bNull; }
     return fret;
 }
 
 bool BeyeContext::BMOpen(const std::string& fname)
 {
-  BFile *bm,*sc;
+  binary_stream *bm,*sc;
   bm = beyeOpenRO(fname,BBIO_CACHE_SIZE);
   if(bm == &bNull)
   {

@@ -73,9 +73,9 @@ static bool  __FASTCALL__ sisx_check_fmt()
 {
     unsigned char sign[4];
     unsigned long id;
-    bmSeek(0,BFile::Seek_Set);
+    bmSeek(0,binary_stream::Seek_Set);
     id=bmReadDWord();
-    bmReadBufferEx(sign,sizeof(sign),16L,BFile::Seek_Set);
+    bmReadBufferEx(sign,sizeof(sign),16L,binary_stream::Seek_Set);
     if((id&0x10000000UL)==0x10000000UL && memcmp(sign,"EPOC",4)==0) return true;
     return false;
 }
@@ -84,7 +84,7 @@ static void __FASTCALL__ sisx_destroy_fmt() {}
 static int  __FASTCALL__ sisx_platform() {
  unsigned id;
  struct E32ImageHeader img;
- bmReadBufferEx(&img,sizeof(img),0,BFile::Seek_Set);
+ bmReadBufferEx(&img,sizeof(img),0,binary_stream::Seek_Set);
  id=DISASM_DATA;
  if((img.iCpuIdentifier&0xF000)==0x1000) id=DISASM_CPU_IX86;
  else if((img.iCpuIdentifier&0xF000)==0x2000) id=DISASM_CPU_ARM;
@@ -100,7 +100,7 @@ static __filesize_t __FASTCALL__ Show_SisX_Header()
  struct E32ImageHeader img;
  __filesize_t fpos,fpos2;
  fpos2=fpos = BMGetCurrFilePos();
- bmReadBufferEx(&img,sizeof(img),0,BFile::Seek_Set);
+ bmReadBufferEx(&img,sizeof(img),0,binary_stream::Seek_Set);
  switch(img.iUid1)
  {
     case 0x10000079: exetype="DLL"; break;

@@ -155,7 +155,7 @@ static char		detected_syntax_name[FILENAME_MAX+1];
 	    int				HiLight;
 
 	    unsigned			bin_mode; /**< points to currently selected mode text mode */
-	    BFile*			txtHandle; /**< Own handle of BBIO stream. (For speed). */
+	    binary_stream*			txtHandle; /**< Own handle of BBIO stream. (For speed). */
 
 	    TSTR			*tlines,*ptlines;
 	    unsigned int		maxstrlen; /**< contains maximal length of string which can be displayed without wrapping */
@@ -175,8 +175,8 @@ bool TextMode::test_leading_escape(__fileoff_t cpos) const {
     unsigned escl = ::strlen(escape);
     spos=(cpos-1)-escl;
     if(escl && spos>=0) {
-	BMReadBufferEx(tmps,escl,spos,BFile::Seek_Set);
-	BMSeek(epos,BFile::Seek_Set);
+	BMReadBufferEx(tmps,escl,spos,binary_stream::Seek_Set);
+	BMSeek(epos,binary_stream::Seek_Set);
 	return ::memcmp(tmps,escape,escl)==0;
     }
     return 0;
@@ -219,7 +219,7 @@ void TextMode::markup_ctx()
     hwnd=PleaseWaitWnd();
     flen=BMGetFLength();
     fpos=BMGetCurrFilePos();
-    BMSeek(0,BFile::Seek_Set);
+    BMSeek(0,binary_stream::Seek_Set);
     acontext_num=0;
     for(fptr=0;fptr<flen;fptr++) {
 	tmps[0]=0;
@@ -235,8 +235,8 @@ void TextMode::markup_ctx()
 		else {
 		    long ccpos;
 		    ccpos=BMGetCurrFilePos();
-		    chn=BMReadByteEx(fptr-1,BFile::Seek_Set);
-		    BMSeek(ccpos, BFile::Seek_Set);
+		    chn=BMReadByteEx(fptr-1,binary_stream::Seek_Set);
+		    BMSeek(ccpos, binary_stream::Seek_Set);
 		    if(chn=='\n' || chn=='\r') ss_idx=1;
 		}
 	    }
@@ -261,7 +261,7 @@ void TextMode::markup_ctx()
 		    if(syntax_hl.maxkwd_len>(len-ss_idx)) {
 			ckpos=BMGetCurrFilePos();
 			BMReadBuffer(&ktmps[len],syntax_hl.maxkwd_len-(len-ss_idx));
-			BMSeek(ckpos,BFile::Seek_Set);
+			BMSeek(ckpos,binary_stream::Seek_Set);
 		    }
 		    hl_find_kwd(ktmps,Color(0),&st_len);
 		    if(st_len) found=0;
@@ -273,7 +273,7 @@ void TextMode::markup_ctx()
 		    acontext[acontext_num].start_off=fptr-ss_idx;
 		    acontext[acontext_num].end_off=flen;
 		    fptr+=len;
-		    BMSeek(fptr,BFile::Seek_Set);
+		    BMSeek(fptr,binary_stream::Seek_Set);
 		    /* try find end */
 		    eseq=syntax_hl.context[i].end_seq;
 		    len=::strlen(eseq);
@@ -291,22 +291,22 @@ void TextMode::markup_ctx()
 			    if(found && escape) found=!test_leading_escape(ecpos);
 			    if(found) {
 				fptr+=len;
-				BMSeek(fptr,BFile::Seek_Set);
+				BMSeek(fptr,binary_stream::Seek_Set);
 				acontext[acontext_num].end_off=fptr;
 				break;
 			    }
-			    else BMSeek(ecpos,BFile::Seek_Set);
+			    else BMSeek(ecpos,binary_stream::Seek_Set);
 			}
 		    }
 		    acontext_num++;
 		    fptr--;
 		}
-		else BMSeek(cpos,BFile::Seek_Set);
+		else BMSeek(cpos,binary_stream::Seek_Set);
 	    }
 	    if(found) break;
 	}
     }
-    BMSeek(fpos,BFile::Seek_Set);
+    BMSeek(fpos,binary_stream::Seek_Set);
     delete hwnd;
 }
 
@@ -385,7 +385,7 @@ static bool __FASTCALL__ txtFiUserFunc1(IniInfo * info,any_t* data)
 	unfmt_str((unsigned char*)stmp);
 	ilen=strlen(stmp);
 	fpos=BMGetCurrFilePos();
-	BMSeek(off,BFile::Seek_Set);
+	BMSeek(off,binary_stream::Seek_Set);
 	found=1;
 	for(i=0;i<ilen;i++) {
 	    unsigned char ch;
@@ -396,7 +396,7 @@ static bool __FASTCALL__ txtFiUserFunc1(IniInfo * info,any_t* data)
 		break;
 	    }
 	}
-	BMSeek(fpos,BFile::Seek_Set);
+	BMSeek(fpos,binary_stream::Seek_Set);
 	if(found) {
 	    strcpy(detected_syntax_name,value+3);
 	    return true;
@@ -552,7 +552,7 @@ static tCompare __FASTCALL__ cmp_kwd(const any_t* e1,const any_t* e2)
 
 void TextMode::read_syntaxes()
 {
-    if(BFile::exists(beye_context().syntax_name)) {
+    if(binary_stream::exists(beye_context().syntax_name)) {
 	Ini_Parser::scan(beye_context().syntax_name.c_str(),txtFiUserFunc1,NULL);
 	if(detected_syntax_name[0]) {
 	    char tmp[FILENAME_MAX+1];
@@ -564,7 +564,7 @@ void TextMode::read_syntaxes()
 	    p=std::max(p,pp);
 	    if(p) { p++; ::strcpy(p,detected_syntax_name); }
 	    ::strcpy(detected_syntax_name,tmp);
-	    if(BFile::exists(detected_syntax_name)) {
+	    if(binary_stream::exists(detected_syntax_name)) {
 		unsigned i,total;
 		int phash;
 		::memset(word_set,0,sizeof(word_set));
@@ -651,7 +651,7 @@ unsigned char TextMode::nls_read_byte(__filesize_t cp) const
     char nls_buff[256];
     unsigned sym_size;
     sym_size = activeNLS->get_symbol_size();
-    txtHandle->seek(cp,BFile::Seek_Set);
+    txtHandle->seek(cp,binary_stream::Seek_Set);
     txtHandle->read(nls_buff,sym_size);
     activeNLS->convert_buffer(nls_buff,sym_size,true);
     return (unsigned char)nls_buff[0];
@@ -951,7 +951,7 @@ TextMode::TextMode(CodeGuider& code_guider)
 	MemOutBox("Text mode initialization");
 	::exit(EXIT_FAILURE);
     }
-    BFile& bh = BMbioHandle();
+    binary_stream& bh = BMbioHandle();
     if((txtHandle = bh.dup()) == &bNull) txtHandle = &bh;
     ::memset(&syntax_hl,0,sizeof(syntax_hl));
     /* Fill operator's hash */
@@ -964,7 +964,7 @@ TextMode::~TextMode() {
     delete buff;
     delete tlines;
     delete ptlines;
-    BFile& bh = BMbioHandle();
+    binary_stream& bh = BMbioHandle();
     if(txtHandle != &bh) { delete txtHandle; txtHandle = &bNull; }
     if(syntax_hl.name) delete syntax_hl.name;
     if(escape) delete escape;
@@ -1021,7 +1021,7 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 	if(keycode == KE_RIGHTARROW || keycode == KE_PGDN) cpos+=cpos%cp_symb_len;
 	else cpos=(cpos/cp_symb_len)*cp_symb_len;
     }
-    BMSeek(cpos,BFile::Seek_Set);
+    BMSeek(cpos,binary_stream::Seek_Set);
     if(!(keycode == KE_LEFTARROW || keycode == KE_RIGHTARROW)) prepare_lines(keycode);
     hilightline = -1;
     for(i = 0;i < height;i++) {
@@ -1033,7 +1033,7 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 		if(bin_mode != MOD_BINARY) {
 		    unsigned n_tabs,b_ptr,b_lim;
 		    len = std::min(MAX_STRLEN,FoundTextSt > tlines[i].st ? (int)(FoundTextSt-tlines[i].st):unsigned(0));
-		    BMReadBufferEx((any_t*)buff,len,tlines[i].st,BFile::Seek_Set);
+		    BMReadBufferEx((any_t*)buff,len,tlines[i].st,binary_stream::Seek_Set);
 		    len = convert_cp(buff,len,false);
 		    for(b_lim=len,b_ptr = 0;b_ptr < len;b_ptr+=2,b_lim-=2) {
 			shift = tab2space(NULL,UINT_MAX,&buff[b_ptr],b_lim,0,&n_tabs,0L);
@@ -1058,7 +1058,7 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 	rshift = bin_mode != MOD_BINARY ? 0 : shift;
 	rsize = size = len - rshift;
 	if(len > rshift) {
-	    BMReadBufferEx((any_t*)buff,size,tlines[i].st + rshift,BFile::Seek_Set);
+	    BMReadBufferEx((any_t*)buff,size,tlines[i].st + rshift,binary_stream::Seek_Set);
 	    rsize = size = convert_cp(buff,size,false);
 	    if(bin_mode != MOD_BINARY) {
 		rsize = size = tab2space(&it,__TVIO_MAXSCREENWIDTH,buff,size,shift,NULL,tlines[i].st);
@@ -1093,7 +1093,7 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
     if(!tlines[1].st) tlines[1].st = tlines[0].end;
     CurrStrLen = tlines[0].end - tlines[0].st;
     CurrPageSize = lastbyte - tlines[0].st;
-    BMSeek(cpos,BFile::Seek_Set);
+    BMSeek(cpos,binary_stream::Seek_Set);
     return shift;
 }
 
@@ -1183,11 +1183,11 @@ bool TextMode::detect()
     if(maxl > flen) maxl = (size_t)flen;
     for(i = 0;i < maxl;i++) {
 	char ch;
-	ch = BMReadByteEx(i,BFile::Seek_Set);
+	ch = BMReadByteEx(i,binary_stream::Seek_Set);
 	if((bin=isBinByte(ch))!=false) break;
     }
     if(bin==false) bin_mode = MOD_PLAIN;
-    BMSeek(fpos,BFile::Seek_Set);
+    BMSeek(fpos,binary_stream::Seek_Set);
     return bin == false;
 }
 

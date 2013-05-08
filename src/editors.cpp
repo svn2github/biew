@@ -107,8 +107,8 @@ bool __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size
  else
  {
     EditorMem.size = (unsigned)((__filesize_t)msize > (flen-cfp) ? (flen-cfp) : msize);
-    BMReadBufferEx(EditorMem.buff,EditorMem.size,cfp,BFile::Seek_Set);
-    BMSeek(cfp,BFile::Seek_Set);
+    BMReadBufferEx(EditorMem.buff,EditorMem.size,cfp,binary_stream::Seek_Set);
+    BMSeek(cfp,binary_stream::Seek_Set);
  }
  memcpy(EditorMem.save,EditorMem.buff,EditorMem.size);
  /** initialize EditorMem.alen */
@@ -155,7 +155,7 @@ void __FASTCALL__ CheckXYBounds()
 
 void __FASTCALL__ editSaveContest()
 {
-  BFile* bHandle;
+  binary_stream* bHandle;
   std::string fname;
   fname = BMName();
   bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
@@ -165,7 +165,7 @@ void __FASTCALL__ editSaveContest()
       errnoMessageBox(WRITE_FAIL,"",errno);
       return;
   }
-  bHandle->seek(edit_cp,BFile::Seek_Set);
+  bHandle->seek(edit_cp,binary_stream::Seek_Set);
   if(!bHandle->write((any_t*)EditorMem.buff,EditorMem.size)) goto err;
   delete bHandle;
   BMReRead();

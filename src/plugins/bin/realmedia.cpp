@@ -35,7 +35,7 @@ namespace	usr {
 
 static bool  __FASTCALL__ rm_check_fmt()
 {
-    if(bmReadDWordEx(0,BFile::Seek_Set)==MKTAG('.', 'R', 'M', 'F')) return true;
+    if(bmReadDWordEx(0,binary_stream::Seek_Set)==MKTAG('.', 'R', 'M', 'F')) return true;
     return false;
 }
 

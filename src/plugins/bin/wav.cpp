@@ -179,8 +179,8 @@ const char *wtag_find_name(unsigned short wtag)
 static bool  __FASTCALL__ wav_check_fmt()
 {
     unsigned long id;
-    id=bmReadDWordEx(8,BFile::Seek_Set);
-    if(	bmReadDWordEx(0,BFile::Seek_Set)==mmioFOURCC('R','I','F','F') &&
+    id=bmReadDWordEx(8,binary_stream::Seek_Set);
+    if(	bmReadDWordEx(0,binary_stream::Seek_Set)==mmioFOURCC('R','I','F','F') &&
 	id==mmioFOURCC('W','A','V','E'))
 	return true;
     return false;
@@ -193,7 +193,7 @@ static int  __FASTCALL__ wav_platform() { return DISASM_DEFAULT; }
 static __filesize_t __FASTCALL__ wav_find_chunk(__filesize_t off,unsigned long id)
 {
     unsigned long ids,size,type;
-    bmSeek(off,BFile::Seek_Set);
+    bmSeek(off,binary_stream::Seek_Set);
     while(!bmEOF())
     {
 /*	fpos=bmGetCurrFilePos();*/
@@ -208,7 +208,7 @@ static __filesize_t __FASTCALL__ wav_find_chunk(__filesize_t off,unsigned long i
 	    if(type==id) return bmGetCurrFilePos();
 	    continue;
 	}
-	bmSeek(size,BFile::Seek_Cur);
+	bmSeek(size,binary_stream::Seek_Cur);
     }
     return -1;
 }
@@ -222,7 +222,7 @@ static __filesize_t __FASTCALL__ Show_WAV_Header()
  fpos = BMGetCurrFilePos();
  fpos2 = wav_find_chunk(12,mmioFOURCC('f','m','t',' '));
  if((__fileoff_t)fpos2==-1) { ErrMessageBox("Main WAV Header not found",""); return fpos; }
- bmSeek(fpos2,BFile::Seek_Set);
+ bmSeek(fpos2,binary_stream::Seek_Set);
  bmReadDWord(); /* skip section size */
  bmReadBuffer(&wavf,sizeof(WAVEFORMATEX));
  fpos2 = wav_find_chunk(12,mmioFOURCC('d','a','t','a'));

@@ -12,14 +12,14 @@ using namespace	usr;
 #include "bfile.h"
 
 namespace	usr {
-BFile::BFile()
+binary_stream::binary_stream()
 	:_handle(-1)
 {
 }
 
-BFile::~BFile() { if(!fname.empty()) close(); }
+binary_stream::~binary_stream() { if(!fname.empty()) close(); }
 
-bool BFile::open(const std::string& _fname,unsigned _openmode)
+bool binary_stream::open(const std::string& _fname,unsigned _openmode)
 {
     if(!fname.empty()) return false; // prevent open without close
     _handle = ::open(_fname.c_str(),_openmode);
@@ -29,66 +29,66 @@ bool BFile::open(const std::string& _fname,unsigned _openmode)
     return true;
 }
 
-bool BFile::create(const std::string& name)
+bool binary_stream::create(const std::string& name)
 {
     return open(name,O_RDWR | O_CREAT | O_TRUNC);
 }
 
-bool BFile::close()
+bool binary_stream::close()
 {
     if(_handle > 2) ::close(_handle);
     fname.clear();
     return true;
 }
 
-bool BFile::seek(__fileoff_t offset,e_seek origin) {
+bool binary_stream::seek(__fileoff_t offset,e_seek origin) {
     return ::lseek(_handle,offset,origin)>0;
 }
 
-__filesize_t BFile::tell() const
+__filesize_t binary_stream::tell() const
 {
     return _tell();
 }
 
-__filesize_t BFile::_tell() const
+__filesize_t binary_stream::_tell() const
 {
     return ::lseek(_handle,0L,SEEK_CUR);
 }
 
-uint8_t BFile::read_byte()
+uint8_t binary_stream::read(const data_type_qualifier_byte_t&)
 {
     uint8_t ret;
     if(::read(_handle,&ret,sizeof(uint8_t))!=sizeof(uint8_t)) ret=-1;
     return ret;
 }
 
-uint16_t BFile::read_word()
+uint16_t binary_stream::read(const data_type_qualifier_word_t&)
 {
     uint16_t ret;
     if(::read(_handle,&ret,sizeof(uint16_t))!=sizeof(uint16_t)) ret=-1;
     return ret;
 }
 
-uint32_t BFile::read_dword()
+uint32_t binary_stream::read(const data_type_qualifier_dword_t&)
 {
     uint32_t ret;
     if(::read(_handle,&ret,sizeof(uint32_t))!=sizeof(uint32_t)) ret=-1;
     return ret;
 }
 
-uint64_t BFile::read_qword()
+uint64_t binary_stream::read(const data_type_qualifier_qword_t&)
 {
     uint64_t ret;
     if(::read(_handle,&ret,sizeof(uint64_t))!=sizeof(uint64_t)) ret=-1;
     return ret;
 }
 
-bool BFile::read(any_t* _buffer,unsigned cbBuffer)
+bool binary_stream::read(any_t* _buffer,unsigned cbBuffer)
 {
      return ::read(_handle,_buffer,cbBuffer)==cbBuffer;
 }
 
-bool BFile::write_byte(uint8_t bVal)
+bool binary_stream::write(uint8_t bVal)
 {
     bool rc;
     rc=::write(_handle,&bVal,sizeof(uint8_t))==sizeof(uint8_t);
@@ -96,7 +96,7 @@ bool BFile::write_byte(uint8_t bVal)
     return rc;
 }
 
-bool BFile::write_word(uint16_t wVal)
+bool binary_stream::write(uint16_t wVal)
 {
     bool rc;
     rc=::write(_handle,&wVal,sizeof(uint16_t))==sizeof(uint16_t);
@@ -104,7 +104,7 @@ bool BFile::write_word(uint16_t wVal)
     return rc;
 }
 
-bool BFile::write_dword(uint32_t dwVal)
+bool binary_stream::write(uint32_t dwVal)
 {
     bool rc;
     rc=::write(_handle,&dwVal,sizeof(uint32_t))==sizeof(uint32_t);
@@ -112,7 +112,7 @@ bool BFile::write_dword(uint32_t dwVal)
     return rc;
 }
 
-bool BFile::write_qword(uint64_t qwVal)
+bool binary_stream::write(uint64_t qwVal)
 {
     bool rc;
     rc=::write(_handle,&qwVal,sizeof(uint64_t))==sizeof(uint64_t);
@@ -120,7 +120,7 @@ bool BFile::write_qword(uint64_t qwVal)
     return rc;
 }
 
-bool BFile::write(const any_t* _buffer,unsigned cbBuffer)
+bool binary_stream::write(const any_t* _buffer,unsigned cbBuffer)
 {
     bool rc;
     rc=::write(_handle,_buffer,cbBuffer)==cbBuffer;
@@ -128,17 +128,17 @@ bool BFile::write(const any_t* _buffer,unsigned cbBuffer)
     return rc;
 }
 
-bool BFile::flush()
+bool binary_stream::flush()
 {
     return true;
 }
 
-__filesize_t BFile::flength() const
+__filesize_t binary_stream::flength() const
 {
     return fsize;
 }
 
-bool BFile::chsize(__filesize_t newsize)
+bool binary_stream::chsize(__filesize_t newsize)
 {
     __filesize_t length, fillsize;
     char * buf;
@@ -170,17 +170,17 @@ bool BFile::chsize(__filesize_t newsize)
     return ret;
 }
 
-int BFile::handle() const
+int binary_stream::handle() const
 {
     return _handle;
 }
 
-std::string BFile::filename() const
+std::string binary_stream::filename() const
 {
     return fname;
 }
 
-bool BFile::dup(BFile& it) const
+bool binary_stream::dup(binary_stream& it) const
 {
     if(fname.empty()) return false;
     if((it._handle=::dup(_handle))==-1) {
@@ -191,19 +191,19 @@ bool BFile::dup(BFile& it) const
     return true;
 }
 
-BFile* BFile::dup() const
+binary_stream* binary_stream::dup() const
 {
-    BFile* ret = new(zeromem) BFile;
+    binary_stream* ret = new(zeromem) binary_stream;
     if(!dup(*ret)) return &bNull;
     return ret;
 }
 
-bool BFile::eof() const
+bool binary_stream::eof() const
 {
     return _tell() >= fsize;
 }
 
-int BFile::truncate(__filesize_t newsize)
+int binary_stream::truncate(__filesize_t newsize)
 {
     int rc;
     rc=ftruncate(_handle,newsize);
@@ -211,25 +211,25 @@ int BFile::truncate(__filesize_t newsize)
     return rc;
 }
 
-void BFile::update_length() {
+void binary_stream::update_length() {
     __filesize_t curr_pos=_tell();
     ::lseek(_handle,0L,SEEK_END);
     fsize=_tell();
     ::lseek(_handle,curr_pos,SEEK_SET);
 }
 
-bool BFile::reread() { return true; }
+bool binary_stream::reread() { return true; }
 
-unsigned BFile::set_optimization(unsigned flags) { UNUSED(flags); return 0; }
-unsigned BFile::get_optimization() const { return 0; }
+unsigned binary_stream::set_optimization(unsigned flags) { UNUSED(flags); return 0; }
+unsigned binary_stream::get_optimization() const { return 0; }
 
 /*  static */
 
-int BFile::truncate(const std::string& name,__filesize_t newsize) { return ::truncate(name.c_str(),newsize); }
-int BFile::exists(const std::string& name) { return ::access(name.c_str(),F_OK) == 0; }
-int BFile::unlink(const std::string& name) {  return ::unlink(name.c_str()); }
-int BFile::rename(const std::string& oldname,const std::string& newname) {  return ::rename(oldname.c_str(),newname.c_str()); }
-bool BFile::get_ftime(const std::string& name,ftime& data) {
+int binary_stream::truncate(const std::string& name,__filesize_t newsize) { return ::truncate(name.c_str(),newsize); }
+int binary_stream::exists(const std::string& name) { return ::access(name.c_str(),F_OK) == 0; }
+int binary_stream::unlink(const std::string& name) {  return ::unlink(name.c_str()); }
+int binary_stream::rename(const std::string& oldname,const std::string& newname) {  return ::rename(oldname.c_str(),newname.c_str()); }
+bool binary_stream::get_ftime(const std::string& name,ftime& data) {
     bool ret = false;
     struct stat statbuf;
     if(!::stat(name.c_str(),&statbuf)) {
@@ -240,7 +240,7 @@ bool BFile::get_ftime(const std::string& name,ftime& data) {
     return ret;
 }
 
-bool BFile::set_ftime(const std::string& name,const ftime& data)
+bool binary_stream::set_ftime(const std::string& name,const ftime& data)
 {
     struct utimbuf ubuf;
     ubuf.actime = data.acctime;
@@ -248,5 +248,5 @@ bool BFile::set_ftime(const std::string& name,const ftime& data)
     return ::utime(name.c_str(),&ubuf) ? false : true;
 }
 
-BFile bNull; /**< Stream associated with STDERR */
+binary_stream bNull; /**< Stream associated with STDERR */
 } // namespace	usr

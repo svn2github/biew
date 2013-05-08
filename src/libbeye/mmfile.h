@@ -7,7 +7,7 @@
 #include "bfile.h"
 
 namespace	usr {
-    class MMFile : public BFile {
+    class MMFile : public binary_stream {
 	public:
 	    MMFile();
 	    virtual ~MMFile();
@@ -18,21 +18,21 @@ namespace	usr {
 	    virtual bool		close();
 	    virtual bool		eof() const;
 	    virtual bool		flush();
-	    virtual uint8_t		read_byte();
-	    virtual uint16_t		read_word();
-	    virtual uint32_t		read_dword();
-	    virtual uint64_t		read_qword();
+	    virtual uint8_t		read(const data_type_qualifier_byte_t&);
+	    virtual uint16_t		read(const data_type_qualifier_word_t&);
+	    virtual uint32_t		read(const data_type_qualifier_dword_t&);
+	    virtual uint64_t		read(const data_type_qualifier_qword_t&);
 	    virtual bool		read(any_t* buffer,unsigned cbBuffer);
 	    virtual bool		seek(__fileoff_t offset,e_seek origin);
 	    virtual __filesize_t	tell() const;
-	    virtual bool		write_byte(uint8_t bVal);
-	    virtual bool		write_word(uint16_t wVal);
-	    virtual bool		write_dword(uint32_t dwVal);
-	    virtual bool		write_qword(uint64_t dwVal);
+	    virtual bool		write(uint8_t bVal);
+	    virtual bool		write(uint16_t wVal);
+	    virtual bool		write(uint32_t dwVal);
+	    virtual bool		write(uint64_t dwVal);
 	    virtual bool		write(const any_t* buffer,unsigned cbBuffer);
 	    virtual bool		chsize(__filesize_t newsize);
 	    virtual bool		dup(MMFile&) const;
-	    virtual BFile*		dup() const;
+	    virtual binary_stream*	dup() const;
 	    virtual bool		reread();
 	    virtual any_t*		buffer() const;
 	protected:

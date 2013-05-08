@@ -94,14 +94,14 @@ static bool __FASTCALL__ lmf_check_fmt()
 	int32_t i,j,p=0;
 /*	lmf_data d;*/
 	lmf_header h;
-	if(!bmReadBufferEx(&h,sizeof h,0,BFile::Seek_Set)) return false;
+	if(!bmReadBufferEx(&h,sizeof h,0,binary_stream::Seek_Set)) return false;
 	/* Test a first heder */
 	if(h.rec_type!=_LMF_DEFINITION_REC||h.zero1!=0||/*h.spare!=0||*/
 		h.data_nbytes<DEFSIZE+2*sizeof(long)||
 		(h.data_nbytes-DEFSIZE)%4!=0) return false;
 	i=j=(h.data_nbytes-DEFSIZE)/4;
 	xdef_len=h.data_nbytes;
-	if(!bmReadBufferEx(&xdef,std::min(sizeof(lmf_xdef),size_t(h.data_nbytes)),6,BFile::Seek_Set)) return false;
+	if(!bmReadBufferEx(&xdef,std::min(sizeof(lmf_xdef),size_t(h.data_nbytes)),6,binary_stream::Seek_Set)) return false;
 	/* Test a definition record */
 	if(DEF.version_no!=400||DEF.code_index>i||DEF.stack_index>i||
 		DEF.heap_index>i||DEF.argv_index>i||DEF.zero2!=0)
@@ -116,7 +116,7 @@ static bool __FASTCALL__ lmf_check_fmt()
 	{
 		/* Test other headers */
 		p+=HDRSIZE+h.data_nbytes;
-		if(!bmReadBufferEx(&h,sizeof h,p,BFile::Seek_Set)) return false;
+		if(!bmReadBufferEx(&h,sizeof h,p,binary_stream::Seek_Set)) return false;
 		if(h.rec_type==_LMF_DEFINITION_REC||h.data_nbytes==0||
 			h.zero1!=0/*||h.spare!=0*/) return false;
 		if(h.rec_type==_LMF_EOF_REC) break;
@@ -144,7 +144,7 @@ static void __FASTCALL__ lmf_init_fmt(CodeGuider& code_guider)
 			hl=(lmf_headers_list*)mp_realloc(hl,(recmax+=MINREC)*sizeof(lmf_headers_list));
 			if(hl==NULL) return;
 		}
-		if(!bmReadBufferEx(&hl[i].header,HDRSIZE,pos,BFile::Seek_Set))
+		if(!bmReadBufferEx(&hl[i].header,HDRSIZE,pos,binary_stream::Seek_Set))
 			failed_lmf;
 		hl[i].file_pos=pos;
 		switch(hl[i].header.rec_type)
@@ -152,14 +152,14 @@ static void __FASTCALL__ lmf_init_fmt(CodeGuider& code_guider)
 		case _LMF_DATA_REC:
 		case _LMF_FIXUP_SEG_REC:
 		case _LMF_FIXUP_LINEAR_REC:
-			if(!bmReadBufferEx(&hl[i].data,DATSIZE,pos+HDRSIZE,BFile::Seek_Set))
+			if(!bmReadBufferEx(&hl[i].data,DATSIZE,pos+HDRSIZE,binary_stream::Seek_Set))
 				failed_lmf;
 			l=hl[i].data.index;
 			if(l>=seg_num)
 				failed_lmf;
 			break;
 		case _LMF_RESOURCE_REC:
-			if(!bmReadBufferEx(&hl[i].res,sizeof(lmf_resource),pos+HDRSIZE,BFile::Seek_Set))
+			if(!bmReadBufferEx(&hl[i].res,sizeof(lmf_resource),pos+HDRSIZE,binary_stream::Seek_Set))
 				failed_lmf;
 			break;
 		case _LMF_EOF_REC:
@@ -332,7 +332,7 @@ static __filesize_t __FASTCALL__ lmf_pa2va(__filesize_t pa)
 	return addr;
 }
 
-static bool __FASTCALL__ lmf_ReadSecHdr(BFile& handle,memArray *obj,unsigned nnames)
+static bool __FASTCALL__ lmf_ReadSecHdr(binary_stream& handle,memArray *obj,unsigned nnames)
 {
 	unsigned i;
 	char tmp[30];
@@ -389,7 +389,7 @@ static bool __FASTCALL__ lmf_ReadSecHdr(BFile& handle,memArray *obj,unsigned nna
 	return true;
 }
 
-static unsigned __FASTCALL__ lmf_SecHdrNumItems(BFile& handle)
+static unsigned __FASTCALL__ lmf_SecHdrNumItems(binary_stream& handle)
 {
 	UNUSED(handle);
 	return reclast+1;

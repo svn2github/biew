@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 	    return EXIT_FAILURE;
 	}
 	ArgVector=argv;
-	infile = new BFile;
+	infile = new binary_stream;
 	bool rc;
 	if ((s = argv[1], s[1] || strpbrk(s, "DEde") == NULL)
 	    || (s = argv[2], (rc = infile->open(s,O_RDONLY)) == false))
@@ -61,8 +61,8 @@ int main(int argc, char *argv[])
 	}
 	__init_sys();
 	s = argv[3];
-	if(BFile::exists(s)) if(BFile::unlink(s)) { Err: printf("Problem with %s\n",s); return EXIT_FAILURE; }
-	outfile = new BFile;
+	if(binary_stream::exists(s)) if(binary_stream::unlink(s)) { Err: printf("Problem with %s\n",s); return EXIT_FAILURE; }
+	outfile = new binary_stream;
 	if(outfile->create(s) == false) goto Err;
 	if (toupper(*argv[1]) == 'E') retcode = Encode();
 #if 0

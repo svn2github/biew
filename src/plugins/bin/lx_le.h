@@ -271,11 +271,11 @@ typedef struct tagLXResource
 extern void          __FASTCALL__ ShowFwdModOrdLX(const LX_ENTRY *_lxe);
 extern __filesize_t  __FASTCALL__ ShowNewHeaderLX();
 extern __filesize_t  __FASTCALL__ ShowObjectsLX();
-extern unsigned      __FASTCALL__ LXRNamesNumItems(BFile&);
-extern bool         __FASTCALL__ LXRNamesReadItems(BFile&,memArray *,unsigned);
+extern unsigned      __FASTCALL__ LXRNamesNumItems(binary_stream&);
+extern bool         __FASTCALL__ LXRNamesReadItems(binary_stream&,memArray *,unsigned);
 extern __filesize_t  __FASTCALL__ ShowModRefLX();
-extern unsigned      __FASTCALL__ LXNRNamesNumItems(BFile&);
-extern bool         __FASTCALL__ LXNRNamesReadItems(BFile&,memArray *,unsigned);
+extern unsigned      __FASTCALL__ LXNRNamesNumItems(binary_stream&);
+extern bool         __FASTCALL__ LXNRNamesReadItems(binary_stream&,memArray *,unsigned);
 extern __filesize_t  __FASTCALL__ ShowImpProcLXLE();
 extern __filesize_t  __FASTCALL__ ShowEntriesLX();
 extern const char *  __FASTCALL__ lxeGetMapAttr(unsigned long attr);

@@ -45,7 +45,7 @@ int		match_position, match_length,  /** of longest match.  These are
 						    set by the InsertNode() procedure. */
 		*lson, *rson, *dad;  /** left & right children &
 					  parents -- These constitute binary search trees. */
-BFile*	infile, *outfile;  /** input & output files */
+binary_stream*	infile, *outfile;  /** input & output files */
 #ifdef INTERACTIVE
 static void InitTree()  /** initialize trees */
 {
@@ -148,9 +148,9 @@ static int Encode()
 	time(&sttime);
 	ppercent = -1;
 #endif
-	infile->seek(0L,BFile::Seek_End);
+	infile->seek(0L,binary_stream::Seek_End);
 	flen = infile->tell();
-	infile->seek(0L,BFile::Seek_Set);
+	infile->seek(0L,binary_stream::Seek_Set);
 	InitTree();  /** initialize trees */
 	code_buf[0] = 0;  /** code_buf[1..16] saves eight units of code, and
 		code_buf[0] works as eight flags, "1" representing that the unit
@@ -164,7 +164,7 @@ static int Encode()
 	{
 	  reach_eof = infile->eof() || infile->tell() > flen;
 	  if(reach_eof) break;
-	  c = infile->read_byte();
+	  c = infile->read(type_byte);
 	  text_buf[r + len] = c;  /** Read F bytes into the last F bytes of
 			the buffer */
 	}
@@ -191,7 +191,7 @@ static int Encode()
 		}
 		if ((mask <<= 1) == 0) {  /** Shift mask left one bit. */
 			for (i = 0; i < code_buf_ptr; i++)  /** Send at most 8 units of */
-				outfile->write_byte(code_buf[i]);     /** code together */
+				outfile->write((uint8_t)code_buf[i]);     /** code together */
 			codesize += code_buf_ptr;
 			code_buf[0] = 0;  code_buf_ptr = mask = 1;
 		}
@@ -200,7 +200,7 @@ static int Encode()
 		{
 			reach_eof = infile->eof() || infile->tell() > flen;
 			if(reach_eof) break;
-			c = infile->read_byte();
+			c = infile->read(type_byte);
 			DeleteNode(s);		/** Delete old strings and */
 			text_buf[s] = c;	/** read new bytes */
 			if (s < F - 1) text_buf[s + N] = c;  /** If the position is
@@ -227,7 +227,7 @@ static int Encode()
 		}
 	} while (len > 0);	/** until length of string to be processed is zero */
 	if (code_buf_ptr > 1) {	/** Send remaining code. */
-		for (i = 0; i < code_buf_ptr; i++) outfile->write_byte(code_buf[i]);
+		for (i = 0; i < code_buf_ptr; i++) outfile->write((uint8_t)code_buf[i]);
 		codesize += code_buf_ptr;
 	}
 	delete text_buf;
@@ -298,7 +298,7 @@ static int Decode(any_t* buff,const uint8_t* instream,unsigned long length)
 		   if(reach_eof) break;
 		   c = instream[in_idx++];
 		   if(buff) ((char  *)buff)[buff_ptr++] = c;
-		   else outfile->write_byte(c);
+		   else outfile->write((uint8_t)c);
 		   text_buf[r++] = c;
 		   r &= (N - 1);
 		}
@@ -316,7 +316,7 @@ static int Decode(any_t* buff,const uint8_t* instream,unsigned long length)
 		     {
 				c = text_buf[(i + k) & (N - 1)];
 				if(buff) ((char  *)buff)[buff_ptr++] = c;
-				else outfile->write_byte(c);
+				else outfile->write((uint8_t)c);
 				text_buf[r++] = c;
 				r &= (N - 1);
 		     }

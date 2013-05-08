@@ -642,7 +642,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
     }
   }
   exit:
-  BMSeek(cfpos,BFile::Seek_Set);
+  BMSeek(cfpos,binary_stream::Seek_Set);
   delete hwnd;
   return ret_addr;
 }

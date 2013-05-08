@@ -37,7 +37,7 @@ using namespace	usr;
 namespace	usr {
 static newPharLap nph;
 
-static BFile* pl_cache = &bNull;
+static binary_stream* pl_cache = &bNull;
 
 static __filesize_t __FASTCALL__ ShowPharLapHeader()
 {
@@ -130,7 +130,7 @@ static void __FASTCALL__ PLSegPaint(TWindow * win,const any_t** names,unsigned s
  win->refresh_full();
 }
 
-static bool __FASTCALL__ __PLReadSegInfo(BFile& handle,memArray * obj,unsigned nnames)
+static bool __FASTCALL__ __PLReadSegInfo(binary_stream& handle,memArray * obj,unsigned nnames)
 {
  unsigned i;
  for(i = 0;i < nnames;i++)
@@ -145,7 +145,7 @@ static bool __FASTCALL__ __PLReadSegInfo(BFile& handle,memArray * obj,unsigned n
 
 static __filesize_t __FASTCALL__ PharLapSegInfo()
 {
- BFile& handle = *pl_cache;
+ binary_stream& handle = *pl_cache;
  unsigned nnames;
  __filesize_t fpos;
  memArray * obj;
@@ -154,7 +154,7 @@ static __filesize_t __FASTCALL__ PharLapSegInfo()
  fpos = BMGetCurrFilePos();
  if(!nnames) { NotifyBox(NOT_ENTRY," Segment Info table "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
- handle.seek(nph.plSegInfoOffset,BFile::Seek_Set);
+ handle.seek(nph.plSegInfoOffset,binary_stream::Seek_Set);
  if(__PLReadSegInfo(handle,obj,nnames))
  {
     int i;
@@ -207,7 +207,7 @@ static void __FASTCALL__ PLRunTimePaint(TWindow * win,const any_t** names,unsign
  win->refresh_full();
 }
 
-static bool __FASTCALL__ __PLReadRunTime(BFile& handle,memArray * obj,unsigned nnames)
+static bool __FASTCALL__ __PLReadRunTime(binary_stream& handle,memArray * obj,unsigned nnames)
 {
  unsigned i;
  for(i = 0;i < nnames;i++)
@@ -222,7 +222,7 @@ static bool __FASTCALL__ __PLReadRunTime(BFile& handle,memArray * obj,unsigned n
 
 static __filesize_t __FASTCALL__ PharLapRunTimeParms()
 {
- BFile& handle = *pl_cache;
+ binary_stream& handle = *pl_cache;
  unsigned nnames;
  __filesize_t fpos;
  memArray * obj;
@@ -231,7 +231,7 @@ static __filesize_t __FASTCALL__ PharLapRunTimeParms()
  fpos = BMGetCurrFilePos();
  if(!nnames) { NotifyBox(NOT_ENTRY," Run-time parameters "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
- handle.seek(nph.plRunTimeParms,BFile::Seek_Set);
+ handle.seek(nph.plRunTimeParms,binary_stream::Seek_Set);
  if(__PLReadRunTime(handle,obj,nnames))
  {
     int i;
@@ -248,7 +248,7 @@ static __filesize_t __FASTCALL__ PharLapRunTimeParms()
 static bool __FASTCALL__ IsPharLap()
 {
    char sign[2];
-   bmReadBufferEx(sign,2,0,BFile::Seek_Set);
+   bmReadBufferEx(sign,2,0,binary_stream::Seek_Set);
    if(sign[0] == 'P' && (sign[1] == '2' || sign[1] == '3')) return true;
    return false;
 }
@@ -256,14 +256,14 @@ static bool __FASTCALL__ IsPharLap()
 static void __FASTCALL__ PharLapInit(CodeGuider& code_guider)
 {
     UNUSED(code_guider);
-  BFile& main_handle = bmbioHandle();
-  bmReadBufferEx(&nph,sizeof(nph),0,BFile::Seek_Set);
+  binary_stream& main_handle = bmbioHandle();
+  bmReadBufferEx(&nph,sizeof(nph),0,binary_stream::Seek_Set);
   if((pl_cache = main_handle.dup()) == &bNull) pl_cache = &main_handle;
 }
 
 static void __FASTCALL__ PharLapDestroy()
 {
-  BFile& main_handle = bmbioHandle();
+  binary_stream& main_handle = bmbioHandle();
   if(pl_cache != &bNull && pl_cache != &main_handle) delete pl_cache;
 }
 

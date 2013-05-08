@@ -14,7 +14,7 @@ namespace	usr {
     struct Plugin_Info;
     class CodeGuider;
     class Bin_Format;
-    class BFile;
+    class binary_stream;
     class Ini_Profile;
     class BeyeContext : public Opaque {
 	public:
@@ -64,12 +64,12 @@ namespace	usr {
 
 	    void		PaintTitle() const;
 
-	    BFile&		bm_file() const { return bm_file_handle; }
-	    BFile&		sc_bm_file() const { return sc_bm_file_handle; }
+	    binary_stream&	bm_file() const { return bm_file_handle; }
+	    binary_stream&	sc_bm_file() const { return sc_bm_file_handle; }
 	    bool		BMOpen(const std::string& fname);
 	    void		BMClose();
-	    static BFile*	beyeOpenRO(const std::string& fname,unsigned cache_size);
-	    static BFile*	beyeOpenRW(const std::string& fname,unsigned cache_size);
+	    static binary_stream* beyeOpenRO(const std::string& fname,unsigned cache_size);
+	    static binary_stream* beyeOpenRW(const std::string& fname,unsigned cache_size);
 
 	    std::string ArgVector1;
 	    std::string ini_ver;
@@ -110,8 +110,8 @@ namespace	usr {
 	    CodeGuider*		code_guider;
 	    addendum*		addons;
 	    class sysinfo*	sysinfo;
-	    BFile&		bm_file_handle;
-	    BFile&		sc_bm_file_handle;
+	    binary_stream&	bm_file_handle;
+	    binary_stream&	sc_bm_file_handle;
     };
     BeyeContext& beye_context();
 } // namespace	usr

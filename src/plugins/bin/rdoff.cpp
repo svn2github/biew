@@ -50,8 +50,8 @@ static __filesize_t cs_start,ds_start;
 static linearArray *rdoffReloc = NULL;
 static linearArray *rdoffImpNames = NULL;
 
-static void  __FASTCALL__ ReadImpNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const std::string&));
-static void __FASTCALL__ rdoff_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const std::string&));
+static void  __FASTCALL__ ReadImpNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
+static void __FASTCALL__ rdoff_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
 static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
 
 static tCompare __FASTCALL__ compare_impnames(const any_t*v1,const any_t*v2);
@@ -72,10 +72,10 @@ static bool  __FASTCALL__ rdoff_skiprec(unsigned char type)
   switch(type)
   {
     case 1: /** reloc record */
-	    bmSeek(8,BFile::Seek_Cur);
+	    bmSeek(8,binary_stream::Seek_Cur);
 	    break;
     case 2: /** import symbol */
-	    bmSeek(2,BFile::Seek_Cur);
+	    bmSeek(2,binary_stream::Seek_Cur);
 	    for(i = 0;i < 32;i++)
 	    {
 	      nulch = bmReadByte();
@@ -83,7 +83,7 @@ static bool  __FASTCALL__ rdoff_skiprec(unsigned char type)
 	    }
 	    break;
     case 3: /** export symbol */
-	    bmSeek(5,BFile::Seek_Cur);
+	    bmSeek(5,binary_stream::Seek_Cur);
 	    for(i = 0;i < 32;i++)
 	    {
 	      nulch = bmReadByte();
@@ -98,7 +98,7 @@ static bool  __FASTCALL__ rdoff_skiprec(unsigned char type)
 	    }
 	    break;
     case 5: /** reserve bss */
-	    bmSeek(4,BFile::Seek_Cur);
+	    bmSeek(4,binary_stream::Seek_Cur);
 	    break;
     default: /** unknown ??? */
 	    ErrMessageBox("Broken RDOFF file","");
@@ -120,7 +120,7 @@ static __filesize_t __FASTCALL__ rdoff_ShowExport()
   memArray * rdoff_et;
   fpos = BMGetCurrFilePos();
   if(!(rdoff_et = ma_Build(0,true))) return fpos;
-  bmSeek(10,BFile::Seek_Set);
+  bmSeek(10,binary_stream::Seek_Set);
   while(bmGetCurrFilePos() < rdoff_hdrlen + 5)
   {
     bool is_eof;
@@ -177,7 +177,7 @@ static __filesize_t __FASTCALL__ rdoff_FindExport(const std::string& name)
   unsigned char segno;
   __filesize_t segoff;
   __filesize_t abs_off;
-  bmSeek(10,BFile::Seek_Set);
+  bmSeek(10,binary_stream::Seek_Set);
   ret = 0L;
   while(bmGetCurrFilePos() < rdoff_hdrlen + 5)
   {
@@ -224,7 +224,7 @@ static __filesize_t __FASTCALL__ rdoff_ShowModRef()
   memArray * rdoff_mr;
   fpos = BMGetCurrFilePos();
   if(!(rdoff_mr = ma_Build(0,true))) return fpos;
-  bmSeek(10,BFile::Seek_Set);
+  bmSeek(10,binary_stream::Seek_Set);
   while(bmGetCurrFilePos() < rdoff_hdrlen + 5)
   {
     bool is_eof;
@@ -265,7 +265,7 @@ static __filesize_t __FASTCALL__ rdoff_ShowImport()
   memArray * rdoff_it;
   fpos = BMGetCurrFilePos();
   if(!(rdoff_it = ma_Build(0,true))) return fpos;
-  bmSeek(10,BFile::Seek_Set);
+  bmSeek(10,binary_stream::Seek_Set);
   while(bmGetCurrFilePos() < rdoff_hdrlen + 5)
   {
     bool is_eof;
@@ -274,7 +274,7 @@ static __filesize_t __FASTCALL__ rdoff_ShowImport()
     if(rec == 2)
     {
       char ch;
-      bmSeek(2,BFile::Seek_Cur);
+      bmSeek(2,binary_stream::Seek_Cur);
       for(i = 0;i < 32;i++)
       {
 	ch = bmReadByte();
@@ -305,11 +305,11 @@ static __filesize_t __FASTCALL__ rdoff_ShowHeader()
   unsigned long hs_len,cs_len;
   TWindow *w;
   fpos = BMGetCurrFilePos();
-  endian = bmReadByteEx(5,BFile::Seek_Set);
+  endian = bmReadByteEx(5,binary_stream::Seek_Set);
   hs_len = bmReadDWord();
-  bmSeek(hs_len,BFile::Seek_Cur);
+  bmSeek(hs_len,binary_stream::Seek_Cur);
   cs_len = bmReadDWord();
-  bmSeek(cs_len,BFile::Seek_Cur);
+  bmSeek(cs_len,binary_stream::Seek_Cur);
   ds_len = bmReadDWord();
   cs_start = hs_len + 14;
   ds_start = cs_start + cs_len + 4;
@@ -362,7 +362,7 @@ static void  __FASTCALL__ BuildRelocRDOFF()
 {
   unsigned char rec;
   if(!(rdoffReloc = la_Build(0,sizeof(RDOFF_RELOC),MemOutBox))) return;
-  bmSeek(10,BFile::Seek_Set);
+  bmSeek(10,binary_stream::Seek_Set);
   while(bmGetCurrFilePos() < rdoff_hdrlen + 5)
   {
     RDOFF_RELOC rdf_r;
@@ -434,7 +434,7 @@ static bool __FASTCALL__ rdoffBuildReferStr(const DisMode& parent,char *str,RDOF
 		 ret = (rdoff_ImpName*)la_Find(rdoffImpNames,&key,compare_impnames);
 		 if(ret)
 		 {
-		   bmSeek(ret->nameoff,BFile::Seek_Set);
+		   bmSeek(ret->nameoff,binary_stream::Seek_Set);
 		   name[0] = 0;
 		   for(i = 0;i < sizeof(name);i++)
 		   {
@@ -459,14 +459,14 @@ static bool __FASTCALL__ rdoffBuildReferStr(const DisMode& parent,char *str,RDOF
      switch(reloc->reflen)
      {
        default:
-       case 4: field_val = bmReadDWordEx(reloc->offset,BFile::Seek_Set);
+       case 4: field_val = bmReadDWordEx(reloc->offset,binary_stream::Seek_Set);
 	       break;
-       case 2: field_val = bmReadWordEx(reloc->offset,BFile::Seek_Set);
+       case 2: field_val = bmReadWordEx(reloc->offset,binary_stream::Seek_Set);
 	       break;
-       case 1: field_val = bmReadByteEx(reloc->offset,BFile::Seek_Set);
+       case 1: field_val = bmReadByteEx(reloc->offset,binary_stream::Seek_Set);
 	       break;
      }
-     bmSeek(foff,BFile::Seek_Set);
+     bmSeek(foff,binary_stream::Seek_Set);
      if(reloc->segto < 3)
      {
        if(base_seg_off < FILESIZE_MAX)
@@ -531,7 +531,7 @@ static bool __FASTCALL__ rdoff_AppendRef(const DisMode& parent,char *str,__files
 static bool __FASTCALL__ rdoff_check_fmt()
 {
   char rbuff[6];
-  bmReadBufferEx(rbuff,sizeof(rbuff),0L,BFile::Seek_Set);
+  bmReadBufferEx(rbuff,sizeof(rbuff),0L,binary_stream::Seek_Set);
   return memcmp(rbuff,"RDOFF1",sizeof(rbuff)) == 0 ||
 	 memcmp(rbuff,"RDOFF\x1",sizeof(rbuff)) == 0;
 }
@@ -540,10 +540,10 @@ static void __FASTCALL__ rdoff_init_fmt(CodeGuider& _code_guider)
 {
     code_guider=&_code_guider;
   unsigned long cs_len;
-  rdoff_hdrlen = bmReadDWordEx(6,BFile::Seek_Set);
-  bmSeek(rdoff_hdrlen,BFile::Seek_Cur);
+  rdoff_hdrlen = bmReadDWordEx(6,binary_stream::Seek_Set);
+  bmSeek(rdoff_hdrlen,binary_stream::Seek_Cur);
   cs_len = bmReadDWord();
-  bmSeek(cs_len,BFile::Seek_Cur);
+  bmSeek(cs_len,binary_stream::Seek_Cur);
   ds_len = bmReadDWord();
   cs_start = rdoff_hdrlen + 14;
   ds_start = cs_start + cs_len + 4;
@@ -556,12 +556,12 @@ static void __FASTCALL__ rdoff_destroy_fmt()
   if(PubNames) { la_Destroy(PubNames); PubNames = NULL; }
 }
 
-static void __FASTCALL__ rdoff_ReadPubName(BFile& b_cache,const struct PubName *it,
+static void __FASTCALL__ rdoff_ReadPubName(binary_stream& b_cache,const struct PubName *it,
 		       char *buff,unsigned cb_buff)
 {
     unsigned char ch;
     unsigned i;
-    b_cache.seek(it->nameoff,BFile::Seek_Set);
+    b_cache.seek(it->nameoff,binary_stream::Seek_Set);
     for(i = 0;i < cb_buff;i++)
     {
       ch = bmReadByte();
@@ -572,13 +572,13 @@ static void __FASTCALL__ rdoff_ReadPubName(BFile& b_cache,const struct PubName *
 
 static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
-  BFile& b_cache = bmbioHandle();
+  binary_stream& b_cache = bmbioHandle();
   return fmtFindPubName(b_cache,buff,cb_buff,pa,
 			rdoff_ReadPubNameList,
 			rdoff_ReadPubName);
 }
 
-static void __FASTCALL__ rdoff_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const std::string&))
+static void __FASTCALL__ rdoff_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
 {
  unsigned char segno,rec;
  __filesize_t segoff,abs_off;
@@ -587,7 +587,7 @@ static void __FASTCALL__ rdoff_ReadPubNameList(BFile& handle,void (__FASTCALL__ 
  UNUSED(handle);
  if(!PubNames)
    if(!(PubNames = la_Build(0,sizeof(struct PubName),mem_out))) return;
- bmSeek(10,BFile::Seek_Set);
+ bmSeek(10,binary_stream::Seek_Set);
  while(bmGetCurrFilePos() < rdoff_hdrlen + 5)
  {
     bool is_eof;
@@ -628,7 +628,7 @@ static tCompare __FASTCALL__ compare_impnames(const any_t*v1,const any_t*v2)
   return __CmpLong__(pnam1->lsegno,pnam2->lsegno);
 }
 
-static void  __FASTCALL__ ReadImpNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const std::string&))
+static void  __FASTCALL__ ReadImpNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
 {
  unsigned char rec;
  unsigned i;
@@ -636,7 +636,7 @@ static void  __FASTCALL__ ReadImpNameList(BFile& handle,void (__FASTCALL__ *mem_
  UNUSED(handle);
  if(!rdoffImpNames)
    if(!(rdoffImpNames = la_Build(0,sizeof(struct rdoff_ImpName),mem_out))) return;
- bmSeek(10,BFile::Seek_Set);
+ bmSeek(10,binary_stream::Seek_Set);
  while(bmGetCurrFilePos() < rdoff_hdrlen + 5)
  {
     bool is_eof;
@@ -674,7 +674,7 @@ static int __FASTCALL__ rdoff_bitness(__filesize_t pa)
 static __filesize_t __FASTCALL__ rdoffGetPubSym(char *str,unsigned cb_str,unsigned *func_class,
 			   __filesize_t pa,bool as_prev)
 {
-  BFile& b_cache = bmbioHandle();
+  binary_stream& b_cache = bmbioHandle();
   return fmtGetPubSym(b_cache,str,cb_str,func_class,pa,as_prev,
 		      rdoff_ReadPubNameList,
 		      rdoff_ReadPubName);

@@ -206,7 +206,7 @@ static int read_id3v23_tags(unsigned flags,unsigned hsize)
 	unsigned ehsize;
 	bmReadBuffer(buf,4);
 	ehsize=(buf[0] << 21) + (buf[1] << 14) + (buf[2] << 7) + buf[3];
-	bmSeek(ehsize,BFile::Seek_Cur);
+	bmSeek(ehsize,binary_stream::Seek_Cur);
     }
     pos=bmGetCurrFilePos();
     epos=pos+hsize;
@@ -259,7 +259,7 @@ static int read_id3v24_tags(unsigned flags,unsigned hsize)
 	unsigned ehsize;
 	bmReadBuffer(buf,4);
 	ehsize=(buf[0] << 21) + (buf[1] << 14) + (buf[2] << 7) + buf[3];
-	bmSeek(ehsize,BFile::Seek_Cur);
+	bmSeek(ehsize,binary_stream::Seek_Cur);
     }
     pos=bmGetCurrFilePos();
     epos=pos+hsize;
@@ -282,7 +282,7 @@ static int read_id3v2_tags()
 {
     char buf[4];
     unsigned vers,rev,flags,hsize;
-    bmSeek(3,BFile::Seek_Set); /* skip 'ID3' */
+    bmSeek(3,binary_stream::Seek_Set); /* skip 'ID3' */
     vers=bmReadByte();
     rev=bmReadByte();
     flags=bmReadByte();
@@ -306,10 +306,10 @@ static void find_next_mp3_hdr(unsigned char *hdr) {
     if(bmEOF()) break;
     len = mp_decode_mp3_header(hdr,NULL,NULL,NULL,NULL);
     if(len < 0) {
-      bmSeek(-3,BFile::Seek_Cur);
+      bmSeek(-3,binary_stream::Seek_Cur);
       continue;
     }
-    bmSeek(spos,BFile::Seek_Set);
+    bmSeek(spos,binary_stream::Seek_Set);
     break;
   }
 }
@@ -336,7 +336,7 @@ static int Xing_test(char *hdr,int *scale,int *lsf,int *srate,long *nframes,long
     if(mpeg1)	off=mode!=MPG_MD_MONO?32:17;
     else	off=mode!=MPG_MD_MONO?17:9;/* mpeg2 */
     fpos = bmGetCurrFilePos();
-    bmSeek(off,BFile::Seek_Cur);
+    bmSeek(off,binary_stream::Seek_Cur);
     bmReadBuffer(buf,4);
     if(memcmp(buf,"Xing",4) == 0 || memcmp(buf,"Info",4) == 0)
     {
@@ -347,10 +347,10 @@ static int Xing_test(char *hdr,int *scale,int *lsf,int *srate,long *nframes,long
 	head_flags = be2me_32(bmReadDWord());
 	if(head_flags & FRAMES_FLAG)	*nframes=be2me_32(bmReadDWord());
 	if(head_flags & BYTES_FLAG)	*nbytes=be2me_32(bmReadDWord());
-	if(head_flags & TOC_FLAG)	bmSeek(100,BFile::Seek_Cur); /* skip indexes */
+	if(head_flags & TOC_FLAG)	bmSeek(100,binary_stream::Seek_Cur); /* skip indexes */
 	if(head_flags & VBR_SCALE_FLAG)	*scale = be2me_32(bmReadDWord());
     }
-    bmSeek(fpos,BFile::Seek_Set);
+    bmSeek(fpos,binary_stream::Seek_Set);
     return is_xing;
 }
 
@@ -360,16 +360,16 @@ static bool  __FASTCALL__ mp3_check_fmt()
     unsigned long off;
     int fmt = 0,mp3_brate,mp3_samplerate,mp3_channels;
     unsigned char hdr[4];
-    bmSeek(0,BFile::Seek_Set);
+    bmSeek(0,binary_stream::Seek_Set);
     bmReadBuffer(hdr,4);
     if( hdr[0] == 'I' && hdr[1] == 'D' && hdr[2] == '3' && (hdr[3] >= 2))
     {
 	int len;
-	bmSeek(2,BFile::Seek_Cur);
+	bmSeek(2,binary_stream::Seek_Cur);
 	bmReadBuffer(hdr,4);
 	len = (hdr[0]<<21) | (hdr[1]<<14) | (hdr[2]<<7) | hdr[3];
 	read_id3v2_tags();
-	bmSeek(len+10,BFile::Seek_Set);
+	bmSeek(len+10,binary_stream::Seek_Set);
 	find_next_mp3_hdr(hdr);
 //	Xing_test(hdr,&scale,&lsf,&srate,&nframes,&nbytes);
 	if(mp_decode_mp3_header(hdr,&fmt,&mp3_brate,&mp3_samplerate,&mp3_channels) > 0)	return true;
@@ -382,7 +382,7 @@ static bool  __FASTCALL__ mp3_check_fmt()
 	for(i=0;i<5;i++)
 	{
 	    if((long)(off=mp_decode_mp3_header(hdr,&fmt,&mp3_brate,&mp3_samplerate,&mp3_channels)) < 0) return false;
-	    bmSeek(off,BFile::Seek_Cur);
+	    bmSeek(off,binary_stream::Seek_Cur);
 	    if(bmEOF()) return false;
 
 	}
@@ -402,15 +402,15 @@ static __filesize_t __FASTCALL__ Show_MP3_Header()
  long nframes,nbytes,ave_brate;
  int is_xing=0;
  fpos2 = fpos = BMGetCurrFilePos();
- bmSeek(0,BFile::Seek_Set);
+ bmSeek(0,binary_stream::Seek_Set);
  bmReadBuffer(hdr,4);
  if( hdr[0] == 'I' && hdr[1] == 'D' && hdr[2] == '3' && (hdr[3] >= 2))
  {
-	bmSeek(2,BFile::Seek_Cur);
+	bmSeek(2,binary_stream::Seek_Cur);
 	bmReadBuffer(hdr,4);
 	len = (hdr[0]<<21) | (hdr[1]<<14) | (hdr[2]<<7) | hdr[3];
 	read_id3v2_tags();
-	bmSeek(len+10,BFile::Seek_Set);
+	bmSeek(len+10,binary_stream::Seek_Set);
 	find_next_mp3_hdr(hdr);
 	fpos2=bmGetCurrFilePos();
  }

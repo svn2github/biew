@@ -47,11 +47,11 @@ static struct external_filehdr coff386hdr;
 static AOUTHDR coff386ahdr;
 static SCNHDR *coff386so;
 static uint_fast16_t nsections;
-static BFile* coff_cache;
+static binary_stream* coff_cache;
 static __filesize_t strings_ptr;
 
-static void __FASTCALL__ coff_ReadPubNameList(BFile& handle,void (__FASTCALL__ *mem_out)(const std::string&));
-static void __FASTCALL__ coff_ReadPubName(BFile& b_cache,const struct PubName *it,
+static void __FASTCALL__ coff_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
+static void __FASTCALL__ coff_ReadPubName(binary_stream& b_cache,const struct PubName *it,
 			   char *buff,unsigned cb_buff);
 static unsigned __FASTCALL__ coff386_GetObjAttr(__filesize_t pa,char *name,unsigned cb_name,
 			     __filesize_t *start,__filesize_t *end,int *_class,int *bitness);
@@ -64,22 +64,22 @@ static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t p
 }
 
 
-static void  __FASTCALL__ coffReadLongName(BFile& handle,__filesize_t offset,
+static void  __FASTCALL__ coffReadLongName(binary_stream& handle,__filesize_t offset,
 				      char *str, unsigned slen)
 {
   unsigned i;
   __filesize_t fpos;
    fpos = handle.tell();
-   handle.seek(offset+strings_ptr,BFile::Seek_Set);
+   handle.seek(offset+strings_ptr,binary_stream::Seek_Set);
    for(i = 0;i < slen;i++)
    {
      unsigned char ch;
-     ch = handle.read_byte();
+     ch = handle.read(type_byte);
      if(ch && !handle.eof()) str[i] = ch;
      else  break;
    }
    str[i] = 0;
-   handle.seek(fpos,BFile::Seek_Set);
+   handle.seek(fpos,binary_stream::Seek_Set);
 }
 
 static __filesize_t __FASTCALL__ coff386_VA2PA(__filesize_t va)
@@ -151,7 +151,7 @@ static void __FASTCALL__ coffObjPaint(TWindow * win,const any_t** names,unsigned
  win->refresh_full();
 }
 
-static bool  __FASTCALL__ __coffReadObjects(BFile& handle,memArray * obj,unsigned n)
+static bool  __FASTCALL__ __coffReadObjects(binary_stream& handle,memArray * obj,unsigned n)
 {
  size_t i;
   for(i = 0;i < n;i++)
@@ -166,7 +166,7 @@ static bool  __FASTCALL__ __coffReadObjects(BFile& handle,memArray * obj,unsigne
 
 static __filesize_t __FASTCALL__ coffShowObjects()
 {
- BFile* handle;
+ binary_stream* handle;
  unsigned nnames;
  __filesize_t fpos,off;
  memArray * obj;
@@ -177,7 +177,7 @@ static __filesize_t __FASTCALL__ coffShowObjects()
  handle = coff_cache;
  off = sizeof(coff386hdr);
  if(COFF_WORD(coff386hdr.f_opthdr)) off += COFF_WORD(coff386hdr.f_opthdr);
- handle->seek(off,BFile::Seek_Set);
+ handle->seek(off,binary_stream::Seek_Set);
  if(__coffReadObjects(*handle,obj,nnames))
  {
   int ret;
@@ -320,17 +320,17 @@ static const char *  __FASTCALL__ coffEncodeClass(unsigned _class)
 }
 
 
-static unsigned __FASTCALL__ coffSymTabNumItems(BFile& handle)
+static unsigned __FASTCALL__ coffSymTabNumItems(binary_stream& handle)
 {
   UNUSED(handle);
   return (unsigned)COFF_DWORD(coff386hdr.f_nsyms);
 }
 
-static bool  __FASTCALL__ coffSymTabReadItems(BFile& handle,memArray * obj,unsigned nnames)
+static bool  __FASTCALL__ coffSymTabReadItems(binary_stream& handle,memArray * obj,unsigned nnames)
 {
  unsigned i;
  unsigned length;
- handle.seek(COFF_DWORD(coff386hdr.f_symptr),BFile::Seek_Set);
+ handle.seek(COFF_DWORD(coff386hdr.f_symptr),binary_stream::Seek_Set);
  for(i = 0;i < nnames;i++)
  {
    struct external_syment cse;
@@ -365,7 +365,7 @@ static __filesize_t  __FASTCALL__ CalcEntryCoff(unsigned long idx,bool display_m
   uint_fast16_t sec_num;
   __filesize_t fpos;
   fpos = 0L;
-  bmSeek(COFF_DWORD(coff386hdr.f_symptr)+idx*sizeof(struct external_syment),BFile::Seek_Set);
+  bmSeek(COFF_DWORD(coff386hdr.f_symptr)+idx*sizeof(struct external_syment),binary_stream::Seek_Set);
   bmReadBuffer(&cse,sizeof(struct external_syment));
   sec_num = COFF_WORD(cse.e_scnum);
   if(sec_num && sec_num <= COFF_WORD(coff386hdr.f_nscns) &&
@@ -433,7 +433,7 @@ static void  __FASTCALL__ BuildRelocCoff386()
   {
     bool is_eof;
     is_eof = false;
-    bmSeek(COFF_DWORD(coff386so[segcount].s_relptr),BFile::Seek_Set);
+    bmSeek(COFF_DWORD(coff386so[segcount].s_relptr),binary_stream::Seek_Set);
     nr = COFF_WORD(coff386so[segcount].s_nreloc);
     for(j = 0;j < nr;j++)
     {
@@ -452,14 +452,14 @@ static void  __FASTCALL__ BuildRelocCoff386()
   delete w;
 }
 
-static bool   __FASTCALL__ coffSymTabReadItemsIdx(BFile& handle,unsigned long idx,
+static bool   __FASTCALL__ coffSymTabReadItemsIdx(binary_stream& handle,unsigned long idx,
 					    char *name,unsigned cb_name,
 					    unsigned *secnum,
 					    __filesize_t *offset)
 {
  struct external_syment cse;
  if(idx >= COFF_DWORD(coff386hdr.f_nsyms)) return false;
- handle.seek(COFF_DWORD(coff386hdr.f_symptr) + idx*sizeof(struct external_syment),BFile::Seek_Set);
+ handle.seek(COFF_DWORD(coff386hdr.f_symptr) + idx*sizeof(struct external_syment),binary_stream::Seek_Set);
  handle.read(&cse,sizeof(struct external_syment));
  if(COFF_DWORD(cse.e.e.e_zeroes) == 0L &&
     COFF_DWORD(cse.e.e.e_offset) >= 4)
@@ -484,7 +484,7 @@ static __filesize_t  __FASTCALL__ BuildReferStrCoff386(const DisMode& parent,cha
   int c,b;
   char name[256],pubname[256],secname[256];
   retval = true;
-  val = bmReadDWordEx(rne->offset,BFile::Seek_Set);
+  val = bmReadDWordEx(rne->offset,binary_stream::Seek_Set);
   /* rne->nameoff it's only pointer to name descriptor */
   is_idx = coffSymTabReadItemsIdx(*coff_cache,rne->nameoff,name,sizeof(name),(unsigned*)&secnum,&offset);
   val_assigned = false;
@@ -560,17 +560,17 @@ static bool __FASTCALL__ coff386_AppendRef(const DisMode& parent,char *str,__fil
 static bool __FASTCALL__ coff386_check_fmt()
 {
   uint_fast16_t id;
-  id = bmReadWordEx(0,BFile::Seek_Set);
+  id = bmReadWordEx(0,binary_stream::Seek_Set);
   return !(I386BADMAG(id));
 }
 
 static void __FASTCALL__ coff386_init_fmt(CodeGuider& _code_guider)
 {
     code_guider=&_code_guider;
-  BFile& main_handle=bNull;
+  binary_stream& main_handle=bNull;
   __filesize_t s_off = sizeof(coff386hdr);
   uint_fast16_t i;
-  bmReadBufferEx(&coff386hdr,sizeof(struct external_filehdr),0,BFile::Seek_Set);
+  bmReadBufferEx(&coff386hdr,sizeof(struct external_filehdr),0,binary_stream::Seek_Set);
   if(COFF_WORD(coff386hdr.f_opthdr)) bmReadBuffer(&coff386ahdr,sizeof(AOUTHDR));
   nsections = COFF_WORD(coff386hdr.f_nscns);
   if(!(coff386so = new SCNHDR[nsections]))
@@ -581,7 +581,7 @@ static void __FASTCALL__ coff386_init_fmt(CodeGuider& _code_guider)
   main_handle = bmbioHandle();
   if((coff_cache = main_handle.dup()) == &bNull) coff_cache = &main_handle;
   if(COFF_WORD(coff386hdr.f_opthdr)) s_off += COFF_WORD(coff386hdr.f_opthdr);
-  coff_cache->seek(s_off,BFile::Seek_Set);
+  coff_cache->seek(s_off,binary_stream::Seek_Set);
   for(i = 0;i < nsections;i++)
   {
     coff_cache->read(&coff386so[i],sizeof(SCNHDR));
@@ -591,7 +591,7 @@ static void __FASTCALL__ coff386_init_fmt(CodeGuider& _code_guider)
 
 static void __FASTCALL__ coff386_destroy_fmt()
 {
-  BFile& main_handle=bNull;
+  binary_stream& main_handle=bNull;
   delete coff386so;
   if(PubNames) { la_Destroy(PubNames); PubNames = 0; }
   main_handle = bmbioHandle();
@@ -631,26 +631,26 @@ static __filesize_t __FASTCALL__ coff386Help()
   return BMGetCurrFilePos();
 }
 
-static void __FASTCALL__ coff_ReadPubName(BFile& b_cache,const struct PubName *it,
+static void __FASTCALL__ coff_ReadPubName(binary_stream& b_cache,const struct PubName *it,
 			   char *buff,unsigned cb_buff)
 {
     if(!it->addinfo)
       coffReadLongName(b_cache,it->nameoff,buff,cb_buff);
     else
     {
-      b_cache.seek(it->nameoff,BFile::Seek_Set);
+      b_cache.seek(it->nameoff,binary_stream::Seek_Set);
       b_cache.read(buff,it->addinfo);
       buff[it->addinfo] = 0;
     }
 }
 
-static void __FASTCALL__ coff_ReadPubNameList(BFile& handle,
+static void __FASTCALL__ coff_ReadPubNameList(binary_stream& handle,
 				    void (__FASTCALL__ *mem_out)(const std::string&))
 {
  unsigned i,nnames;
  struct PubName pn;
  if(!(PubNames = la_Build(0,sizeof(struct PubName),mem_out))) return;
- handle.seek(COFF_DWORD(coff386hdr.f_symptr),BFile::Seek_Set);
+ handle.seek(COFF_DWORD(coff386hdr.f_symptr),binary_stream::Seek_Set);
  nnames = coffSymTabNumItems(handle);
  for(i = 0;i < nnames;i++)
  {

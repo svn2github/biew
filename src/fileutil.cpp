@@ -59,7 +59,7 @@ static bool ChSize()
        bool ret;
        int my_errno = 0;
        std::string fname = BMName();
-       BFile* bHandle;
+       binary_stream* bHandle;
        bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
        if(bHandle == &bNull)
        {
@@ -80,7 +80,7 @@ static bool ChSize()
  return false;
 }
 
-static bool  __FASTCALL__ InsBlock(BFile* bHandle,__filesize_t start,__fileoff_t psize)
+static bool  __FASTCALL__ InsBlock(binary_stream* bHandle,__filesize_t start,__fileoff_t psize)
 {
    char *buffer;
    __filesize_t tile,oflen,flen,crpos,cwpos;
@@ -101,9 +101,9 @@ static bool  __FASTCALL__ InsBlock(BFile* bHandle,__filesize_t start,__fileoff_t
    numtowrite = (unsigned)std::min(tile,__filesize_t(51200U));
    while(tile)
    {
-     bHandle->seek(crpos,BFile::Seek_Set);
+     bHandle->seek(crpos,binary_stream::Seek_Set);
      bHandle->read(buffer,numtowrite);
-     bHandle->seek(cwpos,BFile::Seek_Set);
+     bHandle->seek(cwpos,binary_stream::Seek_Set);
      bHandle->write(buffer,numtowrite);
      tile -= numtowrite;
      numtowrite = (unsigned)std::min(tile,__filesize_t(51200U));
@@ -116,7 +116,7 @@ static bool  __FASTCALL__ InsBlock(BFile* bHandle,__filesize_t start,__fileoff_t
    while(psize)
    {
      numtowrite = (unsigned)std::min(psize,__fileoff_t(51200U));
-     bHandle->seek(cwpos,BFile::Seek_Set);
+     bHandle->seek(cwpos,binary_stream::Seek_Set);
      bHandle->write(buffer,numtowrite);
      psize -= numtowrite;
      cwpos += numtowrite;
@@ -125,7 +125,7 @@ static bool  __FASTCALL__ InsBlock(BFile* bHandle,__filesize_t start,__fileoff_t
    return true;
 }
 
-static bool  __FASTCALL__ DelBlock(BFile* bHandle,__filesize_t start,__fileoff_t psize)
+static bool  __FASTCALL__ DelBlock(binary_stream* bHandle,__filesize_t start,__fileoff_t psize)
 {
    char *buffer;
    __filesize_t tile,oflen,crpos,cwpos;
@@ -139,9 +139,9 @@ static bool  __FASTCALL__ DelBlock(BFile* bHandle,__filesize_t start,__fileoff_t
    while(tile)
    {
      numtowrite = (unsigned)std::min(tile,__filesize_t(51200U));
-     bHandle->seek(crpos,BFile::Seek_Set);
+     bHandle->seek(crpos,binary_stream::Seek_Set);
      bHandle->read(buffer,numtowrite);
-     bHandle->seek(cwpos,BFile::Seek_Set);
+     bHandle->seek(cwpos,binary_stream::Seek_Set);
      bHandle->write(buffer,numtowrite);
      tile -= numtowrite;
      crpos += numtowrite;
@@ -165,7 +165,7 @@ static bool InsDelBlock()
  if(GetInsDelBlkDlg(" Insert or delete block to/from file ",&start,&psize))
  {
     __filesize_t fpos;
-    BFile* bHandle;
+    binary_stream* bHandle;
     std::string fname;
     fpos = BMGetCurrFilePos();
     if(start > BMGetFLength()) { ErrMessageBox("Start is outside of file",""); return 0; }
@@ -184,7 +184,7 @@ static bool InsDelBlock()
       delete bHandle;
       BMReRead();
     }
-    BMSeek(fpos,BFile::Seek_Set);
+    BMSeek(fpos,binary_stream::Seek_Set);
  }
  return ret;
 }
@@ -303,15 +303,15 @@ static bool FStore()
 	    progress_wnd = PercentWnd("Saving ..."," Save block to file ");
 	    if(!(flags & FSDLG_ASMMODE)) { /** Write in binary mode */
 		BBio_File* _bioHandle;
-		BFile* h;
+		binary_stream* h;
 		__filesize_t wsize,crpos,pwsize,awsize;
 		unsigned rem;
 		wsize = endpos - ff_startpos;
-		h = new(zeromem)BFile;
-		if(BFile::exists(ff_fname) == false) h->create(ff_fname);
+		h = new(zeromem)binary_stream;
+		if(binary_stream::exists(ff_fname) == false) h->create(ff_fname);
 		else {
-		    if(!h->open(ff_fname,BFile::FO_READWRITE | BFile::SO_DENYNONE)) {
-			if(!h->open(ff_fname,BFile::FO_READWRITE | BFile::SO_COMPAT)) {
+		    if(!h->open(ff_fname,binary_stream::FO_READWRITE | binary_stream::SO_DENYNONE)) {
+			if(!h->open(ff_fname,binary_stream::FO_READWRITE | binary_stream::SO_COMPAT)) {
 			    use_err:
 			    errnoMessageBox("Can't use file","",errno);
 			    delete h;
@@ -322,18 +322,18 @@ static bool FStore()
 		}
 		delete h;
 		_bioHandle = new BBio_File(BBIO_CACHE_SIZE,BBio_File::Opt_Db);
-		bool rc = _bioHandle->open(ff_fname,BFile::FO_READWRITE | BFile::SO_DENYNONE);
-		if(rc == false)  rc = _bioHandle->open(ff_fname,BFile::FO_READWRITE | BFile::SO_COMPAT);
+		bool rc = _bioHandle->open(ff_fname,binary_stream::FO_READWRITE | binary_stream::SO_DENYNONE);
+		if(rc == false)  rc = _bioHandle->open(ff_fname,binary_stream::FO_READWRITE | binary_stream::SO_COMPAT);
 		if(rc == false)  goto use_err;
 		crpos = ff_startpos;
-		_bioHandle->seek(0L,BFile::Seek_Set);
+		_bioHandle->seek(0L,binary_stream::Seek_Set);
 		prcnt_counter = oprcnt_counter = 0;
 		pwsize = 0;
 		awsize = wsize;
 		while(wsize) {
 		    unsigned real_size;
 		    rem = (unsigned)std::min(wsize,__filesize_t(4096));
-		    if(!BMReadBufferEx(tmp_buff,rem,crpos,BFile::Seek_Set)) {
+		    if(!BMReadBufferEx(tmp_buff,rem,crpos,binary_stream::Seek_Set)) {
 			errnoMessageBox(READ_FAIL,"",errno);
 			delete _bioHandle;
 			goto Exit;
@@ -495,7 +495,7 @@ static bool FStore()
 			}
 		    }
 		    memset(codebuff,0,MaxInsnLen);
-		    BMReadBufferEx((any_t*)codebuff,MaxInsnLen,ff_startpos,BFile::Seek_Set);
+		    BMReadBufferEx((any_t*)codebuff,MaxInsnLen,ff_startpos,binary_stream::Seek_Set);
 		    if(obj_class == OC_CODE) dret = dismode->disassembler(ff_startpos,codebuff,__DISF_NORMAL);
 		    else { /** Data object */
 			unsigned dis_data_len,ifreq,data_len;
@@ -599,7 +599,7 @@ static bool FStore()
 	    } /** END: Write in disassembler mode */
 	    Exit:
 	    delete progress_wnd;
-	    BMSeek(cpos,BFile::Seek_Set);
+	    BMSeek(cpos,binary_stream::Seek_Set);
 	} else  ErrMessageBox("Start position > end position!","");
     }
     delete tmp_buff;
@@ -618,12 +618,12 @@ static bool FRestore()
  if(GetFStoreDlg(" Restore information from file ",ff_fname,&flags,&ff_startpos,&ff_len,FILE_PRMT))
  {
    __filesize_t flen,lval;
-   BFile* h = new(zeromem) BFile;
-   BFile* bHandle;
+   binary_stream* h = new(zeromem) binary_stream;
+   binary_stream* bHandle;
    std::string fname;
    endpos = ff_startpos + ff_len;
-   if(!h->open(ff_fname,BFile::FO_READONLY | BFile::SO_DENYNONE)) {
-	if(!h->open(ff_fname,BFile::FO_READONLY | BFile::SO_COMPAT)) {
+   if(!h->open(ff_fname,binary_stream::FO_READONLY | binary_stream::SO_DENYNONE)) {
+	if(!h->open(ff_fname,binary_stream::FO_READONLY | binary_stream::SO_COMPAT)) {
 	    goto err;
 	}
     }
@@ -637,9 +637,9 @@ static bool FRestore()
      __filesize_t wsize,cwpos;
      unsigned remaind;
      any_t*tmp_buff;
-     h = new(zeromem) BFile;
-     if(!h->open(ff_fname,BFile::FO_READONLY | BFile::SO_DENYNONE)) {
-        if(!h->open(ff_fname,BFile::FO_READONLY | BFile::SO_COMPAT)) {
+     h = new(zeromem) binary_stream;
+     if(!h->open(ff_fname,binary_stream::FO_READONLY | binary_stream::SO_DENYNONE)) {
+        if(!h->open(ff_fname,binary_stream::FO_READONLY | binary_stream::SO_COMPAT)) {
 	    err:
 	    delete h;
 	    errnoMessageBox(OPEN_FAIL,"",errno);
@@ -649,7 +649,7 @@ static bool FRestore()
      cpos = BMGetCurrFilePos();
      wsize = endpos - ff_startpos;
      cwpos = ff_startpos;
-     h->seek(0L,BFile::Seek_Set);
+     h->seek(0L,binary_stream::Seek_Set);
      tmp_buff = new char [4096];
      if(!tmp_buff)
      {
@@ -669,7 +669,7 @@ static bool FRestore()
 	   ret = false;
 	   goto bye;
 	 }
-	 bHandle->seek(cwpos,BFile::Seek_Set);
+	 bHandle->seek(cwpos,binary_stream::Seek_Set);
 	 if(!bHandle->write(tmp_buff,remaind))
 	 {
 	   errnoMessageBox(WRITE_FAIL,"",errno);
@@ -686,7 +686,7 @@ static bool FRestore()
      else errnoMessageBox(OPEN_FAIL,"",errno);
      delete (char*)tmp_buff;
      delete h;
-     BMSeek(cpos,BFile::Seek_Set);
+     BMSeek(cpos,binary_stream::Seek_Set);
      ret = true;
    }
    else ErrMessageBox("Start position > end position!","");
@@ -760,7 +760,7 @@ static bool CryptBlock()
      __filesize_t wsize,cwpos;
      unsigned remaind;
      std::string fname;
-     BFile* bHandle;
+     binary_stream* bHandle;
      any_t*tmp_buff;
      cpos = BMGetCurrFilePos();
      wsize = endpos - ff_startpos;
@@ -775,7 +775,7 @@ static bool CryptBlock()
      bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
      if(bHandle != &bNull)
      {
-       bHandle->seek(ff_startpos,BFile::Seek_Set);
+       bHandle->seek(ff_startpos,binary_stream::Seek_Set);
        while(wsize)
        {
 	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
@@ -786,7 +786,7 @@ static bool CryptBlock()
 	   goto bye;
 	 }
 	 CryptFunc((char*)tmp_buff,remaind,pass);
-	 bHandle->seek(cwpos,BFile::Seek_Set);
+	 bHandle->seek(cwpos,binary_stream::Seek_Set);
 	 if(!(bHandle->write(tmp_buff,remaind)))
 	 {
 	   errnoMessageBox(WRITE_FAIL,"",errno);
@@ -801,7 +801,7 @@ static bool CryptBlock()
        BMReRead();
      }
      delete (char*)tmp_buff;
-     BMSeek(cpos,BFile::Seek_Set);
+     BMSeek(cpos,binary_stream::Seek_Set);
      ret = true;
    }
    else ErrMessageBox("Start position > end position!","");
@@ -864,7 +864,7 @@ static bool ReverseBlock()
      __filesize_t wsize,cwpos;
      unsigned remaind;
      std::string fname;
-     BFile* bHandle;
+     binary_stream* bHandle;
      any_t*tmp_buff;
      cpos = BMGetCurrFilePos();
      wsize = endpos - ff_startpos;
@@ -879,7 +879,7 @@ static bool ReverseBlock()
      bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
      if(bHandle != &bNull)
      {
-       bHandle->seek(ff_startpos,BFile::Seek_Set);
+       bHandle->seek(ff_startpos,binary_stream::Seek_Set);
        while(wsize)
        {
 	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
@@ -890,7 +890,7 @@ static bool ReverseBlock()
 	   goto bye;
 	 }
 	 EndianifyBlock((char*)tmp_buff,remaind, flags & FSDLG_BTNSMASK);
-	 bHandle->seek(cwpos,BFile::Seek_Set);
+	 bHandle->seek(cwpos,binary_stream::Seek_Set);
 	 if(!(bHandle->write(tmp_buff,remaind)))
 	 {
 	   errnoMessageBox(WRITE_FAIL,"",errno);
@@ -905,7 +905,7 @@ static bool ReverseBlock()
        BMReRead();
      }
      delete (char*)tmp_buff;
-     BMSeek(cpos,BFile::Seek_Set);
+     BMSeek(cpos,binary_stream::Seek_Set);
      ret = true;
    }
    else ErrMessageBox("Start position > end position!","");
@@ -951,7 +951,7 @@ static bool XLatBlock()
      __filesize_t wsize,cwpos;
      unsigned remaind;
      std::string fname;
-     BFile* bHandle,* xHandle;
+     binary_stream* bHandle,* xHandle;
      any_t*tmp_buff;
      cpos = BMGetCurrFilePos();
      wsize = endpos - ff_startpos;
@@ -976,7 +976,7 @@ static bool XLatBlock()
        delete xHandle;
        return false;
      }
-     xHandle->seek(0x40, BFile::Seek_Set);
+     xHandle->seek(0x40, binary_stream::Seek_Set);
      xHandle->read(xlt, 256);
      delete xHandle;
      tmp_buff = new char [4096];
@@ -989,7 +989,7 @@ static bool XLatBlock()
      bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
      if(bHandle != &bNull)
      {
-       bHandle->seek(ff_startpos,BFile::Seek_Set);
+       bHandle->seek(ff_startpos,binary_stream::Seek_Set);
        while(wsize)
        {
 	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
@@ -1000,7 +1000,7 @@ static bool XLatBlock()
 	   goto bye;
 	 }
 	 TranslateBlock((char*)tmp_buff,remaind, xlt);
-	 bHandle->seek(cwpos,BFile::Seek_Set);
+	 bHandle->seek(cwpos,binary_stream::Seek_Set);
 	 if(!(bHandle->write(tmp_buff,remaind)))
 	 {
 	   errnoMessageBox(WRITE_FAIL,"",errno);
@@ -1015,7 +1015,7 @@ static bool XLatBlock()
        BMReRead();
      }
      delete (char*)tmp_buff;
-     BMSeek(cpos,BFile::Seek_Set);
+     BMSeek(cpos,binary_stream::Seek_Set);
      ret = true;
    }
    else ErrMessageBox("Start position > end position!","");

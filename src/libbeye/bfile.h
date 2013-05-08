@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 namespace	usr {
-    class BFile : public Opaque {
+    class binary_stream : public Opaque {
 	public:
 	    enum {
 		FO_READONLY	=0x0000, /**< Defines flag of file opening, that indicates opening in read-only mode */
@@ -28,8 +28,8 @@ namespace	usr {
 		Seek_End	=SEEK_END  /**< specifies reference location from end of file */
 	    };
 
-	    BFile();
-	    virtual ~BFile();
+	    binary_stream();
+	    virtual ~binary_stream();
 		   /** Opens existed file and buffered it
 		     * @return                handle of stream
 		     * @param fname           indicates name of file to be open
@@ -79,28 +79,28 @@ namespace	usr {
 		     * @note                  Logical file position is
 		     *                        incremented after operation.
 		    **/
-	    virtual uint8_t		read_byte();
+	    virtual uint8_t		read(const data_type_qualifier_byte_t&);
 
 		   /** Reads two bytes from stream.
 		     * @return                Readed word
 		     * @note                  Logical file position is
 		     *                        incremented after operation.
 		    **/
-	    virtual uint16_t		read_word();
+	    virtual uint16_t		read(const data_type_qualifier_word_t&);
 
 		   /** Reads four bytes from stream.
 		     * @return                Readed double word
 		     * @note                  Logical file position is
 		     *                        incremented after operation.
 		    **/
-	    virtual uint32_t		read_dword();
+	    virtual uint32_t		read(const data_type_qualifier_dword_t&);
 
 		   /** Reads 8 bytes from stream.
 		     * @return                Readed double word
 		     * @note                  Logical file position is
 		     *                        incremented after operation.
 		    **/
-	    virtual uint64_t		read_qword();
+	    virtual uint64_t		read(const data_type_qualifier_qword_t&);
 
 		   /** Reads specified number of bytes from stream.
 		     * @return                true if operation was succesfully performed
@@ -111,11 +111,6 @@ namespace	usr {
 		    **/
 	    virtual bool		read(any_t* buffer,unsigned cbBuffer);
 
-
-	    BFile&			operator>>(uint8_t& val) { val=read_byte(); return *this; }
-	    BFile&			operator>>(uint16_t& val) { val=read_word(); return *this; }
-	    BFile&			operator>>(uint32_t& val) { val=read_dword(); return *this; }
-	    BFile&			operator>>(uint64_t& val) { val=read_qword(); return *this; }
 		   /** Positions logical file pointer at the specified position.
 		     * @return                true if operation was succesfully performed
 		     * @param offset          specifies new offset of file pointer
@@ -134,7 +129,7 @@ namespace	usr {
 		     * @note                  Logical file position is
 		     *                        incremented after operation.
 		    **/
-	    virtual bool		write_byte(uint8_t bVal);
+	    virtual bool		write(uint8_t bVal);
 
 		   /** Writes two bytes to stream.
 		     * @return                true if operation was succesfully performed
@@ -142,7 +137,7 @@ namespace	usr {
 		     * @note                  Logical file position is
 		     *                        incremented after operation.
 		    **/
-	    virtual bool		write_word(uint16_t wVal);
+	    virtual bool		write(uint16_t wVal);
 
 		   /** Writes four bytes to stream.
 		     * @return                true if operation was succesfully performed
@@ -150,7 +145,7 @@ namespace	usr {
 		     * @note                  Logical file position is
 		     *                        incremented after operation.
 		    **/
-	    virtual bool		write_dword(uint32_t dwVal);
+	    virtual bool		write(uint32_t dwVal);
 
 		   /** Writes 8 bytes to stream.
 		     * @return                true if operation was succesfully performed
@@ -158,7 +153,7 @@ namespace	usr {
 		     * @note                  Logical file position is
 		     *                        incremented after operation.
 		    **/
-	    virtual bool		write_qword(uint64_t dwVal);
+	    virtual bool		write(uint64_t dwVal);
 
 		   /** Writes specified number of bytes opened to stream.
 		     * @return                true if operation was succesfully performed
@@ -168,11 +163,6 @@ namespace	usr {
 		     *                        position by the number of bytes writed.
 		    **/
 	    virtual bool		write(const any_t* buffer,unsigned cbBuffer);
-
-	    BFile&			operator<<(uint8_t val) { write_byte(val); return *this; }
-	    BFile&			operator<<(uint16_t val) { write_word(val); return *this; }
-	    BFile&			operator<<(uint32_t val) { write_dword(val); return *this; }
-	    BFile&			operator<<(uint64_t val) { write_qword(val); return *this; }
 
 		   /** Returns name of file associated with opened stream.
 		     * @return                name of file
@@ -194,8 +184,8 @@ namespace	usr {
 		     *                        of stream and buffer with all
 		     *                        characteristics.
 		    **/
-	    virtual bool		dup(BFile&) const;
-	    virtual BFile*		dup() const;
+	    virtual bool		dup(binary_stream&) const;
+	    virtual binary_stream*		dup() const;
 
 		   /** Returns low-level OS handle of opened stream.
 		     * @return                OS handle of opened stream
@@ -232,7 +222,7 @@ namespace	usr {
 	    std::string			fname;
 	    __filesize_t		fsize;
     };
-    extern BFile bNull; /**< Stream associated with STDERR */
+    extern binary_stream bNull; /**< Stream associated with STDERR */
 } // namespace	usr
 
 #endif

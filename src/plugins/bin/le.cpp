@@ -37,17 +37,17 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 
 namespace	usr {
-extern BFile* lx_cache;
+extern binary_stream* lx_cache;
 
 static __filesize_t __FASTCALL__ ShowNewHeaderLE()
 {
   return ShowNewHeaderLX();
 }
 
-static bool __FASTCALL__ __ReadMapTblLE(BFile& handle,memArray * obj,unsigned n)
+static bool __FASTCALL__ __ReadMapTblLE(binary_stream& handle,memArray * obj,unsigned n)
 {
  size_t i;
-  handle.seek(lxe.le.leObjectPageMapTableOffset + beye_context().headshift,BFile::Seek_Set);
+  handle.seek(lxe.le.leObjectPageMapTableOffset + beye_context().headshift,binary_stream::Seek_Set);
   for(i = 0;i < n;i++)
   {
     LE_PAGE lep;
@@ -74,13 +74,13 @@ static __filesize_t  __FASTCALL__ __calcPageEntryLE(LE_PAGE *mt,unsigned long id
 
 __filesize_t __FASTCALL__ CalcPageEntryLE(unsigned long pageidx)
 {
-  BFile* handle;
+  binary_stream* handle;
   bool found;
   unsigned i;
   LE_PAGE mt;
   if(!pageidx) return -1;
   handle = lx_cache;
-  handle->seek(lxe.le.leObjectPageMapTableOffset + beye_context().headshift,BFile::Seek_Set);
+  handle->seek(lxe.le.leObjectPageMapTableOffset + beye_context().headshift,binary_stream::Seek_Set);
   found = false;
   for(i = 0;i < lxe.le.lePageCount;i++)
   {
@@ -98,15 +98,15 @@ __filesize_t __FASTCALL__ CalcPageEntryLE(unsigned long pageidx)
 
 __filesize_t __FASTCALL__ CalcEntryPointLE(unsigned long objnum,__filesize_t _offset)
 {
-  BFile* handle;
+  binary_stream* handle;
   unsigned long i,start,pidx,j;
   __filesize_t ret,pageoff;
   LX_OBJECT lo;
   LE_PAGE mt;
   if(!objnum) return -1;
   handle = lx_cache;
-  handle->seek(lxe.le.leObjectTableOffset + beye_context().headshift,BFile::Seek_Set);
-  handle->seek(sizeof(LX_OBJECT)*(objnum - 1),BFile::Seek_Cur);
+  handle->seek(lxe.le.leObjectTableOffset + beye_context().headshift,binary_stream::Seek_Set);
+  handle->seek(sizeof(LX_OBJECT)*(objnum - 1),binary_stream::Seek_Cur);
   handle->read((any_t*)&lo,sizeof(LX_OBJECT));
 /*  if((lo.o32_flags & 0x00002000L) == 0x00002000L) USE16 = 0;
   else                                            USE16 = 0xFF; */
@@ -120,7 +120,7 @@ __filesize_t __FASTCALL__ CalcEntryPointLE(unsigned long objnum,__filesize_t _of
     if(_offset >= start && _offset < start + lxe.le.lePageSize)
     {
       bool found;
-      handle->seek(pageoff,BFile::Seek_Set);
+      handle->seek(pageoff,binary_stream::Seek_Set);
       pidx = i + lo.o32_pagemap;
       found = false;
       for(j = 0;j < lxe.le.lePageCount;j++)
@@ -160,7 +160,7 @@ __filesize_t __FASTCALL__ CalcEntryLE(const LX_ENTRY *lxent)
 
 static __filesize_t  __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,bool dispmsg)
 {
-  BFile* handle;
+  binary_stream* handle;
   bool found;
   unsigned i;
   unsigned char j;
@@ -170,15 +170,15 @@ static __filesize_t  __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,bool dispms
   __filesize_t ret;
   ret = BMGetCurrFilePos();
   handle = lx_cache;
-  handle->seek(lxe.le.leEntryTableOffset + beye_context().headshift,BFile::Seek_Set);
+  handle->seek(lxe.le.leEntryTableOffset + beye_context().headshift,binary_stream::Seek_Set);
   i = 0;
   found = false;
   while(1)
   {
-   cnt = handle->read_byte();
-   type = handle->read_byte();
+   cnt = handle->read(type_byte);
+   type = handle->read(type_byte);
    if(!cnt) break;
-   if(type) numobj = handle->read_word();
+   if(type) numobj = handle->read(type_word);
    for(j = 0;j < cnt;j++,i++)
    {
      char size;
@@ -199,13 +199,13 @@ static __filesize_t  __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,bool dispms
        if(size)
        {
 	 lxent.b32_obj = numobj;
-	 lxent.entry.e32_flags = handle->read_byte();
+	 lxent.entry.e32_flags = handle->read(type_byte);
 	 handle->read((any_t*)&lxent.entry.e32_variant,size);
        }
        break;
      }
      else
-       if(size) handle->seek(size + sizeof(char),BFile::Seek_Cur);
+       if(size) handle->seek(size + sizeof(char),binary_stream::Seek_Cur);
      if(handle->eof()) break;
    }
    if(found) break;
@@ -215,7 +215,7 @@ static __filesize_t  __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,bool dispms
  return ret;
 }
 
-static unsigned __FASTCALL__ leMapTblNumEntries(BFile& handle)
+static unsigned __FASTCALL__ leMapTblNumEntries(binary_stream& handle)
 {
   UNUSED(handle);
   return (unsigned)lxe.le.lePageCount;
@@ -274,7 +274,7 @@ static bool __FASTCALL__ isLE()
    beye_context().headshift = IsNewExe();
    if(beye_context().headshift)
    {
-     bmReadBufferEx(id,sizeof(id),beye_context().headshift,BFile::Seek_Set);
+     bmReadBufferEx(id,sizeof(id),beye_context().headshift,binary_stream::Seek_Set);
      if(id[0] == 'L' && id[1] == 'E') return true;
    }
    return false;
@@ -283,15 +283,15 @@ static bool __FASTCALL__ isLE()
 static void __FASTCALL__ LEinit(CodeGuider& code_guider)
 {
     UNUSED(code_guider);
-   BFile& main_handle = bmbioHandle();
+   binary_stream& main_handle = bmbioHandle();
    LXType = FILE_LE;
-   bmReadBufferEx(&lxe.le,sizeof(LEHEADER),beye_context().headshift,BFile::Seek_Set);
+   bmReadBufferEx(&lxe.le,sizeof(LEHEADER),beye_context().headshift,binary_stream::Seek_Set);
    if((lx_cache = main_handle.dup()) == &bNull) lx_cache = &main_handle;
 }
 
 static void __FASTCALL__ LEdestroy()
 {
-   BFile& main_handle = bmbioHandle();
+   binary_stream& main_handle = bmbioHandle();
    if(lx_cache != &bNull && lx_cache != &main_handle) delete lx_cache;
 }
 
