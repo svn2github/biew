@@ -3,6 +3,9 @@
 #include <vector>
 
 #include "libbeye/libbeye.h"
+#include "bmfile.h"
+#include "beyeutil.h"
+#include "reg_form.h"
 
 namespace	usr {
     class TWindow;
@@ -96,51 +99,67 @@ namespace	usr {
 	    Bin_Format(CodeGuider& parent);
 	    virtual ~Bin_Format();
 
-	    virtual void		detect_format();
+	    void		detect_format();
 
-	    virtual const char*		name() const;
+	    const char*		name() const { return detectedFormat->name; }
 
-	    virtual const char*		prompt(unsigned idx) const;	/**< on Alt-Fx selection */
-	    virtual __filesize_t	action_F1() const;
-	    virtual __filesize_t	action_F2() const;
-	    virtual __filesize_t	action_F3() const;
-	    virtual __filesize_t	action_F4() const;
-	    virtual __filesize_t	action_F5() const;
-	    virtual __filesize_t	action_F6() const;
-	    virtual __filesize_t	action_F7() const;
-	    virtual __filesize_t	action_F8() const;
-	    virtual __filesize_t	action_F9() const;
-	    virtual __filesize_t	action_F10() const;
+	    const char*		prompt(unsigned idx) const { return detectedFormat->prompt[idx]; }	/**< on Alt-Fx selection */
+	    __filesize_t	action_F1() const { return detectedFormat->action[0]?detectedFormat->action[0]():Bad_Address; }
+	    __filesize_t	action_F2() const { return detectedFormat->action[1]?detectedFormat->action[1]():Bad_Address; }
+	    __filesize_t	action_F3() const { return detectedFormat->action[2]?detectedFormat->action[2]():Bad_Address; }
+	    __filesize_t	action_F4() const { return detectedFormat->action[3]?detectedFormat->action[3]():Bad_Address; }
+	    __filesize_t	action_F5() const { return detectedFormat->action[4]?detectedFormat->action[4]():Bad_Address; }
+	    __filesize_t	action_F6() const { return detectedFormat->action[5]?detectedFormat->action[5]():Bad_Address; }
+	    __filesize_t	action_F7() const { return detectedFormat->action[6]?detectedFormat->action[6]():Bad_Address; }
+	    __filesize_t	action_F8() const { return detectedFormat->action[7]?detectedFormat->action[7]():Bad_Address; }
+	    __filesize_t	action_F9() const { return detectedFormat->action[8]?detectedFormat->action[8]():Bad_Address; }
+	    __filesize_t	action_F10() const{ return detectedFormat->action[9]?detectedFormat->action[9]():Bad_Address; }
 
-	    virtual __filesize_t	show_header() const;
-	    virtual bool		bind(const DisMode& parent,char *str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift) const;
+	    __filesize_t	show_header() const {
+					if(detectedFormat->showHdr) return detectedFormat->showHdr(); /**< if not an MZ style format */
+					if(IsNewExe()) return mz_format?mz_format->showHdr():Bad_Address;
+					return BMGetCurrFilePos();
+				    }
+	    bool		bind(const DisMode& _parent,char *str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift) const { return detectedFormat->bind?detectedFormat->bind(_parent,str,shift,flg,codelen,r_shift):false; }
 
-	    virtual int			query_platform() const;
+	    int			query_platform() const;
 
 			 /** Returns DAB_XXX. Quick version for disassembler */
-	    virtual int			query_bitness(__filesize_t off) const;
+	    int			query_bitness(__filesize_t off) const;
 
 			 /** Returns DAE_XXX. */
-	    virtual int			query_endian(__filesize_t off) const;
+	    int			query_endian(__filesize_t off) const;
 
 			 /** For displaying offset within struct in left address column.
 			   * @return         false if string is not modified.
 			  **/
-	    virtual bool		address_resolving(char * str,__filesize_t off) const;
+	    bool		address_resolving(char * str,__filesize_t off) const { return detectedFormat->AddressResolving?detectedFormat->AddressResolving(str,off):false; }
 
 			 /** Converts virtual address to physical (means file offset).
 			   * @param va       indicates virtual address to be converted
 			   * @return         Bad_Address if operation is meaningless
 			  **/
-	    virtual __filesize_t	va2pa(__filesize_t va) const;
-
+	    __filesize_t	va2pa(__filesize_t va) const {
+						__filesize_t rc=Bad_Address;
+						if(detectedFormat->va2pa) {
+						    rc=detectedFormat->va2pa(va);
+						    if(!rc) rc=Bad_Address;
+						}
+						return rc;
+					    }
 			 /** Converts physical address to virtual.
 			   * @param pa       indicates physical address to be converted
 			   * @note           seg pointer can be NULL
 			   * @return         Bad_Address if operation is meaningless
 			  **/
-	    virtual __filesize_t	pa2va(__filesize_t pa) const;
-
+	    __filesize_t	pa2va(__filesize_t pa) const {
+						__filesize_t rc=Bad_Address;
+						if(detectedFormat->pa2va) {
+						    rc=detectedFormat->pa2va(pa);
+						    if(!rc) rc=Bad_Address;
+						}
+						return rc;
+					    }
 
 	    /*-- Below placed functions for 'put structures' method of save as dialog --*/
 
@@ -155,7 +174,14 @@ namespace	usr {
 			   *                  physical address of public symbol
 			   *                  which is found in given direction
 			  **/
-	    virtual __filesize_t	get_public_symbol(char *str,unsigned cb_str,unsigned *_class,__filesize_t pa,bool as_prev) const;
+	    __filesize_t	get_public_symbol(char *str,unsigned cb_str,unsigned *_class,__filesize_t pa,bool as_prev) const {
+					    __filesize_t rc=Bad_Address;
+					    if(detectedFormat->GetPubSym) {
+						rc=detectedFormat->GetPubSym(str,cb_str,_class,pa,as_prev);
+						if(!rc) rc = Bad_Address;
+					    }
+					    return rc;
+					}
 
 			 /** Determines attributes of object at given physical file address.
 			   * @param pa        indicates physical file offset of object
@@ -175,7 +201,7 @@ namespace	usr {
 			   *                  = 0, end = begin of first data or
 			   *                  code object).
 			  **/
-	    virtual unsigned		get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,__filesize_t *start,__filesize_t *end,int *_class,int *bitness) const;
+	    unsigned		get_object_attribute(__filesize_t pa,char *_name,unsigned cb_name,__filesize_t *start,__filesize_t *end,int *_class,int *bitness) const { return detectedFormat->GetObjAttr?detectedFormat->GetObjAttr(pa,_name,cb_name,start,end,_class,bitness):0; }
 	private:
 	    std::vector<const REGISTRY_BIN*>	formats;
 	    const REGISTRY_BIN*		detectedFormat;

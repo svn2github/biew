@@ -53,7 +53,6 @@ fileutil.cpp\
 info_win.cpp\
 main.cpp\
 mainloop.cpp\
-refs.cpp\
 search.cpp\
 setup.cpp\
 tstrings.cpp

@@ -849,7 +849,7 @@ bool DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,
   }
 #endif
   if(hexAddressResolv) flg |= APREF_SAVE_VIRT;
-  app = disNeedRef >= Ref_All ? AppendAsmRef(*this,str,ulShift,flg,codelen,0L) : false;
+  app = disNeedRef >= Ref_All ? beye_context().bin_format().bind(*this,str,ulShift,flg,codelen,0L) : false;
   if(app != true)
   {
     dig_type = type & 0x00FFU;
@@ -886,7 +886,7 @@ bool DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,
       if(pa!=Bin_Format::Bad_Address)
       {
 	/* 1. Try to determine immediate as offset to public symbol */
-	if(type & Arg_Rip) app = AppendAsmRef(*this,str,pa,flg,codelen,0L);
+	if(type & Arg_Rip) app = beye_context().bin_format().bind(*this,str,pa,flg,codelen,0L);
 	if(app == true) goto next_step;
 	if(dis_severity < CommSev_Func)
 	{
@@ -1096,7 +1096,7 @@ bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__f
    if(dret.pro_clone == __INSNT_JMPPIC || dret.pro_clone == __INSNT_JMPRIP) goto try_pic; /* skip defaults for PIC */
    flg = APREF_TRY_LABEL;
    if(hexAddressResolv) flg |= APREF_SAVE_VIRT;
-   appended=AppendAsmRef(*this,str,ulShift,flg,codelen,r_sh);
+   appended=beye_context().bin_format().bind(*this,str,ulShift,flg,codelen,r_sh);
    if(!appended)
    {
       /*
@@ -1106,7 +1106,7 @@ bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__f
       */
        if(dret.pro_clone == __INSNT_JMPVVT) /* jmp (mod r/m) */
        {
-	    if(AppendAsmRef(*this,str,r_sh+dret.field,APREF_TRY_LABEL,dret.codelen,r_sh))
+	    if(beye_context().bin_format().bind(*this,str,r_sh+dret.field,APREF_TRY_LABEL,dret.codelen,r_sh))
 	    {
 	      appended = true;
 	      modif_to = strchr(str,' ');
@@ -1123,7 +1123,7 @@ bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__f
        {
 	    try_pic:
 	    if(dret.pro_clone == __INSNT_JMPRIP) goto try_rip;
-	    if(AppendAsmRef(*this,str,r_sh+dret.field,APREF_TRY_PIC,dret.codelen,r_sh))
+	    if(beye_context().bin_format().bind(*this,str,r_sh+dret.field,APREF_TRY_PIC,dret.codelen,r_sh))
 	    {
 	      appended = true; /* terminate appending any info anyway */
 	      if(!DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
@@ -1145,7 +1145,7 @@ bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__f
 		    r_sh+dret.field)+dret.codelen;
 	__tmp = beye_context().bin_format().va2pa(_defval);
 	pa = (__tmp!=Bin_Format::Bad_Address) ? __tmp : _defval;
-	app=AppendAsmRef(*this,str,pa,APREF_TRY_LABEL,dret.codelen,0L);
+	app=beye_context().bin_format().bind(*this,str,pa,APREF_TRY_LABEL,dret.codelen,0L);
 	if(app)
 	{
 	  appended = true; /* terminate appending any info anyway */

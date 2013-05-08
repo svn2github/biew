@@ -73,19 +73,6 @@ namespace	usr {
 
     __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos);
 
-		   /** Appends disassembler reference to string.
-		     * @paran parent       reference to class DisMode
-		     * @param str          string buffer for append to
-		     * @param ulShift      physical address of field, that required of binding
-		     * @param mode         see reg_form.h for detail
-		     * @param codelen      length of field, that required binding
-		     * @param r_shift      used only if APPREF_TRY_LABEL mode is set, contains real value of field, that required binding
-		     * @return             true if reference was appended
-		    **/
-    bool __FASTCALL__ AppendAsmRef(const DisMode& parent,char *str,__filesize_t ulShift,
-				       int mode,char codelen,
-				       __filesize_t r_shift);
-
     void  ShowSysInfo();
 
     int  __FASTCALL__ isHOnLine(__filesize_t cp,int width);
