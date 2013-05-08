@@ -97,7 +97,10 @@ namespace beye {
 	    LocalPtr<T>& operator=(LocalPtr<T> a) { return this; }
 	    LocalPtr<T>& operator=(LocalPtr<T>& a) { return this; }
 	    LocalPtr<T>& operator=(LocalPtr<T>* a) { return this; }
-	    T* ptr;
+
+	    Opaque	opaque1;
+	    T*		ptr;
+	    Opaque	opaque2;
     };
 
 #define TESTFLAG(x,y) (((x) & (y)) == (y)) /**< Test y bits in x */

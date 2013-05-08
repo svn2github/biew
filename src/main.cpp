@@ -67,7 +67,9 @@ extern const Plugin_Info disMode;
 
 static volatile char antiviral_hole1[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 
+static Opaque		opaque1;
 static BeyeContext* BeyeCtx=NULL;
+static Opaque		opaque2;
 
 static volatile char antiviral_hole2[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 
