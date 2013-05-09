@@ -553,7 +553,8 @@ void Calculator_Addon::run()
   X2 -= 1;
   Y1 += 2;
   Y2 = Y1;
-  ewnd = WindowOpen(X1,Y1,X2,Y2,TWindow::Flag_Visible | TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
+  ewnd = WindowOpen(X1,Y1,X2,Y2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
+  ewnd->show();
   ewnd->set_color(dialog_cset.editor.active);
   wdlg->goto_xy(2,1); wdlg->puts("Input an integer expression :");
   wdlg->draw_frame(1,3,78,7,TWindow::UP3D_FRAME,dialog_cset.main);

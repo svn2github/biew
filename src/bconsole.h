@@ -20,7 +20,7 @@
 #ifndef __BCONSOLE__H
 #define __BCONSOLE__H
 
-#include "libbeye/twin.h"
+#include "libbeye/twindow.h"
 
 namespace	usr {
 

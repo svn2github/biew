@@ -29,7 +29,7 @@ using namespace	usr;
 #include "beyeutil.h"
 #include "bin_util.h"
 #include "libbeye/kbd_code.h"
-#include "libbeye/twin.h"
+#include "libbeye/twindow.h"
 
 namespace	usr {
 bool __FASTCALL__ Get2DigitDlg(const std::string& title,const std::string& text,unsigned char *xx)
@@ -51,7 +51,8 @@ bool __FASTCALL__ Get2DigitDlg(const std::string& title,const std::string& text,
  Y1 += 1;
  X2 = X1 + 1;
  Y2 = Y1;
- ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::Flag_Visible | TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
+ ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
+ ewnd->show();
  ewnd->set_focus();
  if(*xx) sprintf(str,"%X",(unsigned int)*xx);
  while(1)
@@ -100,7 +101,8 @@ bool __FASTCALL__ Get8DigitDlg(const std::string& title,const std::string& text,
  X2 = X1 + 33;
  X1 = X2 - (len - 1);
  Y2 = Y1;
- ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::Flag_Visible | TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
+ ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
+ ewnd->show();
  ewnd->set_focus();
  if(attr & DECIMAL) legals = attr & SIGN ? decleg : &decleg[2];
  else               legals = attr & SIGN ? legalchars : &legalchars[2];
@@ -149,7 +151,8 @@ bool        __FASTCALL__ Get16DigitDlg(const std::string& title,const std::strin
  X2 = X1 + 43;
  X1 = X2 - (len - 1);
  Y2 = Y1;
- ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::Flag_Visible | TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
+ ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
+ ewnd->show();
  ewnd->set_focus();
  if(attr & DECIMAL) legals = attr & SIGN ? decleg : &decleg[2];
  else               legals = attr & SIGN ? legalchars : &legalchars[2];
@@ -232,7 +235,8 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
  X1 += 17;
  X2 = X1 + len - 1;
  Y2 = Y1;
- ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::Flag_Visible | TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
+ ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
+ ewnd->show();
  ewnd->set_focus();
  legals = *flags == GJDLG_RELATIVE ? legalchars : &legalchars[2];
  paintJumpDlg(hwnd,*flags);

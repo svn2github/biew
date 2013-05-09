@@ -12,7 +12,7 @@ SRCS= bbio.cpp \
       mmfile.cpp \
       mp_malloc.cpp \
       tw_class.cpp \
-      twin.cpp \
+      twindow.cpp \
       sysdep/$(MACHINE)/aclib.cpp \
       sysdep/$(MACHINE)/cpu_info.cpp \
       osdep/$(HOST)/keyboard.cpp \

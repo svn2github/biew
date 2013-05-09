@@ -21,7 +21,7 @@
 #include <limits.h>
 
 #include "libbeye/libbeye.h"
-#include "libbeye/twin.h"
+#include "libbeye/twindow.h"
 #include "libbeye/bstream.h"
 #include "libbeye/file_ini.h"
 

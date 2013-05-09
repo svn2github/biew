@@ -39,7 +39,7 @@ using namespace	usr;
 #include "reg_form.h"
 #include "libbeye/bbio.h"
 #include "libbeye/bswap.h"
-#include "libbeye/twin.h"
+#include "libbeye/twindow.h"
 #include "libbeye/kbd_code.h"
 
 

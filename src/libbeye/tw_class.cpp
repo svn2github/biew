@@ -19,7 +19,7 @@ using namespace	usr;
 **/
 #include <string.h>
 #include <stdlib.h>
-#include "libbeye/twin.h"
+#include "libbeye/twindow.h"
 
 static linearArray *class_set = NULL;
 

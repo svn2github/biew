@@ -22,7 +22,7 @@
 #include "plugin.h"
 #include "colorset.h"
 #include "bconsole.h"
-#include "libbeye/twin.h"
+#include "libbeye/twindow.h"
 
 struct hIniProfile;
 namespace	usr {

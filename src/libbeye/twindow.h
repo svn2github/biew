@@ -1,6 +1,6 @@
 /**
  * @namespace   libbeye
- * @file        libbeye/twin.h
+ * @file        libbeye/twindow.h
  * @brief       This file contains prototypes of Text Window manager functions.
  * @version     -
  * @remark      this source file is part of Binary EYE project (BEYE).
@@ -216,8 +216,7 @@ namespace	usr {
 	    enum twc_flag {
 		Flag_None	=0x0000, /**< Indicates no flags */
 		Flag_Has_Frame	=0x0001, /**< Indicates that window has frame border */
-		Flag_Visible	=0x0002, /**< Indicates that window creates in visible state */
-		Flag_Has_Cursor	=0x0004, /**< Indicates that window has text cursor */
+		Flag_Has_Cursor	=0x0002, /**< Indicates that window has text cursor */
 		Flag_NLS	=0x0100  /**< Indicates that window works in OEM mode */
 	    };
 	    /** align modes for title and footer */

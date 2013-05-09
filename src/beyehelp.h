@@ -18,7 +18,7 @@
 #define __BEYEHELP__H
 #include <fstream>
 
-#include "libbeye/twin.h"
+#include "libbeye/twindow.h"
 
 namespace	usr {
 #define BEYE_HELP_VER "BEYE_HLP v6.1.0"

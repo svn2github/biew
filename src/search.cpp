@@ -480,7 +480,8 @@ bool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
   Y1 = y1+2;
   X2 = X1+75;
   Y2 = Y1;
-  ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::Flag_Has_Cursor | TWindow::Flag_Visible);
+  ewnd = CreateEditor(X1,Y1,X2,Y2,TWindow::Flag_Has_Cursor);
+  ewnd->show();
   hwnd->draw_frame(1,3,78,7,TWindow::DN3D_FRAME,dialog_cset.main);
   hwnd->draw_frame(37,4,42,6,TWindow::UP3D_FRAME,dialog_cset.main);
   hwnd->goto_xy(38,5); hwnd->puts("BASE");

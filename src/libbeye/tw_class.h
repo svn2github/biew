@@ -18,7 +18,7 @@
 #define __TW_CLASS_H 1
 
 #ifndef __TWINDOW_HPP_INCLUDED
-#error Never use this header file directly. Use twin.h instead
+#error Never use this header file directly. Use twindow.h instead
 #endif
 
 		   /** Defines class callback routine type

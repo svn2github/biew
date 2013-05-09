@@ -32,7 +32,7 @@ using namespace	usr;
 #include <unistd.h>
 #endif
 
-#include "libbeye/twin.h"
+#include "libbeye/twindow.h"
 
 namespace	usr {
 TWindow* TWindow::head = NULL;
@@ -286,7 +286,6 @@ void TWindow::create(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _he
     cur_x = cur_y = 0;
     set_focus();
     paint_internal();
-    if((flags & Flag_Visible) == Flag_Visible) show();
 }
 
 TWindow::TWindow(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, twc_flag _flags)

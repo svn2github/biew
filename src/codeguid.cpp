@@ -31,7 +31,7 @@ using namespace	usr;
 #include "codeguid.h"
 #include "reg_form.h"
 #include "libbeye/libbeye.h"
-#include "libbeye/twin.h"
+#include "libbeye/twindow.h"
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 

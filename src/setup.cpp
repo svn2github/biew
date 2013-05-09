@@ -27,7 +27,7 @@ using namespace	usr;
 #include "bconsole.h"
 #include "beyeutil.h"
 #include "libbeye/mmfile.h"
-#include "libbeye/twin.h"
+#include "libbeye/twindow.h"
 #include "libbeye/kbd_code.h"
 
 #ifdef __QNX4__
