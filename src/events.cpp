@@ -17,6 +17,8 @@ using namespace	usr;
  * @since       1995
  * @note        Development, fixes and improvements
 **/
+#include <queue>
+
 #include <limits.h>
 #include <string.h>
 
@@ -28,8 +30,7 @@ using namespace	usr;
 
 namespace	usr {
 
-static int KB_Buff[64];
-static size_t KB_freq = 0;
+static std::queue<int> kb_queue;
 
 bool  __FASTCALL__ IsKbdTerminate()
 {
@@ -160,23 +161,22 @@ static void  __FASTCALL__ __GetEventQue(void (*prompt)(), TWindow *win)
 {
   int key;
   key = __GetEvent(prompt,win);
-  if(KB_freq < sizeof(KB_Buff)/sizeof(int)) KB_Buff[KB_freq++] = key;
+  kb_queue.push(key);
 }
 
 int __FASTCALL__ GetEvent( void (*prompt)(),int (*alt_action)(),TWindow * win)
 {
   int key;
-  while(!KB_freq) __GetEventQue(prompt,win);
-  key = KB_Buff[0];
-  --KB_freq;
-  if(KB_freq) memmove(KB_Buff,&KB_Buff[1],KB_freq-1);
+  while(kb_queue.empty()) __GetEventQue(prompt,win);
+  key = kb_queue.front();
+  kb_queue.pop();
   if(key==KE_TAB && alt_action) key=(*alt_action)();
   return key;
 }
 
 void __FASTCALL__ PostEvent(int code)
 {
-  if(KB_freq < sizeof(KB_Buff)/sizeof(int)) KB_Buff[KB_freq++] = code;
+   kb_queue.push(code);
 }
 } // namespace	usr
 
