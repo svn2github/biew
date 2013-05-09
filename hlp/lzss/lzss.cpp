@@ -35,6 +35,7 @@ using namespace	usr;
 #include <time.h>
 
 #include "libbeye/bbio.h"
+#include "libbeye/osdep/system.h"
 #define INTERACTIVE
 #include "lzssutil.cpp"
 
@@ -59,7 +60,7 @@ int main(int argc, char *argv[])
 		printf("??? %s\n", s);
 		return EXIT_FAILURE;
 	}
-	__init_sys();
+	System msystem();
 	s = argv[3];
 	if(binary_stream::exists(s)) if(binary_stream::unlink(s)) { Err: printf("Problem with %s\n",s); return EXIT_FAILURE; }
 	outfile = new binary_stream;
@@ -71,7 +72,6 @@ int main(int argc, char *argv[])
 	if(!retcode) fprintf(stderr,"Error allocating memory during operation\n");
 	delete infile;
 	delete outfile;
-	__term_sys();
 	return EXIT_SUCCESS;
 }
 

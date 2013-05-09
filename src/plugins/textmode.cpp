@@ -37,6 +37,7 @@ using namespace	usr;
 #include "search.h"
 #include "reg_form.h"
 #include "libbeye/kbd_code.h"
+#include "libbeye/osdep/tconsole.h"
 
 #include "plugin.h"
 
@@ -1015,7 +1016,7 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 	if(keycode == KE_RIGHTARROW || keycode == KE_PGDN) shift+=shift%cp_symb_len;
 	else shift=(shift/cp_symb_len)*cp_symb_len;
     }
-    maxstrlen = wmode ? tvioWidth : (MAX_STRLEN / cp_symb_len) - 3;
+    maxstrlen = wmode ? beye_context().tconsole().vio_width() : (MAX_STRLEN / cp_symb_len) - 3;
     cpos = BMGetCurrFilePos();
     if(cpos%cp_symb_len) {
 	if(keycode == KE_RIGHTARROW || keycode == KE_PGDN) cpos+=cpos%cp_symb_len;
@@ -1038,11 +1039,11 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 		    for(b_lim=len,b_ptr = 0;b_ptr < len;b_ptr+=2,b_lim-=2) {
 			shift = tab2space(NULL,UINT_MAX,&buff[b_ptr],b_lim,0,&n_tabs,0L);
 			if(shift) shift-=cp_symb_len;
-			if(shift < (unsigned)(tvioWidth/2)) break;
+			if(shift < (unsigned)(beye_context().tconsole().vio_width()/2)) break;
 		    }
 		    shift = tab2space(NULL,UINT_MAX,buff,b_ptr,0,NULL,0L);
-		} else if(!isHOnLine((tlines[i].st+shift)*cp_symb_len,std::min(len,tvioWidth))) {
-		    shift = ((unsigned)(FoundTextSt - tlines[i].st)-tvioWidth/2)/cp_symb_len;
+		} else if(!isHOnLine((tlines[i].st+shift)*cp_symb_len,std::min(len,beye_context().tconsole().vio_width()))) {
+		    shift = ((unsigned)(FoundTextSt - tlines[i].st)-beye_context().tconsole().vio_width()/2)/cp_symb_len;
 		    if((int)shift < 0) shift = 0;
 		    if(shift%cp_symb_len) shift+=shift%cp_symb_len;
 		}
@@ -1066,7 +1067,7 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 		if(strmaxlen < tmp) strmaxlen = tmp;
 		if(textmaxlen < tmp) textmaxlen = tmp;
 	    }
-	    if(size > tvioWidth) size = tvioWidth;
+	    if(size > beye_context().tconsole().vio_width()) size = beye_context().tconsole().vio_width();
 	    if(i == (unsigned)hilightline) {
 		if(bin_mode == MOD_BINARY) hli.text = buff;
 		else                       hli.buff = it;
@@ -1075,10 +1076,10 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 		if(bin_mode == MOD_BINARY) MainWnd->direct_write(1,i+1,buff,size);
 		else                       MainWnd->write(1,i + 1,&it,size);
 	    }
-	    if(rsize < tvioWidth) {
+	    if(rsize < beye_context().tconsole().vio_width()) {
 		MainWnd->goto_xy(1 + rsize,i + 1);
 		MainWnd->clreol();
-	    } else if(rsize > tvioWidth) drawBound(MainWnd,tvioWidth,i + 1,TWC_RT_ARROW);
+	    } else if(rsize > beye_context().tconsole().vio_width()) drawBound(MainWnd,beye_context().tconsole().vio_width(),i + 1,TWC_RT_ARROW);
 	} else {
 	    MainWnd->goto_xy(1,i + 1);
 	    MainWnd->clreol();
@@ -1088,7 +1089,7 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 	lastbyte += bin_mode == MOD_BINARY ? shift + size : rshift + len;
     }
     MainWnd->refresh();
-    tmp = textmaxlen - tvioWidth + 2;
+    tmp = textmaxlen - beye_context().tconsole().vio_width() + 2;
     if(shift > tmp) shift = tmp;
     if(!tlines[1].st) tlines[1].st = tlines[0].end;
     CurrStrLen = tlines[0].end - tlines[0].st;

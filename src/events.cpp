@@ -23,7 +23,8 @@ using namespace	usr;
 #include "bconsole.h"
 #include "beye.h"
 #include "libbeye/kbd_code.h"
-#include "libbeye/libbeye.h"
+#include "libbeye/osdep/tconsole.h"
+#include "libbeye/osdep/system.h"
 
 namespace	usr {
 
@@ -32,12 +33,12 @@ static size_t KB_freq = 0;
 
 bool  __FASTCALL__ IsKbdTerminate()
 {
-  return __OsGetCBreak( );
+  return beye_context().system().get_cbreak( );
 }
 
 void __FASTCALL__ CleanKbdTermSig()
 {
-  __OsSetCBreak(false);
+  beye_context().system().set_cbreak(false);
 }
 
 static tAbsCoord mx,my;
@@ -78,7 +79,8 @@ static int  __FASTCALL__ __GetEvent( void (*prompt)() ,TWindow *win)
  unsigned char Flag;
  int key;
  /** Unconditional repaint prompt */
- Flag = __kbdGetShiftsKey();
+ TConsole& tconsole = beye_context().tconsole();
+ Flag = tconsole.kbd_get_shifts();
  if(Flag != oFlag || oprompt !=prompt)
  {
     oFlag = Flag; oprompt = prompt;
@@ -86,11 +88,11 @@ static int  __FASTCALL__ __GetEvent( void (*prompt)() ,TWindow *win)
  }
  while(1)
  {
-     key = __kbdGetKey(beye_context().kbdFlags);
+     key = tconsole.kbd_get_key(beye_context().kbdFlags);
      switch( key )
      {
        case KE_SHIFTKEYS:
-	     Flag = __kbdGetShiftsKey();
+	     Flag = tconsole.kbd_get_shifts();
 	     if(Flag != oFlag || oprompt !=prompt)
 	     {
 	       oFlag = Flag; oprompt = prompt;
@@ -98,18 +100,18 @@ static int  __FASTCALL__ __GetEvent( void (*prompt)() ,TWindow *win)
 	     }
 	     break;
        case KE_MOUSE:
-	     __MsGetPos(&mx,&my);
-	     if((__MsGetBtns() & MS_LEFTPRESS) == MS_LEFTPRESS)
+	     tconsole.mouse_get_pos(mx,my);
+	     if((tconsole.mouse_get_buttons() & MS_LEFTPRESS) == MS_LEFTPRESS)
 	     {
-		  if(my == (unsigned)(tvioHeight - 1))
+		  if(my == (unsigned)(tconsole.vio_height() - 1))
 		  {
 		    while(1)
 		    {
-		      if((__MsGetBtns() & MS_LEFTPRESS) != MS_LEFTPRESS) break;
-		      __MsGetPos(&mx,&my);
+		      if((tconsole.mouse_get_buttons() & MS_LEFTPRESS) != MS_LEFTPRESS) break;
+		      tconsole.mouse_get_pos(mx,my);
 		    }
-		    if(my != (unsigned)(tvioHeight - 1)) continue;
-		    return getPromptKey(__kbdGetShiftsKey());
+		    if(my != (unsigned)(tconsole.vio_height() - 1)) continue;
+		    return getPromptKey(tconsole.kbd_get_shifts());
 		  }
 		  else
 		  {
@@ -135,7 +137,7 @@ static int  __FASTCALL__ __GetEvent( void (*prompt)() ,TWindow *win)
 		    {
 		       while(1)
 		       {
-			  if((__MsGetBtns() & MS_LEFTPRESS) != MS_LEFTPRESS) break;
+			  if((tconsole.mouse_get_buttons() & MS_LEFTPRESS) != MS_LEFTPRESS) break;
 		       }
 		       return KE_ESCAPE;
 		    }

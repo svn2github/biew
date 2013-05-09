@@ -32,7 +32,8 @@ using namespace	usr;
 #include "search.h"
 #include "setup.h"
 #include "tstrings.h"
-#include "libbeye/libbeye.h"
+#include "libbeye/osdep/tconsole.h"
+#include "libbeye/osdep/system.h"
 #include "libbeye/kbd_code.h"
 
 #include "lzss/lzssutil.cpp"
@@ -129,7 +130,7 @@ unsigned Beye_Help::fill_buffer(tvioBuff * dest,unsigned int alen,const std::str
     }
   }
   End:
-  if(dest) __nls_PrepareOEMForTVio(dest,k);
+  if(dest) beye_context().system().nls_prepare_oem_for_vio(dest,k);
   return k;
 }
 
@@ -189,8 +190,8 @@ int Beye_Help::__ListBox(const char** names,unsigned nlist,const std::string& ti
     if(j > mwidth) mwidth = j;
  }
  mwidth += 4;
- if(mwidth > (unsigned)(tvioWidth-2)) mwidth = tvioWidth-2;
- height = nlist < (unsigned)(tvioHeight - 4) ? nlist : tvioHeight - 4;
+ if(mwidth > (unsigned)(beye_context().tconsole().vio_width()-2)) mwidth = beye_context().tconsole().vio_width()-2;
+ height = nlist < (unsigned)(beye_context().tconsole().vio_height() - 4) ? nlist : beye_context().tconsole().vio_height() - 4;
  wlist = CrtHlpWndnls(title,mwidth-1,height);
  ostart = start = cursor = ocursor = 0;
  paint(wlist,names,nlist,start,height,mwidth);

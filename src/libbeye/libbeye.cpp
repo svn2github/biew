@@ -26,18 +26,6 @@ using namespace	usr;
 #include <limits.h>
 #include "libbeye/sysdep/__config.h"
 
-void      __FASTCALL__ __nls_PrepareOEMForTVio(tvioBuff *it,unsigned size)
-{
-  unsigned i;
-  unsigned char ch;
-  for(i = 0;i < size;i++)
-  {
-    ch = it->chars[i];
-    it->oem_pg[i] = NLS_IS_OEMPG(ch) ? ch : 0;
-  }
-  __nls_OemToOsdep(it->chars,size);
-}
-
 void __FASTCALL__ memupr(any_t*ptr,unsigned n)
 {
    unsigned i;

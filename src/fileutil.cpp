@@ -41,7 +41,8 @@ using namespace	usr;
 #include "libbeye/bswap.h"
 #include "libbeye/twindow.h"
 #include "libbeye/kbd_code.h"
-
+#include "libbeye/osdep/tconsole.h"
+#include "libbeye/osdep/system.h"
 
 namespace	usr {
 extern const Plugin_Info disMode;
@@ -935,7 +936,7 @@ static bool XLatBlock()
  flags = FSDLG_NOMODES;
  if(!xlat_fname[0])
  {
-   strcpy(xlat_fname,__get_rc_dir("beye"));
+   strcpy(xlat_fname,beye_context().system().get_rc_dir("beye"));
    strcat(xlat_fname,"xlt");
  }
  if(GetFStoreDlg(" Table Look-up Translation ",xlat_fname,&flags,&ff_startpos,&ff_len,XLAT_PRMT))
@@ -1091,7 +1092,7 @@ static bool FileInfo()
 #ifdef S_IFSOCK /** it socket */
   if((statbuf.st_mode & S_IFSOCK) == S_IFSOCK) attr[0] = 'S';
 #endif
-  wnd = CrtDlgWndnls(" File information: ",tvioWidth-5,13);
+  wnd = CrtDlgWndnls(" File information: ",beye_context().tconsole().vio_width()-5,13);
   wnd->goto_xy(1,1);
   strcpy(stimes[0],ctime(&statbuf.st_ctime));
   strcpy(stimes[1],ctime(&statbuf.st_mtime));

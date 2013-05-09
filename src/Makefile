@@ -37,7 +37,8 @@ INCS = -I.
 LIBS = addons/libaddons.a \
        plugins/libplugins.a \
        plugins/disasm/libdisasm.a \
-       libbeye/libbeye.a
+       libbeye/libbeye.a \
+       libbeye/osdep/libosdep.a
 LIBS += $(EXTRALIBS)
 SRCS = \
 bconsole.cpp\

@@ -25,6 +25,25 @@
 #include "libbeye/sysdep/generic/_inlines.h"
 #endif
 
+		/** Performs interleaving of two buffers into destinition one.
+		  * @return         none
+		  * @param limit    specified size of evenbuffer and oddbuffer
+		  * @param destbuffer specified pointer to the destinition buffer
+				    where result will be placed.
+		  * @param evenbuffer specified source buffer with even bytes.
+		  * @param offbuffer specified source buffer with odd bytes.
+		 **/
+inline void __INTERLEAVE_BUFFERS(uint32_t limit,
+				any_t*destbuffer,
+				const any_t*evenbuffer,
+				const any_t*oddbuffer) {
+    uint32_t freq;
+    for(freq=0;freq<(size_t)limit;freq++) {
+	((char *)destbuffer)[freq+freq] = ((char *)evenbuffer)[freq];
+	((char *)destbuffer)[freq+freq+1] = ((char *)oddbuffer)[freq];
+    }
+}
+
 		/** Compares two long numbers.
 		  * @return         -1 if v1 < v2; +1 if v1 > v2 and 0 if v1 == v2
 		  * @param _val1    specified first number to be compared

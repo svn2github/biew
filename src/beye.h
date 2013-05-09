@@ -16,6 +16,8 @@ namespace	usr {
     class Bin_Format;
     class binary_stream;
     class Ini_Profile;
+    class System;
+    class TConsole;
     class BeyeContext : public Opaque {
 	public:
 	    BeyeContext(const std::vector<std::string>& argv, const std::map<std::string,std::string>& envm);
@@ -46,6 +48,8 @@ namespace	usr {
 	    Plugin&		active_mode() const { return *activeMode; }
 	    Bin_Format&		bin_format() const { return *_bin_format; }
 	    const Plugin_Info*	mode_info() const { return modes[defMainModeSel]; }
+	    TConsole&		tconsole() const { return *_tconsole; }
+	    System&		system() const { return *_system; }
 	    void		show_usage() const;
 	    void		main_loop();
 		   /** Main search routine
@@ -112,6 +116,8 @@ namespace	usr {
 	    class sysinfo*	sysinfo;
 	    binary_stream&	bm_file_handle;
 	    binary_stream&	sc_bm_file_handle;
+	    TConsole*		_tconsole;
+	    LocalPtr<System>	_system;
     };
     BeyeContext& beye_context();
 } // namespace	usr

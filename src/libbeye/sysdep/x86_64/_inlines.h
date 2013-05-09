@@ -18,29 +18,9 @@
 #define inline __inline
 #endif
 
-#if !defined(CAN_COMPILE_X86_GAS)
-#include "libbeye/sysdep/generic/_inlines.h"
-#else
 #ifndef ___INLINES_H
 #define ___INLINES_H 1
-
-#ifdef __clpusplus
-extern "C" {
-#endif
-
-extern void (__FASTCALL__ *InterleaveBuffers_ptr)(uint32_t limit,
-				    any_t*destbuffer,
-				    const any_t*evenbuffer,
-				    const any_t*oddbuffer);
-#ifdef InterleaveBuffers
-#undef InterleaveBuffers
-#endif
-#define InterleaveBuffers(a,b,c,d) (*InterleaveBuffers_ptr)(a,b,c,d)
-#define __INTERLEAVE_BUFFERS InterleaveBuffers
 
 #define COREDUMP() { __asm__ __volatile__(".short 0xffff":::"memory"); }
 
 #endif
-#endif
-#undef ___INLINES_H
-#include "libbeye/sysdep/generic/_inlines.h"

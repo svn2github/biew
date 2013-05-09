@@ -30,7 +30,7 @@ using namespace	usr;
 #include "beyeutil.h"
 #include "beyehelp.h"
 #include "editor.h"
-#include "libbeye/libbeye.h"
+#include "libbeye/osdep/tconsole.h"
 #include "libbeye/kbd_code.h"
 
 namespace	usr {
@@ -82,10 +82,10 @@ bool __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size
 {
  __filesize_t flen,cfp,ssize;
  unsigned i,msize;
- msize = tvioWidth*tvioHeight;
+ msize = beye_context().tconsole().vio_width()*beye_context().tconsole().vio_height();
  EditorMem.buff = new unsigned char [msize];
  EditorMem.save = new unsigned char [msize];
- EditorMem.alen = new unsigned char [tvioHeight];
+ EditorMem.alen = new unsigned char [beye_context().tconsole().vio_height()];
  if((!EditorMem.buff) || (!EditorMem.save) || (!EditorMem.alen))
  {
    if(EditorMem.buff) delete EditorMem.buff;
@@ -113,7 +113,7 @@ bool __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size
  memcpy(EditorMem.save,EditorMem.buff,EditorMem.size);
  /** initialize EditorMem.alen */
  ssize = flen-cfp;
- for(i = 0;i < tvioHeight;i++)
+ for(i = 0;i < beye_context().tconsole().vio_height();i++)
  {
     EditorMem.alen[i] = ssize >= width ? width : ssize;
     ssize -= std::min(ssize,__filesize_t(width));
@@ -219,7 +219,7 @@ int __FASTCALL__ FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*sav
     bool redraw;
     char attr = __ESS_HARDEDIT | __ESS_WANTRETURN;
     ewnd->set_color(browser_cset.edit.main);
-    __MsSetState(false);
+    beye_context().tconsole().mouse_set_state(false);
     for(i = 0;i < height;i++) {
 	for(j = 0;j < EditorMem.alen[i];j++) {
 	    unsigned eidx;
@@ -231,7 +231,7 @@ int __FASTCALL__ FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*sav
 	    ewnd->goto_xy(EditorMem.alen[i] + 1,i + 1); MainWnd->clreol();
 	}
     }
-    __MsSetState(true);
+    beye_context().tconsole().mouse_set_state(true);
     PaintETitle(edit_y*EditorMem.width + edit_x,0);
     TWindow::set_cursor_type(TWindow::Cursor_Normal);
     redraw = true;

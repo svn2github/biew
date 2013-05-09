@@ -35,7 +35,7 @@ using namespace	usr;
 #include "editor.h"
 #include "tstrings.h"
 #include "libbeye/file_ini.h"
-#include "libbeye/libbeye.h"
+#include "libbeye/osdep/tconsole.h"
 #include "libbeye/kbd_code.h"
 
 #include "plugin.h"
@@ -128,10 +128,10 @@ static char *  __FASTCALL__ Get8D(__filesize_t val)
     return Get8Digit(v);
 }
 
-static unsigned char  __FASTCALL__ sizeBit()  { return (tvioWidth-HA_LEN())/(8+1+1); }
-static unsigned char  __FASTCALL__ sizeByte() { return ((tvioWidth-HA_LEN())/(12+1+4)*4); } /* always round on four-column boundary */
-static unsigned char  __FASTCALL__ sizeWord() { return (tvioWidth-HA_LEN())/(4+1+2); }
-static unsigned char  __FASTCALL__ sizeDWord(){ return (tvioWidth-HA_LEN())/(8+1+4); }
+static unsigned char  __FASTCALL__ sizeBit()  { return (beye_context().tconsole().vio_width()-HA_LEN())/(8+1+1); }
+static unsigned char  __FASTCALL__ sizeByte() { return ((beye_context().tconsole().vio_width()-HA_LEN())/(12+1+4)*4); } /* always round on four-column boundary */
+static unsigned char  __FASTCALL__ sizeWord() { return (beye_context().tconsole().vio_width()-HA_LEN())/(4+1+2); }
+static unsigned char  __FASTCALL__ sizeDWord(){ return (beye_context().tconsole().vio_width()-HA_LEN())/(8+1+4); }
 
 static const hexView hexViewer[] =
 {
@@ -199,7 +199,7 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 		    if(hmode == 1) if(freq == 3) { freq = -1; len++; }
 		}
 		BMReadBufferEx((any_t*)&outstr[width - scrHWidth],rwidth*__inc,sindex,binary_stream::Seek_Set);
-		xmin = tvioWidth-scrHWidth;
+		xmin = beye_context().tconsole().vio_width()-scrHWidth;
 		MainWnd->direct_write(1,i + 1,outstr,xmin);
 		if(isHOnLine(sindex,scrHWidth)) {
 		    HLInfo hli;
@@ -235,9 +235,9 @@ void HexMode::misckey_action () /* EditHex */
     if(hmode != 1) return;
     if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,""); return; }
     bound = width-(hexViewer[hmode].width()-virtWidthCorr);
-    ewnd[0] = WindowOpen(HA_LEN()+1,2,bound,tvioHeight-1,TWindow::Flag_Has_Cursor);
+    ewnd[0] = WindowOpen(HA_LEN()+1,2,bound,beye_context().tconsole().vio_height()-1,TWindow::Flag_Has_Cursor);
     ewnd[0]->set_color(browser_cset.edit.main); ewnd[0]->clear();
-    ewnd[1] = WindowOpen(bound+1,2,width,tvioHeight-1,TWindow::Flag_Has_Cursor);
+    ewnd[1] = WindowOpen(bound+1,2,width,beye_context().tconsole().vio_height()-1,TWindow::Flag_Has_Cursor);
     ewnd[1]->set_color(browser_cset.edit.main); ewnd[1]->clear();
     drawEditPrompt();
     has_show[0] = has_show[1] = false;

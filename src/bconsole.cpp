@@ -24,6 +24,8 @@ using namespace	usr;
 #include <iostream>
 
 #include "libbeye/kbd_code.h"
+#include "libbeye/osdep/tconsole.h"
+#include "libbeye/osdep/system.h"
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
@@ -54,14 +56,15 @@ static unsigned char KB_freq = 0;
 
 void __FASTCALL__ initBConsole( unsigned long vio_flg,unsigned long twin_flg )
 {
-  twInit(beye_context().codepage.c_str(),vio_flg,twin_flg);
-  if(tvioWidth < 80 || tvioHeight < 3)
+  BeyeContext& bctx = beye_context();
+  twInit(bctx.system(),bctx.codepage,vio_flg,twin_flg);
+  if(bctx.tconsole().vio_width() < 80 || beye_context().tconsole().vio_height() < 3)
   {
-    if(tvioWidth>16&&tvioHeight>2) {
+    if(bctx.tconsole().vio_width()>16&&beye_context().tconsole().vio_height()>2) {
 	unsigned evt,x,y;
 	TWindow *win;
-	x = (tvioWidth-17)/2;
-	y = (tvioHeight-3)/2;
+	x = (bctx.tconsole().vio_width()-17)/2;
+	y = (bctx.tconsole().vio_height()-3)/2;
 	win = new(zeromem) TWindow(x,y,x+16,y+2,TWindow::Flag_None | TWindow::Flag_NLS);
 	if(!win) goto done;
 	win->set_title(" Error ",TWindow::TMode_Center,error_cset.border);
@@ -79,7 +82,7 @@ void __FASTCALL__ initBConsole( unsigned long vio_flg,unsigned long twin_flg )
     done:
     twDestroy();
     std::cerr<<"Size of video buffer must be larger than 79x2"<<std::endl;
-    std::cerr<<"Current size of video buffer is: w="<<tvioWidth<<" h="<<tvioHeight<<std::endl;
+    std::cerr<<"Current size of video buffer is: w="<<beye_context().tconsole().vio_width()<<" h="<<beye_context().tconsole().vio_height()<<std::endl;
     exit(EXIT_FAILURE);
   }
 }
@@ -435,7 +438,7 @@ static TWindow *  __FASTCALL__ _CreateWindowDD(const std::string& title,tAbsCoor
  win->set_color(dialog_cset.main);
  win->clear();
  memcpy(frame,TWindow::DOUBLE_FRAME,8);
- if(!is_nls) __nls_OemToOsdep((unsigned char *)frame,8);
+ if(!is_nls) beye_context().system().nls_oem2osdep((unsigned char *)frame,8);
  win->set_frame(frame,dialog_cset.border);
  if(!title.empty()) win->set_title(title,TWindow::TMode_Center,dialog_cset.title);
  win->show();
@@ -552,7 +555,7 @@ static void  __FASTCALL__ __MessageBox(const std::string& text,const std::string
  }
  while(!(evt == KE_ESCAPE || evt == KE_F(10) || evt == KE_SPACE || evt == KE_ENTER));
  ErrorWnd->hide();
- ErrorWnd->resize(tvioWidth,tvioHeight); /* It for reserving memory */
+ ErrorWnd->resize(beye_context().tconsole().vio_width(),beye_context().tconsole().vio_height()); /* It for reserving memory */
 }
 
 
@@ -778,15 +781,15 @@ static int  __FASTCALL__ __ListBox(const char** names,unsigned nlist,unsigned de
      }
    }
    // name now has higher priority than ordinal -XF
-   if(mordstr_width > (unsigned)(tvioWidth-10))
-       mordstr_width = (unsigned)(tvioWidth-10);
-   if(mord_width > (unsigned)(tvioWidth-4)-mordstr_width-1)
-       mord_width = (unsigned)(tvioWidth-4)-mordstr_width-1;
+   if(mordstr_width > (unsigned)(beye_context().tconsole().vio_width()-10))
+       mordstr_width = (unsigned)(beye_context().tconsole().vio_width()-10);
+   if(mord_width > (unsigned)(beye_context().tconsole().vio_width()-4)-mordstr_width-1)
+       mord_width = (unsigned)(beye_context().tconsole().vio_width()-4)-mordstr_width-1;
    mwidth = mordstr_width+mord_width+1;
  }
  mwidth += 4;
- if(mwidth > (unsigned)(tvioWidth-1)) mwidth = tvioWidth-1;         // maximal width increased to tvioWidth-1 -XF
- height = nlist < (unsigned)(tvioHeight - 4) ? nlist : tvioHeight - 4;
+ if(mwidth > (unsigned)(beye_context().tconsole().vio_width()-1)) mwidth = beye_context().tconsole().vio_width()-1;         // maximal width increased to beye_context().tconsole().vio_width()-1 -XF
+ height = nlist < (unsigned)(beye_context().tconsole().vio_height() - 4) ? nlist : beye_context().tconsole().vio_height() - 4;
  wlist = CrtLstWndnls(title,mwidth-1,height);
  if((assel & LB_SELECTIVE) == LB_SELECTIVE) wlist->set_footer(" [ENTER] - Go ",TWindow::TMode_Right,dialog_cset.selfooter);
  restart:
@@ -1006,7 +1009,7 @@ int __FASTCALL__ PageBox(unsigned width,unsigned height,const any_t** __obj,unsi
 {
  TWindow * wlist;
  int start,ostart,ret;
- if(height>tvioHeight-2) height=tvioHeight-2;
+ if(height>beye_context().tconsole().vio_height()-2) height=beye_context().tconsole().vio_height()-2;
  wlist = _CreateWindowDD(0,width-1,height,true);
  ostart = start = 0;
  (*func)(wlist,__obj,(unsigned)start,nobj);

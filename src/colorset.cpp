@@ -26,7 +26,7 @@ using namespace	usr;
 #include "colorset.h"
 #include "bconsole.h"
 #include "libbeye/file_ini.h"
-#include "libbeye/libbeye.h"
+#include "libbeye/osdep/tconsole.h"
 
 namespace	usr {
 extern const namedColorDef named_color_def[16] =
@@ -147,7 +147,7 @@ bool csetReadIniFile(const std::string& ini_name)
       Color col;
       col = getColorByName(cstr,Black,&cur_err);
       if(cur_err) has_err = cur_err;
-      else __vioSetTransparentColor(TWindow::get_mapped_color(col));
+      else beye_context().tconsole().vio_set_transparent_color(TWindow::get_mapped_color(col));
     }
   }
   has_err |= readColorPair(cset,"Browser","","Main",&browser_cset.main);

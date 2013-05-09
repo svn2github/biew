@@ -30,6 +30,7 @@ using namespace	usr;
 #include "beyeutil.h"
 #include "reg_form.h"
 #include "libbeye/libbeye.h"
+#include "libbeye/osdep/tconsole.h"
 #include "libbeye/kbd_code.h"
 
 namespace	usr {
@@ -46,7 +47,8 @@ ConsoleInfo_Addon::~ConsoleInfo_Addon() {}
 
 void ConsoleInfo_Addon::run()
 {
-  TWindow * hwnd = CrtDlgWndnls(" Console information ",63,std::min(tAbsCoord(21),tvioHeight-2));
+  BeyeContext& bctx = beye_context();
+  TWindow * hwnd = CrtDlgWndnls(" Console information ",63,std::min(tAbsCoord(21),bctx.tconsole().vio_height()-2));
   unsigned evt;
   int i,j,len;
   unsigned char str[80];
@@ -57,10 +59,10 @@ void ConsoleInfo_Addon::run()
   hwnd->printf(
 	   "Console: %ux%ux%u\n"
 	   "Skin:    %s"
-	   ,tvioWidth
-	   ,tvioHeight
-	   ,tvioNumColors
-	   ,beye_context().scheme_name.c_str());
+	   ,bctx.tconsole().vio_width()
+	   ,bctx.tconsole().vio_height()
+	   ,bctx.tconsole().vio_num_colors()
+	   ,bctx.scheme_name.c_str());
   hwnd->direct_write(1,3,str,len);
   str[0] = TWC_SH;
   for(i = 0;i < 63;i++)  hwnd->direct_write(i+1,4,str,1);

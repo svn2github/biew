@@ -25,6 +25,7 @@ using namespace	usr;
 #include "plugins/textmode.h"
 #include "bconsole.h"
 #include "beyeutil.h"
+#include "libbeye/osdep/system.h"
 
 namespace	usr {
 enum {
@@ -403,8 +404,8 @@ static unsigned __FASTCALL__ ru_convert_buffer(char *buff,unsigned size, bool us
   };
   if(cp_mode != TXT_CURRCP)
   {
-    if(use_fs_nls) __nls_OemToFs((unsigned char *)buff,size);
-    else           __nls_OemToOsdep((unsigned char *)buff,size);
+    if(use_fs_nls) beye_context().system().nls_oem2fs((unsigned char *)buff,size);
+    else           beye_context().system().nls_oem2osdep((unsigned char *)buff,size);
   }
   return size / cp_symb_len;
 }

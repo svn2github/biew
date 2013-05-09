@@ -1,5 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
+#include "libbeye/osdep/tconsole.h"
 using namespace	usr;
 /**
  * @namespace	usr_addons
@@ -19,6 +20,8 @@ using namespace	usr;
 **/
 #include <string.h>
 #include <stddef.h>
+
+#include "beye.h"
 
 #include "addons/addon.h"
 
@@ -53,7 +56,7 @@ void InputView_Addon::run()
   do_exit=0;
   do
   {
-    rval = __inputRawInfo(head,text);
+    rval = beye_context().tconsole().input_raw_info(head,text);
     if(rval==-1)
     {
 	ErrMessageBox("Not implemented yet!","");

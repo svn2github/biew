@@ -32,7 +32,7 @@ using namespace	usr;
 #include "beyeutil.h"
 #include "beyehelp.h"
 #include "libbeye/kbd_code.h"
-#include "libbeye/libbeye.h"
+#include "libbeye/osdep/tconsole.h"
 #include "plugins/plugin.h"
 
 namespace	usr {
@@ -63,7 +63,7 @@ static void  __FASTCALL__ drawControlKeys(TWindow* w,int flg)
 void __FASTCALL__ __drawMultiPrompt(const char * const norm[], const char *const shift[], const char * const alt[], const char * const ctrl[])
 {
   TWindow *_using;
-  int flg = __kbdGetShiftsKey();
+  int flg = beye_context().tconsole().kbd_get_shifts();
   int i;
   const char * cptr;
   HelpWnd->freeze();

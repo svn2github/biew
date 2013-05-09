@@ -2,6 +2,8 @@
 #include "libbeye/libbeye.h"
 using namespace	usr;
 
+#include <limits>
+
 #include <stdlib.h>
 #include <string.h>
 

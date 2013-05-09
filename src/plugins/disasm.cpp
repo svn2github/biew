@@ -46,7 +46,7 @@ using namespace	usr;
 #include "search.h"
 #include "tstrings.h"
 #include "libbeye/file_ini.h"
-#include "libbeye/libbeye.h"
+#include "libbeye/osdep/tconsole.h"
 #include "libbeye/kbd_code.h"
 
 #include "plugin.h"
@@ -74,8 +74,8 @@ DisMode::DisMode(CodeGuider& _code_guider)
     list.push_back(&avr_disassembler_info);
     list.push_back(&arm_disassembler_info);
     list.push_back(&ppc_disassembler_info);
-    CurrStrLenBuff = new unsigned char [tvioHeight];
-    PrevStrLenAddr = new unsigned long [tvioHeight];
+    CurrStrLenBuff = new unsigned char [beye_context().tconsole().vio_height()];
+    PrevStrLenAddr = new unsigned long [beye_context().tconsole().vio_height()];
     dis_comments   = new char [Comm_Size];
     if((!CurrStrLenBuff) || (!PrevStrLenAddr) || (!dis_comments)) {
 	MemOutBox("Disassembler initialization");
@@ -408,7 +408,7 @@ void DisMode::misckey_action() /* disEdit */
     TWindow * ewnd;
     len_64=HA_LEN();
     if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,""); return; }
-    ewnd = WindowOpen(len_64+1,2,disMaxCodeLen*2+len_64+1,tvioHeight-1,TWindow::Flag_Has_Cursor);
+    ewnd = WindowOpen(len_64+1,2,disMaxCodeLen*2+len_64+1,beye_context().tconsole().vio_height()-1,TWindow::Flag_Has_Cursor);
     ewnd->set_color(browser_cset.edit.main); ewnd->clear();
     edit_x = edit_y = 0;
     EditMode = EditMode ? false : true;
@@ -559,7 +559,7 @@ int DisMode::full_asm_edit(TWindow * ewnd)
     int j,_lastbyte,start;
     unsigned rlen,len,flg;
     __filesize_t flen;
-    unsigned max_buff_size = disMaxCodeLen*tvioHeight;
+    unsigned max_buff_size = disMaxCodeLen*beye_context().tconsole().vio_height();
     tAbsCoord height = MainWnd->client_height();
     bool redraw = false;
     char outstr[__TVIO_MAXSCREENWIDTH],owork[__TVIO_MAXSCREENWIDTH];

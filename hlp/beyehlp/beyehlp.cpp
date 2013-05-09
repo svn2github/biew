@@ -29,6 +29,7 @@ using namespace	usr;
 
 #include "libbeye/bbio.h"
 #include "libbeye/file_ini.h"
+#include "libbeye/osdep/system.h"
 #include "beyehelp.h"
 
 static unsigned long items_freq = 0;
@@ -222,7 +223,7 @@ bool __FASTCALL__ MyCallOut(IniInfo* ini,any_t* data)
   return false;
 }
 
-static void my_atexit() { __term_sys(); }
+static void my_atexit() { }
 char **ArgVector;
 
 int main( int argc, char *argv[] )
@@ -239,7 +240,7 @@ int main( int argc, char *argv[] )
   strcpy(id_string,BEYE_HELP_VER);
   ArgVector=argv;
   atexit(my_atexit);
-  __init_sys();
+  System msystem();
   archiver=argv[1];
   Ini_Parser::scan(argv[2],MyCallBack,NULL);
   printf("Using %s as archiver\n"

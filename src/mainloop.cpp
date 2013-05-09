@@ -31,7 +31,8 @@ using namespace	usr;
 #include "search.h"
 #include "setup.h"
 #include "libbeye/kbd_code.h"
-#include "libbeye/libbeye.h"
+#include "libbeye/osdep/system.h"
+#include "libbeye/osdep/tconsole.h"
 #include "plugins/plugin.h"
 
 namespace	usr {
@@ -79,7 +80,7 @@ void __FASTCALL__ HiLightSearch(TWindow *out,__filesize_t cfp,tRelCoord minx,tRe
    memcpy(chars,buff->text,width);
    memset(oem_pg,0,width);
    memset(attrs,attr,width);
-   __nls_PrepareOEMForTVio(&it,width);
+   beye_context().system().nls_prepare_oem_for_vio(&it,width);
  }
  x = (int)(FoundTextSt - cfp);
  if((flags & HLS_USE_DOUBLE_WIDTH) == HLS_USE_DOUBLE_WIDTH) x *= 2;
@@ -242,7 +243,7 @@ void BeyeContext::main_loop()
 		}
 		break;
 	    case KE_HOME: textshift = 0; break;
-	    case KE_END:  textshift = activeMode->get_max_line_length() - tvioWidth/2; break;
+	    case KE_END:  textshift = activeMode->get_max_line_length() - _tconsole->vio_width()/2; break;
 	    case KE_UPARROW:
 		nfp = cfp - activeMode->prev_line_width();
 		break;

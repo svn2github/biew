@@ -56,6 +56,8 @@ using namespace	usr;
 #include "libbeye/file_ini.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
+#include "libbeye/osdep/system.h"
+#include "libbeye/osdep/tconsole.h"
 
 #include "plugins/plugin.h"
 
@@ -130,7 +132,7 @@ void BeyeContext::make_shortname()
     strcat(_shortname,"...");
     strcat(_shortname,&ArgVector1.c_str()[l - slen/2]);
   }
-  __nls_CmdlineToOem((unsigned char *)_shortname,strlen(_shortname));
+  _system->nls_cmdline2oem((unsigned char *)_shortname,strlen(_shortname));
 }
 
 __filesize_t IsNewExe()
@@ -269,7 +271,6 @@ static void MyAtExit()
   if(TitleWnd) delete TitleWnd;
   if(ErrorWnd) delete ErrorWnd;
   termBConsole();
-  __term_sys();
   delete BeyeCtx;
   mp_uninit_malloc(malloc_debug?1:0);
 }
@@ -289,7 +290,7 @@ Ini_Profile& BeyeContext::load_ini_info()
   std::string tmp,stmp;
   Ini_Profile& ini = *new(zeromem) Ini_Profile;
   ini_name = getenv("BEYE_INI");
-  if(!ini_name) ini_name = __get_ini_name("beye");
+  if(!ini_name) ini_name = _system->get_ini_name("beye");
   if(UseIniFile) ini.open(ini_name);
   help_name=read_profile_string(ini,"Beye","Setup","HelpName","");
   skin_name=read_profile_string(ini,"Beye","Setup","SkinName","");
@@ -389,8 +390,8 @@ void BeyeContext::show_usage() const {
     TWindow *win;
     nln = sizeof(beyeArg)/sizeof(struct tagbeyeArg);
     h = nln+4;
-    y = tvioHeight/2-h/2;
-    win = WindowOpen(2,y,tvioWidth-1,y+h,TWindow::Flag_None | TWindow::Flag_NLS);
+    y = _tconsole->vio_height()/2-h/2;
+    win = WindowOpen(2,y,_tconsole->vio_width()-1,y+h,TWindow::Flag_None | TWindow::Flag_NLS);
     if(!win) goto done;
     win->set_title(BEYE_VER_MSG,TWindow::TMode_Center,error_cset.border);
     win->into_center();
@@ -437,7 +438,6 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
     flg=MPA_FLG_BEFORE_CHECK;
     flg=MPA_FLG_BACKTRACE;
 */
- __init_sys();
  Ini_Profile& ini=BeyeCtx->load_ini_info();
  skin_err = csetReadIniFile(BeyeCtx->skin_name.c_str());
  initBConsole(BeyeCtx->vioIniFlags,BeyeCtx->twinIniFlags);
@@ -464,12 +464,13 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  ErrorWnd->into_center();
  ErrorWnd->set_color(error_cset.main);
  ErrorWnd->set_frame(TWindow::DOUBLE_FRAME,error_cset.border);
- HelpWnd = WindowOpen(1,tvioHeight,tvioWidth,tvioHeight,TWindow::Flag_NLS);
+ TConsole& tconsole = BeyeCtx->tconsole();
+ HelpWnd = WindowOpen(1,tconsole.vio_height(),tconsole.vio_width(),tconsole.vio_height(),TWindow::Flag_NLS);
  HelpWnd->set_color(prompt_cset.digit);
  HelpWnd->clear();
  HelpWnd->show();
  if(BeyeCtx->ini_ver!=BEYE_VERSION) Setup();
- TitleWnd = WindowOpen(1,1,tvioWidth,1,TWindow::Flag_None);
+ TitleWnd = WindowOpen(1,1,tconsole.vio_width(),1,TWindow::Flag_None);
  TitleWnd->set_color(title_cset.main);
  TitleWnd->clear();
  TitleWnd->show();
@@ -493,7 +494,7 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  BeyeCtx->bin_format().detect_format();
  BeyeCtx->init_modes(ini);
  delete &ini;
- MainWnd = WindowOpen(1,2,tvioWidth,tvioHeight-1,TWindow::Flag_None);
+ MainWnd = WindowOpen(1,2,tconsole.vio_width(),tconsole.vio_height()-1,TWindow::Flag_None);
  MainWnd->set_color(browser_cset.main);
  MainWnd->clear();
  BeyeCtx->PaintTitle();
@@ -526,7 +527,7 @@ bool BeyeContext::new_source()
 	unsigned ls;
 	ls = ListFile[freq].length();
 	::memcpy(nlsListFile[freq],ListFile[freq].c_str(),ls+1);
-	__nls_CmdlineToOem((unsigned char *)nlsListFile[freq],ls);
+	_system->nls_cmdline2oem((unsigned char *)nlsListFile[freq],ls);
     }
     i = SelBoxA(const_cast<const char**>(nlsListFile),j," Select new file: ",prev_file);
     ret = 0;
@@ -580,24 +581,25 @@ bool BeyeContext::write_profile_string(Ini_Profile& ini,
 
 
 BeyeContext::BeyeContext(const std::vector<std::string>& _argv, const std::map<std::string,std::string>& _envm)
-	    :vioIniFlags(0L),
-	    twinIniFlags(0L),
-	    kbdFlags(0L),
-	    iniSettingsAnywhere(false),
-	    fioUseMMF(false),
-	    iniPreserveTime(false),
-	    iniUseExtProgs(false),
-	    headshift(0L),
-	    LastOffset(0L),
-	    argv(_argv),
-	    envm(_envm),
-	    UseIniFile(true),
-	    beye_mode(UINT_MAX),
-	    defMainModeSel(1),
-	    new_file_size(FILESIZE_MAX),
-	    code_guider(new(zeromem) CodeGuider),
-	    bm_file_handle(bNull),
-	    sc_bm_file_handle(bNull)
+	    :vioIniFlags(0L)
+	    ,twinIniFlags(0L)
+	    ,kbdFlags(0L)
+	    ,iniSettingsAnywhere(false)
+	    ,fioUseMMF(false)
+	    ,iniPreserveTime(false)
+	    ,iniUseExtProgs(false)
+	    ,headshift(0L)
+	    ,LastOffset(0L)
+	    ,argv(_argv)
+	    ,envm(_envm)
+	    ,UseIniFile(true)
+	    ,beye_mode(UINT_MAX)
+	    ,defMainModeSel(1)
+	    ,new_file_size(FILESIZE_MAX)
+	    ,code_guider(new(zeromem) CodeGuider)
+	    ,bm_file_handle(bNull)
+	    ,sc_bm_file_handle(bNull)
+	    ,_system(new(zeromem) System)
 {
     addons = new(zeromem) addendum;
     sysinfo= new(zeromem) class sysinfo;

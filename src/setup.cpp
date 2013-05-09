@@ -29,6 +29,7 @@ using namespace	usr;
 #include "libbeye/mmfile.h"
 #include "libbeye/twindow.h"
 #include "libbeye/kbd_code.h"
+#include "libbeye/osdep/system.h"
 
 #ifdef __QNX4__
 extern int photon,bit7;
@@ -37,29 +38,29 @@ namespace	usr {
 
 const char * beyeGetHelpName()
 {
-  if(!beye_context().help_name[0])
-  {
-    beye_context().help_name=std::string(__get_rc_dir("beye"))+"beye.hlp";
-  }
-  return beye_context().help_name.c_str();
+    BeyeContext& bctx = beye_context();
+    if(!bctx.help_name[0]) {
+	bctx.help_name=std::string(bctx.system().get_rc_dir("beye"))+"beye.hlp";
+    }
+    return bctx.help_name.c_str();
 }
 
 static const char *  __FASTCALL__ beyeGetColorSetName()
 {
-  if(!beye_context().skin_name[0])
-  {
-    beye_context().skin_name=std::string(__get_rc_dir("beye"))+"skn/standard.skn"; /* [dBorca] in skn/ subdir */
-  }
-  return beye_context().skin_name.c_str();
+    BeyeContext& bctx = beye_context();
+    if(!bctx.skin_name[0]) {
+	bctx.skin_name=std::string(bctx.system().get_rc_dir("beye"))+"skn/standard.skn"; /* [dBorca] in skn/ subdir */
+    }
+    return bctx.skin_name.c_str();
 }
 
 static const char *  __FASTCALL__ beyeGetSyntaxName()
 {
-  if(!beye_context().syntax_name[0])
-  {
-    beye_context().syntax_name=std::string(__get_rc_dir("beye"))+"syntax/syntax.stx"; /* [dBorca] in syntax/ subdir */
-  }
-  return beye_context().syntax_name.c_str();
+    BeyeContext& bctx = beye_context();
+    if(!bctx.syntax_name[0]) {
+	bctx.syntax_name=std::string(bctx.system().get_rc_dir("beye"))+"syntax/syntax.stx"; /* [dBorca] in syntax/ subdir */
+    }
+    return bctx.syntax_name.c_str();
 }
 
 

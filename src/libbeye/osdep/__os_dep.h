@@ -31,15 +31,6 @@
 #include "libbeye/_sys_dep.h"
 #endif
 
-#ifndef __BEYELIB_H
-#define __NORECURSIVE
-#include "libbeye/libbeye.h"
-#endif
-
-/* KEYBOARD handling */
-enum {
-    KBD_NONSTOP_ON_MOUSE_PRESS=0x00000001L /**< Defines that \e kbdGetKey must receive mouse events as frequently as it possible. Otherwise each press on mouse button will send only one event. */
-};
 		   /** Initializes keyboard handler.
 		     * @return                none
 		     * @note                  You must call this function before calling any other keyboard related functions
@@ -91,14 +82,6 @@ extern int       __FASTCALL__ __kbdGetShiftsKey();
 		    **/
 extern int       __FASTCALL__ __inputRawInfo(char *head, char *text);
 
-typedef unsigned tAbsCoord; /**< This is the data type used to represent screen-related coordinates */
-
-/* MOUSE handling */
-enum {
-    MS_LEFTPRESS    =1,  /**< Defines that left button of mouse have been pressed */
-    MS_RIGHTPRESS   =2,  /**< Defines that middle button of mouse have been pressed */
-    MS_MIDDLEPRESS  =4   /**< Defines that right button of mouse have been pressed */
-};
 		   /** Initializes mouse handler.
 		     * @return                none
 		     * @note                  You must call this function before calling any other mouse related functions
@@ -142,34 +125,18 @@ extern int       __FASTCALL__ __MsGetBtns();
 
 /* VIDEO subsystem handling */
 
-typedef uint8_t ColorAttr; /**< This is the data type used to represent attributes of color */
-typedef uint8_t t_vchar;   /**< This is the data type used to represent video character */
-
-/** Internal structure of video buffer */
-typedef struct tag_tvioBuff
-{
-  t_vchar *   chars;       /**< Pointer to video character array */
-  t_vchar *   oem_pg;      /**< Pointer to OEM pseudographics. It needed for *nix terminals */
-  ColorAttr * attrs;       /**< Pointer to color attributes array */
-}tvioBuff;
-
 /*
 #define __TVIO_MAXSCREENHEIGHT  100 - No dependencies from screen height.
 				      Today project support any height of
 				      screen.
 */
-enum {
-    __TVIO_MAXSCREENWIDTH   =255, /**< Defines maximal width of screen */
-    __TVIO_FLG_DIRECT_CONSOLE_ACCESS  =0x00000001L, /**< Defines that video subsystem must access to console directly, if it possible */
-    __TVIO_FLG_USE_7BIT               =0x00000002L  /**< Defines that video subsystem must strip high bit of video characters */
-};
 
 		   /** Initializes video handler.
 		     * @return                none
 		     * @note                  You must call this function before calling any other video related functions
 		     * @see                   __term_vio
 		    **/
-extern void      __FASTCALL__ __init_vio(const char *user_cp, unsigned long flags );
+extern void      __FASTCALL__ __init_vio(const char *user_cp, unsigned long flags);
 
 		   /** Terminates video handler.
 		     * @return                none

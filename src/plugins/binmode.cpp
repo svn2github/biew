@@ -34,7 +34,7 @@ using namespace	usr;
 #include "tstrings.h"
 #include "libbeye/file_ini.h"
 #include "libbeye/kbd_code.h"
-#include "libbeye/libbeye.h"
+#include "libbeye/osdep/tconsole.h"
 
 #include "plugin.h"
 
@@ -113,7 +113,7 @@ bool BinMode::action_F2() /* select mode */
 
 bool BinMode::action_F6() /* binDecVirtWidth */
 {
-    if(virtWidthCorr < tvioWidth-1) { virtWidthCorr++; return true; }
+    if(virtWidthCorr < beye_context().tconsole().vio_width()-1) { virtWidthCorr++; return true; }
     return false;
 }
 
@@ -171,7 +171,7 @@ unsigned BinMode::paint( unsigned keycode,unsigned tshift )
 		    chars[i]=buffer[ii++];
 		    attrs[i]=buffer[ii++];
 		}
-		::memset(oem_pg,0,tvioWidth);
+		::memset(oem_pg,0,beye_context().tconsole().vio_width());
 		if(bin_mode==MOD_REVERSE) {
 		    t_vchar *t;
 		    t=it.chars;
@@ -179,9 +179,9 @@ unsigned BinMode::paint( unsigned keycode,unsigned tshift )
 		    it.attrs=(ColorAttr*)t;
 		}
 		count=len/2;
-		::memset(&it.chars[count],TWC_DEF_FILLER,tvioWidth-count);
-		::memset(&it.attrs[count],browser_cset.main,tvioWidth-count);
-	    } else ::memset(&buffer[len],TWC_DEF_FILLER,tvioWidth-len);
+		::memset(&it.chars[count],TWC_DEF_FILLER,beye_context().tconsole().vio_width()-count);
+		::memset(&it.attrs[count],browser_cset.main,beye_context().tconsole().vio_width()-count);
+	    } else ::memset(&buffer[len],TWC_DEF_FILLER,beye_context().tconsole().vio_width()-len);
 	    if(isHOnLine(_index,width)) {
 		hli.text = buffer;
 		HiLightSearch(MainWnd,_index,0,BWidth,j,&hli,HLS_NORMAL);
@@ -237,15 +237,15 @@ void BinMode::misckey_action() /* EditBin */
     TWindow *ewin;
     bool inited;
     if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,""); return; }
-    ewin = WindowOpen(1,2,tvioWidth-virtWidthCorr,tvioHeight-1,TWindow::Flag_Has_Cursor);
+    ewin = WindowOpen(1,2,beye_context().tconsole().vio_width()-virtWidthCorr,beye_context().tconsole().vio_height()-1,TWindow::Flag_Has_Cursor);
     ewin->set_color(browser_cset.edit.main); ewin->clear();
     drawEditPrompt();
     ewin->set_focus();
     edit_x = edit_y = 0;
-    if(bin_mode==MOD_PLAIN) inited=editInitBuffs(tvioWidth-virtWidthCorr,NULL,0);
+    if(bin_mode==MOD_PLAIN) inited=editInitBuffs(beye_context().tconsole().vio_width()-virtWidthCorr,NULL,0);
     else {
 	unsigned long flen,cfp;
-	unsigned i,size,msize = tvioWidth*tvioHeight;
+	unsigned i,size,msize = beye_context().tconsole().vio_width()*beye_context().tconsole().vio_height();
 	unsigned char *buff = new unsigned char [msize*2];
 	if(buff) {
 	    flen = BMGetFLength();
@@ -254,7 +254,7 @@ void BinMode::misckey_action() /* EditBin */
 	    BMReadBufferEx(buff,size*2,cfp,binary_stream::Seek_Set);
 	    BMSeek(cfp,binary_stream::Seek_Set);
 	    for(i=0;i<size;i++) buff[i]=bin_mode==MOD_BINARY?buff[i*2]:buff[i*2+1];
-	    inited=editInitBuffs(tvioWidth-virtWidthCorr,buff,size);
+	    inited=editInitBuffs(beye_context().tconsole().vio_width()-virtWidthCorr,buff,size);
 	    delete buff;
 	} else {
 	    MemOutBox("Editor initialization");
@@ -279,7 +279,7 @@ void BinMode::read_ini(Ini_Profile& ini)
 	if(bin_mode > MOD_MAXMODE) bin_mode = MOD_MAXMODE;
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","VirtWidthCorr","0");
 	virtWidthCorr = (unsigned)::strtoul(tmps.c_str(),NULL,10);
-	if(virtWidthCorr>tvioWidth-1) virtWidthCorr=tvioWidth-1;
+	if(virtWidthCorr>beye_context().tconsole().vio_width()-1) virtWidthCorr=beye_context().tconsole().vio_width()-1;
     }
 }
 

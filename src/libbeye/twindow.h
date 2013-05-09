@@ -23,6 +23,8 @@
 using namespace	usr;
 
 namespace	usr {
+    class System;
+    class TConsole;
     /** Enumerates all colors used in twin library */
     enum Color {
 	Black = 0,	/**< Equivalent of RGB: 0 0 0 */
@@ -201,7 +203,7 @@ namespace	usr {
 		     * @note              Call this function before any other
 		     * @see               twDestroy
 		    **/
-    void	__FASTCALL__ twInit(const std::string& user_cp, unsigned long vio_flags, unsigned long twin_flgs );
+    TConsole&	__FASTCALL__ twInit(System& system,const std::string& user_cp, unsigned long vio_flags, unsigned long twin_flgs );
 
 		   /** Terminates twin library and video subsystem
 		     * @return            none
@@ -847,6 +849,8 @@ namespace	usr {
 	    static const unsigned char THICK_FRAME[];     /**< Flat frame of full width (filles 100% of the character cells) */
 	    static const unsigned char UP3D_FRAME[];      /**< Emulates 3D-frame that similar unpressed button */
 	    static const unsigned char DN3D_FRAME[];      /**< Emulates 3D-frame that similar pressed button */
+	    static TConsole*	tconsole;
+	    static System*	msystem;
 	private:
 	    void		create(tAbsCoord x1_, tAbsCoord y1_, tAbsCoord width, tAbsCoord height, unsigned flags);
 	    void		makewin(tAbsCoord x1, tAbsCoord y1, tAbsCoord width, tAbsCoord height);
@@ -873,6 +877,7 @@ namespace	usr {
 	    void		__athead();
 	    void		into_center(tAbsCoord w,tAbsCoord h);
 
+	    static inline bool NLS_IS_OEMPG(unsigned char ch) { return ch >= 0xB0 && ch <= 0xDF; }
 	    inline char		do_oem_pg(char ch) const { return ((flags & Flag_NLS) == Flag_NLS ? NLS_IS_OEMPG(ch) ? ch : 0 : 0); }
 	    inline void		wputc(char ch,char color,bool update) { wputc_oem(ch,0,color,update); }
 	    inline void		__atwin(TWindow* prev) { if(!prev) __athead(); else { next = prev->next; prev->next = this; }}

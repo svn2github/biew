@@ -39,6 +39,7 @@ using namespace	usr;
 #include "libbeye/file_ini.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
+#include "libbeye/osdep/system.h"
 
 namespace	usr {
 const unsigned ix86_Disassembler::MAX_IX86_INSN_LEN=15;
@@ -6390,7 +6391,7 @@ AsmRet ix86_Disassembler::assembler(const char *code)
   if (active_assembler<0) goto noassemblererror;
   if (!assemblers[active_assembler].run_command) goto noassemblererror;
 
-  home = __get_home_dir("beye");
+  home = beye_context().system().get_home_dir("beye");
 
   //File cleanup
   sprintf(commandbuffer, "%stmp0", home);
