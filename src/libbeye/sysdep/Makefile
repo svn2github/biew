@@ -1,22 +1,16 @@
-include ../../config.mak
+include ../../../config.mak
 
-CXXFLAGS = -I. -I.. -I../.. $(HOST_CFLAGS)
+CXXFLAGS = -I.. -I../.. $(HOST_CFLAGS)
 LDXXFLAGS = $(HOST_LDFLAGS)
 
 DO_MAKE = @ for i in $(SUBDIRS); do $(MAKE) -C $$i $@ || exit; done
 DO_ALL  = @ for i in $(SUBDIRS); do $(MAKE) -C $$i all || exit; done
-SUBDIRS = osdep sysdep
+SUBDIRS=
 
-LIBNAME = $(LIBPREFIX)beye.a
+LIBNAME = $(LIBPREFIX)sysdep.a
 
-SRCS= bbio.cpp \
-      bstream.cpp \
-      file_ini.cpp \
-      libbeye.cpp \
-      mmfile.cpp \
-      mp_malloc.cpp \
-      tw_class.cpp \
-      twindow.cpp
+SRCS=processor.cpp \
+     $(MACHINE)/cpu_info.cpp
 
 OBJS=$(SRCS:.cpp=.o)
 
@@ -24,7 +18,7 @@ OBJS=$(SRCS:.cpp=.o)
 
 .PHONY: $(SUBDIRS)
 
-all:    dep $(LIBNAME) $(SUBDIRS)
+all:    $(LIBNAME) $(SUBDIRS)
 
 $(SUBDIRS):
 	$(DO_ALL)

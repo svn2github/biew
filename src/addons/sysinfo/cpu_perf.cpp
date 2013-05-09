@@ -31,6 +31,7 @@ using namespace	usr;
 #include "reg_form.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
+#include "libbeye/sysdep/processor.h"
 
 namespace	usr {
     class CPUPerformance_Addon : public Addon {
@@ -90,7 +91,8 @@ void CPUPerformance_Addon::run()
    cpu_info = new char [4096];
    if(!cpu_info) { mem_out: MemOutBox("Show CPU information"); return; }
    pwnd = PercentWnd("Analyze:","");
-   __FillCPUInfo(cpu_info,4096,paint_prcnt);
+   Processor cpu;
+   cpu.cpu_info(cpu_info,4096,paint_prcnt);
    delete pwnd;
    data_size = strchr(cpu_info, 0) - cpu_info;
    if(!(str_ptr = cpuPointStrings(cpu_info,data_size,&nstr)))

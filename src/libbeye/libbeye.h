@@ -17,17 +17,17 @@
 **/
 #ifndef __BEYELIB_H
 #define __BEYELIB_H 1
-
 #include "config.h"
+
 #include <stdlib.h>
 #include <string.h>
-
-#ifndef __NORECURSIVE
-#include "libbeye/sysdep/__config.h"
-#include "libbeye/sysdep/_sys_dep.h"
-//#include "libbeye/osdep/__os_dep.h"
-#include "libbeye/sysdep/_hrd_inf.h"
+#include <stdint.h>
+#ifdef HAVE_ENDIAN_H
+#include <endian.h>
 #endif
+
+#include "libbeye/sysdep/_sys_dep.h"
+
 #include "libbeye/mp_malloc.h"
 
 		   /** Converts all alphabetic characters in buffer to upper case.

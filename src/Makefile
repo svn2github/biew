@@ -21,7 +21,7 @@ SUBDIRS=addons plugins libbeye
 DO_MAKE = @ for i in $(SUBDIRS); do $(MAKE) -C $$i $@ || exit; done
 DO_ALL  = @ for i in $(SUBDIRS); do $(MAKE) -C $$i all || exit; done
 
-CXXFLAGS = -I../hlp $(HOST_CFLAGS)
+CXXFLAGS = -I. -I../hlp $(HOST_CFLAGS)
 LDXXFLAGS = $(HOST_LDFLAGS)
 
 ###########################################################################
@@ -38,36 +38,38 @@ LIBS = addons/libaddons.a \
        plugins/libplugins.a \
        plugins/disasm/libdisasm.a \
        libbeye/libbeye.a \
+       libbeye/sysdep/libsysdep.a \
        libbeye/osdep/libosdep.a
 LIBS += $(EXTRALIBS)
-SRCS = \
-bconsole.cpp\
-beyehelp.cpp\
-beyeutil.cpp\
-bin_util.cpp\
-codeguid.cpp\
-colorset.cpp\
-dialogs.cpp\
-editors.cpp\
-events.cpp\
-fileutil.cpp\
-info_win.cpp\
-main.cpp\
-mainloop.cpp\
-search.cpp\
-setup.cpp\
-tstrings.cpp
+SRCS = bconsole.cpp\
+    beyehelp.cpp\
+    beyeutil.cpp\
+    bin_util.cpp\
+    codeguid.cpp\
+    colorset.cpp\
+    dialogs.cpp\
+    editors.cpp\
+    events.cpp\
+    fileutil.cpp\
+    info_win.cpp\
+    main.cpp\
+    mainloop.cpp\
+    search.cpp\
+    setup.cpp\
+    tstrings.cpp
 
 OBJS=$(SRCS:.cpp=.o)
 
 HLP_SUBDIRS=tools/beyehlp tools/lzss
 DO_HELP = @ for i in $(HLP_SUBDIRS); do $(MAKE) -C $$i $@ || exit; done
 
-all:     $(LIBS) $(OBJS) $(TARGET)
-
-$(LIBS): $(SUBDIRS)
+.SUFFIXES: .cpp .o
 
 .PHONY: all $(SUBDIRS)
+
+all:     dep $(LIBS) $(OBJS) $(TARGET)
+
+$(LIBS): $(SUBDIRS)
 
 $(SUBDIRS):
 ifeq ($(filter 3.81,$(firstword $(sort $(MAKE_VERSION) \ 3.81))),)
@@ -80,6 +82,7 @@ clean:
 	$(DO_MAKE)
 	$(RM) $(OBJS)
 	$(RM) $(TARGET)$(EXESUF)
+	$(RM) .depend
 
 distclean: clean
 	$(DO_MAKE)
@@ -101,3 +104,17 @@ endif
 	$(INSTALL) -D -m 755 $(TARGET) $(DESTDIR)$(PREFIX)/bin/$(TARGET)
 uninstall:
 	$(RM) $(DESTDIR)$(PREFIX)/bin/$(TARGET)
+
+dep:    .depend
+
+.depend:
+	$(CXX) -MM $(CXXFLAGS) $(SRCS) 1>.depend
+	$(DO_MAKE)
+
+#
+# include dependency files if they exist
+#
+ifneq ($(wildcard .depend),)
+include .depend
+endif
+

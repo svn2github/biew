@@ -27,7 +27,7 @@ clean:
 
 distclean:
 	$(DO_MAKE)
-	rm -f config.h config.mak configure.log version.h
+	rm -f config.h config.mak configure.log version.h .depend
 
 uninstall:
 	$(DO_IMAKE)

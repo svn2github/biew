@@ -24,7 +24,6 @@ using namespace	usr;
 #include <stdio.h>
 #include <ctype.h>
 #include <limits.h>
-#include "libbeye/sysdep/__config.h"
 
 void __FASTCALL__ memupr(any_t*ptr,unsigned n)
 {
