@@ -272,6 +272,7 @@ void Setup()
   delete ewnd[0];
   delete ewnd[1];
   delete ewnd[2];
+  delete ewnd[3];
   delete wdlg;
 }
 } // namespace	usr
