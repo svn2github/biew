@@ -33,15 +33,9 @@ using namespace	usr;
 #include "libbeye/file_ini.h"
 
 namespace	usr {
-static char *outstr;
-
-static int armBitness=DAB_USE32;
-static int armBigEndian=1;
-static DisMode* parent;
-
-static DisasmRet __FASTCALL__ armDisassembler(__filesize_t ulShift,
-					      MBuffer buffer,
-					      unsigned flags)
+DisasmRet ARM_Disassembler::disassembler(__filesize_t ulShift,
+					MBuffer buffer,
+					unsigned flags)
 {
   DisasmRet ret;
   armBigEndian = beye_context().bin_format().query_endian(ulShift)==DAE_BIG?1:0;
@@ -71,13 +65,13 @@ static DisasmRet __FASTCALL__ armDisassembler(__filesize_t ulShift,
   return ret;
 }
 
-static bool __FASTCALL__ armAsmRef()
+bool ARM_Disassembler::action_F1()
 {
   hlpDisplay(20040);
   return false;
 }
 
-static void __FASTCALL__ armHelpAsm()
+void ARM_Disassembler::show_short_help() const
 {
  char *msgAsmText,*title;
  char **strs;
@@ -151,8 +145,8 @@ static void __FASTCALL__ armHelpAsm()
  bhelp.close();
 }
 
-static int    __FASTCALL__ armMaxInsnLen() { return 8; }
-static ColorAttr __FASTCALL__ armGetAsmColor( unsigned long clone )
+int ARM_Disassembler::max_insn_len() { return 8; }
+ColorAttr ARM_Disassembler::get_insn_color( unsigned long clone )
 {
   if((clone & ARM_XSCALE)==ARM_XSCALE) return disasm_cset.engine[2].engine;
   else
@@ -160,34 +154,39 @@ static ColorAttr __FASTCALL__ armGetAsmColor( unsigned long clone )
   else
 	return disasm_cset.engine[0].engine;
 }
+ColorAttr ARM_Disassembler::get_opcode_color( unsigned long clone ) { return get_insn_color(clone); }
 
-static int       __FASTCALL__ armGetBitness() { return armBitness; }
-static char      __FASTCALL__ armGetClone( unsigned long clone )
+int ARM_Disassembler::get_bitness() { return armBitness; }
+char ARM_Disassembler::clone_short_name( unsigned long clone )
 {
   UNUSED(clone);
   return ' ';
 }
-static void      __FASTCALL__ armInit( DisMode& _parent )
+
+ARM_Disassembler::ARM_Disassembler( DisMode& _parent )
+	    :Disassembler(_parent)
+	    ,parent(_parent)
+	    ,armBitness(DAB_USE32)
+	    ,armBigEndian(1)
 {
-  parent = &_parent;
   outstr = new char[1000];
   if(!outstr)
   {
     MemOutBox("Data disassembler initialization");
     exit(EXIT_FAILURE);
   }
-  arm16Init(parent);
-  arm32Init(parent);
+  arm16Init();
+  arm32Init();
 }
 
-static void  __FASTCALL__ armTerm()
+ARM_Disassembler::~ARM_Disassembler()
 {
    arm32Term();
    arm16Term();
    delete outstr;
 }
 
-static void __FASTCALL__ armReadIni( Ini_Profile& ini )
+void ARM_Disassembler::read_ini( Ini_Profile& ini )
 {
   std::string tmps;
   if(beye_context().is_valid_ini_args())
@@ -201,7 +200,7 @@ static void __FASTCALL__ armReadIni( Ini_Profile& ini )
   }
 }
 
-static void __FASTCALL__ armWriteIni( Ini_Profile& ini )
+void ARM_Disassembler::save_ini(Ini_Profile& ini)
 {
   char tmps[10];
   sprintf(tmps,"%i",armBitness);
@@ -216,7 +215,7 @@ static const char *arm_bitness_names[] =
    "~Full-32"
 };
 
-static bool __FASTCALL__ armSelect_bitness()
+bool ARM_Disassembler::action_F3()
 {
   unsigned nModes;
   int i;
@@ -236,7 +235,7 @@ static const char *arm_endian_names[] =
    "~Big endian"
 };
 
-static bool __FASTCALL__ armSelect_endian()
+bool ARM_Disassembler::action_F4()
 {
   unsigned nModes;
   int i;
@@ -250,25 +249,21 @@ static bool __FASTCALL__ armSelect_endian()
   return false;
 }
 
-extern const REGISTRY_DISASM ARM_Disasm =
-{
-  DISASM_CPU_ARM,
-  "A~RMv5TE/XScale",
-  { "ARMHlp", "Bitnes", "Endian", NULL },
-  { armAsmRef, armSelect_bitness, armSelect_endian, NULL },
-  armDisassembler,
-  NULL,
-  armHelpAsm,
-  armMaxInsnLen,
-  armGetAsmColor,
-  NULL,
-  armGetAsmColor,
-  NULL,
-  armGetBitness,
-  armGetClone,
-  armInit,
-  armTerm,
-  armReadIni,
-  armWriteIni
+const char* ARM_Disassembler::prompt(unsigned idx) const {
+    switch(idx) {
+	case 0: return "x86Hlp"; break;
+	case 2: return "Bitnes"; break;
+	case 3: return "Endian"; break;
+	default: break;
+    }
+    return "";
+}
+
+static Disassembler* query_interface(DisMode& _parent) { return new(zeromem) ARM_Disassembler(_parent); }
+
+extern const Disassembler_Info arm_disassembler_info = {
+    DISASM_CPU_ARM,
+    "A~RMv5TE/XScale",	/**< plugin name */
+    query_interface
 };
 } // namespace	usr

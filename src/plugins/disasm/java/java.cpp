@@ -34,32 +34,57 @@ using namespace	usr;
 #include "libbeye/file_ini.h"
 
 namespace	usr {
-static DisMode* parent;
+    enum {
+	JVM_TAIL		=0x000000FFUL, /* n-bytes of insn's tail */
+	JVM_OBJREF1		=0x00000100UL, /* insns refers object as 1-byte idx */
+	JVM_OBJREF2		=0x00000200UL, /* insns refers object as 2-byte idx */
+	JVM_OBJREF4		=0x00000300UL, /* insns refers object as 4-byte idx */
+	JVM_OBJREFMASK		=0x00000300UL,
+	JVM_CONST1		=0x00000400UL, /* insns hass const as idx,1-byte const */
+	JVM_CONST2		=0x00000800UL, /* insns hass const as idx,2-byte const */
+	JVM_CONST4		=0x00000C00UL, /* insns hass const as idx,4-byte const */
+	JVM_CONSTMASK		=0x00000C00UL,
+	JVM_ATYPE		=0x00001000UL,
+	JVM_CODEREF		=0x20000000UL, /* insns refers relative jump */
+	JVM_LOOKUPSWITCH	=0x01000000UL, /* special case : lookupswitch insn */
+	JVM_TABLESWITCH		=0x02000000UL  /* special case : tableswitch insn */
+    };
+
+    struct java_codes_t {
+	const char * name;
+	unsigned long flags;
+    };
+
+    class Java_Disassembler : public Disassembler {
+	public:
+	    Java_Disassembler(DisMode& parent);
+	    virtual ~Java_Disassembler();
+	
+	    virtual const char*	prompt(unsigned idx) const;
+	    virtual bool	action_F1();
+
+	    virtual DisasmRet	disassembler(__filesize_t shift,MBuffer insn_buff,unsigned flags);
+
+	    virtual void	show_short_help() const;
+	    virtual int		max_insn_len();
+	    virtual ColorAttr	get_insn_color(unsigned long clone);
+
+	    virtual int		get_bitness();
+	    virtual char	clone_short_name(unsigned long clone);
+	    virtual void	read_ini(Ini_Profile&);
+	    virtual void	save_ini(Ini_Profile&);
+	private:
+	    DisMode&		parent;
+	    char*		outstr;
+	    unsigned		vartail;
+	    __filesize_t	vartail_base, vartail_start, vartail_flags, vartail_idx;
+
+	    static const java_codes_t java_codes[256];
+    };
+
 static const unsigned TAB_POS=10;
 
-enum {
-    JVM_TAIL		=0x000000FFUL, /* n-bytes of insn's tail */
-    JVM_OBJREF1		=0x00000100UL, /* insns refers object as 1-byte idx */
-    JVM_OBJREF2		=0x00000200UL, /* insns refers object as 2-byte idx */
-    JVM_OBJREF4		=0x00000300UL, /* insns refers object as 4-byte idx */
-    JVM_OBJREFMASK	=0x00000300UL,
-    JVM_CONST1		=0x00000400UL, /* insns hass const as idx,1-byte const */
-    JVM_CONST2		=0x00000800UL, /* insns hass const as idx,2-byte const */
-    JVM_CONST4		=0x00000C00UL, /* insns hass const as idx,4-byte const */
-    JVM_CONSTMASK	=0x00000C00UL,
-    JVM_ATYPE		=0x00001000UL,
-    JVM_CODEREF		=0x20000000UL, /* insns refers relative jump */
-    JVM_LOOKUPSWITCH	=0x01000000UL, /* special case : lookupswitch insn */
-    JVM_TABLESWITCH	=0x02000000UL  /* special case : tableswitch insn */
-};
-typedef struct java_codes_s
-{
-    const char * name;
-    unsigned long flags;
-}java_codes_t;
-
-
-const java_codes_t java_codes[256]=
+const java_codes_t Java_Disassembler::java_codes[256]=
 {
   /*0x00*/ { "nop", 0 },
   /*0x01*/ { "aconst_null", 0 },
@@ -319,12 +344,9 @@ const java_codes_t java_codes[256]=
   /*0xFF*/ { "impdep2", 0 }
 };
 
-static char *outstr;
-static unsigned vartail=0;
-static __filesize_t vartail_base=0, vartail_start=0, vartail_flags, vartail_idx;
-static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
-					       MBuffer buffer,
-					       unsigned flags)
+DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
+					MBuffer buffer,
+					unsigned flags)
 {
   DisasmRet ret;
   unsigned mult,idx,tail,npadds=0;
@@ -379,7 +401,7 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
 			lval=FMT_DWORD(buffer, 1);
 			newpos=vartail_base+lval;
 			if(lval!=newpos)
-				parent->append_faddr(outstr,ulShift,lval,
+				parent.append_faddr(outstr,ulShift,lval,
 						newpos,DisMode::Near32,0,4);
 				else
 				    strcat(outstr,Get8Digit(newpos));
@@ -393,7 +415,7 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
 			lval=FMT_DWORD(&buffer[4], 1);
 			newpos=vartail_base+lval;
 			if(lval!=newpos)
-				parent->append_faddr(outstr,ulShift,lval,
+				parent.append_faddr(outstr,ulShift,lval,
 						newpos,DisMode::Near32,0,4);
 				else
 				    strcat(outstr,Get8Digit(newpos));
@@ -469,7 +491,7 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
 			strcat(outstr,",default:");
 			newpos=ulShift+(__fileoff_t)defval;
 			if(defval)
-				parent->append_faddr(outstr,ulShift+idx+1+npadds,defval,
+				parent.append_faddr(outstr,ulShift+idx+1+npadds,defval,
 						newpos,DisMode::Near32,0,4);
 			else
 				strcat(outstr,Get8Digit(newpos));
@@ -487,7 +509,7 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
 			strcat(outstr," default:");
 			newpos=ulShift+(__fileoff_t)defval;
 			if(defval)
-				parent->append_faddr(outstr,ulShift+idx+1+npadds,defval,
+				parent.append_faddr(outstr,ulShift+idx+1+npadds,defval,
 						newpos,DisMode::Near32,0,4);
 			else
 				strcat(outstr,Get8Digit(newpos));
@@ -528,7 +550,7 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
 		    if((jflags & JVM_CODEREF)==JVM_CODEREF && sval)
 		    {
 			newpos = ulShift + (signed short)sval;
-			parent->append_faddr(outstr,ulShift + 1,sval,
+			parent.append_faddr(outstr,ulShift + 1,sval,
 					newpos,DisMode::Near16,0,2);
 		    }
 		    else
@@ -541,7 +563,7 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
 		    }
 		    else
 		    if(jflags & JVM_OBJREFMASK)
-		    parent->append_digits(outstr,ulShift+idx,
+		    parent.append_digits(outstr,ulShift+idx,
 			APREF_USE_TYPE,2,&sval,DisMode::Arg_Word);
 		    else strcat(outstr,Get4Digit(sval));
 		    break;
@@ -555,7 +577,7 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
 		    if((jflags & JVM_CODEREF)==JVM_CODEREF && lval)
 		    {
 			newpos = ulShift + (__fileoff_t)lval;
-			parent->append_faddr(outstr,ulShift + 1,lval,
+			parent.append_faddr(outstr,ulShift + 1,lval,
 					newpos,DisMode::Near32,0,4);
 		    }
 		    else
@@ -563,7 +585,7 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
 		    {
 			unsigned short sval;
 			sval=FMT_WORD(&buffer[idx],1);
-			parent->append_digits(outstr,ulShift,
+			parent.append_digits(outstr,ulShift,
 				    APREF_USE_TYPE,2,&sval,DisMode::Arg_Word);
 			strcat(outstr,",");
 			if((jflags & JVM_CONST1)==JVM_CONST1) strcat(outstr,Get2Digit(buffer[idx+2]));
@@ -575,13 +597,13 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
 		    }
 		    else
 		    if(jflags & JVM_OBJREFMASK)
-		    parent->append_digits(outstr,ulShift+idx,
+		    parent.append_digits(outstr,ulShift+idx,
 			APREF_USE_TYPE,4,&lval,DisMode::Arg_DWord);
 		    else strcat(outstr,Get8Digit(lval));
 		    break;
 		}
 		case 8:
-		    parent->append_digits(outstr,ulShift+idx,
+		    parent.append_digits(outstr,ulShift+idx,
 			APREF_USE_TYPE,8,&buffer[idx],DisMode::Arg_QWord);
 		    break;
 	    }
@@ -591,32 +613,34 @@ static DisasmRet __FASTCALL__ javaDisassembler(__filesize_t ulShift,
   return ret;
 }
 
-static void  __FASTCALL__ javaHelpAsm()
+void Java_Disassembler::show_short_help() const
 {
   hlpDisplay(20030);
 }
 
-static bool  __FASTCALL__ javaAsmHelp()
+bool Java_Disassembler::action_F1()
 {
   hlpDisplay(20031);
   return false;
 }
 
-static int    __FASTCALL__ javaMaxInsnLen() { return 13; }
-static ColorAttr __FASTCALL__ javaGetAsmColor( unsigned long clone )
+int Java_Disassembler::max_insn_len() { return 13; }
+ColorAttr Java_Disassembler::get_insn_color( unsigned long clone )
 {
   UNUSED(clone);
   return disasm_cset.cpu_cset[0].clone[0];
 }
-static int       __FASTCALL__ javaGetBitness() { return DAB_USE16; }
-static char      __FASTCALL__ javaGetClone( unsigned long clone )
+int Java_Disassembler::get_bitness() { return DAB_USE16; }
+char Java_Disassembler::clone_short_name( unsigned long clone )
 {
   UNUSED(clone);
   return ' ';
 }
-static void      __FASTCALL__ javaInit( DisMode& _parent )
+
+Java_Disassembler::Java_Disassembler( DisMode& _parent )
+		:Disassembler(_parent)
+		,parent(_parent)
 {
-  parent = &_parent;
   outstr = new char [1000];
   if(!outstr)
   {
@@ -625,40 +649,26 @@ static void      __FASTCALL__ javaInit( DisMode& _parent )
   }
 }
 
-static void  __FASTCALL__ javaTerm()
+Java_Disassembler::~Java_Disassembler()
 {
    delete outstr;
 }
 
-static void __FASTCALL__ javaReadIni( Ini_Profile& ini )
-{
-    UNUSED(ini);
+void Java_Disassembler::read_ini( Ini_Profile& ini ) { UNUSED(ini); }
+void Java_Disassembler::save_ini( Ini_Profile& ini ) { UNUSED(ini); }
+
+const char* Java_Disassembler::prompt(unsigned idx) const {
+    switch(idx) {
+	case 0: return "JvmHlp"; break;
+	default: break;
+    }
+    return "";
 }
 
-static void __FASTCALL__ javaWriteIni( Ini_Profile& ini )
-{
-    UNUSED(ini);
-}
-
-extern const REGISTRY_DISASM Java_Disasm =
-{
-  DISASM_JAVA,
-  "~Java",
-  { "JvmAsm", NULL, NULL, NULL },
-  { javaAsmHelp, NULL, NULL, NULL },
-  javaDisassembler,
-  NULL,
-  javaHelpAsm,
-  javaMaxInsnLen,
-  javaGetAsmColor,
-  NULL,
-  javaGetAsmColor,
-  NULL,
-  javaGetBitness,
-  javaGetClone,
-  javaInit,
-  javaTerm,
-  javaReadIni,
-  javaWriteIni
+static Disassembler* query_interface(DisMode& _parent) { return new(zeromem) Java_Disassembler(_parent); }
+extern const Disassembler_Info java_disassembler_info = {
+    DISASM_JAVA,
+    "~Java",	/**< plugin name */
+    query_interface
 };
 } // namespace	usr

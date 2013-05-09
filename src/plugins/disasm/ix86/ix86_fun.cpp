@@ -33,21 +33,12 @@ using namespace	usr;
 #include "reg_form.h"
 
 namespace	usr {
-extern DisMode* ix86_parent;
 #define MODRM_REG(X) (((X)&0x38)>>3)
 #define MODRM_COP(X) MODRM_REG(X)
 #define MODRM_MOD(X) (((X)&0xC0)>>6)
 #define MODRM_RM(X)  ((X)&0x07)
 
-char *ix86_appstr;
-char *ix86_dtile;
-char *ix86_appbuffer;
-char *ix86_apistr;
-char *ix86_modrm_ret;
-char *ix86_Katmai_buff;
-
-#define ix86_setModifier(str,modf) disSetModifier(str,modf)
-#define getSREG(sreg) (ix86_SegRegs[(unsigned char)sreg])
+inline void ix86_setModifier(char* str,const char* modf) { disSetModifier(str,modf); }
 
 #define REX_reg(rex,reg) (reg|((rex&1)<<3))
 
@@ -59,7 +50,7 @@ char *ix86_Katmai_buff;
 #define USE_WIDE_ADDR (DisP->mode&MOD_WIDE_ADDR)
 #define HAS_67_IN64 ((x86_Bitness == DAB_USE64)&&(DisP->pfx&PFX_67))
 
-static inline unsigned ix86_calcModifier(ix86Param* DisP,unsigned w) {
+unsigned ix86_Disassembler::ix86_calcModifier(ix86Param* DisP,unsigned w) {
   unsigned sizptr;
      if(!w) sizptr = BYTE_PTR;
      else
@@ -70,7 +61,7 @@ static inline unsigned ix86_calcModifier(ix86Param* DisP,unsigned w) {
    return sizptr;
 }
 
-static const char * __FASTCALL__ k64_getREG(ix86Param*DisP,unsigned char reg,bool w,bool rex, bool use_qregs)
+const char * ix86_Disassembler::k64_getREG(ix86Param*DisP,unsigned char reg,bool w,bool rex, bool use_qregs)
 {
  if(x86_Bitness!=DAB_USE64) use_qregs=false;
  if((DisP->mode&MOD_SSE)) {
@@ -89,7 +80,7 @@ static const char * __FASTCALL__ k64_getREG(ix86Param*DisP,unsigned char reg,boo
       return use_qregs?k64_QWordRegs[REX_reg(rex,reg)]:USE_WIDE_DATA?k64_DWordRegs[REX_reg(rex,reg)]:k64_WordRegs[REX_reg(rex,reg)];
 }
 
-static const char *get_VEX_reg(ix86Param* DisP)
+const char* ix86_Disassembler::get_VEX_reg(ix86Param* DisP)
 {
     unsigned rg,brex,wrex;
     const char *rval=NULL;
@@ -100,26 +91,18 @@ static const char *get_VEX_reg(ix86Param* DisP)
     return rval;
 }
 
-static char *  __FASTCALL__ GetDigitsApp(unsigned char loc_off,
-						 ix86Param *DisP,
-						 char codelen,DisMode::e_disarg type)
+char*  ix86_Disassembler::GetDigitsApp(unsigned char loc_off,
+					ix86Param *DisP,
+					char codelen,DisMode::e_disarg type)
 {
   ix86_appbuffer[0] = 0;
   if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
-    ix86_parent->append_digits(ix86_appbuffer,DisP->CodeAddress + loc_off,
+    parent.append_digits(ix86_appbuffer,DisP->CodeAddress + loc_off,
 		    APREF_USE_TYPE,codelen,&DisP->RealCmd[loc_off],type);
   return ix86_appbuffer;
 }
 
-inline char* Get2DigitApp(unsigned char loc_off,ix86Param* DisP) { return GetDigitsApp(loc_off,DisP,1,DisMode::Arg_Byte); }
-inline char* Get2SignDigApp(unsigned char loc_off,ix86Param* DisP) { return GetDigitsApp(loc_off,DisP,1,DisMode::Arg_Char); }
-inline char* Get4DigitApp(unsigned char loc_off,ix86Param* DisP)   { return GetDigitsApp(loc_off,DisP,2,DisMode::Arg_Word); }
-inline char* Get4SignDigApp(unsigned char loc_off,ix86Param* DisP) { return GetDigitsApp(loc_off,DisP,2,DisMode::Arg_Short); }
-inline char* Get8DigitApp(unsigned char loc_off,ix86Param* DisP)   { return GetDigitsApp(loc_off,DisP,4,DisMode::Arg_DWord); }
-inline char* Get8SignDigApp(unsigned char loc_off,ix86Param* DisP) { return GetDigitsApp(loc_off,DisP,4,DisMode::Arg_Long); }
-inline char* Get16DigitApp(unsigned char loc_off,ix86Param* DisP)   { return GetDigitsApp(loc_off,DisP,8,DisMode::Arg_QWord); }
-inline char* Get16SignDigApp(unsigned char loc_off,ix86Param* DisP) { return GetDigitsApp(loc_off,DisP,8,DisMode::Arg_LLong); }
-static char *  __FASTCALL__ Get2SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign)
+char *  ix86_Disassembler::Get2SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign)
 {
   char *ptr = ix86_apistr;
   char *rets;
@@ -133,7 +116,7 @@ static char *  __FASTCALL__ Get2SquareDig(unsigned char loc_off,ix86Param *DisP,
   return ix86_apistr;
 }
 
-static char *  __FASTCALL__ Get4SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign, bool is_disponly)
+char *  ix86_Disassembler::Get4SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign, bool is_disponly)
 {
   char *ptr = ix86_apistr;
   char *rets;
@@ -150,7 +133,7 @@ static char *  __FASTCALL__ Get4SquareDig(unsigned char loc_off,ix86Param *DisP,
   return ix86_apistr;
 }
 
-static char *  __FASTCALL__ Get8SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign,bool is_disponly,bool as_rip)
+char *  ix86_Disassembler::Get8SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign,bool is_disponly,bool as_rip)
 {
   char *ptr = ix86_apistr;
   char *rets;
@@ -168,7 +151,7 @@ static char *  __FASTCALL__ Get8SquareDig(unsigned char loc_off,ix86Param *DisP,
   return ix86_apistr;
 }
 
-static char *  __FASTCALL__ Get16SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign,bool is_disponly)
+char *  ix86_Disassembler::Get16SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign,bool is_disponly)
 {
   char *ptr = ix86_apistr;
   char *rets;
@@ -185,43 +168,43 @@ static char *  __FASTCALL__ Get16SquareDig(unsigned char loc_off,ix86Param *DisP
   return ix86_apistr;
 }
 
-void __FASTCALL__ ix86_ArgES(char *str,ix86Param *param)
+void ix86_Disassembler::ix86_ArgES(char *str,ix86Param *param)
 {
   UNUSED(param);
   strcat(str,"es");
 }
 
-void __FASTCALL__ ix86_ArgDS(char *str,ix86Param *param)
+void ix86_Disassembler::ix86_ArgDS(char *str,ix86Param *param)
 {
   UNUSED(param);
   strcat(str,"ds");
 }
 
-void __FASTCALL__ ix86_ArgSS(char *str,ix86Param *param)
+void ix86_Disassembler::ix86_ArgSS(char *str,ix86Param *param)
 {
   UNUSED(param);
   strcat(str,"ss");
 }
 
-void __FASTCALL__ ix86_ArgCS(char *str,ix86Param *param)
+void ix86_Disassembler::ix86_ArgCS(char *str,ix86Param *param)
 {
   UNUSED(param);
   strcat(str,"cs");
 }
 
-void __FASTCALL__ ix86_ArgFS(char *str,ix86Param *param)
+void ix86_Disassembler::ix86_ArgFS(char *str,ix86Param *param)
 {
   UNUSED(param);
   strcat(str,"fs");
 }
 
-void __FASTCALL__ ix86_ArgGS(char *str,ix86Param *param)
+void ix86_Disassembler::ix86_ArgGS(char *str,ix86Param *param)
 {
   UNUSED(param);
   strcat(str,"gs");
 }
 
-static char * __FASTCALL__ ix86_GetDigitTile(ix86Param* DisP,char wrd,char sgn,unsigned char loc_off)
+char * ix86_Disassembler::ix86_GetDigitTile(ix86Param* DisP,char wrd,char sgn,unsigned char loc_off)
 {
   int cl;
   DisMode::e_disarg type;
@@ -237,7 +220,7 @@ static char * __FASTCALL__ ix86_GetDigitTile(ix86Param* DisP,char wrd,char sgn,u
 		 wrd ? ( USE_WIDE_DATA ? DisMode::Arg_DWord : DisMode::Arg_Word ) : DisMode::Arg_Byte;
     type |= DisMode::Arg_Imm;
     ix86_dtile[0] = 0;
-    ix86_parent->append_digits(ix86_dtile,
+    parent.append_digits(ix86_dtile,
 		    DisP->CodeAddress + loc_off,
 		    APREF_USE_TYPE,cl,&DisP->RealCmd[loc_off],type);
   }
@@ -245,7 +228,7 @@ static char * __FASTCALL__ ix86_GetDigitTile(ix86Param* DisP,char wrd,char sgn,u
   return ix86_dtile;
 }
 
-void __FASTCALL__ arg_segoff(char * str,ix86Param *DisP)
+void ix86_Disassembler::arg_segoff(char * str,ix86Param *DisP)
 {
   unsigned long newpos = 0L;
   long off = 0L;
@@ -258,11 +241,11 @@ void __FASTCALL__ arg_segoff(char * str,ix86Param *DisP)
   }
   DisP->codelen += USE_WIDE_DATA ? 6 : 4;
   if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
-    ix86_parent->append_faddr(str,DisP->CodeAddress + 1,off,newpos,
+    parent.append_faddr(str,DisP->CodeAddress + 1,off,newpos,
 		   USE_WIDE_DATA ? DisMode::Far32 : DisMode::Far16,seg,DisP->codelen-1);
 }
 
-void __FASTCALL__ arg_offset(char * str,ix86Param *DisP)
+void ix86_Disassembler::arg_offset(char * str,ix86Param *DisP)
 {
   long lshift = 0L;
   unsigned long newpos;
@@ -291,11 +274,11 @@ the 8-bit or 32-bit displacement value to 64 bits before adding it to the RIP.
   if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
   {
     newpos = DisP->CodeAddress + lshift + DisP->codelen;
-    ix86_parent->append_faddr(str,DisP->CodeAddress + 1,lshift,newpos,modifier,0,DisP->codelen);
+    parent.append_faddr(str,DisP->CodeAddress + 1,lshift,newpos,modifier,0,DisP->codelen);
   }
 }
 
-static void  __FASTCALL__ getSIBRegs(ix86Param*DisP,char * base,char * scale,char * _index,char *mod,char code)
+void  ix86_Disassembler::getSIBRegs(ix86Param*DisP,char * base,char * scale,char * _index,char *mod,char code)
 {
   char scl = (code & 0xC0) >> 6;
   char bas = code & 0x07;
@@ -352,7 +335,7 @@ static void  __FASTCALL__ getSIBRegs(ix86Param*DisP,char * base,char * scale,cha
 #endif
 }
 
-static char *  __FASTCALL__ ConstrSibMod(ix86Param*DisP,char * store,char * scale,char * _index,char * base,char code,char *mod)
+char *  ix86_Disassembler::ConstrSibMod(ix86Param*DisP,char * store,char * scale,char * _index,char * base,char code,char *mod)
 {
    getSIBRegs(DisP,base,scale,_index,mod,code);
    store[0] = 0;
@@ -370,7 +353,7 @@ static char *  __FASTCALL__ ConstrSibMod(ix86Param*DisP,char * store,char * scal
 }
 
 
-char * __FASTCALL__ ix86_getModRM16(bool w,unsigned char mod,unsigned char rm,ix86Param *DisP)
+char * ix86_Disassembler::ix86_getModRM16(bool w,unsigned char mod,unsigned char rm,ix86Param *DisP)
 {
  char square[50];
  char new_mode = mod;
@@ -441,7 +424,7 @@ char * __FASTCALL__ ix86_getModRM16(bool w,unsigned char mod,unsigned char rm,ix
  return ix86_modrm_ret;
 }
 
-char * __FASTCALL__ ix86_getModRM32(bool w,unsigned char mod,unsigned char rm,ix86Param *DisP)
+char * ix86_Disassembler::ix86_getModRM32(bool w,unsigned char mod,unsigned char rm,ix86Param *DisP)
 {
  const char *cptr;
  char square[50];
@@ -526,7 +509,7 @@ char * __FASTCALL__ ix86_getModRM32(bool w,unsigned char mod,unsigned char rm,ix
  return ix86_modrm_ret;
 }
 
-char * __FASTCALL__ ix86_getModRM64(bool w,unsigned char mod,unsigned char rm,ix86Param *DisP)
+char * ix86_Disassembler::ix86_getModRM64(bool w,unsigned char mod,unsigned char rm,ix86Param *DisP)
 {
  const char *cptr;
  char square[50];
@@ -621,7 +604,7 @@ char * __FASTCALL__ ix86_getModRM64(bool w,unsigned char mod,unsigned char rm,ix
  return ix86_modrm_ret;
 }
 
-char * __FASTCALL__ ix86_getModRM(bool w,unsigned char mod,unsigned char rm,ix86Param *DisP)
+char * ix86_Disassembler::ix86_getModRM(bool w,unsigned char mod,unsigned char rm,ix86Param *DisP)
 {
     char *rval;
     if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) {
@@ -638,7 +621,7 @@ char * __FASTCALL__ ix86_getModRM(bool w,unsigned char mod,unsigned char rm,ix86
     return rval;
 }
 
-char * __FASTCALL__ ix86_CStile(ix86Param *DisP,char *str,const char *arg2)
+char * ix86_Disassembler::ix86_CStile(ix86Param *DisP,char *str,const char *arg2)
 {
   if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) {
     strcat(str,",");
@@ -647,7 +630,7 @@ char * __FASTCALL__ ix86_CStile(ix86Param *DisP,char *str,const char *arg2)
   return str;
 }
 
-static char *  __FASTCALL__ __buildModRegRm(ix86Param *DisP,bool w,bool d)
+char *  ix86_Disassembler::__buildModRegRm(ix86Param *DisP,bool w,bool d)
 {
  char reg = MODRM_REG(DisP->RealCmd[1]);
  char mod = MODRM_MOD(DisP->RealCmd[1]);
@@ -675,7 +658,7 @@ static char *  __FASTCALL__ __buildModRegRm(ix86Param *DisP,bool w,bool d)
  return ix86_dtile;
 }
 
-static char *  __FASTCALL__ __buildModRegRmReg(ix86Param *DisP,bool d,unsigned char wrex)
+char *  ix86_Disassembler::__buildModRegRmReg(ix86Param *DisP,bool d,unsigned char wrex)
 {
  char reg = MODRM_REG(DisP->RealCmd[1]);
  char mod = MODRM_MOD(DisP->RealCmd[1]);
@@ -701,13 +684,13 @@ static char *  __FASTCALL__ __buildModRegRmReg(ix86Param *DisP,bool d,unsigned c
  return ix86_dtile;
 }
 
-void __FASTCALL__ arg_cpu_modregrm(char * str,ix86Param *DisP)
+void ix86_Disassembler::arg_cpu_modregrm(char * str,ix86Param *DisP)
 {
  DisP->codelen++;
  strcat(str,__buildModRegRm(DisP,(DisP->insn_flags&INSN_OP_BYTE)?false:true,(DisP->insn_flags&INSN_STORE)?false:true));
 }
 
-void __FASTCALL__ arg_cpu_modREGrm(char * str,ix86Param *DisP)
+void ix86_Disassembler::arg_cpu_modREGrm(char * str,ix86Param *DisP)
 {
   bool brex,wrex;
   char reg = MODRM_REG(DisP->RealCmd[1]);
@@ -723,7 +706,7 @@ void __FASTCALL__ arg_cpu_modREGrm(char * str,ix86Param *DisP)
   ix86_CStile(DisP,str,ix86_getModRM((DisP->insn_flags&INSN_OP_BYTE)?false:true,mod,rm,DisP));
 }
 
-void __FASTCALL__ arg_cpu_mod_rm(char* str,ix86Param *DisP)
+void ix86_Disassembler::arg_cpu_mod_rm(char* str,ix86Param *DisP)
 {
   char mod = MODRM_MOD(DisP->RealCmd[1]);
   char rm = MODRM_RM(DisP->RealCmd[1]);
@@ -733,25 +716,25 @@ void __FASTCALL__ arg_cpu_mod_rm(char* str,ix86Param *DisP)
   strcat(str,ix86_getModRM(w,mod,rm,DisP));
 }
 
-void  __FASTCALL__ arg_cpu_mod_rm_imm(char *str,ix86Param *DisP)
+void  ix86_Disassembler::arg_cpu_mod_rm_imm(char *str,ix86Param *DisP)
 {
   arg_cpu_mod_rm(str,DisP);
   ix86_CStile(DisP,str,ix86_GetDigitTile(DisP,(DisP->insn_flags&IMM_BYTE)?false:true,0,DisP->codelen));
 }
 
-void  __FASTCALL__ arg_cpu_modregrm_imm(char *str,ix86Param *DisP)
+void  ix86_Disassembler::arg_cpu_modregrm_imm(char *str,ix86Param *DisP)
 {
   arg_cpu_modregrm(str,DisP);
   ix86_CStile(DisP,str,ix86_GetDigitTile(DisP,(DisP->insn_flags&IMM_BYTE)?false:true,0,DisP->codelen));
 }
 
-void  __FASTCALL__ arg_cpu_modregrm_imm8(char *str,ix86Param *DisP)
+void  ix86_Disassembler::arg_cpu_modregrm_imm8(char *str,ix86Param *DisP)
 {
   arg_cpu_modregrm(str,DisP);
   ix86_CStile(DisP,str,ix86_GetDigitTile(DisP,false,0,DisP->codelen));
 }
 
-void __FASTCALL__ arg_cpu_modsegrm(char * str,ix86Param *DisP)
+void ix86_Disassembler::arg_cpu_modsegrm(char * str,ix86Param *DisP)
 {
   char direct = ( DisP->RealCmd[0] & 0x02 ) >> 1;
   char sreg  = MODRM_REG(DisP->RealCmd[1]);
@@ -771,7 +754,7 @@ void __FASTCALL__ arg_cpu_modsegrm(char * str,ix86Param *DisP)
   ix86_CStile(DisP,str,direct ? tileptr : sregptr);
 }
 
-void __FASTCALL__ arg_r0_imm(char * str,ix86Param *DisP)
+void ix86_Disassembler::arg_r0_imm(char * str,ix86Param *DisP)
 {
   char w = DisP->RealCmd[0] & 0x01;
   bool wrex=0;
@@ -785,7 +768,7 @@ void __FASTCALL__ arg_r0_imm(char * str,ix86Param *DisP)
   ix86_CStile(DisP,str,ix86_GetDigitTile(DisP,w,0,1));
 }
 
-void __FASTCALL__ arg_r0rm(char *str,ix86Param *DisP)
+void ix86_Disassembler::arg_r0rm(char *str,ix86Param *DisP)
 {
   unsigned char rm = MODRM_RM(DisP->RealCmd[0]);
   bool brex,wrex;
@@ -798,7 +781,7 @@ void __FASTCALL__ arg_r0rm(char *str,ix86Param *DisP)
   }
 }
 
-void __FASTCALL__ arg_r0mem(char *str,ix86Param *DisP)
+void ix86_Disassembler::arg_r0mem(char *str,ix86Param *DisP)
 {
   unsigned char d = DisP->RealCmd[0] & 0x02;
   const char *mem,*reg;
@@ -823,7 +806,7 @@ void __FASTCALL__ arg_r0mem(char *str,ix86Param *DisP)
   ix86_CStile(DisP,str,d ? reg : ix86_appstr);
 }
 
-void __FASTCALL__ arg_insnreg(char *str,ix86Param *DisP)
+void ix86_Disassembler::arg_insnreg(char *str,ix86Param *DisP)
 {
   bool brex,wrex;
   brex = REX_B(K64_REX);
@@ -831,7 +814,7 @@ void __FASTCALL__ arg_insnreg(char *str,ix86Param *DisP)
   strcat(str,k64_getREG(DisP,MODRM_RM(DisP->RealCmd[0]),(DisP->insn_flags&INSN_OP_BYTE)?false:true,brex,(DisP->insn_flags&K64_FORCE64)?1:wrex));
 }
 
-void __FASTCALL__ arg_insnreg_imm(char * str,ix86Param *DisP)
+void ix86_Disassembler::arg_insnreg_imm(char * str,ix86Param *DisP)
 {
   char w = (DisP->insn_flags&INSN_OP_BYTE)?0:1;
   arg_insnreg(str,DisP);
@@ -839,7 +822,7 @@ void __FASTCALL__ arg_insnreg_imm(char * str,ix86Param *DisP)
   ix86_CStile(DisP,str,ix86_GetDigitTile(DisP,w,0,1));
 }
 
-void __FASTCALL__ arg_imm(char *str,ix86Param *DisP)
+void ix86_Disassembler::arg_imm(char *str,ix86Param *DisP)
 {
   char wrd = 1,sgn = 0;
   if(DisP->insn_flags&IMM_BYTE) {
@@ -851,30 +834,30 @@ void __FASTCALL__ arg_imm(char *str,ix86Param *DisP)
   strcat(str,ix86_GetDigitTile(DisP,wrd,sgn,1));
 }
 
-void __FASTCALL__ arg_imm8(char *str,ix86Param *DisP)
+void ix86_Disassembler::arg_imm8(char *str,ix86Param *DisP)
 {
   if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
-    ix86_parent->append_digits(str,DisP->CodeAddress + DisP->codelen,
+    parent.append_digits(str,DisP->CodeAddress + DisP->codelen,
 		 APREF_USE_TYPE,1,&DisP->RealCmd[DisP->codelen],DisMode::Arg_Byte);
   DisP->codelen++;
 }
 
-void __FASTCALL__ arg_imm16(char *str,ix86Param *DisP)
+void ix86_Disassembler::arg_imm16(char *str,ix86Param *DisP)
 {
   if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
-    ix86_parent->append_digits(str,DisP->CodeAddress + DisP->codelen,
+    parent.append_digits(str,DisP->CodeAddress + DisP->codelen,
 		 APREF_USE_TYPE,2,&DisP->RealCmd[DisP->codelen],DisMode::Arg_Word | DisMode::Arg_Imm);
   DisP->codelen+=2;
 }
 
-void __FASTCALL__ arg_imm16_imm8(char *str,ix86Param *DisP)
+void ix86_Disassembler::arg_imm16_imm8(char *str,ix86Param *DisP)
 {
   arg_imm16(str,DisP);
   if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) strcat(str,",");
   arg_imm8(str,DisP);
 }
 
-static void __FASTCALL__ ix86_ArgRmDigit(char *str,ix86Param *DisP,char w,char s)
+void ix86_Disassembler::ix86_ArgRmDigit(char *str,ix86Param *DisP,char w,char s)
 {
    char mod = MODRM_MOD(DisP->RealCmd[1]);
    char rm = MODRM_RM(DisP->RealCmd[1]);
@@ -883,7 +866,7 @@ static void __FASTCALL__ ix86_ArgRmDigit(char *str,ix86Param *DisP,char w,char s
    ix86_CStile(DisP,str,ix86_GetDigitTile(DisP,w == 2 ? 0 : w,s,DisP->codelen));
 }
 
-void __FASTCALL__ ix86_ArgOp1(char *str,ix86Param *DisP)
+void ix86_Disassembler::ix86_ArgOp1(char *str,ix86Param *DisP)
 {
    unsigned char w = DisP->RealCmd[0] & 0x01;
    unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
@@ -892,7 +875,7 @@ void __FASTCALL__ ix86_ArgOp1(char *str,ix86Param *DisP)
    ix86_ArgRmDigit(str,DisP,w,cop == 0 || cop == 2 || cop == 3 || cop == 5 ? 1 : 0);
 }
 
-void __FASTCALL__ ix86_ArgOp2(char *str,ix86Param *DisP)
+void ix86_Disassembler::ix86_ArgOp2(char *str,ix86Param *DisP)
 {
    unsigned char w = DisP->RealCmd[0] & 0x01;
    unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
@@ -902,7 +885,7 @@ void __FASTCALL__ ix86_ArgOp2(char *str,ix86Param *DisP)
    ix86_ArgRmDigit(str,DisP,w ? 2 : w, w ? 1 : 0);
 }
 
-void __FASTCALL__ ix86_ShOp2(char *str,ix86Param *DisP)
+void ix86_Disassembler::ix86_ShOp2(char *str,ix86Param *DisP)
 {
    char *a1,*a2;
    unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
@@ -919,7 +902,7 @@ void __FASTCALL__ ix86_ShOp2(char *str,ix86Param *DisP)
    ix86_CStile(DisP,str,a2);
 }
 
-void  __FASTCALL__ ix86_DblShift(char *str,ix86Param *DisP)
+void  ix86_Disassembler::ix86_DblShift(char *str,ix86Param *DisP)
 {
     unsigned char code = DisP->RealCmd[0];
     arg_cpu_modregrm(str,DisP);
@@ -930,7 +913,7 @@ void  __FASTCALL__ ix86_DblShift(char *str,ix86Param *DisP)
     }
 }
 
-void __FASTCALL__ ix86_ShOp1(char *str,ix86Param *DisP)
+void ix86_Disassembler::ix86_ShOp1(char *str,ix86Param *DisP)
 {
    char *a1;
    unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
@@ -946,7 +929,7 @@ void __FASTCALL__ ix86_ShOp1(char *str,ix86Param *DisP)
    ix86_CStile(DisP,str,"1");
 }
 
-void __FASTCALL__ ix86_ShOpCL(char *str,ix86Param *DisP)
+void ix86_Disassembler::ix86_ShOpCL(char *str,ix86Param *DisP)
 {
    char *a1;
    unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
@@ -962,7 +945,7 @@ void __FASTCALL__ ix86_ShOpCL(char *str,ix86Param *DisP)
    ix86_CStile(DisP,str,"cl");
 }
 
-void __FASTCALL__ ix86_ArgGrp1(char *str,ix86Param *DisP)
+void ix86_Disassembler::ix86_ArgGrp1(char *str,ix86Param *DisP)
 {
    unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
    unsigned char mod = MODRM_MOD(DisP->RealCmd[1]);
@@ -981,7 +964,7 @@ void __FASTCALL__ ix86_ArgGrp1(char *str,ix86Param *DisP)
    strcat(str,ix86_getModRM(w,mod,rm,DisP));
 }
 
-void __FASTCALL__ ix86_ArgGrp2(char *str,ix86Param *DisP)
+void ix86_Disassembler::ix86_ArgGrp2(char *str,ix86Param *DisP)
 {
    unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
    unsigned char mod = MODRM_MOD(DisP->RealCmd[1]);
@@ -997,7 +980,7 @@ void __FASTCALL__ ix86_ArgGrp2(char *str,ix86Param *DisP)
       Added by "Kostya Nosov" <k-nosov@yandex.ru>:
       make NEEDREF_ALL for indirect "jmp" and "call"
    */
-   oldDisNeedRef = ix86_parent->disNeedRef;
+   oldDisNeedRef = parent.disNeedRef;
 /*
    if(code2 >= 2 && code2 <= 5 && disNeedRef != NEEDREF_NONE)
 					     disNeedRef = NEEDREF_ALL;
@@ -1015,11 +998,11 @@ void __FASTCALL__ ix86_ArgGrp2(char *str,ix86Param *DisP)
      ix86_setModifier(str,ix86_sizes[sizptr]);
      strcat(str,ix86_getModRM(true,mod,rm,DisP));
    }
-   ix86_parent->disNeedRef = oldDisNeedRef;
+   parent.disNeedRef = oldDisNeedRef;
    DisP->REX = REX;
 }
 
-void __FASTCALL__ ix86_InOut(char * str,ix86Param *DisP)
+void ix86_Disassembler::ix86_InOut(char * str,ix86Param *DisP)
 {
   const char *arg,*reg1,*reg2,*regptr,*dig;
   char i;
@@ -1042,7 +1025,7 @@ void __FASTCALL__ ix86_InOut(char * str,ix86Param *DisP)
   ix86_CStile(DisP,str,reg2);
 }
 
-const ix86_ExOpcodes* __FASTCALL__ ix86_prepare_flags(const ix86_ExOpcodes *extable,ix86Param *DisP,unsigned char *code,unsigned char* codelen)
+const ix86_ExOpcodes* ix86_Disassembler::ix86_prepare_flags(const ix86_ExOpcodes *extable,ix86Param *DisP,unsigned char *code,unsigned char* codelen)
 {
  int in_chain=1;
  while(in_chain)
@@ -1080,7 +1063,7 @@ const ix86_ExOpcodes* __FASTCALL__ ix86_prepare_flags(const ix86_ExOpcodes *exta
 
 /** 0f xx opcodes */
 
-void  __FASTCALL__ ix86_ExOpCodes(char *str,ix86Param *DisP)
+void  ix86_Disassembler::ix86_ExOpCodes(char *str,ix86Param *DisP)
 {
  unsigned char code,up;
  const ix86_ExOpcodes *extable=ix86_extable;
@@ -1093,19 +1076,22 @@ void  __FASTCALL__ ix86_ExOpCodes(char *str,ix86Param *DisP)
     strcpy(str,extable[code].name64?extable[code].name64:"???");
  else
  strcpy(str,extable[code].name?extable[code].name:"???");
+ ix86_method mtd;
  if(x86_Bitness == DAB_USE64)
  {
    if(extable[code].method64)
    {
+     mtd=extable[code].method64;
      TabSpace(str,TAB_POS);
-     extable[code].method64(str,DisP);
+     (this->*mtd)(str,DisP);
    }
  }
  else
  if(extable[code].method)
  {
+   mtd=extable[code].method;
    TabSpace(str,TAB_POS);
-   extable[code].method(str,DisP);
+   (this->*mtd)(str,DisP);
  }
  if(x86_Bitness == DAB_USE64) DisP->pro_clone = extable[code].flags64&K64_CPUMASK;
  else
@@ -1117,7 +1103,7 @@ void  __FASTCALL__ ix86_ExOpCodes(char *str,ix86Param *DisP)
  DisP->codelen+=up+1;
 }
 
-void  __FASTCALL__ ix86_ArgExGr0(char *str,ix86Param *DisP)
+void  ix86_Disassembler::ix86_ArgExGr0(char *str,ix86Param *DisP)
 {
     unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
     unsigned char reg = MODRM_RM(DisP->RealCmd[1]);
@@ -1130,8 +1116,8 @@ void  __FASTCALL__ ix86_ArgExGr0(char *str,ix86Param *DisP)
     if((x86_Bitness != DAB_USE64) && (cop < 4)) DisP->pro_clone |= INSN_CPL0;
 }
 
-static const char *ix86_vmxname[]={"???","???","???","???","???","???","vmclear","???",};
-void   __FASTCALL__ ix86_VMX(char *str,ix86Param *DisP)
+const char* ix86_Disassembler::ix86_vmxname[]={"???","???","???","???","???","???","vmclear","???",};
+void   ix86_Disassembler::ix86_VMX(char *str,ix86Param *DisP)
 {
     unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
     unsigned char rm  = MODRM_RM(DisP->RealCmd[1]);
@@ -1144,8 +1130,8 @@ void   __FASTCALL__ ix86_VMX(char *str,ix86Param *DisP)
     DisP->pro_clone |= IX86_P6;
 }
 
-static const char *ix86_0Fvmxname[]={"???","cmpxchg8b","???","???","???","???","vmptrld","vmptrst",};
-void   __FASTCALL__ ix86_0FVMX(char *str,ix86Param *DisP)
+const char* ix86_Disassembler::ix86_0Fvmxname[]={"???","cmpxchg8b","???","???","???","???","vmptrld","vmptrst",};
+void   ix86_Disassembler::ix86_0FVMX(char *str,ix86Param *DisP)
 {
     unsigned char rm = MODRM_RM(DisP->RealCmd[1]);
     unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
@@ -1163,8 +1149,8 @@ void   __FASTCALL__ ix86_0FVMX(char *str,ix86Param *DisP)
     }
 }
 
-static const char *ix86_660Fvmxname[]={"???","???","???","???","???","???","vmclear","???",};
-void   __FASTCALL__ ix86_660FVMX(char *str,ix86Param *DisP)
+const char* ix86_Disassembler::ix86_660Fvmxname[]={"???","???","???","???","???","???","vmclear","???",};
+void   ix86_Disassembler::ix86_660FVMX(char *str,ix86Param *DisP)
 {
     unsigned char rm = MODRM_RM(DisP->RealCmd[1]);
     unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
@@ -1179,8 +1165,8 @@ void   __FASTCALL__ ix86_660FVMX(char *str,ix86Param *DisP)
     }
 }
 
-static const char * ix86_ExGrp1[] = { "sgdt", "sidt", "lgdt", "lidt", "smsw", "???", "lmsw", "invlpg" };
-void  __FASTCALL__ ix86_ArgExGr1(char *str,ix86Param *DisP)
+const char* ix86_Disassembler::ix86_ExGrp1[] = { "sgdt", "sidt", "lgdt", "lidt", "smsw", "???", "lmsw", "invlpg" };
+void  ix86_Disassembler::ix86_ArgExGr1(char *str,ix86Param *DisP)
 {
     unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
     unsigned char reg = MODRM_RM(DisP->RealCmd[1]);
@@ -1363,9 +1349,9 @@ void  __FASTCALL__ ix86_ArgExGr1(char *str,ix86Param *DisP)
     strcat(str,ix86_getModRM(word ? true : buf & 0x01,mod,reg,DisP));
 }
 
-static const char ** k64_xry[] = { k64_CrxRegs, k64_DrxRegs, k64_TrxRegs, k64_XrxRegs };
+const char** ix86_Disassembler::k64_xry[] = { ix86_Disassembler::k64_CrxRegs, ix86_Disassembler::k64_DrxRegs, ix86_Disassembler::k64_TrxRegs, ix86_Disassembler::k64_XrxRegs };
 
-void  __FASTCALL__ ix86_ArgMovXRY(char *str,ix86Param *DisP)
+void  ix86_Disassembler::ix86_ArgMovXRY(char *str,ix86Param *DisP)
 {
     unsigned char code = DisP->RealCmd[0];
     unsigned char xreg = MODRM_REG(DisP->RealCmd[1]);
@@ -1387,7 +1373,7 @@ void  __FASTCALL__ ix86_ArgMovXRY(char *str,ix86Param *DisP)
 
 /* MMX and SSE(2) opcodes */
 
-static void  __FASTCALL__ ix86_bridge_cpu_simd(char *str,ix86Param *DisP,bool direct,bool as_xmmx)
+void  ix86_Disassembler::ix86_bridge_cpu_simd(char *str,ix86Param *DisP,bool direct,bool as_xmmx)
 {
    unsigned long mode=DisP->mode;
    if(as_xmmx) DisP->mode|=MOD_SSE;
@@ -1419,19 +1405,19 @@ static void  __FASTCALL__ ix86_bridge_cpu_simd(char *str,ix86Param *DisP,bool di
    DisP->mode=mode;
 }
 
-void   __FASTCALL__ bridge_simd_cpu(char *str,ix86Param* DisP)
+void   ix86_Disassembler::bridge_simd_cpu(char *str,ix86Param* DisP)
 {
     ix86_bridge_cpu_simd(str,DisP,(DisP->insn_flags&BRIDGE_CPU_SSE)?true:false,(DisP->insn_flags&INSN_SSE)?true:false);
 }
 
-void __FASTCALL__  bridge_simd_cpu_imm8(char *str,ix86Param *DisP)
+void ix86_Disassembler::bridge_simd_cpu_imm8(char *str,ix86Param *DisP)
 {
     bridge_simd_cpu(str,DisP);
     if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) strcat(str,",");
     arg_imm8(str,DisP);
 }
 
-static void  __FASTCALL__ ix86_bridge_sse_mmx(char *str,ix86Param *DisP,bool xmmx_first)
+void  ix86_Disassembler::ix86_bridge_sse_mmx(char *str,ix86Param *DisP,bool xmmx_first)
 {
    unsigned long mode=DisP->mode;
    if(xmmx_first) DisP->mode|=MOD_SSE;
@@ -1465,12 +1451,12 @@ static void  __FASTCALL__ ix86_bridge_sse_mmx(char *str,ix86Param *DisP,bool xmm
    DisP->mode=mode;
 }
 
-void __FASTCALL__ bridge_sse_mmx(char *str,ix86Param* DisP)
+void ix86_Disassembler::bridge_sse_mmx(char *str,ix86Param* DisP)
 {
    ix86_bridge_sse_mmx(str,DisP,(DisP->insn_flags&BRIDGE_MMX_SSE)?false:true);
 }
 
-void __FASTCALL__ arg_emms(char *str,ix86Param *DisP)
+void ix86_Disassembler::arg_emms(char *str,ix86Param *DisP)
 {
     if(DisP->pfx&PFX_VEX) {
 	if(DisP->VEX_vlp&0x04)	strcpy(str,"vzeroall");
@@ -1478,7 +1464,7 @@ void __FASTCALL__ arg_emms(char *str,ix86Param *DisP)
     }
 }
 
-void __FASTCALL__ arg_simd(char *str,ix86Param *DisP)
+void ix86_Disassembler::arg_simd(char *str,ix86Param *DisP)
 {
     unsigned long mode=DisP->mode;
     if(DisP->insn_flags&INSN_MMX)	DisP->mode|=MOD_MMX;
@@ -1487,7 +1473,7 @@ void __FASTCALL__ arg_simd(char *str,ix86Param *DisP)
     DisP->mode=mode;
 }
 
-static void  __FASTCALL__ ix86_ArgxMMXGroup(char *str,const char *name,ix86Param *DisP,bool as_xmmx)
+void  ix86_Disassembler::ix86_ArgxMMXGroup(char *str,const char *name,ix86Param *DisP,bool as_xmmx)
 {
   unsigned long mode=DisP->mode;
   bool brex,wrex;
@@ -1507,37 +1493,37 @@ static void  __FASTCALL__ ix86_ArgxMMXGroup(char *str,const char *name,ix86Param
   DisP->mode=mode;
 }
 
-void __FASTCALL__ ix86_ArgMMXGr1(char *str,ix86Param *DisP)
+void ix86_Disassembler::ix86_ArgMMXGr1(char *str,ix86Param *DisP)
 {
   ix86_ArgxMMXGroup(str,ix86_MMXGr1[MODRM_COP(DisP->RealCmd[1])],DisP,false);
 }
 
-void __FASTCALL__ ix86_ArgMMXGr2(char *str,ix86Param *DisP)
+void ix86_Disassembler::ix86_ArgMMXGr2(char *str,ix86Param *DisP)
 {
   ix86_ArgxMMXGroup(str,ix86_MMXGr2[MODRM_COP(DisP->RealCmd[1])],DisP,false);
 }
 
-void __FASTCALL__ ix86_ArgMMXGr3(char *str,ix86Param *DisP)
+void ix86_Disassembler::ix86_ArgMMXGr3(char *str,ix86Param *DisP)
 {
   ix86_ArgxMMXGroup(str,ix86_MMXGr3[MODRM_COP(DisP->RealCmd[1])],DisP,false);
 }
 
-void __FASTCALL__ ix86_ArgXMMXGr1(char *str,ix86Param *DisP)
+void ix86_Disassembler::ix86_ArgXMMXGr1(char *str,ix86Param *DisP)
 {
   ix86_ArgxMMXGroup(str,ix86_XMMXGr1[MODRM_COP(DisP->RealCmd[1])],DisP,true);
 }
 
-void __FASTCALL__ ix86_ArgXMMXGr2(char *str,ix86Param *DisP)
+void ix86_Disassembler::ix86_ArgXMMXGr2(char *str,ix86Param *DisP)
 {
   ix86_ArgxMMXGroup(str,ix86_XMMXGr2[MODRM_COP(DisP->RealCmd[1])],DisP,true);
 }
 
-void __FASTCALL__ ix86_ArgXMMXGr3(char *str,ix86Param *DisP)
+void ix86_Disassembler::ix86_ArgXMMXGr3(char *str,ix86Param *DisP)
 {
   ix86_ArgxMMXGroup(str,ix86_XMMXGr3[MODRM_COP(DisP->RealCmd[1])],DisP,true);
 }
 
-void __FASTCALL__ ix86_ArgMovYX(char *str,ix86Param *DisP)
+void ix86_Disassembler::ix86_ArgMovYX(char *str,ix86Param *DisP)
 {
       const char *dst,*src;
       unsigned char mod;
@@ -1556,7 +1542,7 @@ void __FASTCALL__ ix86_ArgMovYX(char *str,ix86Param *DisP)
       DisP->codelen++;
 }
 
-void __FASTCALL__ ix86_BitGrp(char *str,ix86Param *DisP)
+void ix86_Disassembler::ix86_BitGrp(char *str,ix86Param *DisP)
 {
    unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
    char mod = MODRM_MOD(DisP->RealCmd[1]);
@@ -1567,9 +1553,9 @@ void __FASTCALL__ ix86_BitGrp(char *str,ix86Param *DisP)
    ix86_CStile(DisP,str,ix86_GetDigitTile(DisP,0,0,++DisP->codelen));
 }
 
-static const char *ix86_KatmaiGr1Names[] = { "fxsave", "fxrstor", "ldmxcsr", "stmxcsr", "xsave", "xrstor", "xsaveopt", "clflush" };
-static const char *ix86_KatmaiGr1Names11[] = { "???", "???", "???", "???", "???", "lfence", "mfence", "sfence" };
-void __FASTCALL__ ix86_ArgKatmaiGrp1(char *str,ix86Param *DisP)
+const char* ix86_Disassembler::ix86_KatmaiGr1Names[] = { "fxsave", "fxrstor", "ldmxcsr", "stmxcsr", "xsave", "xrstor", "xsaveopt", "clflush" };
+const char* ix86_Disassembler::ix86_KatmaiGr1Names11[] = { "???", "???", "???", "???", "???", "lfence", "mfence", "sfence" };
+void ix86_Disassembler::ix86_ArgKatmaiGrp1(char *str,ix86Param *DisP)
 {
    unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
    unsigned char mod = MODRM_MOD(DisP->RealCmd[1]);
@@ -1596,7 +1582,7 @@ void __FASTCALL__ ix86_ArgKatmaiGrp1(char *str,ix86Param *DisP)
 	}
 }
 
-void __FASTCALL__ ix86_ArgKatmaiGrp2(char *str,ix86Param *DisP)
+void ix86_Disassembler::ix86_ArgKatmaiGrp2(char *str,ix86Param *DisP)
 {
    unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
    strcpy(str,ix86_KatmaiGr2Names[cop]);
@@ -1604,8 +1590,8 @@ void __FASTCALL__ ix86_ArgKatmaiGrp2(char *str,ix86Param *DisP)
    arg_cpu_mod_rm(str,DisP);
 }
 
-static const char *ix86_Bm1GrpNames[] = { "???", "blsr", "blmsk", "blsi", "???", "???", "???", "???" };
-void __FASTCALL__ ix86_ArgBm1Grp(char *str,ix86Param *DisP)
+const char* ix86_Disassembler::ix86_Bm1GrpNames[] = { "???", "blsr", "blmsk", "blsi", "???", "???", "???", "???" };
+void ix86_Disassembler::ix86_ArgBm1Grp(char *str,ix86Param *DisP)
 {
     unsigned char rm = MODRM_RM(DisP->RealCmd[1]);
     unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
@@ -1621,8 +1607,8 @@ void __FASTCALL__ ix86_ArgBm1Grp(char *str,ix86Param *DisP)
     strcat(str,ix86_getModRM(true,mod,rm,DisP));
 }
 
-static const char *ix86_FsGsBaseNames[] = { "rdfsbase", "rdgsbase", "wrfsbase", "wrgsbase", "???", "???", "???", "???" };
-void   __FASTCALL__ ix86_ArgFsGsBaseGrp(char *str,ix86Param *DisP)
+const char* ix86_Disassembler::ix86_FsGsBaseNames[] = { "rdfsbase", "rdgsbase", "wrfsbase", "wrgsbase", "???", "???", "???", "???" };
+void   ix86_Disassembler::ix86_ArgFsGsBaseGrp(char *str,ix86Param *DisP)
 {
     unsigned char rm = MODRM_RM(DisP->RealCmd[1]);
     unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
@@ -1635,14 +1621,14 @@ void   __FASTCALL__ ix86_ArgFsGsBaseGrp(char *str,ix86Param *DisP)
     wrex = REX_W(DisP->REX);
     strcat(str,k64_getREG(DisP,rm,true,brex,wrex));
 }
-void __FASTCALL__  arg_simd_imm8(char *str,ix86Param *DisP)
+void ix86_Disassembler::arg_simd_imm8(char *str,ix86Param *DisP)
 {
     arg_simd(str,DisP);
     if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) strcat(str,",");
     arg_imm8(str,DisP);
 }
 
-void __FASTCALL__ arg_simd_regrm(char *str,ix86Param *DisP)
+void ix86_Disassembler::arg_simd_regrm(char *str,ix86Param *DisP)
 {
   bool brex,wrex;
   unsigned long mode=DisP->mode;
@@ -1655,7 +1641,7 @@ void __FASTCALL__ arg_simd_regrm(char *str,ix86Param *DisP)
   DisP->mode=mode;
 }
 
-void __FASTCALL__ arg_simd_regrm_imm8_imm8(char *str,ix86Param *DisP)
+void ix86_Disassembler::arg_simd_regrm_imm8_imm8(char *str,ix86Param *DisP)
 {
   arg_simd_regrm(str,DisP);
   if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) strcat(str,",");
@@ -1664,7 +1650,7 @@ void __FASTCALL__ arg_simd_regrm_imm8_imm8(char *str,ix86Param *DisP)
   arg_imm8(str,DisP);
 }
 
-void __FASTCALL__ arg_simd_rm_imm8_imm8(char *str,ix86Param *DisP)
+void ix86_Disassembler::arg_simd_rm_imm8_imm8(char *str,ix86Param *DisP)
 {
   bool brex,wrex;
   unsigned long mode=DisP->mode;
@@ -1681,7 +1667,7 @@ void __FASTCALL__ arg_simd_rm_imm8_imm8(char *str,ix86Param *DisP)
   arg_imm8(str,DisP);
 }
 
-static void __FASTCALL__  ix86_ArgXMMCmp(char *str,ix86Param *DisP,const char **sfx,unsigned nsfx,unsigned namlen,unsigned precopy)
+void ix86_Disassembler::ix86_ArgXMMCmp(char *str,ix86Param *DisP,const char **sfx,unsigned nsfx,unsigned namlen,unsigned precopy)
 {
    char *a;
    unsigned char suffix;
@@ -1712,11 +1698,11 @@ static void __FASTCALL__  ix86_ArgXMMCmp(char *str,ix86Param *DisP,const char **
    DisP->codelen++;
 }
 
-static const char *ix86_KatmaiCmpSuffixes[] = { "eq", "lt", "le", "unord", "neq", "nlt", "nle", "ord" };
-static const char *vex_cmp_sfx[] = {
+const char* ix86_Disassembler::ix86_KatmaiCmpSuffixes[] = { "eq", "lt", "le", "unord", "neq", "nlt", "nle", "ord" };
+const char* ix86_Disassembler::vex_cmp_sfx[] = {
 "eq", "lt", "le", "unord", "neq", "nlt", "nle", "ord", "eq_uq", "nge", "ngt", "false", "neq_oq", "ge", "gt",
 "true", "eq_os", "lt_oq", "le_oq", "unord_s", "neq_us", "nlt_uq", "nle_uq", "ord_s", "eq_us" };
-void __FASTCALL__  arg_simd_cmp(char *str,ix86Param *DisP)
+void ix86_Disassembler::arg_simd_cmp(char *str,ix86Param *DisP)
 {
     /*Note: this code suppose that name is cmpXY*/
     return (str[0]=='v' && (DisP->pfx&PFX_VEX))?
@@ -1724,16 +1710,15 @@ void __FASTCALL__  arg_simd_cmp(char *str,ix86Param *DisP)
 		ix86_ArgXMMCmp(str,DisP,ix86_KatmaiCmpSuffixes,8,5,3);
 }
 
-
-static const char *xop_cmp_sfx[] = { "lt", "le", "gt", "ge", "eq", "ne", "false", "true" };
-void __FASTCALL__  arg_xop_cmp(char *str,ix86Param *DisP)
+const char* ix86_Disassembler::xop_cmp_sfx[] = { "lt", "le", "gt", "ge", "eq", "ne", "false", "true" };
+void ix86_Disassembler::arg_xop_cmp(char *str,ix86Param *DisP)
 {
     /*Note: this code suppose that name is vpcomXY?? */
     return ix86_ArgXMMCmp(str,DisP,xop_cmp_sfx,8,7,5);
 }
 
-static const char *ix86_clmul_sfx[] = { "lqlq", "hqlq", "lqh", "hqh" };
-void __FASTCALL__  arg_simd_clmul(char *str,ix86Param *DisP)
+const char* ix86_Disassembler::ix86_clmul_sfx[] = { "lqlq", "hqlq", "lqh", "hqh" };
+void ix86_Disassembler::arg_simd_clmul(char *str,ix86Param *DisP)
 {
    char *a;
    unsigned char suffix;
@@ -1769,13 +1754,13 @@ void __FASTCALL__  arg_simd_clmul(char *str,ix86Param *DisP)
    DisP->codelen++;
 }
 
-void   __FASTCALL__ arg_simd_xmm0(char *str,ix86Param *DisP) {
+void   ix86_Disassembler::arg_simd_xmm0(char *str,ix86Param *DisP) {
    arg_simd(str,DisP);
    ix86_CStile(DisP,str,"xmm0");
 }
 
 /* TODO: fix it !!! */
-void   __FASTCALL__ arg_fma4(char *str,ix86Param *DisP) {
+void   ix86_Disassembler::arg_fma4(char *str,ix86Param *DisP) {
     unsigned wrex;
     unsigned long mod = DisP->mode;
     unsigned char d;
@@ -1787,14 +1772,14 @@ void   __FASTCALL__ arg_fma4(char *str,ix86Param *DisP) {
     DisP->mode = mod;
 }
 
-void   __FASTCALL__ arg_fma4_imm8(char *str,ix86Param *DisP) {
+void   ix86_Disassembler::arg_fma4_imm8(char *str,ix86Param *DisP) {
     unsigned is4;
     arg_fma4(str,DisP);
     is4=DisP->RealCmd[DisP->codelen-1];
     ix86_CStile(DisP,str,Get2Digit(is4&0x0F));
 }
 
-void __FASTCALL__ arg_fma(char *str,ix86Param *DisP)
+void ix86_Disassembler::arg_fma(char *str,ix86Param *DisP)
 {
     unsigned long mode=DisP->mode;
     if(DisP->insn_flags&INSN_MMX)	DisP->mode|=MOD_MMX;
@@ -1812,7 +1797,7 @@ void __FASTCALL__ arg_fma(char *str,ix86Param *DisP)
     DisP->mode=mode;
 }
 
-void __FASTCALL__ ix86_3dNowOpCodes( char *str,ix86Param *DisP)
+void ix86_Disassembler::ix86_3DNowOpCodes( char *str,ix86Param *DisP)
 {
  unsigned char code;
  unsigned long mode=DisP->mode;
@@ -1822,18 +1807,20 @@ void __FASTCALL__ ix86_3dNowOpCodes( char *str,ix86Param *DisP)
  DisP->mode=mode;
  code = DisP->RealCmd[DisP->codelen];
  DisP->codelen++;
- strcpy(str,ix86_3dNowtable[code].name);
+ strcpy(str,ix86_3DNowtable[code].name);
  TabSpace(str,TAB_POS);
  strcat(str,ix86_Katmai_buff);
  if(x86_Bitness == DAB_USE64) DisP->pro_clone = K64_ATHLON|INSN_MMX;
- else DisP->pro_clone = ix86_3dNowtable[code].pro_clone;
+ else DisP->pro_clone = ix86_3DNowtable[code].pro_clone;
 }
 
-void __FASTCALL__ ix86_3dNowPrefetchGrp(char *str,ix86Param *DisP)
+void ix86_Disassembler::ix86_3DNowPrefetchGrp(char *str,ix86Param *DisP)
 {
    unsigned char cop = MODRM_COP(DisP->RealCmd[1]);
    strcpy(str,ix86_3dPrefetchGrp[cop]);
    TabSpace(str,TAB_POS);
    arg_cpu_mod_rm(str,DisP);
 }
+
+void ix86_Disassembler::ix86_Null(char *str,ix86Param *param) { UNUSED(str); UNUSED(param); }
 } // namespace	usr

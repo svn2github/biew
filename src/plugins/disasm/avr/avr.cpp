@@ -19,6 +19,8 @@ using namespace	usr;
  *
  * @note        ported from GNU binutils -- most stuff made by Denis Chertykov
 **/
+#include <algorithm>
+
 #include <string.h>
 #include <limits.h>
 #include <stdlib.h>
@@ -37,32 +39,60 @@ using namespace	usr;
 
 namespace	usr {
 #define _(STR)     STR
-#define _MAX(A,B)  ( (A) > (B) ? (A) : (B) )
+    struct avr_opcodes_s {
+	const char*	name;
+	const char*	constraints;
+	const char*	opcode;
+	int		insn_size;		/* in words */
+	int		isa;
+	unsigned int	bin_opcode;
+    };
 
-static DisMode* parent;
-struct avr_opcodes_s
-{
-  const char *name;
-  const char *constraints;
-  const char *opcode;
-  int insn_size;		/* in words */
-  int isa;
-  unsigned int bin_opcode;
-};
+    class AVR_Disassembler : public Disassembler {
+	public:
+	    AVR_Disassembler(DisMode& parent);
+	    virtual ~AVR_Disassembler();
+	
+	    virtual const char*	prompt(unsigned idx) const;
+	    virtual bool	action_F1();
+
+	    virtual DisasmRet	disassembler(__filesize_t shift,MBuffer insn_buff,unsigned flags);
+
+	    virtual void	show_short_help() const;
+	    virtual int		max_insn_len();
+	    virtual ColorAttr	get_insn_color(unsigned long clone);
+	    virtual ColorAttr	get_opcode_color(unsigned long clone);
+
+	    virtual int		get_bitness();
+	    virtual char	clone_short_name(unsigned long clone);
+	private:
+	    static void		avr_assert( int expression );
+	    static int		avr_operand( unsigned int insn,
+					    unsigned int insn2,
+					    unsigned int pc,
+					    int constraint,
+					    char *buf,
+					    char *comment,
+					    int regs );
+
+	    DisMode&		parent;
+
+	    unsigned int*	avr_bin_masks;
+	    unsigned int*	maskptr;
+	    char*		outstr;
+
+	    static const avr_opcodes_s avr_opcodes[];
+    };
 
 #define AVR_INSN(NAME, CONSTR, OPCODE, SIZE, ISA, BIN) \
 {#NAME, CONSTR, OPCODE, SIZE, ISA, BIN},
-
-const struct avr_opcodes_s avr_opcodes[] =
+const avr_opcodes_s AVR_Disassembler::avr_opcodes[] =
 {
   #include "plugins/disasm/avr/avr.h"
   {NULL, NULL, NULL, 0, 0, 0}
 };
 
-static unsigned int *avr_bin_masks;
-static unsigned int *maskptr;
-
-static void avr_assert( int expression )
+void AVR_Disassembler::avr_assert( int expression )
 {
   if (!expression)
   {
@@ -83,7 +113,7 @@ static int avr_fillout( char *str, int to )
   return j;
 }
 
-static int avr_operand( unsigned int insn,
+int AVR_Disassembler::avr_operand( unsigned int insn,
 			unsigned int insn2,
 			unsigned int pc,
 			int constraint,
@@ -267,16 +297,9 @@ static int avr_operand( unsigned int insn,
     return ok;
 }
 
-
-
-
-
-
-static char *outstr;
-
-static DisasmRet __FASTCALL__ AVRDisassembler( __filesize_t ulShift,
-					       MBuffer buffer,
-					       unsigned flags )
+DisasmRet AVR_Disassembler::disassembler( __filesize_t ulShift,
+					MBuffer buffer,
+					unsigned flags )
 {
   unsigned int insn, insn2, clone, type;
   const struct avr_opcodes_s *opcode;
@@ -406,8 +429,6 @@ static DisasmRet __FASTCALL__ AVRDisassembler( __filesize_t ulShift,
   return Ret;
 }
 
-
-
 /* !!!!!!!!!!! have to be 10 string elements !!!!!!!!!!! */
 static const char * AVRCoreNames[] =
 {
@@ -423,13 +444,13 @@ static const char * AVRCoreNames[] =
   "          "
 };
 
-static bool __FASTCALL__ AVRAsmRef()
+bool AVR_Disassembler::action_F1()
 {
   hlpDisplay(20020);
   return false;
 }
 
-static void __FASTCALL__ AVRHelpAsm()
+void AVR_Disassembler::show_short_help() const
 {
   char *msgAsmText,*title;
   char **strs;
@@ -500,50 +521,50 @@ avrhlp_bye:
   bhelp.close();
 }
 
-static int __FASTCALL__ AVRMaxInsnLen()
+int AVR_Disassembler::max_insn_len()
 {
   const struct avr_opcodes_s *opcode;
   int size = 0;
 
   for ( opcode = avr_opcodes; opcode->name; opcode++ )
   {
-    size = _MAX( opcode->insn_size, size);
+    size = std::max( opcode->insn_size, size);
   }
 
   return (size << 2);
 }
 
-static ColorAttr __FASTCALL__ AVRGetOpcodeColor( unsigned long clone )
+ColorAttr AVR_Disassembler::get_opcode_color( unsigned long clone )
 {
   UNUSED(clone);
   return disasm_cset.opcodes0;
 }
 
-static ColorAttr __FASTCALL__ AVRGetAsmColor( unsigned long clone )
+ColorAttr AVR_Disassembler::get_insn_color( unsigned long clone )
 {
   return disasm_cset.cpu_cset[0].clone[clone & 0xff];
 }
 
-static int __FASTCALL__ AVRGetBitness()
+int AVR_Disassembler::get_bitness()
 {
   return DAB_USE16;
 }
 
-static char __FASTCALL__ AVRGetClone( unsigned long clone )
+char AVR_Disassembler::clone_short_name( unsigned long clone )
 {
   UNUSED(clone);
   return ' ';
 }
 
-static void __FASTCALL__ AVRInit( DisMode& _parent )
+AVR_Disassembler::AVR_Disassembler( DisMode& _parent )
+		:Disassembler(_parent)
+		,parent(_parent)
 {
   const struct avr_opcodes_s *opcode;
   unsigned int nopcodes;
 
-  parent = &_parent;
-
   nopcodes = sizeof (avr_opcodes) / sizeof (struct avr_opcodes_s);
-  avr_bin_masks = (unsigned int *)mp_malloc(nopcodes * sizeof (unsigned int));
+  avr_bin_masks = new unsigned[nopcodes];
   outstr = new char [1000];
 
   if (!outstr || !avr_bin_masks)
@@ -574,31 +595,25 @@ static void __FASTCALL__ AVRInit( DisMode& _parent )
   }
 }
 
-static void __FASTCALL__ AVRTerm()
+AVR_Disassembler::~AVR_Disassembler()
 {
    delete avr_bin_masks;
    delete outstr;
 }
 
-extern const REGISTRY_DISASM AVR_Disasm =
-{
-  DISASM_CPU_AVR,
-  "Atmel ~AVR",                          /* disassembler name */
-  { "AVRHlp", NULL, NULL, NULL },        /* prompt for Ctrl-(F1,F3,F4,F5) */
-  { AVRAsmRef, NULL, NULL, NULL },       /* action for Ctrl-(F1,F3,F4,F5) */
-  AVRDisassembler,                       /* main disassembler function */
-  NULL,                                  /* main assembler function (???) */
-  AVRHelpAsm,                            /* display short help (Shift-F1) */
-  AVRMaxInsnLen,                         /* max opcode length of 1 insn */
-  AVRGetAsmColor,                        /* color of insn */
-  AVRGetOpcodeColor,                     /* color of opcode */
-  AVRGetAsmColor,                        /* color of insn */
-  AVRGetOpcodeColor,                     /* color of opcode */
-  AVRGetBitness,                         /* currently ised bitness */
-  AVRGetClone,                           /* short clone name of insn */
-  AVRInit,                               /* plugin initializer */
-  AVRTerm,                               /* plugin terminator */
-  NULL,                                  /* plugin setting reader (from .ini) */
-  NULL                                   /* plugin setting writer (to .ini) */
+const char* AVR_Disassembler::prompt(unsigned idx) const {
+    switch(idx) {
+	case 0: return "AVRHlp"; break;
+	default: break;
+    }
+    return "";
+}
+
+static Disassembler* query_interface(DisMode& _parent) { return new(zeromem) AVR_Disassembler(_parent); }
+
+extern const Disassembler_Info avr_disassembler_info = {
+    DISASM_CPU_AVR,
+    "Atmel ~AVR",	/**< plugin name */
+    query_interface
 };
 } // namespace	usr

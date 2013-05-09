@@ -35,14 +35,46 @@ using namespace	usr;
 
 
 namespace	usr {
-static DisMode* parent;
-static char *outstr;
+    class PPC_Disassembler : public Disassembler {
+	public:
+	    PPC_Disassembler(DisMode& parent);
+	    virtual ~PPC_Disassembler();
+	
+	    virtual const char*	prompt(unsigned idx) const;
+	    virtual bool	action_F1();
+	    virtual bool	action_F3();
+	    virtual bool	action_F4();
+	    virtual bool	action_F5();
 
-static int ppcBitness=DAB_USE32;
-static int ppcBigEndian=1;
-static int ppcDialect=0;
+	    virtual DisasmRet	disassembler(__filesize_t shift,MBuffer insn_buff,unsigned flags);
 
-static const char *gprs[] =
+	    virtual void	show_short_help() const;
+	    virtual int		max_insn_len();
+	    virtual ColorAttr	get_insn_color(unsigned long clone);
+
+	    virtual int		get_bitness();
+	    virtual char	clone_short_name(unsigned long clone);
+	    virtual void	read_ini(Ini_Profile&);
+	    virtual void	save_ini(Ini_Profile&);
+	private:
+	    void		ppc_Encode_args(char *ostr,uint32_t opcode,
+						__fileoff_t ulShift,
+						unsigned long flags,
+						const ppc_arg *args);
+
+	    DisMode&		parent;
+	    char*		outstr;
+	    int			ppcBitness;
+	    int			ppcBigEndian;
+	    int			ppcDialect;
+
+	    static const char*	gprs[];
+	    static const char*	fprs[];
+	    static const char*	vprs[];
+	    static const ppc_opcode ppc_table[];
+    };
+
+const char* PPC_Disassembler::gprs[] =
 {
   "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
   "r8", "r9", "r10","r11","r12","r13","r14","r15",
@@ -50,7 +82,7 @@ static const char *gprs[] =
   "r24","r25","r26","r27","r28","r29","r30","r31"
 };
 
-static const char *fprs[] =
+const char* PPC_Disassembler::fprs[] =
 {
   "f0", "f1", "f2", "f3", "f4", "f5", "f6", "f7",
   "f8", "f9", "f10","f11","f12","f13","f14","f15",
@@ -58,7 +90,7 @@ static const char *fprs[] =
   "f24","f25","f26","f27","f28","f29","f30","f31"
 };
 
-static const char *vprs[] =
+const char* PPC_Disassembler::vprs[] =
 {
   "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7",
   "v8", "v9", "v10","v11","v12","v13","v14","v15",
@@ -66,7 +98,7 @@ static const char *vprs[] =
   "v24","v25","v26","v27","v28","v29","v30","v31"
 };
 
-static void ppc_Encode_args(char *ostr,uint32_t opcode,
+void PPC_Disassembler::ppc_Encode_args(char *ostr,uint32_t opcode,
 			__fileoff_t ulShift,
 			unsigned long flags,
 			const ppc_arg *args) {
@@ -109,21 +141,21 @@ static void ppc_Encode_args(char *ostr,uint32_t opcode,
 		if(len>6) {
 		    int aa = PPC_GET_BITS(opcode,30,1);
 		    unsigned long distin = (value<<2) + (aa?0:ulShift);
-		    parent->append_faddr(ostr,dig_off,value,distin,
+		    parent.append_faddr(ostr,dig_off,value,distin,
 				DisMode::Near32,0,dig_sz);
 		}
 		else goto do_digs;
 	    }
 	    else {
 		do_digs:
-		parent->append_digits(ostr,dig_off,APREF_USE_TYPE,dig_sz,&opcode,dig_flg);
+		parent.append_digits(ostr,dig_off,APREF_USE_TYPE,dig_sz,&opcode,dig_flg);
 	    }
 	}
     }
     if(use_ea) strcat(ostr,"]");
 }
 
-static const ppc_opcode ppc_table[] =
+const ppc_opcode PPC_Disassembler::ppc_table[] =
 {
   { "add",     XO_FORM(31,266,0,0),  XO_MASK, PPC_CPU, {XO_RT,XO_RA,XO_RB,PPC_0} },
   { "add.",    XO_FORM(31,266,0,1),  XO_MASK, PPC_CPU, {XO_RT,XO_RA,XO_RB,PPC_0} },
@@ -1400,9 +1432,9 @@ static const ppc_opcode ppc_table[] =
   {  "xoris",   D_FORM(27),           D_MASK, PPC_CPU, {D_RA,D_RS,D_UI,PPC_0} },
 };
 
-static DisasmRet __FASTCALL__ ppcDisassembler(__filesize_t ulShift,
-					      MBuffer buffer,
-					      unsigned flags)
+DisasmRet PPC_Disassembler::disassembler(__filesize_t ulShift,
+					MBuffer buffer,
+					unsigned flags)
 {
     DisasmRet dret;
     int done;
@@ -1443,7 +1475,7 @@ static DisasmRet __FASTCALL__ ppcDisassembler(__filesize_t ulShift,
 	{
 		strcpy(dret.str,"db");
 		TabSpace(dret.str,TAB_POS);
-		parent->append_digits(dret.str,ulShift,APREF_USE_TYPE,4,&opcode,DisMode::Arg_DWord);
+		parent.append_digits(dret.str,ulShift,APREF_USE_TYPE,4,&opcode,DisMode::Arg_DWord);
 	}
 	dret.pro_clone=0;
     }
@@ -1455,13 +1487,13 @@ static DisasmRet __FASTCALL__ ppcDisassembler(__filesize_t ulShift,
     return dret;
 }
 
-static bool __FASTCALL__ ppcAsmRef()
+bool PPC_Disassembler::action_F1()
 {
   hlpDisplay(20050);
   return false;
 }
 
-static void __FASTCALL__ ppcHelpAsm()
+void PPC_Disassembler::show_short_help() const
 {
  char *msgAsmText,*title;
  char **strs;
@@ -1535,8 +1567,8 @@ static void __FASTCALL__ ppcHelpAsm()
  bhelp.close();
 }
 
-static int    __FASTCALL__ ppcMaxInsnLen() { return 8; }
-static ColorAttr __FASTCALL__ ppcGetAsmColor( unsigned long clone )
+int PPC_Disassembler::max_insn_len() { return 8; }
+ColorAttr PPC_Disassembler::get_insn_color( unsigned long clone )
 {
   if((clone & PPC_CLONE_MSK)==PPC_ALTIVEC) return disasm_cset.engine[2].engine;
   else
@@ -1545,8 +1577,8 @@ static ColorAttr __FASTCALL__ ppcGetAsmColor( unsigned long clone )
 	return disasm_cset.engine[0].engine;
 }
 
-static int       __FASTCALL__ ppcGetBitness() { return ppcBitness; }
-static char      __FASTCALL__ ppcGetClone( unsigned long clone )
+int PPC_Disassembler::get_bitness() { return ppcBitness; }
+char PPC_Disassembler::clone_short_name( unsigned long clone )
 {
   UNUSED(clone);
   return ' ';
@@ -1558,7 +1590,7 @@ static const char *ppc_bitness_names[] =
    "Use~64"
 };
 
-static bool __FASTCALL__ ppcSelect_bitness()
+bool PPC_Disassembler::action_F3()
 {
   unsigned nModes;
   int i;
@@ -1578,7 +1610,7 @@ static const char *ppc_endian_names[] =
    "~Big endian"
 };
 
-static bool __FASTCALL__ ppcSelect_endian()
+bool PPC_Disassembler::action_F4()
 {
   unsigned nModes;
   int i;
@@ -1598,7 +1630,7 @@ static const char *ppc_dialect_names[] =
    "~SPE (embedded cpu)"
 };
 
-static bool __FASTCALL__ ppcSelectDialect()
+bool PPC_Disassembler::action_F5()
 {
   unsigned nModes;
   int i;
@@ -1612,9 +1644,13 @@ static bool __FASTCALL__ ppcSelectDialect()
   return false;
 }
 
-static void      __FASTCALL__ ppcInit( DisMode& _parent )
+PPC_Disassembler::PPC_Disassembler( DisMode& _parent )
+		:Disassembler(_parent)
+		,parent(_parent)
+		,ppcBitness(DAB_USE32)
+		,ppcBigEndian(1)
+		,ppcDialect(0)
 {
-  parent = &_parent;
   outstr = new char [1000];
   if(!outstr)
   {
@@ -1623,12 +1659,12 @@ static void      __FASTCALL__ ppcInit( DisMode& _parent )
   }
 }
 
-static void  __FASTCALL__ ppcTerm()
+PPC_Disassembler::~PPC_Disassembler()
 {
    delete outstr;
 }
 
-static void __FASTCALL__ ppcReadIni( Ini_Profile& ini )
+void PPC_Disassembler::read_ini( Ini_Profile& ini )
 {
   std::string tmps;
   if(beye_context().is_valid_ini_args())
@@ -1645,7 +1681,7 @@ static void __FASTCALL__ ppcReadIni( Ini_Profile& ini )
   }
 }
 
-static void __FASTCALL__ ppcWriteIni( Ini_Profile& ini )
+void PPC_Disassembler::save_ini( Ini_Profile& ini )
 {
   char tmps[10];
   sprintf(tmps,"%i",ppcBitness);
@@ -1656,25 +1692,22 @@ static void __FASTCALL__ ppcWriteIni( Ini_Profile& ini )
   beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode5",tmps);
 }
 
-extern const REGISTRY_DISASM PPC_Disasm =
-{
-  DISASM_CPU_PPC,
-  "AIM Power5+ ISA             [New,Experimental]",
-  { "PpcHlp", "Bitnes", "Endian", "Dialec" },
-  { ppcAsmRef, ppcSelect_bitness, ppcSelect_endian, ppcSelectDialect },
-  ppcDisassembler,
-  NULL,
-  ppcHelpAsm,
-  ppcMaxInsnLen,
-  ppcGetAsmColor,
-  NULL,
-  ppcGetAsmColor,
-  NULL,
-  ppcGetBitness,
-  ppcGetClone,
-  ppcInit,
-  ppcTerm,
-  ppcReadIni,
-  ppcWriteIni
+const char* PPC_Disassembler::prompt(unsigned idx) const {
+    switch(idx) {
+	case 0: return "PpcHlp"; break;
+	case 1: return "Bitnes"; break;
+	case 2: return "Endian"; break;
+	case 3: return "Dialec"; break;
+	default: break;
+    }
+    return "";
+}
+
+static Disassembler* query_interface(DisMode& _parent) { return new(zeromem) PPC_Disassembler(_parent); }
+
+extern const Disassembler_Info ppc_disassembler_info = {
+    DISASM_CPU_PPC,
+    "AIM Power5+ ISA             [New,Experimental]",	/**< plugin name */
+    query_interface
 };
 } // namespace	usr

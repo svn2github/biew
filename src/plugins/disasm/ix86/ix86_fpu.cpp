@@ -28,21 +28,21 @@ using namespace	usr;
 namespace	usr {
 extern char *ix86_appstr;
 
-static char *  __FASTCALL__ SetNameTab(char * str,const char * name)
+char*  ix86_Disassembler::SetNameTab(char * str,const char * name)
 {
  strcpy(str,name);
  TabSpace(str,TAB_POS);
  return str;
 }
 
-static char *  __FASTCALL__ SC(const char * name1,const char * name2)
+char*  ix86_Disassembler::SC(const char * name1,const char * name2)
 {
  SetNameTab(ix86_appstr,name1);
  strcat(ix86_appstr,name2);
  return ix86_appstr;
 }
 
-static char *  __FASTCALL__ SetNameTabD(char * str,const char * name,unsigned char size,ix86Param *DisP)
+char*  ix86_Disassembler::SetNameTabD(char * str,const char * name,unsigned char size,ix86Param *DisP)
 {
  strcpy(str,name);
  strcat(str," ");
@@ -51,23 +51,10 @@ static char *  __FASTCALL__ SetNameTabD(char * str,const char * name,unsigned ch
  return str;
 }
 
-typedef char * ( __FASTCALL__ * FPUroutine)(char *,const char *,ix86Param *);
-typedef struct tagFPUcall
-{
-  FPUroutine   f;
-  const char * c;
-}FPUcall;
-
-typedef struct tgDualStr
-{
- const char * c1;
- const char * c2;
-}DualStr;
-
 static char stx[] = "st(x)";
 #define MakeST(str,num) { stx[3] = (num)+'0'; strcat(str,stx); }
 
-static char *  __FASTCALL__ __UniFPUfunc(char * str,const char * cmd,char opsize,char direct,ix86Param *DisP)
+char*  ix86_Disassembler::__UniFPUfunc(char * str,const char * cmd,char opsize,char direct,ix86Param *DisP)
 {
  char mod = ( DisP->RealCmd[1] & 0xC0 ) >> 6;
  char reg = DisP->RealCmd[1] & 0x07;
@@ -82,7 +69,7 @@ static char *  __FASTCALL__ __UniFPUfunc(char * str,const char * cmd,char opsize
  return str;
 }
 
-static char *  __FASTCALL__ __MemFPUfunc(char * str,const char * cmd,char opsize,ix86Param *DisP)
+char*  ix86_Disassembler::__MemFPUfunc(char * str,const char * cmd,char opsize,ix86Param *DisP)
 {
  char mod = ( DisP->RealCmd[1] & 0xC0 ) >> 6;
  char reg = DisP->RealCmd[1] & 0x07;
@@ -93,52 +80,52 @@ static char *  __FASTCALL__ __MemFPUfunc(char * str,const char * cmd,char opsize
  return str;
 }
 
-static char *  __FASTCALL__ FPUmem(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUmem(char * str,const char * cmd,ix86Param *DisP)
 {
   return __MemFPUfunc(str,cmd,DUMMY_PTR,DisP);
 }
 
-static char *  __FASTCALL__ FPUmem64mem32(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUmem64mem32(char * str,const char * cmd,ix86Param *DisP)
 {
  return __UniFPUfunc(str,cmd,DisP->RealCmd[0] & 0x04 ? QWORD_PTR : DWORD_PTR,0,DisP);
 }
 
-static char *  __FASTCALL__ FPUmem64mem32st(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUmem64mem32st(char * str,const char * cmd,ix86Param *DisP)
 {
  return __UniFPUfunc(str,cmd,DisP->RealCmd[0] & 0x04 ? QWORD_PTR : DWORD_PTR,1,DisP);
 }
 
-static char *  __FASTCALL__ FPUint16int32(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUint16int32(char * str,const char * cmd,ix86Param *DisP)
 {
  return __UniFPUfunc(str,cmd,DisP->RealCmd[0] & 0x04 ? WORD_PTR : DWORD_PTR,0,DisP);
 }
 
-static char *  __FASTCALL__ FPUint16int32st(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUint16int32st(char * str,const char * cmd,ix86Param *DisP)
 {
  return __UniFPUfunc(str,cmd,DisP->RealCmd[0] & 0x04 ? WORD_PTR : DWORD_PTR,1,DisP);
 }
 
-static char *  __FASTCALL__ FPUint64(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUint64(char * str,const char * cmd,ix86Param *DisP)
 {
  return __UniFPUfunc(str,cmd,QWORD_PTR,0,DisP);
 }
 
-static char *  __FASTCALL__ FPUint64st(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUint64st(char * str,const char * cmd,ix86Param *DisP)
 {
  return __UniFPUfunc(str,cmd,QWORD_PTR,1,DisP);
 }
 
-static char *  __FASTCALL__ FPUstint32(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUstint32(char * str,const char * cmd,ix86Param *DisP)
 {
  return __UniFPUfunc(str,cmd,DWORD_PTR,0,DisP);
 }
 
-static char *  __FASTCALL__ FPUld(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUld(char * str,const char * cmd,ix86Param *DisP)
 {
  return __UniFPUfunc(str,cmd,DUMMY_PTR,0,DisP);
 }
 
-static char *  __FASTCALL__ FPUstisti(char * str,const char * cmd,char code1,char code2)
+char*  ix86_Disassembler::FPUstisti(char * str,const char * cmd,char code1,char code2)
 {
  SetNameTab(str,cmd);
  MakeST(str,code1 & 0x07);
@@ -147,118 +134,118 @@ static char *  __FASTCALL__ FPUstisti(char * str,const char * cmd,char code1,cha
  return str;
 }
 
-static char *  __FASTCALL__ FPUst0sti(char * str,const char * cmd,char code1)
+char*  ix86_Disassembler::FPUst0sti(char * str,const char * cmd,char code1)
 {
  return FPUstisti(str,cmd,0,code1);
 }
 
-static char *  __FASTCALL__ FPUstist0(char * str,const char * cmd,char code1)
+char*  ix86_Disassembler::FPUstist0(char * str,const char * cmd,char code1)
 {
  return FPUstisti(str,cmd,code1,0);
 }
 
-static char *  __FASTCALL__ FPUldtword(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUldtword(char * str,const char * cmd,ix86Param *DisP)
 {
  return __UniFPUfunc(str,cmd,TWORD_PTR,0,DisP);
 }
 
-static char *  __FASTCALL__ FPUsttword(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUsttword(char * str,const char * cmd,ix86Param *DisP)
 {
   return __UniFPUfunc(str,cmd,TWORD_PTR,1,DisP);
 }
 
-static char *  __FASTCALL__ FPUcmdsti(char * str,const char * name,char code)
+char*  ix86_Disassembler::FPUcmdsti(char * str,const char * name,char code)
 {
   SetNameTab(str,name);
   MakeST(str,code & 0x07);
   return str;
 }
 
-static char *  __FASTCALL__ FPUcmdst0(char * str,const char * name)
+char*  ix86_Disassembler::FPUcmdst0(char * str,const char * name)
 {
   return FPUcmdsti(str,name,0);
 }
 
-static char *  __FASTCALL__ FPUcmdsti_2(char * str,const char * name1,const char * name2,char code)
+char*  ix86_Disassembler::FPUcmdsti_2(char * str,const char * name1,const char * name2,char code)
 {
   return FPUcmdsti(str,code & 0x08 ? name2 : name1,code);
 }
 
-static char *  __FASTCALL__ FPUst0sti_2(char * str,const char * name1,const char * name2,char code)
+char*  ix86_Disassembler::FPUst0sti_2(char * str,const char * name1,const char * name2,char code)
 {
  return FPUst0sti(str,code & 0x08 ? name2 : name1,code);
 }
 
-static char *  __FASTCALL__ FPUstist0_2(char * str,const char * name1,const char * name2,char code)
+char*  ix86_Disassembler::FPUstist0_2(char * str,const char * name1,const char * name2,char code)
 {
  return FPUstist0(str,code & 0x08 ? name2 : name1,code);
 }
 
-const char * mem64mem32[] =
+const char* ix86_Disassembler::mem64mem32[] =
 {
   "fadd", "fmul", "fcom", "fcomp", "fsub", "fsubr", "fdiv", "fdivr"
 };
 
-const char * int16int32[] =
+const char* ix86_Disassembler::int16int32[] =
 {
  "fiadd", "fimul", "ficom", "ficomp", "fisub", "fisubr", "fidiv", "fidivr"
 };
 
-const char * DBEx[] = { "feni", "fdisi", "fclex", "finit", "fsetpm" };
-const char * D9Ex[] = { "fchs", "fabs", "f???", "f???", "ftst", "fxam", "f???", "f???",
+const char* ix86_Disassembler::DBEx[] = { "feni", "fdisi", "fclex", "finit", "fsetpm" };
+const char* ix86_Disassembler::D9Ex[] = { "fchs", "fabs", "f???", "f???", "ftst", "fxam", "f???", "f???",
 			"fld1", "fldl2t", "fldl2e", "fldpi", "fldlg2", "fldln2", "fldz", "f???" };
-const char * D9Fx[] = { "f2xm1", "fyl2x", "fptan", "fpatan", "fxtract", "fprem1", "fdecstp", "fincstp",
+const char* ix86_Disassembler::D9Fx[] = { "f2xm1", "fyl2x", "fptan", "fpatan", "fxtract", "fprem1", "fdecstp", "fincstp",
 			"fprem", "fyl2xp1", "fsqrt", "fsincos", "frndint", "fscale", "fsin", "fcos" };
 
-FPUcall D9rm[8] =
+const FPUcall ix86_Disassembler::D9rm[8] =
 {
-  { FPUstint32,      "fld" },
-  { FPUld,           "f???" },
-  { FPUmem64mem32st, "fst" },
-  { FPUmem64mem32st, "fstp" },
-  { FPUmem,          "fldenv" },
-  { FPUmem,          "fldcw" },
-  { FPUmem,          "fstenv" },
-  { FPUmem,          "fstcw" }
+  { &ix86_Disassembler::FPUstint32,      "fld" },
+  { &ix86_Disassembler::FPUld,           "f???" },
+  { &ix86_Disassembler::FPUmem64mem32st, "fst" },
+  { &ix86_Disassembler::FPUmem64mem32st, "fstp" },
+  { &ix86_Disassembler::FPUmem,          "fldenv" },
+  { &ix86_Disassembler::FPUmem,          "fldcw" },
+  { &ix86_Disassembler::FPUmem,          "fstenv" },
+  { &ix86_Disassembler::FPUmem,          "fstcw" }
 };
 
-FPUcall DBrm[8] =
+const FPUcall ix86_Disassembler::DBrm[8] =
 {
-  { FPUint16int32,   "fild" },
-  { FPUld,           "fistpp" },
-  { FPUint16int32st, "fist" },
-  { FPUsttword,      "fistp" },
-  { FPUld,           "f???" },
-  { FPUldtword,      "fld" },
-  { FPUld,           "f???" },
-  { FPUint64st,      "fstp" }
+  { &ix86_Disassembler::FPUint16int32,   "fild" },
+  { &ix86_Disassembler::FPUld,           "fistpp" },
+  { &ix86_Disassembler::FPUint16int32st, "fist" },
+  { &ix86_Disassembler::FPUsttword,      "fistp" },
+  { &ix86_Disassembler::FPUld,           "f???" },
+  { &ix86_Disassembler::FPUldtword,      "fld" },
+  { &ix86_Disassembler::FPUld,           "f???" },
+  { &ix86_Disassembler::FPUint64st,      "fstp" }
 };
 
-FPUcall DDrm[8] =
+const FPUcall ix86_Disassembler::DDrm[8] =
 {
-  { FPUint64,        "fld" },
-  { FPUld,           "fistpp" },
-  { FPUmem64mem32st, "fst" },
-  { FPUmem64mem32st, "fstp" },
-  { FPUld,           "frstor" },
-  { FPUld,           "f???" },
-  { FPUld,           "fsave" },
-  { FPUmem,          "fstsw" }
+  { &ix86_Disassembler::FPUint64,        "fld" },
+  { &ix86_Disassembler::FPUld,           "fistpp" },
+  { &ix86_Disassembler::FPUmem64mem32st, "fst" },
+  { &ix86_Disassembler::FPUmem64mem32st, "fstp" },
+  { &ix86_Disassembler::FPUld,           "frstor" },
+  { &ix86_Disassembler::FPUld,           "f???" },
+  { &ix86_Disassembler::FPUld,           "fsave" },
+  { &ix86_Disassembler::FPUmem,          "fstsw" }
 };
 
-FPUcall DFrm[8] =
+const FPUcall ix86_Disassembler::DFrm[8] =
 {
-  { FPUint16int32,   "fild" },
-  { FPUld,           "fistpp" },
-  { FPUint16int32st, "fist" },
-  { FPUint16int32st, "fistp" },
-  { FPUldtword,      "fbld" },
-  { FPUint64,        "fild" },
-  { FPUsttword,      "fbstp" },
-  { FPUint64st,      "fistp" }
+  { &ix86_Disassembler::FPUint16int32,   "fild" },
+  { &ix86_Disassembler::FPUld,           "fistpp" },
+  { &ix86_Disassembler::FPUint16int32st, "fist" },
+  { &ix86_Disassembler::FPUint16int32st, "fistp" },
+  { &ix86_Disassembler::FPUldtword,      "fbld" },
+  { &ix86_Disassembler::FPUint64,        "fild" },
+  { &ix86_Disassembler::FPUsttword,      "fbstp" },
+  { &ix86_Disassembler::FPUint64st,      "fistp" }
 };
 
-DualStr D8str[4] =
+const DualStr ix86_Disassembler::D8str[4] =
 {
   { "fadd" , "fmul" },
   { "fcom" , "fcomp" },
@@ -266,7 +253,7 @@ DualStr D8str[4] =
   { "fdiv" , "fdivr" }
 };
 
-DualStr DEstr[4] =
+const DualStr ix86_Disassembler::DEstr[4] =
 {
   { "faddp" , "fmulp" },
   { "fcomp" , "fcompp" },
@@ -274,14 +261,15 @@ DualStr DEstr[4] =
   { "fdivrp", "fdivp" }
 };
 
-const char * FCMOVc[] = { "fcmovl", "fcmove", "fcmovle", "fcmovu", "fcmov?", "fcmov?", "fcmov?", "fcmov?" };
-const char * FCMOVnc[] = { "fcmovge", "fcmovne", "fcmovg", "fcmovnu", "fcmov?", "fucomi", "fcomi", "f?comi" };
-const char * FxCOMIP[] = { "f???", "f???", "f???", "f???", "f???", "fucomip", "fcomip", "f???" };
+const char* ix86_Disassembler::FCMOVc[] = { "fcmovl", "fcmove", "fcmovle", "fcmovu", "fcmov?", "fcmov?", "fcmov?", "fcmov?" };
+const char* ix86_Disassembler::FCMOVnc[] = { "fcmovge", "fcmovne", "fcmovg", "fcmovnu", "fcmov?", "fucomi", "fcomi", "f?comi" };
+const char* ix86_Disassembler::FxCOMIP[] = { "f???", "f???", "f???", "f???", "f???", "fucomip", "fcomip", "f???" };
 
-void __FASTCALL__ ix86_FPUCmd(char * str,ix86Param *DisP)
+void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param *DisP)
 {
  unsigned char code = DisP->RealCmd[0],code1 = DisP->RealCmd[1];
  unsigned char rm = ( code1 & 0x38 ) >> 3;
+ FPUroutine mtd;
  DisP->codelen = 2;
  DisP->pro_clone |= INSN_FPU;
  SetNameTab(str,"f???");
@@ -311,7 +299,10 @@ void __FASTCALL__ ix86_FPUCmd(char * str,ix86Param *DisP)
 		if(code1 == 0xD0) strcpy(str,"fnop");
 		else
 		  if((code1 & 0xF0) == 0xC0) FPUcmdsti_2(str,"fld","fxch",code1);
-		  else                       (*D9rm[rm].f)(str,D9rm[rm].c,DisP);
+		  else {
+		    mtd=D9rm[rm].f;
+		    (this->*mtd)(str,D9rm[rm].c,DisP);
+		  }
 	    break;
    case 0xDA :
 	    if(code1 == 0xE9)
@@ -370,7 +361,8 @@ void __FASTCALL__ ix86_FPUCmd(char * str,ix86Param *DisP)
 	       }
 	       else
 	       {
-		 (*DBrm[rm].f)(str,DBrm[rm].c,DisP);
+		 mtd=DBrm[rm].f;
+		 (this->*mtd)(str,DBrm[rm].c,DisP);
 		 if(rm==1
 		  && x86_Bitness != DAB_USE64
 		 ) {
@@ -414,7 +406,8 @@ void __FASTCALL__ ix86_FPUCmd(char * str,ix86Param *DisP)
 		  }
 		  else
 		  {
-		    (*DDrm[rm].f)(str,DDrm[rm].c,DisP);
+		    mtd=DDrm[rm].f;
+		    (this->*mtd)(str,DDrm[rm].c,DisP);
 		    if(rm==1
 		  && x86_Bitness != DAB_USE64
 		    ) {
@@ -477,7 +470,8 @@ void __FASTCALL__ ix86_FPUCmd(char * str,ix86Param *DisP)
 		}
 		else
 		{
-		   (*DFrm[rm].f)(str,DFrm[rm].c,DisP);
+		   mtd=DFrm[rm].f;
+		   (this->*mtd)(str,DFrm[rm].c,DisP);
 		   if(rm==1
 		  && x86_Bitness != DAB_USE64
 		   ) {

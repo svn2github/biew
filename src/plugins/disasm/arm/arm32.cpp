@@ -29,16 +29,6 @@ using namespace	usr;
 #include "plugins/disasm/arm/arm.h"
 
 namespace	usr {
-static DisMode* parent;
-typedef struct tag_arm_opcode32
-{
-    const char *name;
-    const char *mask;
-    const long flags;
-    unsigned   bmsk;
-    unsigned   bits;
-}arm_opcode32;
-
 /*
     c    - conditional codes
     a	 - address mode
@@ -74,7 +64,7 @@ XScale extension:
     u	 - 0 - unsigned 1 - signed
 */
 
-static arm_opcode32 opcode_table[]=
+arm_opcode32 ARM_Disassembler::opcode32_table[]=
 {
  /* CPU */
     { "ADC", "cccc00I0101Sssssdddd<<<<<<<<<<<<", ARM_V1|ARM_INTEGER, 0, 0 },
@@ -300,7 +290,7 @@ static arm_opcode32 opcode_table[]=
  {   "WXOR", "cccc11100001JJJJEEEE00000000GGGG", ARM_V5|ARM_XSCALE, 0, 0 },
 };
 
-const char *armCCnames[16] =
+const char* ARM_Disassembler::armCCnames[16] =
 {
     "EQ", /* Equal */
     "NE", /* Not Equal */
@@ -319,13 +309,13 @@ const char *armCCnames[16] =
     ""/*AL - Always or unconditional*/,
     "NV" /* NEVER */
 };
-const char *arm_sysfreg_name[16] =
+const char* ARM_Disassembler::arm_sysfreg_name[16] =
 {
     "fpsid", "fpscr", "fp???", "fp???", "fp???", "fp???", "fp???", "fp???",
     "fpexc", "fp???", "fp???", "fp???", "fp???", "fp???", "fp???", "fp???",
 };
 
-const char *arm_freg_name[32] =
+const char* ARM_Disassembler::arm_freg_name[32] =
 {
     "F0", "F1", "F2", "F3", "F4", "F5", "F6", "F7",
     "F8", "F9", "F10", "F11", "F12", "F13", "F14", "F15",
@@ -333,13 +323,12 @@ const char *arm_freg_name[32] =
     "F24", "F25", "F26", "F27", "F28", "F29", "F30", "F31"
 };
 
-const char * arm_wreg_name[] =
+const char* ARM_Disassembler::arm_wreg_name[] =
 {
    "wR0", "wR1", "wR2", "wR3", "wR4", "wR5", "wR6", "wR7",
    "wR8", "wR9", "wR10", "wR11", "wR12", "wR13", "wR14", "wR15",
 };
 
-extern const char * arm_reg_name[];
 #define READ_IMM32(chr)\
 {\
 	val=0;\
@@ -357,7 +346,7 @@ extern const char * arm_reg_name[];
 	READ_IMM32(chr);\
 	if(prev) strcat(dret->str,",");\
 	strcat(dret->str,"#");\
-	parent->append_digits(dret->str,ulShift,APREF_USE_TYPE,4,&val,chr=='-'?DisMode::Arg_Short:DisMode::Arg_Word);\
+	parent.append_digits(dret->str,ulShift,APREF_USE_TYPE,4,&val,chr=='-'?DisMode::Arg_Short:DisMode::Arg_Word);\
 	if(smul) strcat(dret->str,smul);\
 	prev=1;\
     }
@@ -417,11 +406,11 @@ extern const char * arm_reg_name[];
     }\
 }
 
-void __FASTCALL__ arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
+void ARM_Disassembler::arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
 					uint32_t opcode, unsigned flags,unsigned _index)
 {
     unsigned i,idx,val,prev;
-    const char *msk=opcode_table[_index].mask;
+    const char *msk=opcode32_table[_index].mask;
     const char *p;
     unsigned a_I,a_P,a_U,a_N,a_W;
     bool has_I,has_P,has_U,has_N,has_W;
@@ -467,7 +456,7 @@ void __FASTCALL__ arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
 	if(hh) tbuff|=0x2;
 	tbuff+=8;
 	if(prev) strcat(dret->str,",");
-	parent->append_faddr(dret->str,ulShift+1,(long)tbuff,ulShift+tbuff,DisMode::Near32,0,3);
+	parent.append_faddr(dret->str,ulShift+1,(long)tbuff,ulShift+tbuff,DisMode::Near32,0,3);
 	prev=1;
     }
 
@@ -591,21 +580,21 @@ void __FASTCALL__ arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
     APPEND_ARM_2DIG('F');
 }
 
-void __FASTCALL__ arm32Disassembler(DisasmRet *dret,__filesize_t ulShift,
+void ARM_Disassembler::arm32Disassembler(DisasmRet *dret,__filesize_t ulShift,
 					uint32_t opcode, unsigned flags)
 {
     int done;
     unsigned i,ix,n,idx,val;
     const char *p;
     const char *msk;
-    n = sizeof(opcode_table)/sizeof(arm_opcode32);
+    n = sizeof(opcode32_table)/sizeof(arm_opcode32);
     done=0;
     for(ix=0;ix<n;ix++)
     {
-	if((opcode & opcode_table[ix].bmsk) == opcode_table[ix].bits)
+	if((opcode & opcode32_table[ix].bmsk) == opcode32_table[ix].bits)
 	{
-	    strcpy(dret->str,opcode_table[ix].name);
-	    msk=opcode_table[ix].mask;
+	    strcpy(dret->str,opcode32_table[ix].name);
+	    msk=opcode32_table[ix].mask;
 	    p=strchr(msk,'L');
 	    if(p)
 	    {
@@ -659,7 +648,7 @@ void __FASTCALL__ arm32Disassembler(DisasmRet *dret,__filesize_t ulShift,
 	    }
 	    TabSpace(dret->str,TAB_POS);
 	    arm32EncodeTail(dret,ulShift,opcode,flags,ix);
-	    dret->pro_clone=opcode_table[ix].flags;
+	    dret->pro_clone=opcode32_table[ix].flags;
 	    done=1;
 	    break;
 	}
@@ -669,30 +658,29 @@ void __FASTCALL__ arm32Disassembler(DisasmRet *dret,__filesize_t ulShift,
 	    {
 		strcpy(dret->str,"???");
 		TabSpace(dret->str,TAB_POS);
-		parent->append_digits(dret->str,ulShift,APREF_USE_TYPE,4,&opcode,DisMode::Arg_DWord);
+		parent.append_digits(dret->str,ulShift,APREF_USE_TYPE,4,&opcode,DisMode::Arg_DWord);
 	    }
     }
 }
 
-void __FASTCALL__ arm32Init(DisMode* _parent)
+void ARM_Disassembler::arm32Init()
 {
-    parent = _parent;
     unsigned i,n,j;
-    n = sizeof(opcode_table)/sizeof(arm_opcode32);
+    n = sizeof(opcode32_table)/sizeof(arm_opcode32);
     for(i=0;i<n;i++)
     {
-	opcode_table[i].bmsk=0;
-	opcode_table[i].bits=0;
+	opcode32_table[i].bmsk=0;
+	opcode32_table[i].bits=0;
 	for(j=0;j<32;j++)
 	{
-	    if(opcode_table[i].mask[j]=='0' || opcode_table[i].mask[j]=='1')
+	    if(opcode32_table[i].mask[j]=='0' || opcode32_table[i].mask[j]=='1')
 	    {
-		opcode_table[i].bmsk|=(1<<(31-j));
-		opcode_table[i].bits|=(opcode_table[i].mask[j]=='1'?1<<(31-j):0<<(31-j));
+		opcode32_table[i].bmsk|=(1<<(31-j));
+		opcode32_table[i].bits|=(opcode32_table[i].mask[j]=='1'?1<<(31-j):0<<(31-j));
 	    }
 	}
     }
 }
 
-void __FASTCALL__ arm32Term() {}
+void ARM_Disassembler::arm32Term() {}
 } // namespace	usr

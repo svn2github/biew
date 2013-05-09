@@ -24,6 +24,7 @@
 #endif
 
 namespace	usr {
+    class ix86_Disassembler;
 enum {
     TAB_POS   =10,
     TILE_SAFE =4000,
@@ -38,14 +39,14 @@ enum {
 
 enum {
     PFX_SEGMASK		=0x00000007,
-     PFX_SEG_CS		=0x00000000,
-     PFX_SEG_DS		=0x00000001,
-     PFX_SEG_ES		=0x00000002,
-     PFX_SEG_SS		=0x00000003,
-     PFX_SEG_FS		=0x00000004,
-     PFX_SEG_GS		=0x00000005,
-     PFX_SEG_US		=0x00000006,
-     PFX_SEG_XS		=0x00000007,
+    PFX_SEG_CS		=0x00000000,
+    PFX_SEG_DS		=0x00000001,
+    PFX_SEG_ES		=0x00000002,
+    PFX_SEG_SS		=0x00000003,
+    PFX_SEG_FS		=0x00000004,
+    PFX_SEG_GS		=0x00000005,
+    PFX_SEG_US		=0x00000006,
+    PFX_SEG_XS		=0x00000007,
     PFX_LOCK		=0x00000008,
     PFX_F2_REPNE	=0x00000010,
     PFX_F3_REP		=0x00000020,
@@ -151,7 +152,13 @@ typedef struct tagix86Param
 #define REX_b(rex) ((rex)&0x01)
 
 extern char * SJump[];
-typedef void (__FASTCALL__*ix86_method)(char *encode_str,ix86Param *);
+typedef void (ix86_Disassembler::*ix86_method)(char *encode_str,ix86Param *);
+
+typedef char* ( ix86_Disassembler::*FPUroutine)(char *,const char *,ix86Param *);
+struct FPUcall {
+    FPUroutine	f;
+    const char*	c;
+};
 
 enum {
     IX86_CPU086		=0x00000000UL,
@@ -251,163 +258,315 @@ enum {
     IX86_UNKCYRIX	=(IX86_CYRIX|IX86_CPU686)
 };
 
-typedef struct tag_ix86opcodes
-{
-  const char *  name16;
-  const char *  name32;
-  const char *  name64;
-  ix86_method   method;
-  unsigned long pro_clone;
-  ix86_method   method64;
-  unsigned long flags64;
-}ix86_Opcodes;
+    struct ix86_Opcodes {
+	const char*	name16;
+	const char*	name32;
+	const char*	name64;
+	ix86_method	method;
+	unsigned long	pro_clone;
+	ix86_method	method64;
+	unsigned long	flags64;
+    };
 
-typedef struct tag_ix86ExOpcodes
-{
-  const char *  name;
-  const char *  name64;
-  ix86_method   method;
-  ix86_method   method64;
-  unsigned long flags64;
-  unsigned long pro_clone;
-}ix86_ExOpcodes;
+    struct ix86_ExOpcodes {
+	const char*	name;
+	const char*	name64;
+	ix86_method	method;
+	ix86_method	method64;
+	unsigned long	flags64;
+	unsigned long	pro_clone;
+    };
 
-typedef struct tag_ix3dNowopcodes
-{
-  const char *  name;
-  unsigned long pro_clone;
-}ix86_3dNowopcodes;
+    struct assembler_t {
+	const char *run_command;
+	const char *detect_command;
+    };
 
-extern unsigned x86_Bitness;
+    struct ix86_3dNowopcodes {
+	const char*	name;
+	unsigned long	pro_clone;
+    };
 
-extern const ix86_Opcodes ix86_table[];
-extern const ix86_ExOpcodes ix86_extable[];
-extern const ix86_3dNowopcodes ix86_3dNowtable[];
+    struct DualStr {
+	const char*	c1;
+	const char*	c2;
+    };
 
-extern char ix86_segpref[];
-extern const char * ix86_sizes[];
-extern const char * ix86_A16[];
-extern const char * i8086_ByteRegs[];
-extern const char * k64_ByteRegs[];
+    extern unsigned x86_Bitness;
 
-extern const char * ix86_MMXRegs[];
+    class DisMode;
+    class ix86_Disassembler : public Disassembler {
+	public:
+	    ix86_Disassembler(DisMode&);
+	    virtual ~ix86_Disassembler();
 
-extern const char * k64_WordRegs[];
-extern const char * k64_DWordRegs[];
-extern const char * k64_QWordRegs[];
-extern const char * k64_XMMXRegs[];
-extern const char * k64_YMMXRegs[];
-extern const char * k64_CrxRegs[];
-extern const char * k64_DrxRegs[];
-extern const char * k64_TrxRegs[];
-extern const char * k64_XrxRegs[];
+	    virtual const char*	prompt(unsigned idx) const;
+	    virtual bool	action_F1();
+	    virtual bool	action_F3();
 
-extern const char * ix86_SegRegs[];
+	    virtual DisasmRet	disassembler(__filesize_t shift,MBuffer insn_buff,unsigned flags);
+	    virtual AsmRet	assembler(const char *str);
 
-extern const char * ix86_Op1Names[];
-extern const char * ix86_ShNames[];
-extern const char * ix86_Gr1Names[];
-extern const char * ix86_Gr2Names[];
+	    virtual void	show_short_help() const;
+	    virtual int		max_insn_len();
+	    virtual ColorAttr	get_insn_color(unsigned long clone);
+	    virtual ColorAttr	get_opcode_color(unsigned long clone);
+	    virtual ColorAttr	get_alt_insn_color(unsigned long clone);
+	    virtual ColorAttr	get_alt_opcode_color(unsigned long clone);
 
-extern const char * ix86_ExGrp0[];
-extern const char * ix86_BitGrpNames[];
+	    virtual int		get_bitness();
+	    virtual char	clone_short_name(unsigned long clone);
+	    virtual void	read_ini(Ini_Profile&);
+	    virtual void	save_ini(Ini_Profile&);
+	private:
+	/* ix86.cpp */
+	    const ix86_ExOpcodes*	ix86_prepare_flags(const ix86_ExOpcodes *extable,ix86Param *DisP,unsigned char *code,unsigned char *codelen);
+	    DisasmRet			ix86Disassembler(__filesize_t ulShift,MBuffer buffer,unsigned flags);
+	    void			parse_XOP_8F(ix86Param *DisP);
+	    void			parse_VEX_C5(ix86Param *DisP);
+	    void			parse_VEX_C4(ix86Param *DisP);
+	    void			parse_VEX_pp(ix86Param *DisP);
+	    unsigned char		parse_REX(unsigned char code,ix86Param *DisP);
+	    void			ix86_gettype(DisasmRet *dret,ix86Param *_DisP);
+	    MBuffer			parse_REX_type(MBuffer insn,char *up,ix86Param *DisP);
+	    bool			is_listed(unsigned char insn,const unsigned char *list,size_t listsize);
+	    void			ix86_InOut(char *str,ix86Param *DisP);
+	/* ix86_fpu.cpp */
+	    void 			ix86_FPUCmd(char *str,ix86Param *DisP);
+	    char*			FPUstist0_2(char *str,const char *name1,const char *name2,char code);
+	    char*			FPUst0sti_2(char *str,const char *name1,const char *name2,char code);
+	    char*			FPUcmdsti_2(char *str,const char *name1,const char *name2,char code);
+	    char*			FPUcmdst0(char *str,const char *name);
+	    char*			FPUcmdsti(char *str,const char *name,char code);
+	    char*			FPUsttword(char *str,const char *cmd,ix86Param *DisP);
+	    char*			FPUldtword(char *str,const char *cmd,ix86Param *DisP);
+	    char*			FPUstist0(char *str,const char *cmd,char code1);
+	    char*			FPUst0sti(char *str,const char *cmd,char code1);
+	    char*			FPUstisti(char *str,const char *cmd,char code1,char code2);
+	    char*			FPUld(char *str,const char *cmd,ix86Param *DisP);
+	    char*			FPUstint32(char *str,const char *cmd,ix86Param *DisP);
+	    char*			FPUint64st(char *str,const char *cmd,ix86Param *DisP);
+	    char*			FPUint64(char *str,const char *cmd,ix86Param *DisP);
+	    char*			FPUint16int32st(char *str,const char *cmd,ix86Param *DisP);
+	    char*			FPUint16int32(char *str,const char *cmd,ix86Param *DisP);
+	    char*			FPUmem64mem32st(char *str,const char *cmd,ix86Param *DisP);
+	    char*			FPUmem64mem32(char *str,const char *cmd,ix86Param *DisP);
+	    char*			FPUmem(char *str,const char *cmd,ix86Param *DisP);
+	    char*			__MemFPUfunc(char *str,const char *cmd,char opsize,ix86Param *DisP);
+	    char*			__UniFPUfunc(char *str,const char *cmd,char opsize,char direct,ix86Param *DisP);
+	    char*			SetNameTabD(char *str,const char *name,unsigned char size,ix86Param *DisP);
+	    char*			SC(const char *name1,const char *name2);
+	    char*			SetNameTab(char *str,const char *name);
+	/* ix86_func.cpp */
+	    void			ix86_3DNowPrefetchGrp(char *str,ix86Param *DisP);
+	    void			ix86_3DNowOpCodes(char *str,ix86Param *DisP);
+	    void			arg_fma(char *str,ix86Param *DisP);
+	    void			arg_fma4_imm8(char *str,ix86Param *DisP);
+	    void			arg_fma4(char *str,ix86Param *DisP);
+	    void			arg_simd_xmm0(char *str,ix86Param *DisP);
+	    void			arg_simd_clmul(char *str,ix86Param *DisP);
+	    void			arg_xop_cmp(char *str,ix86Param *DisP);
+	    void			arg_simd_cmp(char *str,ix86Param *DisP);
+	    void			ix86_ArgXMMCmp(char *str,ix86Param *DisP,const char **sfx,unsigned nsfx,unsigned namlen,unsigned precopy);
+	    void			arg_simd_rm_imm8_imm8(char *str,ix86Param *DisP);
+	    void			arg_simd_regrm_imm8_imm8(char *str,ix86Param *DisP);
+	    void			arg_simd_regrm(char *str,ix86Param *DisP);
+	    void			arg_simd_imm8(char *str,ix86Param *DisP);
+	    void			ix86_ArgFsGsBaseGrp(char *str,ix86Param *DisP);
+	    void			ix86_ArgBm1Grp(char *str,ix86Param *DisP);
+	    void			ix86_ArgKatmaiGrp2(char *str,ix86Param *DisP);
+	    void			ix86_ArgKatmaiGrp1(char *str,ix86Param *DisP);
+	    void			ix86_BitGrp(char *str,ix86Param *DisP);
+	    void			ix86_ArgMovYX(char *str,ix86Param *DisP);
+	    void			ix86_ArgXMMXGr3(char *str,ix86Param *DisP);
+	    void			ix86_ArgXMMXGr2(char *str,ix86Param *DisP);
+	    void			ix86_ArgXMMXGr1(char *str,ix86Param *DisP);
+	    void			ix86_ArgMMXGr3(char *str,ix86Param *DisP);
+	    void			ix86_ArgMMXGr2(char *str,ix86Param *DisP);
+	    void			ix86_ArgMMXGr1(char *str,ix86Param *DisP);
+	    void			ix86_ArgxMMXGroup(char *str,const char *name,ix86Param *DisP,bool as_xmmx);
+	    void			arg_simd(char *str,ix86Param *DisP);
+	    void			arg_emms(char *str,ix86Param *DisP);
+	    void			bridge_sse_mmx(char *str,ix86Param *DisP);
+	    void			ix86_bridge_sse_mmx(char *str,ix86Param *DisP,bool xmmx_first);
+	    void			bridge_simd_cpu_imm8(char *str,ix86Param *DisP);
+	    void			bridge_simd_cpu(char *str,ix86Param *DisP);
+	    void			ix86_bridge_cpu_simd(char *str,ix86Param *DisP,bool direct,bool as_xmmx);
+	    void			ix86_ArgMovXRY(char *str,ix86Param *DisP);
+	    void			ix86_ArgExGr1(char *str,ix86Param *DisP);
+	    void			ix86_660FVMX(char *str,ix86Param *DisP);
+	    void			ix86_0FVMX(char *str,ix86Param *DisP);
+	    void			ix86_VMX(char *str,ix86Param *DisP);
+	    void			ix86_ArgExGr0(char *str,ix86Param *DisP);
+	    void			ix86_ExOpCodes(char *str,ix86Param *DisP);
+	    void			ix86_ArgGrp2(char *str,ix86Param *DisP);
+	    void			ix86_ArgGrp1(char *str,ix86Param *DisP);
+	    void			ix86_ShOpCL(char *str,ix86Param *DisP);
+	    void			ix86_ShOp1(char *str,ix86Param *DisP);
+	    void			ix86_DblShift(char *str,ix86Param *DisP);
+	    void			ix86_ShOp2(char *str,ix86Param *DisP);
+	    void			ix86_ArgOp2(char *str,ix86Param *DisP);
+	    void			ix86_ArgOp1(char *str,ix86Param *DisP);
+	    void			ix86_ArgRmDigit(char *str,ix86Param *DisP,char w,char s);
+	    void			arg_imm16_imm8(char *str,ix86Param *DisP);
+	    void			arg_imm16(char *str,ix86Param *DisP);
+	    void			arg_imm8(char *str,ix86Param *DisP);
+	    void			arg_imm(char *str,ix86Param *DisP);
+	    void			arg_insnreg_imm(char *str,ix86Param *DisP);
+	    void			arg_insnreg(char *str,ix86Param *DisP);
+	    void			arg_r0mem(char *str,ix86Param *DisP);
+	    void			arg_r0rm(char *str,ix86Param *DisP);
+	    void			arg_r0_imm(char *str,ix86Param *DisP);
+	    void			arg_cpu_modsegrm(char *str,ix86Param *DisP);
+	    void			arg_cpu_modregrm_imm8(char *str,ix86Param *DisP);
+	    void			arg_cpu_modregrm_imm(char *str,ix86Param *DisP);
+	    void			arg_cpu_mod_rm_imm(char *str,ix86Param *DisP);
+	    void			arg_cpu_mod_rm(char *str,ix86Param *DisP);
+	    void			arg_cpu_modREGrm(char *str,ix86Param *DisP);
+	    void			arg_cpu_modregrm(char *str,ix86Param *DisP);
+	    char*			__buildModRegRmReg(ix86Param *DisP,bool d,unsigned char wrex);
+	    char*			__buildModRegRm(ix86Param *DisP,bool w,bool d);
+	    char*			ix86_CStile(ix86Param *DisP,char *str,const char *arg2);
+	    char*			ix86_getModRM(bool w,unsigned char mod,unsigned char rm,ix86Param *DisP);
+	    char*			ix86_getModRM64(bool w,unsigned char mod,unsigned char rm,ix86Param *DisP);
+	    char*			ix86_getModRM32(bool w,unsigned char mod,unsigned char rm,ix86Param *DisP);
+	    char*			ix86_getModRM16(bool w,unsigned char mod,unsigned char rm,ix86Param *DisP);
+	    char*			ConstrSibMod(ix86Param *DisP,char *store,char *scale,char *_index,char *base,char code,char *mod);
+	    void			getSIBRegs(ix86Param *DisP,char *base,char *scale,char *_index,char *mod,char code);
+	    void			arg_offset(char *str,ix86Param *DisP);
+	    void			arg_segoff(char *str,ix86Param *DisP);
+	    char*			ix86_GetDigitTile(ix86Param *DisP,char wrd,char sgn,unsigned char loc_off);
+	    void			ix86_ArgGS(char *str,ix86Param *param);
+	    void			ix86_ArgFS(char *str,ix86Param *param);
+	    void			ix86_ArgCS(char *str,ix86Param *param);
+	    void			ix86_ArgSS(char *str,ix86Param *param);
+	    void			ix86_ArgDS(char *str,ix86Param *param);
+	    void			ix86_ArgES(char *str,ix86Param *param);
+	    char*			GetDigitsApp(unsigned char loc_off,ix86Param *DisP,char codelen,DisMode::e_disarg type);
+	    char*			Get16SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign,bool is_disponly);
+	    char*			Get8SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign,bool is_disponly,bool as_rip);
+	    char*			Get4SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign,bool is_disponly);
+	    char*			Get2SquareDig(unsigned char loc_off,ix86Param *DisP,bool as_sign);
+	    inline char*		Get16SignDigApp(unsigned char loc_off,ix86Param *DisP){ return GetDigitsApp(loc_off,DisP,8,DisMode::Arg_LLong); };
+	    inline char*		Get16DigitApp(unsigned char loc_off,ix86Param *DisP){ return GetDigitsApp(loc_off,DisP,8,DisMode::Arg_QWord); };
+	    inline char*		Get8SignDigApp(unsigned char loc_off,ix86Param *DisP){ return GetDigitsApp(loc_off,DisP,4,DisMode::Arg_Long); };
+	    inline char*		Get8DigitApp(unsigned char loc_off,ix86Param *DisP){ return GetDigitsApp(loc_off,DisP,4,DisMode::Arg_DWord); };
+	    inline char*		Get4SignDigApp(unsigned char loc_off,ix86Param *DisP){ return GetDigitsApp(loc_off,DisP,2,DisMode::Arg_Short); };
+	    inline char*		Get4DigitApp(unsigned char loc_off,ix86Param *DisP){ return GetDigitsApp(loc_off,DisP,2,DisMode::Arg_Word); };
+	    inline char*		Get2SignDigApp(unsigned char loc_off,ix86Param *DisP){ return GetDigitsApp(loc_off,DisP,1,DisMode::Arg_Char); };
+	    inline char*		Get2DigitApp(unsigned char loc_off,ix86Param *DisP){ return GetDigitsApp(loc_off,DisP,1,DisMode::Arg_Byte); };
+	    const char*			get_VEX_reg(ix86Param *DisP);
+	    const char*			k64_getREG(ix86Param *DisP,unsigned char reg,bool w,bool rex,bool use_qregs);
+	    unsigned			ix86_calcModifier(ix86Param *DisP,unsigned w);
+	    const char*			getSREG(unsigned sreg) const { return ix86_SegRegs[sreg]; }
+	    void			ix86_Null(char *str,ix86Param *param);
+	/* data */
+	    DisMode&			parent;
+	    unsigned			x86_Bitness;
+	    char*			ix86_voidstr;
+	    char*			ix86_da_out;
+	    char*			ix86_Katmai_buff;
+	    char*			ix86_appstr;
+	    char*			ix86_dtile;
+	    char*			ix86_appbuffer;
+	    char*			ix86_apistr;
+	    char*			ix86_modrm_ret;
+	    int				active_assembler;
 
-extern const char * ix86_MMXGr1[];
-extern const char * ix86_MMXGr2[];
-extern const char * ix86_MMXGr3[];
-extern const char * ix86_XMMXGr1[];
-extern const char * ix86_XMMXGr2[];
-extern const char * ix86_XMMXGr3[];
+	/* static data */
+	    static const unsigned	MAX_IX86_INSN_LEN;
+	    static const unsigned	MAX_DISASM_OUTPUT;
 
-extern const char * ix86_3dPrefetchGrp[];
+	    static const assembler_t	assemblers[];
+	    static const unsigned	CODEBUFFER_LEN;
 
-extern const char * ix86_KatmaiGr2Names[];
+	    static const char		ix86CloneSNames[4];
+	    static const char*		ix86_sizes[];
+	    static const char*		ix86_A16[];
 
-    const ix86_ExOpcodes* __FASTCALL__ ix86_prepare_flags(const ix86_ExOpcodes *extable,ix86Param *DisP,unsigned char *code,unsigned char *codelen);
-    char * __FASTCALL__ ix86_getModRM(bool w,unsigned char mod,unsigned char rm,ix86Param *DisP);
-    void   __FASTCALL__ ix86_setModifier(char *str,const char *modf);
-    char * __FASTCALL__ ix86_CStile(ix86Param *DisP,char *str,const char *arg2);
+	    static const char*		i8086_ByteRegs[];
+	    static const char*		k64_ByteRegs[];
+	    static const char*		ix86_MMXRegs[];
+	    static const char*		ix86_SegRegs[];
 
-/* methods */
+	    static const char*		k64_WordRegs[];
+	    static const char*		k64_DWordRegs[];
+	    static const char*		k64_QWordRegs[];
+	    static const char*		k64_XMMXRegs[];
+	    static const char*		k64_YMMXRegs[];
+	    static const char*		k64_CrxRegs[];
+	    static const char*		k64_DrxRegs[];
+	    static const char*		k64_TrxRegs[];
+	    static const char*		k64_XrxRegs[];
 
-    void   __FASTCALL__ ix86_ArgES(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ArgDS(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ArgSS(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ArgCS(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ArgFS(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ArgGS(char *str,ix86Param *);
+	    static const char*		ix86_Op1Names[];
+	    static const char*		ix86_ShNames[];
+	    static const char*		ix86_Gr1Names[];
+	    static const char*		ix86_Gr2Names[];
+	    static const char*		ix86_ExGrp0[];
+	    static const char*		ix86_BitGrpNames[];
+	    static const char*		ix86_MMXGr1[];
+	    static const char*		ix86_MMXGr2[];
+	    static const char*		ix86_MMXGr3[];
+	    static const char*		ix86_XMMXGr1[];
+	    static const char*		ix86_XMMXGr2[];
+	    static const char*		ix86_XMMXGr3[];
+	    static const char*		ix86_3dPrefetchGrp[];
+	    static const char*		ix86_KatmaiGr2Names[];
 
-    void   __FASTCALL__ arg_cpu_modregrm(char * str,ix86Param *DisP);
-    void   __FASTCALL__ arg_cpu_modREGrm(char * str,ix86Param *DisP); /* CRC32 */
-    void   __FASTCALL__ arg_cpu_mod_rm(char* str,ix86Param *DisP);
-    void   __FASTCALL__ arg_cpu_mod_rm_imm(char *str,ix86Param *DisP);
-    void   __FASTCALL__ arg_cpu_modregrm_imm(char *str,ix86Param *DisP);
-    void   __FASTCALL__ arg_cpu_modregrm_imm8(char *str,ix86Param *DisP);
-    void   __FASTCALL__ arg_offset(char *str,ix86Param *);
-    void   __FASTCALL__ arg_segoff(char *str,ix86Param *);
-    void   __FASTCALL__ arg_insnreg(char *str,ix86Param *); /* reg is part of insn */
-    void   __FASTCALL__ arg_insnreg_imm(char *str,ix86Param *);
-    void   __FASTCALL__ arg_cpu_modsegrm(char * str,ix86Param *DisP);
-    void   __FASTCALL__ arg_r0_imm(char *str,ix86Param *);
-    void   __FASTCALL__ arg_r0rm(char *str,ix86Param *);
-    void   __FASTCALL__ arg_r0mem(char *str,ix86Param *DisP);
-    void   __FASTCALL__ arg_imm(char *str,ix86Param *);
-    void   __FASTCALL__ arg_imm8(char *str,ix86Param *);
-    void   __FASTCALL__ arg_imm16(char *str,ix86Param *);
-    void   __FASTCALL__ arg_imm16_imm8(char *str,ix86Param *);
+	    static unsigned		BITNESS;
+	    static char			ix86_segpref[4];
+	    static const unsigned char	leave_insns[];
 
-    void   __FASTCALL__ ix86_ArgOp1(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ArgOp2(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ShOp2(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ShOp1(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ShOpCL(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ArgGrp1(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ArgGrp2(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_InOut(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_FPUCmd(char *str,ix86Param *);
+	    static const ix86_Opcodes	ix86_table[256];
+	    static const ix86_ExOpcodes	ix86_F30F_PentiumTable[256];
+	    static const ix86_ExOpcodes	ix86_F20F_PentiumTable[256];
+	    static const ix86_ExOpcodes	ix86_F30F3A_Table[256];
+	    static const ix86_ExOpcodes	ix86_F30F38_Table[256];
+	    static const ix86_ExOpcodes	ix86_F20F3A_Table[256];
+	    static const ix86_ExOpcodes	ix86_F20F38_Table[256];
+	    static const ix86_ExOpcodes	ix86_660F_PentiumTable[256];
+	    static const ix86_ExOpcodes	ix86_660F3A_Table[256];
+	    static const ix86_ExOpcodes ix86_660F38_Table[256];
+	    static const ix86_ExOpcodes	ix86_660F01_Table[256];
+	    static const ix86_ExOpcodes	K64_XOP_Table[256];
+	    static const ix86_3dNowopcodes ix86_3DNowtable[256];
+	    static const ix86_ExOpcodes	ix86_extable[256];
+	    static const ix86_ExOpcodes	ix86_0FA7_Table[256];
+	    static const ix86_ExOpcodes	ix86_0FA6_Table[256];
+	    static const ix86_ExOpcodes	ix86_0F3A_Table[256];
+	    static const ix86_ExOpcodes	ix86_0F38_Table[256];
 
-    void   __FASTCALL__ ix86_ExOpCodes(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_3dNowOpCodes(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_3dNowPrefetchGrp(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_BitGrp(char *str,ix86Param *);
+	    static const char*		mem64mem32[];
+	    static const char*		int16int32[];
+	    static const char*		DBEx[];
+	    static const char*		D9Ex[];
+	    static const char*		D9Fx[];
 
-    void   __FASTCALL__ ix86_ArgExGr0(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ArgExGr1(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ArgMovXRY(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_DblShift(char *str,ix86Param *);
+	    static const FPUcall	DFrm[8];
+	    static const FPUcall	DDrm[8];
+	    static const FPUcall	DBrm[8];
+	    static const FPUcall	D9rm[8];
+	    static const DualStr	D8str[4];
+	    static const DualStr	DEstr[4];
+	    static const char*		FCMOVc[];
+	    static const char*		FCMOVnc[];
+	    static const char*		FxCOMIP[];
 
-    void   __FASTCALL__ arg_emms(char *str,ix86Param *);
-    void   __FASTCALL__ arg_simd(char *str,ix86Param *);
-    void   __FASTCALL__ arg_simd_imm8(char *str,ix86Param *);
-    void   __FASTCALL__ arg_simd_xmm0(char *str,ix86Param *);
-    void   __FASTCALL__ arg_simd_regrm(char *str,ix86Param *);
-    void   __FASTCALL__ arg_simd_regrm_imm8_imm8(char *str,ix86Param *);
-    void   __FASTCALL__ arg_simd_rm_imm8_imm8(char *str,ix86Param *);
-    void   __FASTCALL__ bridge_sse_mmx(char *str,ix86Param* DisP);
-    void   __FASTCALL__ bridge_simd_cpu(char *str,ix86Param* DisP);
-    void   __FASTCALL__ bridge_simd_cpu_imm8(char *str,ix86Param* DisP);
-    void   __FASTCALL__ arg_fma(char *str,ix86Param *);
-    void   __FASTCALL__ arg_fma4(char *str,ix86Param *);
-    void   __FASTCALL__ arg_fma4_imm8(char *str,ix86Param *DisP);
+	    static const char*		ix86_Bm1GrpNames[];
+	    static const char*		ix86_FsGsBaseNames[];
+	    static const char*		ix86_KatmaiCmpSuffixes[];
+	    static const char*		ix86_KatmaiGr1Names[];
+	    static const char*		ix86_KatmaiGr1Names11[];
+	    static const char*		vex_cmp_sfx[];
+	    static const char*		xop_cmp_sfx[];
+	    static const char*		ix86_clmul_sfx[];
 
-    void   __FASTCALL__ ix86_ArgMMXGr1(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ArgMMXGr2(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ArgMMXGr3(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ArgXMMXGr1(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ArgXMMXGr2(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ArgXMMXGr3(char *str,ix86Param *);
-
-    void   __FASTCALL__ ix86_ArgKatmaiGrp1(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ArgKatmaiGrp2(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ArgMovYX(char *str,ix86Param *);
-    void   __FASTCALL__ arg_simd_cmp(char *str,ix86Param *DisP);
-    void   __FASTCALL__ arg_simd_clmul(char *str,ix86Param *DisP);
-    void   __FASTCALL__ arg_xop_cmp(char *str,ix86Param *DisP);
-    void   __FASTCALL__ ix86_ArgBm1Grp(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_ArgFsGsBaseGrp(char *str,ix86Param *);
-
-    void   __FASTCALL__ ix86_VMX(char *str,ix86Param *);
-    void   __FASTCALL__ ix86_0FVMX(char *str,ix86Param *DisP);
-    void   __FASTCALL__ ix86_660FVMX(char *str,ix86Param *DisP);
+	    static const char**		k64_xry[];
+	    static const char*		ix86_vmxname[];
+	    static const char*		ix86_0Fvmxname[];
+	    static const char*		ix86_660Fvmxname[];
+	    static const char*		ix86_ExGrp1[];
+    };
 } // namespace	usr
 #endif

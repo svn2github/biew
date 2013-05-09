@@ -29,21 +29,11 @@ using namespace	usr;
 #include "plugins/disasm/arm/arm.h"
 
 namespace	usr {
-static DisMode* parent;
 enum {
     ARM_USE_SP	=0x00100000UL,
     ARM_USE_PC	=0x00200000UL,
     ARM_HAS_RN	=0x00400000UL
 };
-typedef struct tag_arm_opcode16
-{
-    const char *name;
-    const char *mask;
-    const long flags;
-    unsigned   bmsk;
-    unsigned   bits;
-}arm_opcode16;
-
 /*
     c    - conditional codes
     a	 - address mode
@@ -69,7 +59,7 @@ typedef struct tag_arm_opcode16
     o    - code offset value
     O    - offset value
 */
-static arm_opcode16 opcode_table[]=
+arm_opcode16 ARM_Disassembler::opcode_table[]=
 {
     { "ADC", "0100000101mmmddd", ARM_V4|ARM_INTEGER, 0, 0 },
     { "ADD", "0001110iiisssddd", ARM_V4|ARM_INTEGER, 0, 0 },
@@ -136,13 +126,11 @@ static arm_opcode16 opcode_table[]=
     { "TST", "0100001000sssmmm", ARM_V4|ARM_INTEGER, 0, 0 }
 };
 
-const char * arm_reg_name[] =
+const char* ARM_Disassembler::arm_reg_name[] =
 {
    "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7",
    "R8", "R9", "R10", "R11", "R12", "R13", "R14", "PC",
 };
-
-extern const char *armCCnames[16];
 
 #define READ_IMM(chr)\
 {\
@@ -156,18 +144,17 @@ extern const char *armCCnames[16];
 }
 
 #define PARSE_IMM(chr,smul)\
-    p=strchr(msk,chr);\
-    if(p)\
+    if(strchr(msk,chr))\
     {\
 	READ_IMM(chr);\
 	if(prev) strcat(dret->str,",");\
 	strcat(dret->str,"#");\
-	parent->append_digits(dret->str,ulShift,APREF_USE_TYPE,2,&val,DisMode::Arg_Word);\
+	parent.append_digits(dret->str,ulShift,APREF_USE_TYPE,2,&val,DisMode::Arg_Word);\
 	if(smul) strcat(dret->str,smul);\
 	prev=1;\
     }
 
-static void __FASTCALL__ arm16EncodeTail(DisasmRet *dret,uint16_t opcode,__filesize_t ulShift,const char *msk,long flags)
+void ARM_Disassembler::arm16EncodeTail(DisasmRet *dret,uint16_t opcode,__filesize_t ulShift,const char *msk,long flags)
 {
     unsigned i,idx,val,prev,bracket;
     int s,d,m,n;
@@ -247,7 +234,7 @@ static void __FASTCALL__ arm16EncodeTail(DisasmRet *dret,uint16_t opcode,__files
 	    tbuff=tbuff<<12;
 	else if(hh==1)
 	    tbuff=(tbuff<<1)&0xfffffffc;
-	parent->append_faddr(dret->str,ulShift+1,(long)tbuff,ulShift+tbuff,DisMode::Near32,0,2);
+	parent.append_faddr(dret->str,ulShift+1,(long)tbuff,ulShift+tbuff,DisMode::Near32,0,2);
 	prev=1;
     }
     p=strchr(msk,'R');
@@ -271,7 +258,7 @@ static void __FASTCALL__ arm16EncodeTail(DisasmRet *dret,uint16_t opcode,__files
     if(bracket) strcat(dret->str,"]");
 }
 
-void __FASTCALL__ arm16Disassembler(DisasmRet *dret,__filesize_t ulShift,
+void ARM_Disassembler::arm16Disassembler(DisasmRet *dret,__filesize_t ulShift,
 					uint16_t opcode, unsigned flags)
 {
     int done;
@@ -304,13 +291,12 @@ void __FASTCALL__ arm16Disassembler(DisasmRet *dret,__filesize_t ulShift,
     {
 	strcpy(dret->str,"???");
 	TabSpace(dret->str,TAB_POS);
-	parent->append_digits(dret->str,ulShift,APREF_USE_TYPE,2,&opcode,DisMode::Arg_Word);
+	parent.append_digits(dret->str,ulShift,APREF_USE_TYPE,2,&opcode,DisMode::Arg_Word);
     }
 }
 
-void __FASTCALL__ arm16Init(DisMode* _parent)
+void ARM_Disassembler::arm16Init()
 {
-    parent = _parent;
     unsigned i,n,j;
     n = sizeof(opcode_table)/sizeof(arm_opcode16);
     for(i=0;i<n;i++)
@@ -328,5 +314,5 @@ void __FASTCALL__ arm16Init(DisMode* _parent)
     }
 }
 
-void __FASTCALL__ arm16Term() {}
+void ARM_Disassembler::arm16Term() {}
 } // namespace	usr

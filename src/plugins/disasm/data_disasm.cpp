@@ -31,9 +31,33 @@ using namespace	usr;
 #include "libbeye/file_ini.h"
 
 namespace	usr {
-static int nulWidth = 1;
-static DisMode* parent;
-static const char *width_names[] =
+    class Data_Disassembler : public Disassembler {
+	public:
+	    Data_Disassembler(DisMode& parent);
+	    virtual ~Data_Disassembler();
+	
+	    virtual const char*	prompt(unsigned idx) const;
+	    virtual bool	action_F3();
+
+	    virtual DisasmRet	disassembler(__filesize_t shift,MBuffer insn_buff,unsigned flags);
+
+	    virtual void	show_short_help() const;
+	    virtual int		max_insn_len();
+	    virtual ColorAttr	get_insn_color(unsigned long clone);
+
+	    virtual int		get_bitness();
+	    virtual char	clone_short_name(unsigned long clone);
+	    virtual void	read_ini(Ini_Profile&);
+	    virtual void	save_ini(Ini_Profile&);
+	private:
+	    DisMode&		parent;
+	    int			nulWidth;
+	    char*		outstr;
+
+	    static const char*	width_names[];
+    };
+
+const char* Data_Disassembler::width_names[] =
 {
    "~Byte",
    "~Word",
@@ -41,7 +65,7 @@ static const char *width_names[] =
    "~Quad word"
 };
 
-static bool __FASTCALL__ nulSelect_width()
+bool Data_Disassembler::action_F3()
 {
   unsigned nModes;
   int i;
@@ -55,11 +79,9 @@ static bool __FASTCALL__ nulSelect_width()
   return false;
 }
 
-static char *outstr;
-
-static DisasmRet __FASTCALL__ nulDisassembler(__filesize_t ulShift,
-					      MBuffer buffer,
-					      unsigned flags)
+DisasmRet Data_Disassembler::disassembler(__filesize_t ulShift,
+					MBuffer buffer,
+					unsigned flags)
 {
   DisasmRet ret;
   int cl;
@@ -91,7 +113,7 @@ static DisasmRet __FASTCALL__ nulDisassembler(__filesize_t ulShift,
     }
     ret.codelen = cl;
     strcpy(outstr,preface);
-    parent->append_digits(outstr,ulShift,APREF_USE_TYPE,cl,buffer,type);
+    parent.append_digits(outstr,ulShift,APREF_USE_TYPE,cl,buffer,type);
   }
   else
     if(flags & __DISF_GETTYPE) ret.pro_clone = __INSNT_ORDINAL;
@@ -107,26 +129,28 @@ static DisasmRet __FASTCALL__ nulDisassembler(__filesize_t ulShift,
   return ret;
 }
 
-static void  __FASTCALL__ nulHelpAsm()
+void Data_Disassembler::show_short_help() const
 {
   hlpDisplay(20010);
 }
 
-static int    __FASTCALL__ nulMaxInsnLen() { return 8; }
-static ColorAttr __FASTCALL__ nulGetAsmColor( unsigned long clone )
+int Data_Disassembler::max_insn_len() { return 8; }
+ColorAttr Data_Disassembler::get_insn_color( unsigned long clone )
 {
   UNUSED(clone);
   return disasm_cset.cpu_cset[0].clone[0];
 }
-static int       __FASTCALL__ nulGetBitness() { return DAB_USE16; }
-static char      __FASTCALL__ nulGetClone( unsigned long clone )
+int Data_Disassembler::get_bitness() { return DAB_USE16; }
+char Data_Disassembler::clone_short_name( unsigned long clone )
 {
   UNUSED(clone);
   return ' ';
 }
-static void      __FASTCALL__ nulInit( DisMode& _parent )
+Data_Disassembler::Data_Disassembler( DisMode& _parent )
+		:Disassembler(_parent)
+		,parent(_parent)
+		,nulWidth(1)
 {
-  parent = &_parent;
   outstr = new char [1000];
   if(!outstr)
   {
@@ -135,12 +159,12 @@ static void      __FASTCALL__ nulInit( DisMode& _parent )
   }
 }
 
-static void  __FASTCALL__ nulTerm()
+Data_Disassembler::~Data_Disassembler()
 {
    delete outstr;
 }
 
-static void __FASTCALL__ nulReadIni( Ini_Profile& ini )
+void Data_Disassembler::read_ini( Ini_Profile& ini )
 {
   std::string tmps;
   if(beye_context().is_valid_ini_args())
@@ -151,32 +175,25 @@ static void __FASTCALL__ nulReadIni( Ini_Profile& ini )
   }
 }
 
-static void __FASTCALL__ nulWriteIni( Ini_Profile& ini )
+void Data_Disassembler::save_ini( Ini_Profile& ini )
 {
   char tmps[10];
   sprintf(tmps,"%i",nulWidth);
   beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
 }
 
-extern const REGISTRY_DISASM Null_Disasm =
-{
-  DISASM_DATA,
-  "~Data",
-  { NULL, "Width ", NULL, NULL },
-  { NULL, nulSelect_width, NULL, NULL },
-  nulDisassembler,
-  NULL,
-  nulHelpAsm,
-  nulMaxInsnLen,
-  nulGetAsmColor,
-  NULL,
-  nulGetAsmColor,
-  NULL,
-  nulGetBitness,
-  nulGetClone,
-  nulInit,
-  nulTerm,
-  nulReadIni,
-  nulWriteIni
+const char* Data_Disassembler::prompt(unsigned idx) const {
+    switch(idx) {
+	case 1: return "Width"; break;
+	default: break;
+    }
+    return "";
+}
+
+static Disassembler* query_interface(DisMode& _parent) { return new(zeromem) Data_Disassembler(_parent); }
+extern const Disassembler_Info data_disassembler_info = {
+    DISASM_DATA,
+    "~Data",	/**< plugin name */
+    query_interface
 };
 } // namespace	usr

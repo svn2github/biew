@@ -15,13 +15,70 @@ namespace	usr {
 	ARM_DSP		=0x00000200UL,
 	ARM_XSCALE	=0x00000400UL
     };
-    void __FASTCALL__ arm16Init(DisMode*);
-    void __FASTCALL__ arm16Term();
-    void __FASTCALL__ arm16Disassembler(DisasmRet *dret,__filesize_t ulShift,
+
+    struct arm_opcode32 {
+	const char*	name;
+	const char*	mask;
+	const long	flags;
+	unsigned	bmsk;
+	unsigned	bits;
+    };
+
+    struct arm_opcode16 {
+	const char*	name;
+	const char*	mask;
+	const long	flags;
+	unsigned	bmsk;
+	unsigned	bits;
+    };
+
+    class ARM_Disassembler : public Disassembler {
+	public:
+	    ARM_Disassembler(DisMode& parent);
+	    virtual ~ARM_Disassembler();
+	
+	    virtual const char*	prompt(unsigned idx) const;
+	    virtual bool	action_F1();
+	    virtual bool	action_F3();
+	    virtual bool	action_F4();
+
+	    virtual DisasmRet	disassembler(__filesize_t shift,MBuffer insn_buff,unsigned flags);
+
+	    virtual void	show_short_help() const;
+	    virtual int		max_insn_len();
+	    virtual ColorAttr	get_insn_color(unsigned long clone);
+	    virtual ColorAttr	get_opcode_color(unsigned long clone);
+
+	    virtual int		get_bitness();
+	    virtual char	clone_short_name(unsigned long clone);
+	    virtual void	read_ini(Ini_Profile&);
+	    virtual void	save_ini(Ini_Profile&);
+	private:
+	    void		arm16EncodeTail(DisasmRet *dret,uint16_t opcode,__filesize_t ulShift,const char *msk,long flags);
+	    void		arm16Init();
+	    void		arm16Term();
+	    void		arm16Disassembler(DisasmRet *dret,__filesize_t ulShift,
 						uint16_t opcode, unsigned flags);
-    void __FASTCALL__ arm32Init(DisMode*);
-    void __FASTCALL__ arm32Term();
-    void __FASTCALL__ arm32Disassembler(DisasmRet *dret,__filesize_t ulShift,
+
+	    void		arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,uint32_t opcode, unsigned flags,unsigned _index);
+	    void		arm32Init();
+	    void		arm32Term();
+	    void		arm32Disassembler(DisasmRet *dret,__filesize_t ulShift,
 						uint32_t opcode, unsigned flags);
+
+	    DisMode&		parent;
+	    char*		outstr;
+	    int			armBitness;
+	    int			armBigEndian;
+
+	    static arm_opcode16	opcode_table[];
+	    static const char*	arm_reg_name[];
+	    static const char*	armCCnames[16];
+
+	    static arm_opcode32	opcode32_table[];
+	    static const char *arm_sysfreg_name[16];
+	    static const char *arm_freg_name[32];
+	    static const char * arm_wreg_name[];
+    };
 } // namespace	usr
 #endif

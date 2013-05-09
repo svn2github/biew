@@ -9,7 +9,7 @@ DO_ALL  = @ for i in $(SUBDIRS); do $(MAKE) -C $$i all || exit; done
 LIBNAME = $(LIBPREFIX)disasm.a
 SUBDIRS = arm avr ix86 java ppc
 
-SRCS=null_da.cpp
+SRCS=data_disasm.cpp
 
 OBJS=$(SRCS:.cpp=.o)
 

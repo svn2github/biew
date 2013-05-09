@@ -451,7 +451,7 @@ void About()
  unsigned i,j,len;
  char str[2];
  const unsigned char core[8] = { TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, 0x00 };
- hwnd = WindowOpen(0,0,73,13,TWindow::Flag_Has_Frame | TWindow::Flag_NLS);
+ hwnd = WindowOpen(0,0,74,14,TWindow::Flag_Has_Frame | TWindow::Flag_NLS);
  hwnd->into_center();
  hwnd->set_color(LightCyan,Black);
  hwnd->clear();

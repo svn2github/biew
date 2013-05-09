@@ -52,12 +52,12 @@ using namespace	usr;
 #include "plugin.h"
 
 namespace	usr {
-    extern const REGISTRY_DISASM ix86_Disasm;
-    extern const REGISTRY_DISASM Null_Disasm;
-    extern const REGISTRY_DISASM AVR_Disasm;
-    extern const REGISTRY_DISASM ARM_Disasm;
-    extern const REGISTRY_DISASM PPC_Disasm;
-    extern const REGISTRY_DISASM Java_Disasm;
+    extern const Disassembler_Info ix86_disassembler_info;
+    extern const Disassembler_Info data_disassembler_info;
+    extern const Disassembler_Info avr_disassembler_info;
+    extern const Disassembler_Info arm_disassembler_info;
+    extern const Disassembler_Info ppc_disassembler_info;
+    extern const Disassembler_Info java_disassembler_info;
 
 DisMode::DisMode(CodeGuider& _code_guider)
 	:Plugin(_code_guider)
@@ -68,12 +68,12 @@ DisMode::DisMode(CodeGuider& _code_guider)
 {
     size_t i,sz;
     unsigned def_platform;
-    list.push_back(&Null_Disasm);
-    list.push_back(&ix86_Disasm);
-    list.push_back(&Java_Disasm);
-    list.push_back(&AVR_Disasm);
-    list.push_back(&ARM_Disasm);
-    list.push_back(&PPC_Disasm);
+    list.push_back(&data_disassembler_info);
+    list.push_back(&ix86_disassembler_info);
+    list.push_back(&java_disassembler_info);
+    list.push_back(&avr_disassembler_info);
+    list.push_back(&arm_disassembler_info);
+    list.push_back(&ppc_disassembler_info);
     CurrStrLenBuff = new unsigned char [tvioHeight];
     PrevStrLenAddr = new unsigned long [tvioHeight];
     dis_comments   = new char [Comm_Size];
@@ -83,22 +83,24 @@ DisMode::DisMode(CodeGuider& _code_guider)
     }
     def_platform = DISASM_DATA;
     def_platform = beye_context().bin_format().query_platform();
-    activeDisasm = list[0];
-    DefDisasmSel = DISASM_DATA;
     sz=list.size();
     for(i=0;i<sz;i++) {
 	if(list[i]->type == def_platform) {
-	    activeDisasm=list[i];
-	    DefDisasmSel = def_platform;
+	    activeDisasm=list[i]->query_interface(*this);
+	    DefDisasmSel = i;
 	    break;
 	}
+    }
+    if(!activeDisasm) {
+	activeDisasm = list[0]->query_interface(*this);
+	DefDisasmSel = 0;
     }
     accept_actions();
 }
 
 DisMode::~DisMode()
 {
-    if(activeDisasm->term) activeDisasm->term();
+    delete activeDisasm;
     delete CurrStrLenBuff;
     delete PrevStrLenAddr;
     delete dis_comments;
@@ -111,8 +113,8 @@ DisMode::e_flag DisMode::flags() const { return UseCodeGuide | Disasm | Has_Sear
 static const char* txt[] = { "", "Disasm", "", "", "", "AResol", "PanMod", "ResRef", "HiLght", "UsrNam" };
 const char* DisMode::prompt(unsigned idx) const {
     if(activeDisasm && idx!=1 && idx<5) {
-	if(!idx) return activeDisasm->prompt[idx];
-	return activeDisasm->prompt[idx-1];
+	if(!idx) return activeDisasm->prompt(idx);
+	return activeDisasm->prompt(idx-1);
     }
     return (idx < 10) ? txt[idx] : "";
 }
@@ -126,8 +128,8 @@ bool DisMode::action_F2() /* disSelect_Disasm */
     for(i = 0;i < nModes;i++) modeName[i] = list[i]->name;
     retval = SelBoxA(modeName,nModes," Select disassembler: ",DefDisasmSel);
     if(retval != -1) {
-	if(activeDisasm->term) activeDisasm->term();
-	activeDisasm = list[retval];
+	delete activeDisasm;
+	activeDisasm = list[retval]->query_interface(*this);
 	DefDisasmSel = retval;
 	accept_actions();
 	return true;
@@ -298,7 +300,7 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 		    MainWnd->direct_write(1,i + 1,outstr,len);
 		    if(!hexAddressResolv) {
 			MainWnd->set_color(disasm_cset.family_id);
-			_clone = activeDisasm->CloneShortName(dret.pro_clone);
+			_clone = activeDisasm->clone_short_name(dret.pro_clone);
 			MainWnd->direct_write(len_64,i + 1,&_clone,1);
 			MainWnd->set_color(browser_cset.main);
 		    }
@@ -311,10 +313,8 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 		    for(j = 0;j < dret.codelen;j++,len+=2) ::memcpy(&outstr[len],Get2Digit(disCodeBuffer[j]),2);
 		    tmp_off = disPanelMode < Panel_Full ? full_off : med_off;
 		    if(len < tmp_off) len = tmp_off;
-		    if(activeDisasm->GetOpcodeColor)
-			opc =	HiLight == 2 ? activeDisasm->altGetOpcodeColor(dret.pro_clone) :
-				HiLight == 1 ? activeDisasm->GetOpcodeColor(dret.pro_clone) : disasm_cset.opcodes;
-		    else	opc = disasm_cset.opcodes;
+		    opc =HiLight == 2 ? activeDisasm->get_alt_opcode_color(dret.pro_clone) :
+			 HiLight == 1 ? activeDisasm->get_opcode_color(dret.pro_clone) : disasm_cset.opcodes;
 		    MainWnd->set_color(opc);
 		    MainWnd->direct_write(disPanelMode < Panel_Full ? len_64+1 : 1,
 				i + 1,
@@ -327,8 +327,8 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 		}
 		MainWnd->set_color(browser_cset.main);
 		MainWnd->direct_write(len,i + 1," ",1);  len++;
-		cattr =	HiLight == 2 ?  activeDisasm->altGetInsnColor(dret.pro_clone) :
-			HiLight == 1 ?  activeDisasm->GetInsnColor(dret.pro_clone) :
+		cattr =	HiLight == 2 ?  activeDisasm->get_alt_insn_color(dret.pro_clone) :
+			HiLight == 1 ?  activeDisasm->get_insn_color(dret.pro_clone) :
 					browser_cset.main;
 		MainWnd->set_color(cattr);
 		j = strlen(dret.str);
@@ -391,10 +391,10 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
     return textshift;
 }
 
-bool DisMode::action_F1() { return (activeDisasm->action[0])?(*activeDisasm->action[0])():false; }
-bool DisMode::action_F3() { return (activeDisasm->action[1])?(*activeDisasm->action[1])():false; }
-bool DisMode::action_F4() { return (activeDisasm->action[2])?(*activeDisasm->action[2])():false; }
-bool DisMode::action_F5() { return (activeDisasm->action[3])?(*activeDisasm->action[3])():false; }
+bool DisMode::action_F1() { return activeDisasm->action_F1(); }
+bool DisMode::action_F3() { return activeDisasm->action_F3(); }
+bool DisMode::action_F4() { return activeDisasm->action_F4(); }
+bool DisMode::action_F5() { return activeDisasm->action_F5(); }
 
 unsigned long DisMode::prev_page_size() const { return PrevPageSize; }
 unsigned long DisMode::curr_page_size() const { return CurrPageSize; }
@@ -591,37 +591,32 @@ int DisMode::full_asm_edit(TWindow * ewnd)
 	    case KE_CTL_F(4):
 		{
 		    AsmRet aret;
-		    if(activeDisasm->asm_f) {
-			char code[81];
-			code[0]='\0';
-			if(GetStringDlg(code,activeDisasm->name,
+		    char code[81];
+		    code[0]='\0';
+		    if(GetStringDlg(code,list[DefDisasmSel]->name,
 					 NULL,"Enter assembler instruction:")) {
-			    aret = (*activeDisasm->asm_f)(code);
-			    if(aret.err_code) {
-				const char *message="Syntax error";
-				if (aret.insn[0]) {
-				    message=(const char*)aret.insn;
-				}
-				ErrMessageBox(message,"");
-				continue;
-			    } else {
-				int i;
-				char bytebuffer[3];
+			aret = activeDisasm->assembler(code);
+			if(aret.err_code) {
+			    const char *message="Syntax error";
+			    if (aret.insn[0]) {
+				message=(const char*)aret.insn;
+			    }
+			    ErrMessageBox(message,"");
+			    continue;
+			} else {
+			    int i;
+			    char bytebuffer[3];
 
-				for (i=aret.insn_len-1; i>=0; i--) {
-				    sprintf(bytebuffer, "%02x", aret.insn[i]);
-				    ungotstring(bytebuffer);
-				}
+			    for (i=aret.insn_len-1; i>=0; i--) {
+				sprintf(bytebuffer, "%02x", aret.insn[i]);
+				ungotstring(bytebuffer);
 			    }
 			}
-			break;
-		    } else {
-			ErrMessageBox("Sorry, no assembler available","");
-			continue;
 		    }
+		    break;
 		}
 	    case KE_F(1)    : ExtHelp(); continue;
-	    case KE_CTL_F(1): activeDisasm->action[0](); continue;
+	    case KE_CTL_F(1): activeDisasm->action_F1(); continue;
 	    case KE_CTL_F(2): beye_context().select_sysinfo(); continue;
 	    case KE_CTL_F(3): beye_context().select_tool(); continue;
 	    case KE_F(2)    :
@@ -660,7 +655,7 @@ int DisMode::full_asm_edit(TWindow * ewnd)
 
 void DisMode::help() const
 {
-   if( activeDisasm->ShowShortHelp ) activeDisasm->ShowShortHelp();
+   activeDisasm->show_short_help();
 }
 
 void DisMode::read_ini(Ini_Profile& ini)
@@ -681,9 +676,10 @@ void DisMode::read_ini(Ini_Profile& ini)
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode9","0");
 	HiLight = (int)strtoul(tmps.c_str(),NULL,10);
 	if(HiLight > 2) HiLight = 2;
-	activeDisasm = list[DefDisasmSel];
+	if(activeDisasm) delete activeDisasm;
+	activeDisasm = list[DefDisasmSel]->query_interface(*this);
 	accept_actions();
-	if(activeDisasm->read_ini) activeDisasm->read_ini(ini);
+	activeDisasm->read_ini(ini);
     }
 }
 
@@ -700,14 +696,14 @@ void DisMode::save_ini(Ini_Profile& ini)
     bctx.write_profile_string(ini,"Beye","Browser","SubSubMode8",tmps);
     ::sprintf(tmps,"%i",HiLight);
     bctx.write_profile_string(ini,"Beye","Browser","SubSubMode9",tmps);
-    if(activeDisasm->save_ini) activeDisasm->save_ini(ini);
+    activeDisasm->save_ini(ini);
 }
 
 DisasmRet DisMode::disassembler(__filesize_t ulShift,MBuffer buffer,unsigned flg)
 {
     dis_comments[0] = 0;
     dis_severity = DisMode::CommSev_None;
-    return activeDisasm->disasm(ulShift,buffer,flg);
+    return activeDisasm->disassembler(ulShift,buffer,flg);
 }
 
 unsigned DisMode::get_symbol_size() const { return 1; }
@@ -786,7 +782,6 @@ __filesize_t DisMode::search_engine(TWindow *pwnd, __filesize_t start,
 
 void DisMode::accept_actions()
 {
-    if(activeDisasm->init) activeDisasm->init(*this);
     disMaxCodeLen = activeDisasm->max_insn_len();
     if(disCodeBuffer) delete disCodeBuffer;
     disCodeBuffer = new char [disMaxCodeLen];

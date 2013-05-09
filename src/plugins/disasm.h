@@ -21,6 +21,7 @@
 
 #include "plugin.h"
 #include "colorset.h"
+#include "bconsole.h"
 #include "libbeye/twin.h"
 
 struct hIniProfile;
@@ -37,7 +38,8 @@ typedef struct tagDisasmRet
   unsigned char codelen;   /**< contains length of instruction when normal disassembling; length of field for binding on __DISF_GETTYPE */
 }DisasmRet;
 typedef unsigned char * MBuffer;
-    struct REGISTRY_DISASM;
+    struct Disassembler_Info;
+    class Disassembler;
     class DisMode : public Plugin {
 	public:
 	    /* New features: commentaries */
@@ -193,7 +195,7 @@ typedef unsigned char * MBuffer;
 	    int				full_asm_edit(TWindow * ewnd);
 
 	    unsigned			DefDisasmSel;
-	    const REGISTRY_DISASM*	activeDisasm;
+	    Disassembler*		activeDisasm;
 
 	    unsigned long		PrevPageSize,CurrPageSize,PrevStrLen,CurrStrLen;
 	    int				DisasmCurrLine;
@@ -209,7 +211,7 @@ typedef unsigned char * MBuffer;
 
 	    CodeGuider&			code_guider;
 	    bool			DisasmPrepareMode;
-	    std::vector<const REGISTRY_DISASM *> list;
+	    std::vector<const Disassembler_Info*> list;
     };
     inline DisMode::e_disarg operator~(DisMode::e_disarg a) { return static_cast<DisMode::e_disarg>(~static_cast<unsigned>(a)); }
     inline DisMode::e_disarg operator|(DisMode::e_disarg a, DisMode::e_disarg b) { return static_cast<DisMode::e_disarg>(static_cast<unsigned>(a)|static_cast<unsigned>(b)); }
@@ -228,85 +230,88 @@ typedef unsigned char * MBuffer;
     inline DisMode::e_disaddr operator^=(DisMode::e_disaddr& a, DisMode::e_disaddr b) { return (a=static_cast<DisMode::e_disaddr>(static_cast<unsigned>(a)^static_cast<unsigned>(b))); }
 
 /** List of CPU platform. */
-enum {
-    DISASM_DATA		=0,  /**< indicates data disassembler */
-    DISASM_CPU_IX86	=1,  /**< indicates Intel-x86 disassembler */
-    DISASM_CPU_AVR	=2,  /**< indicates Atmel-AVR disassembler */
-    DISASM_JAVA		=3,  /**< indicates Java disassembler */
-    DISASM_CPU_ARM	=4,  /**< indicates ARM disassembler */
-    DISASM_CPU_PPC	=5,  /**< indicates PowerPC disassembler */
+    enum {
+	DISASM_DATA	=0,  /**< indicates data disassembler */
+	DISASM_CPU_IX86	=1,  /**< indicates Intel-x86 disassembler */
+	DISASM_CPU_AVR	=2,  /**< indicates Atmel-AVR disassembler */
+	DISASM_JAVA	=3,  /**< indicates Java disassembler */
+	DISASM_CPU_ARM	=4,  /**< indicates ARM disassembler */
+	DISASM_CPU_PPC	=5,  /**< indicates PowerPC disassembler */
 			    /* ... here may placed other constants!!! ... */
-    DISASM_CPU_IA64	=6,  /**< indicates Itanium disassembler */
-    DISASM_CPU_ALPHA	=7,  /**< indicates DEC Alpha disassembler */
-    DISASM_CPU_MIPS	=8,  /**< indicates MIPS disassembler */
-    DISASM_CPU_SPARC	=9,  /**< indicates SUN Sparc disassembler */
-    DISASM_CPU_SH	=10, /**< indicates Hitachi SH disassembler */
-    DISASM_CPU_CRAY	=11, /**< indicates Cray disassembler */
+	DISASM_CPU_IA64	=6,  /**< indicates Itanium disassembler */
+	DISASM_CPU_ALPHA=7,  /**< indicates DEC Alpha disassembler */
+	DISASM_CPU_MIPS	=8,  /**< indicates MIPS disassembler */
+	DISASM_CPU_SPARC=9,  /**< indicates SUN Sparc disassembler */
+	DISASM_CPU_SH	=10, /**< indicates Hitachi SH disassembler */
+	DISASM_CPU_CRAY	=11, /**< indicates Cray disassembler */
 			    /* ... here may placed other constants!!! ... */
-    DISASM_DEFAULT	=0  /**< indicates unspecified disassembler: format default */
-};
+	DISASM_DEFAULT	=0  /**< indicates unspecified disassembler: format default */
+    };
 
-typedef bool (__FASTCALL__ *DisasmAction)();
-
-enum {
-    ASM_NOERR  =0,
-    ASM_SYNTAX =1
-};
+    enum {
+	ASM_NOERR  =0,
+	ASM_SYNTAX =1
+    };
 /*
    This struct is ordered as it documented in Athlon manual
    Publication # 22007 Rev: D
 */
-typedef struct tagAsmRet
-{
-  MBuffer       insn;
-  int           err_code;
-  unsigned char insn_len;
-}AsmRet;
+    struct AsmRet {
+	MBuffer		insn;
+	int		err_code;
+	unsigned char	insn_len;
+    };
 
-enum {
-    PREDICT_DEPTH =15 /**< means depth of prediction is 15 insns which have max_insn_len */
-};
-/** Flags of disassembler */
-enum {
-    __DISF_NORMAL   =0x0000, /**< Performs normal disassembling */
-    __DISF_GETTYPE  =0x0001, /**< Tells to disassembler that field pro_clone must to contain type of instruction */
-    __DISF_SIZEONLY =0x8000 /**< Performs computing size of insns */
-};
-/** Types of instruction (for __DISF_GETTYPE) in future must grow */
-enum {
-    __INSNT_ORDINAL =0x00000000L, /**< Any unspecified instruction */
-    __INSNT_RET     =0x00000001L, /**< Instruction of return class */
-    __INSNT_LEAVE   =0x00000002L, /**< Instruction of leave class: Example: pop reg1; pop reg2; mov esp, ebp; pop ebp; retx or similar */
-    __INSNT_JMPVVT  =0x00000003L, /**< Jump via virtual table */
-    __INSNT_JMPPIC  =0x00000004L, /**< Jump via PIC. Like: .i386: jmp name@GOT(ebx) */
-    __INSNT_JMPRIP  =0x00000005L  /**< Jump via RIP. Like: .i386: jmp [rip+name@GOT(rip)] */
-};
-typedef DisasmRet (__FASTCALL__ *DisasmFunc)(__filesize_t shift,
-					     MBuffer insn_buff,
-					     unsigned flags);
-typedef AsmRet    (__FASTCALL__ *AsmFunc)(const char *str);
+    enum {
+	PREDICT_DEPTH =15 /**< means depth of prediction is 15 insns which have max_insn_len */
+    };
+    /** Flags of disassembler */
+    enum {
+	__DISF_NORMAL	=0x0000, /**< Performs normal disassembling */
+	__DISF_GETTYPE	=0x0001, /**< Tells to disassembler that field pro_clone must to contain type of instruction */
+	__DISF_SIZEONLY	=0x8000 /**< Performs computing size of insns */
+    };
+    /** Types of instruction (for __DISF_GETTYPE) in future must grow */
+    enum {
+	__INSNT_ORDINAL	=0x00000000L, /**< Any unspecified instruction */
+	__INSNT_RET	=0x00000001L, /**< Instruction of return class */
+	__INSNT_LEAVE	=0x00000002L, /**< Instruction of leave class: Example: pop reg1; pop reg2; mov esp, ebp; pop ebp; retx or similar */
+	__INSNT_JMPVVT	=0x00000003L, /**< Jump via virtual table */
+	__INSNT_JMPPIC	=0x00000004L, /**< Jump via PIC. Like: .i386: jmp name@GOT(ebx) */
+	__INSNT_JMPRIP	=0x00000005L  /**< Jump via RIP. Like: .i386: jmp [rip+name@GOT(rip)] */
+    };
+    class Disassembler : public Opaque {
+	public:
+	    Disassembler(DisMode& parent) { UNUSED(parent); }
+	    virtual ~Disassembler() {}
+	
+	    virtual const char*	prompt(unsigned idx) const = 0;	/**< prompt on Ctrl-(F1,F3-F5) */
+	    virtual bool	action_F1() { return false; }	/**< actions on Ctrl-(F1,F3-F5) */
+	    virtual bool	action_F3() { return false; }	/**< actions on Ctrl-(F1,F3-F5) */
+	    virtual bool	action_F4() { return false; }	/**< actions on Ctrl-(F1,F3-F5) */
+	    virtual bool	action_F5() { return false; }	/**< actions on Ctrl-(F1,F3-F5) */
 
-struct REGISTRY_DISASM
-{
-  unsigned     type;		/**< DISASM_XXX constant */
-  const char * name;		/**< disassembler name */
-  const char * prompt[4];	/**< prompt on Ctrl-(F1,F3-F5) */
-  DisasmAction action[4];	/**< actions on Ctrl-(F1,F3-F5) */
-  DisasmFunc   disasm;		/**< main function of disasm */
-  AsmFunc      asm_f;		/**< assembler (vice versa of disasm) */
-  void         (__FASTCALL__ *ShowShortHelp)(); /**< displays short help */
-  int          (__FASTCALL__ *max_insn_len)(); /**< Max length of 1 disasm instruction */
-  ColorAttr    (__FASTCALL__ *GetInsnColor)(unsigned long clone); /**< returns color of instruction */
-  ColorAttr    (__FASTCALL__ *GetOpcodeColor)(unsigned long clone); /**< returns color of instruction */
-  ColorAttr    (__FASTCALL__ *altGetInsnColor)(unsigned long clone); /**< returns color of instruction in alternative mode */
-  ColorAttr    (__FASTCALL__ *altGetOpcodeColor)(unsigned long clone); /**< returns color of instruction in alternative mode */
-  int          (__FASTCALL__ *GetDefBitness)();               /**< returns currently used bitness */
-  char         (__FASTCALL__ *CloneShortName)(unsigned long clone); /**< returns short clone name of instruction */
-  void         (__FASTCALL__ *init)(DisMode& parent);     /**< initializing of plugin */
-  void         (__FASTCALL__ *term)();     /**< terminating of plugin */
-  void         (__FASTCALL__ *read_ini)(Ini_Profile& );  /**< reads settings of plugin from .ini file */
-  void         (__FASTCALL__ *save_ini)(Ini_Profile& );  /**< stores settings of plugin into .ini file */
-};
+	    virtual DisasmRet	disassembler(__filesize_t shift,MBuffer insn_buff,unsigned flags) = 0; /**< main function of disasm */
+	    virtual AsmRet	assembler(const char *str) { AsmRet ret = {NULL, ASM_SYNTAX, 0 }; UNUSED(str); ErrMessageBox("Sorry, no assembler available",""); return ret; }
+
+	    virtual void	show_short_help() const = 0; /**< displays short help */
+	    virtual int		max_insn_len() = 0; /**< Max length of 1 disasm instruction */
+	    virtual ColorAttr	get_insn_color(unsigned long clone) { UNUSED(clone); return browser_cset.main; } /**< returns color of instruction */
+	    virtual ColorAttr	get_opcode_color(unsigned long clone) { UNUSED(clone); return disasm_cset.opcodes; } /**< returns color of instruction */
+	    virtual ColorAttr	get_alt_insn_color(unsigned long clone) { return get_insn_color(clone); } /**< returns color of instruction */
+	    virtual ColorAttr	get_alt_opcode_color(unsigned long clone) { return get_opcode_color(clone); } /**< returns color of instruction */
+
+	    virtual int		get_bitness() = 0;  /**< returns currently used bitness */
+	    virtual char	clone_short_name(unsigned long clone) = 0; /**< returns short clone name of instruction */
+	    virtual void	read_ini(Ini_Profile&) {}  /**< reads settings of plugin from .ini file */
+	    virtual void	save_ini(Ini_Profile&) {}  /**< stores settings of plugin into .ini file */
+    };
+
+    struct Disassembler_Info {
+	unsigned	type;	/**< DISASM_XXX constant */
+	const char*	name;	/**< disassembler name */
+	Disassembler* (*query_interface)(DisMode& parent);
+    };
 
 /** Common disassembler utility */
     char * __FASTCALL__ TabSpace(char * str,unsigned nSpace);
