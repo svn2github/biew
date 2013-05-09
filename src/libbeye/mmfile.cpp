@@ -64,7 +64,7 @@ __filesize_t MMFile::tell() const
 
 bool MMFile::eof() const { return chk_eof(); }
 
-uint8_t MMFile::read(const data_type_qualifier_byte_t&)
+uint8_t MMFile::read(const data_type_qualifier__byte_t&)
 {
     uint8_t rval;
     rval = ((uint8_t*)addr)[filepos++];
@@ -72,7 +72,7 @@ uint8_t MMFile::read(const data_type_qualifier_byte_t&)
     return rval;
 }
 
-uint16_t MMFile::read(const data_type_qualifier_word_t&)
+uint16_t MMFile::read(const data_type_qualifier__word_t&)
 {
     uint16_t rval=-1;
     read(&rval,sizeof(uint16_t));

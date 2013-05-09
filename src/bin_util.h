@@ -19,7 +19,7 @@
 #define __BIN_UTIL__H
 
 #include "libbeye/bswap.h"
-#include "libbeye/bbio.h"
+#include "libbeye/bstream.h"
 #include "beyeutil.h"
 
 namespace	usr {

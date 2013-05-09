@@ -1,5 +1,5 @@
-#ifndef __BFILE_HPP_INCLUDED
-#define __BFILE_HPP_INCLUDED 1
+#ifndef __BSTREAM_HPP_INCLUDED
+#define __BSTREAM_HPP_INCLUDED 1
 #include "libbeye/libbeye.h"
 
 #include <fcntl.h>
@@ -79,14 +79,14 @@ namespace	usr {
 		     * @note                  Logical file position is
 		     *                        incremented after operation.
 		    **/
-	    virtual uint8_t		read(const data_type_qualifier_byte_t&);
+	    virtual uint8_t		read(const data_type_qualifier__byte_t&);
 
 		   /** Reads two bytes from stream.
 		     * @return                Readed word
 		     * @note                  Logical file position is
 		     *                        incremented after operation.
 		    **/
-	    virtual uint16_t		read(const data_type_qualifier_word_t&);
+	    virtual uint16_t		read(const data_type_qualifier__word_t&);
 
 		   /** Reads four bytes from stream.
 		     * @return                Readed double word

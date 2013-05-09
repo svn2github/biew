@@ -293,12 +293,12 @@ __filesize_t BBio_File::tell() const
     return filepos;
 }
 
-uint8_t BBio_File::read(const data_type_qualifier_byte_t&)
+uint8_t BBio_File::read(const data_type_qualifier__byte_t&)
 {
     return __getc();
 }
 
-uint16_t BBio_File::read(const data_type_qualifier_word_t&)
+uint16_t BBio_File::read(const data_type_qualifier__word_t&)
 {
     uint16_t ret;
     __getbuff(reinterpret_cast<char*>(&ret),sizeof(uint16_t));

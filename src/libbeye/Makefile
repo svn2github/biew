@@ -6,7 +6,7 @@ LDXXFLAGS = $(HOST_LDFLAGS)
 LIBNAME = $(LIBPREFIX)beye.a
 
 SRCS= bbio.cpp \
-      bfile.cpp \
+      bstream.cpp \
       file_ini.cpp \
       libbeye.cpp \
       mmfile.cpp \

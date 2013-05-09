@@ -78,8 +78,8 @@ namespace	usr {
 #define FILEOFF_MAX std::numeric_limits<int64_t>::max()
 #define FILESIZE_MAX std::numeric_limits<uint64_t>::max()
 
-enum data_type_qualifier_byte_t{ type_byte=0 };
-enum data_type_qualifier_word_t{ type_word=0 };
+enum data_type_qualifier__byte_t{ type_byte=0 };
+enum data_type_qualifier__word_t{ type_word=0 };
 enum data_type_qualifier_dword_t{ type_dword=0 };
 enum data_type_qualifier_qword_t{ type_qword=0 };
 

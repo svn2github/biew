@@ -19,7 +19,7 @@
 #include <limits>
 #include <string>
 
-#include "libbeye/bbio.h"
+#include "libbeye/bstream.h"
 #include "beye.h"
 
 namespace	usr {

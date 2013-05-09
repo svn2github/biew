@@ -18,7 +18,7 @@
 #define __LX_LE_INC
 
 #include "beyeutil.h"
-#include "libbeye/bbio.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
 #ifdef __HAVE_PRAGMA_PACK__

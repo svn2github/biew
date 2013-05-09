@@ -9,7 +9,7 @@ using namespace	usr;
 #include <string.h>
 #include <sys/stat.h>
 
-#include "bfile.h"
+#include "bstream.h"
 
 namespace	usr {
 binary_stream::binary_stream()
@@ -55,14 +55,14 @@ __filesize_t binary_stream::_tell() const
     return ::lseek(_handle,0L,SEEK_CUR);
 }
 
-uint8_t binary_stream::read(const data_type_qualifier_byte_t&)
+uint8_t binary_stream::read(const data_type_qualifier__byte_t&)
 {
     uint8_t ret;
     if(::read(_handle,&ret,sizeof(uint8_t))!=sizeof(uint8_t)) ret=-1;
     return ret;
 }
 
-uint16_t binary_stream::read(const data_type_qualifier_word_t&)
+uint16_t binary_stream::read(const data_type_qualifier__word_t&)
 {
     uint16_t ret;
     if(::read(_handle,&ret,sizeof(uint16_t))!=sizeof(uint16_t)) ret=-1;

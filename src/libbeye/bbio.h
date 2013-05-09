@@ -19,7 +19,7 @@
 #include <string>
 
 #include "libbeye/libbeye.h"
-#include "bfile.h"
+#include "bstream.h"
 /******************************************************************\
 *  Buffered binary file streams input/output section               *
 *  Helpful for read/write small size objects from/to file          *
@@ -59,8 +59,8 @@ namespace	usr {
 	    virtual bool		eof() const;
 	    virtual __filesize_t	flength() const;
 	    virtual bool		flush();
-	    virtual uint8_t		read(const data_type_qualifier_byte_t&);
-	    virtual uint16_t		read(const data_type_qualifier_word_t&);
+	    virtual uint8_t		read(const data_type_qualifier__byte_t&);
+	    virtual uint16_t		read(const data_type_qualifier__word_t&);
 	    virtual uint32_t		read(const data_type_qualifier_dword_t&);
 	    virtual uint64_t		read(const data_type_qualifier_qword_t&);
 	    virtual bool		read(any_t* buffer,unsigned cbBuffer);

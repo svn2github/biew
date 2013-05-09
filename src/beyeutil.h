@@ -22,7 +22,7 @@
 
 #include "libbeye/libbeye.h"
 #include "libbeye/twin.h"
-#include "libbeye/bbio.h"
+#include "libbeye/bstream.h"
 #include "libbeye/file_ini.h"
 
 namespace	usr {

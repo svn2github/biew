@@ -30,7 +30,7 @@ using namespace	usr;
 #include <ctype.h>
 #include <limits.h>
 
-#include "libbeye/bbio.h"
+#include "libbeye/bstream.h"
 #include "libbeye/file_ini.h"
 
 enum {
