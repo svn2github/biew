@@ -1384,6 +1384,9 @@ enum {
 	uint64_t	st_size;	/**< Associated symbol size */
     };
 
+    inline uint16_t ELF_WORD(const uint16_t* cval,bool is_msbf) { return FMT_WORD(cval,is_msbf); }
+    inline uint32_t ELF_DWORD(const uint32_t* cval,bool is_msbf) { return FMT_DWORD(cval,is_msbf); }
+    inline uint64_t ELF_QWORD(const uint64_t* cval,bool is_msbf) { return FMT_QWORD(cval,is_msbf); }
     template<typename foff_t>
     class Elf_xx {
 	public:
@@ -1404,19 +1407,19 @@ enum {
 		foff_t   tmp;
 		fs.seek(0,binary_stream::Seek_Set);
 		fs.read(&rc.e_ident,16);
-		fs.read(&tmp16,2); rc.e_type=FMT_WORD(&tmp16,is_msbf);
-		fs.read(&tmp16,2); rc.e_machine=FMT_WORD(&tmp16,is_msbf);
-		fs.read(&tmp32,4); rc.e_version=FMT_DWORD(&tmp32,is_msbf);
-		fs.read(&tmp,sizeof(foff_t)); rc.e_entry=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
-		fs.read(&tmp,sizeof(foff_t)); rc.e_phoff=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
-		fs.read(&tmp,sizeof(foff_t)); rc.e_shoff=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
-		fs.read(&tmp32,4); rc.e_flags=FMT_DWORD(&tmp32,is_msbf);
-		fs.read(&tmp16,2); rc.e_ehsize=FMT_WORD(&tmp16,is_msbf);
-		fs.read(&tmp16,2); rc.e_phentsize=FMT_WORD(&tmp16,is_msbf);
-		fs.read(&tmp16,2); rc.e_phnum=FMT_WORD(&tmp16,is_msbf);
-		fs.read(&tmp16,2); rc.e_shentsize=FMT_WORD(&tmp16,is_msbf);
-		fs.read(&tmp16,2); rc.e_shnum=FMT_WORD(&tmp16,is_msbf);
-		fs.read(&tmp16,2); rc.e_shstrndx=FMT_WORD(&tmp16,is_msbf);
+		fs.read(&tmp16,2); rc.e_type=ELF_WORD(&tmp16,is_msbf);
+		fs.read(&tmp16,2); rc.e_machine=ELF_WORD(&tmp16,is_msbf);
+		fs.read(&tmp32,4); rc.e_version=ELF_DWORD(&tmp32,is_msbf);
+		fs.read(&tmp,sizeof(foff_t)); rc.e_entry=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
+		fs.read(&tmp,sizeof(foff_t)); rc.e_phoff=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
+		fs.read(&tmp,sizeof(foff_t)); rc.e_shoff=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
+		fs.read(&tmp32,4); rc.e_flags=ELF_DWORD(&tmp32,is_msbf);
+		fs.read(&tmp16,2); rc.e_ehsize=ELF_WORD(&tmp16,is_msbf);
+		fs.read(&tmp16,2); rc.e_phentsize=ELF_WORD(&tmp16,is_msbf);
+		fs.read(&tmp16,2); rc.e_phnum=ELF_WORD(&tmp16,is_msbf);
+		fs.read(&tmp16,2); rc.e_shentsize=ELF_WORD(&tmp16,is_msbf);
+		fs.read(&tmp16,2); rc.e_shnum=ELF_WORD(&tmp16,is_msbf);
+		fs.read(&tmp16,2); rc.e_shstrndx=ELF_WORD(&tmp16,is_msbf);
 		return rc;
 	    }
 	    Elf_Shdr		read_shdr(binary_stream& _fs,__filesize_t off) const {
@@ -1424,16 +1427,16 @@ enum {
 		uint32_t tmp32;
 		foff_t   tmp;
 		_fs.seek(off,binary_stream::Seek_Set);
-		_fs.read(&tmp32,4); rc.sh_name=FMT_DWORD(&tmp32,is_msbf);
-		_fs.read(&tmp32,4); rc.sh_type=FMT_DWORD(&tmp32,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.sh_flags=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.sh_addr=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.sh_offset=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.sh_size=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
-		_fs.read(&tmp32,4); rc.sh_link=FMT_DWORD(&tmp32,is_msbf);
-		_fs.read(&tmp32,4); rc.sh_info=FMT_DWORD(&tmp32,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.sh_addralign=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.sh_entsize=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		_fs.read(&tmp32,4); rc.sh_name=ELF_DWORD(&tmp32,is_msbf);
+		_fs.read(&tmp32,4); rc.sh_type=ELF_DWORD(&tmp32,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.sh_flags=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.sh_addr=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.sh_offset=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.sh_size=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
+		_fs.read(&tmp32,4); rc.sh_link=ELF_DWORD(&tmp32,is_msbf);
+		_fs.read(&tmp32,4); rc.sh_info=ELF_DWORD(&tmp32,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.sh_addralign=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.sh_entsize=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
 		return rc;
 	    }
 	    Elf_Phdr		read_phdr(binary_stream& _fs,__filesize_t off) const {
@@ -1441,39 +1444,39 @@ enum {
 		uint32_t tmp32;
 		foff_t   tmp;
 		_fs.seek(off,binary_stream::Seek_Set);
-		_fs.read(&tmp32,4); rc.p_type=FMT_DWORD(&tmp32,is_msbf);
-		_fs.read(&tmp32,4); rc.p_flags=FMT_DWORD(&tmp32,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.p_offset=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.p_vaddr=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.p_paddr=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.p_filesz=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.p_memsz=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.p_align=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		_fs.read(&tmp32,4); rc.p_type=ELF_DWORD(&tmp32,is_msbf);
+		_fs.read(&tmp32,4); rc.p_flags=ELF_DWORD(&tmp32,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.p_offset=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.p_vaddr=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.p_paddr=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.p_filesz=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.p_memsz=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.p_align=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
 		return rc;
 	    }
 	    Elf_Dyn		read_dyn(binary_stream& _fs,__filesize_t off) const {
 		Elf_Dyn rc;
 		foff_t   tmp;
 		_fs.seek(off,binary_stream::Seek_Set);
-		_fs.read(&tmp,sizeof(foff_t)); rc.d_tag=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.d_un.d_val=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.d_tag=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.d_un.d_val=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
 		return rc;
 	    }
 	    Elf_Rel		read_rel(binary_stream& _fs,__filesize_t off) const {
 		Elf_Rel rc;
 		foff_t   tmp;
 		_fs.seek(off,binary_stream::Seek_Set);
-		_fs.read(&tmp,sizeof(foff_t)); rc.r_offset=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.r_info=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.r_offset=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.r_info=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
 		return rc;
 	    }
 	    Elf_Rela		read_rela(binary_stream& _fs,__filesize_t off) const {
 		Elf_Rela rc;
 		foff_t   tmp;
 		_fs.seek(off,binary_stream::Seek_Set);
-		_fs.read(&tmp,sizeof(foff_t)); rc.r_offset=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.r_info=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.r_addend=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.r_offset=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.r_info=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.r_addend=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
 		return rc;
 	    }
 	    bool		is_msbf,is_64bit;
@@ -1525,12 +1528,12 @@ enum {
 		uint32_t tmp32;
 		uint16_t tmp16;
 		fs.seek(off,binary_stream::Seek_Set);
-		tmp32=fs.read(type_dword); rc.st_name=FMT_DWORD(&tmp32,elf.is_msbf);
-		tmp32=fs.read(type_dword); rc.st_value=FMT_DWORD(&tmp32,elf.is_msbf);
-		tmp32=fs.read(type_dword); rc.st_size=FMT_DWORD(&tmp32,elf.is_msbf);
+		tmp32=fs.read(type_dword); rc.st_name=ELF_DWORD(&tmp32,elf.is_msbf);
+		tmp32=fs.read(type_dword); rc.st_value=ELF_DWORD(&tmp32,elf.is_msbf);
+		tmp32=fs.read(type_dword); rc.st_size=ELF_DWORD(&tmp32,elf.is_msbf);
 		rc.st_info=fs.read(type_byte);
 		rc.st_other=fs.read(type_byte);
-		tmp16=fs.read(type_word); rc.st_shndx=FMT_WORD(&tmp16,elf.is_msbf);
+		tmp16=fs.read(type_word); rc.st_shndx=ELF_WORD(&tmp16,elf.is_msbf);
 		return rc;
 	    }
 	    virtual size_t			sym_size() const { return sizeof(Elf386_External_Sym); }
@@ -1563,12 +1566,12 @@ enum {
 		uint16_t tmp16;
 		uint64_t tmp64;
 		fs.seek(off,binary_stream::Seek_Set);
-		tmp32=fs.read(type_dword); rc.st_name=FMT_DWORD(&tmp32,elf.is_msbf);
+		tmp32=fs.read(type_dword); rc.st_name=ELF_DWORD(&tmp32,elf.is_msbf);
 		rc.st_info=fs.read(type_byte);
 		rc.st_other=fs.read(type_byte);
-		tmp16=fs.read(type_word); rc.st_shndx=FMT_WORD(&tmp16,elf.is_msbf);
-		tmp64=fs.read(type_qword); rc.st_value=FMT_QWORD(&tmp64,elf.is_msbf);
-		tmp64=fs.read(type_qword); rc.st_size=FMT_QWORD(&tmp64,elf.is_msbf);
+		tmp16=fs.read(type_word); rc.st_shndx=ELF_WORD(&tmp16,elf.is_msbf);
+		tmp64=fs.read(type_qword); rc.st_value=ELF_QWORD(&tmp64,elf.is_msbf);
+		tmp64=fs.read(type_qword); rc.st_size=ELF_QWORD(&tmp64,elf.is_msbf);
 		return rc;
 	    }
 	    virtual size_t			sym_size() const { return sizeof(Elf64_External_Sym); }

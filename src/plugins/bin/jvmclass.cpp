@@ -90,7 +90,7 @@ static linearArray *PubNames = NULL;
 
 inline uint16_t JVM_WORD(const uint16_t* cval,bool is_msbf) { return FMT_WORD(cval,is_msbf); }
 inline uint32_t JVM_DWORD(const uint32_t* cval,bool is_msbf) { return FMT_DWORD(cval,is_msbf); }
-inline uint64_t JVM_QWORD(const uint64_t* cval,bool is_msbf) { return FMT_DWORD(cval,is_msbf); }
+inline uint64_t JVM_QWORD(const uint64_t* cval,bool is_msbf) { return FMT_QWORD(cval,is_msbf); }
 
 
 static bool  __FASTCALL__ jvm_check_fmt()
