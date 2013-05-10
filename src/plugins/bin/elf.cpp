@@ -788,32 +788,32 @@ static bool __FASTCALL__ __elfReadSymTab(binary_stream& handle,memArray *obj,uns
   {
    __filesize_t fp;
    char stmp[80];
-   ElfXX_External_Sym sym;
+   Elf_Sym sym;
    if(IsKbdTerminate() || handle.eof()) break;
    fp = handle.tell();
-   handle.read(&sym,sizeof(sym));
+   sym=Elf->read_sym(handle,fp);
    handle.seek(fp+__elfSymEntSize,binary_stream::Seek_Set);
-   elf386_readnametableex(ELF_WORD(ELF_SYM(sym,st_name)),text,tlen);
+   elf386_readnametableex(sym.st_name,text,tlen); // !!! HACK
    text[tlen-1] = 0;
    if(is_64bit)
    sprintf(stmp,"%-29s %016llX %08lX %04hX %s %s %s"
 	       ,text
-	       ,(unsigned long long)ELF_XWORD(ELF_SYM(sym,st_value))
-	       ,(unsigned)ELF_XWORD(ELF_SYM(sym,st_size))
-	       ,ELF_HALF(ELF_SYM(sym,st_other))
-	       ,elf_SymTabType(ELF_SYM(sym,st_info[0]))
-	       ,elf_SymTabBind(ELF_SYM(sym,st_info[0]))
-	       ,elf_SymTabShNdx(ELF_HALF(ELF_SYM(sym,st_shndx)))
+	       ,(unsigned long long)sym.st_value
+	       ,(unsigned)sym.st_size
+	       ,sym.st_other
+	       ,elf_SymTabType(sym.st_info)
+	       ,elf_SymTabBind(sym.st_info)
+	       ,elf_SymTabShNdx(sym.st_shndx)
 	       );
    else
    sprintf(stmp,"%-37s %08lX %08lX %04hX %s %s %s"
 	       ,text
-	       ,(unsigned)ELF_XWORD(ELF_SYM(sym,st_value))
-	       ,(unsigned)ELF_XWORD(ELF_SYM(sym,st_size))
-	       ,ELF_HALF(ELF_SYM(sym,st_other))
-	       ,elf_SymTabType(ELF_SYM(sym,st_info[0]))
-	       ,elf_SymTabBind(ELF_SYM(sym,st_info[0]))
-	       ,elf_SymTabShNdx(ELF_HALF(ELF_SYM(sym,st_shndx)))
+	       ,(unsigned)sym.st_value
+	       ,(unsigned)sym.st_size
+	       ,sym.st_other
+	       ,elf_SymTabType(sym.st_info)
+	       ,elf_SymTabBind(sym.st_info)
+	       ,elf_SymTabShNdx(sym.st_shndx)
 	       );
    if(!ma_AddString(obj,stmp,true)) break;
   }
@@ -892,15 +892,15 @@ static __filesize_t __FASTCALL__ ShowSecHdrElf()
 
 static __filesize_t __calcSymEntry(binary_stream& handle,__filesize_t num,bool display_msg)
 {
-   ElfXX_External_Sym it;
+   Elf_Sym it;
    Elf_Shdr sec;
    __filesize_t ffpos,fpos = 0L;
    ffpos = handle.tell();
-   handle.seek(__elfSymPtr+__elfSymEntSize*num,binary_stream::Seek_Set);
-   handle.read(&it,sizeof(it));
-   sec=Elf->read_shdr(handle,Elf->ehdr().e_shoff+Elf->ehdr().e_shentsize*ELF_HALF(ELF_SYM(it,st_shndx)));
+   it=Elf->read_sym(handle,__elfSymPtr+__elfSymEntSize*num);
+   // HACK
+   sec=Elf->read_shdr(handle,Elf->ehdr().e_shoff+Elf->ehdr().e_shentsize*it.st_shndx);
    handle.seek(ffpos,binary_stream::Seek_Set);
-   if(ELF_IS_SECTION_PHYSICAL(ELF_HALF(ELF_SYM(it,st_shndx))))
+   if(ELF_IS_SECTION_PHYSICAL(it.st_shndx))
 /*
    In relocatable files, st_value holds alignment constraints for a
    symbol whose section index is SHN_COMMON.
@@ -916,8 +916,8 @@ static __filesize_t __calcSymEntry(binary_stream& handle,__filesize_t num,bool d
    is irrelevant.
 */
      fpos = Elf->ehdr().e_type == ET_REL ?
-	    sec.sh_offset + ELF_XWORD(ELF_SYM(it,st_value)):
-	    elfVA2PA(ELF_XWORD(ELF_SYM(it,st_value)));
+	    sec.sh_offset + it.st_value:
+	    elfVA2PA(it.st_value);
    else
      if(display_msg) ErrMessageBox(NO_ENTRY,BAD_ENTRY);
    return fpos;
@@ -1395,6 +1395,7 @@ static Elf_Reloc  *  __FASTCALL__ __found_ElfRel(__filesize_t offset)
   return (Elf_Reloc*)la_Find(CurrElfChain,&key,compare_elf_reloc);
 }
 
+/* UNHACKED !!! :( */
 static bool  __FASTCALL__ __readRelocName(Elf_Reloc  *erl, char *buff, size_t cbBuff)
 {
   __filesize_t r_sym;
@@ -2192,18 +2193,18 @@ static void __FASTCALL__ elf_ReadPubNameList(binary_stream& handle,void (__FASTC
     handle.seek(__elfSymPtr,binary_stream::Seek_Set);
     for(i = 0;i < __elfNumSymTab;i++)
     {
-      ElfXX_External_Sym sym;
+      Elf_Sym sym;
       fp = handle.tell();
-      handle.read(&sym,sizeof(sym));
+      sym=Elf->read_sym(handle,fp);
       if(handle.eof() || IsKbdTerminate()) break;
       handle.seek(fp+__elfSymEntSize,binary_stream::Seek_Set);
-      if(ELF_IS_SECTION_PHYSICAL(ELF_HALF(ELF_SYM(sym,st_shndx))) &&
-	 ELF_ST_TYPE(ELF_SYM(sym,st_info[0])) != STT_SECTION)
+      if(ELF_IS_SECTION_PHYSICAL(sym.st_shndx) &&
+	 ELF_ST_TYPE(sym.st_info) != STT_SECTION)
       {
 	epn.pa = __calcSymEntry(handle,i,false);
-	epn.nameoff = ELF_WORD(ELF_SYM(sym,st_name));
+	epn.nameoff = sym.st_name;
 	epn.addinfo = __elfSymShTbl;
-	epn.attr = ELF_SYM(sym,st_info[0]);
+	epn.attr = sym.st_info;
 	if(!la_AddData(PubNames,&epn,MemOutBox)) break;
       }
     }
