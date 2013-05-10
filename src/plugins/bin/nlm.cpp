@@ -28,7 +28,7 @@ using namespace	usr;
 #include "colorset.h"
 #include "bin_util.h"
 #include "plugins/disasm.h"
-#include "plugins/bin/nlm386.h"
+#include "plugins/bin/nlm.h"
 #include "codeguid.h"
 #include "bmfile.h"
 #include "bconsole.h"

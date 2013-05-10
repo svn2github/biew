@@ -32,7 +32,6 @@ namespace	usr {
     extern bool EditMode;
 
     extern __filesize_t lastbyte;
-    extern char * ini_name;
 
     int   __FASTCALL__ Gebool(bool _bool);
     any_t**            FAllocPtrPtr(unsigned num);

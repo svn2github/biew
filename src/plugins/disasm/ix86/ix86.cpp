@@ -6384,7 +6384,7 @@ AsmRet ix86_Disassembler::assembler(const char *code)
   FILE *asmf, *bin, *err;
   int i,c;
   char commandbuffer[FILENAME_MAX+1];
-  char *home=NULL;
+  std::string home;
 
   //Check assembler availability
   memset(&result,0,sizeof(AsmRet));
@@ -6394,7 +6394,7 @@ AsmRet ix86_Disassembler::assembler(const char *code)
   home = beye_context().system().get_home_dir("beye");
 
   //File cleanup
-  sprintf(commandbuffer, "%stmp0", home);
+  sprintf(commandbuffer, "%stmp0", home.c_str());
   for (i=0; i<3; i++)
   {
     remove(commandbuffer);
@@ -6402,7 +6402,7 @@ AsmRet ix86_Disassembler::assembler(const char *code)
   }
 
   //Generate NASM input file
-  sprintf(commandbuffer, "%stmp0", home);
+  sprintf(commandbuffer, "%stmp0", home.c_str());
   asmf = fopen(commandbuffer, "w");
   if (!asmf) goto tmperror;
   if (get_bitness() == DAB_USE16)
@@ -6421,7 +6421,7 @@ AsmRet ix86_Disassembler::assembler(const char *code)
   fclose(asmf);
 
   //Build command line
-  i=sprintf(commandbuffer, assemblers[active_assembler].run_command, home, home, home);
+  i=sprintf(commandbuffer, assemblers[active_assembler].run_command, home.c_str(), home.c_str(), home.c_str());
   if ((i >= FILENAME_MAX) || (i < 0)) goto commandtoolongerror;
 
   //Run external assembler
@@ -6437,7 +6437,7 @@ AsmRet ix86_Disassembler::assembler(const char *code)
   while ((errno == EAGAIN) && (i < 10));
 
   //Read result
-  sprintf(commandbuffer, "%stmp1", home);
+  sprintf(commandbuffer, "%stmp1", home.c_str());
   bin = fopen(commandbuffer, "r");
   if (!bin) goto asmerror;
   i=0;
@@ -6457,7 +6457,7 @@ AsmRet ix86_Disassembler::assembler(const char *code)
 
 asmerror:
   //Read error message
-  sprintf(commandbuffer, "%stmp2", home);
+  sprintf(commandbuffer, "%stmp2", home.c_str());
   err = fopen(commandbuffer, "r");
   if (!err) goto tmperror;
   i=0;
@@ -6508,7 +6508,7 @@ commandtoolongerror:
 doneerror:
 done:
   //Final cleanup
-  sprintf(commandbuffer, "%stmp0", home);
+  sprintf(commandbuffer, "%stmp0", home.c_str());
   for (i=0; i<3; i++)
   {
     remove(commandbuffer);

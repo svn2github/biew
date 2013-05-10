@@ -104,7 +104,7 @@ namespace	usr {
 	    std::vector<std::string> ListFile;
 	    std::string		LastOpenFileName;
 	    char*		_shortname;
-	    const char*		ini_name;
+	    std::string		ini_name;
 	    bool		UseIniFile;
 	    size_t		LastMode;
 	    unsigned int	beye_mode;

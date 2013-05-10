@@ -33,7 +33,7 @@ using namespace	usr;
 #include "bmfile.h"
 #include "beyeutil.h"
 #include "beyehelp.h"
-#include "plugins/bin/coff386.h"
+#include "plugins/bin/coff.h"
 #include "plugins/disasm.h"
 #include "libbeye/kbd_code.h"
 

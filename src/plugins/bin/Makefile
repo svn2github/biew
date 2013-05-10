@@ -7,9 +7,9 @@ CXXSRCS =\
     avi.cpp\
     bin.cpp\
     bmp.cpp\
-    coff386.cpp\
+    coff.cpp\
     dos_sys.cpp\
-    elf386.cpp\
+    elf.cpp\
     jpeg.cpp\
     jvmclass.cpp\
     le.cpp\
@@ -20,7 +20,7 @@ CXXSRCS =\
     mpeg.cpp\
     mz.cpp\
     ne.cpp\
-    nlm386.cpp\
+    nlm.cpp\
     opharlap.cpp\
     pe.cpp\
     pharlap.cpp\

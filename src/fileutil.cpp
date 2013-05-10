@@ -190,8 +190,8 @@ static bool InsDelBlock()
  return ret;
 }
 
-static char ff_fname[FILENAME_MAX+1] = "beye.$$$";
-static char xlat_fname[FILENAME_MAX+1];
+static std::string ff_fname="beye.$$$";
+static std::string xlat_fname;
 static __filesize_t ff_startpos = 0L,ff_len = 0L;
 
 static void  __FASTCALL__ printObject(FILE *fout,unsigned obj_num,char *oname,int oclass,int obitness,__filesize_t size)
@@ -271,11 +271,9 @@ static void  __FASTCALL__ make_addr_column(char *buff,__filesize_t offset)
 static void __make_dump_name(const char *end)
 {
  /* construct name */
- char *p;
- strcpy(ff_fname,BMName().c_str());
- p = strrchr(ff_fname,'.');
- if(!p) p = &ff_fname[strlen(ff_fname)];
- strcpy(p,end);
+ ff_fname=BMName();
+ ff_fname=ff_fname.substr(0,ff_fname.rfind('.'));
+ ff_fname+=end;
 }
 
 static bool FStore()
@@ -294,7 +292,10 @@ static bool FStore()
     ff_startpos = BMGetCurrFilePos();
     if(!ff_len) ff_len = BMGetFLength() - ff_startpos;
     __make_dump_name(".$$$");
-    if(GetFStoreDlg(" Save information to file ",ff_fname,&flags,&ff_startpos,&ff_len,FILE_PRMT)) {
+    char ffname[4096];
+    strcpy(ffname,ff_fname.c_str());
+    if(GetFStoreDlg(" Save information to file ",ffname,&flags,&ff_startpos,&ff_len,FILE_PRMT)) {
+	ff_fname=ffname;
 	endpos = ff_startpos + ff_len;
 	endpos = endpos > BMGetFLength() ? BMGetFLength() : endpos;
 	if(endpos > ff_startpos) {
@@ -384,7 +385,7 @@ static bool FStore()
 		}
 		tmp_buff2 = new char [0x1000];
 		file_cache = new char [BBIO_SMALL_CACHE_SIZE];
-		fout = fopen(ff_fname,"wt");
+		fout = fopen(ff_fname.c_str(),"wt");
 		if(fout == NULL) {
 		    errnoMessageBox(WRITE_FAIL,"",errno);
 		    delete codebuff;
@@ -616,8 +617,11 @@ static bool FRestore()
  ret = false;
  flags = FSDLG_NOMODES;
  __make_dump_name(".$$$");
- if(GetFStoreDlg(" Restore information from file ",ff_fname,&flags,&ff_startpos,&ff_len,FILE_PRMT))
+ char ffname[4096];
+ strcpy(ffname,ff_fname.c_str());
+ if(GetFStoreDlg(" Restore information from file ",ffname,&flags,&ff_startpos,&ff_len,FILE_PRMT))
  {
+   ff_fname=ffname;
    __filesize_t flen,lval;
    binary_stream* h = new(zeromem) binary_stream;
    binary_stream* bHandle;
@@ -934,13 +938,12 @@ static bool XLatBlock()
  ff_startpos = BMGetCurrFilePos();
  if(!ff_len) ff_len = BMGetFLength() - ff_startpos;
  flags = FSDLG_NOMODES;
- if(!xlat_fname[0])
+ if(xlat_fname.empty()) xlat_fname=beye_context().system().get_rc_dir("beye")+"xlt";
+ char ffname[4096];
+ strcpy(ffname,xlat_fname.c_str());
+ if(GetFStoreDlg(" Table Look-up Translation ",ffname,&flags,&ff_startpos,&ff_len,XLAT_PRMT))
  {
-   strcpy(xlat_fname,beye_context().system().get_rc_dir("beye"));
-   strcat(xlat_fname,"xlt");
- }
- if(GetFStoreDlg(" Table Look-up Translation ",xlat_fname,&flags,&ff_startpos,&ff_len,XLAT_PRMT))
- {
+   xlat_fname=ffname;
    __filesize_t flen,lval;
    endpos = ff_startpos + ff_len;
    flen = BMGetFLength();

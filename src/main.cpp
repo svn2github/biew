@@ -289,8 +289,10 @@ Ini_Profile& BeyeContext::load_ini_info()
   char buf[20];
   std::string tmp,stmp;
   Ini_Profile& ini = *new(zeromem) Ini_Profile;
-  ini_name = getenv("BEYE_INI");
-  if(!ini_name) ini_name = _system->get_ini_name("beye");
+  const char* iname;
+  iname = ::getenv("BEYE_INI");
+  if(iname) ini_name=iname;
+  if(ini_name.empty()) ini_name = _system->get_ini_name("beye");
   if(UseIniFile) ini.open(ini_name);
   help_name=read_profile_string(ini,"Beye","Setup","HelpName","");
   skin_name=read_profile_string(ini,"Beye","Setup","SkinName","");

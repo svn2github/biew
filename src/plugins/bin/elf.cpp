@@ -56,7 +56,7 @@ using namespace	usr;
 #include <stdlib.h>
 
 #include "colorset.h"
-#include "plugins/bin/elf386.h"
+#include "plugins/bin/elf.h"
 #include "plugins/disasm.h"
 #include "bin_util.h"
 #include "codeguid.h"

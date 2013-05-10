@@ -12,9 +12,9 @@ System::~System() { __term_sys(); }
 void System::yield_timeslice() const { __OsYield(); }
 bool System::get_cbreak() const { return __OsGetCBreak(); }
 void System::set_cbreak( bool state ) const { __OsSetCBreak(state); }
-char* System::get_home_dir(const char *progname) const { return __get_home_dir(progname); }
-char* System::get_ini_name(const char *progname) const { return __get_ini_name(progname); }
-char* System::get_rc_dir(const char *progname) const { return __get_rc_dir(progname ); }
+std::string System::get_home_dir(const std::string& progname) const { return __get_home_dir(progname.c_str()); }
+std::string System::get_ini_name(const std::string& progname) const { return __get_ini_name(progname.c_str()); }
+std::string System::get_rc_dir(const std::string& progname) const { return __get_rc_dir(progname.c_str()); }
 unsigned System::set_timer_callback(unsigned ms,timer_callback *func) const { return __OsSetTimerCallBack(ms,func); }
 void System::restore_timer() const { __OsRestoreTimer(); }
 /* National Language Support */

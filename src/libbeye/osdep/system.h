@@ -2,6 +2,8 @@
 #define __SYSTEM_HPP_INCLUDED 1
 #include "libbeye/libbeye.h"
 
+#include <string>
+
 namespace	usr {
     typedef void timer_callback(); /**< This is the code type used to represent user supplied function of timer callback */
     class System {
@@ -44,7 +46,7 @@ namespace	usr {
 		     *                        argv[0] program argument.
 		     * @see                   __get_home_dir
 		    **/
-	    char*		get_home_dir(const char *progname) const;
+	    std::string		get_home_dir(const std::string& progname) const;
 
 		   /** Builds OS specific name of initializing file
 		     * @return                fully qualified name of .ini file
@@ -53,7 +55,7 @@ namespace	usr {
 		     *                        argv[0] program argument.
 		     * @see                   __get_rc_dir
 		    **/
-	    char*		get_ini_name(const char *progname) const;
+	    std::string		get_ini_name(const std::string& progname) const;
 
 		   /** Builds OS specific name of program resource directory
 		     * @return                Slash terminated path to program resource directory
@@ -62,7 +64,7 @@ namespace	usr {
 		     *                        argv[0] program argument.
 		     * @see                   __get_ini_name
 		    **/
-	    char*		get_rc_dir(const char *progname) const;
+	    std::string		get_rc_dir(const std::string& progname) const;
 
 		   /** Sets user defined function as timer callback with given time interval
 		     * @return                Real call back interval in milliseconds
