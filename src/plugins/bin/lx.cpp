@@ -294,12 +294,6 @@ __filesize_t __FASTCALL__ ShowNewHeaderLX()
   return fpos;
 }
 
-static unsigned __FASTCALL__ LXModRefNumItems(binary_stream& handle)
-{
-  UNUSED(handle);
-  return (unsigned)lxe.lx.lxImportModuleTableEntries;
-}
-
 unsigned __FASTCALL__ LXRNamesNumItems(binary_stream& handle)
 {
   return GetNamCountNE(handle,beye_context().headshift + lxe.lx.lxResidentNameTableOffset);
@@ -962,7 +956,7 @@ static __filesize_t __FASTCALL__ ShowResourceLX()
 
 __filesize_t __FASTCALL__ ShowModRefLX()
 {
-  fmtShowList(LXModRefNumItems(bmbioHandle()),
+  fmtShowList((unsigned)lxe.lx.lxImportModuleTableEntries,
 	      __ReadModRefNamesLX,
 	      MOD_REFER,
 	      LB_SORTABLE,

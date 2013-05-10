@@ -777,12 +777,6 @@ static bool  __FASTCALL__ ELF_IS_SECTION_PHYSICAL(unsigned sec_num)
 	   sec_num == SHN_COMMON || sec_num == SHN_HIRESERVE);
 }
 
-static unsigned __FASTCALL__ __elfGetNumSymTab( binary_stream& handle )
-{
-  UNUSED(handle);
-  return __elfNumSymTab;
-}
-
 static bool __FASTCALL__ __elfReadSymTab(binary_stream& handle,memArray *obj,unsigned nsym)
 {
  size_t i,tlen;
@@ -933,7 +927,7 @@ static __filesize_t  __FASTCALL__ displayELFsymtab()
   __filesize_t fpos;
   int ret;
   fpos = BMGetCurrFilePos();
-  ret = fmtShowList(__elfGetNumSymTab(bmbioHandle()),__elfReadSymTab,
+  ret = fmtShowList(__elfNumSymTab,__elfReadSymTab,
 		" Name                                  Value    Size     Oth. Type   Bind   Sec# ",
 		LB_SELECTIVE,NULL);
   if(ret != -1)
