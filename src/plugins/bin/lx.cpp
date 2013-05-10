@@ -854,18 +854,12 @@ static bool  __FASTCALL__ __ReadIterTblLX(binary_stream& handle,memArray * obj,u
   return true;
 }
 #endif
-static unsigned __FASTCALL__ lxGetPageCount(binary_stream& handle)
-{
-  UNUSED(handle);
-  return (unsigned)lxe.lx.lxPageCount;
-}
-
 static __filesize_t __FASTCALL__ ShowMapTableLX()
 {
  __filesize_t fpos;
  int ret;
  fpos = BMGetCurrFilePos();
- ret = fmtShowList(lxGetPageCount,__ReadMapTblLX," Map of pages ",
+ ret = fmtShowList((unsigned)lxe.lx.lxPageCount,__ReadMapTblLX," Map of pages ",
 		   LB_SELECTIVE,NULL);
  if(ret != -1)
  {
@@ -968,7 +962,7 @@ static __filesize_t __FASTCALL__ ShowResourceLX()
 
 __filesize_t __FASTCALL__ ShowModRefLX()
 {
-  fmtShowList(LXModRefNumItems,
+  fmtShowList(LXModRefNumItems(bmbioHandle()),
 	      __ReadModRefNamesLX,
 	      MOD_REFER,
 	      LB_SORTABLE,
@@ -981,7 +975,7 @@ static __filesize_t __FASTCALL__ ShowResNamLX()
   __filesize_t fpos = BMGetCurrFilePos();
   int ret;
   unsigned ordinal;
-  ret = fmtShowList(LXRNamesNumItems,LXRNamesReadItems,
+  ret = fmtShowList(LXRNamesNumItems(bmbioHandle()),LXRNamesReadItems,
 		    RES_NAMES,
 		    LB_SELECTIVE | LB_SORTABLE,&ordinal);
   if(ret != -1)
@@ -998,7 +992,7 @@ static __filesize_t __FASTCALL__ ShowNResNmLX()
   {
     int ret;
     unsigned ordinal;
-    ret = fmtShowList(LXNRNamesNumItems,LXNRNamesReadItems,
+    ret = fmtShowList(LXNRNamesNumItems(bmbioHandle()),LXNRNamesReadItems,
 		      NORES_NAMES,
 		      LB_SELECTIVE | LB_SORTABLE,&ordinal);
     if(ret != -1)
@@ -1011,7 +1005,7 @@ static __filesize_t __FASTCALL__ ShowNResNmLX()
 
 __filesize_t __FASTCALL__ ShowImpProcLXLE()
 {
-  fmtShowList(LXImpNamesNumItems,LXImpNamesReadItems,
+  fmtShowList(LXImpNamesNumItems(bmbioHandle()),LXImpNamesReadItems,
 	      IMPPROC_TABLE,0,NULL);
   return BMGetCurrFilePos();
 }

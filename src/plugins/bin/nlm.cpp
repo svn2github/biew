@@ -271,12 +271,6 @@ static __filesize_t __FASTCALL__ ShowNewNLM()
   return fpos;
 }
 
-static unsigned __FASTCALL__ NLMExtRefNumItems(binary_stream& handle)
-{
-  UNUSED(handle);
-  return (unsigned)nlm.nlm_numberOfExternalReferences;
-}
-
 static bool __FASTCALL__ __ReadExtRefNamesNLM(binary_stream& handle,memArray * obj,unsigned n)
 {
  unsigned i;
@@ -321,12 +315,6 @@ static __filesize_t  __FASTCALL__ CalcEntryNLM(unsigned ord,bool dispmsg)
  return ret;
 }
 
-static unsigned __FASTCALL__ NLMNamesNumItems(binary_stream& handle)
-{
-  UNUSED(handle);
-  return (unsigned)nlm.nlm_numberOfPublics;
-}
-
 static bool __FASTCALL__ NLMNamesReadItems(binary_stream& handle,memArray * obj,unsigned nnames)
 {
  unsigned char length;
@@ -352,18 +340,12 @@ static bool __FASTCALL__ NLMNamesReadItems(binary_stream& handle,memArray * obj,
 
 static __filesize_t __FASTCALL__ ShowExtRefNLM()
 {
-  fmtShowList(NLMExtRefNumItems,
+  fmtShowList((unsigned)nlm.nlm_numberOfExternalReferences,
 	      __ReadExtRefNamesNLM,
 	      EXT_REFER,
 	      LB_SORTABLE,
 	      NULL);
    return BMGetCurrFilePos();
-}
-
-static unsigned __FASTCALL__ NLMModRefNumItems(binary_stream& handle)
-{
-  UNUSED(handle);
-  return (unsigned)nlm.nlm_numberOfModuleDependencies;
 }
 
 static bool __FASTCALL__ __ReadModRefNamesNLM(binary_stream& handle,memArray * obj,unsigned nnames)
@@ -391,7 +373,7 @@ static bool __FASTCALL__ __ReadModRefNamesNLM(binary_stream& handle,memArray * o
 
 static __filesize_t __FASTCALL__ ShowModRefNLM()
 {
-  fmtShowList(NLMModRefNumItems,
+  fmtShowList((unsigned)nlm.nlm_numberOfModuleDependencies,
 	      __ReadModRefNamesNLM,
 	      MOD_REFER,
 	      LB_SORTABLE,
@@ -403,7 +385,7 @@ static __filesize_t __FASTCALL__ ShowPubNamNLM()
 {
   __filesize_t fpos = BMGetCurrFilePos();
   int ret;
-  ret = fmtShowList(NLMNamesNumItems,NLMNamesReadItems,
+  ret = fmtShowList((unsigned)nlm.nlm_numberOfPublics,NLMNamesReadItems,
 		    EXP_TABLE,
 		    LB_SELECTIVE,NULL);
   if(ret != -1)

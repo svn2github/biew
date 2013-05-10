@@ -215,18 +215,12 @@ static __filesize_t  __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,bool dispms
  return ret;
 }
 
-static unsigned __FASTCALL__ leMapTblNumEntries(binary_stream& handle)
-{
-  UNUSED(handle);
-  return (unsigned)lxe.le.lePageCount;
-}
-
 static __filesize_t __FASTCALL__ ShowMapTableLE()
 {
  __filesize_t fpos;
  int ret;
  fpos = BMGetCurrFilePos();
- ret = fmtShowList(leMapTblNumEntries,__ReadMapTblLE,
+ ret = fmtShowList((unsigned)lxe.le.lePageCount,__ReadMapTblLE,
 		   " Map of pages ", LB_SELECTIVE, NULL);
  if(ret != -1)
  {
@@ -240,7 +234,7 @@ static __filesize_t __FASTCALL__ ShowResNamLE()
   __filesize_t fpos = BMGetCurrFilePos();
   int ret;
   unsigned ordinal;
-  ret = fmtShowList(LXRNamesNumItems,LXRNamesReadItems,
+  ret = fmtShowList(LXRNamesNumItems(bmbioHandle()),LXRNamesReadItems,
 		    RES_NAMES,
 		    LB_SELECTIVE | LB_SORTABLE,&ordinal);
   if(ret != -1)
@@ -257,7 +251,7 @@ static __filesize_t __FASTCALL__ ShowNResNmLE()
   {
     int ret;
     unsigned ordinal;
-    ret = fmtShowList(LXNRNamesNumItems,LXNRNamesReadItems,
+    ret = fmtShowList(LXNRNamesNumItems(bmbioHandle()),LXNRNamesReadItems,
 		      NORES_NAMES,
 		      LB_SELECTIVE | LB_SORTABLE,&ordinal);
     if(ret != -1)

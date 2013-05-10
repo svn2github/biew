@@ -230,18 +230,11 @@ static bool __FASTCALL__ jvm_read_interfaces(binary_stream& handle,memArray * na
     return true;
 }
 
-static unsigned __FASTCALL__ jvm_get_num_interfaces(binary_stream& handle)
-{
-    UNUSED(handle);
-    return jvm_header.interfaces_count;
-}
-
-
 static __filesize_t __FASTCALL__ ShowInterfaces()
 {
   __filesize_t fpos;
   fpos = BMGetCurrFilePos();
-  fmtShowList(jvm_get_num_interfaces,jvm_read_interfaces,
+  fmtShowList(jvm_header.interfaces_count,jvm_read_interfaces,
 		    " interfaces ",
 		    LB_SORTABLE,NULL);
   return fpos;
@@ -268,19 +261,12 @@ static bool __FASTCALL__ jvm_read_attributes(binary_stream& handle,memArray * na
     return true;
 }
 
-static unsigned __FASTCALL__ jvm_get_num_attributes(binary_stream& handle)
-{
-    UNUSED(handle);
-    return jvm_header.attributes_count;
-}
-
-
 static __filesize_t  __FASTCALL__ __ShowAttributes(const std::string& title)
 {
   __filesize_t fpos;
   int ret;
   fpos = BMGetCurrFilePos();
-  ret=fmtShowList(jvm_get_num_attributes,jvm_read_attributes,
+  ret=fmtShowList(jvm_header.attributes_count,jvm_read_attributes,
 		title,
 		LB_SELECTIVE,NULL);
   if(ret!=-1)
@@ -331,18 +317,12 @@ static bool __FASTCALL__ jvm_read_methods(binary_stream& handle,memArray * names
     return true;
 }
 
-static unsigned __FASTCALL__ jvm_get_num_methods(binary_stream& handle)
-{
-    UNUSED(handle);
-    return jvm_header.methods_count;
-}
-
 static __filesize_t __FASTCALL__ ShowMethods()
 {
   __filesize_t fpos;
   int ret;
   fpos = BMGetCurrFilePos();
-  ret=fmtShowList(jvm_get_num_methods,jvm_read_methods,
+  ret=fmtShowList(jvm_header.methods_count,jvm_read_methods,
 		    " length   attributes ",
 		    LB_SELECTIVE,NULL);
   if(ret!=-1)
@@ -405,18 +385,12 @@ static bool __FASTCALL__ jvm_read_fields(binary_stream& handle,memArray * names,
     return true;
 }
 
-static unsigned __FASTCALL__ jvm_get_num_fields(binary_stream& handle)
-{
-    UNUSED(handle);
-    return jvm_header.fields_count;
-}
-
 static __filesize_t __FASTCALL__ ShowFields()
 {
   __filesize_t fpos;
   int ret;
   fpos = BMGetCurrFilePos();
-  ret=fmtShowList(jvm_get_num_fields,jvm_read_fields,
+  ret=fmtShowList(jvm_header.fields_count,jvm_read_fields,
 		    " length   attributes ",
 		    LB_SELECTIVE,NULL);
   if(ret!=-1)
@@ -531,17 +505,11 @@ static bool __FASTCALL__ jvm_read_pool(binary_stream& handle,memArray * names,un
     return true;
 }
 
-static unsigned __FASTCALL__ jvm_get_num_pools(binary_stream& handle)
-{
-    UNUSED(handle);
-    return jvm_header.constant_pool_count;
-}
-
 static __filesize_t __FASTCALL__ ShowPool()
 {
   __filesize_t fpos;
   fpos = BMGetCurrFilePos();
-  fmtShowList(jvm_get_num_pools,jvm_read_pool,
+  fmtShowList(jvm_header.constant_pool_count,jvm_read_pool,
 		    " Constant pool ",
 		    LB_SORTABLE,NULL);
   return fpos;

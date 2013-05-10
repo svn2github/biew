@@ -389,18 +389,12 @@ static bool __FASTCALL__ lmf_ReadSecHdr(binary_stream& handle,memArray *obj,unsi
 	return true;
 }
 
-static unsigned __FASTCALL__ lmf_SecHdrNumItems(binary_stream& handle)
-{
-	UNUSED(handle);
-	return reclast+1;
-}
-
 static __filesize_t __FASTCALL__ lmf_ShowSecLst()
 {
 	__filesize_t fpos;
 	int ret;
 	fpos=BMGetCurrFilePos();
-	ret=fmtShowList(lmf_SecHdrNumItems,lmf_ReadSecHdr,
+	ret=fmtShowList(reclast+1,lmf_ReadSecHdr,
 		" Num Type              Seg Virtual addresses   ",
 		LB_SELECTIVE,NULL);
 	if(ret!=-1)

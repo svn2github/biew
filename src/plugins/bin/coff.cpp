@@ -319,13 +319,6 @@ static const char *  __FASTCALL__ coffEncodeClass(unsigned _class)
   return ret;
 }
 
-
-static unsigned __FASTCALL__ coffSymTabNumItems(binary_stream& handle)
-{
-  UNUSED(handle);
-  return (unsigned)COFF_DWORD(coff386hdr.f_nsyms);
-}
-
 static bool  __FASTCALL__ coffSymTabReadItems(binary_stream& handle,memArray * obj,unsigned nnames)
 {
  unsigned i;
@@ -387,7 +380,7 @@ static __filesize_t __FASTCALL__ coffShowSymTab()
 {
   __filesize_t fpos = BMGetCurrFilePos();
   int ret;
-  ret = fmtShowList(coffSymTabNumItems,coffSymTabReadItems,
+  ret = fmtShowList(COFF_DWORD(coff386hdr.f_nsyms),coffSymTabReadItems,
 		    "Symbol Table",
 		    LB_SELECTIVE,NULL);
   if(ret != -1)
@@ -651,7 +644,7 @@ static void __FASTCALL__ coff_ReadPubNameList(binary_stream& handle,
  struct PubName pn;
  if(!(PubNames = la_Build(0,sizeof(struct PubName),mem_out))) return;
  handle.seek(COFF_DWORD(coff386hdr.f_symptr),binary_stream::Seek_Set);
- nnames = coffSymTabNumItems(handle);
+ nnames = COFF_DWORD(coff386hdr.f_nsyms);
  for(i = 0;i < nnames;i++)
  {
    struct external_syment cse;

@@ -629,7 +629,7 @@ static __filesize_t __FASTCALL__ ShowModRefPE()
 				   magic = imp_pe.idFlags;
      else                          magic = imp_pe.idLookupTableRVA;
      addr_shift_pe = magic ? RVA2Phys(magic) : magic;
-     fmtShowList(GetImpCountPE,__ReadImpContPE,petitle,0,NULL);
+     fmtShowList(GetImpCountPE(bmbioHandle()),__ReadImpContPE,petitle,0,NULL);
     }
   }
   ma_Destroy(obj);
@@ -751,7 +751,7 @@ static __filesize_t __FASTCALL__ ShowExpNamPE()
 	      ,sftime);
     }
   }
-  ret = fmtShowList(PEExportNumItems,PEExportReadItems,
+  ret = fmtShowList(PEExportNumItems(bmbioHandle()),PEExportReadItems,
 		    exp_nam,
 		    LB_SELECTIVE | LB_SORTABLE,&ordinal);
   if(ret != -1)
@@ -801,17 +801,11 @@ static bool __FASTCALL__ PEReadRVAs(binary_stream& handle, memArray * obj, unsig
   return true;
 }
 
-static unsigned __FASTCALL__ PENumRVAs(binary_stream& handle)
-{
-  UNUSED(handle);
-  return PE32_HDR(pe32,peDirSize);
-}
-
 static __filesize_t __FASTCALL__ ShowPERVAs()
 {
   __filesize_t fpos = BMGetCurrFilePos();
   int ret;
-  ret = fmtShowList(PENumRVAs, PEReadRVAs, " Directory Entry       RVA           size ", LB_SELECTIVE|LB_USEACC, NULL);
+  ret = fmtShowList(PE32_HDR(pe32,peDirSize), PEReadRVAs, " Directory Entry       RVA           size ", LB_SELECTIVE|LB_USEACC, NULL);
   if (ret!=-1 && peDir[ret].rva)
     fpos = RVA2Phys(peDir[ret].rva);
 

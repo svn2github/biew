@@ -83,6 +83,11 @@ typedef union
 }ElfXX_External_Sym;
 #define ELF_SYM(e,FIELD) (is_64bit?(((Elf64_External_Sym *)&e.e64)->FIELD):(((Elf386_External_Sym *)&e.e32)->FIELD))
 #define ELF_SYM_SIZE() (is_64bit?sizeof(Elf64_External_Sym):sizeof(Elf386_External_Sym))
+#define ELF_HALF(cval) FMT_WORD(cval,is_msbf)
+#define ELF_WORD(cval) FMT_DWORD(cval,is_msbf)
+#define ELF_XWORD(cval) (is_64bit?FMT_QWORD(cval,is_msbf):FMT_DWORD(cval,is_msbf))
+#define ELF_ADDR(cval) ELF_XWORD(cval)
+#define ELF_OFF(cval) ELF_XWORD(cval)
 
 static __filesize_t active_shtbl = 0;
 static __filesize_t elf_min_va = FILESIZE_MAX;
@@ -99,12 +104,6 @@ struct tag_elfVAMap
   __filesize_t nameoff;
   __filesize_t flags;
 };
-
-#define ELF_HALF(cval) FMT_WORD(cval,is_msbf)
-#define ELF_WORD(cval) FMT_DWORD(cval,is_msbf)
-#define ELF_XWORD(cval) (is_64bit?FMT_QWORD(cval,is_msbf):FMT_DWORD(cval,is_msbf))
-#define ELF_ADDR(cval) ELF_XWORD(cval)
-#define ELF_OFF(cval) ELF_XWORD(cval)
 
 static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
 static void __FASTCALL__ elf_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
@@ -861,18 +860,12 @@ static bool  __FASTCALL__ __elfReadDynTab(binary_stream& handle,memArray *obj, u
   return true;
 }
 
-static unsigned __FASTCALL__ Elf386PrgHdrNumItems(binary_stream& handle)
-{
-   UNUSED(handle);
-   return Elf->ehdr().e_phnum;
-}
-
 static __filesize_t __FASTCALL__ ShowPrgHdrElf()
 {
   __filesize_t fpos;
   int ret;
   fpos = BMGetCurrFilePos();
-  ret = fmtShowList(Elf386PrgHdrNumItems,__elfReadPrgHdr,
+  ret = fmtShowList(Elf->ehdr().e_phnum,__elfReadPrgHdr,
 		    " type            fileoffs virtaddr physaddr filesize memsize  flg align   ",
 		    LB_SELECTIVE,NULL);
   if(ret != -1)
@@ -885,18 +878,12 @@ static __filesize_t __FASTCALL__ ShowPrgHdrElf()
   return fpos;
 }
 
-static unsigned __FASTCALL__ Elf386SecHdrNumItems(binary_stream& handle)
-{
-  UNUSED(handle);
-  return IsSectionsPresent ? Elf->ehdr().e_shnum : 0;
-}
-
 static __filesize_t __FASTCALL__ ShowSecHdrElf()
 {
   __filesize_t fpos;
   int ret;
   fpos = BMGetCurrFilePos();
-  ret = fmtShowList(Elf386SecHdrNumItems,__elfReadSecHdr,
+  ret = fmtShowList(IsSectionsPresent ? Elf->ehdr().e_shnum : 0,__elfReadSecHdr,
 		    " name             type   flg virtaddr fileoffs   size   link info algn esiz",
 		   LB_SELECTIVE,NULL);
   if(ret != -1)
@@ -946,7 +933,7 @@ static __filesize_t  __FASTCALL__ displayELFsymtab()
   __filesize_t fpos;
   int ret;
   fpos = BMGetCurrFilePos();
-  ret = fmtShowList(__elfGetNumSymTab,__elfReadSymTab,
+  ret = fmtShowList(__elfGetNumSymTab(bmbioHandle()),__elfReadSymTab,
 		" Name                                  Value    Size     Oth. Type   Bind   Sec# ",
 		LB_SELECTIVE,NULL);
   if(ret != -1)

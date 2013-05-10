@@ -124,17 +124,15 @@ static binary_stream*  __FASTCALL__ ReopenSeek(__filesize_t dist)
  return handle;
 }
 
-int __FASTCALL__ fmtShowList( GetNumItems gni,ReadItems ri,const std::string& title,int flags,unsigned * ordinal)
+int __FASTCALL__ fmtShowList( size_t nnames,ReadItems ri,const std::string& title,int flags,unsigned * ordinal)
 {
  int ret;
  bool bval;
  binary_stream* handle;
- unsigned nnames;
  memArray * obj;
  TWindow* w;
  ret = -1;
  if((handle = ReopenSeek(0)) == &bNull) return ret;
- nnames = gni ? (*gni)(*handle) : (unsigned)-1;
  if(!(obj = ma_Build(nnames,true))) goto exit;
  w = PleaseWaitWnd();
  bval = (*ri)(*handle,obj,nnames);
@@ -235,7 +233,7 @@ static bool    __FASTCALL__ udnReadItems(binary_stream& handle,memArray * names,
 static bool __FASTCALL__ udnDeleteItem() {
   int rval=-1;
   if(udn_list) {
-    rval = fmtShowList(udnGetNumItems,udnReadItems,
+    rval = fmtShowList(udnGetNumItems(bmbioHandle()),udnReadItems,
 		    " User-defined Names (aka bookmarks) ",
 		    LB_SELECTIVE,NULL);
     if(rval!=-1) {
@@ -251,7 +249,7 @@ static bool __FASTCALL__ udnDeleteItem() {
 bool __FASTCALL__ udnSelectName(__filesize_t *off) {
   int rval=-1;
   if(udn_list) {
-    rval = fmtShowList(udnGetNumItems,udnReadItems,
+    rval = fmtShowList(udnGetNumItems(bmbioHandle()),udnReadItems,
 		    " User-defined Names (aka bookmarks) ",
 		    LB_SELECTIVE,NULL);
     if(rval!=-1) *off = ((udn *)udn_list->data)[rval].offset;

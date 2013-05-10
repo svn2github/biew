@@ -62,10 +62,8 @@ namespace	usr {
 				      ReadPubNameList fmtReadPubNameList,
 				      ReadPubName fmtReadPubName);
 
-    typedef unsigned      (__FASTCALL__ * GetNumItems)(binary_stream& handle);
     typedef bool         (__FASTCALL__ * ReadItems)(binary_stream& handle,memArray * names,unsigned nnames);
-    typedef __filesize_t  (__FASTCALL__ * CalcEntry)(unsigned,int dispmsg);
-    int           __FASTCALL__ fmtShowList( GetNumItems gni,ReadItems ri,const std::string& title,int flags,unsigned * ordinal);
+    int           __FASTCALL__ fmtShowList( size_t num,ReadItems ri,const std::string& title,int flags,unsigned * ordinal);
 
     /** Reads user defined name at given offset!
     **/

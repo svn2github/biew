@@ -914,7 +914,7 @@ static __filesize_t __FASTCALL__ ShowResNamNE()
   __filesize_t fpos = BMGetCurrFilePos();
   int ret;
   unsigned ordinal;
-  ret = fmtShowList(NERNamesNumItems,NERNamesReadItems,
+  ret = fmtShowList(NERNamesNumItems(bmbioHandle()),NERNamesReadItems,
 		    RES_NAMES,
 		    LB_SELECTIVE | LB_SORTABLE,&ordinal);
   if(ret != -1)
@@ -931,7 +931,7 @@ static __filesize_t __FASTCALL__ ShowNResNmNE()
   {
     int ret;
     unsigned ordinal;
-    ret = fmtShowList(NENRNamesNumItems,NENRNamesReadItems,
+    ret = fmtShowList(NENRNamesNumItems(bmbioHandle()),NENRNamesReadItems,
 		      NORES_NAMES,
 		      LB_SELECTIVE | LB_SORTABLE,&ordinal);
     if(ret != -1)
