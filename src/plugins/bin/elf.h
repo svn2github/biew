@@ -26,15 +26,13 @@
 **/
 #ifndef __ELF_INC
 #define __ELF_INC
+#include "config.h"
+#include "bin_util.h"
 
-#ifndef __SYS_DEP_H
-#include "_sys_dep.h"
-#endif
 namespace	usr {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack(1)
 #endif
-
 enum {
     EI_NIDENT	=16,		/**< Size of e_ident[] */
 /** Fields in e_ident[] */
@@ -1313,9 +1311,230 @@ enum {
     R_ARM_RPC24		=254,
     R_ARM_RBASE		=255
 };
-
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
 #endif
+
+    struct Elf_Ehdr {
+	uint8_t		e_ident[16];	/**< ELF "magic number" */
+	uint16_t	e_type;		/**< Identifies object file type */
+	uint16_t	e_machine;	/**< Specifies required architecture */
+	uint32_t	e_version;	/**< Identifies object file version */
+	uint64_t	e_entry;	/**< Entry point virtual address */
+	uint64_t	e_phoff;	/**< Program header table file offset */
+	uint64_t	e_shoff;	/**< Section header table file offset */
+	uint32_t	e_flags;	/**< Processor-specific flags */
+	uint16_t	e_ehsize;	/**< ELF header size in bytes */
+	uint16_t	e_phentsize;	/**< Program header table entry size */
+	uint16_t	e_phnum;	/**< Program header table entry count */
+	uint16_t	e_shentsize;	/**< Section header table entry size */
+	uint16_t	e_shnum;	/**< Section header table entry count */
+	uint16_t	e_shstrndx;	/**< Section header string table index */
+    };
+
+    struct Elf_Shdr {
+	uint32_t	sh_name;	/**< Section name, index in string tbl */
+	uint32_t	sh_type;	/**< Type of section */
+	uint64_t	sh_flags;	/**< Miscellaneous section attributes */
+	uint64_t	sh_addr;	/**< Section virtual addr at execution */
+	uint64_t	sh_offset;	/**< Section file offset */
+	uint64_t	sh_size;	/**< Size of section in bytes */
+	uint32_t	sh_link;	/**< Index of another section */
+	uint32_t	sh_info;	/**< Additional section information */
+	uint64_t	sh_addralign;	/**< Section alignment */
+	uint64_t	sh_entsize;	/**< Entry size if section holds table */
+    };
+
+    struct Elf_Phdr {
+	uint32_t	p_type;		/**< Identifies program segment type */
+	uint32_t	p_flags;	/**< Segment flags */
+	uint64_t	p_offset;	/**< Segment file offset */
+	uint64_t	p_vaddr;	/**< Segment virtual address */
+	uint64_t	p_paddr;	/**< Segment physical address (ignored on SystemV)*/
+	uint64_t	p_filesz;	/**< Segment size in file */
+	uint64_t	p_memsz;	/**< Segment size in memory */
+	uint64_t	p_align;	/**< Segment alignment, file & memory */
+    };
+
+    struct Elf_Dyn {
+	uint64_t	d_tag;		/**< entry tag value */
+	union {
+	    uint64_t	d_val;
+	    uint64_t	d_ptr;
+	} d_un;
+    };
+
+    struct Elf_Rel {
+	uint64_t	r_offset;	/**< Location at which to apply the action */
+	uint64_t	r_info;		/**< index and type of relocation */
+    };
+
+    struct Elf_Rela {
+	uint64_t	r_offset;	/**< Location at which to apply the action */
+	uint64_t	r_info;		/**< index and type of relocation */
+	uint64_t	r_addend;	/**< Constant addend used to compute value */
+    };
+
+    template<typename foff_t>
+    class Elf_xx {
+	public:
+	    Elf_xx(binary_stream& _fs)
+		:fs(_fs) {
+		uint8_t buf[16];
+		fs.seek(0,binary_stream::Seek_Set);
+		fs.read(buf,16);
+		is_msbf = (buf[EI_DATA] == ELFDATA2MSB);
+		is_64bit = (buf[EI_CLASS] == ELFCLASS64);
+	    }
+	    virtual ~Elf_xx() {}
+
+	    Elf_Ehdr		read_ehdr() const {
+		Elf_Ehdr rc;
+		uint16_t tmp16;
+		uint32_t tmp32;
+		foff_t   tmp;
+		fs.seek(0,binary_stream::Seek_Set);
+		fs.read(&rc.e_ident,16);
+		fs.read(&tmp16,2); rc.e_type=FMT_WORD(&tmp16,is_msbf);
+		fs.read(&tmp16,2); rc.e_machine=FMT_WORD(&tmp16,is_msbf);
+		fs.read(&tmp32,4); rc.e_version=FMT_DWORD(&tmp32,is_msbf);
+		fs.read(&tmp,sizeof(foff_t)); rc.e_entry=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		fs.read(&tmp,sizeof(foff_t)); rc.e_phoff=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		fs.read(&tmp,sizeof(foff_t)); rc.e_shoff=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		fs.read(&tmp32,4); rc.e_flags=FMT_DWORD(&tmp32,is_msbf);
+		fs.read(&tmp16,2); rc.e_ehsize=FMT_WORD(&tmp16,is_msbf);
+		fs.read(&tmp16,2); rc.e_phentsize=FMT_WORD(&tmp16,is_msbf);
+		fs.read(&tmp16,2); rc.e_phnum=FMT_WORD(&tmp16,is_msbf);
+		fs.read(&tmp16,2); rc.e_shentsize=FMT_WORD(&tmp16,is_msbf);
+		fs.read(&tmp16,2); rc.e_shnum=FMT_WORD(&tmp16,is_msbf);
+		fs.read(&tmp16,2); rc.e_shstrndx=FMT_WORD(&tmp16,is_msbf);
+		return rc;
+	    }
+	    Elf_Shdr		read_shdr(binary_stream& _fs,__filesize_t off) const {
+		Elf_Shdr rc;
+		uint32_t tmp32;
+		foff_t   tmp;
+		_fs.seek(off,binary_stream::Seek_Set);
+		_fs.read(&tmp32,4); rc.sh_name=FMT_DWORD(&tmp32,is_msbf);
+		_fs.read(&tmp32,4); rc.sh_type=FMT_DWORD(&tmp32,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.sh_flags=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.sh_addr=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.sh_offset=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.sh_size=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		_fs.read(&tmp32,4); rc.sh_link=FMT_DWORD(&tmp32,is_msbf);
+		_fs.read(&tmp32,4); rc.sh_info=FMT_DWORD(&tmp32,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.sh_addralign=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.sh_entsize=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		return rc;
+	    }
+	    Elf_Phdr		read_phdr(binary_stream& _fs,__filesize_t off) const {
+		Elf_Phdr rc;
+		uint32_t tmp32;
+		foff_t   tmp;
+		_fs.seek(off,binary_stream::Seek_Set);
+		_fs.read(&tmp32,4); rc.p_type=FMT_DWORD(&tmp32,is_msbf);
+		_fs.read(&tmp32,4); rc.p_flags=FMT_DWORD(&tmp32,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.p_offset=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.p_vaddr=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.p_paddr=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.p_filesz=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.p_memsz=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.p_align=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		return rc;
+	    }
+	    Elf_Dyn		read_dyn(binary_stream& _fs,__filesize_t off) const {
+		Elf_Dyn rc;
+		foff_t   tmp;
+		_fs.seek(off,binary_stream::Seek_Set);
+		_fs.read(&tmp,sizeof(foff_t)); rc.d_tag=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.d_un.d_val=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		return rc;
+	    }
+	    Elf_Rel		read_rel(binary_stream& _fs,__filesize_t off) const {
+		Elf_Rel rc;
+		foff_t   tmp;
+		_fs.seek(off,binary_stream::Seek_Set);
+		_fs.read(&tmp,sizeof(foff_t)); rc.r_offset=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.r_info=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		return rc;
+	    }
+	    Elf_Rela		read_rela(binary_stream& _fs,__filesize_t off) const {
+		Elf_Rela rc;
+		foff_t   tmp;
+		_fs.seek(off,binary_stream::Seek_Set);
+		_fs.read(&tmp,sizeof(foff_t)); rc.r_offset=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.r_info=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		_fs.read(&tmp,sizeof(foff_t)); rc.r_addend=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
+		return rc;
+	    }
+	private:
+	    binary_stream&	fs;
+	    bool		is_msbf,is_64bit;
+    };
+
+    class Elf {
+	public:
+	    Elf() {}
+	    virtual ~Elf() {}
+
+	    virtual const Elf_Ehdr&		ehdr() const = 0;
+	    virtual size_t			ehdr_size() const = 0;
+	    virtual Elf_Shdr			read_shdr(binary_stream& fs,__filesize_t off) const = 0;
+	    virtual size_t			shdr_size() const = 0;
+	    virtual Elf_Phdr			read_phdr(binary_stream& fs,__filesize_t off) const = 0;
+	    virtual size_t			phdr_size() const = 0;
+	    virtual Elf_Dyn			read_dyn(binary_stream& fs,__filesize_t off) const = 0;
+	    virtual size_t			dyn_size() const = 0;
+	    virtual Elf_Rel			read_rel(binary_stream& fs,__filesize_t off) const = 0;
+	    virtual size_t			rel_size() const = 0;
+	    virtual Elf_Rela			read_rela(binary_stream& fs,__filesize_t off) const = 0;
+	    virtual size_t			rela_size() const = 0;
+    };
+    class Elf32 : public Elf {
+	public:
+	    Elf32(binary_stream& fs):elf(fs) {
+		_ehdr = elf.read_ehdr();
+	    }
+	    virtual ~Elf32() {}
+
+	    virtual const Elf_Ehdr&		ehdr() const { return _ehdr; }
+	    virtual size_t			ehdr_size() const { return sizeof(Elf386_External_Ehdr); }
+	    virtual Elf_Shdr			read_shdr(binary_stream& fs,__filesize_t off) const { return elf.read_shdr(fs,off); }
+	    virtual size_t			shdr_size() const { return sizeof(Elf386_External_Shdr); }
+	    virtual Elf_Phdr			read_phdr(binary_stream& fs,__filesize_t off) const { return elf.read_phdr(fs,off); }
+	    virtual size_t			phdr_size() const { return sizeof(Elf386_External_Phdr); }
+	    virtual Elf_Dyn			read_dyn(binary_stream& fs,__filesize_t off) const { return elf.read_dyn(fs,off); }
+	    virtual size_t			dyn_size() const { return sizeof(Elf386_External_Dyn); }
+	    virtual Elf_Rel			read_rel(binary_stream& fs,__filesize_t off) const { return elf.read_rel(fs,off); }
+	    virtual size_t			rel_size() const { return sizeof(Elf386_External_Rel); }
+	    virtual Elf_Rela			read_rela(binary_stream& fs,__filesize_t off) const { return elf.read_rela(fs,off); }
+	    virtual size_t			rela_size() const { return sizeof(Elf386_External_Rela); }
+	private:
+	    Elf_xx<uint32_t> elf;
+	    Elf_Ehdr _ehdr;
+    };
+    class Elf64 : public Elf {
+	public:
+	    Elf64(binary_stream& fs):elf(fs) {
+		_ehdr = elf.read_ehdr();
+	    }
+	    virtual ~Elf64() {}
+
+	    virtual const Elf_Ehdr&		ehdr() const { return _ehdr; }
+	    virtual size_t			ehdr_size() const { return sizeof(Elf64_External_Ehdr); }
+	    virtual Elf_Shdr			read_shdr(binary_stream& fs,__filesize_t off) const { return elf.read_shdr(fs,off); }
+	    virtual size_t			shdr_size() const { return sizeof(Elf64_External_Shdr); }
+	    virtual Elf_Phdr			read_phdr(binary_stream& fs,__filesize_t off) const { return elf.read_phdr(fs,off); }
+	    virtual size_t			phdr_size() const { return sizeof(Elf64_External_Phdr); }
+	    virtual Elf_Dyn			read_dyn(binary_stream& fs,__filesize_t off) const { return elf.read_dyn(fs,off); }
+	    virtual size_t			dyn_size() const { return sizeof(Elf64_External_Dyn); }
+	    virtual Elf_Rel			read_rel(binary_stream& fs,__filesize_t off) const { return elf.read_rel(fs,off); }
+	    virtual size_t			rel_size() const { return sizeof(Elf64_External_Rel); }
+	    virtual Elf_Rela			read_rela(binary_stream& fs,__filesize_t off) const { return elf.read_rela(fs,off); }
+	    virtual size_t			rela_size() const { return sizeof(Elf64_External_Rela); }
+	private:
+	    Elf_xx<uint64_t> elf;
+	    Elf_Ehdr _ehdr;
+    };
 } // namespace	usr
 #endif
