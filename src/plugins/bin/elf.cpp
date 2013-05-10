@@ -77,19 +77,6 @@ static char is_64bit;
 static class Elf* Elf = NULL;
 static linearArray *PubNames = NULL;
 
-typedef union
-{
-  Elf386_External_Sym e32;
-  Elf64_External_Sym  e64;
-}ElfXX_External_Sym;
-#define ELF_SYM(e,FIELD) (is_64bit?(((Elf64_External_Sym *)&e.e64)->FIELD):(((Elf386_External_Sym *)&e.e32)->FIELD))
-#define ELF_SYM_SIZE() (is_64bit?sizeof(Elf64_External_Sym):sizeof(Elf386_External_Sym))
-#define ELF_HALF(cval) FMT_WORD(cval,is_msbf)
-#define ELF_WORD(cval) FMT_DWORD(cval,is_msbf)
-#define ELF_XWORD(cval) (is_64bit?FMT_QWORD(cval,is_msbf):FMT_DWORD(cval,is_msbf))
-#define ELF_ADDR(cval) ELF_XWORD(cval)
-#define ELF_OFF(cval) ELF_XWORD(cval)
-
 static __filesize_t active_shtbl = 0;
 static __filesize_t elf_min_va = FILESIZE_MAX;
 static unsigned long __elfNumSymTab = 0;
@@ -1395,16 +1382,13 @@ static Elf_Reloc  *  __FASTCALL__ __found_ElfRel(__filesize_t offset)
   return (Elf_Reloc*)la_Find(CurrElfChain,&key,compare_elf_reloc);
 }
 
-/* UNHACKED !!! :( */
 static bool  __FASTCALL__ __readRelocName(Elf_Reloc  *erl, char *buff, size_t cbBuff)
 {
-  __filesize_t r_sym;
   Elf_Shdr shdr;
-  ElfXX_External_Sym sym;
+  Elf_Sym sym;
   binary_stream& handle = elfcache;
   __filesize_t fp;
   bool ret = true;
-  r_sym = is_64bit?ELF64_R_SYM(erl->info):ELF32_R_SYM(erl->info);
   fp = handle.tell();
   if(IsSectionsPresent) /* Section headers are present */
   {
@@ -1417,6 +1401,7 @@ static bool  __FASTCALL__ __readRelocName(Elf_Reloc  *erl, char *buff, size_t cb
   if(ret)
   {
     /* We assume that dynsym and symtab are equal */
+    __filesize_t r_sym = is_64bit?ELF64_R_SYM(erl->info):ELF32_R_SYM(erl->info);
     unsigned old_active;
     old_active = active_shtbl;
     if(IsSectionsPresent) active_shtbl = shdr.sh_link;
@@ -1427,9 +1412,9 @@ static bool  __FASTCALL__ __readRelocName(Elf_Reloc  *erl, char *buff, size_t cb
       dynptr = findPHEntry(PT_DYNAMIC,&nitems);
       active_shtbl = elfVA2PA(findPHDynEntry(DT_STRTAB,dynptr,nitems));
     }
-    handle.seek(r_sym*ELF_SYM_SIZE(),binary_stream::Seek_Cur);
-    handle.read(&sym,sizeof(sym));
-    elf386_readnametableex(ELF_WORD(ELF_SYM(sym,st_name)),buff,cbBuff);
+    handle.seek(r_sym*__elfSymEntSize,binary_stream::Seek_Cur);
+    sym=Elf->read_sym(handle,handle.tell());
+    elf386_readnametableex(sym.st_name,buff,cbBuff);
     buff[cbBuff-1] = '\0';
     active_shtbl = old_active;
     if(!buff[0])
@@ -1437,11 +1422,11 @@ static bool  __FASTCALL__ __readRelocName(Elf_Reloc  *erl, char *buff, size_t cb
       /* reading name failed - try read at least section name */
       if(IsSectionsPresent)
       {
-       if(ELF_ST_TYPE(ELF_SYM(sym,st_info[0])) == STT_SECTION &&
-	  ELF_HALF(ELF_SYM(sym,st_shndx)) &&
-	  ELF_IS_SECTION_PHYSICAL(ELF_HALF(ELF_SYM(sym,st_shndx))))
+       if(ELF_ST_TYPE(sym.st_info) == STT_SECTION &&
+	  sym.st_shndx &&
+	  ELF_IS_SECTION_PHYSICAL(sym.st_shndx))
        {
-         shdr=Elf->read_shdr(handle,Elf->ehdr().e_shoff+ELF_HALF(ELF_SYM(sym,st_shndx))*Elf->ehdr().e_shentsize);
+         shdr=Elf->read_shdr(handle,Elf->ehdr().e_shoff+sym.st_shndx*Elf->ehdr().e_shentsize);
 	 if(!FindPubName(buff, cbBuff, shdr.sh_offset+erl->addend))
 		      elf386_readnametable(shdr.sh_name,buff,cbBuff);
        }

@@ -338,9 +338,9 @@ enum {
     which contains the symbol binding and symbol type.  The STB_ and STT_
     defines identify the binding and type. */
 
-#define ELF_ST_BIND(val)		(((uint8_t)(val)) >> 4)
-#define ELF_ST_TYPE(val)		(((uint8_t)(val)) & 0xF)
-#define ELF_ST_INFO(bind,type)		((((uint8_t)(bind)) << 4) + ((((uint8_t)type)) & 0xF))
+inline uint8_t ELF_ST_BIND(uint8_t val)			{ return val>>4; }
+inline uint8_t ELF_ST_TYPE(uint8_t val)			{ return val&0xF; }
+inline uint8_t ELF_ST_INFO(uint8_t bind,uint8_t type)	{ return (bind<<4)+(type&0xF); }
 enum {
     STN_UNDEF	=0		/**< undefined symbol index */
 };
@@ -376,13 +376,13 @@ enum {
 };
 /** relocation info handling macros */
 
-#define ELF32_R_SYM(i)		((i) >> 8)
-#define ELF32_R_TYPE(i)		((i) & 0xff)
-#define ELF32_R_INFO(s,t)	(((s) << 8) + ((t) & 0xff))
+inline size_t ELF32_R_SYM(size_t i)		{ return i>>8; }
+inline size_t ELF32_R_TYPE(size_t i)		{ return i&0xff; }
+inline size_t ELF32_R_INFO(size_t s,size_t t)	{ return (s<<8)+(t&0xff); }
 
-#define ELF64_R_SYM(i)		((i) >> 32)
-#define ELF64_R_TYPE(i)		((i) & 0xffffffff)
-#define ELF64_R_INFO(s,t)	(((bfd_vma) (s) << 32) + (bfd_vma) (t))
+inline size_t ELF64_R_SYM(size_t i)		{ return i>>32; }
+inline size_t ELF64_R_TYPE(size_t i)		{ return i&0xffffffff; }
+//inline size_t ELF64_R_INFO(size_t s,size_t t)	{ return ((bfd_vma)(s)<<32)+(bfd_vma)(t); }
 
 /** Legal values for d_tag (dynamic entry type).  */
 enum {
