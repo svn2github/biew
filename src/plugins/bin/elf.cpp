@@ -75,6 +75,7 @@ static CodeGuider* code_guider;
 static char is_msbf; /* is most significand byte first */
 static char is_64bit;
 static class Elf* Elf = NULL;
+static linearArray *PubNames = NULL;
 
 typedef union
 {
@@ -2222,8 +2223,9 @@ static void __FASTCALL__ elf_ReadPubName(binary_stream& b_cache,const struct Pub
 static __filesize_t __FASTCALL__ elfGetPubSym(char *str,unsigned cb_str,unsigned *func_class,
 			   __filesize_t pa,bool as_prev)
 {
+   if(!PubNames) elf_ReadPubNameList(elfcache,NULL);
    return fmtGetPubSym(elfcache,str,cb_str,func_class,pa,as_prev,
-		       elf_ReadPubNameList,
+		       PubNames,
 		       elf_ReadPubName);
 }
 

@@ -46,20 +46,13 @@ namespace	usr {
 	__filesize_t attr;
     };
 
-    extern linearArray *PubNames;
-
     typedef void (__FASTCALL__ *ReadPubName)(binary_stream& b_cache,const struct PubName *it,char *buff,unsigned cb_buff);
-    typedef void (__FASTCALL__ *ReadPubNameList)(binary_stream& fmt_chahe,void (__FASTCALL__ *mem_out)(const std::string&));
 
     tCompare __FASTCALL__ fmtComparePubNames(const any_t* v1,const any_t* v2);
-    bool __FASTCALL__ fmtFindPubName(binary_stream& fmt_cache,char *buff,unsigned cb_buff,
-					 __filesize_t pa,
-					 ReadPubNameList fmtReadPubNameList,
-					 ReadPubName fmtReadPubName);
     __filesize_t __FASTCALL__ fmtGetPubSym(binary_stream& fmt_cache,char *str,unsigned cb_str,
 				      unsigned *func_class,__filesize_t pa,
 				      bool as_prev,
-				      ReadPubNameList fmtReadPubNameList,
+				      linearArray *PubNames,
 				      ReadPubName fmtReadPubName);
 
     typedef bool         (__FASTCALL__ * ReadItems)(binary_stream& handle,memArray * names,unsigned nnames);

@@ -86,6 +86,7 @@ ClassFile_t jvm_header;
 
 static binary_stream* jvm_cache;
 static binary_stream* pool_cache;
+static linearArray *PubNames = NULL;
 
 inline uint16_t JVM_WORD(const uint16_t* cval,bool is_msbf) { return FMT_WORD(cval,is_msbf); }
 inline uint32_t JVM_DWORD(const uint32_t* cval,bool is_msbf) { return FMT_DWORD(cval,is_msbf); }
@@ -760,8 +761,9 @@ static void __FASTCALL__ jvm_ReadPubNameList(binary_stream& handle,void (__FASTC
 static __filesize_t __FASTCALL__ jvm_GetPubSym(char *str,unsigned cb_str,unsigned *func_class,
 			   __filesize_t pa,bool as_prev)
 {
+  if(!PubNames) jvm_ReadPubNameList(bmbioHandle(),NULL);
   return fmtGetPubSym(bmbioHandle(),str,cb_str,func_class,pa,as_prev,
-		      jvm_ReadPubNameList,
+		      PubNames,
 		      jvm_ReadPubName);
 }
 

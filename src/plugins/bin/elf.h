@@ -1375,6 +1375,15 @@ enum {
 	uint64_t	r_addend;	/**< Constant addend used to compute value */
     };
 
+    struct Elf_Sym {
+	uint32_t	st_name;	/**< Symbol name, index in string tbl */
+	uint8_t		st_info;	/**< Type and binding attributes */
+	uint8_t		st_other;	/**< No defined meaning, 0 */
+	uint16_t	st_shndx;	/**< Associated section index */
+	uint64_t	st_value;	/**< Value of the symbol */
+	uint64_t	st_size;	/**< Associated symbol size */
+    };
+
     template<typename foff_t>
     class Elf_xx {
 	public:
@@ -1467,9 +1476,9 @@ enum {
 		_fs.read(&tmp,sizeof(foff_t)); rc.r_addend=is_64bit?FMT_QWORD(&tmp,is_msbf):FMT_DWORD(&tmp,is_msbf);
 		return rc;
 	    }
+	    bool		is_msbf,is_64bit;
 	private:
 	    binary_stream&	fs;
-	    bool		is_msbf,is_64bit;
     };
 
     class Elf {
@@ -1489,6 +1498,8 @@ enum {
 	    virtual size_t			rel_size() const = 0;
 	    virtual Elf_Rela			read_rela(binary_stream& fs,__filesize_t off) const = 0;
 	    virtual size_t			rela_size() const = 0;
+	    virtual Elf_Sym			read_sym(binary_stream& fs,__filesize_t off) const = 0;
+	    virtual size_t			sym_size() const = 0;
     };
     class Elf32 : public Elf {
 	public:
@@ -1509,6 +1520,20 @@ enum {
 	    virtual size_t			rel_size() const { return sizeof(Elf386_External_Rel); }
 	    virtual Elf_Rela			read_rela(binary_stream& fs,__filesize_t off) const { return elf.read_rela(fs,off); }
 	    virtual size_t			rela_size() const { return sizeof(Elf386_External_Rela); }
+	    virtual Elf_Sym			read_sym(binary_stream& fs,__filesize_t off) const {
+		Elf_Sym rc;
+		uint32_t tmp32;
+		uint16_t tmp16;
+		fs.seek(off,binary_stream::Seek_Set);
+		tmp32=fs.read(type_dword); rc.st_name=FMT_DWORD(&tmp32,elf.is_msbf);
+		tmp32=fs.read(type_dword); rc.st_value=FMT_DWORD(&tmp32,elf.is_msbf);
+		tmp32=fs.read(type_dword); rc.st_size=FMT_DWORD(&tmp32,elf.is_msbf);
+		rc.st_info=fs.read(type_byte);
+		rc.st_other=fs.read(type_byte);
+		tmp16=fs.read(type_word); rc.st_shndx=FMT_WORD(&tmp16,elf.is_msbf);
+		return rc;
+	    }
+	    virtual size_t			sym_size() const { return sizeof(Elf386_External_Sym); }
 	private:
 	    Elf_xx<uint32_t> elf;
 	    Elf_Ehdr _ehdr;
@@ -1532,6 +1557,21 @@ enum {
 	    virtual size_t			rel_size() const { return sizeof(Elf64_External_Rel); }
 	    virtual Elf_Rela			read_rela(binary_stream& fs,__filesize_t off) const { return elf.read_rela(fs,off); }
 	    virtual size_t			rela_size() const { return sizeof(Elf64_External_Rela); }
+	    virtual Elf_Sym			read_sym(binary_stream& fs,__filesize_t off) const {
+		Elf_Sym rc;
+		uint32_t tmp32;
+		uint16_t tmp16;
+		uint64_t tmp64;
+		fs.seek(off,binary_stream::Seek_Set);
+		tmp32=fs.read(type_dword); rc.st_name=FMT_DWORD(&tmp32,elf.is_msbf);
+		rc.st_info=fs.read(type_byte);
+		rc.st_other=fs.read(type_byte);
+		tmp16=fs.read(type_word); rc.st_shndx=FMT_WORD(&tmp16,elf.is_msbf);
+		tmp64=fs.read(type_qword); rc.st_value=FMT_QWORD(&tmp64,elf.is_msbf);
+		tmp64=fs.read(type_qword); rc.st_size=FMT_QWORD(&tmp64,elf.is_msbf);
+		return rc;
+	    }
+	    virtual size_t			sym_size() const { return sizeof(Elf64_External_Sym); }
 	private:
 	    Elf_xx<uint64_t> elf;
 	    Elf_Ehdr _ehdr;

@@ -42,6 +42,7 @@ using namespace	usr;
 namespace	usr {
 static CodeGuider* code_guider;
 static Nlm_Internal_Fixed_Header nlm;
+static linearArray *PubNames = NULL;
 
 static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
 static void __FASTCALL__ nlm_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
@@ -602,9 +603,16 @@ static void __FASTCALL__ nlm_ReadPubName(binary_stream& b_cache,const struct Pub
 
 static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
-  return fmtFindPubName(*nlm_cache,buff,cb_buff,pa,
-			nlm_ReadPubNameList,
-			nlm_ReadPubName);
+  struct PubName *ret,key;
+  key.pa = pa;
+  if(!PubNames) nlm_ReadPubNameList(*nlm_cache,MemOutBox);
+  ret = (PubName*)la_Find(PubNames,&key,fmtComparePubNames);
+  if(ret)
+  {
+    nlm_ReadPubName(*nlm_cache,ret,buff,cb_buff);
+    return true;
+  }
+  return udnFindName(pa,buff,cb_buff);
 }
 
 static void __FASTCALL__ nlm_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
@@ -632,8 +640,9 @@ static void __FASTCALL__ nlm_ReadPubNameList(binary_stream& handle,void (__FASTC
 static __filesize_t __FASTCALL__ NLMGetPubSym(char *str,unsigned cb_str,unsigned *func_class,
 			   __filesize_t pa,bool as_prev)
 {
+  if(!PubNames) nlm_ReadPubNameList(*nlm_cache,NULL);
   return fmtGetPubSym(*nlm_cache,str,cb_str,func_class,pa,as_prev,
-		      nlm_ReadPubNameList,
+		      PubNames,
 		      nlm_ReadPubName);
 }
 

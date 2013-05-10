@@ -33,8 +33,6 @@ using namespace	usr;
 #include "plugins/disasm.h"
 
 namespace	usr {
-linearArray *PubNames = NULL;
-
 tCompare __FASTCALL__ fmtComparePubNames(const any_t* v1,const any_t* v2)
 {
   const struct PubName  *pnam1, *pnam2;
@@ -43,33 +41,15 @@ tCompare __FASTCALL__ fmtComparePubNames(const any_t* v1,const any_t* v2)
   return __CmpLong__(pnam1->pa,pnam2->pa);
 }
 
-bool __FASTCALL__ fmtFindPubName(binary_stream& fmt_cache,char *buff,unsigned cb_buff,
-		   __filesize_t pa,
-		   ReadPubNameList fmt_readlist,
-		   ReadPubName fmt_readpub)
-{
-  struct PubName *ret,key;
-  key.pa = pa;
-  if(!PubNames) (*fmt_readlist)(fmt_cache,MemOutBox);
-  ret = (PubName*)la_Find(PubNames,&key,fmtComparePubNames);
-  if(ret)
-  {
-    (*fmt_readpub)(fmt_cache,ret,buff,cb_buff);
-    return true;
-  }
-  return udnFindName(pa,buff,cb_buff);
-}
-
 __filesize_t __FASTCALL__ fmtGetPubSym(binary_stream& fmt_cache,char *str,unsigned cb_str,
 			   unsigned *func_class,__filesize_t pa,bool as_prev,
-			   ReadPubNameList fmt_readlist,
+			    linearArray *PubNames,
 			   ReadPubName fmt_readpub)
 {
   __filesize_t cfpos,ret_addr,cur_addr;
   unsigned long i,idx,nitems;
   struct PubName key,*it;
   cfpos = bmGetCurrFilePos();
-  if(!PubNames) (*fmt_readlist)(fmt_cache,NULL);
   if(!PubNames->nItems) return 0;
   ret_addr = 0L;
   idx = UINT_MAX;

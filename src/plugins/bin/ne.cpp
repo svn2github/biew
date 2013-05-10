@@ -43,6 +43,7 @@ using namespace	usr;
 namespace	usr {
 static CodeGuider* code_guider;
 static NEHEADER ne;
+static linearArray *PubNames = NULL;
 
 static binary_stream* ne_cache = &bNull;
 static binary_stream* ne_cache1 = &bNull;
@@ -1336,9 +1337,16 @@ static void __FASTCALL__ ne_ReadPubName(binary_stream& b_cache,const struct PubN
 
 static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
-  return fmtFindPubName(*ne_cache2,buff,cb_buff,pa,
-			ne_ReadPubNameList,
-			ne_ReadPubName);
+  struct PubName *ret,key;
+  key.pa = pa;
+  if(!PubNames) ne_ReadPubNameList(*ne_cache2,MemOutBox);
+  ret = (PubName*)la_Find(PubNames,&key,fmtComparePubNames);
+  if(ret)
+  {
+    ne_ReadPubName(*ne_cache2,ret,buff,cb_buff);
+    return true;
+  }
+  return udnFindName(pa,buff,cb_buff);
 }
 
 
@@ -1420,8 +1428,9 @@ static __filesize_t __FASTCALL__ nePA2VA(__filesize_t pa)
 static __filesize_t __FASTCALL__ neGetPubSym(char *str,unsigned cb_str,unsigned *func_class,
 			  __filesize_t pa,bool as_prev)
 {
+  if(!PubNames) ne_ReadPubNameList(*ne_cache,NULL);
   return fmtGetPubSym(*ne_cache,str,cb_str,func_class,pa,as_prev,
-		      ne_ReadPubNameList,
+		      PubNames,
 		      ne_ReadPubName);
 }
 

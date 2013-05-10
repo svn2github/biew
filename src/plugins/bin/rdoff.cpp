@@ -46,6 +46,7 @@ struct rdoff_ImpName
 
 static unsigned long rdoff_hdrlen,ds_len;
 static __filesize_t cs_start,ds_start;
+static linearArray *PubNames = NULL;
 
 static linearArray *rdoffReloc = NULL;
 static linearArray *rdoffImpNames = NULL;
@@ -573,9 +574,16 @@ static void __FASTCALL__ rdoff_ReadPubName(binary_stream& b_cache,const struct P
 static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
   binary_stream& b_cache = bmbioHandle();
-  return fmtFindPubName(b_cache,buff,cb_buff,pa,
-			rdoff_ReadPubNameList,
-			rdoff_ReadPubName);
+  struct PubName *ret,key;
+  key.pa = pa;
+  if(!PubNames) rdoff_ReadPubNameList(b_cache,MemOutBox);
+  ret = (PubName*)la_Find(PubNames,&key,fmtComparePubNames);
+  if(ret)
+  {
+    rdoff_ReadPubName(b_cache,ret,buff,cb_buff);
+    return true;
+  }
+  return udnFindName(pa,buff,cb_buff);
 }
 
 static void __FASTCALL__ rdoff_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
@@ -675,8 +683,9 @@ static __filesize_t __FASTCALL__ rdoffGetPubSym(char *str,unsigned cb_str,unsign
 			   __filesize_t pa,bool as_prev)
 {
   binary_stream& b_cache = bmbioHandle();
+  if(!PubNames) rdoff_ReadPubNameList(b_cache,NULL);
   return fmtGetPubSym(b_cache,str,cb_str,func_class,pa,as_prev,
-		      rdoff_ReadPubNameList,
+		      PubNames,
 		      rdoff_ReadPubName);
 }
 

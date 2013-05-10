@@ -62,6 +62,7 @@ static PE_ADDR * peVA = NULL;
 static PE32X_HEADER pe32;
 static PEHEADER pe;
 static PERVA *peDir;
+static linearArray *PubNames = NULL;
 
 #define PE_HDR_SIZE() (sizeof(PEHEADER) + PE32_HDR_SIZE())
 
@@ -1237,9 +1238,16 @@ static void __FASTCALL__ pe_ReadPubName(binary_stream& b_cache,const struct PubN
 
 static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
-  return fmtFindPubName(*pe_cache4,buff,cb_buff,pa,
-			pe_ReadPubNameList,
-			pe_ReadPubName);
+  struct PubName *ret,key;
+  key.pa = pa;
+  if(!PubNames) pe_ReadPubNameList(*pe_cache4,MemOutBox);
+  ret = (PubName*)la_Find(PubNames,&key,fmtComparePubNames);
+  if(ret)
+  {
+    pe_ReadPubName(*pe_cache4,ret,buff,cb_buff);
+    return true;
+  }
+  return udnFindName(pa,buff,cb_buff);
 }
 
 static void __FASTCALL__ pe_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
@@ -1268,8 +1276,9 @@ static void __FASTCALL__ pe_ReadPubNameList(binary_stream& handle,void (__FASTCA
 static __filesize_t __FASTCALL__ peGetPubSym(char *str,unsigned cb_str,unsigned *func_class,
 			  __filesize_t pa,bool as_prev)
 {
+  if(!PubNames) pe_ReadPubNameList(*pe_cache,NULL);
   return fmtGetPubSym(*pe_cache,str,cb_str,func_class,pa,as_prev,
-		      pe_ReadPubNameList,
+		      PubNames,
 		      pe_ReadPubName);
 }
 

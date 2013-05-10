@@ -49,6 +49,7 @@ static SCNHDR *coff386so;
 static uint_fast16_t nsections;
 static binary_stream* coff_cache;
 static __filesize_t strings_ptr;
+static linearArray *PubNames = NULL;
 
 static void __FASTCALL__ coff_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
 static void __FASTCALL__ coff_ReadPubName(binary_stream& b_cache,const struct PubName *it,
@@ -58,11 +59,17 @@ static unsigned __FASTCALL__ coff386_GetObjAttr(__filesize_t pa,char *name,unsig
 
 static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
-  return fmtFindPubName(*coff_cache,buff,cb_buff,pa,
-			coff_ReadPubNameList,
-			coff_ReadPubName);
+  struct PubName *ret,key;
+  key.pa = pa;
+  if(!PubNames) coff_ReadPubNameList(*coff_cache,MemOutBox);
+  ret = (PubName*)la_Find(PubNames,&key,fmtComparePubNames);
+  if(ret)
+  {
+    coff_ReadPubName(*coff_cache,ret,buff,cb_buff);
+    return true;
+  }
+  return udnFindName(pa,buff,cb_buff);
 }
-
 
 static void  __FASTCALL__ coffReadLongName(binary_stream& handle,__filesize_t offset,
 				      char *str, unsigned slen)
@@ -682,8 +689,9 @@ static void __FASTCALL__ coff_ReadPubNameList(binary_stream& handle,
 static __filesize_t __FASTCALL__ coff386_GetPubSym(char *str,unsigned cb_str,unsigned *func_class,
 			  __filesize_t pa,bool as_prev)
 {
+  if(!PubNames) coff_ReadPubNameList(*coff_cache,NULL);
   return fmtGetPubSym(*coff_cache,str,cb_str,func_class,pa,as_prev,
-		      coff_ReadPubNameList,
+		      PubNames,
 		      coff_ReadPubName);
 }
 
