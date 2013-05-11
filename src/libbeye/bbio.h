@@ -78,25 +78,35 @@ namespace	usr {
 	    virtual binary_stream*	dup() const;
     private:
 	    /** Virtual file buffer structure */
-	    struct b_cache {
-		b_cache(unsigned size):buffer(new char[size]) {}
-		~b_cache() {}
-		__filesize_t	f_start; /**< logical position of mirror the buffer onto file */
-		LocalPtr<char>	buffer;  /**< NULL - is illegal case */
-		unsigned	buflen;  /**< length data, actually contains in buffer */
-		unsigned	bufsize; /**< real size of buffer */
-		bool		updated; /**< true if buffer contains data, that not pesent in file */
+	    class binary_cache {
+		public:
+		    binary_cache(BBio_File& _parent,unsigned size);
+		    virtual ~binary_cache();
+
+		    unsigned 		buffsize() const { return bufsize; }
+		    __filesize_t	fstart() const { return f_start; }
+		    binary_cache&	operator=(const binary_cache& it);
+		    bool		is_out_of_buffer(__filesize_t pos) const { return pos < f_start || pos >= f_start + bufsize; }
+		    bool		is_out_of_contents(__filesize_t pos) const { return pos < f_start || pos >= f_start + buflen; }
+		    bool		fill(__fileoff_t pos);
+		    bool		flush();
+		    bool		seek(__fileoff_t pos,e_seek origin);
+		    unsigned char	read();
+		    bool		write(unsigned char ch);
+		    bool		read(char* buff,unsigned cbBuff);
+		    bool		write(const char* buff,unsigned cbBuff);
+		    void		chsize(__filesize_t newsize);
+
+		    unsigned		buflen;  /**< length data, actually contains in buffer */
+		    bool		updated; /**< true if buffer contains data, that not pesent in file */
+		private:
+		    __filesize_t	f_start; /**< logical position of mirror the buffer onto file */
+		    unsigned		bufsize; /**< real size of buffer */
+		    LocalPtr<char>	buffer;  /**< NULL - is illegal case */
+		    BBio_File&	parent;
 	    };
+
 	    bool is_writeable(unsigned _openmode) const { return (_openmode & O_RDWR) || (_openmode & O_WRONLY); }
-	    bool __isOutOfBuffer(__filesize_t pos) const { return pos < vfb.f_start || pos >= vfb.f_start + vfb.bufsize; }
-	    bool __isOutOfContents(__filesize_t pos) const { return pos < vfb.f_start || pos >= vfb.f_start + vfb.buflen; }
-	    bool __fill(__fileoff_t pos);
-	    bool __flush();
-	    bool __seek(__fileoff_t pos,e_seek origin);
-	    unsigned char __getc();
-	    bool __putc(unsigned char ch);
-	    bool __getbuff(char * buff,unsigned cbBuff);
-	    bool __putbuff(const char * buff,unsigned cbBuff);
 	    bool chk_eof(__fileoff_t& pos) { is_eof = false;
 		/* Accessing memory after mmf[flength-1] causes GPF in MMF mode */
 		/* so we must add special checks for it but no for read-write mode */
@@ -122,7 +132,7 @@ namespace	usr {
 	    __filesize_t	filepos;   /**< current logical position in file */
 	    unsigned		openmode;  /**< mode,that OsOpen this file */
 	    int			optimize;  /**< seek optimization */
-	    b_cache		vfb;       /**< buffered file */
+	    binary_cache	vfb;       /**< buffered file */
 	    bool		is_eof;    /**< Indicates EOF for buffering streams */
 	    bool		founderr;
 	    __filesize_t	_flength;
