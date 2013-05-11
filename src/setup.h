@@ -18,7 +18,7 @@
 #define __SETUP__H
 
 namespace	usr {
-    const char*beyeGetHelpName();
-    void       Setup();
+    std::string		beyeGetHelpName();
+    void		Setup();
 } // namespace	usr
 #endif

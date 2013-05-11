@@ -276,11 +276,10 @@ int Beye_Help::__ListBox(const char** names,unsigned nlist,const std::string& ti
 
 bool Beye_Help::open( bool interact )
 {
-  const char *help_name;
   char hlp_id[sizeof(BEYE_HELP_VER)];
   if(fs.is_open()) return false; /*means: help file is already opened */
-  help_name = beyeGetHelpName();
-  fs.open(help_name,std::ios_base::binary|std::ios_base::in);
+  std::string help_name = beyeGetHelpName();
+  fs.open(help_name.c_str(),std::ios_base::binary|std::ios_base::in);
   if(!fs.is_open()) {
     if(interact) errnoMessageBox("Can't open help file","",errno);
     return false;

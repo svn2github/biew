@@ -36,35 +36,52 @@ extern int photon,bit7;
 #endif
 namespace	usr {
 
-const char * beyeGetHelpName()
+std::string beyeGetHelpName()
 {
     BeyeContext& bctx = beye_context();
     if(!bctx.help_name[0]) {
 	bctx.help_name=std::string(bctx.system().get_rc_dir("beye"))+"beye.hlp";
     }
-    return bctx.help_name.c_str();
+    return bctx.help_name;
 }
 
-static const char *  __FASTCALL__ beyeGetColorSetName()
+static std::string __FASTCALL__ beyeGetColorSetName()
 {
     BeyeContext& bctx = beye_context();
     if(!bctx.skin_name[0]) {
 	bctx.skin_name=std::string(bctx.system().get_rc_dir("beye"))+"skn/standard.skn"; /* [dBorca] in skn/ subdir */
     }
-    return bctx.skin_name.c_str();
+    return bctx.skin_name;
 }
 
-static const char *  __FASTCALL__ beyeGetSyntaxName()
+static std::string  __FASTCALL__ beyeGetSyntaxName()
 {
     BeyeContext& bctx = beye_context();
     if(!bctx.syntax_name[0]) {
 	bctx.syntax_name=std::string(bctx.system().get_rc_dir("beye"))+"syntax/syntax.stx"; /* [dBorca] in syntax/ subdir */
     }
-    return bctx.syntax_name.c_str();
+    return bctx.syntax_name;
 }
 
 
-static const char * setuptxt[] =
+    class Setup : public Opaque {
+	public:
+	    Setup();
+	    virtual ~Setup();
+
+	    virtual void	run();
+	private:
+	    bool		select_codepage();
+	    void		paint(TWindow& twin);
+
+	    static void		draw_prompt();
+
+	    unsigned		default_cp;
+	    static const char*	setuptxt[];
+	    static const char*	cp_list[];
+    };
+
+const char* Setup::setuptxt[] =
 {
   "Help  ",
   "Consol",
@@ -78,8 +95,7 @@ static const char * setuptxt[] =
   "Escape"
 };
 
-static unsigned default_cp = 15;
-static const char * cp_list[] =
+const char* Setup::cp_list[] =
 {
   "CP437 - original IBM PC Latin US",
   "CP708 - Arabic language",
@@ -100,7 +116,7 @@ static const char * cp_list[] =
   "CP869 - IBM PC Greek-2",
 };
 
-static bool __FASTCALL__ select_codepage()
+bool Setup::select_codepage()
 {
   unsigned nModes;
   int i;
@@ -119,55 +135,55 @@ static bool __FASTCALL__ select_codepage()
   return false;
 }
 
-static void drawSetupPrompt()
+void Setup::draw_prompt()
 {
    __drawSinglePrompt(setuptxt);
 }
 
-static void  __FASTCALL__ setup_paint( TWindow *twin )
+void Setup::paint(TWindow& twin)
 {
-  twin->set_color(dialog_cset.group.active);
-  twin->goto_xy(2,9);
-  twin->printf(" [%c] - Direct console access "
+  twin.set_color(dialog_cset.group.active);
+  twin.goto_xy(2,9);
+  twin.printf(" [%c] - Direct console access "
 	   ,Gebool((beye_context().vioIniFlags & __TVIO_FLG_DIRECT_CONSOLE_ACCESS) == __TVIO_FLG_DIRECT_CONSOLE_ACCESS));
-  twin->goto_xy(2,10);
-  twin->printf(" [%c] - Mouse sensitivity     "
+  twin.goto_xy(2,10);
+  twin.printf(" [%c] - Mouse sensitivity     "
 	   ,Gebool((beye_context().kbdFlags & KBD_NONSTOP_ON_MOUSE_PRESS) == KBD_NONSTOP_ON_MOUSE_PRESS));
-  twin->goto_xy(2,11);
-  twin->printf(" [%c] - Force mono            "
+  twin.goto_xy(2,11);
+  twin.printf(" [%c] - Force mono            "
 	   ,Gebool((beye_context().twinIniFlags & TWIF_FORCEMONO) == TWIF_FORCEMONO));
-  twin->goto_xy(2,12);
+  twin.goto_xy(2,12);
 #ifdef __QNX4__
   if(photon)
   {
-    twin->set_color(dialog_cset.group.disabled);
-    twin->printf(" [%c] - Force 7-bit output    "
+    twin.set_color(dialog_cset.group.disabled);
+    twin.printf(" [%c] - Force 7-bit output    "
 	    ,Gebool(bit7));
-    twin->set_color(dialog_cset.group.active);
+    twin.set_color(dialog_cset.group.active);
   }
   else
 #endif
-  twin->printf(" [%c] - Force 7-bit output    "
+  twin.printf(" [%c] - Force 7-bit output    "
 	   ,Gebool((beye_context().vioIniFlags & __TVIO_FLG_USE_7BIT) == __TVIO_FLG_USE_7BIT));
-  twin->goto_xy(32,9);
-  twin->printf(" [%c] - Apply plugin settings to all files     "
+  twin.goto_xy(32,9);
+  twin.printf(" [%c] - Apply plugin settings to all files     "
 	   ,Gebool(beye_context().iniSettingsAnywhere));
-  twin->goto_xy(32,10);
-  if(!MMFile::has_mmio) twin->set_color(dialog_cset.group.disabled);
-  twin->printf(" [%c] - Use MMF                                "
+  twin.goto_xy(32,10);
+  if(!MMFile::has_mmio) twin.set_color(dialog_cset.group.disabled);
+  twin.printf(" [%c] - Use MMF                                "
 	   ,Gebool(beye_context().fioUseMMF));
-  twin->set_color(dialog_cset.group.active);
-  twin->goto_xy(32,11);
-  twin->printf(" [%c] - Preserve timestamp                     "
+  twin.set_color(dialog_cset.group.active);
+  twin.goto_xy(32,11);
+  twin.printf(" [%c] - Preserve timestamp                     "
 	   ,Gebool(beye_context().iniPreserveTime));
-  twin->goto_xy(32,12);
-  twin->printf(" [%c] - Enable usage of external programs      "
+  twin.goto_xy(32,12);
+  twin.printf(" [%c] - Enable usage of external programs      "
 	   ,Gebool(beye_context().iniUseExtProgs));
-  twin->set_color(dialog_cset.main);
-  twin->goto_xy(50,7); twin->puts(beye_context().codepage.c_str());
+  twin.set_color(dialog_cset.main);
+  twin.goto_xy(50,7); twin.puts(beye_context().codepage);
 }
 
-void Setup()
+void Setup::run()
 {
   tAbsCoord x1,y1,x2,y2;
   tRelCoord X1,Y1,X2,Y2;
@@ -175,10 +191,10 @@ void Setup()
   TWindow * wdlg,*ewnd[4];
   char estr[3][FILENAME_MAX+1];
   int active = 0;
-  strcpy(estr[0],beyeGetHelpName());
-  strcpy(estr[1],beyeGetColorSetName());
-  strcpy(estr[2],beyeGetSyntaxName());
-  wdlg = CrtDlgWndnls(" Setup ",78,13);
+  strcpy(estr[0],beyeGetHelpName().c_str());
+  strcpy(estr[1],beyeGetColorSetName().c_str());
+  strcpy(estr[2],beyeGetSyntaxName().c_str());
+  wdlg = CrtDlgWndnls(" Setup ",77,12);
   wdlg->get_pos(&x1,&y1,&x2,&y2);
   X1 = x1;
   Y1 = y1;
@@ -221,16 +237,16 @@ void Setup()
   wdlg->set_footer(" [Enter] - Accept changes ",TWindow::TMode_Center,dialog_cset.footer);
   wdlg->draw_frame(1,8,78,13,TWindow::UP3D_FRAME,dialog_cset.main);
 
-  setup_paint(wdlg);
+  paint(*wdlg);
   active = 0;
   ewnd[active]->set_focus();
   while(1)
   {
    if(active==3) {
-	if(select_codepage() == true) setup_paint(wdlg);
+	if(select_codepage() == true) paint(*wdlg);
 	ret = KE_TAB;
    }
-   else ret = xeditstring(ewnd[active],estr[active],NULL,sizeof(estr[active]),drawSetupPrompt);
+   else ret = xeditstring(ewnd[active],estr[active],NULL,sizeof(estr[active]),&Setup::draw_prompt);
    switch(ret)
    {
      case KE_F(10):
@@ -261,7 +277,7 @@ void Setup()
 		    break;
      default: continue;
    }
-   setup_paint(wdlg);
+   paint(*wdlg);
   }
   exit:
   if(ret)
@@ -275,5 +291,14 @@ void Setup()
   delete ewnd[2];
   delete ewnd[3];
   delete wdlg;
+}
+
+Setup::Setup():default_cp(15) {}
+Setup::~Setup() {}
+
+void Setup() {
+    class Setup* setup = new class Setup;
+    setup->run();
+    delete setup;
 }
 } // namespace	usr
