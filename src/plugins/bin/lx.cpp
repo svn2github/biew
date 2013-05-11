@@ -850,16 +850,27 @@ static bool  __FASTCALL__ __ReadIterTblLX(binary_stream& handle,memArray * obj,u
 #endif
 static __filesize_t __FASTCALL__ ShowMapTableLX()
 {
- __filesize_t fpos;
- int ret;
- fpos = BMGetCurrFilePos();
- ret = fmtShowList((unsigned)lxe.lx.lxPageCount,__ReadMapTblLX," Map of pages ",
-		   LB_SELECTIVE,NULL);
- if(ret != -1)
- {
-   fpos = CalcPageEntry(ret + 1);
- }
- return fpos;
+    __filesize_t fpos = BMGetCurrFilePos();
+    int ret;
+    std::string title = " Map of pages ";
+    ssize_t nnames = (unsigned)lxe.lx.lxPageCount;
+    int flags = LB_SELECTIVE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    ret = -1;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = __ReadMapTblLX(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ret = ma_Display(obj,title,flags,-1);
+    }
+    ma_Destroy(obj);
+    exit:
+    if(ret != -1) fpos = CalcPageEntry(ret + 1);
+    return fpos;
 }
 
 __filesize_t __FASTCALL__ ShowEntriesLX()
@@ -956,52 +967,112 @@ static __filesize_t __FASTCALL__ ShowResourceLX()
 
 __filesize_t __FASTCALL__ ShowModRefLX()
 {
-  fmtShowList((unsigned)lxe.lx.lxImportModuleTableEntries,
-	      __ReadModRefNamesLX,
-	      MOD_REFER,
-	      LB_SORTABLE,
-	      NULL);
-  return BMGetCurrFilePos();
+    std::string title = MOD_REFER;
+    ssize_t nnames = (unsigned)lxe.lx.lxImportModuleTableEntries;
+    int flags = LB_SELECTIVE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = __ReadModRefNamesLX(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ma_Display(obj,title,flags,-1);
+    }
+    ma_Destroy(obj);
+    exit:
+    return BMGetCurrFilePos();
 }
 
 static __filesize_t __FASTCALL__ ShowResNamLX()
 {
-  __filesize_t fpos = BMGetCurrFilePos();
-  int ret;
-  unsigned ordinal;
-  ret = fmtShowList(LXRNamesNumItems(bmbioHandle()),LXRNamesReadItems,
-		    RES_NAMES,
-		    LB_SELECTIVE | LB_SORTABLE,&ordinal);
-  if(ret != -1)
-  {
-    fpos = CalcEntryBungleLX(ordinal,true);
-  }
-  return fpos;
+    __filesize_t fpos = BMGetCurrFilePos();
+    int ret;
+    unsigned ordinal;
+    std::string title = RES_NAMES;
+    ssize_t nnames = LXRNamesNumItems(bmbioHandle());
+    int flags = LB_SELECTIVE | LB_SORTABLE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    ret = -1;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = LXRNamesReadItems(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ret = ma_Display(obj,title,flags,-1);
+	if(ret != -1) {
+	    const char* cptr;
+	    char buff[40];
+	    cptr = strrchr((char*)obj->data[ret],LB_ORD_DELIMITER);
+	    cptr++;
+	    strcpy(buff,cptr);
+	    ordinal = atoi(buff);
+	}
+    }
+    ma_Destroy(obj);
+    exit:
+    if(ret != -1) fpos = CalcEntryBungleLX(ordinal,true);
+    return fpos;
 }
 
 static __filesize_t __FASTCALL__ ShowNResNmLX()
 {
-  __filesize_t fpos;
-  fpos = BMGetCurrFilePos();
-  {
+    __filesize_t fpos = BMGetCurrFilePos();
     int ret;
     unsigned ordinal;
-    ret = fmtShowList(LXNRNamesNumItems(bmbioHandle()),LXNRNamesReadItems,
-		      NORES_NAMES,
-		      LB_SELECTIVE | LB_SORTABLE,&ordinal);
-    if(ret != -1)
-    {
-      fpos = CalcEntryBungleLX(ordinal,true);
+    std::string title = NORES_NAMES;
+    ssize_t nnames = LXNRNamesNumItems(bmbioHandle());
+    int flags = LB_SELECTIVE | LB_SORTABLE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    ret = -1;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = LXNRNamesReadItems(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ret = ma_Display(obj,title,flags,-1);
+	if(ret != -1) {
+	    const char* cptr;
+	    char buff[40];
+	    cptr = strrchr((char*)obj->data[ret],LB_ORD_DELIMITER);
+	    cptr++;
+	    strcpy(buff,cptr);
+	    ordinal = atoi(buff);
+	}
     }
-  }
-  return fpos;
+    ma_Destroy(obj);
+    exit:
+    if(ret != -1) fpos = CalcEntryBungleLX(ordinal,true);
+    return fpos;
 }
 
 __filesize_t __FASTCALL__ ShowImpProcLXLE()
 {
-  fmtShowList(LXImpNamesNumItems(bmbioHandle()),LXImpNamesReadItems,
-	      IMPPROC_TABLE,0,NULL);
-  return BMGetCurrFilePos();
+    std::string title = IMPPROC_TABLE;
+    ssize_t nnames = LXImpNamesNumItems(bmbioHandle());
+    int flags = LB_SORTABLE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = LXImpNamesReadItems(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ma_Display(obj,title,flags,-1);
+    }
+    ma_Destroy(obj);
+    exit:
+    return BMGetCurrFilePos();
 }
 
 static bool __FASTCALL__ isLX()

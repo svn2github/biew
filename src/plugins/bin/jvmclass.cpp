@@ -88,10 +88,9 @@ static binary_stream* jvm_cache;
 static binary_stream* pool_cache;
 static linearArray *PubNames = NULL;
 
-inline uint16_t JVM_WORD(const uint16_t* cval,bool is_msbf) { return FMT_WORD(cval,is_msbf); }
-inline uint32_t JVM_DWORD(const uint32_t* cval,bool is_msbf) { return FMT_DWORD(cval,is_msbf); }
-inline uint64_t JVM_QWORD(const uint64_t* cval,bool is_msbf) { return FMT_QWORD(cval,is_msbf); }
-
+inline uint16_t JVM_WORD(const uint16_t* cval,bool is_msbf) { return FMT_WORD(*cval,is_msbf); }
+inline uint32_t JVM_DWORD(const uint32_t* cval,bool is_msbf) { return FMT_DWORD(*cval,is_msbf); }
+inline uint64_t JVM_QWORD(const uint64_t* cval,bool is_msbf) { return FMT_QWORD(*cval,is_msbf); }
 
 static bool  __FASTCALL__ jvm_check_fmt()
 {
@@ -233,12 +232,24 @@ static bool __FASTCALL__ jvm_read_interfaces(binary_stream& handle,memArray * na
 
 static __filesize_t __FASTCALL__ ShowInterfaces()
 {
-  __filesize_t fpos;
-  fpos = BMGetCurrFilePos();
-  fmtShowList(jvm_header.interfaces_count,jvm_read_interfaces,
-		    " interfaces ",
-		    LB_SORTABLE,NULL);
-  return fpos;
+    __filesize_t fpos = BMGetCurrFilePos();
+    std::string title = " interfaces ";
+    ssize_t nnames = jvm_header.interfaces_count;
+    int flags = LB_SORTABLE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = jvm_read_interfaces(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ma_Display(obj,title,flags,-1);
+    }
+    ma_Destroy(obj);
+    exit:
+    return fpos;
 }
 
 static bool __FASTCALL__ jvm_read_attributes(binary_stream& handle,memArray * names,unsigned nnames)
@@ -264,28 +275,38 @@ static bool __FASTCALL__ jvm_read_attributes(binary_stream& handle,memArray * na
 
 static __filesize_t  __FASTCALL__ __ShowAttributes(const std::string& title)
 {
-  __filesize_t fpos;
-  int ret;
-  fpos = BMGetCurrFilePos();
-  ret=fmtShowList(jvm_header.attributes_count,jvm_read_attributes,
-		title,
-		LB_SELECTIVE,NULL);
-  if(ret!=-1)
-  {
-    unsigned i;
-    bmSeek(jvm_header.attributes_offset,binary_stream::Seek_Set);
-    for(i=0;i<(unsigned)ret+1;i++)
-    {
-	uint32_t len;
-	fpos=bmGetCurrFilePos();
-	bmSeek(fpos+2,binary_stream::Seek_Set);
-	len=bmReadDWord();
-	len=JVM_DWORD(&len,1);
-	fpos+=6;
-	bmSeek(len,binary_stream::Seek_Cur);
+    __filesize_t fpos = BMGetCurrFilePos();
+    int ret;
+    ssize_t nnames = jvm_header.attributes_count;
+    int flags = LB_SELECTIVE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    ret = -1;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = jvm_read_attributes(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ret = ma_Display(obj,title,flags,-1);
     }
-  }
-  return fpos;
+    ma_Destroy(obj);
+    exit:
+    if(ret!=-1) {
+	unsigned i;
+	bmSeek(jvm_header.attributes_offset,binary_stream::Seek_Set);
+	for(i=0;i<(unsigned)ret+1;i++) {
+	    uint32_t len;
+	    fpos=bmGetCurrFilePos();
+	    bmSeek(fpos+2,binary_stream::Seek_Set);
+	    len=bmReadDWord();
+	    len=JVM_DWORD(&len,1);
+	    fpos+=6;
+	    bmSeek(len,binary_stream::Seek_Cur);
+	}
+    }
+    return fpos;
 }
 
 static __filesize_t __FASTCALL__ ShowAttributes()
@@ -320,44 +341,54 @@ static bool __FASTCALL__ jvm_read_methods(binary_stream& handle,memArray * names
 
 static __filesize_t __FASTCALL__ ShowMethods()
 {
-  __filesize_t fpos;
-  int ret;
-  fpos = BMGetCurrFilePos();
-  ret=fmtShowList(jvm_header.methods_count,jvm_read_methods,
-		    " length   attributes ",
-		    LB_SELECTIVE,NULL);
-  if(ret!=-1)
-  {
-    char str[80];
-    unsigned i;
-    unsigned short acount=0;
-    bmSeek(jvm_header.methods_offset,binary_stream::Seek_Set);
-    for(i=0;i<(unsigned)ret+1;i++)
-    {
-	fpos=bmGetCurrFilePos();
-	bmSeek(2,binary_stream::Seek_Cur);
-	get_name(bmbioHandle(),str,sizeof(str));
-	bmSeek(fpos+6,binary_stream::Seek_Set);
-	acount=bmReadWord();
-	acount=JVM_WORD(&acount,1);
-	skip_attributes(bmbioHandle(),acount);
+    __filesize_t fpos = BMGetCurrFilePos();
+    int ret;
+    std::string title = " length   attributes ";
+    ssize_t nnames = jvm_header.methods_count;
+    int flags = LB_SELECTIVE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    ret = -1;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = jvm_read_methods(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ret = ma_Display(obj,title,flags,-1);
     }
-    fpos += 6;
-    if(acount>1)
-    {
-	__filesize_t a_offset;
-	unsigned short a_count;
-	a_offset = jvm_header.attributes_offset;
-	a_count = jvm_header.attributes_count;
-	jvm_header.attributes_offset=fpos+2;
-	jvm_header.attributes_count=acount;
-	fpos=__ShowAttributes(str);
-	jvm_header.attributes_offset=a_offset;
-	jvm_header.attributes_count=a_count;
+    ma_Destroy(obj);
+    exit:
+    if(ret!=-1) {
+	char str[80];
+	unsigned i;
+	unsigned short acount=0;
+	bmSeek(jvm_header.methods_offset,binary_stream::Seek_Set);
+	for(i=0;i<(unsigned)ret+1;i++) {
+	    fpos=bmGetCurrFilePos();
+	    bmSeek(2,binary_stream::Seek_Cur);
+	    get_name(bmbioHandle(),str,sizeof(str));
+	    bmSeek(fpos+6,binary_stream::Seek_Set);
+	    acount=bmReadWord();
+	    acount=JVM_WORD(&acount,1);
+	    skip_attributes(bmbioHandle(),acount);
+	}
+	fpos += 6;
+	if(acount>1) {
+	    __filesize_t a_offset;
+	    unsigned short a_count;
+	    a_offset = jvm_header.attributes_offset;
+	    a_count = jvm_header.attributes_count;
+	    jvm_header.attributes_offset=fpos+2;
+	    jvm_header.attributes_count=acount;
+	    fpos=__ShowAttributes(str);
+	    jvm_header.attributes_offset=a_offset;
+	    jvm_header.attributes_count=a_count;
+	}
+	else fpos += acount?6:0;
     }
-    else fpos += acount?6:0;
-  }
-  return fpos;
+    return fpos;
 }
 
 
@@ -388,44 +419,54 @@ static bool __FASTCALL__ jvm_read_fields(binary_stream& handle,memArray * names,
 
 static __filesize_t __FASTCALL__ ShowFields()
 {
-  __filesize_t fpos;
-  int ret;
-  fpos = BMGetCurrFilePos();
-  ret=fmtShowList(jvm_header.fields_count,jvm_read_fields,
-		    " length   attributes ",
-		    LB_SELECTIVE,NULL);
-  if(ret!=-1)
-  {
-    char str[80];
-    unsigned i;
-    unsigned short acount=0;
-    bmSeek(jvm_header.fields_offset,binary_stream::Seek_Set);
-    for(i=0;i<(unsigned)ret+1;i++)
-    {
-	fpos=bmGetCurrFilePos();
-	bmSeek(2,binary_stream::Seek_Cur);
-	get_name(bmbioHandle(),str,sizeof(str));
-	bmSeek(fpos+6,binary_stream::Seek_Set);
-	acount=bmReadWord();
-	acount=JVM_WORD(&acount,1);
-	skip_attributes(bmbioHandle(),acount);
+    __filesize_t fpos = BMGetCurrFilePos();
+    int ret;
+    std::string title = " length   attributes ";
+    ssize_t nnames = jvm_header.fields_count;
+    int flags = LB_SELECTIVE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    ret = -1;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = jvm_read_fields(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ret = ma_Display(obj,title,flags,-1);
     }
-    fpos += 6;
-    if(acount>1)
-    {
-	__filesize_t a_offset;
-	unsigned short a_count;
-	a_offset = jvm_header.attributes_offset;
-	a_count = jvm_header.attributes_count;
-	jvm_header.attributes_offset=fpos+2;
-	jvm_header.attributes_count=acount;
-	fpos=__ShowAttributes(str);
-	jvm_header.attributes_offset=a_offset;
-	jvm_header.attributes_count=a_count;
+    ma_Destroy(obj);
+    exit:
+    if(ret!=-1) {
+	char str[80];
+	unsigned i;
+	unsigned short acount=0;
+	bmSeek(jvm_header.fields_offset,binary_stream::Seek_Set);
+	for(i=0;i<(unsigned)ret+1;i++) {
+	    fpos=bmGetCurrFilePos();
+	    bmSeek(2,binary_stream::Seek_Cur);
+	    get_name(bmbioHandle(),str,sizeof(str));
+	    bmSeek(fpos+6,binary_stream::Seek_Set);
+	    acount=bmReadWord();
+	    acount=JVM_WORD(&acount,1);
+	    skip_attributes(bmbioHandle(),acount);
+	}
+	fpos += 6;
+	if(acount>1) {
+	    __filesize_t a_offset;
+	    unsigned short a_count;
+	    a_offset = jvm_header.attributes_offset;
+	    a_count = jvm_header.attributes_count;
+	    jvm_header.attributes_offset=fpos+2;
+	    jvm_header.attributes_count=acount;
+	    fpos=__ShowAttributes(str);
+	    jvm_header.attributes_offset=a_offset;
+	    jvm_header.attributes_count=a_count;
+	}
+	else fpos += acount?6:0;
     }
-    else fpos += acount?6:0;
-  }
-  return fpos;
+    return fpos;
 }
 
 static bool __FASTCALL__ jvm_read_pool(binary_stream& handle,memArray * names,unsigned nnames)
@@ -508,12 +549,24 @@ static bool __FASTCALL__ jvm_read_pool(binary_stream& handle,memArray * names,un
 
 static __filesize_t __FASTCALL__ ShowPool()
 {
-  __filesize_t fpos;
-  fpos = BMGetCurrFilePos();
-  fmtShowList(jvm_header.constant_pool_count,jvm_read_pool,
-		    " Constant pool ",
-		    LB_SORTABLE,NULL);
-  return fpos;
+    __filesize_t fpos = BMGetCurrFilePos();
+    std::string title = " Constant pool ";
+    ssize_t nnames = jvm_header.constant_pool_count;
+    int flags = LB_SORTABLE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = jvm_read_pool(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ma_Display(obj,title,flags,-1);
+    }
+    ma_Destroy(obj);
+    exit:
+    return fpos;
 }
 
 static void __FASTCALL__ jvm_init_fmt(CodeGuider& code_guider)
@@ -761,10 +814,18 @@ static void __FASTCALL__ jvm_ReadPubNameList(binary_stream& handle,void (__FASTC
 static __filesize_t __FASTCALL__ jvm_GetPubSym(char *str,unsigned cb_str,unsigned *func_class,
 			   __filesize_t pa,bool as_prev)
 {
-  if(!PubNames) jvm_ReadPubNameList(bmbioHandle(),NULL);
-  return fmtGetPubSym(bmbioHandle(),str,cb_str,func_class,pa,as_prev,
-		      PubNames,
-		      jvm_ReadPubName);
+    binary_stream& b_cache = bmbioHandle();
+    __filesize_t fpos;
+    size_t idx;
+    if(!PubNames) jvm_ReadPubNameList(b_cache,NULL);
+    fpos=fmtGetPubSym(*func_class,pa,as_prev,PubNames,idx);
+    if(idx!=std::numeric_limits<size_t>::max()) {
+	struct PubName *it;
+	it = &((struct PubName  *)PubNames->data)[idx];
+	jvm_ReadPubName(b_cache,it,str,cb_str);
+	str[cb_str-1] = 0;
+    }
+    return fpos;
 }
 
 static unsigned __FASTCALL__ jvm_GetObjAttr(__filesize_t pa,char *name,unsigned cb_name,
@@ -841,19 +902,18 @@ static int __FASTCALL__ jvm_bitness(__filesize_t off)
 
 static bool __FASTCALL__ jvm_AppendRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
- bool retrf = true;
- unsigned slen=1000; /* According on disasm/java/java.c */
- UNUSED(r_sh);
-    if((flags & APREF_TRY_LABEL)!=APREF_TRY_LABEL)
-    {
+    bool retrf = true;
+    unsigned slen=1000; /* According on disasm/java/java.c */
+    UNUSED(parent);
+    UNUSED(r_sh);
+    if((flags & APREF_TRY_LABEL)!=APREF_TRY_LABEL) {
 	__filesize_t fpos;
 	uint32_t lidx,lval,lval2;
 	unsigned sl;
 	unsigned short sval,sval2;
 	unsigned char utag;
 	jvm_cache->seek(ulShift,binary_stream::Seek_Set);
-	switch(codelen)
-	{
+	switch(codelen) {
 	    case 4: lidx=jvm_cache->read(type_dword); lidx=JVM_DWORD(&lidx,1); break;
 	    case 2: sval=jvm_cache->read(type_word); lidx=JVM_WORD(&sval,1); break;
 	    default:
@@ -864,8 +924,7 @@ static bool __FASTCALL__ jvm_AppendRef(const DisMode& parent,char *str,__filesiz
 	skip_constant_pool(*pool_cache,lidx-1);
 	utag=pool_cache->read(type_byte);
 	str=&str[strlen(str)];
-	switch(utag)
-	{
+	switch(utag) {
 	    case CONSTANT_STRING:
 	    case CONSTANT_CLASS:
 			get_name(*pool_cache,str,slen);

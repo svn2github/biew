@@ -341,12 +341,23 @@ static bool __FASTCALL__ NLMNamesReadItems(binary_stream& handle,memArray * obj,
 
 static __filesize_t __FASTCALL__ ShowExtRefNLM()
 {
-  fmtShowList((unsigned)nlm.nlm_numberOfExternalReferences,
-	      __ReadExtRefNamesNLM,
-	      EXT_REFER,
-	      LB_SORTABLE,
-	      NULL);
-   return BMGetCurrFilePos();
+    std::string title = EXT_REFER;
+    ssize_t nnames = (unsigned)nlm.nlm_numberOfExternalReferences;
+    int flags = LB_SORTABLE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = __ReadExtRefNamesNLM(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ma_Display(obj,title,flags,-1);
+    }
+    ma_Destroy(obj);
+    exit:
+    return BMGetCurrFilePos();
 }
 
 static bool __FASTCALL__ __ReadModRefNamesNLM(binary_stream& handle,memArray * obj,unsigned nnames)
@@ -374,26 +385,48 @@ static bool __FASTCALL__ __ReadModRefNamesNLM(binary_stream& handle,memArray * o
 
 static __filesize_t __FASTCALL__ ShowModRefNLM()
 {
-  fmtShowList((unsigned)nlm.nlm_numberOfModuleDependencies,
-	      __ReadModRefNamesNLM,
-	      MOD_REFER,
-	      LB_SORTABLE,
-	      NULL);
-   return BMGetCurrFilePos();
+    std::string title = MOD_REFER;
+    ssize_t nnames = (unsigned)nlm.nlm_numberOfModuleDependencies;
+    int flags = LB_SORTABLE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = __ReadModRefNamesNLM(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ma_Display(obj,title,flags,-1);
+    }
+    ma_Destroy(obj);
+    exit:
+    return BMGetCurrFilePos();
 }
 
 static __filesize_t __FASTCALL__ ShowPubNamNLM()
 {
-  __filesize_t fpos = BMGetCurrFilePos();
-  int ret;
-  ret = fmtShowList((unsigned)nlm.nlm_numberOfPublics,NLMNamesReadItems,
-		    EXP_TABLE,
-		    LB_SELECTIVE,NULL);
-  if(ret != -1)
-  {
-    fpos = CalcEntryNLM(ret,true);
-  }
-  return fpos;
+    __filesize_t fpos = BMGetCurrFilePos();
+    int ret;
+    std::string title = EXP_TABLE;
+    ssize_t nnames = (unsigned)nlm.nlm_numberOfPublics;
+    int flags = LB_SELECTIVE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    ret = -1;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = NLMNamesReadItems(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ret = ma_Display(obj,title,flags,-1);
+    }
+    ma_Destroy(obj);
+    exit:
+    if(ret != -1) fpos = CalcEntryNLM(ret,true);
+    return fpos;
 }
 
 /***************************************************************************/
@@ -640,10 +673,17 @@ static void __FASTCALL__ nlm_ReadPubNameList(binary_stream& handle,void (__FASTC
 static __filesize_t __FASTCALL__ NLMGetPubSym(char *str,unsigned cb_str,unsigned *func_class,
 			   __filesize_t pa,bool as_prev)
 {
-  if(!PubNames) nlm_ReadPubNameList(*nlm_cache,NULL);
-  return fmtGetPubSym(*nlm_cache,str,cb_str,func_class,pa,as_prev,
-		      PubNames,
-		      nlm_ReadPubName);
+    __filesize_t fpos;
+    size_t idx;
+    if(!PubNames) nlm_ReadPubNameList(*nlm_cache,NULL);
+    fpos=fmtGetPubSym(*func_class,pa,as_prev,PubNames,idx);
+    if(idx!=std::numeric_limits<size_t>::max()) {
+	struct PubName *it;
+	it = &((struct PubName  *)PubNames->data)[idx];
+	nlm_ReadPubName(*nlm_cache,it,str,cb_str);
+	str[cb_str-1] = 0;
+    }
+    return fpos;
 }
 
 static unsigned __FASTCALL__ NLMGetObjAttr(__filesize_t pa,char *name,unsigned cb_name,

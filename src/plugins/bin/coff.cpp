@@ -385,16 +385,27 @@ static __filesize_t  __FASTCALL__ CalcEntryCoff(unsigned long idx,bool display_m
 
 static __filesize_t __FASTCALL__ coffShowSymTab()
 {
-  __filesize_t fpos = BMGetCurrFilePos();
-  int ret;
-  ret = fmtShowList(COFF_DWORD(coff386hdr.f_nsyms),coffSymTabReadItems,
-		    "Symbol Table",
-		    LB_SELECTIVE,NULL);
-  if(ret != -1)
-  {
-    fpos = CalcEntryCoff(ret,true);
-  }
-  return fpos;
+    __filesize_t fpos = BMGetCurrFilePos();
+    int ret;
+    std::string title = "Symbol Table";
+    ssize_t nnames = COFF_DWORD(coff386hdr.f_nsyms);
+    int flags = LB_SELECTIVE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    ret = -1;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = coffSymTabReadItems(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ret = ma_Display(obj,title,flags,-1);
+    }
+    ma_Destroy(obj);
+    exit:
+    if(ret != -1) fpos = CalcEntryCoff(ret,true);
+    return fpos;
 }
 
 /***************************************************************************/
@@ -689,10 +700,17 @@ static void __FASTCALL__ coff_ReadPubNameList(binary_stream& handle,
 static __filesize_t __FASTCALL__ coff386_GetPubSym(char *str,unsigned cb_str,unsigned *func_class,
 			  __filesize_t pa,bool as_prev)
 {
-  if(!PubNames) coff_ReadPubNameList(*coff_cache,NULL);
-  return fmtGetPubSym(*coff_cache,str,cb_str,func_class,pa,as_prev,
-		      PubNames,
-		      coff_ReadPubName);
+    __filesize_t fpos;
+    size_t idx;
+    if(!PubNames) coff_ReadPubNameList(*coff_cache,NULL);
+    fpos=fmtGetPubSym(*func_class,pa,as_prev,PubNames,idx);
+    if(idx!=std::numeric_limits<size_t>::max()) {
+	struct PubName *it;
+	it = &((struct PubName  *)PubNames->data)[idx];
+	coff_ReadPubName(*coff_cache,it,str,cb_str);
+	str[cb_str-1] = 0;
+    }
+    return fpos;
 }
 
 static unsigned __FASTCALL__ coff386_GetObjAttr(__filesize_t pa,char *name,unsigned cb_name,

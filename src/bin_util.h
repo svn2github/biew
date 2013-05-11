@@ -24,13 +24,13 @@
 
 namespace	usr {
 #if __BYTE_ORDER == __BIG_ENDIAN
-inline uint16_t FMT_WORD(const uint16_t* cval,bool is_big) { return !is_big ? bswap_16(*cval) : *cval; }
-inline uint32_t FMT_DWORD(const uint32_t* cval,bool is_big) { return !is_big ? bswap_32(*cval) :*cval; }
-inline uint64_t FMT_QWORD(const uint64_t* cval,bool is_big) { return !is_big ? bswap_64(*cval) :*cval; }
+    inline uint16_t FMT_WORD(uint16_t cval,bool is_big) { return !is_big ? bswap_16(cval) : cval; }
+    inline uint32_t FMT_DWORD(uint32_t cval,bool is_big) { return !is_big ? bswap_32(cval) :cval; }
+    inline uint64_t FMT_QWORD(uint64_t cval,bool is_big) { return !is_big ? bswap_64(cval) :cval; }
 #else
-inline uint16_t FMT_WORD(const uint16_t* cval,bool is_big) { return is_big ? bswap_16(*cval) : *cval; }
-inline uint32_t FMT_DWORD(const uint32_t* cval,bool is_big) { return is_big ? bswap_32(*cval) :*cval; }
-inline uint64_t FMT_QWORD(const uint64_t* cval,bool is_big) { return is_big ? bswap_64(*cval) :*cval; }
+    inline uint16_t FMT_WORD(uint16_t cval,bool is_big) { return is_big ? bswap_16(cval) : cval; }
+    inline uint32_t FMT_DWORD(uint32_t cval,bool is_big) { return is_big ? bswap_32(cval) :cval; }
+    inline uint64_t FMT_QWORD(uint64_t cval,bool is_big) { return is_big ? bswap_64(cval) :cval; }
 #endif
 
     struct PubName {
@@ -40,17 +40,9 @@ inline uint64_t FMT_QWORD(const uint64_t* cval,bool is_big) { return is_big ? bs
 	__filesize_t attr;
     };
 
-    typedef void (__FASTCALL__ *ReadPubName)(binary_stream& b_cache,const struct PubName *it,char *buff,unsigned cb_buff);
-
     tCompare __FASTCALL__ fmtComparePubNames(const any_t* v1,const any_t* v2);
-    __filesize_t __FASTCALL__ fmtGetPubSym(binary_stream& fmt_cache,char *str,unsigned cb_str,
-				      unsigned *func_class,__filesize_t pa,
-				      bool as_prev,
-				      linearArray *PubNames,
-				      ReadPubName fmtReadPubName);
-
-    typedef bool         (__FASTCALL__ * ReadItems)(binary_stream& handle,memArray * names,unsigned nnames);
-    int           __FASTCALL__ fmtShowList( size_t num,ReadItems ri,const std::string& title,int flags,unsigned * ordinal);
+    __filesize_t __FASTCALL__ fmtGetPubSym(unsigned& func_class,__filesize_t pa,bool as_prev,
+					linearArray *PubNames,size_t& index);
 
     /** Reads user defined name at given offset!
     **/

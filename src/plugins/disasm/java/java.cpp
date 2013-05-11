@@ -344,6 +344,10 @@ const java_codes_t Java_Disassembler::java_codes[256]=
   /*0xFF*/ { "impdep2", 0 }
 };
 
+inline uint16_t JVM_WORD(const uint16_t* cval,bool is_msbf) { return FMT_WORD(*cval,is_msbf); }
+inline uint32_t JVM_DWORD(const uint32_t* cval,bool is_msbf) { return FMT_DWORD(*cval,is_msbf); }
+inline uint64_t JVM_QWORD(const uint64_t* cval,bool is_msbf) { return FMT_QWORD(*cval,is_msbf); }
+
 DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 					MBuffer buffer,
 					unsigned flags)
@@ -398,7 +402,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 			strcpy(outstr,"case ");
 			strcat(outstr,Get8Digit((ulShift-vartail_start)/4+vartail_idx));
 			strcat(outstr,":");
-			lval=FMT_DWORD((uint32_t*)buffer, 1);
+			lval=JVM_DWORD((uint32_t*)buffer, 1);
 			newpos=vartail_base+lval;
 			if(lval!=newpos)
 				parent.append_faddr(outstr,ulShift,lval,
@@ -409,10 +413,10 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		else
 		{
 			strcpy(outstr,"case ");
-			cval=FMT_DWORD((uint32_t*)buffer, 1);
+			cval=JVM_DWORD((uint32_t*)buffer, 1);
 			strcat(outstr,Get8Digit(cval));
 			strcat(outstr,":");
-			lval=FMT_DWORD((uint32_t*)(&buffer[4]), 1);
+			lval=JVM_DWORD((uint32_t*)(&buffer[4]), 1);
 			newpos=vartail_base+lval;
 			if(lval!=newpos)
 				parent.append_faddr(outstr,ulShift,lval,
@@ -441,7 +445,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
     if(jflags & JVM_LOOKUPSWITCH)
     {
 	tail=8+npadds;
-	vartail=FMT_DWORD((uint32_t*)(&buffer[idx+1+npadds+4]),1)*8;
+	vartail=JVM_DWORD((uint32_t*)(&buffer[idx+1+npadds+4]),1)*8;
 	vartail_start=tail+ulShift;
 	if(prev_pa && vartail_start+vartail<=next_pa);
 	else vartail=0;
@@ -450,8 +454,8 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
     {
 	unsigned long hi,lo;
 	tail=12+npadds;
-	lo=FMT_DWORD((uint32_t*)(&buffer[idx+1+npadds+4]),1);
-	hi=FMT_DWORD((uint32_t*)(&buffer[idx+1+npadds+8]),1);
+	lo=JVM_DWORD((uint32_t*)(&buffer[idx+1+npadds+4]),1);
+	hi=JVM_DWORD((uint32_t*)(&buffer[idx+1+npadds+8]),1);
 	vartail=(hi-lo+1)*4;
 	vartail_start=tail+ulShift;
 	vartail_idx=lo;
@@ -481,8 +485,8 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 	    {
 		__filesize_t newpos;
 		unsigned long defval,npairs;
-		defval=FMT_DWORD((uint32_t*)(&buffer[idx+npadds]),1);
-		npairs=FMT_DWORD((uint32_t*)(&buffer[idx+npadds+4]),1);
+		defval=JVM_DWORD((uint32_t*)(&buffer[idx+npadds]),1);
+		npairs=JVM_DWORD((uint32_t*)(&buffer[idx+npadds+4]),1);
 		if(!vartail) strcat(outstr,"???invalid???");
 		else
 		{
@@ -502,7 +506,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 	    {
 		__filesize_t newpos;
 		unsigned long defval;
-		defval=FMT_DWORD((uint32_t*)(&buffer[idx+npadds]),1);
+		defval=JVM_DWORD((uint32_t*)(&buffer[idx+npadds]),1);
 		if(!vartail) strcat(outstr,"???invalid???");
 		else
 		{
@@ -546,7 +550,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		{
 		    __filesize_t newpos;
 		    unsigned short sval;
-		    sval=FMT_WORD((uint16_t*)(&buffer[idx]),1);
+		    sval=JVM_WORD((uint16_t*)(&buffer[idx]),1);
 		    if((jflags & JVM_CODEREF)==JVM_CODEREF && sval)
 		    {
 			newpos = ulShift + (signed short)sval;
@@ -573,7 +577,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		{
 		    __filesize_t newpos;
 		    unsigned long lval;
-		    lval=FMT_DWORD((uint32_t*)(&buffer[idx]),1);
+		    lval=JVM_DWORD((uint32_t*)(&buffer[idx]),1);
 		    if((jflags & JVM_CODEREF)==JVM_CODEREF && lval)
 		    {
 			newpos = ulShift + (__fileoff_t)lval;
@@ -584,14 +588,14 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		    if((jflags & JVM_OBJREF2)==JVM_OBJREF2)
 		    {
 			unsigned short sval;
-			sval=FMT_WORD((uint16_t*)(&buffer[idx]),1);
+			sval=JVM_WORD((uint16_t*)(&buffer[idx]),1);
 			parent.append_digits(outstr,ulShift,
 				    APREF_USE_TYPE,2,&sval,DisMode::Arg_Word);
 			strcat(outstr,",");
 			if((jflags & JVM_CONST1)==JVM_CONST1) strcat(outstr,Get2Digit(buffer[idx+2]));
 			else
 			{
-			    sval=FMT_WORD((uint16_t*)(&buffer[idx+2]),1);
+			    sval=JVM_WORD((uint16_t*)(&buffer[idx+2]),1);
 			    strcat(outstr,Get4Digit(sval));
 			}
 		    }

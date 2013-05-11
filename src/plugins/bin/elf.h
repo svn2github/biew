@@ -1384,9 +1384,9 @@ enum {
 	uint64_t	st_size;	/**< Associated symbol size */
     };
 
-    inline uint16_t ELF_WORD(const uint16_t* cval,bool is_msbf) { return FMT_WORD(cval,is_msbf); }
-    inline uint32_t ELF_DWORD(const uint32_t* cval,bool is_msbf) { return FMT_DWORD(cval,is_msbf); }
-    inline uint64_t ELF_QWORD(const uint64_t* cval,bool is_msbf) { return FMT_QWORD(cval,is_msbf); }
+    inline uint16_t ELF_WORD(const uint16_t* cval,bool is_msbf) { return FMT_WORD(*cval,is_msbf); }
+    inline uint32_t ELF_DWORD(const uint32_t* cval,bool is_msbf) { return FMT_DWORD(*cval,is_msbf); }
+    inline uint64_t ELF_QWORD(const uint64_t* cval,bool is_msbf) { return FMT_QWORD(*cval,is_msbf); }
     template<typename foff_t>
     class Elf_xx {
 	public:

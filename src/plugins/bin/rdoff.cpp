@@ -682,11 +682,18 @@ static int __FASTCALL__ rdoff_bitness(__filesize_t pa)
 static __filesize_t __FASTCALL__ rdoffGetPubSym(char *str,unsigned cb_str,unsigned *func_class,
 			   __filesize_t pa,bool as_prev)
 {
-  binary_stream& b_cache = bmbioHandle();
-  if(!PubNames) rdoff_ReadPubNameList(b_cache,NULL);
-  return fmtGetPubSym(b_cache,str,cb_str,func_class,pa,as_prev,
-		      PubNames,
-		      rdoff_ReadPubName);
+    binary_stream& b_cache = bmbioHandle();
+    __filesize_t fpos;
+    size_t idx;
+    if(!PubNames) rdoff_ReadPubNameList(b_cache,NULL);
+    fpos=fmtGetPubSym(*func_class,pa,as_prev,PubNames,idx);
+    if(idx!=std::numeric_limits<size_t>::max()) {
+	struct PubName *it;
+	it = &((struct PubName  *)PubNames->data)[idx];
+	rdoff_ReadPubName(b_cache,it,str,cb_str);
+	str[cb_str-1] = 0;
+    }
+    return fpos;
 }
 
 static unsigned __FASTCALL__ rdoffGetObjAttr(__filesize_t pa,char *name,unsigned cb_name,

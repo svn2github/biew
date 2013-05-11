@@ -844,37 +844,61 @@ static bool  __FASTCALL__ __elfReadDynTab(binary_stream& handle,memArray *obj, u
 
 static __filesize_t __FASTCALL__ ShowPrgHdrElf()
 {
-  __filesize_t fpos;
-  int ret;
-  fpos = BMGetCurrFilePos();
-  ret = fmtShowList(Elf->ehdr().e_phnum,__elfReadPrgHdr,
-		    " type            fileoffs virtaddr physaddr filesize memsize  flg align   ",
-		    LB_SELECTIVE,NULL);
-  if(ret != -1)
-  {
-    Elf_Phdr it;
-    it=Elf->read_phdr(bmbioHandle(),Elf->ehdr().e_phoff+Elf->phdr_size()*ret);
-    bmReadBuffer(&it,sizeof(it));
-    fpos = it.p_offset;
-  }
-  return fpos;
+    __filesize_t fpos = BMGetCurrFilePos();
+    int ret;
+    std::string title = " type            fileoffs virtaddr physaddr filesize memsize  flg align   ";
+    ssize_t nnames = Elf->ehdr().e_phnum;
+    int flags = LB_SELECTIVE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    ret = -1;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = __elfReadPrgHdr(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ret = ma_Display(obj,title,flags,-1);
+    }
+    ma_Destroy(obj);
+    exit:
+    if(ret != -1) {
+	Elf_Phdr it;
+	it=Elf->read_phdr(bmbioHandle(),Elf->ehdr().e_phoff+Elf->phdr_size()*ret);
+	bmReadBuffer(&it,sizeof(it));
+	fpos = it.p_offset;
+    }
+    return fpos;
 }
 
 static __filesize_t __FASTCALL__ ShowSecHdrElf()
 {
-  __filesize_t fpos;
-  int ret;
-  fpos = BMGetCurrFilePos();
-  ret = fmtShowList(IsSectionsPresent ? Elf->ehdr().e_shnum : 0,__elfReadSecHdr,
-		    " name             type   flg virtaddr fileoffs   size   link info algn esiz",
-		   LB_SELECTIVE,NULL);
-  if(ret != -1)
-  {
-    Elf_Shdr it;
-    it=Elf->read_shdr(bmbioHandle(),Elf->ehdr().e_shoff+Elf->ehdr().e_shentsize*ret);
-    fpos = it.sh_offset;
-  }
-  return fpos;
+    __filesize_t fpos = BMGetCurrFilePos();
+    int ret;
+    std::string title = " name             type   flg virtaddr fileoffs   size   link info algn esiz";
+    ssize_t nnames = IsSectionsPresent ? Elf->ehdr().e_shnum : 0;
+    int flags = LB_SELECTIVE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    ret = -1;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = __elfReadSecHdr(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ret = ma_Display(obj,title,flags,-1);
+    }
+    ma_Destroy(obj);
+    exit:
+    if(ret != -1) {
+	Elf_Shdr it;
+	it=Elf->read_shdr(bmbioHandle(),Elf->ehdr().e_shoff+Elf->ehdr().e_shentsize*ret);
+	fpos = it.sh_offset;
+    }
+    return fpos;
 }
 
 static __filesize_t __calcSymEntry(binary_stream& handle,__filesize_t num,bool display_msg)
@@ -912,19 +936,31 @@ static __filesize_t __calcSymEntry(binary_stream& handle,__filesize_t num,bool d
 
 static __filesize_t  __FASTCALL__ displayELFsymtab()
 {
-  __filesize_t fpos;
-  int ret;
-  fpos = BMGetCurrFilePos();
-  ret = fmtShowList(__elfNumSymTab,__elfReadSymTab,
-		" Name                                  Value    Size     Oth. Type   Bind   Sec# ",
-		LB_SELECTIVE,NULL);
-  if(ret != -1)
-  {
-    __filesize_t ea;
-    ea = __calcSymEntry(bmbioHandle(),ret,true);
-    fpos = ea ? ea : fpos;
-  }
-  return fpos;
+    __filesize_t fpos = BMGetCurrFilePos();
+    int ret;
+    std::string title = " Name                                  Value    Size     Oth. Type   Bind   Sec# ";
+    ssize_t nnames = __elfNumSymTab;
+    int flags = LB_SELECTIVE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    ret = -1;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = __elfReadSymTab(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ret = ma_Display(obj,title,flags,-1);
+    }
+    ma_Destroy(obj);
+    exit:
+    if(ret != -1) {
+	__filesize_t ea;
+	ea = __calcSymEntry(bmbioHandle(),ret,true);
+	fpos = ea ? ea : fpos;
+    }
+    return fpos;
 }
 
 static __filesize_t  __FASTCALL__ displayELFdyntab(__filesize_t dynptr,
@@ -2209,10 +2245,17 @@ static void __FASTCALL__ elf_ReadPubName(binary_stream& b_cache,const struct Pub
 static __filesize_t __FASTCALL__ elfGetPubSym(char *str,unsigned cb_str,unsigned *func_class,
 			   __filesize_t pa,bool as_prev)
 {
-   if(!PubNames) elf_ReadPubNameList(elfcache,NULL);
-   return fmtGetPubSym(elfcache,str,cb_str,func_class,pa,as_prev,
-		       PubNames,
-		       elf_ReadPubName);
+    __filesize_t fpos;
+    size_t idx;
+    if(!PubNames) elf_ReadPubNameList(elfcache,NULL);
+    fpos=fmtGetPubSym(*func_class,pa,as_prev,PubNames,idx);
+    if(idx!=std::numeric_limits<size_t>::max()) {
+	struct PubName *it;
+	it = &((struct PubName  *)PubNames->data)[idx];
+	elf_ReadPubName(elfcache,it,str,cb_str);
+	str[cb_str-1] = 0;
+    }
+    return fpos;
 }
 
 static unsigned __FASTCALL__ elfGetObjAttr(__filesize_t pa,char *name,unsigned cb_name,

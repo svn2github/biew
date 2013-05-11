@@ -912,47 +912,81 @@ static __filesize_t __FASTCALL__ ShowResourcesNE()
 
 static __filesize_t __FASTCALL__ ShowResNamNE()
 {
-  __filesize_t fpos = BMGetCurrFilePos();
-  int ret;
-  unsigned ordinal;
-  ret = fmtShowList(NERNamesNumItems(bmbioHandle()),NERNamesReadItems,
-		    RES_NAMES,
-		    LB_SELECTIVE | LB_SORTABLE,&ordinal);
-  if(ret != -1)
-  {
-    fpos = CalcEntryNE(ordinal,true);
-  }
-  return fpos;
+    __filesize_t fpos = BMGetCurrFilePos();
+    int ret;
+    unsigned ordinal;
+    std::string title = RES_NAMES;
+    ssize_t nnames = NERNamesNumItems(bmbioHandle());
+    int flags = LB_SELECTIVE | LB_SORTABLE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    ret = -1;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = NERNamesReadItems(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ret = ma_Display(obj,title,flags,-1);
+	if(ret != -1) {
+	    const char* cptr;
+	    char buff[40];
+	    cptr = strrchr((char*)obj->data[ret],LB_ORD_DELIMITER);
+	    cptr++;
+	    strcpy(buff,cptr);
+	    ordinal = atoi(buff);
+	}
+    }
+    ma_Destroy(obj);
+    exit:
+    if(ret != -1) fpos = CalcEntryNE(ordinal,true);
+    return fpos;
 }
 
 static __filesize_t __FASTCALL__ ShowNResNmNE()
 {
-  __filesize_t fpos;
-  fpos = BMGetCurrFilePos();
-  {
+    __filesize_t fpos = BMGetCurrFilePos();
     int ret;
     unsigned ordinal;
-    ret = fmtShowList(NENRNamesNumItems(bmbioHandle()),NENRNamesReadItems,
-		      NORES_NAMES,
-		      LB_SELECTIVE | LB_SORTABLE,&ordinal);
-    if(ret != -1)
-    {
-      fpos = CalcEntryNE(ordinal,true);
+    std::string title = NORES_NAMES;
+    ssize_t nnames = NENRNamesNumItems(bmbioHandle());
+    int flags = LB_SELECTIVE | LB_SORTABLE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    ret = -1;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = NENRNamesReadItems(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ret = ma_Display(obj,title,flags,-1);
+	if(ret != -1) {
+	    const char* cptr;
+	    char buff[40];
+	    cptr = strrchr((char*)obj->data[ret],LB_ORD_DELIMITER);
+	    cptr++;
+	    strcpy(buff,cptr);
+	    ordinal = atoi(buff);
+	}
     }
-  }
-  return fpos;
+    ma_Destroy(obj);
+    exit:
+    if(ret != -1) fpos = CalcEntryNE(ordinal,true);
+    return fpos;
 }
 
 static bool __FASTCALL__ IsNEFormat()
 {
-   char id[2];
-   beye_context().headshift = IsNewExe();
-   if(beye_context().headshift)
-   {
-     bmReadBufferEx(id,sizeof(id),beye_context().headshift,binary_stream::Seek_Set);
-     if(id[0] == 'N' && id[1] == 'E') return true;
-   }
-   return false;
+    char id[2];
+    beye_context().headshift = IsNewExe();
+    if(beye_context().headshift) {
+	bmReadBufferEx(id,sizeof(id),beye_context().headshift,binary_stream::Seek_Set);
+	if(id[0] == 'N' && id[1] == 'E') return true;
+    }
+    return false;
 }
 
 /***************************************************************************/
@@ -1328,25 +1362,24 @@ static void __FASTCALL__ ne_ReadPubName(binary_stream& b_cache,const struct PubN
 			   char *buff,unsigned cb_buff)
 {
     unsigned char rlen;
-      b_cache.seek(it->nameoff,binary_stream::Seek_Set);
-      rlen = b_cache.read(type_byte);
-      rlen = std::min(unsigned(rlen),cb_buff-1);
-      b_cache.read(buff,rlen);
-      buff[rlen] = 0;
+    b_cache.seek(it->nameoff,binary_stream::Seek_Set);
+    rlen = b_cache.read(type_byte);
+    rlen = std::min(unsigned(rlen),cb_buff-1);
+    b_cache.read(buff,rlen);
+    buff[rlen] = 0;
 }
 
 static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
-  struct PubName *ret,key;
-  key.pa = pa;
-  if(!PubNames) ne_ReadPubNameList(*ne_cache2,MemOutBox);
-  ret = (PubName*)la_Find(PubNames,&key,fmtComparePubNames);
-  if(ret)
-  {
-    ne_ReadPubName(*ne_cache2,ret,buff,cb_buff);
-    return true;
-  }
-  return udnFindName(pa,buff,cb_buff);
+    struct PubName *ret,key;
+    key.pa = pa;
+    if(!PubNames) ne_ReadPubNameList(*ne_cache2,MemOutBox);
+    ret = (PubName*)la_Find(PubNames,&key,fmtComparePubNames);
+    if(ret) {
+	ne_ReadPubName(*ne_cache2,ret,buff,cb_buff);
+	return true;
+    }
+    return udnFindName(pa,buff,cb_buff);
 }
 
 
@@ -1428,10 +1461,17 @@ static __filesize_t __FASTCALL__ nePA2VA(__filesize_t pa)
 static __filesize_t __FASTCALL__ neGetPubSym(char *str,unsigned cb_str,unsigned *func_class,
 			  __filesize_t pa,bool as_prev)
 {
-  if(!PubNames) ne_ReadPubNameList(*ne_cache,NULL);
-  return fmtGetPubSym(*ne_cache,str,cb_str,func_class,pa,as_prev,
-		      PubNames,
-		      ne_ReadPubName);
+    __filesize_t fpos;
+    size_t idx;
+    if(!PubNames) ne_ReadPubNameList(*ne_cache,NULL);
+    fpos=fmtGetPubSym(*func_class,pa,as_prev,PubNames,idx);
+    if(idx!=std::numeric_limits<size_t>::max()) {
+	struct PubName *it;
+	it = &((struct PubName  *)PubNames->data)[idx];
+	ne_ReadPubName(*ne_cache,it,str,cb_str);
+	str[cb_str-1] = 0;
+    }
+    return fpos;
 }
 
 static unsigned __FASTCALL__ neGetObjAttr(__filesize_t pa,char *name,unsigned cb_name,

@@ -38,9 +38,9 @@ namespace	usr {
 static char is_msbf=0; /* is most significand byte first */
 static char is_64bit=0;
 
-inline uint16_t AOUT_HALF(const uint16_t* cval) { return FMT_WORD(cval,is_msbf); }
-inline uint32_t AOUT_WORD(const uint32_t* cval) { return FMT_DWORD(cval,is_msbf); }
-inline uint64_t AOUT_QWORD(const uint64_t* cval) { return FMT_QWORD(cval,is_msbf); }
+inline uint16_t AOUT_HALF(const uint16_t* cval) { return FMT_WORD(*cval,is_msbf); }
+inline uint32_t AOUT_WORD(const uint32_t* cval) { return FMT_DWORD(*cval,is_msbf); }
+inline uint64_t AOUT_QWORD(const uint64_t* cval) { return FMT_QWORD(*cval,is_msbf); }
 
 static const char *  __FASTCALL__ aout_encode_hdr(uint32_t info)
 {

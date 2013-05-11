@@ -598,44 +598,61 @@ static bool __FASTCALL__  __ReadImpContPE(binary_stream& handle,memArray * obj,u
   return true;
 }
 
+static void __FASTCALL__ ShowModContextPE(const std::string& title) {
+    ssize_t nnames = GetImpCountPE(bmbioHandle());
+    int flags = LB_SORTABLE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = __ReadImpContPE(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ma_Display(obj,title,flags,-1);
+    }
+    ma_Destroy(obj);
+    exit:
+    return;
+}
+
 static __filesize_t __FASTCALL__ ShowModRefPE()
 {
-  binary_stream& handle = *pe_cache;
-  char petitle[80];
-  memArray * obj;
-  unsigned nnames;
-  __filesize_t phys,fret;
-  fret = BMGetCurrFilePos();
-  if(!peDir[PE_IMPORT].rva) { not_found: NotifyBox(NOT_ENTRY," Module References "); return fret; }
-  handle.seek(0L,binary_stream::Seek_Set);
-  phys = RVA2Phys(peDir[PE_IMPORT].rva);
-  if(!(nnames = GetImportCountPE(handle,phys))) goto not_found;
-  if(!(obj = ma_Build(nnames,true))) goto exit;
-  if(__ReadImportPE(handle,phys,obj,nnames))
-  {
-    int i;
-    i = 0;
-    while(1)
-    {
-     ImportDirPE imp_pe;
-     unsigned long magic;
+    binary_stream& handle = *pe_cache;
+    char petitle[80];
+    memArray* obj;
+    unsigned nnames;
+    __filesize_t phys,fret;
+    fret = BMGetCurrFilePos();
+    if(!peDir[PE_IMPORT].rva) { not_found: NotifyBox(NOT_ENTRY," Module References "); return fret; }
+    handle.seek(0L,binary_stream::Seek_Set);
+    phys = RVA2Phys(peDir[PE_IMPORT].rva);
+    if(!(nnames = GetImportCountPE(handle,phys))) goto not_found;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    if(__ReadImportPE(handle,phys,obj,nnames)) {
+	int i;
+	i = 0;
+	while(1) {
+	    ImportDirPE imp_pe;
+	    unsigned long magic;
 
-     i = ma_Display(obj,MOD_REFER,LB_SELECTIVE,i);
-     if(i == -1) break;
-     sprintf(petitle,"%s%s ",IMPPROC_TABLE,(char *)obj->data[i]);
-     handle.seek(phys + i*sizeof(ImportDirPE),binary_stream::Seek_Set);
-     handle.read(&imp_pe,sizeof(ImportDirPE));
-     if(handle.eof()) break;
-     if(!(imp_pe.idMajVer == 0 && imp_pe.idMinVer == 0 && imp_pe.idDateTime != 0xFFFFFFFFUL))
-				   magic = imp_pe.idFlags;
-     else                          magic = imp_pe.idLookupTableRVA;
-     addr_shift_pe = magic ? RVA2Phys(magic) : magic;
-     fmtShowList(GetImpCountPE(bmbioHandle()),__ReadImpContPE,petitle,0,NULL);
+	    i = ma_Display(obj,MOD_REFER,LB_SELECTIVE,i);
+	    if(i == -1) break;
+	    sprintf(petitle,"%s%s ",IMPPROC_TABLE,(char *)obj->data[i]);
+	    handle.seek(phys + i*sizeof(ImportDirPE),binary_stream::Seek_Set);
+	    handle.read(&imp_pe,sizeof(ImportDirPE));
+	    if(handle.eof()) break;
+	    if(!(imp_pe.idMajVer == 0 && imp_pe.idMinVer == 0 && imp_pe.idDateTime != 0xFFFFFFFFUL))
+		magic = imp_pe.idFlags;
+	    else magic = imp_pe.idLookupTableRVA;
+	    addr_shift_pe = magic ? RVA2Phys(magic) : magic;
+	    ShowModContextPE(petitle);
+	}
     }
-  }
-  ma_Destroy(obj);
-  exit:
-  return fret;
+    ma_Destroy(obj);
+    exit:
+    return fret;
 }
 
 static ExportTablePE et;
@@ -724,42 +741,59 @@ static __filesize_t  __FASTCALL__ CalcEntryPE(unsigned ordinal,bool dispmsg)
 
 static __filesize_t __FASTCALL__ ShowExpNamPE()
 {
-  __filesize_t fpos = BMGetCurrFilePos();
-  int ret;
-  unsigned ordinal;
-  __filesize_t addr;
-  char exp_nam[256], exp_buf[300];
-  fpos = BMGetCurrFilePos();
-  strcpy(exp_nam,EXP_TABLE);
-  if(peDir[PE_EXPORT].rva)
-  {
-    addr = RVA2Phys(peDir[PE_EXPORT].rva);
-    bmSeek(addr,binary_stream::Seek_Set);
-    bmReadBuffer((any_t*)&et,sizeof(et));
-    if(et.etNameRVA)
-    {
-      char sftime[80];
-      struct tm * tm;
-      time_t tval;
-      __peReadASCIIZName(bmbioHandle(),RVA2Phys(et.etNameRVA),exp_buf, sizeof(exp_buf));
-      if(strlen(exp_buf) > 50) strcpy(&exp_buf[50],"...");
-      tval = et.etDateTime;
-      tm = localtime(&tval);
-      strftime(sftime,sizeof(sftime),"%x",tm);
-      sprintf(exp_nam," %s (ver=%hX.%hX %s) "
-	      ,exp_buf
-	      ,et.etMajVer, et.etMinVer
-	      ,sftime);
+    __filesize_t fpos = BMGetCurrFilePos();
+    int ret;
+    unsigned ordinal;
+    __filesize_t addr;
+    char exp_nam[256], exp_buf[300];
+    fpos = BMGetCurrFilePos();
+    strcpy(exp_nam,EXP_TABLE);
+    if(peDir[PE_EXPORT].rva) {
+	addr = RVA2Phys(peDir[PE_EXPORT].rva);
+	bmSeek(addr,binary_stream::Seek_Set);
+	bmReadBuffer((any_t*)&et,sizeof(et));
+	if(et.etNameRVA) {
+	    char sftime[80];
+	    struct tm * tm;
+	    time_t tval;
+	    __peReadASCIIZName(bmbioHandle(),RVA2Phys(et.etNameRVA),exp_buf, sizeof(exp_buf));
+	    if(strlen(exp_buf) > 50) strcpy(&exp_buf[50],"...");
+	    tval = et.etDateTime;
+	    tm = localtime(&tval);
+	    strftime(sftime,sizeof(sftime),"%x",tm);
+	    sprintf(exp_nam," %s (ver=%hX.%hX %s) "
+		    ,exp_buf
+		    ,et.etMajVer, et.etMinVer
+		    ,sftime);
+	}
     }
-  }
-  ret = fmtShowList(PEExportNumItems(bmbioHandle()),PEExportReadItems,
-		    exp_nam,
-		    LB_SELECTIVE | LB_SORTABLE,&ordinal);
-  if(ret != -1)
-  {
-    fpos = CalcEntryPE(ordinal,true);
-  }
-  return fpos;
+    std::string title = exp_nam;
+    ssize_t nnames = PEExportNumItems(bmbioHandle());
+    int flags = LB_SELECTIVE | LB_SORTABLE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    ret = -1;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = PEExportReadItems(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ret = ma_Display(obj,title,flags,-1);
+	if(ret != -1) {
+	    const char* cptr;
+	    char buff[40];
+	    cptr = strrchr((char*)obj->data[ret],LB_ORD_DELIMITER);
+	    cptr++;
+	    strcpy(buff,cptr);
+	    ordinal = atoi(buff);
+	}
+    }
+    ma_Destroy(obj);
+    exit:
+    if(ret != -1) fpos = CalcEntryPE(ordinal,true);
+    return fpos;
 }
 
 
@@ -804,13 +838,27 @@ static bool __FASTCALL__ PEReadRVAs(binary_stream& handle, memArray * obj, unsig
 
 static __filesize_t __FASTCALL__ ShowPERVAs()
 {
-  __filesize_t fpos = BMGetCurrFilePos();
-  int ret;
-  ret = fmtShowList(PE32_HDR(pe32,peDirSize), PEReadRVAs, " Directory Entry       RVA           size ", LB_SELECTIVE|LB_USEACC, NULL);
-  if (ret!=-1 && peDir[ret].rva)
-    fpos = RVA2Phys(peDir[ret].rva);
-
-  return fpos;
+    __filesize_t fpos = BMGetCurrFilePos();
+    int ret;
+    std::string title = " Directory Entry       RVA           size ";
+    ssize_t nnames = PE32_HDR(pe32,peDirSize);
+    int flags = LB_SELECTIVE | LB_USEACC;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    ret = -1;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = PEReadRVAs(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ret = ma_Display(obj,title,flags,-1);
+    }
+    ma_Destroy(obj);
+    exit:
+    if (ret!=-1 && peDir[ret].rva) fpos = RVA2Phys(peDir[ret].rva);
+    return fpos;
 }
 
 /***************************************************************************/
@@ -1276,10 +1324,17 @@ static void __FASTCALL__ pe_ReadPubNameList(binary_stream& handle,void (__FASTCA
 static __filesize_t __FASTCALL__ peGetPubSym(char *str,unsigned cb_str,unsigned *func_class,
 			  __filesize_t pa,bool as_prev)
 {
-  if(!PubNames) pe_ReadPubNameList(*pe_cache,NULL);
-  return fmtGetPubSym(*pe_cache,str,cb_str,func_class,pa,as_prev,
-		      PubNames,
-		      pe_ReadPubName);
+    __filesize_t fpos;
+    size_t idx;
+    if(!PubNames) pe_ReadPubNameList(*pe_cache,NULL);
+    fpos=fmtGetPubSym(*func_class,pa,as_prev,PubNames,idx);
+    if(idx!=std::numeric_limits<size_t>::max()) {
+	struct PubName *it;
+	it = &((struct PubName  *)PubNames->data)[idx];
+	pe_ReadPubName(*pe_cache,it,str,cb_str);
+	str[cb_str-1] = 0;
+    }
+    return fpos;
 }
 
 static unsigned __FASTCALL__ peGetObjAttr(__filesize_t pa,char *name,unsigned cb_name,

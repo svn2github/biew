@@ -41,104 +41,47 @@ tCompare __FASTCALL__ fmtComparePubNames(const any_t* v1,const any_t* v2)
   return __CmpLong__(pnam1->pa,pnam2->pa);
 }
 
-__filesize_t __FASTCALL__ fmtGetPubSym(binary_stream& fmt_cache,char *str,unsigned cb_str,
-			   unsigned *func_class,__filesize_t pa,bool as_prev,
-			    linearArray *PubNames,
-			   ReadPubName fmt_readpub)
+__filesize_t __FASTCALL__ fmtGetPubSym(unsigned& func_class,__filesize_t pa,bool as_prev,
+					linearArray *PubNames,size_t& index)
 {
-  __filesize_t cfpos,ret_addr,cur_addr;
-  unsigned long i,idx,nitems;
-  struct PubName key,*it;
-  cfpos = bmGetCurrFilePos();
-  if(!PubNames->nItems) return 0;
-  ret_addr = 0L;
-  idx = UINT_MAX;
-  key.pa = pa;
-  i = (unsigned)la_FindNearest(PubNames,&key,fmtComparePubNames);
-  nitems = PubNames->nItems;
-  if(as_prev) idx = i;
-  else
-  {
-    static unsigned long multiref_i = 0;
-    get_next:
-    while((cur_addr = ((struct PubName  *)PubNames->data)[i].pa) <= pa)
-    {
-      i++;
-      if((cur_addr == pa && i > multiref_i) || (i >= nitems - 1)) break;
+    __filesize_t ret_addr,cur_addr;
+    size_t i,idx,nitems;
+    struct PubName key;
+    if(!PubNames->nItems) return 0;
+    ret_addr = 0L;
+    index = idx = std::numeric_limits<size_t>::max();
+    key.pa = pa;
+    i = (unsigned)la_FindNearest(PubNames,&key,fmtComparePubNames);
+    nitems = PubNames->nItems;
+    if(as_prev) idx = i;
+    else {
+	static unsigned long multiref_i = 0;
+	get_next:
+	while((cur_addr = ((struct PubName  *)PubNames->data)[i].pa) <= pa) {
+	    i++;
+	    if((cur_addr == pa && i > multiref_i) || (i >= nitems - 1)) break;
+	}
+	idx = i;
+	if(idx < PubNames->nItems) ret_addr = cur_addr;
+	else ret_addr = 0L;
+	if(ret_addr && ret_addr == pa) {
+	    if(idx <= multiref_i) { i = idx; goto get_next; }
+	    else multiref_i = idx;
+	}
+	else multiref_i = 0;
     }
-    idx = i;
-    if(idx < PubNames->nItems) ret_addr = cur_addr;
-    else ret_addr = 0L;
-    if(ret_addr && ret_addr == pa)
-    {
-      if(idx <= multiref_i) { i = idx; goto get_next; }
-      else multiref_i = idx;
+    if(idx < PubNames->nItems) {
+	ret_addr = ((struct PubName  *)PubNames->data)[idx].pa;
+	func_class = ((struct PubName  *)PubNames->data)[idx].attr;
+	if(!idx && pa < ret_addr && as_prev) ret_addr = 0;
+	else {
+	    index = idx;
+//	    it = &((struct PubName  *)PubNames->data)[idx];
+//	    (*fmt_readpub)(fmt_cache,it,str,cb_str);
+//	    str[cb_str-1] = 0;
+	}
     }
-    else multiref_i = 0;
-  }
-  if(idx < PubNames->nItems)
-  {
-    ret_addr = ((struct PubName  *)PubNames->data)[idx].pa;
-    *func_class = ((struct PubName  *)PubNames->data)[idx].attr;
-    if(!idx && pa < ret_addr && as_prev)
-    {
-      ret_addr = 0;
-    }
-    else
-    {
-      it = &((struct PubName  *)PubNames->data)[idx];
-      (*fmt_readpub)(fmt_cache,it,str,cb_str);
-      str[cb_str-1] = 0;
-    }
-  }
-  bmSeek(cfpos,binary_stream::Seek_Set);
-  return ret_addr;
-}
-
-static binary_stream*  __FASTCALL__ ReopenSeek(__filesize_t dist)
-{
- binary_stream* handle;
- handle = bmbioHandle().dup();
- if(handle != &bNull) handle->seek(dist,binary_stream::Seek_Set);
- else                 errnoMessageBox(READ_FAIL,"",errno);
- return handle;
-}
-
-int __FASTCALL__ fmtShowList( size_t nnames,ReadItems ri,const std::string& title,int flags,unsigned * ordinal)
-{
- int ret;
- bool bval;
- binary_stream* handle;
- memArray * obj;
- TWindow* w;
- ret = -1;
- if((handle = ReopenSeek(0)) == &bNull) return ret;
- if(!(obj = ma_Build(nnames,true))) goto exit;
- w = PleaseWaitWnd();
- bval = (*ri)(*handle,obj,nnames);
- delete w;
- if(bval)
- {
-   if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
-   if(flags)
-   {
-     ret = ma_Display(obj,title,flags,-1);
-     if(ordinal && ret != -1)
-     {
-       const char* cptr;
-       char buff[40];
-       cptr = strrchr((char*)obj->data[ret],LB_ORD_DELIMITER);
-       cptr++;
-       strcpy(buff,cptr);
-       *ordinal = atoi(buff);
-     }
-   }
-   else    { ret = -1; ma_Display(obj,title,LB_SORTABLE,-1); }
- }
- ma_Destroy(obj);
- exit:
- delete handle;
- return ret;
+    return ret_addr;
 }
 
 /* User Defined names (UDN) */
@@ -211,31 +154,53 @@ static bool    __FASTCALL__ udnReadItems(binary_stream& handle,memArray * names,
 }
 
 static bool __FASTCALL__ udnDeleteItem() {
-  int rval=-1;
-  if(udn_list) {
-    rval = fmtShowList(udnGetNumItems(bmbioHandle()),udnReadItems,
-		    " User-defined Names (aka bookmarks) ",
-		    LB_SELECTIVE,NULL);
-    if(rval!=-1) {
-	la_DeleteData(udn_list,rval);
+    int ret=-1;
+    if(!udn_list) { ErrMessageBox("UDN list is empty!",""); return false; }
+    std::string title = " User-defined Names (aka bookmarks) ";
+    ssize_t nnames = udnGetNumItems(bmbioHandle());
+    int flags = LB_SELECTIVE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = udnReadItems(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ret = ma_Display(obj,title,flags,-1);
+    }
+    ma_Destroy(obj);
+    exit:
+    if(ret!=-1) {
+	la_DeleteData(udn_list,ret);
 	la_Sort(udn_list,udn_compare);
 	udn_modified=true;
     }
-  }
-  else ErrMessageBox("UDN list is empty!","");
-  return rval==-1?false:true;
+    return ret==-1?false:true;
 }
 
 bool __FASTCALL__ udnSelectName(__filesize_t *off) {
-  int rval=-1;
-  if(udn_list) {
-    rval = fmtShowList(udnGetNumItems(bmbioHandle()),udnReadItems,
-		    " User-defined Names (aka bookmarks) ",
-		    LB_SELECTIVE,NULL);
-    if(rval!=-1) *off = ((udn *)udn_list->data)[rval].offset;
-  }
-  else ErrMessageBox("UDN list is empty!","");
-  return rval==-1?false:true;
+    int ret=-1;
+    if(!udn_list) { ErrMessageBox("UDN list is empty!",""); return false; }
+    std::string title = " User-defined Names (aka bookmarks) ";
+    ssize_t nnames = udnGetNumItems(bmbioHandle());
+    int flags = LB_SELECTIVE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = udnReadItems(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ret = ma_Display(obj,title,flags,-1);
+    }
+    ma_Destroy(obj);
+    exit:
+    if(ret!=-1) *off = ((udn *)udn_list->data)[ret].offset;
+    return ret==-1?false:true;
 }
 
 bool __FASTCALL__ udnFindName(__filesize_t pa,char *buff, unsigned cb_buff) {

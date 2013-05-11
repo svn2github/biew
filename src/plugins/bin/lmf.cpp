@@ -31,6 +31,7 @@ using namespace	usr;
 #include "beyehelp.h"
 #include "beyeutil.h"
 #include "bconsole.h"
+#include "tstrings.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/lmf.h"
 #include "libbeye/libbeye.h"
@@ -391,15 +392,27 @@ static bool __FASTCALL__ lmf_ReadSecHdr(binary_stream& handle,memArray *obj,unsi
 
 static __filesize_t __FASTCALL__ lmf_ShowSecLst()
 {
-	__filesize_t fpos;
-	int ret;
-	fpos=BMGetCurrFilePos();
-	ret=fmtShowList(reclast+1,lmf_ReadSecHdr,
-		" Num Type              Seg Virtual addresses   ",
-		LB_SELECTIVE,NULL);
-	if(ret!=-1)
-		fpos=hl[ret].file_pos;
-	return fpos;
+    __filesize_t fpos=BMGetCurrFilePos();
+    int ret;
+    std::string title = " Num Type              Seg Virtual addresses   ";
+    ssize_t nnames = reclast+1;
+    int flags = LB_SELECTIVE;
+    bool bval;
+    memArray* obj;
+    TWindow* w;
+    ret = -1;
+    if(!(obj = ma_Build(nnames,true))) goto exit;
+    w = PleaseWaitWnd();
+    bval = lmf_ReadSecHdr(bmbioHandle(),obj,nnames);
+    delete w;
+    if(bval) {
+	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	ret = ma_Display(obj,title,flags,-1);
+    }
+    ma_Destroy(obj);
+    exit:
+    if(ret!=-1) fpos=hl[ret].file_pos;
+    return fpos;
 }
 
 static __filesize_t __FASTCALL__ lmf_ShowHeader()
