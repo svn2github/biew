@@ -59,12 +59,13 @@ namespace	usr {
     extern const Disassembler_Info ppc_disassembler_info;
     extern const Disassembler_Info java_disassembler_info;
 
-DisMode::DisMode(CodeGuider& _code_guider)
-	:Plugin(_code_guider)
+DisMode::DisMode(TWindow& _main_wnd,CodeGuider& _code_guider)
+	:Plugin(_main_wnd,_code_guider)
 	,DefDisasmSel(__DEFAULT_DISASM)
 	,HiLight(1)
 	,code_guider(_code_guider)
 	,DisasmPrepareMode(false)
+	,main_wnd(_main_wnd)
 {
     size_t i,sz;
     unsigned def_platform;
@@ -142,7 +143,7 @@ void DisMode::fill_prev_asm_page(__filesize_t bound,unsigned predist)
     __filesize_t distin,addr;
     unsigned j;
     unsigned totallen;
-    tAbsCoord height = MainWnd->client_height();
+    tAbsCoord height = main_wnd.client_height();
     char addrdet;
     e_ref showref;
     if(!predist) predist = height*disMaxCodeLen;
@@ -178,7 +179,7 @@ void DisMode::fill_prev_asm_page(__filesize_t bound,unsigned predist)
 
 void DisMode::prepare_asm_lines(int keycode,__filesize_t cfpos)
 {
-    tAbsCoord height = MainWnd->client_height();
+    tAbsCoord height = main_wnd.client_height();
     switch(keycode) {
 	case KE_DOWNARROW:
 		PrevStrLen = CurrStrLenBuff[0];
@@ -251,16 +252,16 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
     }
     prepare_asm_lines(keycode,cfpos);
     if(amocpos != cfpos || keycode == KE_SUPERKEY || keycode == KE_JUSTFIND) {
-	tAbsCoord height = MainWnd->client_height();
-	tAbsCoord width = MainWnd->client_width();
+	tAbsCoord height = main_wnd.client_height();
+	tAbsCoord width = main_wnd.client_width();
 	code_guider.reset_go_address(keycode);
 	I = 0;
-	MainWnd->freeze();
+	main_wnd.freeze();
 	if(keycode == KE_UPARROW) {
 	    dir = -1;
 	    Limit = -1;
 	    /* All checks we have done above */
-	    MainWnd->scroll_down(1,1);
+	    main_wnd.scroll_down(1,1);
 	    ::memmove(&CurrStrLenBuff[1],CurrStrLenBuff,height-1);
 	} else {
 	    dir = 1;
@@ -269,11 +270,11 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 	if(keycode == KE_DOWNARROW) {
 	    if(CurrStrLenBuff[1]) {
 		I = height-1;
-		MainWnd->scroll_up(I,1);
+		main_wnd.scroll_up(I,1);
 		::memmove(CurrStrLenBuff,&CurrStrLenBuff[1],I);
 		cfpos += Summ(CurrStrLenBuff,I);
 	    } else {
-		MainWnd->refresh();
+		main_wnd.refresh();
 		goto bye;
 	    }
 	}
@@ -290,19 +291,19 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 		dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
 		if(i == 0) CurrStrLen = dret.codelen;
 		CurrStrLenBuff[i] = dret.codelen;
-		MainWnd->set_color(browser_cset.main);
+		main_wnd.set_color(browser_cset.main);
 		len_64=HA_LEN();
 		::memcpy(outstr,code_guider.encode_address(cfpos,hexAddressResolv),len_64);
 		len = 0;
 		if(disPanelMode < Panel_Full) {
 		    static char _clone;
 		    len = len_64;
-		    MainWnd->direct_write(1,i + 1,outstr,len);
+		    main_wnd.direct_write(1,i + 1,outstr,len);
 		    if(!hexAddressResolv) {
-			MainWnd->set_color(disasm_cset.family_id);
+			main_wnd.set_color(disasm_cset.family_id);
 			_clone = activeDisasm->clone_short_name(dret.pro_clone);
-			MainWnd->direct_write(len_64,i + 1,&_clone,1);
-			MainWnd->set_color(browser_cset.main);
+			main_wnd.direct_write(len_64,i + 1,&_clone,1);
+			main_wnd.set_color(browser_cset.main);
 		    }
 		}
 		if(disPanelMode < Panel_Medium) {
@@ -315,22 +316,22 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 		    if(len < tmp_off) len = tmp_off;
 		    opc =HiLight == 2 ? activeDisasm->get_alt_opcode_color(dret.pro_clone) :
 			 HiLight == 1 ? activeDisasm->get_opcode_color(dret.pro_clone) : disasm_cset.opcodes;
-		    MainWnd->set_color(opc);
-		    MainWnd->direct_write(disPanelMode < Panel_Full ? len_64+1 : 1,
+		    main_wnd.set_color(opc);
+		    main_wnd.direct_write(disPanelMode < Panel_Full ? len_64+1 : 1,
 				i + 1,
 				&outstr[len_64],
 				disPanelMode < Panel_Full ? len - (len_64+1) : len - 1);
 		    if(isHOnLine(cfpos,dret.codelen)) {
 			hli.text = &outstr[len_64];
-			HiLightSearch(MainWnd,cfpos,len_64,dret.codelen,i,&hli,HLS_USE_DOUBLE_WIDTH);
+			HiLightSearch(main_wnd,cfpos,len_64,dret.codelen,i,&hli,HLS_USE_DOUBLE_WIDTH);
 		    }
 		}
-		MainWnd->set_color(browser_cset.main);
-		MainWnd->direct_write(len,i + 1," ",1);  len++;
+		main_wnd.set_color(browser_cset.main);
+		main_wnd.direct_write(len,i + 1," ",1);  len++;
 		cattr =	HiLight == 2 ?  activeDisasm->get_alt_insn_color(dret.pro_clone) :
 			HiLight == 1 ?  activeDisasm->get_insn_color(dret.pro_clone) :
 					browser_cset.main;
-		MainWnd->set_color(cattr);
+		main_wnd.set_color(cattr);
 		j = strlen(dret.str);
 		/* Here adding commentaries */
 		savstring[0] = 0;
@@ -352,38 +353,38 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 			    dret.str[new_idx] = 0;
 			    j = ::strlen(dret.str);
 		    }
-		MainWnd->direct_write(len,i+1,dret.str,j); len += j;
+		main_wnd.direct_write(len,i+1,dret.str,j); len += j;
 		if(dis_severity > DisMode::CommSev_None) {
-		    MainWnd->set_color(disasm_cset.comments);
-		    MainWnd->goto_xy(len,i+1);
-		    MainWnd->puts(" ; "); len+=3;
+		    main_wnd.set_color(disasm_cset.comments);
+		    main_wnd.goto_xy(len,i+1);
+		    main_wnd.puts(" ; "); len+=3;
 		    j = orig_commpos-len;
 		    j = std::min(j,strlen(dis_comments));
-		    MainWnd->direct_write(len,i+1,dis_comments,j);
+		    main_wnd.direct_write(len,i+1,dis_comments,j);
 		    len += j;
 		    if(savstring[0]) {
-			MainWnd->goto_xy(len,i+1);
-			MainWnd->clreol();
-			MainWnd->set_color(cattr);
+			main_wnd.goto_xy(len,i+1);
+			main_wnd.clreol();
+			main_wnd.set_color(cattr);
 			len = orig_commoff + orig_commpos;
-			MainWnd->direct_write(len,i+1,savstring,5);
+			main_wnd.direct_write(len,i+1,savstring,5);
 			len += 5;
 		    }
 		}
-		MainWnd->set_color(browser_cset.main);
+		main_wnd.set_color(browser_cset.main);
 		if(len < width) {
-		    MainWnd->goto_xy(len,i + 1);
-		    MainWnd->clreol();
+		    main_wnd.goto_xy(len,i + 1);
+		    main_wnd.clreol();
 		}
 		cfpos += dret.codelen;
 		BMSeek(cfpos,binary_stream::Seek_Set);
 	    } else {
-		MainWnd->direct_write(1,i + 1,outstr,width);
+		main_wnd.direct_write(1,i + 1,outstr,width);
 		CurrStrLenBuff[i] = 0;
 	    }
 	}
-	MainWnd->refresh();
-	MainWnd->set_color(browser_cset.main);
+	main_wnd.refresh();
+	main_wnd.set_color(browser_cset.main);
 	lastbyte = TopCFPos + Summ(CurrStrLenBuff,height);
 	CurrPageSize = lastbyte-TopCFPos;
     }
@@ -407,7 +408,7 @@ void DisMode::misckey_action() /* disEdit */
     unsigned len_64;
     TWindow * ewnd;
     len_64=HA_LEN();
-    if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,""); return; }
+    if(!BMGetFLength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
     ewnd = WindowOpen(len_64+1,2,disMaxCodeLen*2+len_64+1,beye_context().tconsole().vio_height()-1,TWindow::Flag_Has_Cursor);
     ewnd->set_color(browser_cset.edit.main); ewnd->clear();
     edit_x = edit_y = 0;
@@ -514,15 +515,15 @@ void DisMode::disasm_screen(TWindow* ewnd,__filesize_t cp,__filesize_t flen,int 
 {
     int i,j,len,lim,len_64;
     char outstr[__TVIO_MAXSCREENWIDTH+1],outstr1[__TVIO_MAXSCREENWIDTH+1];
-    tAbsCoord width = MainWnd->client_width();
+    tAbsCoord width = main_wnd.client_width();
     DisasmRet dret;
     ewnd->freeze();
     for(i = st;i < stop;i++) {
 	if(start + cp < flen) {
 	    len_64=HA_LEN();
 	    ::memcpy(outstr,code_guider.encode_address(cp + start,hexAddressResolv),len_64);
-	    MainWnd->set_color(browser_cset.main);
-	    MainWnd->direct_write(1,i + 1,outstr,len_64-1);
+	    main_wnd.set_color(browser_cset.main);
+	    main_wnd.direct_write(1,i + 1,outstr,len_64-1);
 	    dret = disassembler(cp + start,&EditorMem.buff[start],__DISF_NORMAL);
 	    EditorMem.alen[i] = dret.codelen;
 	    ::memset(outstr,TWC_DEF_FILLER,width);
@@ -538,13 +539,13 @@ void DisMode::disasm_screen(TWindow* ewnd,__filesize_t cp,__filesize_t flen,int 
 	    len = ::strlen(dret.str);
 	    ::memset(outstr,TWC_DEF_FILLER,width);
 	    ::memcpy(outstr,dret.str,len);
-	    MainWnd->set_color(browser_cset.main);
+	    main_wnd.set_color(browser_cset.main);
 	    lim = disMaxCodeLen*2+len_64+1;
-	    MainWnd->direct_write(lim+1,i + 1,outstr,width-lim);
+	    main_wnd.direct_write(lim+1,i + 1,outstr,width-lim);
 	    start += EditorMem.alen[i];
 	} else {
-	    MainWnd->goto_xy(1,i + 1);
-	    MainWnd->clreol();
+	    main_wnd.goto_xy(1,i + 1);
+	    main_wnd.clreol();
 	    ewnd->set_focus();
 	    ewnd->goto_xy(1,i + 1);
 	    ewnd->clreol();
@@ -560,7 +561,7 @@ int DisMode::full_asm_edit(TWindow * ewnd)
     unsigned rlen,len,flg;
     __filesize_t flen;
     unsigned max_buff_size = disMaxCodeLen*beye_context().tconsole().vio_height();
-    tAbsCoord height = MainWnd->client_height();
+    tAbsCoord height = main_wnd.client_height();
     bool redraw = false;
     char outstr[__TVIO_MAXSCREENWIDTH],owork[__TVIO_MAXSCREENWIDTH];
 
@@ -574,7 +575,7 @@ int DisMode::full_asm_edit(TWindow * ewnd)
     ::memset(EditorMem.alen,TWC_DEF_FILLER,height);
 
     disasm_screen(ewnd,edit_cp,flen,0,height,start);
-    PaintETitle(0,true);
+    beye_context().paint_Etitle(0,true);
     start = 0;
     ewnd->show();
     TWindow::set_cursor_type(TWindow::Cursor_Normal);
@@ -601,7 +602,7 @@ int DisMode::full_asm_edit(TWindow * ewnd)
 			    if (aret.insn[0]) {
 				message=(const char*)aret.insn;
 			    }
-			    ErrMessageBox(message,"");
+			    beye_context().ErrMessageBox(message,"");
 			    continue;
 			} else {
 			    int i;
@@ -627,10 +628,10 @@ int DisMode::full_asm_edit(TWindow * ewnd)
 		    if((bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE)) != &bNull) {
 			bHandle->seek(edit_cp,binary_stream::Seek_Set);
 			if(!bHandle->write((any_t*)EditorMem.buff,rlen))
-			    errnoMessageBox(WRITE_FAIL,"",errno);
+			    beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 			delete bHandle;
 			BMReRead();
-		    } else errnoMessageBox("Can't reopen","",errno);
+		    } else beye_context().errnoMessageBox("Can't reopen","",errno);
 		}
 	    case KE_F(10):
 	    case KE_ESCAPE: goto bye;
@@ -644,7 +645,7 @@ int DisMode::full_asm_edit(TWindow * ewnd)
 	    EditorMem.alen[edit_y] = dret.codelen;
 	    disasm_screen(ewnd,edit_cp,flen,0,height,0);
 	}
-	PaintETitle(start + edit_x/2,true);
+	beye_context().paint_Etitle(start + edit_x/2,true);
 	CheckXYBounds();
 	start = edit_y ? Summ(EditorMem.alen,edit_y) : 0;
     }
@@ -837,7 +838,7 @@ bool DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,
        strncpy(sout,str,sizeof(sout)-1);
        sout[sizeof(sout)-1] = 0;
        if(!strlen(sout)) strcpy(sout,"disAppendDigits");
-       ErrMessageBox(sout," Internal disassembler error detected ");
+       beye_context().ErrMessageBox(sout," Internal disassembler error detected ");
        displayed = true;
        COREDUMP();
      }
@@ -1080,7 +1081,7 @@ bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__f
        strncpy(sout,str,sizeof(sout)-1);
        sout[sizeof(sout)-1] = 0;
        if(!strlen(sout)) strcpy(sout,"disAppendFAddr");
-       ErrMessageBox(sout," Internal disassembler error detected ");
+       beye_context().ErrMessageBox(sout," Internal disassembler error detected ");
        displayed = true;
        COREDUMP();
      }
@@ -1230,7 +1231,7 @@ bool hexAddressResolution(unsigned& har);
 bool DisMode::action_F6() { return hexAddressResolution(hexAddressResolv); }
 unsigned DisMode::get_max_line_length() const { return get_max_symbol_size(); }
 
-static Plugin* query_interface(CodeGuider& code_guider) { return new(zeromem) DisMode(code_guider); }
+static Plugin* query_interface(TWindow& main_wnd,CodeGuider& code_guider) { return new(zeromem) DisMode(main_wnd,code_guider); }
 
 extern const Plugin_Info disMode = {
     "~Disassembler",	/**< plugin name */

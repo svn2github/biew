@@ -858,7 +858,7 @@ static __filesize_t __FASTCALL__ ShowPrgHdrElf()
     bval = __elfReadPrgHdr(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ret = ma_Display(obj,title,flags,-1);
     }
     ma_Destroy(obj);
@@ -888,7 +888,7 @@ static __filesize_t __FASTCALL__ ShowSecHdrElf()
     bval = __elfReadSecHdr(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ret = ma_Display(obj,title,flags,-1);
     }
     ma_Destroy(obj);
@@ -930,7 +930,7 @@ static __filesize_t __calcSymEntry(binary_stream& handle,__filesize_t num,bool d
 	    sec.sh_offset + it.st_value:
 	    elfVA2PA(it.st_value);
    else
-     if(display_msg) ErrMessageBox(NO_ENTRY,BAD_ENTRY);
+     if(display_msg) beye_context().ErrMessageBox(NO_ENTRY,BAD_ENTRY);
    return fpos;
 }
 
@@ -950,7 +950,7 @@ static __filesize_t  __FASTCALL__ displayELFsymtab()
     bval = __elfReadSymTab(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ret = ma_Display(obj,title,flags,-1);
     }
     ma_Destroy(obj);
@@ -998,7 +998,7 @@ static __filesize_t  __FASTCALL__ displayELFdyntab(__filesize_t dynptr,
        else
        {
 	 not_entry:
-	 ErrMessageBox(NOT_ENTRY,"");
+	 beye_context().ErrMessageBox(NOT_ENTRY,"");
        }
     }
   }
@@ -1010,7 +1010,7 @@ static __filesize_t __FASTCALL__ ShowELFSymTab()
 {
   __filesize_t fpos;
   fpos = BMGetCurrFilePos();
-  if(!__elfSymPtr) { NotifyBox(NOT_ENTRY," ELF symbol table "); return fpos; }
+  if(!__elfSymPtr) { beye_context().NotifyBox(NOT_ENTRY," ELF symbol table "); return fpos; }
   active_shtbl = __elfSymShTbl;
   return displayELFsymtab();
 }
@@ -1027,7 +1027,7 @@ static __filesize_t __FASTCALL__ ShowELFDynSec()
     dynptr = findPHPubSyms(&nitems, &ent_size, &active_shtbl);
     number = nitems;
   }
-  if(!dynptr) { NotifyBox(NOT_ENTRY," ELF dynamic symbol table "); return fpos; }
+  if(!dynptr) { beye_context().NotifyBox(NOT_ENTRY," ELF dynamic symbol table "); return fpos; }
   return displayELFdyntab(dynptr,number,ent_size);
 }
 
@@ -1853,7 +1853,7 @@ static void  __FASTCALL__ displayELFdyninfo(__filesize_t f_off,unsigned nitems)
   char stmp[80];
   stroff = 0;
   stroff = elfVA2PA(findPHDynEntry(DT_STRTAB,f_off,nitems));
-  if(!stroff) { NotifyBox(" String information not found!",NULL); return; }
+  if(!stroff) { beye_context().NotifyBox(" String information not found!",NULL); return; }
   bmSeek(f_off,binary_stream::Seek_Set);
   if(!(obj = ma_Build(0,true))) return;
   strcpy(stmp,S_INTERPRETER);
@@ -1904,7 +1904,7 @@ static __filesize_t __FASTCALL__ ShowELFDynInfo()
   unsigned number;
   fpos = BMGetCurrFilePos();
   dynptr = findPHEntry(PT_DYNAMIC,&number);
-  if(!dynptr) { NotifyBox(NOT_ENTRY," ELF dynamic linking information "); return fpos; }
+  if(!dynptr) { beye_context().NotifyBox(NOT_ENTRY," ELF dynamic linking information "); return fpos; }
   displayELFdyninfo(dynptr,number);
   BMSeek(fpos, binary_stream::Seek_Set);
   return fpos;

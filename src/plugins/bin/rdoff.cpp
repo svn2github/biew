@@ -102,7 +102,7 @@ static bool  __FASTCALL__ rdoff_skiprec(unsigned char type)
 	    bmSeek(4,binary_stream::Seek_Cur);
 	    break;
     default: /** unknown ??? */
-	    ErrMessageBox("Broken RDOFF file","");
+	    beye_context().ErrMessageBox("Broken RDOFF file","");
 	    ret = false;
 	    break;
   }
@@ -163,7 +163,7 @@ static __filesize_t __FASTCALL__ rdoff_ShowExport()
       if(rets) fpos = strtoul(&rets[7],NULL,16);
     }
   }
-  else                 NotifyBox(NOT_ENTRY,EXP_TABLE);
+  else                 beye_context().NotifyBox(NOT_ENTRY,EXP_TABLE);
   exit:
   ma_Destroy(rdoff_et);
   return fpos;
@@ -251,7 +251,7 @@ static __filesize_t __FASTCALL__ rdoff_ShowModRef()
     }
   }
   if(rdoff_mr->nItems) ma_Display(rdoff_mr,MOD_REFER,LB_SORTABLE,0);
-  else                 NotifyBox(NOT_ENTRY,MOD_REFER);
+  else                 beye_context().NotifyBox(NOT_ENTRY,MOD_REFER);
   exit:
   ma_Destroy(rdoff_mr);
   return fpos;
@@ -293,7 +293,7 @@ static __filesize_t __FASTCALL__ rdoff_ShowImport()
     }
   }
   if(rdoff_it->nItems) ma_Display(rdoff_it,IMPPROC_TABLE,LB_SORTABLE,0);
-  else                 NotifyBox(NOT_ENTRY,EXP_TABLE);
+  else                 beye_context().NotifyBox(NOT_ENTRY,EXP_TABLE);
   exit:
   ma_Destroy(rdoff_it);
   return fpos;

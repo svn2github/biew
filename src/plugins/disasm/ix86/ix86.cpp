@@ -6145,7 +6145,7 @@ void ix86_Disassembler::show_short_help() const
  msgAsmText[size] = 0;
  if(!(strs = bhelp.point_strings(msgAsmText,size,&nstrs))) goto mem_off;
  title = msgAsmText;
- hwnd = CrtHlpWndnls(title,72,21);
+ hwnd = CrtHlpWndnls(title,73,22);
  for(i = 0;i < nstrs;i++)
  {
    unsigned rlen;

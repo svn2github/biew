@@ -211,7 +211,7 @@ static __filesize_t  __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,bool dispms
    if(found) break;
  }
  if(found) ret = CalcEntryLE((LX_ENTRY *)&lxent);
- else      if(dispmsg) ErrMessageBox(NOT_ENTRY,"");
+ else      if(dispmsg) beye_context().ErrMessageBox(NOT_ENTRY,"");
  return ret;
 }
 
@@ -231,7 +231,7 @@ static __filesize_t __FASTCALL__ ShowMapTableLE()
     bval = __ReadMapTblLE(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ret = ma_Display(obj,title,flags,-1);
     }
     ma_Destroy(obj);
@@ -257,7 +257,7 @@ static __filesize_t __FASTCALL__ ShowResNamLE()
     bval = LXRNamesReadItems(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ret = ma_Display(obj,title,flags,-1);
 	if(ret != -1) {
 	    const char* cptr;
@@ -291,7 +291,7 @@ static __filesize_t __FASTCALL__ ShowNResNmLE()
     bval = LXNRNamesReadItems(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ret = ma_Display(obj,title,flags,-1);
 	if(ret != -1) {
 	    const char* cptr;

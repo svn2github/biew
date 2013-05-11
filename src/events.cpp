@@ -125,10 +125,8 @@ static int  __FASTCALL__ __GetEvent( void (*prompt)() ,TWindow *win)
 		    }
 		    else
 		    {
-		      X1 = 0; X2 = MainWnd->client_width(); Y1 = 1; Y2 = MainWnd->client_height() - 1;
-		      TWindow* wnd=
-		        MainWnd ? MainWnd : /*XXX:drop this line? */
-		        TWindow::at_pos(mx,my);
+		      X1 = 0; X2 = beye_context().main_wnd().client_width(); Y1 = 1; Y2 = beye_context().main_wnd().client_height() - 1;
+		      TWindow* wnd=TWindow::at_pos(mx,my);
 		        if(!wnd) return KE_MOUSE;
 		        X1 = 0; X2 = wnd->client_width(); Y1 = 1; Y2 = wnd->client_height() - 1;
 		    }

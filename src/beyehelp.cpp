@@ -192,7 +192,7 @@ int Beye_Help::__ListBox(const char** names,unsigned nlist,const std::string& ti
  mwidth += 4;
  if(mwidth > (unsigned)(beye_context().tconsole().vio_width()-2)) mwidth = beye_context().tconsole().vio_width()-2;
  height = nlist < (unsigned)(beye_context().tconsole().vio_height() - 4) ? nlist : beye_context().tconsole().vio_height() - 4;
- wlist = CrtHlpWndnls(title,mwidth-1,height);
+ wlist = CrtHlpWndnls(title,mwidth,height+1);
  ostart = start = cursor = ocursor = 0;
  paint(wlist,names,nlist,start,height,mwidth);
  for(;;)
@@ -245,7 +245,7 @@ int Beye_Help::__ListBox(const char** names,unsigned nlist,const std::string& ti
 		     }
 		  }
 		  if(!found) scursor = -1;
-		  if(scursor == -1) ErrMessageBox(STR_NOT_FOUND,SEARCH_MSG);
+		  if(scursor == -1) beye_context().ErrMessageBox(STR_NOT_FOUND,SEARCH_MSG);
 	       }
 	     }
 	     break;
@@ -281,14 +281,14 @@ bool Beye_Help::open( bool interact )
   std::string help_name = beyeGetHelpName();
   fs.open(help_name.c_str(),std::ios_base::binary|std::ios_base::in);
   if(!fs.is_open()) {
-    if(interact) errnoMessageBox("Can't open help file","",errno);
+    if(interact) beye_context().errnoMessageBox("Can't open help file","",errno);
     return false;
   }
   fs.seekg(0L,std::ios_base::beg);
   fs.read(hlp_id,sizeof(hlp_id));
   if(memcmp(hlp_id,BEYE_HELP_VER,strlen(BEYE_HELP_VER)) != 0) {
     if(interact) {
-      ErrMessageBox("Incorrect help version","");
+      beye_context().ErrMessageBox("Incorrect help version","");
     }
     fs.close();
     return false;
@@ -321,7 +321,7 @@ unsigned long Beye_Help::get_item_size(unsigned long item_id)
 {
   unsigned long ret = 0;
   if(find_item(item_id)) ret = strtoul(bhi.item_decomp_size,NULL,16);
-  else                   ErrMessageBox("Find: Item not found","");
+  else                   beye_context().ErrMessageBox("Find: Item not found","");
   return ret;
 }
 
@@ -340,7 +340,7 @@ bool Beye_Help::load_item(unsigned long item_id, any_t* buffer)
 	    else ret = true;
 	    delete inbuff;
 	}
-	else ErrMessageBox("Load: Item not found","");
+	else beye_context().ErrMessageBox("Load: Item not found","");
     }
     return ret;
 }

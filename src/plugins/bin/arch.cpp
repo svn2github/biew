@@ -121,7 +121,7 @@ static __filesize_t __FASTCALL__ archModLst()
       Some archives sometimes have big and sometimes little endian.
       Here is a horrible attempt to determine it.
    */
-   if(!(nnames = (unsigned)std::min(rnames,bnames))) { NotifyBox(NOT_ENTRY,"Archive modules list"); return fpos; }
+   if(!(nnames = (unsigned)std::min(rnames,bnames))) { beye_context().NotifyBox(NOT_ENTRY,"Archive modules list"); return fpos; }
    /**
       Some archives sometimes have length and sometimes number of entries
       Here is a horrible attempt to determine it.

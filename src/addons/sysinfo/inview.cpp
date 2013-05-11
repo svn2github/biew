@@ -59,7 +59,7 @@ void InputView_Addon::run()
     rval = beye_context().tconsole().input_raw_info(head,text);
     if(rval==-1)
     {
-	ErrMessageBox("Not implemented yet!","");
+	beye_context().ErrMessageBox("Not implemented yet!","");
 	break;
     }
     hwnd->goto_xy(1,1);

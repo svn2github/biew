@@ -55,7 +55,7 @@ int __FASTCALL__ isHOnLine(__filesize_t cp,int width)
 	  || (FoundTextSt <= cp && FoundTextEnd >= cp + width);
 }
 
-void __FASTCALL__ HiLightSearch(TWindow *out,__filesize_t cfp,tRelCoord minx,tRelCoord maxx,tRelCoord y,HLInfo *buff,unsigned flags)
+void __FASTCALL__ HiLightSearch(TWindow& out,__filesize_t cfp,tRelCoord minx,tRelCoord maxx,tRelCoord y,HLInfo *buff,unsigned flags)
 {
  tvioBuff it;
  unsigned __len,width;
@@ -96,10 +96,10 @@ void __FASTCALL__ HiLightSearch(TWindow *out,__filesize_t cfp,tRelCoord minx,tRe
    attr = browser_cset.hlight;
    memset(&attrs[st],attr,end-st);
  }
- out->write(minx + 1,y + 1,&it,width);
+ out.write(minx + 1,y + 1,&it,width);
 }
 
-static void  __FASTCALL__ drawTitle()
+void BeyeContext::draw_title() const
 {
   unsigned percent;
   __filesize_t flen;
@@ -122,7 +122,7 @@ void BeyeContext::main_loop()
     drawPrompt();
     textshift = activeMode->paint(KE_SUPERKEY,textshift);
     BMSeek(LastOffset,binary_stream::Seek_Set);
-    drawTitle();
+    draw_title();
     while(1) {
 	unsigned che;
 	ch = GetEvent(drawPrompt,MainActionFromMenu,NULL);
@@ -313,7 +313,7 @@ void BeyeContext::main_loop()
 	if((activeMode->flags() & Plugin::Text) != Plugin::Text) savep = BMGetCurrFilePos();
 	textshift = activeMode->paint(ch,textshift);
 	if((activeMode->flags() & Plugin::Text) != Plugin::Text) BMSeek(savep,binary_stream::Seek_Set);
-	drawTitle();
+	draw_title();
     }
 }
 } // namespace	usr

@@ -44,8 +44,6 @@ using namespace	usr;
 #include "bconsole.h"
 
 namespace	usr {
-    extern TWindow * ErrorWnd;
-
 enum {
     MAXINPUT=79,
     FORMFEED=12
@@ -75,7 +73,7 @@ void __FASTCALL__ initBConsole( unsigned long vio_flg,unsigned long twin_flg )
 	win->puts("Screensize<80x3");
 	win->show();
 	do {
-	    evt = GetEvent(NULL,NULL,ErrorWnd);
+	    evt = GetEvent(NULL,NULL,win);
 	}while(!(evt == KE_ESCAPE || evt == KE_F(10) || evt == KE_ENTER));
 	delete win;
     }
@@ -317,7 +315,7 @@ TWindow *__FASTCALL__ PleaseWaitWnd()
 
 void __FASTCALL__ MemOutBox(const std::string& user_msg)
 {
-  ErrMessageBox(user_msg," Not enough memory! ");
+  beye_context().ErrMessageBox(user_msg," Not enough memory! ");
 }
 
 struct percent_data
@@ -526,64 +524,55 @@ TWindow * __FASTCALL__ CreateEditor(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsC
  return ret;
 }
 
-static void  __FASTCALL__ __MB(const std::string& text,const std::string& title,
-				       ColorAttr base,ColorAttr frame)
+void BeyeContext::message_box(const std::string& text,const std::string& title,
+					       ColorAttr base,ColorAttr frame) const
 {
- unsigned slen,tlen;
- slen = text.length() + 3;
- tlen = title.length() + 2;
- slen = std::min(std::max(slen,tlen)+1,unsigned(78));
- ErrorWnd->resize(slen,3);
- ErrorWnd->into_center();
- ErrorWnd->set_frame(TWindow::DOUBLE_FRAME,frame);
- ErrorWnd->set_title(title,TWindow::TMode_Center,frame);
- ErrorWnd->set_color(base);
- ErrorWnd->clear();
- ErrorWnd->show_on_top();
- ErrorWnd->goto_xy(2,1);
- ErrorWnd->puts(text);
+    unsigned evt;
+    unsigned slen,tlen;
+    slen = text.length() + 3;
+    tlen = title.length() + 2;
+    slen = std::min(std::max(slen,tlen)+1,unsigned(78));
+    ErrorWnd->resize(slen,3);
+    ErrorWnd->into_center();
+    ErrorWnd->set_frame(TWindow::DOUBLE_FRAME,frame);
+    ErrorWnd->set_title(title,TWindow::TMode_Center,frame);
+    ErrorWnd->set_color(base);
+    ErrorWnd->clear();
+    ErrorWnd->show_on_top();
+    ErrorWnd->goto_xy(2,1);
+    ErrorWnd->puts(text);
+    do {
+	evt = GetEvent(drawEmptyPrompt,NULL,ErrorWnd);
+    }while(!(evt == KE_ESCAPE || evt == KE_F(10) || evt == KE_SPACE || evt == KE_ENTER));
+    ErrorWnd->hide();
+    ErrorWnd->resize(beye_context().tconsole().vio_width(),beye_context().tconsole().vio_height()); /* It for reserving memory */
 }
 
-static void  __FASTCALL__ __MessageBox(const std::string& text,const std::string& title,
-					       ColorAttr base,ColorAttr frame)
+void BeyeContext::TMessageBox(const std::string& text,const std::string& title) const
 {
- unsigned evt;
- __MB(text,title,base,frame);
- do
- {
-   evt = GetEvent(drawEmptyPrompt,NULL,ErrorWnd);
- }
- while(!(evt == KE_ESCAPE || evt == KE_F(10) || evt == KE_SPACE || evt == KE_ENTER));
- ErrorWnd->hide();
- ErrorWnd->resize(beye_context().tconsole().vio_width(),beye_context().tconsole().vio_height()); /* It for reserving memory */
+    message_box(text,title,dialog_cset.main,dialog_cset.title);
 }
 
-
-void __FASTCALL__ TMessageBox(const std::string& text,const std::string& title)
+void BeyeContext::NotifyBox(const std::string& text,const std::string& title) const
 {
- __MessageBox(text,title,dialog_cset.main,dialog_cset.title);
+    message_box(text,!title.empty() ? title : NOTE_MSG,notify_cset.main,notify_cset.border);
 }
 
-void __FASTCALL__ NotifyBox(const std::string& text,const std::string& title)
+void BeyeContext::ErrMessageBox(const std::string& text,const std::string& title) const
 {
- __MessageBox(text,!title.empty() ? title : NOTE_MSG,notify_cset.main,notify_cset.border);
+    message_box(text,!title.empty() ? title : ERROR_MSG,error_cset.main,error_cset.border);
 }
 
-void __FASTCALL__ ErrMessageBox(const std::string& text,const std::string& title)
+void BeyeContext::WarnMessageBox(const std::string& text,const std::string& title) const
 {
- __MessageBox(text,!title.empty() ? title : ERROR_MSG,error_cset.main,error_cset.border);
+    message_box(text,!title.empty() ? title : WARN_MSG,warn_cset.main,warn_cset.border);
 }
 
-void __FASTCALL__ WarnMessageBox(const std::string& text,const std::string& title)
+void BeyeContext::errnoMessageBox(const std::string& text,const std::string& title,int __errno__) const
 {
- __MessageBox(text,!title.empty() ? title : WARN_MSG,warn_cset.main,warn_cset.border);
-}
-
-void __FASTCALL__ errnoMessageBox(const std::string& text,const std::string& title,int __errno__)
-{
-  char stmp[256];
-  sprintf(stmp,"%s: %i (%s)",text.c_str(),__errno__,strerror(__errno__));
-  ErrMessageBox(stmp,title);
+    char stmp[256];
+    sprintf(stmp,"%s: %i (%s)",text.c_str(),__errno__,strerror(__errno__));
+    beye_context().ErrMessageBox(stmp,title);
 }
 
 static void  __FASTCALL__ PaintLine(TWindow* w,unsigned i,const std::string& name,
@@ -864,7 +853,7 @@ static int  __FASTCALL__ __ListBox(const char** names,unsigned nlist,unsigned de
 		    }
 		    fclose(out);
 		  }
-		  else errnoMessageBox(WRITE_FAIL,"",errno);
+		  else beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 		}
 	      }
 	      break;
@@ -916,7 +905,7 @@ static int  __FASTCALL__ __ListBox(const char** names,unsigned nlist,unsigned de
 		    }
 		  }
 		  if(!found) scursor = -1;
-		  if(scursor == -1) ErrMessageBox(STR_NOT_FOUND,SEARCH_MSG);
+		  if(scursor == -1) beye_context().ErrMessageBox(STR_NOT_FOUND,SEARCH_MSG);
 	       }
 	     }
 	     break;

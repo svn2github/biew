@@ -152,7 +152,7 @@ static __filesize_t __FASTCALL__ PharLapSegInfo()
  if(nph.plSegInfoOffset && nph.plSegInfoSize) nnames = (unsigned)(nph.plSegInfoSize / sizeof(PLSegInfo));
  else                                           nnames = 0;
  fpos = BMGetCurrFilePos();
- if(!nnames) { NotifyBox(NOT_ENTRY," Segment Info table "); return fpos; }
+ if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Segment Info table "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
  handle.seek(nph.plSegInfoOffset,binary_stream::Seek_Set);
  if(__PLReadSegInfo(handle,obj,nnames))
@@ -229,7 +229,7 @@ static __filesize_t __FASTCALL__ PharLapRunTimeParms()
  if(nph.plRunTimeParms && nph.plRunTimeSize) nnames = (unsigned)(nph.plRunTimeSize / sizeof(PLRunTimeParms));
  else                                          nnames = 0;
  fpos = BMGetCurrFilePos();
- if(!nnames) { NotifyBox(NOT_ENTRY," Run-time parameters "); return fpos; }
+ if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Run-time parameters "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
  handle.seek(nph.plRunTimeParms,binary_stream::Seek_Set);
  if(__PLReadRunTime(handle,obj,nnames))

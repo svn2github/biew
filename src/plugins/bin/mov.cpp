@@ -64,7 +64,7 @@ static int  __FASTCALL__ mov_platform() { return DISASM_DEFAULT; }
 
 static __filesize_t __FASTCALL__ Show_MOV_Header()
 {
-    ErrMessageBox("Not implemented yet!","MOV format");
+    beye_context().ErrMessageBox("Not implemented yet!","MOV format");
     return BMGetCurrFilePos();
 }
 

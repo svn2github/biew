@@ -458,7 +458,7 @@ static __filesize_t __FASTCALL__ ShowObjectsPE()
  memArray * obj;
  fpos = BMGetCurrFilePos();
  nnames = pe.peObjects;
- if(!nnames) { NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
+ if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
  handle.seek(0x18 + pe.peNTHdrSize + beye_context().headshift,binary_stream::Seek_Set);
  if(__ReadObjectsPE(handle,obj,nnames))
@@ -609,7 +609,7 @@ static void __FASTCALL__ ShowModContextPE(const std::string& title) {
     bval = __ReadImpContPE(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ma_Display(obj,title,flags,-1);
     }
     ma_Destroy(obj);
@@ -625,7 +625,7 @@ static __filesize_t __FASTCALL__ ShowModRefPE()
     unsigned nnames;
     __filesize_t phys,fret;
     fret = BMGetCurrFilePos();
-    if(!peDir[PE_IMPORT].rva) { not_found: NotifyBox(NOT_ENTRY," Module References "); return fret; }
+    if(!peDir[PE_IMPORT].rva) { not_found: beye_context().NotifyBox(NOT_ENTRY," Module References "); return fret; }
     handle.seek(0L,binary_stream::Seek_Set);
     phys = RVA2Phys(peDir[PE_IMPORT].rva);
     if(!(nnames = GetImportCountPE(handle,phys))) goto not_found;
@@ -734,7 +734,7 @@ static __filesize_t  __FASTCALL__ CalcEntryPE(unsigned ordinal,bool dispmsg)
    ord = (unsigned)ordinal - (unsigned)et.etOrdinalBase;
    eret = fioReadDWord2Phys(handle,rva + 4*ord,binary_stream::Seek_Set);
    if(eret && eret < bmGetFLength()) fret = eret;
-   else if(dispmsg) ErrMessageBox(NO_ENTRY,BAD_ENTRY);
+   else if(dispmsg) beye_context().ErrMessageBox(NO_ENTRY,BAD_ENTRY);
  }
  return fret;
 }
@@ -779,7 +779,7 @@ static __filesize_t __FASTCALL__ ShowExpNamPE()
     bval = PEExportReadItems(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ret = ma_Display(obj,title,flags,-1);
 	if(ret != -1) {
 	    const char* cptr;
@@ -852,7 +852,7 @@ static __filesize_t __FASTCALL__ ShowPERVAs()
     bval = PEReadRVAs(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ret = ma_Display(obj,title,flags,-1);
     }
     ma_Destroy(obj);

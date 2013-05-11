@@ -23,9 +23,6 @@
 #include "libbeye/twindow.h"
 
 namespace	usr {
-
-    extern TWindow *MainWnd,*HelpWnd,*TitleWnd,*CritErrWnd;
-
     void         __FASTCALL__ initBConsole( unsigned long vio_flg,unsigned long twin_flg );
     void         __FASTCALL__ termBConsole();
     bool        __FASTCALL__ IsKbdTerminate();
@@ -83,12 +80,7 @@ enum {
 					void (*func)());
     int          __FASTCALL__ xeditstring(TWindow* w,char *s,const char *legal,
 					unsigned maxlength, void(*func)());
-    void         __FASTCALL__ ErrMessageBox(const std::string& text,const std::string& title);
-    void         __FASTCALL__ WarnMessageBox(const std::string& text,const std::string& title);
-    void         __FASTCALL__ errnoMessageBox(const std::string& text,const std::string& title,int __errno__);
     void         __FASTCALL__ ListBox(const char ** names,unsigned nlist,const std::string& title);
-    void         __FASTCALL__ TMessageBox(const std::string& text,const std::string& title);
-    void         __FASTCALL__ NotifyBox(const std::string& text,const std::string& title);
     int          __FASTCALL__ PageBox(unsigned width,unsigned height,const any_t** __obj,
 				 unsigned nobj,pagefunc func);
     void         __FASTCALL__ MemOutBox(const std::string& user_msg);

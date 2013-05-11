@@ -44,7 +44,7 @@ static bool  __FASTCALL__ asf_check_fmt()
 
 static __filesize_t __FASTCALL__ Show_ASF_Header()
 {
-    ErrMessageBox("Not implemented yet!","ASF format");
+    beye_context().ErrMessageBox("Not implemented yet!","ASF format");
     return BMGetCurrFilePos();
 }
 

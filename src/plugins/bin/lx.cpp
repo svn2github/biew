@@ -596,7 +596,7 @@ void __FASTCALL__ ShowFwdModOrdLX(const LX_ENTRY *lxent)
     sprintf(&buff[strlen(buff)],"@%u",(unsigned)lxent->entry.e32_variant.e32_fwd.value);
   }
   else ReadLXLEImpName(lxe.lx.lxImportProcedureTableOffset + beye_context().headshift,(unsigned)lxent->entry.e32_variant.e32_fwd.value,buff);
-  TMessageBox(buff," Forwarder entry point ");
+  beye_context().TMessageBox(buff," Forwarder entry point ");
 }
 
 static __filesize_t  __FASTCALL__ CalcEntryLX(const LX_ENTRY *lxent)
@@ -675,7 +675,7 @@ static __filesize_t  __FASTCALL__ CalcEntryBungleLX(unsigned ordinal,bool dispms
    if(found || is_eof) break;
  }
  if(found) ret = CalcEntryLX((LX_ENTRY *)&lxent);
- else      if(dispmsg) ErrMessageBox(NOT_ENTRY,"");
+ else      if(dispmsg) beye_context().ErrMessageBox(NOT_ENTRY,"");
  return ret;
 }
 
@@ -687,7 +687,7 @@ __filesize_t __FASTCALL__ ShowObjectsLX()
  memArray * obj;
  fpos = BMGetCurrFilePos();
  nnames = (unsigned)lxe.lx.lxObjectCount;
- if(!nnames) { NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
+ if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
  handle.seek(lxe.lx.lxObjectTableOffset + beye_context().headshift,binary_stream::Seek_Set);
  if(__ReadObjectsLX(handle,obj,nnames))
@@ -864,7 +864,7 @@ static __filesize_t __FASTCALL__ ShowMapTableLX()
     bval = __ReadMapTblLX(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ret = ma_Display(obj,title,flags,-1);
     }
     ma_Destroy(obj);
@@ -879,13 +879,13 @@ __filesize_t __FASTCALL__ ShowEntriesLX()
  __filesize_t fpos;
  memArray * obj;
  fpos = BMGetCurrFilePos();
- if(!lxe.lx.lxEntryTableOffset) { NotifyBox(NOT_ENTRY," Entry Table "); return fpos; }
+ if(!lxe.lx.lxEntryTableOffset) { beye_context().NotifyBox(NOT_ENTRY," Entry Table "); return fpos; }
  handle.seek(lxe.lx.lxEntryTableOffset + beye_context().headshift,binary_stream::Seek_Set);
  if(!(obj = ma_Build(0,true))) goto exit;
  if(__ReadEntriesLX(handle,obj))
  {
     int ret;
-    if(!obj->nItems) { NotifyBox(NOT_ENTRY," Entry Table "); goto bye; }
+    if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY," Entry Table "); goto bye; }
     ret = PageBox(70,8,(const any_t**)obj->data,obj->nItems,PaintEntriesLX);
     if(ret != -1)  fpos = LXType == FILE_LX ? CalcEntryLX((const LX_ENTRY*)obj->data[ret]) : CalcEntryLE((const LX_ENTRY*)obj->data[ret]);
  }
@@ -952,7 +952,7 @@ static __filesize_t __FASTCALL__ ShowResourceLX()
  fpos = BMGetCurrFilePos();
  handle.seek((__fileoff_t)beye_context().headshift + lxe.lx.lxResourceTableOffset,binary_stream::Seek_Set);
  nrgroup = (unsigned)lxe.lx.lxNumberResourceTableEntries;
- if(!nrgroup) { NotifyBox(NOT_ENTRY," Resources "); return fpos; }
+ if(!nrgroup) { beye_context().NotifyBox(NOT_ENTRY," Resources "); return fpos; }
  if(!(obj = ma_Build(nrgroup,true))) goto exit;
  if(!(raddr  = new long [nrgroup])) return fpos;
  if(__ReadResourceGroupLX(handle,obj,nrgroup,raddr))
@@ -978,7 +978,7 @@ __filesize_t __FASTCALL__ ShowModRefLX()
     bval = __ReadModRefNamesLX(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ma_Display(obj,title,flags,-1);
     }
     ma_Destroy(obj);
@@ -1003,7 +1003,7 @@ static __filesize_t __FASTCALL__ ShowResNamLX()
     bval = LXRNamesReadItems(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ret = ma_Display(obj,title,flags,-1);
 	if(ret != -1) {
 	    const char* cptr;
@@ -1037,7 +1037,7 @@ static __filesize_t __FASTCALL__ ShowNResNmLX()
     bval = LXNRNamesReadItems(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ret = ma_Display(obj,title,flags,-1);
 	if(ret != -1) {
 	    const char* cptr;
@@ -1067,7 +1067,7 @@ __filesize_t __FASTCALL__ ShowImpProcLXLE()
     bval = LXImpNamesReadItems(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ma_Display(obj,title,flags,-1);
     }
     ma_Destroy(obj);

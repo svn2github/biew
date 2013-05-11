@@ -155,7 +155,7 @@ static bool    __FASTCALL__ udnReadItems(binary_stream& handle,memArray * names,
 
 static bool __FASTCALL__ udnDeleteItem() {
     int ret=-1;
-    if(!udn_list) { ErrMessageBox("UDN list is empty!",""); return false; }
+    if(!udn_list) { beye_context().ErrMessageBox("UDN list is empty!",""); return false; }
     std::string title = " User-defined Names (aka bookmarks) ";
     ssize_t nnames = udnGetNumItems(bmbioHandle());
     int flags = LB_SELECTIVE;
@@ -167,7 +167,7 @@ static bool __FASTCALL__ udnDeleteItem() {
     bval = udnReadItems(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ret = ma_Display(obj,title,flags,-1);
     }
     ma_Destroy(obj);
@@ -182,7 +182,7 @@ static bool __FASTCALL__ udnDeleteItem() {
 
 bool __FASTCALL__ udnSelectName(__filesize_t *off) {
     int ret=-1;
-    if(!udn_list) { ErrMessageBox("UDN list is empty!",""); return false; }
+    if(!udn_list) { beye_context().ErrMessageBox("UDN list is empty!",""); return false; }
     std::string title = " User-defined Names (aka bookmarks) ";
     ssize_t nnames = udnGetNumItems(bmbioHandle());
     int flags = LB_SELECTIVE;
@@ -194,7 +194,7 @@ bool __FASTCALL__ udnSelectName(__filesize_t *off) {
     bval = udnReadItems(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ret = ma_Display(obj,title,flags,-1);
     }
     ma_Destroy(obj);
@@ -241,7 +241,7 @@ bool __FASTCALL__ __udnSaveList()
 	else {
 	    char stmp[256];
 	    sprintf(stmp,"Can't open file: %s\n",strerror(errno));
-	    ErrMessageBox(udn_fname,stmp);
+	    beye_context().ErrMessageBox(udn_fname,stmp);
 	}
     }
     return false;
@@ -254,7 +254,7 @@ bool __FASTCALL__ udnSaveList() {
     {
 	udn_fname=tmps;
 	if(udn_list)	return __udnSaveList();
-	else		ErrMessageBox("UDN list is empty!","");
+	else		beye_context().ErrMessageBox("UDN list is empty!","");
     }
     return false;
 }
@@ -276,7 +276,7 @@ bool __FASTCALL__  __udnLoadList() {
 		if(!brk) {
 		    char stmp[256];
 		    sprintf(stmp,"Can't recognize line: %u",i);
-		    ErrMessageBox(stmp,"");
+		    beye_context().ErrMessageBox(stmp,"");
 		    return true;
 		}
 		*brk='\0';
@@ -298,7 +298,7 @@ bool __FASTCALL__  __udnLoadList() {
 	else {
 	    char stmp[256];
 	    sprintf(stmp,"Can't open file: %s\n",strerror(errno));
-	    ErrMessageBox(udn_fname,stmp);
+	    beye_context().ErrMessageBox(udn_fname,stmp);
     }
     return false;
 }
@@ -309,7 +309,7 @@ bool __FASTCALL__ udnLoadList() {
     {
 	udn_fname=tmps;
 	if(udn_list)	return __udnLoadList();
-	else		ErrMessageBox("UDN list is empty!","");
+	else		beye_context().ErrMessageBox("UDN list is empty!","");
     }
     return false;
 }
@@ -360,7 +360,7 @@ void __FASTCALL__ udnInit( Ini_Profile& ini ) {
 void __FASTCALL__ udnTerm( Ini_Profile& ini ) {
   if(udn_list) {
     if(udn_modified) {
-	WarnMessageBox("User-defined list of names was not saved",NULL);
+	beye_context().WarnMessageBox("User-defined list of names was not saved",NULL);
 	udnSaveList();
     }
     la_Destroy(udn_list);

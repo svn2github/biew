@@ -41,7 +41,7 @@ static bool  __FASTCALL__ rm_check_fmt()
 
 static __filesize_t __FASTCALL__ Show_RM_Header()
 {
-    ErrMessageBox("Not implemented yet!","RM format");
+    beye_context().ErrMessageBox("Not implemented yet!","RM format");
     return BMGetCurrFilePos();
 }
 

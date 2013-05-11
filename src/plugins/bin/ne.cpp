@@ -370,7 +370,7 @@ static __filesize_t __FASTCALL__ ShowModRefNE()
  TWindow * w;
  fret = BMGetCurrFilePos();
  handle.seek(0L,binary_stream::Seek_Set);
- if(!(nnames = ne.neModuleReferenceTableCount)) { NotifyBox(NOT_ENTRY,MOD_REFER); return fret; }
+ if(!(nnames = ne.neModuleReferenceTableCount)) { beye_context().NotifyBox(NOT_ENTRY,MOD_REFER); return fret; }
  if(!(obj = ma_Build(nnames,true))) goto exit;
  w = PleaseWaitWnd();
  bval = __ReadModRefNamesNE(handle,obj);
@@ -468,7 +468,7 @@ static void __FASTCALL__ ShowProcListNE( int modno )
  delete w;
  if(__bool)
  {
-     if(!obj->nItems)  { NotifyBox(NOT_ENTRY,MOD_REFER); return; }
+     if(!obj->nItems)  { beye_context().NotifyBox(NOT_ENTRY,MOD_REFER); return; }
      rd_ImpName(name,sizeof(name),modno+1,false);
      sprintf(ptitle,"%s%s ",IMPPROC_TABLE,name);
      ma_Display(obj,ptitle,LB_SORTABLE,-1);
@@ -663,14 +663,14 @@ static __filesize_t  __FASTCALL__ CalcEntryNE(unsigned ord,bool dispmsg)
   ENTRY entr;
   SEGDEF segd;
   int segnum;
-  if(!ReadEntryNE(&entr,ord)) { if(dispmsg) ErrMessageBox(NOT_ENTRY,""); return 0L; }
+  if(!ReadEntryNE(&entr,ord)) { if(dispmsg) beye_context().ErrMessageBox(NOT_ENTRY,""); return 0L; }
   if(entr.eFixed == 0xFE)
   {
     char outs[100];
     if(dispmsg)
     {
       sprintf(outs,"This entry is constant : %04hXH",entr.eSegOff);
-      TMessageBox(outs,"Virtual entry");
+      beye_context().TMessageBox(outs,"Virtual entry");
     }
     return 0L;
   }
@@ -679,7 +679,7 @@ static __filesize_t  __FASTCALL__ CalcEntryNE(unsigned ord,bool dispmsg)
   {
     return segd.sdOffset ? (((__filesize_t)segd.sdOffset)<<ne.neLogicalSectorShiftCount) + entr.eSegOff : 0L;
   }
-  else if(dispmsg) ErrMessageBox(NO_ENTRY,BAD_ENTRY);
+  else if(dispmsg) beye_context().ErrMessageBox(NO_ENTRY,BAD_ENTRY);
   return 0L;
 }
 
@@ -691,7 +691,7 @@ static __filesize_t __FASTCALL__ ShowSegDefNE()
  memArray * obj;
  nnames = ne.neSegmentTableCount;
  fpos = BMGetCurrFilePos();
- if(!nnames) { NotifyBox(NOT_ENTRY," Segment Definition "); return fpos; }
+ if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Segment Definition "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
  handle.seek((__fileoff_t)beye_context().headshift + ne.neOffsetSegmentTable,binary_stream::Seek_Set);
  if(__ReadSegTableNE(handle,obj,nnames))
@@ -759,7 +759,7 @@ static __filesize_t __FASTCALL__ ShowEntriesNE()
  memArray * obj;
  nnames = GetEntryCountNE();
  fpos = BMGetCurrFilePos();
- if(!nnames) { NotifyBox(NOT_ENTRY," Entries "); return fpos; }
+ if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Entries "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
  handle.seek((__fileoff_t)beye_context().headshift + ne.neOffsetEntryTable,binary_stream::Seek_Set);
  if(__ReadEntryTableNE(handle,obj))
@@ -895,7 +895,7 @@ static __filesize_t __FASTCALL__ ShowResourcesNE()
  unsigned nrgroup;
  fpos = BMGetCurrFilePos();
  handle.seek((__fileoff_t)beye_context().headshift + ne.neOffsetResourceTable,binary_stream::Seek_Set);
- if(!(nrgroup = GetResourceGroupCountNE(handle))) { NotifyBox(NOT_ENTRY," Resources "); return fpos; }
+ if(!(nrgroup = GetResourceGroupCountNE(handle))) { beye_context().NotifyBox(NOT_ENTRY," Resources "); return fpos; }
  if(!(rgroup = ma_Build(nrgroup,true))) goto exit;
  if(!(raddr  = new long [nrgroup])) return fpos;
  if(__ReadResourceGroupNE(handle,rgroup,nrgroup,raddr))
@@ -927,7 +927,7 @@ static __filesize_t __FASTCALL__ ShowResNamNE()
     bval = NERNamesReadItems(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ret = ma_Display(obj,title,flags,-1);
 	if(ret != -1) {
 	    const char* cptr;
@@ -961,7 +961,7 @@ static __filesize_t __FASTCALL__ ShowNResNmNE()
     bval = NENRNamesReadItems(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ret = ma_Display(obj,title,flags,-1);
 	if(ret != -1) {
 	    const char* cptr;

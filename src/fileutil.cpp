@@ -65,7 +65,7 @@ static bool ChSize()
        if(bHandle == &bNull)
        {
 	 err:
-	 errnoMessageBox(RESIZE_FAIL,"",my_errno);
+	 beye_context().errnoMessageBox(RESIZE_FAIL,"",my_errno);
 	 return false;
        }
        ret = bHandle->chsize(psize);
@@ -75,7 +75,7 @@ static bool ChSize()
        BMReRead();
        return ret;
     }
-    else ErrMessageBox("Invalid new length","");
+    else beye_context().ErrMessageBox("Invalid new length","");
   }
  }
  return false;
@@ -93,7 +93,7 @@ static bool  __FASTCALL__ InsBlock(binary_stream* bHandle,__filesize_t start,__f
    if(!buffer) return 0;
    if(!bHandle->chsize(oflen+psize))
    {
-     ErrMessageBox(EXPAND_FAIL,"");
+     beye_context().ErrMessageBox(EXPAND_FAIL,"");
      delete buffer;
      return false;
    }
@@ -151,7 +151,7 @@ static bool  __FASTCALL__ DelBlock(binary_stream* bHandle,__filesize_t start,__f
    delete buffer;
    if(!bHandle->chsize(oflen+psize))
    {
-     ErrMessageBox(TRUNC_FAIL,"");
+     beye_context().ErrMessageBox(TRUNC_FAIL,"");
      delete buffer;
    }
    return true;
@@ -169,14 +169,14 @@ static bool InsDelBlock()
     binary_stream* bHandle;
     std::string fname;
     fpos = BMGetCurrFilePos();
-    if(start > BMGetFLength()) { ErrMessageBox("Start is outside of file",""); return 0; }
+    if(start > BMGetFLength()) { beye_context().ErrMessageBox("Start is outside of file",""); return 0; }
     if(!psize) return 0;
-    if(psize < 0) if(start+labs(psize) > BMGetFLength()) { ErrMessageBox("Use change size operation instead of block deletion",""); return 0; }
+    if(psize < 0) if(start+labs(psize) > BMGetFLength()) { beye_context().ErrMessageBox("Use change size operation instead of block deletion",""); return 0; }
     fname = BMName();
     bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
     if(bHandle == &bNull)
     {
-      errnoMessageBox(OPEN_FAIL,"",errno);
+      beye_context().errnoMessageBox(OPEN_FAIL,"",errno);
     }
     else
     {
@@ -315,7 +315,7 @@ static bool FStore()
 		    if(!h->open(ff_fname,binary_stream::FO_READWRITE | binary_stream::SO_DENYNONE)) {
 			if(!h->open(ff_fname,binary_stream::FO_READWRITE | binary_stream::SO_COMPAT)) {
 			    use_err:
-			    errnoMessageBox("Can't use file","",errno);
+			    beye_context().errnoMessageBox("Can't use file","",errno);
 			    delete h;
 			    goto Exit;
 			}
@@ -336,13 +336,13 @@ static bool FStore()
 		    unsigned real_size;
 		    rem = (unsigned)std::min(wsize,__filesize_t(4096));
 		    if(!BMReadBufferEx(tmp_buff,rem,crpos,binary_stream::Seek_Set)) {
-			errnoMessageBox(READ_FAIL,"",errno);
+			beye_context().errnoMessageBox(READ_FAIL,"",errno);
 			delete _bioHandle;
 			goto Exit;
 		    }
 		    real_size = (bctx.active_mode().flags()&Plugin::Has_ConvertCP) ? bctx.active_mode().convert_cp((char *)tmp_buff,rem,true) : rem;
 		    if(!_bioHandle->write(tmp_buff,real_size)) {
-			errnoMessageBox(WRITE_FAIL,"",errno);
+			beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 			delete _bioHandle;
 			goto Exit;
 		    }
@@ -374,7 +374,7 @@ static bool FStore()
 		extern const Plugin_Info disMode;
 		DisMode* dismode;
 		if(bctx.mode_info()!=&disMode)
-		    dismode = static_cast<DisMode*>(disMode.query_interface(bctx.codeguider()));
+		    dismode = static_cast<DisMode*>(disMode.query_interface(bctx.main_wnd(),bctx.codeguider()));
 		else
 		    dismode = static_cast<DisMode*>(&bctx.active_mode());
 		MaxInsnLen = dismode->get_max_symbol_size();
@@ -387,7 +387,7 @@ static bool FStore()
 		file_cache = new char [BBIO_SMALL_CACHE_SIZE];
 		fout = fopen(ff_fname.c_str(),"wt");
 		if(fout == NULL) {
-		    errnoMessageBox(WRITE_FAIL,"",errno);
+		    beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 		    delete codebuff;
 		    goto Exit;
 		}
@@ -571,7 +571,7 @@ static bool FStore()
 		    }
 		    strcat(tmp_buff2 ? tmp_buff2 : tmp_buff,"\n");
 		    if(fputs(tmp_buff2 ? tmp_buff2 : tmp_buff,fout) == EOF) {
-			errnoMessageBox(WRITE_FAIL,"",errno);
+			beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 			goto dis_exit;
 		    }
 		    if(flags & FSDLG_STRUCTS) {
@@ -579,7 +579,7 @@ static bool FStore()
 			    dret.codelen = stop - ff_startpos;
 		    }
 		    if(!dret.codelen) {
-			ErrMessageBox("Internal fatal error"," Put structures ");
+			beye_context().ErrMessageBox("Internal fatal error"," Put structures ");
 			goto dis_exit;
 		    }
 		    ff_startpos += dret.codelen;
@@ -602,7 +602,7 @@ static bool FStore()
 	    Exit:
 	    delete progress_wnd;
 	    BMSeek(cpos,binary_stream::Seek_Set);
-	} else  ErrMessageBox("Start position > end position!","");
+	} else  beye_context().ErrMessageBox("Start position > end position!","");
     }
     delete tmp_buff;
     DumpMode = false;
@@ -647,7 +647,7 @@ static bool FRestore()
         if(!h->open(ff_fname,binary_stream::FO_READONLY | binary_stream::SO_COMPAT)) {
 	    err:
 	    delete h;
-	    errnoMessageBox(OPEN_FAIL,"",errno);
+	    beye_context().errnoMessageBox(OPEN_FAIL,"",errno);
 	    return false;
         }
      }
@@ -669,7 +669,7 @@ static bool FRestore()
        {
 	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
 	 if(!h->read(tmp_buff,remaind)) {
-	   errnoMessageBox(READ_FAIL,"",errno);
+	   beye_context().errnoMessageBox(READ_FAIL,"",errno);
 	   delete h;
 	   ret = false;
 	   goto bye;
@@ -677,7 +677,7 @@ static bool FRestore()
 	 bHandle->seek(cwpos,binary_stream::Seek_Set);
 	 if(!bHandle->write(tmp_buff,remaind))
 	 {
-	   errnoMessageBox(WRITE_FAIL,"",errno);
+	   beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
 	 }
@@ -688,13 +688,13 @@ static bool FRestore()
        delete bHandle;
        BMReRead();
      }
-     else errnoMessageBox(OPEN_FAIL,"",errno);
+     else beye_context().errnoMessageBox(OPEN_FAIL,"",errno);
      delete (char*)tmp_buff;
      delete h;
      BMSeek(cpos,binary_stream::Seek_Set);
      ret = true;
    }
-   else ErrMessageBox("Start position > end position!","");
+   else beye_context().ErrMessageBox("Start position > end position!","");
  }
  return ret;
 }
@@ -759,7 +759,7 @@ static bool CryptBlock()
    lval = endpos - ff_startpos;
    endpos = lval > flen ? flen + ff_startpos : endpos;
    endpos = endpos > BMGetFLength() ? BMGetFLength() : endpos;
-   if(!pass[0]) { ErrMessageBox("Password can't be empty",""); return false; }
+   if(!pass[0]) { beye_context().ErrMessageBox("Password can't be empty",""); return false; }
    if(endpos > ff_startpos)
    {
      __filesize_t wsize,cwpos;
@@ -786,7 +786,7 @@ static bool CryptBlock()
 	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
 	 if(!bHandle->read(tmp_buff,remaind))
 	 {
-	   errnoMessageBox(READ_FAIL,"",errno);
+	   beye_context().errnoMessageBox(READ_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
 	 }
@@ -794,7 +794,7 @@ static bool CryptBlock()
 	 bHandle->seek(cwpos,binary_stream::Seek_Set);
 	 if(!(bHandle->write(tmp_buff,remaind)))
 	 {
-	   errnoMessageBox(WRITE_FAIL,"",errno);
+	   beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
 	 }
@@ -809,7 +809,7 @@ static bool CryptBlock()
      BMSeek(cpos,binary_stream::Seek_Set);
      ret = true;
    }
-   else ErrMessageBox("Start position > end position!","");
+   else beye_context().ErrMessageBox("Start position > end position!","");
  }
  return ret;
 }
@@ -890,7 +890,7 @@ static bool ReverseBlock()
 	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
 	 if(!bHandle->read(tmp_buff,remaind))
 	 {
-	   errnoMessageBox(READ_FAIL,"",errno);
+	   beye_context().errnoMessageBox(READ_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
 	 }
@@ -898,7 +898,7 @@ static bool ReverseBlock()
 	 bHandle->seek(cwpos,binary_stream::Seek_Set);
 	 if(!(bHandle->write(tmp_buff,remaind)))
 	 {
-	   errnoMessageBox(WRITE_FAIL,"",errno);
+	   beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
 	 }
@@ -913,7 +913,7 @@ static bool ReverseBlock()
      BMSeek(cpos,binary_stream::Seek_Set);
      ret = true;
    }
-   else ErrMessageBox("Start position > end position!","");
+   else beye_context().ErrMessageBox("Start position > end position!","");
  }
  return ret;
 }
@@ -964,19 +964,19 @@ static bool XLatBlock()
      xHandle = BeyeContext::beyeOpenRO(xlat_fname,BBIO_SMALL_CACHE_SIZE);
      if(xHandle == &bNull)
      {
-       ErrMessageBox("Can't open xlat file", "");
+       beye_context().ErrMessageBox("Can't open xlat file", "");
        return false;
      }
      if(xHandle->flength() != 320)
      {
-       ErrMessageBox("Size of xlat file is not 320 bytes", "");
+       beye_context().ErrMessageBox("Size of xlat file is not 320 bytes", "");
        delete xHandle;
        return false;
      }
      xHandle->read(xlt, 16);
      if(memcmp(xlt, "Beye Xlat Table.", 16) != 0)
      {
-       ErrMessageBox("It seems that xlat file is corrupt", "");
+       beye_context().ErrMessageBox("It seems that xlat file is corrupt", "");
        delete xHandle;
        return false;
      }
@@ -999,7 +999,7 @@ static bool XLatBlock()
 	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
 	 if(!bHandle->read(tmp_buff,remaind))
 	 {
-	   errnoMessageBox(READ_FAIL,"",errno);
+	   beye_context().errnoMessageBox(READ_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
 	 }
@@ -1007,7 +1007,7 @@ static bool XLatBlock()
 	 bHandle->seek(cwpos,binary_stream::Seek_Set);
 	 if(!(bHandle->write(tmp_buff,remaind)))
 	 {
-	   errnoMessageBox(WRITE_FAIL,"",errno);
+	   beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
 	 }
@@ -1022,7 +1022,7 @@ static bool XLatBlock()
      BMSeek(cpos,binary_stream::Seek_Set);
      ret = true;
    }
-   else ErrMessageBox("Start position > end position!","");
+   else beye_context().ErrMessageBox("Start position > end position!","");
  }
  return ret;
 }

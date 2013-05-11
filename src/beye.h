@@ -18,6 +18,7 @@ namespace	usr {
     class Ini_Profile;
     class System;
     class TConsole;
+    class TWindow;
     class BeyeContext : public Opaque {
 	public:
 	    BeyeContext(const std::vector<std::string>& argv, const std::map<std::string,std::string>& envm);
@@ -65,8 +66,11 @@ namespace	usr {
 	    void		select_sysinfo() const;
 
 	    CodeGuider&		codeguider() const { return *code_guider; }
+	    TWindow&		main_wnd() const { return *MainWnd; }
 
 	    void		PaintTitle() const;
+
+	    void		create_windows();
 
 	    binary_stream&	bm_file() const { return bm_file_handle; }
 	    binary_stream&	sc_bm_file() const { return sc_bm_file_handle; }
@@ -74,6 +78,14 @@ namespace	usr {
 	    void		BMClose();
 	    static binary_stream* beyeOpenRO(const std::string& fname,unsigned cache_size);
 	    static binary_stream* beyeOpenRW(const std::string& fname,unsigned cache_size);
+
+	    void		TMessageBox(const std::string& text,const std::string& title) const;
+	    void		NotifyBox(const std::string& text,const std::string& title) const;
+	    void		ErrMessageBox(const std::string& text,const std::string& title) const;
+	    void		WarnMessageBox(const std::string& text,const std::string& title) const;
+	    void		errnoMessageBox(const std::string& text,const std::string& title,int __errno__) const;
+	    void		paint_Etitle(int shift,bool use_shift) const;
+	    void		draw_multi_prompt(const char * const norm[], const char *const shift[], const char * const alt[], const char * const ctrl[]) const;
 
 	    std::string ArgVector1;
 	    std::string ini_ver;
@@ -95,6 +107,9 @@ namespace	usr {
 	private:
 	    void		auto_detect_mode();
 	    int			queryKey(const std::string& arg);
+	    void		message_box(const std::string& text,const std::string& title,
+					    ColorAttr base,ColorAttr frame) const;
+	    void		draw_title() const;
 
 	    Opaque		opaque;
 	    Plugin*		activeMode;
@@ -118,6 +133,10 @@ namespace	usr {
 	    binary_stream&	sc_bm_file_handle;
 	    TConsole*		_tconsole;
 	    LocalPtr<System>	_system;
+	    TWindow*		ErrorWnd;
+	    TWindow*		TitleWnd;
+	    TWindow*		PromptWnd;
+	    TWindow*		MainWnd;
     };
     BeyeContext& beye_context();
 } // namespace	usr

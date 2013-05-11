@@ -76,7 +76,7 @@ static int  __FASTCALL__ sis_platform() { return DISASM_CPU_ARM; }
 
 static __filesize_t __FASTCALL__ Show_Sis3_Header()
 {
-    ErrMessageBox("Not implemented yet!","Sis v3 header");
+    beye_context().ErrMessageBox("Not implemented yet!","Sis v3 header");
     return BMGetCurrFilePos();
 }
 

@@ -179,7 +179,7 @@ static __filesize_t __FASTCALL__ coffShowObjects()
  memArray * obj;
  fpos = BMGetCurrFilePos();
  nnames = COFF_WORD(coff386hdr.f_nscns);
- if(!nnames) { NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
+ if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
  handle = coff_cache;
  off = sizeof(coff386hdr);
@@ -379,7 +379,7 @@ static __filesize_t  __FASTCALL__ CalcEntryCoff(unsigned long idx,bool display_m
   }
   else
     if(display_msg)
-      ErrMessageBox(NO_ENTRY,"");
+      beye_context().ErrMessageBox(NO_ENTRY,"");
   return fpos;
 }
 
@@ -399,7 +399,7 @@ static __filesize_t __FASTCALL__ coffShowSymTab()
     bval = coffSymTabReadItems(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ret = ma_Display(obj,title,flags,-1);
     }
     ma_Destroy(obj);

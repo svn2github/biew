@@ -60,14 +60,14 @@ static void  __FASTCALL__ drawControlKeys(TWindow* w,int flg)
   w->putch(ckey);
 }
 
-void __FASTCALL__ __drawMultiPrompt(const char * const norm[], const char *const shift[], const char * const alt[], const char * const ctrl[])
+void BeyeContext::draw_multi_prompt(const char * const norm[], const char *const shift[], const char * const alt[], const char * const ctrl[]) const
 {
   TWindow *_using;
   int flg = beye_context().tconsole().kbd_get_shifts();
   int i;
   const char * cptr;
-  HelpWnd->freeze();
-  HelpWnd->goto_xy(2,1);
+  PromptWnd->freeze();
+  PromptWnd->goto_xy(2,1);
   for(i = 0;i < 10;i++)
   {
     /* todo: it might be better to ensure that if
@@ -82,15 +82,15 @@ void __FASTCALL__ __drawMultiPrompt(const char * const norm[], const char *const
 	cptr = ctrl && ctrl[i] && ctrl[i][0] ? ctrl[i] : "      ";
     else cptr = norm && norm[i] && norm[i][0] ? norm[i] : "      ";
 
-    ShowFunKey(HelpWnd,ftext[i],cptr);
+    ShowFunKey(PromptWnd,ftext[i],cptr);
   }
-  drawControlKeys(HelpWnd,flg);
-  HelpWnd->refresh();
+  drawControlKeys(PromptWnd,flg);
+  PromptWnd->refresh();
 }
 
 void __FASTCALL__ __drawSinglePrompt(const char *prmt[])
 {
-  __drawMultiPrompt(prmt, NULL, NULL, NULL);
+  beye_context().draw_multi_prompt(prmt, NULL, NULL, NULL);
 }
 
 
@@ -136,7 +136,7 @@ void drawPrompt()
     size_t i;
     for(i=0;i<10;i++) prmt[i]=beye_context().active_mode().prompt(i);
     for(i=0;i<10;i++) fprmt[i]=beye_context().bin_format().prompt(i);
-    __drawMultiPrompt(FxText, ShiftFxText, fprmt, prmt);
+    beye_context().draw_multi_prompt(FxText, ShiftFxText, fprmt, prmt);
 }
 
 static const char * amenu_names[] =
@@ -266,7 +266,7 @@ void drawEmptyListPrompt()
 
 void drawAsmEdPrompt()
 {
-  __drawMultiPrompt(fetext, NULL, NULL, casmtext);
+  beye_context().draw_multi_prompt(fetext, NULL, NULL, casmtext);
 }
 
 int EditAsmActionFromMenu()
@@ -378,17 +378,17 @@ static const char * helplisttxt[] =
 
 void drawListPrompt()
 {
-  __drawMultiPrompt(listtxt, shlisttxt, NULL, NULL);
+  beye_context().draw_multi_prompt(listtxt, shlisttxt, NULL, NULL);
 }
 
 void drawOrdListPrompt()
 {
-  __drawMultiPrompt(ordlisttxt, shlisttxt, NULL, NULL);
+  beye_context().draw_multi_prompt(ordlisttxt, shlisttxt, NULL, NULL);
 }
 
 void drawSearchListPrompt()
 {
-  __drawMultiPrompt(searchlisttxt, shlisttxt, NULL, NULL);
+  beye_context().draw_multi_prompt(searchlisttxt, shlisttxt, NULL, NULL);
 }
 
 void drawHelpPrompt()
@@ -406,7 +406,7 @@ int HelpActionFromMenu()
 
 void drawHelpListPrompt()
 {
-  __drawMultiPrompt(helplisttxt, shlisttxt, NULL, NULL);
+  beye_context().draw_multi_prompt(helplisttxt, shlisttxt, NULL, NULL);
 }
 
 typedef struct tagvbyte
@@ -625,7 +625,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
 		      {
 			ret_addr = prev_func_pa;
 		      }
-		      else ErrMessageBox(NOT_ENTRY,"");
+		      else beye_context().ErrMessageBox(NOT_ENTRY,"");
 		    }
 		    goto exit;
       case KE_F(5):
@@ -635,7 +635,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
 		      {
 			ret_addr = next_func_pa;
 		      }
-		      else ErrMessageBox(NOT_ENTRY,"");
+		      else beye_context().ErrMessageBox(NOT_ENTRY,"");
 		    }
 		    goto exit;
       default: break;

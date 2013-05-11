@@ -45,7 +45,7 @@ void ExtHelp()
     hlpDisplay(2);
 }
 
-void __FASTCALL__ PaintETitle( int shift,bool use_shift )
+void BeyeContext::paint_Etitle( int shift,bool use_shift ) const
 {
   unsigned eidx;
   char byte,obyte;
@@ -130,7 +130,7 @@ void __FASTCALL__ editDestroyBuffs()
 
 void __FASTCALL__ CheckBounds()
 {
-  tAbsCoord height = MainWnd->client_height();
+  tAbsCoord height = beye_context().main_wnd().client_height();
   if(edit_y < 0) edit_y = 0;
   if((unsigned)edit_y > height - 1) edit_y = height - 1;
   if(!EditorMem.alen[edit_y]) edit_y--;
@@ -139,7 +139,7 @@ void __FASTCALL__ CheckBounds()
 
 void __FASTCALL__ CheckYBounds()
 {
-  tAbsCoord height = MainWnd->client_height();
+  tAbsCoord height = beye_context().main_wnd().client_height();
   if(edit_y < 0) edit_y = 0;
   if((unsigned)edit_y > height - 1) edit_y = height - 1;
   while(!EditorMem.alen[edit_y]) edit_y--;
@@ -162,7 +162,7 @@ void __FASTCALL__ editSaveContest()
   if(bHandle == &bNull)
   {
       err:
-      errnoMessageBox(WRITE_FAIL,"",errno);
+      beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
       return;
   }
   bHandle->seek(edit_cp,binary_stream::Seek_Set);
@@ -215,7 +215,7 @@ int __FASTCALL__ FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*sav
     unsigned mlen;
     unsigned int _lastbyte;
     unsigned flags;
-    tAbsCoord height = MainWnd->client_height();
+    tAbsCoord height = beye_context().main_wnd().client_height();
     bool redraw;
     char attr = __ESS_HARDEDIT | __ESS_WANTRETURN;
     ewnd->set_color(browser_cset.edit.main);
@@ -228,11 +228,12 @@ int __FASTCALL__ FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*sav
 	    ewnd->direct_write(j + 1,i + 1,&EditorMem.buff[eidx],1);
 	}
 	if((unsigned)EditorMem.alen[i] + 1 < EditorMem.width) {
-	    ewnd->goto_xy(EditorMem.alen[i] + 1,i + 1); MainWnd->clreol();
+	    ewnd->goto_xy(EditorMem.alen[i] + 1,i + 1);
+	    ewnd->clreol();
 	}
     }
     beye_context().tconsole().mouse_set_state(true);
-    PaintETitle(edit_y*EditorMem.width + edit_x,0);
+    beye_context().paint_Etitle(edit_y*EditorMem.width + edit_x,0);
     TWindow::set_cursor_type(TWindow::Cursor_Normal);
     redraw = true;
     if(hexwnd) {
@@ -278,7 +279,7 @@ int __FASTCALL__ FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*sav
 		hexwnd->direct_write(11,edit_y + 1,work,len);
 	    }
 	}
-	PaintETitle(edit_y*EditorMem.width + edit_x,0);
+	beye_context().paint_Etitle(edit_y*EditorMem.width + edit_x,0);
     }
 bye:
     TWindow::set_cursor_type(TWindow::Cursor_Off);

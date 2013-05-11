@@ -22,7 +22,7 @@ namespace	usr {
 		Has_ConvertCP	=0x0010
 	    };
 
-	    Plugin(CodeGuider& code_guider) { UNUSED(code_guider); }
+	    Plugin(TWindow& main_wnd,CodeGuider& code_guider) { UNUSED(main_wnd); UNUSED(code_guider); }
 	    virtual ~Plugin() {}
 
 	    virtual const char*		prompt(unsigned idx) const = 0;	/**< on Ctrl-Fx selection */
@@ -87,7 +87,7 @@ namespace	usr {
 
     struct Plugin_Info {
 	const char* name;
-	Plugin* (*query_interface)(CodeGuider& code_guider);
+	Plugin* (*query_interface)(TWindow&,CodeGuider&);
     };
 
     class DisMode;

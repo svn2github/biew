@@ -43,7 +43,7 @@ using namespace	usr;
 namespace	usr {
     class HexMode : public Plugin {
 	public:
-	    HexMode(CodeGuider& code_guider);
+	    HexMode(TWindow& _main_wnd,CodeGuider& code_guider);
 	    virtual ~HexMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -76,16 +76,17 @@ namespace	usr {
 	    CodeGuider&	code_guider;
 	    unsigned	virtWidthCorr;
 	    unsigned	hmode;
-
+	    TWindow&	main_wnd;
     };
 unsigned	hexAddressResolv;
 static unsigned hendian;
 
-HexMode::HexMode(CodeGuider& _code_guider)
-	:Plugin(_code_guider)
+HexMode::HexMode(TWindow& _main_wnd,CodeGuider& _code_guider)
+	:Plugin(_main_wnd,_code_guider)
 	,code_guider(_code_guider)
 	,virtWidthCorr(0)
 	,hmode(1)
+	,main_wnd(_main_wnd)
 {}
 HexMode::~HexMode() {}
 
@@ -152,9 +153,9 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
     int __inc,dlen;
     cpos = BMGetCurrFilePos();
     if(hmocpos != cpos || keycode == KE_SUPERKEY || keycode == KE_JUSTFIND) {
-	tAbsCoord height = MainWnd->client_height();
-	tAbsCoord width = MainWnd->client_width();
-	MainWnd->freeze();
+	tAbsCoord height = main_wnd.client_height();
+	tAbsCoord width = main_wnd.client_width();
+	main_wnd.freeze();
 	HWidth = hexViewer[hmode].width()-virtWidthCorr;
 	if(!(hmocpos == cpos + HWidth || hmocpos == cpos - HWidth)) keycode = KE_SUPERKEY;
 	hmocpos = cpos;
@@ -168,14 +169,14 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 	    dir = -1;
 	    Limit = -1;
 	    if((__filesize_t)HWidth <= cpos) {
-		MainWnd->scroll_down(1,1);
+		main_wnd.scroll_down(1,1);
 		I = 0;
 	    } else goto full_redraw;
 	} else if(keycode == KE_DOWNARROW && flen >= HWidth) {
 	    I = height-1;
 	    dir = 1;
 	    Limit = height;
-	    MainWnd->scroll_up(I,1);
+	    main_wnd.scroll_up(I,1);
 	} else {
 	    full_redraw:
 	    I = 0;
@@ -200,16 +201,16 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 		}
 		BMReadBufferEx((any_t*)&outstr[width - scrHWidth],rwidth*__inc,sindex,binary_stream::Seek_Set);
 		xmin = beye_context().tconsole().vio_width()-scrHWidth;
-		MainWnd->direct_write(1,i + 1,outstr,xmin);
+		main_wnd.direct_write(1,i + 1,outstr,xmin);
 		if(isHOnLine(sindex,scrHWidth)) {
 		    HLInfo hli;
 		    hli.text = &outstr[xmin];
-		    HiLightSearch(MainWnd,sindex,xmin,width,i,&hli,HLS_NORMAL);
-		} else  MainWnd->direct_write(xmin + 1,i + 1,&outstr[xmin],width - xmin);
-	    } else MainWnd->direct_write(1,i + 1,outstr,width);
+		    HiLightSearch(main_wnd,sindex,xmin,width,i,&hli,HLS_NORMAL);
+		} else  main_wnd.direct_write(xmin + 1,i + 1,&outstr[xmin],width - xmin);
+	    } else main_wnd.direct_write(1,i + 1,outstr,width);
 	}
 	lastbyte = lindex + __inc;
-	MainWnd->refresh();
+	main_wnd.refresh();
     }
     return textshift;
 }
@@ -219,8 +220,8 @@ void HexMode::help() const
    hlpDisplay(1002);
 }
 
-unsigned long HexMode::prev_page_size() const { return (hexViewer[hmode].width()-virtWidthCorr)*hexViewer[hmode].size*MainWnd->client_height(); }
-unsigned long HexMode::curr_page_size() const { return (hexViewer[hmode].width()-virtWidthCorr)*hexViewer[hmode].size*MainWnd->client_height(); }
+unsigned long HexMode::prev_page_size() const { return (hexViewer[hmode].width()-virtWidthCorr)*hexViewer[hmode].size*main_wnd.client_height(); }
+unsigned long HexMode::curr_page_size() const { return (hexViewer[hmode].width()-virtWidthCorr)*hexViewer[hmode].size*main_wnd.client_height(); }
 unsigned long HexMode::prev_line_width() const { return (hexViewer[hmode].width()-virtWidthCorr)*hexViewer[hmode].size; }
 unsigned long HexMode::curr_line_width() const { return (hexViewer[hmode].width()-virtWidthCorr)*hexViewer[hmode].size; }
 
@@ -231,9 +232,9 @@ void HexMode::misckey_action () /* EditHex */
     bool has_show[2];
     int active = 0,oactive = 0;
     unsigned bound;
-    tAbsCoord width = MainWnd->client_width();
+    tAbsCoord width = main_wnd.client_width();
     if(hmode != 1) return;
-    if(!BMGetFLength()) { ErrMessageBox(NOTHING_EDIT,""); return; }
+    if(!BMGetFLength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
     bound = width-(hexViewer[hmode].width()-virtWidthCorr);
     ewnd[0] = WindowOpen(HA_LEN()+1,2,bound,beye_context().tconsole().vio_height()-1,TWindow::Flag_Has_Cursor);
     ewnd[0]->set_color(browser_cset.edit.main); ewnd[0]->clear();
@@ -251,8 +252,8 @@ void HexMode::misckey_action () /* EditHex */
 		oactive = active;
 	    }
 	    ewnd[active]->set_focus();
-	    if(!active) _lastbyte = full_hex_edit(MainWnd,ewnd[0]);
-	    else        _lastbyte = FullEdit(ewnd[1],MainWnd,*this,NULL);
+	    if(!active) _lastbyte = full_hex_edit(&main_wnd,ewnd[0]);
+	    else        _lastbyte = FullEdit(ewnd[1],&main_wnd,*this,NULL);
 	    has_show[active] = true;
 	    if(_lastbyte == KE_TAB) active = active ? 0 : 1;
 	    else break;
@@ -379,7 +380,7 @@ int HexMode::full_hex_edit(TWindow* txtwnd,TWindow* hexwnd)
 	}
     }
     redraw = true;
-    PaintETitle(edit_y*EditorMem.width + edit_x,0);
+    beye_context().paint_Etitle(edit_y*EditorMem.width + edit_x,0);
     hexwnd->show();
     TWindow::set_cursor_type(TWindow::Cursor_Normal);
     while(1) {
@@ -405,7 +406,7 @@ int HexMode::full_hex_edit(TWindow* txtwnd,TWindow* hexwnd)
 	}
 	CheckBounds();
 	if(redraw) txtwnd->direct_write(width - EditorMem.width + 1,edit_y + 1,&EditorMem.buff[eidx],mlen/3);
-	PaintETitle(eidx + edit_x,0);
+	beye_context().paint_Etitle(eidx + edit_x,0);
     }
     bye:
     TWindow::set_cursor_type(TWindow::Cursor_Off);
@@ -459,7 +460,7 @@ void HexMode::save_ini(Ini_Profile&  ini)
 unsigned HexMode::get_symbol_size() const { return 1; }
 unsigned HexMode::get_max_line_length() const { return hexViewer[hmode].width(); }
 
-static Plugin* query_interface(CodeGuider& code_guider) { return new(zeromem) HexMode(code_guider); }
+static Plugin* query_interface(TWindow& main_wnd,CodeGuider& code_guider) { return new(zeromem) HexMode(main_wnd,code_guider); }
 
 extern const Plugin_Info hexMode = {
     "~Hexadecimal mode",	/**< plugin name */

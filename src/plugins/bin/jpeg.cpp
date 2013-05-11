@@ -48,7 +48,7 @@ static int  __FASTCALL__ jpeg_platform() { return DISASM_DEFAULT; }
 
 static __filesize_t __FASTCALL__ Show_JPEG_Header()
 {
-    ErrMessageBox("Not implemented yet!","JPEG format");
+    beye_context().ErrMessageBox("Not implemented yet!","JPEG format");
     return BMGetCurrFilePos();
 }
 

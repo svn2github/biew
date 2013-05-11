@@ -568,8 +568,6 @@ bool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
   return ret;
 }
 
-extern TWindow * ErrorWnd;
-
 __filesize_t BeyeContext::search( bool is_continue )
 {
   __filesize_t found;

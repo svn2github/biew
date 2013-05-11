@@ -244,7 +244,7 @@ static __filesize_t __FASTCALL__ ShowInterfaces()
     bval = jvm_read_interfaces(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ma_Display(obj,title,flags,-1);
     }
     ma_Destroy(obj);
@@ -288,7 +288,7 @@ static __filesize_t  __FASTCALL__ __ShowAttributes(const std::string& title)
     bval = jvm_read_attributes(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ret = ma_Display(obj,title,flags,-1);
     }
     ma_Destroy(obj);
@@ -355,7 +355,7 @@ static __filesize_t __FASTCALL__ ShowMethods()
     bval = jvm_read_methods(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ret = ma_Display(obj,title,flags,-1);
     }
     ma_Destroy(obj);
@@ -433,7 +433,7 @@ static __filesize_t __FASTCALL__ ShowFields()
     bval = jvm_read_fields(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ret = ma_Display(obj,title,flags,-1);
     }
     ma_Destroy(obj);
@@ -561,7 +561,7 @@ static __filesize_t __FASTCALL__ ShowPool()
     bval = jvm_read_pool(bmbioHandle(),obj,nnames);
     delete w;
     if(bval) {
-	if(!obj->nItems) { NotifyBox(NOT_ENTRY,title); goto exit; }
+	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
 	ma_Display(obj,title,flags,-1);
     }
     ma_Destroy(obj);

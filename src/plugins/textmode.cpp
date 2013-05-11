@@ -107,7 +107,7 @@ static char		detected_syntax_name[FILENAME_MAX+1];
 
     class TextMode : public Plugin {
 	public:
-	    TextMode(CodeGuider& code_guider);
+	    TextMode(TWindow& _main_wnd,CodeGuider& code_guider);
 	    virtual ~TextMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -149,6 +149,7 @@ static char		detected_syntax_name[FILENAME_MAX+1];
 	    void			markup_ctx();
 	    bool			test_leading_escape(__fileoff_t cpos) const;
 	    bool			is_legal_word_char(unsigned char ch) const { return (bool)word_set[(unsigned char)ch]; }
+	    void			drawBound(TWindow& w,int x,int y,char ch) const;
 
 	    acontext_hl_t*		acontext; /* means active context*/
 	    unsigned long		acontext_num;
@@ -168,6 +169,7 @@ static char		detected_syntax_name[FILENAME_MAX+1];
 
 	    const REGISTRY_NLS*		activeNLS;
 	    unsigned			defNLSSet;
+	    TWindow&			main_wnd;
     };
 
 bool TextMode::test_leading_escape(__fileoff_t cpos) const {
@@ -379,7 +381,7 @@ static bool __FASTCALL__ txtFiUserFunc1(IniInfo * info,any_t* data)
 	char stmp[4096];
 	strncpy(stmp,info->value,sizeof(stmp));
 	char* value=strstr(stmp,"-->");
-	if(!value) { ErrMessageBox("Missing separator in main context definition",""); return true; }
+	if(!value) { beye_context().ErrMessageBox("Missing separator in main context definition",""); return true; }
 	*value=0;
 	softmode=0;
 	if(strcmp(info->subsection,"Soft")==0) softmode=1;
@@ -416,13 +418,13 @@ static Color  __FASTCALL__ getCtxColorByName(const char *subsection,const char *
     else if(::strcmp(subsection,"Constants")==0) cset=&prog_cset.constants;
     else if(::strcmp(subsection,"Keywords")==0) cset=&prog_cset.keywords;
     else if(::strcmp(subsection,"Operators")==0) cset=&prog_cset.operators;
-    else ErrMessageBox("Unknown context subsection definition",subsection);
+    else beye_context().ErrMessageBox("Unknown context subsection definition",subsection);
     if(cset) {
 	if(::strcmp(item,"base")==0) return Color(cset->base);
 	if(::strcmp(item,"extended")==0) return Color(cset->extended);
 	if(::strcmp(item,"reserved")==0) return Color(cset->reserved);
 	if(::strcmp(item,"alt")==0) return Color(cset->alt);
-	ErrMessageBox("Unknown context class definition",item);
+	beye_context().ErrMessageBox("Unknown context class definition",item);
     }
     *err=1;
     return cdef;
@@ -435,7 +437,7 @@ static Color  __FASTCALL__ getKwdColorByName(const char *item,Color cdef,bool *e
     if(::strcmp(item,"extended")==0) return Color(prog_cset.keywords.extended);
     if(::strcmp(item,"reserved")==0) return Color(prog_cset.keywords.reserved);
     if(::strcmp(item,"alt")==0) return Color(prog_cset.keywords.alt);
-    ErrMessageBox("Unknown keyword class definition",item);
+    beye_context().ErrMessageBox("Unknown keyword class definition",item);
     *err=1;
     return cdef;
 }
@@ -447,7 +449,7 @@ static Color  __FASTCALL__ getOpColorByName(const char *item,Color cdef,bool *er
     if(::strcmp(item,"extended")==0) return Color(prog_cset.operators.extended);
     if(::strcmp(item,"reserved")==0) return Color(prog_cset.operators.reserved);
     if(::strcmp(item,"alt")==0) return Color(prog_cset.operators.alt);
-    ErrMessageBox("Unknown keyword class definition",item);
+    beye_context().ErrMessageBox("Unknown keyword class definition",item);
     *err=1;
     return cdef;
 }
@@ -570,7 +572,7 @@ void TextMode::read_syntaxes()
 		int phash;
 		::memset(word_set,0,sizeof(word_set));
 		Ini_Parser::scan(detected_syntax_name,txtFiUserFunc2,NULL);
-		if(last_syntax_err[0]) ErrMessageBox(last_syntax_err,"");
+		if(last_syntax_err[0]) beye_context().ErrMessageBox(last_syntax_err,"");
 		/* put longest strings on top */
 		HQSort(syntax_hl.context,syntax_hl.context_num,sizeof(context_hl_t),cmp_ctx);
 		HQSort(syntax_hl.keyword,syntax_hl.keyword_num,sizeof(keyword_hl_t),cmp_kwd);
@@ -712,7 +714,7 @@ void TextMode::fill_prev_page(__filesize_t lval) const
     unsigned cp_symb_len;
     int i;
     cp_symb_len = activeNLS->get_symbol_size();
-    for(i = MainWnd->client_height() - 1;i >= 0;i--) {
+    for(i = main_wnd.client_height() - 1;i >= 0;i--) {
 	ptlines[i].end = lval;
 	if(lval >= cp_symb_len) lval = back_scan_cr(lval - cp_symb_len);
 	ptlines[i].st = lval;
@@ -722,7 +724,7 @@ void TextMode::fill_prev_page(__filesize_t lval) const
 void TextMode::fill_curr_page(__filesize_t lval,__filesize_t flen) const
 {
     size_t i;
-    tAbsCoord height = MainWnd->client_height();
+    tAbsCoord height = main_wnd.client_height();
     for(i = 0;i < height;i++) {
 	tlines[i].st = lval;
 	if(lval < flen) lval = forward_scan_cr(lval,flen);
@@ -732,7 +734,7 @@ void TextMode::fill_curr_page(__filesize_t lval,__filesize_t flen) const
 
 void TextMode::prepare_lines(int keycode)
 {
-    int size,size1,h,height = MainWnd->client_height();
+    int size,size1,h,height = main_wnd.client_height();
     unsigned cp_symb_len;
     __filesize_t lval,flen,cp = BMGetCurrFilePos();
     cp_symb_len = activeNLS->get_symbol_size();
@@ -924,26 +926,27 @@ void TextMode::paint_search(HLInfo * cptr,unsigned int shift,int i,int size,int 
     savee= FoundTextEnd;
     FoundTextSt = tlines[i].st + shift + sh/cp_symb_len;
     FoundTextEnd = tlines[i].st + shift + she/cp_symb_len;
-    HiLightSearch(MainWnd,tlines[i].st + shift,0,size,i,cptr,_bin_mode == MOD_BINARY ? HLS_NORMAL : HLS_USE_BUFFER_AS_VIDEO);
+    HiLightSearch(main_wnd,tlines[i].st + shift,0,size,i,cptr,_bin_mode == MOD_BINARY ? HLS_NORMAL : HLS_USE_BUFFER_AS_VIDEO);
     FoundTextSt = save;
     FoundTextEnd = savee;
 }
 
-static void  __FASTCALL__ drawBound(TWindow* w,int x,int y,char ch)
+void TextMode::drawBound(TWindow& w,int x,int y,char ch) const
 {
-  w->goto_xy(x,y);
-  w->set_color(browser_cset.bound);
-  w->putch(ch);
-  w->set_color(browser_cset.main);
+  w.goto_xy(x,y);
+  w.set_color(browser_cset.bound);
+  w.putch(ch);
+  w.set_color(browser_cset.main);
 }
 
-TextMode::TextMode(CodeGuider& code_guider)
-	:Plugin(code_guider)
+TextMode::TextMode(TWindow& _main_wnd,CodeGuider& code_guider)
+	:Plugin(_main_wnd,code_guider)
 	,HiLight(1)
 	,bin_mode(MOD_PLAIN)
 	,txtHandle(&bNull)
 	,maxstrlen(MAX_STRLEN)
 	,activeNLS(&RussianNLS)
+	,main_wnd(_main_wnd)
 {
     buff = new char [MAX_STRLEN];
     tlines = new TSTR[__TVIO_MAXSCREENWIDTH];
@@ -1001,7 +1004,7 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
     unsigned size,rsize,rshift;
     __filesize_t cpos;
     unsigned cp_symb_len,len,tmp,textmaxlen;
-    tAbsCoord height = MainWnd->client_height();
+    tAbsCoord height = main_wnd.client_height();
     HLInfo hli;
     tvioBuff it;
     t_vchar chars[__TVIO_MAXSCREENWIDTH];
@@ -1052,7 +1055,7 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 	}
     }
     textmaxlen = maxstrlen - 2;
-    MainWnd->freeze();
+    main_wnd.freeze();
     for(i = 0;i < height;i++) {
 	len = (int)(tlines[i].end - tlines[i].st);
 	if(isHOnLine(tlines[i].st,len)) hilightline = i;
@@ -1073,22 +1076,22 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 		else                       hli.buff = it;
 		paint_search(&hli,shift,i,size,bin_mode == MOD_BINARY);
 	    } else {
-		if(bin_mode == MOD_BINARY) MainWnd->direct_write(1,i+1,buff,size);
-		else                       MainWnd->write(1,i + 1,&it,size);
+		if(bin_mode == MOD_BINARY) main_wnd.direct_write(1,i+1,buff,size);
+		else                       main_wnd.write(1,i + 1,&it,size);
 	    }
 	    if(rsize < beye_context().tconsole().vio_width()) {
-		MainWnd->goto_xy(1 + rsize,i + 1);
-		MainWnd->clreol();
-	    } else if(rsize > beye_context().tconsole().vio_width()) drawBound(MainWnd,beye_context().tconsole().vio_width(),i + 1,TWC_RT_ARROW);
+		main_wnd.goto_xy(1 + rsize,i + 1);
+		main_wnd.clreol();
+	    } else if(rsize > beye_context().tconsole().vio_width()) drawBound(main_wnd,beye_context().tconsole().vio_width(),i + 1,TWC_RT_ARROW);
 	} else {
-	    MainWnd->goto_xy(1,i + 1);
-	    MainWnd->clreol();
+	    main_wnd.goto_xy(1,i + 1);
+	    main_wnd.clreol();
 	}
-	if(shift) drawBound(MainWnd,1,i + 1,TWC_LT_ARROW);
+	if(shift) drawBound(main_wnd,1,i + 1,TWC_LT_ARROW);
 	lastbyte = tlines[i].st;
 	lastbyte += bin_mode == MOD_BINARY ? shift + size : rshift + len;
     }
-    MainWnd->refresh();
+    main_wnd.refresh();
     tmp = textmaxlen - beye_context().tconsole().vio_width() + 2;
     if(shift > tmp) shift = tmp;
     if(!tlines[1].st) tlines[1].st = tlines[0].end;
@@ -1235,7 +1238,7 @@ bool TextMode::action_F8 () /* txtShowType */
     const char *type;
     if(syntax_hl.name) type=syntax_hl.name;
     else type="Unknown";
-    TMessageBox(type," Detected text type: ");
+    beye_context().TMessageBox(type," Detected text type: ");
     return false;
 }
 
@@ -1243,7 +1246,7 @@ unsigned TextMode::get_symbol_size() const { return activeNLS->get_symbol_size()
 unsigned TextMode::get_max_line_length() const { return strmaxlen; }
 TextMode::e_flag TextMode::flags() const { return Text|Has_ConvertCP; }
 
-static Plugin* query_interface(CodeGuider& code_guider) { return new(zeromem) TextMode(code_guider); }
+static Plugin* query_interface(TWindow& main_wnd,CodeGuider& code_guider) { return new(zeromem) TextMode(main_wnd,code_guider); }
 
 extern const Plugin_Info textMode = {
     "~Text mode",	/**< plugin name */

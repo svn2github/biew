@@ -87,7 +87,7 @@ typedef union tag_HLInfo
   tvioBuff        buff;
 }HLInfo;
 
-    void __FASTCALL__ HiLightSearch(TWindow *out,__filesize_t cfp,tRelCoord minx,
+    void __FASTCALL__ HiLightSearch(TWindow& out,__filesize_t cfp,tRelCoord minx,
 			  tRelCoord maxx,tRelCoord y,HLInfo *buff,unsigned flags);
 
 /** Class memory array */
@@ -107,7 +107,6 @@ typedef struct tag_memArray
 
     int      __FASTCALL__ ExpandHex(char * dest,const unsigned char * src,int size,char hard);
 
-    void		PaintTitle();
     __filesize_t       IsNewExe();
 } // namespace	usr
 #endif

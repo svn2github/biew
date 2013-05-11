@@ -50,6 +50,7 @@ using namespace	usr;
 #include <math.h>
 #include <stdio.h>
 
+#include "beye.h"
 #include "addons/addon.h"
 
 #include "colorset.h"
@@ -576,7 +577,7 @@ void Calculator_Addon::run()
        _ret = evaluate(estr,&val,&base);
        if(_ret != SUCCESS)
        {
-	 ErrMessageBox(_ret == O_ERROR ? "Bad operand" :
+	 beye_context().ErrMessageBox(_ret == O_ERROR ? "Bad operand" :
 		       _ret == R_ERROR ? "Runtime error" :
 		       _ret == E_MEM ? "Not enough memory!" :
 		       "Syntax error","");
@@ -597,7 +598,7 @@ void Calculator_Addon::run()
 	   case 2: strcat(sres,"b"); break;
 	   default: break;
 	 }
-	 NotifyBox(sres," Result ");
+	 beye_context().NotifyBox(sres," Result ");
        }
        continue;
      }

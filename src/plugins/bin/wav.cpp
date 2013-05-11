@@ -221,7 +221,7 @@ static __filesize_t __FASTCALL__ Show_WAV_Header()
  __filesize_t fpos,fpos2;
  fpos = BMGetCurrFilePos();
  fpos2 = wav_find_chunk(12,mmioFOURCC('f','m','t',' '));
- if((__fileoff_t)fpos2==-1) { ErrMessageBox("Main WAV Header not found",""); return fpos; }
+ if((__fileoff_t)fpos2==-1) { beye_context().ErrMessageBox("Main WAV Header not found",""); return fpos; }
  bmSeek(fpos2,binary_stream::Seek_Set);
  bmReadDWord(); /* skip section size */
  bmReadBuffer(&wavf,sizeof(WAVEFORMATEX));

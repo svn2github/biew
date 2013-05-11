@@ -91,7 +91,7 @@ typedef unsigned char * MBuffer;
 		Panel_Wide   =0        /**< full mode of panel: instruction only */
 	    };
 
-	    DisMode(CodeGuider& code_guider);
+	    DisMode(TWindow& _main_wnd,CodeGuider& code_guider);
 	    virtual ~DisMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -212,6 +212,7 @@ typedef unsigned char * MBuffer;
 	    CodeGuider&			code_guider;
 	    bool			DisasmPrepareMode;
 	    std::vector<const Disassembler_Info*> list;
+	    TWindow&			main_wnd;
     };
     inline DisMode::e_disarg operator~(DisMode::e_disarg a) { return static_cast<DisMode::e_disarg>(~static_cast<unsigned>(a)); }
     inline DisMode::e_disarg operator|(DisMode::e_disarg a, DisMode::e_disarg b) { return static_cast<DisMode::e_disarg>(static_cast<unsigned>(a)|static_cast<unsigned>(b)); }
@@ -292,7 +293,7 @@ typedef unsigned char * MBuffer;
 	    virtual bool	action_F5() { return false; }	/**< actions on Ctrl-(F1,F3-F5) */
 
 	    virtual DisasmRet	disassembler(__filesize_t shift,MBuffer insn_buff,unsigned flags) = 0; /**< main function of disasm */
-	    virtual AsmRet	assembler(const char *str) { AsmRet ret = {NULL, ASM_SYNTAX, 0 }; UNUSED(str); ErrMessageBox("Sorry, no assembler available",""); return ret; }
+	    virtual AsmRet	assembler(const char *str) { AsmRet ret = {NULL, ASM_SYNTAX, 0 }; UNUSED(str); beye_context().ErrMessageBox("Sorry, no assembler available",""); return ret; }
 
 	    virtual void	show_short_help() const = 0; /**< displays short help */
 	    virtual int		max_insn_len() = 0; /**< Max length of 1 disasm instruction */

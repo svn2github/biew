@@ -75,8 +75,6 @@ static Opaque		opaque2;
 
 static volatile char antiviral_hole2[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 
-TWindow * MainWnd = 0,*HelpWnd = 0,*TitleWnd = 0,*ErrorWnd = 0;
-
 static const unsigned SHORT_PATH_LEN=__TVIO_MAXSCREENWIDTH-54;
 
 static volatile char antiviral_hole3[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
@@ -98,7 +96,7 @@ bool BeyeContext::select_mode()
     if(retval != -1) {
 	defMainModeSel = retval;
 	delete activeMode;
-	activeMode = modes[defMainModeSel]->query_interface(*code_guider);
+	activeMode = modes[defMainModeSel]->query_interface(*MainWnd,*code_guider);
 	return true;
     }
     return false;
@@ -106,7 +104,7 @@ bool BeyeContext::select_mode()
 
 void BeyeContext::init_modes( Ini_Profile& ini )
 {
-    if(!activeMode) activeMode = modes[defMainModeSel]->query_interface(*code_guider);
+    if(!activeMode) activeMode = modes[defMainModeSel]->query_interface(*MainWnd,*code_guider);
     activeMode->read_ini(ini);
 }
 
@@ -116,7 +114,7 @@ void BeyeContext::quick_select_mode()
     if(defMainModeSel < nModes - 1) defMainModeSel++;
     else                            defMainModeSel = 0;
     delete activeMode;
-    activeMode = modes[defMainModeSel]->query_interface(*code_guider);
+    activeMode = modes[defMainModeSel]->query_interface(*MainWnd,*code_guider);
 }
 
 void BeyeContext::make_shortname()
@@ -164,7 +162,7 @@ void BeyeContext::auto_detect_mode()
     size_t i,n = modes.size();
     Plugin* mode;
     for(i = 0;i < n;i++) {
-	mode = modes[i]->query_interface(*code_guider);
+	mode = modes[i]->query_interface(*MainWnd,*code_guider);
 	if(mode->detect()) {
 	    defMainModeSel = i;
 	    break;
@@ -172,7 +170,7 @@ void BeyeContext::auto_detect_mode()
 	delete mode; mode = NULL;
     }
     if(mode) delete mode;
-    activeMode = modes[defMainModeSel]->query_interface(*code_guider);
+    activeMode = modes[defMainModeSel]->query_interface(*MainWnd,*code_guider);
     BMSeek(0,binary_stream::Seek_Set);
 }
 
@@ -266,11 +264,6 @@ void BeyeContext::PaintTitle() const
 
 static void MyAtExit()
 {
-  if(MainWnd) delete MainWnd;
-  if(HelpWnd) delete HelpWnd;
-  if(TitleWnd) delete TitleWnd;
-  if(ErrorWnd) delete ErrorWnd;
-  termBConsole();
   delete BeyeCtx;
   mp_uninit_malloc(malloc_debug?1:0);
 }
@@ -417,6 +410,27 @@ void BeyeContext::show_usage() const {
     termBConsole();
 }
 
+void	BeyeContext::create_windows() {
+    ErrorWnd = WindowOpen(1,1,50,16,TWindow::Flag_None | TWindow::Flag_NLS);
+    if(ErrorWnd) ErrorWnd->set_title(" Error ",TWindow::TMode_Center,error_cset.border);
+    else { std::cerr<<"fatal error: can't create window"<<std::endl; ::exit(EXIT_FAILURE); }
+    ErrorWnd->into_center();
+    ErrorWnd->set_color(error_cset.main);
+    ErrorWnd->set_frame(TWindow::DOUBLE_FRAME,error_cset.border);
+    PromptWnd = WindowOpen(1,_tconsole->vio_height(),_tconsole->vio_width(),_tconsole->vio_height(),TWindow::Flag_NLS);
+    PromptWnd->set_color(prompt_cset.digit);
+    PromptWnd->clear();
+    PromptWnd->show();
+    if(BeyeCtx->ini_ver!=BEYE_VERSION) Setup();
+    TitleWnd = WindowOpen(1,1,_tconsole->vio_width(),1,TWindow::Flag_None);
+    TitleWnd->set_color(title_cset.main);
+    TitleWnd->clear();
+    TitleWnd->show();
+    MainWnd = WindowOpen(1,2,_tconsole->vio_width(),_tconsole->vio_height()-1,TWindow::Flag_None);
+    MainWnd->set_color(browser_cset.main);
+    MainWnd->clear();
+}
+
 int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::string>& envm)
 {
  bool skin_err;
@@ -460,29 +474,14 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
     return EXIT_FAILURE;
  }
  udnInit(ini);
- ErrorWnd = WindowOpen(1,1,50,16,TWindow::Flag_None | TWindow::Flag_NLS);
- if(ErrorWnd) ErrorWnd->set_title(" Error ",TWindow::TMode_Center,error_cset.border);
- else { std::cerr<<"fatal error: can't create window"<<std::endl; return EXIT_FAILURE; }
- ErrorWnd->into_center();
- ErrorWnd->set_color(error_cset.main);
- ErrorWnd->set_frame(TWindow::DOUBLE_FRAME,error_cset.border);
- TConsole& tconsole = BeyeCtx->tconsole();
- HelpWnd = WindowOpen(1,tconsole.vio_height(),tconsole.vio_width(),tconsole.vio_height(),TWindow::Flag_NLS);
- HelpWnd->set_color(prompt_cset.digit);
- HelpWnd->clear();
- HelpWnd->show();
- if(BeyeCtx->ini_ver!=BEYE_VERSION) Setup();
- TitleWnd = WindowOpen(1,1,tconsole.vio_width(),1,TWindow::Flag_None);
- TitleWnd->set_color(title_cset.main);
- TitleWnd->clear();
- TitleWnd->show();
+ BeyeCtx->create_windows();
  atexit(MyAtExit);
  retval = EXIT_SUCCESS;
  if(skin_err)
  {
    char sout[256];
    sprintf(sout,"Error in skin file detected: '%s'",BeyeCtx->last_skin_error.c_str());
-   ErrMessageBox(sout,"");
+   BeyeCtx->ErrMessageBox(sout,"");
  }
  /* We must do it before opening a file because of some RTL has bug
     when are trying to open already open file with no sharing access */
@@ -496,12 +495,9 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  BeyeCtx->bin_format().detect_format();
  BeyeCtx->init_modes(ini);
  delete &ini;
- MainWnd = WindowOpen(1,2,tconsole.vio_width(),tconsole.vio_height()-1,TWindow::Flag_None);
- MainWnd->set_color(browser_cset.main);
- MainWnd->clear();
  BeyeCtx->PaintTitle();
  if(!BeyeCtx->is_valid_ini_args() || BeyeCtx->LastOffset > BMGetFLength()) BeyeCtx->LastOffset = 0;
- MainWnd->show();
+ BeyeCtx->main_wnd().show();
  BeyeCtx->main_loop();
  BeyeCtx->LastOffset = BMGetCurrFilePos();
  BeyeCtx->save_ini_info();
@@ -546,7 +542,7 @@ bool BeyeContext::new_source()
 	    make_shortname();
 	    _bin_format = new(zeromem) Bin_Format(*code_guider);
 	    _bin_format->detect_format();
-	    activeMode=modes[defMainModeSel]->query_interface(*code_guider);
+	    activeMode=modes[defMainModeSel]->query_interface(*MainWnd,*code_guider);
 	    ret = true;
 	} else {
 	    if(BMOpen(ArgVector1) != true) ::exit(EXIT_FAILURE);
@@ -555,7 +551,7 @@ bool BeyeContext::new_source()
 	    make_shortname();
 	    _bin_format = new(zeromem) Bin_Format(*code_guider);
 	    _bin_format->detect_format();
-	    activeMode=modes[defMainModeSel]->query_interface(*code_guider);
+	    activeMode=modes[defMainModeSel]->query_interface(*MainWnd,*code_guider);
 	    ret = false;
 	}
     }
@@ -629,6 +625,12 @@ BeyeContext::~BeyeContext() {
     delete _shortname;
     delete code_guider;
     BMClose();
+
+    if(MainWnd) delete MainWnd;
+    if(PromptWnd) delete PromptWnd;
+    if(TitleWnd) delete TitleWnd;
+    if(ErrorWnd) delete ErrorWnd;
+    termBConsole();
 }
 const std::vector<std::string>& BeyeContext::list_file() const { return ListFile; }
 
@@ -638,6 +640,7 @@ void BeyeContext::select_sysinfo() const { sysinfo->select(); }
 binary_stream* BeyeContext::beyeOpenRO(const std::string& fname,unsigned cache_size)
 {
     binary_stream* fret;
+    if(!binary_stream::exists(fname)) return &bNull;
     if(beye_context().fioUseMMF)fret= new(zeromem) MMFile;
     else			fret= new(zeromem) BBio_File(cache_size,BBio_File::Opt_Db);
     bool rc;
@@ -651,6 +654,7 @@ binary_stream* BeyeContext::beyeOpenRO(const std::string& fname,unsigned cache_s
 binary_stream* BeyeContext:: beyeOpenRW(const std::string& fname,unsigned cache_size)
 {
     binary_stream* fret;
+    if(!binary_stream::exists(fname)) return &bNull;
     if(beye_context().fioUseMMF)fret= new(zeromem) MMFile;
     else			fret= new(zeromem) BBio_File(cache_size,BBio_File::Opt_Db);
     bool rc;
