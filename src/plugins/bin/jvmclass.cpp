@@ -123,19 +123,19 @@ typedef struct ClassFile_s
 	    __filesize_t		__ShowAttributes(const std::string& title);
 	    void			jvm_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
 
+	    inline uint16_t JVM_WORD(const uint16_t* cval,bool is_msbf) const { return FMT_WORD(*cval,is_msbf); }
+	    inline uint32_t JVM_DWORD(const uint32_t* cval,bool is_msbf) const { return FMT_DWORD(*cval,is_msbf); }
+	    inline uint64_t JVM_QWORD(const uint64_t* cval,bool is_msbf) const { return FMT_QWORD(*cval,is_msbf); }
+
+	    binary_stream*	jvm_cache;
+	    binary_stream*	pool_cache;
+	    linearArray*	PubNames;
+
 	    ClassFile_t jvm_header;
     };
 
 static const char* txt[]={ "", "Import", "Code  ", "Data  ", "", "", "", "Pool  ", "", "Attrib" };
 const char* JVM_Parser::prompt(unsigned idx) const { return txt[idx]; }
-
-static binary_stream* jvm_cache;
-static binary_stream* pool_cache;
-static linearArray *PubNames = NULL;
-
-inline uint16_t JVM_WORD(const uint16_t* cval,bool is_msbf) { return FMT_WORD(*cval,is_msbf); }
-inline uint32_t JVM_DWORD(const uint32_t* cval,bool is_msbf) { return FMT_DWORD(*cval,is_msbf); }
-inline uint64_t JVM_QWORD(const uint64_t* cval,bool is_msbf) { return FMT_QWORD(*cval,is_msbf); }
 
 unsigned JVM_Parser::skip_constant(binary_stream& handle,unsigned char id)
 {

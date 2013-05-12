@@ -68,7 +68,11 @@ namespace	usr {
 	    static tCompare		compare_ptr(const any_t*e1,const any_t*e2);
 	    static tCompare		compare_mz(const any_t*e1,const any_t*e2);
 
-	    CodeGuider&			_code_guider;
+	    MZHEADER		mz;
+	    unsigned long	HeadSize;
+	    long*		CurrMZChain;
+	    unsigned long	CurrMZCount;
+	    CodeGuider&		_code_guider;
     };
 } // namespace	usr
 #endif

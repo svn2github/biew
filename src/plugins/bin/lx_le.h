@@ -150,11 +150,10 @@ typedef struct tag_VxD_Desc_Block
 }VxD_Desc_Block;
 
 
-extern union LX_LE
-{
+union LX_LE {
   LEHEADER le;
   LXHEADER lx;
-}lxe;
+};
 
 /** Flat .EXE object table entry */
 typedef struct o32_obj
@@ -304,6 +303,8 @@ typedef struct tagLXResource
 	    bool			LXNRNamesReadItems(binary_stream&handle,memArray *obj,unsigned nnames);
 	    unsigned			LXRNamesNumItems(binary_stream&handle);
 	    bool			LXRNamesReadItems(binary_stream&handle,memArray *obj,unsigned nnames);
+	protected:
+	    static union LX_LE lxe;
 	private:
 	    bool			__ReadResourceGroupLX(binary_stream&handle,memArray *obj,unsigned nitems,long *addr);
 	    bool			__ReadMapTblLX(binary_stream&handle,memArray *obj,unsigned n);
@@ -333,6 +334,8 @@ typedef struct tagLXResource
 	    static const char*		GetOrderingLX(unsigned char type);
 
 	    static void			(* lxphead[])(TWindow*);
+
+	    static __filesize_t LXEntryPoint;
     };
 
     class LE_Parser : public LX_Parser {

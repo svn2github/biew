@@ -159,22 +159,31 @@ namespace	usr {
 	    bool			FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
 	    void			elf_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
 
-	    CodeGuider&			code_guider;
+	    bool		is_msbf; /* is most significand byte first */
+	    bool		is_64bit;
+	    class Elf*		Elf;
+	    linearArray*	PubNames;
+
+	    __filesize_t	active_shtbl;
+	    __filesize_t	elf_min_va;
+	    unsigned long	__elfNumSymTab;
+	    __filesize_t	__elfSymShTbl;
+	    unsigned long	__elfSymEntSize;
+	    __filesize_t	__elfSymPtr;
+	    bool		IsSectionsPresent;
+
+	    binary_stream&	namecache;
+	    binary_stream&	namecache2;
+	    binary_stream&	elfcache;
+
+	    linearArray*	va_map_phys;
+	    linearArray*	va_map_virt;
+	    linearArray*	CurrElfChain;
+
+	    CodeGuider&		code_guider;
     };
 static const char* txt[]={ "ELFhlp", "DynInf", "DynSec", "", "", "", "SymTab", "", "SecHdr", "PrgDef" };
 const char* ELF_Parser::prompt(unsigned idx) const { return txt[idx]; }
-
-static char is_msbf; /* is most significand byte first */
-static char is_64bit;
-static class Elf* Elf = NULL;
-static linearArray *PubNames = NULL;
-
-static __filesize_t active_shtbl = 0;
-static __filesize_t elf_min_va = FILESIZE_MAX;
-static unsigned long __elfNumSymTab = 0;
-static __filesize_t  __elfSymShTbl = 0;
-static unsigned long __elfSymEntSize = 0;
-static __filesize_t  __elfSymPtr = 0L;
 
 struct tag_elfVAMap
 {
@@ -184,8 +193,6 @@ struct tag_elfVAMap
   __filesize_t nameoff;
   __filesize_t flags;
 };
-
-static bool IsSectionsPresent;
 
 __filesize_t  ELF_Parser::findPHEntry(unsigned long type,unsigned *nitems)
 {
@@ -303,12 +310,6 @@ __filesize_t ELF_Parser::findSHEntry(binary_stream& b_cache, unsigned long type,
   b_cache.seek(fpos, binary_stream::Seek_Set);
   return tableptr;
 }
-
-static binary_stream& namecache = bNull;
-static binary_stream& namecache2 = bNull;
-static binary_stream& elfcache = bNull;
-
-static linearArray *va_map_phys,* va_map_virt;
 
 tCompare ELF_Parser::vamap_comp_virt(const any_t*v1,const any_t*v2)
 {
@@ -1120,8 +1121,6 @@ __filesize_t ELF_Parser::action_F3()
 /***************************************************************************/
 /************************ RELOCATION FOR ELF *******************************/
 /***************************************************************************/
-static linearArray *CurrElfChain = NULL;
-
 tCompare ELF_Parser::compare_elf_reloc(const any_t*e1,const any_t*e2)
 {
   const Elf_Reloc  *p1, *p2;
@@ -2134,6 +2133,10 @@ void ELF_Parser::__elfReadSegments(linearArray **to, bool is_virt )
 
 ELF_Parser::ELF_Parser(CodeGuider& _code_guider)
 	    :Binary_Parser(_code_guider)
+	    ,elf_min_va(FILESIZE_MAX)
+	    ,namecache(bNull)
+	    ,namecache2(bNull)
+	    ,elfcache(bNull)
 	    ,code_guider(_code_guider)
 {
     __filesize_t fs;

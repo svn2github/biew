@@ -50,15 +50,16 @@ namespace	usr {
 	    virtual bool		address_resolving(char *,__filesize_t);
 	    static bool			check_fmt(uint32_t id);
 	private:
+	    bool			probe_fmt(uint32_t id);
 	    const char*			aout_encode_machine(uint32_t info,unsigned *id) const;
 	    const char*			aout_encode_hdr(uint32_t info) const;
-    };
-static char is_msbf; /* is most significand byte first */
-static char is_64bit;
-inline uint16_t		AOUT_HALF(const uint16_t* cval) { return FMT_WORD(*cval,is_msbf); }
-inline uint32_t		AOUT_WORD(const uint32_t* cval) { return FMT_DWORD(*cval,is_msbf); }
-inline uint64_t		AOUT_QWORD(const uint64_t* cval) { return FMT_QWORD(*cval,is_msbf); }
+	    inline uint16_t		AOUT_HALF(const uint16_t* cval) const { return FMT_WORD(*cval,is_msbf); }
+	    inline uint32_t		AOUT_WORD(const uint32_t* cval) const { return FMT_DWORD(*cval,is_msbf); }
+	    inline uint64_t		AOUT_QWORD(const uint64_t* cval) const { return FMT_QWORD(*cval,is_msbf); }
 
+	    bool is_msbf; /* is most significand byte first */
+	    bool is_64bit;
+    };
 static const char* txt[]={ "AOutHl", "", "", "", "", "", "", "", "", "" };
 const char* AOut_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
@@ -141,11 +142,25 @@ bool AOut_Parser::check_fmt( uint32_t id )
   int a32,a64;
   a32=!(N_BADMAG(id));
   a64=!(N_BADMAG64(id));
+  return a32 || a64 || N_MAGIC(id)==CMAGIC;
+}
+
+bool AOut_Parser::probe_fmt( uint32_t id )
+{
+  int a32,a64;
+  a32=!(N_BADMAG(id));
+  a64=!(N_BADMAG64(id));
   if(a64) is_64bit=1;
   return a32 || a64 || N_MAGIC(id)==CMAGIC;
 }
 
-AOut_Parser::AOut_Parser(CodeGuider&c):Binary_Parser(c) {}
+AOut_Parser::AOut_Parser(CodeGuider&c):Binary_Parser(c) {
+    uint32_t id;
+    id = bmReadDWordEx(0,binary_stream::Seek_Set);
+    if(probe_fmt(id)) return;
+    id=be2me_32(id);
+    if(probe_fmt(id)) is_msbf=1;
+}
 AOut_Parser::~AOut_Parser() {}
 
 int AOut_Parser::query_bitness(__filesize_t off) const
@@ -193,7 +208,7 @@ static bool probe() {
   id = bmReadDWordEx(0,binary_stream::Seek_Set);
   if(AOut_Parser::check_fmt(id)) return 1;
   id=be2me_32(id);
-  if(AOut_Parser::check_fmt(id)) { is_msbf=1; return 1; }
+  if(AOut_Parser::check_fmt(id)) return 1;
   return 0;
 }
 

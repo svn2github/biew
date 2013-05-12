@@ -111,6 +111,18 @@ namespace	usr {
 	    __filesize_t		fioReadDWord2Phys(binary_stream& handle,__filesize_t offset,binary_stream::e_seek origin);
 	    void			ShowModContextPE(const std::string& title);
 
+	    binary_stream*	pe_cache1;
+	    binary_stream*	pe_cache2;
+	    binary_stream*	pe_cache3;
+	    binary_stream*	pe_cache4;
+	    linearArray*	CurrPEChain;
+
+	    __filesize_t	addr_shift_pe;
+
+	    ExportTablePE	et;
+	    PERVA*		peDir;
+	    linearArray*	PubNames;
+
 	    static void			(* const pephead[])(TWindow *);
     };
 static const char* txt[]={ "PEHelp", "Import", "Export","", "","","", "PEHead", "Dir   ", "Object" };
@@ -118,29 +130,24 @@ const char* PE_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
 #define ARRAY_SIZE(x)       (sizeof(x)/sizeof(x[0]))
 
+static __fileoff_t overlayPE = -1L;
+static __filesize_t entryPE = 0;
+
 static int is_64bit;
+static binary_stream* pe_cache=&bNull;
 
 typedef union {
   PE32HEADER   pe32;
   PE32P_HEADER pe32p;
 }PE32X_HEADER;
 
-#define PE32_HDR(e,FIELD) (is_64bit?(((PE32P_HEADER *)&e.pe32p)->FIELD):(((PE32HEADER *)&e.pe32)->FIELD))
-#define PE32_HDR_SIZE() (is_64bit?sizeof(PE32P_HEADER):sizeof(PE32HEADER))
-
-static PE_ADDR * peVA = NULL;
 static PE32X_HEADER pe32;
 static PEHEADER pe;
-static PERVA *peDir;
-static linearArray *PubNames = NULL;
+static PE_ADDR* peVA;
 
+#define PE32_HDR(e,FIELD) (is_64bit?(((PE32P_HEADER *)&e.pe32p)->FIELD):(((PE32HEADER *)&e.pe32)->FIELD))
+#define PE32_HDR_SIZE() (is_64bit?sizeof(PE32P_HEADER):sizeof(PE32HEADER))
 #define PE_HDR_SIZE() (sizeof(PEHEADER) + PE32_HDR_SIZE())
-
-static binary_stream* pe_cache = &bNull;
-static binary_stream* pe_cache1 = &bNull;
-static binary_stream* pe_cache2 = &bNull;
-static binary_stream* pe_cache3 = &bNull;
-static binary_stream* pe_cache4 = &bNull;
 
 __filesize_t PE_Parser::CalcPEObjectEntry(__fileoff_t offset)
 {
@@ -245,9 +252,6 @@ const char* PE_Parser::PECPUType()
 
     return "Unknown";
 }
-
-static __filesize_t entryPE = 0L;
-static __fileoff_t overlayPE = -1L;
 
 void PE_Parser::PaintNewHeaderPE_1(TWindow* w)
 {
@@ -596,8 +600,6 @@ unsigned  PE_Parser::__ReadImportPE(binary_stream& handle,__filesize_t phys,memA
   return obj->nItems;
 }
 
-static __filesize_t addr_shift_pe = 0L;
-
 unsigned PE_Parser::GetImpCountPE(binary_stream& handle)
 {
  unsigned count;
@@ -718,8 +720,6 @@ __filesize_t PE_Parser::action_F2()
     exit:
     return fret;
 }
-
-static ExportTablePE et;
 
 void PE_Parser::writeExportVA(__filesize_t va, binary_stream& handle, char *buf, unsigned long bufsize)
 {
@@ -927,8 +927,6 @@ __filesize_t PE_Parser::action_F9()
 /***************************************************************************/
 /************************  FOR PE  *****************************************/
 /***************************************************************************/
-static linearArray *CurrPEChain = NULL;
-
 tCompare PE_Parser::compare_pe_reloc_s(const any_t*e1,const any_t*e2)
 {
   const RELOC_PE  *p1, *p2;
@@ -1193,6 +1191,10 @@ bool PE_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int fl
 
 PE_Parser::PE_Parser(CodeGuider& __code_guider)
 	:MZ_Parser(__code_guider)
+	,pe_cache1(&bNull)
+	,pe_cache2(&bNull)
+	,pe_cache3(&bNull)
+	,pe_cache4(&bNull)
 {
    int i;
 

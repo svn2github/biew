@@ -76,17 +76,16 @@ namespace	usr {
 	    void			ReadImpNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
 	    __filesize_t		rdoff_FindExport(const std::string& name);
 
+	    unsigned long		rdoff_hdrlen,ds_len;
+	    __filesize_t		cs_start,ds_start;
+	    linearArray*		PubNames;
+	    linearArray*		rdoffReloc;
+	    linearArray*		rdoffImpNames;
+	    unsigned char		__codelen;
 	    CodeGuider&			code_guider;
     };
 static const char* txt[]={ "RdHelp", "ModRef", "Export", "", "Import", "", "", "", "", "" };
 const char* RDOff_Parser::prompt(unsigned idx) const { return txt[idx]; }
-
-static unsigned long rdoff_hdrlen,ds_len;
-static __filesize_t cs_start,ds_start;
-static linearArray *PubNames = NULL;
-
-static linearArray *rdoffReloc = NULL;
-static linearArray *rdoffImpNames = NULL;
 
 __filesize_t RDOff_Parser::action_F1()
 {
@@ -427,8 +426,6 @@ void  RDOff_Parser::BuildRelocRDOFF()
   exit:
   la_Sort(rdoffReloc,rdoff_compare_reloc);
 }
-
-static unsigned char __codelen;
 
 bool RDOff_Parser::rdoffBuildReferStr(const DisMode& parent,char *str,RDOFF_RELOC *reloc,__filesize_t ulShift,int flags)
 {

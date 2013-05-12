@@ -44,8 +44,9 @@ namespace	usr {
 	    virtual bool		address_resolving(char *,__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va);
 	    virtual __filesize_t	pa2va(__filesize_t pa);
+	private:
+	    DOSDRIVER drv;
     };
-static DOSDRIVER drv;
 static const char* txt[]={ "SysHlp", "", "", "", "", "", "", "", "", "" };
 const char* DosSys_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
@@ -99,7 +100,12 @@ __filesize_t DosSys_Parser::show_header()
  return fpos;
 }
 
-DosSys_Parser::DosSys_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {}
+DosSys_Parser::DosSys_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {
+    unsigned char id[4];
+    bmReadBufferEx(id,sizeof(id),0,binary_stream::Seek_Set);
+    if(id[0] == 0xFF && id[1] == 0xFF && id[2] == 0xFF && id[3] == 0xFF)
+	bmReadBufferEx((any_t*)&drv,sizeof(DOSDRIVER),4,binary_stream::Seek_Set);
+}
 DosSys_Parser::~DosSys_Parser() {}
 int DosSys_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
@@ -131,11 +137,7 @@ static bool probe() {
   unsigned char id[4];
   bool ret = false;
   bmReadBufferEx(id,sizeof(id),0,binary_stream::Seek_Set);
-  if(id[0] == 0xFF && id[1] == 0xFF && id[2] == 0xFF && id[3] == 0xFF)
-  {
-     bmReadBufferEx((any_t*)&drv,sizeof(DOSDRIVER),4,binary_stream::Seek_Set);
-     ret = true;
-  }
+  if(id[0] == 0xFF && id[1] == 0xFF && id[2] == 0xFF && id[3] == 0xFF) ret = true;
   return ret;
 }
 

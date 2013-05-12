@@ -45,7 +45,6 @@ namespace	usr {
 static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
 const char* RM_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-
 __filesize_t RM_Parser::show_header()
 {
     beye_context().ErrMessageBox("Not implemented yet!","RM format");

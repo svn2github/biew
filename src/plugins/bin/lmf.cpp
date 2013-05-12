@@ -74,20 +74,22 @@ namespace	usr {
 	private:
 	    void			failed_lmf() const;
 	    bool			lmf_ReadSecHdr(binary_stream& handle,memArray *obj,unsigned nnames);
+
+	    lmf_headers_list*	hl;
+	    lmf_xdef		xdef;
+	    int			xdef_len;
+	    unsigned		seg_num;
+	    uint32_t		reccnt;
+	    uint32_t		recmax;
+	    uint32_t		reclast;
+	    uint32_t		segbase[MAXSEG];
+
+	    static const char*	lmftypes[];
     };
 static const char* txt[]={"LMFHlp","","","","","","","","SecLst",""};
 const char* LMF_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-static lmf_headers_list *hl;
-static lmf_xdef xdef;
-static int xdef_len=0;
-static unsigned seg_num=0;
-static uint32_t reccnt;
-static uint32_t recmax;
-static uint32_t reclast;
-static uint32_t segbase[MAXSEG];
-
-const char *lmftypes[]={
+const char* LMF_Parser::lmftypes[]={
 	"definition",
 	"comment",
 	"text",
@@ -112,7 +114,23 @@ inline size_t HDRSIZE() { return sizeof(lmf_header); }
 LMF_Parser::LMF_Parser(CodeGuider& code_guider)
 	    :Binary_Parser(code_guider)
 {
-	uint32_t i,l;
+    uint32_t i;
+    int32_t j,p=0;
+/*	lmf_data d;*/
+    lmf_header h;
+    bmReadBufferEx(&h,sizeof h,0,binary_stream::Seek_Set);
+	/* Test a first heder */
+    i=j=(h.data_nbytes-DEFSIZE())/4;
+    xdef_len=h.data_nbytes;
+    bmReadBufferEx(&xdef,std::min(sizeof(lmf_xdef),size_t(h.data_nbytes)),6,binary_stream::Seek_Set);
+    while(1) {
+	/* Test other headers */
+	p+=HDRSIZE()+h.data_nbytes;
+	bmReadBufferEx(&h,sizeof h,p,binary_stream::Seek_Set);
+	if(h.rec_type==_LMF_EOF_REC) break;
+    }
+
+	uint32_t l;
 	int32_t pos=0;
 	hl=new lmf_headers_list[MINREC];
 	if(hl==NULL) return;
@@ -488,37 +506,35 @@ __filesize_t LMF_Parser::action_F1()
 
 static bool probe()
 {
-	int32_t i,j,p=0;
+    lmf_xdef xdef;
+    int32_t j,p=0;
+    uint32_t i;
 /*	lmf_data d;*/
-	lmf_header h;
-	if(!bmReadBufferEx(&h,sizeof h,0,binary_stream::Seek_Set)) return false;
+    lmf_header h;
+    if(!bmReadBufferEx(&h,sizeof h,0,binary_stream::Seek_Set)) return false;
 	/* Test a first heder */
-	if(h.rec_type!=_LMF_DEFINITION_REC||h.zero1!=0||/*h.spare!=0||*/
+    if(h.rec_type!=_LMF_DEFINITION_REC||h.zero1!=0||/*h.spare!=0||*/
 		h.data_nbytes<DEFSIZE()+2*sizeof(long)||
 		(h.data_nbytes-DEFSIZE())%4!=0) return false;
-	i=j=(h.data_nbytes-DEFSIZE())/4;
-	xdef_len=h.data_nbytes;
-	if(!bmReadBufferEx(&xdef,std::min(sizeof(lmf_xdef),size_t(h.data_nbytes)),6,binary_stream::Seek_Set)) return false;
+    i=j=(h.data_nbytes-DEFSIZE())/4;
+    if(!bmReadBufferEx(&xdef,std::min(sizeof(lmf_xdef),size_t(h.data_nbytes)),6,binary_stream::Seek_Set)) return false;
 	/* Test a definition record */
-	if(xdef.def.version_no!=400||xdef.def.code_index>i||xdef.def.stack_index>i||
+    if(xdef.def.version_no!=400||xdef.def.code_index>i||xdef.def.stack_index>i||
 		xdef.def.heap_index>i||xdef.def.argv_index>i||xdef.def.zero2!=0)
 		return false;
-	if(xdef.def.cpu%100!=86||(xdef.def.fpu!=0&&xdef.def.fpu%100!=87))
+    if(xdef.def.cpu%100!=86||(xdef.def.fpu!=0&&xdef.def.fpu%100!=87))
 		return false;
-	if(xdef.def.cflags&_PCF_FLAT&&xdef.def.flat_offset==0) return false;
-	if(xdef.def.stack_nbytes==0) return false;
-	for(i=0;i<4;i++)
-		if(xdef.def.zero1[i]!=0) return false;
-	while(1)
-	{
-		/* Test other headers */
-		p+=HDRSIZE()+h.data_nbytes;
-		if(!bmReadBufferEx(&h,sizeof h,p,binary_stream::Seek_Set)) return false;
-		if(h.rec_type==_LMF_DEFINITION_REC||h.data_nbytes==0||
-			h.zero1!=0/*||h.spare!=0*/) return false;
-		if(h.rec_type==_LMF_EOF_REC) break;
-	}
-	return true;
+    if(xdef.def.cflags&_PCF_FLAT&&xdef.def.flat_offset==0) return false;
+    if(xdef.def.stack_nbytes==0) return false;
+    for(i=0;i<4;i++) if(xdef.def.zero1[i]!=0) return false;
+    while(1) {
+	/* Test other headers */
+	p+=HDRSIZE()+h.data_nbytes;
+	if(!bmReadBufferEx(&h,sizeof h,p,binary_stream::Seek_Set)) return false;
+	if(h.rec_type==_LMF_DEFINITION_REC||h.data_nbytes==0||h.zero1!=0/*||h.spare!=0*/) return false;
+	if(h.rec_type==_LMF_EOF_REC) break;
+    }
+    return true;
 }
 
 

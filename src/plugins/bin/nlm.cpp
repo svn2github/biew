@@ -82,14 +82,16 @@ namespace	usr {
 	    bool		__ReadExtRefNamesNLM(binary_stream&handle,memArray *obj,unsigned n);
 	    bool		FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
 
+	    Nlm_Internal_Fixed_Header nlm;
+	    linearArray*	PubNames;
+	    binary_stream*	nlm_cache;
+	    char		__codelen;
+	    linearArray*	RelocNlm;
+
 	    CodeGuider&		code_guider;
     };
 static const char* txt[]={ "NlmHlp", "ModRef", "PubDef", "", "ExtNam", "", "", "NlmHdr", "", "" };
 const char* NLM_Parser::prompt(unsigned idx) const { return txt[idx]; }
-
-static Nlm_Internal_Fixed_Header nlm;
-static linearArray *PubNames = NULL;
-static binary_stream* nlm_cache = &bNull;
 
 __filesize_t NLM_Parser::show_header()
 {
@@ -472,9 +474,6 @@ __filesize_t NLM_Parser::action_F3()
 /***************************************************************************/
 /************************  FOR NLM  ****************************************/
 /***************************************************************************/
-static char __codelen;
-static linearArray *RelocNlm = NULL;
-
 tCompare NLM_Parser::nlm_compare_s(const any_t*e1,const any_t*e2)
 {
   const RELOC_NLM  *r1, *r2;
@@ -604,6 +603,7 @@ bool NLM_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int f
 
 NLM_Parser::NLM_Parser(CodeGuider& _code_guider)
 	    :Binary_Parser(_code_guider)
+	    ,nlm_cache(&bNull)
 	    ,code_guider(_code_guider)
 {
   binary_stream& main_handle = bmbioHandle();

@@ -40,8 +40,8 @@ using namespace	usr;
 namespace	usr {
 static const char* txt[]={ "LXhelp", "Import", "ResNam", "NRsNam", "ImpNam", "Entry ", "ResTbl", "LXHead", "MapTbl", "Object" };
 const char* LX_Parser::prompt(unsigned idx) const { return txt[idx]; }
-union LX_LE lxe;
-int LXType;
+union LX_LE LX_Parser::lxe;
+__filesize_t LX_Parser::LXEntryPoint=0;
 
 static const char * LXordering[] =
 {
@@ -84,8 +84,6 @@ const char * __osModType[] =
   "PROT. MODE PHYSICAL DEVICE DRIVER",
   "PROT. MODE VIRTUAL DEVICE DRIVER"
 };
-
-static __filesize_t LXEntryPoint = 0;
 
 const char* LX_Parser::GetOrderingLX(unsigned char type)
 {

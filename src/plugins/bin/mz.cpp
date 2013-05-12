@@ -39,9 +39,6 @@ namespace	usr {
 static const char* txt[]={"MZHelp","","","","","","","","",""};
 const char* MZ_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-static MZHEADER mz;
-static unsigned long HeadSize;
-
 __filesize_t MZ_Parser::va2pa(__filesize_t va)
 {
   return va >= HeadSize ? va + HeadSize : 0L;
@@ -200,10 +197,6 @@ __filesize_t MZ_Parser::show_header()
  return fpos;
 }
 
-static long* CurrMZChain = 0;
-static unsigned long CurrMZCount;
-static char __codelen;
-
 tCompare MZ_Parser::compare_ptr(const any_t*e1,const any_t*e2)
 {
   unsigned long v1,v2;
@@ -243,6 +236,7 @@ void MZ_Parser::BuildMZChain()
   delete w;
 }
 
+static char __codelen;
 tCompare MZ_Parser::compare_mz(const any_t*e1,const any_t*e2)
 {
   long l1,l2;
@@ -301,6 +295,14 @@ MZ_Parser::MZ_Parser(CodeGuider& __code_guider)
 	    :Binary_Parser(__code_guider)
 	    ,_code_guider(__code_guider)
 {
+    unsigned char id[2];
+    bmReadBufferEx(id,sizeof(id),0,binary_stream::Seek_Set);
+    if((id[0] == 'M' && id[1] == 'Z') ||
+     (id[0] == 'Z' && id[1] == 'M'))
+    {
+	bmReadBufferEx((any_t*)&mz,sizeof(MZHEADER),2,binary_stream::Seek_Set);
+	HeadSize = ((unsigned long)mz.mzHeaderSize) << 4;
+    }
 }
 MZ_Parser::~MZ_Parser() {}
 int MZ_Parser::query_platform() const { return DISASM_CPU_IX86; }
@@ -331,17 +333,11 @@ __filesize_t MZ_Parser::action_F1()
 }
 
 static bool probe() {
-  unsigned char id[2];
-  bool ret = false;
-  bmReadBufferEx(id,sizeof(id),0,binary_stream::Seek_Set);
-  if((id[0] == 'M' && id[1] == 'Z') ||
-     (id[0] == 'Z' && id[1] == 'M'))
-  {
-    bmReadBufferEx((any_t*)&mz,sizeof(MZHEADER),2,binary_stream::Seek_Set);
-    HeadSize = ((unsigned long)mz.mzHeaderSize) << 4;
-    ret = true;
-  }
-  return ret;
+    unsigned char id[2];
+    bmReadBufferEx(id,sizeof(id),0,binary_stream::Seek_Set);
+    if((id[0] == 'M' && id[1] == 'Z') ||
+	(id[0] == 'Z' && id[1] == 'M')) return true;
+    return false;
 }
 
 static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) MZ_Parser(_parent); }

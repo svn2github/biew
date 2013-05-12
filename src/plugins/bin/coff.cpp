@@ -80,23 +80,25 @@ namespace	usr {
 	    void			coff_ReadPubName(binary_stream&b_cache,const struct PubName *it,char *buff,unsigned cb_buff);
 	    void			coff_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
 
+	    static inline uint16_t COFF_WORD(const uint8_t* cval) { return (uint16_t)(*(const uint16_t *)(const uint8_t *)cval); }
+	    static inline uint32_t COFF_DWORD(const uint8_t* cval) { return (uint32_t)(*(const uint32_t *)(const uint8_t *)cval); }
+
 	    static tCompare __FASTCALL__ coff386_compare_rels(const any_t *e1,const any_t *e2);
 
-	    CodeGuider&			code_guider;
+	    struct external_filehdr	coff386hdr;
+	    AOUTHDR		coff386ahdr;
+	    SCNHDR*		coff386so;
+	    uint_fast16_t	nsections;
+	    binary_stream*	coff_cache;
+	    __filesize_t	strings_ptr;
+	    linearArray*	PubNames;
+	    char		__codelen;
+	    linearArray*	RelocCoff386;
+
+	    CodeGuider&		code_guider;
     };
 static const char* txt[]={ "CofHlp", "", "", "", "", "", "SymTab", "", "", "Objects" };
 const char* Coff_Parser::prompt(unsigned idx) const { return txt[idx]; }
-
-inline uint16_t COFF_WORD(const uint8_t* cval) { return (uint16_t)(*(const uint16_t *)(const uint8_t *)cval); }
-inline uint32_t COFF_DWORD(const uint8_t* cval) { return (uint32_t)(*(const uint32_t *)(const uint8_t *)cval); }
-
-static struct external_filehdr coff386hdr;
-static AOUTHDR coff386ahdr;
-static SCNHDR *coff386so;
-static uint_fast16_t nsections;
-static binary_stream* coff_cache;
-static __filesize_t strings_ptr;
-static linearArray *PubNames = NULL;
 
 bool Coff_Parser::FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
@@ -451,9 +453,6 @@ __filesize_t Coff_Parser::action_F7()
 /***************************************************************************/
 /*********************  REFS COFF386  **************************************/
 /***************************************************************************/
-static char __codelen;
-static linearArray *RelocCoff386 = NULL;
-
 tCompare __FASTCALL__ Coff_Parser::coff386_compare_rels(const any_t*e1,const any_t*e2)
 {
   const RELOC_COFF386  *r1, *r2;

@@ -54,12 +54,11 @@ namespace	usr {
 	    bool			__PLReadSegInfo(binary_stream& handle,memArray * obj,unsigned nnames);
 	    static void __FASTCALL__	PLSegPaint(TWindow * win,const any_t** names,unsigned start,unsigned nlist);
 
+	    binary_stream*		pl_cache;
 	    newPharLap			nph;
     };
 static const char* txt[]={ "PLHelp", "", "", "", "", "", "", "", "RunTim", "SegInf" };
 const char* PharLap_Parser::prompt(unsigned idx) const { return txt[idx]; }
-
-static binary_stream* pl_cache = &bNull;
 
 __filesize_t PharLap_Parser::show_header()
 {
@@ -269,6 +268,7 @@ __filesize_t PharLap_Parser::action_F9()
 
 PharLap_Parser::PharLap_Parser(CodeGuider& code_guider)
 	    :Binary_Parser(code_guider)
+	    ,pl_cache(&bNull)
 {
   binary_stream& main_handle = bmbioHandle();
   bmReadBufferEx(&nph,sizeof(nph),0,binary_stream::Seek_Set);
