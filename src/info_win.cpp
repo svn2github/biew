@@ -559,7 +559,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
   wait_wnd = PleaseWaitWnd();
   cfpos = BMGetCurrFilePos();
   va = beye_context().bin_format().pa2va(ctrl_pos);
-  if(va==Bin_Format::Bad_Address) va = ctrl_pos;
+  if(va==Plugin::Bad_Address) va = ctrl_pos;
   vaddr[0] = '\0';
   sprintf(&vaddr[strlen(vaddr)],"%016llXH",va);
   prev_func_pa = next_func_pa = 0;

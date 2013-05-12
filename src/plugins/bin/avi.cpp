@@ -32,8 +32,7 @@ using namespace	usr;
 #include "plugins/bin/mmio.h"
 
 namespace	usr {
-typedef struct
-{
+struct MainAVIHeader {
     DWORD		dwMicroSecPerFrame;	// frame display rate (or 0L)
     DWORD		dwMaxBytesPerSec;	// max. transfer rate
     DWORD		dwPaddingGranularity;	// pad to multiples of this
@@ -48,13 +47,13 @@ typedef struct
     DWORD		dwHeight;
 
     DWORD		dwReserved[4];
-} MainAVIHeader;
+};
 
 /*
 ** Stream header
 */
 
-typedef struct {
+struct AVIStreamHeader {
     FOURCC		fccType;
     FOURCC		fccHandler;
     DWORD		dwFlags;	/* Contains AVITF_* flags */
@@ -69,55 +68,56 @@ typedef struct {
     DWORD		dwQuality;
     DWORD		dwSampleSize;
     RECT		rcFrame;
-} AVIStreamHeader;
+};
 
-static const uint32_t formtypeAVI             =mmioFOURCC('A', 'V', 'I', ' ');
-static const uint32_t listtypeAVIHEADER       =mmioFOURCC('h', 'd', 'r', 'l');
-static const uint32_t ckidAVIMAINHDR          =mmioFOURCC('a', 'v', 'i', 'h');
-static const uint32_t listtypeSTREAMHEADER    =mmioFOURCC('s', 't', 'r', 'l');
-static const uint32_t ckidSTREAMHEADER        =mmioFOURCC('s', 't', 'r', 'h');
-static const uint32_t ckidSTREAMFORMAT        =mmioFOURCC('s', 't', 'r', 'f');
-static const uint32_t ckidSTREAMHANDLERDATA   =mmioFOURCC('s', 't', 'r', 'd');
-static const uint32_t ckidSTREAMNAME	      =mmioFOURCC('s', 't', 'r', 'n');
+    class AVI_Parser : public Binary_Parser {
+	public:
+	    AVI_Parser(CodeGuider&);
+	    virtual ~AVI_Parser();
 
-static const uint32_t listtypeAVIMOVIE        =mmioFOURCC('m', 'o', 'v', 'i');
-static const uint32_t listtypeAVIRECORD       =mmioFOURCC('r', 'e', 'c', ' ');
+	    virtual const char*		prompt(unsigned idx) const;
+	    virtual __filesize_t	action_F2();
+	    virtual __filesize_t	action_F3();
 
-static const uint32_t ckidAVINEWINDEX         =mmioFOURCC('i', 'd', 'x', '1');
+	    virtual __filesize_t	show_header();
+	    virtual int			query_platform() const;
+	private:
+	    __filesize_t		avi_find_chunk(__filesize_t off,unsigned long id) const;
+
+	    static const uint32_t formtypeAVI             =mmioFOURCC('A', 'V', 'I', ' ');
+	    static const uint32_t listtypeAVIHEADER       =mmioFOURCC('h', 'd', 'r', 'l');
+	    static const uint32_t ckidAVIMAINHDR          =mmioFOURCC('a', 'v', 'i', 'h');
+	    static const uint32_t listtypeSTREAMHEADER    =mmioFOURCC('s', 't', 'r', 'l');
+	    static const uint32_t ckidSTREAMHEADER        =mmioFOURCC('s', 't', 'r', 'h');
+	    static const uint32_t ckidSTREAMFORMAT        =mmioFOURCC('s', 't', 'r', 'f');
+	    static const uint32_t ckidSTREAMHANDLERDATA   =mmioFOURCC('s', 't', 'r', 'd');
+	    static const uint32_t ckidSTREAMNAME	      =mmioFOURCC('s', 't', 'r', 'n');
+
+	    static const uint32_t listtypeAVIMOVIE        =mmioFOURCC('m', 'o', 'v', 'i');
+	    static const uint32_t listtypeAVIRECORD       =mmioFOURCC('r', 'e', 'c', ' ');
+
+	    static const uint32_t ckidAVINEWINDEX         =mmioFOURCC('i', 'd', 'x', '1');
 
 /*
 ** Stream types for the <fccType> field of the stream header.
 */
-static const uint32_t streamtypeVIDEO         =mmioFOURCC('v', 'i', 'd', 's');
-static const uint32_t streamtypeAUDIO         =mmioFOURCC('a', 'u', 'd', 's');
-static const uint32_t streamtypeMIDI	      =mmioFOURCC('m', 'i', 'd', 's');
-static const uint32_t streamtypeTEXT          =mmioFOURCC('t', 'x', 't', 's');
+	    static const uint32_t streamtypeVIDEO         =mmioFOURCC('v', 'i', 'd', 's');
+	    static const uint32_t streamtypeAUDIO         =mmioFOURCC('a', 'u', 'd', 's');
+	    static const uint32_t streamtypeMIDI	  =mmioFOURCC('m', 'i', 'd', 's');
+	    static const uint32_t streamtypeTEXT          =mmioFOURCC('t', 'x', 't', 's');
 
-#if 0
-/* Basic chunk types */
-static const uint32_t cktypeDIBbits           =aviTWOCC('d', 'b');
-static const uint32_t cktypeDIBcompressed     =aviTWOCC('d', 'c');
-static const uint32_t cktypePALchange         =aviTWOCC('p', 'c');
-static const uint32_t cktypeWAVEbytes         =aviTWOCC('w', 'b');
-#endif
 /* Chunk id to use for extra chunks for padding. */
-static const uint32_t ckidAVIPADDING          =mmioFOURCC('J', 'U', 'N', 'K');
+	    static const uint32_t ckidAVIPADDING          =mmioFOURCC('J', 'U', 'N', 'K');
+    };
 
-static bool  __FASTCALL__ avi_check_fmt()
-{
-    unsigned long id;
-    id=bmReadDWordEx(8,binary_stream::Seek_Set);
-    if(	bmReadDWordEx(0,binary_stream::Seek_Set)==mmioFOURCC('R','I','F','F') &&
-	(id==mmioFOURCC('A','V','I',' ') || id==mmioFOURCC('O','N','2',' ')))
-	return true;
-    return false;
-}
+static const char* txt[]={ "", "Audio", "Video", "", "", "", "", "", "", "" };
+const char* AVI_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-static void __FASTCALL__ avi_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ avi_destroy_fmt() {}
-static int  __FASTCALL__ avi_platform() { return DISASM_DEFAULT; }
+AVI_Parser::AVI_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {}
+AVI_Parser::~AVI_Parser() {}
+int AVI_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-static __filesize_t __FASTCALL__ avi_find_chunk(__filesize_t off,unsigned long id)
+__filesize_t AVI_Parser::avi_find_chunk(__filesize_t off,unsigned long id) const
 {
     unsigned long ids,size,type;
     bmSeek(off,binary_stream::Seek_Set);
@@ -140,7 +140,7 @@ static __filesize_t __FASTCALL__ avi_find_chunk(__filesize_t off,unsigned long i
     return -1;
 }
 
-static __filesize_t __FASTCALL__ Show_AVI_Header()
+__filesize_t AVI_Parser::show_header()
 {
  unsigned keycode;
  TWindow * hwnd;
@@ -187,7 +187,7 @@ static __filesize_t __FASTCALL__ Show_AVI_Header()
  return fpos;
 }
 
-static __filesize_t __FASTCALL__ Show_A_Header()
+__filesize_t AVI_Parser::action_F2()
 {
  unsigned keycode;
  TWindow * hwnd;
@@ -246,7 +246,7 @@ static __filesize_t __FASTCALL__ Show_A_Header()
 	 ,strh.dwSuggestedBufferSize
 	 ,strh.dwQuality
 	 ,strh.dwSampleSize
-	 ,wavf.wFormatTag,wtag_find_name(wavf.wFormatTag)
+	 ,wavf.wFormatTag,Wave_Parser::wtag_find_name(wavf.wFormatTag)
 	 ,wavf.nChannels,wavf.nSamplesPerSec
 	 ,wavf.nAvgBytesPerSec
 	 ,wavf.nBlockAlign
@@ -260,7 +260,7 @@ static __filesize_t __FASTCALL__ Show_A_Header()
  return fpos;
 }
 
-static __filesize_t __FASTCALL__ Show_V_Header()
+__filesize_t AVI_Parser::action_F3()
 {
  unsigned keycode;
  TWindow * hwnd;
@@ -337,23 +337,19 @@ static __filesize_t __FASTCALL__ Show_V_Header()
  return fpos;
 }
 
-extern const REGISTRY_BIN aviTable =
-{
-  "Audio Video Interleaved format",
-  { NULL, "Audio", "Video", NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  { NULL, Show_A_Header, Show_V_Header, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  avi_check_fmt,
-  avi_init_fmt,
-  avi_destroy_fmt,
-  Show_AVI_Header,
-  NULL,
-  avi_platform,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+static bool probe() {
+    unsigned long id;
+    id=bmReadDWordEx(8,binary_stream::Seek_Set);
+    if(	bmReadDWordEx(0,binary_stream::Seek_Set)==mmioFOURCC('R','I','F','F') &&
+	(id==mmioFOURCC('A','V','I',' ') || id==mmioFOURCC('O','N','2',' ')))
+	return true;
+    return false;
+}
+
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) AVI_Parser(_parent); }
+extern const Binary_Parser_Info avi_info = {
+    "Audio Video Interleaved format",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

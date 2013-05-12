@@ -33,8 +33,7 @@ using namespace	usr;
 #include "plugins/disasm.h"
 
 namespace	usr {
-struct E32ImageHeader
-{
+struct E32ImageHeader {
     unsigned long iUid1;
     unsigned long iUid2;
     unsigned long iUid3;
@@ -69,19 +68,24 @@ struct E32ImageHeader
     unsigned short iCpuIdentifier;
 };
 
-static bool  __FASTCALL__ sisx_check_fmt()
-{
-    unsigned char sign[4];
-    unsigned long id;
-    bmSeek(0,binary_stream::Seek_Set);
-    id=bmReadDWord();
-    bmReadBufferEx(sign,sizeof(sign),16L,binary_stream::Seek_Set);
-    if((id&0x10000000UL)==0x10000000UL && memcmp(sign,"EPOC",4)==0) return true;
-    return false;
-}
-static void __FASTCALL__ sisx_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ sisx_destroy_fmt() {}
-static int  __FASTCALL__ sisx_platform() {
+    class SisX_Parser : public Binary_Parser {
+	public:
+	    SisX_Parser(CodeGuider&);
+	    virtual ~SisX_Parser();
+
+	    virtual const char*		prompt(unsigned idx) const;
+
+	    virtual __filesize_t	show_header();
+	    virtual int			query_platform() const;
+	private:
+	    __filesize_t		show_sis3_header();
+    };
+static const char* txt[]={"","","","","","","","","",""};
+const char* SisX_Parser::prompt(unsigned idx) const { return txt[idx]; }
+
+SisX_Parser::SisX_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) { }
+SisX_Parser::~SisX_Parser() {}
+int  SisX_Parser::query_platform() const {
  unsigned id;
  struct E32ImageHeader img;
  bmReadBufferEx(&img,sizeof(img),0,binary_stream::Seek_Set);
@@ -91,7 +95,7 @@ static int  __FASTCALL__ sisx_platform() {
  return id;
 }
 
-static __filesize_t __FASTCALL__ Show_SisX_Header()
+__filesize_t SisX_Parser::show_header()
 {
  unsigned keycode;
  TWindow * hwnd;
@@ -170,23 +174,21 @@ static __filesize_t __FASTCALL__ Show_SisX_Header()
  return fpos;
 }
 
-extern const REGISTRY_BIN sisxTable =
-{
-  "SisX(EPOC) Symbian OS executable file",
-  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  sisx_check_fmt,
-  sisx_init_fmt,
-  sisx_destroy_fmt,
-  Show_SisX_Header,
-  NULL,
-  sisx_platform,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+static bool probe() {
+    unsigned char sign[4];
+    unsigned long id;
+    bmSeek(0,binary_stream::Seek_Set);
+    id=bmReadDWord();
+    bmReadBufferEx(sign,sizeof(sign),16L,binary_stream::Seek_Set);
+    if((id&0x10000000UL)==0x10000000UL && memcmp(sign,"EPOC",4)==0) return true;
+    return false;
+}
+
+
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) SisX_Parser(_parent); }
+extern const Binary_Parser_Info sisx_info = {
+    "SisX(EPOC) Symbian OS executable file",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

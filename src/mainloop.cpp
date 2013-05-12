@@ -36,8 +36,6 @@ using namespace	usr;
 #include "plugins/plugin.h"
 
 namespace	usr {
-extern REGISTRY_BIN mzTable;
-
 __filesize_t lastbyte;
 static __filesize_t OldCurrFilePos; /** means previous File position */
 unsigned long CurrStrLen = 0;
@@ -212,7 +210,7 @@ void BeyeContext::main_loop()
 				__filesize_t temp_fp;
 				nfp = shift;
 				temp_fp = _bin_format->va2pa(shift);
-				if(temp_fp==Bin_Format::Bad_Address) ErrMessageBox(NOT_ENTRY,"");
+				if(temp_fp==Plugin::Bad_Address) ErrMessageBox(NOT_ENTRY,"");
 				else nfp = temp_fp;
 				break;
 		    }
@@ -299,7 +297,7 @@ void BeyeContext::main_loop()
 		continue;
 	}
 	GO:
-	if(cfp != nfp && nfp != Bin_Format::Bad_Address) {
+	if(cfp != nfp && nfp != Plugin::Bad_Address) {
 	    unsigned long twidth = ( activeMode->flags() & Plugin::Text ) == Plugin::Text ?
 			   activeMode->get_symbol_size() :
 			   ( activeMode->flags() & Plugin::Disasm ) == Plugin::Disasm ?

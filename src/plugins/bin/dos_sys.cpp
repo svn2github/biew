@@ -31,9 +31,25 @@ using namespace	usr;
 #include "plugins/bin/dos_sys.h"
 
 namespace	usr {
-static DOSDRIVER drv;
+    class DosSys_Parser : public Binary_Parser {
+	public:
+	    DosSys_Parser(CodeGuider&);
+	    virtual ~DosSys_Parser();
 
-static __filesize_t __FASTCALL__ ShowSysHeader()
+	    virtual const char*		prompt(unsigned idx) const;
+	    virtual __filesize_t	action_F1();
+
+	    virtual __filesize_t	show_header();
+	    virtual int			query_platform() const;
+	    virtual bool		address_resolving(char *,__filesize_t);
+	    virtual __filesize_t	va2pa(__filesize_t va);
+	    virtual __filesize_t	pa2va(__filesize_t pa);
+    };
+static DOSDRIVER drv;
+static const char* txt[]={ "SysHlp", "", "", "", "", "", "", "", "", "" };
+const char* DosSys_Parser::prompt(unsigned idx) const { return txt[idx]; }
+
+__filesize_t DosSys_Parser::show_header()
 {
  int keycode;
  TWindow *hwnd;
@@ -83,9 +99,35 @@ static __filesize_t __FASTCALL__ ShowSysHeader()
  return fpos;
 }
 
+DosSys_Parser::DosSys_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {}
+DosSys_Parser::~DosSys_Parser() {}
+int DosSys_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static bool  __FASTCALL__ dossys_check_fmt()
+bool DosSys_Parser::address_resolving(char *addr,__filesize_t cfpos)
 {
+  bool bret = true;
+  if(cfpos < sizeof(DOSDRIVER)+4) sprintf(addr,"SYSH:%s",Get4Digit(cfpos));
+  else bret = false;
+  return bret;
+}
+
+__filesize_t DosSys_Parser::action_F1()
+{
+  hlpDisplay(10014);
+  return BMGetCurrFilePos();
+}
+
+__filesize_t DosSys_Parser::va2pa(__filesize_t va)
+{
+  return va;
+}
+
+__filesize_t DosSys_Parser::pa2va(__filesize_t pa)
+{
+  return pa;
+}
+
+static bool probe() {
   unsigned char id[4];
   bool ret = false;
   bmReadBufferEx(id,sizeof(id),0,binary_stream::Seek_Set);
@@ -97,51 +139,10 @@ static bool  __FASTCALL__ dossys_check_fmt()
   return ret;
 }
 
-static void __FASTCALL__ dossys_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ dossys_destroy_fmt() {}
-static int  __FASTCALL__ dossys_platform() { return DISASM_CPU_IX86; }
-
-static bool __FASTCALL__ dossys_AddressResolv(char *addr,__filesize_t cfpos)
-{
-  bool bret = true;
-  if(cfpos < sizeof(DOSDRIVER)+4) sprintf(addr,"SYSH:%s",Get4Digit(cfpos));
-  else bret = false;
-  return bret;
-}
-
-static __filesize_t __FASTCALL__ SYSHelp()
-{
-  hlpDisplay(10014);
-  return BMGetCurrFilePos();
-}
-
-static __filesize_t __FASTCALL__ sysVA2PA(__filesize_t va)
-{
-  return va;
-}
-
-static __filesize_t __FASTCALL__ sysPA2VA(__filesize_t pa)
-{
-  return pa;
-}
-
-extern const REGISTRY_BIN dossysTable =
-{
-  "DOS driver",
-  { "SYSHlp", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  { SYSHelp, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  dossys_check_fmt,
-  dossys_init_fmt,
-  dossys_destroy_fmt,
-  ShowSysHeader,
-  NULL,
-  dossys_platform,
-  NULL,
-  NULL,
-  dossys_AddressResolv,
-  sysVA2PA,
-  sysPA2VA,
-  NULL,
-  NULL
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) DosSys_Parser(_parent); }
+extern const Binary_Parser_Info dossys_info = {
+    "DOS-driver",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

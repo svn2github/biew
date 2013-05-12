@@ -38,25 +38,45 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 
 namespace	usr {
-enum {
-    MAXREC		=200,
-    MINREC		=20,
-    MAXSEG		=50,
-    MAXSEGFRAMES	=50
-};
-typedef struct		/* LMF file frame */
-{
+    enum {
+	MAXREC		=200,
+	MINREC		=20,
+	MAXSEG		=50,
+	MAXSEGFRAMES	=50
+    };
+    struct lmf_headers_list {		/* LMF file frame */
 	lmf_header header;		/* Header of frame */
 	lmf_data data;			/* Data info */
 	lmf_resource res;		/* Resource info */
 	uint32_t file_pos;		/* Frame header file position */
-} lmf_headers_list;
+    };
 
-typedef struct		/* Extra definition */
-{
+    struct lmf_xdef {		/* Extra definition */
 	lmf_definition def;		/* Standard definition */
 	uint32_t seg[MAXSEG];	/* Segments lengthes list */
-} lmf_xdef;
+    };
+
+    class LMF_Parser : public Binary_Parser {
+	public:
+	    LMF_Parser(CodeGuider&);
+	    virtual ~LMF_Parser();
+
+	    virtual const char*		prompt(unsigned idx) const;
+	    virtual __filesize_t	action_F1();
+	    virtual __filesize_t	action_F9();
+
+	    virtual __filesize_t	show_header();
+	    virtual int			query_platform() const;
+	    virtual int			query_bitness(__filesize_t) const;
+	    virtual bool		address_resolving(char *,__filesize_t);
+	    virtual __filesize_t	va2pa(__filesize_t va);
+	    virtual __filesize_t	pa2va(__filesize_t pa);
+	private:
+	    void			failed_lmf() const;
+	    bool			lmf_ReadSecHdr(binary_stream& handle,memArray *obj,unsigned nnames);
+    };
+static const char* txt[]={"LMFHlp","","","","","","","","SecLst",""};
+const char* LMF_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
 static lmf_headers_list *hl;
 static lmf_xdef xdef;
@@ -80,63 +100,25 @@ const char *lmftypes[]={
 	"ph resource",
 	"unknown"};
 
-static void __FASTCALL__ failed_lmf()
+void LMF_Parser::failed_lmf() const
 {
 	/* lmf corruption message */
 }
 
-#define DEF xdef.def
-#define DEFSIZE sizeof(lmf_definition)
-#define DATSIZE sizeof(lmf_data)
-#define HDRSIZE sizeof(lmf_header)
+inline size_t DEFSIZE() { return sizeof(lmf_definition); }
+inline size_t DATSIZE() { return sizeof(lmf_data); }
+inline size_t HDRSIZE() { return sizeof(lmf_header); }
 
-static bool __FASTCALL__ lmf_check_fmt()
+LMF_Parser::LMF_Parser(CodeGuider& code_guider)
+	    :Binary_Parser(code_guider)
 {
-	int32_t i,j,p=0;
-/*	lmf_data d;*/
-	lmf_header h;
-	if(!bmReadBufferEx(&h,sizeof h,0,binary_stream::Seek_Set)) return false;
-	/* Test a first heder */
-	if(h.rec_type!=_LMF_DEFINITION_REC||h.zero1!=0||/*h.spare!=0||*/
-		h.data_nbytes<DEFSIZE+2*sizeof(long)||
-		(h.data_nbytes-DEFSIZE)%4!=0) return false;
-	i=j=(h.data_nbytes-DEFSIZE)/4;
-	xdef_len=h.data_nbytes;
-	if(!bmReadBufferEx(&xdef,std::min(sizeof(lmf_xdef),size_t(h.data_nbytes)),6,binary_stream::Seek_Set)) return false;
-	/* Test a definition record */
-	if(DEF.version_no!=400||DEF.code_index>i||DEF.stack_index>i||
-		DEF.heap_index>i||DEF.argv_index>i||DEF.zero2!=0)
-		return false;
-	if(DEF.cpu%100!=86||(DEF.fpu!=0&&DEF.fpu%100!=87))
-		return false;
-	if(DEF.cflags&_PCF_FLAT&&DEF.flat_offset==0) return false;
-	if(DEF.stack_nbytes==0) return false;
-	for(i=0;i<4;i++)
-		if(DEF.zero1[i]!=0) return false;
-	while(1)
-	{
-		/* Test other headers */
-		p+=HDRSIZE+h.data_nbytes;
-		if(!bmReadBufferEx(&h,sizeof h,p,binary_stream::Seek_Set)) return false;
-		if(h.rec_type==_LMF_DEFINITION_REC||h.data_nbytes==0||
-			h.zero1!=0/*||h.spare!=0*/) return false;
-		if(h.rec_type==_LMF_EOF_REC) break;
-	}
-	return true;
-}
-
-#define failed_lmf {failed_lmf();return;}
-
-static void __FASTCALL__ lmf_init_fmt(CodeGuider& code_guider)
-{
-    UNUSED(code_guider);
 	uint32_t i,l;
 	int32_t pos=0;
 	hl=new lmf_headers_list[MINREC];
 	if(hl==NULL) return;
 	recmax=MINREC;
 	reccnt=0;
-	seg_num=(xdef_len-DEFSIZE)/4;
+	seg_num=(xdef_len-DEFSIZE())/4;
 	for(i=0;i<seg_num;i++) segbase[i]=0;
 	for(i=0;;i++)
 	{
@@ -145,23 +127,23 @@ static void __FASTCALL__ lmf_init_fmt(CodeGuider& code_guider)
 			hl=(lmf_headers_list*)mp_realloc(hl,(recmax+=MINREC)*sizeof(lmf_headers_list));
 			if(hl==NULL) return;
 		}
-		if(!bmReadBufferEx(&hl[i].header,HDRSIZE,pos,binary_stream::Seek_Set))
-			failed_lmf;
+		if(!bmReadBufferEx(&hl[i].header,HDRSIZE(),pos,binary_stream::Seek_Set))
+			{ failed_lmf(); return; }
 		hl[i].file_pos=pos;
 		switch(hl[i].header.rec_type)
 		{
 		case _LMF_DATA_REC:
 		case _LMF_FIXUP_SEG_REC:
 		case _LMF_FIXUP_LINEAR_REC:
-			if(!bmReadBufferEx(&hl[i].data,DATSIZE,pos+HDRSIZE,binary_stream::Seek_Set))
-				failed_lmf;
+			if(!bmReadBufferEx(&hl[i].data,DATSIZE(),pos+HDRSIZE(),binary_stream::Seek_Set))
+				{ failed_lmf(); return; }
 			l=hl[i].data.index;
 			if(l>=seg_num)
-				failed_lmf;
+				{ failed_lmf(); return; }
 			break;
 		case _LMF_RESOURCE_REC:
-			if(!bmReadBufferEx(&hl[i].res,sizeof(lmf_resource),pos+HDRSIZE,binary_stream::Seek_Set))
-				failed_lmf;
+			if(!bmReadBufferEx(&hl[i].res,sizeof(lmf_resource),pos+HDRSIZE(),binary_stream::Seek_Set))
+				{ failed_lmf(); return; }
 			break;
 		case _LMF_EOF_REC:
 			reclast=i;
@@ -173,14 +155,14 @@ static void __FASTCALL__ lmf_init_fmt(CodeGuider& code_guider)
 		case _LMF_PHRESOURCE:
 			break;				/* Ignore this records */
 		default:
-			failed_lmf;
+			{ failed_lmf(); return; }
 		}
-		pos+=hl[i].header.data_nbytes+HDRSIZE;
+		pos+=hl[i].header.data_nbytes+HDRSIZE();
 	}
 outloop:
-	if(DEF.cflags&_PCF_FLAT)
+	if(xdef.def.cflags&_PCF_FLAT)
 	{
-		segbase[0]=DEF.stack_nbytes;
+		segbase[0]=xdef.def.stack_nbytes;
 		for(i=1;i<=seg_num;i++)
 			segbase[i]=(segbase[i-1]+
 				((xdef.seg[i-1]&0x0fffffff)+4095))&0xfffff000;
@@ -189,26 +171,24 @@ outloop:
 	return;
 }
 
-#undef failed_lmf
-
-static void __FASTCALL__ lmf_destroy_fmt()
+LMF_Parser::~LMF_Parser()
 {
 	delete hl;
 }
 
-static int __FASTCALL__ lmf_platform()
+int LMF_Parser::query_platform() const
 {
 	return DISASM_CPU_IX86;
 }
 
-static int __FASTCALL__ lmf_bitness(__filesize_t pa)
+int LMF_Parser::query_bitness(__filesize_t pa) const
 {
 	UNUSED(pa);
-	if(DEF.cflags&_PCF_32BIT) return DAB_USE32;
+	if(xdef.def.cflags&_PCF_32BIT) return DAB_USE32;
 	else return DAB_USE16;
 }
 
-static bool __FASTCALL__ lmf_AddressResolv(char *addr,__filesize_t cfpos)
+bool LMF_Parser::address_resolving(char *addr,__filesize_t cfpos)
 {
 	unsigned i;
  /* Since this function is used in references resolving of disassembler
@@ -216,54 +196,54 @@ static bool __FASTCALL__ lmf_AddressResolv(char *addr,__filesize_t cfpos)
 	for(i=0;i<=reclast;i++)
 	{
 		if(hl[i].file_pos<=cfpos&&
-			cfpos<hl[i].file_pos+hl[i].header.data_nbytes+HDRSIZE)
+			cfpos<hl[i].file_pos+hl[i].header.data_nbytes+HDRSIZE())
 		{
-			if(cfpos<hl[i].file_pos+HDRSIZE)
+			if(cfpos<hl[i].file_pos+HDRSIZE())
 				sprintf(addr,"H%s:%s",Get2Digit(i),Get4Digit(cfpos-hl[i].file_pos));
 			else
 				switch(hl[i].header.rec_type)
 				{
 				case _LMF_DEFINITION_REC:
 					sprintf(addr,"Def:%s",
-						Get4Digit(cfpos-hl[i].file_pos-HDRSIZE));
+						Get4Digit(cfpos-hl[i].file_pos-HDRSIZE()));
 					break;
 				case _LMF_COMMENT_REC:
-					if(cfpos<hl[i].file_pos+HDRSIZE+DATSIZE)
+					if(cfpos<hl[i].file_pos+HDRSIZE()+DATSIZE())
 						sprintf(addr,"Com:%s",
-							Get4Digit(cfpos-hl[i].file_pos-HDRSIZE));
+							Get4Digit(cfpos-hl[i].file_pos-HDRSIZE()));
 					break;
 				case _LMF_DATA_REC:
 				case _LMF_FIXUP_SEG_REC:
-					if(cfpos<hl[i].file_pos+HDRSIZE+DATSIZE)
+					if(cfpos<hl[i].file_pos+HDRSIZE()+DATSIZE())
 						sprintf(addr,(hl[i].header.rec_type==_LMF_DATA_REC)?
 								"Dat:%s":"Fix:%s",
-							Get4Digit(cfpos-hl[i].file_pos-HDRSIZE));
+							Get4Digit(cfpos-hl[i].file_pos-HDRSIZE()));
 /*					else
 						if(((xdef.seg[hl[i].data.index]>>28)&0xf)==_LMF_CODE)
 							sprintf(addr,"C:%06X",(cfpos-hl[i].file_pos+
-								hl[i].data.offset-HDRSIZE-
-								DATSIZE));
+								hl[i].data.offset-HDRSIZE()-
+								DATSIZE()));
 						else
 							sprintf(addr,"D:%06X",(cfpos-hl[i].file_pos+
-								hl[i].data.offset-HDRSIZE-
-								DATSIZE));*/
+								hl[i].data.offset-HDRSIZE()-
+								DATSIZE()));*/
 					return false;
 					break;
 				case _LMF_FIXUP_80X87_REC:
 					sprintf(addr,"F87:%s",
-						Get4Digit(cfpos-hl[i].file_pos-HDRSIZE));
+						Get4Digit(cfpos-hl[i].file_pos-HDRSIZE()));
 					break;
 				case _LMF_EOF_REC:
 					sprintf(addr,"Eof:%s",
-						Get4Digit(cfpos-hl[i].file_pos-HDRSIZE));
+						Get4Digit(cfpos-hl[i].file_pos-HDRSIZE()));
 					break;
 				case _LMF_RESOURCE_REC:
 					sprintf(addr,"Res:%s",
-						Get4Digit(cfpos-hl[i].file_pos-HDRSIZE));
+						Get4Digit(cfpos-hl[i].file_pos-HDRSIZE()));
 					break;
 				case _LMF_ENDDATA_REC:
 					sprintf(addr,"EnD:%s",
-						Get4Digit(cfpos-hl[i].file_pos-HDRSIZE));
+						Get4Digit(cfpos-hl[i].file_pos-HDRSIZE()));
 					break;
 				default:
 					return false;
@@ -274,13 +254,13 @@ static bool __FASTCALL__ lmf_AddressResolv(char *addr,__filesize_t cfpos)
 	return false;
 }
 
-static __filesize_t __FASTCALL__ lmf_va2pa(__filesize_t va)
+__filesize_t LMF_Parser::va2pa(__filesize_t va)
 {
 	unsigned i,j;
 	int seclen;
 	__filesize_t addr=0;
 	__filesize_t newva=0;
-	if(DEF.cflags&_PCF_32BIT)
+	if(xdef.def.cflags&_PCF_32BIT)
 	{
 		for(i=0;i<seg_num;i++)
 			if(va>segbase[i]&&va<segbase[i+1])
@@ -298,26 +278,26 @@ static __filesize_t __FASTCALL__ lmf_va2pa(__filesize_t va)
 	}
 	for(j=1;j<reclast;j++)
 	{
-		seclen=hl[j].header.data_nbytes-DATSIZE;
+		seclen=hl[j].header.data_nbytes-DATSIZE();
 		if(hl[j].header.rec_type==_LMF_DATA_REC&&
 			hl[j].data.index==i&&
 			hl[j].data.offset<=newva&&
 			hl[j].data.offset+seclen>newva) break;
 	}
 	if(i==reclast) return 0;
-	addr=hl[j].file_pos+newva-hl[j].data.offset+HDRSIZE+DATSIZE;
+	addr=hl[j].file_pos+newva-hl[j].data.offset+HDRSIZE()+DATSIZE();
 
 	return addr;
 }
 
-static __filesize_t __FASTCALL__ lmf_pa2va(__filesize_t pa)
+__filesize_t LMF_Parser::pa2va(__filesize_t pa)
 {
 	unsigned i;
 	int seclen;
 	__filesize_t addr=0;
 	for(i=1;i<reclast;i++)
 	{
-		seclen=hl[i].header.data_nbytes-DATSIZE;
+		seclen=hl[i].header.data_nbytes-DATSIZE();
 		if(hl[i].file_pos<=pa&&
 			hl[i].file_pos+seclen>pa)
 		{
@@ -325,15 +305,15 @@ static __filesize_t __FASTCALL__ lmf_pa2va(__filesize_t pa)
 			else return 0;
 		}
 	}
-	addr=hl[i].data.offset+pa-(hl[i].file_pos+HDRSIZE+DATSIZE);
-	if(DEF.cflags&_PCF_32BIT)
+	addr=hl[i].data.offset+pa-(hl[i].file_pos+HDRSIZE()+DATSIZE());
+	if(xdef.def.cflags&_PCF_32BIT)
 		addr+=segbase[hl[i].data.index];
 	else
-		addr|=(hl[i].data.index<<19)|((DEF.cflags&_PCF_PRIVMASK)<<14);
+		addr|=(hl[i].data.index<<19)|((xdef.def.cflags&_PCF_PRIVMASK)<<14);
 	return addr;
 }
 
-static bool __FASTCALL__ lmf_ReadSecHdr(binary_stream& handle,memArray *obj,unsigned nnames)
+bool LMF_Parser::lmf_ReadSecHdr(binary_stream& handle,memArray *obj,unsigned nnames)
 {
 	unsigned i;
 	char tmp[30];
@@ -346,8 +326,8 @@ static bool __FASTCALL__ lmf_ReadSecHdr(binary_stream& handle,memArray *obj,unsi
 		{
 		case _LMF_DEFINITION_REC:
 			sprintf(tmp,"%s %s",
-				(DEF.cflags&_PCF_32BIT)?"32-bit":"16-bit",
-				(DEF.cflags&_PCF_FLAT)?"flat model":"");
+				(xdef.def.cflags&_PCF_32BIT)?"32-bit":"16-bit",
+				(xdef.def.cflags&_PCF_FLAT)?"flat model":"");
 			sprintf(stmp," %2d %-17s<%2d> %s",i+1,
 				lmftypes[hl[i].header.rec_type],seg_num,tmp);
 			break;
@@ -357,14 +337,14 @@ static bool __FASTCALL__ lmf_ReadSecHdr(binary_stream& handle,memArray *obj,unsi
 			sprintf(tmp,"%s (%s)",lmftypes[hl[i].header.rec_type],
 				((xdef.seg[hl[i].data.index]>>28)==_LMF_CODE)?
 					"code":"data");
-			if(DEF.cflags&_PCF_32BIT)
+			if(xdef.def.cflags&_PCF_32BIT)
 				sprintf(stmp," %2d %-18s %2d %08lX to %08lX",
 					i+1,
 					tmp,
 					hl[i].data.index,
 					(unsigned long)hl[i].data.offset,
 					(unsigned long)hl[i].data.offset+
-						hl[i].header.data_nbytes-HDRSIZE-DATSIZE);
+						hl[i].header.data_nbytes-HDRSIZE()-DATSIZE());
 			else
 				sprintf(stmp," %2d %-18s %2d %04lX to %04lX        ",
 					i+1,
@@ -372,7 +352,7 @@ static bool __FASTCALL__ lmf_ReadSecHdr(binary_stream& handle,memArray *obj,unsi
 					hl[i].data.index,
 					(unsigned long)hl[i].data.offset,
 					(unsigned long)hl[i].data.offset+
-						hl[i].header.data_nbytes-HDRSIZE-DATSIZE);
+						hl[i].header.data_nbytes-HDRSIZE()-DATSIZE());
 			break;
 		case _LMF_RESOURCE_REC:
 			sprintf(tmp,"%s%s",lmftypes[hl[i].header.rec_type],
@@ -390,7 +370,7 @@ static bool __FASTCALL__ lmf_ReadSecHdr(binary_stream& handle,memArray *obj,unsi
 	return true;
 }
 
-static __filesize_t __FASTCALL__ lmf_ShowSecLst()
+__filesize_t LMF_Parser::action_F9()
 {
     __filesize_t fpos=BMGetCurrFilePos();
     int ret;
@@ -415,7 +395,7 @@ static __filesize_t __FASTCALL__ lmf_ShowSecLst()
     return fpos;
 }
 
-static __filesize_t __FASTCALL__ lmf_ShowHeader()
+__filesize_t LMF_Parser::show_header()
 {
 	unsigned i,j,k;
 	__filesize_t fpos;
@@ -425,13 +405,13 @@ static __filesize_t __FASTCALL__ lmf_ShowHeader()
 	unsigned keycode;
 /*	unsigned long entrya;*/
 	fpos = BMGetCurrFilePos();
-	sprintf(hdr," QNX%d Load Module Format Header ",DEF.version_no/100);
+	sprintf(hdr," QNX%d Load Module Format Header ",xdef.def.version_no/100);
 	sprintf(tmp,"%s%sPrivity=%d%s%s",
-		(DEF.cflags&_PCF_LONG_LIVED)?"Long lived, ":"",
-		(DEF.cflags&_PCF_32BIT)?"32-bit, ":"",
-		(DEF.cflags&_PCF_PRIVMASK)>>2,
-		(DEF.cflags&_PCF_FLAT)?", Flat model":"",
-		(DEF.cflags&_PCF_NOSHARE)?", NoShare":"");
+		(xdef.def.cflags&_PCF_LONG_LIVED)?"Long lived, ":"",
+		(xdef.def.cflags&_PCF_32BIT)?"32-bit, ":"",
+		(xdef.def.cflags&_PCF_PRIVMASK)>>2,
+		(xdef.def.cflags&_PCF_FLAT)?", Flat model":"",
+		(xdef.def.cflags&_PCF_NOSHARE)?", NoShare":"");
 	if(strlen(tmp)>30) j=5;
 	else j=1;
 	k=seg_num+j+1;
@@ -443,8 +423,8 @@ static __filesize_t __FASTCALL__ lmf_ShowHeader()
 		"Code flags    = %04XH\n"
 		"(%s)\n"
 		"CPU/FPU       = %d/%d\n",
-		DEF.version_no/100,DEF.version_no%100,DEF.cflags,
-		tmp,DEF.cpu,DEF.fpu);
+		xdef.def.version_no/100,xdef.def.version_no%100,xdef.def.cflags,
+		tmp,xdef.def.cpu,xdef.def.fpu);
 	w->printf(
 		"Code index    = %d\n"
 		"Stack index   = %d\n"
@@ -455,15 +435,15 @@ static __filesize_t __FASTCALL__ lmf_ShowHeader()
 		"Heap size     = %08lXH\n"
 		"Flat offset   = %08lXH\n"
 		"Unmapped size = %08lXH\n",
-		DEF.code_index,
-		DEF.stack_index,
-		DEF.heap_index,
-		DEF.argv_index,
-		DEF.code_offset,
-		DEF.stack_nbytes,
-		DEF.heap_nbytes,
-		DEF.flat_offset,
-		DEF.unmapped_size);
+		xdef.def.code_index,
+		xdef.def.stack_index,
+		xdef.def.heap_index,
+		xdef.def.argv_index,
+		xdef.def.code_offset,
+		xdef.def.stack_nbytes,
+		xdef.def.heap_nbytes,
+		xdef.def.flat_offset,
+		xdef.def.unmapped_size);
 	w->goto_xy(35,j++);
 	w->printf("Segments:");
 	w->goto_xy(35,j++);
@@ -479,7 +459,7 @@ static __filesize_t __FASTCALL__ lmf_ShowHeader()
 	w->set_color(dialog_cset.entry);
 	w->printf(
 		"Entry point   = seg:%d, offset:%08lXH",
-		DEF.code_index,DEF.code_offset);
+		xdef.def.code_index,xdef.def.code_offset);
 	w->printf("\n"); w->clreol();
 	w->set_color(dialog_cset.main);
 	while(1)
@@ -487,10 +467,10 @@ static __filesize_t __FASTCALL__ lmf_ShowHeader()
 		keycode=GetEvent(drawEmptyPrompt,NULL,w);
 		if(keycode==KE_ENTER)
 		{
-			if(DEF.cflags&_PCF_32BIT)
-				fpos=lmf_va2pa(segbase[DEF.code_index]+DEF.code_offset);
+			if(xdef.def.cflags&_PCF_32BIT)
+				fpos=va2pa(segbase[xdef.def.code_index]+xdef.def.code_offset);
 			else
-				fpos=lmf_va2pa((DEF.code_index<<19)+DEF.code_offset);
+				fpos=va2pa((xdef.def.code_index<<19)+xdef.def.code_offset);
 			break;
 		}
 		else
@@ -500,29 +480,52 @@ static __filesize_t __FASTCALL__ lmf_ShowHeader()
 	return fpos;
 }
 
-static __filesize_t __FASTCALL__ lmf_LMFHlp()
+__filesize_t LMF_Parser::action_F1()
 {
   hlpDisplay(10015);
   return BMGetCurrFilePos();
 }
 
-extern const REGISTRY_BIN lmfTable=
+static bool probe()
 {
-	"lmf (QNX4 executable file)",
-	{"LMFHlp",NULL,NULL,NULL,NULL,NULL,NULL,NULL,"SecLst",NULL},
-	{lmf_LMFHlp,NULL,NULL,NULL,NULL,NULL,NULL,NULL,lmf_ShowSecLst,NULL},
-	lmf_check_fmt,
-	lmf_init_fmt,
-	lmf_destroy_fmt,
-	lmf_ShowHeader,
-	NULL,
-	lmf_platform,
-	lmf_bitness,
-	NULL,
-	lmf_AddressResolv,
-	lmf_va2pa,
-	lmf_pa2va,
-	NULL,
-	NULL
+	int32_t i,j,p=0;
+/*	lmf_data d;*/
+	lmf_header h;
+	if(!bmReadBufferEx(&h,sizeof h,0,binary_stream::Seek_Set)) return false;
+	/* Test a first heder */
+	if(h.rec_type!=_LMF_DEFINITION_REC||h.zero1!=0||/*h.spare!=0||*/
+		h.data_nbytes<DEFSIZE()+2*sizeof(long)||
+		(h.data_nbytes-DEFSIZE())%4!=0) return false;
+	i=j=(h.data_nbytes-DEFSIZE())/4;
+	xdef_len=h.data_nbytes;
+	if(!bmReadBufferEx(&xdef,std::min(sizeof(lmf_xdef),size_t(h.data_nbytes)),6,binary_stream::Seek_Set)) return false;
+	/* Test a definition record */
+	if(xdef.def.version_no!=400||xdef.def.code_index>i||xdef.def.stack_index>i||
+		xdef.def.heap_index>i||xdef.def.argv_index>i||xdef.def.zero2!=0)
+		return false;
+	if(xdef.def.cpu%100!=86||(xdef.def.fpu!=0&&xdef.def.fpu%100!=87))
+		return false;
+	if(xdef.def.cflags&_PCF_FLAT&&xdef.def.flat_offset==0) return false;
+	if(xdef.def.stack_nbytes==0) return false;
+	for(i=0;i<4;i++)
+		if(xdef.def.zero1[i]!=0) return false;
+	while(1)
+	{
+		/* Test other headers */
+		p+=HDRSIZE()+h.data_nbytes;
+		if(!bmReadBufferEx(&h,sizeof h,p,binary_stream::Seek_Set)) return false;
+		if(h.rec_type==_LMF_DEFINITION_REC||h.data_nbytes==0||
+			h.zero1!=0/*||h.spare!=0*/) return false;
+		if(h.rec_type==_LMF_EOF_REC) break;
+	}
+	return true;
+}
+
+
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) LMF_Parser(_parent); }
+extern const Binary_Parser_Info lmf_info = {
+    "lmf (QNX4 executable file)",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

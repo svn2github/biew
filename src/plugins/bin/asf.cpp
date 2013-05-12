@@ -32,8 +32,29 @@ using namespace	usr;
 #include "plugins/bin/mmio.h"
 
 namespace	usr {
-static bool  __FASTCALL__ asf_check_fmt()
+    class ASF_Parser : public Binary_Parser {
+	public:
+	    ASF_Parser(CodeGuider&);
+	    virtual ~ASF_Parser();
+
+	    virtual const char*		prompt(unsigned idx) const;
+
+	    virtual __filesize_t	show_header();
+	    virtual int			query_platform() const;
+    };
+static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
+const char* ASF_Parser::prompt(unsigned idx) const { return txt[idx]; }
+
+__filesize_t ASF_Parser::show_header()
 {
+    beye_context().ErrMessageBox("Not implemented yet!","ASF format");
+    return BMGetCurrFilePos();
+}
+
+ASF_Parser::ASF_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {}
+ASF_Parser::~ASF_Parser() {}
+
+static bool probe() {
     const unsigned char asfhdrguid[16]= {0x30,0x26,0xB2,0x75,0x8E,0x66,0xCF,0x11,0xA6,0xD9,0x00,0xAA,0x00,0x62,0xCE,0x6C};
 /*    const unsigned char asf2hdrguid[16]={0xD1,0x29,0xE2,0xD6,0xDA,0x35,0xD1,0x11,0x90,0x34,0x00,0xA0,0xC9,0x03,0x49,0xBE}; */
     unsigned char buff[16];
@@ -42,33 +63,12 @@ static bool  __FASTCALL__ asf_check_fmt()
     return false;
 }
 
-static __filesize_t __FASTCALL__ Show_ASF_Header()
-{
-    beye_context().ErrMessageBox("Not implemented yet!","ASF format");
-    return BMGetCurrFilePos();
-}
+int ASF_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-static void __FASTCALL__ asf_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ asf_destroy_fmt() {}
-static int  __FASTCALL__ asf_platform() { return DISASM_DEFAULT; }
-
-extern const REGISTRY_BIN asfTable =
-{
-  "Advanced stream file format v1",
-  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  asf_check_fmt,
-  asf_init_fmt,
-  asf_destroy_fmt,
-  Show_ASF_Header,
-  NULL,
-  asf_platform,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) ASF_Parser(_parent); }
+extern const Binary_Parser_Info asf_info = {
+    "Advanced stream file format v1",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

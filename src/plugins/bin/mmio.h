@@ -1,6 +1,8 @@
 #ifndef __MMIO
 #define __MMIO 1
 
+#include "plugin.h"
+
 namespace	usr {
 typedef unsigned long DWORD;
 typedef unsigned short WORD;
@@ -60,12 +62,24 @@ typedef struct __attribute__((__packed__))
 ,((char *)&i)[2]?((char *)&i)[2]:' '\
 ,((char *)&i)[3]?((char *)&i)[3]:' '
 
-typedef struct
-{
-    unsigned short wTag;
-    const char *name;
-}wTagNames;
-extern wTagNames wtagNames[];
-extern const char *wtag_find_name(unsigned short wtag);
+    struct wTagNames {
+	unsigned short wTag;
+	const char *name;
+    };
+
+    class Wave_Parser : public Binary_Parser {
+	public:
+	    Wave_Parser(CodeGuider&);
+	    virtual ~Wave_Parser();
+
+	    virtual const char*		prompt(unsigned idx) const;
+
+	    virtual __filesize_t	show_header();
+	    virtual int			query_platform() const;
+
+	    static const char*		wtag_find_name(unsigned short wtag);
+	private:
+	    __filesize_t		wav_find_chunk(__filesize_t off,unsigned long id);
+    };
 } // namespace	usr
 #endif

@@ -37,14 +37,10 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 
 namespace	usr {
-extern binary_stream* lx_cache;
+static const char* txt[]={ "LEHelp", "Import", "ResNam", "NRsNam", "ImpNam", "Entry ", "", "LEHead", "MapTbl", "Object" };
+const char* LE_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-static __filesize_t __FASTCALL__ ShowNewHeaderLE()
-{
-  return ShowNewHeaderLX();
-}
-
-static bool __FASTCALL__ __ReadMapTblLE(binary_stream& handle,memArray * obj,unsigned n)
+bool LE_Parser::__ReadMapTblLE(binary_stream& handle,memArray * obj,unsigned n)
 {
  size_t i;
   handle.seek(lxe.le.leObjectPageMapTableOffset + beye_context().headshift,binary_stream::Seek_Set);
@@ -60,7 +56,7 @@ static bool __FASTCALL__ __ReadMapTblLE(binary_stream& handle,memArray * obj,uns
   return true;
 }
 
-static __filesize_t  __FASTCALL__ __calcPageEntryLE(LE_PAGE *mt,unsigned long idx)
+__filesize_t  LE_Parser::__calcPageEntryLE(LE_PAGE *mt,unsigned long idx) const
 {
   __filesize_t ret;
   __filesize_t dataoff;
@@ -72,7 +68,7 @@ static __filesize_t  __FASTCALL__ __calcPageEntryLE(LE_PAGE *mt,unsigned long id
   return ret;
 }
 
-__filesize_t __FASTCALL__ CalcPageEntryLE(unsigned long pageidx)
+__filesize_t LE_Parser::CalcPageEntry(unsigned long pageidx) const
 {
   binary_stream* handle;
   bool found;
@@ -96,7 +92,7 @@ __filesize_t __FASTCALL__ CalcPageEntryLE(unsigned long pageidx)
   else      return BMGetCurrFilePos();
 }
 
-__filesize_t __FASTCALL__ CalcEntryPointLE(unsigned long objnum,__filesize_t _offset)
+__filesize_t LE_Parser::CalcEntryPoint(unsigned long objnum,__filesize_t _offset) const
 {
   binary_stream* handle;
   unsigned long i,start,pidx,j;
@@ -139,17 +135,17 @@ __filesize_t __FASTCALL__ CalcEntryPointLE(unsigned long objnum,__filesize_t _of
   return ret;
 }
 
-__filesize_t __FASTCALL__ CalcEntryLE(const LX_ENTRY *lxent)
+__filesize_t LE_Parser::CalcEntryLE(const LX_ENTRY *lxent)
 {
   __filesize_t ret;
   ret = BMGetCurrFilePos();
       switch(lxent->b32_type)
       {
-	case 1: ret = CalcEntryPointLE(lxent->b32_obj,lxent->entry.e32_variant.e32_offset.offset16);
+	case 1: ret = CalcEntryPoint(lxent->b32_obj,lxent->entry.e32_variant.e32_offset.offset16);
 		      break;
-	case 2: ret = CalcEntryPointLE(lxent->b32_obj,lxent->entry.e32_variant.e32_callgate.offset);
+	case 2: ret = CalcEntryPoint(lxent->b32_obj,lxent->entry.e32_variant.e32_callgate.offset);
 		      break;
-	case 3: ret = CalcEntryPointLE(lxent->b32_obj,lxent->entry.e32_variant.e32_offset.offset32);
+	case 3: ret = CalcEntryPoint(lxent->b32_obj,lxent->entry.e32_variant.e32_offset.offset32);
 		      break;
 	case 4: ShowFwdModOrdLX(lxent);
 	case 5:
@@ -158,7 +154,7 @@ __filesize_t __FASTCALL__ CalcEntryLE(const LX_ENTRY *lxent)
   return ret;
 }
 
-static __filesize_t  __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,bool dispmsg)
+__filesize_t LE_Parser::CalcEntryBungleLE(unsigned ordinal,bool dispmsg)
 {
   binary_stream* handle;
   bool found;
@@ -215,7 +211,7 @@ static __filesize_t  __FASTCALL__ CalcEntryBungleLE(unsigned ordinal,bool dispms
  return ret;
 }
 
-static __filesize_t __FASTCALL__ ShowMapTableLE()
+__filesize_t LE_Parser::action_F10()
 {
     __filesize_t fpos = BMGetCurrFilePos();
     int ret;
@@ -236,11 +232,11 @@ static __filesize_t __FASTCALL__ ShowMapTableLE()
     }
     ma_Destroy(obj);
     exit:
-    if(ret != -1) fpos = CalcPageEntryLE(ret + 1);
+    if(ret != -1) fpos = CalcPageEntry(ret + 1);
     return fpos;
 }
 
-static __filesize_t __FASTCALL__ ShowResNamLE()
+__filesize_t LE_Parser::action_F3()
 {
     __filesize_t fpos = BMGetCurrFilePos();
     int ret;
@@ -274,7 +270,7 @@ static __filesize_t __FASTCALL__ ShowResNamLE()
     return fpos;
 }
 
-static __filesize_t __FASTCALL__ ShowNResNmLE()
+__filesize_t LE_Parser::action_F4()
 {
     __filesize_t fpos = BMGetCurrFilePos();
     int ret;
@@ -308,40 +304,23 @@ static __filesize_t __FASTCALL__ ShowNResNmLE()
     return fpos;
 }
 
-static bool __FASTCALL__ isLE()
+LE_Parser::LE_Parser(CodeGuider& __code_guider)
+	:LX_Parser(__code_guider)
 {
-   char id[2];
-   beye_context().headshift = IsNewExe();
-   if(beye_context().headshift)
-   {
-     bmReadBufferEx(id,sizeof(id),beye_context().headshift,binary_stream::Seek_Set);
-     if(id[0] == 'L' && id[1] == 'E') return true;
-   }
-   return false;
-}
-
-static void __FASTCALL__ LEinit(CodeGuider& code_guider)
-{
-    UNUSED(code_guider);
-   binary_stream& main_handle = bmbioHandle();
-   LXType = FILE_LE;
    bmReadBufferEx(&lxe.le,sizeof(LEHEADER),beye_context().headshift,binary_stream::Seek_Set);
-   if((lx_cache = main_handle.dup()) == &bNull) lx_cache = &main_handle;
 }
 
-static void __FASTCALL__ LEdestroy()
+LE_Parser::~LE_Parser()
 {
-   binary_stream& main_handle = bmbioHandle();
-   if(lx_cache != &bNull && lx_cache != &main_handle) delete lx_cache;
 }
 
-static __filesize_t __FASTCALL__ LEHelp()
+__filesize_t LE_Parser::action_F1()
 {
   hlpDisplay(10004);
   return BMGetCurrFilePos();
 }
 
-static bool __FASTCALL__ leAddressResolv(char *addr,__filesize_t cfpos)
+bool LE_Parser::address_resolving(char *addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
@@ -369,23 +348,23 @@ static bool __FASTCALL__ leAddressResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static int __FASTCALL__ lePlatform() { return DISASM_CPU_IX86; }
+int LE_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-extern const REGISTRY_BIN leTable =
-{
-  "LE (Linear Executable)",
-  { "LEHelp", "Import", "ResNam", "NRsNam", "ImpNam", "Entry ", NULL, "LEHead", "MapTbl", "Object" },
-  { LEHelp, ShowModRefLX, ShowResNamLE, ShowNResNmLE, ShowImpProcLXLE, ShowEntriesLX, NULL, ShowNewHeaderLE, ShowMapTableLE, ShowObjectsLX },
-  isLE, LEinit, LEdestroy,
-  NULL,
-  NULL,
-  lePlatform,
-  NULL,
-  NULL,
-  leAddressResolv,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+static bool probe() {
+   char id[2];
+   beye_context().headshift = IsNewExe();
+   if(beye_context().headshift)
+   {
+     bmReadBufferEx(id,sizeof(id),beye_context().headshift,binary_stream::Seek_Set);
+     if(id[0] == 'L' && id[1] == 'E') return true;
+   }
+   return false;
+}
+
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) LE_Parser(_parent); }
+extern const Binary_Parser_Info le_info = {
+    "LE (Linear Executable)",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

@@ -33,17 +33,24 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 
 namespace	usr {
-static oldPharLap oph;
+    class oldPharLap_Parser : public Binary_Parser {
+	public:
+	    oldPharLap_Parser(CodeGuider&);
+	    virtual ~oldPharLap_Parser();
 
-static bool __FASTCALL__ IsOldPharLap()
-{
-   char sign[2];
-   bmReadBufferEx(sign,2,0,binary_stream::Seek_Set);
-   if(sign[0] == 'M' && sign[1] == 'P') return true;
-   return false;
-}
+	    virtual const char*		prompt(unsigned idx) const;
+	    virtual __filesize_t	action_F1();
 
-static __filesize_t __FASTCALL__ ShowOPharLapHeader()
+	    virtual __filesize_t	show_header();
+	    virtual int			query_platform() const;
+	    virtual bool		address_resolving(char *,__filesize_t);
+	private:
+	    oldPharLap			oph;
+    };
+static const char* txt[]={"PLHelp","","","","","","","","",""};
+const char* oldPharLap_Parser::prompt(unsigned idx) const { return txt[idx]; }
+
+__filesize_t oldPharLap_Parser::show_header()
 {
   __filesize_t fpos,entrypoint;
   TWindow * w;
@@ -89,17 +96,15 @@ static __filesize_t __FASTCALL__ ShowOPharLapHeader()
   return fpos;
 }
 
-static void __FASTCALL__ OPharLapInit(CodeGuider& code_guider)
+oldPharLap_Parser::oldPharLap_Parser(CodeGuider& code_guider)
+		:Binary_Parser(code_guider)
 {
-    UNUSED(code_guider);
-  bmReadBufferEx(&oph,sizeof(oph),0,binary_stream::Seek_Set);
+    bmReadBufferEx(&oph,sizeof(oph),0,binary_stream::Seek_Set);
 }
 
-static void __FASTCALL__ OPharLapDestroy()
-{
-}
+oldPharLap_Parser::~oldPharLap_Parser(){}
 
-static bool __FASTCALL__ OldPharLapAddrResolv(char *addr,__filesize_t cfpos)
+bool oldPharLap_Parser::address_resolving(char *addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
@@ -113,31 +118,25 @@ static bool __FASTCALL__ OldPharLapAddrResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static __filesize_t __FASTCALL__ HelpOPharLap()
+__filesize_t oldPharLap_Parser::action_F1()
 {
   hlpDisplay(10008);
   return BMGetCurrFilePos();
 }
 
-static int __FASTCALL__ OldPharLapPlatform() { return DISASM_CPU_IX86; }
+int oldPharLap_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-extern const REGISTRY_BIN OldPharLapTable =
-{
-  "Pharlap",
-  { "PLHelp", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  { HelpOPharLap, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  IsOldPharLap,
-  OPharLapInit,
-  OPharLapDestroy,
-  ShowOPharLapHeader,
-  NULL,
-  OldPharLapPlatform,
-  NULL,
-  NULL,
-  OldPharLapAddrResolv,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+static bool probe() {
+   char sign[2];
+   bmReadBufferEx(sign,2,0,binary_stream::Seek_Set);
+   if(sign[0] == 'M' && sign[1] == 'P') return true;
+   return false;
+}
+
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) oldPharLap_Parser(_parent); }
+extern const Binary_Parser_Info oldpharlap_info = {
+    "PharLap",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

@@ -39,9 +39,12 @@ using namespace	usr;
 #include "codeguid.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
+#include "ne.h"
 
 namespace	usr {
-static CodeGuider* code_guider;
+static const char* txt[]={ "NEHelp", "ModRef", "ResNam", "NRsNam", "", "Entry ", "ResTbl", "NE Hdr", "", "SegDef" };
+const char* NE_Parser::prompt(unsigned idx) const { return txt[idx]; }
+
 static NEHEADER ne;
 static linearArray *PubNames = NULL;
 
@@ -50,13 +53,7 @@ static binary_stream* ne_cache1 = &bNull;
 static binary_stream* ne_cache2 = &bNull;
 static binary_stream* ne_cache3 = &bNull;
 
-static __filesize_t  __FASTCALL__ CalcEntryPointNE( unsigned,unsigned );
-static void __FASTCALL__ ne_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
-static bool   __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
-static void __FASTCALL__ rd_ImpName(char *buff,int blen,unsigned idx,bool useasoff);
-static __filesize_t __FASTCALL__ nePA2VA(__filesize_t pa);
-
-const char * __nedata[] =
+const char* NE_Parser::__nedata[] =
 {
   "NOAUTODATA",
   "SINGLEDATA",
@@ -73,7 +70,7 @@ const char * __neExeType[] =
    "Windows Dev386"
 };
 
-static const char * __FASTCALL__ __getNEType(unsigned type)
+const char* NE_Parser::__getNEType(unsigned type)
 {
   if(type > 4) type = 0;
   return __neExeType[type];
@@ -87,14 +84,14 @@ const char * PMWinAPI[4] =
   "(WINDOWAPI). Windowing application."
 };
 
-const char * __FASTCALL__ GetPMWinAPI(unsigned flag)
+const char* NE_Parser::GetPMWinAPI(unsigned flag)
 {
  flag >>= 8;
  flag &= 0x0003;
  return PMWinAPI[flag];
 }
 
-static void  PaintNewHeaderNE_1(TWindow* w)
+void NE_Parser::PaintNewHeaderNE_1(TWindow* w)
 {
   w->printf(
 	   "Signature                      = '%c%c'\n"
@@ -145,7 +142,7 @@ static void  PaintNewHeaderNE_1(TWindow* w)
 
 static __filesize_t entryNE;
 
-static void  PaintNewHeaderNE_2(TWindow* w)
+void NE_Parser::PaintNewHeaderNE_2(TWindow* w)
 {
   w->printf(
 	   "SS : SP                        = %04hXH:%04hXH\n"
@@ -206,13 +203,13 @@ static void  PaintNewHeaderNE_2(TWindow* w)
   w->set_color(dialog_cset.main);
 }
 
-static void ( * nephead[])(TWindow* w) =
+void (__FASTCALL__ * NE_Parser::nephead[])(TWindow* w) =
 {
-  PaintNewHeaderNE_1,
-  PaintNewHeaderNE_2
+  &NE_Parser::PaintNewHeaderNE_1,
+  &NE_Parser::PaintNewHeaderNE_2
 };
 
-static void __FASTCALL__ PaintNewHeaderNE(TWindow * win,const any_t**ptr,unsigned npage,unsigned tpage)
+void NE_Parser::PaintNewHeaderNE(TWindow * win,const any_t**ptr,unsigned npage,unsigned tpage)
 {
   char text[80];
   UNUSED(ptr);
@@ -229,7 +226,7 @@ static void __FASTCALL__ PaintNewHeaderNE(TWindow * win,const any_t**ptr,unsigne
   win->refresh_full();
 }
 
-static __filesize_t __FASTCALL__ ShowNewHeaderNE()
+__filesize_t NE_Parser::action_F8()
 {
   __fileoff_t pos;
   unsigned CS,IP;
@@ -241,7 +238,7 @@ static __filesize_t __FASTCALL__ ShowNewHeaderNE()
   return pos;
 }
 
-static void  __FASTCALL__ entpaintNE(TWindow* w,const ENTRY *nam,unsigned flags)
+void NE_Parser::entpaintNE(TWindow* w,const ENTRY *nam,unsigned flags)
 {
   w->goto_xy(1,1);
   w->printf(
@@ -259,13 +256,13 @@ static void  __FASTCALL__ entpaintNE(TWindow* w,const ENTRY *nam,unsigned flags)
 	   ,((unsigned)((unsigned char)(nam->eSegNum))));
 }
 
-static void  __FASTCALL__ paintdummyentryNE(TWindow* w)
+void NE_Parser::paintdummyentryNE(TWindow* w)
 {
     w->goto_xy(1,3);
     w->printf("   Entry point not present ( Dummy bungle )");
 }
 
-static void __FASTCALL__ SegPaintNE(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
+void NE_Parser::SegPaintNE(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
 {
  char buffer[81];
  const SEGDEF ** nam = (const SEGDEF **)names;
@@ -317,7 +314,7 @@ static void __FASTCALL__ SegPaintNE(TWindow * win,const any_t** names,unsigned s
  win->refresh_full();
 }
 
-static void __FASTCALL__ EntPaintNE(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
+void NE_Parser::EntPaintNE(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
 {
  char buffer[81];
  const ENTRY ** nam = (const ENTRY **)names;
@@ -332,7 +329,7 @@ static void __FASTCALL__ EntPaintNE(TWindow * win,const any_t** names,unsigned s
  win->refresh_full();
 }
 
-static bool __FASTCALL__ __ReadModRefNamesNE(binary_stream& handle,memArray * obj)
+bool NE_Parser::__ReadModRefNamesNE(binary_stream& handle,memArray * obj)
 {
  unsigned i;
  uint_fast16_t offTable;
@@ -357,9 +354,7 @@ static bool __FASTCALL__ __ReadModRefNamesNE(binary_stream& handle,memArray * ob
  return true;
 }
 
-static void __FASTCALL__ ShowProcListNE(int);
-
-static __filesize_t __FASTCALL__ ShowModRefNE()
+__filesize_t NE_Parser::action_F2()
 {
  binary_stream& handle = *ne_cache;
  int ret;
@@ -392,7 +387,7 @@ static __filesize_t __FASTCALL__ ShowModRefNE()
  return fret;
 }
 
-static bool  __FASTCALL__ isPresent(memArray *arr,unsigned nentry,char *_tmpl)
+bool NE_Parser::isPresent(memArray *arr,unsigned nentry,char *_tmpl)
 {
    unsigned i;
    bool ret = false;
@@ -406,8 +401,7 @@ static bool  __FASTCALL__ isPresent(memArray *arr,unsigned nentry,char *_tmpl)
    return ret;
 }
 
-
-static bool __FASTCALL__ __ReadProcListNE(binary_stream& handle,memArray * obj,int modno)
+bool NE_Parser::__ReadProcListNE(binary_stream& handle,memArray * obj,int modno)
 {
   unsigned i,count;
   char buff[256];
@@ -454,7 +448,7 @@ static bool __FASTCALL__ __ReadProcListNE(binary_stream& handle,memArray * obj,i
   return true;
 }
 
-static void __FASTCALL__ ShowProcListNE( int modno )
+void NE_Parser::ShowProcListNE( int modno )
 {
  binary_stream& handle = *ne_cache;
  char ptitle[80],name[50];
@@ -475,45 +469,8 @@ static void __FASTCALL__ ShowProcListNE( int modno )
  }
  ma_Destroy(obj);
 }
-#if 0
-static int RNRprevind = -3;
-static long RNRprevshift = 0;
 
-static unsigned __FASTCALL__ RNameReadFull(binary_stream& handle,char * names,unsigned nindex,unsigned long offset)
-{
- unsigned char length;
- uint_fast16_t Ordinal;
- unsigned i;
- if(RNRprevind == (nindex - 1) && RNRprevshift)  handle->seek(RNRprevshift,binary_stream::Seek_Set);
- else
- {
-   handle->seek(offset,binary_stream::Seek_Set);
-   for(i = 0;i < nindex;i++)
-   {
-     length = handle->read(type_byte);
-     handle->seek(length + 2,binary_stream::Seek_Cur);
-   }
- }
- length = handle->read(type_byte);
- handle->read((any_t*)names,length);
- names[length] = 0;
- Ordinal = handle->read(type_word);
- RNRprevind = nindex;
- RNRprevshift = handle->tell();
- return Ordinal;
-}
-
-static unsigned __FASTCALL__ ResNameReadFull(binary_stream& handle,char * names,unsigned nindex)
-{
-  return RNameReadFull(handle,names,nindex,ne.neOffsetResidentNameTable + beye_context().headshift);
-}
-
-static unsigned __FASTCALL__ NResNameReadFull(binary_stream& handle,char * names,unsigned nindex)
-{
-  return RNameReadFull(handle,names,nindex,ne.neOffsetNonResidentNameTable);
-}
-#endif
-bool __FASTCALL__ RNamesReadItems(binary_stream& handle,memArray * obj,unsigned nnames,__filesize_t offset)
+bool NE_Parser::RNamesReadItems(binary_stream& handle,memArray * obj,unsigned nnames,__filesize_t offset)
 {
  unsigned char length;
  unsigned Ordinal;
@@ -532,17 +489,17 @@ bool __FASTCALL__ RNamesReadItems(binary_stream& handle,memArray * obj,unsigned 
  return true;
 }
 
-static bool __FASTCALL__ NERNamesReadItems(binary_stream& handle,memArray * names,unsigned nnames)
+bool NE_Parser::NERNamesReadItems(binary_stream& handle,memArray * names,unsigned nnames)
 {
    return RNamesReadItems(handle,names,nnames,ne.neOffsetResidentNameTable + beye_context().headshift);
 }
 
-static bool __FASTCALL__ NENRNamesReadItems(binary_stream& handle,memArray * names,unsigned nnames)
+bool NE_Parser::NENRNamesReadItems(binary_stream& handle,memArray * names,unsigned nnames)
 {
    return RNamesReadItems(handle,names,nnames,ne.neOffsetNonResidentNameTable);
 }
 
-static bool  __FASTCALL__ __ReadSegTableNE(binary_stream& handle,memArray * obj,unsigned nnames)
+bool  NE_Parser::__ReadSegTableNE(binary_stream& handle,memArray * obj,unsigned nnames)
 {
  unsigned i;
  for(i = 0;i < nnames;i++)
@@ -555,7 +512,7 @@ static bool  __FASTCALL__ __ReadSegTableNE(binary_stream& handle,memArray * obj,
  return true;
 }
 
-unsigned __FASTCALL__ GetNamCountNE(binary_stream& handle,__filesize_t offset )
+unsigned NE_Parser::GetNamCountNE(binary_stream& handle,__filesize_t offset )
 {
  unsigned i;
  i = 0;
@@ -573,17 +530,17 @@ unsigned __FASTCALL__ GetNamCountNE(binary_stream& handle,__filesize_t offset )
  return i;
 }
 
-static unsigned __FASTCALL__ NERNamesNumItems(binary_stream& handle)
+unsigned NE_Parser::NERNamesNumItems(binary_stream& handle)
 {
    return GetNamCountNE(handle,beye_context().headshift + ne.neOffsetResidentNameTable);
 }
 
-static unsigned __FASTCALL__ NENRNamesNumItems(binary_stream& handle)
+unsigned NE_Parser::NENRNamesNumItems(binary_stream& handle)
 {
    return GetNamCountNE(handle,ne.neOffsetNonResidentNameTable);
 }
 
-static void __FASTCALL__ ReadEntryItemNE(binary_stream& handle,ENTRY * obj,unsigned char etype)
+void NE_Parser::ReadEntryItemNE(binary_stream& handle,ENTRY * obj,unsigned char etype)
 {
  obj->eFixed = etype;
  if(etype)
@@ -604,7 +561,7 @@ static void __FASTCALL__ ReadEntryItemNE(binary_stream& handle,ENTRY * obj,unsig
  if(etype != 0xFE && etype != 0xFF) obj->eSegNum = etype;
 }
 
-static void  __FASTCALL__ SkipEntryItemNE(binary_stream& handle,unsigned char etype)
+void NE_Parser::SkipEntryItemNE(binary_stream& handle,unsigned char etype)
 {
  if(etype)
  {
@@ -614,7 +571,7 @@ static void  __FASTCALL__ SkipEntryItemNE(binary_stream& handle,unsigned char et
  }
 }
 
-static bool __FASTCALL__ ReadEntryNE(ENTRY * obj,unsigned entnum)
+bool NE_Parser::ReadEntryNE(ENTRY * obj,unsigned entnum)
 {
   binary_stream& handle = *ne_cache1;
   unsigned i,j;
@@ -639,7 +596,7 @@ static bool __FASTCALL__ ReadEntryNE(ENTRY * obj,unsigned entnum)
   return false;
 }
 
-static bool __FASTCALL__ ReadSegDefNE(SEGDEF * obj,unsigned segnum)
+bool NE_Parser::ReadSegDefNE(SEGDEF * obj,unsigned segnum) const
 {
  binary_stream* handle;
   handle = ne_cache3;
@@ -649,7 +606,7 @@ static bool __FASTCALL__ ReadSegDefNE(SEGDEF * obj,unsigned segnum)
   return true;
 }
 
-static __filesize_t  __FASTCALL__ CalcEntryPointNE( unsigned segnum, unsigned offset )
+__filesize_t  NE_Parser::CalcEntryPointNE( unsigned segnum, unsigned offset )
 {
   SEGDEF seg;
   __filesize_t shift;
@@ -658,7 +615,7 @@ static __filesize_t  __FASTCALL__ CalcEntryPointNE( unsigned segnum, unsigned of
   return shift;
 }
 
-static __filesize_t  __FASTCALL__ CalcEntryNE(unsigned ord,bool dispmsg)
+__filesize_t  NE_Parser::CalcEntryNE(unsigned ord,bool dispmsg)
 {
   ENTRY entr;
   SEGDEF segd;
@@ -683,7 +640,7 @@ static __filesize_t  __FASTCALL__ CalcEntryNE(unsigned ord,bool dispmsg)
   return 0L;
 }
 
-static __filesize_t __FASTCALL__ ShowSegDefNE()
+__filesize_t NE_Parser::action_F10()
 {
  binary_stream& handle = *ne_cache;
  unsigned nnames;
@@ -707,7 +664,7 @@ static __filesize_t __FASTCALL__ ShowSegDefNE()
  return fpos;
 }
 
-static bool  __FASTCALL__ __ReadEntryTableNE(binary_stream& handle,memArray * obj)
+bool NE_Parser::__ReadEntryTableNE(binary_stream& handle,memArray * obj)
 {
  unsigned i;
  unsigned char j,nentry;
@@ -729,7 +686,7 @@ static bool  __FASTCALL__ __ReadEntryTableNE(binary_stream& handle,memArray * ob
  return true;
 }
 
-static unsigned __FASTCALL__ GetEntryCountNE()
+unsigned NE_Parser::GetEntryCountNE()
 {
  binary_stream& handle = *ne_cache;
  unsigned i,j;
@@ -751,7 +708,7 @@ static unsigned __FASTCALL__ GetEntryCountNE()
  return i;
 }
 
-static __filesize_t __FASTCALL__ ShowEntriesNE()
+__filesize_t NE_Parser::action_F6()
 {
  binary_stream& handle = *ne_cache;
  unsigned nnames;
@@ -793,7 +750,7 @@ const char * ResourceGrNames[] =
   "VERSIONINFO"
 };
 
-static char *  __FASTCALL__ GetResourceIDNE(binary_stream& handle,unsigned rid,__filesize_t BegResTab)
+char* NE_Parser::GetResourceIDNE(binary_stream& handle,unsigned rid,__filesize_t BegResTab)
 {
  static char buff[30];
  unsigned char nByte;
@@ -817,7 +774,7 @@ static char *  __FASTCALL__ GetResourceIDNE(binary_stream& handle,unsigned rid,_
  return buff;
 }
 
-static bool  __FASTCALL__ __ReadResourceGroupNE(binary_stream& handle,memArray *obj,unsigned nitems,long * addr)
+bool NE_Parser::__ReadResourceGroupNE(binary_stream& handle,memArray *obj,unsigned nitems,long * addr)
 {
  unsigned i,j;
  uint_fast16_t rcAlign,rTypeID,rcount;
@@ -862,7 +819,7 @@ static bool  __FASTCALL__ __ReadResourceGroupNE(binary_stream& handle,memArray *
  return true;
 }
 
-static unsigned int  __FASTCALL__ GetResourceGroupCountNE(binary_stream& handle)
+unsigned int NE_Parser::GetResourceGroupCountNE(binary_stream& handle)
 {
  uint_fast16_t rcount, rTypeID;
  int count = 0;
@@ -886,7 +843,7 @@ static unsigned int  __FASTCALL__ GetResourceGroupCountNE(binary_stream& handle)
  return count;
 }
 
-static __filesize_t __FASTCALL__ ShowResourcesNE()
+__filesize_t NE_Parser::action_F7()
 {
  __filesize_t fpos;
  binary_stream& handle = *ne_cache;
@@ -910,7 +867,7 @@ static __filesize_t __FASTCALL__ ShowResourcesNE()
  return fpos;
 }
 
-static __filesize_t __FASTCALL__ ShowResNamNE()
+__filesize_t NE_Parser::action_F3()
 {
     __filesize_t fpos = BMGetCurrFilePos();
     int ret;
@@ -944,7 +901,7 @@ static __filesize_t __FASTCALL__ ShowResNamNE()
     return fpos;
 }
 
-static __filesize_t __FASTCALL__ ShowNResNmNE()
+__filesize_t NE_Parser::action_F4()
 {
     __filesize_t fpos = BMGetCurrFilePos();
     int ret;
@@ -978,27 +935,9 @@ static __filesize_t __FASTCALL__ ShowNResNmNE()
     return fpos;
 }
 
-static bool __FASTCALL__ IsNEFormat()
-{
-    char id[2];
-    beye_context().headshift = IsNewExe();
-    if(beye_context().headshift) {
-	bmReadBufferEx(id,sizeof(id),beye_context().headshift,binary_stream::Seek_Set);
-	if(id[0] == 'N' && id[1] == 'E') return true;
-    }
-    return false;
-}
-
 /***************************************************************************/
 /************************ RELOCATION FOR NE  *******************************/
 /***************************************************************************/
-
-typedef struct tagNERefChain
-{
-  unsigned offset;
-  unsigned number;
-}NERefChain;
-
 static unsigned CurrChainSegment = 0xFFFF;
 static unsigned long CurrSegmentStart = 0;
 static unsigned long CurrSegmentLength = 0;
@@ -1006,7 +945,7 @@ static int           CurrSegmentHasReloc = -1;
 static linearArray *CurrNEChain = NULL;
 static char __codelen,__type;
 
-static tCompare __FASTCALL__ compare_chains(const any_t*v1,const any_t*v2)
+tCompare NE_Parser::compare_chains(const any_t*v1,const any_t*v2)
 {
   const NERefChain  * c1, * c2;
   c1 = (const NERefChain  *)v1;
@@ -1014,8 +953,7 @@ static tCompare __FASTCALL__ compare_chains(const any_t*v1,const any_t*v2)
   return __CmpLong__(c1->offset,c2->offset);
 }
 
-
-static void  __FASTCALL__ BuildNERefChain(__filesize_t segoff,__filesize_t slength)
+void NE_Parser::BuildNERefChain(__filesize_t segoff,__filesize_t slength)
 {
   unsigned nchains,i;
   __filesize_t reloc_off;
@@ -1057,7 +995,7 @@ static void  __FASTCALL__ BuildNERefChain(__filesize_t segoff,__filesize_t sleng
   delete w;
 }
 
-static tCompare __FASTCALL__ compare_ne_spec(const any_t*e1,const any_t*e2)
+tCompare NE_Parser::compare_ne_spec(const any_t*e1,const any_t*e2)
 {
   const NERefChain  *r1, *r2;
   RELOC_NE rne;
@@ -1074,7 +1012,7 @@ static tCompare __FASTCALL__ compare_ne_spec(const any_t*e1,const any_t*e2)
   return ret;
 }
 
-static tCompare __FASTCALL__ compare_ne(const any_t*e1,const any_t*e2)
+tCompare NE_Parser::compare_ne(const any_t*e1,const any_t*e2)
 {
   const NERefChain  *r1, *r2;
   int ret;
@@ -1087,7 +1025,7 @@ static tCompare __FASTCALL__ compare_ne(const any_t*e1,const any_t*e2)
   return ret;
 }
 
-static RELOC_NE *  __FASTCALL__ __found_RNE(__filesize_t segoff,__filesize_t slength,unsigned segnum,unsigned keyoff,char codelen)
+RELOC_NE* NE_Parser::__found_RNE(__filesize_t segoff,__filesize_t slength,unsigned segnum,unsigned keyoff,char codelen)
 {
   NERefChain *found,key;
   static RELOC_NE rne;
@@ -1104,7 +1042,7 @@ static RELOC_NE *  __FASTCALL__ __found_RNE(__filesize_t segoff,__filesize_t sle
   else      return 0;
 }
 
-static RELOC_NE *  __FASTCALL__ __found_RNE_spec(__filesize_t segoff,__filesize_t slength,unsigned segnum,unsigned keyoff,char codelen,int type)
+RELOC_NE* NE_Parser::__found_RNE_spec(__filesize_t segoff,__filesize_t slength,unsigned segnum,unsigned keyoff,char codelen,int type)
 {
   NERefChain *found,key;
   static RELOC_NE rne;
@@ -1129,7 +1067,7 @@ static RELOC_NE *  __FASTCALL__ __found_RNE_spec(__filesize_t segoff,__filesize_
   else      return 0;
 }
 
-static unsigned  __FASTCALL__ __findSpecType(__filesize_t sstart,__filesize_t ssize,unsigned segnum,__filesize_t target,char codelen,char type,unsigned defval)
+unsigned NE_Parser::__findSpecType(__filesize_t sstart,__filesize_t ssize,unsigned segnum,__filesize_t target,char codelen,char type,unsigned defval)
 {
    unsigned ret;
    RELOC_NE * rne;
@@ -1139,7 +1077,7 @@ static unsigned  __FASTCALL__ __findSpecType(__filesize_t sstart,__filesize_t ss
    return ret;
 }
 
-static void  __FASTCALL__ rdImpNameNELX(char *buff,int blen,unsigned idx,bool useasoff,__filesize_t OffTable)
+void NE_Parser::rdImpNameNELX(char *buff,int blen,unsigned idx,bool useasoff,__filesize_t OffTable)
 {
   unsigned char len;
   __filesize_t name_off;
@@ -1162,12 +1100,12 @@ static void  __FASTCALL__ rdImpNameNELX(char *buff,int blen,unsigned idx,bool us
   buff[len] = 0;
 }
 
-static void __FASTCALL__ rd_ImpName(char *buff,int blen,unsigned idx,bool useasoff)
+void NE_Parser::rd_ImpName(char *buff,int blen,unsigned idx,bool useasoff)
 {
   rdImpNameNELX(buff,blen,idx,useasoff,beye_context().headshift + ne.neOffsetImportTable);
 }
 
-static bool  __FASTCALL__ BuildReferStrNE(const DisMode& parent,char *str,RELOC_NE *rne,int flags,__filesize_t ulShift)
+bool NE_Parser::BuildReferStrNE(const DisMode& parent,char *str,RELOC_NE *rne,int flags,__filesize_t ulShift)
 {
   char buff[256];
   const char *pref;
@@ -1215,7 +1153,7 @@ static bool  __FASTCALL__ BuildReferStrNE(const DisMode& parent,char *str,RELOC_
 	 retrf = ea?true:false;
 	 sprintf(&str[strlen(str)],"(*this).@%hu",rne->ordinal);
        }
-       if(!DumpMode && !EditMode && !(flags & APREF_USE_TYPE)) code_guider->add_go_address(parent,str,ea);
+       if(!DumpMode && !EditMode && !(flags & APREF_USE_TYPE)) code_guider().add_go_address(parent,str,ea);
      }
      else
      {
@@ -1225,11 +1163,11 @@ static bool  __FASTCALL__ BuildReferStrNE(const DisMode& parent,char *str,RELOC_
 	 sprintf(&str[strlen(str)],"%s",buff);
        else
        {
-	 if(need_virt) sprintf(&str[strlen(str)],".%08lX",(unsigned long)nePA2VA(ep));
+	 if(need_virt) sprintf(&str[strlen(str)],".%08lX",(unsigned long)pa2va(ep));
 	 else sprintf(&str[strlen(str)],"(*this).seg<#%hu>:%sH",rne->idx,Get4Digit(rne->ordinal));
 	 retrf = ep?true:false;
        }
-       if(!DumpMode && !EditMode && !(flags & APREF_USE_TYPE)) code_guider->add_go_address(parent,str,ep);
+       if(!DumpMode && !EditMode && !(flags & APREF_USE_TYPE)) code_guider().add_go_address(parent,str,ep);
      }
    }
    else
@@ -1250,7 +1188,7 @@ static bool  __FASTCALL__ BuildReferStrNE(const DisMode& parent,char *str,RELOC_
    return retrf;
 }
 
-static bool __FASTCALL__ AppendNERef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+bool NE_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
     unsigned i;
     __filesize_t segpos,slength;
@@ -1300,7 +1238,7 @@ static bool __FASTCALL__ AppendNERef(const DisMode& parent,char *str,__filesize_
 	      if(FindPubName(buff,sizeof(buff),r_sh))
 	      {
 		strcat(str,buff);
-		if(!DumpMode && !EditMode) code_guider->add_go_address(parent,str,r_sh);
+		if(!DumpMode && !EditMode) code_guider().add_go_address(parent,str,r_sh);
 		return true;
 	      }
 	   }
@@ -1312,7 +1250,7 @@ static bool __FASTCALL__ AppendNERef(const DisMode& parent,char *str,__filesize_
 }
 
 /** return false if unsuccess true otherwise */
-static bool  __FASTCALL__ ReadPubNames(binary_stream& handle,__filesize_t offset,void (__FASTCALL__ *mem_out)(const std::string&))
+bool NE_Parser::ReadPubNames(binary_stream& handle,__filesize_t offset,void (__FASTCALL__ *mem_out)(const std::string&))
 {
  struct PubName pnam;
  ENTRY ent;
@@ -1358,7 +1296,7 @@ static bool  __FASTCALL__ ReadPubNames(binary_stream& handle,__filesize_t offset
  return ret;
 }
 
-static void __FASTCALL__ ne_ReadPubName(binary_stream& b_cache,const struct PubName *it,
+void NE_Parser::ne_ReadPubName(binary_stream& b_cache,const struct PubName *it,
 			   char *buff,unsigned cb_buff)
 {
     unsigned char rlen;
@@ -1369,7 +1307,7 @@ static void __FASTCALL__ ne_ReadPubName(binary_stream& b_cache,const struct PubN
     buff[rlen] = 0;
 }
 
-static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
+bool NE_Parser::FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
     struct PubName *ret,key;
     key.pa = pa;
@@ -1382,8 +1320,7 @@ static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t p
     return udnFindName(pa,buff,cb_buff);
 }
 
-
-static void __FASTCALL__ ne_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
+void NE_Parser::ne_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
 {
    if((PubNames = la_Build(0,sizeof(struct PubName),mem_out)) != NULL)
    {
@@ -1394,9 +1331,9 @@ static void __FASTCALL__ ne_ReadPubNameList(binary_stream& handle,void (__FASTCA
    }
 }
 
-static void __FASTCALL__ NE_init(CodeGuider& _code_guider)
+NE_Parser::NE_Parser(CodeGuider& __code_guider)
+	:MZ_Parser(__code_guider)
 {
-    code_guider=&_code_guider;
    binary_stream& main_handle = bmbioHandle();
    bmReadBufferEx(&ne,sizeof(NEHEADER),beye_context().headshift,binary_stream::Seek_Set);
    if((ne_cache3 = main_handle.dup()) == &bNull) ne_cache3 = &main_handle;
@@ -1405,7 +1342,7 @@ static void __FASTCALL__ NE_init(CodeGuider& _code_guider)
    if((ne_cache2 = main_handle.dup()) == &bNull) ne_cache2 = &main_handle;
 }
 
-static void __FASTCALL__ NE_destroy()
+NE_Parser::~NE_Parser()
 {
   binary_stream& main_handle = bmbioHandle();
   if(CurrNEChain) { la_Destroy(CurrNEChain); CurrNEChain = 0; }
@@ -1416,13 +1353,13 @@ static void __FASTCALL__ NE_destroy()
   if(ne_cache1 != &bNull && ne_cache1 != &main_handle) delete ne_cache1;
 }
 
-static __filesize_t __FASTCALL__ NEHelp()
+__filesize_t NE_Parser::action_F1()
 {
   hlpDisplay(10006);
   return BMGetCurrFilePos();
 }
 
-static __filesize_t __FASTCALL__ neVA2PA(__filesize_t va)
+__filesize_t NE_Parser::va2pa(__filesize_t va)
 {
   SEGDEF nesd;
   uint_fast16_t seg,off;
@@ -1432,7 +1369,7 @@ static __filesize_t __FASTCALL__ neVA2PA(__filesize_t va)
   return nesd.sdOffset ? (((__filesize_t)nesd.sdOffset)<<ne.neLogicalSectorShiftCount) + off : 0;
 }
 
-static __filesize_t __FASTCALL__ nePA2VA(__filesize_t pa)
+__filesize_t NE_Parser::pa2va(__filesize_t pa)
 {
   unsigned i,segcount = ne.neSegmentTableCount;
   __filesize_t currseg_st,nextseg_st;
@@ -1458,7 +1395,7 @@ static __filesize_t __FASTCALL__ nePA2VA(__filesize_t pa)
   return 0L;
 }
 
-static __filesize_t __FASTCALL__ neGetPubSym(char *str,unsigned cb_str,unsigned *func_class,
+__filesize_t NE_Parser::get_public_symbol(char *str,unsigned cb_str,unsigned *func_class,
 			  __filesize_t pa,bool as_prev)
 {
     __filesize_t fpos;
@@ -1474,8 +1411,8 @@ static __filesize_t __FASTCALL__ neGetPubSym(char *str,unsigned cb_str,unsigned 
     return fpos;
 }
 
-static unsigned __FASTCALL__ neGetObjAttr(__filesize_t pa,char *name,unsigned cb_name,
-		      __filesize_t *start,__filesize_t *end,int *_class,int *bitness)
+unsigned NE_Parser::__get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,
+		      __filesize_t *start,__filesize_t *end,int *_class,int *bitness) const
 {
   __filesize_t currseg_st;
   unsigned i,segcount = ne.neSegmentTableCount,ret;
@@ -1524,7 +1461,12 @@ static unsigned __FASTCALL__ neGetObjAttr(__filesize_t pa,char *name,unsigned cb
   return ret;
 }
 
-static int __FASTCALL__ bitnessNE(__filesize_t pa)
+unsigned NE_Parser::get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,
+		      __filesize_t *start,__filesize_t *end,int *_class,int *bitness) {
+    return __get_object_attribute(pa,name,cb_name,start,end,_class,bitness);
+}
+
+int NE_Parser::query_bitness(__filesize_t pa) const
 {
   static __filesize_t st = 0,end = 0;
   char name[1];
@@ -1532,12 +1474,12 @@ static int __FASTCALL__ bitnessNE(__filesize_t pa)
   static int bitness;
   if(!(pa >= st && pa < end))
   {
-    neGetObjAttr(pa,name,sizeof(name),&st,&end,&_class,&bitness);
+    __get_object_attribute(pa,name,sizeof(name),&st,&end,&_class,&bitness);
   }
   return bitness;
 }
 
-static bool __FASTCALL__ neAddressResolv(char *addr,__filesize_t cfpos)
+bool NE_Parser::address_resolving(char *addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
@@ -1563,7 +1505,7 @@ static bool __FASTCALL__ neAddressResolv(char *addr,__filesize_t cfpos)
     strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift - ne.neOffsetEntryTable));
   }
   else
-    if((res=nePA2VA(cfpos))!=0)
+    if((res=pa2va(cfpos))!=0)
     {
       addr[0] = '.';
       strcpy(&addr[1],Get8Digit(res));
@@ -1572,23 +1514,23 @@ static bool __FASTCALL__ neAddressResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static int __FASTCALL__ platformNE() { return DISASM_CPU_IX86; }
+int NE_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-extern const REGISTRY_BIN neTable =
-{
-  "NE (New Exe)",
-  { "NEHelp", "ModRef", "ResNam", "NRsNam", NULL, "Entry ", "ResTbl", "NE Hdr", NULL, "SegDef" },
-  { NEHelp, ShowModRefNE, ShowResNamNE, ShowNResNmNE, NULL, ShowEntriesNE, ShowResourcesNE, ShowNewHeaderNE, NULL, ShowSegDefNE },
-  IsNEFormat, NE_init, NE_destroy,
-  NULL,
-  AppendNERef,
-  platformNE,
-  bitnessNE,
-  NULL,
-  neAddressResolv,
-  neVA2PA,
-  nePA2VA,
-  neGetPubSym,
-  neGetObjAttr
+static bool probe() {
+    char id[2];
+    beye_context().headshift = IsNewExe();
+    if(beye_context().headshift) {
+	bmReadBufferEx(id,sizeof(id),beye_context().headshift,binary_stream::Seek_Set);
+	if(id[0] == 'N' && id[1] == 'E') return true;
+    }
+    return false;
+}
+
+
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) NE_Parser(_parent); }
+extern const Binary_Parser_Info ne_info = {
+    "NE (New Exe)",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

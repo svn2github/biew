@@ -31,8 +31,7 @@ using namespace	usr;
 #include "plugins/disasm.h"
 
 namespace	usr {
-struct SisHeader
-{
+struct SisHeader {
     unsigned long UID1;
     unsigned long UID2;
     unsigned long UID3;
@@ -58,29 +57,32 @@ struct SisHeader
     unsigned long  ComponentNamePointer;
 };
 
-static bool  __FASTCALL__ sis_check_fmt()
-{
-    unsigned long id1,id2,id3;
-    bmSeek(0,binary_stream::Seek_Set);
-    id1=bmReadDWordEx(0,binary_stream::Seek_Set);
-    id2=bmReadDWordEx(4,binary_stream::Seek_Set);
-    id3=bmReadDWordEx(8,binary_stream::Seek_Set);
-    if((id2==0x10003A12 || id2==0x1000006D) && id3==0x10000419) return true;
-    /* try s60 3rd */
-    if(id1==0x10201A7A) return true;
-    return false;
-}
-static void __FASTCALL__ sis_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ sis_destroy_fmt() {}
-static int  __FASTCALL__ sis_platform() { return DISASM_CPU_ARM; }
+    class Sis_Parser : public Binary_Parser {
+	public:
+	    Sis_Parser(CodeGuider&);
+	    virtual ~Sis_Parser();
 
-static __filesize_t __FASTCALL__ Show_Sis3_Header()
+	    virtual const char*		prompt(unsigned idx) const;
+
+	    virtual __filesize_t	show_header();
+	    virtual int			query_platform() const;
+	private:
+	    __filesize_t		show_sis3_header();
+    };
+static const char* txt[]={"","","","","","","","","",""};
+const char* Sis_Parser::prompt(unsigned idx) const { return txt[idx]; }
+
+Sis_Parser::Sis_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {}
+Sis_Parser::~Sis_Parser() {}
+int  Sis_Parser::query_platform() const { return DISASM_CPU_ARM; }
+
+__filesize_t Sis_Parser::show_sis3_header()
 {
     beye_context().ErrMessageBox("Not implemented yet!","Sis v3 header");
     return BMGetCurrFilePos();
 }
 
-static __filesize_t __FASTCALL__ Show_Sis_Header()
+__filesize_t Sis_Parser::show_header()
 {
  unsigned keycode;
  TWindow * hwnd;
@@ -89,7 +91,7 @@ static __filesize_t __FASTCALL__ Show_Sis_Header()
  __filesize_t fpos,fpos2;
  fpos2=fpos = BMGetCurrFilePos();
  bmReadBufferEx(&sis,sizeof(sis),0,binary_stream::Seek_Set);
- if(sis.UID1==0x10201A7A) return Show_Sis3_Header();
+ if(sis.UID1==0x10201A7A) return show_sis3_header();
  switch(sis.Type)
  {
     case 0x0000: TypeName="APP"; break;
@@ -145,23 +147,22 @@ static __filesize_t __FASTCALL__ Show_Sis_Header()
  return fpos;
 }
 
-extern const REGISTRY_BIN sisTable =
-{
-  "Sis(EPOC) Symbian OS installable file",
-  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  sis_check_fmt,
-  sis_init_fmt,
-  sis_destroy_fmt,
-  Show_Sis_Header,
-  NULL,
-  sis_platform,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+static bool probe() {
+    unsigned long id1,id2,id3;
+    bmSeek(0,binary_stream::Seek_Set);
+    id1=bmReadDWordEx(0,binary_stream::Seek_Set);
+    id2=bmReadDWordEx(4,binary_stream::Seek_Set);
+    id3=bmReadDWordEx(8,binary_stream::Seek_Set);
+    if((id2==0x10003A12 || id2==0x1000006D) && id3==0x10000419) return true;
+    /* try s60 3rd */
+    if(id1==0x10201A7A) return true;
+    return false;
+}
+
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) Sis_Parser(_parent); }
+extern const Binary_Parser_Info sis_info = {
+    "Sis(EPOC) Symbian OS installable file",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

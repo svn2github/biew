@@ -32,8 +32,22 @@ using namespace	usr;
 #include "plugins/bin/mmio.h"
 namespace	usr {
 #define MOV_FOURCC(a,b,c,d) ((a<<24)|(b<<16)|(c<<8)|(d))
+    class MOV_Parser : public Binary_Parser {
+	public:
+	    MOV_Parser(CodeGuider&);
+	    virtual ~MOV_Parser();
 
-static __filesize_t __FASTCALL__ mov_find_chunk(__filesize_t off,unsigned long id)
+	    virtual const char*		prompt(unsigned idx) const;
+
+	    virtual __filesize_t	show_header();
+	    virtual int			query_platform() const;
+
+	    static __filesize_t		mov_find_chunk(__filesize_t off,unsigned long id);
+    };
+static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
+const char* MOV_Parser::prompt(unsigned idx) const { return txt[idx]; }
+
+__filesize_t MOV_Parser::mov_find_chunk(__filesize_t off,unsigned long id)
 {
     unsigned long ids,size;
     bmSeek(off,binary_stream::Seek_Set);
@@ -49,43 +63,28 @@ static __filesize_t __FASTCALL__ mov_find_chunk(__filesize_t off,unsigned long i
 }
 
 
-static bool  __FASTCALL__ mov_check_fmt()
-{
-    __filesize_t moov,mdat;
-    moov=mov_find_chunk(0,MOV_FOURCC('m','o','o','v'));
-    mdat=mov_find_chunk(0,MOV_FOURCC('m','d','a','t'));
-    if(moov != -1 && mdat != -1) return true;
-    return false;
-}
+MOV_Parser::MOV_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {}
+MOV_Parser::~MOV_Parser() {}
+int MOV_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-static void __FASTCALL__ mov_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ mov_destroy_fmt() {}
-static int  __FASTCALL__ mov_platform() { return DISASM_DEFAULT; }
-
-static __filesize_t __FASTCALL__ Show_MOV_Header()
+__filesize_t MOV_Parser::show_header()
 {
     beye_context().ErrMessageBox("Not implemented yet!","MOV format");
     return BMGetCurrFilePos();
 }
 
+static bool probe() {
+    __filesize_t moov,mdat;
+    moov=MOV_Parser::mov_find_chunk(0,MOV_FOURCC('m','o','o','v'));
+    mdat=MOV_Parser::mov_find_chunk(0,MOV_FOURCC('m','d','a','t'));
+    if(moov != -1 && mdat != -1) return true;
+    return false;
+}
 
-extern const REGISTRY_BIN movTable =
-{
-  "MOV file format",
-  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  mov_check_fmt,
-  mov_init_fmt,
-  mov_destroy_fmt,
-  Show_MOV_Header,
-  NULL,
-  mov_platform,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) MOV_Parser(_parent); }
+extern const Binary_Parser_Info mov_info = {
+    "MOV file format",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

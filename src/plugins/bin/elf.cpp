@@ -71,7 +71,99 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 
 namespace	usr {
-static CodeGuider* code_guider;
+    struct Elf_Reloc {
+	__filesize_t  offset;
+	__filesize_t  info;
+	__filesize_t  addend;
+	__filesize_t  sh_idx;
+    };
+    class ELF_Parser : public Binary_Parser {
+	public:
+	    ELF_Parser(CodeGuider&);
+	    virtual ~ELF_Parser();
+
+	    virtual const char*		prompt(unsigned idx) const;
+	    virtual __filesize_t	action_F1();
+	    virtual __filesize_t	action_F2();
+	    virtual __filesize_t	action_F3();
+	    virtual __filesize_t	action_F7();
+	    virtual __filesize_t	action_F9();
+	    virtual __filesize_t	action_F10();
+
+	    virtual __filesize_t	show_header();
+	    virtual bool		bind(const DisMode& _parent,char *str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
+	    virtual int			query_platform() const;
+	    virtual int			query_bitness(__filesize_t) const;
+	    virtual int			query_endian(__filesize_t) const;
+	    virtual bool		address_resolving(char *,__filesize_t);
+	    virtual __filesize_t	va2pa(__filesize_t va);
+	    virtual __filesize_t	pa2va(__filesize_t pa);
+	    virtual __filesize_t	get_public_symbol(char *str,unsigned cb_str,unsigned *_class,
+							    __filesize_t pa,bool as_prev);
+	    virtual unsigned		get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,
+							__filesize_t *start,__filesize_t *end,int *_class,int *bitness);
+	private:
+	    void			elf_ReadPubName(binary_stream&b_cache,const struct PubName *it,char *buff,unsigned cb_buff);
+	    static tCompare __FASTCALL__ compare_pubnames(const any_t *v1,const any_t *v2);
+	    void			__elfReadSegments(linearArray **to,bool is_virt);
+	    void			displayELFdyninfo(__filesize_t f_off,unsigned nitems);
+	    bool			BuildReferStrElf(char *str,Elf_Reloc *erl,int flags,unsigned codelen,__filesize_t defval);
+	    bool			BuildReferStrElf_ppc(char *str,Elf_Reloc *erl,int flags,unsigned codelen,__filesize_t defval);
+	    bool			BuildReferStrElf_x86_64(char *str,Elf_Reloc *erl,int flags,unsigned codelen,__filesize_t defval);
+	    bool			BuildReferStrElf_i386(char *str,Elf_Reloc *erl,int flags,unsigned codelen,__filesize_t defval);
+	    bool			BuildReferStrElf_arm(char *str,Elf_Reloc *erl,int flags,unsigned codelen,__filesize_t defval);
+	    bool			__readRelocName(Elf_Reloc *erl,char *buff,size_t cbBuff);
+	    Elf_Reloc *			__found_ElfRel(__filesize_t offset);
+	    void			buildElf386RelChain();
+	    void			__elfReadRelaSection(__filesize_t offset,__filesize_t size,__filesize_t sh_link,__filesize_t info,__filesize_t entsize);
+	    void			__elfReadRelSection(__filesize_t offset,__filesize_t size,__filesize_t sh_link,__filesize_t info,__filesize_t entsize);
+	    void			__elf_ppc_read_erc(binary_stream&handle2,Elf_Reloc *erc);
+	    void			__elf_x86_64_read_erc(binary_stream&handle2,Elf_Reloc *erc);
+	    void			__elf_i386_read_erc(binary_stream&handle2,Elf_Reloc *erc);
+	    void			__elf_arm_read_erc(binary_stream&handle2,Elf_Reloc *erc);
+	    inline uint16_t		bioRead12(binary_stream&handle2) const { return handle2.read(type_word)&0x0FFFUL; };
+	    inline uint32_t		bioRead19(binary_stream&handle2) const { return handle2.read(type_dword)&0x0007FFFFUL; };
+	    inline uint32_t		bioRead22(binary_stream&handle2) const { return handle2.read(type_dword)&0x003FFFFFUL; };
+	    inline uint32_t		bioRead24(binary_stream&handle2) const { return handle2.read(type_dword)&0x00FFFFFFUL; };
+	    inline uint32_t		bioRead25(binary_stream&handle2) const { return handle2.read(type_dword)&0x01FFFFFFUL; };
+	    inline uint32_t		bioRead30(binary_stream&handle2) const { return handle2.read(type_dword)&0x3FFFFFFFUL; };
+	    __filesize_t		get_f_offset(__filesize_t r_offset,__filesize_t sh_link);
+	    static tCompare __FASTCALL__ compare_elf_reloc(const any_t *e1,const any_t *e2);
+	    __filesize_t		displayELFdyntab(__filesize_t dynptr,unsigned long nitem,long entsize);
+	    __filesize_t		displayELFsymtab();
+	    __filesize_t		__calcSymEntry(binary_stream&handle,__filesize_t num,bool display_msg);
+	    bool			__elfReadDynTab(binary_stream&handle,memArray *obj,unsigned ntbl,__filesize_t entsize);
+	    bool			__elfReadSymTab(binary_stream&handle,memArray *obj,unsigned nsym);
+	    bool			ELF_IS_SECTION_PHYSICAL(unsigned sec_num) const;
+	    const char*			elf_SymTabShNdx(unsigned idx) const;
+	    const char*			elf_SymTabBind(char type) const;
+	    const char*			elf_SymTabType(char type) const;
+	    bool			__elfReadSecHdr(binary_stream&handle,memArray *obj,unsigned nnames);
+	    const char*			elf_encode_sh_type(long sh_type) const;
+	    bool			__elfReadPrgHdr(binary_stream&handle,memArray *obj,unsigned nnames);
+	    const char*			elf_encode_p_type(long p_type) const;
+	    const char*			elf_osabi(unsigned char id) const;
+	    const char*			elf_version(unsigned long id) const;
+	    const char*			elf_machine(unsigned id,unsigned *disasm) const;
+	    const char*			elf_otype(unsigned id) const;
+	    const char*			elf_data(unsigned char id) const;
+	    const char*			elf_class(unsigned char id) const;
+	    void			elf386_readnametableex(__filesize_t off,char *buf,unsigned blen);
+	    void			elf386_readnametable(__filesize_t off,char *buf,unsigned blen);
+	    static tCompare __FASTCALL__ vamap_comp_phys(const any_t *v1,const any_t *v2);
+	    static tCompare __FASTCALL__ vamap_comp_virt(const any_t *v1,const any_t *v2);
+	    __filesize_t		findSHEntry(binary_stream&b_cache,unsigned long type,unsigned long *nitems,__filesize_t *link,unsigned long *ent_size);
+	    __filesize_t		findPHPubSyms(unsigned long *number,unsigned long *ent_size,__filesize_t *act_shtbl);
+	    __filesize_t		findPHDynEntry(unsigned long type,__filesize_t dynptr,unsigned long nitems);
+	    __filesize_t		findPHEntry(unsigned long type,unsigned *nitems);
+	    bool			FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
+	    void			elf_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
+
+	    CodeGuider&			code_guider;
+    };
+static const char* txt[]={ "ELFhlp", "DynInf", "DynSec", "", "", "", "SymTab", "", "SecHdr", "PrgDef" };
+const char* ELF_Parser::prompt(unsigned idx) const { return txt[idx]; }
+
 static char is_msbf; /* is most significand byte first */
 static char is_64bit;
 static class Elf* Elf = NULL;
@@ -93,13 +185,9 @@ struct tag_elfVAMap
   __filesize_t flags;
 };
 
-static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
-static void __FASTCALL__ elf_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
-static __filesize_t __FASTCALL__ elfVA2PA(__filesize_t va);
-static __filesize_t __FASTCALL__ elfPA2VA(__filesize_t pa);
 static bool IsSectionsPresent;
 
-static __filesize_t  __FASTCALL__ findPHEntry(unsigned long type,unsigned *nitems)
+__filesize_t  ELF_Parser::findPHEntry(unsigned long type,unsigned *nitems)
 {
   __filesize_t fpos,dynptr;
   Elf_Phdr phdr;
@@ -123,7 +211,7 @@ static __filesize_t  __FASTCALL__ findPHEntry(unsigned long type,unsigned *nitem
   return dynptr;
 }
 
-static __filesize_t  __FASTCALL__ findPHDynEntry(unsigned long type,
+__filesize_t ELF_Parser::findPHDynEntry(unsigned long type,
 							__filesize_t dynptr,
 							unsigned long nitems)
 {
@@ -144,7 +232,7 @@ static __filesize_t  __FASTCALL__ findPHDynEntry(unsigned long type,
   return is_found ? dyntab.d_un.d_ptr : 0L;
 }
 
-static __filesize_t  __FASTCALL__ findPHPubSyms(unsigned long *number,
+__filesize_t ELF_Parser::findPHPubSyms(unsigned long *number,
 							unsigned long *ent_size,
 							__filesize_t *act_shtbl)
 {
@@ -157,10 +245,10 @@ static __filesize_t  __FASTCALL__ findPHPubSyms(unsigned long *number,
     dyn_ptr = dynptr = findPHEntry(PT_DYNAMIC,&nitems);
     if(dynptr)
     {
-      dynptr = elfVA2PA(findPHDynEntry(DT_SYMTAB,dyn_ptr,nitems));
+      dynptr = va2pa(findPHDynEntry(DT_SYMTAB,dyn_ptr,nitems));
       if(dynptr)
       {
-	*act_shtbl = elfVA2PA(findPHDynEntry(DT_STRTAB,dyn_ptr,nitems));
+	*act_shtbl = va2pa(findPHDynEntry(DT_STRTAB,dyn_ptr,nitems));
 	*ent_size = findPHDynEntry(DT_SYMENT,dyn_ptr,nitems);
        /* Only way to determine size of symbol table entries it's find
 	   nearest section that follows DT_SYMTAB.
@@ -178,7 +266,7 @@ static __filesize_t  __FASTCALL__ findPHPubSyms(unsigned long *number,
 	    dyntab=Elf->read_dyn(bmbioHandle(),dptr);
 	    if(bmEOF()) break;
 	    dptr += Elf->dyn_size();
-	    cur_ptr = elfVA2PA(dyntab.d_un.d_ptr);
+	    cur_ptr = va2pa(dyntab.d_un.d_ptr);
 	    if(cur_ptr > dynptr && cur_ptr < max_val) max_val = cur_ptr;
 	  }
 	  bmSeek(_fpos,binary_stream::Seek_Set);
@@ -190,10 +278,9 @@ static __filesize_t  __FASTCALL__ findPHPubSyms(unsigned long *number,
   return dynptr;
 }
 
-static __filesize_t  __FASTCALL__
-		     findSHEntry(binary_stream& b_cache, unsigned long type,
-				 unsigned long *nitems,__filesize_t *link,
-				 unsigned long *ent_size)
+__filesize_t ELF_Parser::findSHEntry(binary_stream& b_cache, unsigned long type,
+				unsigned long *nitems,__filesize_t *link,
+				unsigned long *ent_size)
 {
   Elf_Shdr shdr;
   __filesize_t fpos, tableptr;
@@ -223,7 +310,7 @@ static binary_stream& elfcache = bNull;
 
 static linearArray *va_map_phys,* va_map_virt;
 
-static tCompare __FASTCALL__ vamap_comp_virt(const any_t*v1,const any_t*v2)
+tCompare ELF_Parser::vamap_comp_virt(const any_t*v1,const any_t*v2)
 {
   const struct tag_elfVAMap  *pnam1, *pnam2;
   pnam1 = (const struct tag_elfVAMap  *)v1;
@@ -231,7 +318,7 @@ static tCompare __FASTCALL__ vamap_comp_virt(const any_t*v1,const any_t*v2)
   return pnam1->va<pnam2->va?-1:pnam1->va>pnam2->va?1:0;
 }
 
-static tCompare __FASTCALL__ vamap_comp_phys(const any_t*v1,const any_t*v2)
+tCompare ELF_Parser::vamap_comp_phys(const any_t*v1,const any_t*v2)
 {
   const struct tag_elfVAMap  *pnam1, *pnam2;
   pnam1 = (const struct tag_elfVAMap  *)v1;
@@ -239,7 +326,7 @@ static tCompare __FASTCALL__ vamap_comp_phys(const any_t*v1,const any_t*v2)
   return pnam1->foff<pnam2->foff?-1:pnam1->foff>pnam2->foff?1:0;
 }
 
-static __filesize_t __FASTCALL__ elfVA2PA(__filesize_t va)
+__filesize_t ELF_Parser::va2pa(__filesize_t va)
 {
   unsigned long i;
   if(va_map_virt)
@@ -252,7 +339,7 @@ static __filesize_t __FASTCALL__ elfVA2PA(__filesize_t va)
   return 0L;
 }
 
-static __filesize_t __FASTCALL__ elfPA2VA(__filesize_t pa)
+__filesize_t ELF_Parser::pa2va(__filesize_t pa)
 {
   unsigned long i;
   __filesize_t ret;
@@ -270,7 +357,7 @@ static __filesize_t __FASTCALL__ elfPA2VA(__filesize_t pa)
   return ret;
 }
 
-static void  __FASTCALL__ elf386_readnametable(__filesize_t off,char *buf,unsigned blen)
+void ELF_Parser::elf386_readnametable(__filesize_t off,char *buf,unsigned blen)
 {
   __filesize_t foff;
   Elf_Shdr sh;
@@ -291,7 +378,7 @@ static void  __FASTCALL__ elf386_readnametable(__filesize_t off,char *buf,unsign
   }
 }
 
-static void  __FASTCALL__ elf386_readnametableex(__filesize_t off,char *buf,unsigned blen)
+void ELF_Parser::elf386_readnametableex(__filesize_t off,char *buf,unsigned blen)
 {
   __filesize_t foff;
   Elf_Shdr sh;
@@ -317,7 +404,7 @@ static void  __FASTCALL__ elf386_readnametableex(__filesize_t off,char *buf,unsi
   }
 }
 
-static const char *  __FASTCALL__ elf_class(unsigned char id)
+const char* ELF_Parser::elf_class(unsigned char id) const
 {
   switch(id)
   {
@@ -328,7 +415,7 @@ static const char *  __FASTCALL__ elf_class(unsigned char id)
   }
 }
 
-static const char *  __FASTCALL__ elf_data(unsigned char id)
+const char* ELF_Parser::elf_data(unsigned char id) const
 {
   switch(id)
   {
@@ -339,7 +426,7 @@ static const char *  __FASTCALL__ elf_data(unsigned char id)
   }
 }
 
-static const char * __FASTCALL__ elf_otype(unsigned id)
+const char* ELF_Parser::elf_otype(unsigned id) const
 {
   switch(id)
   {
@@ -360,7 +447,7 @@ static const char * __FASTCALL__ elf_otype(unsigned id)
     only common machine types are used, add remaining if needed
 */
 
-static const char * __FASTCALL__ elf_machine(unsigned id,unsigned *disasm)
+const char* ELF_Parser::elf_machine(unsigned id,unsigned *disasm) const
 {
   *disasm=DISASM_DATA;
   switch(id)
@@ -488,7 +575,7 @@ static const char * __FASTCALL__ elf_machine(unsigned id,unsigned *disasm)
   }
 }
 
-static const char * __FASTCALL__ elf_version(unsigned long id)
+const char* ELF_Parser::elf_version(unsigned long id) const
 {
   switch(id)
   {
@@ -498,7 +585,7 @@ static const char * __FASTCALL__ elf_version(unsigned long id)
   }
 }
 
-static const char * __FASTCALL__ elf_osabi(unsigned char id)
+const char* ELF_Parser::elf_osabi(unsigned char id) const
 {
   switch(id)
   {
@@ -521,8 +608,7 @@ static const char * __FASTCALL__ elf_osabi(unsigned char id)
   }
 }
 
-
-static __filesize_t __FASTCALL__ ShowELFHeader()
+__filesize_t ELF_Parser::show_header()
 {
   __filesize_t fpos;
   TWindow *w;
@@ -530,7 +616,7 @@ static __filesize_t __FASTCALL__ ShowELFHeader()
   unsigned keycode,dummy;
   __filesize_t entrya;
   fpos = BMGetCurrFilePos();
-  entrya = elfVA2PA(Elf->ehdr().e_entry);
+  entrya = va2pa(Elf->ehdr().e_entry);
   sprintf(hdr," ELF (Executable and Linking Format) ");
   w = CrtDlgWndnls(hdr,74,18);
   w->goto_xy(1,1);
@@ -602,7 +688,7 @@ static __filesize_t __FASTCALL__ ShowELFHeader()
   return fpos;
 }
 
-static const char *  __FASTCALL__ elf_encode_p_type(long p_type)
+const char* ELF_Parser::elf_encode_p_type(long p_type) const
 {
    switch(p_type)
    {
@@ -620,7 +706,7 @@ static const char *  __FASTCALL__ elf_encode_p_type(long p_type)
    }
 }
 
-static bool __FASTCALL__ __elfReadPrgHdr(binary_stream& handle,memArray *obj,unsigned nnames)
+bool ELF_Parser::__elfReadPrgHdr(binary_stream& handle,memArray *obj,unsigned nnames)
 {
  size_t i;
   handle.seek(Elf->ehdr().e_phoff,binary_stream::Seek_Set);
@@ -650,7 +736,7 @@ static bool __FASTCALL__ __elfReadPrgHdr(binary_stream& handle,memArray *obj,uns
   return true;
 }
 
-static const char *  __FASTCALL__ elf_encode_sh_type(long sh_type)
+const char* ELF_Parser::elf_encode_sh_type(long sh_type) const
 {
    switch(sh_type)
    {
@@ -678,7 +764,7 @@ static const char *  __FASTCALL__ elf_encode_sh_type(long sh_type)
    }
 }
 
-static bool __FASTCALL__ __elfReadSecHdr(binary_stream& handle,memArray *obj,unsigned nnames)
+bool ELF_Parser::__elfReadSecHdr(binary_stream& handle,memArray *obj,unsigned nnames)
 {
  size_t i;
   handle.seek(Elf->ehdr().e_shoff,binary_stream::Seek_Set);
@@ -713,7 +799,7 @@ static bool __FASTCALL__ __elfReadSecHdr(binary_stream& handle,memArray *obj,uns
   return true;
 }
 
-static const char *  __FASTCALL__ elf_SymTabType(char type)
+const char* ELF_Parser::elf_SymTabType(char type) const
 {
   switch(ELF_ST_TYPE(type))
   {
@@ -729,7 +815,7 @@ static const char *  __FASTCALL__ elf_SymTabType(char type)
   }
 }
 
-static const char *  __FASTCALL__ elf_SymTabBind(char type)
+const char* ELF_Parser::elf_SymTabBind(char type) const
 {
   switch(ELF_ST_BIND(type))
   {
@@ -743,7 +829,7 @@ static const char *  __FASTCALL__ elf_SymTabBind(char type)
   }
 }
 
-static const char *  __FASTCALL__ elf_SymTabShNdx(unsigned idx)
+const char* ELF_Parser::elf_SymTabShNdx(unsigned idx) const
 {
   static char ret[10];
   switch(idx)
@@ -758,14 +844,14 @@ static const char *  __FASTCALL__ elf_SymTabShNdx(unsigned idx)
   }
 }
 
-static bool  __FASTCALL__ ELF_IS_SECTION_PHYSICAL(unsigned sec_num)
+bool ELF_Parser::ELF_IS_SECTION_PHYSICAL(unsigned sec_num) const
 {
   return !(sec_num == SHN_UNDEF || sec_num == SHN_LOPROC ||
 	   sec_num == SHN_HIPROC || sec_num == SHN_ABS ||
 	   sec_num == SHN_COMMON || sec_num == SHN_HIRESERVE);
 }
 
-static bool __FASTCALL__ __elfReadSymTab(binary_stream& handle,memArray *obj,unsigned nsym)
+bool ELF_Parser::__elfReadSymTab(binary_stream& handle,memArray *obj,unsigned nsym)
 {
  size_t i,tlen;
  char text[37];
@@ -807,7 +893,7 @@ static bool __FASTCALL__ __elfReadSymTab(binary_stream& handle,memArray *obj,uns
   return true;
 }
 
-static bool  __FASTCALL__ __elfReadDynTab(binary_stream& handle,memArray *obj, unsigned ntbl,__filesize_t entsize)
+bool ELF_Parser::__elfReadDynTab(binary_stream& handle,memArray *obj, unsigned ntbl,__filesize_t entsize)
 {
  size_t i;
  char sout[80];
@@ -842,7 +928,7 @@ static bool  __FASTCALL__ __elfReadDynTab(binary_stream& handle,memArray *obj, u
   return true;
 }
 
-static __filesize_t __FASTCALL__ ShowPrgHdrElf()
+__filesize_t ELF_Parser::action_F10()
 {
     __filesize_t fpos = BMGetCurrFilePos();
     int ret;
@@ -872,7 +958,7 @@ static __filesize_t __FASTCALL__ ShowPrgHdrElf()
     return fpos;
 }
 
-static __filesize_t __FASTCALL__ ShowSecHdrElf()
+__filesize_t ELF_Parser::action_F9()
 {
     __filesize_t fpos = BMGetCurrFilePos();
     int ret;
@@ -901,7 +987,7 @@ static __filesize_t __FASTCALL__ ShowSecHdrElf()
     return fpos;
 }
 
-static __filesize_t __calcSymEntry(binary_stream& handle,__filesize_t num,bool display_msg)
+__filesize_t ELF_Parser::__calcSymEntry(binary_stream& handle,__filesize_t num,bool display_msg)
 {
    Elf_Sym it;
    Elf_Shdr sec;
@@ -928,13 +1014,13 @@ static __filesize_t __calcSymEntry(binary_stream& handle,__filesize_t num,bool d
 */
      fpos = Elf->ehdr().e_type == ET_REL ?
 	    sec.sh_offset + it.st_value:
-	    elfVA2PA(it.st_value);
+	    va2pa(it.st_value);
    else
      if(display_msg) beye_context().ErrMessageBox(NO_ENTRY,BAD_ENTRY);
    return fpos;
 }
 
-static __filesize_t  __FASTCALL__ displayELFsymtab()
+__filesize_t ELF_Parser::displayELFsymtab()
 {
     __filesize_t fpos = BMGetCurrFilePos();
     int ret;
@@ -963,7 +1049,7 @@ static __filesize_t  __FASTCALL__ displayELFsymtab()
     return fpos;
 }
 
-static __filesize_t  __FASTCALL__ displayELFdyntab(__filesize_t dynptr,
+__filesize_t ELF_Parser::displayELFdyntab(__filesize_t dynptr,
 							unsigned long nitem,
 							long entsize)
 {
@@ -989,7 +1075,7 @@ static __filesize_t  __FASTCALL__ displayELFdyntab(__filesize_t dynptr,
 	 addr_probe = is_64bit?strtoull(&addr[4],NULL,16):strtoul(&addr[4],NULL,16);
 	 if(addr_probe && addr_probe >= elf_min_va)
 	 {
-	   addr_probe = elfVA2PA(addr_probe);
+	   addr_probe = va2pa(addr_probe);
 	   if(addr_probe && addr_probe < bmGetFLength()) fpos = addr_probe;
 	   else goto not_entry;
 	 }
@@ -1006,7 +1092,7 @@ static __filesize_t  __FASTCALL__ displayELFdyntab(__filesize_t dynptr,
   return fpos;
 }
 
-static __filesize_t __FASTCALL__ ShowELFSymTab()
+__filesize_t ELF_Parser::action_F7()
 {
   __filesize_t fpos;
   fpos = BMGetCurrFilePos();
@@ -1015,7 +1101,7 @@ static __filesize_t __FASTCALL__ ShowELFSymTab()
   return displayELFsymtab();
 }
 
-static __filesize_t __FASTCALL__ ShowELFDynSec()
+__filesize_t ELF_Parser::action_F3()
 {
   __filesize_t fpos,dynptr;
   unsigned long number;
@@ -1034,16 +1120,9 @@ static __filesize_t __FASTCALL__ ShowELFDynSec()
 /***************************************************************************/
 /************************ RELOCATION FOR ELF *******************************/
 /***************************************************************************/
-typedef struct tagElfRefChain
-{
-  __filesize_t  offset;
-  __filesize_t  info;
-  __filesize_t  addend;
-  __filesize_t  sh_idx;
-}Elf_Reloc;
 static linearArray *CurrElfChain = NULL;
 
-static tCompare __FASTCALL__ compare_elf_reloc(const any_t*e1,const any_t*e2)
+tCompare ELF_Parser::compare_elf_reloc(const any_t*e1,const any_t*e2)
 {
   const Elf_Reloc  *p1, *p2;
   p1 = (const Elf_Reloc  *)e1;
@@ -1051,7 +1130,7 @@ static tCompare __FASTCALL__ compare_elf_reloc(const any_t*e1,const any_t*e2)
   return p1->offset<p2->offset?-1:p1->offset>p2->offset?1:0;
 }
 
-static __filesize_t get_f_offset(__filesize_t r_offset,__filesize_t sh_link)
+__filesize_t ELF_Parser::get_f_offset(__filesize_t r_offset,__filesize_t sh_link)
 {
   /*
     r_offset member gives the location at which to apply the relocation
@@ -1073,20 +1152,13 @@ static __filesize_t get_f_offset(__filesize_t r_offset,__filesize_t sh_link)
 		  handle.seek(fp,binary_stream::Seek_Set);
 		  f_offset = shdr.sh_offset + r_offset;
 		}
-     default: f_offset = elfVA2PA(r_offset);
+     default: f_offset = va2pa(r_offset);
 	      break;
   }
   return f_offset;
 }
 
-inline uint32_t bioRead30(binary_stream& handle2) { return handle2.read(type_dword)&0x3FFFFFFFUL; }
-inline uint32_t bioRead25(binary_stream& handle2) { return handle2.read(type_dword)&0x01FFFFFFUL; }
-inline uint32_t bioRead24(binary_stream& handle2) { return handle2.read(type_dword)&0x00FFFFFFUL; }
-inline uint32_t bioRead22(binary_stream& handle2) { return handle2.read(type_dword)&0x003FFFFFUL; }
-inline uint32_t bioRead19(binary_stream& handle2) { return handle2.read(type_dword)&0x0007FFFFUL; }
-inline uint16_t bioRead12(binary_stream& handle2) { return handle2.read(type_word)&0x0FFFUL; }
-
-static void __elf_arm_read_erc(binary_stream& handle2,Elf_Reloc *erc)
+void ELF_Parser::__elf_arm_read_erc(binary_stream& handle2,Elf_Reloc *erc)
 {
     switch(ELF32_R_TYPE(erc->info))
     {
@@ -1132,7 +1204,7 @@ static void __elf_arm_read_erc(binary_stream& handle2,Elf_Reloc *erc)
     }
 }
 
-static void __elf_i386_read_erc(binary_stream& handle2,Elf_Reloc *erc)
+void ELF_Parser::__elf_i386_read_erc(binary_stream& handle2,Elf_Reloc *erc)
 {
     switch(ELF32_R_TYPE(erc->info))
     {
@@ -1150,7 +1222,7 @@ static void __elf_i386_read_erc(binary_stream& handle2,Elf_Reloc *erc)
     }
 }
 
-static void __elf_x86_64_read_erc(binary_stream& handle2,Elf_Reloc *erc) {
+void ELF_Parser::__elf_x86_64_read_erc(binary_stream& handle2,Elf_Reloc *erc) {
     switch(ELF32_R_TYPE(erc->info))
     {
       case R_X86_64_8:
@@ -1178,7 +1250,7 @@ static void __elf_x86_64_read_erc(binary_stream& handle2,Elf_Reloc *erc) {
     }
 }
 
-static void __elf_ppc_read_erc(binary_stream& handle2,Elf_Reloc *erc)
+void ELF_Parser::__elf_ppc_read_erc(binary_stream& handle2,Elf_Reloc *erc)
 {
     switch(ELF32_R_TYPE(erc->info))
     {
@@ -1239,7 +1311,7 @@ static void __elf_ppc_read_erc(binary_stream& handle2,Elf_Reloc *erc)
     }
 }
 
-static void  __FASTCALL__ __elfReadRelSection(__filesize_t offset,
+void ELF_Parser::__elfReadRelSection(__filesize_t offset,
 							__filesize_t size,
 							__filesize_t sh_link,
 							__filesize_t info,
@@ -1282,7 +1354,7 @@ static void  __FASTCALL__ __elfReadRelSection(__filesize_t offset,
   handle.seek(fp,binary_stream::Seek_Set);
 }
 
-static void  __FASTCALL__ __elfReadRelaSection(__filesize_t offset,
+void ELF_Parser::__elfReadRelaSection(__filesize_t offset,
 							__filesize_t size,
 							__filesize_t sh_link,
 							__filesize_t info,
@@ -1312,7 +1384,7 @@ static void  __FASTCALL__ __elfReadRelaSection(__filesize_t offset,
   handle.seek(fp,binary_stream::Seek_Set);
 }
 
-static void  __FASTCALL__ buildElf386RelChain()
+void ELF_Parser::buildElf386RelChain()
 {
   size_t i,_nitems;
   TWindow *w;
@@ -1361,10 +1433,10 @@ static void  __FASTCALL__ buildElf386RelChain()
     __filesize_t dyn_ptr,dynptr,link,type;
     unsigned tsize,nitems;
     dynptr = findPHEntry(PT_DYNAMIC,&nitems);
-    link = elfVA2PA(findPHDynEntry(DT_SYMTAB,dynptr,nitems));
+    link = va2pa(findPHDynEntry(DT_SYMTAB,dynptr,nitems));
     if(dynptr)
     {
-      dyn_ptr = elfVA2PA(findPHDynEntry(DT_RELA,dynptr,nitems));
+      dyn_ptr = va2pa(findPHDynEntry(DT_RELA,dynptr,nitems));
       if(dyn_ptr)
       {
 	tsize = findPHDynEntry(DT_RELASZ,dynptr,nitems);
@@ -1374,7 +1446,7 @@ static void  __FASTCALL__ buildElf386RelChain()
 			     0,/* only executable can lose sections */
 			     sizeof(Elf386_External_Rela));
       }
-      dyn_ptr = elfVA2PA(findPHDynEntry(DT_REL,dynptr,nitems));
+      dyn_ptr = va2pa(findPHDynEntry(DT_REL,dynptr,nitems));
       if(dyn_ptr)
       {
 	tsize = findPHDynEntry(DT_RELSZ,dynptr,nitems);
@@ -1384,7 +1456,7 @@ static void  __FASTCALL__ buildElf386RelChain()
 			    0,/* only executable can lose sections */
 			    sizeof(Elf386_External_Rel));
       }
-      dyn_ptr = elfVA2PA(findPHDynEntry(DT_JMPREL,dynptr,nitems));
+      dyn_ptr = va2pa(findPHDynEntry(DT_JMPREL,dynptr,nitems));
       if(dyn_ptr)
       {
 	tsize = findPHDynEntry(DT_PLTRELSZ,dynptr,nitems);
@@ -1410,7 +1482,7 @@ static void  __FASTCALL__ buildElf386RelChain()
   return;
 }
 
-static Elf_Reloc  *  __FASTCALL__ __found_ElfRel(__filesize_t offset)
+Elf_Reloc* ELF_Parser::__found_ElfRel(__filesize_t offset)
 {
   Elf_Reloc key;
   if(!CurrElfChain) buildElf386RelChain();
@@ -1418,7 +1490,7 @@ static Elf_Reloc  *  __FASTCALL__ __found_ElfRel(__filesize_t offset)
   return (Elf_Reloc*)la_Find(CurrElfChain,&key,compare_elf_reloc);
 }
 
-static bool  __FASTCALL__ __readRelocName(Elf_Reloc  *erl, char *buff, size_t cbBuff)
+bool ELF_Parser::__readRelocName(Elf_Reloc  *erl, char *buff, size_t cbBuff)
 {
   Elf_Shdr shdr;
   Elf_Sym sym;
@@ -1446,7 +1518,7 @@ static bool  __FASTCALL__ __readRelocName(Elf_Reloc  *erl, char *buff, size_t cb
       __filesize_t dynptr;
       unsigned nitems;
       dynptr = findPHEntry(PT_DYNAMIC,&nitems);
-      active_shtbl = elfVA2PA(findPHDynEntry(DT_STRTAB,dynptr,nitems));
+      active_shtbl = va2pa(findPHDynEntry(DT_STRTAB,dynptr,nitems));
     }
     handle.seek(r_sym*__elfSymEntSize,binary_stream::Seek_Cur);
     sym=Elf->read_sym(handle,handle.tell());
@@ -1474,7 +1546,7 @@ static bool  __FASTCALL__ __readRelocName(Elf_Reloc  *erl, char *buff, size_t cb
   return ret;
 }
 
-static bool  __FASTCALL__ BuildReferStrElf_arm(char *str,
+bool ELF_Parser::BuildReferStrElf_arm(char *str,
 							Elf_Reloc  *erl,
 							int flags,unsigned codelen,
 							__filesize_t defval)
@@ -1550,7 +1622,7 @@ static bool  __FASTCALL__ BuildReferStrElf_arm(char *str,
   return retval;
 }
 
-static bool  __FASTCALL__ BuildReferStrElf_i386(char *str,
+bool ELF_Parser::BuildReferStrElf_i386(char *str,
 							Elf_Reloc  *erl,
 							int flags,unsigned codelen,
 							__filesize_t defval)
@@ -1633,7 +1705,7 @@ static bool  __FASTCALL__ BuildReferStrElf_i386(char *str,
   return retval;
 }
 
-static bool  __FASTCALL__ BuildReferStrElf_x86_64(char *str,
+bool ELF_Parser::BuildReferStrElf_x86_64(char *str,
 							Elf_Reloc  *erl,
 							int flags,unsigned codelen,
 							__filesize_t defval)
@@ -1730,7 +1802,7 @@ static bool  __FASTCALL__ BuildReferStrElf_x86_64(char *str,
   return retval;
 }
 
-static bool  __FASTCALL__ BuildReferStrElf_ppc(char *str,
+bool ELF_Parser::BuildReferStrElf_ppc(char *str,
 							Elf_Reloc  *erl,
 							int flags,unsigned codelen,
 							__filesize_t defval)
@@ -1825,7 +1897,7 @@ static bool  __FASTCALL__ BuildReferStrElf_ppc(char *str,
   return retval;
 }
 
-static bool  __FASTCALL__ BuildReferStrElf(char *str,
+bool ELF_Parser::BuildReferStrElf(char *str,
 							Elf_Reloc  *erl,
 							int flags,unsigned codelen,
 							__filesize_t defval)
@@ -1841,9 +1913,9 @@ static bool  __FASTCALL__ BuildReferStrElf(char *str,
     }
 }
 
-#define S_INTERPRETER "Interpreter : "
+static const char* S_INTERPRETER="Interpreter : ";
 
-static void  __FASTCALL__ displayELFdyninfo(__filesize_t f_off,unsigned nitems)
+void ELF_Parser::displayELFdyninfo(__filesize_t f_off,unsigned nitems)
 {
   Elf_Dyn dyntab;
   __filesize_t curroff,stroff;
@@ -1852,7 +1924,7 @@ static void  __FASTCALL__ displayELFdyninfo(__filesize_t f_off,unsigned nitems)
   memArray * obj;
   char stmp[80];
   stroff = 0;
-  stroff = elfVA2PA(findPHDynEntry(DT_STRTAB,f_off,nitems));
+  stroff = va2pa(findPHDynEntry(DT_STRTAB,f_off,nitems));
   if(!stroff) { beye_context().NotifyBox(" String information not found!",NULL); return; }
   bmSeek(f_off,binary_stream::Seek_Set);
   if(!(obj = ma_Build(0,true))) return;
@@ -1898,7 +1970,7 @@ static void  __FASTCALL__ displayELFdyninfo(__filesize_t f_off,unsigned nitems)
   ma_Destroy(obj);
 }
 
-static __filesize_t __FASTCALL__ ShowELFDynInfo()
+__filesize_t ELF_Parser::action_F2()
 {
   __filesize_t dynptr,fpos;
   unsigned number;
@@ -1910,7 +1982,7 @@ static __filesize_t __FASTCALL__ ShowELFDynInfo()
   return fpos;
 }
 
-static bool __FASTCALL__ AppendELFRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+bool ELF_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
   char buff[400];
   bool ret = false;
@@ -1936,8 +2008,8 @@ static bool __FASTCALL__ AppendELFRef(const DisMode& parent,char *str,__filesize
 	 dyn_ent = findPHDynEntry(DT_PLTGOT,dynptr,nitems);
 	 if(dyn_ent)
 	 {
-	   got_off = elfVA2PA(dyn_ent);
-	   return AppendELFRef(parent,str, got_off + off_in_got, flags & ~APREF_TRY_PIC, codelen, r_sh);
+	   got_off = va2pa(dyn_ent);
+	   return bind(parent,str, got_off + off_in_got, flags & ~APREF_TRY_PIC, codelen, r_sh);
 	 }
        }
        return false;
@@ -1949,7 +2021,7 @@ static bool __FASTCALL__ AppendELFRef(const DisMode& parent,char *str,__filesize
   }
   if(!ret && Elf->ehdr().e_type>ET_REL && codelen>=4)
   {
-    if((erl = __found_ElfRel(elfVA2PA(bmReadDWordEx(ulShift,binary_stream::Seek_Set)))) != NULL)
+    if((erl = __found_ElfRel(va2pa(bmReadDWordEx(ulShift,binary_stream::Seek_Set)))) != NULL)
     {
       ret = BuildReferStrElf(str,erl,flags,codelen,defval);
     }
@@ -1964,7 +2036,7 @@ static bool __FASTCALL__ AppendELFRef(const DisMode& parent,char *str,__filesize
 	 if(strlen(buff))
 	 {
 	   strcat(str,buff);
-	   if(!DumpMode && !EditMode) code_guider->add_go_address(parent,str,r_sh);
+	   if(!DumpMode && !EditMode) code_guider.add_go_address(parent,str,r_sh);
 	   ret = true;
 	 }
        }
@@ -1973,15 +2045,7 @@ static bool __FASTCALL__ AppendELFRef(const DisMode& parent,char *str,__filesize
   return ret;
 }
 
-static bool __FASTCALL__ IsELF32()
-{
-  char id[4];
-  bmReadBufferEx(id,sizeof(id),0,binary_stream::Seek_Set);
-  return IS_ELF(id);
-//  [0] == EI_MAG0 && id[1] == EI_MAG1 && id[2] == 'L' && id[3] == 'F';
-}
-
-static void __FASTCALL__ __elfReadSegments(linearArray **to, bool is_virt )
+void ELF_Parser::__elfReadSegments(linearArray **to, bool is_virt )
 {
  Elf_Phdr phdr;
  Elf_Shdr shdr;
@@ -2024,7 +2088,7 @@ static void __FASTCALL__ __elfReadSegments(linearArray **to, bool is_virt )
 	 if(flg & SHF_WRITE)     x_flags |= PF_W;
 	 if(flg & SHF_EXECINSTR) x_flags |= PF_X;
 	 vamap.flags = x_flags;
-	 test = is_virt ? elfVA2PA(vamap.va) != 0 : elfPA2VA(vamap.foff) != 0;
+	 test = is_virt ? va2pa(vamap.va) != 0 : pa2va(vamap.foff) != 0;
 	 if(!test)
 	 {
 	   if(!la_AddData(*to,&vamap,MemOutBox)) exit(EXIT_FAILURE);
@@ -2053,7 +2117,7 @@ static void __FASTCALL__ __elfReadSegments(linearArray **to, bool is_virt )
 	vamap.foff = phdr.p_offset;
 	vamap.nameoff = phdr.p_type & 0x000000FFUL ? ~phdr.p_type : 0xFFFFFFFFUL;
 	vamap.flags = phdr.p_flags;
-	test = is_virt ? elfVA2PA(vamap.va) != 0 : elfPA2VA(vamap.foff) != 0;
+	test = is_virt ? va2pa(vamap.va) != 0 : pa2va(vamap.foff) != 0;
 	if(!test)
 	{
 	  if(!la_AddData(*to,&vamap,MemOutBox))
@@ -2068,9 +2132,10 @@ static void __FASTCALL__ __elfReadSegments(linearArray **to, bool is_virt )
     }
 }
 
-static void __FASTCALL__ ELFinit(CodeGuider& _code_guider)
+ELF_Parser::ELF_Parser(CodeGuider& _code_guider)
+	    :Binary_Parser(_code_guider)
+	    ,code_guider(_code_guider)
 {
-    code_guider=&_code_guider;
     __filesize_t fs;
     size_t i;
     uint8_t buf[16];
@@ -2106,7 +2171,7 @@ static void __FASTCALL__ ELFinit(CodeGuider& _code_guider)
    __elfSymPtr = findSHEntry(bmbioHandle(), SHT_SYMTAB, &__elfNumSymTab, &__elfSymShTbl, &__elfSymEntSize);
 }
 
-static void __FASTCALL__ ELFdestroy()
+ELF_Parser::~ELF_Parser()
 {
    binary_stream& main_handle = bmbioHandle();
    if(&namecache != &bNull && &namecache != &main_handle) delete &namecache;
@@ -2119,19 +2184,19 @@ static void __FASTCALL__ ELFdestroy()
    delete Elf;
 }
 
-static int __FASTCALL__ ELFbitness(__filesize_t off)
+int ELF_Parser::query_bitness(__filesize_t off) const
 {
   UNUSED(off);
   return is_64bit?DAB_USE64:DAB_USE32;
 }
 
-static __filesize_t __FASTCALL__ ELFHelp()
+__filesize_t ELF_Parser::action_F1()
 {
   hlpDisplay(10003);
   return BMGetCurrFilePos();
 }
 
-static bool __FASTCALL__ ELFAddrResolv(char *addr,__filesize_t cfpos)
+bool ELF_Parser::address_resolving(char *addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
@@ -2143,7 +2208,7 @@ static bool __FASTCALL__ ELFAddrResolv(char *addr,__filesize_t cfpos)
     strcpy(&addr[7],Get2Digit(cfpos));
   }
   else
-    if((res=elfPA2VA(cfpos))!=0)
+    if((res=pa2va(cfpos))!=0)
     {
       addr[0] = '.';
       strcpy(&addr[1],Get8Digit(res));
@@ -2152,7 +2217,7 @@ static bool __FASTCALL__ ELFAddrResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static tCompare __FASTCALL__ compare_pubnames(const any_t*v1,const any_t*v2)
+tCompare ELF_Parser::compare_pubnames(const any_t*v1,const any_t*v2)
 {
   const struct PubName  *pnam1, *pnam2;
   pnam1 = (const struct PubName  *)v1;
@@ -2160,7 +2225,7 @@ static tCompare __FASTCALL__ compare_pubnames(const any_t*v1,const any_t*v2)
   return __CmpLong__(pnam1->pa,pnam2->pa);
 }
 
-static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
+bool ELF_Parser::FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
   struct PubName *ret,key;
   key.pa = pa;
@@ -2175,7 +2240,7 @@ static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t p
   return udnFindName(pa,buff,cb_buff);
 }
 
-static void __FASTCALL__ elf_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
+void ELF_Parser::elf_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
 {
   __filesize_t fpos,fp,tableptr,pubname_shtbl;
   unsigned long i,number,ent_size,nitems;
@@ -2201,7 +2266,7 @@ static void __FASTCALL__ elf_ReadPubNameList(binary_stream& handle,void (__FASTC
      if(b_cache.eof()) break;
      b_cache.seek(fp+ent_size,binary_stream::Seek_Set);
      epn.nameoff = pdyn.d_tag;
-     epn.pa = elfVA2PA(pdyn.d_un.d_val);
+     epn.pa = va2pa(pdyn.d_un.d_val);
      epn.addinfo = pubname_shtbl;
      epn.attr = ELF_ST_INFO(STB_GLOBAL,STT_NOTYPE);
      if(!la_AddData(PubNames,&epn,mem_out)) break;
@@ -2234,7 +2299,7 @@ static void __FASTCALL__ elf_ReadPubNameList(binary_stream& handle,void (__FASTC
   b_cache.seek(fpos,binary_stream::Seek_Set);
 }
 
-static void __FASTCALL__ elf_ReadPubName(binary_stream& b_cache,const struct PubName *it,
+void ELF_Parser::elf_ReadPubName(binary_stream& b_cache,const struct PubName *it,
 			    char *buff,unsigned cb_buff)
 {
    UNUSED(b_cache);
@@ -2242,7 +2307,7 @@ static void __FASTCALL__ elf_ReadPubName(binary_stream& b_cache,const struct Pub
    elf386_readnametableex(it->nameoff,buff,cb_buff);
 }
 
-static __filesize_t __FASTCALL__ elfGetPubSym(char *str,unsigned cb_str,unsigned *func_class,
+__filesize_t ELF_Parser::get_public_symbol(char *str,unsigned cb_str,unsigned *func_class,
 			   __filesize_t pa,bool as_prev)
 {
     __filesize_t fpos;
@@ -2258,7 +2323,7 @@ static __filesize_t __FASTCALL__ elfGetPubSym(char *str,unsigned cb_str,unsigned
     return fpos;
 }
 
-static unsigned __FASTCALL__ elfGetObjAttr(__filesize_t pa,char *name,unsigned cb_name,
+unsigned ELF_Parser::get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,
 		       __filesize_t *start,__filesize_t *end,int *_class,int *bitness)
 {
   unsigned i,ret;
@@ -2266,7 +2331,7 @@ static unsigned __FASTCALL__ elfGetObjAttr(__filesize_t pa,char *name,unsigned c
   *start = 0;
   *end = bmGetFLength();
   *_class = OC_NOOBJECT;
-  *bitness = ELFbitness(pa);
+  *bitness = query_bitness(pa);
   name[0] = 0;
   ret = 0;
   evam = (tag_elfVAMap*)va_map_phys->data;
@@ -2300,32 +2365,28 @@ static unsigned __FASTCALL__ elfGetObjAttr(__filesize_t pa,char *name,unsigned c
   return ret;
 }
 
-static int __FASTCALL__ ELFplatform() {
+int ELF_Parser::query_platform() const {
     unsigned id;
     elf_machine(Elf->ehdr().e_machine,&id);
     return id;
 }
 
-static int __FASTCALL__ ELFendian(__filesize_t off) {
+int ELF_Parser::query_endian(__filesize_t off) const {
  UNUSED(off);
  return is_msbf?DAE_BIG:DAE_LITTLE;
 }
 
-extern const REGISTRY_BIN elf386Table =
-{
-  "ELF (Executable and Linking Format)",
-  { "ELFhlp", "DynInf", "DynSec", NULL, NULL, NULL, "SymTab", NULL, "SecHdr", "PrgDef" },
-  { ELFHelp, ShowELFDynInfo, ShowELFDynSec, NULL, NULL, NULL, ShowELFSymTab, NULL, ShowSecHdrElf, ShowPrgHdrElf },
-  IsELF32, ELFinit, ELFdestroy,
-  ShowELFHeader,
-  AppendELFRef,
-  ELFplatform,
-  ELFbitness,
-  ELFendian,
-  ELFAddrResolv,
-  elfVA2PA,
-  elfPA2VA,
-  elfGetPubSym,
-  elfGetObjAttr
+static bool probe() {
+  char id[4];
+  bmReadBufferEx(id,sizeof(id),0,binary_stream::Seek_Set);
+  return IS_ELF(id);
+//  [0] == EI_MAG0 && id[1] == EI_MAG1 && id[2] == 'L' && id[3] == 'F';
+}
+
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) ELF_Parser(_parent); }
+extern const Binary_Parser_Info elf_info = {
+    "ELF (Executable and Linking Format)",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

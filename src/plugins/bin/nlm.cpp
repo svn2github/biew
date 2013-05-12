@@ -40,17 +40,58 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 
 namespace	usr {
-static CodeGuider* code_guider;
+    struct RELOC_NLM {
+	unsigned long offset;
+	unsigned long nameoff; /** if refnum == -1 then internal */
+    };
+    class NLM_Parser : public Binary_Parser {
+	public:
+	    NLM_Parser(CodeGuider&);
+	    virtual ~NLM_Parser();
+
+	    virtual const char*		prompt(unsigned idx) const;
+	    virtual __filesize_t	action_F1();
+	    virtual __filesize_t	action_F2();
+	    virtual __filesize_t	action_F3();
+	    virtual __filesize_t	action_F5();
+	    virtual __filesize_t	action_F8();
+
+	    virtual __filesize_t	show_header();
+	    virtual bool		bind(const DisMode& _parent,char *str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
+	    virtual int			query_platform() const;
+	    virtual int			query_bitness(__filesize_t) const;
+	    virtual bool		address_resolving(char *,__filesize_t);
+	    virtual __filesize_t	va2pa(__filesize_t va);
+	    virtual __filesize_t	pa2va(__filesize_t pa);
+	    virtual __filesize_t	get_public_symbol(char *str,unsigned cb_str,unsigned *_class,
+							    __filesize_t pa,bool as_prev);
+	    virtual unsigned		get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,
+							__filesize_t *start,__filesize_t *end,int *_class,int *bitness);
+	private:
+	    void		nlm_ReadPubName(binary_stream&b_cache,const struct PubName *it,char *buff,unsigned cb_buff);
+	    void		nlm_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
+	    bool		NLMAddrResolv(char *addr,__filesize_t cfpos);
+	    int			NLMbitness(__filesize_t off);
+	    bool		BuildReferStrNLM(char *str,RELOC_NLM *rne,int flags);
+	    void		BuildRelocNlm();
+	    static tCompare	nlm_compare_f(const any_t *e1,const any_t *e2);
+	    static tCompare	nlm_compare_s(const any_t *e1,const any_t *e2);
+	    bool		__ReadModRefNamesNLM(binary_stream&handle,memArray *obj,unsigned nnames);
+	    bool		NLMNamesReadItems(binary_stream&handle,memArray *obj,unsigned nnames);
+	    __filesize_t	CalcEntryNLM(unsigned ord,bool dispmsg);
+	    bool		__ReadExtRefNamesNLM(binary_stream&handle,memArray *obj,unsigned n);
+	    bool		FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
+
+	    CodeGuider&		code_guider;
+    };
+static const char* txt[]={ "NlmHlp", "ModRef", "PubDef", "", "ExtNam", "", "", "NlmHdr", "", "" };
+const char* NLM_Parser::prompt(unsigned idx) const { return txt[idx]; }
+
 static Nlm_Internal_Fixed_Header nlm;
 static linearArray *PubNames = NULL;
-
-static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
-static void __FASTCALL__ nlm_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
-static __filesize_t __FASTCALL__ NLMPA2VA(__filesize_t pa);
-
 static binary_stream* nlm_cache = &bNull;
 
-static __filesize_t __FASTCALL__ ShowNLMHeader()
+__filesize_t NLM_Parser::show_header()
 {
   __filesize_t fpos;
   char modName[NLM_MODULE_NAME_SIZE];
@@ -132,7 +173,7 @@ static __filesize_t __FASTCALL__ ShowNLMHeader()
   return fpos;
 }
 
-static __filesize_t __FASTCALL__ ShowNewNLM()
+__filesize_t NLM_Parser::action_F8()
 {
   __filesize_t fpos,ssize,m,d,sharedEntry,sharedExit;
   char modName[256];
@@ -272,7 +313,7 @@ static __filesize_t __FASTCALL__ ShowNewNLM()
   return fpos;
 }
 
-static bool __FASTCALL__ __ReadExtRefNamesNLM(binary_stream& handle,memArray * obj,unsigned n)
+bool NLM_Parser::__ReadExtRefNamesNLM(binary_stream& handle,memArray * obj,unsigned n)
 {
  unsigned i;
  handle.seek(nlm.nlm_externalReferencesOffset,binary_stream::Seek_Set);
@@ -292,7 +333,7 @@ static bool __FASTCALL__ __ReadExtRefNamesNLM(binary_stream& handle,memArray * o
  return true;
 }
 
-static __filesize_t  __FASTCALL__ CalcEntryNLM(unsigned ord,bool dispmsg)
+__filesize_t NLM_Parser::CalcEntryNLM(unsigned ord,bool dispmsg)
 {
  unsigned char length;
  unsigned i;
@@ -316,7 +357,7 @@ static __filesize_t  __FASTCALL__ CalcEntryNLM(unsigned ord,bool dispmsg)
  return ret;
 }
 
-static bool __FASTCALL__ NLMNamesReadItems(binary_stream& handle,memArray * obj,unsigned nnames)
+bool NLM_Parser::NLMNamesReadItems(binary_stream& handle,memArray * obj,unsigned nnames)
 {
  unsigned char length;
  unsigned i;
@@ -339,7 +380,7 @@ static bool __FASTCALL__ NLMNamesReadItems(binary_stream& handle,memArray * obj,
  return true;
 }
 
-static __filesize_t __FASTCALL__ ShowExtRefNLM()
+__filesize_t NLM_Parser::action_F5()
 {
     std::string title = EXT_REFER;
     ssize_t nnames = (unsigned)nlm.nlm_numberOfExternalReferences;
@@ -360,7 +401,7 @@ static __filesize_t __FASTCALL__ ShowExtRefNLM()
     return BMGetCurrFilePos();
 }
 
-static bool __FASTCALL__ __ReadModRefNamesNLM(binary_stream& handle,memArray * obj,unsigned nnames)
+bool NLM_Parser::__ReadModRefNamesNLM(binary_stream& handle,memArray * obj,unsigned nnames)
 {
  unsigned char length;
  unsigned i;
@@ -382,8 +423,7 @@ static bool __FASTCALL__ __ReadModRefNamesNLM(binary_stream& handle,memArray * o
  return true;
 }
 
-
-static __filesize_t __FASTCALL__ ShowModRefNLM()
+__filesize_t NLM_Parser::action_F2()
 {
     std::string title = MOD_REFER;
     ssize_t nnames = (unsigned)nlm.nlm_numberOfModuleDependencies;
@@ -404,7 +444,7 @@ static __filesize_t __FASTCALL__ ShowModRefNLM()
     return BMGetCurrFilePos();
 }
 
-static __filesize_t __FASTCALL__ ShowPubNamNLM()
+__filesize_t NLM_Parser::action_F3()
 {
     __filesize_t fpos = BMGetCurrFilePos();
     int ret;
@@ -433,16 +473,9 @@ static __filesize_t __FASTCALL__ ShowPubNamNLM()
 /************************  FOR NLM  ****************************************/
 /***************************************************************************/
 static char __codelen;
-
-typedef struct tagRELOC_NLM
-{
-  unsigned long offset;
-  unsigned long nameoff; /** if refnum == -1 then internal */
-}RELOC_NLM;
-
 static linearArray *RelocNlm = NULL;
 
-static tCompare __FASTCALL__ nlm_compare_s(const any_t*e1,const any_t*e2)
+tCompare NLM_Parser::nlm_compare_s(const any_t*e1,const any_t*e2)
 {
   const RELOC_NLM  *r1, *r2;
   r1 = reinterpret_cast<const RELOC_NLM*>(e1);
@@ -450,7 +483,7 @@ static tCompare __FASTCALL__ nlm_compare_s(const any_t*e1,const any_t*e2)
   return __CmpLong__(r1->offset,r2->offset);
 }
 
-static tCompare __FASTCALL__ nlm_compare_f(const any_t*e1,const any_t*e2)
+tCompare NLM_Parser::nlm_compare_f(const any_t*e1,const any_t*e2)
 {
   const RELOC_NLM  *r1, *r2;
   r1 = reinterpret_cast<const RELOC_NLM*>(e1);
@@ -458,7 +491,7 @@ static tCompare __FASTCALL__ nlm_compare_f(const any_t*e1,const any_t*e2)
   return __CmpLong__(r1->offset,r2->offset);
 }
 
-static void  __FASTCALL__ BuildRelocNlm()
+void NLM_Parser::BuildRelocNlm()
 {
   unsigned i,j;
   unsigned long val,niter,noff;
@@ -505,7 +538,7 @@ static void  __FASTCALL__ BuildRelocNlm()
   delete w;
 }
 
-static bool  __FASTCALL__ BuildReferStrNLM(char *str,RELOC_NLM*rne,int flags)
+bool NLM_Parser::BuildReferStrNLM(char *str,RELOC_NLM*rne,int flags)
 {
   __filesize_t val;
   bool retrf;
@@ -541,7 +574,7 @@ static bool  __FASTCALL__ BuildReferStrNLM(char *str,RELOC_NLM*rne,int flags)
   return retrf;
 }
 
-static bool __FASTCALL__ AppendNLMRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+bool NLM_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
   RELOC_NLM *rnlm,key;
   bool retrf;
@@ -562,41 +595,35 @@ static bool __FASTCALL__ AppendNLMRef(const DisMode& parent,char *str,__filesize
      if(FindPubName(buff,sizeof(buff),r_sh))
      {
        strcat(str,buff);
-       if(!DumpMode && !EditMode) code_guider->add_go_address(parent,str,r_sh);
+       if(!DumpMode && !EditMode) code_guider.add_go_address(parent,str,r_sh);
        retrf = true;
      }
   }
   return retrf;
 }
 
-static bool __FASTCALL__ IsNLM()
+NLM_Parser::NLM_Parser(CodeGuider& _code_guider)
+	    :Binary_Parser(_code_guider)
+	    ,code_guider(_code_guider)
 {
-  char ctrl[NLM_SIGNATURE_SIZE];
-  bmReadBufferEx(ctrl,NLM_SIGNATURE_SIZE,0,binary_stream::Seek_Set);
-  return memcmp(ctrl,NLM_SIGNATURE,NLM_SIGNATURE_SIZE) == 0;
-}
-
-static void __FASTCALL__ NLMinit(CodeGuider& _code_guider)
-{
-    code_guider=&_code_guider;
   binary_stream& main_handle = bmbioHandle();
   bmReadBufferEx(&nlm,sizeof(Nlm_Internal_Fixed_Header),0,binary_stream::Seek_Set);
   if((nlm_cache = main_handle.dup()) == &bNull) nlm_cache = &main_handle;
 }
 
-static void __FASTCALL__ NLMdestroy()
+NLM_Parser::~NLM_Parser()
 {
   binary_stream& main_handle = bmbioHandle();
   if(nlm_cache != &bNull && nlm_cache != &main_handle) delete nlm_cache;
 }
 
-static int __FASTCALL__ NLMbitness(__filesize_t off)
+int NLM_Parser::query_bitness(__filesize_t off) const
 {
   UNUSED(off);
   return DAB_USE32;
 }
 
-static bool __FASTCALL__ NLMAddrResolv(char *addr,__filesize_t cfpos)
+bool NLM_Parser::address_resolving(char *addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
@@ -608,7 +635,7 @@ static bool __FASTCALL__ NLMAddrResolv(char *addr,__filesize_t cfpos)
     strcpy(&addr[7],Get2Digit(cfpos));
   }
   else
-    if((res=NLMPA2VA(cfpos)) != 0)
+    if((res=pa2va(cfpos)) != 0)
     {
       addr[0] = '.';
       strcpy(&addr[1],Get8Digit(res));
@@ -617,13 +644,13 @@ static bool __FASTCALL__ NLMAddrResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static __filesize_t __FASTCALL__ HelpNLM()
+__filesize_t NLM_Parser::action_F1()
 {
   hlpDisplay(10007);
   return BMGetCurrFilePos();
 }
 
-static void __FASTCALL__ nlm_ReadPubName(binary_stream& b_cache,const struct PubName *it,
+void NLM_Parser::nlm_ReadPubName(binary_stream& b_cache,const struct PubName *it,
 			    char *buff,unsigned cb_buff)
 {
     unsigned char length;
@@ -634,7 +661,7 @@ static void __FASTCALL__ nlm_ReadPubName(binary_stream& b_cache,const struct Pub
     buff[length] = 0;
 }
 
-static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
+bool NLM_Parser::FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
   struct PubName *ret,key;
   key.pa = pa;
@@ -648,7 +675,7 @@ static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t p
   return udnFindName(pa,buff,cb_buff);
 }
 
-static void __FASTCALL__ nlm_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
+void NLM_Parser::nlm_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
 {
  unsigned char length;
  unsigned i;
@@ -670,7 +697,7 @@ static void __FASTCALL__ nlm_ReadPubNameList(binary_stream& handle,void (__FASTC
  if(PubNames->nItems) la_Sort(PubNames,fmtComparePubNames);
 }
 
-static __filesize_t __FASTCALL__ NLMGetPubSym(char *str,unsigned cb_str,unsigned *func_class,
+__filesize_t NLM_Parser::get_public_symbol(char *str,unsigned cb_str,unsigned *func_class,
 			   __filesize_t pa,bool as_prev)
 {
     __filesize_t fpos;
@@ -686,7 +713,7 @@ static __filesize_t __FASTCALL__ NLMGetPubSym(char *str,unsigned cb_str,unsigned
     return fpos;
 }
 
-static unsigned __FASTCALL__ NLMGetObjAttr(__filesize_t pa,char *name,unsigned cb_name,
+unsigned NLM_Parser::get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,
 		      __filesize_t *start,__filesize_t *end,int *_class,int *bitness)
 {
   unsigned ret;
@@ -694,7 +721,7 @@ static unsigned __FASTCALL__ NLMGetObjAttr(__filesize_t pa,char *name,unsigned c
   *start = 0;
   *end = bmGetFLength();
   *_class = OC_NOOBJECT;
-  *bitness = NLMbitness(pa);
+  *bitness = query_bitness(pa);
   name[0] = 0;
   if(pa < nlm.nlm_codeImageOffset)
   {
@@ -726,34 +753,29 @@ static unsigned __FASTCALL__ NLMGetObjAttr(__filesize_t pa,char *name,unsigned c
   return ret;
 }
 
-static __filesize_t __FASTCALL__ NLMVA2PA(__filesize_t va)
+__filesize_t NLM_Parser::va2pa(__filesize_t va)
 {
   return va + std::min(nlm.nlm_codeImageOffset,nlm.nlm_dataImageOffset);
 }
 
-static __filesize_t __FASTCALL__ NLMPA2VA(__filesize_t pa)
+__filesize_t NLM_Parser::pa2va(__filesize_t pa)
 {
   __filesize_t base = std::min(nlm.nlm_codeImageOffset,nlm.nlm_dataImageOffset);
   return pa > base ? pa - base : 0L;
 }
 
-static int __FASTCALL__ NLMPlatform() { return DISASM_CPU_IX86; }
+int NLM_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-extern const REGISTRY_BIN nlm386Table =
-{
-  "nlm-i386 (Novell Loadable Module)",
-  { "NlmHlp", "ModRef", "PubDef", NULL, "ExtNam", NULL, NULL, "NlmHdr", NULL, NULL },
-  { HelpNLM, ShowModRefNLM, ShowPubNamNLM, NULL, ShowExtRefNLM, NULL, NULL, ShowNewNLM, NULL, NULL },
-  IsNLM, NLMinit, NLMdestroy,
-  ShowNLMHeader,
-  AppendNLMRef,
-  NLMPlatform,
-  NLMbitness,
-  NULL,
-  NLMAddrResolv,
-  NLMVA2PA,
-  NLMPA2VA,
-  NLMGetPubSym,
-  NLMGetObjAttr
+static bool probe() {
+  char ctrl[NLM_SIGNATURE_SIZE];
+  bmReadBufferEx(ctrl,NLM_SIGNATURE_SIZE,0,binary_stream::Seek_Set);
+  return memcmp(ctrl,NLM_SIGNATURE,NLM_SIGNATURE_SIZE) == 0;
+}
+
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) NLM_Parser(_parent); }
+extern const Binary_Parser_Info nlm_info = {
+    "nlm-i386 (Novell Loadable Module)",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

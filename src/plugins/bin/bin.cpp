@@ -24,28 +24,27 @@ using namespace	usr;
 #include "plugins/disasm.h"
 
 namespace	usr {
-static bool  __FASTCALL__ bin_check_fmt() { return true; }
-static void __FASTCALL__ bin_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ bin_destroy_fmt() {}
-static int  __FASTCALL__ bin_platform() { return DISASM_DEFAULT; }
+    class Bin_Parser : public Binary_Parser {
+	public:
+	    Bin_Parser(CodeGuider&);
+	    virtual ~Bin_Parser();
 
-extern const REGISTRY_BIN binTable =
-{
-  "Binary file",
-  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  bin_check_fmt,
-  bin_init_fmt,
-  bin_destroy_fmt,
-  NULL,
-  NULL,
-  bin_platform,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+	    virtual const char*		prompt(unsigned idx) const;
+
+	    virtual int			query_platform() const;
+    };
+static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
+const char* Bin_Parser::prompt(unsigned idx) const { return txt[idx]; }
+
+Bin_Parser::Bin_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {}
+Bin_Parser::~Bin_Parser() {}
+int  Bin_Parser::query_platform() const { return DISASM_DEFAULT; }
+
+static bool probe() { return true; }
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) Bin_Parser(_parent); }
+extern const Binary_Parser_Info bin_info = {
+    "Binary file",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

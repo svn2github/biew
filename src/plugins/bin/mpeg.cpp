@@ -59,33 +59,29 @@ namespace	usr {
   0x000001F3		- ISO_13522_stream
   0x000001FF		- prog_stream_dir
 */
+    class Mpeg_Parser : public Binary_Parser {
+	public:
+	    Mpeg_Parser(CodeGuider&);
+	    virtual ~Mpeg_Parser();
 
-static bool  __FASTCALL__ mpeg_check_fmt()
-{
+	    virtual const char*		prompt(unsigned idx) const;
+	    virtual int			query_platform() const;
+    };
+static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
+const char* Mpeg_Parser::prompt(unsigned idx) const { return txt[idx]; }
+
+Mpeg_Parser::Mpeg_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {}
+Mpeg_Parser::~Mpeg_Parser() {}
+int Mpeg_Parser::query_platform() const { return DISASM_DEFAULT; }
+
+static bool probe() {
     return false;
 }
 
-static void __FASTCALL__ mpeg_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ mpeg_destroy_fmt() {}
-static int  __FASTCALL__ mpeg_platform() { return DISASM_DEFAULT; }
-
-extern const REGISTRY_BIN mpegTable =
-{
-  "MPEG-PES file format",
-  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  mpeg_check_fmt,
-  mpeg_init_fmt,
-  mpeg_destroy_fmt,
-  NULL,
-  NULL,
-  mpeg_platform,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) Mpeg_Parser(_parent); }
+extern const Binary_Parser_Info mpeg_info = {
+    "MPEG-PES file format",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

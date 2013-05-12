@@ -35,11 +35,33 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 
 namespace	usr {
-static newPharLap nph;
+    class PharLap_Parser : public Binary_Parser {
+	public:
+	    PharLap_Parser(CodeGuider&);
+	    virtual ~PharLap_Parser();
+
+	    virtual const char*		prompt(unsigned idx) const;
+	    virtual __filesize_t	action_F1();
+	    virtual __filesize_t	action_F9();
+	    virtual __filesize_t	action_F10();
+
+	    virtual __filesize_t	show_header();
+	    virtual int			query_platform() const;
+	    virtual bool		address_resolving(char *,__filesize_t);
+	private:
+	    bool			__PLReadRunTime(binary_stream& handle,memArray * obj,unsigned nnames);
+	    static void __FASTCALL__	PLRunTimePaint(TWindow * win,const any_t** names,unsigned start,unsigned nlist);
+	    bool			__PLReadSegInfo(binary_stream& handle,memArray * obj,unsigned nnames);
+	    static void __FASTCALL__	PLSegPaint(TWindow * win,const any_t** names,unsigned start,unsigned nlist);
+
+	    newPharLap			nph;
+    };
+static const char* txt[]={ "PLHelp", "", "", "", "", "", "", "", "RunTim", "SegInf" };
+const char* PharLap_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
 static binary_stream* pl_cache = &bNull;
 
-static __filesize_t __FASTCALL__ ShowPharLapHeader()
+__filesize_t PharLap_Parser::show_header()
 {
   __filesize_t fpos;
   TWindow *w;
@@ -108,7 +130,7 @@ static __filesize_t __FASTCALL__ ShowPharLapHeader()
   return fpos;
 }
 
-static void __FASTCALL__ PLSegPaint(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
+void PharLap_Parser::PLSegPaint(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
 {
  char buffer[81];
  const PLSegInfo ** nam = (const PLSegInfo **)names;
@@ -130,7 +152,7 @@ static void __FASTCALL__ PLSegPaint(TWindow * win,const any_t** names,unsigned s
  win->refresh_full();
 }
 
-static bool __FASTCALL__ __PLReadSegInfo(binary_stream& handle,memArray * obj,unsigned nnames)
+bool PharLap_Parser::__PLReadSegInfo(binary_stream& handle,memArray * obj,unsigned nnames)
 {
  unsigned i;
  for(i = 0;i < nnames;i++)
@@ -143,7 +165,7 @@ static bool __FASTCALL__ __PLReadSegInfo(binary_stream& handle,memArray * obj,un
  return true;
 }
 
-static __filesize_t __FASTCALL__ PharLapSegInfo()
+__filesize_t PharLap_Parser::action_F10()
 {
  binary_stream& handle = *pl_cache;
  unsigned nnames;
@@ -168,7 +190,7 @@ static __filesize_t __FASTCALL__ PharLapSegInfo()
  return fpos;
 }
 
-static void __FASTCALL__ PLRunTimePaint(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
+void PharLap_Parser::PLRunTimePaint(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
 {
  char buffer[81];
  char sign[3];
@@ -207,7 +229,7 @@ static void __FASTCALL__ PLRunTimePaint(TWindow * win,const any_t** names,unsign
  win->refresh_full();
 }
 
-static bool __FASTCALL__ __PLReadRunTime(binary_stream& handle,memArray * obj,unsigned nnames)
+bool PharLap_Parser::__PLReadRunTime(binary_stream& handle,memArray * obj,unsigned nnames)
 {
  unsigned i;
  for(i = 0;i < nnames;i++)
@@ -220,7 +242,7 @@ static bool __FASTCALL__ __PLReadRunTime(binary_stream& handle,memArray * obj,un
  return true;
 }
 
-static __filesize_t __FASTCALL__ PharLapRunTimeParms()
+__filesize_t PharLap_Parser::action_F9()
 {
  binary_stream& handle = *pl_cache;
  unsigned nnames;
@@ -245,29 +267,21 @@ static __filesize_t __FASTCALL__ PharLapRunTimeParms()
  return fpos;
 }
 
-static bool __FASTCALL__ IsPharLap()
+PharLap_Parser::PharLap_Parser(CodeGuider& code_guider)
+	    :Binary_Parser(code_guider)
 {
-   char sign[2];
-   bmReadBufferEx(sign,2,0,binary_stream::Seek_Set);
-   if(sign[0] == 'P' && (sign[1] == '2' || sign[1] == '3')) return true;
-   return false;
-}
-
-static void __FASTCALL__ PharLapInit(CodeGuider& code_guider)
-{
-    UNUSED(code_guider);
   binary_stream& main_handle = bmbioHandle();
   bmReadBufferEx(&nph,sizeof(nph),0,binary_stream::Seek_Set);
   if((pl_cache = main_handle.dup()) == &bNull) pl_cache = &main_handle;
 }
 
-static void __FASTCALL__ PharLapDestroy()
+PharLap_Parser::~PharLap_Parser()
 {
   binary_stream& main_handle = bmbioHandle();
   if(pl_cache != &bNull && pl_cache != &main_handle) delete pl_cache;
 }
 
-static bool __FASTCALL__ PharLapAddrResolv(char *addr,__filesize_t cfpos)
+bool PharLap_Parser::address_resolving(char *addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
@@ -281,31 +295,25 @@ static bool __FASTCALL__ PharLapAddrResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static __filesize_t __FASTCALL__ PharLapHelp()
+__filesize_t PharLap_Parser::action_F1()
 {
   hlpDisplay(10010);
   return BMGetCurrFilePos();
 }
 
-static int __FASTCALL__ PharLapPlatform() { return DISASM_CPU_IX86; }
+int PharLap_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-extern const REGISTRY_BIN PharLapTable =
-{
-  "PharLap",
-  { "PLHelp", NULL, NULL, NULL, NULL, NULL, NULL, NULL, "RunTim", "SegInf" },
-  { PharLapHelp, NULL, NULL, NULL, NULL, NULL, NULL, NULL, PharLapRunTimeParms, PharLapSegInfo },
-  IsPharLap,
-  PharLapInit,
-  PharLapDestroy,
-  ShowPharLapHeader,
-  NULL,
-  PharLapPlatform,
-  NULL,
-  NULL,
-  PharLapAddrResolv,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+static bool probe() {
+   char sign[2];
+   bmReadBufferEx(sign,2,0,binary_stream::Seek_Set);
+   if(sign[0] == 'P' && (sign[1] == '2' || sign[1] == '3')) return true;
+   return false;
+}
+
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) PharLap_Parser(_parent); }
+extern const Binary_Parser_Info pharlap_info = {
+    "PharLap",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

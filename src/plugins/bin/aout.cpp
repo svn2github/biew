@@ -35,14 +35,34 @@ using namespace	usr;
 #include "libbeye/libbeye.h"
 
 namespace	usr {
-static char is_msbf=0; /* is most significand byte first */
-static char is_64bit=0;
+    class AOut_Parser : public Binary_Parser {
+	public:
+	    AOut_Parser(CodeGuider&);
+	    virtual ~AOut_Parser();
 
-inline uint16_t AOUT_HALF(const uint16_t* cval) { return FMT_WORD(*cval,is_msbf); }
-inline uint32_t AOUT_WORD(const uint32_t* cval) { return FMT_DWORD(*cval,is_msbf); }
-inline uint64_t AOUT_QWORD(const uint64_t* cval) { return FMT_QWORD(*cval,is_msbf); }
+	    virtual const char*		prompt(unsigned idx) const;
+	    virtual __filesize_t	action_F1();
 
-static const char *  __FASTCALL__ aout_encode_hdr(uint32_t info)
+	    virtual __filesize_t	show_header();
+	    virtual int			query_platform() const;
+	    virtual int			query_bitness(__filesize_t) const;
+	    virtual int			query_endian(__filesize_t) const;
+	    virtual bool		address_resolving(char *,__filesize_t);
+	    static bool			check_fmt(uint32_t id);
+	private:
+	    const char*			aout_encode_machine(uint32_t info,unsigned *id) const;
+	    const char*			aout_encode_hdr(uint32_t info) const;
+    };
+static char is_msbf; /* is most significand byte first */
+static char is_64bit;
+inline uint16_t		AOUT_HALF(const uint16_t* cval) { return FMT_WORD(*cval,is_msbf); }
+inline uint32_t		AOUT_WORD(const uint32_t* cval) { return FMT_DWORD(*cval,is_msbf); }
+inline uint64_t		AOUT_QWORD(const uint64_t* cval) { return FMT_QWORD(*cval,is_msbf); }
+
+static const char* txt[]={ "AOutHl", "", "", "", "", "", "", "", "", "" };
+const char* AOut_Parser::prompt(unsigned idx) const { return txt[idx]; }
+
+const char* AOut_Parser::aout_encode_hdr(uint32_t info) const
 {
    switch(N_MAGIC(AOUT_WORD(&info)))
    {
@@ -59,7 +79,7 @@ static const char *  __FASTCALL__ aout_encode_hdr(uint32_t info)
    }
 }
 
-static const char *  __FASTCALL__ aout_encode_machine(uint32_t info,unsigned* id)
+const char* AOut_Parser::aout_encode_machine(uint32_t info,unsigned* id) const
 {
    *id=DISASM_DATA;
    switch(N_MACHTYPE(AOUT_WORD(&info)))
@@ -75,7 +95,7 @@ static const char *  __FASTCALL__ aout_encode_machine(uint32_t info,unsigned* id
    }
 }
 
-static __filesize_t __FASTCALL__ ShowAOutHeader()
+__filesize_t AOut_Parser::show_header()
 {
   struct external_exec aout;
   __filesize_t fpos;
@@ -116,7 +136,7 @@ static __filesize_t __FASTCALL__ ShowAOutHeader()
   return fpos;
 }
 
-static bool __FASTCALL__ __aout_check_fmt( uint32_t id )
+bool AOut_Parser::check_fmt( uint32_t id )
 {
   int a32,a64;
   a32=!(N_BADMAG(id));
@@ -125,32 +145,22 @@ static bool __FASTCALL__ __aout_check_fmt( uint32_t id )
   return a32 || a64 || N_MAGIC(id)==CMAGIC;
 }
 
-static bool __FASTCALL__ aout_check_fmt()
-{
-  uint32_t id;
-  id = bmReadDWordEx(0,binary_stream::Seek_Set);
-  if(__aout_check_fmt(id)) return 1;
-  id=be2me_32(id);
-  if(__aout_check_fmt(id)) { is_msbf=1; return 1; }
-  return 0;
-}
+AOut_Parser::AOut_Parser(CodeGuider&c):Binary_Parser(c) {}
+AOut_Parser::~AOut_Parser() {}
 
-static void __FASTCALL__ aout_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider);}
-static void __FASTCALL__ aout_destroy_fmt() {}
-
-static int __FASTCALL__ aout_bitness(__filesize_t off)
+int AOut_Parser::query_bitness(__filesize_t off) const
 {
    UNUSED(off);
    return is_64bit?DAB_USE64:DAB_USE32;
 }
 
-static int __FASTCALL__ aout_endian(__filesize_t off)
+int AOut_Parser::query_endian(__filesize_t off) const
 {
    UNUSED(off);
    return is_msbf?DAE_BIG:DAE_LITTLE;
 }
 
-static bool __FASTCALL__ aout_AddrResolv(char *addr,__filesize_t fpos)
+bool AOut_Parser::address_resolving(char *addr,__filesize_t fpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
@@ -164,13 +174,13 @@ static bool __FASTCALL__ aout_AddrResolv(char *addr,__filesize_t fpos)
   return bret;
 }
 
-static __filesize_t __FASTCALL__ aout_help()
+__filesize_t AOut_Parser::action_F1()
 {
   hlpDisplay(10000);
   return BMGetCurrFilePos();
 }
 
-static int __FASTCALL__ aout_platform() {
+int AOut_Parser::query_platform() const {
  unsigned id;
  struct external_exec aout;
  bmReadBufferEx(&aout,sizeof(struct external_exec),0,binary_stream::Seek_Set);
@@ -178,23 +188,19 @@ static int __FASTCALL__ aout_platform() {
  return id;
 }
 
-extern const REGISTRY_BIN aoutTable =
-{
-  "a.out (Assembler and link Output)",
-  { "AOutHl", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  { aout_help, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  aout_check_fmt,
-  aout_init_fmt,
-  aout_destroy_fmt,
-  ShowAOutHeader,
-  NULL,
-  aout_platform,
-  aout_bitness,
-  aout_endian,
-  aout_AddrResolv,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+static bool probe() {
+  uint32_t id;
+  id = bmReadDWordEx(0,binary_stream::Seek_Set);
+  if(AOut_Parser::check_fmt(id)) return 1;
+  id=be2me_32(id);
+  if(AOut_Parser::check_fmt(id)) { is_msbf=1; return 1; }
+  return 0;
+}
+
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) AOut_Parser(_parent); }
+extern const Binary_Parser_Info aout_info = {
+    "a.out (Assembler and link Output)",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

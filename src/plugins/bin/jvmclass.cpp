@@ -82,7 +82,52 @@ typedef struct ClassFile_s
     __filesize_t attrcode_offset;
 }ClassFile_t;
 
-ClassFile_t jvm_header;
+    class JVM_Parser : public Binary_Parser {
+	public:
+	    JVM_Parser(CodeGuider&);
+	    virtual ~JVM_Parser();
+
+	    virtual const char*		prompt(unsigned idx) const;
+	    virtual __filesize_t	action_F2();
+	    virtual __filesize_t	action_F3();
+	    virtual __filesize_t	action_F4();
+	    virtual __filesize_t	action_F8();
+	    virtual __filesize_t	action_F10();
+
+	    virtual __filesize_t	show_header();
+	    virtual bool		bind(const DisMode& _parent,char *str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
+	    virtual int			query_platform() const;
+	    virtual int			query_bitness(__filesize_t) const;
+	    virtual bool		address_resolving(char *,__filesize_t);
+	    virtual __filesize_t	va2pa(__filesize_t va);
+	    virtual __filesize_t	pa2va(__filesize_t pa);
+	    virtual __filesize_t	get_public_symbol(char *str,unsigned cb_str,unsigned *_class,
+							    __filesize_t pa,bool as_prev);
+	    virtual unsigned		get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,
+							__filesize_t *start,__filesize_t *end,int *_class,int *bitness);
+	private:
+	    void			jvm_ReadPubName(binary_stream&b_cache,const struct PubName *it,char *buff,unsigned cb_buff);
+	    void			decode_acc_flags(unsigned flags,char *str) const;
+	    bool			jvm_read_pool(binary_stream&handle,memArray *names,unsigned nnames);
+	    bool			jvm_read_fields(binary_stream&handle,memArray *names,unsigned nnames);
+	    bool			jvm_read_methods(binary_stream&handle,memArray *names,unsigned nnames);
+	    bool			jvm_read_attributes(binary_stream&handle,memArray *names,unsigned nnames);
+	    bool			jvm_read_interfaces(binary_stream&handle,memArray *names,unsigned nnames);
+	    void			skip_fields(unsigned nitems,int attr);
+	    void			skip_attributes(binary_stream&handle,unsigned nitems);
+	    char*			get_class_name(binary_stream&handle,unsigned idx,char *str,unsigned slen);
+	    void			get_name(binary_stream&handle,char *str,unsigned slen);
+	    void			get_utf8(binary_stream&handle,unsigned nidx,char *str,unsigned slen);
+	    void			skip_constant_pool(binary_stream&handle,unsigned nitems);
+	    unsigned			skip_constant(binary_stream&handle,unsigned char id);
+	    __filesize_t		__ShowAttributes(const std::string& title);
+	    void			jvm_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
+
+	    ClassFile_t jvm_header;
+    };
+
+static const char* txt[]={ "", "Import", "Code  ", "Data  ", "", "", "", "Pool  ", "", "Attrib" };
+const char* JVM_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
 static binary_stream* jvm_cache;
 static binary_stream* pool_cache;
@@ -92,15 +137,7 @@ inline uint16_t JVM_WORD(const uint16_t* cval,bool is_msbf) { return FMT_WORD(*c
 inline uint32_t JVM_DWORD(const uint32_t* cval,bool is_msbf) { return FMT_DWORD(*cval,is_msbf); }
 inline uint64_t JVM_QWORD(const uint64_t* cval,bool is_msbf) { return FMT_QWORD(*cval,is_msbf); }
 
-static bool  __FASTCALL__ jvm_check_fmt()
-{
-  unsigned char id[4];
-  bmReadBufferEx(id,sizeof(id),0,binary_stream::Seek_Set);
-  /* Cafe babe !!! */
-  return id[0]==0xCA && id[1]==0xFE && id[2]==0xBA && id[3]==0xBE && bmGetFLength()>=16;
-}
-
-static unsigned  __FASTCALL__ skip_constant(binary_stream& handle,unsigned char id)
+unsigned JVM_Parser::skip_constant(binary_stream& handle,unsigned char id)
 {
     unsigned add;
     unsigned short sval;
@@ -127,7 +164,7 @@ static unsigned  __FASTCALL__ skip_constant(binary_stream& handle,unsigned char 
     return add;
 }
 
-static void  __FASTCALL__ skip_constant_pool(binary_stream& handle,unsigned nitems)
+void JVM_Parser::skip_constant_pool(binary_stream& handle,unsigned nitems)
 {
     unsigned i;
     for(i=0;i<nitems;i++)
@@ -138,7 +175,7 @@ static void  __FASTCALL__ skip_constant_pool(binary_stream& handle,unsigned nite
     }
 }
 
-static void  __FASTCALL__ get_utf8(binary_stream& handle,unsigned nidx,char *str,unsigned slen)
+void JVM_Parser::get_utf8(binary_stream& handle,unsigned nidx,char *str,unsigned slen)
 {
     unsigned char id;
     handle.seek(jvm_header.constants_offset,binary_stream::Seek_Set);
@@ -154,7 +191,7 @@ static void  __FASTCALL__ get_utf8(binary_stream& handle,unsigned nidx,char *str
     }
 }
 
-static void  __FASTCALL__ get_name(binary_stream& handle,char *str,unsigned slen)
+void JVM_Parser::get_name(binary_stream& handle,char *str,unsigned slen)
 {
     unsigned short nidx;
     nidx=handle.read(type_word);
@@ -162,7 +199,7 @@ static void  __FASTCALL__ get_name(binary_stream& handle,char *str,unsigned slen
     get_utf8(handle,nidx,str,slen);
 }
 
-static char *  __FASTCALL__ get_class_name(binary_stream& handle,unsigned idx,char *str,unsigned slen)
+char* JVM_Parser::get_class_name(binary_stream& handle,unsigned idx,char *str,unsigned slen)
 {
     *str='\0';
     if(idx && idx<(unsigned)jvm_header.constant_pool_count-1)
@@ -176,7 +213,7 @@ static char *  __FASTCALL__ get_class_name(binary_stream& handle,unsigned idx,ch
     return str;
 }
 
-static void  __FASTCALL__ skip_attributes(binary_stream& handle,unsigned nitems)
+void JVM_Parser::skip_attributes(binary_stream& handle,unsigned nitems)
 {
     unsigned i;
     for(i=0;i<nitems;i++)
@@ -189,7 +226,7 @@ static void  __FASTCALL__ skip_attributes(binary_stream& handle,unsigned nitems)
     }
 }
 
-static void  __FASTCALL__ skip_fields(unsigned nitems,int attr)
+void JVM_Parser::skip_fields(unsigned nitems,int attr)
 {
     unsigned i;
     __filesize_t fpos;
@@ -211,7 +248,7 @@ static void  __FASTCALL__ skip_fields(unsigned nitems,int attr)
     }
 }
 
-static bool __FASTCALL__ jvm_read_interfaces(binary_stream& handle,memArray * names,unsigned nnames)
+bool JVM_Parser::jvm_read_interfaces(binary_stream& handle,memArray * names,unsigned nnames)
 {
     unsigned i;
     __filesize_t fpos;
@@ -230,7 +267,7 @@ static bool __FASTCALL__ jvm_read_interfaces(binary_stream& handle,memArray * na
     return true;
 }
 
-static __filesize_t __FASTCALL__ ShowInterfaces()
+__filesize_t JVM_Parser::action_F2()
 {
     __filesize_t fpos = BMGetCurrFilePos();
     std::string title = " interfaces ";
@@ -252,7 +289,7 @@ static __filesize_t __FASTCALL__ ShowInterfaces()
     return fpos;
 }
 
-static bool __FASTCALL__ jvm_read_attributes(binary_stream& handle,memArray * names,unsigned nnames)
+bool JVM_Parser::jvm_read_attributes(binary_stream& handle,memArray * names,unsigned nnames)
 {
     unsigned i;
     __filesize_t fpos;
@@ -273,7 +310,7 @@ static bool __FASTCALL__ jvm_read_attributes(binary_stream& handle,memArray * na
     return true;
 }
 
-static __filesize_t  __FASTCALL__ __ShowAttributes(const std::string& title)
+__filesize_t  JVM_Parser::__ShowAttributes(const std::string& title)
 {
     __filesize_t fpos = BMGetCurrFilePos();
     int ret;
@@ -309,12 +346,12 @@ static __filesize_t  __FASTCALL__ __ShowAttributes(const std::string& title)
     return fpos;
 }
 
-static __filesize_t __FASTCALL__ ShowAttributes()
+__filesize_t JVM_Parser::action_F10()
 {
     return __ShowAttributes(" length   attributes ");
 }
 
-static bool __FASTCALL__ jvm_read_methods(binary_stream& handle,memArray * names,unsigned nnames)
+bool JVM_Parser::jvm_read_methods(binary_stream& handle,memArray * names,unsigned nnames)
 {
     unsigned i;
     __filesize_t fpos;
@@ -339,7 +376,7 @@ static bool __FASTCALL__ jvm_read_methods(binary_stream& handle,memArray * names
     return true;
 }
 
-static __filesize_t __FASTCALL__ ShowMethods()
+__filesize_t JVM_Parser::action_F3()
 {
     __filesize_t fpos = BMGetCurrFilePos();
     int ret;
@@ -391,8 +428,7 @@ static __filesize_t __FASTCALL__ ShowMethods()
     return fpos;
 }
 
-
-static bool __FASTCALL__ jvm_read_fields(binary_stream& handle,memArray * names,unsigned nnames)
+bool JVM_Parser::jvm_read_fields(binary_stream& handle,memArray * names,unsigned nnames)
 {
     unsigned i;
     __filesize_t fpos;
@@ -417,7 +453,7 @@ static bool __FASTCALL__ jvm_read_fields(binary_stream& handle,memArray * names,
     return true;
 }
 
-static __filesize_t __FASTCALL__ ShowFields()
+__filesize_t JVM_Parser::action_F4()
 {
     __filesize_t fpos = BMGetCurrFilePos();
     int ret;
@@ -469,7 +505,7 @@ static __filesize_t __FASTCALL__ ShowFields()
     return fpos;
 }
 
-static bool __FASTCALL__ jvm_read_pool(binary_stream& handle,memArray * names,unsigned nnames)
+bool JVM_Parser::jvm_read_pool(binary_stream& handle,memArray * names,unsigned nnames)
 {
     __filesize_t fpos;
     uint32_t lval,lval2;
@@ -547,7 +583,7 @@ static bool __FASTCALL__ jvm_read_pool(binary_stream& handle,memArray * names,un
     return true;
 }
 
-static __filesize_t __FASTCALL__ ShowPool()
+__filesize_t JVM_Parser::action_F8()
 {
     __filesize_t fpos = BMGetCurrFilePos();
     std::string title = " Constant pool ";
@@ -569,9 +605,9 @@ static __filesize_t __FASTCALL__ ShowPool()
     return fpos;
 }
 
-static void __FASTCALL__ jvm_init_fmt(CodeGuider& code_guider)
+JVM_Parser::JVM_Parser(CodeGuider& code_guider)
+	    :Binary_Parser(code_guider)
 {
-    UNUSED(code_guider);
     __filesize_t fpos;
     unsigned short sval;
     jvm_header.magic=0xCAFEBABE;
@@ -619,16 +655,16 @@ static void __FASTCALL__ jvm_init_fmt(CodeGuider& code_guider)
     if((pool_cache = bh.dup()) == &bNull) pool_cache = &bh;
 }
 
-static void __FASTCALL__ jvm_destroy_fmt()
+JVM_Parser::~JVM_Parser()
 {
   binary_stream& bh=bmbioHandle();
   if(jvm_cache != &bNull && jvm_cache != &bh) delete jvm_cache;
   if(pool_cache != &bNull && pool_cache != &bh) delete pool_cache;
 }
 
-static int  __FASTCALL__ jvm_platform() { return DISASM_JAVA; }
+int JVM_Parser::query_platform() const { return DISASM_JAVA; }
 
-static void  __FASTCALL__ decode_acc_flags(unsigned flags, char *str)
+void JVM_Parser::decode_acc_flags(unsigned flags, char *str) const
 {
     if(flags & 0x0001) strcpy(str," PUBLIC");
     if(flags & 0x0010) strcat(str," FINAL");
@@ -638,7 +674,7 @@ static void  __FASTCALL__ decode_acc_flags(unsigned flags, char *str)
     strcat(str," ");
 }
 
-static __filesize_t __FASTCALL__ ShowJvmHeader()
+__filesize_t JVM_Parser::show_header()
 {
     __filesize_t entry;
     TWindow * hwnd;
@@ -684,23 +720,23 @@ static __filesize_t __FASTCALL__ ShowJvmHeader()
     return entry;
 }
 
-static __filesize_t __FASTCALL__ jvm_VA2PA(__filesize_t va)
+__filesize_t JVM_Parser::va2pa(__filesize_t va)
 {
   return  va + jvm_header.code_offset;
 }
 
-static __filesize_t __FASTCALL__ jvm_PA2VA(__filesize_t pa)
+__filesize_t JVM_Parser::pa2va(__filesize_t pa)
 {
   return pa >= jvm_header.code_offset ? pa - jvm_header.code_offset : 0L;
 }
 
-static bool __FASTCALL__ jvm_AddressResolv(char *addr,__filesize_t cfpos)
+bool JVM_Parser::address_resolving(char *addr,__filesize_t cfpos)
 {
   bool bret = true;
   if(cfpos >= jvm_header.methods_offset)
   {
     addr[0]='.';
-    strcpy(&addr[1],Get8Digit(jvm_PA2VA(cfpos)));
+    strcpy(&addr[1],Get8Digit(pa2va(cfpos)));
   }
   else
 /*
@@ -718,7 +754,7 @@ static bool __FASTCALL__ jvm_AddressResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static void __FASTCALL__ jvm_ReadPubName(binary_stream& b_cache,const struct PubName *it,
+void JVM_Parser::jvm_ReadPubName(binary_stream& b_cache,const struct PubName *it,
 			    char *buff,unsigned cb_buff)
 {
     b_cache.seek(it->nameoff,binary_stream::Seek_Set);
@@ -733,7 +769,7 @@ static void __FASTCALL__ jvm_ReadPubName(binary_stream& b_cache,const struct Pub
     }
 }
 
-static void __FASTCALL__ jvm_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
+void JVM_Parser::jvm_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
 {
  __filesize_t fpos;
  unsigned i;
@@ -811,7 +847,7 @@ static void __FASTCALL__ jvm_ReadPubNameList(binary_stream& handle,void (__FASTC
  if(PubNames->nItems) la_Sort(PubNames,fmtComparePubNames);
 }
 
-static __filesize_t __FASTCALL__ jvm_GetPubSym(char *str,unsigned cb_str,unsigned *func_class,
+__filesize_t JVM_Parser::get_public_symbol(char *str,unsigned cb_str,unsigned *func_class,
 			   __filesize_t pa,bool as_prev)
 {
     binary_stream& b_cache = bmbioHandle();
@@ -828,7 +864,7 @@ static __filesize_t __FASTCALL__ jvm_GetPubSym(char *str,unsigned cb_str,unsigne
     return fpos;
 }
 
-static unsigned __FASTCALL__ jvm_GetObjAttr(__filesize_t pa,char *name,unsigned cb_name,
+unsigned JVM_Parser::get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,
 		      __filesize_t *start,__filesize_t *end,int *_class,int *bitness)
 {
   unsigned ret;
@@ -894,13 +930,13 @@ static unsigned __FASTCALL__ jvm_GetObjAttr(__filesize_t pa,char *name,unsigned 
   return ret;
 }
 
-static int __FASTCALL__ jvm_bitness(__filesize_t off)
+int JVM_Parser::query_bitness(__filesize_t off) const
 {
     UNUSED(off);
     return DAB_USE16;
 }
 
-static bool __FASTCALL__ jvm_AppendRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+bool JVM_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
     bool retrf = true;
     unsigned slen=1000; /* According on disasm/java/java.c */
@@ -995,23 +1031,17 @@ static bool __FASTCALL__ jvm_AppendRef(const DisMode& parent,char *str,__filesiz
     return retrf;
 }
 
-extern const REGISTRY_BIN jvmTable =
-{
-  "Java's ClassFile",
-  { NULL, "Import", "Code  ", "Data  ", NULL, NULL, NULL, "Pool  ", NULL, "Attrib" },
-  { NULL, ShowInterfaces, ShowMethods, ShowFields, NULL, NULL, NULL, ShowPool, NULL, ShowAttributes },
-  jvm_check_fmt,
-  jvm_init_fmt,
-  jvm_destroy_fmt,
-  ShowJvmHeader,
-  jvm_AppendRef,
-  jvm_platform,
-  jvm_bitness,
-  NULL,
-  jvm_AddressResolv,
-  jvm_VA2PA,
-  jvm_PA2VA,
-  jvm_GetPubSym,
-  jvm_GetObjAttr
+static bool probe() {
+  unsigned char id[4];
+  bmReadBufferEx(id,sizeof(id),0,binary_stream::Seek_Set);
+  /* Cafe babe !!! */
+  return id[0]==0xCA && id[1]==0xFE && id[2]==0xBA && id[3]==0xBE && bmGetFLength()>=16;
+}
+
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) JVM_Parser(_parent); }
+extern const Binary_Parser_Info jvm_info = {
+    "Java's ClassFile",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

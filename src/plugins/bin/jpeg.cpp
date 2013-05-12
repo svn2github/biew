@@ -32,8 +32,30 @@ using namespace	usr;
 #include "plugins/bin/mmio.h"
 
 namespace	usr {
-static bool  __FASTCALL__ jpeg_check_fmt()
+    class Jpeg_Parser : public Binary_Parser {
+	public:
+	    Jpeg_Parser(CodeGuider&);
+	    virtual ~Jpeg_Parser();
+
+	    virtual const char*		prompt(unsigned idx) const;
+
+	    virtual __filesize_t	show_header();
+	    virtual int			query_platform() const;
+    };
+static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
+const char* Jpeg_Parser::prompt(unsigned idx) const { return txt[idx]; }
+
+Jpeg_Parser::Jpeg_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) { UNUSED(code_guider); }
+Jpeg_Parser::~Jpeg_Parser() {}
+int Jpeg_Parser::query_platform() const { return DISASM_DEFAULT; }
+
+__filesize_t Jpeg_Parser::show_header()
 {
+    beye_context().ErrMessageBox("Not implemented yet!","JPEG format");
+    return BMGetCurrFilePos();
+}
+
+static bool probe() {
     unsigned long val;
     unsigned char id[4];
     val=bmReadDWordEx(0,binary_stream::Seek_Set);
@@ -42,33 +64,10 @@ static bool  __FASTCALL__ jpeg_check_fmt()
     return false;
 }
 
-static void __FASTCALL__ jpeg_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ jpeg_destroy_fmt() {}
-static int  __FASTCALL__ jpeg_platform() { return DISASM_DEFAULT; }
-
-static __filesize_t __FASTCALL__ Show_JPEG_Header()
-{
-    beye_context().ErrMessageBox("Not implemented yet!","JPEG format");
-    return BMGetCurrFilePos();
-}
-
-extern const REGISTRY_BIN jpegTable =
-{
-  "JPEG file format",
-  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  jpeg_check_fmt,
-  jpeg_init_fmt,
-  jpeg_destroy_fmt,
-  Show_JPEG_Header,
-  NULL,
-  jpeg_platform,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) Jpeg_Parser(_parent); }
+extern const Binary_Parser_Info jpeg_info = {
+    "JPEG file format",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

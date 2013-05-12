@@ -999,7 +999,7 @@ int __FASTCALL__ PageBox(unsigned width,unsigned height,const any_t** __obj,unsi
  TWindow * wlist;
  int start,ostart,ret;
  if(height>beye_context().tconsole().vio_height()-2) height=beye_context().tconsole().vio_height()-2;
- wlist = _CreateWindowDD(0,width-1,height,true);
+ wlist = _CreateWindowDD("",width-1,height,true);
  ostart = start = 0;
  (*func)(wlist,__obj,(unsigned)start,nobj);
  for(;;)

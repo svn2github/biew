@@ -36,21 +36,23 @@ using namespace	usr;
 #include "plugins/bin/mz.h"
 
 namespace	usr {
-static CodeGuider* code_guider;
+static const char* txt[]={"MZHelp","","","","","","","","",""};
+const char* MZ_Parser::prompt(unsigned idx) const { return txt[idx]; }
+
 static MZHEADER mz;
 static unsigned long HeadSize;
 
-static __filesize_t __FASTCALL__ mzVA2PA(__filesize_t va)
+__filesize_t MZ_Parser::va2pa(__filesize_t va)
 {
   return va >= HeadSize ? va + HeadSize : 0L;
 }
 
-static __filesize_t __FASTCALL__ mzPA2VA(__filesize_t pa)
+__filesize_t MZ_Parser::pa2va(__filesize_t pa)
 {
   return pa >= HeadSize ? pa - HeadSize : 0L;
 }
 
-static const char *  __FASTCALL__ __QueryAddInfo( unsigned char *memmap )
+const char* MZ_Parser::QueryAddInfo( unsigned char *memmap )
 {
   static char rbuff[41];
   unsigned long idl;
@@ -109,7 +111,7 @@ static const char *  __FASTCALL__ __QueryAddInfo( unsigned char *memmap )
  return 0;
 }
 
-static const char *  __FASTCALL__ QueryAddInfo()
+const char* MZ_Parser::QueryAddInfo()
 {
    unsigned char *memmap;
    memmap = new unsigned char[1000];
@@ -120,14 +122,14 @@ static const char *  __FASTCALL__ QueryAddInfo()
      fpos = bmGetCurrFilePos();
      bmReadBufferEx(memmap,1000,0x1C,binary_stream::Seek_Set);
      bmSeek(fpos,binary_stream::Seek_Set);
-     ret = __QueryAddInfo(memmap);
+     ret = QueryAddInfo(memmap);
      delete memmap;
      return ret;
    }
    return NULL;
 }
 
-static __filesize_t __FASTCALL__ ShowMZHeader()
+__filesize_t MZ_Parser::show_header()
 {
  unsigned keycode;
  TWindow * hwnd;
@@ -198,11 +200,11 @@ static __filesize_t __FASTCALL__ ShowMZHeader()
  return fpos;
 }
 
-long  * CurrMZChain = 0;
+static long* CurrMZChain = 0;
 static unsigned long CurrMZCount;
 static char __codelen;
 
-static tCompare __FASTCALL__ compare_ptr(const any_t*e1,const any_t*e2)
+tCompare MZ_Parser::compare_ptr(const any_t*e1,const any_t*e2)
 {
   unsigned long v1,v2;
   v1 = *((const unsigned long  *)e1);
@@ -210,7 +212,7 @@ static tCompare __FASTCALL__ compare_ptr(const any_t*e1,const any_t*e2)
   return __CmpLong__(v1,v2);
 }
 
-static void  __FASTCALL__ BuildMZChain()
+void MZ_Parser::BuildMZChain()
 {
   unsigned i;
   __filesize_t fpos;
@@ -241,7 +243,7 @@ static void  __FASTCALL__ BuildMZChain()
   delete w;
 }
 
-static tCompare __FASTCALL__ compare_mz(const any_t*e1,const any_t*e2)
+tCompare MZ_Parser::compare_mz(const any_t*e1,const any_t*e2)
 {
   long l1,l2;
   tCompare ret;
@@ -254,7 +256,7 @@ static tCompare __FASTCALL__ compare_mz(const any_t*e1,const any_t*e2)
   return ret;
 }
 
-static bool  __FASTCALL__ isMZReferenced(__filesize_t shift,char len)
+bool MZ_Parser::isMZReferenced(__filesize_t shift,char len)
 {
   if(mz.mzRelocationCount)
   {
@@ -269,7 +271,8 @@ static bool  __FASTCALL__ isMZReferenced(__filesize_t shift,char len)
   }
   return false;
 }
-static bool __FASTCALL__ AppendMZRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+
+bool MZ_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
   char stmp[256];
   bool ret = false;
@@ -287,14 +290,47 @@ static bool __FASTCALL__ AppendMZRef(const DisMode& parent,char *str,__filesize_
     r_sh += (((__filesize_t)mz.mzHeaderSize) << 4);
     if(udnFindName(r_sh,stmp,sizeof(stmp))==true) strcat(str,stmp);
     else strcat(str,Get8Digit(r_sh));
-    code_guider->add_go_address(parent,str,r_sh);
+    _code_guider.add_go_address(parent,str,r_sh);
     ret = true;
   }
   return ret;
 }
 
-static bool  __FASTCALL__ mz_check_fmt()
+/* Special case: this module must not use init and destroy */
+MZ_Parser::MZ_Parser(CodeGuider& __code_guider)
+	    :Binary_Parser(__code_guider)
+	    ,_code_guider(__code_guider)
 {
+}
+MZ_Parser::~MZ_Parser() {}
+int MZ_Parser::query_platform() const { return DISASM_CPU_IX86; }
+
+bool MZ_Parser::address_resolving(char *addr,__filesize_t cfpos)
+{
+  bool bret = true;
+  if(cfpos < sizeof(MZHEADER)+2) sprintf(addr,"MZH :%s",Get4Digit(cfpos));
+  else
+    if(cfpos >= sizeof(MZHEADER)+2 && cfpos < sizeof(MZHEADER)+2+(mz.mzRelocationCount<<2))
+    {
+      sprintf(addr,"MZRl:%s",Get4Digit(cfpos - sizeof(MZHEADER)));
+    }
+    else
+     if(cfpos >= HeadSize)
+     {
+       addr[0] = '.';
+       strcpy(&addr[1],Get8Digit(MZ_Parser::pa2va(cfpos)));
+     }
+     else bret = false;
+  return bret;
+}
+
+__filesize_t MZ_Parser::action_F1()
+{
+  hlpDisplay(10013);
+  return BMGetCurrFilePos();
+}
+
+static bool probe() {
   unsigned char id[2];
   bool ret = false;
   bmReadBufferEx(id,sizeof(id),0,binary_stream::Seek_Set);
@@ -308,53 +344,10 @@ static bool  __FASTCALL__ mz_check_fmt()
   return ret;
 }
 
-/* Special case: this module must not use init and destroy */
-static void __FASTCALL__ mz_init_fmt(CodeGuider& _code_guider) { code_guider=&_code_guider; }
-static void __FASTCALL__ mz_destroy_fmt() {}
-static int  __FASTCALL__ mz_platform() { return DISASM_CPU_IX86; }
-
-static bool __FASTCALL__ mzAddressResolv(char *addr,__filesize_t cfpos)
-{
-  bool bret = true;
-  if(cfpos < sizeof(MZHEADER)+2) sprintf(addr,"MZH :%s",Get4Digit(cfpos));
-  else
-    if(cfpos >= sizeof(MZHEADER)+2 && cfpos < sizeof(MZHEADER)+2+(mz.mzRelocationCount<<2))
-    {
-      sprintf(addr,"MZRl:%s",Get4Digit(cfpos - sizeof(MZHEADER)));
-    }
-    else
-     if(cfpos >= HeadSize)
-     {
-       addr[0] = '.';
-       strcpy(&addr[1],Get8Digit(mzPA2VA(cfpos)));
-     }
-     else bret = false;
-  return bret;
-}
-
-static __filesize_t __FASTCALL__ MZHelp()
-{
-  hlpDisplay(10013);
-  return BMGetCurrFilePos();
-}
-
-extern const REGISTRY_BIN mzTable =
-{
-  "MZ (Old DOS-exe)",
-  { "MZHelp", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  { MZHelp, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  mz_check_fmt,
-  mz_init_fmt,
-  mz_destroy_fmt,
-  ShowMZHeader,
-  AppendMZRef,
-  mz_platform,
-  NULL,
-  NULL,
-  mzAddressResolv,
-  mzVA2PA,
-  mzPA2VA,
-  NULL,
-  NULL
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) MZ_Parser(_parent); }
+extern const Binary_Parser_Info mz_info = {
+    "MZ (Old DOS-exe)",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

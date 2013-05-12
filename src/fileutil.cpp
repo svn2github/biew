@@ -419,7 +419,7 @@ static bool FStore()
 		    func_pa = bctx.bin_format().get_public_symbol(func_name,sizeof(func_name),
 						&func_class,ff_startpos,true);
 		    func_name[sizeof(func_name)-1] = 0;
-		    if(func_pa!=Bin_Format::Bad_Address) {
+		    if(func_pa!=Plugin::Bad_Address) {
 			fprintf(fout,"%s %s:\n"
 					,GET_FUNC_CLASS(func_class)
 					,func_name);
@@ -429,7 +429,7 @@ static bool FStore()
 		    }
 		    func_pa = bctx.bin_format().get_public_symbol(func_name,sizeof(func_name),
 						&func_class,ff_startpos,false);
-		    if(func_pa==Bin_Format::Bad_Address) func_pa=0;
+		    if(func_pa==Plugin::Bad_Address) func_pa=0;
 		    func_name[sizeof(func_name)-1] = 0;
 		}
 		prcnt_counter = oprcnt_counter = 0;
@@ -464,7 +464,7 @@ static bool FStore()
 				ff_startpos = func_pa;
 				func_pa = bctx.bin_format().get_public_symbol(func_name,sizeof(func_name),
 						&func_class,ff_startpos,false);
-				if(func_pa==Bin_Format::Bad_Address) func_pa=0;
+				if(func_pa==Plugin::Bad_Address) func_pa=0;
 				func_name[sizeof(func_name)-1] = 0;
 				if(func_pa == ff_startpos) {
 				    fprintf(fout,"...Probably internal error of beye...\n");
@@ -486,7 +486,7 @@ static bool FStore()
 					,func_name);
 				func_pa = bctx.bin_format().get_public_symbol(func_name,sizeof(func_name),
 						&func_class,ff_startpos,false);
-				if(func_pa==Bin_Format::Bad_Address) func_pa=0;
+				if(func_pa==Plugin::Bad_Address) func_pa=0;
 				func_name[sizeof(func_name)-1] = 0;
 				not_silly++;
 				if(not_silly > 100) {

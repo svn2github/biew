@@ -876,10 +876,10 @@ bool DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,
       unsigned _class;
       if(type & Arg_Rip) {
 	__tmp=beye_context().bin_format().pa2va(ulShift);
-	_defval += ((__tmp!=Bin_Format::Bad_Address) ? __tmp : ulShift)+fld_len;
+	_defval += ((__tmp!=Plugin::Bad_Address) ? __tmp : ulShift)+fld_len;
       }
       pa = beye_context().bin_format().va2pa(_defval);
-      if(pa!=Bin_Format::Bad_Address)
+      if(pa!=Plugin::Bad_Address)
       {
 	/* 1. Try to determine immediate as offset to public symbol */
 	if(type & Arg_Rip) app = beye_context().bin_format().bind(*this,str,pa,flg,codelen,0L);
@@ -888,7 +888,7 @@ bool DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,
 	{
 	  strcpy(comments,".*");
 	  psym = beye_context().bin_format().get_public_symbol(&comments[2],sizeof(comments)-2,&_class,pa,false);
-	  if(psym!=Bin_Format::Bad_Address) {
+	  if(psym!=Plugin::Bad_Address) {
 	    if(psym != pa) comments[0] = 0;
 	    else
 	    {
@@ -1136,11 +1136,11 @@ bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__f
 					    BMReadDWordEx(r_sh+dret.field,binary_stream::Seek_Set);
 		BMSeek(_fpos,binary_stream::Seek_Set);
 	__tmp=beye_context().bin_format().pa2va(r_sh+dret.field);
-	_defval += (__tmp!=Bin_Format::Bad_Address ?
+	_defval += (__tmp!=Plugin::Bad_Address ?
 		    __tmp :
 		    r_sh+dret.field)+dret.codelen;
 	__tmp = beye_context().bin_format().va2pa(_defval);
-	pa = (__tmp!=Bin_Format::Bad_Address) ? __tmp : _defval;
+	pa = (__tmp!=Plugin::Bad_Address) ? __tmp : _defval;
 	app=beye_context().bin_format().bind(*this,str,pa,APREF_TRY_LABEL,dret.codelen,0L);
 	if(app)
 	{

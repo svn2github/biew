@@ -29,7 +29,21 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 
 namespace	usr {
-static __filesize_t __FASTCALL__ rdoff2_ShowHeader()
+    class RDOff2_Parser : public Binary_Parser {
+	public:
+	    RDOff2_Parser(CodeGuider&);
+	    virtual ~RDOff2_Parser();
+
+	    virtual const char*		prompt(unsigned idx) const;
+	    virtual __filesize_t	action_F1();
+
+	    virtual __filesize_t	show_header();
+	    virtual int			query_platform() const;
+    };
+static const char* txt[]={"RdHelp","","","","","","","","",""};
+const char* RDOff2_Parser::prompt(unsigned idx) const { return txt[idx]; }
+
+__filesize_t RDOff2_Parser::show_header()
 {
   int endian;
   __filesize_t fpos;
@@ -67,42 +81,29 @@ static __filesize_t __FASTCALL__ rdoff2_ShowHeader()
   return fpos;
 }
 
-static __filesize_t __FASTCALL__ rdoff2_Help()
+__filesize_t RDOff2_Parser::action_F1()
 {
   hlpDisplay(10012);
   return BMGetCurrFilePos();
 }
 
-static bool __FASTCALL__ rdoff2_check_fmt()
-{
+
+RDOff2_Parser::RDOff2_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {}
+RDOff2_Parser::~RDOff2_Parser() {}
+
+int RDOff2_Parser::query_platform() const { return DISASM_CPU_IX86; }
+
+static bool probe() {
   char rbuff[6];
   bmReadBufferEx(rbuff,sizeof(rbuff),0L,binary_stream::Seek_Set);
   return memcmp(rbuff,"RDOFF2",sizeof(rbuff)) == 0 ||
 	 memcmp(rbuff,"RDOFF\x2",sizeof(rbuff)) == 0;
 }
 
-static void __FASTCALL__ rdoff2_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ rdoff2_destroy_fmt() {}
-
-static int __FASTCALL__ rdoff2_platform() { return DISASM_CPU_IX86; }
-
-extern const REGISTRY_BIN rdoff2Table =
-{
-  "RDOFF v2 (Relocatable Dynamic Object File Format)",
-  { "RdHelp", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  { rdoff2_Help, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  rdoff2_check_fmt,
-  rdoff2_init_fmt,
-  rdoff2_destroy_fmt,
-  rdoff2_ShowHeader,
-  NULL,
-  rdoff2_platform,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) RDOff2_Parser(_parent); }
+extern const Binary_Parser_Info rdoff2_info = {
+    "RDOFF v2 (Relocatable Dynamic Object File Format)",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

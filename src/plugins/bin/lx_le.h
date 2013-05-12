@@ -19,6 +19,8 @@
 
 #include "beyeutil.h"
 #include "libbeye/bstream.h"
+#include "mz.h"
+#include "ne.h"
 
 namespace	usr {
 #ifdef __HAVE_PRAGMA_PACK__
@@ -267,30 +269,93 @@ typedef struct tagLXResource
    uint32_t offset;
 }LXResource;
 
-
-extern void          __FASTCALL__ ShowFwdModOrdLX(const LX_ENTRY *_lxe);
-extern __filesize_t  __FASTCALL__ ShowNewHeaderLX();
-extern __filesize_t  __FASTCALL__ ShowObjectsLX();
-extern unsigned      __FASTCALL__ LXRNamesNumItems(binary_stream&);
-extern bool         __FASTCALL__ LXRNamesReadItems(binary_stream&,memArray *,unsigned);
-extern __filesize_t  __FASTCALL__ ShowModRefLX();
-extern unsigned      __FASTCALL__ LXNRNamesNumItems(binary_stream&);
-extern bool         __FASTCALL__ LXNRNamesReadItems(binary_stream&,memArray *,unsigned);
-extern __filesize_t  __FASTCALL__ ShowImpProcLXLE();
-extern __filesize_t  __FASTCALL__ ShowEntriesLX();
-extern const char *  __FASTCALL__ lxeGetMapAttr(unsigned long attr);
-extern __filesize_t  __FASTCALL__ CalcEntryPointLE(unsigned long objnum,__filesize_t _offset);
-extern __filesize_t  __FASTCALL__ CalcPageEntryLE(unsigned long idx);
-extern __filesize_t  __FASTCALL__ CalcEntryLE(const LX_ENTRY *);
-
-enum {
-    FILE_LX=1,
-    FILE_LE=2
-};
-extern int LXType;
-
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
 #endif
+    class LX_Parser : public MZ_Parser {
+	public:
+	    LX_Parser(CodeGuider&);
+	    virtual ~LX_Parser();
+
+	    virtual const char*		prompt(unsigned idx) const;
+	    virtual __filesize_t	action_F1();
+	    virtual __filesize_t	action_F2();
+	    virtual __filesize_t	action_F3();
+	    virtual __filesize_t	action_F4();
+	    virtual __filesize_t	action_F5();
+	    virtual __filesize_t	action_F6();
+	    virtual __filesize_t	action_F7();
+	    virtual __filesize_t	action_F8();
+	    virtual __filesize_t	action_F9();
+	    virtual __filesize_t	action_F10();
+
+	    virtual int			query_platform() const;
+	    virtual int			query_bitness(__filesize_t) const;
+	    virtual bool		address_resolving(char *,__filesize_t);
+	    virtual __filesize_t	va2pa(__filesize_t va);
+	    virtual __filesize_t	pa2va(__filesize_t pa);
+	protected:
+	    binary_stream*		lx_cache;
+	    virtual __filesize_t	CalcEntryPoint(unsigned long objnum,__filesize_t _offset) const;
+	    virtual __filesize_t	CalcPageEntry(unsigned long pageidx) const;
+	    const char*			lxeGetMapAttr(unsigned long attr);
+	    void			ShowFwdModOrdLX(const LX_ENTRY *lxent);
+	    unsigned			LXNRNamesNumItems(binary_stream&handle);
+	    bool			LXNRNamesReadItems(binary_stream&handle,memArray *obj,unsigned nnames);
+	    unsigned			LXRNamesNumItems(binary_stream&handle);
+	    bool			LXRNamesReadItems(binary_stream&handle,memArray *obj,unsigned nnames);
+	private:
+	    bool			__ReadResourceGroupLX(binary_stream&handle,memArray *obj,unsigned nitems,long *addr);
+	    bool			__ReadMapTblLX(binary_stream&handle,memArray *obj,unsigned n);
+	    static void __FASTCALL__	PaintEntriesLX(TWindow *win,const any_t **names,unsigned start,unsigned nlist);
+	    static void			entrypaintLX(TWindow *w,const LX_ENTRY *nam);
+	    static const char*		entryTypeLX(unsigned char type);
+	    __filesize_t		CalcEntryBungleLX(unsigned ordinal,bool dispmsg);
+	    __filesize_t		CalcEntryLX(const LX_ENTRY *lxent);
+	    void			ReadLXLEImpName(__filesize_t offtable,unsigned num,char *str);
+	    void			ReadLXLEImpMod(__filesize_t offtable,unsigned num,char *str);
+	    __filesize_t		__calcPageEntry(LX_MAP_TABLE *mt) const;
+	    void			lxReadPageDesc(binary_stream&handle,LX_MAP_TABLE *mt,unsigned long pageidx) const;
+	    bool			__ReadEntriesLX(binary_stream&handle,memArray *obj);
+	    bool			__ReadObjectsLX(binary_stream&handle,memArray *obj,unsigned n);
+	    static void __FASTCALL__	ObjPaintLX(TWindow *win,const any_t **names,unsigned start,unsigned nlist);
+	    static void			objpaintLX(TWindow *w,const LX_OBJECT *nam);
+	    bool			__ReadModRefNamesLX(binary_stream&handle,memArray *obj,unsigned nnames);
+	    bool			LXImpNamesReadItems(binary_stream&handle,memArray *obj,unsigned nnames);
+	    unsigned			LXImpNamesNumItems(binary_stream&handle);
+	    static void __FASTCALL__	PaintNewHeaderLX(TWindow *win,const any_t **ptr,unsigned npage,unsigned tpage);
+	    static void			PaintNewHeaderLX_3(TWindow *w);
+	    static void			PaintNewHeaderLX_2(TWindow *w);
+	    static void			PaintNewHeaderLX_1(TWindow *w);
+	    static const char*		__getOSModType(char type);
+	    static const char*		GetOSTypeLX(int num);
+	    static const char*		GetCPUTypeLX(int num);
+	    static const char*		GetOrderingLX(unsigned char type);
+
+	    static void			(* lxphead[])(TWindow*);
+    };
+
+    class LE_Parser : public LX_Parser {
+	public:
+	    LE_Parser(CodeGuider&);
+	    virtual ~LE_Parser();
+
+	    virtual const char*		prompt(unsigned idx) const;
+	    virtual __filesize_t	action_F1();
+	    virtual __filesize_t	action_F3();
+	    virtual __filesize_t	action_F4();
+	    virtual __filesize_t	action_F10();
+
+	    virtual int			query_platform() const;
+	    virtual bool		address_resolving(char *,__filesize_t);
+	protected:
+	    virtual __filesize_t	CalcEntryPoint(unsigned long objnum,__filesize_t _offset) const;
+	    virtual __filesize_t	CalcPageEntry(unsigned long pageidx) const;
+	private:
+	    __filesize_t		CalcEntryBungleLE(unsigned ordinal,bool dispmsg);
+	    __filesize_t		CalcEntryLE(const LX_ENTRY *lxent);
+	    __filesize_t		__calcPageEntryLE(LE_PAGE *mt,unsigned long idx) const;
+	    bool			__ReadMapTblLE(binary_stream&handle,memArray *obj,unsigned n);
+    };
 } // namespace	usr
 #endif

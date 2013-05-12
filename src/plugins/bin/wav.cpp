@@ -31,7 +31,7 @@ using namespace	usr;
 #include "plugins/bin/mmio.h"
 
 namespace	usr {
-wTagNames wtagNames[] =
+extern const wTagNames wtagNames[] =
 {
  { 0x0000, "MS-Unknown" },
  { 0x0001, "Raw PCM" },
@@ -166,7 +166,10 @@ wTagNames wtagNames[] =
  { 0xFFFF, "Development" },
 };
 
-const char *wtag_find_name(unsigned short wtag)
+static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
+const char* Wave_Parser::prompt(unsigned idx) const { return txt[idx]; }
+
+const char* Wave_Parser::wtag_find_name(unsigned short wtag)
 {
     unsigned i;
     for(i=0;i<sizeof(wtagNames)/sizeof(wTagNames);i++)
@@ -176,21 +179,11 @@ const char *wtag_find_name(unsigned short wtag)
     return "Unknown";
 }
 
-static bool  __FASTCALL__ wav_check_fmt()
-{
-    unsigned long id;
-    id=bmReadDWordEx(8,binary_stream::Seek_Set);
-    if(	bmReadDWordEx(0,binary_stream::Seek_Set)==mmioFOURCC('R','I','F','F') &&
-	id==mmioFOURCC('W','A','V','E'))
-	return true;
-    return false;
-}
+Wave_Parser::Wave_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {}
+Wave_Parser::~Wave_Parser() {}
+int  Wave_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-static void __FASTCALL__ wav_init_fmt(CodeGuider& code_guider) { UNUSED(code_guider); }
-static void __FASTCALL__ wav_destroy_fmt() {}
-static int  __FASTCALL__ wav_platform() { return DISASM_DEFAULT; }
-
-static __filesize_t __FASTCALL__ wav_find_chunk(__filesize_t off,unsigned long id)
+__filesize_t Wave_Parser::wav_find_chunk(__filesize_t off,unsigned long id)
 {
     unsigned long ids,size,type;
     bmSeek(off,binary_stream::Seek_Set);
@@ -213,7 +206,7 @@ static __filesize_t __FASTCALL__ wav_find_chunk(__filesize_t off,unsigned long i
     return -1;
 }
 
-static __filesize_t __FASTCALL__ Show_WAV_Header()
+__filesize_t Wave_Parser::show_header()
 {
  unsigned keycode;
  TWindow * hwnd;
@@ -251,23 +244,19 @@ static __filesize_t __FASTCALL__ Show_WAV_Header()
  return fpos;
 }
 
-extern const REGISTRY_BIN wavTable =
-{
-  "RIFF WAVE format",
-  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  wav_check_fmt,
-  wav_init_fmt,
-  wav_destroy_fmt,
-  Show_WAV_Header,
-  NULL,
-  wav_platform,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+static bool probe() {
+    unsigned long id;
+    id=bmReadDWordEx(8,binary_stream::Seek_Set);
+    if(	bmReadDWordEx(0,binary_stream::Seek_Set)==mmioFOURCC('R','I','F','F') &&
+	id==mmioFOURCC('W','A','V','E'))
+	return true;
+    return false;
+}
+
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) Wave_Parser(_parent); }
+extern const Binary_Parser_Info wav_info = {
+    "RIFF WAVE format",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

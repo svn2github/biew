@@ -38,10 +38,57 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 
 namespace	usr {
-static CodeGuider* code_guider;
+    struct RELOC_COFF386 {
+	unsigned long offset;
+	unsigned long nameoff;
+	unsigned      type;
+    };
+    class Coff_Parser : public Binary_Parser {
+	public:
+	    Coff_Parser(CodeGuider&);
+	    virtual ~Coff_Parser();
+
+	    virtual const char*		prompt(unsigned idx) const;
+	    virtual __filesize_t	action_F1();
+	    virtual __filesize_t	action_F7();
+	    virtual __filesize_t	action_F10();
+
+	    virtual __filesize_t	show_header();
+	    virtual bool		bind(const DisMode& _parent,char *str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
+	    virtual int			query_platform() const;
+	    virtual int			query_bitness(__filesize_t) const;
+	    virtual bool		address_resolving(char *,__filesize_t);
+	    virtual __filesize_t	va2pa(__filesize_t va);
+	    virtual __filesize_t	pa2va(__filesize_t pa);
+	    virtual __filesize_t	get_public_symbol(char *str,unsigned cb_str,unsigned *_class,
+							    __filesize_t pa,bool as_prev);
+	    virtual unsigned		get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,
+							__filesize_t *start,__filesize_t *end,int *_class,int *bitness);
+	private:
+	    __filesize_t		BuildReferStrCoff386(const DisMode&parent,char *str,RELOC_COFF386 *rne,int flags);
+	    bool			coffSymTabReadItemsIdx(binary_stream&handle,unsigned long idx,char *name,unsigned cb_name,unsigned *secnum,__filesize_t *offset);
+	    void			BuildRelocCoff386();
+	    __filesize_t		CalcEntryCoff(unsigned long idx,bool display_msg);
+	    bool			coffSymTabReadItems(binary_stream&handle,memArray *obj,unsigned nnames);
+	    const char*			coffEncodeClass(unsigned _class) const;
+	    const char*			coffEncodeType(unsigned type) const;
+	    const char*			coff386_encode_hdr(unsigned info) const;
+	    bool			__coffReadObjects(binary_stream&handle,memArray *obj,unsigned n);
+	    static void			coffObjPaint(TWindow *win,const any_t **names,unsigned start,unsigned nlist);
+	    void			coffReadLongName(binary_stream&handle,__filesize_t offset,char *str,unsigned slen);
+	    bool			FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
+	    void			coff_ReadPubName(binary_stream&b_cache,const struct PubName *it,char *buff,unsigned cb_buff);
+	    void			coff_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
+
+	    static tCompare __FASTCALL__ coff386_compare_rels(const any_t *e1,const any_t *e2);
+
+	    CodeGuider&			code_guider;
+    };
+static const char* txt[]={ "CofHlp", "", "", "", "", "", "SymTab", "", "", "Objects" };
+const char* Coff_Parser::prompt(unsigned idx) const { return txt[idx]; }
+
 inline uint16_t COFF_WORD(const uint8_t* cval) { return (uint16_t)(*(const uint16_t *)(const uint8_t *)cval); }
 inline uint32_t COFF_DWORD(const uint8_t* cval) { return (uint32_t)(*(const uint32_t *)(const uint8_t *)cval); }
-
 
 static struct external_filehdr coff386hdr;
 static AOUTHDR coff386ahdr;
@@ -51,13 +98,7 @@ static binary_stream* coff_cache;
 static __filesize_t strings_ptr;
 static linearArray *PubNames = NULL;
 
-static void __FASTCALL__ coff_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
-static void __FASTCALL__ coff_ReadPubName(binary_stream& b_cache,const struct PubName *it,
-			   char *buff,unsigned cb_buff);
-static unsigned __FASTCALL__ coff386_GetObjAttr(__filesize_t pa,char *name,unsigned cb_name,
-			     __filesize_t *start,__filesize_t *end,int *_class,int *bitness);
-
-static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
+bool Coff_Parser::FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
   struct PubName *ret,key;
   key.pa = pa;
@@ -71,7 +112,7 @@ static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t p
   return udnFindName(pa,buff,cb_buff);
 }
 
-static void  __FASTCALL__ coffReadLongName(binary_stream& handle,__filesize_t offset,
+void Coff_Parser::coffReadLongName(binary_stream& handle,__filesize_t offset,
 				      char *str, unsigned slen)
 {
   unsigned i;
@@ -89,7 +130,7 @@ static void  __FASTCALL__ coffReadLongName(binary_stream& handle,__filesize_t of
    handle.seek(fpos,binary_stream::Seek_Set);
 }
 
-static __filesize_t __FASTCALL__ coff386_VA2PA(__filesize_t va)
+__filesize_t Coff_Parser::va2pa(__filesize_t va)
 {
   uint_fast16_t i;
   for(i = 0;i < nsections;i++)
@@ -102,7 +143,7 @@ static __filesize_t __FASTCALL__ coff386_VA2PA(__filesize_t va)
   return 0L;
 }
 
-static __filesize_t __FASTCALL__ coff386_PA2VA(__filesize_t pa)
+__filesize_t Coff_Parser::pa2va(__filesize_t pa)
 {
   uint_fast16_t i;
   for(i = 0;i < nsections;i++)
@@ -115,8 +156,7 @@ static __filesize_t __FASTCALL__ coff386_PA2VA(__filesize_t pa)
   return 0L;
 }
 
-
-static void __FASTCALL__ coffObjPaint(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
+void Coff_Parser::coffObjPaint(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
 {
  char buffer[81];
  const SCNHDR ** obj = (const SCNHDR **)names;
@@ -158,7 +198,7 @@ static void __FASTCALL__ coffObjPaint(TWindow * win,const any_t** names,unsigned
  win->refresh_full();
 }
 
-static bool  __FASTCALL__ __coffReadObjects(binary_stream& handle,memArray * obj,unsigned n)
+bool Coff_Parser::__coffReadObjects(binary_stream& handle,memArray * obj,unsigned n)
 {
  size_t i;
   for(i = 0;i < n;i++)
@@ -171,7 +211,7 @@ static bool  __FASTCALL__ __coffReadObjects(binary_stream& handle,memArray * obj
   return true;
 }
 
-static __filesize_t __FASTCALL__ coffShowObjects()
+__filesize_t Coff_Parser::action_F10()
 {
  binary_stream* handle;
  unsigned nnames;
@@ -195,7 +235,7 @@ static __filesize_t __FASTCALL__ coffShowObjects()
  return fpos;
 }
 
-static const char *  __FASTCALL__ coff386_encode_hdr(unsigned info)
+const char* Coff_Parser::coff386_encode_hdr(unsigned info) const
 {
    switch(info)
    {
@@ -207,7 +247,7 @@ static const char *  __FASTCALL__ coff386_encode_hdr(unsigned info)
    }
 }
 
-static __filesize_t __FASTCALL__ ShowCoff386Header()
+__filesize_t Coff_Parser::show_header()
 {
   __filesize_t fpos,entry,v_entry;
   unsigned keycode;
@@ -217,7 +257,7 @@ static __filesize_t __FASTCALL__ ShowCoff386Header()
   if(*(unsigned short *)coff386ahdr.magic == ZMAGIC)
   {
     v_entry = entry = *(__filesize_t *)&coff386ahdr.entry;
-    entry = coff386_VA2PA(v_entry);
+    entry = va2pa(v_entry);
   }
   w = CrtDlgWndnls(coff386_encode_hdr(COFF_WORD(coff386hdr.f_magic)),54,12);
   w->goto_xy(1,1);
@@ -260,7 +300,7 @@ static __filesize_t __FASTCALL__ ShowCoff386Header()
   return fpos;
 }
 
-static const char *  __FASTCALL__ coffEncodeType(unsigned type)
+const char* Coff_Parser::coffEncodeType(unsigned type) const
 {
   const char *ret;
   switch(type)
@@ -287,7 +327,7 @@ static const char *  __FASTCALL__ coffEncodeType(unsigned type)
   return ret;
 }
 
-static const char *  __FASTCALL__ coffEncodeClass(unsigned _class)
+const char* Coff_Parser::coffEncodeClass(unsigned _class) const
 {
   const char *ret;
   switch(_class)
@@ -326,7 +366,7 @@ static const char *  __FASTCALL__ coffEncodeClass(unsigned _class)
   return ret;
 }
 
-static bool  __FASTCALL__ coffSymTabReadItems(binary_stream& handle,memArray * obj,unsigned nnames)
+bool Coff_Parser::coffSymTabReadItems(binary_stream& handle,memArray * obj,unsigned nnames)
 {
  unsigned i;
  unsigned length;
@@ -359,7 +399,7 @@ static bool  __FASTCALL__ coffSymTabReadItems(binary_stream& handle,memArray * o
  return true;
 }
 
-static __filesize_t  __FASTCALL__ CalcEntryCoff(unsigned long idx,bool display_msg)
+__filesize_t Coff_Parser::CalcEntryCoff(unsigned long idx,bool display_msg)
 {
   struct external_syment cse;
   uint_fast16_t sec_num;
@@ -383,7 +423,7 @@ static __filesize_t  __FASTCALL__ CalcEntryCoff(unsigned long idx,bool display_m
   return fpos;
 }
 
-static __filesize_t __FASTCALL__ coffShowSymTab()
+__filesize_t Coff_Parser::action_F7()
 {
     __filesize_t fpos = BMGetCurrFilePos();
     int ret;
@@ -412,17 +452,9 @@ static __filesize_t __FASTCALL__ coffShowSymTab()
 /*********************  REFS COFF386  **************************************/
 /***************************************************************************/
 static char __codelen;
-
-typedef struct tagRELOC_COFF386
-{
-  unsigned long offset;
-  unsigned long nameoff;
-  unsigned      type;
-}RELOC_COFF386;
-
 static linearArray *RelocCoff386 = NULL;
 
-static tCompare __FASTCALL__ coff386_compare_rels(const any_t*e1,const any_t*e2)
+tCompare __FASTCALL__ Coff_Parser::coff386_compare_rels(const any_t*e1,const any_t*e2)
 {
   const RELOC_COFF386  *r1, *r2;
   r1 = reinterpret_cast<const RELOC_COFF386*>(e1);
@@ -430,7 +462,7 @@ static tCompare __FASTCALL__ coff386_compare_rels(const any_t*e1,const any_t*e2)
   return __CmpLong__(r1->offset,r2->offset);
 }
 
-static void  __FASTCALL__ BuildRelocCoff386()
+void Coff_Parser::BuildRelocCoff386()
 {
   TWindow * w;
   size_t j,segcount, nr;
@@ -463,7 +495,7 @@ static void  __FASTCALL__ BuildRelocCoff386()
   delete w;
 }
 
-static bool   __FASTCALL__ coffSymTabReadItemsIdx(binary_stream& handle,unsigned long idx,
+bool Coff_Parser::coffSymTabReadItemsIdx(binary_stream& handle,unsigned long idx,
 					    char *name,unsigned cb_name,
 					    unsigned *secnum,
 					    __filesize_t *offset)
@@ -485,7 +517,7 @@ static bool   __FASTCALL__ coffSymTabReadItemsIdx(binary_stream& handle,unsigned
  return true;
 }
 
-static __filesize_t  __FASTCALL__ BuildReferStrCoff386(const DisMode& parent,char *str,RELOC_COFF386 *rne,int flags)
+__filesize_t Coff_Parser::BuildReferStrCoff386(const DisMode& parent,char *str,RELOC_COFF386 *rne,int flags)
 {
   __filesize_t offset,s,e;
   bool retval;
@@ -531,17 +563,17 @@ static __filesize_t  __FASTCALL__ BuildReferStrCoff386(const DisMode& parent,cha
   }
   if(rne->type == RELOC_REL32 && (flags & APREF_TRY_LABEL) != APREF_TRY_LABEL)
   {
-     coff386_GetObjAttr(rne->offset,secname,sizeof(secname),&s,&e,&c,&b);
+     get_object_attribute(rne->offset,secname,sizeof(secname),&s,&e,&c,&b);
      strcat(str,"-");
      strcat(str,secname);
   }
   e = CalcEntryCoff(rne->nameoff,false);
   if(!DumpMode && !EditMode && e && (flags & APREF_TRY_LABEL) == APREF_TRY_LABEL)
-						code_guider->add_go_address(parent,str,e);
+						code_guider.add_go_address(parent,str,e);
   return retval;
 }
 
-static bool __FASTCALL__ coff386_AppendRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+bool Coff_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
   RELOC_COFF386 *rcoff386,key;
   bool ret;
@@ -561,23 +593,17 @@ static bool __FASTCALL__ coff386_AppendRef(const DisMode& parent,char *str,__fil
      if(FindPubName(buff,sizeof(buff),r_sh))
      {
        strcat(str,buff);
-       if(!DumpMode && !EditMode) code_guider->add_go_address(parent,str,r_sh);
+       if(!DumpMode && !EditMode) code_guider.add_go_address(parent,str,r_sh);
        ret = true;
      }
   }
   return ret;
 }
 
-static bool __FASTCALL__ coff386_check_fmt()
+Coff_Parser::Coff_Parser(CodeGuider& _code_guider)
+	    :Binary_Parser(_code_guider)
+	    ,code_guider(_code_guider)
 {
-  uint_fast16_t id;
-  id = bmReadWordEx(0,binary_stream::Seek_Set);
-  return !(I386BADMAG(id));
-}
-
-static void __FASTCALL__ coff386_init_fmt(CodeGuider& _code_guider)
-{
-    code_guider=&_code_guider;
   binary_stream& main_handle=bNull;
   __filesize_t s_off = sizeof(coff386hdr);
   uint_fast16_t i;
@@ -600,7 +626,7 @@ static void __FASTCALL__ coff386_init_fmt(CodeGuider& _code_guider)
   strings_ptr = COFF_DWORD(coff386hdr.f_symptr)+COFF_DWORD(coff386hdr.f_nsyms)*sizeof(struct external_syment);
 }
 
-static void __FASTCALL__ coff386_destroy_fmt()
+Coff_Parser::~Coff_Parser()
 {
   binary_stream& main_handle=bNull;
   delete coff386so;
@@ -609,13 +635,13 @@ static void __FASTCALL__ coff386_destroy_fmt()
   if(coff_cache != &bNull && coff_cache != &main_handle) delete coff_cache;
 }
 
-static int __FASTCALL__ coff386_bitness(__filesize_t off)
+int Coff_Parser::query_bitness(__filesize_t off) const
 {
   UNUSED(off);
   return DAB_USE32;
 }
 
-static bool __FASTCALL__ coff386_AddrResolv(char *addr,__filesize_t cfpos)
+bool Coff_Parser::address_resolving(char *addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
@@ -627,7 +653,7 @@ static bool __FASTCALL__ coff386_AddrResolv(char *addr,__filesize_t cfpos)
     strcpy(&addr[7],Get2Digit(cfpos));
   }
   else
-    if((res=coff386_PA2VA(cfpos))!=0)
+    if((res=pa2va(cfpos))!=0)
     {
       addr[0] = '.';
       strcpy(&addr[1],Get8Digit(res));
@@ -636,13 +662,13 @@ static bool __FASTCALL__ coff386_AddrResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static __filesize_t __FASTCALL__ coff386Help()
+__filesize_t Coff_Parser::action_F1()
 {
   hlpDisplay(10002);
   return BMGetCurrFilePos();
 }
 
-static void __FASTCALL__ coff_ReadPubName(binary_stream& b_cache,const struct PubName *it,
+void Coff_Parser::coff_ReadPubName(binary_stream& b_cache,const struct PubName *it,
 			   char *buff,unsigned cb_buff)
 {
     if(!it->addinfo)
@@ -655,7 +681,7 @@ static void __FASTCALL__ coff_ReadPubName(binary_stream& b_cache,const struct Pu
     }
 }
 
-static void __FASTCALL__ coff_ReadPubNameList(binary_stream& handle,
+void Coff_Parser::coff_ReadPubNameList(binary_stream& handle,
 				    void (__FASTCALL__ *mem_out)(const std::string&))
 {
  unsigned i,nnames;
@@ -697,7 +723,7 @@ static void __FASTCALL__ coff_ReadPubNameList(binary_stream& handle,
  la_Sort(PubNames,fmtComparePubNames);
 }
 
-static __filesize_t __FASTCALL__ coff386_GetPubSym(char *str,unsigned cb_str,unsigned *func_class,
+__filesize_t Coff_Parser::get_public_symbol(char *str,unsigned cb_str,unsigned *func_class,
 			  __filesize_t pa,bool as_prev)
 {
     __filesize_t fpos;
@@ -713,7 +739,7 @@ static __filesize_t __FASTCALL__ coff386_GetPubSym(char *str,unsigned cb_str,uns
     return fpos;
 }
 
-static unsigned __FASTCALL__ coff386_GetObjAttr(__filesize_t pa,char *name,unsigned cb_name,
+unsigned Coff_Parser::get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,
 			    __filesize_t *start,__filesize_t *end,int *_class,int *bitness)
 {
   unsigned ret;
@@ -748,25 +774,18 @@ static unsigned __FASTCALL__ coff386_GetObjAttr(__filesize_t pa,char *name,unsig
   return ret;
 }
 
-static int __FASTCALL__ coff386_platform() { return DISASM_CPU_IX86; }
+int Coff_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-extern const REGISTRY_BIN coff386Table =
-{
-  "coff-i386 (Common Object File Format)",
-  { "CofHlp", NULL, NULL, NULL, NULL, NULL, "SymTab", NULL, NULL, "Objects" },
-  { coff386Help, NULL, NULL, NULL, NULL, NULL, coffShowSymTab, NULL, NULL, coffShowObjects },
-  coff386_check_fmt,
-  coff386_init_fmt,
-  coff386_destroy_fmt,
-  ShowCoff386Header,
-  coff386_AppendRef,
-  coff386_platform,
-  coff386_bitness,
-  NULL,
-  coff386_AddrResolv,
-  coff386_VA2PA,
-  coff386_PA2VA,
-  coff386_GetPubSym,
-  coff386_GetObjAttr
+static bool probe() {
+  uint_fast16_t id;
+  id = bmReadWordEx(0,binary_stream::Seek_Set);
+  return !(I386BADMAG(id));
+}
+
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) Coff_Parser(_parent); }
+extern const Binary_Parser_Info coff_info = {
+    "coff-i386 (Common Object File Format)",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

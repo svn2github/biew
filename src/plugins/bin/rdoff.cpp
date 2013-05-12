@@ -36,13 +36,50 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 
 namespace	usr {
-static CodeGuider* code_guider;
-struct rdoff_ImpName
-{
-  unsigned short lsegno;
-  unsigned short reserv;
-  __filesize_t nameoff;
-};
+    struct rdoff_ImpName {
+	unsigned short lsegno;
+	unsigned short reserv;
+	__filesize_t nameoff;
+    };
+
+    class RDOff_Parser : public Binary_Parser {
+	public:
+	    RDOff_Parser(CodeGuider&);
+	    virtual ~RDOff_Parser();
+
+	    virtual const char*		prompt(unsigned idx) const;
+	    virtual __filesize_t	action_F1();
+	    virtual __filesize_t	action_F2();
+	    virtual __filesize_t	action_F3();
+	    virtual __filesize_t	action_F5();
+
+	    virtual __filesize_t	show_header();
+	    virtual bool		bind(const DisMode& _parent,char *str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
+	    virtual int			query_platform() const;
+	    virtual int			query_bitness(__filesize_t) const;
+	    virtual bool		address_resolving(char *,__filesize_t);
+	    virtual __filesize_t	va2pa(__filesize_t va);
+	    virtual __filesize_t	pa2va(__filesize_t pa);
+	    virtual __filesize_t	get_public_symbol(char *str,unsigned cb_str,unsigned *_class,
+							    __filesize_t pa,bool as_prev);
+	    virtual unsigned		get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,
+							__filesize_t *start,__filesize_t *end,int *_class,int *bitness);
+	private:
+	    void			rdoff_ReadPubName(binary_stream&b_cache,const struct PubName *it,char *buff,unsigned cb_buff);
+	    void			rdoff_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
+	    bool			rdoffBuildReferStr(const DisMode&parent,char *str,RDOFF_RELOC *reloc,__filesize_t ulShift,int flags);
+	    void			BuildRelocRDOFF();
+	    static tCompare		rdoff_compare_reloc(const any_t *e1,const any_t *e2);
+	    bool			rdoff_skiprec(unsigned char type);
+	    static tCompare		compare_impnames(const any_t *v1,const any_t *v2);
+	    bool			FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
+	    void			ReadImpNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
+	    __filesize_t		rdoff_FindExport(const std::string& name);
+
+	    CodeGuider&			code_guider;
+    };
+static const char* txt[]={ "RdHelp", "ModRef", "Export", "", "Import", "", "", "", "", "" };
+const char* RDOff_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
 static unsigned long rdoff_hdrlen,ds_len;
 static __filesize_t cs_start,ds_start;
@@ -51,20 +88,14 @@ static linearArray *PubNames = NULL;
 static linearArray *rdoffReloc = NULL;
 static linearArray *rdoffImpNames = NULL;
 
-static void  __FASTCALL__ ReadImpNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
-static void __FASTCALL__ rdoff_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
-static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
-
-static tCompare __FASTCALL__ compare_impnames(const any_t*v1,const any_t*v2);
-
-static __filesize_t __FASTCALL__ rdoff_Help()
+__filesize_t RDOff_Parser::action_F1()
 {
   hlpDisplay(10011);
   return BMGetCurrFilePos();
 }
 
 /** return 0 if error */
-static bool  __FASTCALL__ rdoff_skiprec(unsigned char type)
+bool  RDOff_Parser::rdoff_skiprec(unsigned char type)
 {
   unsigned i;
   bool ret;
@@ -109,7 +140,7 @@ static bool  __FASTCALL__ rdoff_skiprec(unsigned char type)
   return ret;
 }
 
-static __filesize_t __FASTCALL__ rdoff_ShowExport()
+__filesize_t RDOff_Parser::action_F3()
 {
   __filesize_t fpos;
   unsigned char rec;
@@ -169,7 +200,7 @@ static __filesize_t __FASTCALL__ rdoff_ShowExport()
   return fpos;
 }
 
-static __filesize_t __FASTCALL__ rdoff_FindExport(const std::string& name)
+__filesize_t RDOff_Parser::rdoff_FindExport(const std::string& name)
 {
   __filesize_t ret;
   unsigned char rec;
@@ -216,7 +247,7 @@ static __filesize_t __FASTCALL__ rdoff_FindExport(const std::string& name)
   return ret;
 }
 
-static __filesize_t __FASTCALL__ rdoff_ShowModRef()
+__filesize_t RDOff_Parser::action_F2()
 {
   __filesize_t fpos;
   unsigned char rec;
@@ -257,7 +288,7 @@ static __filesize_t __FASTCALL__ rdoff_ShowModRef()
   return fpos;
 }
 
-static __filesize_t __FASTCALL__ rdoff_ShowImport()
+__filesize_t RDOff_Parser::action_F5()
 {
   __filesize_t fpos;
   unsigned char rec;
@@ -299,7 +330,7 @@ static __filesize_t __FASTCALL__ rdoff_ShowImport()
   return fpos;
 }
 
-static __filesize_t __FASTCALL__ rdoff_ShowHeader()
+__filesize_t RDOff_Parser::show_header()
 {
   int endian;
   __filesize_t fpos,entry;
@@ -351,7 +382,7 @@ static __filesize_t __FASTCALL__ rdoff_ShowHeader()
   return fpos;
 }
 
-static tCompare __FASTCALL__ rdoff_compare_reloc(const any_t*e1,const any_t*e2)
+tCompare RDOff_Parser::rdoff_compare_reloc(const any_t*e1,const any_t*e2)
 {
   const RDOFF_RELOC  *r1, *r2;
   r1 = reinterpret_cast<const RDOFF_RELOC*>(e1);
@@ -359,7 +390,7 @@ static tCompare __FASTCALL__ rdoff_compare_reloc(const any_t*e1,const any_t*e2)
   return __CmpLong__(r1->offset,r2->offset);
 }
 
-static void  __FASTCALL__ BuildRelocRDOFF()
+void  RDOff_Parser::BuildRelocRDOFF()
 {
   unsigned char rec;
   if(!(rdoffReloc = la_Build(0,sizeof(RDOFF_RELOC),MemOutBox))) return;
@@ -399,7 +430,7 @@ static void  __FASTCALL__ BuildRelocRDOFF()
 
 static unsigned char __codelen;
 
-static bool __FASTCALL__ rdoffBuildReferStr(const DisMode& parent,char *str,RDOFF_RELOC *reloc,__filesize_t ulShift,int flags)
+bool RDOff_Parser::rdoffBuildReferStr(const DisMode& parent,char *str,RDOFF_RELOC *reloc,__filesize_t ulShift,int flags)
 {
    char name[400],ch,buff[400];
    const char *ptr_type;
@@ -485,7 +516,7 @@ static bool __FASTCALL__ rdoffBuildReferStr(const DisMode& parent,char *str,RDOF
 	 strcat(str,ptr_type);
 	 strcat(str,Get8Digit(field_val));
 	 if(!EditMode && !DumpMode && (flags & APREF_TRY_LABEL))
-	   code_guider->add_go_address(parent,str,reloc->segto ? ds_start + field_val : cs_start + field_val);
+	   code_guider.add_go_address(parent,str,reloc->segto ? ds_start + field_val : cs_start + field_val);
 	 retrf = true;
        }
      }
@@ -504,7 +535,7 @@ static bool __FASTCALL__ rdoffBuildReferStr(const DisMode& parent,char *str,RDOF
    return retrf;
 }
 
-static bool __FASTCALL__ rdoff_AppendRef(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+bool RDOff_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
   RDOFF_RELOC *rrdoff,key;
   bool ret;
@@ -522,24 +553,17 @@ static bool __FASTCALL__ rdoff_AppendRef(const DisMode& parent,char *str,__files
      if(FindPubName(buff,sizeof(buff),r_sh))
      {
        strcat(str,buff);
-       if(!DumpMode && !EditMode) code_guider->add_go_address(parent,str,r_sh);
+       if(!DumpMode && !EditMode) code_guider.add_go_address(parent,str,r_sh);
        ret = true;
      }
   }
   return ret;
 }
 
-static bool __FASTCALL__ rdoff_check_fmt()
+RDOff_Parser::RDOff_Parser(CodeGuider& _code_guider)
+	    :Binary_Parser(_code_guider)
+	    ,code_guider(_code_guider)
 {
-  char rbuff[6];
-  bmReadBufferEx(rbuff,sizeof(rbuff),0L,binary_stream::Seek_Set);
-  return memcmp(rbuff,"RDOFF1",sizeof(rbuff)) == 0 ||
-	 memcmp(rbuff,"RDOFF\x1",sizeof(rbuff)) == 0;
-}
-
-static void __FASTCALL__ rdoff_init_fmt(CodeGuider& _code_guider)
-{
-    code_guider=&_code_guider;
   unsigned long cs_len;
   rdoff_hdrlen = bmReadDWordEx(6,binary_stream::Seek_Set);
   bmSeek(rdoff_hdrlen,binary_stream::Seek_Cur);
@@ -550,14 +574,14 @@ static void __FASTCALL__ rdoff_init_fmt(CodeGuider& _code_guider)
   ds_start = cs_start + cs_len + 4;
 }
 
-static void __FASTCALL__ rdoff_destroy_fmt()
+RDOff_Parser::~RDOff_Parser()
 {
   if(rdoffReloc) { la_Destroy(rdoffReloc); rdoffReloc = NULL; }
   if(rdoffImpNames) { la_Destroy(rdoffImpNames); rdoffImpNames = NULL; }
   if(PubNames) { la_Destroy(PubNames); PubNames = NULL; }
 }
 
-static void __FASTCALL__ rdoff_ReadPubName(binary_stream& b_cache,const struct PubName *it,
+void RDOff_Parser::rdoff_ReadPubName(binary_stream& b_cache,const struct PubName *it,
 		       char *buff,unsigned cb_buff)
 {
     unsigned char ch;
@@ -571,7 +595,7 @@ static void __FASTCALL__ rdoff_ReadPubName(binary_stream& b_cache,const struct P
     }
 }
 
-static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
+bool RDOff_Parser::FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
   binary_stream& b_cache = bmbioHandle();
   struct PubName *ret,key;
@@ -586,7 +610,7 @@ static bool  __FASTCALL__ FindPubName(char *buff,unsigned cb_buff,__filesize_t p
   return udnFindName(pa,buff,cb_buff);
 }
 
-static void __FASTCALL__ rdoff_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
+void RDOff_Parser::rdoff_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
 {
  unsigned char segno,rec;
  __filesize_t segoff,abs_off;
@@ -628,7 +652,7 @@ static void __FASTCALL__ rdoff_ReadPubNameList(binary_stream& handle,void (__FAS
  if(PubNames->nItems) la_Sort(PubNames,fmtComparePubNames);
 }
 
-static tCompare __FASTCALL__ compare_impnames(const any_t*v1,const any_t*v2)
+tCompare RDOff_Parser::compare_impnames(const any_t*v1,const any_t*v2)
 {
   const struct rdoff_ImpName  *pnam1, *pnam2;
   pnam1 = (const struct rdoff_ImpName  *)v1;
@@ -636,7 +660,7 @@ static tCompare __FASTCALL__ compare_impnames(const any_t*v1,const any_t*v2)
   return __CmpLong__(pnam1->lsegno,pnam2->lsegno);
 }
 
-static void  __FASTCALL__ ReadImpNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
+void  RDOff_Parser::ReadImpNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
 {
  unsigned char rec;
  unsigned i;
@@ -673,13 +697,13 @@ static void  __FASTCALL__ ReadImpNameList(binary_stream& handle,void (__FASTCALL
 }
 
 /** bitness not declared, but we assign 32-bit as default */
-static int __FASTCALL__ rdoff_bitness(__filesize_t pa)
+int RDOff_Parser::query_bitness(__filesize_t pa) const
 {
   UNUSED(pa);
   return DAB_USE32;
 }
 
-static __filesize_t __FASTCALL__ rdoffGetPubSym(char *str,unsigned cb_str,unsigned *func_class,
+__filesize_t RDOff_Parser::get_public_symbol(char *str,unsigned cb_str,unsigned *func_class,
 			   __filesize_t pa,bool as_prev)
 {
     binary_stream& b_cache = bmbioHandle();
@@ -696,7 +720,7 @@ static __filesize_t __FASTCALL__ rdoffGetPubSym(char *str,unsigned cb_str,unsign
     return fpos;
 }
 
-static unsigned __FASTCALL__ rdoffGetObjAttr(__filesize_t pa,char *name,unsigned cb_name,
+unsigned RDOff_Parser::get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,
 			 __filesize_t *start,__filesize_t *end,int *_class,int *bitness)
 {
   unsigned ret;
@@ -704,7 +728,7 @@ static unsigned __FASTCALL__ rdoffGetObjAttr(__filesize_t pa,char *name,unsigned
   *start = 0;
   *end = bmGetFLength();
   *_class = OC_NOOBJECT;
-  *bitness = rdoff_bitness(pa);
+  *bitness = query_bitness(pa);
   name[0] = 0;
   if(pa < cs_start)
   {
@@ -748,17 +772,17 @@ static unsigned __FASTCALL__ rdoffGetObjAttr(__filesize_t pa,char *name,unsigned
   return ret;
 }
 
-static __filesize_t __FASTCALL__ rdoffVA2PA(__filesize_t va)
+__filesize_t RDOff_Parser::va2pa(__filesize_t va)
 {
   return va + cs_start;
 }
 
-static __filesize_t __FASTCALL__ rdoffPA2VA(__filesize_t pa)
+__filesize_t RDOff_Parser::pa2va(__filesize_t pa)
 {
   return pa > cs_start ? pa - cs_start : 0L;
 }
 
-static bool __FASTCALL__ rdoff_AddressResolv(char *addr,__filesize_t cfpos)
+bool RDOff_Parser::address_resolving(char *addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
@@ -770,7 +794,7 @@ static bool __FASTCALL__ rdoff_AddressResolv(char *addr,__filesize_t cfpos)
     strcpy(&addr[5],Get4Digit(cfpos));
  }
  else
-   if((res=rdoffPA2VA(cfpos))!=0)
+   if((res=pa2va(cfpos))!=0)
    {
      addr[0] = '.';
      strcpy(&addr[1],Get8Digit(res));
@@ -779,25 +803,19 @@ static bool __FASTCALL__ rdoff_AddressResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static int __FASTCALL__ rdoff_platform() { return DISASM_CPU_IX86; }
+int RDOff_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-extern const REGISTRY_BIN rdoffTable =
-{
-  "RDOFF (Relocatable Dynamic Object File Format)",
-  { "RdHelp", "ModRef", "Export", NULL, "Import", NULL, NULL, NULL, NULL, NULL },
-  { rdoff_Help, rdoff_ShowModRef, rdoff_ShowExport, NULL, rdoff_ShowImport, NULL, NULL, NULL, NULL, NULL },
-  rdoff_check_fmt,
-  rdoff_init_fmt,
-  rdoff_destroy_fmt,
-  rdoff_ShowHeader,
-  rdoff_AppendRef,
-  rdoff_platform,
-  rdoff_bitness,
-  NULL,
-  rdoff_AddressResolv,
-  rdoffVA2PA,
-  rdoffPA2VA,
-  rdoffGetPubSym,
-  rdoffGetObjAttr
+static bool probe() {
+  char rbuff[6];
+  bmReadBufferEx(rbuff,sizeof(rbuff),0L,binary_stream::Seek_Set);
+  return memcmp(rbuff,"RDOFF1",sizeof(rbuff)) == 0 ||
+	 memcmp(rbuff,"RDOFF\x1",sizeof(rbuff)) == 0;
+}
+
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) RDOff_Parser(_parent); }
+extern const Binary_Parser_Info rdoff_info = {
+    "RDOFF (Relocatable Dynamic Object File Format)",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

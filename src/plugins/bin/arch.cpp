@@ -38,9 +38,27 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 
 namespace	usr {
-ar_hdr arch;
+    class Arch_Parser : public Binary_Parser {
+	public:
+	    Arch_Parser(CodeGuider&);
+	    virtual ~Arch_Parser();
 
-static __filesize_t __FASTCALL__ ShowARCHHeader()
+	    virtual const char*		prompt(unsigned idx) const;
+	    virtual __filesize_t	action_F1();
+	    virtual __filesize_t	action_F3();
+
+	    virtual __filesize_t	show_header();
+	    virtual int			query_platform() const;
+	    virtual bool		address_resolving(char *,__filesize_t);
+	private:
+	    bool			archReadModList(memArray *obj,unsigned nnames,__filesize_t *addr);
+
+	    ar_hdr arch;
+    };
+static const char* txt[]={ "ArcHlp", "", "ModLst", "", "", "", "", "", "", "" };
+const char* Arch_Parser::prompt(unsigned idx) const { return txt[idx]; }
+
+__filesize_t Arch_Parser::show_header()
 {
   __filesize_t fpos;
   unsigned evt;
@@ -81,7 +99,7 @@ static __filesize_t __FASTCALL__ ShowARCHHeader()
   return fpos;
 }
 
-static bool  __FASTCALL__ archReadModList(memArray *obj,unsigned nnames,__filesize_t *addr)
+bool Arch_Parser::archReadModList(memArray *obj,unsigned nnames,__filesize_t *addr)
 {
   __filesize_t foff,flen;
   unsigned i;
@@ -106,7 +124,7 @@ static bool  __FASTCALL__ archReadModList(memArray *obj,unsigned nnames,__filesi
   return true;
 }
 
-static __filesize_t __FASTCALL__ archModLst()
+__filesize_t Arch_Parser::action_F3()
 {
    memArray *obj;
    __filesize_t *addr;
@@ -151,24 +169,14 @@ static __filesize_t __FASTCALL__ archModLst()
    return fpos;
 }
 
-static bool __FASTCALL__ IsArch()
+Arch_Parser::Arch_Parser(CodeGuider& code_guider)
+	    :Binary_Parser(code_guider)
 {
-  char str[16];
-  bmReadBufferEx(str,sizeof(str),0,binary_stream::Seek_Set);
-  return strncmp(str,"!<arch>\012",8) == 0;
-}
-
-static void __FASTCALL__ ArchInit(CodeGuider& code_guider)
-{
-    UNUSED(code_guider);
     bmReadBufferEx(&arch,sizeof(arch),0,binary_stream::Seek_Set);
 }
+Arch_Parser::~Arch_Parser(){}
 
-static void __FASTCALL__ ArchDestroy()
-{
-}
-
-static bool __FASTCALL__ archAddrResolv(char *addr,__filesize_t cfpos)
+bool Arch_Parser::address_resolving(char *addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
@@ -182,29 +190,24 @@ static bool __FASTCALL__ archAddrResolv(char *addr,__filesize_t cfpos)
   return bret;
 }
 
-static __filesize_t __FASTCALL__ archHelp()
+__filesize_t Arch_Parser::action_F1()
 {
   hlpDisplay(10001);
   return BMGetCurrFilePos();
 }
 
-static int __FASTCALL__ arch_platform() { return DISASM_DEFAULT; }
+static bool probe() {
+  char str[16];
+  bmReadBufferEx(str,sizeof(str),0,binary_stream::Seek_Set);
+  return strncmp(str,"!<arch>\012",8) == 0;
+}
 
-extern const REGISTRY_BIN archTable =
-{
-  "arch (Archive)",
-  { "ArcHlp", NULL, "ModLst", NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  { archHelp, NULL, archModLst, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-  IsArch, ArchInit, ArchDestroy,
-  ShowARCHHeader,
-  NULL,
-  arch_platform,
-  NULL,
-  NULL,
-  archAddrResolv,
-  NULL,
-  NULL,
-  NULL,
-  NULL
+int Arch_Parser::query_platform() const { return DISASM_DEFAULT; }
+
+static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) Arch_Parser(_parent); }
+extern const Binary_Parser_Info arch_info = {
+    "arch (Archive)",	/**< plugin name */
+    probe,
+    query_interface
 };
 } // namespace	usr

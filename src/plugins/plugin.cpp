@@ -7,88 +7,85 @@
 #include "bmfile.h"
 
 namespace	usr {
-extern const REGISTRY_BIN binTable;
-extern const REGISTRY_BIN rmTable;
-extern const REGISTRY_BIN movTable;
-extern const REGISTRY_BIN mp3Table;
-extern const REGISTRY_BIN mpegTable;
-extern const REGISTRY_BIN jpegTable;
-extern const REGISTRY_BIN wavTable;
-extern const REGISTRY_BIN aviTable;
-extern const REGISTRY_BIN asfTable;
-extern const REGISTRY_BIN bmpTable;
-extern const REGISTRY_BIN neTable;
-extern const REGISTRY_BIN peTable;
-extern const REGISTRY_BIN leTable;
-extern const REGISTRY_BIN lxTable;
-extern const REGISTRY_BIN nlm386Table;
-extern const REGISTRY_BIN elf386Table;
-extern const REGISTRY_BIN jvmTable;
-extern const REGISTRY_BIN coff386Table;
-extern const REGISTRY_BIN archTable;
-extern const REGISTRY_BIN aoutTable;
-extern const REGISTRY_BIN OldPharLapTable;
-extern const REGISTRY_BIN PharLapTable;
-extern const REGISTRY_BIN rdoffTable;
-extern const REGISTRY_BIN rdoff2Table;
-extern const REGISTRY_BIN sisTable;
-extern const REGISTRY_BIN sisxTable;
-extern const REGISTRY_BIN lmfTable;
-extern const REGISTRY_BIN mzTable;
-extern const REGISTRY_BIN dossysTable;
+extern const Binary_Parser_Info bin_info;
+extern const Binary_Parser_Info rm_info;
+extern const Binary_Parser_Info mov_info;
+extern const Binary_Parser_Info mp3_info;
+extern const Binary_Parser_Info mpeg_info;
+extern const Binary_Parser_Info jpeg_info;
+extern const Binary_Parser_Info wav_info;
+extern const Binary_Parser_Info avi_info;
+extern const Binary_Parser_Info asf_info;
+extern const Binary_Parser_Info bmp_info;
+extern const Binary_Parser_Info ne_info;
+extern const Binary_Parser_Info pe_info;
+extern const Binary_Parser_Info le_info;
+extern const Binary_Parser_Info lx_info;
+extern const Binary_Parser_Info nlm_info;
+extern const Binary_Parser_Info elf_info;
+extern const Binary_Parser_Info jvm_info;
+extern const Binary_Parser_Info coff_info;
+extern const Binary_Parser_Info arch_info;
+extern const Binary_Parser_Info aout_info;
+extern const Binary_Parser_Info oldpharlap_info;
+extern const Binary_Parser_Info pharlap_info;
+extern const Binary_Parser_Info rdoff_info;
+extern const Binary_Parser_Info rdoff2_info;
+extern const Binary_Parser_Info sis_info;
+extern const Binary_Parser_Info sisx_info;
+extern const Binary_Parser_Info lmf_info;
+extern const Binary_Parser_Info mz_info;
+extern const Binary_Parser_Info dossys_info;
 
 Bin_Format::Bin_Format(CodeGuider& _parent)
 	    :parent(_parent)
 {
-    formats.push_back(&neTable);
-    formats.push_back(&peTable);
-    formats.push_back(&leTable);
-    formats.push_back(&lxTable);
-    formats.push_back(&nlm386Table);
-    formats.push_back(&elf386Table);
-    formats.push_back(&jvmTable);
-    formats.push_back(&coff386Table);
-    formats.push_back(&archTable);
-    formats.push_back(&aoutTable);
-    formats.push_back(&OldPharLapTable);
-    formats.push_back(&PharLapTable);
-    formats.push_back(&rdoffTable);
-    formats.push_back(&rdoff2Table);
-    formats.push_back(&lmfTable);
-    formats.push_back(&sisTable);
-    formats.push_back(&sisxTable);
-    formats.push_back(&aviTable);
-    formats.push_back(&asfTable);
-    formats.push_back(&bmpTable);
-    formats.push_back(&mpegTable);
-    formats.push_back(&jpegTable);
-    formats.push_back(&wavTable);
-    formats.push_back(&movTable);
-    formats.push_back(&rmTable);
-    formats.push_back(&mp3Table);
-    formats.push_back(&mzTable);
-    formats.push_back(&dossysTable);
-    formats.push_back(&binTable);
-    detectedFormat = &binTable;
-    mz_format = &mzTable;
+    formats.push_back(&ne_info);
+    formats.push_back(&pe_info);
+    formats.push_back(&le_info);
+    formats.push_back(&lx_info);
+    formats.push_back(&nlm_info);
+    formats.push_back(&elf_info);
+    formats.push_back(&jvm_info);
+    formats.push_back(&coff_info);
+    formats.push_back(&arch_info);
+    formats.push_back(&aout_info);
+    formats.push_back(&oldpharlap_info);
+    formats.push_back(&pharlap_info);
+    formats.push_back(&rdoff_info);
+    formats.push_back(&rdoff2_info);
+    formats.push_back(&lmf_info);
+    formats.push_back(&sis_info);
+    formats.push_back(&sisx_info);
+    formats.push_back(&avi_info);
+    formats.push_back(&asf_info);
+    formats.push_back(&bmp_info);
+    formats.push_back(&mpeg_info);
+    formats.push_back(&jpeg_info);
+    formats.push_back(&wav_info);
+    formats.push_back(&mov_info);
+    formats.push_back(&rm_info);
+    formats.push_back(&mp3_info);
+    formats.push_back(&mz_info);
+    formats.push_back(&dossys_info);
+    formats.push_back(&bin_info);
 }
-Bin_Format::~Bin_Format() { if(detectedFormat->destroy) detectedFormat->destroy(); }
+Bin_Format::~Bin_Format() { delete detectedFormat; }
 
 void Bin_Format::detect_format()
 {
     if(!bmGetFLength()) return;
     size_t i,sz=formats.size();
     for(i = 0;i < sz;i++) {
-	if(formats[i]->check_format()) {
-	    detectedFormat = formats[i];
-	    if(detectedFormat->init) detectedFormat->init(parent);
+	if(formats[i]->probe()) {
+	    detectedFormat = formats[i]->query_interface(parent);
 	    break;
 	}
     }
 }
 
-int	Bin_Format::query_platform() const { return detectedFormat->query_platform?detectedFormat->query_platform():DISASM_DEFAULT; }
-int	Bin_Format::query_bitness(__filesize_t off) const { return detectedFormat->query_bitness?detectedFormat->query_bitness(off):DAB_USE16; }
-int	Bin_Format::query_endian(__filesize_t off) const { return detectedFormat->query_endian?detectedFormat->query_endian(off):DAE_LITTLE; }
+int	Bin_Format::query_platform() const { return detectedFormat->query_platform(); }
+int	Bin_Format::query_bitness(__filesize_t off) const { return detectedFormat->query_bitness(off); }
+int	Bin_Format::query_endian(__filesize_t off) const { return detectedFormat->query_endian(off); }
 
 } // namespace	usr
