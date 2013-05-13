@@ -5637,7 +5637,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
  up = ua = ud = 0;
  ix86_da_out[0] = 0;
 
- if(BITNESS == DAB_AUTO) x86_Bitness = beye_context().bin_format().query_bitness(ulShift);
+ if(BITNESS == DAB_AUTO) x86_Bitness = bin_format.query_bitness(ulShift);
  else x86_Bitness = BITNESS;
 
  if(x86_Bitness > DAB_USE16)
@@ -6286,10 +6286,11 @@ const assembler_t ix86_Disassembler::assemblers[] = {
 #define pclose(fp) fclose(fp)
 #endif
 
-ix86_Disassembler::ix86_Disassembler(binary_stream& h,DisMode& _parent )
-		    :Disassembler(h,_parent)
+ix86_Disassembler::ix86_Disassembler(Bin_Format& b,binary_stream& h,DisMode& _parent )
+		    :Disassembler(b,h,_parent)
 		    ,parent(_parent)
 		    ,main_handle(h)
+		    ,bin_format(b)
 		    ,x86_Bitness(DAB_AUTO)
 		    ,active_assembler(-1)
 {
@@ -6517,7 +6518,7 @@ done:
   return result;
 }
 
-static Disassembler* query_interface(binary_stream& h,DisMode& parent) { return new(zeromem) ix86_Disassembler(h,parent); }
+static Disassembler* query_interface(Bin_Format& b,binary_stream& h,DisMode& parent) { return new(zeromem) ix86_Disassembler(b,h,parent); }
 
 extern const Disassembler_Info ix86_disassembler_info = {
     DISASM_CPU_IX86,

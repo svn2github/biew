@@ -34,7 +34,7 @@ namespace	usr {
 
     class ARM_Disassembler : public Disassembler {
 	public:
-	    ARM_Disassembler(binary_stream& h,DisMode& parent);
+	    ARM_Disassembler(Bin_Format& b,binary_stream& h,DisMode& parent);
 	    virtual ~ARM_Disassembler();
 	
 	    virtual const char*	prompt(unsigned idx) const;
@@ -68,6 +68,7 @@ namespace	usr {
 
 	    DisMode&		parent;
 	    binary_stream&	main_handle;
+	    Bin_Format&		bin_format;
 	    char*		outstr;
 	    int			armBitness;
 	    int			armBigEndian;

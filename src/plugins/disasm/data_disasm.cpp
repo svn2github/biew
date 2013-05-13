@@ -33,7 +33,7 @@ using namespace	usr;
 namespace	usr {
     class Data_Disassembler : public Disassembler {
 	public:
-	    Data_Disassembler(binary_stream& h,DisMode& parent);
+	    Data_Disassembler(Bin_Format& b,binary_stream& h,DisMode& parent);
 	    virtual ~Data_Disassembler();
 	
 	    virtual const char*	prompt(unsigned idx) const;
@@ -52,6 +52,7 @@ namespace	usr {
 	private:
 	    DisMode&		parent;
 	    binary_stream&	main_handle;
+	    Bin_Format&		bin_format;
 	    int			nulWidth;
 	    char*		outstr;
 
@@ -147,10 +148,11 @@ char Data_Disassembler::clone_short_name( unsigned long clone )
   UNUSED(clone);
   return ' ';
 }
-Data_Disassembler::Data_Disassembler(binary_stream& h,DisMode& _parent )
-		:Disassembler(h,_parent)
+Data_Disassembler::Data_Disassembler(Bin_Format& b,binary_stream& h,DisMode& _parent )
+		:Disassembler(b,h,_parent)
 		,parent(_parent)
 		,main_handle(h)
+		,bin_format(b)
 		,nulWidth(1)
 {
   outstr = new char [1000];
@@ -192,7 +194,7 @@ const char* Data_Disassembler::prompt(unsigned idx) const {
     return "";
 }
 
-static Disassembler* query_interface(binary_stream& h,DisMode& _parent) { return new(zeromem) Data_Disassembler(h,_parent); }
+static Disassembler* query_interface(Bin_Format& b,binary_stream& h,DisMode& _parent) { return new(zeromem) Data_Disassembler(b,h,_parent); }
 extern const Disassembler_Info data_disassembler_info = {
     DISASM_DATA,
     "~Data",	/**< plugin name */

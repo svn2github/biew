@@ -94,7 +94,7 @@ bool BeyeContext::select_mode()
     if(retval != -1) {
 	defMainModeSel = retval;
 	delete activeMode;
-	activeMode = modes[defMainModeSel]->query_interface(bm_file_handle,*MainWnd,*code_guider);
+	activeMode = modes[defMainModeSel]->query_interface(bin_format(),bm_file_handle,*MainWnd,*code_guider);
 	return true;
     }
     return false;
@@ -102,7 +102,7 @@ bool BeyeContext::select_mode()
 
 void BeyeContext::init_modes( Ini_Profile& ini )
 {
-    if(!activeMode) activeMode = modes[defMainModeSel]->query_interface(bm_file_handle,*MainWnd,*code_guider);
+    if(!activeMode) activeMode = modes[defMainModeSel]->query_interface(bin_format(),bm_file_handle,*MainWnd,*code_guider);
     activeMode->read_ini(ini);
 }
 
@@ -112,7 +112,7 @@ void BeyeContext::quick_select_mode()
     if(defMainModeSel < nModes - 1) defMainModeSel++;
     else                            defMainModeSel = 0;
     delete activeMode;
-    activeMode = modes[defMainModeSel]->query_interface(bm_file_handle,*MainWnd,*code_guider);
+    activeMode = modes[defMainModeSel]->query_interface(bin_format(),bm_file_handle,*MainWnd,*code_guider);
 }
 
 void BeyeContext::make_shortname()
@@ -136,7 +136,7 @@ void BeyeContext::auto_detect_mode()
     size_t i,n = modes.size();
     Plugin* mode;
     for(i = 0;i < n;i++) {
-	mode = modes[i]->query_interface(bm_file_handle,*MainWnd,*code_guider);
+	mode = modes[i]->query_interface(bin_format(),bm_file_handle,*MainWnd,*code_guider);
 	if(mode->detect()) {
 	    defMainModeSel = i;
 	    break;
@@ -144,7 +144,7 @@ void BeyeContext::auto_detect_mode()
 	delete mode; mode = NULL;
     }
     if(mode) delete mode;
-    activeMode = modes[defMainModeSel]->query_interface(bm_file_handle,*MainWnd,*code_guider);
+    activeMode = modes[defMainModeSel]->query_interface(bin_format(),bm_file_handle,*MainWnd,*code_guider);
     beye_context().bm_file().seek(0,binary_stream::Seek_Set);
 }
 
@@ -520,7 +520,7 @@ bool BeyeContext::new_source()
 	    make_shortname();
 	    _bin_format = new(zeromem) Bin_Format(*code_guider);
 	    _bin_format->detect_format(sc_bm_file_handle);
-	    activeMode=modes[defMainModeSel]->query_interface(bm_file_handle,*MainWnd,*code_guider);
+	    activeMode=modes[defMainModeSel]->query_interface(bin_format(),bm_file_handle,*MainWnd,*code_guider);
 	    ret = true;
 	} else {
 	    if(BMOpen(ArgVector1) != true) ::exit(EXIT_FAILURE);
@@ -529,7 +529,7 @@ bool BeyeContext::new_source()
 	    make_shortname();
 	    _bin_format = new(zeromem) Bin_Format(*code_guider);
 	    _bin_format->detect_format(sc_bm_file_handle);
-	    activeMode=modes[defMainModeSel]->query_interface(bm_file_handle,*MainWnd,*code_guider);
+	    activeMode=modes[defMainModeSel]->query_interface(bin_format(),bm_file_handle,*MainWnd,*code_guider);
 	    ret = false;
 	}
     }

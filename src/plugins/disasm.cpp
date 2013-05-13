@@ -58,8 +58,8 @@ namespace	usr {
     extern const Disassembler_Info ppc_disassembler_info;
     extern const Disassembler_Info java_disassembler_info;
 
-DisMode::DisMode(binary_stream& h,TWindow& _main_wnd,CodeGuider& _code_guider)
-	:Plugin(h,_main_wnd,_code_guider)
+DisMode::DisMode(Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& _code_guider)
+	:Plugin(b,h,_main_wnd,_code_guider)
 	,DefDisasmSel(__DEFAULT_DISASM)
 	,HiLight(1)
 	,code_guider(_code_guider)
@@ -67,6 +67,7 @@ DisMode::DisMode(binary_stream& h,TWindow& _main_wnd,CodeGuider& _code_guider)
 	,main_wnd(_main_wnd)
 	,main_handle(h)
 	,second_handle(bNull)
+	,bin_format(b)
 {
     size_t i,sz;
     unsigned def_platform;
@@ -86,17 +87,17 @@ DisMode::DisMode(binary_stream& h,TWindow& _main_wnd,CodeGuider& _code_guider)
 	::exit(EXIT_FAILURE);
     }
     def_platform = DISASM_DATA;
-    def_platform = beye_context().bin_format().query_platform();
+    def_platform = bin_format.query_platform();
     sz=list.size();
     for(i=0;i<sz;i++) {
 	if(list[i]->type == def_platform) {
-	    activeDisasm=list[i]->query_interface(second_handle,*this);
+	    activeDisasm=list[i]->query_interface(bin_format,second_handle,*this);
 	    DefDisasmSel = i;
 	    break;
 	}
     }
     if(!activeDisasm) {
-	activeDisasm = list[0]->query_interface(second_handle,*this);
+	activeDisasm = list[0]->query_interface(bin_format,second_handle,*this);
 	DefDisasmSel = 0;
     }
     accept_actions();
@@ -134,7 +135,7 @@ bool DisMode::action_F2() /* disSelect_Disasm */
     retval = SelBoxA(modeName,nModes," Select disassembler: ",DefDisasmSel);
     if(retval != -1) {
 	delete activeDisasm;
-	activeDisasm = list[retval]->query_interface(second_handle,*this);
+	activeDisasm = list[retval]->query_interface(bin_format,second_handle,*this);
 	DefDisasmSel = retval;
 	accept_actions();
 	return true;
@@ -686,7 +687,7 @@ void DisMode::read_ini(Ini_Profile& ini)
 	HiLight = (int)strtoul(tmps.c_str(),NULL,10);
 	if(HiLight > 2) HiLight = 2;
 	if(activeDisasm) delete activeDisasm;
-	activeDisasm = list[DefDisasmSel]->query_interface(second_handle,*this);
+	activeDisasm = list[DefDisasmSel]->query_interface(bin_format,second_handle,*this);
 	accept_actions();
 	activeDisasm->read_ini(ini);
     }
@@ -855,7 +856,7 @@ bool DisMode::append_digits(binary_stream& handle,char *str,__filesize_t ulShift
   }
 #endif
   if(hexAddressResolv) flg |= APREF_SAVE_VIRT;
-  app = disNeedRef >= Ref_All ? beye_context().bin_format().bind(*this,str,ulShift,flg,codelen,0L) : false;
+  app = disNeedRef >= Ref_All ? bin_format.bind(*this,str,ulShift,flg,codelen,0L) : false;
   if(app != true)
   {
     dig_type = type & 0x00FFU;
@@ -885,19 +886,19 @@ bool DisMode::append_digits(binary_stream& handle,char *str,__filesize_t ulShift
       __filesize_t pa,psym,__tmp;
       unsigned _class;
       if(type & Arg_Rip) {
-	__tmp=beye_context().bin_format().pa2va(ulShift);
+	__tmp=bin_format.pa2va(ulShift);
 	_defval += ((__tmp!=Plugin::Bad_Address) ? __tmp : ulShift)+fld_len;
       }
-      pa = beye_context().bin_format().va2pa(_defval);
+      pa = bin_format.va2pa(_defval);
       if(pa!=Plugin::Bad_Address)
       {
 	/* 1. Try to determine immediate as offset to public symbol */
-	if(type & Arg_Rip) app = beye_context().bin_format().bind(*this,str,pa,flg,codelen,0L);
+	if(type & Arg_Rip) app = bin_format.bind(*this,str,pa,flg,codelen,0L);
 	if(app == true) goto next_step;
 	if(dis_severity < CommSev_Func)
 	{
 	  strcpy(comments,".*");
-	  psym = beye_context().bin_format().get_public_symbol(&comments[2],sizeof(comments)-2,&_class,pa,false);
+	  psym = bin_format.get_public_symbol(&comments[2],sizeof(comments)-2,&_class,pa,false);
 	  if(psym!=Plugin::Bad_Address) {
 	    if(psym != pa) comments[0] = 0;
 	    else
@@ -1102,7 +1103,7 @@ bool DisMode::append_faddr(binary_stream& handle,char * str,__fileoff_t ulShift,
    if(dret.pro_clone == __INSNT_JMPPIC || dret.pro_clone == __INSNT_JMPRIP) goto try_pic; /* skip defaults for PIC */
    flg = APREF_TRY_LABEL;
    if(hexAddressResolv) flg |= APREF_SAVE_VIRT;
-   appended=beye_context().bin_format().bind(*this,str,ulShift,flg,codelen,r_sh);
+   appended=bin_format.bind(*this,str,ulShift,flg,codelen,r_sh);
    if(!appended)
    {
       /*
@@ -1112,7 +1113,7 @@ bool DisMode::append_faddr(binary_stream& handle,char * str,__fileoff_t ulShift,
       */
        if(dret.pro_clone == __INSNT_JMPVVT) /* jmp (mod r/m) */
        {
-	    if(beye_context().bin_format().bind(*this,str,r_sh+dret.field,APREF_TRY_LABEL,dret.codelen,r_sh))
+	    if(bin_format.bind(*this,str,r_sh+dret.field,APREF_TRY_LABEL,dret.codelen,r_sh))
 	    {
 	      appended = true;
 	      modif_to = strchr(str,' ');
@@ -1129,7 +1130,7 @@ bool DisMode::append_faddr(binary_stream& handle,char * str,__fileoff_t ulShift,
        {
 	    try_pic:
 	    if(dret.pro_clone == __INSNT_JMPRIP) goto try_rip;
-	    if(beye_context().bin_format().bind(*this,str,r_sh+dret.field,APREF_TRY_PIC,dret.codelen,r_sh))
+	    if(bin_format.bind(*this,str,r_sh+dret.field,APREF_TRY_PIC,dret.codelen,r_sh))
 	    {
 	      appended = true; /* terminate appending any info anyway */
 	      if(!DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
@@ -1146,13 +1147,13 @@ bool DisMode::append_faddr(binary_stream& handle,char * str,__fileoff_t ulShift,
 		_defval = dret.codelen==8 ? main_handle.read(type_qword):
 					    main_handle.read(type_dword);
 		main_handle.seek(_fpos,binary_stream::Seek_Set);
-	__tmp=beye_context().bin_format().pa2va(r_sh+dret.field);
+	__tmp=bin_format.pa2va(r_sh+dret.field);
 	_defval += (__tmp!=Plugin::Bad_Address ?
 		    __tmp :
 		    r_sh+dret.field)+dret.codelen;
-	__tmp = beye_context().bin_format().va2pa(_defval);
+	__tmp = bin_format.va2pa(_defval);
 	pa = (__tmp!=Plugin::Bad_Address) ? __tmp : _defval;
-	app=beye_context().bin_format().bind(*this,str,pa,APREF_TRY_LABEL,dret.codelen,0L);
+	app=bin_format.bind(*this,str,pa,APREF_TRY_LABEL,dret.codelen,0L);
 	if(app)
 	{
 	  appended = true; /* terminate appending any info anyway */
@@ -1176,7 +1177,7 @@ bool DisMode::append_faddr(binary_stream& handle,char * str,__fileoff_t ulShift,
    if(hexAddressResolv)
    {
      r_sh = r_sh ? r_sh : (__filesize_t)ulShift;
-     appended = beye_context().bin_format().address_resolving(&str[strlen(str)],r_sh);
+     appended = bin_format.address_resolving(&str[strlen(str)],r_sh);
    }
    if(!appended)
    {
@@ -1242,7 +1243,7 @@ bool hexAddressResolution(unsigned& har);
 bool DisMode::action_F6() { return hexAddressResolution(hexAddressResolv); }
 unsigned DisMode::get_max_line_length() const { return get_max_symbol_size(); }
 
-static Plugin* query_interface(binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider) { return new(zeromem) DisMode(h,main_wnd,code_guider); }
+static Plugin* query_interface(Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider) { return new(zeromem) DisMode(b,h,main_wnd,code_guider); }
 
 extern const Plugin_Info disMode = {
     "~Disassembler",	/**< plugin name */

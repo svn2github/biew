@@ -38,7 +38,7 @@ DisasmRet ARM_Disassembler::disassembler(__filesize_t ulShift,
 					unsigned flags)
 {
   DisasmRet ret;
-  armBigEndian = beye_context().bin_format().query_endian(ulShift)==DAE_BIG?1:0;
+  armBigEndian = bin_format.query_endian(ulShift)==DAE_BIG?1:0;
   if(flags == __DISF_NORMAL)
   {
     memset(&ret,0,sizeof(ret));
@@ -163,10 +163,11 @@ char ARM_Disassembler::clone_short_name( unsigned long clone )
   return ' ';
 }
 
-ARM_Disassembler::ARM_Disassembler(binary_stream& h,DisMode& _parent )
-	    :Disassembler(h,_parent)
+ARM_Disassembler::ARM_Disassembler(Bin_Format& b,binary_stream& h,DisMode& _parent )
+	    :Disassembler(b,h,_parent)
 	    ,parent(_parent)
 	    ,main_handle(h)
+	    ,bin_format(b)
 	    ,armBitness(DAB_USE32)
 	    ,armBigEndian(1)
 {
@@ -260,7 +261,7 @@ const char* ARM_Disassembler::prompt(unsigned idx) const {
     return "";
 }
 
-static Disassembler* query_interface(binary_stream& h,DisMode& _parent) { return new(zeromem) ARM_Disassembler(h,_parent); }
+static Disassembler* query_interface(Bin_Format& b,binary_stream& h,DisMode& _parent) { return new(zeromem) ARM_Disassembler(b,h,_parent); }
 
 extern const Disassembler_Info arm_disassembler_info = {
     DISASM_CPU_ARM,

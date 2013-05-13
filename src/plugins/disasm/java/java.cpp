@@ -56,7 +56,7 @@ namespace	usr {
 
     class Java_Disassembler : public Disassembler {
 	public:
-	    Java_Disassembler(binary_stream& h,DisMode& parent);
+	    Java_Disassembler(Bin_Format& b,binary_stream& h,DisMode& parent);
 	    virtual ~Java_Disassembler();
 	
 	    virtual const char*	prompt(unsigned idx) const;
@@ -75,6 +75,7 @@ namespace	usr {
 	private:
 	    DisMode&		parent;
 	    binary_stream&	main_handle;
+	    Bin_Format&		bin_format;
 	    char*		outstr;
 	    unsigned		vartail;
 	    __filesize_t	vartail_base, vartail_start, vartail_flags, vartail_idx;
@@ -433,9 +434,9 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
     unsigned func_class;
     vartail_flags=jflags;
     /* Sorry! We really need to know method offset to compute padding bytes */
-    prev_pa = beye_context().bin_format().get_public_symbol(prev_func,sizeof(prev_func),
+    prev_pa = bin_format.get_public_symbol(prev_func,sizeof(prev_func),
 					    &func_class,ulShift,true);
-    next_pa = beye_context().bin_format().get_public_symbol(prev_func,sizeof(prev_func),
+    next_pa = bin_format.get_public_symbol(prev_func,sizeof(prev_func),
 					    &func_class,ulShift,false);
     if(next_pa==Plugin::Bad_Address) next_pa=main_handle.flength();
     if(prev_pa==Plugin::Bad_Address) prev_pa=0;
@@ -641,10 +642,11 @@ char Java_Disassembler::clone_short_name( unsigned long clone )
   return ' ';
 }
 
-Java_Disassembler::Java_Disassembler(binary_stream& h,DisMode& _parent )
-		:Disassembler(h,_parent)
+Java_Disassembler::Java_Disassembler(Bin_Format& b,binary_stream& h,DisMode& _parent )
+		:Disassembler(b,h,_parent)
 		,parent(_parent)
 		,main_handle(h)
+		,bin_format(b)
 {
   outstr = new char [1000];
   if(!outstr)
@@ -670,7 +672,7 @@ const char* Java_Disassembler::prompt(unsigned idx) const {
     return "";
 }
 
-static Disassembler* query_interface(binary_stream& h,DisMode& _parent) { return new(zeromem) Java_Disassembler(h,_parent); }
+static Disassembler* query_interface(Bin_Format& b,binary_stream& h,DisMode& _parent) { return new(zeromem) Java_Disassembler(b,h,_parent); }
 extern const Disassembler_Info java_disassembler_info = {
     DISASM_JAVA,
     "~Java",	/**< plugin name */

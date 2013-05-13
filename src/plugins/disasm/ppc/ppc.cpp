@@ -37,7 +37,7 @@ using namespace	usr;
 namespace	usr {
     class PPC_Disassembler : public Disassembler {
 	public:
-	    PPC_Disassembler(binary_stream& h,DisMode& parent);
+	    PPC_Disassembler(Bin_Format& b,binary_stream& h,DisMode& parent);
 	    virtual ~PPC_Disassembler();
 	
 	    virtual const char*	prompt(unsigned idx) const;
@@ -64,6 +64,7 @@ namespace	usr {
 
 	    DisMode&		parent;
 	    binary_stream&	main_handle;
+	    Bin_Format&		bin_format;
 	    char*		outstr;
 	    int			ppcBitness;
 	    int			ppcBigEndian;
@@ -1442,8 +1443,8 @@ DisasmRet PPC_Disassembler::disassembler(__filesize_t ulShift,
     unsigned ix,n;
     uint32_t opcode;
     memset(&dret,0,sizeof(DisasmRet));
-    ppcBitness = beye_context().bin_format().query_bitness(ulShift);
-    ppcBigEndian = beye_context().bin_format().query_endian(ulShift)==DAE_BIG?1:0;
+    ppcBitness = bin_format.query_bitness(ulShift);
+    ppcBigEndian = bin_format.query_endian(ulShift)==DAE_BIG?1:0;
     opcode=ppcBigEndian?be2me_32(*((uint32_t *)buffer)):le2me_32(*((uint32_t *)buffer));
     n = sizeof(ppc_table)/sizeof(ppc_opcode);
     done=0;
@@ -1645,10 +1646,11 @@ bool PPC_Disassembler::action_F5()
   return false;
 }
 
-PPC_Disassembler::PPC_Disassembler(binary_stream& h,DisMode& _parent )
-		:Disassembler(h,_parent)
+PPC_Disassembler::PPC_Disassembler(Bin_Format& b,binary_stream& h,DisMode& _parent )
+		:Disassembler(b,h,_parent)
 		,parent(_parent)
 		,main_handle(h)
+		,bin_format(b)
 		,ppcBitness(DAB_USE32)
 		,ppcBigEndian(1)
 		,ppcDialect(0)
@@ -1705,7 +1707,7 @@ const char* PPC_Disassembler::prompt(unsigned idx) const {
     return "";
 }
 
-static Disassembler* query_interface(binary_stream& h,DisMode& _parent) { return new(zeromem) PPC_Disassembler(h,_parent); }
+static Disassembler* query_interface(Bin_Format& b,binary_stream& h,DisMode& _parent) { return new(zeromem) PPC_Disassembler(b,h,_parent); }
 
 extern const Disassembler_Info ppc_disassembler_info = {
     DISASM_CPU_PPC,
