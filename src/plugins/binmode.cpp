@@ -28,7 +28,6 @@ using namespace	usr;
 #include "beyeutil.h"
 #include "beyehelp.h"
 #include "bin_util.h"
-#include "bmfile.h"
 #include "reg_form.h"
 #include "editor.h"
 #include "tstrings.h"
@@ -150,7 +149,7 @@ unsigned BinMode::paint( unsigned keycode,unsigned tshift )
     it.chars=chars;
     it.oem_pg=oem_pg;
     it.attrs=attrs;
-    cfp  = BMGetCurrFilePos();
+    cfp  = beye_context().bm_file().tell();
     width = main_wnd.client_width();
     BWidth = main_wnd.client_width()-virtWidthCorr;
     height = main_wnd.client_height();
@@ -158,7 +157,7 @@ unsigned BinMode::paint( unsigned keycode,unsigned tshift )
     else _b_width=2;
     if(cfp != bmocpos || keycode == KE_SUPERKEY || keycode == KE_JUSTFIND) {
 	bmocpos = cfp;
-	flen = BMGetFLength();
+	flen = beye_context().bm_file().flength();
 	limit = flen - BWidth;
 	if(flen < (__filesize_t)BWidth) BWidth = (int)(limit = flen);
 	main_wnd.freeze();
@@ -166,7 +165,11 @@ unsigned BinMode::paint( unsigned keycode,unsigned tshift )
 	    count=BWidth*_b_width;
 	    _index = cfp + j*count;
 	    len = _index < limit ? (int)count : _index < flen ? (int)(flen - _index) : 0;
-	    if(len) { lastbyte = _index + len; BMReadBufferEx((any_t*)buffer,len,_index,binary_stream::Seek_Set); }
+	    if(len) {
+		lastbyte = _index + len;
+		beye_context().bm_file().seek(_index,binary_stream::Seek_Set);
+		beye_context().bm_file().read((any_t*)buffer,len);
+	    }
 	    if(bin_mode!=MOD_PLAIN) {
 		unsigned i,ii;
 		for(i=ii=0;i<BWidth;i++) {
@@ -217,29 +220,29 @@ void BinMode::save_video(Opaque& _this,unsigned char *buff,unsigned size)
     binary_stream* bHandle;
     std::string fname;
     unsigned i;
-    fname = BMName();
+    fname = beye_context().bm_file().filename();
     bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
     if(bHandle == &bNull) {
 	err:
 	beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 	return;
     }
-    bHandle->seek(BMGetCurrFilePos(),binary_stream::Seek_Set);
+    bHandle->seek(beye_context().bm_file().tell(),binary_stream::Seek_Set);
     if(it.bin_mode==MOD_REVERSE) bHandle->seek(1,binary_stream::Seek_Cur);
     for(i=0;i<size;i++) {
 	if(!bHandle->write((uint8_t)buff[i])) goto err;
 	bHandle->seek(1,binary_stream::Seek_Cur);
     }
     delete bHandle;
-    BMReRead();
+    beye_context().bm_file().reread();
 }
 
 void BinMode::misckey_action() /* EditBin */
 {
     TWindow *ewin;
     bool inited;
-    if(!BMGetFLength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
-    ewin = WindowOpen(1,2,beye_context().tconsole().vio_width()-virtWidthCorr,beye_context().tconsole().vio_height()-1,TWindow::Flag_Has_Cursor);
+    if(!beye_context().bm_file().flength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
+    ewin = new(zeromem) TWindow(1,2,beye_context().tconsole().vio_width()-virtWidthCorr,beye_context().tconsole().vio_height()-2,TWindow::Flag_Has_Cursor);
     ewin->set_color(browser_cset.edit.main); ewin->clear();
     drawEditPrompt();
     ewin->set_focus();
@@ -250,11 +253,12 @@ void BinMode::misckey_action() /* EditBin */
 	unsigned i,size,msize = beye_context().tconsole().vio_width()*beye_context().tconsole().vio_height();
 	unsigned char *buff = new unsigned char [msize*2];
 	if(buff) {
-	    flen = BMGetFLength();
-	    cfp = BMGetCurrFilePos();
+	    flen = beye_context().bm_file().flength();
+	    cfp = beye_context().bm_file().tell();
 	    size = (unsigned)((unsigned long)msize > (flen-cfp) ? (flen-cfp) : msize);
-	    BMReadBufferEx(buff,size*2,cfp,binary_stream::Seek_Set);
-	    BMSeek(cfp,binary_stream::Seek_Set);
+	    beye_context().bm_file().seek(cfp,binary_stream::Seek_Set);
+	    beye_context().bm_file().read(buff,size*2);
+	    beye_context().bm_file().seek(cfp,binary_stream::Seek_Set);
 	    for(i=0;i<size;i++) buff[i]=bin_mode==MOD_BINARY?buff[i*2]:buff[i*2+1];
 	    inited=editInitBuffs(beye_context().tconsole().vio_width()-virtWidthCorr,buff,size);
 	    delete buff;

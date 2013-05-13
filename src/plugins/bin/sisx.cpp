@@ -23,7 +23,6 @@ using namespace	usr;
 #include <string.h>
 
 #include "reg_form.h"
-#include "bmfile.h"
 #include "bconsole.h"
 #include "beyehelp.h"
 #include "colorset.h"
@@ -31,6 +30,8 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 #include "plugins/bin/mmio.h"
 #include "plugins/disasm.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
 struct E32ImageHeader {
@@ -88,7 +89,8 @@ SisX_Parser::~SisX_Parser() {}
 int  SisX_Parser::query_platform() const {
  unsigned id;
  struct E32ImageHeader img;
- bmReadBufferEx(&img,sizeof(img),0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(&img,sizeof(img));
  id=DISASM_DATA;
  if((img.iCpuIdentifier&0xF000)==0x1000) id=DISASM_CPU_IX86;
  else if((img.iCpuIdentifier&0xF000)==0x2000) id=DISASM_CPU_ARM;
@@ -103,8 +105,9 @@ __filesize_t SisX_Parser::show_header()
  char head[80];
  struct E32ImageHeader img;
  __filesize_t fpos,fpos2;
- fpos2=fpos = BMGetCurrFilePos();
- bmReadBufferEx(&img,sizeof(img),0,binary_stream::Seek_Set);
+ fpos2=fpos = beye_context().bm_file().tell();
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(&img,sizeof(img));
  switch(img.iUid1)
  {
     case 0x10000079: exetype="DLL"; break;
@@ -177,9 +180,10 @@ __filesize_t SisX_Parser::show_header()
 static bool probe() {
     unsigned char sign[4];
     unsigned long id;
-    bmSeek(0,binary_stream::Seek_Set);
-    id=bmReadDWord();
-    bmReadBufferEx(sign,sizeof(sign),16L,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    id=beye_context().sc_bm_file().read(type_dword);
+    beye_context().sc_bm_file().seek(16L,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(sign,sizeof(sign));
     if((id&0x10000000UL)==0x10000000UL && memcmp(sign,"EPOC",4)==0) return true;
     return false;
 }

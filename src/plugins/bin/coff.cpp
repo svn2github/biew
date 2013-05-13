@@ -30,12 +30,13 @@ using namespace	usr;
 #include "colorset.h"
 #include "bconsole.h"
 #include "bin_util.h"
-#include "bmfile.h"
 #include "beyeutil.h"
 #include "beyehelp.h"
 #include "plugins/bin/coff.h"
 #include "plugins/disasm.h"
 #include "libbeye/kbd_code.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
     struct RELOC_COFF386 {
@@ -219,7 +220,7 @@ __filesize_t Coff_Parser::action_F10()
  unsigned nnames;
  __filesize_t fpos,off;
  memArray * obj;
- fpos = BMGetCurrFilePos();
+ fpos = beye_context().bm_file().tell();
  nnames = COFF_WORD(coff386hdr.f_nscns);
  if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
@@ -254,7 +255,7 @@ __filesize_t Coff_Parser::show_header()
   __filesize_t fpos,entry,v_entry;
   unsigned keycode;
   TWindow * w;
-  fpos = BMGetCurrFilePos();
+  fpos = beye_context().bm_file().tell();
   v_entry = entry = 0L;
   if(*(unsigned short *)coff386ahdr.magic == ZMAGIC)
   {
@@ -407,8 +408,8 @@ __filesize_t Coff_Parser::CalcEntryCoff(unsigned long idx,bool display_msg)
   uint_fast16_t sec_num;
   __filesize_t fpos;
   fpos = 0L;
-  bmSeek(COFF_DWORD(coff386hdr.f_symptr)+idx*sizeof(struct external_syment),binary_stream::Seek_Set);
-  bmReadBuffer(&cse,sizeof(struct external_syment));
+  beye_context().sc_bm_file().seek(COFF_DWORD(coff386hdr.f_symptr)+idx*sizeof(struct external_syment),binary_stream::Seek_Set);
+  beye_context().sc_bm_file().read(&cse,sizeof(struct external_syment));
   sec_num = COFF_WORD(cse.e_scnum);
   if(sec_num && sec_num <= COFF_WORD(coff386hdr.f_nscns) &&
     ((cse.e_sclass[0] == C_EXT ||
@@ -427,7 +428,7 @@ __filesize_t Coff_Parser::CalcEntryCoff(unsigned long idx,bool display_msg)
 
 __filesize_t Coff_Parser::action_F7()
 {
-    __filesize_t fpos = BMGetCurrFilePos();
+    __filesize_t fpos = beye_context().bm_file().tell();
     int ret;
     std::string title = "Symbol Table";
     ssize_t nnames = COFF_DWORD(coff386hdr.f_nsyms);
@@ -438,7 +439,7 @@ __filesize_t Coff_Parser::action_F7()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = coffSymTabReadItems(bmbioHandle(),obj,nnames);
+    bval = coffSymTabReadItems(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -468,20 +469,20 @@ void Coff_Parser::BuildRelocCoff386()
   RELOC_COFF386 rel;
   if(!(RelocCoff386 = la_Build(0,sizeof(RELOC_COFF386),MemOutBox))) return;
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
-  if(!PubNames) coff_ReadPubNameList(bmbioHandle(),MemOutBox);
+  if(!PubNames) coff_ReadPubNameList(beye_context().sc_bm_file(),MemOutBox);
   w->goto_xy(1,1);
   w->puts(BUILD_REFS);
   for(segcount = 0;segcount < COFF_WORD(coff386hdr.f_nscns);segcount++)
   {
     bool is_eof;
     is_eof = false;
-    bmSeek(COFF_DWORD(coff386so[segcount].s_relptr),binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(COFF_DWORD(coff386so[segcount].s_relptr),binary_stream::Seek_Set);
     nr = COFF_WORD(coff386so[segcount].s_nreloc);
     for(j = 0;j < nr;j++)
     {
       struct external_reloc er;
-      bmReadBuffer(&er,sizeof(struct external_reloc));
-      if((is_eof = bmEOF()) != 0) break;
+      beye_context().sc_bm_file().read(&er,sizeof(struct external_reloc));
+      if((is_eof = beye_context().sc_bm_file().eof()) != 0) break;
       rel.offset = er.r_vaddr + COFF_DWORD(coff386so[segcount].s_scnptr);
       rel.nameoff = er.r_symndx;
       rel.type = er.r_type;
@@ -526,7 +527,8 @@ __filesize_t Coff_Parser::BuildReferStrCoff386(const DisMode& parent,char *str,R
   int c,b;
   char name[256],pubname[256],secname[256];
   retval = true;
-  val = bmReadDWordEx(rne->offset,binary_stream::Seek_Set);
+  beye_context().sc_bm_file().seek(rne->offset,binary_stream::Seek_Set);
+  val = beye_context().sc_bm_file().read(type_dword);
   /* rne->nameoff it's only pointer to name descriptor */
   is_idx = coffSymTabReadItemsIdx(*coff_cache,rne->nameoff,name,sizeof(name),(unsigned*)&secnum,&offset);
   val_assigned = false;
@@ -579,7 +581,7 @@ bool Coff_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int 
   char buff[400];
   ret = false;
   if(flags & APREF_TRY_PIC) return ret;
-  if(!PubNames) coff_ReadPubNameList(bmbioHandle(),MemOutBox);
+  if(!PubNames) coff_ReadPubNameList(beye_context().sc_bm_file(),MemOutBox);
   if((COFF_WORD(coff386hdr.f_flags) & F_RELFLG) == F_RELFLG) goto try_pub;
   if(!RelocCoff386) BuildRelocCoff386();
   key.offset = ulShift;
@@ -603,18 +605,19 @@ Coff_Parser::Coff_Parser(CodeGuider& _code_guider)
 	    :Binary_Parser(_code_guider)
 	    ,code_guider(_code_guider)
 {
-  binary_stream& main_handle=bNull;
-  __filesize_t s_off = sizeof(coff386hdr);
-  uint_fast16_t i;
-  bmReadBufferEx(&coff386hdr,sizeof(struct external_filehdr),0,binary_stream::Seek_Set);
-  if(COFF_WORD(coff386hdr.f_opthdr)) bmReadBuffer(&coff386ahdr,sizeof(AOUTHDR));
+    binary_stream& main_handle=bNull;
+    __filesize_t s_off = sizeof(coff386hdr);
+    uint_fast16_t i;
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(&coff386hdr,sizeof(struct external_filehdr));
+  if(COFF_WORD(coff386hdr.f_opthdr)) beye_context().sc_bm_file().read(&coff386ahdr,sizeof(AOUTHDR));
   nsections = COFF_WORD(coff386hdr.f_nscns);
   if(!(coff386so = new SCNHDR[nsections]))
   {
      MemOutBox("Coff386 initialization");
      exit(EXIT_FAILURE);
   }
-  main_handle = bmbioHandle();
+  main_handle = beye_context().sc_bm_file();
   if((coff_cache = main_handle.dup()) == &bNull) coff_cache = &main_handle;
   if(COFF_WORD(coff386hdr.f_opthdr)) s_off += COFF_WORD(coff386hdr.f_opthdr);
   coff_cache->seek(s_off,binary_stream::Seek_Set);
@@ -630,7 +633,7 @@ Coff_Parser::~Coff_Parser()
   binary_stream& main_handle=bNull;
   delete coff386so;
   if(PubNames) { la_Destroy(PubNames); PubNames = 0; }
-  main_handle = bmbioHandle();
+  main_handle = beye_context().sc_bm_file();
   if(coff_cache != &bNull && coff_cache != &main_handle) delete coff_cache;
 }
 
@@ -664,7 +667,7 @@ bool Coff_Parser::address_resolving(char *addr,__filesize_t cfpos)
 __filesize_t Coff_Parser::action_F1()
 {
   hlpDisplay(10002);
-  return BMGetCurrFilePos();
+  return beye_context().bm_file().tell();
 }
 
 void Coff_Parser::coff_ReadPubName(binary_stream& b_cache,const struct PubName *it,
@@ -744,7 +747,7 @@ unsigned Coff_Parser::get_object_attribute(__filesize_t pa,char *name,unsigned c
   unsigned ret;
   uint_fast16_t i;
   *start = 0;
-  *end = bmGetFLength();
+  *end = beye_context().sc_bm_file().flength();
   *_class = OC_NOOBJECT;
   *bitness = DAB_USE32;
   name[0] = 0;
@@ -776,9 +779,10 @@ unsigned Coff_Parser::get_object_attribute(__filesize_t pa,char *name,unsigned c
 int Coff_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
 static bool probe() {
-  uint_fast16_t id;
-  id = bmReadWordEx(0,binary_stream::Seek_Set);
-  return !(I386BADMAG(id));
+    uint_fast16_t id;
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    id = beye_context().sc_bm_file().read(type_word);
+    return !(I386BADMAG(id));
 }
 
 static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) Coff_Parser(_parent); }

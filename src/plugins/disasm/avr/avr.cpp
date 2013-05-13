@@ -27,7 +27,6 @@ using namespace	usr;
 #include <stdio.h>
 
 #include "beyehelp.h"
-#include "bmfile.h"
 #include "plugins/disasm.h"
 #include "beyeutil.h"
 #include "reg_form.h"

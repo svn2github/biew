@@ -28,7 +28,6 @@ using namespace	usr;
 #include "plugins/disasm.h"
 #include "plugins/disasm/ix86/ix86.h"
 #include "beyeutil.h"
-#include "bmfile.h"
 #include "codeguid.h"
 #include "reg_form.h"
 

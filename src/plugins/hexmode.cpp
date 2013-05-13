@@ -28,7 +28,6 @@ using namespace	usr;
 #include "bconsole.h"
 #include "beyeutil.h"
 #include "beyehelp.h"
-#include "bmfile.h"
 #include "bin_util.h"
 #include "reg_form.h"
 #include "codeguid.h"
@@ -108,12 +107,23 @@ typedef struct tag_hexView {
     unsigned char hardlen;
 }hexView;
 
-static char *  __FASTCALL__ GetB(__filesize_t val) { return GetBinary(BMReadByteEx(val,binary_stream::Seek_Set)); }
-static char *  __FASTCALL__ Get2D(__filesize_t val) { return Get2Digit(BMReadByteEx(val,binary_stream::Seek_Set)); }
+static char *  __FASTCALL__ GetB(__filesize_t val) {
+    char id;
+    beye_context().bm_file().seek(val,binary_stream::Seek_Set);
+    id=beye_context().bm_file().read(type_byte);
+    return GetBinary(id);
+}
+static char *  __FASTCALL__ Get2D(__filesize_t val) {
+    char id;
+    beye_context().bm_file().seek(val,binary_stream::Seek_Set);
+    id=beye_context().bm_file().read(type_byte);
+    return Get2Digit(id);
+}
 static char *  __FASTCALL__ Get4D(__filesize_t val)
 {
     unsigned short v;
-    v = BMReadWordEx(val,binary_stream::Seek_Set);
+    beye_context().bm_file().seek(val,binary_stream::Seek_Set);
+    v = beye_context().bm_file().read(type_word);
     if(hendian==1) v=le2me_16(v);
     else
     if(hendian==2) v=be2me_16(v);
@@ -122,7 +132,8 @@ static char *  __FASTCALL__ Get4D(__filesize_t val)
 static char *  __FASTCALL__ Get8D(__filesize_t val)
 {
     unsigned long v;
-    v = BMReadDWordEx(val,binary_stream::Seek_Set);
+    beye_context().bm_file().seek(val,binary_stream::Seek_Set);
+    v = beye_context().bm_file().read(type_dword);
     if(hendian==1) v=le2me_32(v);
     else
     if(hendian==2) v=be2me_32(v);
@@ -151,7 +162,7 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
     __filesize_t sindex,cpos,flen,lindex,SIndex;
     static __filesize_t hmocpos = 0L;
     int __inc,dlen;
-    cpos = BMGetCurrFilePos();
+    cpos = beye_context().bm_file().tell();
     if(hmocpos != cpos || keycode == KE_SUPERKEY || keycode == KE_JUSTFIND) {
 	tAbsCoord height = main_wnd.client_height();
 	tAbsCoord width = main_wnd.client_width();
@@ -161,7 +172,7 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 	hmocpos = cpos;
 	__inc = hexViewer[hmode].size;
 	dlen = hexViewer[hmode].hardlen;
-	flen = BMGetFLength();
+	flen = beye_context().bm_file().flength();
 	scrHWidth = HWidth*__inc;
 	if(flen < HWidth) HWidth = flen;
 	if(keycode == KE_UPARROW) {
@@ -199,7 +210,8 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 		    len += dlen + 1;
 		    if(hmode == 1) if(freq == 3) { freq = -1; len++; }
 		}
-		BMReadBufferEx((any_t*)&outstr[width - scrHWidth],rwidth*__inc,sindex,binary_stream::Seek_Set);
+		beye_context().bm_file().seek(sindex,binary_stream::Seek_Set);
+		beye_context().bm_file().read((any_t*)&outstr[width - scrHWidth],rwidth*__inc);
 		xmin = beye_context().tconsole().vio_width()-scrHWidth;
 		main_wnd.direct_write(1,i + 1,outstr,xmin);
 		if(isHOnLine(sindex,scrHWidth)) {
@@ -234,11 +246,11 @@ void HexMode::misckey_action () /* EditHex */
     unsigned bound;
     tAbsCoord width = main_wnd.client_width();
     if(hmode != 1) return;
-    if(!BMGetFLength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
-    bound = width-(hexViewer[hmode].width()-virtWidthCorr);
-    ewnd[0] = WindowOpen(HA_LEN()+1,2,bound,beye_context().tconsole().vio_height()-1,TWindow::Flag_Has_Cursor);
+    if(!beye_context().bm_file().flength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
+    bound = (width-(hexViewer[hmode].width()-virtWidthCorr))-HA_LEN();
+    ewnd[0] = new(zeromem) TWindow(HA_LEN()+1,2,bound,beye_context().tconsole().vio_height()-2,TWindow::Flag_Has_Cursor);
     ewnd[0]->set_color(browser_cset.edit.main); ewnd[0]->clear();
-    ewnd[1] = WindowOpen(bound+1,2,width,beye_context().tconsole().vio_height()-1,TWindow::Flag_Has_Cursor);
+    ewnd[1] = new(zeromem) TWindow(bound+HA_LEN()+1,2,width-bound+2,beye_context().tconsole().vio_height()-2,TWindow::Flag_Has_Cursor);
     ewnd[1]->set_color(browser_cset.edit.main); ewnd[1]->clear();
     drawEditPrompt();
     has_show[0] = has_show[1] = false;

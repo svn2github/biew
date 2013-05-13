@@ -18,7 +18,22 @@
 #define __SETUP__H
 
 namespace	usr {
+    class Setup : public Opaque {
+	public:
+	    Setup();
+	    virtual ~Setup();
+
+	    virtual void	run();
+	private:
+	    bool		select_codepage();
+	    void		paint(TWindow& twin);
+
+	    static void		draw_prompt();
+
+	    unsigned		default_cp;
+	    static const char*	setuptxt[];
+	    static const char*	cp_list[];
+    };
     std::string		beyeGetHelpName();
-    void		Setup();
 } // namespace	usr
 #endif

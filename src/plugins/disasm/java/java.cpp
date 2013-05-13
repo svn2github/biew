@@ -29,7 +29,6 @@ using namespace	usr;
 #include "beyehelp.h"
 #include "beyeutil.h"
 #include "bin_util.h"
-#include "bmfile.h"
 #include "reg_form.h"
 #include "libbeye/file_ini.h"
 
@@ -437,7 +436,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 					    &func_class,ulShift,true);
     next_pa = beye_context().bin_format().get_public_symbol(prev_func,sizeof(prev_func),
 					    &func_class,ulShift,false);
-    if(next_pa==Plugin::Bad_Address) next_pa=bmGetFLength();
+    if(next_pa==Plugin::Bad_Address) next_pa=beye_context().sc_bm_file().flength();
     if(prev_pa==Plugin::Bad_Address) prev_pa=0;
     if(!(prev_pa%4)) npadds = (ulShift+1-prev_pa)%4; /* align only if method is aligned */
     else npadds=0;

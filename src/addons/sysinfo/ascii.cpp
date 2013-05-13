@@ -49,7 +49,7 @@ ASCII_Addon::~ASCII_Addon() {}
 TWindow*  ASCII_Addon::CreatePanelNF(tAbsCoord x1,tAbsCoord y1,tAbsCoord x2,tAbsCoord y2)
 {
  TWindow *win;
- win = WindowOpen(x1,y1,x2,y2);
+ win = new(zeromem) TWindow(x1,y1,x2-x1+1,y2-y2+1);
  win->set_color(dialog_cset.main);
  win->clear();
  win->show();

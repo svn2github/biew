@@ -293,7 +293,7 @@ typedef unsigned char * MBuffer;
 	    virtual bool	action_F5() { return false; }	/**< actions on Ctrl-(F1,F3-F5) */
 
 	    virtual DisasmRet	disassembler(__filesize_t shift,MBuffer insn_buff,unsigned flags) = 0; /**< main function of disasm */
-	    virtual AsmRet	assembler(const char *str) { AsmRet ret = {NULL, ASM_SYNTAX, 0 }; UNUSED(str); beye_context().ErrMessageBox("Sorry, no assembler available",""); return ret; }
+	    virtual AsmRet	assembler(const char *str);
 
 	    virtual void	show_short_help() const = 0; /**< displays short help */
 	    virtual int		max_insn_len() = 0; /**< Max length of 1 disasm instruction */

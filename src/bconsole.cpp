@@ -431,7 +431,7 @@ static TWindow *  __FASTCALL__ _CreateWindowDD(const std::string& title,tAbsCoor
  unsigned char frame[8];
  flags = TWindow::Flag_Has_Frame;
  if(is_nls) flags |= TWindow::Flag_NLS;
- win = WindowOpen(0,0,x2+2,y2+2,flags);
+ win = new(zeromem) TWindow(0,0,x2+2,y2+2,flags);
  win->into_center();
  win->set_color(dialog_cset.main);
  win->clear();
@@ -460,7 +460,7 @@ static TWindow *  __FASTCALL__ _CrtMnuWindowDD(const std::string& title,tAbsCoor
  TWindow *win;
  TWindow::twc_flag flags = TWindow::Flag_Has_Frame;
  if(is_nls) flags |= TWindow::Flag_NLS;
- win = WindowOpen(x1,y1,x2+1,y2+1,flags);
+ win = new(zeromem) TWindow(x1,y1,x2-x1+2,y2-y1+2,flags);
  if(!x1 && !y1) win->into_center();
  win->set_color(menu_cset.main);
  win->clear();
@@ -495,7 +495,7 @@ static TWindow *  __FASTCALL__ _CreateHlpWnd(const std::string& title,tAbsCoord 
  TWindow *win;
  TWindow::twc_flag flags = TWindow::Flag_Has_Frame;
  if(is_nls) flags |= TWindow::Flag_NLS;
- win = WindowOpen(0,0,x2,y2,flags);
+ win = new(zeromem) TWindow(0,0,x2+2,y2+2,flags);
  win->into_center();
  win->set_color(help_cset.main);
  win->clear();
@@ -518,7 +518,7 @@ TWindow * __FASTCALL__ CrtHlpWndnls(const std::string& title,tAbsCoord x2,tAbsCo
 TWindow * __FASTCALL__ CreateEditor(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsCoord Y2,TWindow::twc_flag flags)
 {
  TWindow *ret;
- ret = WindowOpen(X1,Y1,X2,Y2,flags);
+ ret = new(zeromem) TWindow(X1,Y1,X2-X1+1,Y2-Y1+1,flags);
  ret->set_color(dialog_cset.editor.active);
  ret->clear();
  return ret;

@@ -25,7 +25,6 @@ using namespace	usr;
 #include <limits.h>
 
 #include "beye.h"
-#include "bmfile.h"
 #include "beyeutil.h"
 #include "bconsole.h"
 #include "codeguid.h"
@@ -169,7 +168,7 @@ void CodeGuider::add_go_address(const DisMode& parent,char *str,__filesize_t add
 
 void CodeGuider::add_back_address()
 {
-    BackAddr.push_back(BMGetCurrFilePos());
+    BackAddr.push_back(beye_context().bm_file().tell());
 }
 
 __filesize_t CodeGuider::get_go_address(unsigned keycode)
@@ -180,7 +179,7 @@ __filesize_t CodeGuider::get_go_address(unsigned keycode)
 	    ret = BackAddr.back();
 	    BackAddr.pop_back();
 	}
-	else ret=BMGetCurrFilePos();
+	else ret=beye_context().bm_file().tell();
     } else {
 	unsigned ptr;
 	keycode &= 0x00FF;
@@ -188,7 +187,7 @@ __filesize_t CodeGuider::get_go_address(unsigned keycode)
 	if(ptr < GoAddr.size()) {
 	    add_back_address();
 	    ret = GoAddr[ptr].first;
-	} else ret = BMGetCurrFilePos();
+	} else ret = beye_context().bm_file().tell();
     }
     return ret;
 }
@@ -196,7 +195,7 @@ __filesize_t CodeGuider::get_go_address(unsigned keycode)
 char* CodeGuider::encode_address(__filesize_t cfpos,bool AddressDetail) const
 {
     static char addr[11];
-    strcpy(addr,is_BMUse64()?Get16Digit(cfpos):Get8Digit(cfpos));
+    strcpy(addr,beye_context().is_file64()?Get16Digit(cfpos):Get8Digit(cfpos));
     if(AddressDetail) beye_context().bin_format().address_resolving(addr,cfpos);
     strcat(addr,": ");
     return addr;

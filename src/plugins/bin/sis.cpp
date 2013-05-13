@@ -21,7 +21,6 @@ using namespace	usr;
 #include <stddef.h>
 
 #include "reg_form.h"
-#include "bmfile.h"
 #include "bconsole.h"
 #include "beyehelp.h"
 #include "colorset.h"
@@ -29,6 +28,8 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 #include "plugins/bin/mmio.h"
 #include "plugins/disasm.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
 struct SisHeader {
@@ -79,7 +80,7 @@ int  Sis_Parser::query_platform() const { return DISASM_CPU_ARM; }
 __filesize_t Sis_Parser::show_sis3_header()
 {
     beye_context().ErrMessageBox("Not implemented yet!","Sis v3 header");
-    return BMGetCurrFilePos();
+    return beye_context().bm_file().tell();
 }
 
 __filesize_t Sis_Parser::show_header()
@@ -89,8 +90,9 @@ __filesize_t Sis_Parser::show_header()
  const char *TypeName;
  struct SisHeader sis;
  __filesize_t fpos,fpos2;
- fpos2=fpos = BMGetCurrFilePos();
- bmReadBufferEx(&sis,sizeof(sis),0,binary_stream::Seek_Set);
+ fpos2=fpos = beye_context().bm_file().tell();
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(&sis,sizeof(sis));
  if(sis.UID1==0x10201A7A) return show_sis3_header();
  switch(sis.Type)
  {
@@ -149,10 +151,10 @@ __filesize_t Sis_Parser::show_header()
 
 static bool probe() {
     unsigned long id1,id2,id3;
-    bmSeek(0,binary_stream::Seek_Set);
-    id1=bmReadDWordEx(0,binary_stream::Seek_Set);
-    id2=bmReadDWordEx(4,binary_stream::Seek_Set);
-    id3=bmReadDWordEx(8,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    id1=beye_context().sc_bm_file().read(type_dword);
+    id2=beye_context().sc_bm_file().read(type_dword);
+    id3=beye_context().sc_bm_file().read(type_dword);
     if((id2==0x10003A12 || id2==0x1000006D) && id3==0x10000419) return true;
     /* try s60 3rd */
     if(id1==0x10201A7A) return true;

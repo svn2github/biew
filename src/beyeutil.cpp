@@ -24,7 +24,6 @@ using namespace	usr;
 #include <limits.h>
 #include <stdarg.h>
 
-#include "bmfile.h"
 #include "beyeutil.h"
 #include "bconsole.h"
 #include "tstrings.h"

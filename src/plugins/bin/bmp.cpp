@@ -25,10 +25,11 @@ using namespace	usr;
 #include "colorset.h"
 #include "beyeutil.h"
 #include "reg_form.h"
-#include "bmfile.h"
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
     class BMP_Parser : public Binary_Parser {
@@ -54,13 +55,13 @@ __filesize_t BMP_Parser::show_header()
  TWindow * hwnd;
  BITMAPINFOHEADER bmph;
  __filesize_t fpos,fpos2;
- fpos = BMGetCurrFilePos();
- bmSeek(2,binary_stream::Seek_Set);
- /*filesize = */bmReadDWord();
- bmSeek(4,binary_stream::Seek_Cur);
- fpos2=bmReadWord(); /* data offset */
- bmSeek(2,binary_stream::Seek_Cur);
- bmReadBuffer(&bmph,sizeof(BITMAPINFOHEADER));
+ fpos = beye_context().bm_file().tell();
+ beye_context().sc_bm_file().seek(2,binary_stream::Seek_Set);
+ /*filesize = */beye_context().sc_bm_file().read(type_dword);
+ beye_context().sc_bm_file().seek(4,binary_stream::Seek_Cur);
+ fpos2=beye_context().sc_bm_file().read(type_word); /* data offset */
+ beye_context().sc_bm_file().seek(2,binary_stream::Seek_Cur);
+ beye_context().sc_bm_file().read(&bmph,sizeof(BITMAPINFOHEADER));
  hwnd = CrtDlgWndnls(" BMP File Header ",43,6);
  hwnd->goto_xy(1,1);
  hwnd->printf(
@@ -88,8 +89,9 @@ __filesize_t BMP_Parser::show_header()
 }
 
 static bool probe() {
-    if(	bmReadByteEx(0,binary_stream::Seek_Set) == 'B' &&
-	bmReadByteEx(1,binary_stream::Seek_Set) == 'M') return true;
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    if(	beye_context().sc_bm_file().read(type_byte) == 'B' &&
+	beye_context().sc_bm_file().read(type_byte) == 'M') return true;
     return false;
 }
 

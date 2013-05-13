@@ -29,13 +29,14 @@ using namespace	usr;
 #include "beyehelp.h"
 #include "beyeutil.h"
 #include "bin_util.h"
-#include "bmfile.h"
 #include "colorset.h"
 #include "codeguid.h"
 #include "reg_form.h"
 #include "tstrings.h"
 #include "plugins/disasm.h"
 #include "libbeye/kbd_code.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
 enum {
@@ -233,10 +234,10 @@ void JVM_Parser::skip_fields(unsigned nitems,int attr)
     for(i=0;i<nitems;i++)
     {
 	unsigned short sval;
-	bmSeek(6,binary_stream::Seek_Cur);
-	sval=bmReadWord();
+	beye_context().sc_bm_file().seek(6,binary_stream::Seek_Cur);
+	sval=beye_context().sc_bm_file().read(type_word);
 	sval=JVM_WORD(&sval,1);
-	fpos=bmGetCurrFilePos();
+	fpos=beye_context().sc_bm_file().tell();
 	if(i==0)
 	{
 	    __filesize_t lval;
@@ -244,7 +245,7 @@ void JVM_Parser::skip_fields(unsigned nitems,int attr)
 	    if(attr) jvm_header.code_offset=lval;
 	    else jvm_header.data_offset=lval;
 	}
-	skip_attributes(bmbioHandle(),sval);
+	skip_attributes(beye_context().sc_bm_file(),sval);
     }
 }
 
@@ -269,7 +270,7 @@ bool JVM_Parser::jvm_read_interfaces(binary_stream& handle,memArray * names,unsi
 
 __filesize_t JVM_Parser::action_F2()
 {
-    __filesize_t fpos = BMGetCurrFilePos();
+    __filesize_t fpos = beye_context().bm_file().tell();
     std::string title = " interfaces ";
     ssize_t nnames = jvm_header.interfaces_count;
     int flags = LB_SORTABLE;
@@ -278,7 +279,7 @@ __filesize_t JVM_Parser::action_F2()
     TWindow* w;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = jvm_read_interfaces(bmbioHandle(),obj,nnames);
+    bval = jvm_read_interfaces(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -312,7 +313,7 @@ bool JVM_Parser::jvm_read_attributes(binary_stream& handle,memArray * names,unsi
 
 __filesize_t  JVM_Parser::__ShowAttributes(const std::string& title)
 {
-    __filesize_t fpos = BMGetCurrFilePos();
+    __filesize_t fpos = beye_context().bm_file().tell();
     int ret;
     ssize_t nnames = jvm_header.attributes_count;
     int flags = LB_SELECTIVE;
@@ -322,7 +323,7 @@ __filesize_t  JVM_Parser::__ShowAttributes(const std::string& title)
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = jvm_read_attributes(bmbioHandle(),obj,nnames);
+    bval = jvm_read_attributes(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -332,15 +333,15 @@ __filesize_t  JVM_Parser::__ShowAttributes(const std::string& title)
     exit:
     if(ret!=-1) {
 	unsigned i;
-	bmSeek(jvm_header.attributes_offset,binary_stream::Seek_Set);
+	beye_context().sc_bm_file().seek(jvm_header.attributes_offset,binary_stream::Seek_Set);
 	for(i=0;i<(unsigned)ret+1;i++) {
 	    uint32_t len;
-	    fpos=bmGetCurrFilePos();
-	    bmSeek(fpos+2,binary_stream::Seek_Set);
-	    len=bmReadDWord();
+	    fpos=beye_context().sc_bm_file().tell();
+	    beye_context().sc_bm_file().seek(fpos+2,binary_stream::Seek_Set);
+	    len=beye_context().sc_bm_file().read(type_dword);
 	    len=JVM_DWORD(&len,1);
 	    fpos+=6;
-	    bmSeek(len,binary_stream::Seek_Cur);
+	    beye_context().sc_bm_file().seek(len,binary_stream::Seek_Cur);
 	}
     }
     return fpos;
@@ -378,7 +379,7 @@ bool JVM_Parser::jvm_read_methods(binary_stream& handle,memArray * names,unsigne
 
 __filesize_t JVM_Parser::action_F3()
 {
-    __filesize_t fpos = BMGetCurrFilePos();
+    __filesize_t fpos = beye_context().bm_file().tell();
     int ret;
     std::string title = " length   attributes ";
     ssize_t nnames = jvm_header.methods_count;
@@ -389,7 +390,7 @@ __filesize_t JVM_Parser::action_F3()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = jvm_read_methods(bmbioHandle(),obj,nnames);
+    bval = jvm_read_methods(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -401,15 +402,15 @@ __filesize_t JVM_Parser::action_F3()
 	char str[80];
 	unsigned i;
 	unsigned short acount=0;
-	bmSeek(jvm_header.methods_offset,binary_stream::Seek_Set);
+	beye_context().sc_bm_file().seek(jvm_header.methods_offset,binary_stream::Seek_Set);
 	for(i=0;i<(unsigned)ret+1;i++) {
-	    fpos=bmGetCurrFilePos();
-	    bmSeek(2,binary_stream::Seek_Cur);
-	    get_name(bmbioHandle(),str,sizeof(str));
-	    bmSeek(fpos+6,binary_stream::Seek_Set);
-	    acount=bmReadWord();
+	    fpos=beye_context().sc_bm_file().tell();
+	    beye_context().sc_bm_file().seek(2,binary_stream::Seek_Cur);
+	    get_name(beye_context().sc_bm_file(),str,sizeof(str));
+	    beye_context().sc_bm_file().seek(fpos+6,binary_stream::Seek_Set);
+	    acount=beye_context().sc_bm_file().read(type_word);
 	    acount=JVM_WORD(&acount,1);
-	    skip_attributes(bmbioHandle(),acount);
+	    skip_attributes(beye_context().sc_bm_file(),acount);
 	}
 	fpos += 6;
 	if(acount>1) {
@@ -455,7 +456,7 @@ bool JVM_Parser::jvm_read_fields(binary_stream& handle,memArray * names,unsigned
 
 __filesize_t JVM_Parser::action_F4()
 {
-    __filesize_t fpos = BMGetCurrFilePos();
+    __filesize_t fpos = beye_context().bm_file().tell();
     int ret;
     std::string title = " length   attributes ";
     ssize_t nnames = jvm_header.fields_count;
@@ -466,7 +467,7 @@ __filesize_t JVM_Parser::action_F4()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = jvm_read_fields(bmbioHandle(),obj,nnames);
+    bval = jvm_read_fields(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -478,15 +479,15 @@ __filesize_t JVM_Parser::action_F4()
 	char str[80];
 	unsigned i;
 	unsigned short acount=0;
-	bmSeek(jvm_header.fields_offset,binary_stream::Seek_Set);
+	beye_context().sc_bm_file().seek(jvm_header.fields_offset,binary_stream::Seek_Set);
 	for(i=0;i<(unsigned)ret+1;i++) {
-	    fpos=bmGetCurrFilePos();
-	    bmSeek(2,binary_stream::Seek_Cur);
-	    get_name(bmbioHandle(),str,sizeof(str));
-	    bmSeek(fpos+6,binary_stream::Seek_Set);
-	    acount=bmReadWord();
+	    fpos=beye_context().sc_bm_file().tell();
+	    beye_context().sc_bm_file().seek(2,binary_stream::Seek_Cur);
+	    get_name(beye_context().sc_bm_file(),str,sizeof(str));
+	    beye_context().sc_bm_file().seek(fpos+6,binary_stream::Seek_Set);
+	    acount=beye_context().sc_bm_file().read(type_word);
 	    acount=JVM_WORD(&acount,1);
-	    skip_attributes(bmbioHandle(),acount);
+	    skip_attributes(beye_context().sc_bm_file(),acount);
 	}
 	fpos += 6;
 	if(acount>1) {
@@ -585,7 +586,7 @@ bool JVM_Parser::jvm_read_pool(binary_stream& handle,memArray * names,unsigned n
 
 __filesize_t JVM_Parser::action_F8()
 {
-    __filesize_t fpos = BMGetCurrFilePos();
+    __filesize_t fpos = beye_context().bm_file().tell();
     std::string title = " Constant pool ";
     ssize_t nnames = jvm_header.constant_pool_count;
     int flags = LB_SORTABLE;
@@ -594,7 +595,7 @@ __filesize_t JVM_Parser::action_F8()
     TWindow* w;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = jvm_read_pool(bmbioHandle(),obj,nnames);
+    bval = jvm_read_pool(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -614,50 +615,50 @@ JVM_Parser::JVM_Parser(CodeGuider& code_guider)
     jvm_header.attrcode_offset=-1;
     jvm_header.code_offset=-1;
     jvm_header.data_offset=-1;
-    fpos=bmGetCurrFilePos();
-    bmSeek(4,binary_stream::Seek_Set);
-    sval=bmReadWord();
+    fpos=beye_context().sc_bm_file().tell();
+    beye_context().sc_bm_file().seek(4,binary_stream::Seek_Set);
+    sval=beye_context().sc_bm_file().read(type_word);
     jvm_header.minor=JVM_WORD(&sval,1);
-    sval=bmReadWord();
+    sval=beye_context().sc_bm_file().read(type_word);
     jvm_header.major=JVM_WORD(&sval,1);
-    sval=bmReadWord();
+    sval=beye_context().sc_bm_file().read(type_word);
     jvm_header.constant_pool_count=JVM_WORD(&sval,1);
-    jvm_header.constants_offset=bmGetCurrFilePos();
-    skip_constant_pool(bmbioHandle(),jvm_header.constant_pool_count-1);
-    sval=bmReadWord();
+    jvm_header.constants_offset=beye_context().sc_bm_file().tell();
+    skip_constant_pool(beye_context().sc_bm_file(),jvm_header.constant_pool_count-1);
+    sval=beye_context().sc_bm_file().read(type_word);
     jvm_header.access_flags=JVM_WORD(&sval,1);
-    sval=bmReadWord();
+    sval=beye_context().sc_bm_file().read(type_word);
     jvm_header.this_class=JVM_WORD(&sval,1);
-    sval=bmReadWord();
+    sval=beye_context().sc_bm_file().read(type_word);
     jvm_header.super_class=JVM_WORD(&sval,1);
-    sval=bmReadWord();
+    sval=beye_context().sc_bm_file().read(type_word);
     jvm_header.interfaces_count=JVM_WORD(&sval,1);
-    jvm_header.interfaces_offset=bmGetCurrFilePos();
-    bmSeek(jvm_header.interfaces_count*2,binary_stream::Seek_Cur);
-    sval=bmReadWord();
+    jvm_header.interfaces_offset=beye_context().sc_bm_file().tell();
+    beye_context().sc_bm_file().seek(jvm_header.interfaces_count*2,binary_stream::Seek_Cur);
+    sval=beye_context().sc_bm_file().read(type_word);
     jvm_header.fields_count=JVM_WORD(&sval,1);
-    jvm_header.fields_offset=bmGetCurrFilePos();
+    jvm_header.fields_offset=beye_context().sc_bm_file().tell();
     skip_fields(jvm_header.fields_count,0);
-    sval=bmReadWord();
+    sval=beye_context().sc_bm_file().read(type_word);
     jvm_header.methods_count=JVM_WORD(&sval,1);
-    jvm_header.methods_offset=bmGetCurrFilePos();
+    jvm_header.methods_offset=beye_context().sc_bm_file().tell();
     skip_fields(jvm_header.fields_count,1); /* methods have the same struct as fields */
-    sval=bmReadWord();
+    sval=beye_context().sc_bm_file().read(type_word);
     jvm_header.attrcode_offset=0;
     jvm_header.attributes_count=JVM_WORD(&sval,1);
-    jvm_header.attributes_offset=bmGetCurrFilePos();
+    jvm_header.attributes_offset=beye_context().sc_bm_file().tell();
     if(jvm_header.attributes_count) jvm_header.attrcode_offset=jvm_header.attributes_offset;
-    skip_attributes(bmbioHandle(),sval);
-    jvm_header.header_length=bmGetCurrFilePos();
-    bmSeek(fpos,binary_stream::Seek_Set);
-    binary_stream& bh = bmbioHandle();
+    skip_attributes(beye_context().sc_bm_file(),sval);
+    jvm_header.header_length=beye_context().sc_bm_file().tell();
+    beye_context().sc_bm_file().seek(fpos,binary_stream::Seek_Set);
+    binary_stream& bh = beye_context().sc_bm_file();
     if((jvm_cache = bh.dup()) == &bNull) jvm_cache = &bh;
     if((pool_cache = bh.dup()) == &bNull) pool_cache = &bh;
 }
 
 JVM_Parser::~JVM_Parser()
 {
-  binary_stream& bh=bmbioHandle();
+  binary_stream& bh=beye_context().sc_bm_file();
   if(jvm_cache != &bNull && jvm_cache != &bh) delete jvm_cache;
   if(pool_cache != &bNull && pool_cache != &bh) delete pool_cache;
 }
@@ -680,12 +681,12 @@ __filesize_t JVM_Parser::show_header()
     TWindow * hwnd;
     unsigned keycode;
     char sinfo[70],sinfo2[70],sinfo3[70];
-    entry=BMGetCurrFilePos();
+    entry=beye_context().bm_file().tell();
     hwnd = CrtDlgWndnls(" ClassFile Header ",78,11);
     hwnd->goto_xy(1,1);
     decode_acc_flags(jvm_header.access_flags,sinfo);
-    get_class_name(bmbioHandle(),jvm_header.this_class,sinfo2,sizeof(sinfo2));
-    get_class_name(bmbioHandle(),jvm_header.super_class,sinfo3,sizeof(sinfo3));
+    get_class_name(beye_context().sc_bm_file(),jvm_header.this_class,sinfo2,sizeof(sinfo2));
+    get_class_name(beye_context().sc_bm_file(),jvm_header.super_class,sinfo3,sizeof(sinfo3));
     hwnd->printf(
 	     "Signature     = 'CAFEBABE'\n"
 	     "Version       = %u.%u\n"
@@ -850,7 +851,7 @@ void JVM_Parser::jvm_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *m
 __filesize_t JVM_Parser::get_public_symbol(char *str,unsigned cb_str,unsigned *func_class,
 			   __filesize_t pa,bool as_prev)
 {
-    binary_stream& b_cache = bmbioHandle();
+    binary_stream& b_cache = beye_context().sc_bm_file();
     __filesize_t fpos;
     size_t idx;
     if(!PubNames) jvm_ReadPubNameList(b_cache,NULL);
@@ -870,7 +871,7 @@ unsigned JVM_Parser::get_object_attribute(__filesize_t pa,char *name,unsigned cb
   unsigned ret;
   UNUSED(cb_name);
   *start = 0;
-  *end = bmGetFLength();
+  *end = beye_context().sc_bm_file().flength();
   *_class = OC_NOOBJECT;
   *bitness = DAB_USE16;
   name[0] = 0;
@@ -915,13 +916,13 @@ unsigned JVM_Parser::get_object_attribute(__filesize_t pa,char *name,unsigned cb
     {
       __filesize_t fpos;
       uint32_t len;
-      fpos=bmGetCurrFilePos();
-      bmSeek(jvm_header.attributes_offset,binary_stream::Seek_Set);
-      get_name(bmbioHandle(),name,cb_name);
-      bmSeek(fpos+2,binary_stream::Seek_Set);
-      len=bmReadDWord();
+      fpos=beye_context().sc_bm_file().tell();
+      beye_context().sc_bm_file().seek(jvm_header.attributes_offset,binary_stream::Seek_Set);
+      get_name(beye_context().sc_bm_file(),name,cb_name);
+      beye_context().sc_bm_file().seek(fpos+2,binary_stream::Seek_Set);
+      len=beye_context().sc_bm_file().read(type_dword);
       len=JVM_DWORD(&len,1);
-      bmSeek(fpos,binary_stream::Seek_Set);
+      beye_context().sc_bm_file().seek(fpos,binary_stream::Seek_Set);
       *_class = OC_CODE;
       *start = jvm_header.attributes_offset+6;
       *end = *start+len;
@@ -1033,9 +1034,10 @@ bool JVM_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int f
 
 static bool probe() {
   unsigned char id[4];
-  bmReadBufferEx(id,sizeof(id),0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(id,sizeof(id));
   /* Cafe babe !!! */
-  return id[0]==0xCA && id[1]==0xFE && id[2]==0xBA && id[3]==0xBE && bmGetFLength()>=16;
+  return id[0]==0xCA && id[1]==0xFE && id[2]==0xBA && id[3]==0xBE && beye_context().sc_bm_file().flength()>=16;
 }
 
 static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) JVM_Parser(_parent); }

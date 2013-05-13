@@ -554,7 +554,7 @@ void Calculator_Addon::run()
   X2 -= 1;
   Y1 += 2;
   Y2 = Y1;
-  ewnd = WindowOpen(X1,Y1,X2,Y2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
+  ewnd = new(zeromem) TWindow(X1,Y1,X2-X1+1,Y2-Y1+1,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
   ewnd->show();
   ewnd->set_color(dialog_cset.editor.active);
   wdlg->goto_xy(2,1); wdlg->puts("Input an integer expression :");

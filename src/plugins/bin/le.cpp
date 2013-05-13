@@ -27,7 +27,6 @@ using namespace	usr;
 #include "plugins/disasm.h"
 #include "plugins/bin/lx_le.h"
 #include "bin_util.h"
-#include "bmfile.h"
 #include "beyehelp.h"
 #include "tstrings.h"
 #include "beyeutil.h"
@@ -89,7 +88,7 @@ __filesize_t LE_Parser::CalcPageEntry(unsigned long pageidx) const
     }
   }
   if(found) return __calcPageEntryLE((LE_PAGE*)&mt,pageidx - 1);
-  else      return BMGetCurrFilePos();
+  else      return beye_context().bm_file().tell();
 }
 
 __filesize_t LE_Parser::CalcEntryPoint(unsigned long objnum,__filesize_t _offset) const
@@ -126,7 +125,7 @@ __filesize_t LE_Parser::CalcEntryPoint(unsigned long objnum,__filesize_t _offset
 	if(mt.number == pidx) { found = true; break; }
       }
       if(found) ret = __calcPageEntryLE((LE_PAGE*)&mt,pidx - 1) + _offset - start;
-      else      ret = BMGetCurrFilePos();
+      else      ret = beye_context().bm_file().tell();
       break;
     }
     if(is_eof) break;
@@ -138,7 +137,7 @@ __filesize_t LE_Parser::CalcEntryPoint(unsigned long objnum,__filesize_t _offset
 __filesize_t LE_Parser::CalcEntryLE(const LX_ENTRY *lxent)
 {
   __filesize_t ret;
-  ret = BMGetCurrFilePos();
+  ret = beye_context().bm_file().tell();
       switch(lxent->b32_type)
       {
 	case 1: ret = CalcEntryPoint(lxent->b32_obj,lxent->entry.e32_variant.e32_offset.offset16);
@@ -164,7 +163,7 @@ __filesize_t LE_Parser::CalcEntryBungleLE(unsigned ordinal,bool dispmsg)
   uint_fast16_t numobj = 0;
   LX_ENTRY lxent;
   __filesize_t ret;
-  ret = BMGetCurrFilePos();
+  ret = beye_context().bm_file().tell();
   handle = lx_cache;
   handle->seek(lxe.le.leEntryTableOffset + beye_context().headshift,binary_stream::Seek_Set);
   i = 0;
@@ -213,7 +212,7 @@ __filesize_t LE_Parser::CalcEntryBungleLE(unsigned ordinal,bool dispmsg)
 
 __filesize_t LE_Parser::action_F10()
 {
-    __filesize_t fpos = BMGetCurrFilePos();
+    __filesize_t fpos = beye_context().bm_file().tell();
     int ret;
     std::string title = " Map of pages ";
     ssize_t nnames = (unsigned)lxe.le.lePageCount;
@@ -224,7 +223,7 @@ __filesize_t LE_Parser::action_F10()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = __ReadMapTblLE(bmbioHandle(),obj,nnames);
+    bval = __ReadMapTblLE(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -238,11 +237,11 @@ __filesize_t LE_Parser::action_F10()
 
 __filesize_t LE_Parser::action_F3()
 {
-    __filesize_t fpos = BMGetCurrFilePos();
+    __filesize_t fpos = beye_context().bm_file().tell();
     int ret;
     unsigned ordinal;
     std::string title = RES_NAMES;
-    ssize_t nnames = LXRNamesNumItems(bmbioHandle());
+    ssize_t nnames = LXRNamesNumItems(beye_context().sc_bm_file());
     int flags = LB_SELECTIVE | LB_SORTABLE;
     bool bval;
     memArray* obj;
@@ -250,7 +249,7 @@ __filesize_t LE_Parser::action_F3()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = LXRNamesReadItems(bmbioHandle(),obj,nnames);
+    bval = LXRNamesReadItems(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -272,11 +271,11 @@ __filesize_t LE_Parser::action_F3()
 
 __filesize_t LE_Parser::action_F4()
 {
-    __filesize_t fpos = BMGetCurrFilePos();
+    __filesize_t fpos = beye_context().bm_file().tell();
     int ret;
     unsigned ordinal;
     std::string title = NORES_NAMES;
-    ssize_t nnames = LXNRNamesNumItems(bmbioHandle());
+    ssize_t nnames = LXNRNamesNumItems(beye_context().sc_bm_file());
     int flags = LB_SELECTIVE | LB_SORTABLE;
     bool bval;
     memArray* obj;
@@ -284,7 +283,7 @@ __filesize_t LE_Parser::action_F4()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = LXNRNamesReadItems(bmbioHandle(),obj,nnames);
+    bval = LXNRNamesReadItems(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -307,7 +306,8 @@ __filesize_t LE_Parser::action_F4()
 LE_Parser::LE_Parser(CodeGuider& __code_guider)
 	:LX_Parser(__code_guider)
 {
-   bmReadBufferEx(&lxe.le,sizeof(LEHEADER),beye_context().headshift,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(beye_context().headshift,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(&lxe.le,sizeof(LEHEADER));
 }
 
 LE_Parser::~LE_Parser()
@@ -317,7 +317,7 @@ LE_Parser::~LE_Parser()
 __filesize_t LE_Parser::action_F1()
 {
   hlpDisplay(10004);
-  return BMGetCurrFilePos();
+  return beye_context().bm_file().tell();
 }
 
 bool LE_Parser::address_resolving(char *addr,__filesize_t cfpos)
@@ -355,7 +355,8 @@ static bool probe() {
    beye_context().headshift = IsNewExe();
    if(beye_context().headshift)
    {
-     bmReadBufferEx(id,sizeof(id),beye_context().headshift,binary_stream::Seek_Set);
+     beye_context().sc_bm_file().seek(beye_context().headshift,binary_stream::Seek_Set);
+     beye_context().sc_bm_file().read(id,sizeof(id));
      if(id[0] == 'L' && id[1] == 'E') return true;
    }
    return false;

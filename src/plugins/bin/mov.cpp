@@ -25,11 +25,13 @@ using namespace	usr;
 #include "colorset.h"
 #include "beyeutil.h"
 #include "reg_form.h"
-#include "bmfile.h"
 #include "libbeye/bswap.h"
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
+
 namespace	usr {
 #define MOV_FOURCC(a,b,c,d) ((a<<24)|(b<<16)|(c<<8)|(d))
     class MOV_Parser : public Binary_Parser {
@@ -50,14 +52,14 @@ const char* MOV_Parser::prompt(unsigned idx) const { return txt[idx]; }
 __filesize_t MOV_Parser::mov_find_chunk(__filesize_t off,unsigned long id)
 {
     unsigned long ids,size;
-    bmSeek(off,binary_stream::Seek_Set);
-    while(!bmEOF())
+    beye_context().sc_bm_file().seek(off,binary_stream::Seek_Set);
+    while(!beye_context().sc_bm_file().eof())
     {
-	size=be2me_32(bmReadDWord());
+	size=be2me_32(beye_context().sc_bm_file().read(type_dword));
 	if(size < 8) return -1;
-	ids=be2me_32(bmReadDWord());
-	if(ids==id) return bmGetCurrFilePos()-8;
-	bmSeek(size-8,binary_stream::Seek_Cur);
+	ids=be2me_32(beye_context().sc_bm_file().read(type_dword));
+	if(ids==id) return beye_context().sc_bm_file().tell()-8;
+	beye_context().sc_bm_file().seek(size-8,binary_stream::Seek_Cur);
     }
     return -1;
 }
@@ -70,7 +72,7 @@ int MOV_Parser::query_platform() const { return DISASM_DEFAULT; }
 __filesize_t MOV_Parser::show_header()
 {
     beye_context().ErrMessageBox("Not implemented yet!","MOV format");
-    return BMGetCurrFilePos();
+    return beye_context().bm_file().tell();
 }
 
 static bool probe() {

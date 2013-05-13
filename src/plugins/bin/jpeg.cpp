@@ -26,10 +26,11 @@ using namespace	usr;
 #include "colorset.h"
 #include "beyeutil.h"
 #include "reg_form.h"
-#include "bmfile.h"
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
     class Jpeg_Parser : public Binary_Parser {
@@ -52,14 +53,16 @@ int Jpeg_Parser::query_platform() const { return DISASM_DEFAULT; }
 __filesize_t Jpeg_Parser::show_header()
 {
     beye_context().ErrMessageBox("Not implemented yet!","JPEG format");
-    return BMGetCurrFilePos();
+    return beye_context().bm_file().tell();
 }
 
 static bool probe() {
     unsigned long val;
     unsigned char id[4];
-    val=bmReadDWordEx(0,binary_stream::Seek_Set);
-    bmReadBufferEx(id,4,6,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    val = beye_context().sc_bm_file().read(type_dword);
+    beye_context().sc_bm_file().seek(6,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(id,4);
     if(val==0xE0FFD8FF && memcmp(id,"JFIF",4)==0) return true;
     return false;
 }

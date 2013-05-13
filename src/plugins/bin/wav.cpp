@@ -25,10 +25,11 @@ using namespace	usr;
 #include "colorset.h"
 #include "beyeutil.h"
 #include "reg_form.h"
-#include "bmfile.h"
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
 extern const wTagNames wtagNames[] =
@@ -186,22 +187,22 @@ int  Wave_Parser::query_platform() const { return DISASM_DEFAULT; }
 __filesize_t Wave_Parser::wav_find_chunk(__filesize_t off,unsigned long id)
 {
     unsigned long ids,size,type;
-    bmSeek(off,binary_stream::Seek_Set);
-    while(!bmEOF())
+    beye_context().sc_bm_file().seek(off,binary_stream::Seek_Set);
+    while(!beye_context().sc_bm_file().eof())
     {
-/*	fpos=bmGetCurrFilePos();*/
-	ids=bmReadDWord();
-	if(ids==id) return bmGetCurrFilePos();
-	size=bmReadDWord();
+/*	fpos=beye_context().sc_bm_file().tell();*/
+	ids=beye_context().sc_bm_file().read(type_dword);
+	if(ids==id) return beye_context().sc_bm_file().tell();
+	size=beye_context().sc_bm_file().read(type_dword);
 	size=(size+1)&(~1);
 /*fprintf(stderr,"%08X:%4s %08X\n",fpos,(char *)&ids,size);*/
 	if(ids==mmioFOURCC('L','I','S','T'))
 	{
-	    type=bmReadDWord();
-	    if(type==id) return bmGetCurrFilePos();
+	    type=beye_context().sc_bm_file().read(type_dword);
+	    if(type==id) return beye_context().sc_bm_file().tell();
 	    continue;
 	}
-	bmSeek(size,binary_stream::Seek_Cur);
+	beye_context().sc_bm_file().seek(size,binary_stream::Seek_Cur);
     }
     return -1;
 }
@@ -212,12 +213,12 @@ __filesize_t Wave_Parser::show_header()
  TWindow * hwnd;
  WAVEFORMATEX wavf;
  __filesize_t fpos,fpos2;
- fpos = BMGetCurrFilePos();
+ fpos = beye_context().bm_file().tell();
  fpos2 = wav_find_chunk(12,mmioFOURCC('f','m','t',' '));
  if((__fileoff_t)fpos2==-1) { beye_context().ErrMessageBox("Main WAV Header not found",""); return fpos; }
- bmSeek(fpos2,binary_stream::Seek_Set);
- bmReadDWord(); /* skip section size */
- bmReadBuffer(&wavf,sizeof(WAVEFORMATEX));
+ beye_context().sc_bm_file().seek(fpos2,binary_stream::Seek_Set);
+ beye_context().sc_bm_file().read(type_dword); /* skip section size */
+ beye_context().sc_bm_file().read(&wavf,sizeof(WAVEFORMATEX));
  fpos2 = wav_find_chunk(12,mmioFOURCC('d','a','t','a'));
  if((__fileoff_t)fpos2!=-1) fpos2-=4;
  hwnd = CrtDlgWndnls(" WAV File Header ",43,5);
@@ -245,9 +246,12 @@ __filesize_t Wave_Parser::show_header()
 }
 
 static bool probe() {
-    unsigned long id;
-    id=bmReadDWordEx(8,binary_stream::Seek_Set);
-    if(	bmReadDWordEx(0,binary_stream::Seek_Set)==mmioFOURCC('R','I','F','F') &&
+    unsigned long id,id0;
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    id0 = beye_context().sc_bm_file().read(type_dword);
+    beye_context().sc_bm_file().seek(8,binary_stream::Seek_Set);
+    id = beye_context().sc_bm_file().read(type_dword);
+    if(	id0==mmioFOURCC('R','I','F','F') &&
 	id==mmioFOURCC('W','A','V','E'))
 	return true;
     return false;

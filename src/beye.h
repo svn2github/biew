@@ -3,11 +3,17 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
 
+#include <limits>
 #include <map>
 #include <vector>
 #include <string>
 
 namespace	usr {
+    enum {
+	BBIO_CACHE_SIZE        =0xFFFF,  /* 64k */
+	BBIO_SMALL_CACHE_SIZE  =0x4000  /* 16k */
+    };
+
     class addendum;
     class sysinfo;
     class Plugin;
@@ -78,6 +84,8 @@ namespace	usr {
 	    void		BMClose();
 	    static binary_stream* beyeOpenRO(const std::string& fname,unsigned cache_size);
 	    static binary_stream* beyeOpenRW(const std::string& fname,unsigned cache_size);
+	    __filesize_t	flength() const;
+	    bool		is_file64() const { return flength() > std::numeric_limits<uint32_t>::max(); }
 
 	    void		TMessageBox(const std::string& text,const std::string& title) const;
 	    void		NotifyBox(const std::string& text,const std::string& title) const;
@@ -139,5 +147,7 @@ namespace	usr {
 	    TWindow*		MainWnd;
     };
     BeyeContext& beye_context();
+
+    inline unsigned	HA_LEN() { return beye_context().is_file64()?18:10; }
 } // namespace	usr
 #endif

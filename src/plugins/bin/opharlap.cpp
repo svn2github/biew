@@ -22,7 +22,6 @@ using namespace	usr;
 
 #include "colorset.h"
 #include "bin_util.h"
-#include "bmfile.h"
 #include "beyeutil.h"
 #include "beyehelp.h"
 #include "bconsole.h"
@@ -31,6 +30,8 @@ using namespace	usr;
 #include "plugins/disasm.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
     class oldPharLap_Parser : public Binary_Parser {
@@ -55,7 +56,7 @@ __filesize_t oldPharLap_Parser::show_header()
   __filesize_t fpos,entrypoint;
   TWindow * w;
   unsigned keycode;
-  fpos = BMGetCurrFilePos();
+  fpos = beye_context().bm_file().tell();
   entrypoint = oph.plHeadSize*16 + oph.plEIP;
   w = CrtDlgWndnls(" Old PharLap executable ",54,11);
   w->goto_xy(1,1);
@@ -99,7 +100,8 @@ __filesize_t oldPharLap_Parser::show_header()
 oldPharLap_Parser::oldPharLap_Parser(CodeGuider& code_guider)
 		:Binary_Parser(code_guider)
 {
-    bmReadBufferEx(&oph,sizeof(oph),0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(&oph,sizeof(oph));
 }
 
 oldPharLap_Parser::~oldPharLap_Parser(){}
@@ -121,14 +123,15 @@ bool oldPharLap_Parser::address_resolving(char *addr,__filesize_t cfpos)
 __filesize_t oldPharLap_Parser::action_F1()
 {
   hlpDisplay(10008);
-  return BMGetCurrFilePos();
+  return beye_context().bm_file().tell();
 }
 
 int oldPharLap_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
 static bool probe() {
    char sign[2];
-   bmReadBufferEx(sign,2,0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(sign,2);
    if(sign[0] == 'M' && sign[1] == 'P') return true;
    return false;
 }

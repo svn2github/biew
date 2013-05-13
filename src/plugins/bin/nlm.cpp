@@ -30,7 +30,6 @@ using namespace	usr;
 #include "plugins/disasm.h"
 #include "plugins/bin/nlm.h"
 #include "codeguid.h"
-#include "bmfile.h"
 #include "bconsole.h"
 #include "reg_form.h"
 #include "tstrings.h"
@@ -38,6 +37,8 @@ using namespace	usr;
 #include "beyehelp.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
     struct RELOC_NLM {
@@ -99,7 +100,7 @@ __filesize_t NLM_Parser::show_header()
   char modName[NLM_MODULE_NAME_SIZE];
   TWindow * w;
   unsigned keycode;
-  fpos = BMGetCurrFilePos();
+  fpos = beye_context().bm_file().tell();
   w = CrtDlgWndnls(" NetWare Loadable Module ",59,23);
   w->goto_xy(1,1);
   strncpy(modName,(char *)&nlm.nlm_moduleName[1],(int)nlm.nlm_moduleName[0]);
@@ -183,115 +184,115 @@ __filesize_t NLM_Parser::action_F8()
   TWindow *w;
   unsigned keycode;
   sharedEntry = sharedExit = 0;
-  fpos = BMGetCurrFilePos();
+  fpos = beye_context().bm_file().tell();
   w = CrtDlgWndnls(" NetWare Loadable Module ",74,23);
   w->goto_xy(1,1);
-  bmSeek(sizeof(Nlm_Internal_Fixed_Header),binary_stream::Seek_Set);
-  len = bmReadByte();
-  bmReadBuffer(modName,len + 1);
-  ssize = bmReadDWord();
-  bmSeek(4,binary_stream::Seek_Cur); /** skip reserved */
+  beye_context().sc_bm_file().seek(sizeof(Nlm_Internal_Fixed_Header),binary_stream::Seek_Set);
+  len = beye_context().sc_bm_file().read(type_byte);
+  beye_context().sc_bm_file().read(modName,len + 1);
+  ssize = beye_context().sc_bm_file().read(type_dword);
+  beye_context().sc_bm_file().seek(4,binary_stream::Seek_Cur); /** skip reserved */
   w->printf("%s\n"
 	   "Stack size                    = %08lXH\n"
 	   ,modName
 	   ,ssize);
-  bmReadBuffer(modName,5);
+  beye_context().sc_bm_file().read(modName,5);
   modName[5] = 0;
   w->printf("Old thread name               = %s\n",modName);
-  len = bmReadByte();
-  bmReadBuffer(modName,len + 1);
+  len = beye_context().sc_bm_file().read(type_byte);
+  beye_context().sc_bm_file().read(modName,len + 1);
   w->printf("Screen name                   = %s\n",modName);
-  len = bmReadByte();
-  bmReadBuffer(modName,len + 1);
+  len = beye_context().sc_bm_file().read(type_byte);
+  beye_context().sc_bm_file().read(modName,len + 1);
   w->printf("Thread name                   = %s",modName);
   while(1)
   {
-    bmReadBuffer(modName,9);
-    if(bmEOF()) break;
+    beye_context().sc_bm_file().read(modName,9);
+    if(beye_context().sc_bm_file().eof()) break;
     modName[9] = 0;
     if(memcmp(modName,"VeRsIoN#",8) == 0)
     {
-      bmSeek(-1,binary_stream::Seek_Cur);
-      ssize = bmReadDWord();
-      d = bmReadDWord();
-      m = bmReadDWord();
+      beye_context().sc_bm_file().seek(-1,binary_stream::Seek_Cur);
+      ssize = beye_context().sc_bm_file().read(type_dword);
+      d = beye_context().sc_bm_file().read(type_dword);
+      m = beye_context().sc_bm_file().read(type_dword);
       w->printf("\nVersion ( Revision )          = %lu.%lu ( %08lXH )\n",ssize,d,m);
-      ssize = bmReadDWord();
-      m     = bmReadDWord();
-      d     = bmReadDWord();
+      ssize = beye_context().sc_bm_file().read(type_dword);
+      m     = beye_context().sc_bm_file().read(type_dword);
+      d     = beye_context().sc_bm_file().read(type_dword);
       w->printf("Date (DD.MM.YY)               = %lu.%lu.%lu",d,m,ssize);
     }
     else
       if(memcmp(modName,"CoPyRiGhT",9) == 0)
       {
-	bmSeek(1,binary_stream::Seek_Cur);
-	len = bmReadByte();
-	bmReadBuffer(modName,len + 1);
+	beye_context().sc_bm_file().seek(1,binary_stream::Seek_Cur);
+	len = beye_context().sc_bm_file().read(type_byte);
+	beye_context().sc_bm_file().read(modName,len + 1);
 	w->printf("\nCopyright = %s",modName);
       }
       else
 	if(memcmp(modName,"MeSsAgEs",8) == 0)
 	{
-	  bmSeek(-1,binary_stream::Seek_Cur);
-	  ssize = bmReadDWord();
+	  beye_context().sc_bm_file().seek(-1,binary_stream::Seek_Cur);
+	  ssize = beye_context().sc_bm_file().read(type_dword);
 	  w->printf("\nLanguage                      = %08lXH\n",ssize);
-	  ssize = bmReadDWord();
-	  m = bmReadDWord();
-	  d = bmReadDWord();
+	  ssize = beye_context().sc_bm_file().read(type_dword);
+	  m = beye_context().sc_bm_file().read(type_dword);
+	  d = beye_context().sc_bm_file().read(type_dword);
 	  w->printf("Messages (offset/length/count)= %08lXH/%08lXH/%08lXH\n",ssize,m,d);
-	  ssize = bmReadDWord();
-	  m = bmReadDWord();
-	  d = bmReadDWord();
+	  ssize = beye_context().sc_bm_file().read(type_dword);
+	  m = beye_context().sc_bm_file().read(type_dword);
+	  d = beye_context().sc_bm_file().read(type_dword);
 	  w->printf("Help (offset/length/dataOff)  = %08lXH/%08lXH/%08lXH\n",ssize,m,d);
-	  ssize = bmReadDWord();
-	  m = bmReadDWord();
+	  ssize = beye_context().sc_bm_file().read(type_dword);
+	  m = beye_context().sc_bm_file().read(type_dword);
 	  w->printf("SharedCode (offset/length)    = %08lXH/%08lXH\n",ssize,m);
-	  ssize = bmReadDWord();
-	  m = bmReadDWord();
+	  ssize = beye_context().sc_bm_file().read(type_dword);
+	  m = beye_context().sc_bm_file().read(type_dword);
 	  w->printf("SharedData (offset/length)    = %08lXH/%08lXH\n",ssize,m);
-	  ssize = bmReadDWord();
-	  m = bmReadDWord();
+	  ssize = beye_context().sc_bm_file().read(type_dword);
+	  m = beye_context().sc_bm_file().read(type_dword);
 	  w->printf("SharedReloc (offset/count)    = %08lXH/%08lXH\n",ssize,m);
-	  ssize = bmReadDWord();
-	  m = bmReadDWord();
+	  ssize = beye_context().sc_bm_file().read(type_dword);
+	  m = beye_context().sc_bm_file().read(type_dword);
 	  w->printf("SharedExtRef (offset/count)   = %08lXH/%08lXH\n",ssize,m);
-	  ssize = bmReadDWord();
-	  m = bmReadDWord();
+	  ssize = beye_context().sc_bm_file().read(type_dword);
+	  m = beye_context().sc_bm_file().read(type_dword);
 	  w->printf("SharedPublics (offset/count)  = %08lXH/%08lXH\n",ssize,m);
-	  ssize = bmReadDWord();
-	  m = bmReadDWord();
+	  ssize = beye_context().sc_bm_file().read(type_dword);
+	  m = beye_context().sc_bm_file().read(type_dword);
 	  w->printf("SharedDebugRec (offset/count) = %08lXH/%08lXH\n",ssize,m);
-	  sharedEntry = bmReadDWord();
+	  sharedEntry = beye_context().sc_bm_file().read(type_dword);
 	  w->set_color(dialog_cset.entry);
 	  w->printf("Shared initialization offset  = %08lXH [Enter]",sharedEntry);
 	  w->printf("\n"); w->clreol();
-	  sharedExit = bmReadDWord();
+	  sharedExit = beye_context().sc_bm_file().read(type_dword);
 	  w->set_color(dialog_cset.altentry);
 	  w->printf("Shared exit procedure offset  = %08lXH [Ctrl+Enter | F5]",sharedExit);
 	  w->printf("\n"); w->clreol();
 	  w->set_color(dialog_cset.main);
-	  ssize = bmReadDWord();
+	  ssize = beye_context().sc_bm_file().read(type_dword);
 	  w->printf("Product ID                    = %08lXH",ssize);
 	}
 	else
 	  if(memcmp(modName,"CuStHeAd",8) == 0)
 	  {
 	    unsigned long hdr;
-	    bmSeek(-1,binary_stream::Seek_Cur);
-	    ssize = bmReadDWord();
-	    d = bmReadDWord();
-	    m = bmReadDWord();
-	    bmReadBuffer(modName,8);
+	    beye_context().sc_bm_file().seek(-1,binary_stream::Seek_Cur);
+	    ssize = beye_context().sc_bm_file().read(type_dword);
+	    d = beye_context().sc_bm_file().read(type_dword);
+	    m = beye_context().sc_bm_file().read(type_dword);
+	    beye_context().sc_bm_file().read(modName,8);
 	    modName[8] = 0;
-	    hdr = bmReadDWord();
+	    hdr = beye_context().sc_bm_file().read(type_dword);
 	    w->printf("\nCustHead (name/hdrOff/hdrLen/dataOff/dataLen) = %s/%08lXH/%08lXH/%08lXH/%08lHX",modName,hdr,ssize,d,m);
 	  }
 	  else
 	    if(memcmp(modName,"CyGnUsEx",8) == 0)
 	    {
-	      bmSeek(-1,binary_stream::Seek_Cur);
-	      d = bmReadDWord();
-	      m = bmReadDWord();
+	      beye_context().sc_bm_file().seek(-1,binary_stream::Seek_Cur);
+	      d = beye_context().sc_bm_file().read(type_dword);
+	      m = beye_context().sc_bm_file().read(type_dword);
 	      w->printf("\nCygnus (offset/length) = %08lXH/%08lXH",d,m);
 	    }
 	    else break;
@@ -340,18 +341,22 @@ __filesize_t NLM_Parser::CalcEntryNLM(unsigned ord,bool dispmsg)
  unsigned char length;
  unsigned i;
  __filesize_t ret,fpos,cpos;
- fpos = BMGetCurrFilePos();
+ fpos = beye_context().bm_file().tell();
  cpos = nlm.nlm_publicsOffset;
  for(i = 0;i < ord;i++)
  {
-   length = bmReadByteEx(cpos,binary_stream::Seek_Set); cpos+=length + 5;
+    beye_context().sc_bm_file().seek(cpos,binary_stream::Seek_Set);
+    length = beye_context().sc_bm_file().read(type_byte); cpos+=length + 5;
  }
- length = bmReadByteEx(cpos,binary_stream::Seek_Set); cpos+=length + 1;
- ret = bmReadDWordEx(cpos,binary_stream::Seek_Set);
+ beye_context().sc_bm_file().seek(cpos,binary_stream::Seek_Set);
+ length = beye_context().sc_bm_file().read(type_byte);
+ cpos+=length + 1;
+ beye_context().sc_bm_file().seek(cpos,binary_stream::Seek_Set);
+ ret = beye_context().sc_bm_file().read(type_dword);
  ret &= 0x00FFFFFFL;
  ret += nlm.nlm_codeImageOffset;
- bmSeek(fpos,binary_stream::Seek_Set);
- if(ret > bmGetFLength())
+ beye_context().sc_bm_file().seek(fpos,binary_stream::Seek_Set);
+ if(ret > beye_context().sc_bm_file().flength())
  {
     ret = fpos;
     if(dispmsg) beye_context().ErrMessageBox(NO_ENTRY,"");
@@ -392,7 +397,7 @@ __filesize_t NLM_Parser::action_F5()
     TWindow* w;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = __ReadExtRefNamesNLM(bmbioHandle(),obj,nnames);
+    bval = __ReadExtRefNamesNLM(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -400,7 +405,7 @@ __filesize_t NLM_Parser::action_F5()
     }
     ma_Destroy(obj);
     exit:
-    return BMGetCurrFilePos();
+    return beye_context().bm_file().tell();
 }
 
 bool NLM_Parser::__ReadModRefNamesNLM(binary_stream& handle,memArray * obj,unsigned nnames)
@@ -435,7 +440,7 @@ __filesize_t NLM_Parser::action_F2()
     TWindow* w;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = __ReadModRefNamesNLM(bmbioHandle(),obj,nnames);
+    bval = __ReadModRefNamesNLM(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -443,12 +448,12 @@ __filesize_t NLM_Parser::action_F2()
     }
     ma_Destroy(obj);
     exit:
-    return BMGetCurrFilePos();
+    return beye_context().bm_file().tell();
 }
 
 __filesize_t NLM_Parser::action_F3()
 {
-    __filesize_t fpos = BMGetCurrFilePos();
+    __filesize_t fpos = beye_context().bm_file().tell();
     int ret;
     std::string title = EXP_TABLE;
     ssize_t nnames = (unsigned)nlm.nlm_numberOfPublics;
@@ -459,7 +464,7 @@ __filesize_t NLM_Parser::action_F3()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = NLMNamesReadItems(bmbioHandle(),obj,nnames);
+    bval = NLMNamesReadItems(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -500,7 +505,7 @@ void NLM_Parser::BuildRelocNlm()
   RELOC_NLM rel;
   if(!(RelocNlm = la_Build(0,sizeof(RELOC_NLM),MemOutBox))) return;
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
-  if(!PubNames) nlm_ReadPubNameList(bmbioHandle(),MemOutBox);
+  if(!PubNames) nlm_ReadPubNameList(beye_context().sc_bm_file(),MemOutBox);
   w->goto_xy(1,1);
   w->puts(BUILD_REFS);
   /** -- for external references */
@@ -510,12 +515,15 @@ void NLM_Parser::BuildRelocNlm()
     bool is_eof;
     noff = cpos;
     is_eof = false;
-    len = bmReadByteEx(cpos,binary_stream::Seek_Set); cpos += len + 1;
-    niter = bmReadDWordEx(cpos,binary_stream::Seek_Set); cpos += 4;
+    beye_context().sc_bm_file().seek(cpos,binary_stream::Seek_Set);
+    len = beye_context().sc_bm_file().read(type_byte);
+    cpos += len + 1;
+    beye_context().sc_bm_file().seek(cpos,binary_stream::Seek_Set);
+    niter = beye_context().sc_bm_file().read(type_dword);
     for(i = 0;i < niter;i++)
     {
-      val = bmReadDWordEx(cpos,binary_stream::Seek_Set); cpos += 4;
-      if((is_eof = bmEOF()) != 0) break;
+      val = beye_context().sc_bm_file().read(type_dword);
+      if((is_eof = beye_context().sc_bm_file().eof()) != 0) break;
       rel.offset = (val&0x00FFFFFFL) + nlm.nlm_codeImageOffset;
       rel.nameoff = noff;
       if(!la_AddData(RelocNlm,&rel,MemOutBox)) goto next;
@@ -526,8 +534,8 @@ void NLM_Parser::BuildRelocNlm()
   cpos = nlm.nlm_relocationFixupOffset;
   for(j = 0;j < (unsigned)nlm.nlm_numberOfRelocationFixups;j++)
   {
-    val = bmReadDWord();
-    if(bmEOF()) break;
+    val = beye_context().sc_bm_file().read(type_dword);
+    if(beye_context().sc_bm_file().eof()) break;
     rel.offset = (val&0x00FFFFFFL) + nlm.nlm_codeImageOffset;
     rel.nameoff = -1;
     if(!la_AddData(RelocNlm,&rel,MemOutBox)) break;
@@ -556,7 +564,8 @@ bool NLM_Parser::BuildReferStrNLM(char *str,RELOC_NLM*rne,int flags)
   }
   else
   {
-    val = bmReadDWordEx(rne->offset,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(rne->offset,binary_stream::Seek_Set);
+    val = beye_context().sc_bm_file().read(type_dword);
     if(FindPubName(name,sizeof(name),val))
     {
       strcat(str,name);
@@ -579,7 +588,7 @@ bool NLM_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int f
   bool retrf;
   char buff[400];
   if(flags & APREF_TRY_PIC) return false;
-  if(!nlm.nlm_numberOfExternalReferences || nlm.nlm_externalReferencesOffset >= bmGetFLength()) retrf = false;
+  if(!nlm.nlm_numberOfExternalReferences || nlm.nlm_externalReferencesOffset >= beye_context().sc_bm_file().flength()) retrf = false;
   else
   {
     if(!RelocNlm) BuildRelocNlm();
@@ -590,7 +599,7 @@ bool NLM_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int f
   }
   if(!retrf && (flags & APREF_TRY_LABEL))
   {
-     if(!PubNames) nlm_ReadPubNameList(bmbioHandle(),MemOutBox);
+     if(!PubNames) nlm_ReadPubNameList(beye_context().sc_bm_file(),MemOutBox);
      if(FindPubName(buff,sizeof(buff),r_sh))
      {
        strcat(str,buff);
@@ -606,14 +615,15 @@ NLM_Parser::NLM_Parser(CodeGuider& _code_guider)
 	    ,nlm_cache(&bNull)
 	    ,code_guider(_code_guider)
 {
-  binary_stream& main_handle = bmbioHandle();
-  bmReadBufferEx(&nlm,sizeof(Nlm_Internal_Fixed_Header),0,binary_stream::Seek_Set);
+  binary_stream& main_handle = beye_context().sc_bm_file();
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(&nlm,sizeof(Nlm_Internal_Fixed_Header));
   if((nlm_cache = main_handle.dup()) == &bNull) nlm_cache = &main_handle;
 }
 
 NLM_Parser::~NLM_Parser()
 {
-  binary_stream& main_handle = bmbioHandle();
+  binary_stream& main_handle = beye_context().sc_bm_file();
   if(nlm_cache != &bNull && nlm_cache != &main_handle) delete nlm_cache;
 }
 
@@ -647,7 +657,7 @@ bool NLM_Parser::address_resolving(char *addr,__filesize_t cfpos)
 __filesize_t NLM_Parser::action_F1()
 {
   hlpDisplay(10007);
-  return BMGetCurrFilePos();
+  return beye_context().bm_file().tell();
 }
 
 void NLM_Parser::nlm_ReadPubName(binary_stream& b_cache,const struct PubName *it,
@@ -719,7 +729,7 @@ unsigned NLM_Parser::get_object_attribute(__filesize_t pa,char *name,unsigned cb
   unsigned ret;
   UNUSED(cb_name);
   *start = 0;
-  *end = bmGetFLength();
+  *end = beye_context().sc_bm_file().flength();
   *_class = OC_NOOBJECT;
   *bitness = query_bitness(pa);
   name[0] = 0;
@@ -768,7 +778,8 @@ int NLM_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
 static bool probe() {
   char ctrl[NLM_SIGNATURE_SIZE];
-  bmReadBufferEx(ctrl,NLM_SIGNATURE_SIZE,0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(ctrl,NLM_SIGNATURE_SIZE);
   return memcmp(ctrl,NLM_SIGNATURE,NLM_SIGNATURE_SIZE) == 0;
 }
 

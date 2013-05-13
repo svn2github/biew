@@ -26,10 +26,11 @@ using namespace	usr;
 #include "colorset.h"
 #include "beyeutil.h"
 #include "reg_form.h"
-#include "bmfile.h"
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
 struct MainAVIHeader {
@@ -120,22 +121,22 @@ int AVI_Parser::query_platform() const { return DISASM_DEFAULT; }
 __filesize_t AVI_Parser::avi_find_chunk(__filesize_t off,unsigned long id) const
 {
     unsigned long ids,size,type;
-    bmSeek(off,binary_stream::Seek_Set);
-    while(!bmEOF())
+    beye_context().sc_bm_file().seek(off,binary_stream::Seek_Set);
+    while(!beye_context().sc_bm_file().eof())
     {
-/*	fpos=bmGetCurrFilePos();*/
-	ids=bmReadDWord();
-	if(ids==id) return bmGetCurrFilePos();
-	size=bmReadDWord();
+/*	fpos=beye_context().sc_bm_file().tell();*/
+	ids=beye_context().sc_bm_file().read(type_dword);
+	if(ids==id) return beye_context().sc_bm_file().tell();
+	size=beye_context().sc_bm_file().read(type_dword);
 	size=(size+1)&(~1);
 /*fprintf(stderr,"%08X:%4s %08X\n",fpos,(char *)&ids,size);*/
 	if(ids==mmioFOURCC('L','I','S','T'))
 	{
-	    type=bmReadDWord();
-	    if(type==id) return bmGetCurrFilePos();
+	    type=beye_context().sc_bm_file().read(type_dword);
+	    if(type==id) return beye_context().sc_bm_file().tell();
 	    continue;
 	}
-	bmSeek(size,binary_stream::Seek_Cur);
+	beye_context().sc_bm_file().seek(size,binary_stream::Seek_Cur);
     }
     return -1;
 }
@@ -146,12 +147,12 @@ __filesize_t AVI_Parser::show_header()
  TWindow * hwnd;
  MainAVIHeader avih;
  __filesize_t fpos,fpos2;
- fpos = BMGetCurrFilePos();
+ fpos = beye_context().bm_file().tell();
  fpos2 = avi_find_chunk(12,mmioFOURCC('a','v','i','h'));
  if((__fileoff_t)fpos2==-1) { beye_context().ErrMessageBox("Main AVI Header not found",""); return fpos; }
- bmSeek(fpos2,binary_stream::Seek_Set);
- bmReadDWord(); /* skip section size */
- bmReadBuffer(&avih,sizeof(MainAVIHeader));
+ beye_context().sc_bm_file().seek(fpos2,binary_stream::Seek_Set);
+ beye_context().sc_bm_file().read(type_dword); /* skip section size */
+ beye_context().sc_bm_file().read(&avih,sizeof(MainAVIHeader));
  fpos2 = avi_find_chunk(12,mmioFOURCC('m','o','v','i'));
  if((__fileoff_t)fpos2!=-1) fpos2-=4;
  hwnd = CrtDlgWndnls(" AVI File Header ",43,9);
@@ -194,22 +195,22 @@ __filesize_t AVI_Parser::action_F2()
  AVIStreamHeader strh;
  WAVEFORMATEX wavf;
  __filesize_t newcpos,fpos,fpos2;
- fpos = BMGetCurrFilePos();
+ fpos = beye_context().bm_file().tell();
  memset(&wavf,0,sizeof(wavf));
  fpos2=12;
  do
  {
     fpos2 = avi_find_chunk(fpos2,mmioFOURCC('s','t','r','h'));
     if((__fileoff_t)fpos2==-1) { beye_context().ErrMessageBox("Audio Stream Header not found",""); return fpos; }
-    bmSeek(fpos2,binary_stream::Seek_Set);
-    newcpos=bmReadDWord();
-    bmReadBuffer(&strh,sizeof(AVIStreamHeader));
+    beye_context().sc_bm_file().seek(fpos2,binary_stream::Seek_Set);
+    newcpos=beye_context().sc_bm_file().read(type_dword);
+    beye_context().sc_bm_file().read(&strh,sizeof(AVIStreamHeader));
     fpos2+=newcpos+4;
  }while(strh.fccType!=streamtypeAUDIO);
- if(bmReadDWord()==mmioFOURCC('s','t','r','f'))
+ if(beye_context().sc_bm_file().read(type_dword)==mmioFOURCC('s','t','r','f'))
  {
-    bmReadDWord(); /* skip header size */
-    bmReadBuffer(&wavf,sizeof(WAVEFORMATEX));
+    beye_context().sc_bm_file().read(type_dword); /* skip header size */
+    beye_context().sc_bm_file().read(&wavf,sizeof(WAVEFORMATEX));
  }
  hwnd = CrtDlgWndnls(" Stream File Header ",43,18);
  hwnd->goto_xy(1,1);
@@ -267,22 +268,22 @@ __filesize_t AVI_Parser::action_F3()
  AVIStreamHeader strh;
  BITMAPINFOHEADER bmph;
  __filesize_t newcpos,fpos,fpos2;
- fpos = BMGetCurrFilePos();
+ fpos = beye_context().bm_file().tell();
  memset(&bmph,0,sizeof(BITMAPINFOHEADER));
  fpos2=12;
  do
  {
     fpos2 = avi_find_chunk(fpos2,mmioFOURCC('s','t','r','h'));
     if((__fileoff_t)fpos2==-1) { beye_context().ErrMessageBox("Video Stream Header not found",""); return fpos; }
-    bmSeek(fpos2,binary_stream::Seek_Set);
-    newcpos=bmReadDWord(); /* skip section size */
-    bmReadBuffer(&strh,sizeof(AVIStreamHeader));
+    beye_context().sc_bm_file().seek(fpos2,binary_stream::Seek_Set);
+    newcpos=beye_context().sc_bm_file().read(type_dword); /* skip section size */
+    beye_context().sc_bm_file().read(&strh,sizeof(AVIStreamHeader));
     fpos2+=newcpos+4;
  }while(strh.fccType!=streamtypeVIDEO);
- if(bmReadDWord()==mmioFOURCC('s','t','r','f'))
+ if(beye_context().sc_bm_file().read(type_dword)==mmioFOURCC('s','t','r','f'))
  {
-    bmReadDWord(); /* skip header size */
-    bmReadBuffer(&bmph,sizeof(BITMAPINFOHEADER));
+    beye_context().sc_bm_file().read(type_dword); /* skip header size */
+    beye_context().sc_bm_file().read(&bmph,sizeof(BITMAPINFOHEADER));
  }
  hwnd = CrtDlgWndnls(" Stream File Header ",43,20);
  hwnd->goto_xy(1,1);
@@ -339,8 +340,10 @@ __filesize_t AVI_Parser::action_F3()
 
 static bool probe() {
     unsigned long id;
-    id=bmReadDWordEx(8,binary_stream::Seek_Set);
-    if(	bmReadDWordEx(0,binary_stream::Seek_Set)==mmioFOURCC('R','I','F','F') &&
+    beye_context().sc_bm_file().seek(8,binary_stream::Seek_Set);
+    id = beye_context().sc_bm_file().read(type_dword);
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    if(	beye_context().sc_bm_file().read(type_dword)==mmioFOURCC('R','I','F','F') &&
 	(id==mmioFOURCC('A','V','I',' ') || id==mmioFOURCC('O','N','2',' ')))
 	return true;
     return false;

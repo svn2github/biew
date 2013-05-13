@@ -28,7 +28,6 @@ using namespace	usr;
 #include "plugins/disasm.h"
 #include "plugins/bin/lx_le.h"
 #include "bin_util.h"
-#include "bmfile.h"
 #include "beyehelp.h"
 #include "tstrings.h"
 #include "beyeutil.h"
@@ -269,7 +268,7 @@ __filesize_t LX_Parser::action_F8()
   __filesize_t fpos;
   LXEntryPoint = CalcEntryPoint(lxe.lx.lxEIPObjectNumbers,lxe.lx.lxEIP);
   if(LXEntryPoint == FILESIZE_MAX) LXEntryPoint = 0;
-  fpos = BMGetCurrFilePos();
+  fpos = beye_context().bm_file().tell();
   if(PageBox(70,21,NULL,3,PaintNewHeaderLX) != -1)
   {
     if(LXEntryPoint) fpos = LXEntryPoint;
@@ -513,7 +512,7 @@ __filesize_t LX_Parser::CalcEntryPoint(unsigned long objnum,__filesize_t _offset
   unsigned long i,diff;
   LX_OBJECT lo;
   LX_MAP_TABLE mt;
-  if(!objnum) return BMGetCurrFilePos();
+  if(!objnum) return beye_context().bm_file().tell();
   handle.seek(lxe.lx.lxObjectTableOffset + beye_context().headshift,binary_stream::Seek_Set);
   handle.seek(sizeof(LX_OBJECT)*(objnum - 1),binary_stream::Seek_Cur);
   handle.read((any_t*)&lo,sizeof(LX_OBJECT));
@@ -572,7 +571,7 @@ void LX_Parser::ShowFwdModOrdLX(const LX_ENTRY *lxent)
 __filesize_t LX_Parser::CalcEntryLX(const LX_ENTRY *lxent)
 {
   __filesize_t ret;
-  ret = BMGetCurrFilePos();
+  ret = beye_context().bm_file().tell();
       switch(lxent->b32_type)
       {
 	case 1: ret = CalcEntryPoint(lxent->b32_obj,lxent->entry.e32_variant.e32_offset.offset16);
@@ -598,7 +597,7 @@ __filesize_t LX_Parser::CalcEntryBungleLX(unsigned ordinal,bool dispmsg)
   uint_fast16_t numobj = 0;
   LX_ENTRY lxent;
   __filesize_t ret;
-  ret = BMGetCurrFilePos();
+  ret = beye_context().bm_file().tell();
   handle = lx_cache;
   handle->seek(lxe.lx.lxEntryTableOffset + beye_context().headshift,binary_stream::Seek_Set);
   i = 0;
@@ -655,7 +654,7 @@ __filesize_t LX_Parser::action_F10()
  __filesize_t fpos;
  unsigned nnames;
  memArray * obj;
- fpos = BMGetCurrFilePos();
+ fpos = beye_context().bm_file().tell();
  nnames = (unsigned)lxe.lx.lxObjectCount;
  if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
@@ -807,7 +806,7 @@ bool LX_Parser::__ReadMapTblLX(binary_stream& handle,memArray * obj,unsigned n)
 
 __filesize_t LX_Parser::action_F9()
 {
-    __filesize_t fpos = BMGetCurrFilePos();
+    __filesize_t fpos = beye_context().bm_file().tell();
     int ret;
     std::string title = " Map of pages ";
     ssize_t nnames = (unsigned)lxe.lx.lxPageCount;
@@ -818,7 +817,7 @@ __filesize_t LX_Parser::action_F9()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = __ReadMapTblLX(bmbioHandle(),obj,nnames);
+    bval = __ReadMapTblLX(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -835,7 +834,7 @@ __filesize_t LX_Parser::action_F6()
  binary_stream& handle = *lx_cache;
  __filesize_t fpos;
  memArray * obj;
- fpos = BMGetCurrFilePos();
+ fpos = beye_context().bm_file().tell();
  if(!lxe.lx.lxEntryTableOffset) { beye_context().NotifyBox(NOT_ENTRY," Entry Table "); return fpos; }
  handle.seek(lxe.lx.lxEntryTableOffset + beye_context().headshift,binary_stream::Seek_Set);
  if(!(obj = ma_Build(0,true))) goto exit;
@@ -906,7 +905,7 @@ __filesize_t LX_Parser::action_F7()
  memArray * obj;
  long * raddr;
  unsigned nrgroup;
- fpos = BMGetCurrFilePos();
+ fpos = beye_context().bm_file().tell();
  handle.seek((__fileoff_t)beye_context().headshift + lxe.lx.lxResourceTableOffset,binary_stream::Seek_Set);
  nrgroup = (unsigned)lxe.lx.lxNumberResourceTableEntries;
  if(!nrgroup) { beye_context().NotifyBox(NOT_ENTRY," Resources "); return fpos; }
@@ -932,7 +931,7 @@ __filesize_t LX_Parser::action_F2()
     TWindow* w;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = __ReadModRefNamesLX(bmbioHandle(),obj,nnames);
+    bval = __ReadModRefNamesLX(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -940,16 +939,16 @@ __filesize_t LX_Parser::action_F2()
     }
     ma_Destroy(obj);
     exit:
-    return BMGetCurrFilePos();
+    return beye_context().bm_file().tell();
 }
 
 __filesize_t LX_Parser::action_F3()
 {
-    __filesize_t fpos = BMGetCurrFilePos();
+    __filesize_t fpos = beye_context().bm_file().tell();
     int ret;
     unsigned ordinal;
     std::string title = RES_NAMES;
-    ssize_t nnames = LXRNamesNumItems(bmbioHandle());
+    ssize_t nnames = LXRNamesNumItems(beye_context().sc_bm_file());
     int flags = LB_SELECTIVE | LB_SORTABLE;
     bool bval;
     memArray* obj;
@@ -957,7 +956,7 @@ __filesize_t LX_Parser::action_F3()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = LXRNamesReadItems(bmbioHandle(),obj,nnames);
+    bval = LXRNamesReadItems(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -979,11 +978,11 @@ __filesize_t LX_Parser::action_F3()
 
 __filesize_t LX_Parser::action_F4()
 {
-    __filesize_t fpos = BMGetCurrFilePos();
+    __filesize_t fpos = beye_context().bm_file().tell();
     int ret;
     unsigned ordinal;
     std::string title = NORES_NAMES;
-    ssize_t nnames = LXNRNamesNumItems(bmbioHandle());
+    ssize_t nnames = LXNRNamesNumItems(beye_context().sc_bm_file());
     int flags = LB_SELECTIVE | LB_SORTABLE;
     bool bval;
     memArray* obj;
@@ -991,7 +990,7 @@ __filesize_t LX_Parser::action_F4()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = LXNRNamesReadItems(bmbioHandle(),obj,nnames);
+    bval = LXNRNamesReadItems(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -1014,14 +1013,14 @@ __filesize_t LX_Parser::action_F4()
 __filesize_t LX_Parser::action_F5()
 {
     std::string title = IMPPROC_TABLE;
-    ssize_t nnames = LXImpNamesNumItems(bmbioHandle());
+    ssize_t nnames = LXImpNamesNumItems(beye_context().sc_bm_file());
     int flags = LB_SORTABLE;
     bool bval;
     memArray* obj;
     TWindow* w;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = LXImpNamesReadItems(bmbioHandle(),obj,nnames);
+    bval = LXImpNamesReadItems(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -1029,27 +1028,28 @@ __filesize_t LX_Parser::action_F5()
     }
     ma_Destroy(obj);
     exit:
-    return BMGetCurrFilePos();
+    return beye_context().bm_file().tell();
 }
 
 LX_Parser::LX_Parser(CodeGuider& __code_guider)
 	:MZ_Parser(__code_guider)
 {
-   binary_stream& main_handle = bmbioHandle();
-   bmReadBufferEx(&lxe.lx,sizeof(LXHEADER),beye_context().headshift,binary_stream::Seek_Set);
+   binary_stream& main_handle = beye_context().sc_bm_file();
+    beye_context().sc_bm_file().seek(beye_context().headshift,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(&lxe.lx,sizeof(LXHEADER));
    if((lx_cache = main_handle.dup()) == &bNull) lx_cache = &main_handle;
 }
 
 LX_Parser::~LX_Parser()
 {
-   binary_stream& main_handle = bmbioHandle();
+   binary_stream& main_handle = beye_context().sc_bm_file();
    if(lx_cache != &bNull && lx_cache != &main_handle) delete lx_cache;
 }
 
 __filesize_t LX_Parser::action_F1()
 {
   hlpDisplay(10005);
-  return BMGetCurrFilePos();
+  return beye_context().bm_file().tell();
 }
 
 __filesize_t LX_Parser::va2pa(__filesize_t va)
@@ -1198,7 +1198,8 @@ static bool probe()
 {
    char id[4];
    beye_context().headshift = IsNewExe();
-   bmReadBufferEx(id,sizeof(id),beye_context().headshift,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(beye_context().headshift,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(id,sizeof(id));
    if(id[0] == 'L' && id[1] == 'X' && id[2] == 0 && id[3] == 0) return true;
    return false;
 }

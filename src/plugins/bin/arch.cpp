@@ -25,7 +25,6 @@ using namespace	usr;
 #include <time.h>
 
 #include "libbeye/bswap.h"
-#include "bmfile.h"
 #include "bin_util.h"
 #include "beyehelp.h"
 #include "bconsole.h"
@@ -36,6 +35,8 @@ using namespace	usr;
 #include "plugins/disasm.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
     class Arch_Parser : public Binary_Parser {
@@ -66,7 +67,7 @@ __filesize_t Arch_Parser::show_header()
   struct tm * tm;
   time_t ldat;
   char sout[50];
-  fpos = BMGetCurrFilePos();
+  fpos = beye_context().bm_file().tell();
   w = CrtDlgWndnls(" This is COFF or a.out archive ",54,6);
   w->goto_xy(1,1);
   strncpy(sout,(char *)arch.ar_name,16);
@@ -104,7 +105,7 @@ bool Arch_Parser::archReadModList(memArray *obj,unsigned nnames,__filesize_t *ad
   __filesize_t foff,flen;
   unsigned i;
   char stmp[80];
-  flen = bmGetFLength();
+  flen = beye_context().sc_bm_file().flength();
   for(i = 0;i < nnames;i++)
   {
     bool is_eof;
@@ -115,8 +116,9 @@ bool Arch_Parser::archReadModList(memArray *obj,unsigned nnames,__filesize_t *ad
     foff = addr[i];
     if(foff > flen)  foff = be2me_32(foff);
     if(IsKbdTerminate()) break;
-    bmReadBufferEx(stmp,sizeof(ar_sub_hdr),foff,binary_stream::Seek_Set);
-    is_eof = bmEOF();
+    beye_context().sc_bm_file().seek(foff,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(stmp,sizeof(ar_sub_hdr));
+    is_eof = beye_context().sc_bm_file().eof();
     stmp[sizeof(ar_sub_hdr)-2] = 0;
     if(!ma_AddString(obj,is_eof ? CORRUPT_BIN_MSG : stmp,true)) break;
     if(is_eof) break;
@@ -131,9 +133,10 @@ __filesize_t Arch_Parser::action_F3()
    unsigned long rnames,bnames;
    unsigned nnames;
    __filesize_t fpos,flen;
-   fpos = BMGetCurrFilePos();
-   flen = bmGetFLength();
-   rnames = bmReadDWordEx(sizeof(ar_hdr),binary_stream::Seek_Set);
+   fpos = beye_context().bm_file().tell();
+   flen = beye_context().sc_bm_file().flength();
+    beye_context().sc_bm_file().seek(sizeof(ar_hdr),binary_stream::Seek_Set);
+    rnames = beye_context().sc_bm_file().read(type_dword);
    bnames = be2me_32(rnames);
    /**
       Some archives sometimes have big and sometimes little endian.
@@ -147,7 +150,8 @@ __filesize_t Arch_Parser::action_F3()
    if(!(nnames%4)) nnames/=sizeof(unsigned long);
    if(!(obj = ma_Build(nnames,true))) return fpos;
    if(!(addr = new __filesize_t [nnames])) goto exit;
-   bmReadBufferEx(addr,sizeof(unsigned long)*nnames,sizeof(ar_hdr)+sizeof(unsigned long),binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(sizeof(ar_hdr)+sizeof(unsigned long),binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(addr,sizeof(unsigned long)*nnames);
    if(archReadModList(obj,nnames,addr))
    {
      int ret;
@@ -172,7 +176,8 @@ __filesize_t Arch_Parser::action_F3()
 Arch_Parser::Arch_Parser(CodeGuider& code_guider)
 	    :Binary_Parser(code_guider)
 {
-    bmReadBufferEx(&arch,sizeof(arch),0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(&arch,sizeof(arch));
 }
 Arch_Parser::~Arch_Parser(){}
 
@@ -193,12 +198,13 @@ bool Arch_Parser::address_resolving(char *addr,__filesize_t cfpos)
 __filesize_t Arch_Parser::action_F1()
 {
   hlpDisplay(10001);
-  return BMGetCurrFilePos();
+  return beye_context().bm_file().tell();
 }
 
 static bool probe() {
   char str[16];
-  bmReadBufferEx(str,sizeof(str),0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(str,sizeof(str));
   return strncmp(str,"!<arch>\012",8) == 0;
 }
 

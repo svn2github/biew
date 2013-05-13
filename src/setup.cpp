@@ -63,24 +63,6 @@ static std::string  __FASTCALL__ beyeGetSyntaxName()
     return bctx.syntax_name;
 }
 
-
-    class Setup : public Opaque {
-	public:
-	    Setup();
-	    virtual ~Setup();
-
-	    virtual void	run();
-	private:
-	    bool		select_codepage();
-	    void		paint(TWindow& twin);
-
-	    static void		draw_prompt();
-
-	    unsigned		default_cp;
-	    static const char*	setuptxt[];
-	    static const char*	cp_list[];
-    };
-
 const char* Setup::setuptxt[] =
 {
   "Help  ",
@@ -194,7 +176,7 @@ void Setup::run()
   strcpy(estr[0],beyeGetHelpName().c_str());
   strcpy(estr[1],beyeGetColorSetName().c_str());
   strcpy(estr[2],beyeGetSyntaxName().c_str());
-  wdlg = CrtDlgWndnls(" Setup ",77,12);
+  wdlg = CrtDlgWndnls(" Setup ",78,13);
   wdlg->get_pos(&x1,&y1,&x2,&y2);
   X1 = x1;
   Y1 = y1;
@@ -228,7 +210,7 @@ void Setup::run()
 
   Y1 += 2;
   Y2 = Y1;
-  ewnd[3] = WindowOpen(60,Y1,61,Y2,TWindow::Flag_NLS);
+  ewnd[3] = new(zeromem) TWindow(60,Y1,2,Y2-Y1+1,TWindow::Flag_NLS);
 
   wdlg->goto_xy(2,1); wdlg->puts("Enter help file name (including full path):");
   wdlg->goto_xy(2,3); wdlg->puts("Enter color skin name (including full path):");
@@ -295,10 +277,4 @@ void Setup::run()
 
 Setup::Setup():default_cp(15) {}
 Setup::~Setup() {}
-
-void Setup() {
-    class Setup* setup = new class Setup;
-    setup->run();
-    delete setup;
-}
 } // namespace	usr

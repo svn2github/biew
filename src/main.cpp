@@ -42,12 +42,10 @@ using namespace	usr;
 #include "beye.h"
 #include "bconsole.h"
 #include "colorset.h"
-#include "bmfile.h"
 #include "bin_util.h"
 #include "codeguid.h"
 #include "editor.h"
 #include "tstrings.h"
-//#include "reg_form.h"
 #include "beyeutil.h"
 #include "search.h"
 #include "setup.h"
@@ -135,26 +133,14 @@ void BeyeContext::make_shortname()
 
 __filesize_t IsNewExe()
 {
-  __filesize_t ret;
-  char id[2];
-  bmReadBufferEx(id,sizeof(id),0,binary_stream::Seek_Set);
-#if 0
-   /*
-      It is well documented technology, but it correctly working
-      only with normal stubs, i.e. when New EXE header is located at
-      offset > 0x40. However, in PC world exists files with wrong
-      stubs, which are normal for Host OS. Hence beye must recognize
-      them as normal New EXE files, despite the fact that DOS can
-      not execute ones.
-      Fixed by Kostya Nosov <k-nosov@yandex.ru>.
-   */
-   if(!( id[0] == 'M' && id[1] == 'Z' &&
-	bmReadWordEx(0x18,binary_stream::Seek_Set) >= 0x40 &&
-	(ret=bmReadDWordEx(0x3C,binary_stream::Seek_Set)) > 0x40L)) ret = 0;
-#endif
-   if(!( id[0] == 'M' && id[1] == 'Z' &&
-	(ret=bmReadDWordEx(0x3C,binary_stream::Seek_Set)) > 0x02L)) ret = 0;
-   return (__filesize_t)ret;
+    __filesize_t ret;
+    char id[2];
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(id,sizeof(id));
+    beye_context().sc_bm_file().seek(0x3C,binary_stream::Seek_Set);
+    ret=beye_context().sc_bm_file().read(type_dword);
+    if(!( id[0] == 'M' && id[1] == 'Z' && ret > 0x02L)) ret = 0;
+    return (__filesize_t)ret;
 }
 
 void BeyeContext::auto_detect_mode()
@@ -171,7 +157,7 @@ void BeyeContext::auto_detect_mode()
     }
     if(mode) delete mode;
     activeMode = modes[defMainModeSel]->query_interface(*MainWnd,*code_guider);
-    BMSeek(0,binary_stream::Seek_Set);
+    beye_context().bm_file().seek(0,binary_stream::Seek_Set);
 }
 
 static const struct tagbeyeArg {
@@ -258,7 +244,7 @@ void BeyeContext::PaintTitle() const
  TitleWnd->clreol();
  TitleWnd->printf("File : %s",beye_context().short_name());
  TitleWnd->goto_xy(TitleWnd->client_width()-43,1);
- TitleWnd->printf("Size : %8llu bytes",BMGetFLength());
+ TitleWnd->printf("Size : %8llu bytes",beye_context().bm_file().flength());
  TitleWnd->refresh();
 }
 
@@ -386,7 +372,7 @@ void BeyeContext::show_usage() const {
     nln = sizeof(beyeArg)/sizeof(struct tagbeyeArg);
     h = nln+4;
     y = _tconsole->vio_height()/2-h/2;
-    win = WindowOpen(2,y,_tconsole->vio_width()-1,y+h,TWindow::Flag_None | TWindow::Flag_NLS);
+    win = new(zeromem) TWindow(2,y,_tconsole->vio_width()-2,h+1,TWindow::Flag_None | TWindow::Flag_NLS);
     if(!win) goto done;
     win->set_title(BEYE_VER_MSG,TWindow::TMode_Center,error_cset.border);
     win->into_center();
@@ -411,22 +397,26 @@ void BeyeContext::show_usage() const {
 }
 
 void	BeyeContext::create_windows() {
-    ErrorWnd = WindowOpen(1,1,50,16,TWindow::Flag_None | TWindow::Flag_NLS);
+    ErrorWnd = new(zeromem) TWindow(1,1,51,17,TWindow::Flag_None | TWindow::Flag_NLS);
     if(ErrorWnd) ErrorWnd->set_title(" Error ",TWindow::TMode_Center,error_cset.border);
     else { std::cerr<<"fatal error: can't create window"<<std::endl; ::exit(EXIT_FAILURE); }
     ErrorWnd->into_center();
     ErrorWnd->set_color(error_cset.main);
     ErrorWnd->set_frame(TWindow::DOUBLE_FRAME,error_cset.border);
-    PromptWnd = WindowOpen(1,_tconsole->vio_height(),_tconsole->vio_width(),_tconsole->vio_height(),TWindow::Flag_NLS);
+    PromptWnd = new(zeromem) TWindow(1,_tconsole->vio_height(),_tconsole->vio_width()-1,1,TWindow::Flag_NLS);
     PromptWnd->set_color(prompt_cset.digit);
     PromptWnd->clear();
     PromptWnd->show();
-    if(BeyeCtx->ini_ver!=BEYE_VERSION) Setup();
-    TitleWnd = WindowOpen(1,1,_tconsole->vio_width(),1,TWindow::Flag_None);
+    if(BeyeCtx->ini_ver!=BEYE_VERSION) {
+	class Setup* setup = new class Setup;
+	setup->run();
+	delete setup;
+    }
+    TitleWnd = new(zeromem) TWindow(1,1,_tconsole->vio_width(),1,TWindow::Flag_None);
     TitleWnd->set_color(title_cset.main);
     TitleWnd->clear();
     TitleWnd->show();
-    MainWnd = WindowOpen(1,2,_tconsole->vio_width(),_tconsole->vio_height()-1,TWindow::Flag_None);
+    MainWnd = new(zeromem) TWindow(1,2,_tconsole->vio_width(),_tconsole->vio_height()-2,TWindow::Flag_None);
     MainWnd->set_color(browser_cset.main);
     MainWnd->clear();
 }
@@ -496,10 +486,10 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
  BeyeCtx->init_modes(ini);
  delete &ini;
  BeyeCtx->PaintTitle();
- if(!BeyeCtx->is_valid_ini_args() || BeyeCtx->LastOffset > BMGetFLength()) BeyeCtx->LastOffset = 0;
+ if(!BeyeCtx->is_valid_ini_args() || BeyeCtx->LastOffset > beye_context().bm_file().flength()) BeyeCtx->LastOffset = 0;
  BeyeCtx->main_wnd().show();
  BeyeCtx->main_loop();
- BeyeCtx->LastOffset = BMGetCurrFilePos();
+ BeyeCtx->LastOffset = beye_context().bm_file().tell();
  BeyeCtx->save_ini_info();
  if(BeyeCtx->iniPreserveTime && ftim_ok) binary_stream::set_ftime(BeyeCtx->ArgVector1,ftim);
  Bye:
@@ -694,6 +684,8 @@ void BeyeContext::BMClose()
   if(&sc_bm_file_handle != &bNull) delete &sc_bm_file_handle;
   sc_bm_file_handle = bNull;
 }
+
+__filesize_t BeyeContext::flength() const { return bm_file_handle.flength(); }
 
 static bool test_antiviral_protection(int* verbose)
 {

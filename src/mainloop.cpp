@@ -21,7 +21,6 @@ using namespace	usr;
 
 #include "beye.h"
 #include "colorset.h"
-#include "bmfile.h"
 #include "tstrings.h"
 #include "reg_form.h"
 #include "beyeutil.h"
@@ -101,7 +100,7 @@ void BeyeContext::draw_title() const
 {
   unsigned percent;
   __filesize_t flen;
-  flen = BMGetFLength();
+  flen = beye_context().bm_file().flength();
   percent = flen ? (unsigned)(( lastbyte*100 )/flen) : 100;
   if(percent > 100) percent = 100;
   TitleWnd->goto_xy(TitleWnd->client_width()-4,1);
@@ -116,16 +115,16 @@ void BeyeContext::main_loop()
     int ch;
     __filesize_t savep = 0,cfp,nfp,flen;
     unsigned long lwidth;
-    BMSeek(LastOffset,binary_stream::Seek_Set);
+    beye_context().bm_file().seek(LastOffset,binary_stream::Seek_Set);
     drawPrompt();
     textshift = activeMode->paint(KE_SUPERKEY,textshift);
-    BMSeek(LastOffset,binary_stream::Seek_Set);
+    beye_context().bm_file().seek(LastOffset,binary_stream::Seek_Set);
     draw_title();
     while(1) {
 	unsigned che;
 	ch = GetEvent(drawPrompt,MainActionFromMenu,NULL);
-	nfp = cfp = OldCurrFilePos = BMGetCurrFilePos();
-	flen = BMGetFLength();
+	nfp = cfp = OldCurrFilePos = beye_context().bm_file().tell();
+	flen = beye_context().bm_file().flength();
 	lwidth = activeMode->curr_line_width();
 	che = ch & 0x00FF;
 	if(((che >= '0' && che <= '9') ||
@@ -179,12 +178,12 @@ void BeyeContext::main_loop()
 		break;
 	    case KE_F(4):
 		__filesize_t sfp;
-		sfp = BMGetCurrFilePos();
+		sfp = beye_context().bm_file().tell();
 		activeMode->misckey_action();
 		ch = KE_SUPERKEY;
 		PaintTitle();
 		drawPrompt();
-		BMSeek(sfp,binary_stream::Seek_Set);
+		beye_context().bm_file().seek(sfp,binary_stream::Seek_Set);
 		break;
 	    case KE_F(5):
 		{
@@ -195,7 +194,7 @@ void BeyeContext::main_loop()
 			default:
 			case GJDLG_PERCENTS:
 				shift=shift>100?100:shift;
-				nfp = BMGetFLength()*shift/100;
+				nfp = beye_context().bm_file().flength()*shift/100;
 				break;
 			case GJDLG_FILE_TOP:
 				nfp = shift;
@@ -204,7 +203,7 @@ void BeyeContext::main_loop()
 				nfp += (long)shift;
 				break;
 			case GJDLG_REL_EOF:
-				nfp = BMGetFLength()+(long)shift;
+				nfp = beye_context().bm_file().flength()+(long)shift;
 				break;
 			case GJDLG_VIRTUAL:
 				__filesize_t temp_fp;
@@ -222,7 +221,7 @@ void BeyeContext::main_loop()
 	    break;
 	    case KE_SHIFT_F(5): nfp = WhereAMI(nfp); break;
 	    case KE_F(6):
-		BMReRead();
+		beye_context().bm_file().reread();
 		FoundTextSt = FoundTextEnd; ch = KE_SUPERKEY;
 		PaintTitle();
 		break;
@@ -233,7 +232,12 @@ void BeyeContext::main_loop()
 		    nfp = _bin_format->show_header();
 		    break;
 	    case KE_SHIFT_F(8): select_tool(); break;
-	    case KE_F(9): Setup(); break;
+	    case KE_F(9): {
+			class Setup* setup = new class Setup;
+			setup->run();
+			delete setup;
+		    }
+		    break;
 	    case KE_SHIFT_F(10):
 		if(FileUtils()) {
 		    FoundTextSt = FoundTextEnd; ch = KE_SUPERKEY;
@@ -305,12 +309,12 @@ void BeyeContext::main_loop()
 	    __filesize_t p = flen - twidth;
 	    if((__fileoff_t)nfp < 0) nfp = 0;
 	    if(nfp > 0) if(nfp > p) nfp = p;
-	    BMSeek(nfp,binary_stream::Seek_Set);
+	    beye_context().bm_file().seek(nfp,binary_stream::Seek_Set);
 	}
 	DRAW:
-	if((activeMode->flags() & Plugin::Text) != Plugin::Text) savep = BMGetCurrFilePos();
+	if((activeMode->flags() & Plugin::Text) != Plugin::Text) savep = beye_context().bm_file().tell();
 	textshift = activeMode->paint(ch,textshift);
-	if((activeMode->flags() & Plugin::Text) != Plugin::Text) BMSeek(savep,binary_stream::Seek_Set);
+	if((activeMode->flags() & Plugin::Text) != Plugin::Text) beye_context().bm_file().seek(savep,binary_stream::Seek_Set);
 	draw_title();
     }
 }

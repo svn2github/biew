@@ -22,13 +22,14 @@ using namespace	usr;
 #include <stddef.h>
 
 #include "bconsole.h"
-#include "bmfile.h"
 #include "beyehelp.h"
 #include "colorset.h"
 #include "reg_form.h"
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/dos_sys.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
     class DosSys_Parser : public Binary_Parser {
@@ -56,7 +57,7 @@ __filesize_t DosSys_Parser::show_header()
  TWindow *hwnd;
  bool charun;
  __fileoff_t fpos;
- fpos = BMGetCurrFilePos();
+ fpos = beye_context().bm_file().tell();
  hwnd = CrtDlgWndnls(" DOS Device Driver Header ",57,13);
  charun = (drv.ddAttribute & 0x8000) == 0x8000;
  if(charun) hwnd->printf("Device Name               = %8s\n",drv.ddName);
@@ -102,9 +103,12 @@ __filesize_t DosSys_Parser::show_header()
 
 DosSys_Parser::DosSys_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {
     unsigned char id[4];
-    bmReadBufferEx(id,sizeof(id),0,binary_stream::Seek_Set);
-    if(id[0] == 0xFF && id[1] == 0xFF && id[2] == 0xFF && id[3] == 0xFF)
-	bmReadBufferEx((any_t*)&drv,sizeof(DOSDRIVER),4,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(id,sizeof(id));
+    if(id[0] == 0xFF && id[1] == 0xFF && id[2] == 0xFF && id[3] == 0xFF) {
+	beye_context().sc_bm_file().seek(4,binary_stream::Seek_Set);
+	beye_context().sc_bm_file().read((any_t*)&drv,sizeof(DOSDRIVER));
+    }
 }
 DosSys_Parser::~DosSys_Parser() {}
 int DosSys_Parser::query_platform() const { return DISASM_CPU_IX86; }
@@ -120,7 +124,7 @@ bool DosSys_Parser::address_resolving(char *addr,__filesize_t cfpos)
 __filesize_t DosSys_Parser::action_F1()
 {
   hlpDisplay(10014);
-  return BMGetCurrFilePos();
+  return beye_context().bm_file().tell();
 }
 
 __filesize_t DosSys_Parser::va2pa(__filesize_t va)
@@ -136,7 +140,8 @@ __filesize_t DosSys_Parser::pa2va(__filesize_t pa)
 static bool probe() {
   unsigned char id[4];
   bool ret = false;
-  bmReadBufferEx(id,sizeof(id),0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(id,sizeof(id));
   if(id[0] == 0xFF && id[1] == 0xFF && id[2] == 0xFF && id[3] == 0xFF) ret = true;
   return ret;
 }

@@ -23,10 +23,11 @@ using namespace	usr;
 #include "plugins/bin/rdoff2.h"
 #include "reg_form.h"
 #include "bin_util.h"
-#include "bmfile.h"
 #include "bconsole.h"
 #include "beyehelp.h"
 #include "libbeye/kbd_code.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
     class RDOff2_Parser : public Binary_Parser {
@@ -49,10 +50,11 @@ __filesize_t RDOff2_Parser::show_header()
   __filesize_t fpos;
   unsigned long hs_len,im_len;
   TWindow *w;
-  fpos = BMGetCurrFilePos();
-  endian = bmReadByteEx(5,binary_stream::Seek_Set);
-  im_len = bmReadDWord();
-  hs_len = bmReadDWord();
+  fpos = beye_context().bm_file().tell();
+  beye_context().sc_bm_file().seek(5,binary_stream::Seek_Set);
+  endian = beye_context().sc_bm_file().read(type_byte);
+  im_len = beye_context().sc_bm_file().read(type_dword);
+  hs_len = beye_context().sc_bm_file().read(type_dword);
   w = CrtDlgWndnls(endian == 0x02 ? " RDOFFv2 big endian " : " RDOFFv2 little endian ",54,5);
   w->goto_xy(1,1);
   w->printf(
@@ -84,7 +86,7 @@ __filesize_t RDOff2_Parser::show_header()
 __filesize_t RDOff2_Parser::action_F1()
 {
   hlpDisplay(10012);
-  return BMGetCurrFilePos();
+  return beye_context().bm_file().tell();
 }
 
 
@@ -94,8 +96,9 @@ RDOff2_Parser::~RDOff2_Parser() {}
 int RDOff2_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
 static bool probe() {
-  char rbuff[6];
-  bmReadBufferEx(rbuff,sizeof(rbuff),0L,binary_stream::Seek_Set);
+    char rbuff[6];
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(rbuff,sizeof(rbuff));
   return memcmp(rbuff,"RDOFF2",sizeof(rbuff)) == 0 ||
 	 memcmp(rbuff,"RDOFF\x2",sizeof(rbuff)) == 0;
 }

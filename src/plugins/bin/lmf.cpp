@@ -27,7 +27,6 @@ using namespace	usr;
 
 #include "reg_form.h"
 #include "bin_util.h"
-#include "bmfile.h"
 #include "beyehelp.h"
 #include "beyeutil.h"
 #include "bconsole.h"
@@ -36,6 +35,8 @@ using namespace	usr;
 #include "plugins/bin/lmf.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
     enum {
@@ -118,15 +119,18 @@ LMF_Parser::LMF_Parser(CodeGuider& code_guider)
     int32_t j,p=0;
 /*	lmf_data d;*/
     lmf_header h;
-    bmReadBufferEx(&h,sizeof h,0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(&h,sizeof h);
 	/* Test a first heder */
     i=j=(h.data_nbytes-DEFSIZE())/4;
     xdef_len=h.data_nbytes;
-    bmReadBufferEx(&xdef,std::min(sizeof(lmf_xdef),size_t(h.data_nbytes)),6,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(6,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(&xdef,std::min(sizeof(lmf_xdef),size_t(h.data_nbytes)));
     while(1) {
 	/* Test other headers */
 	p+=HDRSIZE()+h.data_nbytes;
-	bmReadBufferEx(&h,sizeof h,p,binary_stream::Seek_Set);
+	beye_context().sc_bm_file().seek(p,binary_stream::Seek_Set);
+	beye_context().sc_bm_file().read(&h,sizeof h);
 	if(h.rec_type==_LMF_EOF_REC) break;
     }
 
@@ -145,7 +149,8 @@ LMF_Parser::LMF_Parser(CodeGuider& code_guider)
 			hl=(lmf_headers_list*)mp_realloc(hl,(recmax+=MINREC)*sizeof(lmf_headers_list));
 			if(hl==NULL) return;
 		}
-		if(!bmReadBufferEx(&hl[i].header,HDRSIZE(),pos,binary_stream::Seek_Set))
+		beye_context().sc_bm_file().seek(pos,binary_stream::Seek_Set);
+		if(!beye_context().sc_bm_file().read(&hl[i].header,HDRSIZE()))
 			{ failed_lmf(); return; }
 		hl[i].file_pos=pos;
 		switch(hl[i].header.rec_type)
@@ -153,14 +158,16 @@ LMF_Parser::LMF_Parser(CodeGuider& code_guider)
 		case _LMF_DATA_REC:
 		case _LMF_FIXUP_SEG_REC:
 		case _LMF_FIXUP_LINEAR_REC:
-			if(!bmReadBufferEx(&hl[i].data,DATSIZE(),pos+HDRSIZE(),binary_stream::Seek_Set))
+			beye_context().sc_bm_file().seek(pos+HDRSIZE(),binary_stream::Seek_Set);
+			if(!beye_context().sc_bm_file().read(&hl[i].data,DATSIZE()))
 				{ failed_lmf(); return; }
 			l=hl[i].data.index;
 			if(l>=seg_num)
 				{ failed_lmf(); return; }
 			break;
 		case _LMF_RESOURCE_REC:
-			if(!bmReadBufferEx(&hl[i].res,sizeof(lmf_resource),pos+HDRSIZE(),binary_stream::Seek_Set))
+			beye_context().sc_bm_file().seek(pos+HDRSIZE(),binary_stream::Seek_Set);
+			if(!beye_context().sc_bm_file().read(&hl[i].res,sizeof(lmf_resource)))
 				{ failed_lmf(); return; }
 			break;
 		case _LMF_EOF_REC:
@@ -390,7 +397,7 @@ bool LMF_Parser::lmf_ReadSecHdr(binary_stream& handle,memArray *obj,unsigned nna
 
 __filesize_t LMF_Parser::action_F9()
 {
-    __filesize_t fpos=BMGetCurrFilePos();
+    __filesize_t fpos=beye_context().bm_file().tell();
     int ret;
     std::string title = " Num Type              Seg Virtual addresses   ";
     ssize_t nnames = reclast+1;
@@ -401,7 +408,7 @@ __filesize_t LMF_Parser::action_F9()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = lmf_ReadSecHdr(bmbioHandle(),obj,nnames);
+    bval = lmf_ReadSecHdr(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -422,7 +429,7 @@ __filesize_t LMF_Parser::show_header()
 	char tmp[30];
 	unsigned keycode;
 /*	unsigned long entrya;*/
-	fpos = BMGetCurrFilePos();
+	fpos = beye_context().bm_file().tell();
 	sprintf(hdr," QNX%d Load Module Format Header ",xdef.def.version_no/100);
 	sprintf(tmp,"%s%sPrivity=%d%s%s",
 		(xdef.def.cflags&_PCF_LONG_LIVED)?"Long lived, ":"",
@@ -501,7 +508,7 @@ __filesize_t LMF_Parser::show_header()
 __filesize_t LMF_Parser::action_F1()
 {
   hlpDisplay(10015);
-  return BMGetCurrFilePos();
+  return beye_context().bm_file().tell();
 }
 
 static bool probe()
@@ -511,13 +518,15 @@ static bool probe()
     uint32_t i;
 /*	lmf_data d;*/
     lmf_header h;
-    if(!bmReadBufferEx(&h,sizeof h,0,binary_stream::Seek_Set)) return false;
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    if(!beye_context().sc_bm_file().read(&h,sizeof h)) return false;
 	/* Test a first heder */
     if(h.rec_type!=_LMF_DEFINITION_REC||h.zero1!=0||/*h.spare!=0||*/
 		h.data_nbytes<DEFSIZE()+2*sizeof(long)||
 		(h.data_nbytes-DEFSIZE())%4!=0) return false;
     i=j=(h.data_nbytes-DEFSIZE())/4;
-    if(!bmReadBufferEx(&xdef,std::min(sizeof(lmf_xdef),size_t(h.data_nbytes)),6,binary_stream::Seek_Set)) return false;
+    beye_context().sc_bm_file().seek(6,binary_stream::Seek_Set);
+    if(!beye_context().sc_bm_file().read(&xdef,std::min(sizeof(lmf_xdef),size_t(h.data_nbytes)))) return false;
 	/* Test a definition record */
     if(xdef.def.version_no!=400||xdef.def.code_index>i||xdef.def.stack_index>i||
 		xdef.def.heap_index>i||xdef.def.argv_index>i||xdef.def.zero2!=0)
@@ -530,7 +539,8 @@ static bool probe()
     while(1) {
 	/* Test other headers */
 	p+=HDRSIZE()+h.data_nbytes;
-	if(!bmReadBufferEx(&h,sizeof h,p,binary_stream::Seek_Set)) return false;
+	beye_context().sc_bm_file().seek(p,binary_stream::Seek_Set);
+	if(!beye_context().sc_bm_file().read(&h,sizeof h)) return false;
 	if(h.rec_type==_LMF_DEFINITION_REC||h.data_nbytes==0||h.zero1!=0/*||h.spare!=0*/) return false;
 	if(h.rec_type==_LMF_EOF_REC) break;
     }

@@ -30,7 +30,6 @@ using namespace	usr;
 
 #include "beye.h"
 #include "editor.h"
-#include "bmfile.h"
 #include "tstrings.h"
 #include "plugins/hexmode.h"
 #include "plugins/disasm.h"
@@ -53,13 +52,13 @@ static bool ChSize()
  {
   if(tile != 0)
   {
-    psize = BMGetFLength();
+    psize = beye_context().bm_file().flength();
     psize += tile;
     if(psize > 0)
     {
        bool ret;
        int my_errno = 0;
-       std::string fname = BMName();
+       std::string fname = beye_context().bm_file().filename();
        binary_stream* bHandle;
        bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
        if(bHandle == &bNull)
@@ -72,7 +71,7 @@ static bool ChSize()
        my_errno = errno;
        delete bHandle;
        if(ret == false) goto err;
-       BMReRead();
+       beye_context().bm_file().reread();
        return ret;
     }
     else beye_context().ErrMessageBox("Invalid new length","");
@@ -162,17 +161,17 @@ static bool InsDelBlock()
  __filesize_t start;
  static __fileoff_t psize;
  bool ret = false;
- start = BMGetCurrFilePos();
+ start = beye_context().bm_file().tell();
  if(GetInsDelBlkDlg(" Insert or delete block to/from file ",&start,&psize))
  {
     __filesize_t fpos;
     binary_stream* bHandle;
     std::string fname;
-    fpos = BMGetCurrFilePos();
-    if(start > BMGetFLength()) { beye_context().ErrMessageBox("Start is outside of file",""); return 0; }
+    fpos = beye_context().bm_file().tell();
+    if(start > beye_context().bm_file().flength()) { beye_context().ErrMessageBox("Start is outside of file",""); return 0; }
     if(!psize) return 0;
-    if(psize < 0) if(start+labs(psize) > BMGetFLength()) { beye_context().ErrMessageBox("Use change size operation instead of block deletion",""); return 0; }
-    fname = BMName();
+    if(psize < 0) if(start+labs(psize) > beye_context().bm_file().flength()) { beye_context().ErrMessageBox("Use change size operation instead of block deletion",""); return 0; }
+    fname = beye_context().bm_file().filename();
     bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
     if(bHandle == &bNull)
     {
@@ -183,9 +182,9 @@ static bool InsDelBlock()
       if(psize < 0) ret = DelBlock(bHandle,start,psize);
       else          ret = InsBlock(bHandle,start,psize);
       delete bHandle;
-      BMReRead();
+      beye_context().bm_file().reread();
     }
-    BMSeek(fpos,binary_stream::Seek_Set);
+    beye_context().bm_file().seek(fpos,binary_stream::Seek_Set);
  }
  return ret;
 }
@@ -231,7 +230,7 @@ static void  __FASTCALL__ printHdr(FILE * fout,const Bin_Format& fmt)
 	       "%sDumped : %s\n"
 	       "%sFormat : %s\n"
 	       "%s\n\n"
-	      ,cptr1,cptr,BMName().c_str()
+	      ,cptr1,cptr,beye_context().bm_file().filename().c_str()
 	      ,cptr,ff_startpos,ff_startpos+ff_len
 	      ,cptr,BEYE_VER_MSG
 	      ,cptr,ctime(&tim)
@@ -271,7 +270,7 @@ static void  __FASTCALL__ make_addr_column(char *buff,__filesize_t offset)
 static void __make_dump_name(const char *end)
 {
  /* construct name */
- ff_fname=BMName();
+ ff_fname=beye_context().bm_file().filename();
  ff_fname=ff_fname.substr(0,ff_fname.rfind('.'));
  ff_fname+=end;
 }
@@ -289,19 +288,19 @@ static bool FStore()
     }
     flags = FSDLG_USEMODES | FSDLG_BINMODE | FSDLG_COMMENT;
     DumpMode = true;
-    ff_startpos = BMGetCurrFilePos();
-    if(!ff_len) ff_len = BMGetFLength() - ff_startpos;
+    ff_startpos = beye_context().bm_file().tell();
+    if(!ff_len) ff_len = beye_context().bm_file().flength() - ff_startpos;
     __make_dump_name(".$$$");
     char ffname[4096];
     strcpy(ffname,ff_fname.c_str());
     if(GetFStoreDlg(" Save information to file ",ffname,&flags,&ff_startpos,&ff_len,FILE_PRMT)) {
 	ff_fname=ffname;
 	endpos = ff_startpos + ff_len;
-	endpos = endpos > BMGetFLength() ? BMGetFLength() : endpos;
+	endpos = endpos > beye_context().bm_file().flength() ? beye_context().bm_file().flength() : endpos;
 	if(endpos > ff_startpos) {
 	    TWindow *progress_wnd;
 	    unsigned prcnt_counter,oprcnt_counter;
-	    cpos = BMGetCurrFilePos();
+	    cpos = beye_context().bm_file().tell();
 	    progress_wnd = PercentWnd("Saving ..."," Save block to file ");
 	    if(!(flags & FSDLG_ASMMODE)) { /** Write in binary mode */
 		BBio_File* _bioHandle;
@@ -335,7 +334,8 @@ static bool FStore()
 		while(wsize) {
 		    unsigned real_size;
 		    rem = (unsigned)std::min(wsize,__filesize_t(4096));
-		    if(!BMReadBufferEx(tmp_buff,rem,crpos,binary_stream::Seek_Set)) {
+		    beye_context().bm_file().seek(crpos,binary_stream::Seek_Set);
+		    if(!beye_context().bm_file().read(tmp_buff,rem)) {
 			beye_context().errnoMessageBox(READ_FAIL,"",errno);
 			delete _bioHandle;
 			goto Exit;
@@ -407,7 +407,7 @@ static bool FStore()
 		    defobj:
 		    obj_num = 0;
 		    obj_start = 0;
-		    obj_end = BMGetFLength();
+		    obj_end = beye_context().bm_file().flength();
 		    obj_name[0] = 0;
 		    obj_class = OC_CODE;
 		    obj_bitness = bctx.bin_format().query_bitness(ff_startpos);
@@ -497,7 +497,8 @@ static bool FStore()
 			}
 		    }
 		    memset(codebuff,0,MaxInsnLen);
-		    BMReadBufferEx((any_t*)codebuff,MaxInsnLen,ff_startpos,binary_stream::Seek_Set);
+		    beye_context().bm_file().seek(ff_startpos,binary_stream::Seek_Set);
+		    beye_context().bm_file().read((any_t*)codebuff,MaxInsnLen);
 		    if(obj_class == OC_CODE) dret = dismode->disassembler(ff_startpos,codebuff,__DISF_NORMAL);
 		    else { /** Data object */
 			unsigned dis_data_len,ifreq,data_len;
@@ -601,7 +602,7 @@ static bool FStore()
 	    } /** END: Write in disassembler mode */
 	    Exit:
 	    delete progress_wnd;
-	    BMSeek(cpos,binary_stream::Seek_Set);
+	    beye_context().bm_file().seek(cpos,binary_stream::Seek_Set);
 	} else  beye_context().ErrMessageBox("Start position > end position!","");
     }
     delete tmp_buff;
@@ -636,7 +637,7 @@ static bool FRestore()
    delete h;
    lval = endpos - ff_startpos;
    endpos = lval > flen ? flen + ff_startpos : endpos;
-   endpos = endpos > BMGetFLength() ? BMGetFLength() : endpos;
+   endpos = endpos > beye_context().bm_file().flength() ? beye_context().bm_file().flength() : endpos;
    if(endpos > ff_startpos)
    {
      __filesize_t wsize,cwpos;
@@ -651,7 +652,7 @@ static bool FRestore()
 	    return false;
         }
      }
-     cpos = BMGetCurrFilePos();
+     cpos = beye_context().bm_file().tell();
      wsize = endpos - ff_startpos;
      cwpos = ff_startpos;
      h->seek(0L,binary_stream::Seek_Set);
@@ -661,7 +662,7 @@ static bool FRestore()
        MemOutBox("temporary buffer initialization");
        return false;
      }
-     fname = BMName();
+     fname = beye_context().bm_file().filename();
      bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
      if(bHandle != &bNull)
      {
@@ -686,12 +687,12 @@ static bool FRestore()
        }
        bye:
        delete bHandle;
-       BMReRead();
+       beye_context().bm_file().reread();
      }
      else beye_context().errnoMessageBox(OPEN_FAIL,"",errno);
      delete (char*)tmp_buff;
      delete h;
-     BMSeek(cpos,binary_stream::Seek_Set);
+     beye_context().bm_file().seek(cpos,binary_stream::Seek_Set);
      ret = true;
    }
    else beye_context().ErrMessageBox("Start position > end position!","");
@@ -747,18 +748,18 @@ static bool CryptBlock()
  char pass[81];
  bool ret;
  ret = false;
- ff_startpos = BMGetCurrFilePos();
- if(!ff_len) ff_len = BMGetFLength() - ff_startpos;
+ ff_startpos = beye_context().bm_file().tell();
+ if(!ff_len) ff_len = beye_context().bm_file().flength() - ff_startpos;
  pass[0] = 0;
  flags = FSDLG_NOMODES;
  if(GetFStoreDlg(" (De)Crypt block of file ",pass,&flags,&ff_startpos,&ff_len,"Input password (WARNING! password will be displayed):"))
  {
    __filesize_t flen,lval;
    endpos = ff_startpos + ff_len;
-   flen = BMGetFLength();
+   flen = beye_context().bm_file().flength();
    lval = endpos - ff_startpos;
    endpos = lval > flen ? flen + ff_startpos : endpos;
-   endpos = endpos > BMGetFLength() ? BMGetFLength() : endpos;
+   endpos = endpos > beye_context().bm_file().flength() ? beye_context().bm_file().flength() : endpos;
    if(!pass[0]) { beye_context().ErrMessageBox("Password can't be empty",""); return false; }
    if(endpos > ff_startpos)
    {
@@ -767,7 +768,7 @@ static bool CryptBlock()
      std::string fname;
      binary_stream* bHandle;
      any_t*tmp_buff;
-     cpos = BMGetCurrFilePos();
+     cpos = beye_context().bm_file().tell();
      wsize = endpos - ff_startpos;
      cwpos = ff_startpos;
      tmp_buff = new char [4096];
@@ -776,7 +777,7 @@ static bool CryptBlock()
        MemOutBox("temporary buffer initialization");
        return false;
      }
-     fname = BMName();
+     fname = beye_context().bm_file().filename();
      bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
      if(bHandle != &bNull)
      {
@@ -803,10 +804,10 @@ static bool CryptBlock()
        }
        bye:
        delete bHandle;
-       BMReRead();
+       beye_context().bm_file().reread();
      }
      delete (char*)tmp_buff;
-     BMSeek(cpos,binary_stream::Seek_Set);
+     beye_context().bm_file().seek(cpos,binary_stream::Seek_Set);
      ret = true;
    }
    else beye_context().ErrMessageBox("Start position > end position!","");
@@ -853,17 +854,17 @@ static bool ReverseBlock()
  unsigned long flags;
  bool ret;
  ret = false;
- ff_startpos = BMGetCurrFilePos();
- if(!ff_len) ff_len = BMGetFLength() - ff_startpos;
+ ff_startpos = beye_context().bm_file().tell();
+ if(!ff_len) ff_len = beye_context().bm_file().flength() - ff_startpos;
  flags = FSDLG_USEBITNS;
  if(GetFStoreDlg(" Endianify block of file ",NULL,&flags,&ff_startpos,&ff_len,NULL))
  {
    __filesize_t flen,lval;
    endpos = ff_startpos + ff_len;
-   flen = BMGetFLength();
+   flen = beye_context().bm_file().flength();
    lval = endpos - ff_startpos;
    endpos = lval > flen ? flen + ff_startpos : endpos;
-   endpos = endpos > BMGetFLength() ? BMGetFLength() : endpos;
+   endpos = endpos > beye_context().bm_file().flength() ? beye_context().bm_file().flength() : endpos;
    if(endpos > ff_startpos)
    {
      __filesize_t wsize,cwpos;
@@ -871,7 +872,7 @@ static bool ReverseBlock()
      std::string fname;
      binary_stream* bHandle;
      any_t*tmp_buff;
-     cpos = BMGetCurrFilePos();
+     cpos = beye_context().bm_file().tell();
      wsize = endpos - ff_startpos;
      cwpos = ff_startpos;
      tmp_buff = new char [4096];
@@ -880,7 +881,7 @@ static bool ReverseBlock()
        MemOutBox("temporary buffer initialization");
        return false;
      }
-     fname = BMName();
+     fname = beye_context().bm_file().filename();
      bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
      if(bHandle != &bNull)
      {
@@ -907,10 +908,10 @@ static bool ReverseBlock()
        }
        bye:
        delete bHandle;
-       BMReRead();
+       beye_context().bm_file().reread();
      }
      delete (char*)tmp_buff;
-     BMSeek(cpos,binary_stream::Seek_Set);
+     beye_context().bm_file().seek(cpos,binary_stream::Seek_Set);
      ret = true;
    }
    else beye_context().ErrMessageBox("Start position > end position!","");
@@ -935,8 +936,8 @@ static bool XLatBlock()
  unsigned long flags;
  bool ret;
  ret = false;
- ff_startpos = BMGetCurrFilePos();
- if(!ff_len) ff_len = BMGetFLength() - ff_startpos;
+ ff_startpos = beye_context().bm_file().tell();
+ if(!ff_len) ff_len = beye_context().bm_file().flength() - ff_startpos;
  flags = FSDLG_NOMODES;
  if(xlat_fname.empty()) xlat_fname=beye_context().system().get_rc_dir("beye")+"xlt";
  char ffname[4096];
@@ -946,10 +947,10 @@ static bool XLatBlock()
    xlat_fname=ffname;
    __filesize_t flen,lval;
    endpos = ff_startpos + ff_len;
-   flen = BMGetFLength();
+   flen = beye_context().bm_file().flength();
    lval = endpos - ff_startpos;
    endpos = lval > flen ? flen + ff_startpos : endpos;
-   endpos = endpos > BMGetFLength() ? BMGetFLength() : endpos;
+   endpos = endpos > beye_context().bm_file().flength() ? beye_context().bm_file().flength() : endpos;
    if(endpos > ff_startpos)
    {
      __filesize_t wsize,cwpos;
@@ -957,7 +958,7 @@ static bool XLatBlock()
      std::string fname;
      binary_stream* bHandle,* xHandle;
      any_t*tmp_buff;
-     cpos = BMGetCurrFilePos();
+     cpos = beye_context().bm_file().tell();
      wsize = endpos - ff_startpos;
      cwpos = ff_startpos;
      /* Parse xlat file */
@@ -989,7 +990,7 @@ static bool XLatBlock()
        MemOutBox("temporary buffer initialization");
        return false;
      }
-     fname = BMName();
+     fname = beye_context().bm_file().filename();
      bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
      if(bHandle != &bNull)
      {
@@ -1016,10 +1017,10 @@ static bool XLatBlock()
        }
        bye:
        delete bHandle;
-       BMReRead();
+       beye_context().bm_file().reread();
      }
      delete (char*)tmp_buff;
-     BMSeek(cpos,binary_stream::Seek_Set);
+     beye_context().bm_file().seek(cpos,binary_stream::Seek_Set);
      ret = true;
    }
    else beye_context().ErrMessageBox("Start position > end position!","");
@@ -1035,7 +1036,7 @@ static bool FileInfo()
   char attr[14];
   char stimes[3][80];
   memset(&statbuf,0,sizeof(struct stat));
-  stat(BMName().c_str(),&statbuf);
+  stat(beye_context().bm_file().filename().c_str(),&statbuf);
   memset(attr,'-',sizeof(attr));
   attr[sizeof(attr)-1] = 0;
 #ifdef S_IXOTH /** Execute by other */
@@ -1116,7 +1117,7 @@ static bool FileInfo()
 	   "Group ID of the file owner    = %u"
 	   ,beye_context().short_name()
 	   ,beye_context().bin_format().name()
-	   ,BMGetFLength()
+	   ,beye_context().bm_file().flength()
 	   ,attr
 	   ,stimes[0]
 	   ,stimes[1]

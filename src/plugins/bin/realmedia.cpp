@@ -25,10 +25,11 @@ using namespace	usr;
 #include "colorset.h"
 #include "beyeutil.h"
 #include "reg_form.h"
-#include "bmfile.h"
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
 #define MKTAG(a, b, c, d) (a | (b << 8) | (c << 16) | (d << 24))
@@ -48,7 +49,7 @@ const char* RM_Parser::prompt(unsigned idx) const { return txt[idx]; }
 __filesize_t RM_Parser::show_header()
 {
     beye_context().ErrMessageBox("Not implemented yet!","RM format");
-    return BMGetCurrFilePos();
+    return beye_context().bm_file().tell();
 }
 
 RM_Parser::RM_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {}
@@ -56,7 +57,8 @@ RM_Parser::~RM_Parser() {}
 int  RM_Parser::query_platform() const { return DISASM_DEFAULT; }
 
 static bool probe() {
-    if(bmReadDWordEx(0,binary_stream::Seek_Set)==MKTAG('.', 'R', 'M', 'F')) return true;
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    if(beye_context().sc_bm_file().read(type_dword)==MKTAG('.', 'R', 'M', 'F')) return true;
     return false;
 }
 

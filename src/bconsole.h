@@ -41,8 +41,6 @@ namespace	usr {
     TWindow *    __FASTCALL__ CreateEditor(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsCoord Y2,TWindow::twc_flag flags);
     void         __FASTCALL__ DisplayBox(const char **names,unsigned nlist,const std::string& title);
 
-    inline TWindow*	WindowOpen(tAbsCoord x1,tAbsCoord y1,tAbsCoord x2,tAbsCoord y2,TWindow::twc_flag flags=TWindow::Flag_None) { return new(zeromem) TWindow(x1,y1,x2-x1+1,y2-y1+1,flags); }
-
 /** Edit string styles */
 enum {
     __ESS_ENABLEINSERT =0x0001U, /**< enable insert mode */

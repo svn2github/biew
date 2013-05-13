@@ -29,7 +29,6 @@ using namespace	usr;
 
 #include "beye.h"
 #include "beyehelp.h"
-#include "bmfile.h"
 #include "plugins/disasm.h"
 #include "plugins/disasm/ix86/ix86.h"
 #include "beyeutil.h"

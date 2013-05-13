@@ -60,7 +60,6 @@ using namespace	usr;
 #include "plugins/disasm.h"
 #include "bin_util.h"
 #include "codeguid.h"
-#include "bmfile.h"
 #include "beyehelp.h"
 #include "tstrings.h"
 #include "beyeutil.h"
@@ -69,6 +68,8 @@ using namespace	usr;
 #include "libbeye/libbeye.h"
 #include "libbeye/file_ini.h"
 #include "libbeye/kbd_code.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
     struct Elf_Reloc {
@@ -199,14 +200,14 @@ __filesize_t  ELF_Parser::findPHEntry(unsigned long type,unsigned *nitems)
   __filesize_t fpos,dynptr;
   Elf_Phdr phdr;
   size_t i,limit;
-  fpos = bmGetCurrFilePos();
+  fpos = beye_context().sc_bm_file().tell();
   dynptr = 0;
   *nitems = 0;
   limit = Elf->ehdr().e_phnum;
   for(i = 0;i < limit;i++)
   {
-   phdr=Elf->read_phdr(bmbioHandle(),Elf->ehdr().e_phoff + i*Elf->ehdr().e_phentsize);
-   if(bmEOF()) break;
+   phdr=Elf->read_phdr(beye_context().sc_bm_file(),Elf->ehdr().e_phoff + i*Elf->ehdr().e_phentsize);
+   if(beye_context().sc_bm_file().eof()) break;
    if(phdr.p_type == type)
    {
      dynptr = phdr.p_offset;
@@ -214,7 +215,7 @@ __filesize_t  ELF_Parser::findPHEntry(unsigned long type,unsigned *nitems)
      break;
    }
   }
-  bmSeek(fpos,binary_stream::Seek_Set);
+  beye_context().sc_bm_file().seek(fpos,binary_stream::Seek_Set);
   return dynptr;
 }
 
@@ -226,16 +227,16 @@ __filesize_t ELF_Parser::findPHDynEntry(unsigned long type,
   __filesize_t fpos;
   bool is_found = false;
   Elf_Dyn dyntab;
-  fpos = bmGetCurrFilePos();
-  bmSeek(dynptr,binary_stream::Seek_Set);
+  fpos = beye_context().sc_bm_file().tell();
+  beye_context().sc_bm_file().seek(dynptr,binary_stream::Seek_Set);
   for(i = 0;i < nitems;i++)
   {
-    dyntab=Elf->read_dyn(bmbioHandle(),dynptr);
-    if(bmEOF()) break;
+    dyntab=Elf->read_dyn(beye_context().sc_bm_file(),dynptr);
+    if(beye_context().sc_bm_file().eof()) break;
     dynptr += Elf->dyn_size();
     if(dyntab.d_tag == type) { is_found = true; break; }
   }
-  bmSeek(fpos,binary_stream::Seek_Set);
+  beye_context().sc_bm_file().seek(fpos,binary_stream::Seek_Set);
   return is_found ? dyntab.d_un.d_ptr : 0L;
 }
 
@@ -245,7 +246,7 @@ __filesize_t ELF_Parser::findPHPubSyms(unsigned long *number,
 {
   __filesize_t fpos, dynptr, dyn_ptr;
   unsigned i, nitems;
-  fpos = bmGetCurrFilePos();
+  fpos = beye_context().sc_bm_file().tell();
   *ent_size = UINT_MAX;
     /* Here we did an attempt to detect symbol table even if sections header
        are lost */
@@ -264,24 +265,24 @@ __filesize_t ELF_Parser::findPHPubSyms(unsigned long *number,
 	{
 	  __filesize_t _fpos,dptr,max_val,cur_ptr;
 	  Elf_Dyn dyntab;
-	  _fpos = bmGetCurrFilePos();
+	  _fpos = beye_context().sc_bm_file().tell();
 	  dptr = dyn_ptr;
-	  bmSeek(dptr,binary_stream::Seek_Set);
-	  max_val = bmGetFLength(); /* if section is last */
+	  beye_context().sc_bm_file().seek(dptr,binary_stream::Seek_Set);
+	  max_val = beye_context().sc_bm_file().flength(); /* if section is last */
 	  for(i = 0;i < nitems;i++)
 	  {
-	    dyntab=Elf->read_dyn(bmbioHandle(),dptr);
-	    if(bmEOF()) break;
+	    dyntab=Elf->read_dyn(beye_context().sc_bm_file(),dptr);
+	    if(beye_context().sc_bm_file().eof()) break;
 	    dptr += Elf->dyn_size();
 	    cur_ptr = va2pa(dyntab.d_un.d_ptr);
 	    if(cur_ptr > dynptr && cur_ptr < max_val) max_val = cur_ptr;
 	  }
-	  bmSeek(_fpos,binary_stream::Seek_Set);
+	  beye_context().sc_bm_file().seek(_fpos,binary_stream::Seek_Set);
 	  *number = (max_val - dynptr) / *ent_size;
 	}
       }
     }
-  bmSeek(fpos, binary_stream::Seek_Set);
+  beye_context().sc_bm_file().seek(fpos, binary_stream::Seek_Set);
   return dynptr;
 }
 
@@ -616,7 +617,7 @@ __filesize_t ELF_Parser::show_header()
   char hdr[81];
   unsigned keycode,dummy;
   __filesize_t entrya;
-  fpos = BMGetCurrFilePos();
+  fpos = beye_context().bm_file().tell();
   entrya = va2pa(Elf->ehdr().e_entry);
   sprintf(hdr," ELF (Executable and Linking Format) ");
   w = CrtDlgWndnls(hdr,74,18);
@@ -931,7 +932,7 @@ bool ELF_Parser::__elfReadDynTab(binary_stream& handle,memArray *obj, unsigned n
 
 __filesize_t ELF_Parser::action_F10()
 {
-    __filesize_t fpos = BMGetCurrFilePos();
+    __filesize_t fpos = beye_context().bm_file().tell();
     int ret;
     std::string title = " type            fileoffs virtaddr physaddr filesize memsize  flg align   ";
     ssize_t nnames = Elf->ehdr().e_phnum;
@@ -942,7 +943,7 @@ __filesize_t ELF_Parser::action_F10()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = __elfReadPrgHdr(bmbioHandle(),obj,nnames);
+    bval = __elfReadPrgHdr(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -952,8 +953,8 @@ __filesize_t ELF_Parser::action_F10()
     exit:
     if(ret != -1) {
 	Elf_Phdr it;
-	it=Elf->read_phdr(bmbioHandle(),Elf->ehdr().e_phoff+Elf->phdr_size()*ret);
-	bmReadBuffer(&it,sizeof(it));
+	it=Elf->read_phdr(beye_context().sc_bm_file(),Elf->ehdr().e_phoff+Elf->phdr_size()*ret);
+	beye_context().sc_bm_file().read(&it,sizeof(it));
 	fpos = it.p_offset;
     }
     return fpos;
@@ -961,7 +962,7 @@ __filesize_t ELF_Parser::action_F10()
 
 __filesize_t ELF_Parser::action_F9()
 {
-    __filesize_t fpos = BMGetCurrFilePos();
+    __filesize_t fpos = beye_context().bm_file().tell();
     int ret;
     std::string title = " name             type   flg virtaddr fileoffs   size   link info algn esiz";
     ssize_t nnames = IsSectionsPresent ? Elf->ehdr().e_shnum : 0;
@@ -972,7 +973,7 @@ __filesize_t ELF_Parser::action_F9()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = __elfReadSecHdr(bmbioHandle(),obj,nnames);
+    bval = __elfReadSecHdr(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -982,7 +983,7 @@ __filesize_t ELF_Parser::action_F9()
     exit:
     if(ret != -1) {
 	Elf_Shdr it;
-	it=Elf->read_shdr(bmbioHandle(),Elf->ehdr().e_shoff+Elf->ehdr().e_shentsize*ret);
+	it=Elf->read_shdr(beye_context().sc_bm_file(),Elf->ehdr().e_shoff+Elf->ehdr().e_shentsize*ret);
 	fpos = it.sh_offset;
     }
     return fpos;
@@ -1023,7 +1024,7 @@ __filesize_t ELF_Parser::__calcSymEntry(binary_stream& handle,__filesize_t num,b
 
 __filesize_t ELF_Parser::displayELFsymtab()
 {
-    __filesize_t fpos = BMGetCurrFilePos();
+    __filesize_t fpos = beye_context().bm_file().tell();
     int ret;
     std::string title = " Name                                  Value    Size     Oth. Type   Bind   Sec# ";
     ssize_t nnames = __elfNumSymTab;
@@ -1034,7 +1035,7 @@ __filesize_t ELF_Parser::displayELFsymtab()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = __elfReadSymTab(bmbioHandle(),obj,nnames);
+    bval = __elfReadSymTab(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -1044,7 +1045,7 @@ __filesize_t ELF_Parser::displayELFsymtab()
     exit:
     if(ret != -1) {
 	__filesize_t ea;
-	ea = __calcSymEntry(bmbioHandle(),ret,true);
+	ea = __calcSymEntry(beye_context().sc_bm_file(),ret,true);
 	fpos = ea ? ea : fpos;
     }
     return fpos;
@@ -1058,7 +1059,7 @@ __filesize_t ELF_Parser::displayELFdyntab(__filesize_t dynptr,
   memArray *obj;
   binary_stream& handle=elfcache;
   unsigned ndyn;
-  fpos = BMGetCurrFilePos();
+  fpos = beye_context().bm_file().tell();
   ndyn = (unsigned)nitem;
   if(!(obj = ma_Build(ndyn,true))) return fpos;
   handle.seek(dynptr,binary_stream::Seek_Set);
@@ -1077,7 +1078,7 @@ __filesize_t ELF_Parser::displayELFdyntab(__filesize_t dynptr,
 	 if(addr_probe && addr_probe >= elf_min_va)
 	 {
 	   addr_probe = va2pa(addr_probe);
-	   if(addr_probe && addr_probe < bmGetFLength()) fpos = addr_probe;
+	   if(addr_probe && addr_probe < beye_context().sc_bm_file().flength()) fpos = addr_probe;
 	   else goto not_entry;
 	 }
 	 else goto not_entry;
@@ -1096,7 +1097,7 @@ __filesize_t ELF_Parser::displayELFdyntab(__filesize_t dynptr,
 __filesize_t ELF_Parser::action_F7()
 {
   __filesize_t fpos;
-  fpos = BMGetCurrFilePos();
+  fpos = beye_context().bm_file().tell();
   if(!__elfSymPtr) { beye_context().NotifyBox(NOT_ENTRY," ELF symbol table "); return fpos; }
   active_shtbl = __elfSymShTbl;
   return displayELFsymtab();
@@ -1107,8 +1108,8 @@ __filesize_t ELF_Parser::action_F3()
   __filesize_t fpos,dynptr;
   unsigned long number;
   unsigned long nitems,ent_size = UINT_MAX;
-  fpos = BMGetCurrFilePos();
-  dynptr = findSHEntry(bmbioHandle(), SHT_DYNSYM, &number, &active_shtbl, &ent_size);
+  fpos = beye_context().bm_file().tell();
+  dynptr = findSHEntry(beye_context().sc_bm_file(), SHT_DYNSYM, &number, &active_shtbl, &ent_size);
   if(!dynptr)
   {
     dynptr = findPHPubSyms(&nitems, &ent_size, &active_shtbl);
@@ -1925,18 +1926,20 @@ void ELF_Parser::displayELFdyninfo(__filesize_t f_off,unsigned nitems)
   stroff = 0;
   stroff = va2pa(findPHDynEntry(DT_STRTAB,f_off,nitems));
   if(!stroff) { beye_context().NotifyBox(" String information not found!",NULL); return; }
-  bmSeek(f_off,binary_stream::Seek_Set);
+  beye_context().sc_bm_file().seek(f_off,binary_stream::Seek_Set);
   if(!(obj = ma_Build(0,true))) return;
   strcpy(stmp,S_INTERPRETER);
   curroff = findPHEntry(PT_INTERP, &i);
-  if(curroff) bmReadBufferEx(&stmp[sizeof(S_INTERPRETER) - 1],sizeof(stmp)-sizeof(S_INTERPRETER)-1,
-			     curroff,binary_stream::Seek_Set);
+  if(curroff) {
+    beye_context().sc_bm_file().seek(curroff,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(&stmp[sizeof(S_INTERPRETER) - 1],sizeof(stmp)-sizeof(S_INTERPRETER)-1);
+  }
   if(!ma_AddString(obj,stmp,true)) goto dyn_end;
-  bmSeek(f_off,binary_stream::Seek_Set);
+  beye_context().sc_bm_file().seek(f_off,binary_stream::Seek_Set);
   for(i = 0;i < nitems;i++)
   {
-    dyntab=Elf->read_dyn(bmbioHandle(),f_off);
-    if(bmEOF()) break;
+    dyntab=Elf->read_dyn(beye_context().sc_bm_file(),f_off);
+    if(beye_context().sc_bm_file().eof()) break;
     f_off += Elf->dyn_size();
     is_add = true;
     switch(dyntab.d_tag)
@@ -1945,19 +1948,22 @@ void ELF_Parser::displayELFdyninfo(__filesize_t f_off,unsigned nitems)
       case DT_NEEDED:
 		    {
 		      strcpy(stmp,"Needed : ");
-		      bmReadBufferEx(&stmp[strlen(stmp)],70,dyntab.d_un.d_ptr + stroff,binary_stream::Seek_Set);
+			beye_context().sc_bm_file().seek(dyntab.d_un.d_ptr + stroff,binary_stream::Seek_Set);
+			beye_context().sc_bm_file().read(&stmp[strlen(stmp)],70);
 		    }
 		    break;
       case DT_SONAME:
 		    {
 		      strcpy(stmp,"SO name: ");
-		      bmReadBufferEx(&stmp[strlen(stmp)],70,dyntab.d_un.d_ptr + stroff,binary_stream::Seek_Set);
+			beye_context().sc_bm_file().seek(dyntab.d_un.d_ptr + stroff,binary_stream::Seek_Set);
+			beye_context().sc_bm_file().read(&stmp[strlen(stmp)],70);
 		    }
 		    break;
       case DT_RPATH:
 		    {
 		      strcpy(stmp,"LibPath: ");
-		      bmReadBufferEx(&stmp[strlen(stmp)],70,dyntab.d_un.d_ptr + stroff,binary_stream::Seek_Set);
+			beye_context().sc_bm_file().seek(dyntab.d_un.d_ptr + stroff,binary_stream::Seek_Set);
+			beye_context().sc_bm_file().read(&stmp[strlen(stmp)],70);
 		    }
 		    break;
        default:     is_add = false; break;
@@ -1973,11 +1979,11 @@ __filesize_t ELF_Parser::action_F2()
 {
   __filesize_t dynptr,fpos;
   unsigned number;
-  fpos = BMGetCurrFilePos();
+  fpos = beye_context().bm_file().tell();
   dynptr = findPHEntry(PT_DYNAMIC,&number);
   if(!dynptr) { beye_context().NotifyBox(NOT_ENTRY," ELF dynamic linking information "); return fpos; }
   displayELFdyninfo(dynptr,number);
-  BMSeek(fpos, binary_stream::Seek_Set);
+  beye_context().bm_file().seek(fpos, binary_stream::Seek_Set);
   return fpos;
 }
 
@@ -1987,12 +1993,16 @@ bool ELF_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int f
   bool ret = false;
   Elf_Reloc  *erl;
   __filesize_t defval;
+  beye_context().sc_bm_file().seek(ulShift,binary_stream::Seek_Set);
   switch(codelen) {
     default:
-    case 1: defval = bmReadByteEx(ulShift, binary_stream::Seek_Set); break;
-    case 2: defval = bmReadWordEx(ulShift, binary_stream::Seek_Set); break;
-    case 4: defval = bmReadDWordEx(ulShift, binary_stream::Seek_Set); break;
-    case 8: defval = bmReadQWordEx(ulShift, binary_stream::Seek_Set); break;
+    case 1: defval = beye_context().sc_bm_file().read(type_byte); break;
+    case 2: defval = beye_context().sc_bm_file().read(type_word); break;
+    case 4: defval = beye_context().sc_bm_file().read(type_dword); break;
+    case 8:
+	beye_context().sc_bm_file().seek(ulShift, binary_stream::Seek_Set);
+	defval=beye_context().sc_bm_file().read(type_qword);
+	break;
   }
   if(flags & APREF_TRY_PIC)
   {
@@ -2013,14 +2023,17 @@ bool ELF_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int f
        }
        return false;
   }
-  if(!PubNames) elf_ReadPubNameList(bmbioHandle(),MemOutBox);
+  if(!PubNames) elf_ReadPubNameList(beye_context().sc_bm_file(),MemOutBox);
   if((erl = __found_ElfRel(ulShift)) != NULL)
   {
     ret = BuildReferStrElf(str,erl,flags,codelen,defval);
   }
   if(!ret && Elf->ehdr().e_type>ET_REL && codelen>=4)
   {
-    if((erl = __found_ElfRel(va2pa(bmReadDWordEx(ulShift,binary_stream::Seek_Set)))) != NULL)
+    uint32_t id;
+    beye_context().sc_bm_file().seek(ulShift,binary_stream::Seek_Set);
+    id = beye_context().sc_bm_file().read(type_dword);
+    if((erl = __found_ElfRel(va2pa(id))) != NULL)
     {
       ret = BuildReferStrElf(str,erl,flags,codelen,defval);
     }
@@ -2065,13 +2078,13 @@ void ELF_Parser::__elfReadSegments(linearArray **to, bool is_virt )
      {
        exit(EXIT_FAILURE);
      }
-     bmSeek(Elf->ehdr().e_shoff,binary_stream::Seek_Set);
+     beye_context().sc_bm_file().seek(Elf->ehdr().e_shoff,binary_stream::Seek_Set);
      for(i = 0;i < va_map_count;i++)
      {
        __filesize_t flg,x_flags;
-       fp = bmGetCurrFilePos();
-       shdr=Elf->read_shdr(bmbioHandle(),fp);
-       bmSeek(fp+Elf->ehdr().e_shentsize,binary_stream::Seek_Set);
+       fp = beye_context().sc_bm_file().tell();
+       shdr=Elf->read_shdr(beye_context().sc_bm_file(),fp);
+       beye_context().sc_bm_file().seek(fp+Elf->ehdr().e_shentsize,binary_stream::Seek_Set);
        vamap.va = shdr.sh_addr;
        vamap.size = shdr.sh_size;
        vamap.foff = shdr.sh_offset;
@@ -2105,12 +2118,12 @@ void ELF_Parser::__elfReadSegments(linearArray **to, bool is_virt )
       {
 	exit(EXIT_FAILURE);
       }
-      bmSeek(Elf->ehdr().e_phoff,binary_stream::Seek_Set);
+      beye_context().sc_bm_file().seek(Elf->ehdr().e_phoff,binary_stream::Seek_Set);
       for(i = 0;i < va_map_count;i++)
       {
-	fp = bmGetCurrFilePos();
-	phdr=Elf->read_phdr(bmbioHandle(),fp);
-	bmSeek(fp+Elf->ehdr().e_phentsize,binary_stream::Seek_Set);
+	fp = beye_context().sc_bm_file().tell();
+	phdr=Elf->read_phdr(beye_context().sc_bm_file(),fp);
+	beye_context().sc_bm_file().seek(fp+Elf->ehdr().e_phentsize,binary_stream::Seek_Set);
 	vamap.va = phdr.p_vaddr;
 	vamap.size = std::max(phdr.p_filesz, phdr.p_memsz);
 	vamap.foff = phdr.p_offset;
@@ -2142,12 +2155,13 @@ ELF_Parser::ELF_Parser(CodeGuider& _code_guider)
     __filesize_t fs;
     size_t i;
     uint8_t buf[16];
-   bmReadBufferEx(buf,16,0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(buf,16);
    is_msbf = (buf[EI_DATA] == ELFDATA2MSB);
    is_64bit = (buf[EI_CLASS] == ELFCLASS64);
-   if(is_64bit) Elf = new(zeromem) Elf64(bmbioHandle());
-   else Elf = new(zeromem) Elf32(bmbioHandle());
-   fs = bmGetFLength();
+   if(is_64bit) Elf = new(zeromem) Elf64(beye_context().sc_bm_file());
+   else Elf = new(zeromem) Elf32(beye_context().sc_bm_file());
+   fs = beye_context().sc_bm_file().flength();
    IsSectionsPresent = Elf->ehdr().e_shnum != 0 &&
 		       Elf->ehdr().e_shoff &&
 		       Elf->ehdr().e_shoff < fs &&
@@ -2163,7 +2177,7 @@ ELF_Parser::ELF_Parser(CodeGuider& _code_guider)
      evm = &((struct tag_elfVAMap  *)va_map_virt->data)[i];
      if(evm->va < elf_min_va) elf_min_va = evm->va;
    }
-   binary_stream& main_handle = bmbioHandle();
+   binary_stream& main_handle = beye_context().sc_bm_file();
    namecache = *main_handle.dup();
    namecache2 = *main_handle.dup();
    elfcache = *main_handle.dup();
@@ -2171,12 +2185,12 @@ ELF_Parser::ELF_Parser(CodeGuider& _code_guider)
    if(&namecache2 == &bNull) namecache2 = main_handle;
    if(&elfcache == &bNull) elfcache = main_handle;
    /** Computing symbol table entry */
-   __elfSymPtr = findSHEntry(bmbioHandle(), SHT_SYMTAB, &__elfNumSymTab, &__elfSymShTbl, &__elfSymEntSize);
+   __elfSymPtr = findSHEntry(beye_context().sc_bm_file(), SHT_SYMTAB, &__elfNumSymTab, &__elfSymShTbl, &__elfSymEntSize);
 }
 
 ELF_Parser::~ELF_Parser()
 {
-   binary_stream& main_handle = bmbioHandle();
+   binary_stream& main_handle = beye_context().sc_bm_file();
    if(&namecache != &bNull && &namecache != &main_handle) delete &namecache;
    if(&namecache2 != &bNull && &namecache2 != &main_handle) delete &namecache2;
    if(&elfcache != &bNull && &elfcache != &main_handle) delete &elfcache;
@@ -2196,7 +2210,7 @@ int ELF_Parser::query_bitness(__filesize_t off) const
 __filesize_t ELF_Parser::action_F1()
 {
   hlpDisplay(10003);
-  return BMGetCurrFilePos();
+  return beye_context().bm_file().tell();
 }
 
 bool ELF_Parser::address_resolving(char *addr,__filesize_t cfpos)
@@ -2332,7 +2346,7 @@ unsigned ELF_Parser::get_object_attribute(__filesize_t pa,char *name,unsigned cb
   unsigned i,ret;
   struct tag_elfVAMap *evam;
   *start = 0;
-  *end = bmGetFLength();
+  *end = beye_context().sc_bm_file().flength();
   *_class = OC_NOOBJECT;
   *bitness = query_bitness(pa);
   name[0] = 0;
@@ -2380,9 +2394,10 @@ int ELF_Parser::query_endian(__filesize_t off) const {
 }
 
 static bool probe() {
-  char id[4];
-  bmReadBufferEx(id,sizeof(id),0,binary_stream::Seek_Set);
-  return IS_ELF(id);
+    char id[4];
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(id,sizeof id);
+    return IS_ELF(id);
 //  [0] == EI_MAG0 && id[1] == EI_MAG1 && id[2] == 'L' && id[3] == 'F';
 }
 

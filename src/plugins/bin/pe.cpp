@@ -35,7 +35,6 @@ using namespace	usr;
 #include "plugins/disasm.h"
 #include "bin_util.h"
 #include "codeguid.h"
-#include "bmfile.h"
 #include "beyehelp.h"
 #include "tstrings.h"
 #include "beyeutil.h"
@@ -414,8 +413,8 @@ void PE_Parser::PaintNewHeaderPE(TWindow * win,const any_t**ptr,unsigned npage,u
 __filesize_t PE_Parser::action_F8()
 {
  __fileoff_t fpos;
- fpos = BMGetCurrFilePos();
- if(PageBox(70,21,NULL,2,PaintNewHeaderPE) != -1 && entryPE && entryPE < bmGetFLength()) fpos = entryPE;
+ fpos = beye_context().bm_file().tell();
+ if(PageBox(70,21,NULL,2,PaintNewHeaderPE) != -1 && entryPE && entryPE < beye_context().sc_bm_file().flength()) fpos = entryPE;
  return fpos;
 }
 
@@ -524,7 +523,7 @@ __filesize_t PE_Parser::action_F10()
  binary_stream& handle = *pe_cache;
  unsigned nnames;
  memArray * obj;
- fpos = BMGetCurrFilePos();
+ fpos = beye_context().bm_file().tell();
  nnames = pe.peObjects;
  if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
@@ -639,7 +638,7 @@ bool PE_Parser:: __ReadImpContPE(binary_stream& handle,memArray * obj,unsigned n
     if(!cond)
     {
       rphys = RVA2Phys(is_64bit?(Hint&0x7FFFFFFFFFFFFFFFULL):(Hint&0x7FFFFFFFUL));
-      if(rphys > bmGetFLength() || handle.eof())
+      if(rphys > beye_context().sc_bm_file().flength() || handle.eof())
       {
 	if(!ma_AddString(obj,CORRUPT_BIN_MSG,true)) break;
       }
@@ -665,14 +664,14 @@ bool PE_Parser:: __ReadImpContPE(binary_stream& handle,memArray * obj,unsigned n
 }
 
 void PE_Parser::ShowModContextPE(const std::string& title) {
-    ssize_t nnames = GetImpCountPE(bmbioHandle());
+    ssize_t nnames = GetImpCountPE(beye_context().sc_bm_file());
     int flags = LB_SORTABLE;
     bool bval;
     memArray* obj;
     TWindow* w;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = __ReadImpContPE(bmbioHandle(),obj,nnames);
+    bval = __ReadImpContPE(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -690,7 +689,7 @@ __filesize_t PE_Parser::action_F2()
     memArray* obj;
     unsigned nnames;
     __filesize_t phys,fret;
-    fret = BMGetCurrFilePos();
+    fret = beye_context().bm_file().tell();
     if(!peDir[PE_IMPORT].rva) { not_found: beye_context().NotifyBox(NOT_ENTRY," Module References "); return fret; }
     handle.seek(0L,binary_stream::Seek_Set);
     phys = RVA2Phys(peDir[PE_IMPORT].rva);
@@ -791,13 +790,13 @@ __filesize_t  PE_Parser::CalcEntryPE(unsigned ordinal,bool dispmsg)
  __filesize_t fret,rva;
  unsigned ord;
  binary_stream& handle = *pe_cache1;
- fret = BMGetCurrFilePos();
+ fret = beye_context().bm_file().tell();
  {
    __filesize_t eret;
    rva = RVA2Phys(et.etAddressTableRVA);
    ord = (unsigned)ordinal - (unsigned)et.etOrdinalBase;
    eret = fioReadDWord2Phys(handle,rva + 4*ord,binary_stream::Seek_Set);
-   if(eret && eret < bmGetFLength()) fret = eret;
+   if(eret && eret < beye_context().sc_bm_file().flength()) fret = eret;
    else if(dispmsg) beye_context().ErrMessageBox(NO_ENTRY,BAD_ENTRY);
  }
  return fret;
@@ -805,22 +804,22 @@ __filesize_t  PE_Parser::CalcEntryPE(unsigned ordinal,bool dispmsg)
 
 __filesize_t PE_Parser::action_F3()
 {
-    __filesize_t fpos = BMGetCurrFilePos();
+    __filesize_t fpos = beye_context().bm_file().tell();
     int ret;
     unsigned ordinal;
     __filesize_t addr;
     char exp_nam[256], exp_buf[300];
-    fpos = BMGetCurrFilePos();
+    fpos = beye_context().bm_file().tell();
     strcpy(exp_nam,EXP_TABLE);
     if(peDir[PE_EXPORT].rva) {
 	addr = RVA2Phys(peDir[PE_EXPORT].rva);
-	bmSeek(addr,binary_stream::Seek_Set);
-	bmReadBuffer((any_t*)&et,sizeof(et));
+	beye_context().sc_bm_file().seek(addr,binary_stream::Seek_Set);
+	beye_context().sc_bm_file().read((any_t*)&et,sizeof(et));
 	if(et.etNameRVA) {
 	    char sftime[80];
 	    struct tm * tm;
 	    time_t tval;
-	    __peReadASCIIZName(bmbioHandle(),RVA2Phys(et.etNameRVA),exp_buf, sizeof(exp_buf));
+	    __peReadASCIIZName(beye_context().sc_bm_file(),RVA2Phys(et.etNameRVA),exp_buf, sizeof(exp_buf));
 	    if(strlen(exp_buf) > 50) strcpy(&exp_buf[50],"...");
 	    tval = et.etDateTime;
 	    tm = localtime(&tval);
@@ -832,7 +831,7 @@ __filesize_t PE_Parser::action_F3()
 	}
     }
     std::string title = exp_nam;
-    ssize_t nnames = PEExportNumItems(bmbioHandle());
+    ssize_t nnames = PEExportNumItems(beye_context().sc_bm_file());
     int flags = LB_SELECTIVE | LB_SORTABLE;
     bool bval;
     memArray* obj;
@@ -840,7 +839,7 @@ __filesize_t PE_Parser::action_F3()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = PEExportReadItems(bmbioHandle(),obj,nnames);
+    bval = PEExportReadItems(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -901,7 +900,7 @@ bool PE_Parser::PEReadRVAs(binary_stream& handle, memArray * obj, unsigned nname
 
 __filesize_t PE_Parser::action_F9()
 {
-    __filesize_t fpos = BMGetCurrFilePos();
+    __filesize_t fpos = beye_context().bm_file().tell();
     int ret;
     std::string title = " Directory Entry       RVA           size ";
     ssize_t nnames = PE32_HDR(pe32,peDirSize);
@@ -912,7 +911,7 @@ __filesize_t PE_Parser::action_F9()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = PEReadRVAs(bmbioHandle(),obj,nnames);
+    bval = PEReadRVAs(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -945,7 +944,7 @@ void PE_Parser::BuildPERefChain()
   TWindow *w;
   if(!(CurrPEChain = la_Build(0,sizeof(RELOC_PE),MemOutBox))) return;
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
-  if(!PubNames) pe_ReadPubNameList(bmbioHandle(),MemOutBox);
+  if(!PubNames) pe_ReadPubNameList(beye_context().sc_bm_file(),MemOutBox);
   w->goto_xy(1,1);
   w->puts(BUILD_REFS);
   binary_stream& handle = *pe_cache;
@@ -1097,7 +1096,7 @@ bool PE_Parser::BuildReferStrPE(char *str,RELOC_PE  *rpe,int flags)
 	 if(is_64bit) hint_off=Hint & 0x7FFFFFFFFFFFFFFFULL;
 	 else         hint_off=Hint & 0x7FFFFFFFUL;
 	 phys = RVA2Phys(hint_off);
-	 if(phys > bmGetFLength()) strcat(str,"???");
+	 if(phys > beye_context().sc_bm_file().flength()) strcat(str,"???");
 	 else
 	 {
 	   handle2.seek(phys + 2,binary_stream::Seek_Set);
@@ -1170,7 +1169,10 @@ bool PE_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int fl
   if(flags & APREF_TRY_PIC) return false;
   if(peDir[PE_IMPORT].rva || peDir[PE_FIXUP].rva)
   {
-    b_cache->seek(RVA2Phys(bmReadDWordEx(ulShift,binary_stream::Seek_Set) - PE32_HDR(pe32,peImageBase)),
+    uint32_t id;
+    beye_context().sc_bm_file().seek(ulShift,binary_stream::Seek_Set);
+    id = beye_context().sc_bm_file().read(type_dword);
+    b_cache->seek(RVA2Phys(id - PE32_HDR(pe32,peImageBase)),
 	    binary_stream::Seek_Set);
     rpe = __found_RPE(b_cache->read(type_dword));
     if(!rpe) rpe = __found_RPE(ulShift);
@@ -1178,7 +1180,7 @@ bool PE_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int fl
   }
   if(!retrf && (flags & APREF_TRY_LABEL))
   {
-     if(!PubNames) pe_ReadPubNameList(bmbioHandle(),MemOutBox);
+     if(!PubNames) pe_ReadPubNameList(beye_context().sc_bm_file(),MemOutBox);
      if(FindPubName(buff,sizeof(buff),r_sh))
      {
        strcat(str,buff);
@@ -1198,31 +1200,34 @@ PE_Parser::PE_Parser(CodeGuider& __code_guider)
 {
    int i;
 
-   bmReadBufferEx(&pe,sizeof(PEHEADER),beye_context().headshift,binary_stream::Seek_Set);
-   is_64bit = pe.peMagic==0x20B?1:0;
-   bmReadBufferEx(&pe32,PE32_HDR_SIZE(),beye_context().headshift+sizeof(PEHEADER),binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(beye_context().headshift,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(&pe,sizeof(PEHEADER));
+    is_64bit = pe.peMagic==0x20B?1:0;
+    beye_context().sc_bm_file().read(&pe32,PE32_HDR_SIZE());
 
    if(!(peDir = new PERVA[PE32_HDR(pe32,peDirSize)]))
    {
      MemOutBox("PE initialization");
      exit(EXIT_FAILURE);
    }
-   bmReadBuffer(peDir, sizeof(PERVA)*PE32_HDR(pe32,peDirSize));
+   beye_context().sc_bm_file().read(peDir, sizeof(PERVA)*PE32_HDR(pe32,peDirSize));
 
    if(!(peVA = new PE_ADDR[pe.peObjects]))
    {
      MemOutBox("PE initialization");
      exit(EXIT_FAILURE);
    }
-   bmSeek(0x18 + pe.peNTHdrSize + beye_context().headshift,binary_stream::Seek_Set);
+   beye_context().sc_bm_file().seek(0x18 + pe.peNTHdrSize + beye_context().headshift,binary_stream::Seek_Set);
    for(i = 0;i < pe.peObjects;i++)
    {
-     peVA[i].rva = bmReadDWordEx(12L,binary_stream::Seek_Cur);
-     peVA[i].phys = bmReadDWordEx(4L,binary_stream::Seek_Cur);
-     bmSeek(16L,binary_stream::Seek_Cur);
+     beye_context().sc_bm_file().seek(12,binary_stream::Seek_Set);
+     peVA[i].rva = beye_context().sc_bm_file().read(type_dword);
+     beye_context().sc_bm_file().seek(4,binary_stream::Seek_Set);
+     peVA[i].phys = beye_context().sc_bm_file().read(type_dword);
+     beye_context().sc_bm_file().seek(16L,binary_stream::Seek_Cur);
    }
 
-   binary_stream& main_handle = bmbioHandle();
+   binary_stream& main_handle = beye_context().sc_bm_file();
    if((pe_cache = main_handle.dup()) == &bNull) pe_cache = &main_handle;
    if((pe_cache1 = main_handle.dup()) == &bNull) pe_cache1 = &main_handle;
    if((pe_cache2 = main_handle.dup()) == &bNull) pe_cache2 = &main_handle;
@@ -1232,7 +1237,7 @@ PE_Parser::PE_Parser(CodeGuider& __code_guider)
 
 PE_Parser::~PE_Parser()
 {
-  binary_stream& main_handle = bmbioHandle();
+  binary_stream& main_handle = beye_context().sc_bm_file();
   if(peVA) delete peVA;
   if(peDir) delete peDir;
   if(PubNames) { la_Destroy(PubNames); PubNames = 0; }
@@ -1257,7 +1262,7 @@ int PE_Parser::query_bitness(__filesize_t off) const
 __filesize_t PE_Parser::action_F1()
 {
   hlpDisplay(10009);
-  return BMGetCurrFilePos();
+  return beye_context().bm_file().tell();
 }
 
 bool PE_Parser::address_resolving(char *addr,__filesize_t cfpos)
@@ -1297,14 +1302,14 @@ __filesize_t PE_Parser::pa2va(__filesize_t pa)
 {
   int i;
   __filesize_t ret_addr;
-  bmSeek(0x18 + pe.peNTHdrSize + beye_context().headshift,binary_stream::Seek_Set);
+  beye_context().sc_bm_file().seek(0x18 + pe.peNTHdrSize + beye_context().headshift,binary_stream::Seek_Set);
   ret_addr = 0;
   for(i = 0;i < pe.peObjects;i++)
   {
     PE_OBJECT po;
     __filesize_t obj_pa;
-    if(IsKbdTerminate() || bmEOF()) break;
-    bmReadBuffer(&po,sizeof(PE_OBJECT));
+    if(IsKbdTerminate() || beye_context().sc_bm_file().eof()) break;
+    beye_context().sc_bm_file().read(&po,sizeof(PE_OBJECT));
     obj_pa = CalcPEObjectEntry(po.oPhysicalOffset);
     if(pa >= obj_pa && pa < obj_pa + po.oPhysicalSize)
     {
@@ -1382,18 +1387,18 @@ unsigned PE_Parser::get_object_attribute(__filesize_t pa,char *name,unsigned cb_
 {
   unsigned i,nitems,ret;
   *start = 0;
-  *end = bmGetFLength();
+  *end = beye_context().sc_bm_file().flength();
   *_class = OC_NOOBJECT;
   *bitness = query_bitness(pa);
   name[0] = 0;
   nitems = pe.peObjects;
   ret = 0;
-  bmSeek(0x18 + pe.peNTHdrSize + beye_context().headshift,binary_stream::Seek_Set);
+  beye_context().sc_bm_file().seek(0x18 + pe.peNTHdrSize + beye_context().headshift,binary_stream::Seek_Set);
   for(i = 0;i < nitems;i++)
   {
     PE_OBJECT po;
-    if(IsKbdTerminate() || bmEOF()) break;
-    bmReadBuffer(&po,sizeof(PE_OBJECT));
+    if(IsKbdTerminate() || beye_context().sc_bm_file().eof()) break;
+    beye_context().sc_bm_file().read(&po,sizeof(PE_OBJECT));
     if(pa >= *start && pa < po.oPhysicalOffset)
     {
       /** means between two objects */
@@ -1451,7 +1456,8 @@ static bool probe() {
    beye_context().headshift = IsNewExe();
    if(beye_context().headshift)
    {
-     bmReadBufferEx(id,sizeof(id),beye_context().headshift,binary_stream::Seek_Set);
+     beye_context().sc_bm_file().seek(beye_context().headshift,binary_stream::Seek_Set);
+     beye_context().sc_bm_file().read(id,sizeof(id));
      if(id[0] == 'P' && id[1] == 'E') return true;
    }
    return false;

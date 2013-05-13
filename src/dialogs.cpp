@@ -22,7 +22,6 @@ using namespace	usr;
 #include <stdio.h>
 
 #include "colorset.h"
-#include "bmfile.h"
 #include "tstrings.h"
 #include "beyehelp.h"
 #include "bconsole.h"
@@ -30,6 +29,7 @@ using namespace	usr;
 #include "bin_util.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/twindow.h"
+#include "beye.h"
 
 namespace	usr {
 bool __FASTCALL__ Get2DigitDlg(const std::string& title,const std::string& text,unsigned char *xx)
@@ -216,7 +216,7 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
  const char * legals;
  char declegals[13];
  unsigned attr;
- hwnd = CrtDlgWndnls(" Jump within file ",is_BMUse64()?34:26,6);
+ hwnd = CrtDlgWndnls(" Jump within file ",beye_context().is_file64()?34:26,6);
  memcpy(declegals,legalchars,12);
  hwnd->get_pos(&x1,&y1,&x2,&y2);
  hwnd->goto_xy(2,1); hwnd->puts("Enter offset :");
@@ -257,7 +257,7 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
 		     update = false;
 		     break;
       case KE_F(5):  if(udnSelectName(addr)) {
-			if(is_BMUse64()) sprintf(str,"%016llX",*addr);
+			if(beye_context().is_file64()) sprintf(str,"%016llX",*addr);
 			else		 sprintf(str,"%08lX",(unsigned long)*addr);
 		     }
 		     break;
@@ -280,7 +280,7 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
  delete hwnd;
  if(ret)
  {
- if(is_BMUse64())
+ if(beye_context().is_file64())
     *addr = (*flags) == GJDLG_RELATIVE ||
 	    (*flags) == GJDLG_REL_EOF ? (unsigned long long int)strtoll(str,NULL,(*flags)==GJDLG_PERCENTS?10:16):
 					strtoull(str,NULL,(*flags)==GJDLG_PERCENTS?10:16);

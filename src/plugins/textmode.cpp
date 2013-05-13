@@ -29,7 +29,6 @@ using namespace	usr;
 #include "beye.h"
 #include "plugins/textmode.h"
 #include "colorset.h"
-#include "bmfile.h"
 #include "bin_util.h"
 #include "beyeutil.h"
 #include "beyehelp.h"
@@ -174,12 +173,13 @@ static char		detected_syntax_name[FILENAME_MAX+1];
 
 bool TextMode::test_leading_escape(__fileoff_t cpos) const {
     char tmps[MAX_STRLEN];
-    __fileoff_t epos = BMGetCurrFilePos(),spos;
+    __fileoff_t epos = beye_context().bm_file().tell(),spos;
     unsigned escl = ::strlen(escape);
     spos=(cpos-1)-escl;
     if(escl && spos>=0) {
-	BMReadBufferEx(tmps,escl,spos,binary_stream::Seek_Set);
-	BMSeek(epos,binary_stream::Seek_Set);
+	beye_context().bm_file().seek(spos,binary_stream::Seek_Set);
+	beye_context().bm_file().read(tmps,escl);
+	beye_context().bm_file().seek(epos,binary_stream::Seek_Set);
 	return ::memcmp(tmps,escape,escl)==0;
     }
     return 0;
@@ -220,13 +220,13 @@ void TextMode::markup_ctx()
     const char *sseq,*eseq;
     TWindow *hwnd;
     hwnd=PleaseWaitWnd();
-    flen=BMGetFLength();
-    fpos=BMGetCurrFilePos();
-    BMSeek(0,binary_stream::Seek_Set);
+    flen=beye_context().bm_file().flength();
+    fpos=beye_context().bm_file().tell();
+    beye_context().bm_file().seek(0,binary_stream::Seek_Set);
     acontext_num=0;
     for(fptr=0;fptr<flen;fptr++) {
 	tmps[0]=0;
-	ch=BMReadByte();
+	ch=beye_context().bm_file().read(type_byte);
 	found=0;
 	if(ch=='\r') ch='\n';
 	for(i=0;i<syntax_hl.context_num;i++) {
@@ -237,19 +237,20 @@ void TextMode::markup_ctx()
 		if(fptr==0) ss_idx=1;
 		else {
 		    long ccpos;
-		    ccpos=BMGetCurrFilePos();
-		    chn=BMReadByteEx(fptr-1,binary_stream::Seek_Set);
-		    BMSeek(ccpos, binary_stream::Seek_Set);
+		    ccpos=beye_context().bm_file().tell();
+		    beye_context().bm_file().seek(fptr-1,binary_stream::Seek_Set);
+		    chn=beye_context().bm_file().read(type_byte);
+		    beye_context().bm_file().seek(ccpos, binary_stream::Seek_Set);
 		    if(chn=='\n' || chn=='\r') ss_idx=1;
 		}
 	    }
 	    if(ch==sseq[ss_idx]) {
 		__fileoff_t cpos;
 		len=::strlen(sseq);
-		cpos=BMGetCurrFilePos();
+		cpos=beye_context().bm_file().tell();
 		found=0;
 		if(len>(ss_idx+1)) {
-		    BMReadBuffer(tmps,len-(ss_idx+1));
+		    beye_context().bm_file().read(tmps,len-(ss_idx+1));
 		    if(::memcmp(tmps,&sseq[ss_idx+1],len-(ss_idx+1))==0) found=1;
 		}
 		else found=1;
@@ -262,9 +263,9 @@ void TextMode::markup_ctx()
 		    ktmps[0]=ch;
 		    ::memcpy(&ktmps[1],tmps,len-(ss_idx+1));
 		    if(syntax_hl.maxkwd_len>(len-ss_idx)) {
-			ckpos=BMGetCurrFilePos();
-			BMReadBuffer(&ktmps[len],syntax_hl.maxkwd_len-(len-ss_idx));
-			BMSeek(ckpos,binary_stream::Seek_Set);
+			ckpos=beye_context().bm_file().tell();
+			beye_context().bm_file().read(&ktmps[len],syntax_hl.maxkwd_len-(len-ss_idx));
+			beye_context().bm_file().seek(ckpos,binary_stream::Seek_Set);
 		    }
 		    hl_find_kwd(ktmps,Color(0),&st_len);
 		    if(st_len) found=0;
@@ -276,40 +277,40 @@ void TextMode::markup_ctx()
 		    acontext[acontext_num].start_off=fptr-ss_idx;
 		    acontext[acontext_num].end_off=flen;
 		    fptr+=len;
-		    BMSeek(fptr,binary_stream::Seek_Set);
+		    beye_context().bm_file().seek(fptr,binary_stream::Seek_Set);
 		    /* try find end */
 		    eseq=syntax_hl.context[i].end_seq;
 		    len=::strlen(eseq);
 		    for(;fptr<flen;fptr++) {
-			ch=BMReadByte();
+			ch=beye_context().bm_file().read(type_byte);
 			if(ch==eseq[0]) {
 			    long ecpos;
-			    ecpos=BMGetCurrFilePos();
+			    ecpos=beye_context().bm_file().tell();
 			    found=0;
 			    if(len>1) {
-				BMReadBuffer(tmps,len-1);
+				beye_context().bm_file().read(tmps,len-1);
 				if(::memcmp(tmps,&eseq[1],len-1)==0) found=1;
 			    }
 			    else found=1;
 			    if(found && escape) found=!test_leading_escape(ecpos);
 			    if(found) {
 				fptr+=len;
-				BMSeek(fptr,binary_stream::Seek_Set);
+				beye_context().bm_file().seek(fptr,binary_stream::Seek_Set);
 				acontext[acontext_num].end_off=fptr;
 				break;
 			    }
-			    else BMSeek(ecpos,binary_stream::Seek_Set);
+			    else beye_context().bm_file().seek(ecpos,binary_stream::Seek_Set);
 			}
 		    }
 		    acontext_num++;
 		    fptr--;
 		}
-		else BMSeek(cpos,binary_stream::Seek_Set);
+		else beye_context().bm_file().seek(cpos,binary_stream::Seek_Set);
 	    }
 	    if(found) break;
 	}
     }
-    BMSeek(fpos,binary_stream::Seek_Set);
+    beye_context().bm_file().seek(fpos,binary_stream::Seek_Set);
     delete hwnd;
 }
 
@@ -387,19 +388,22 @@ static bool __FASTCALL__ txtFiUserFunc1(IniInfo * info,any_t* data)
 	if(strcmp(info->subsection,"Soft")==0) softmode=1;
 	unfmt_str((unsigned char*)stmp);
 	ilen=strlen(stmp);
-	fpos=BMGetCurrFilePos();
-	BMSeek(off,binary_stream::Seek_Set);
+	fpos=beye_context().bm_file().tell();
+	beye_context().bm_file().seek(off,binary_stream::Seek_Set);
 	found=1;
 	for(i=0;i<ilen;i++) {
 	    unsigned char ch;
-	    ch=BMReadByte();
-	    if(softmode) while(isspace(ch)) { ch=BMReadByte(); if(BMEOF()) { found = 0; break; }}
+	    ch=beye_context().bm_file().read(type_byte);
+	    if(softmode) while(isspace(ch)) {
+		ch=beye_context().bm_file().read(type_byte);
+		if(beye_context().bm_file().eof()) { found = 0; break; }
+	    }
 	    if(ch != stmp[i]) {
 		found=0;
 		break;
 	    }
 	}
-	BMSeek(fpos,binary_stream::Seek_Set);
+	beye_context().bm_file().seek(fpos,binary_stream::Seek_Set);
 	if(found) {
 	    strcpy(detected_syntax_name,value+3);
 	    return true;
@@ -601,7 +605,7 @@ ColorAttr TextMode::hl_get_ctx(long off,int *is_valid, long *end_ctx) const
 {
     unsigned long ii;
     *is_valid=0;
-    *end_ctx=BMGetFLength();
+    *end_ctx=beye_context().bm_file().flength();
     for(ii=0;ii<acontext_num;ii++)
     {
 	if(acontext[ii].start_off <= off && off < acontext[ii].end_off)
@@ -736,9 +740,9 @@ void TextMode::prepare_lines(int keycode)
 {
     int size,size1,h,height = main_wnd.client_height();
     unsigned cp_symb_len;
-    __filesize_t lval,flen,cp = BMGetCurrFilePos();
+    __filesize_t lval,flen,cp = beye_context().bm_file().tell();
     cp_symb_len = activeNLS->get_symbol_size();
-    flen = BMGetFLength();
+    flen = beye_context().bm_file().flength();
     /** search begin of first string */
     h=height-1;
     size = sizeof(TSTR)*h;
@@ -955,7 +959,7 @@ TextMode::TextMode(TWindow& _main_wnd,CodeGuider& code_guider)
 	MemOutBox("Text mode initialization");
 	::exit(EXIT_FAILURE);
     }
-    binary_stream& bh = BMbioHandle();
+    binary_stream& bh = beye_context().bm_file();
     if((txtHandle = bh.dup()) == &bNull) txtHandle = &bh;
     ::memset(&syntax_hl,0,sizeof(syntax_hl));
     /* Fill operator's hash */
@@ -968,7 +972,7 @@ TextMode::~TextMode() {
     delete buff;
     delete tlines;
     delete ptlines;
-    binary_stream& bh = BMbioHandle();
+    binary_stream& bh = beye_context().bm_file();
     if(txtHandle != &bh) { delete txtHandle; txtHandle = &bNull; }
     if(syntax_hl.name) delete syntax_hl.name;
     if(escape) delete escape;
@@ -1020,12 +1024,12 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 	else shift=(shift/cp_symb_len)*cp_symb_len;
     }
     maxstrlen = wmode ? beye_context().tconsole().vio_width() : (MAX_STRLEN / cp_symb_len) - 3;
-    cpos = BMGetCurrFilePos();
+    cpos = beye_context().bm_file().tell();
     if(cpos%cp_symb_len) {
 	if(keycode == KE_RIGHTARROW || keycode == KE_PGDN) cpos+=cpos%cp_symb_len;
 	else cpos=(cpos/cp_symb_len)*cp_symb_len;
     }
-    BMSeek(cpos,binary_stream::Seek_Set);
+    beye_context().bm_file().seek(cpos,binary_stream::Seek_Set);
     if(!(keycode == KE_LEFTARROW || keycode == KE_RIGHTARROW)) prepare_lines(keycode);
     hilightline = -1;
     for(i = 0;i < height;i++) {
@@ -1037,7 +1041,8 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 		if(bin_mode != MOD_BINARY) {
 		    unsigned n_tabs,b_ptr,b_lim;
 		    len = std::min(MAX_STRLEN,FoundTextSt > tlines[i].st ? (int)(FoundTextSt-tlines[i].st):unsigned(0));
-		    BMReadBufferEx((any_t*)buff,len,tlines[i].st,binary_stream::Seek_Set);
+		    beye_context().bm_file().seek(tlines[i].st,binary_stream::Seek_Set);
+		    beye_context().bm_file().read((any_t*)buff,len);
 		    len = convert_cp(buff,len,false);
 		    for(b_lim=len,b_ptr = 0;b_ptr < len;b_ptr+=2,b_lim-=2) {
 			shift = tab2space(NULL,UINT_MAX,&buff[b_ptr],b_lim,0,&n_tabs,0L);
@@ -1062,7 +1067,8 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 	rshift = bin_mode != MOD_BINARY ? 0 : shift;
 	rsize = size = len - rshift;
 	if(len > rshift) {
-	    BMReadBufferEx((any_t*)buff,size,tlines[i].st + rshift,binary_stream::Seek_Set);
+	    beye_context().bm_file().seek(tlines[i].st + rshift,binary_stream::Seek_Set);
+	    beye_context().bm_file().read((any_t*)buff,size);
 	    rsize = size = convert_cp(buff,size,false);
 	    if(bin_mode != MOD_BINARY) {
 		rsize = size = tab2space(&it,__TVIO_MAXSCREENWIDTH,buff,size,shift,NULL,tlines[i].st);
@@ -1097,7 +1103,7 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
     if(!tlines[1].st) tlines[1].st = tlines[0].end;
     CurrStrLen = tlines[0].end - tlines[0].st;
     CurrPageSize = lastbyte - tlines[0].st;
-    BMSeek(cpos,binary_stream::Seek_Set);
+    beye_context().bm_file().seek(cpos,binary_stream::Seek_Set);
     return shift;
 }
 
@@ -1182,16 +1188,17 @@ bool TextMode::detect()
     bool bin = false;
     __filesize_t flen,fpos;
     maxl = 1000;
-    flen = BMGetFLength();
-    fpos=BMGetCurrFilePos();
+    flen = beye_context().bm_file().flength();
+    fpos=beye_context().bm_file().tell();
     if(maxl > flen) maxl = (size_t)flen;
     for(i = 0;i < maxl;i++) {
 	char ch;
-	ch = BMReadByteEx(i,binary_stream::Seek_Set);
+	beye_context().bm_file().seek(i,binary_stream::Seek_Set);
+	ch=beye_context().bm_file().read(type_byte);
 	if((bin=isBinByte(ch))!=false) break;
     }
     if(bin==false) bin_mode = MOD_PLAIN;
-    BMSeek(fpos,binary_stream::Seek_Set);
+    beye_context().bm_file().seek(fpos,binary_stream::Seek_Set);
     return bin == false;
 }
 

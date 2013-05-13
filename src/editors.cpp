@@ -23,7 +23,6 @@ using namespace	usr;
 #include <errno.h>
 
 #include "colorset.h"
-#include "bmfile.h"
 #include "tstrings.h"
 #include "plugins/disasm.h"
 #include "bconsole.h"
@@ -32,6 +31,8 @@ using namespace	usr;
 #include "editor.h"
 #include "libbeye/osdep/tconsole.h"
 #include "libbeye/kbd_code.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
 __fileoff_t edit_cp = 0;
@@ -96,8 +97,8 @@ bool __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size
  }
  memset(EditorMem.buff,TWC_DEF_FILLER,msize);
  memset(EditorMem.save,TWC_DEF_FILLER,msize);
- flen = BMGetFLength();
- edit_cp = cfp = BMGetCurrFilePos();
+ flen = beye_context().bm_file().flength();
+ edit_cp = cfp = beye_context().bm_file().tell();
  EditorMem.width = width;
  if(buff)
  {
@@ -107,8 +108,9 @@ bool __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size
  else
  {
     EditorMem.size = (unsigned)((__filesize_t)msize > (flen-cfp) ? (flen-cfp) : msize);
-    BMReadBufferEx(EditorMem.buff,EditorMem.size,cfp,binary_stream::Seek_Set);
-    BMSeek(cfp,binary_stream::Seek_Set);
+    beye_context().bm_file().seek(cfp,binary_stream::Seek_Set);
+    beye_context().bm_file().read(EditorMem.buff,EditorMem.size);
+    beye_context().bm_file().seek(cfp,binary_stream::Seek_Set);
  }
  memcpy(EditorMem.save,EditorMem.buff,EditorMem.size);
  /** initialize EditorMem.alen */
@@ -157,7 +159,7 @@ void __FASTCALL__ editSaveContest()
 {
   binary_stream* bHandle;
   std::string fname;
-  fname = BMName();
+  fname = beye_context().bm_file().filename();
   bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
   if(bHandle == &bNull)
   {
@@ -168,7 +170,7 @@ void __FASTCALL__ editSaveContest()
   bHandle->seek(edit_cp,binary_stream::Seek_Set);
   if(!bHandle->write((any_t*)EditorMem.buff,EditorMem.size)) goto err;
   delete bHandle;
-  BMReRead();
+  beye_context().bm_file().reread();
 }
 
 bool __FASTCALL__ edit_defaction(int _lastbyte)

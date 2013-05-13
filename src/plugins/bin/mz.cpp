@@ -24,7 +24,6 @@ using namespace	usr;
 
 #include "beye.h"
 #include "bconsole.h"
-#include "bmfile.h"
 #include "beyehelp.h"
 #include "bin_util.h"
 #include "colorset.h"
@@ -116,9 +115,10 @@ const char* MZ_Parser::QueryAddInfo()
    {
      const char *ret;
      __filesize_t fpos;
-     fpos = bmGetCurrFilePos();
-     bmReadBufferEx(memmap,1000,0x1C,binary_stream::Seek_Set);
-     bmSeek(fpos,binary_stream::Seek_Set);
+     fpos = beye_context().sc_bm_file().tell();
+     beye_context().sc_bm_file().seek(0x1C,binary_stream::Seek_Set);
+     beye_context().sc_bm_file().read(memmap,1000);
+     beye_context().sc_bm_file().seek(fpos,binary_stream::Seek_Set);
      ret = QueryAddInfo(memmap);
      delete memmap;
      return ret;
@@ -133,7 +133,7 @@ __filesize_t MZ_Parser::show_header()
  __filesize_t newcpos,fpos;
  unsigned long FPageCnt;
  const char * addinfo;
- fpos = BMGetCurrFilePos();
+ fpos = beye_context().bm_file().tell();
  keycode = 16;
  if(IsNewExe()) keycode++;
  addinfo = QueryAddInfo();
@@ -214,7 +214,7 @@ void MZ_Parser::BuildMZChain()
   w->goto_xy(1,1);
   w->puts(BUILD_REFS);
   CurrMZCount = 0;
-  fpos = bmGetCurrFilePos();
+  fpos = beye_context().sc_bm_file().tell();
   for(i = 0;i < mz.mzRelocationCount;i++)
   {
     unsigned off,seg,j;
@@ -225,14 +225,14 @@ void MZ_Parser::BuildMZChain()
     if(!tptr) break;
     CurrMZChain = (long*)tptr;
     j = mz.mzTableOffset + i*4;
-    bmSeek(j,binary_stream::Seek_Set);
-    off = bmReadWord();
-    seg = bmReadWord();
+    beye_context().sc_bm_file().seek(j,binary_stream::Seek_Set);
+    off = beye_context().sc_bm_file().read(type_word);
+    seg = beye_context().sc_bm_file().read(type_word);
     ptr = (((long)seg) << 4) + off + (((long)mz.mzHeaderSize) << 4);
     CurrMZChain[CurrMZCount++] = ptr;
   }
   HQSort(CurrMZChain,CurrMZCount,sizeof(any_t*),compare_ptr);
-  bmSeek(fpos,binary_stream::Seek_Set);
+  beye_context().sc_bm_file().seek(fpos,binary_stream::Seek_Set);
   delete w;
 }
 
@@ -274,7 +274,8 @@ bool MZ_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int fl
   if(isMZReferenced(ulShift,codelen))
   {
      unsigned wrd;
-     wrd = bmReadWordEx(ulShift,binary_stream::Seek_Set);
+     beye_context().sc_bm_file().seek(ulShift,binary_stream::Seek_Set);
+     wrd = beye_context().sc_bm_file().read(type_word);
      strcat(str,Get4Digit(wrd));
      strcat(str,"+PID");
      ret = true;
@@ -296,11 +297,13 @@ MZ_Parser::MZ_Parser(CodeGuider& __code_guider)
 	    ,_code_guider(__code_guider)
 {
     unsigned char id[2];
-    bmReadBufferEx(id,sizeof(id),0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(id,sizeof(id));
     if((id[0] == 'M' && id[1] == 'Z') ||
      (id[0] == 'Z' && id[1] == 'M'))
     {
-	bmReadBufferEx((any_t*)&mz,sizeof(MZHEADER),2,binary_stream::Seek_Set);
+	beye_context().sc_bm_file().seek(2,binary_stream::Seek_Set);
+	beye_context().sc_bm_file().read((any_t*)&mz,sizeof(MZHEADER));
 	HeadSize = ((unsigned long)mz.mzHeaderSize) << 4;
     }
 }
@@ -329,12 +332,13 @@ bool MZ_Parser::address_resolving(char *addr,__filesize_t cfpos)
 __filesize_t MZ_Parser::action_F1()
 {
   hlpDisplay(10013);
-  return BMGetCurrFilePos();
+  return beye_context().bm_file().tell();
 }
 
 static bool probe() {
     unsigned char id[2];
-    bmReadBufferEx(id,sizeof(id),0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(id,sizeof(id));
     if((id[0] == 'M' && id[1] == 'Z') ||
 	(id[0] == 'Z' && id[1] == 'M')) return true;
     return false;

@@ -26,7 +26,6 @@ using namespace	usr;
 #include <ctype.h>
 
 #include "colorset.h"
-#include "bmfile.h"
 #include "bconsole.h"
 #include "beyehelp.h"
 #include "search.h"
@@ -35,6 +34,8 @@ using namespace	usr;
 #include "libbeye/osdep/tconsole.h"
 #include "libbeye/osdep/system.h"
 #include "libbeye/kbd_code.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 #include "lzss/lzssutil.cpp"
 

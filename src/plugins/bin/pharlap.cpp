@@ -27,12 +27,13 @@ using namespace	usr;
 #include "beyeutil.h"
 #include "beyehelp.h"
 #include "tstrings.h"
-#include "bmfile.h"
 #include "reg_form.h"
 #include "plugins/bin/pharlap.h"
 #include "plugins/disasm.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
     class PharLap_Parser : public Binary_Parser {
@@ -66,7 +67,7 @@ __filesize_t PharLap_Parser::show_header()
   TWindow *w;
   unsigned keycode;
   char sign[3];
-  fpos = BMGetCurrFilePos();
+  fpos = beye_context().bm_file().tell();
   strncpy(sign,(char *)nph.plSignature,2);
   sign[2] = 0;
   w = CrtDlgWndnls(" New PharLap executable ",59,23);
@@ -172,7 +173,7 @@ __filesize_t PharLap_Parser::action_F10()
  memArray * obj;
  if(nph.plSegInfoOffset && nph.plSegInfoSize) nnames = (unsigned)(nph.plSegInfoSize / sizeof(PLSegInfo));
  else                                           nnames = 0;
- fpos = BMGetCurrFilePos();
+ fpos = beye_context().bm_file().tell();
  if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Segment Info table "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
  handle.seek(nph.plSegInfoOffset,binary_stream::Seek_Set);
@@ -249,7 +250,7 @@ __filesize_t PharLap_Parser::action_F9()
  memArray * obj;
  if(nph.plRunTimeParms && nph.plRunTimeSize) nnames = (unsigned)(nph.plRunTimeSize / sizeof(PLRunTimeParms));
  else                                          nnames = 0;
- fpos = BMGetCurrFilePos();
+ fpos = beye_context().bm_file().tell();
  if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Run-time parameters "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
  handle.seek(nph.plRunTimeParms,binary_stream::Seek_Set);
@@ -270,14 +271,15 @@ PharLap_Parser::PharLap_Parser(CodeGuider& code_guider)
 	    :Binary_Parser(code_guider)
 	    ,pl_cache(&bNull)
 {
-  binary_stream& main_handle = bmbioHandle();
-  bmReadBufferEx(&nph,sizeof(nph),0,binary_stream::Seek_Set);
+  binary_stream& main_handle = beye_context().sc_bm_file();
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(&nph,sizeof(nph));
   if((pl_cache = main_handle.dup()) == &bNull) pl_cache = &main_handle;
 }
 
 PharLap_Parser::~PharLap_Parser()
 {
-  binary_stream& main_handle = bmbioHandle();
+  binary_stream& main_handle = beye_context().sc_bm_file();
   if(pl_cache != &bNull && pl_cache != &main_handle) delete pl_cache;
 }
 
@@ -298,14 +300,15 @@ bool PharLap_Parser::address_resolving(char *addr,__filesize_t cfpos)
 __filesize_t PharLap_Parser::action_F1()
 {
   hlpDisplay(10010);
-  return BMGetCurrFilePos();
+  return beye_context().bm_file().tell();
 }
 
 int PharLap_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
 static bool probe() {
    char sign[2];
-   bmReadBufferEx(sign,2,0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(sign,2);
    if(sign[0] == 'P' && (sign[1] == '2' || sign[1] == '3')) return true;
    return false;
 }

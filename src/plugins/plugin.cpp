@@ -3,8 +3,8 @@
 #include "reg_form.h"
 #include "disasm.h"
 #include "beyeutil.h"
-
-#include "bmfile.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
 extern const Binary_Parser_Info bin_info;
@@ -74,7 +74,7 @@ Bin_Format::~Bin_Format() { delete detectedFormat; }
 
 void Bin_Format::detect_format()
 {
-    if(!bmGetFLength()) return;
+    if(!beye_context().sc_bm_file().flength()) return;
     size_t i,sz=formats.size();
     for(i = 0;i < sz;i++) {
 	if(formats[i]->probe()) {

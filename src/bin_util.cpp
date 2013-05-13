@@ -27,7 +27,6 @@ using namespace	usr;
 #include "bin_util.h"
 #include "reg_form.h"
 #include "beyeutil.h"
-#include "bmfile.h"
 #include "bconsole.h"
 #include "tstrings.h"
 #include "plugins/disasm.h"
@@ -106,7 +105,7 @@ static bool __FASTCALL__ udnAddItem() {
     __filesize_t off;
     udn item,*prev;
     char ud_name[256],prompt[256];
-    off = BMGetCurrFilePos();
+    off = beye_context().bm_file().tell();
     sprintf(prompt," Name for %08X offset: ",off);
     prev=NULL;
     ud_name[0]='\0';
@@ -157,14 +156,14 @@ static bool __FASTCALL__ udnDeleteItem() {
     int ret=-1;
     if(!udn_list) { beye_context().ErrMessageBox("UDN list is empty!",""); return false; }
     std::string title = " User-defined Names (aka bookmarks) ";
-    ssize_t nnames = udnGetNumItems(bmbioHandle());
+    ssize_t nnames = udnGetNumItems(beye_context().sc_bm_file());
     int flags = LB_SELECTIVE;
     bool bval;
     memArray* obj;
     TWindow* w;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = udnReadItems(bmbioHandle(),obj,nnames);
+    bval = udnReadItems(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -184,14 +183,14 @@ bool __FASTCALL__ udnSelectName(__filesize_t *off) {
     int ret=-1;
     if(!udn_list) { beye_context().ErrMessageBox("UDN list is empty!",""); return false; }
     std::string title = " User-defined Names (aka bookmarks) ";
-    ssize_t nnames = udnGetNumItems(bmbioHandle());
+    ssize_t nnames = udnGetNumItems(beye_context().sc_bm_file());
     int flags = LB_SELECTIVE;
     bool bval;
     memArray* obj;
     TWindow* w;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = udnReadItems(bmbioHandle(),obj,nnames);
+    bval = udnReadItems(beye_context().sc_bm_file(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -228,7 +227,7 @@ bool __FASTCALL__ __udnSaveList()
 	    fprintf(out,"; This is an automatically generated list of user-defined names\n"
 			"; for: %s\n"
 			"; by Beye-%s\n"
-			,BMName().c_str()
+			,beye_context().bm_file().filename().c_str()
 			,BEYE_VERSION);
 	    for(i=0;i<udn_list->nItems;i++)
 		fprintf(out,"%016llX:%s\n"

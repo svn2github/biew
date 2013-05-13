@@ -25,7 +25,6 @@ using namespace	usr;
 
 #include "beye.h"
 #include "colorset.h"
-#include "bmfile.h"
 #include "tstrings.h"
 #include "search.h"
 #include "beyehelp.h"
@@ -121,7 +120,7 @@ static __filesize_t  __FASTCALL__  ___lfind(const char *sfrom,
     cache = icache;
   }
   else cache = scache;
-  flen = sfrom ? slen : BMGetFLength();
+  flen = sfrom ? slen : beye_context().bm_file().flength();
   endscan = beyeFlg & SF_REVERSE ? 0 : flen;
   direct  = beyeFlg & SF_REVERSE ? -1 : 1;
   tsize = flen;
@@ -133,8 +132,8 @@ static __filesize_t  __FASTCALL__  ___lfind(const char *sfrom,
   start += beyeFlg & SF_REVERSE ? 0 : (pattern_size-1)*symb_size;
   if(!sfrom)
   {
-    bio_opt = BMbioHandle().get_optimization();
-    BMbioHandle().set_optimization((bio_opt & (~BBio_File::Opt_DirMask)) |
+    bio_opt = beye_context().bm_file().get_optimization();
+    beye_context().bm_file().set_optimization((bio_opt & (~BBio_File::Opt_DirMask)) |
 		      (beyeFlg & SF_REVERSE ? BBio_File::Opt_RBackScan : BBio_File::Opt_RForward));
   }
   start = (start/symb_size)*symb_size; /** align on symbol boundary */
@@ -161,8 +160,10 @@ static __filesize_t  __FASTCALL__  ___lfind(const char *sfrom,
     }
     if(sfrom)
       memcpy(nbuff,&sfrom[start],symb_size);
-    else
-      BMReadBufferEx(nbuff,symb_size,start,binary_stream::Seek_Set);
+    else {
+      beye_context().bm_file().seek(start,binary_stream::Seek_Set);
+      beye_context().bm_file().read(nbuff,symb_size);
+    }
     if((beye_context().active_mode().flags() & Plugin::Text) == Plugin::Text) beye_context().active_mode().convert_cp(nbuff,symb_size,false);
     ch = nbuff[0];
     if(!(beyeFlg & SF_CASESENS)) ch = toupper(ch);
@@ -174,8 +175,10 @@ static __filesize_t  __FASTCALL__  ___lfind(const char *sfrom,
 	if((flags & __LF_NOSEEK) && findptr != orig_start) break;
 	if(sfrom)
 	  memcpy(fbuff,&sfrom[findptr],pattern_size*symb_size);
-	else
-	  BMReadBufferEx((any_t*)fbuff,pattern_size*symb_size,findptr,binary_stream::Seek_Set);
+	else {
+	    beye_context().bm_file().seek(findptr,binary_stream::Seek_Set);
+	    beye_context().bm_file().read((any_t*)fbuff,pattern_size*symb_size);
+	}
 	if((beye_context().active_mode().flags() & Plugin::Text) == Plugin::Text)
 	     __search_len = beye_context().active_mode().convert_cp((char *)fbuff,pattern_size*symb_size,false);
 	else __search_len = pattern_size;
@@ -199,8 +202,10 @@ static __filesize_t  __FASTCALL__  ___lfind(const char *sfrom,
 	{
 	  if(sfrom)
 	    memcpy(nbuff,&sfrom[findptr-symb_size],symb_size);
-	  else
-	    BMReadBufferEx(nbuff,symb_size,findptr - symb_size,binary_stream::Seek_Set);
+	  else {
+		beye_context().bm_file().seek(findptr - symb_size,binary_stream::Seek_Set);
+		beye_context().bm_file().read(nbuff,symb_size);
+	  }
 	  if((beye_context().active_mode().flags() & Plugin::Text) == Plugin::Text) beye_context().active_mode().convert_cp(nbuff,symb_size,false);
 	  ch = nbuff[0];
 	}
@@ -209,8 +214,10 @@ static __filesize_t  __FASTCALL__  ___lfind(const char *sfrom,
 	{
 	  if(sfrom)
 	    memcpy(nbuff,&sfrom[findptr + (pattern_size*symb_size)],symb_size);
-	  else
-	    BMReadBufferEx(nbuff,symb_size,findptr + (pattern_size*symb_size),binary_stream::Seek_Set);
+	  else {
+		beye_context().bm_file().seek(findptr + (pattern_size*symb_size),binary_stream::Seek_Set);
+		beye_context().bm_file().read(nbuff,symb_size);
+	  }
 	  if((beye_context().active_mode().flags() & Plugin::Text) == Plugin::Text) beye_context().active_mode().convert_cp(nbuff,symb_size,false);
 	  ch1 = nbuff[0];
 	}
@@ -221,7 +228,7 @@ static __filesize_t  __FASTCALL__  ___lfind(const char *sfrom,
     if(cond) { __found = true; retval = findptr; break; }
     if(flags & __LF_NOSEEK) break;
   }
-  if(!sfrom) BMbioHandle().set_optimization(bio_opt);
+  if(!sfrom) beye_context().bm_file().set_optimization(bio_opt);
   return retval;
 }
 
@@ -573,8 +580,8 @@ __filesize_t BeyeContext::search( bool is_continue )
   __filesize_t found;
   __filesize_t fmem,lmem,slen, flen;
   bool ret;
-  fmem = BMGetCurrFilePos();
-  flen = BMGetFLength();
+  fmem = beye_context().bm_file().tell();
+  flen = beye_context().bm_file().flength();
   ret = is_continue ? true :
 	SearchDialog(SD_ALLFEATURES,(char *)search_buff,&search_len,&beyeSearchFlg);
   if(ret && search_len)
@@ -607,7 +614,7 @@ __filesize_t BeyeContext::search( bool is_continue )
     }
     else  ErrMessageBox(STR_NOT_FOUND,SEARCH_MSG);
   }
-  BMSeek(fmem,binary_stream::Seek_Set);
+  beye_context().bm_file().seek(fmem,binary_stream::Seek_Set);
   return fmem;
 }
 } // namespace	usr

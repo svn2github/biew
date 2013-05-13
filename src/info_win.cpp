@@ -25,7 +25,6 @@ using namespace	usr;
 
 #include "beye.h"
 #include "colorset.h"
-#include "bmfile.h"
 #include "tstrings.h"
 #include "reg_form.h"
 #include "bconsole.h"
@@ -451,7 +450,7 @@ void About()
  unsigned i,j,len;
  char str[2];
  const unsigned char core[8] = { TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, 0x00 };
- hwnd = WindowOpen(0,0,74,14,TWindow::Flag_Has_Frame | TWindow::Flag_NLS);
+ hwnd = new(zeromem) TWindow(0,0,75,15,TWindow::Flag_Has_Frame | TWindow::Flag_NLS);
  hwnd->into_center();
  hwnd->set_color(LightCyan,Black);
  hwnd->clear();
@@ -557,7 +556,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
   hwnd->set_footer("[Enter] - Prev. entry [Ctrl-Enter | F5] - Next entry]",TWindow::TMode_Right,dialog_cset.selfooter);
   hwnd->goto_xy(1,1);
   wait_wnd = PleaseWaitWnd();
-  cfpos = BMGetCurrFilePos();
+  cfpos = beye_context().bm_file().tell();
   va = beye_context().bin_format().pa2va(ctrl_pos);
   if(va==Plugin::Bad_Address) va = ctrl_pos;
   vaddr[0] = '\0';
@@ -578,7 +577,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
     obj_num = 0;
     oname[0] = 0;
     obj_start = 0;
-    obj_end = BMGetFLength();
+    obj_end = beye_context().bm_file().flength();
     obj_class = OC_CODE;
     obj_bitness = DAB_USE16;
   }
@@ -642,7 +641,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
     }
   }
   exit:
-  BMSeek(cfpos,binary_stream::Seek_Set);
+  beye_context().bm_file().seek(cfpos,binary_stream::Seek_Set);
   delete hwnd;
   return ret_addr;
 }

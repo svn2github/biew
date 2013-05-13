@@ -22,7 +22,6 @@ using namespace	usr;
 
 #include "libbeye/bswap.h"
 #include "colorset.h"
-#include "bmfile.h"
 #include "beyeutil.h"
 #include "bin_util.h"
 #include "beyehelp.h"
@@ -33,6 +32,8 @@ using namespace	usr;
 #include "plugins/bin/aout64.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
+#include "beye.h"
+#include "libbeye/bstream.h"
 
 namespace	usr {
     class AOut_Parser : public Binary_Parser {
@@ -102,8 +103,9 @@ __filesize_t AOut_Parser::show_header()
   __filesize_t fpos;
   unsigned keycode,dummy;
   TWindow *w;
-  fpos = BMGetCurrFilePos();
-  bmReadBufferEx(&aout,sizeof(struct external_exec),0,binary_stream::Seek_Set);
+  fpos = beye_context().bm_file().tell();
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(&aout,sizeof(struct external_exec));
   uint32_t* p_info = (uint32_t*)&aout.e_info;
   w = CrtDlgWndnls(aout_encode_hdr(*p_info),54,7);
   w->goto_xy(1,1);
@@ -156,7 +158,8 @@ bool AOut_Parser::probe_fmt( uint32_t id )
 
 AOut_Parser::AOut_Parser(CodeGuider&c):Binary_Parser(c) {
     uint32_t id;
-    id = bmReadDWordEx(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    id = beye_context().sc_bm_file().read(type_dword);
     if(probe_fmt(id)) return;
     id=be2me_32(id);
     if(probe_fmt(id)) is_msbf=1;
@@ -192,20 +195,22 @@ bool AOut_Parser::address_resolving(char *addr,__filesize_t fpos)
 __filesize_t AOut_Parser::action_F1()
 {
   hlpDisplay(10000);
-  return BMGetCurrFilePos();
+  return beye_context().bm_file().tell();
 }
 
 int AOut_Parser::query_platform() const {
  unsigned id;
  struct external_exec aout;
- bmReadBufferEx(&aout,sizeof(struct external_exec),0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+    beye_context().sc_bm_file().read(&aout,sizeof(struct external_exec));
  aout_encode_machine(*((uint32_t *)aout.e_info),&id);
  return id;
 }
 
 static bool probe() {
   uint32_t id;
-  id = bmReadDWordEx(0,binary_stream::Seek_Set);
+  beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
+  id = beye_context().sc_bm_file().read(type_dword);
   if(AOut_Parser::check_fmt(id)) return 1;
   id=be2me_32(id);
   if(AOut_Parser::check_fmt(id)) return 1;

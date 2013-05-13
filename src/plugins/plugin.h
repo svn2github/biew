@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "libbeye/libbeye.h"
-#include "bmfile.h"
 #include "beyeutil.h"
 #include "reg_form.h"
 
