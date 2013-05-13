@@ -37,7 +37,7 @@ using namespace	usr;
 namespace	usr {
     class PPC_Disassembler : public Disassembler {
 	public:
-	    PPC_Disassembler(DisMode& parent);
+	    PPC_Disassembler(binary_stream& h,DisMode& parent);
 	    virtual ~PPC_Disassembler();
 	
 	    virtual const char*	prompt(unsigned idx) const;
@@ -63,6 +63,7 @@ namespace	usr {
 						const ppc_arg *args);
 
 	    DisMode&		parent;
+	    binary_stream&	main_handle;
 	    char*		outstr;
 	    int			ppcBitness;
 	    int			ppcBigEndian;
@@ -141,14 +142,14 @@ void PPC_Disassembler::ppc_Encode_args(char *ostr,uint32_t opcode,
 		if(len>6) {
 		    int aa = PPC_GET_BITS(opcode,30,1);
 		    unsigned long distin = (value<<2) + (aa?0:ulShift);
-		    parent.append_faddr(ostr,dig_off,value,distin,
+		    parent.append_faddr(main_handle,ostr,dig_off,value,distin,
 				DisMode::Near32,0,dig_sz);
 		}
 		else goto do_digs;
 	    }
 	    else {
 		do_digs:
-		parent.append_digits(ostr,dig_off,APREF_USE_TYPE,dig_sz,&opcode,dig_flg);
+		parent.append_digits(main_handle,ostr,dig_off,APREF_USE_TYPE,dig_sz,&opcode,dig_flg);
 	    }
 	}
     }
@@ -1475,7 +1476,7 @@ DisasmRet PPC_Disassembler::disassembler(__filesize_t ulShift,
 	{
 		strcpy(dret.str,"db");
 		TabSpace(dret.str,TAB_POS);
-		parent.append_digits(dret.str,ulShift,APREF_USE_TYPE,4,&opcode,DisMode::Arg_DWord);
+		parent.append_digits(main_handle,dret.str,ulShift,APREF_USE_TYPE,4,&opcode,DisMode::Arg_DWord);
 	}
 	dret.pro_clone=0;
     }
@@ -1644,9 +1645,10 @@ bool PPC_Disassembler::action_F5()
   return false;
 }
 
-PPC_Disassembler::PPC_Disassembler( DisMode& _parent )
-		:Disassembler(_parent)
+PPC_Disassembler::PPC_Disassembler(binary_stream& h,DisMode& _parent )
+		:Disassembler(h,_parent)
 		,parent(_parent)
+		,main_handle(h)
 		,ppcBitness(DAB_USE32)
 		,ppcBigEndian(1)
 		,ppcDialect(0)
@@ -1703,7 +1705,7 @@ const char* PPC_Disassembler::prompt(unsigned idx) const {
     return "";
 }
 
-static Disassembler* query_interface(DisMode& _parent) { return new(zeromem) PPC_Disassembler(_parent); }
+static Disassembler* query_interface(binary_stream& h,DisMode& _parent) { return new(zeromem) PPC_Disassembler(h,_parent); }
 
 extern const Disassembler_Info ppc_disassembler_info = {
     DISASM_CPU_PPC,

@@ -17,11 +17,9 @@
 #ifndef __RDOFF_INC
 #define __RDOFF_INC
 
-namespace	usr {
-#ifndef __SYS_DEP_H
-#include "_sys_dep.h"
-#endif
+#include "config.h"
 
+namespace	usr {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack(1)
 #endif

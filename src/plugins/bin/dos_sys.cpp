@@ -28,13 +28,14 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/dos_sys.h"
-#include "beye.h"
 #include "libbeye/bstream.h"
+#include "plugins/binary_parser.h"
+#include "beye.h"
 
 namespace	usr {
     class DosSys_Parser : public Binary_Parser {
 	public:
-	    DosSys_Parser(CodeGuider&);
+	    DosSys_Parser(binary_stream&,CodeGuider&);
 	    virtual ~DosSys_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -46,7 +47,8 @@ namespace	usr {
 	    virtual __filesize_t	va2pa(__filesize_t va);
 	    virtual __filesize_t	pa2va(__filesize_t pa);
 	private:
-	    DOSDRIVER drv;
+	    DOSDRIVER		drv;
+	    binary_stream&	main_handle;
     };
 static const char* txt[]={ "SysHlp", "", "", "", "", "", "", "", "", "" };
 const char* DosSys_Parser::prompt(unsigned idx) const { return txt[idx]; }
@@ -57,7 +59,7 @@ __filesize_t DosSys_Parser::show_header()
  TWindow *hwnd;
  bool charun;
  __fileoff_t fpos;
- fpos = beye_context().bm_file().tell();
+ fpos = beye_context().tell();
  hwnd = CrtDlgWndnls(" DOS Device Driver Header ",57,13);
  charun = (drv.ddAttribute & 0x8000) == 0x8000;
  if(charun) hwnd->printf("Device Name               = %8s\n",drv.ddName);
@@ -101,13 +103,16 @@ __filesize_t DosSys_Parser::show_header()
  return fpos;
 }
 
-DosSys_Parser::DosSys_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {
+DosSys_Parser::DosSys_Parser(binary_stream& h,CodeGuider& code_guider)
+	    :Binary_Parser(h,code_guider)
+	    ,main_handle(h)
+{
     unsigned char id[4];
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(id,sizeof(id));
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(id,sizeof(id));
     if(id[0] == 0xFF && id[1] == 0xFF && id[2] == 0xFF && id[3] == 0xFF) {
-	beye_context().sc_bm_file().seek(4,binary_stream::Seek_Set);
-	beye_context().sc_bm_file().read((any_t*)&drv,sizeof(DOSDRIVER));
+	main_handle.seek(4,binary_stream::Seek_Set);
+	main_handle.read((any_t*)&drv,sizeof(DOSDRIVER));
     }
 }
 DosSys_Parser::~DosSys_Parser() {}
@@ -124,7 +129,7 @@ bool DosSys_Parser::address_resolving(char *addr,__filesize_t cfpos)
 __filesize_t DosSys_Parser::action_F1()
 {
   hlpDisplay(10014);
-  return beye_context().bm_file().tell();
+  return beye_context().tell();
 }
 
 __filesize_t DosSys_Parser::va2pa(__filesize_t va)
@@ -137,16 +142,16 @@ __filesize_t DosSys_Parser::pa2va(__filesize_t pa)
   return pa;
 }
 
-static bool probe() {
+static bool probe(binary_stream& main_handle) {
   unsigned char id[4];
   bool ret = false;
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(id,sizeof(id));
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(id,sizeof(id));
   if(id[0] == 0xFF && id[1] == 0xFF && id[2] == 0xFF && id[3] == 0xFF) ret = true;
   return ret;
 }
 
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) DosSys_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) DosSys_Parser(h,_parent); }
 extern const Binary_Parser_Info dossys_info = {
     "DOS-driver",	/**< plugin name */
     probe,

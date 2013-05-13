@@ -46,7 +46,7 @@ namespace	usr {
     };
     class BinMode : public Plugin {
 	public:
-	    BinMode(TWindow& _main_wnd,CodeGuider& code_guider);
+	    BinMode(binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider);
 	    virtual ~BinMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -73,17 +73,18 @@ namespace	usr {
 	private:
 	    static void	save_video(Opaque& _this,unsigned char *buff,unsigned size);
 
-	    unsigned	virtWidthCorr;
-	    unsigned	bin_mode; /**< points to currently selected mode text mode */
-	    TWindow&	main_wnd;
-
+	    unsigned		virtWidthCorr;
+	    unsigned		bin_mode; /**< points to currently selected mode text mode */
+	    TWindow&		main_wnd;
+	    binary_stream&	main_handle;
     };
 
-BinMode::BinMode(TWindow& _main_wnd,CodeGuider& code_guider)
-	:Plugin(_main_wnd,code_guider)
+BinMode::BinMode(binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider)
+	:Plugin(h,_main_wnd,code_guider)
 	,virtWidthCorr(0)
 	,bin_mode(MOD_PLAIN)
 	,main_wnd(_main_wnd)
+	,main_handle(h)
 {}
 BinMode::~BinMode() {}
 
@@ -149,7 +150,7 @@ unsigned BinMode::paint( unsigned keycode,unsigned tshift )
     it.chars=chars;
     it.oem_pg=oem_pg;
     it.attrs=attrs;
-    cfp  = beye_context().bm_file().tell();
+    cfp  = main_handle.tell();
     width = main_wnd.client_width();
     BWidth = main_wnd.client_width()-virtWidthCorr;
     height = main_wnd.client_height();
@@ -157,7 +158,7 @@ unsigned BinMode::paint( unsigned keycode,unsigned tshift )
     else _b_width=2;
     if(cfp != bmocpos || keycode == KE_SUPERKEY || keycode == KE_JUSTFIND) {
 	bmocpos = cfp;
-	flen = beye_context().bm_file().flength();
+	flen = main_handle.flength();
 	limit = flen - BWidth;
 	if(flen < (__filesize_t)BWidth) BWidth = (int)(limit = flen);
 	main_wnd.freeze();
@@ -167,8 +168,8 @@ unsigned BinMode::paint( unsigned keycode,unsigned tshift )
 	    len = _index < limit ? (int)count : _index < flen ? (int)(flen - _index) : 0;
 	    if(len) {
 		lastbyte = _index + len;
-		beye_context().bm_file().seek(_index,binary_stream::Seek_Set);
-		beye_context().bm_file().read((any_t*)buffer,len);
+		main_handle.seek(_index,binary_stream::Seek_Set);
+		main_handle.read((any_t*)buffer,len);
 	    }
 	    if(bin_mode!=MOD_PLAIN) {
 		unsigned i,ii;
@@ -227,7 +228,7 @@ void BinMode::save_video(Opaque& _this,unsigned char *buff,unsigned size)
 	beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 	return;
     }
-    bHandle->seek(beye_context().bm_file().tell(),binary_stream::Seek_Set);
+    bHandle->seek(beye_context().tell(),binary_stream::Seek_Set);
     if(it.bin_mode==MOD_REVERSE) bHandle->seek(1,binary_stream::Seek_Cur);
     for(i=0;i<size;i++) {
 	if(!bHandle->write((uint8_t)buff[i])) goto err;
@@ -241,7 +242,7 @@ void BinMode::misckey_action() /* EditBin */
 {
     TWindow *ewin;
     bool inited;
-    if(!beye_context().bm_file().flength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
+    if(!main_handle.flength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
     ewin = new(zeromem) TWindow(1,2,beye_context().tconsole().vio_width()-virtWidthCorr,beye_context().tconsole().vio_height()-2,TWindow::Flag_Has_Cursor);
     ewin->set_color(browser_cset.edit.main); ewin->clear();
     drawEditPrompt();
@@ -253,12 +254,12 @@ void BinMode::misckey_action() /* EditBin */
 	unsigned i,size,msize = beye_context().tconsole().vio_width()*beye_context().tconsole().vio_height();
 	unsigned char *buff = new unsigned char [msize*2];
 	if(buff) {
-	    flen = beye_context().bm_file().flength();
-	    cfp = beye_context().bm_file().tell();
+	    flen = main_handle.flength();
+	    cfp = main_handle.tell();
 	    size = (unsigned)((unsigned long)msize > (flen-cfp) ? (flen-cfp) : msize);
-	    beye_context().bm_file().seek(cfp,binary_stream::Seek_Set);
-	    beye_context().bm_file().read(buff,size*2);
-	    beye_context().bm_file().seek(cfp,binary_stream::Seek_Set);
+	    main_handle.seek(cfp,binary_stream::Seek_Set);
+	    main_handle.read(buff,size*2);
+	    main_handle.seek(cfp,binary_stream::Seek_Set);
 	    for(i=0;i<size;i++) buff[i]=bin_mode==MOD_BINARY?buff[i*2]:buff[i*2+1];
 	    inited=editInitBuffs(beye_context().tconsole().vio_width()-virtWidthCorr,buff,size);
 	    delete buff;
@@ -303,7 +304,7 @@ void BinMode::save_ini(Ini_Profile& ini)
 unsigned BinMode::get_symbol_size() const { return bin_mode==MOD_PLAIN?1:2; }
 unsigned BinMode::get_max_line_length() const { return main_wnd.client_width(); }
 
-static Plugin* query_interface(TWindow& main_wnd,CodeGuider& code_guider) { return new(zeromem) BinMode(main_wnd,code_guider); }
+static Plugin* query_interface(binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider) { return new(zeromem) BinMode(h,main_wnd,code_guider); }
 
 extern const Plugin_Info binMode = {
     "~Binary mode",	/**< plugin name */

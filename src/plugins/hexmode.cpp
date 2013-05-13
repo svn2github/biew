@@ -42,7 +42,7 @@ using namespace	usr;
 namespace	usr {
     class HexMode : public Plugin {
 	public:
-	    HexMode(TWindow& _main_wnd,CodeGuider& code_guider);
+	    HexMode(binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider);
 	    virtual ~HexMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -72,20 +72,22 @@ namespace	usr {
 	    void		check_width_corr();
 	    int			full_hex_edit(TWindow * txtwnd,TWindow *hexwnd);
 
-	    CodeGuider&	code_guider;
-	    unsigned	virtWidthCorr;
-	    unsigned	hmode;
-	    TWindow&	main_wnd;
+	    CodeGuider&		code_guider;
+	    unsigned		virtWidthCorr;
+	    unsigned		hmode;
+	    TWindow&		main_wnd;
+	    binary_stream&	main_handle;
     };
 unsigned	hexAddressResolv;
 static unsigned hendian;
 
-HexMode::HexMode(TWindow& _main_wnd,CodeGuider& _code_guider)
-	:Plugin(_main_wnd,_code_guider)
+HexMode::HexMode(binary_stream& h,TWindow& _main_wnd,CodeGuider& _code_guider)
+	:Plugin(h,_main_wnd,_code_guider)
 	,code_guider(_code_guider)
 	,virtWidthCorr(0)
 	,hmode(1)
 	,main_wnd(_main_wnd)
+	,main_handle(h)
 {}
 HexMode::~HexMode() {}
 
@@ -96,7 +98,7 @@ const char* HexMode::prompt(unsigned idx) const {
     return (idx < 10) ? txt[idx] : "";
 }
 
-typedef char *( __FASTCALL__ *hexFunc)(__filesize_t);
+typedef char *( __FASTCALL__ *hexFunc)(binary_stream& main_handle,__filesize_t);
 typedef unsigned char ( __FASTCALL__ *sizeFunc) ();
 
 typedef struct tag_hexView {
@@ -107,33 +109,33 @@ typedef struct tag_hexView {
     unsigned char hardlen;
 }hexView;
 
-static char *  __FASTCALL__ GetB(__filesize_t val) {
+static char *  __FASTCALL__ GetB(binary_stream& main_handle,__filesize_t val) {
     char id;
-    beye_context().bm_file().seek(val,binary_stream::Seek_Set);
-    id=beye_context().bm_file().read(type_byte);
+    main_handle.seek(val,binary_stream::Seek_Set);
+    id=main_handle.read(type_byte);
     return GetBinary(id);
 }
-static char *  __FASTCALL__ Get2D(__filesize_t val) {
+static char *  __FASTCALL__ Get2D(binary_stream& main_handle,__filesize_t val) {
     char id;
-    beye_context().bm_file().seek(val,binary_stream::Seek_Set);
-    id=beye_context().bm_file().read(type_byte);
+    main_handle.seek(val,binary_stream::Seek_Set);
+    id=main_handle.read(type_byte);
     return Get2Digit(id);
 }
-static char *  __FASTCALL__ Get4D(__filesize_t val)
+static char *  __FASTCALL__ Get4D(binary_stream& main_handle,__filesize_t val)
 {
     unsigned short v;
-    beye_context().bm_file().seek(val,binary_stream::Seek_Set);
-    v = beye_context().bm_file().read(type_word);
+    main_handle.seek(val,binary_stream::Seek_Set);
+    v = main_handle.read(type_word);
     if(hendian==1) v=le2me_16(v);
     else
     if(hendian==2) v=be2me_16(v);
     return Get4Digit(v);
 }
-static char *  __FASTCALL__ Get8D(__filesize_t val)
+static char *  __FASTCALL__ Get8D(binary_stream& main_handle,__filesize_t val)
 {
     unsigned long v;
-    beye_context().bm_file().seek(val,binary_stream::Seek_Set);
-    v = beye_context().bm_file().read(type_dword);
+    main_handle.seek(val,binary_stream::Seek_Set);
+    v = main_handle.read(type_dword);
     if(hendian==1) v=le2me_32(v);
     else
     if(hendian==2) v=be2me_32(v);
@@ -162,7 +164,7 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
     __filesize_t sindex,cpos,flen,lindex,SIndex;
     static __filesize_t hmocpos = 0L;
     int __inc,dlen;
-    cpos = beye_context().bm_file().tell();
+    cpos = main_handle.tell();
     if(hmocpos != cpos || keycode == KE_SUPERKEY || keycode == KE_JUSTFIND) {
 	tAbsCoord height = main_wnd.client_height();
 	tAbsCoord width = main_wnd.client_width();
@@ -172,7 +174,7 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 	hmocpos = cpos;
 	__inc = hexViewer[hmode].size;
 	dlen = hexViewer[hmode].hardlen;
-	flen = beye_context().bm_file().flength();
+	flen = main_handle.flength();
 	scrHWidth = HWidth*__inc;
 	if(flen < HWidth) HWidth = flen;
 	if(keycode == KE_UPARROW) {
@@ -206,12 +208,12 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 		len = HA_LEN();
 		::memcpy(outstr,code_guider.encode_address(sindex,hexAddressResolv),len);
 		for(j = 0,freq = 0,lindex = sindex;j < rwidth;j++,lindex += __inc,freq++) {
-		    ::memcpy(&outstr[len],hexViewer[hmode].func(lindex),dlen);
+		    ::memcpy(&outstr[len],hexViewer[hmode].func(main_handle,lindex),dlen);
 		    len += dlen + 1;
 		    if(hmode == 1) if(freq == 3) { freq = -1; len++; }
 		}
-		beye_context().bm_file().seek(sindex,binary_stream::Seek_Set);
-		beye_context().bm_file().read((any_t*)&outstr[width - scrHWidth],rwidth*__inc);
+		main_handle.seek(sindex,binary_stream::Seek_Set);
+		main_handle.read((any_t*)&outstr[width - scrHWidth],rwidth*__inc);
 		xmin = beye_context().tconsole().vio_width()-scrHWidth;
 		main_wnd.direct_write(1,i + 1,outstr,xmin);
 		if(isHOnLine(sindex,scrHWidth)) {
@@ -246,7 +248,7 @@ void HexMode::misckey_action () /* EditHex */
     unsigned bound;
     tAbsCoord width = main_wnd.client_width();
     if(hmode != 1) return;
-    if(!beye_context().bm_file().flength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
+    if(!main_handle.flength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
     bound = (width-(hexViewer[hmode].width()-virtWidthCorr))-HA_LEN();
     ewnd[0] = new(zeromem) TWindow(HA_LEN()+1,2,bound,beye_context().tconsole().vio_height()-2,TWindow::Flag_Has_Cursor);
     ewnd[0]->set_color(browser_cset.edit.main); ewnd[0]->clear();
@@ -472,7 +474,7 @@ void HexMode::save_ini(Ini_Profile&  ini)
 unsigned HexMode::get_symbol_size() const { return 1; }
 unsigned HexMode::get_max_line_length() const { return hexViewer[hmode].width(); }
 
-static Plugin* query_interface(TWindow& main_wnd,CodeGuider& code_guider) { return new(zeromem) HexMode(main_wnd,code_guider); }
+static Plugin* query_interface(binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider) { return new(zeromem) HexMode(h,main_wnd,code_guider); }
 
 extern const Plugin_Info hexMode = {
     "~Hexadecimal mode",	/**< plugin name */

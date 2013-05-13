@@ -17,9 +17,7 @@
 #ifndef __PHARLAP_INC
 #define __PHARLAP_INC
 
-#ifndef __SYS_DEP_H
-#include "_sys_dep.h"
-#endif
+#include "config.h"
 
 namespace	usr {
 #ifdef __HAVE_PRAGMA_PACK__

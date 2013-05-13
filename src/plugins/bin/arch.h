@@ -17,9 +17,7 @@
 #ifndef __ARCH_INC
 #define __ARCH_INC
 
-#ifndef __SYS_DEP_H
-#include "_sys_dep.h"
-#endif
+#include "config.h"
 
 namespace	usr {
 #ifdef __HAVE_PRAGMA_PACK__

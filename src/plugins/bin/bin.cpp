@@ -22,11 +22,12 @@ using namespace	usr;
 
 #include "reg_form.h"
 #include "plugins/disasm.h"
+#include "plugins/binary_parser.h"
 
 namespace	usr {
     class Bin_Parser : public Binary_Parser {
 	public:
-	    Bin_Parser(CodeGuider&);
+	    Bin_Parser(binary_stream& h,CodeGuider&);
 	    virtual ~Bin_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -36,12 +37,13 @@ namespace	usr {
 static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
 const char* Bin_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-Bin_Parser::Bin_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {}
+Bin_Parser::Bin_Parser(binary_stream& h,CodeGuider& code_guider)
+	    :Binary_Parser(h,code_guider) {}
 Bin_Parser::~Bin_Parser() {}
 int  Bin_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-static bool probe() { return true; }
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) Bin_Parser(_parent); }
+static bool probe(binary_stream&) { return true; }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) Bin_Parser(h,_parent); }
 extern const Binary_Parser_Info bin_info = {
     "Binary file",	/**< plugin name */
     probe,

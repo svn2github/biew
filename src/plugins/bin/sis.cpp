@@ -28,8 +28,9 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 #include "plugins/bin/mmio.h"
 #include "plugins/disasm.h"
-#include "beye.h"
 #include "libbeye/bstream.h"
+#include "plugins/binary_parser.h"
+#include "beye.h"
 
 namespace	usr {
 struct SisHeader {
@@ -60,7 +61,7 @@ struct SisHeader {
 
     class Sis_Parser : public Binary_Parser {
 	public:
-	    Sis_Parser(CodeGuider&);
+	    Sis_Parser(binary_stream&,CodeGuider&);
 	    virtual ~Sis_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -69,18 +70,23 @@ struct SisHeader {
 	    virtual int			query_platform() const;
 	private:
 	    __filesize_t		show_sis3_header();
+
+	    binary_stream&		main_handle;
     };
 static const char* txt[]={"","","","","","","","","",""};
 const char* Sis_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-Sis_Parser::Sis_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {}
+Sis_Parser::Sis_Parser(binary_stream& h,CodeGuider& code_guider)
+	    :Binary_Parser(h,code_guider)
+	    ,main_handle(h)
+{}
 Sis_Parser::~Sis_Parser() {}
 int  Sis_Parser::query_platform() const { return DISASM_CPU_ARM; }
 
 __filesize_t Sis_Parser::show_sis3_header()
 {
     beye_context().ErrMessageBox("Not implemented yet!","Sis v3 header");
-    return beye_context().bm_file().tell();
+    return beye_context().tell();
 }
 
 __filesize_t Sis_Parser::show_header()
@@ -90,9 +96,9 @@ __filesize_t Sis_Parser::show_header()
  const char *TypeName;
  struct SisHeader sis;
  __filesize_t fpos,fpos2;
- fpos2=fpos = beye_context().bm_file().tell();
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(&sis,sizeof(sis));
+ fpos2=fpos = beye_context().tell();
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(&sis,sizeof(sis));
  if(sis.UID1==0x10201A7A) return show_sis3_header();
  switch(sis.Type)
  {
@@ -149,19 +155,19 @@ __filesize_t Sis_Parser::show_header()
  return fpos;
 }
 
-static bool probe() {
+static bool probe(binary_stream& main_handle) {
     unsigned long id1,id2,id3;
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    id1=beye_context().sc_bm_file().read(type_dword);
-    id2=beye_context().sc_bm_file().read(type_dword);
-    id3=beye_context().sc_bm_file().read(type_dword);
+    main_handle.seek(0,binary_stream::Seek_Set);
+    id1=main_handle.read(type_dword);
+    id2=main_handle.read(type_dword);
+    id3=main_handle.read(type_dword);
     if((id2==0x10003A12 || id2==0x1000006D) && id3==0x10000419) return true;
     /* try s60 3rd */
     if(id1==0x10201A7A) return true;
     return false;
 }
 
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) Sis_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) Sis_Parser(h,_parent); }
 extern const Binary_Parser_Info sis_info = {
     "Sis(EPOC) Symbian OS installable file",	/**< plugin name */
     probe,

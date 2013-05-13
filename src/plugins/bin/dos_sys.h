@@ -17,9 +17,7 @@
 #ifndef __DOS_SYS_INC
 #define __DOS_SYS_INC
 
-#ifndef __BEYEUTIL__H
-#include "beyeutil.h"
-#endif
+#include "config.h"
 
 namespace	usr {
 #ifdef __HAVE_PRAGMA_PACK__

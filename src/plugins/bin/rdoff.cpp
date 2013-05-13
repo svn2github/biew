@@ -33,8 +33,9 @@ using namespace	usr;
 #include "plugins/disasm.h"
 #include "plugins/bin/rdoff.h"
 #include "libbeye/kbd_code.h"
-#include "beye.h"
 #include "libbeye/bstream.h"
+#include "plugins/binary_parser.h"
+#include "beye.h"
 
 namespace	usr {
     struct rdoff_ImpName {
@@ -45,7 +46,7 @@ namespace	usr {
 
     class RDOff_Parser : public Binary_Parser {
 	public:
-	    RDOff_Parser(CodeGuider&);
+	    RDOff_Parser(binary_stream&,CodeGuider&);
 	    virtual ~RDOff_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -83,6 +84,7 @@ namespace	usr {
 	    linearArray*		rdoffReloc;
 	    linearArray*		rdoffImpNames;
 	    unsigned char		__codelen;
+	    binary_stream&		main_handle;
 	    CodeGuider&			code_guider;
     };
 static const char* txt[]={ "RdHelp", "ModRef", "Export", "", "Import", "", "", "", "", "" };
@@ -91,7 +93,7 @@ const char* RDOff_Parser::prompt(unsigned idx) const { return txt[idx]; }
 __filesize_t RDOff_Parser::action_F1()
 {
   hlpDisplay(10011);
-  return beye_context().bm_file().tell();
+  return beye_context().tell();
 }
 
 /** return 0 if error */
@@ -104,33 +106,33 @@ bool  RDOff_Parser::rdoff_skiprec(unsigned char type)
   switch(type)
   {
     case 1: /** reloc record */
-	    beye_context().sc_bm_file().seek(8,binary_stream::Seek_Cur);
+	    main_handle.seek(8,binary_stream::Seek_Cur);
 	    break;
     case 2: /** import symbol */
-	    beye_context().sc_bm_file().seek(2,binary_stream::Seek_Cur);
+	    main_handle.seek(2,binary_stream::Seek_Cur);
 	    for(i = 0;i < 32;i++)
 	    {
-	      nulch = beye_context().sc_bm_file().read(type_byte);
+	      nulch = main_handle.read(type_byte);
 	      if(!nulch) break;
 	    }
 	    break;
     case 3: /** export symbol */
-	    beye_context().sc_bm_file().seek(5,binary_stream::Seek_Cur);
+	    main_handle.seek(5,binary_stream::Seek_Cur);
 	    for(i = 0;i < 32;i++)
 	    {
-	      nulch = beye_context().sc_bm_file().read(type_byte);
+	      nulch = main_handle.read(type_byte);
 	      if(!nulch) break;
 	    }
 	    break;
     case 4: /** import library */
 	    for(i = 0;i < 128;i++)
 	    {
-	      nulch = beye_context().sc_bm_file().read(type_byte);
+	      nulch = main_handle.read(type_byte);
 	      if(!nulch) break;
 	    }
 	    break;
     case 5: /** reserve bss */
-	    beye_context().sc_bm_file().seek(4,binary_stream::Seek_Cur);
+	    main_handle.seek(4,binary_stream::Seek_Cur);
 	    break;
     default: /** unknown ??? */
 	    beye_context().ErrMessageBox("Broken RDOFF file","");
@@ -150,24 +152,24 @@ __filesize_t RDOff_Parser::action_F3()
   __filesize_t segoff;
   __filesize_t abs_off;
   memArray * rdoff_et;
-  fpos = beye_context().bm_file().tell();
+  fpos = beye_context().tell();
   if(!(rdoff_et = ma_Build(0,true))) return fpos;
-  beye_context().sc_bm_file().seek(10,binary_stream::Seek_Set);
-  while(beye_context().sc_bm_file().tell() < rdoff_hdrlen + 5)
+  main_handle.seek(10,binary_stream::Seek_Set);
+  while(main_handle.tell() < rdoff_hdrlen + 5)
   {
     bool is_eof;
-    rec = beye_context().sc_bm_file().read(type_byte);
+    rec = main_handle.read(type_byte);
     is_eof = false;
     if(rec == 3)
     {
       char ch;
-      segno = beye_context().sc_bm_file().read(type_byte);
-      segoff = beye_context().sc_bm_file().read(type_dword);
+      segno = main_handle.read(type_byte);
+      segoff = main_handle.read(type_dword);
       for(i = 0;i < 32;i++)
       {
-	ch = beye_context().sc_bm_file().read(type_byte);
+	ch = main_handle.read(type_byte);
 	str[i] = ch;
-	is_eof = beye_context().sc_bm_file().eof();
+	is_eof = main_handle.eof();
 	if(!ch || is_eof) break;
       }
       str[i] = 0;
@@ -179,7 +181,7 @@ __filesize_t RDOff_Parser::action_F3()
     else
     {
       if(!rdoff_skiprec(rec)) goto exit;
-      if(beye_context().sc_bm_file().eof()) break;
+      if(main_handle.eof()) break;
     }
   }
   if(rdoff_et->nItems)
@@ -209,22 +211,22 @@ __filesize_t RDOff_Parser::rdoff_FindExport(const std::string& name)
   unsigned char segno;
   __filesize_t segoff;
   __filesize_t abs_off;
-  beye_context().sc_bm_file().seek(10,binary_stream::Seek_Set);
+  main_handle.seek(10,binary_stream::Seek_Set);
   ret = 0L;
-  while(beye_context().sc_bm_file().tell() < rdoff_hdrlen + 5)
+  while(main_handle.tell() < rdoff_hdrlen + 5)
   {
     bool is_eof;
-    rec = beye_context().sc_bm_file().read(type_byte);
+    rec = main_handle.read(type_byte);
     is_eof = false;
     if(rec == 3)
     {
       char ch;
-      segno = beye_context().sc_bm_file().read(type_byte);
-      segoff = beye_context().sc_bm_file().read(type_dword);
+      segno = main_handle.read(type_byte);
+      segoff = main_handle.read(type_dword);
       for(i = 0;i < 32;i++)
       {
-	ch = beye_context().sc_bm_file().read(type_byte);
-	is_eof = beye_context().sc_bm_file().eof();
+	ch = main_handle.read(type_byte);
+	is_eof = main_handle.eof();
 	str[i] = ch;
 	if(!ch || is_eof) break;
       }
@@ -241,7 +243,7 @@ __filesize_t RDOff_Parser::rdoff_FindExport(const std::string& name)
     else
     {
       if(!rdoff_skiprec(rec)) break;
-      if(beye_context().sc_bm_file().eof()) break;
+      if(main_handle.eof()) break;
     }
   }
   return ret;
@@ -254,21 +256,21 @@ __filesize_t RDOff_Parser::action_F2()
   unsigned i;
   char str[129];
   memArray * rdoff_mr;
-  fpos = beye_context().bm_file().tell();
+  fpos = beye_context().tell();
   if(!(rdoff_mr = ma_Build(0,true))) return fpos;
-  beye_context().sc_bm_file().seek(10,binary_stream::Seek_Set);
-  while(beye_context().sc_bm_file().tell() < rdoff_hdrlen + 5)
+  main_handle.seek(10,binary_stream::Seek_Set);
+  while(main_handle.tell() < rdoff_hdrlen + 5)
   {
     bool is_eof;
-    rec = beye_context().sc_bm_file().read(type_byte);
+    rec = main_handle.read(type_byte);
     is_eof = false;
     if(rec == 4)
     {
       char ch;
       for(i = 0;i < 128;i++)
       {
-	ch = beye_context().sc_bm_file().read(type_byte);
-	is_eof = beye_context().sc_bm_file().eof();
+	ch = main_handle.read(type_byte);
+	is_eof = main_handle.eof();
 	str[i] = ch;
 	if(!ch || is_eof) break;
       }
@@ -278,7 +280,7 @@ __filesize_t RDOff_Parser::action_F2()
     else
     {
       if(!rdoff_skiprec(rec)) goto exit;
-      if(beye_context().sc_bm_file().eof()) break;
+      if(main_handle.eof()) break;
     }
   }
   if(rdoff_mr->nItems) ma_Display(rdoff_mr,MOD_REFER,LB_SORTABLE,0);
@@ -295,22 +297,22 @@ __filesize_t RDOff_Parser::action_F5()
   unsigned i;
   char str[33];
   memArray * rdoff_it;
-  fpos = beye_context().bm_file().tell();
+  fpos = beye_context().tell();
   if(!(rdoff_it = ma_Build(0,true))) return fpos;
-  beye_context().sc_bm_file().seek(10,binary_stream::Seek_Set);
-  while(beye_context().sc_bm_file().tell() < rdoff_hdrlen + 5)
+  main_handle.seek(10,binary_stream::Seek_Set);
+  while(main_handle.tell() < rdoff_hdrlen + 5)
   {
     bool is_eof;
-    rec = beye_context().sc_bm_file().read(type_byte);
+    rec = main_handle.read(type_byte);
     is_eof = false;
     if(rec == 2)
     {
       char ch;
-      beye_context().sc_bm_file().seek(2,binary_stream::Seek_Cur);
+      main_handle.seek(2,binary_stream::Seek_Cur);
       for(i = 0;i < 32;i++)
       {
-	ch = beye_context().sc_bm_file().read(type_byte);
-	is_eof = beye_context().sc_bm_file().eof();
+	ch = main_handle.read(type_byte);
+	is_eof = main_handle.eof();
 	str[i] = ch;
 	if(!ch || is_eof) break;
       }
@@ -320,7 +322,7 @@ __filesize_t RDOff_Parser::action_F5()
     else
     {
       if(!rdoff_skiprec(rec)) goto exit;
-      if(beye_context().sc_bm_file().eof()) break;
+      if(main_handle.eof()) break;
     }
   }
   if(rdoff_it->nItems) ma_Display(rdoff_it,IMPPROC_TABLE,LB_SORTABLE,0);
@@ -336,14 +338,14 @@ __filesize_t RDOff_Parser::show_header()
   __filesize_t fpos,entry;
   unsigned long hs_len,cs_len;
   TWindow *w;
-  fpos = beye_context().bm_file().tell();
-  beye_context().sc_bm_file().seek(5,binary_stream::Seek_Set);
-  endian = beye_context().sc_bm_file().read(type_byte);
-  hs_len = beye_context().sc_bm_file().read(type_dword);
-  beye_context().sc_bm_file().seek(hs_len,binary_stream::Seek_Cur);
-  cs_len = beye_context().sc_bm_file().read(type_dword);
-  beye_context().sc_bm_file().seek(cs_len,binary_stream::Seek_Cur);
-  ds_len = beye_context().sc_bm_file().read(type_dword);
+  fpos = beye_context().tell();
+  main_handle.seek(5,binary_stream::Seek_Set);
+  endian = main_handle.read(type_byte);
+  hs_len = main_handle.read(type_dword);
+  main_handle.seek(hs_len,binary_stream::Seek_Cur);
+  cs_len = main_handle.read(type_dword);
+  main_handle.seek(cs_len,binary_stream::Seek_Cur);
+  ds_len = main_handle.read(type_dword);
   cs_start = hs_len + 14;
   ds_start = cs_start + cs_len + 4;
   w = CrtDlgWndnls(endian == 0x01 ? " RDOFF big endian " : " RDOFF little endian ",54,6);
@@ -395,16 +397,16 @@ void  RDOff_Parser::BuildRelocRDOFF()
 {
   unsigned char rec;
   if(!(rdoffReloc = la_Build(0,sizeof(RDOFF_RELOC),MemOutBox))) return;
-  beye_context().sc_bm_file().seek(10,binary_stream::Seek_Set);
-  while(beye_context().sc_bm_file().tell() < rdoff_hdrlen + 5)
+  main_handle.seek(10,binary_stream::Seek_Set);
+  while(main_handle.tell() < rdoff_hdrlen + 5)
   {
     RDOFF_RELOC rdf_r;
-    rec = beye_context().sc_bm_file().read(type_byte);
+    rec = main_handle.read(type_byte);
     if(rec == 1)
     {
       unsigned char segno;
       __filesize_t off;
-      segno = beye_context().sc_bm_file().read(type_byte);
+      segno = main_handle.read(type_byte);
       rdf_r.is_rel = 0;
       if(segno >= 64)
       {
@@ -412,17 +414,17 @@ void  RDOff_Parser::BuildRelocRDOFF()
 	segno -= 64;
       }
       rdf_r.offset = segno == 0 ? cs_start : segno == 1 ? ds_start : FILESIZE_MAX;
-      off = beye_context().sc_bm_file().read(type_dword);
-      if(beye_context().sc_bm_file().eof()) break;
+      off = main_handle.read(type_dword);
+      if(main_handle.eof()) break;
       rdf_r.offset += off;
-      rdf_r.reflen = beye_context().sc_bm_file().read(type_byte);
-      rdf_r.segto = beye_context().sc_bm_file().read(type_word);
+      rdf_r.reflen = main_handle.read(type_byte);
+      rdf_r.segto = main_handle.read(type_word);
       if(!la_AddData(rdoffReloc,&rdf_r,MemOutBox)) break;
     }
     else
     {
       if(!rdoff_skiprec(rec)) goto exit;
-      if(beye_context().sc_bm_file().eof()) break;
+      if(main_handle.eof()) break;
     }
   }
   exit:
@@ -465,13 +467,13 @@ bool RDOff_Parser::rdoffBuildReferStr(const DisMode& parent,char *str,RDOFF_RELO
 		 ret = (rdoff_ImpName*)la_Find(rdoffImpNames,&key,compare_impnames);
 		 if(ret)
 		 {
-		   beye_context().sc_bm_file().seek(ret->nameoff,binary_stream::Seek_Set);
+		   main_handle.seek(ret->nameoff,binary_stream::Seek_Set);
 		   name[0] = 0;
 		   for(i = 0;i < sizeof(name);i++)
 		   {
-		     ch = beye_context().sc_bm_file().read(type_byte);
+		     ch = main_handle.read(type_byte);
 		     name[i] = ch;
-		     if(!ch || beye_context().sc_bm_file().eof()) break;
+		     if(!ch || main_handle.eof()) break;
 		   }
 		   name[i] = 0;
 		   ptr_type = name;
@@ -486,19 +488,19 @@ bool RDOff_Parser::rdoffBuildReferStr(const DisMode& parent,char *str,RDOFF_RELO
    if(reloc->segto >= 3) strcat(str,ptr_type); /** case extern symbol */
    if(reloc->segto < 3 || reloc->is_rel)
    {
-     foff = beye_context().sc_bm_file().tell();
-     beye_context().sc_bm_file().seek(reloc->offset,binary_stream::Seek_Set);
+     foff = main_handle.tell();
+     main_handle.seek(reloc->offset,binary_stream::Seek_Set);
      switch(reloc->reflen)
      {
        default:
-       case 4: field_val = beye_context().sc_bm_file().read(type_dword);
+       case 4: field_val = main_handle.read(type_dword);
 	       break;
-       case 2: field_val = beye_context().sc_bm_file().read(type_word);
+       case 2: field_val = main_handle.read(type_word);
 	       break;
-       case 1: field_val = beye_context().sc_bm_file().read(type_byte);
+       case 1: field_val = main_handle.read(type_byte);
 	       break;
      }
-     beye_context().sc_bm_file().seek(foff,binary_stream::Seek_Set);
+     main_handle.seek(foff,binary_stream::Seek_Set);
      if(reloc->segto < 3)
      {
        if(base_seg_off < FILESIZE_MAX)
@@ -542,8 +544,8 @@ bool RDOff_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int
   char buff[400];
   if(flags & APREF_TRY_PIC) return false;
   if(!rdoffReloc) BuildRelocRDOFF();
-  if(!rdoffImpNames) ReadImpNameList(beye_context().sc_bm_file(),MemOutBox);
-  if(!PubNames) rdoff_ReadPubNameList(beye_context().sc_bm_file(),MemOutBox);
+  if(!rdoffImpNames) ReadImpNameList(main_handle,MemOutBox);
+  if(!PubNames) rdoff_ReadPubNameList(main_handle,MemOutBox);
   key.offset = ulShift;
   __codelen = codelen;
   rrdoff = (RDOFF_RELOC*)la_Find(rdoffReloc,&key,rdoff_compare_reloc);
@@ -560,17 +562,18 @@ bool RDOff_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int
   return ret;
 }
 
-RDOff_Parser::RDOff_Parser(CodeGuider& _code_guider)
-	    :Binary_Parser(_code_guider)
+RDOff_Parser::RDOff_Parser(binary_stream& h,CodeGuider& _code_guider)
+	    :Binary_Parser(h,_code_guider)
+	    ,main_handle(h)
 	    ,code_guider(_code_guider)
 {
     unsigned long cs_len;
-    beye_context().sc_bm_file().seek(6,binary_stream::Seek_Set);
-    rdoff_hdrlen = beye_context().sc_bm_file().read(type_dword);
-    beye_context().sc_bm_file().seek(rdoff_hdrlen,binary_stream::Seek_Cur);
-    cs_len = beye_context().sc_bm_file().read(type_dword);
-    beye_context().sc_bm_file().seek(cs_len,binary_stream::Seek_Cur);
-    ds_len = beye_context().sc_bm_file().read(type_dword);
+    main_handle.seek(6,binary_stream::Seek_Set);
+    rdoff_hdrlen = main_handle.read(type_dword);
+    main_handle.seek(rdoff_hdrlen,binary_stream::Seek_Cur);
+    cs_len = main_handle.read(type_dword);
+    main_handle.seek(cs_len,binary_stream::Seek_Cur);
+    ds_len = main_handle.read(type_dword);
     cs_start = rdoff_hdrlen + 14;
     ds_start = cs_start + cs_len + 4;
 }
@@ -590,15 +593,15 @@ void RDOff_Parser::rdoff_ReadPubName(binary_stream& b_cache,const struct PubName
     b_cache.seek(it->nameoff,binary_stream::Seek_Set);
     for(i = 0;i < cb_buff;i++)
     {
-      ch = beye_context().sc_bm_file().read(type_byte);
+      ch = main_handle.read(type_byte);
       buff[i] = ch;
-      if(!ch || beye_context().sc_bm_file().eof()) break;
+      if(!ch || main_handle.eof()) break;
     }
 }
 
 bool RDOff_Parser::FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
 {
-  binary_stream& b_cache = beye_context().sc_bm_file();
+  binary_stream& b_cache = main_handle;
   struct PubName *ret,key;
   key.pa = pa;
   if(!PubNames) rdoff_ReadPubNameList(b_cache,MemOutBox);
@@ -620,22 +623,22 @@ void RDOff_Parser::rdoff_ReadPubNameList(binary_stream& handle,void (__FASTCALL_
  UNUSED(handle);
  if(!PubNames)
    if(!(PubNames = la_Build(0,sizeof(struct PubName),mem_out))) return;
- beye_context().sc_bm_file().seek(10,binary_stream::Seek_Set);
- while(beye_context().sc_bm_file().tell() < rdoff_hdrlen + 5)
+ main_handle.seek(10,binary_stream::Seek_Set);
+ while(main_handle.tell() < rdoff_hdrlen + 5)
  {
     bool is_eof;
-    rec = beye_context().sc_bm_file().read(type_byte);
+    rec = main_handle.read(type_byte);
     is_eof = false;
     if(rec == 3)
     {
       char ch;
-      segno = beye_context().sc_bm_file().read(type_byte);
-      segoff = beye_context().sc_bm_file().read(type_dword);
-      rdf_pn.nameoff = beye_context().sc_bm_file().tell();
+      segno = main_handle.read(type_byte);
+      segoff = main_handle.read(type_dword);
+      rdf_pn.nameoff = main_handle.tell();
       for(i = 0;i < 32;i++)
       {
-	ch = beye_context().sc_bm_file().read(type_byte);
-	is_eof = beye_context().sc_bm_file().eof();
+	ch = main_handle.read(type_byte);
+	is_eof = main_handle.eof();
 	if(!ch || is_eof) break;
       }
       abs_off = segno == 0 ? cs_start : segno == 1 ? ds_start : FILESIZE_MAX;
@@ -647,7 +650,7 @@ void RDOff_Parser::rdoff_ReadPubNameList(binary_stream& handle,void (__FASTCALL_
     else
     {
       if(!rdoff_skiprec(rec)) break;
-      if(beye_context().sc_bm_file().eof()) break;
+      if(main_handle.eof()) break;
     }
  }
  if(PubNames->nItems) la_Sort(PubNames,fmtComparePubNames);
@@ -669,21 +672,21 @@ void  RDOff_Parser::ReadImpNameList(binary_stream& handle,void (__FASTCALL__ *me
  UNUSED(handle);
  if(!rdoffImpNames)
    if(!(rdoffImpNames = la_Build(0,sizeof(struct rdoff_ImpName),mem_out))) return;
- beye_context().sc_bm_file().seek(10,binary_stream::Seek_Set);
- while(beye_context().sc_bm_file().tell() < rdoff_hdrlen + 5)
+ main_handle.seek(10,binary_stream::Seek_Set);
+ while(main_handle.tell() < rdoff_hdrlen + 5)
  {
     bool is_eof;
-    rec = beye_context().sc_bm_file().read(type_byte);
+    rec = main_handle.read(type_byte);
     is_eof = false;
     if(rec == 2)
     {
       char ch;
-      rdf_in.lsegno = beye_context().sc_bm_file().read(type_word);
-      rdf_in.nameoff = beye_context().sc_bm_file().tell();
+      rdf_in.lsegno = main_handle.read(type_word);
+      rdf_in.nameoff = main_handle.tell();
       for(i = 0;i < 32;i++)
       {
-	ch = beye_context().sc_bm_file().read(type_byte);
-	is_eof = beye_context().sc_bm_file().eof();
+	ch = main_handle.read(type_byte);
+	is_eof = main_handle.eof();
 	if(!ch) break;
       }
       if(!la_AddData(rdoffImpNames,&rdf_in,MemOutBox) || is_eof) break;
@@ -691,7 +694,7 @@ void  RDOff_Parser::ReadImpNameList(binary_stream& handle,void (__FASTCALL__ *me
     else
     {
       if(!rdoff_skiprec(rec)) break;
-      if(beye_context().sc_bm_file().eof()) break;
+      if(main_handle.eof()) break;
     }
  }
  if(rdoffImpNames->nItems) la_Sort(rdoffImpNames,compare_impnames);
@@ -707,7 +710,7 @@ int RDOff_Parser::query_bitness(__filesize_t pa) const
 __filesize_t RDOff_Parser::get_public_symbol(char *str,unsigned cb_str,unsigned *func_class,
 			   __filesize_t pa,bool as_prev)
 {
-    binary_stream& b_cache = beye_context().sc_bm_file();
+    binary_stream& b_cache = main_handle;
     __filesize_t fpos;
     size_t idx;
     if(!PubNames) rdoff_ReadPubNameList(b_cache,NULL);
@@ -727,7 +730,7 @@ unsigned RDOff_Parser::get_object_attribute(__filesize_t pa,char *name,unsigned 
   unsigned ret;
   UNUSED(cb_name);
   *start = 0;
-  *end = beye_context().sc_bm_file().flength();
+  *end = main_handle.flength();
   *_class = OC_NOOBJECT;
   *bitness = query_bitness(pa);
   name[0] = 0;
@@ -806,15 +809,15 @@ bool RDOff_Parser::address_resolving(char *addr,__filesize_t cfpos)
 
 int RDOff_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static bool probe() {
-  char rbuff[6];
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(rbuff,sizeof(rbuff));
-  return memcmp(rbuff,"RDOFF1",sizeof(rbuff)) == 0 ||
-	 memcmp(rbuff,"RDOFF\x1",sizeof(rbuff)) == 0;
+static bool probe(binary_stream& main_handle) {
+    char rbuff[6];
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(rbuff,sizeof(rbuff));
+    return  memcmp(rbuff,"RDOFF1",sizeof(rbuff)) == 0 ||
+	    memcmp(rbuff,"RDOFF\x1",sizeof(rbuff)) == 0;
 }
 
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) RDOff_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) RDOff_Parser(h,_parent); }
 extern const Binary_Parser_Info rdoff_info = {
     "RDOFF (Relocatable Dynamic Object File Format)",	/**< plugin name */
     probe,

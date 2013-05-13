@@ -33,15 +33,15 @@ using namespace	usr;
 #include "tstrings.h"
 #include "plugins/bin/arch.h"
 #include "plugins/disasm.h"
-#include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
-#include "beye.h"
 #include "libbeye/bstream.h"
+#include "plugins/binary_parser.h"
+#include "beye.h"
 
 namespace	usr {
     class Arch_Parser : public Binary_Parser {
 	public:
-	    Arch_Parser(CodeGuider&);
+	    Arch_Parser(binary_stream&,CodeGuider&);
 	    virtual ~Arch_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -54,7 +54,8 @@ namespace	usr {
 	private:
 	    bool			archReadModList(memArray *obj,unsigned nnames,__filesize_t *addr);
 
-	    ar_hdr arch;
+	    ar_hdr		arch;
+	    binary_stream&	main_handle;
     };
 static const char* txt[]={ "ArcHlp", "", "ModLst", "", "", "", "", "", "", "" };
 const char* Arch_Parser::prompt(unsigned idx) const { return txt[idx]; }
@@ -67,7 +68,7 @@ __filesize_t Arch_Parser::show_header()
   struct tm * tm;
   time_t ldat;
   char sout[50];
-  fpos = beye_context().bm_file().tell();
+  fpos = beye_context().tell();
   w = CrtDlgWndnls(" This is COFF or a.out archive ",54,6);
   w->goto_xy(1,1);
   strncpy(sout,(char *)arch.ar_name,16);
@@ -105,7 +106,7 @@ bool Arch_Parser::archReadModList(memArray *obj,unsigned nnames,__filesize_t *ad
   __filesize_t foff,flen;
   unsigned i;
   char stmp[80];
-  flen = beye_context().sc_bm_file().flength();
+  flen = main_handle.flength();
   for(i = 0;i < nnames;i++)
   {
     bool is_eof;
@@ -116,9 +117,9 @@ bool Arch_Parser::archReadModList(memArray *obj,unsigned nnames,__filesize_t *ad
     foff = addr[i];
     if(foff > flen)  foff = be2me_32(foff);
     if(IsKbdTerminate()) break;
-    beye_context().sc_bm_file().seek(foff,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(stmp,sizeof(ar_sub_hdr));
-    is_eof = beye_context().sc_bm_file().eof();
+    main_handle.seek(foff,binary_stream::Seek_Set);
+    main_handle.read(stmp,sizeof(ar_sub_hdr));
+    is_eof = main_handle.eof();
     stmp[sizeof(ar_sub_hdr)-2] = 0;
     if(!ma_AddString(obj,is_eof ? CORRUPT_BIN_MSG : stmp,true)) break;
     if(is_eof) break;
@@ -133,10 +134,10 @@ __filesize_t Arch_Parser::action_F3()
    unsigned long rnames,bnames;
    unsigned nnames;
    __filesize_t fpos,flen;
-   fpos = beye_context().bm_file().tell();
-   flen = beye_context().sc_bm_file().flength();
-    beye_context().sc_bm_file().seek(sizeof(ar_hdr),binary_stream::Seek_Set);
-    rnames = beye_context().sc_bm_file().read(type_dword);
+   fpos = beye_context().tell();
+   flen = main_handle.flength();
+    main_handle.seek(sizeof(ar_hdr),binary_stream::Seek_Set);
+    rnames = main_handle.read(type_dword);
    bnames = be2me_32(rnames);
    /**
       Some archives sometimes have big and sometimes little endian.
@@ -150,8 +151,8 @@ __filesize_t Arch_Parser::action_F3()
    if(!(nnames%4)) nnames/=sizeof(unsigned long);
    if(!(obj = ma_Build(nnames,true))) return fpos;
    if(!(addr = new __filesize_t [nnames])) goto exit;
-    beye_context().sc_bm_file().seek(sizeof(ar_hdr)+sizeof(unsigned long),binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(addr,sizeof(unsigned long)*nnames);
+    main_handle.seek(sizeof(ar_hdr)+sizeof(unsigned long),binary_stream::Seek_Set);
+    main_handle.read(addr,sizeof(unsigned long)*nnames);
    if(archReadModList(obj,nnames,addr))
    {
      int ret;
@@ -173,11 +174,12 @@ __filesize_t Arch_Parser::action_F3()
    return fpos;
 }
 
-Arch_Parser::Arch_Parser(CodeGuider& code_guider)
-	    :Binary_Parser(code_guider)
+Arch_Parser::Arch_Parser(binary_stream& h,CodeGuider& code_guider)
+	    :Binary_Parser(h,code_guider)
+	    ,main_handle(h)
 {
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(&arch,sizeof(arch));
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(&arch,sizeof(arch));
 }
 Arch_Parser::~Arch_Parser(){}
 
@@ -198,19 +200,19 @@ bool Arch_Parser::address_resolving(char *addr,__filesize_t cfpos)
 __filesize_t Arch_Parser::action_F1()
 {
   hlpDisplay(10001);
-  return beye_context().bm_file().tell();
+  return beye_context().tell();
 }
 
-static bool probe() {
+static bool probe(binary_stream& main_handle) {
   char str[16];
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(str,sizeof(str));
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(str,sizeof(str));
   return strncmp(str,"!<arch>\012",8) == 0;
 }
 
 int Arch_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) Arch_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& main_handle,CodeGuider& _parent) { return new(zeromem) Arch_Parser(main_handle,_parent); }
 extern const Binary_Parser_Info arch_info = {
     "arch (Archive)",	/**< plugin name */
     probe,

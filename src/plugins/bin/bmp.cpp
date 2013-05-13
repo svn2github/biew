@@ -28,24 +28,30 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
-#include "beye.h"
 #include "libbeye/bstream.h"
+#include "plugins/binary_parser.h"
+#include "beye.h"
 
 namespace	usr {
     class BMP_Parser : public Binary_Parser {
 	public:
-	    BMP_Parser(CodeGuider&);
+	    BMP_Parser(binary_stream& h,CodeGuider&);
 	    virtual ~BMP_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
 
 	    virtual __filesize_t	show_header();
 	    virtual int			query_platform() const;
+	private:
+	    binary_stream&	main_handle;
     };
 static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
 const char* BMP_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-BMP_Parser::BMP_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {}
+BMP_Parser::BMP_Parser(binary_stream& h,CodeGuider& code_guider)
+	    :Binary_Parser(h,code_guider)
+	    ,main_handle(h)
+{}
 BMP_Parser::~BMP_Parser() {}
 int BMP_Parser::query_platform() const { return DISASM_DEFAULT; }
 
@@ -55,13 +61,13 @@ __filesize_t BMP_Parser::show_header()
  TWindow * hwnd;
  BITMAPINFOHEADER bmph;
  __filesize_t fpos,fpos2;
- fpos = beye_context().bm_file().tell();
- beye_context().sc_bm_file().seek(2,binary_stream::Seek_Set);
- /*filesize = */beye_context().sc_bm_file().read(type_dword);
- beye_context().sc_bm_file().seek(4,binary_stream::Seek_Cur);
- fpos2=beye_context().sc_bm_file().read(type_word); /* data offset */
- beye_context().sc_bm_file().seek(2,binary_stream::Seek_Cur);
- beye_context().sc_bm_file().read(&bmph,sizeof(BITMAPINFOHEADER));
+ fpos = beye_context().tell();
+ main_handle.seek(2,binary_stream::Seek_Set);
+ /*filesize = */main_handle.read(type_dword);
+ main_handle.seek(4,binary_stream::Seek_Cur);
+ fpos2=main_handle.read(type_word); /* data offset */
+ main_handle.seek(2,binary_stream::Seek_Cur);
+ main_handle.read(&bmph,sizeof(BITMAPINFOHEADER));
  hwnd = CrtDlgWndnls(" BMP File Header ",43,6);
  hwnd->goto_xy(1,1);
  hwnd->printf(
@@ -88,14 +94,14 @@ __filesize_t BMP_Parser::show_header()
  return fpos;
 }
 
-static bool probe() {
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    if(	beye_context().sc_bm_file().read(type_byte) == 'B' &&
-	beye_context().sc_bm_file().read(type_byte) == 'M') return true;
+static bool probe(binary_stream& main_handle) {
+    main_handle.seek(0,binary_stream::Seek_Set);
+    if(	main_handle.read(type_byte) == 'B' &&
+	main_handle.read(type_byte) == 'M') return true;
     return false;
 }
 
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) BMP_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) BMP_Parser(h,_parent); }
 extern const Binary_Parser_Info bmp_info = {
     "BitMaP file format",	/**< plugin name */
     probe,

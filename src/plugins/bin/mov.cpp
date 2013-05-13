@@ -29,14 +29,15 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
-#include "beye.h"
 #include "libbeye/bstream.h"
+#include "plugins/binary_parser.h"
+#include "beye.h"
 
 namespace	usr {
 #define MOV_FOURCC(a,b,c,d) ((a<<24)|(b<<16)|(c<<8)|(d))
     class MOV_Parser : public Binary_Parser {
 	public:
-	    MOV_Parser(CodeGuider&);
+	    MOV_Parser(binary_stream&,CodeGuider&);
 	    virtual ~MOV_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -44,46 +45,51 @@ namespace	usr {
 	    virtual __filesize_t	show_header();
 	    virtual int			query_platform() const;
 
-	    static __filesize_t		mov_find_chunk(__filesize_t off,unsigned long id);
+	    static __filesize_t		mov_find_chunk(binary_stream& main_handle,__filesize_t off,unsigned long id);
+	private:
+	    binary_stream&	main_handle;
     };
 static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
 const char* MOV_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-__filesize_t MOV_Parser::mov_find_chunk(__filesize_t off,unsigned long id)
+__filesize_t MOV_Parser::mov_find_chunk(binary_stream& main_handle,__filesize_t off,unsigned long id)
 {
     unsigned long ids,size;
-    beye_context().sc_bm_file().seek(off,binary_stream::Seek_Set);
-    while(!beye_context().sc_bm_file().eof())
+    main_handle.seek(off,binary_stream::Seek_Set);
+    while(!main_handle.eof())
     {
-	size=be2me_32(beye_context().sc_bm_file().read(type_dword));
+	size=be2me_32(main_handle.read(type_dword));
 	if(size < 8) return -1;
-	ids=be2me_32(beye_context().sc_bm_file().read(type_dword));
-	if(ids==id) return beye_context().sc_bm_file().tell()-8;
-	beye_context().sc_bm_file().seek(size-8,binary_stream::Seek_Cur);
+	ids=be2me_32(main_handle.read(type_dword));
+	if(ids==id) return main_handle.tell()-8;
+	main_handle.seek(size-8,binary_stream::Seek_Cur);
     }
     return -1;
 }
 
 
-MOV_Parser::MOV_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {}
+MOV_Parser::MOV_Parser(binary_stream& h,CodeGuider& code_guider)
+	    :Binary_Parser(h,code_guider)
+	    ,main_handle(h)
+{}
 MOV_Parser::~MOV_Parser() {}
 int MOV_Parser::query_platform() const { return DISASM_DEFAULT; }
 
 __filesize_t MOV_Parser::show_header()
 {
     beye_context().ErrMessageBox("Not implemented yet!","MOV format");
-    return beye_context().bm_file().tell();
+    return beye_context().tell();
 }
 
-static bool probe() {
+static bool probe(binary_stream& main_handle) {
     __filesize_t moov,mdat;
-    moov=MOV_Parser::mov_find_chunk(0,MOV_FOURCC('m','o','o','v'));
-    mdat=MOV_Parser::mov_find_chunk(0,MOV_FOURCC('m','d','a','t'));
+    moov=MOV_Parser::mov_find_chunk(main_handle,0,MOV_FOURCC('m','o','o','v'));
+    mdat=MOV_Parser::mov_find_chunk(main_handle,0,MOV_FOURCC('m','d','a','t'));
     if(moov != -1 && mdat != -1) return true;
     return false;
 }
 
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) MOV_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) MOV_Parser(h,_parent); }
 extern const Binary_Parser_Info mov_info = {
     "MOV file format",	/**< plugin name */
     probe,

@@ -120,7 +120,7 @@ static __filesize_t  __FASTCALL__  ___lfind(const char *sfrom,
     cache = icache;
   }
   else cache = scache;
-  flen = sfrom ? slen : beye_context().bm_file().flength();
+  flen = sfrom ? slen : beye_context().flength();
   endscan = beyeFlg & SF_REVERSE ? 0 : flen;
   direct  = beyeFlg & SF_REVERSE ? -1 : 1;
   tsize = flen;
@@ -580,8 +580,8 @@ __filesize_t BeyeContext::search( bool is_continue )
   __filesize_t found;
   __filesize_t fmem,lmem,slen, flen;
   bool ret;
-  fmem = beye_context().bm_file().tell();
-  flen = beye_context().bm_file().flength();
+  fmem = beye_context().tell();
+  flen = beye_context().flength();
   ret = is_continue ? true :
 	SearchDialog(SD_ALLFEATURES,(char *)search_buff,&search_len,&beyeSearchFlg);
   if(ret && search_len)

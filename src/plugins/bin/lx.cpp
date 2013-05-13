@@ -23,7 +23,6 @@ using namespace	usr;
 #include <stdlib.h>
 #include <string.h>
 
-#include "beye.h"
 #include "colorset.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/lx_le.h"
@@ -34,7 +33,8 @@ using namespace	usr;
 #include "bconsole.h"
 #include "reg_form.h"
 #include "libbeye/kbd_code.h"
-#include "libbeye/libbeye.h"
+#include "plugins/binary_parser.h"
+#include "beye.h"
 
 namespace	usr {
 static const char* txt[]={ "LXhelp", "Import", "ResNam", "NRsNam", "ImpNam", "Entry ", "ResTbl", "LXHead", "MapTbl", "Object" };
@@ -268,7 +268,7 @@ __filesize_t LX_Parser::action_F8()
   __filesize_t fpos;
   LXEntryPoint = CalcEntryPoint(lxe.lx.lxEIPObjectNumbers,lxe.lx.lxEIP);
   if(LXEntryPoint == FILESIZE_MAX) LXEntryPoint = 0;
-  fpos = beye_context().bm_file().tell();
+  fpos = beye_context().tell();
   if(PageBox(70,21,NULL,3,PaintNewHeaderLX) != -1)
   {
     if(LXEntryPoint) fpos = LXEntryPoint;
@@ -278,7 +278,7 @@ __filesize_t LX_Parser::action_F8()
 
 unsigned LX_Parser::LXRNamesNumItems(binary_stream& handle)
 {
-  return NE_Parser::GetNamCountNE(handle,beye_context().headshift + lxe.lx.lxResidentNameTableOffset);
+  return NE_Parser::GetNamCountNE(handle,headshift() + lxe.lx.lxResidentNameTableOffset);
 }
 
 unsigned LX_Parser::LXNRNamesNumItems(binary_stream& handle)
@@ -288,7 +288,7 @@ unsigned LX_Parser::LXNRNamesNumItems(binary_stream& handle)
 
 bool LX_Parser::LXRNamesReadItems(binary_stream& handle,memArray * obj,unsigned nnames)
 {
-   return NE_Parser::RNamesReadItems(handle,obj,nnames,lxe.lx.lxResidentNameTableOffset + beye_context().headshift);
+   return NE_Parser::RNamesReadItems(handle,obj,nnames,lxe.lx.lxResidentNameTableOffset + headshift());
 }
 
 unsigned LX_Parser::LXImpNamesNumItems(binary_stream& handle)
@@ -296,10 +296,10 @@ unsigned LX_Parser::LXImpNamesNumItems(binary_stream& handle)
   __filesize_t fpos;
   unsigned char len;
   unsigned count;
-  handle.seek(lxe.lx.lxImportProcedureTableOffset + beye_context().headshift,binary_stream::Seek_Set);
+  handle.seek(lxe.lx.lxImportProcedureTableOffset + headshift(),binary_stream::Seek_Set);
   fpos = handle.tell();
   count = 0;
-  while(fpos < lxe.lx.lxFixupSectionSize + lxe.lx.lxFixupPageTableOffset + beye_context().headshift)
+  while(fpos < lxe.lx.lxFixupSectionSize + lxe.lx.lxFixupPageTableOffset + headshift())
   {
     len = handle.read(type_byte);
     handle.seek(len,binary_stream::Seek_Cur);
@@ -314,7 +314,7 @@ bool LX_Parser::LXImpNamesReadItems(binary_stream& handle,memArray * obj,unsigne
 {
  unsigned i;
  unsigned char byte;
- handle.seek(lxe.lx.lxImportProcedureTableOffset + beye_context().headshift,binary_stream::Seek_Set);
+ handle.seek(lxe.lx.lxImportProcedureTableOffset + headshift(),binary_stream::Seek_Set);
  for(i = 0;i < nnames;i++)
  {
    char nam[256];
@@ -336,7 +336,7 @@ bool LX_Parser::__ReadModRefNamesLX(binary_stream& handle,memArray * obj,unsigne
 {
  unsigned i;
  unsigned char byte;
- handle.seek(lxe.lx.lxImportModuleTableOffset + beye_context().headshift,binary_stream::Seek_Set);
+ handle.seek(lxe.lx.lxImportModuleTableOffset + headshift(),binary_stream::Seek_Set);
  for(i = 0;i < nnames;i++)
  {
    char nam[256];
@@ -471,7 +471,7 @@ bool LX_Parser::__ReadEntriesLX(binary_stream& handle,memArray *obj)
 
 void LX_Parser::lxReadPageDesc(binary_stream& handle,LX_MAP_TABLE *mt,unsigned long pageidx) const
 {
-  handle.seek(beye_context().headshift+lxe.lx.lxObjectPageTableOffset+
+  handle.seek(headshift()+lxe.lx.lxObjectPageTableOffset+
 	  sizeof(LX_MAP_TABLE)*(pageidx - 1),binary_stream::Seek_Set);
   handle.read((any_t*)mt,sizeof(LX_MAP_TABLE));
 }
@@ -512,8 +512,8 @@ __filesize_t LX_Parser::CalcEntryPoint(unsigned long objnum,__filesize_t _offset
   unsigned long i,diff;
   LX_OBJECT lo;
   LX_MAP_TABLE mt;
-  if(!objnum) return beye_context().bm_file().tell();
-  handle.seek(lxe.lx.lxObjectTableOffset + beye_context().headshift,binary_stream::Seek_Set);
+  if(!objnum) return beye_context().tell();
+  handle.seek(lxe.lx.lxObjectTableOffset + headshift(),binary_stream::Seek_Set);
   handle.seek(sizeof(LX_OBJECT)*(objnum - 1),binary_stream::Seek_Cur);
   handle.read((any_t*)&lo,sizeof(LX_OBJECT));
   i = _offset / lxe.lx.lxPageSize;
@@ -558,20 +558,20 @@ void LX_Parser::ShowFwdModOrdLX(const LX_ENTRY *lxent)
 {
   char buff[513];
   buff[0] = 0;
-  ReadLXLEImpMod(lxe.lx.lxImportModuleTableOffset + beye_context().headshift,lxent->entry.e32_variant.e32_fwd.modord,buff);
+  ReadLXLEImpMod(lxe.lx.lxImportModuleTableOffset + headshift(),lxent->entry.e32_variant.e32_fwd.modord,buff);
   strcat(buff,".");
   if((lxent->entry.e32_flags & 0x01) == 0x01)
   {
     sprintf(&buff[strlen(buff)],"@%u",(unsigned)lxent->entry.e32_variant.e32_fwd.value);
   }
-  else ReadLXLEImpName(lxe.lx.lxImportProcedureTableOffset + beye_context().headshift,(unsigned)lxent->entry.e32_variant.e32_fwd.value,buff);
+  else ReadLXLEImpName(lxe.lx.lxImportProcedureTableOffset + headshift(),(unsigned)lxent->entry.e32_variant.e32_fwd.value,buff);
   beye_context().TMessageBox(buff," Forwarder entry point ");
 }
 
 __filesize_t LX_Parser::CalcEntryLX(const LX_ENTRY *lxent)
 {
   __filesize_t ret;
-  ret = beye_context().bm_file().tell();
+  ret = beye_context().tell();
       switch(lxent->b32_type)
       {
 	case 1: ret = CalcEntryPoint(lxent->b32_obj,lxent->entry.e32_variant.e32_offset.offset16);
@@ -597,9 +597,9 @@ __filesize_t LX_Parser::CalcEntryBungleLX(unsigned ordinal,bool dispmsg)
   uint_fast16_t numobj = 0;
   LX_ENTRY lxent;
   __filesize_t ret;
-  ret = beye_context().bm_file().tell();
+  ret = beye_context().tell();
   handle = lx_cache;
-  handle->seek(lxe.lx.lxEntryTableOffset + beye_context().headshift,binary_stream::Seek_Set);
+  handle->seek(lxe.lx.lxEntryTableOffset + headshift(),binary_stream::Seek_Set);
   i = 0;
   found = false;
   while(1)
@@ -654,11 +654,11 @@ __filesize_t LX_Parser::action_F10()
  __filesize_t fpos;
  unsigned nnames;
  memArray * obj;
- fpos = beye_context().bm_file().tell();
+ fpos = beye_context().tell();
  nnames = (unsigned)lxe.lx.lxObjectCount;
  if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
- handle.seek(lxe.lx.lxObjectTableOffset + beye_context().headshift,binary_stream::Seek_Set);
+ handle.seek(lxe.lx.lxObjectTableOffset + headshift(),binary_stream::Seek_Set);
  if(__ReadObjectsLX(handle,obj,nnames))
  {
   int ret;
@@ -806,7 +806,7 @@ bool LX_Parser::__ReadMapTblLX(binary_stream& handle,memArray * obj,unsigned n)
 
 __filesize_t LX_Parser::action_F9()
 {
-    __filesize_t fpos = beye_context().bm_file().tell();
+    __filesize_t fpos = beye_context().tell();
     int ret;
     std::string title = " Map of pages ";
     ssize_t nnames = (unsigned)lxe.lx.lxPageCount;
@@ -817,7 +817,7 @@ __filesize_t LX_Parser::action_F9()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = __ReadMapTblLX(beye_context().sc_bm_file(),obj,nnames);
+    bval = __ReadMapTblLX(main_handle(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -834,9 +834,9 @@ __filesize_t LX_Parser::action_F6()
  binary_stream& handle = *lx_cache;
  __filesize_t fpos;
  memArray * obj;
- fpos = beye_context().bm_file().tell();
+ fpos = beye_context().tell();
  if(!lxe.lx.lxEntryTableOffset) { beye_context().NotifyBox(NOT_ENTRY," Entry Table "); return fpos; }
- handle.seek(lxe.lx.lxEntryTableOffset + beye_context().headshift,binary_stream::Seek_Set);
+ handle.seek(lxe.lx.lxEntryTableOffset + headshift(),binary_stream::Seek_Set);
  if(!(obj = ma_Build(0,true))) goto exit;
  if(__ReadEntriesLX(handle,obj))
  {
@@ -905,8 +905,8 @@ __filesize_t LX_Parser::action_F7()
  memArray * obj;
  long * raddr;
  unsigned nrgroup;
- fpos = beye_context().bm_file().tell();
- handle.seek((__fileoff_t)beye_context().headshift + lxe.lx.lxResourceTableOffset,binary_stream::Seek_Set);
+ fpos = beye_context().tell();
+ handle.seek((__fileoff_t)headshift() + lxe.lx.lxResourceTableOffset,binary_stream::Seek_Set);
  nrgroup = (unsigned)lxe.lx.lxNumberResourceTableEntries;
  if(!nrgroup) { beye_context().NotifyBox(NOT_ENTRY," Resources "); return fpos; }
  if(!(obj = ma_Build(nrgroup,true))) goto exit;
@@ -931,7 +931,7 @@ __filesize_t LX_Parser::action_F2()
     TWindow* w;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = __ReadModRefNamesLX(beye_context().sc_bm_file(),obj,nnames);
+    bval = __ReadModRefNamesLX(main_handle(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -939,16 +939,16 @@ __filesize_t LX_Parser::action_F2()
     }
     ma_Destroy(obj);
     exit:
-    return beye_context().bm_file().tell();
+    return beye_context().tell();
 }
 
 __filesize_t LX_Parser::action_F3()
 {
-    __filesize_t fpos = beye_context().bm_file().tell();
+    __filesize_t fpos = beye_context().tell();
     int ret;
     unsigned ordinal;
     std::string title = RES_NAMES;
-    ssize_t nnames = LXRNamesNumItems(beye_context().sc_bm_file());
+    ssize_t nnames = LXRNamesNumItems(main_handle());
     int flags = LB_SELECTIVE | LB_SORTABLE;
     bool bval;
     memArray* obj;
@@ -956,7 +956,7 @@ __filesize_t LX_Parser::action_F3()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = LXRNamesReadItems(beye_context().sc_bm_file(),obj,nnames);
+    bval = LXRNamesReadItems(main_handle(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -978,11 +978,11 @@ __filesize_t LX_Parser::action_F3()
 
 __filesize_t LX_Parser::action_F4()
 {
-    __filesize_t fpos = beye_context().bm_file().tell();
+    __filesize_t fpos = beye_context().tell();
     int ret;
     unsigned ordinal;
     std::string title = NORES_NAMES;
-    ssize_t nnames = LXNRNamesNumItems(beye_context().sc_bm_file());
+    ssize_t nnames = LXNRNamesNumItems(main_handle());
     int flags = LB_SELECTIVE | LB_SORTABLE;
     bool bval;
     memArray* obj;
@@ -990,7 +990,7 @@ __filesize_t LX_Parser::action_F4()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = LXNRNamesReadItems(beye_context().sc_bm_file(),obj,nnames);
+    bval = LXNRNamesReadItems(main_handle(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -1013,14 +1013,14 @@ __filesize_t LX_Parser::action_F4()
 __filesize_t LX_Parser::action_F5()
 {
     std::string title = IMPPROC_TABLE;
-    ssize_t nnames = LXImpNamesNumItems(beye_context().sc_bm_file());
+    ssize_t nnames = LXImpNamesNumItems(main_handle());
     int flags = LB_SORTABLE;
     bool bval;
     memArray* obj;
     TWindow* w;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = LXImpNamesReadItems(beye_context().sc_bm_file(),obj,nnames);
+    bval = LXImpNamesReadItems(main_handle(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -1028,28 +1028,27 @@ __filesize_t LX_Parser::action_F5()
     }
     ma_Destroy(obj);
     exit:
-    return beye_context().bm_file().tell();
+    return beye_context().tell();
 }
 
-LX_Parser::LX_Parser(CodeGuider& __code_guider)
-	:MZ_Parser(__code_guider)
+LX_Parser::LX_Parser(binary_stream& h,CodeGuider& __code_guider)
+	:MZ_Parser(h,__code_guider)
 {
-   binary_stream& main_handle = beye_context().sc_bm_file();
-    beye_context().sc_bm_file().seek(beye_context().headshift,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(&lxe.lx,sizeof(LXHEADER));
-   if((lx_cache = main_handle.dup()) == &bNull) lx_cache = &main_handle;
+    main_handle().seek(headshift(),binary_stream::Seek_Set);
+    main_handle().read(&lxe.lx,sizeof(LXHEADER));
+    if((lx_cache = main_handle().dup()) == &bNull) lx_cache = &main_handle();
 }
 
 LX_Parser::~LX_Parser()
 {
-   binary_stream& main_handle = beye_context().sc_bm_file();
-   if(lx_cache != &bNull && lx_cache != &main_handle) delete lx_cache;
+   binary_stream& _mh = main_handle();
+   if(lx_cache != &bNull && lx_cache != &_mh) delete lx_cache;
 }
 
 __filesize_t LX_Parser::action_F1()
 {
   hlpDisplay(10005);
-  return beye_context().bm_file().tell();
+  return beye_context().tell();
 }
 
 __filesize_t LX_Parser::va2pa(__filesize_t va)
@@ -1060,7 +1059,7 @@ __filesize_t LX_Parser::va2pa(__filesize_t va)
   __filesize_t rva,pa;
   LX_OBJECT lo;
   LX_MAP_TABLE mt;
-  handle.seek(lxe.lx.lxObjectTableOffset + beye_context().headshift,binary_stream::Seek_Set);
+  handle.seek(lxe.lx.lxObjectTableOffset + headshift(),binary_stream::Seek_Set);
   pa = oidx = 0; /* means: error */
   for(i = 0;i < lxe.lx.lxObjectCount;i++)
   {
@@ -1106,7 +1105,7 @@ __filesize_t LX_Parser::pa2va(__filesize_t pa)
   if(pidx)
   {
     rva = pa - pagentry + (pidx-1)*lxe.lx.lxPageSize;
-    handle.seek(lxe.lx.lxObjectTableOffset + beye_context().headshift,binary_stream::Seek_Set);
+    handle.seek(lxe.lx.lxObjectTableOffset + headshift(),binary_stream::Seek_Set);
     for(i = 0;i < lxe.lx.lxObjectCount;i++)
     {
       handle.read((any_t*)&lo,sizeof(LX_OBJECT));
@@ -1143,7 +1142,7 @@ int LX_Parser::query_bitness(__filesize_t pa) const
   /* Secondly we must determine object number for given physical address */
   if(pidx)
   {
-    handle.seek(lxe.lx.lxObjectTableOffset + beye_context().headshift,binary_stream::Seek_Set);
+    handle.seek(lxe.lx.lxObjectTableOffset + headshift(),binary_stream::Seek_Set);
     for(i = 0;i < lxe.lx.lxObjectCount;i++)
     {
       handle.read((any_t*)&lo,sizeof(LX_OBJECT));
@@ -1163,24 +1162,24 @@ bool LX_Parser::address_resolving(char *addr,__filesize_t cfpos)
     it must be seriously optimized for speed. */
   bool bret = true;
   uint32_t res;
-  if(cfpos >= beye_context().headshift && cfpos < beye_context().headshift + sizeof(LXHEADER))
+  if(cfpos >= headshift() && cfpos < headshift() + sizeof(LXHEADER))
   {
     strcpy(addr,"LXH :");
-    strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift));
+    strcpy(&addr[5],Get4Digit(cfpos - headshift()));
   }
   else
-  if(cfpos >= beye_context().headshift + lxe.lx.lxObjectTableOffset &&
-     cfpos <  beye_context().headshift + lxe.lx.lxObjectTableOffset + sizeof(LX_OBJECT)*lxe.lx.lxObjectCount)
+  if(cfpos >= headshift() + lxe.lx.lxObjectTableOffset &&
+     cfpos <  headshift() + lxe.lx.lxObjectTableOffset + sizeof(LX_OBJECT)*lxe.lx.lxObjectCount)
   {
     strcpy(addr,"LXOD:");
-    strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift - lxe.lx.lxObjectTableOffset));
+    strcpy(&addr[5],Get4Digit(cfpos - headshift() - lxe.lx.lxObjectTableOffset));
   }
   else
-  if(cfpos >= beye_context().headshift + lxe.lx.lxObjectPageTableOffset &&
-     cfpos <  beye_context().headshift + lxe.lx.lxObjectPageTableOffset + sizeof(LX_MAP_TABLE)*lxe.lx.lxPageCount)
+  if(cfpos >= headshift() + lxe.lx.lxObjectPageTableOffset &&
+     cfpos <  headshift() + lxe.lx.lxObjectPageTableOffset + sizeof(LX_MAP_TABLE)*lxe.lx.lxPageCount)
   {
     strcpy(addr,"LXPD:");
-    strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift - lxe.lx.lxObjectPageTableOffset));
+    strcpy(&addr[5],Get4Digit(cfpos - headshift() - lxe.lx.lxObjectPageTableOffset));
   }
   else
    if((res=pa2va(cfpos))!=0)
@@ -1194,17 +1193,17 @@ bool LX_Parser::address_resolving(char *addr,__filesize_t cfpos)
 
 int LX_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static bool probe()
+static bool probe(binary_stream& main_handle)
 {
-   char id[4];
-   beye_context().headshift = IsNewExe();
-    beye_context().sc_bm_file().seek(beye_context().headshift,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(id,sizeof(id));
-   if(id[0] == 'L' && id[1] == 'X' && id[2] == 0 && id[3] == 0) return true;
-   return false;
+    char id[4];
+    __filesize_t headshift = MZ_Parser::is_new_exe(main_handle);
+    main_handle.seek(headshift,binary_stream::Seek_Set);
+    main_handle.read(id,sizeof(id));
+    if(id[0] == 'L' && id[1] == 'X' && id[2] == 0 && id[3] == 0) return true;
+    return false;
 }
 
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) LX_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) LX_Parser(h,_parent); }
 extern const Binary_Parser_Info lx_info = {
     "LX (Linear eXecutable)",	/**< plugin name */
     probe,

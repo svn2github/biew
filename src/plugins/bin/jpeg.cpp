@@ -29,45 +29,51 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
-#include "beye.h"
 #include "libbeye/bstream.h"
+#include "plugins/binary_parser.h"
+#include "beye.h"
 
 namespace	usr {
     class Jpeg_Parser : public Binary_Parser {
 	public:
-	    Jpeg_Parser(CodeGuider&);
+	    Jpeg_Parser(binary_stream&,CodeGuider&);
 	    virtual ~Jpeg_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
 
 	    virtual __filesize_t	show_header();
 	    virtual int			query_platform() const;
+	private:
+	    binary_stream&	main_handle;
     };
 static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
 const char* Jpeg_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-Jpeg_Parser::Jpeg_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) { UNUSED(code_guider); }
+Jpeg_Parser::Jpeg_Parser(binary_stream& h,CodeGuider& code_guider)
+	    :Binary_Parser(h,code_guider)
+	    ,main_handle(h)
+{}
 Jpeg_Parser::~Jpeg_Parser() {}
 int Jpeg_Parser::query_platform() const { return DISASM_DEFAULT; }
 
 __filesize_t Jpeg_Parser::show_header()
 {
     beye_context().ErrMessageBox("Not implemented yet!","JPEG format");
-    return beye_context().bm_file().tell();
+    return beye_context().tell();
 }
 
-static bool probe() {
+static bool probe(binary_stream& main_handle) {
     unsigned long val;
     unsigned char id[4];
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    val = beye_context().sc_bm_file().read(type_dword);
-    beye_context().sc_bm_file().seek(6,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(id,4);
+    main_handle.seek(0,binary_stream::Seek_Set);
+    val = main_handle.read(type_dword);
+    main_handle.seek(6,binary_stream::Seek_Set);
+    main_handle.read(id,4);
     if(val==0xE0FFD8FF && memcmp(id,"JFIF",4)==0) return true;
     return false;
 }
 
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) Jpeg_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) Jpeg_Parser(h,_parent); }
 extern const Binary_Parser_Info jpeg_info = {
     "JPEG file format",	/**< plugin name */
     probe,

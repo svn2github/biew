@@ -28,20 +28,23 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
-#include "beye.h"
 #include "libbeye/bstream.h"
+#include "plugins/binary_parser.h"
+#include "beye.h"
 
 namespace	usr {
 #define MKTAG(a, b, c, d) (a | (b << 8) | (c << 16) | (d << 24))
     class RM_Parser : public Binary_Parser {
 	public:
-	    RM_Parser(CodeGuider&);
+	    RM_Parser(binary_stream&,CodeGuider&);
 	    virtual ~RM_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
 
 	    virtual __filesize_t	show_header();
 	    virtual int			query_platform() const;
+	private:
+	    binary_stream&		main_handle;
     };
 static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
 const char* RM_Parser::prompt(unsigned idx) const { return txt[idx]; }
@@ -49,20 +52,23 @@ const char* RM_Parser::prompt(unsigned idx) const { return txt[idx]; }
 __filesize_t RM_Parser::show_header()
 {
     beye_context().ErrMessageBox("Not implemented yet!","RM format");
-    return beye_context().bm_file().tell();
+    return beye_context().tell();
 }
 
-RM_Parser::RM_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {}
+RM_Parser::RM_Parser(binary_stream& h,CodeGuider& code_guider)
+	    :Binary_Parser(h,code_guider)
+	    ,main_handle(h)
+{}
 RM_Parser::~RM_Parser() {}
 int  RM_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-static bool probe() {
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    if(beye_context().sc_bm_file().read(type_dword)==MKTAG('.', 'R', 'M', 'F')) return true;
+static bool probe(binary_stream& main_handle) {
+    main_handle.seek(0,binary_stream::Seek_Set);
+    if(main_handle.read(type_dword)==MKTAG('.', 'R', 'M', 'F')) return true;
     return false;
 }
 
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) RM_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) RM_Parser(h,_parent); }
 extern const Binary_Parser_Info rm_info = {
     "Real Media file format",	/**< plugin name */
     probe,

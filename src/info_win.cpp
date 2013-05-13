@@ -556,7 +556,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
   hwnd->set_footer("[Enter] - Prev. entry [Ctrl-Enter | F5] - Next entry]",TWindow::TMode_Right,dialog_cset.selfooter);
   hwnd->goto_xy(1,1);
   wait_wnd = PleaseWaitWnd();
-  cfpos = beye_context().bm_file().tell();
+  cfpos = beye_context().tell();
   va = beye_context().bin_format().pa2va(ctrl_pos);
   if(va==Plugin::Bad_Address) va = ctrl_pos;
   vaddr[0] = '\0';
@@ -577,7 +577,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
     obj_num = 0;
     oname[0] = 0;
     obj_start = 0;
-    obj_end = beye_context().bm_file().flength();
+    obj_end = beye_context().flength();
     obj_class = OC_CODE;
     obj_bitness = DAB_USE16;
   }

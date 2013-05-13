@@ -31,14 +31,14 @@ using namespace	usr;
 #define ARCH_SIZE 32
 #include "plugins/bin/aout64.h"
 #include "libbeye/kbd_code.h"
-#include "libbeye/libbeye.h"
-#include "beye.h"
 #include "libbeye/bstream.h"
+#include "plugins/binary_parser.h"
+#include "beye.h"
 
 namespace	usr {
     class AOut_Parser : public Binary_Parser {
 	public:
-	    AOut_Parser(CodeGuider&);
+	    AOut_Parser(binary_stream&,CodeGuider&);
 	    virtual ~AOut_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -60,6 +60,7 @@ namespace	usr {
 
 	    bool is_msbf; /* is most significand byte first */
 	    bool is_64bit;
+	    binary_stream&		main_handle;
     };
 static const char* txt[]={ "AOutHl", "", "", "", "", "", "", "", "", "" };
 const char* AOut_Parser::prompt(unsigned idx) const { return txt[idx]; }
@@ -103,9 +104,9 @@ __filesize_t AOut_Parser::show_header()
   __filesize_t fpos;
   unsigned keycode,dummy;
   TWindow *w;
-  fpos = beye_context().bm_file().tell();
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(&aout,sizeof(struct external_exec));
+  fpos = beye_context().tell();
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(&aout,sizeof(struct external_exec));
   uint32_t* p_info = (uint32_t*)&aout.e_info;
   w = CrtDlgWndnls(aout_encode_hdr(*p_info),54,7);
   w->goto_xy(1,1);
@@ -156,10 +157,13 @@ bool AOut_Parser::probe_fmt( uint32_t id )
   return a32 || a64 || N_MAGIC(id)==CMAGIC;
 }
 
-AOut_Parser::AOut_Parser(CodeGuider&c):Binary_Parser(c) {
+AOut_Parser::AOut_Parser(binary_stream& h,CodeGuider&c)
+	    :Binary_Parser(h,c)
+	    ,main_handle(h)
+{
     uint32_t id;
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    id = beye_context().sc_bm_file().read(type_dword);
+    main_handle.seek(0,binary_stream::Seek_Set);
+    id = main_handle.read(type_dword);
     if(probe_fmt(id)) return;
     id=be2me_32(id);
     if(probe_fmt(id)) is_msbf=1;
@@ -195,29 +199,29 @@ bool AOut_Parser::address_resolving(char *addr,__filesize_t fpos)
 __filesize_t AOut_Parser::action_F1()
 {
   hlpDisplay(10000);
-  return beye_context().bm_file().tell();
+  return beye_context().tell();
 }
 
 int AOut_Parser::query_platform() const {
  unsigned id;
  struct external_exec aout;
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(&aout,sizeof(struct external_exec));
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(&aout,sizeof(struct external_exec));
  aout_encode_machine(*((uint32_t *)aout.e_info),&id);
  return id;
 }
 
-static bool probe() {
+static bool probe(binary_stream& main_handle) {
   uint32_t id;
-  beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-  id = beye_context().sc_bm_file().read(type_dword);
+  main_handle.seek(0,binary_stream::Seek_Set);
+  id = main_handle.read(type_dword);
   if(AOut_Parser::check_fmt(id)) return 1;
   id=be2me_32(id);
   if(AOut_Parser::check_fmt(id)) return 1;
   return 0;
 }
 
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) AOut_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) AOut_Parser(h,_parent); }
 extern const Binary_Parser_Info aout_info = {
     "a.out (Assembler and link Output)",	/**< plugin name */
     probe,

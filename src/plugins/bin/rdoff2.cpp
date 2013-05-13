@@ -26,13 +26,14 @@ using namespace	usr;
 #include "bconsole.h"
 #include "beyehelp.h"
 #include "libbeye/kbd_code.h"
-#include "beye.h"
 #include "libbeye/bstream.h"
+#include "plugins/binary_parser.h"
+#include "beye.h"
 
 namespace	usr {
     class RDOff2_Parser : public Binary_Parser {
 	public:
-	    RDOff2_Parser(CodeGuider&);
+	    RDOff2_Parser(binary_stream&,CodeGuider&);
 	    virtual ~RDOff2_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -40,6 +41,8 @@ namespace	usr {
 
 	    virtual __filesize_t	show_header();
 	    virtual int			query_platform() const;
+	private:
+	    binary_stream&		main_handle;
     };
 static const char* txt[]={"RdHelp","","","","","","","","",""};
 const char* RDOff2_Parser::prompt(unsigned idx) const { return txt[idx]; }
@@ -50,11 +53,11 @@ __filesize_t RDOff2_Parser::show_header()
   __filesize_t fpos;
   unsigned long hs_len,im_len;
   TWindow *w;
-  fpos = beye_context().bm_file().tell();
-  beye_context().sc_bm_file().seek(5,binary_stream::Seek_Set);
-  endian = beye_context().sc_bm_file().read(type_byte);
-  im_len = beye_context().sc_bm_file().read(type_dword);
-  hs_len = beye_context().sc_bm_file().read(type_dword);
+  fpos = beye_context().tell();
+  main_handle.seek(5,binary_stream::Seek_Set);
+  endian = main_handle.read(type_byte);
+  im_len = main_handle.read(type_dword);
+  hs_len = main_handle.read(type_dword);
   w = CrtDlgWndnls(endian == 0x02 ? " RDOFFv2 big endian " : " RDOFFv2 little endian ",54,5);
   w->goto_xy(1,1);
   w->printf(
@@ -86,24 +89,27 @@ __filesize_t RDOff2_Parser::show_header()
 __filesize_t RDOff2_Parser::action_F1()
 {
   hlpDisplay(10012);
-  return beye_context().bm_file().tell();
+  return beye_context().tell();
 }
 
 
-RDOff2_Parser::RDOff2_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {}
+RDOff2_Parser::RDOff2_Parser(binary_stream& h,CodeGuider& code_guider)
+	    :Binary_Parser(h,code_guider)
+	    ,main_handle(h)
+{}
 RDOff2_Parser::~RDOff2_Parser() {}
 
 int RDOff2_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static bool probe() {
+static bool probe(binary_stream& main_handle) {
     char rbuff[6];
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(rbuff,sizeof(rbuff));
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(rbuff,sizeof(rbuff));
   return memcmp(rbuff,"RDOFF2",sizeof(rbuff)) == 0 ||
 	 memcmp(rbuff,"RDOFF\x2",sizeof(rbuff)) == 0;
 }
 
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) RDOff2_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) RDOff2_Parser(h,_parent); }
 extern const Binary_Parser_Info rdoff2_info = {
     "RDOFF v2 (Relocatable Dynamic Object File Format)",	/**< plugin name */
     probe,

@@ -346,7 +346,7 @@ const char* ARM_Disassembler::arm_wreg_name[] =
 	READ_IMM32(chr);\
 	if(prev) strcat(dret->str,",");\
 	strcat(dret->str,"#");\
-	parent.append_digits(dret->str,ulShift,APREF_USE_TYPE,4,&val,chr=='-'?DisMode::Arg_Short:DisMode::Arg_Word);\
+	parent.append_digits(main_handle,dret->str,ulShift,APREF_USE_TYPE,4,&val,chr=='-'?DisMode::Arg_Short:DisMode::Arg_Word);\
 	if(smul) strcat(dret->str,smul);\
 	prev=1;\
     }
@@ -456,7 +456,7 @@ void ARM_Disassembler::arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
 	if(hh) tbuff|=0x2;
 	tbuff+=8;
 	if(prev) strcat(dret->str,",");
-	parent.append_faddr(dret->str,ulShift+1,(long)tbuff,ulShift+tbuff,DisMode::Near32,0,3);
+	parent.append_faddr(main_handle,dret->str,ulShift+1,(long)tbuff,ulShift+tbuff,DisMode::Near32,0,3);
 	prev=1;
     }
 
@@ -658,7 +658,7 @@ void ARM_Disassembler::arm32Disassembler(DisasmRet *dret,__filesize_t ulShift,
 	    {
 		strcpy(dret->str,"???");
 		TabSpace(dret->str,TAB_POS);
-		parent.append_digits(dret->str,ulShift,APREF_USE_TYPE,4,&opcode,DisMode::Arg_DWord);
+		parent.append_digits(main_handle,dret->str,ulShift,APREF_USE_TYPE,4,&opcode,DisMode::Arg_DWord);
 	    }
     }
 }

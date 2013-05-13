@@ -17,6 +17,7 @@
 #ifndef __NE_INC
 #define __NE_INC
 
+#include "config.h"
 #include "beyeutil.h"
 #include "libbeye/bstream.h"
 #include "mz.h"
@@ -110,7 +111,7 @@ namespace	usr {
     class PE_Parser;
     class NE_Parser : public MZ_Parser {
 	public:
-	    NE_Parser(CodeGuider&);
+	    NE_Parser(binary_stream&,CodeGuider&);
 	    virtual ~NE_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;

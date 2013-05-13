@@ -32,13 +32,14 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
-#include "beye.h"
 #include "libbeye/bstream.h"
+#include "plugins/binary_parser.h"
+#include "beye.h"
 
 namespace	usr {
     class MP3_Parser : public Binary_Parser {
 	public:
-	    MP3_Parser(CodeGuider&);
+	    MP3_Parser(binary_stream&,CodeGuider&);
 	    virtual ~MP3_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -48,12 +49,14 @@ namespace	usr {
 
 	    static int		mp_decode_mp3_header(unsigned char *hbuf,int *fmt,int *brate,int *samplerate,int *channels);
 	    static int		mp_mp3_get_lsf(unsigned char *hbuf);
-	    static int		Xing_test(char *hdr,int *scale,int *lsf,int *srate,long *nframes,long *nbytes);
-	    static void		find_next_mp3_hdr(unsigned char *hdr);
-	    static int		read_id3v2_tags();
-	    static int		read_id3v24_tags(unsigned flags,unsigned hsize);
-	    static int		read_id3v23_tags(unsigned flags,unsigned hsize);
-	    static int		read_id3v22_tags(unsigned flags,unsigned hsize);
+	    static int		Xing_test(binary_stream&,char *hdr,int *scale,int *lsf,int *srate,long *nframes,long *nbytes);
+	    static void		find_next_mp3_hdr(binary_stream&,unsigned char *hdr);
+	    static int		read_id3v2_tags(binary_stream&);
+	    static int		read_id3v24_tags(binary_stream&,unsigned flags,unsigned hsize);
+	    static int		read_id3v23_tags(binary_stream&,unsigned flags,unsigned hsize);
+	    static int		read_id3v22_tags(binary_stream&,unsigned flags,unsigned hsize);
+	private:
+	    binary_stream&	main_handle;
     };
 static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
 const char* MP3_Parser::prompt(unsigned idx) const { return txt[idx]; }
@@ -175,25 +178,25 @@ int MP3_Parser::mp_decode_mp3_header(unsigned char* hbuf,int *fmt,int *brate,int
 
 /* frame header */
 #define ID3V22_FRAME_HEADER_SIZE             6
-int MP3_Parser::read_id3v22_tags(unsigned flags,unsigned hsize)
+int MP3_Parser::read_id3v22_tags(binary_stream& main_handle,unsigned flags,unsigned hsize)
 {
     __filesize_t pos,epos;
     if(	flags==ID3V22_ZERO_FLAG ||
 	flags==ID3V22_UNSYNCH_FLAG ||
 	flags==ID3V22_COMPRESS_FLAG) return 0;
-    pos=beye_context().sc_bm_file().tell();
+    pos=main_handle.tell();
     epos=pos+hsize;
     while(pos<epos)
     {
 	unsigned long id;
 	unsigned len;
 	unsigned char buf[ID3V22_FRAME_HEADER_SIZE],data[4096];
-	beye_context().sc_bm_file().read(buf,ID3V22_FRAME_HEADER_SIZE);
+	main_handle.read(buf,ID3V22_FRAME_HEADER_SIZE);
 	id=(buf[2] << 16) + (buf[1] << 8) + buf[0];
 	len=(buf[3] << 14) + (buf[4] << 7) + buf[5];
-	beye_context().sc_bm_file().read(data,std::min(len,unsigned(4096)));
+	main_handle.read(data,std::min(len,unsigned(4096)));
 	data[len]=0;
-	pos=beye_context().sc_bm_file().tell();
+	pos=main_handle.tell();
     }
     return 1;
 }
@@ -217,7 +220,7 @@ int MP3_Parser::read_id3v22_tags(unsigned flags,unsigned hsize)
 #define ID3V23_FRAME_GROUP_ID_FLAG      0x0020
 #define ID3V23_FRAME_ZERO_FLAG          0x1F1F
 
-int MP3_Parser::read_id3v23_tags(unsigned flags,unsigned hsize)
+int MP3_Parser::read_id3v23_tags(binary_stream& main_handle,unsigned flags,unsigned hsize)
 {
     __filesize_t pos,epos;
     if(	flags==ID3V23_ZERO_FLAG ||
@@ -226,24 +229,24 @@ int MP3_Parser::read_id3v23_tags(unsigned flags,unsigned hsize)
     {
 	char buf[4];
 	unsigned ehsize;
-	beye_context().sc_bm_file().read(buf,4);
+	main_handle.read(buf,4);
 	ehsize=(buf[0] << 21) + (buf[1] << 14) + (buf[2] << 7) + buf[3];
-	beye_context().sc_bm_file().seek(ehsize,binary_stream::Seek_Cur);
+	main_handle.seek(ehsize,binary_stream::Seek_Cur);
     }
-    pos=beye_context().sc_bm_file().tell();
+    pos=main_handle.tell();
     epos=pos+hsize;
     while(pos<epos)
     {
 	unsigned long id;
 	unsigned len;
 	unsigned char buf[ID3V23_FRAME_HEADER_SIZE],data[4096];
-	beye_context().sc_bm_file().read(buf,ID3V23_FRAME_HEADER_SIZE);
+	main_handle.read(buf,ID3V23_FRAME_HEADER_SIZE);
 	id=*((unsigned long *)buf);
 	len=(buf[4] << 21) + (buf[5] << 14) + (buf[6] << 7) + buf[7];
 	if((int)len <= 0) return 0;
-	beye_context().sc_bm_file().read(data,std::min(len,unsigned(4096)));
+	main_handle.read(data,std::min(len,unsigned(4096)));
 	data[len]=0;
-	pos=beye_context().sc_bm_file().tell();
+	pos=main_handle.tell();
     }
     return 1;
 }
@@ -270,7 +273,7 @@ int MP3_Parser::read_id3v23_tags(unsigned flags,unsigned hsize)
 #define ID3V24_FRAME_DATA_LEN_FLAG      0x0001
 #define ID3V24_FRAME_ZERO_FLAG          0x8FB0
 
-int MP3_Parser::read_id3v24_tags(unsigned flags,unsigned hsize)
+int MP3_Parser::read_id3v24_tags(binary_stream& main_handle,unsigned flags,unsigned hsize)
 {
     __filesize_t pos,epos;
     if(	flags==ID3V24_ZERO_FLAG ||
@@ -279,59 +282,59 @@ int MP3_Parser::read_id3v24_tags(unsigned flags,unsigned hsize)
     {
 	char buf[4];
 	unsigned ehsize;
-	beye_context().sc_bm_file().read(buf,4);
+	main_handle.read(buf,4);
 	ehsize=(buf[0] << 21) + (buf[1] << 14) + (buf[2] << 7) + buf[3];
-	beye_context().sc_bm_file().seek(ehsize,binary_stream::Seek_Cur);
+	main_handle.seek(ehsize,binary_stream::Seek_Cur);
     }
-    pos=beye_context().sc_bm_file().tell();
+    pos=main_handle.tell();
     epos=pos+hsize;
     while(pos<epos)
     {
 	unsigned long id;
 	unsigned len;
 	unsigned char buf[ID3V23_FRAME_HEADER_SIZE],data[4096];
-	beye_context().sc_bm_file().read(buf,ID3V23_FRAME_HEADER_SIZE);
+	main_handle.read(buf,ID3V23_FRAME_HEADER_SIZE);
 	id=*((unsigned long *)buf);
 	len=(buf[4] << 21) + (buf[5] << 14) + (buf[6] << 7) + buf[7];
-	beye_context().sc_bm_file().read(data,std::min(len,unsigned(4096)));
+	main_handle.read(data,std::min(len,unsigned(4096)));
 	data[len]=0;
-	pos=beye_context().sc_bm_file().tell();
+	pos=main_handle.tell();
     }
     return 1;
 }
 
-int MP3_Parser::read_id3v2_tags()
+int MP3_Parser::read_id3v2_tags(binary_stream& main_handle)
 {
     char buf[4];
     unsigned vers,rev,flags,hsize;
-    beye_context().sc_bm_file().seek(3,binary_stream::Seek_Set); /* skip 'ID3' */
-    vers=beye_context().sc_bm_file().read(type_byte);
-    rev=beye_context().sc_bm_file().read(type_byte);
-    flags=beye_context().sc_bm_file().read(type_byte);
-    beye_context().sc_bm_file().read(buf,4);
+    main_handle.seek(3,binary_stream::Seek_Set); /* skip 'ID3' */
+    vers=main_handle.read(type_byte);
+    rev=main_handle.read(type_byte);
+    flags=main_handle.read(type_byte);
+    main_handle.read(buf,4);
     hsize=(buf[0] << 21) + (buf[1] << 14) + (buf[2] << 7) + buf[3];
-    if(vers==2) return read_id3v22_tags(flags,hsize);
+    if(vers==2) return read_id3v22_tags(main_handle,flags,hsize);
     else
-    if(vers==3) return read_id3v23_tags(flags,hsize);
+    if(vers==3) return read_id3v23_tags(main_handle,flags,hsize);
     else
-    if(vers==4) return read_id3v24_tags(flags,hsize);
+    if(vers==4) return read_id3v24_tags(main_handle,flags,hsize);
     else
     return 1;
 }
 
-void MP3_Parser::find_next_mp3_hdr(unsigned char *hdr) {
+void MP3_Parser::find_next_mp3_hdr(binary_stream& main_handle,unsigned char *hdr) {
   int len;
   __filesize_t spos;
-  while(!beye_context().sc_bm_file().eof()) {
-    spos=beye_context().sc_bm_file().tell();
-    beye_context().sc_bm_file().read(hdr,4);
-    if(beye_context().sc_bm_file().eof()) break;
+  while(!main_handle.eof()) {
+    spos=main_handle.tell();
+    main_handle.read(hdr,4);
+    if(main_handle.eof()) break;
     len = mp_decode_mp3_header(hdr,NULL,NULL,NULL,NULL);
     if(len < 0) {
-      beye_context().sc_bm_file().seek(-3,binary_stream::Seek_Cur);
+      main_handle.seek(-3,binary_stream::Seek_Cur);
       continue;
     }
-    beye_context().sc_bm_file().seek(spos,binary_stream::Seek_Set);
+    main_handle.seek(spos,binary_stream::Seek_Set);
     break;
   }
 }
@@ -343,7 +346,7 @@ void MP3_Parser::find_next_mp3_hdr(unsigned char *hdr) {
 #define FRAMES_AND_BYTES (FRAMES_FLAG | BYTES_FLAG)
 #define MPG_MD_MONO     3
 
-int MP3_Parser::Xing_test(char *hdr,int *scale,int *lsf,int *srate,long *nframes,long *nbytes)
+int MP3_Parser::Xing_test(binary_stream& main_handle,char *hdr,int *scale,int *lsf,int *srate,long *nframes,long *nbytes)
 {
     __filesize_t fpos;
     unsigned mpeg1, mode, sr_index;
@@ -357,22 +360,22 @@ int MP3_Parser::Xing_test(char *hdr,int *scale,int *lsf,int *srate,long *nframes
     mode     = (hdr[3]>>6)&3;
     if(mpeg1)	off=mode!=MPG_MD_MONO?32:17;
     else	off=mode!=MPG_MD_MONO?17:9;/* mpeg2 */
-    fpos = beye_context().sc_bm_file().tell();
-    beye_context().sc_bm_file().seek(off,binary_stream::Seek_Cur);
-    beye_context().sc_bm_file().read(buf,4);
+    fpos = main_handle.tell();
+    main_handle.seek(off,binary_stream::Seek_Cur);
+    main_handle.read(buf,4);
     if(memcmp(buf,"Xing",4) == 0 || memcmp(buf,"Info",4) == 0)
     {
 	is_xing=1;
 	*nbytes=*nframes=0;
 	*lsf=mpeg1?0:1;
 	*srate=sr_table[sr_index&0x3];
-	head_flags = be2me_32(beye_context().sc_bm_file().read(type_dword));
-	if(head_flags & FRAMES_FLAG)	*nframes=be2me_32(beye_context().sc_bm_file().read(type_dword));
-	if(head_flags & BYTES_FLAG)	*nbytes=be2me_32(beye_context().sc_bm_file().read(type_dword));
-	if(head_flags & TOC_FLAG)	beye_context().sc_bm_file().seek(100,binary_stream::Seek_Cur); /* skip indexes */
-	if(head_flags & VBR_SCALE_FLAG)	*scale = be2me_32(beye_context().sc_bm_file().read(type_dword));
+	head_flags = be2me_32(main_handle.read(type_dword));
+	if(head_flags & FRAMES_FLAG)	*nframes=be2me_32(main_handle.read(type_dword));
+	if(head_flags & BYTES_FLAG)	*nbytes=be2me_32(main_handle.read(type_dword));
+	if(head_flags & TOC_FLAG)	main_handle.seek(100,binary_stream::Seek_Cur); /* skip indexes */
+	if(head_flags & VBR_SCALE_FLAG)	*scale = be2me_32(main_handle.read(type_dword));
     }
-    beye_context().sc_bm_file().seek(fpos,binary_stream::Seek_Set);
+    main_handle.seek(fpos,binary_stream::Seek_Set);
     return is_xing;
 }
 
@@ -387,27 +390,27 @@ __filesize_t MP3_Parser::show_header()
  int scale,lsf,srate;
  long nframes,nbytes,ave_brate;
  int is_xing=0;
- fpos2 = fpos = beye_context().bm_file().tell();
- beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
- beye_context().sc_bm_file().read(hdr,4);
+ fpos2 = fpos = beye_context().tell();
+ main_handle.seek(0,binary_stream::Seek_Set);
+ main_handle.read(hdr,4);
  if( hdr[0] == 'I' && hdr[1] == 'D' && hdr[2] == '3' && (hdr[3] >= 2))
  {
-	beye_context().sc_bm_file().seek(2,binary_stream::Seek_Cur);
-	beye_context().sc_bm_file().read(hdr,4);
+	main_handle.seek(2,binary_stream::Seek_Cur);
+	main_handle.read(hdr,4);
 	len = (hdr[0]<<21) | (hdr[1]<<14) | (hdr[2]<<7) | hdr[3];
-	read_id3v2_tags();
-	beye_context().sc_bm_file().seek(len+10,binary_stream::Seek_Set);
-	find_next_mp3_hdr(hdr);
-	fpos2=beye_context().sc_bm_file().tell();
+	read_id3v2_tags(main_handle);
+	main_handle.seek(len+10,binary_stream::Seek_Set);
+	find_next_mp3_hdr(main_handle,hdr);
+	fpos2=main_handle.tell();
  }
- is_xing=Xing_test((char*)hdr,&scale,&lsf,&srate,&nframes,&nbytes);
+ is_xing=Xing_test(main_handle,(char*)hdr,&scale,&lsf,&srate,&nframes,&nbytes);
  mp_decode_mp3_header(hdr,&fmt,&mp3_brate,&mp3_samplerate,&mp3_channels);
  ave_brate=mp3_brate*8;
  if(is_xing)
  {
     ave_brate=(((float)(nbytes)/nframes)*(float)(srate<<lsf))/144.;
-    find_next_mp3_hdr(hdr);
-    fpos2=beye_context().sc_bm_file().tell();
+    find_next_mp3_hdr(main_handle,hdr);
+    fpos2=main_handle.tell();
  }
  hwnd = CrtDlgWndnls(" MP3 File Header ",43,4);
  hwnd->goto_xy(1,1);
@@ -433,46 +436,48 @@ __filesize_t MP3_Parser::show_header()
  return fpos;
 }
 
-MP3_Parser::MP3_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {}
+MP3_Parser::MP3_Parser(binary_stream& h,CodeGuider& code_guider)
+	    :Binary_Parser(h,code_guider)
+	    ,main_handle(h)
+{}
 MP3_Parser::~MP3_Parser() {}
 int MP3_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-static bool probe() {
+static bool probe(binary_stream& main_handle) {
     unsigned i;
     unsigned long off;
     int fmt = 0,mp3_brate,mp3_samplerate,mp3_channels;
     unsigned char hdr[4];
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(hdr,4);
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(hdr,4);
     if( hdr[0] == 'I' && hdr[1] == 'D' && hdr[2] == '3' && (hdr[3] >= 2))
     {
 	int len;
-	beye_context().sc_bm_file().seek(2,binary_stream::Seek_Cur);
-	beye_context().sc_bm_file().read(hdr,4);
+	main_handle.seek(2,binary_stream::Seek_Cur);
+	main_handle.read(hdr,4);
 	len = (hdr[0]<<21) | (hdr[1]<<14) | (hdr[2]<<7) | hdr[3];
-	MP3_Parser::read_id3v2_tags();
-	beye_context().sc_bm_file().seek(len+10,binary_stream::Seek_Set);
-	MP3_Parser::find_next_mp3_hdr(hdr);
+	MP3_Parser::read_id3v2_tags(main_handle);
+	main_handle.seek(len+10,binary_stream::Seek_Set);
+	MP3_Parser::find_next_mp3_hdr(main_handle,hdr);
 //	Xing_test(hdr,&scale,&lsf,&srate,&nframes,&nbytes);
 	if(MP3_Parser::mp_decode_mp3_header(hdr,&fmt,&mp3_brate,&mp3_samplerate,&mp3_channels) > 0)	return true;
     }
     else
     {
 	if(MP3_Parser::mp_decode_mp3_header(hdr,NULL,NULL,NULL,NULL) < 0) return false;
-	MP3_Parser::find_next_mp3_hdr(hdr);
-	if(beye_context().sc_bm_file().eof()) return false;
+	MP3_Parser::find_next_mp3_hdr(main_handle,hdr);
+	if(main_handle.eof()) return false;
 	for(i=0;i<5;i++)
 	{
 	    if((long)(off=MP3_Parser::mp_decode_mp3_header(hdr,&fmt,&mp3_brate,&mp3_samplerate,&mp3_channels)) < 0) return false;
-	    beye_context().sc_bm_file().seek(off,binary_stream::Seek_Cur);
-	    if(beye_context().sc_bm_file().eof()) return false;
-
+	    main_handle.seek(off,binary_stream::Seek_Cur);
+	    if(main_handle.eof()) return false;
 	}
     }
     return true;
 }
 
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) MP3_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) MP3_Parser(h,_parent); }
 extern const Binary_Parser_Info mp3_info = {
     "MP3 file format",	/**< plugin name */
     probe,

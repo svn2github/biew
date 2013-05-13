@@ -28,6 +28,7 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
+#include "plugins/binary_parser.h"
 
 namespace	usr {
 /*
@@ -60,24 +61,30 @@ namespace	usr {
 */
     class Mpeg_Parser : public Binary_Parser {
 	public:
-	    Mpeg_Parser(CodeGuider&);
+	    Mpeg_Parser(binary_stream&,CodeGuider&);
 	    virtual ~Mpeg_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
 	    virtual int			query_platform() const;
+	private:
+	    binary_stream&	main_handle;
     };
 static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
 const char* Mpeg_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-Mpeg_Parser::Mpeg_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {}
+Mpeg_Parser::Mpeg_Parser(binary_stream& h,CodeGuider& code_guider)
+	    :Binary_Parser(h,code_guider)
+	    ,main_handle(h)
+{}
 Mpeg_Parser::~Mpeg_Parser() {}
 int Mpeg_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-static bool probe() {
+static bool probe(binary_stream& main_handle) {
+    UNUSED(main_handle);
     return false;
 }
 
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) Mpeg_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) Mpeg_Parser(h,_parent); }
 extern const Binary_Parser_Info mpeg_info = {
     "MPEG-PES file format",	/**< plugin name */
     probe,

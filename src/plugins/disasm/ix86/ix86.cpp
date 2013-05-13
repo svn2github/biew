@@ -6286,9 +6286,10 @@ const assembler_t ix86_Disassembler::assemblers[] = {
 #define pclose(fp) fclose(fp)
 #endif
 
-ix86_Disassembler::ix86_Disassembler(DisMode& _parent )
-		    :Disassembler(_parent)
+ix86_Disassembler::ix86_Disassembler(binary_stream& h,DisMode& _parent )
+		    :Disassembler(h,_parent)
 		    ,parent(_parent)
+		    ,main_handle(h)
 		    ,x86_Bitness(DAB_AUTO)
 		    ,active_assembler(-1)
 {
@@ -6516,7 +6517,7 @@ done:
   return result;
 }
 
-static Disassembler* query_interface(DisMode& parent) { return new(zeromem) ix86_Disassembler(parent); }
+static Disassembler* query_interface(binary_stream& h,DisMode& parent) { return new(zeromem) ix86_Disassembler(h,parent); }
 
 extern const Disassembler_Info ix86_disassembler_info = {
     DISASM_CPU_IX86,

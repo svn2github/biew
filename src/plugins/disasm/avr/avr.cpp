@@ -49,7 +49,7 @@ namespace	usr {
 
     class AVR_Disassembler : public Disassembler {
 	public:
-	    AVR_Disassembler(DisMode& parent);
+	    AVR_Disassembler(binary_stream& h,DisMode& parent);
 	    virtual ~AVR_Disassembler();
 	
 	    virtual const char*	prompt(unsigned idx) const;
@@ -75,6 +75,7 @@ namespace	usr {
 					    int regs );
 
 	    DisMode&		parent;
+	    binary_stream&	main_handle;
 
 	    unsigned int*	avr_bin_masks;
 	    unsigned int*	maskptr;
@@ -555,9 +556,10 @@ char AVR_Disassembler::clone_short_name( unsigned long clone )
   return ' ';
 }
 
-AVR_Disassembler::AVR_Disassembler( DisMode& _parent )
-		:Disassembler(_parent)
+AVR_Disassembler::AVR_Disassembler(binary_stream& h, DisMode& _parent )
+		:Disassembler(h,_parent)
 		,parent(_parent)
+		,main_handle(h)
 {
   const struct avr_opcodes_s *opcode;
   unsigned int nopcodes;
@@ -608,7 +610,7 @@ const char* AVR_Disassembler::prompt(unsigned idx) const {
     return "";
 }
 
-static Disassembler* query_interface(DisMode& _parent) { return new(zeromem) AVR_Disassembler(_parent); }
+static Disassembler* query_interface(binary_stream& h,DisMode& _parent) { return new(zeromem) AVR_Disassembler(h,_parent); }
 
 extern const Disassembler_Info avr_disassembler_info = {
     DISASM_CPU_AVR,

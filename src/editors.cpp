@@ -97,8 +97,8 @@ bool __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size
  }
  memset(EditorMem.buff,TWC_DEF_FILLER,msize);
  memset(EditorMem.save,TWC_DEF_FILLER,msize);
- flen = beye_context().bm_file().flength();
- edit_cp = cfp = beye_context().bm_file().tell();
+ flen = beye_context().flength();
+ edit_cp = cfp = beye_context().tell();
  EditorMem.width = width;
  if(buff)
  {

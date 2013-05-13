@@ -35,8 +35,9 @@ using namespace	usr;
 #include "tstrings.h"
 #include "plugins/disasm.h"
 #include "libbeye/kbd_code.h"
-#include "beye.h"
 #include "libbeye/bstream.h"
+#include "plugins/binary_parser.h"
+#include "beye.h"
 
 namespace	usr {
 enum {
@@ -85,7 +86,7 @@ typedef struct ClassFile_s
 
     class JVM_Parser : public Binary_Parser {
 	public:
-	    JVM_Parser(CodeGuider&);
+	    JVM_Parser(binary_stream&,CodeGuider&);
 	    virtual ~JVM_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -132,7 +133,8 @@ typedef struct ClassFile_s
 	    binary_stream*	pool_cache;
 	    linearArray*	PubNames;
 
-	    ClassFile_t jvm_header;
+	    ClassFile_t		jvm_header;
+	    binary_stream&	main_handle;
     };
 
 static const char* txt[]={ "", "Import", "Code  ", "Data  ", "", "", "", "Pool  ", "", "Attrib" };
@@ -234,10 +236,10 @@ void JVM_Parser::skip_fields(unsigned nitems,int attr)
     for(i=0;i<nitems;i++)
     {
 	unsigned short sval;
-	beye_context().sc_bm_file().seek(6,binary_stream::Seek_Cur);
-	sval=beye_context().sc_bm_file().read(type_word);
+	main_handle.seek(6,binary_stream::Seek_Cur);
+	sval=main_handle.read(type_word);
 	sval=JVM_WORD(&sval,1);
-	fpos=beye_context().sc_bm_file().tell();
+	fpos=main_handle.tell();
 	if(i==0)
 	{
 	    __filesize_t lval;
@@ -245,7 +247,7 @@ void JVM_Parser::skip_fields(unsigned nitems,int attr)
 	    if(attr) jvm_header.code_offset=lval;
 	    else jvm_header.data_offset=lval;
 	}
-	skip_attributes(beye_context().sc_bm_file(),sval);
+	skip_attributes(main_handle,sval);
     }
 }
 
@@ -270,7 +272,7 @@ bool JVM_Parser::jvm_read_interfaces(binary_stream& handle,memArray * names,unsi
 
 __filesize_t JVM_Parser::action_F2()
 {
-    __filesize_t fpos = beye_context().bm_file().tell();
+    __filesize_t fpos = beye_context().tell();
     std::string title = " interfaces ";
     ssize_t nnames = jvm_header.interfaces_count;
     int flags = LB_SORTABLE;
@@ -279,7 +281,7 @@ __filesize_t JVM_Parser::action_F2()
     TWindow* w;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = jvm_read_interfaces(beye_context().sc_bm_file(),obj,nnames);
+    bval = jvm_read_interfaces(main_handle,obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -313,7 +315,7 @@ bool JVM_Parser::jvm_read_attributes(binary_stream& handle,memArray * names,unsi
 
 __filesize_t  JVM_Parser::__ShowAttributes(const std::string& title)
 {
-    __filesize_t fpos = beye_context().bm_file().tell();
+    __filesize_t fpos = beye_context().tell();
     int ret;
     ssize_t nnames = jvm_header.attributes_count;
     int flags = LB_SELECTIVE;
@@ -323,7 +325,7 @@ __filesize_t  JVM_Parser::__ShowAttributes(const std::string& title)
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = jvm_read_attributes(beye_context().sc_bm_file(),obj,nnames);
+    bval = jvm_read_attributes(main_handle,obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -333,15 +335,15 @@ __filesize_t  JVM_Parser::__ShowAttributes(const std::string& title)
     exit:
     if(ret!=-1) {
 	unsigned i;
-	beye_context().sc_bm_file().seek(jvm_header.attributes_offset,binary_stream::Seek_Set);
+	main_handle.seek(jvm_header.attributes_offset,binary_stream::Seek_Set);
 	for(i=0;i<(unsigned)ret+1;i++) {
 	    uint32_t len;
-	    fpos=beye_context().sc_bm_file().tell();
-	    beye_context().sc_bm_file().seek(fpos+2,binary_stream::Seek_Set);
-	    len=beye_context().sc_bm_file().read(type_dword);
+	    fpos=main_handle.tell();
+	    main_handle.seek(fpos+2,binary_stream::Seek_Set);
+	    len=main_handle.read(type_dword);
 	    len=JVM_DWORD(&len,1);
 	    fpos+=6;
-	    beye_context().sc_bm_file().seek(len,binary_stream::Seek_Cur);
+	    main_handle.seek(len,binary_stream::Seek_Cur);
 	}
     }
     return fpos;
@@ -379,7 +381,7 @@ bool JVM_Parser::jvm_read_methods(binary_stream& handle,memArray * names,unsigne
 
 __filesize_t JVM_Parser::action_F3()
 {
-    __filesize_t fpos = beye_context().bm_file().tell();
+    __filesize_t fpos = beye_context().tell();
     int ret;
     std::string title = " length   attributes ";
     ssize_t nnames = jvm_header.methods_count;
@@ -390,7 +392,7 @@ __filesize_t JVM_Parser::action_F3()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = jvm_read_methods(beye_context().sc_bm_file(),obj,nnames);
+    bval = jvm_read_methods(main_handle,obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -402,15 +404,15 @@ __filesize_t JVM_Parser::action_F3()
 	char str[80];
 	unsigned i;
 	unsigned short acount=0;
-	beye_context().sc_bm_file().seek(jvm_header.methods_offset,binary_stream::Seek_Set);
+	main_handle.seek(jvm_header.methods_offset,binary_stream::Seek_Set);
 	for(i=0;i<(unsigned)ret+1;i++) {
-	    fpos=beye_context().sc_bm_file().tell();
-	    beye_context().sc_bm_file().seek(2,binary_stream::Seek_Cur);
-	    get_name(beye_context().sc_bm_file(),str,sizeof(str));
-	    beye_context().sc_bm_file().seek(fpos+6,binary_stream::Seek_Set);
-	    acount=beye_context().sc_bm_file().read(type_word);
+	    fpos=main_handle.tell();
+	    main_handle.seek(2,binary_stream::Seek_Cur);
+	    get_name(main_handle,str,sizeof(str));
+	    main_handle.seek(fpos+6,binary_stream::Seek_Set);
+	    acount=main_handle.read(type_word);
 	    acount=JVM_WORD(&acount,1);
-	    skip_attributes(beye_context().sc_bm_file(),acount);
+	    skip_attributes(main_handle,acount);
 	}
 	fpos += 6;
 	if(acount>1) {
@@ -456,7 +458,7 @@ bool JVM_Parser::jvm_read_fields(binary_stream& handle,memArray * names,unsigned
 
 __filesize_t JVM_Parser::action_F4()
 {
-    __filesize_t fpos = beye_context().bm_file().tell();
+    __filesize_t fpos = beye_context().tell();
     int ret;
     std::string title = " length   attributes ";
     ssize_t nnames = jvm_header.fields_count;
@@ -467,7 +469,7 @@ __filesize_t JVM_Parser::action_F4()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = jvm_read_fields(beye_context().sc_bm_file(),obj,nnames);
+    bval = jvm_read_fields(main_handle,obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -479,15 +481,15 @@ __filesize_t JVM_Parser::action_F4()
 	char str[80];
 	unsigned i;
 	unsigned short acount=0;
-	beye_context().sc_bm_file().seek(jvm_header.fields_offset,binary_stream::Seek_Set);
+	main_handle.seek(jvm_header.fields_offset,binary_stream::Seek_Set);
 	for(i=0;i<(unsigned)ret+1;i++) {
-	    fpos=beye_context().sc_bm_file().tell();
-	    beye_context().sc_bm_file().seek(2,binary_stream::Seek_Cur);
-	    get_name(beye_context().sc_bm_file(),str,sizeof(str));
-	    beye_context().sc_bm_file().seek(fpos+6,binary_stream::Seek_Set);
-	    acount=beye_context().sc_bm_file().read(type_word);
+	    fpos=main_handle.tell();
+	    main_handle.seek(2,binary_stream::Seek_Cur);
+	    get_name(main_handle,str,sizeof(str));
+	    main_handle.seek(fpos+6,binary_stream::Seek_Set);
+	    acount=main_handle.read(type_word);
 	    acount=JVM_WORD(&acount,1);
-	    skip_attributes(beye_context().sc_bm_file(),acount);
+	    skip_attributes(main_handle,acount);
 	}
 	fpos += 6;
 	if(acount>1) {
@@ -586,7 +588,7 @@ bool JVM_Parser::jvm_read_pool(binary_stream& handle,memArray * names,unsigned n
 
 __filesize_t JVM_Parser::action_F8()
 {
-    __filesize_t fpos = beye_context().bm_file().tell();
+    __filesize_t fpos = beye_context().tell();
     std::string title = " Constant pool ";
     ssize_t nnames = jvm_header.constant_pool_count;
     int flags = LB_SORTABLE;
@@ -595,7 +597,7 @@ __filesize_t JVM_Parser::action_F8()
     TWindow* w;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = jvm_read_pool(beye_context().sc_bm_file(),obj,nnames);
+    bval = jvm_read_pool(main_handle,obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -606,8 +608,9 @@ __filesize_t JVM_Parser::action_F8()
     return fpos;
 }
 
-JVM_Parser::JVM_Parser(CodeGuider& code_guider)
-	    :Binary_Parser(code_guider)
+JVM_Parser::JVM_Parser(binary_stream& h,CodeGuider& code_guider)
+	    :Binary_Parser(h,code_guider)
+	    ,main_handle(h)
 {
     __filesize_t fpos;
     unsigned short sval;
@@ -615,50 +618,50 @@ JVM_Parser::JVM_Parser(CodeGuider& code_guider)
     jvm_header.attrcode_offset=-1;
     jvm_header.code_offset=-1;
     jvm_header.data_offset=-1;
-    fpos=beye_context().sc_bm_file().tell();
-    beye_context().sc_bm_file().seek(4,binary_stream::Seek_Set);
-    sval=beye_context().sc_bm_file().read(type_word);
+    fpos=main_handle.tell();
+    main_handle.seek(4,binary_stream::Seek_Set);
+    sval=main_handle.read(type_word);
     jvm_header.minor=JVM_WORD(&sval,1);
-    sval=beye_context().sc_bm_file().read(type_word);
+    sval=main_handle.read(type_word);
     jvm_header.major=JVM_WORD(&sval,1);
-    sval=beye_context().sc_bm_file().read(type_word);
+    sval=main_handle.read(type_word);
     jvm_header.constant_pool_count=JVM_WORD(&sval,1);
-    jvm_header.constants_offset=beye_context().sc_bm_file().tell();
-    skip_constant_pool(beye_context().sc_bm_file(),jvm_header.constant_pool_count-1);
-    sval=beye_context().sc_bm_file().read(type_word);
+    jvm_header.constants_offset=main_handle.tell();
+    skip_constant_pool(main_handle,jvm_header.constant_pool_count-1);
+    sval=main_handle.read(type_word);
     jvm_header.access_flags=JVM_WORD(&sval,1);
-    sval=beye_context().sc_bm_file().read(type_word);
+    sval=main_handle.read(type_word);
     jvm_header.this_class=JVM_WORD(&sval,1);
-    sval=beye_context().sc_bm_file().read(type_word);
+    sval=main_handle.read(type_word);
     jvm_header.super_class=JVM_WORD(&sval,1);
-    sval=beye_context().sc_bm_file().read(type_word);
+    sval=main_handle.read(type_word);
     jvm_header.interfaces_count=JVM_WORD(&sval,1);
-    jvm_header.interfaces_offset=beye_context().sc_bm_file().tell();
-    beye_context().sc_bm_file().seek(jvm_header.interfaces_count*2,binary_stream::Seek_Cur);
-    sval=beye_context().sc_bm_file().read(type_word);
+    jvm_header.interfaces_offset=main_handle.tell();
+    main_handle.seek(jvm_header.interfaces_count*2,binary_stream::Seek_Cur);
+    sval=main_handle.read(type_word);
     jvm_header.fields_count=JVM_WORD(&sval,1);
-    jvm_header.fields_offset=beye_context().sc_bm_file().tell();
+    jvm_header.fields_offset=main_handle.tell();
     skip_fields(jvm_header.fields_count,0);
-    sval=beye_context().sc_bm_file().read(type_word);
+    sval=main_handle.read(type_word);
     jvm_header.methods_count=JVM_WORD(&sval,1);
-    jvm_header.methods_offset=beye_context().sc_bm_file().tell();
+    jvm_header.methods_offset=main_handle.tell();
     skip_fields(jvm_header.fields_count,1); /* methods have the same struct as fields */
-    sval=beye_context().sc_bm_file().read(type_word);
+    sval=main_handle.read(type_word);
     jvm_header.attrcode_offset=0;
     jvm_header.attributes_count=JVM_WORD(&sval,1);
-    jvm_header.attributes_offset=beye_context().sc_bm_file().tell();
+    jvm_header.attributes_offset=main_handle.tell();
     if(jvm_header.attributes_count) jvm_header.attrcode_offset=jvm_header.attributes_offset;
-    skip_attributes(beye_context().sc_bm_file(),sval);
-    jvm_header.header_length=beye_context().sc_bm_file().tell();
-    beye_context().sc_bm_file().seek(fpos,binary_stream::Seek_Set);
-    binary_stream& bh = beye_context().sc_bm_file();
+    skip_attributes(main_handle,sval);
+    jvm_header.header_length=main_handle.tell();
+    main_handle.seek(fpos,binary_stream::Seek_Set);
+    binary_stream& bh = main_handle;
     if((jvm_cache = bh.dup()) == &bNull) jvm_cache = &bh;
     if((pool_cache = bh.dup()) == &bNull) pool_cache = &bh;
 }
 
 JVM_Parser::~JVM_Parser()
 {
-  binary_stream& bh=beye_context().sc_bm_file();
+  binary_stream& bh=main_handle;
   if(jvm_cache != &bNull && jvm_cache != &bh) delete jvm_cache;
   if(pool_cache != &bNull && pool_cache != &bh) delete pool_cache;
 }
@@ -681,12 +684,12 @@ __filesize_t JVM_Parser::show_header()
     TWindow * hwnd;
     unsigned keycode;
     char sinfo[70],sinfo2[70],sinfo3[70];
-    entry=beye_context().bm_file().tell();
+    entry=beye_context().tell();
     hwnd = CrtDlgWndnls(" ClassFile Header ",78,11);
     hwnd->goto_xy(1,1);
     decode_acc_flags(jvm_header.access_flags,sinfo);
-    get_class_name(beye_context().sc_bm_file(),jvm_header.this_class,sinfo2,sizeof(sinfo2));
-    get_class_name(beye_context().sc_bm_file(),jvm_header.super_class,sinfo3,sizeof(sinfo3));
+    get_class_name(main_handle,jvm_header.this_class,sinfo2,sizeof(sinfo2));
+    get_class_name(main_handle,jvm_header.super_class,sinfo3,sizeof(sinfo3));
     hwnd->printf(
 	     "Signature     = 'CAFEBABE'\n"
 	     "Version       = %u.%u\n"
@@ -851,7 +854,7 @@ void JVM_Parser::jvm_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *m
 __filesize_t JVM_Parser::get_public_symbol(char *str,unsigned cb_str,unsigned *func_class,
 			   __filesize_t pa,bool as_prev)
 {
-    binary_stream& b_cache = beye_context().sc_bm_file();
+    binary_stream& b_cache = main_handle;
     __filesize_t fpos;
     size_t idx;
     if(!PubNames) jvm_ReadPubNameList(b_cache,NULL);
@@ -871,7 +874,7 @@ unsigned JVM_Parser::get_object_attribute(__filesize_t pa,char *name,unsigned cb
   unsigned ret;
   UNUSED(cb_name);
   *start = 0;
-  *end = beye_context().sc_bm_file().flength();
+  *end = main_handle.flength();
   *_class = OC_NOOBJECT;
   *bitness = DAB_USE16;
   name[0] = 0;
@@ -916,13 +919,13 @@ unsigned JVM_Parser::get_object_attribute(__filesize_t pa,char *name,unsigned cb
     {
       __filesize_t fpos;
       uint32_t len;
-      fpos=beye_context().sc_bm_file().tell();
-      beye_context().sc_bm_file().seek(jvm_header.attributes_offset,binary_stream::Seek_Set);
-      get_name(beye_context().sc_bm_file(),name,cb_name);
-      beye_context().sc_bm_file().seek(fpos+2,binary_stream::Seek_Set);
-      len=beye_context().sc_bm_file().read(type_dword);
+      fpos=main_handle.tell();
+      main_handle.seek(jvm_header.attributes_offset,binary_stream::Seek_Set);
+      get_name(main_handle,name,cb_name);
+      main_handle.seek(fpos+2,binary_stream::Seek_Set);
+      len=main_handle.read(type_dword);
       len=JVM_DWORD(&len,1);
-      beye_context().sc_bm_file().seek(fpos,binary_stream::Seek_Set);
+      main_handle.seek(fpos,binary_stream::Seek_Set);
       *_class = OC_CODE;
       *start = jvm_header.attributes_offset+6;
       *end = *start+len;
@@ -1032,15 +1035,15 @@ bool JVM_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int f
     return retrf;
 }
 
-static bool probe() {
+static bool probe(binary_stream& main_handle) {
   unsigned char id[4];
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(id,sizeof(id));
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(id,sizeof(id));
   /* Cafe babe !!! */
-  return id[0]==0xCA && id[1]==0xFE && id[2]==0xBA && id[3]==0xBE && beye_context().sc_bm_file().flength()>=16;
+  return id[0]==0xCA && id[1]==0xFE && id[2]==0xBA && id[3]==0xBE && main_handle.flength()>=16;
 }
 
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) JVM_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) JVM_Parser(h,_parent); }
 extern const Binary_Parser_Info jvm_info = {
     "Java's ClassFile",	/**< plugin name */
     probe,

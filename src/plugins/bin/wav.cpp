@@ -28,8 +28,9 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/mmio.h"
-#include "beye.h"
 #include "libbeye/bstream.h"
+#include "plugins/binary_parser.h"
+#include "beye.h"
 
 namespace	usr {
 extern const wTagNames wtagNames[] =
@@ -180,29 +181,32 @@ const char* Wave_Parser::wtag_find_name(unsigned short wtag)
     return "Unknown";
 }
 
-Wave_Parser::Wave_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) {}
+Wave_Parser::Wave_Parser(binary_stream& h,CodeGuider& code_guider)
+	    :Binary_Parser(h,code_guider)
+	    ,main_handle(h)
+{}
 Wave_Parser::~Wave_Parser() {}
 int  Wave_Parser::query_platform() const { return DISASM_DEFAULT; }
 
 __filesize_t Wave_Parser::wav_find_chunk(__filesize_t off,unsigned long id)
 {
     unsigned long ids,size,type;
-    beye_context().sc_bm_file().seek(off,binary_stream::Seek_Set);
-    while(!beye_context().sc_bm_file().eof())
+    main_handle.seek(off,binary_stream::Seek_Set);
+    while(!main_handle.eof())
     {
-/*	fpos=beye_context().sc_bm_file().tell();*/
-	ids=beye_context().sc_bm_file().read(type_dword);
-	if(ids==id) return beye_context().sc_bm_file().tell();
-	size=beye_context().sc_bm_file().read(type_dword);
+/*	fpos=main_handle.tell();*/
+	ids=main_handle.read(type_dword);
+	if(ids==id) return main_handle.tell();
+	size=main_handle.read(type_dword);
 	size=(size+1)&(~1);
 /*fprintf(stderr,"%08X:%4s %08X\n",fpos,(char *)&ids,size);*/
 	if(ids==mmioFOURCC('L','I','S','T'))
 	{
-	    type=beye_context().sc_bm_file().read(type_dword);
-	    if(type==id) return beye_context().sc_bm_file().tell();
+	    type=main_handle.read(type_dword);
+	    if(type==id) return main_handle.tell();
 	    continue;
 	}
-	beye_context().sc_bm_file().seek(size,binary_stream::Seek_Cur);
+	main_handle.seek(size,binary_stream::Seek_Cur);
     }
     return -1;
 }
@@ -213,12 +217,12 @@ __filesize_t Wave_Parser::show_header()
  TWindow * hwnd;
  WAVEFORMATEX wavf;
  __filesize_t fpos,fpos2;
- fpos = beye_context().bm_file().tell();
+ fpos = beye_context().tell();
  fpos2 = wav_find_chunk(12,mmioFOURCC('f','m','t',' '));
  if((__fileoff_t)fpos2==-1) { beye_context().ErrMessageBox("Main WAV Header not found",""); return fpos; }
- beye_context().sc_bm_file().seek(fpos2,binary_stream::Seek_Set);
- beye_context().sc_bm_file().read(type_dword); /* skip section size */
- beye_context().sc_bm_file().read(&wavf,sizeof(WAVEFORMATEX));
+ main_handle.seek(fpos2,binary_stream::Seek_Set);
+ main_handle.read(type_dword); /* skip section size */
+ main_handle.read(&wavf,sizeof(WAVEFORMATEX));
  fpos2 = wav_find_chunk(12,mmioFOURCC('d','a','t','a'));
  if((__fileoff_t)fpos2!=-1) fpos2-=4;
  hwnd = CrtDlgWndnls(" WAV File Header ",43,5);
@@ -245,19 +249,19 @@ __filesize_t Wave_Parser::show_header()
  return fpos;
 }
 
-static bool probe() {
+static bool probe(binary_stream& main_handle) {
     unsigned long id,id0;
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    id0 = beye_context().sc_bm_file().read(type_dword);
-    beye_context().sc_bm_file().seek(8,binary_stream::Seek_Set);
-    id = beye_context().sc_bm_file().read(type_dword);
+    main_handle.seek(0,binary_stream::Seek_Set);
+    id0 = main_handle.read(type_dword);
+    main_handle.seek(8,binary_stream::Seek_Set);
+    id = main_handle.read(type_dword);
     if(	id0==mmioFOURCC('R','I','F','F') &&
 	id==mmioFOURCC('W','A','V','E'))
 	return true;
     return false;
 }
 
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) Wave_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) Wave_Parser(h,_parent); }
 extern const Binary_Parser_Info wav_info = {
     "RIFF WAVE format",	/**< plugin name */
     probe,

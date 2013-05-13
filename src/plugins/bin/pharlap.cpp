@@ -30,15 +30,15 @@ using namespace	usr;
 #include "reg_form.h"
 #include "plugins/bin/pharlap.h"
 #include "plugins/disasm.h"
-#include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
-#include "beye.h"
 #include "libbeye/bstream.h"
+#include "plugins/binary_parser.h"
+#include "beye.h"
 
 namespace	usr {
     class PharLap_Parser : public Binary_Parser {
 	public:
-	    PharLap_Parser(CodeGuider&);
+	    PharLap_Parser(binary_stream&,CodeGuider&);
 	    virtual ~PharLap_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -55,6 +55,7 @@ namespace	usr {
 	    bool			__PLReadSegInfo(binary_stream& handle,memArray * obj,unsigned nnames);
 	    static void __FASTCALL__	PLSegPaint(TWindow * win,const any_t** names,unsigned start,unsigned nlist);
 
+	    binary_stream&		main_handle;
 	    binary_stream*		pl_cache;
 	    newPharLap			nph;
     };
@@ -67,7 +68,7 @@ __filesize_t PharLap_Parser::show_header()
   TWindow *w;
   unsigned keycode;
   char sign[3];
-  fpos = beye_context().bm_file().tell();
+  fpos = beye_context().tell();
   strncpy(sign,(char *)nph.plSignature,2);
   sign[2] = 0;
   w = CrtDlgWndnls(" New PharLap executable ",59,23);
@@ -173,7 +174,7 @@ __filesize_t PharLap_Parser::action_F10()
  memArray * obj;
  if(nph.plSegInfoOffset && nph.plSegInfoSize) nnames = (unsigned)(nph.plSegInfoSize / sizeof(PLSegInfo));
  else                                           nnames = 0;
- fpos = beye_context().bm_file().tell();
+ fpos = beye_context().tell();
  if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Segment Info table "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
  handle.seek(nph.plSegInfoOffset,binary_stream::Seek_Set);
@@ -250,7 +251,7 @@ __filesize_t PharLap_Parser::action_F9()
  memArray * obj;
  if(nph.plRunTimeParms && nph.plRunTimeSize) nnames = (unsigned)(nph.plRunTimeSize / sizeof(PLRunTimeParms));
  else                                          nnames = 0;
- fpos = beye_context().bm_file().tell();
+ fpos = beye_context().tell();
  if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Run-time parameters "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
  handle.seek(nph.plRunTimeParms,binary_stream::Seek_Set);
@@ -267,20 +268,19 @@ __filesize_t PharLap_Parser::action_F9()
  return fpos;
 }
 
-PharLap_Parser::PharLap_Parser(CodeGuider& code_guider)
-	    :Binary_Parser(code_guider)
+PharLap_Parser::PharLap_Parser(binary_stream& h,CodeGuider& code_guider)
+	    :Binary_Parser(h,code_guider)
+	    ,main_handle(h)
 	    ,pl_cache(&bNull)
 {
-  binary_stream& main_handle = beye_context().sc_bm_file();
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(&nph,sizeof(nph));
-  if((pl_cache = main_handle.dup()) == &bNull) pl_cache = &main_handle;
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(&nph,sizeof(nph));
+    if((pl_cache = main_handle.dup()) == &bNull) pl_cache = &main_handle;
 }
 
 PharLap_Parser::~PharLap_Parser()
 {
-  binary_stream& main_handle = beye_context().sc_bm_file();
-  if(pl_cache != &bNull && pl_cache != &main_handle) delete pl_cache;
+    if(pl_cache != &bNull && pl_cache != &main_handle) delete pl_cache;
 }
 
 bool PharLap_Parser::address_resolving(char *addr,__filesize_t cfpos)
@@ -300,20 +300,20 @@ bool PharLap_Parser::address_resolving(char *addr,__filesize_t cfpos)
 __filesize_t PharLap_Parser::action_F1()
 {
   hlpDisplay(10010);
-  return beye_context().bm_file().tell();
+  return beye_context().tell();
 }
 
 int PharLap_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static bool probe() {
+static bool probe(binary_stream& main_handle) {
    char sign[2];
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(sign,2);
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(sign,2);
    if(sign[0] == 'P' && (sign[1] == '2' || sign[1] == '3')) return true;
    return false;
 }
 
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) PharLap_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) PharLap_Parser(h,_parent); }
 extern const Binary_Parser_Info pharlap_info = {
     "PharLap",	/**< plugin name */
     probe,

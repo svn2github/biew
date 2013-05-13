@@ -33,7 +33,7 @@ using namespace	usr;
 namespace	usr {
     class Data_Disassembler : public Disassembler {
 	public:
-	    Data_Disassembler(DisMode& parent);
+	    Data_Disassembler(binary_stream& h,DisMode& parent);
 	    virtual ~Data_Disassembler();
 	
 	    virtual const char*	prompt(unsigned idx) const;
@@ -51,6 +51,7 @@ namespace	usr {
 	    virtual void	save_ini(Ini_Profile&);
 	private:
 	    DisMode&		parent;
+	    binary_stream&	main_handle;
 	    int			nulWidth;
 	    char*		outstr;
 
@@ -113,7 +114,7 @@ DisasmRet Data_Disassembler::disassembler(__filesize_t ulShift,
     }
     ret.codelen = cl;
     strcpy(outstr,preface);
-    parent.append_digits(outstr,ulShift,APREF_USE_TYPE,cl,buffer,type);
+    parent.append_digits(main_handle,outstr,ulShift,APREF_USE_TYPE,cl,buffer,type);
   }
   else
     if(flags & __DISF_GETTYPE) ret.pro_clone = __INSNT_ORDINAL;
@@ -146,9 +147,10 @@ char Data_Disassembler::clone_short_name( unsigned long clone )
   UNUSED(clone);
   return ' ';
 }
-Data_Disassembler::Data_Disassembler( DisMode& _parent )
-		:Disassembler(_parent)
+Data_Disassembler::Data_Disassembler(binary_stream& h,DisMode& _parent )
+		:Disassembler(h,_parent)
 		,parent(_parent)
+		,main_handle(h)
 		,nulWidth(1)
 {
   outstr = new char [1000];
@@ -190,7 +192,7 @@ const char* Data_Disassembler::prompt(unsigned idx) const {
     return "";
 }
 
-static Disassembler* query_interface(DisMode& _parent) { return new(zeromem) Data_Disassembler(_parent); }
+static Disassembler* query_interface(binary_stream& h,DisMode& _parent) { return new(zeromem) Data_Disassembler(h,_parent); }
 extern const Disassembler_Info data_disassembler_info = {
     DISASM_DATA,
     "~Data",	/**< plugin name */

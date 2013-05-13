@@ -26,9 +26,7 @@
 #ifndef __A_OUT_64_H__
 #define __A_OUT_64_H__
 
-#ifndef __SYS_DEP_H
-#include "_sys_dep.h"
-#endif
+#include "config.h"
 
 namespace	usr {
 #ifdef __HAVE_PRAGMA_PACK__

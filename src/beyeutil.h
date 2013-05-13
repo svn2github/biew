@@ -106,7 +106,5 @@ typedef struct tag_memArray
     int       __FASTCALL__ ma_Display(memArray *obj,const std::string& title,int flg,unsigned defsel);
 
     int      __FASTCALL__ ExpandHex(char * dest,const unsigned char * src,int size,char hard);
-
-    __filesize_t       IsNewExe();
 } // namespace	usr
 #endif

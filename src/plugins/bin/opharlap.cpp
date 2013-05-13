@@ -28,15 +28,15 @@ using namespace	usr;
 #include "reg_form.h"
 #include "plugins/bin/pharlap.h"
 #include "plugins/disasm.h"
-#include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
-#include "beye.h"
 #include "libbeye/bstream.h"
+#include "plugins/binary_parser.h"
+#include "beye.h"
 
 namespace	usr {
     class oldPharLap_Parser : public Binary_Parser {
 	public:
-	    oldPharLap_Parser(CodeGuider&);
+	    oldPharLap_Parser(binary_stream&,CodeGuider&);
 	    virtual ~oldPharLap_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -47,6 +47,7 @@ namespace	usr {
 	    virtual bool		address_resolving(char *,__filesize_t);
 	private:
 	    oldPharLap			oph;
+	    binary_stream&		main_handle;
     };
 static const char* txt[]={"PLHelp","","","","","","","","",""};
 const char* oldPharLap_Parser::prompt(unsigned idx) const { return txt[idx]; }
@@ -56,7 +57,7 @@ __filesize_t oldPharLap_Parser::show_header()
   __filesize_t fpos,entrypoint;
   TWindow * w;
   unsigned keycode;
-  fpos = beye_context().bm_file().tell();
+  fpos = beye_context().tell();
   entrypoint = oph.plHeadSize*16 + oph.plEIP;
   w = CrtDlgWndnls(" Old PharLap executable ",54,11);
   w->goto_xy(1,1);
@@ -97,11 +98,12 @@ __filesize_t oldPharLap_Parser::show_header()
   return fpos;
 }
 
-oldPharLap_Parser::oldPharLap_Parser(CodeGuider& code_guider)
-		:Binary_Parser(code_guider)
+oldPharLap_Parser::oldPharLap_Parser(binary_stream& h,CodeGuider& code_guider)
+		:Binary_Parser(h,code_guider)
+		,main_handle(h)
 {
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(&oph,sizeof(oph));
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(&oph,sizeof(oph));
 }
 
 oldPharLap_Parser::~oldPharLap_Parser(){}
@@ -123,20 +125,20 @@ bool oldPharLap_Parser::address_resolving(char *addr,__filesize_t cfpos)
 __filesize_t oldPharLap_Parser::action_F1()
 {
   hlpDisplay(10008);
-  return beye_context().bm_file().tell();
+  return beye_context().tell();
 }
 
 int oldPharLap_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static bool probe() {
+static bool probe(binary_stream& main_handle) {
    char sign[2];
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(sign,2);
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(sign,2);
    if(sign[0] == 'M' && sign[1] == 'P') return true;
    return false;
 }
 
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) oldPharLap_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) oldPharLap_Parser(h,_parent); }
 extern const Binary_Parser_Info oldpharlap_info = {
     "PharLap",	/**< plugin name */
     probe,

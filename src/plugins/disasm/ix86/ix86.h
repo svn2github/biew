@@ -297,7 +297,7 @@ enum {
     class DisMode;
     class ix86_Disassembler : public Disassembler {
 	public:
-	    ix86_Disassembler(DisMode&);
+	    ix86_Disassembler(binary_stream&,DisMode&);
 	    virtual ~ix86_Disassembler();
 
 	    virtual const char*	prompt(unsigned idx) const;
@@ -462,6 +462,8 @@ enum {
 	    void			ix86_Null(char *str,ix86Param *param);
 	/* data */
 	    DisMode&			parent;
+	    binary_stream&		main_handle;
+
 	    unsigned			x86_Bitness;
 	    char*			ix86_voidstr;
 	    char*			ix86_da_out;

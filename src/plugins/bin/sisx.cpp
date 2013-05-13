@@ -30,8 +30,9 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 #include "plugins/bin/mmio.h"
 #include "plugins/disasm.h"
-#include "beye.h"
 #include "libbeye/bstream.h"
+#include "plugins/binary_parser.h"
+#include "beye.h"
 
 namespace	usr {
 struct E32ImageHeader {
@@ -71,7 +72,7 @@ struct E32ImageHeader {
 
     class SisX_Parser : public Binary_Parser {
 	public:
-	    SisX_Parser(CodeGuider&);
+	    SisX_Parser(binary_stream&,CodeGuider&);
 	    virtual ~SisX_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -80,17 +81,22 @@ struct E32ImageHeader {
 	    virtual int			query_platform() const;
 	private:
 	    __filesize_t		show_sis3_header();
+
+	    binary_stream&		main_handle;
     };
 static const char* txt[]={"","","","","","","","","",""};
 const char* SisX_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-SisX_Parser::SisX_Parser(CodeGuider& code_guider):Binary_Parser(code_guider) { }
+SisX_Parser::SisX_Parser(binary_stream& h,CodeGuider& code_guider)
+	    :Binary_Parser(h,code_guider)
+	    ,main_handle(h)
+{}
 SisX_Parser::~SisX_Parser() {}
 int  SisX_Parser::query_platform() const {
  unsigned id;
  struct E32ImageHeader img;
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(&img,sizeof(img));
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(&img,sizeof(img));
  id=DISASM_DATA;
  if((img.iCpuIdentifier&0xF000)==0x1000) id=DISASM_CPU_IX86;
  else if((img.iCpuIdentifier&0xF000)==0x2000) id=DISASM_CPU_ARM;
@@ -105,9 +111,9 @@ __filesize_t SisX_Parser::show_header()
  char head[80];
  struct E32ImageHeader img;
  __filesize_t fpos,fpos2;
- fpos2=fpos = beye_context().bm_file().tell();
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(&img,sizeof(img));
+ fpos2=fpos = beye_context().tell();
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(&img,sizeof(img));
  switch(img.iUid1)
  {
     case 0x10000079: exetype="DLL"; break;
@@ -177,19 +183,19 @@ __filesize_t SisX_Parser::show_header()
  return fpos;
 }
 
-static bool probe() {
+static bool probe(binary_stream& main_handle) {
     unsigned char sign[4];
     unsigned long id;
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    id=beye_context().sc_bm_file().read(type_dword);
-    beye_context().sc_bm_file().seek(16L,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(sign,sizeof(sign));
+    main_handle.seek(0,binary_stream::Seek_Set);
+    id=main_handle.read(type_dword);
+    main_handle.seek(16L,binary_stream::Seek_Set);
+    main_handle.read(sign,sizeof(sign));
     if((id&0x10000000UL)==0x10000000UL && memcmp(sign,"EPOC",4)==0) return true;
     return false;
 }
 
 
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) SisX_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) SisX_Parser(h,_parent); }
 extern const Binary_Parser_Info sisx_info = {
     "SisX(EPOC) Symbian OS executable file",	/**< plugin name */
     probe,

@@ -58,13 +58,15 @@ namespace	usr {
     extern const Disassembler_Info ppc_disassembler_info;
     extern const Disassembler_Info java_disassembler_info;
 
-DisMode::DisMode(TWindow& _main_wnd,CodeGuider& _code_guider)
-	:Plugin(_main_wnd,_code_guider)
+DisMode::DisMode(binary_stream& h,TWindow& _main_wnd,CodeGuider& _code_guider)
+	:Plugin(h,_main_wnd,_code_guider)
 	,DefDisasmSel(__DEFAULT_DISASM)
 	,HiLight(1)
 	,code_guider(_code_guider)
 	,DisasmPrepareMode(false)
 	,main_wnd(_main_wnd)
+	,main_handle(h)
+	,second_handle(bNull)
 {
     size_t i,sz;
     unsigned def_platform;
@@ -77,6 +79,8 @@ DisMode::DisMode(TWindow& _main_wnd,CodeGuider& _code_guider)
     CurrStrLenBuff = new unsigned char [beye_context().tconsole().vio_height()];
     PrevStrLenAddr = new unsigned long [beye_context().tconsole().vio_height()];
     dis_comments   = new char [Comm_Size];
+    second_handle =*main_handle.dup();
+    if(&second_handle==&bNull) second_handle = main_handle;
     if((!CurrStrLenBuff) || (!PrevStrLenAddr) || (!dis_comments)) {
 	MemOutBox("Disassembler initialization");
 	::exit(EXIT_FAILURE);
@@ -86,13 +90,13 @@ DisMode::DisMode(TWindow& _main_wnd,CodeGuider& _code_guider)
     sz=list.size();
     for(i=0;i<sz;i++) {
 	if(list[i]->type == def_platform) {
-	    activeDisasm=list[i]->query_interface(*this);
+	    activeDisasm=list[i]->query_interface(second_handle,*this);
 	    DefDisasmSel = i;
 	    break;
 	}
     }
     if(!activeDisasm) {
-	activeDisasm = list[0]->query_interface(*this);
+	activeDisasm = list[0]->query_interface(second_handle,*this);
 	DefDisasmSel = 0;
     }
     accept_actions();
@@ -106,6 +110,7 @@ DisMode::~DisMode()
     delete dis_comments;
     delete disCodeBuffer;
     delete disCodeBufPredict;
+    if(&second_handle!=&bNull && &second_handle!=&main_handle) delete &second_handle;
 }
 
 DisMode::e_flag DisMode::flags() const { return UseCodeGuide | Disasm | Has_SearchEngine; }
@@ -129,7 +134,7 @@ bool DisMode::action_F2() /* disSelect_Disasm */
     retval = SelBoxA(modeName,nModes," Select disassembler: ",DefDisasmSel);
     if(retval != -1) {
 	delete activeDisasm;
-	activeDisasm = list[retval]->query_interface(*this);
+	activeDisasm = list[retval]->query_interface(second_handle,*this);
 	DefDisasmSel = retval;
 	accept_actions();
 	return true;
@@ -159,8 +164,8 @@ void DisMode::fill_prev_asm_page(__filesize_t bound,unsigned predist)
     for(j = 0;;j++) {
 	DisasmRet dret;
 	addr = distin + totallen;
-	beye_context().bm_file().seek(addr,binary_stream::Seek_Set);
-	beye_context().bm_file().read(disCodeBuffer,disMaxCodeLen);
+	main_handle.seek(addr,binary_stream::Seek_Set);
+	main_handle.read(disCodeBuffer,disMaxCodeLen);
 	dret = disassembler(distin,(unsigned char*)disCodeBuffer,__DISF_SIZEONLY);
 	if(addr >= bound) break;
 	totallen += dret.codelen;
@@ -233,8 +238,8 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
     char savstring[20];
     HLInfo hli;
     ColorAttr cattr;
-    flen = beye_context().bm_file().flength();
-    cfpos = TopCFPos = beye_context().bm_file().tell();
+    flen = main_handle.flength();
+    cfpos = TopCFPos = main_handle.tell();
     if(keycode == KE_UPARROW) {
 	char addrdet;
 	e_ref showref;
@@ -242,8 +247,8 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 	showref = disNeedRef;
 	addrdet = hexAddressResolv;
 	disNeedRef = Ref_None; hexAddressResolv = 0;
-	beye_context().bm_file().seek(cfpos,binary_stream::Seek_Set);
-	beye_context().bm_file().read(disCodeBuffer,disMaxCodeLen);
+	main_handle.seek(cfpos,binary_stream::Seek_Set);
+	main_handle.read(disCodeBuffer,disMaxCodeLen);
 	DisasmPrepareMode = true;
 	dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_SIZEONLY);
 	if(cfpos + dret.codelen != amocpos && cfpos && amocpos) keycode = KE_SUPERKEY;
@@ -288,8 +293,8 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 	    if(cfpos < flen) {
 		len = cfpos + disMaxCodeLen < flen ? disMaxCodeLen : (int)(flen - cfpos);
 		::memset(disCodeBuffer,0,disMaxCodeLen);
-		beye_context().bm_file().seek(cfpos,binary_stream::Seek_Set);
-		beye_context().bm_file().read((any_t*)disCodeBuffer,len);
+		main_handle.seek(cfpos,binary_stream::Seek_Set);
+		main_handle.read((any_t*)disCodeBuffer,len);
 		dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
 		if(i == 0) CurrStrLen = dret.codelen;
 		CurrStrLenBuff[i] = dret.codelen;
@@ -379,7 +384,7 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 		    main_wnd.clreol();
 		}
 		cfpos += dret.codelen;
-		beye_context().bm_file().seek(cfpos,binary_stream::Seek_Set);
+		main_handle.seek(cfpos,binary_stream::Seek_Set);
 	    } else {
 		main_wnd.direct_write(1,i + 1,outstr,width);
 		CurrStrLenBuff[i] = 0;
@@ -410,7 +415,7 @@ void DisMode::misckey_action() /* disEdit */
     unsigned len_64;
     TWindow * ewnd;
     len_64=HA_LEN();
-    if(!beye_context().bm_file().flength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
+    if(!main_handle.flength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
     ewnd = new(zeromem) TWindow(len_64+1,2,disMaxCodeLen*2+1,beye_context().tconsole().vio_height()-2,TWindow::Flag_Has_Cursor);
     ewnd->set_color(browser_cset.edit.main); ewnd->clear();
     edit_x = edit_y = 0;
@@ -567,13 +572,13 @@ int DisMode::full_asm_edit(TWindow * ewnd)
     bool redraw = false;
     char outstr[__TVIO_MAXSCREENWIDTH],owork[__TVIO_MAXSCREENWIDTH];
 
-    flen = beye_context().bm_file().flength();
-    edit_cp = beye_context().bm_file().tell();
+    flen = main_handle.flength();
+    edit_cp = main_handle.tell();
     start = 0;
 
     rlen = (__filesize_t)edit_cp + max_buff_size < flen ? max_buff_size : (unsigned)(flen - edit_cp);
-    beye_context().bm_file().seek(edit_cp,binary_stream::Seek_Set);
-    beye_context().bm_file().read((any_t*)EditorMem.buff,rlen);
+    main_handle.seek(edit_cp,binary_stream::Seek_Set);
+    main_handle.read((any_t*)EditorMem.buff,rlen);
     ::memcpy(EditorMem.save,EditorMem.buff,max_buff_size);
     ::memset(EditorMem.alen,TWC_DEF_FILLER,height);
 
@@ -627,13 +632,13 @@ int DisMode::full_asm_edit(TWindow * ewnd)
 		{
 		    binary_stream* bHandle;
 		    std::string fname;
-		    fname = beye_context().bm_file().filename();
+		    fname = main_handle.filename();
 		    if((bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE)) != &bNull) {
 			bHandle->seek(edit_cp,binary_stream::Seek_Set);
 			if(!bHandle->write((any_t*)EditorMem.buff,rlen))
 			    beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 			delete bHandle;
-			beye_context().bm_file().reread();
+			main_handle.reread();
 		    } else beye_context().errnoMessageBox("Can't reopen","",errno);
 		}
 	    case KE_F(10):
@@ -681,7 +686,7 @@ void DisMode::read_ini(Ini_Profile& ini)
 	HiLight = (int)strtoul(tmps.c_str(),NULL,10);
 	if(HiLight > 2) HiLight = 2;
 	if(activeDisasm) delete activeDisasm;
-	activeDisasm = list[DefDisasmSel]->query_interface(*this);
+	activeDisasm = list[DefDisasmSel]->query_interface(second_handle,*this);
 	accept_actions();
 	activeDisasm->read_ini(ini);
     }
@@ -722,8 +727,8 @@ __filesize_t DisMode::search_engine(TWindow *pwnd, __filesize_t start,
     char *disSearchBuff;
     unsigned len, lw, proc, pproc, pmult;
     int cache[UCHAR_MAX+1];
-    cfpos = sfpos = beye_context().bm_file().tell();
-    flen = beye_context().bm_file().flength();
+    cfpos = sfpos = main_handle.tell();
+    flen = main_handle.flength();
     retval = FILESIZE_MAX;
     disSearchBuff  = new char [1002+Comm_Size];
     DumpMode = true;
@@ -755,8 +760,8 @@ __filesize_t DisMode::search_engine(TWindow *pwnd, __filesize_t start,
 		len = cfpos + disMaxCodeLen < flen ? disMaxCodeLen : (int)(flen - cfpos);
 		::memset(disCodeBuffer,0,disMaxCodeLen);
 		dfpos = cfpos;
-		beye_context().bm_file().seek(cfpos,binary_stream::Seek_Set);
-		beye_context().bm_file().read((any_t*)disCodeBuffer,len);
+		main_handle.seek(cfpos,binary_stream::Seek_Set);
+		main_handle.read((any_t*)disCodeBuffer,len);
 		dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
 		cfpos -= lw;
 	    } else break;
@@ -764,8 +769,8 @@ __filesize_t DisMode::search_engine(TWindow *pwnd, __filesize_t start,
 	    len = cfpos + disMaxCodeLen < flen ? disMaxCodeLen : (int)(flen - cfpos);
 	    ::memset(disCodeBuffer,0,disMaxCodeLen);
 	    dfpos = cfpos;
-	    beye_context().bm_file().seek(cfpos,binary_stream::Seek_Set);
-	    beye_context().bm_file().read((any_t*)disCodeBuffer,len);
+	    main_handle.seek(cfpos,binary_stream::Seek_Set);
+	    main_handle.read((any_t*)disCodeBuffer,len);
 	    dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
 	    cfpos += dret.codelen;
 	    if(cfpos >= flen) break;
@@ -781,7 +786,7 @@ __filesize_t DisMode::search_engine(TWindow *pwnd, __filesize_t start,
     }
     delete disSearchBuff;
     bye:
-    beye_context().bm_file().seek(sfpos, binary_stream::Seek_Set);
+    main_handle.seek(sfpos, binary_stream::Seek_Set);
     DumpMode = false;
     return retval;
 }
@@ -825,16 +830,16 @@ void  __FASTCALL__ disSetModifier(char *str,const char *modf)
   if(i+mlen > len) { str[i+mlen] = TWC_DEF_FILLER; str[i+mlen+1] = 0; }
 }
 
-bool DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,any_t*defval,e_disarg type)
+bool DisMode::append_digits(binary_stream& handle,char *str,__filesize_t ulShift,int flg,char codelen,any_t*defval,e_disarg type)
 {
  bool app;
  char comments[Comm_Size];
  const char *appstr;
  unsigned dig_type;
  __filesize_t fpos;
- fpos = beye_context().sc_bm_file().tell();
+ fpos = handle.tell();
 #ifndef NDEBUG
-  if(ulShift >= beye_context().bm_file().flength()-codelen)
+  if(ulShift >= main_handle.flength()-codelen)
   {
      char sout[75];
      static bool displayed = false;
@@ -912,8 +917,8 @@ bool DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,
 	  strcat(comments,"->\"");
 	  for(_index = 3;_index < sizeof(comments)-5;_index++)
 	  {
-	    beye_context().sc_bm_file().seek(pa+_index-3,binary_stream::Seek_Set);
-	    rch = beye_context().sc_bm_file().read(type_byte);
+	    handle.seek(pa+_index-3,binary_stream::Seek_Set);
+	    rch = handle.read(type_byte);
 	    if(isprint(rch)) comments[_index] = rch;
 	    else break;
 	  }
@@ -1052,11 +1057,11 @@ bool DisMode::append_digits(char *str,__filesize_t ulShift,int flg,char codelen,
      strcpy(dis_comments,comments);
    }
   }
-  beye_context().sc_bm_file().seek(fpos,binary_stream::Seek_Set);
+  handle.seek(fpos,binary_stream::Seek_Set);
   return app;
 }
 
-bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__filesize_t r_sh,e_disaddr type,unsigned seg,char codelen)
+bool DisMode::append_faddr(binary_stream& handle,char * str,__fileoff_t ulShift,__fileoff_t distin,__filesize_t r_sh,e_disaddr type,unsigned seg,char codelen)
 {
  e_ref needref;
  __filesize_t fpos;
@@ -1064,7 +1069,7 @@ bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__f
  DisasmRet dret;
  bool appended = false;
  int flg;
- fpos = beye_context().sc_bm_file().tell();
+ fpos = handle.tell();
  memset(&dret,0,sizeof(DisasmRet));
  /* Prepare insn type */
  if(disNeedRef > Ref_None)
@@ -1072,12 +1077,12 @@ bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__f
    /* Forward prediction: ulShift = offset of binded field but r_sh is
       pointer where this field is referenced. */
    memset(disCodeBufPredict,0,disMaxCodeLen*PREDICT_DEPTH);
-   beye_context().sc_bm_file().seek(r_sh, binary_stream::Seek_Set);
-   beye_context().sc_bm_file().read(disCodeBufPredict,disMaxCodeLen*PREDICT_DEPTH);
+   handle.seek(r_sh, binary_stream::Seek_Set);
+   handle.read(disCodeBufPredict,disMaxCodeLen*PREDICT_DEPTH);
    dret = disassembler(r_sh,(MBuffer)disCodeBufPredict,__DISF_GETTYPE);
  }
 #ifndef NDEBUG
-  if(ulShift >= (__fileoff_t)beye_context().bm_file().flength()-codelen)
+  if(ulShift >= (__fileoff_t)main_handle.flength()-codelen)
   {
      char sout[75];
      static bool displayed = false;
@@ -1136,11 +1141,11 @@ bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__f
 	__filesize_t _defval,_fpos,pa,__tmp;
 	unsigned long app;
 		try_rip:
-		_fpos = beye_context().bm_file().tell();
-		beye_context().bm_file().seek(r_sh+dret.field,binary_stream::Seek_Set);
-		_defval = dret.codelen==8 ? beye_context().bm_file().read(type_qword):
-					    beye_context().bm_file().read(type_dword);
-		beye_context().bm_file().seek(_fpos,binary_stream::Seek_Set);
+		_fpos = main_handle.tell();
+		main_handle.seek(r_sh+dret.field,binary_stream::Seek_Set);
+		_defval = dret.codelen==8 ? main_handle.read(type_qword):
+					    main_handle.read(type_dword);
+		main_handle.seek(_fpos,binary_stream::Seek_Set);
 	__tmp=beye_context().bin_format().pa2va(r_sh+dret.field);
 	_defval += (__tmp!=Plugin::Bad_Address ?
 		    __tmp :
@@ -1177,7 +1182,7 @@ bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__f
    {
      needref = disNeedRef;
      disNeedRef = Ref_None;
-     if(r_sh <= beye_context().bm_file().flength())
+     if(r_sh <= main_handle.flength())
      {
        const char * cptr;
        char lbuf[20];
@@ -1229,7 +1234,7 @@ bool DisMode::append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__f
    }
    if(appended && !DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
  }
- beye_context().sc_bm_file().seek(fpos,binary_stream::Seek_Set);
+ handle.seek(fpos,binary_stream::Seek_Set);
  return appended;
 }
 
@@ -1237,7 +1242,7 @@ bool hexAddressResolution(unsigned& har);
 bool DisMode::action_F6() { return hexAddressResolution(hexAddressResolv); }
 unsigned DisMode::get_max_line_length() const { return get_max_symbol_size(); }
 
-static Plugin* query_interface(TWindow& main_wnd,CodeGuider& code_guider) { return new(zeromem) DisMode(main_wnd,code_guider); }
+static Plugin* query_interface(binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider) { return new(zeromem) DisMode(h,main_wnd,code_guider); }
 
 extern const Plugin_Info disMode = {
     "~Disassembler",	/**< plugin name */

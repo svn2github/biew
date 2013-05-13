@@ -56,7 +56,7 @@ namespace	usr {
 
     class Java_Disassembler : public Disassembler {
 	public:
-	    Java_Disassembler(DisMode& parent);
+	    Java_Disassembler(binary_stream& h,DisMode& parent);
 	    virtual ~Java_Disassembler();
 	
 	    virtual const char*	prompt(unsigned idx) const;
@@ -74,6 +74,7 @@ namespace	usr {
 	    virtual void	save_ini(Ini_Profile&);
 	private:
 	    DisMode&		parent;
+	    binary_stream&	main_handle;
 	    char*		outstr;
 	    unsigned		vartail;
 	    __filesize_t	vartail_base, vartail_start, vartail_flags, vartail_idx;
@@ -404,7 +405,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 			lval=JVM_DWORD((uint32_t*)buffer, 1);
 			newpos=vartail_base+lval;
 			if(lval!=newpos)
-				parent.append_faddr(outstr,ulShift,lval,
+				parent.append_faddr(main_handle,outstr,ulShift,lval,
 						newpos,DisMode::Near32,0,4);
 				else
 				    strcat(outstr,Get8Digit(newpos));
@@ -418,7 +419,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 			lval=JVM_DWORD((uint32_t*)(&buffer[4]), 1);
 			newpos=vartail_base+lval;
 			if(lval!=newpos)
-				parent.append_faddr(outstr,ulShift,lval,
+				parent.append_faddr(main_handle,outstr,ulShift,lval,
 						newpos,DisMode::Near32,0,4);
 				else
 				    strcat(outstr,Get8Digit(newpos));
@@ -436,7 +437,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 					    &func_class,ulShift,true);
     next_pa = beye_context().bin_format().get_public_symbol(prev_func,sizeof(prev_func),
 					    &func_class,ulShift,false);
-    if(next_pa==Plugin::Bad_Address) next_pa=beye_context().sc_bm_file().flength();
+    if(next_pa==Plugin::Bad_Address) next_pa=main_handle.flength();
     if(prev_pa==Plugin::Bad_Address) prev_pa=0;
     if(!(prev_pa%4)) npadds = (ulShift+1-prev_pa)%4; /* align only if method is aligned */
     else npadds=0;
@@ -494,7 +495,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 			strcat(outstr,",default:");
 			newpos=ulShift+(__fileoff_t)defval;
 			if(defval)
-				parent.append_faddr(outstr,ulShift+idx+1+npadds,defval,
+				parent.append_faddr(main_handle,outstr,ulShift+idx+1+npadds,defval,
 						newpos,DisMode::Near32,0,4);
 			else
 				strcat(outstr,Get8Digit(newpos));
@@ -512,7 +513,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 			strcat(outstr," default:");
 			newpos=ulShift+(__fileoff_t)defval;
 			if(defval)
-				parent.append_faddr(outstr,ulShift+idx+1+npadds,defval,
+				parent.append_faddr(main_handle,outstr,ulShift+idx+1+npadds,defval,
 						newpos,DisMode::Near32,0,4);
 			else
 				strcat(outstr,Get8Digit(newpos));
@@ -553,7 +554,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		    if((jflags & JVM_CODEREF)==JVM_CODEREF && sval)
 		    {
 			newpos = ulShift + (signed short)sval;
-			parent.append_faddr(outstr,ulShift + 1,sval,
+			parent.append_faddr(main_handle,outstr,ulShift + 1,sval,
 					newpos,DisMode::Near16,0,2);
 		    }
 		    else
@@ -566,7 +567,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		    }
 		    else
 		    if(jflags & JVM_OBJREFMASK)
-		    parent.append_digits(outstr,ulShift+idx,
+		    parent.append_digits(main_handle,outstr,ulShift+idx,
 			APREF_USE_TYPE,2,&sval,DisMode::Arg_Word);
 		    else strcat(outstr,Get4Digit(sval));
 		    break;
@@ -580,7 +581,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		    if((jflags & JVM_CODEREF)==JVM_CODEREF && lval)
 		    {
 			newpos = ulShift + (__fileoff_t)lval;
-			parent.append_faddr(outstr,ulShift + 1,lval,
+			parent.append_faddr(main_handle,outstr,ulShift + 1,lval,
 					newpos,DisMode::Near32,0,4);
 		    }
 		    else
@@ -588,7 +589,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		    {
 			unsigned short sval;
 			sval=JVM_WORD((uint16_t*)(&buffer[idx]),1);
-			parent.append_digits(outstr,ulShift,
+			parent.append_digits(main_handle,outstr,ulShift,
 				    APREF_USE_TYPE,2,&sval,DisMode::Arg_Word);
 			strcat(outstr,",");
 			if((jflags & JVM_CONST1)==JVM_CONST1) strcat(outstr,Get2Digit(buffer[idx+2]));
@@ -600,13 +601,13 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		    }
 		    else
 		    if(jflags & JVM_OBJREFMASK)
-		    parent.append_digits(outstr,ulShift+idx,
+		    parent.append_digits(main_handle,outstr,ulShift+idx,
 			APREF_USE_TYPE,4,&lval,DisMode::Arg_DWord);
 		    else strcat(outstr,Get8Digit(lval));
 		    break;
 		}
 		case 8:
-		    parent.append_digits(outstr,ulShift+idx,
+		    parent.append_digits(main_handle,outstr,ulShift+idx,
 			APREF_USE_TYPE,8,&buffer[idx],DisMode::Arg_QWord);
 		    break;
 	    }
@@ -640,9 +641,10 @@ char Java_Disassembler::clone_short_name( unsigned long clone )
   return ' ';
 }
 
-Java_Disassembler::Java_Disassembler( DisMode& _parent )
-		:Disassembler(_parent)
+Java_Disassembler::Java_Disassembler(binary_stream& h,DisMode& _parent )
+		:Disassembler(h,_parent)
 		,parent(_parent)
+		,main_handle(h)
 {
   outstr = new char [1000];
   if(!outstr)
@@ -668,7 +670,7 @@ const char* Java_Disassembler::prompt(unsigned idx) const {
     return "";
 }
 
-static Disassembler* query_interface(DisMode& _parent) { return new(zeromem) Java_Disassembler(_parent); }
+static Disassembler* query_interface(binary_stream& h,DisMode& _parent) { return new(zeromem) Java_Disassembler(h,_parent); }
 extern const Disassembler_Info java_disassembler_info = {
     DISASM_JAVA,
     "~Java",	/**< plugin name */

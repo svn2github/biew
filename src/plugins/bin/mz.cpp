@@ -22,7 +22,6 @@ using namespace	usr;
 #include <stdio.h>
 #include <stddef.h>
 
-#include "beye.h"
 #include "bconsole.h"
 #include "beyehelp.h"
 #include "bin_util.h"
@@ -33,6 +32,7 @@ using namespace	usr;
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/mz.h"
+#include "beye.h"
 
 namespace	usr {
 static const char* txt[]={"MZHelp","","","","","","","","",""};
@@ -115,10 +115,10 @@ const char* MZ_Parser::QueryAddInfo()
    {
      const char *ret;
      __filesize_t fpos;
-     fpos = beye_context().sc_bm_file().tell();
-     beye_context().sc_bm_file().seek(0x1C,binary_stream::Seek_Set);
-     beye_context().sc_bm_file().read(memmap,1000);
-     beye_context().sc_bm_file().seek(fpos,binary_stream::Seek_Set);
+     fpos = _main_handle.tell();
+     _main_handle.seek(0x1C,binary_stream::Seek_Set);
+     _main_handle.read(memmap,1000);
+     _main_handle.seek(fpos,binary_stream::Seek_Set);
      ret = QueryAddInfo(memmap);
      delete memmap;
      return ret;
@@ -133,9 +133,9 @@ __filesize_t MZ_Parser::show_header()
  __filesize_t newcpos,fpos;
  unsigned long FPageCnt;
  const char * addinfo;
- fpos = beye_context().bm_file().tell();
+ fpos = beye_context().tell();
  keycode = 16;
- if(IsNewExe()) keycode++;
+ if(is_new_exe(_main_handle)) keycode++;
  addinfo = QueryAddInfo();
  if(addinfo) keycode++;
  hwnd = CrtDlgWndnls(" Old Exe Header ",43,keycode-1);
@@ -174,20 +174,17 @@ __filesize_t MZ_Parser::show_header()
  hwnd->clreol();
  hwnd->set_color(dialog_cset.main);
  hwnd->printf("\nImage offset         = %08lXH",(long)HeadSize);
- if(beye_context().headshift)
- {
+ if(_headshift) {
    hwnd->set_color(dialog_cset.altinfo);
-   hwnd->printf("\nNew EXE header shift = %08lXH",(long)beye_context().headshift);
+   hwnd->printf("\nNew EXE header shift = %08lXH",(long)_headshift);
    hwnd->clreol();
  }
- if(addinfo)
- {
+ if(addinfo) {
    hwnd->set_color(dialog_cset.extrainfo);
    hwnd->printf("\n%s",addinfo);
    hwnd->clreol();
  }
- while(1)
- {
+ while(1) {
    keycode = GetEvent(drawEmptyPrompt,NULL,hwnd);
    if(keycode == KE_F(5) || keycode == KE_ENTER) { fpos = newcpos; break; }
    else
@@ -214,7 +211,7 @@ void MZ_Parser::BuildMZChain()
   w->goto_xy(1,1);
   w->puts(BUILD_REFS);
   CurrMZCount = 0;
-  fpos = beye_context().sc_bm_file().tell();
+  fpos = _main_handle.tell();
   for(i = 0;i < mz.mzRelocationCount;i++)
   {
     unsigned off,seg,j;
@@ -225,14 +222,14 @@ void MZ_Parser::BuildMZChain()
     if(!tptr) break;
     CurrMZChain = (long*)tptr;
     j = mz.mzTableOffset + i*4;
-    beye_context().sc_bm_file().seek(j,binary_stream::Seek_Set);
-    off = beye_context().sc_bm_file().read(type_word);
-    seg = beye_context().sc_bm_file().read(type_word);
+    _main_handle.seek(j,binary_stream::Seek_Set);
+    off = _main_handle.read(type_word);
+    seg = _main_handle.read(type_word);
     ptr = (((long)seg) << 4) + off + (((long)mz.mzHeaderSize) << 4);
     CurrMZChain[CurrMZCount++] = ptr;
   }
   HQSort(CurrMZChain,CurrMZCount,sizeof(any_t*),compare_ptr);
-  beye_context().sc_bm_file().seek(fpos,binary_stream::Seek_Set);
+  _main_handle.seek(fpos,binary_stream::Seek_Set);
   delete w;
 }
 
@@ -274,8 +271,8 @@ bool MZ_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int fl
   if(isMZReferenced(ulShift,codelen))
   {
      unsigned wrd;
-     beye_context().sc_bm_file().seek(ulShift,binary_stream::Seek_Set);
-     wrd = beye_context().sc_bm_file().read(type_word);
+     _main_handle.seek(ulShift,binary_stream::Seek_Set);
+     wrd = _main_handle.read(type_word);
      strcat(str,Get4Digit(wrd));
      strcat(str,"+PID");
      ret = true;
@@ -292,19 +289,20 @@ bool MZ_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int fl
 }
 
 /* Special case: this module must not use init and destroy */
-MZ_Parser::MZ_Parser(CodeGuider& __code_guider)
-	    :Binary_Parser(__code_guider)
+MZ_Parser::MZ_Parser(binary_stream& h,CodeGuider& __code_guider)
+	    :Binary_Parser(h,__code_guider)
+	    ,_main_handle(h)
 	    ,_code_guider(__code_guider)
 {
     unsigned char id[2];
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(id,sizeof(id));
+    _main_handle.seek(0,binary_stream::Seek_Set);
+    _main_handle.read(id,sizeof(id));
     if((id[0] == 'M' && id[1] == 'Z') ||
-     (id[0] == 'Z' && id[1] == 'M'))
-    {
-	beye_context().sc_bm_file().seek(2,binary_stream::Seek_Set);
-	beye_context().sc_bm_file().read((any_t*)&mz,sizeof(MZHEADER));
+     (id[0] == 'Z' && id[1] == 'M')) {
+	_main_handle.seek(2,binary_stream::Seek_Set);
+	_main_handle.read((any_t*)&mz,sizeof(MZHEADER));
 	HeadSize = ((unsigned long)mz.mzHeaderSize) << 4;
+	_headshift = is_new_exe(h);
     }
 }
 MZ_Parser::~MZ_Parser() {}
@@ -332,19 +330,31 @@ bool MZ_Parser::address_resolving(char *addr,__filesize_t cfpos)
 __filesize_t MZ_Parser::action_F1()
 {
   hlpDisplay(10013);
-  return beye_context().bm_file().tell();
+  return beye_context().tell();
 }
 
-static bool probe() {
+__filesize_t MZ_Parser::is_new_exe(binary_stream& main_handle)
+{
+    __filesize_t ret;
+    char id[2];
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(id,sizeof(id));
+    main_handle.seek(0x3C,binary_stream::Seek_Set);
+    ret=main_handle.read(type_dword);
+    if(!( id[0] == 'M' && id[1] == 'Z' && ret > 0x02L)) ret = 0;
+    return (__filesize_t)ret;
+}
+
+static bool probe(binary_stream& _main_handle) {
     unsigned char id[2];
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(id,sizeof(id));
+    _main_handle.seek(0,binary_stream::Seek_Set);
+    _main_handle.read(id,sizeof(id));
     if((id[0] == 'M' && id[1] == 'Z') ||
 	(id[0] == 'Z' && id[1] == 'M')) return true;
     return false;
 }
 
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) MZ_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) MZ_Parser(h,_parent); }
 extern const Binary_Parser_Info mz_info = {
     "MZ (Old DOS-exe)",	/**< plugin name */
     probe,

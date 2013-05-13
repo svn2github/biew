@@ -105,7 +105,7 @@ static bool __FASTCALL__ udnAddItem() {
     __filesize_t off;
     udn item,*prev;
     char ud_name[256],prompt[256];
-    off = beye_context().bm_file().tell();
+    off = beye_context().tell();
     sprintf(prompt," Name for %08X offset: ",off);
     prev=NULL;
     ud_name[0]='\0';

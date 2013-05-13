@@ -94,7 +94,7 @@ bool BeyeContext::select_mode()
     if(retval != -1) {
 	defMainModeSel = retval;
 	delete activeMode;
-	activeMode = modes[defMainModeSel]->query_interface(*MainWnd,*code_guider);
+	activeMode = modes[defMainModeSel]->query_interface(bm_file_handle,*MainWnd,*code_guider);
 	return true;
     }
     return false;
@@ -102,7 +102,7 @@ bool BeyeContext::select_mode()
 
 void BeyeContext::init_modes( Ini_Profile& ini )
 {
-    if(!activeMode) activeMode = modes[defMainModeSel]->query_interface(*MainWnd,*code_guider);
+    if(!activeMode) activeMode = modes[defMainModeSel]->query_interface(bm_file_handle,*MainWnd,*code_guider);
     activeMode->read_ini(ini);
 }
 
@@ -112,7 +112,7 @@ void BeyeContext::quick_select_mode()
     if(defMainModeSel < nModes - 1) defMainModeSel++;
     else                            defMainModeSel = 0;
     delete activeMode;
-    activeMode = modes[defMainModeSel]->query_interface(*MainWnd,*code_guider);
+    activeMode = modes[defMainModeSel]->query_interface(bm_file_handle,*MainWnd,*code_guider);
 }
 
 void BeyeContext::make_shortname()
@@ -131,24 +131,12 @@ void BeyeContext::make_shortname()
   _system->nls_cmdline2oem((unsigned char *)_shortname,strlen(_shortname));
 }
 
-__filesize_t IsNewExe()
-{
-    __filesize_t ret;
-    char id[2];
-    beye_context().sc_bm_file().seek(0,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(id,sizeof(id));
-    beye_context().sc_bm_file().seek(0x3C,binary_stream::Seek_Set);
-    ret=beye_context().sc_bm_file().read(type_dword);
-    if(!( id[0] == 'M' && id[1] == 'Z' && ret > 0x02L)) ret = 0;
-    return (__filesize_t)ret;
-}
-
 void BeyeContext::auto_detect_mode()
 {
     size_t i,n = modes.size();
     Plugin* mode;
     for(i = 0;i < n;i++) {
-	mode = modes[i]->query_interface(*MainWnd,*code_guider);
+	mode = modes[i]->query_interface(bm_file_handle,*MainWnd,*code_guider);
 	if(mode->detect()) {
 	    defMainModeSel = i;
 	    break;
@@ -156,7 +144,7 @@ void BeyeContext::auto_detect_mode()
 	delete mode; mode = NULL;
     }
     if(mode) delete mode;
-    activeMode = modes[defMainModeSel]->query_interface(*MainWnd,*code_guider);
+    activeMode = modes[defMainModeSel]->query_interface(bm_file_handle,*MainWnd,*code_guider);
     beye_context().bm_file().seek(0,binary_stream::Seek_Set);
 }
 
@@ -242,9 +230,9 @@ void BeyeContext::PaintTitle() const
  TitleWnd->freeze();
  TitleWnd->goto_xy(1,1);
  TitleWnd->clreol();
- TitleWnd->printf("File : %s",beye_context().short_name());
+ TitleWnd->printf("File : %s",short_name());
  TitleWnd->goto_xy(TitleWnd->client_width()-43,1);
- TitleWnd->printf("Size : %8llu bytes",beye_context().bm_file().flength());
+ TitleWnd->printf("Size : %8llu bytes",flength());
  TitleWnd->refresh();
 }
 
@@ -482,14 +470,14 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
    retval = EXIT_FAILURE;
    goto Bye;
  }
- BeyeCtx->bin_format().detect_format();
+ BeyeCtx->bin_format().detect_format(BeyeCtx->sc_bm_file());
  BeyeCtx->init_modes(ini);
  delete &ini;
  BeyeCtx->PaintTitle();
- if(!BeyeCtx->is_valid_ini_args() || BeyeCtx->LastOffset > beye_context().bm_file().flength()) BeyeCtx->LastOffset = 0;
+ if(!BeyeCtx->is_valid_ini_args() || BeyeCtx->LastOffset > BeyeCtx->flength()) BeyeCtx->LastOffset = 0;
  BeyeCtx->main_wnd().show();
  BeyeCtx->main_loop();
- BeyeCtx->LastOffset = beye_context().bm_file().tell();
+ BeyeCtx->LastOffset = BeyeCtx->tell();
  BeyeCtx->save_ini_info();
  if(BeyeCtx->iniPreserveTime && ftim_ok) binary_stream::set_ftime(BeyeCtx->ArgVector1,ftim);
  Bye:
@@ -531,8 +519,8 @@ bool BeyeContext::new_source()
 	    delete activeMode;
 	    make_shortname();
 	    _bin_format = new(zeromem) Bin_Format(*code_guider);
-	    _bin_format->detect_format();
-	    activeMode=modes[defMainModeSel]->query_interface(*MainWnd,*code_guider);
+	    _bin_format->detect_format(sc_bm_file_handle);
+	    activeMode=modes[defMainModeSel]->query_interface(bm_file_handle,*MainWnd,*code_guider);
 	    ret = true;
 	} else {
 	    if(BMOpen(ArgVector1) != true) ::exit(EXIT_FAILURE);
@@ -540,8 +528,8 @@ bool BeyeContext::new_source()
 	    delete activeMode;
 	    make_shortname();
 	    _bin_format = new(zeromem) Bin_Format(*code_guider);
-	    _bin_format->detect_format();
-	    activeMode=modes[defMainModeSel]->query_interface(*MainWnd,*code_guider);
+	    _bin_format->detect_format(sc_bm_file_handle);
+	    activeMode=modes[defMainModeSel]->query_interface(bm_file_handle,*MainWnd,*code_guider);
 	    ret = false;
 	}
     }
@@ -576,7 +564,6 @@ BeyeContext::BeyeContext(const std::vector<std::string>& _argv, const std::map<s
 	    ,fioUseMMF(false)
 	    ,iniPreserveTime(false)
 	    ,iniUseExtProgs(false)
-	    ,headshift(0L)
 	    ,LastOffset(0L)
 	    ,argv(_argv)
 	    ,envm(_envm)
@@ -686,6 +673,7 @@ void BeyeContext::BMClose()
 }
 
 __filesize_t BeyeContext::flength() const { return bm_file_handle.flength(); }
+__filesize_t BeyeContext::tell() const { return bm_file_handle.tell(); }
 
 static bool test_antiviral_protection(int* verbose)
 {

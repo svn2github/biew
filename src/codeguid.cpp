@@ -168,7 +168,7 @@ void CodeGuider::add_go_address(const DisMode& parent,char *str,__filesize_t add
 
 void CodeGuider::add_back_address()
 {
-    BackAddr.push_back(beye_context().bm_file().tell());
+    BackAddr.push_back(beye_context().tell());
 }
 
 __filesize_t CodeGuider::get_go_address(unsigned keycode)
@@ -179,7 +179,7 @@ __filesize_t CodeGuider::get_go_address(unsigned keycode)
 	    ret = BackAddr.back();
 	    BackAddr.pop_back();
 	}
-	else ret=beye_context().bm_file().tell();
+	else ret=beye_context().tell();
     } else {
 	unsigned ptr;
 	keycode &= 0x00FF;
@@ -187,7 +187,7 @@ __filesize_t CodeGuider::get_go_address(unsigned keycode)
 	if(ptr < GoAddr.size()) {
 	    add_back_address();
 	    ret = GoAddr[ptr].first;
-	} else ret = beye_context().bm_file().tell();
+	} else ret = beye_context().tell();
     }
     return ret;
 }

@@ -85,6 +85,7 @@ namespace	usr {
 	    static binary_stream* beyeOpenRO(const std::string& fname,unsigned cache_size);
 	    static binary_stream* beyeOpenRW(const std::string& fname,unsigned cache_size);
 	    __filesize_t	flength() const;
+	    __filesize_t	tell() const;
 	    bool		is_file64() const { return flength() > std::numeric_limits<uint32_t>::max(); }
 
 	    void		TMessageBox(const std::string& text,const std::string& title) const;
@@ -110,7 +111,6 @@ namespace	usr {
 	    bool fioUseMMF;
 	    bool iniPreserveTime;
 	    bool iniUseExtProgs;
-	    __filesize_t headshift;
 	    __filesize_t LastOffset;
 	private:
 	    void		auto_detect_mode();

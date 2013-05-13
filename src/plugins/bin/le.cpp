@@ -23,7 +23,6 @@ using namespace	usr;
 #include <string.h>
 #include <stdarg.h>
 
-#include "beye.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/lx_le.h"
 #include "bin_util.h"
@@ -32,8 +31,9 @@ using namespace	usr;
 #include "beyeutil.h"
 #include "bconsole.h"
 #include "reg_form.h"
-#include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
+#include "plugins/binary_parser.h"
+#include "beye.h"
 
 namespace	usr {
 static const char* txt[]={ "LEHelp", "Import", "ResNam", "NRsNam", "ImpNam", "Entry ", "", "LEHead", "MapTbl", "Object" };
@@ -42,7 +42,7 @@ const char* LE_Parser::prompt(unsigned idx) const { return txt[idx]; }
 bool LE_Parser::__ReadMapTblLE(binary_stream& handle,memArray * obj,unsigned n)
 {
  size_t i;
-  handle.seek(lxe.le.leObjectPageMapTableOffset + beye_context().headshift,binary_stream::Seek_Set);
+  handle.seek(lxe.le.leObjectPageMapTableOffset + headshift(),binary_stream::Seek_Set);
   for(i = 0;i < n;i++)
   {
     LE_PAGE lep;
@@ -75,7 +75,7 @@ __filesize_t LE_Parser::CalcPageEntry(unsigned long pageidx) const
   LE_PAGE mt;
   if(!pageidx) return -1;
   handle = lx_cache;
-  handle->seek(lxe.le.leObjectPageMapTableOffset + beye_context().headshift,binary_stream::Seek_Set);
+  handle->seek(lxe.le.leObjectPageMapTableOffset + headshift(),binary_stream::Seek_Set);
   found = false;
   for(i = 0;i < lxe.le.lePageCount;i++)
   {
@@ -88,7 +88,7 @@ __filesize_t LE_Parser::CalcPageEntry(unsigned long pageidx) const
     }
   }
   if(found) return __calcPageEntryLE((LE_PAGE*)&mt,pageidx - 1);
-  else      return beye_context().bm_file().tell();
+  else      return beye_context().tell();
 }
 
 __filesize_t LE_Parser::CalcEntryPoint(unsigned long objnum,__filesize_t _offset) const
@@ -100,12 +100,12 @@ __filesize_t LE_Parser::CalcEntryPoint(unsigned long objnum,__filesize_t _offset
   LE_PAGE mt;
   if(!objnum) return -1;
   handle = lx_cache;
-  handle->seek(lxe.le.leObjectTableOffset + beye_context().headshift,binary_stream::Seek_Set);
+  handle->seek(lxe.le.leObjectTableOffset + headshift(),binary_stream::Seek_Set);
   handle->seek(sizeof(LX_OBJECT)*(objnum - 1),binary_stream::Seek_Cur);
   handle->read((any_t*)&lo,sizeof(LX_OBJECT));
 /*  if((lo.o32_flags & 0x00002000L) == 0x00002000L) USE16 = 0;
   else                                            USE16 = 0xFF; */
-  pageoff = lxe.le.leObjectPageMapTableOffset + beye_context().headshift;
+  pageoff = lxe.le.leObjectPageMapTableOffset + headshift();
   start = 0;
   ret = -1;
   for(i = 0;i < lo.o32_mapsize;i++)
@@ -125,7 +125,7 @@ __filesize_t LE_Parser::CalcEntryPoint(unsigned long objnum,__filesize_t _offset
 	if(mt.number == pidx) { found = true; break; }
       }
       if(found) ret = __calcPageEntryLE((LE_PAGE*)&mt,pidx - 1) + _offset - start;
-      else      ret = beye_context().bm_file().tell();
+      else      ret = beye_context().tell();
       break;
     }
     if(is_eof) break;
@@ -137,7 +137,7 @@ __filesize_t LE_Parser::CalcEntryPoint(unsigned long objnum,__filesize_t _offset
 __filesize_t LE_Parser::CalcEntryLE(const LX_ENTRY *lxent)
 {
   __filesize_t ret;
-  ret = beye_context().bm_file().tell();
+  ret = beye_context().tell();
       switch(lxent->b32_type)
       {
 	case 1: ret = CalcEntryPoint(lxent->b32_obj,lxent->entry.e32_variant.e32_offset.offset16);
@@ -163,9 +163,9 @@ __filesize_t LE_Parser::CalcEntryBungleLE(unsigned ordinal,bool dispmsg)
   uint_fast16_t numobj = 0;
   LX_ENTRY lxent;
   __filesize_t ret;
-  ret = beye_context().bm_file().tell();
+  ret = beye_context().tell();
   handle = lx_cache;
-  handle->seek(lxe.le.leEntryTableOffset + beye_context().headshift,binary_stream::Seek_Set);
+  handle->seek(lxe.le.leEntryTableOffset + headshift(),binary_stream::Seek_Set);
   i = 0;
   found = false;
   while(1)
@@ -212,7 +212,7 @@ __filesize_t LE_Parser::CalcEntryBungleLE(unsigned ordinal,bool dispmsg)
 
 __filesize_t LE_Parser::action_F10()
 {
-    __filesize_t fpos = beye_context().bm_file().tell();
+    __filesize_t fpos = beye_context().tell();
     int ret;
     std::string title = " Map of pages ";
     ssize_t nnames = (unsigned)lxe.le.lePageCount;
@@ -223,7 +223,7 @@ __filesize_t LE_Parser::action_F10()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = __ReadMapTblLE(beye_context().sc_bm_file(),obj,nnames);
+    bval = __ReadMapTblLE(main_handle(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -237,11 +237,11 @@ __filesize_t LE_Parser::action_F10()
 
 __filesize_t LE_Parser::action_F3()
 {
-    __filesize_t fpos = beye_context().bm_file().tell();
+    __filesize_t fpos = beye_context().tell();
     int ret;
     unsigned ordinal;
     std::string title = RES_NAMES;
-    ssize_t nnames = LXRNamesNumItems(beye_context().sc_bm_file());
+    ssize_t nnames = LXRNamesNumItems(main_handle());
     int flags = LB_SELECTIVE | LB_SORTABLE;
     bool bval;
     memArray* obj;
@@ -249,7 +249,7 @@ __filesize_t LE_Parser::action_F3()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = LXRNamesReadItems(beye_context().sc_bm_file(),obj,nnames);
+    bval = LXRNamesReadItems(main_handle(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -271,11 +271,11 @@ __filesize_t LE_Parser::action_F3()
 
 __filesize_t LE_Parser::action_F4()
 {
-    __filesize_t fpos = beye_context().bm_file().tell();
+    __filesize_t fpos = beye_context().tell();
     int ret;
     unsigned ordinal;
     std::string title = NORES_NAMES;
-    ssize_t nnames = LXNRNamesNumItems(beye_context().sc_bm_file());
+    ssize_t nnames = LXNRNamesNumItems(main_handle());
     int flags = LB_SELECTIVE | LB_SORTABLE;
     bool bval;
     memArray* obj;
@@ -283,7 +283,7 @@ __filesize_t LE_Parser::action_F4()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = LXNRNamesReadItems(beye_context().sc_bm_file(),obj,nnames);
+    bval = LXNRNamesReadItems(main_handle(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -303,11 +303,11 @@ __filesize_t LE_Parser::action_F4()
     return fpos;
 }
 
-LE_Parser::LE_Parser(CodeGuider& __code_guider)
-	:LX_Parser(__code_guider)
+LE_Parser::LE_Parser(binary_stream& h,CodeGuider& __code_guider)
+	:LX_Parser(h,__code_guider)
 {
-    beye_context().sc_bm_file().seek(beye_context().headshift,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(&lxe.le,sizeof(LEHEADER));
+    main_handle().seek(headshift(),binary_stream::Seek_Set);
+    main_handle().read(&lxe.le,sizeof(LEHEADER));
 }
 
 LE_Parser::~LE_Parser()
@@ -317,7 +317,7 @@ LE_Parser::~LE_Parser()
 __filesize_t LE_Parser::action_F1()
 {
   hlpDisplay(10004);
-  return beye_context().bm_file().tell();
+  return beye_context().tell();
 }
 
 bool LE_Parser::address_resolving(char *addr,__filesize_t cfpos)
@@ -325,24 +325,24 @@ bool LE_Parser::address_resolving(char *addr,__filesize_t cfpos)
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
   bool bret = true;
-  if(cfpos >= beye_context().headshift && cfpos < beye_context().headshift + sizeof(LEHEADER))
+  if(cfpos >= headshift() && cfpos < headshift() + sizeof(LEHEADER))
   {
      strcpy(addr,"LEH :");
-     strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift));
+     strcpy(&addr[5],Get4Digit(cfpos - headshift()));
   }
   else
-  if(cfpos >= beye_context().headshift + lxe.le.leObjectTableOffset &&
-     cfpos <  beye_context().headshift + lxe.le.leObjectTableOffset + sizeof(LX_OBJECT)*lxe.le.leObjectCount)
+  if(cfpos >= headshift() + lxe.le.leObjectTableOffset &&
+     cfpos <  headshift() + lxe.le.leObjectTableOffset + sizeof(LX_OBJECT)*lxe.le.leObjectCount)
   {
      strcpy(addr,"LEOD:");
-     strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift - lxe.le.leObjectTableOffset));
+     strcpy(&addr[5],Get4Digit(cfpos - headshift() - lxe.le.leObjectTableOffset));
   }
   else
-  if(cfpos >= beye_context().headshift + lxe.le.leObjectPageMapTableOffset &&
-     cfpos <  beye_context().headshift + lxe.le.leObjectPageMapTableOffset + sizeof(LE_PAGE)*lxe.le.lePageCount)
+  if(cfpos >= headshift() + lxe.le.leObjectPageMapTableOffset &&
+     cfpos <  headshift() + lxe.le.leObjectPageMapTableOffset + sizeof(LE_PAGE)*lxe.le.lePageCount)
   {
     strcpy(addr,"LEPD:");
-    strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift - lxe.le.leObjectPageMapTableOffset));
+    strcpy(&addr[5],Get4Digit(cfpos - headshift() - lxe.le.leObjectPageMapTableOffset));
   }
   else bret = false;
   return bret;
@@ -350,19 +350,19 @@ bool LE_Parser::address_resolving(char *addr,__filesize_t cfpos)
 
 int LE_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static bool probe() {
+static bool probe(binary_stream& main_handle) {
    char id[2];
-   beye_context().headshift = IsNewExe();
-   if(beye_context().headshift)
+   __filesize_t headshift = MZ_Parser::is_new_exe(main_handle);
+   if(headshift)
    {
-     beye_context().sc_bm_file().seek(beye_context().headshift,binary_stream::Seek_Set);
-     beye_context().sc_bm_file().read(id,sizeof(id));
+     main_handle.seek(headshift,binary_stream::Seek_Set);
+     main_handle.read(id,sizeof(id));
      if(id[0] == 'L' && id[1] == 'E') return true;
    }
    return false;
 }
 
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) LE_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) LE_Parser(h,_parent); }
 extern const Binary_Parser_Info le_info = {
     "LE (Linear Executable)",	/**< plugin name */
     probe,

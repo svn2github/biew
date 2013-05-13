@@ -18,9 +18,7 @@
 #ifndef __LMF_INC
 #define __LMF_INC
 
-#ifndef __SYS_DEP_H
-#include "_sys_dep.h"
-#endif
+#include "config.h"
 
 namespace	usr {
 #if __WATCOMC__ > 1000

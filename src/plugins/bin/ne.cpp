@@ -25,7 +25,6 @@ using namespace	usr;
 #include <stdlib.h>
 #include <limits.h>
 
-#include "beye.h"
 #include "colorset.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/ne.h"
@@ -39,6 +38,7 @@ using namespace	usr;
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 #include "ne.h"
+#include "beye.h"
 
 namespace	usr {
 static const char* txt[]={ "NEHelp", "ModRef", "ResNam", "NRsNam", "", "Entry ", "ResTbl", "NE Hdr", "", "SegDef" };
@@ -232,7 +232,7 @@ __filesize_t NE_Parser::action_F8()
   CS = (unsigned)((ne.neCSIPvalue) >> 16);  /** segment number */
   IP = (unsigned)(ne.neCSIPvalue & 0xFFFF); /** offset within segment */
   entryNE = CalcEntryPointNE(CS,IP);
-  pos = beye_context().bm_file().tell();
+  pos = beye_context().tell();
   if(PageBox(70,22,NULL,2,PaintNewHeaderNE) != -1 && entryNE) pos = entryNE;
   return pos;
 }
@@ -332,7 +332,7 @@ bool NE_Parser::__ReadModRefNamesNE(binary_stream& handle,memArray * obj)
 {
  unsigned i;
  uint_fast16_t offTable;
- handle.seek(ne.neOffsetModuleReferenceTable + beye_context().headshift,binary_stream::Seek_Set);
+ handle.seek(ne.neOffsetModuleReferenceTable + headshift(),binary_stream::Seek_Set);
  for(i = 0;i < ne.neModuleReferenceTableCount;i++)
  {
    __filesize_t NameOff;
@@ -341,7 +341,7 @@ bool NE_Parser::__ReadModRefNamesNE(binary_stream& handle,memArray * obj)
    char stmp[256];
    offTable = handle.read(type_word);
    fp = handle.tell();
-   NameOff = (__fileoff_t)beye_context().headshift + offTable + ne.neOffsetImportTable;
+   NameOff = (__fileoff_t)headshift() + offTable + ne.neOffsetImportTable;
    handle.seek(NameOff,binary_stream::Seek_Set);
    length = handle.read(type_byte);
    if(IsKbdTerminate() || handle.eof()) break;
@@ -362,7 +362,7 @@ __filesize_t NE_Parser::action_F2()
  __filesize_t fret;
  memArray * obj;
  TWindow * w;
- fret = beye_context().bm_file().tell();
+ fret = beye_context().tell();
  handle.seek(0L,binary_stream::Seek_Set);
  if(!(nnames = ne.neModuleReferenceTableCount)) { beye_context().NotifyBox(NOT_ENTRY,MOD_REFER); return fret; }
  if(!(obj = ma_Build(nnames,true))) goto exit;
@@ -408,7 +408,7 @@ bool NE_Parser::__ReadProcListNE(binary_stream& handle,memArray * obj,int modno)
   modno++;
   count = 0;
 
-  handle.seek(beye_context().headshift+ne.neOffsetSegmentTable,binary_stream::Seek_Set);
+  handle.seek(headshift()+ne.neOffsetSegmentTable,binary_stream::Seek_Set);
   for(i = 0;i < ne.neSegmentTableCount;i++)
   {
     handle.read(&tsd,sizeof(SEGDEF));
@@ -490,7 +490,7 @@ bool NE_Parser::RNamesReadItems(binary_stream& handle,memArray * obj,unsigned nn
 
 bool NE_Parser::NERNamesReadItems(binary_stream& handle,memArray * names,unsigned nnames)
 {
-   return RNamesReadItems(handle,names,nnames,ne.neOffsetResidentNameTable + beye_context().headshift);
+   return RNamesReadItems(handle,names,nnames,ne.neOffsetResidentNameTable + headshift());
 }
 
 bool NE_Parser::NENRNamesReadItems(binary_stream& handle,memArray * names,unsigned nnames)
@@ -531,7 +531,7 @@ unsigned NE_Parser::GetNamCountNE(binary_stream& handle,__filesize_t offset )
 
 unsigned NE_Parser::NERNamesNumItems(binary_stream& handle)
 {
-   return GetNamCountNE(handle,beye_context().headshift + ne.neOffsetResidentNameTable);
+   return GetNamCountNE(handle,headshift() + ne.neOffsetResidentNameTable);
 }
 
 unsigned NE_Parser::NENRNamesNumItems(binary_stream& handle)
@@ -575,7 +575,7 @@ bool NE_Parser::ReadEntryNE(ENTRY * obj,unsigned entnum)
   binary_stream& handle = *ne_cache1;
   unsigned i,j;
   unsigned char nentry,etype;
-  handle.seek((__fileoff_t)beye_context().headshift + ne.neOffsetEntryTable,binary_stream::Seek_Set);
+  handle.seek((__fileoff_t)headshift() + ne.neOffsetEntryTable,binary_stream::Seek_Set);
   i = 0;
   while(1)
   {
@@ -600,7 +600,7 @@ bool NE_Parser::ReadSegDefNE(SEGDEF * obj,unsigned segnum) const
  binary_stream* handle;
   handle = ne_cache3;
   if(segnum > ne.neSegmentTableCount || !segnum) return false;
-  handle->seek((__fileoff_t)beye_context().headshift + ne.neOffsetSegmentTable + (segnum - 1)*sizeof(SEGDEF),binary_stream::Seek_Set);
+  handle->seek((__fileoff_t)headshift() + ne.neOffsetSegmentTable + (segnum - 1)*sizeof(SEGDEF),binary_stream::Seek_Set);
   handle->read((any_t*)obj,sizeof(SEGDEF));
   return true;
 }
@@ -646,10 +646,10 @@ __filesize_t NE_Parser::action_F10()
  __filesize_t fpos;
  memArray * obj;
  nnames = ne.neSegmentTableCount;
- fpos = beye_context().bm_file().tell();
+ fpos = beye_context().tell();
  if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Segment Definition "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
- handle.seek((__fileoff_t)beye_context().headshift + ne.neOffsetSegmentTable,binary_stream::Seek_Set);
+ handle.seek((__fileoff_t)headshift() + ne.neOffsetSegmentTable,binary_stream::Seek_Set);
  if(__ReadSegTableNE(handle,obj,nnames))
  {
     int i;
@@ -690,7 +690,7 @@ unsigned NE_Parser::GetEntryCountNE()
  binary_stream& handle = *ne_cache;
  unsigned i,j;
  unsigned char nentry;
- handle.seek((__fileoff_t)beye_context().headshift + ne.neOffsetEntryTable,binary_stream::Seek_Set);
+ handle.seek((__fileoff_t)headshift() + ne.neOffsetEntryTable,binary_stream::Seek_Set);
  i = 0;
  while(1)
  {
@@ -714,10 +714,10 @@ __filesize_t NE_Parser::action_F6()
  __filesize_t fpos;
  memArray * obj;
  nnames = GetEntryCountNE();
- fpos = beye_context().bm_file().tell();
+ fpos = beye_context().tell();
  if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Entries "); return fpos; }
  if(!(obj = ma_Build(nnames,true))) return fpos;
- handle.seek((__fileoff_t)beye_context().headshift + ne.neOffsetEntryTable,binary_stream::Seek_Set);
+ handle.seek((__fileoff_t)headshift() + ne.neOffsetEntryTable,binary_stream::Seek_Set);
  if(__ReadEntryTableNE(handle,obj))
  {
   int i;
@@ -849,8 +849,8 @@ __filesize_t NE_Parser::action_F7()
  memArray* rgroup;
  long * raddr;
  unsigned nrgroup;
- fpos = beye_context().bm_file().tell();
- handle.seek((__fileoff_t)beye_context().headshift + ne.neOffsetResourceTable,binary_stream::Seek_Set);
+ fpos = beye_context().tell();
+ handle.seek((__fileoff_t)headshift() + ne.neOffsetResourceTable,binary_stream::Seek_Set);
  if(!(nrgroup = GetResourceGroupCountNE(handle))) { beye_context().NotifyBox(NOT_ENTRY," Resources "); return fpos; }
  if(!(rgroup = ma_Build(nrgroup,true))) goto exit;
  if(!(raddr  = new long [nrgroup])) return fpos;
@@ -868,11 +868,11 @@ __filesize_t NE_Parser::action_F7()
 
 __filesize_t NE_Parser::action_F3()
 {
-    __filesize_t fpos = beye_context().bm_file().tell();
+    __filesize_t fpos = beye_context().tell();
     int ret;
     unsigned ordinal;
     std::string title = RES_NAMES;
-    ssize_t nnames = NERNamesNumItems(beye_context().sc_bm_file());
+    ssize_t nnames = NERNamesNumItems(main_handle());
     int flags = LB_SELECTIVE | LB_SORTABLE;
     bool bval;
     memArray* obj;
@@ -880,7 +880,7 @@ __filesize_t NE_Parser::action_F3()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = NERNamesReadItems(beye_context().sc_bm_file(),obj,nnames);
+    bval = NERNamesReadItems(main_handle(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -902,11 +902,11 @@ __filesize_t NE_Parser::action_F3()
 
 __filesize_t NE_Parser::action_F4()
 {
-    __filesize_t fpos = beye_context().bm_file().tell();
+    __filesize_t fpos = beye_context().tell();
     int ret;
     unsigned ordinal;
     std::string title = NORES_NAMES;
-    ssize_t nnames = NENRNamesNumItems(beye_context().sc_bm_file());
+    ssize_t nnames = NENRNamesNumItems(main_handle());
     int flags = LB_SELECTIVE | LB_SORTABLE;
     bool bval;
     memArray* obj;
@@ -914,7 +914,7 @@ __filesize_t NE_Parser::action_F4()
     ret = -1;
     if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = NENRNamesReadItems(beye_context().sc_bm_file(),obj,nnames);
+    bval = NENRNamesReadItems(main_handle(),obj,nnames);
     delete w;
     if(bval) {
 	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
@@ -961,11 +961,11 @@ void NE_Parser::BuildNERefChain(__filesize_t segoff,__filesize_t slength)
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
   w->goto_xy(1,1);
   w->printf(" Building reference chains for segment #%u",CurrChainSegment);
-  if(!PubNames) ne_ReadPubNameList(beye_context().sc_bm_file(),MemOutBox);
+  if(!PubNames) ne_ReadPubNameList(main_handle(),MemOutBox);
   reloc_off = segoff + slength;
 
-  beye_context().sc_bm_file().seek(reloc_off,binary_stream::Seek_Set);
-  nchains =beye_context().sc_bm_file().read(type_word);
+  main_handle().seek(reloc_off,binary_stream::Seek_Set);
+  nchains =main_handle().read(type_word);
   reloc_off += 2;
   for(i = 0;i < nchains;i++)
   {
@@ -973,9 +973,9 @@ void NE_Parser::BuildNERefChain(__filesize_t segoff,__filesize_t slength)
      RELOC_NE rne;
      NERefChain nrc;
      this_reloc_off = reloc_off + i*sizeof(RELOC_NE);
-     beye_context().sc_bm_file().seek(this_reloc_off,binary_stream::Seek_Set);
-     beye_context().sc_bm_file().read(&rne,sizeof(RELOC_NE));
-     if(IsKbdTerminate() || beye_context().sc_bm_file().eof()) break;
+     main_handle().seek(this_reloc_off,binary_stream::Seek_Set);
+     main_handle().read(&rne,sizeof(RELOC_NE));
+     if(IsKbdTerminate() || main_handle().eof()) break;
      nrc.offset = rne.RefOff;
      nrc.number = i;
      if(!la_AddData(CurrNEChain,&nrc,MemOutBox)) { OutOfMem: break; }
@@ -984,9 +984,9 @@ void NE_Parser::BuildNERefChain(__filesize_t segoff,__filesize_t slength)
        while(1)
        {
 	 unsigned next_off;
-	 beye_context().sc_bm_file().seek(segoff + (__filesize_t)((NERefChain  *)CurrNEChain->data)[CurrNEChain->nItems - 1].offset,binary_stream::Seek_Set);
-	 next_off =beye_context().sc_bm_file().read(type_word);
-	 if(beye_context().sc_bm_file().eof()) break;
+	 main_handle().seek(segoff + (__filesize_t)((NERefChain  *)CurrNEChain->data)[CurrNEChain->nItems - 1].offset,binary_stream::Seek_Set);
+	 next_off =main_handle().read(type_word);
+	 if(main_handle().eof()) break;
 	 if(next_off > slength || next_off == 0xFFFF || next_off == ((NERefChain  *)CurrNEChain->data)[CurrNEChain->nItems - 1].offset) break;
 	 nrc.offset = next_off;
 	 nrc.number = i;
@@ -1043,8 +1043,8 @@ RELOC_NE* NE_Parser::__found_RNE(__filesize_t segoff,__filesize_t slength,unsign
   __codelen = codelen;
   found = (NERefChain*)la_Find(CurrNEChain,&key,compare_ne);
   if(found) {
-    beye_context().sc_bm_file().seek(segoff + slength + 2 + sizeof(RELOC_NE)*found->number,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(&rne,sizeof(rne));
+    main_handle().seek(segoff + slength + 2 + sizeof(RELOC_NE)*found->number,binary_stream::Seek_Set);
+    main_handle().read(&rne,sizeof(rne));
     return &rne;
   }
   else      return 0;
@@ -1095,11 +1095,11 @@ void NE_Parser::rdImpNameNELX(char *buff,int blen,unsigned idx,bool useasoff,__f
   if(!useasoff)
   {
     __filesize_t ref_off;
-    ref_off = (__filesize_t)beye_context().headshift
+    ref_off = (__filesize_t)headshift()
 	      + ne.neOffsetModuleReferenceTable
 	      + (idx - 1)*2;
-	beye_context().sc_bm_file().seek(ref_off,binary_stream::Seek_Set);
-	name_off += beye_context().sc_bm_file().read(type_word);
+	main_handle().seek(ref_off,binary_stream::Seek_Set);
+	name_off += main_handle().read(type_word);
   }
   else name_off += idx;
   b_cache->seek(name_off,binary_stream::Seek_Set);
@@ -1111,7 +1111,7 @@ void NE_Parser::rdImpNameNELX(char *buff,int blen,unsigned idx,bool useasoff,__f
 
 void NE_Parser::rd_ImpName(char *buff,int blen,unsigned idx,bool useasoff)
 {
-  rdImpNameNELX(buff,blen,idx,useasoff,beye_context().headshift + ne.neOffsetImportTable);
+  rdImpNameNELX(buff,blen,idx,useasoff,headshift() + ne.neOffsetImportTable);
 }
 
 bool NE_Parser::BuildReferStrNE(const DisMode& parent,char *str,RELOC_NE *rne,int flags,__filesize_t ulShift)
@@ -1189,8 +1189,8 @@ bool NE_Parser::BuildReferStrNE(const DisMode& parent,char *str,RELOC_NE *rne,in
      if(reflen && reflen <= 4)
      {
        strcat(str,"+");
-       beye_context().sc_bm_file().seek(ulShift,binary_stream::Seek_Set);
-       data = beye_context().sc_bm_file().read(type_dword);
+       main_handle().seek(ulShift,binary_stream::Seek_Set);
+       data = main_handle().read(type_dword);
        strcat(str,reflen == 1 ? Get2Digit(data) : reflen == 2 ? Get4Digit(data) : Get8Digit(data));
      }
      else strcat(str,",<add>");
@@ -1231,8 +1231,8 @@ bool NE_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int fl
 	 {
 	    if(rne->AddrType == 2)
 	    {
-	      beye_context().sc_bm_file().seek(ulShift,binary_stream::Seek_Set);
-	      rne->ordinal = beye_context().sc_bm_file().read(type_word);
+	      main_handle().seek(ulShift,binary_stream::Seek_Set);
+	      rne->ordinal = main_handle().read(type_word);
 	      rne->ordinal = __findSpecType(CurrSegmentStart,CurrSegmentLength,i + 1,ulShift,codelen,5,rne->ordinal);
 	    }
 	    if(rne->AddrType == 5)
@@ -1335,40 +1335,39 @@ void NE_Parser::ne_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem
 {
    if((PubNames = la_Build(0,sizeof(struct PubName),mem_out)) != NULL)
    {
-     ReadPubNames(handle,beye_context().headshift + ne.neOffsetResidentNameTable,mem_out);
+     ReadPubNames(handle,headshift() + ne.neOffsetResidentNameTable,mem_out);
      ReadPubNames(handle,ne.neOffsetNonResidentNameTable,mem_out);
      if(PubNames->nItems)
        la_Sort(PubNames,fmtComparePubNames);
    }
 }
 
-NE_Parser::NE_Parser(CodeGuider& __code_guider)
-	:MZ_Parser(__code_guider)
+NE_Parser::NE_Parser(binary_stream& h,CodeGuider& __code_guider)
+	:MZ_Parser(h,__code_guider)
 {
-    binary_stream& main_handle = beye_context().sc_bm_file();
-    beye_context().sc_bm_file().seek(beye_context().headshift,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(&ne,sizeof(NEHEADER));
-    if((ne_cache3 = main_handle.dup()) == &bNull) ne_cache3 = &main_handle;
-    if((ne_cache1 = main_handle.dup()) == &bNull) ne_cache2 = &main_handle;
-    if((ne_cache = main_handle.dup()) == &bNull) ne_cache = &main_handle;
-    if((ne_cache2 = main_handle.dup()) == &bNull) ne_cache2 = &main_handle;
+    h.seek(headshift(),binary_stream::Seek_Set);
+    h.read(&ne,sizeof(NEHEADER));
+    if((ne_cache3 = h.dup()) == &bNull) ne_cache3 = &h;
+    if((ne_cache1 = h.dup()) == &bNull) ne_cache2 = &h;
+    if((ne_cache = h.dup()) == &bNull) ne_cache = &h;
+    if((ne_cache2 = h.dup()) == &bNull) ne_cache2 = &h;
 }
 
 NE_Parser::~NE_Parser()
 {
-  binary_stream& main_handle = beye_context().sc_bm_file();
+  binary_stream& h = main_handle();
   if(CurrNEChain) { la_Destroy(CurrNEChain); CurrNEChain = 0; }
   if(PubNames)  { la_Destroy(PubNames); PubNames = 0; }
-  if(ne_cache != &bNull && ne_cache != &main_handle) delete ne_cache;
-  if(ne_cache2 != &bNull && ne_cache2 != &main_handle) delete ne_cache2;
-  if(ne_cache3 != &bNull && ne_cache3 != &main_handle) delete ne_cache3;
-  if(ne_cache1 != &bNull && ne_cache1 != &main_handle) delete ne_cache1;
+  if(ne_cache != &bNull && ne_cache != &h) delete ne_cache;
+  if(ne_cache2 != &bNull && ne_cache2 != &h) delete ne_cache2;
+  if(ne_cache3 != &bNull && ne_cache3 != &h) delete ne_cache3;
+  if(ne_cache1 != &bNull && ne_cache1 != &h) delete ne_cache1;
 }
 
 __filesize_t NE_Parser::action_F1()
 {
   hlpDisplay(10006);
-  return beye_context().bm_file().tell();
+  return beye_context().tell();
 }
 
 __filesize_t NE_Parser::va2pa(__filesize_t va)
@@ -1431,12 +1430,12 @@ unsigned NE_Parser::__get_object_attribute(__filesize_t pa,char *name,unsigned c
   bool found;
   UNUSED(cb_name);
   *start = 0;
-  *end = beye_context().sc_bm_file().flength();
+  *end = main_handle().flength();
   *_class = OC_NOOBJECT;
   *bitness = DAB_USE16;
   name[0] = 0;
   ret = 0;
-  beye_context().sc_bm_file().seek((__fileoff_t)beye_context().headshift + ne.neOffsetSegmentTable,binary_stream::Seek_Set);
+  main_handle().seek((__fileoff_t)headshift() + ne.neOffsetSegmentTable,binary_stream::Seek_Set);
   found = false;
   for(i = 0;i < segcount;i++)
   {
@@ -1468,7 +1467,7 @@ unsigned NE_Parser::__get_object_attribute(__filesize_t pa,char *name,unsigned c
   if(!found)
   {
     *start = *end;
-    *end = beye_context().sc_bm_file().flength();
+    *end = main_handle().flength();
   }
   return ret;
 }
@@ -1497,24 +1496,24 @@ bool NE_Parser::address_resolving(char *addr,__filesize_t cfpos)
     it must be seriously optimized for speed. */
   bool bret = true;
   uint32_t res;
-  if(cfpos >= beye_context().headshift && cfpos < beye_context().headshift + sizeof(NEHEADER))
+  if(cfpos >= headshift() && cfpos < headshift() + sizeof(NEHEADER))
   {
      strcpy(addr,"NEH :");
-     strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift));
+     strcpy(&addr[5],Get4Digit(cfpos - headshift()));
   }
   else
-  if(cfpos >= beye_context().headshift + ne.neOffsetSegmentTable &&
-     cfpos <  beye_context().headshift + ne.neOffsetSegmentTable + ne.neSegmentTableCount*sizeof(SEGDEF))
+  if(cfpos >= headshift() + ne.neOffsetSegmentTable &&
+     cfpos <  headshift() + ne.neOffsetSegmentTable + ne.neSegmentTableCount*sizeof(SEGDEF))
   {
     strcpy(addr,"NESD:");
-    strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift - ne.neOffsetSegmentTable));
+    strcpy(&addr[5],Get4Digit(cfpos - headshift() - ne.neOffsetSegmentTable));
   }
   else
-  if(cfpos >= beye_context().headshift + ne.neOffsetEntryTable &&
-     cfpos <  beye_context().headshift + ne.neOffsetEntryTable + ne.neLengthEntryTable)
+  if(cfpos >= headshift() + ne.neOffsetEntryTable &&
+     cfpos <  headshift() + ne.neOffsetEntryTable + ne.neLengthEntryTable)
   {
     strcpy(addr,"NEET:");
-    strcpy(&addr[5],Get4Digit(cfpos - beye_context().headshift - ne.neOffsetEntryTable));
+    strcpy(&addr[5],Get4Digit(cfpos - headshift() - ne.neOffsetEntryTable));
   }
   else
     if((res=pa2va(cfpos))!=0)
@@ -1528,19 +1527,18 @@ bool NE_Parser::address_resolving(char *addr,__filesize_t cfpos)
 
 int NE_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static bool probe() {
+static bool probe(binary_stream& main_handle) {
     char id[2];
-    beye_context().headshift = IsNewExe();
-    if(beye_context().headshift) {
-	beye_context().sc_bm_file().seek(beye_context().headshift,binary_stream::Seek_Set);
-	beye_context().sc_bm_file().read(id,sizeof(id));
+    __filesize_t headshift = MZ_Parser::is_new_exe(main_handle);
+    if(headshift) {
+	main_handle.seek(headshift,binary_stream::Seek_Set);
+	main_handle.read(id,sizeof(id));
 	if(id[0] == 'N' && id[1] == 'E') return true;
     }
     return false;
 }
 
-
-static Binary_Parser* query_interface(CodeGuider& _parent) { return new(zeromem) NE_Parser(_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) NE_Parser(h,_parent); }
 extern const Binary_Parser_Info ne_info = {
     "NE (New Exe)",	/**< plugin name */
     probe,

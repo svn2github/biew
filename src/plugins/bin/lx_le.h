@@ -17,6 +17,7 @@
 #ifndef __LX_LE_INC
 #define __LX_LE_INC
 
+#include "config.h"
 #include "beyeutil.h"
 #include "libbeye/bstream.h"
 #include "mz.h"
@@ -273,7 +274,7 @@ typedef struct tagLXResource
 #endif
     class LX_Parser : public MZ_Parser {
 	public:
-	    LX_Parser(CodeGuider&);
+	    LX_Parser(binary_stream&,CodeGuider&);
 	    virtual ~LX_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -340,7 +341,7 @@ typedef struct tagLXResource
 
     class LE_Parser : public LX_Parser {
 	public:
-	    LE_Parser(CodeGuider&);
+	    LE_Parser(binary_stream& h,CodeGuider&);
 	    virtual ~LE_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;

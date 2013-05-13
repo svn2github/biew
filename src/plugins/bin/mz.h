@@ -17,9 +17,9 @@
 #ifndef __MZ_INC
 #define __MZ_INC
 
-#ifndef __BEYEUTIL__H
+#include "config.h"
 #include "beyeutil.h"
-#endif
+#include "plugins/binary_parser.h"
 
 namespace	usr {
 #ifdef __HAVE_PRAGMA_PACK__
@@ -45,7 +45,7 @@ namespace	usr {
 #endif
     class MZ_Parser : public Binary_Parser {
 	public:
-	    MZ_Parser(CodeGuider&);
+	    MZ_Parser(binary_stream& h,CodeGuider&);
 	    virtual ~MZ_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -57,8 +57,12 @@ namespace	usr {
 	    virtual bool		address_resolving(char *,__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va);
 	    virtual __filesize_t	pa2va(__filesize_t pa);
+
+	    static __filesize_t		is_new_exe(binary_stream& main_handle);
 	protected:
 	    CodeGuider&			code_guider() const { return _code_guider; }
+	    binary_stream&		main_handle() const { return _main_handle; }
+	    virtual __filesize_t	headshift() const { return _headshift; }
 	private:
 	    const char*			QueryAddInfo( unsigned char *memmap );
 	    const char*			QueryAddInfo();
@@ -72,6 +76,8 @@ namespace	usr {
 	    unsigned long	HeadSize;
 	    long*		CurrMZChain;
 	    unsigned long	CurrMZCount;
+	    __filesize_t	_headshift;
+	    binary_stream&	_main_handle;
 	    CodeGuider&		_code_guider;
     };
 } // namespace	usr

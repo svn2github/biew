@@ -91,7 +91,7 @@ typedef unsigned char * MBuffer;
 		Panel_Wide   =0        /**< full mode of panel: instruction only */
 	    };
 
-	    DisMode(TWindow& _main_wnd,CodeGuider& code_guider);
+	    DisMode(binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider);
 	    virtual ~DisMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -150,7 +150,7 @@ typedef unsigned char * MBuffer;
     strcpy(outstr,"calln32 ");
     disAppendFAddr(outstr, 0x1004, 0x12345678, 0x1002, DISADR_NEAR32, 0, 4);
 **/
-	    virtual bool		append_faddr(char * str,__fileoff_t ulShift,__fileoff_t distin,__filesize_t r_sh,e_disaddr type,unsigned seg,char codelen);
+	    virtual bool		append_faddr(binary_stream& handle,char * str,__fileoff_t ulShift,__fileoff_t distin,__filesize_t r_sh,e_disaddr type,unsigned seg,char codelen);
 /** Appends symbolic information instead digits to instruction string
     @param str       string to be appended
     @param flags     same as described in reg_form.h (APREF_* family)
@@ -177,7 +177,7 @@ typedef unsigned char * MBuffer;
     disAppendDigits(outstr, 0x5680, 1, 2, 0x1234, DISARG_WORD);
     strcat(outstr,"]");
 **/
-	    virtual bool		append_digits(char *str,__filesize_t ulShift,int flags,char codelen,any_t*defval,e_disarg type);
+	    virtual bool		append_digits(binary_stream& handle,char *str,__filesize_t ulShift,int flags,char codelen,any_t*defval,e_disarg type);
 
 	    virtual e_panel		panel_mode() const { return disPanelMode; }
 	    virtual bool		prepare_mode() const { return DisasmPrepareMode; }
@@ -213,6 +213,8 @@ typedef unsigned char * MBuffer;
 	    bool			DisasmPrepareMode;
 	    std::vector<const Disassembler_Info*> list;
 	    TWindow&			main_wnd;
+	    binary_stream&		main_handle;
+	    binary_stream&		second_handle;
     };
     inline DisMode::e_disarg operator~(DisMode::e_disarg a) { return static_cast<DisMode::e_disarg>(~static_cast<unsigned>(a)); }
     inline DisMode::e_disarg operator|(DisMode::e_disarg a, DisMode::e_disarg b) { return static_cast<DisMode::e_disarg>(static_cast<unsigned>(a)|static_cast<unsigned>(b)); }
@@ -283,7 +285,7 @@ typedef unsigned char * MBuffer;
     };
     class Disassembler : public Opaque {
 	public:
-	    Disassembler(DisMode& parent) { UNUSED(parent); }
+	    Disassembler(binary_stream& h,DisMode& parent) { UNUSED(h); UNUSED(parent); }
 	    virtual ~Disassembler() {}
 	
 	    virtual const char*	prompt(unsigned idx) const = 0;	/**< prompt on Ctrl-(F1,F3-F5) */
@@ -311,7 +313,7 @@ typedef unsigned char * MBuffer;
     struct Disassembler_Info {
 	unsigned	type;	/**< DISASM_XXX constant */
 	const char*	name;	/**< disassembler name */
-	Disassembler* (*query_interface)(DisMode& parent);
+	Disassembler* (*query_interface)(binary_stream& h,DisMode& parent);
     };
 
 /** Common disassembler utility */
