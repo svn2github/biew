@@ -18,6 +18,9 @@ using namespace	usr;
  * @note        Development, fixes and improvements
 **/
 #include <algorithm>
+#include <iomanip>
+#include <iostream>
+#include <fstream>
 
 #include <sys/stat.h>
 #include <stdio.h>
@@ -193,7 +196,7 @@ static std::string ff_fname="beye.$$$";
 static std::string xlat_fname;
 static __filesize_t ff_startpos = 0L,ff_len = 0L;
 
-static void  __FASTCALL__ printObject(FILE *fout,unsigned obj_num,char *oname,int oclass,int obitness,__filesize_t size)
+static void  __FASTCALL__ printObject(std::ofstream& fout,unsigned obj_num,char *oname,int oclass,int obitness,__filesize_t size)
 {
   const char *name,*btn;
   char onumname[30];
@@ -211,31 +214,23 @@ static void  __FASTCALL__ printObject(FILE *fout,unsigned obj_num,char *oname,in
 			    oclass == OC_CODE ? "DUMP_TEXT" :
 			    "Unknown";
   if(!oname[0]) { sprintf(onumname,"%s%u",name,obj_num); name = onumname; }
-  fprintf(fout,"\nSEGMENT %s BYTE PUBLIC %s '%s'\n; size: %llu bytes\n\n"
-	      ,name
-	      ,btn
-	      ,oclass == OC_DATA ? "DATA" : oclass == OC_CODE ? "CODE" : "NoObject"
-	      ,size);
+  fout<<std::endl<<"SEGMENT "<<name<<" BYTE PUBLIC "<<btn<<" '"<<(oclass == OC_DATA ? "DATA" : oclass == OC_CODE ? "CODE" : "NoObject")<<"'"<<std::endl;
+  fout<<"; size: "<<std::dec<<size<<" bytes"<<std::endl<<std::endl;
 }
 
-static void  __FASTCALL__ printHdr(FILE * fout,const Bin_Format& fmt)
+static void  __FASTCALL__ printHdr(std::ofstream& fout,const Bin_Format& fmt)
 {
-  const char *cptr,*cptr1,*cptr2;
-  time_t tim;
-  cptr = cptr1 = ";"; cptr2 = "";
-  time(&tim);
-  fprintf(fout,"%s\n%sDisassembler dump of \'%s\'\n"
-	       "%sRange : %16llXH-%16llXH\n"
-	       "%sWritten by %s\n"
-	       "%sDumped : %s\n"
-	       "%sFormat : %s\n"
-	       "%s\n\n"
-	      ,cptr1,cptr,beye_context().bm_file().filename().c_str()
-	      ,cptr,ff_startpos,ff_startpos+ff_len
-	      ,cptr,BEYE_VER_MSG
-	      ,cptr,ctime(&tim)
-	      ,cptr,fmt.name()
-	      ,cptr2);
+    const char *cptr,*cptr1,*cptr2;
+    time_t tim;
+    cptr = cptr1 = ";"; cptr2 = "";
+    time(&tim);
+    fout<<cptr1<<std::endl;
+    fout<<cptr<<"Disassembler dump of \'"<<beye_context().bm_file().filename()<<"\'"<<std::endl;
+    fout<<cptr<<"Range : "<<std::hex<<ff_startpos<<"H-"<<std::hex<<(ff_startpos+ff_len)<<"H"<<std::endl;
+    fout<<cptr<<"Written by "<<BEYE_VER_MSG<<std::endl;
+    fout<<cptr<<"Dumped : "<<ctime(&tim)<<std::endl;
+    fout<<cptr<<"Format : "<<fmt.name()<<std::endl;
+    fout<<cptr2<<std::endl<<std::endl;
 }
 
 static unsigned  __FASTCALL__ printHelpComment(char *buff,MBuffer codebuff,DisasmRet *dret,DisMode::e_severity dis_severity,const char* dis_comments)
@@ -303,31 +298,18 @@ static bool FStore()
 	    cpos = beye_context().tell();
 	    progress_wnd = PercentWnd("Saving ..."," Save block to file ");
 	    if(!(flags & FSDLG_ASMMODE)) { /** Write in binary mode */
-		BBio_File* _bioHandle;
+		std::ofstream fs;
 		binary_stream* h;
 		__filesize_t wsize,crpos,pwsize,awsize;
 		unsigned rem;
 		wsize = endpos - ff_startpos;
-		h = new(zeromem)binary_stream;
-		if(binary_stream::exists(ff_fname) == false) h->create(ff_fname);
-		else {
-		    if(!h->open(ff_fname,binary_stream::FO_READWRITE | binary_stream::SO_DENYNONE)) {
-			if(!h->open(ff_fname,binary_stream::FO_READWRITE | binary_stream::SO_COMPAT)) {
-			    use_err:
-			    beye_context().errnoMessageBox("Can't use file","",errno);
-			    delete h;
-			    goto Exit;
-			}
-			h->truncate(0L);
-		    }
+		fs.open(ff_fname.c_str(),std::ios_base::out|std::ios_base::binary);
+		if(!fs.good())  {
+		    beye_context().errnoMessageBox("Can't use file","",errno);
+		    goto Exit;
 		}
-		delete h;
-		_bioHandle = new BBio_File(BBIO_CACHE_SIZE,BBio_File::Opt_Db);
-		bool rc = _bioHandle->open(ff_fname,binary_stream::FO_READWRITE | binary_stream::SO_DENYNONE);
-		if(rc == false)  rc = _bioHandle->open(ff_fname,binary_stream::FO_READWRITE | binary_stream::SO_COMPAT);
-		if(rc == false)  goto use_err;
 		crpos = ff_startpos;
-		_bioHandle->seek(0L,binary_stream::Seek_Set);
+		fs.seekp(0L,std::ios_base::beg);
 		prcnt_counter = oprcnt_counter = 0;
 		pwsize = 0;
 		awsize = wsize;
@@ -337,13 +319,12 @@ static bool FStore()
 		    beye_context().bm_file().seek(crpos,binary_stream::Seek_Set);
 		    if(!beye_context().bm_file().read(tmp_buff,rem)) {
 			beye_context().errnoMessageBox(READ_FAIL,"",errno);
-			delete _bioHandle;
 			goto Exit;
 		    }
 		    real_size = (bctx.active_mode().flags()&Plugin::Has_ConvertCP) ? bctx.active_mode().convert_cp((char *)tmp_buff,rem,true) : rem;
-		    if(!_bioHandle->write(tmp_buff,real_size)) {
+		    fs.write(tmp_buff,real_size);
+		    if(!fs.good()) {
 			beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
-			delete _bioHandle;
 			goto Exit;
 		    }
 		    wsize -= rem;
@@ -355,9 +336,8 @@ static bool FStore()
 			if(!ShowPercentInWnd(progress_wnd,prcnt_counter)) break;
 		    }
 		}
-		delete _bioHandle;
 	    } else { /** Write in disassembler mode */
-		FILE * fout = NULL;
+		std::ofstream fout;
 		unsigned char *codebuff;
 		char *file_cache = NULL,*tmp_buff2 = NULL;
 		unsigned MaxInsnLen;
@@ -385,13 +365,13 @@ static bool FStore()
 		}
 		tmp_buff2 = new char [0x1000];
 		file_cache = new char [BBIO_SMALL_CACHE_SIZE];
-		fout = fopen(ff_fname.c_str(),"wt");
-		if(fout == NULL) {
+		fout.open(ff_fname.c_str(),std::ios_base::out);
+		if(!fout.is_open()) {
 		    beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 		    delete codebuff;
 		    goto Exit;
 		}
-		if(file_cache) setvbuf(fout,file_cache,_IOFBF,BBIO_SMALL_CACHE_SIZE);
+//		if(file_cache) setvbuf(fout,file_cache,_IOFBF,BBIO_SMALL_CACHE_SIZE);
 		if(flags & FSDLG_COMMENT) {
 		    printHdr(fout,bctx.bin_format());
 		}
@@ -420,11 +400,9 @@ static bool FStore()
 						&func_class,ff_startpos,true);
 		    func_name[sizeof(func_name)-1] = 0;
 		    if(func_pa!=Plugin::Bad_Address) {
-			fprintf(fout,"%s %s:\n"
-					,GET_FUNC_CLASS(func_class)
-					,func_name);
+			fout<<GET_FUNC_CLASS(func_class)<<" "<<func_name<<":"<<std::endl;
 			if(func_pa < ff_startpos && flags & FSDLG_COMMENT) {
-				fprintf(fout,"; ...\n");
+				fout<<"; ..."<<std::endl;
 			}
 		    }
 		    func_pa = bctx.bin_format().get_public_symbol(func_name,sizeof(func_name),
@@ -450,29 +428,26 @@ static bool FStore()
 			}
 			if(obj_class == OC_NOOBJECT) {
 			    __filesize_t diff;
-			    fprintf(fout,"; L%016llXH-L%016llXH - no object\n",obj_start,obj_end);
+			    fout<<"; L"<<std::hex<<std::setfill('0')<<std::setw(16)<<obj_start<<"H-L"<<std::hex<<std::setfill('0')<<std::setw(16)<<obj_end<<"H - no object"<<std::endl;
 			    dret.codelen = std::min(__filesize_t(UCHAR_MAX),obj_end - ff_startpos);
 			    /** some functions can placed in virtual area of objects
 				mean at end of true data, but before next object */
 			    while(func_pa && func_pa >= obj_start && func_pa < obj_end && func_pa > ff_startpos) {
 				diff = func_pa - ff_startpos;
-				if(diff) fprintf(fout,"resb %16llXH\n",diff);
-				fprintf(fout,"%s %s: ;at offset - %16llXH\n"
-					,GET_FUNC_CLASS(func_class)
-					,func_name
-					,func_pa);
+				if(diff) fout<<"resb "<<std::dec<<diff<<"H"<<std::endl;
+				fout<<GET_FUNC_CLASS(func_class)<<" "<<func_name<<": ;at offset - "<<std::hex<<func_pa<<"H"<<std::endl;
 				ff_startpos = func_pa;
 				func_pa = bctx.bin_format().get_public_symbol(func_name,sizeof(func_name),
 						&func_class,ff_startpos,false);
 				if(func_pa==Plugin::Bad_Address) func_pa=0;
 				func_name[sizeof(func_name)-1] = 0;
 				if(func_pa == ff_startpos) {
-				    fprintf(fout,"...Probably internal error of beye...\n");
+				    fout<<"...Probably internal error of beye..."<<std::endl;
 				    break;
 				}
 			    }
 			    diff = obj_end - ff_startpos;
-			    if(diff) fprintf(fout,"resb %16llXH\n",diff);
+			    if(diff) fout<<"resb "<<std::hex<<diff<<"H"<<std::endl;
 			    ff_startpos = obj_end;
 			    goto next_obj;
 			}
@@ -481,16 +456,14 @@ static bool FStore()
 			    not_silly = 0;
 			    while(ff_startpos == func_pa) {
 				/* print out here all public labels */
-				fprintf(fout,"%s %s:\n"
-					,GET_FUNC_CLASS(func_class)
-					,func_name);
+				fout<<GET_FUNC_CLASS(func_class)<<" "<<func_name<<std::endl;
 				func_pa = bctx.bin_format().get_public_symbol(func_name,sizeof(func_name),
 						&func_class,ff_startpos,false);
 				if(func_pa==Plugin::Bad_Address) func_pa=0;
 				func_name[sizeof(func_name)-1] = 0;
 				not_silly++;
 				if(not_silly > 100) {
-				    fprintf(fout,"; [snipped out] ...\n");
+				    fout<<"; [snipped out] ..."<<std::endl;
 				    break;
 				}
 			    }
@@ -570,8 +543,8 @@ static bool FStore()
 			szSpace2Tab(tmp_buff2,tmp_buff);
 			szTrimTrailingSpace(tmp_buff2);
 		    }
-		    strcat(tmp_buff2 ? tmp_buff2 : tmp_buff,"\n");
-		    if(fputs(tmp_buff2 ? tmp_buff2 : tmp_buff,fout) == EOF) {
+		    fout<<(tmp_buff2 ? tmp_buff2 : tmp_buff)<<std::endl;
+		    if(!fout.good()) {
 			beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 			goto dis_exit;
 		    }
@@ -595,7 +568,7 @@ static bool FStore()
 		}
 		dis_exit:
 		delete codebuff;
-		fclose(fout);
+		fout.close();
 		if(file_cache) delete file_cache;
 		if(tmp_buff2) delete tmp_buff2;
 		if(bctx.mode_info()!=&disMode)	delete dismode;

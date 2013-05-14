@@ -173,9 +173,9 @@ namespace	usr {
 	    __filesize_t	__elfSymPtr;
 	    bool		IsSectionsPresent;
 
-	    binary_stream&	namecache;
-	    binary_stream&	namecache2;
-	    binary_stream&	elfcache;
+	    binary_stream*	namecache;
+	    binary_stream*	namecache2;
+	    binary_stream*	elfcache;
 
 	    linearArray*	va_map_phys;
 	    linearArray*	va_map_virt;
@@ -367,7 +367,7 @@ void ELF_Parser::elf386_readnametable(__filesize_t off,char *buf,unsigned blen)
   unsigned char ch;
   unsigned freq;
 
-  binary_stream& b_cache = namecache,&b_cache2 = namecache2;
+  binary_stream& b_cache = *namecache,&b_cache2 = *namecache2;
   foff = Elf->ehdr().e_shoff+Elf->ehdr().e_shstrndx*Elf->ehdr().e_shentsize;
   sh=Elf->read_shdr(b_cache2,foff);
   foff = sh.sh_offset + off;
@@ -387,7 +387,7 @@ void ELF_Parser::elf386_readnametableex(__filesize_t off,char *buf,unsigned blen
   Elf_Shdr sh;
   unsigned char ch;
   unsigned freq;
-  binary_stream& b_cache = namecache,&b_cache2 = namecache2;
+  binary_stream& b_cache = *namecache,&b_cache2 = *namecache2;
   if(Elf->ehdr().e_shoff)
   {
     foff = Elf->ehdr().e_shoff+active_shtbl*Elf->ehdr().e_shentsize;
@@ -1058,7 +1058,7 @@ __filesize_t ELF_Parser::displayELFdyntab(__filesize_t dynptr,
 {
   __filesize_t fpos;
   memArray *obj;
-  binary_stream& handle=elfcache;
+  binary_stream& handle=*elfcache;
   unsigned ndyn;
   fpos = beye_context().tell();
   ndyn = (unsigned)nitem;
@@ -1141,7 +1141,7 @@ __filesize_t ELF_Parser::get_f_offset(__filesize_t r_offset,__filesize_t sh_link
     the virtual address of the storage unit affected by the relocation.
   */
   __filesize_t f_offset;
-  binary_stream& handle = elfcache;
+  binary_stream& handle = *elfcache;
   switch(Elf->ehdr().e_type)
   {
      case ET_REL:
@@ -1318,7 +1318,7 @@ void ELF_Parser::__elfReadRelSection(__filesize_t offset,
 							__filesize_t info,
 							__filesize_t entsize)
 {
-  binary_stream& handle = elfcache,&handle2 = namecache;
+  binary_stream& handle = *elfcache,&handle2 = *namecache;
   size_t i,nitems;
   Elf_Rel relent;
   __filesize_t fp, sfp, lfp;
@@ -1361,7 +1361,7 @@ void ELF_Parser::__elfReadRelaSection(__filesize_t offset,
 							__filesize_t info,
 							__filesize_t entsize)
 {
-  binary_stream& handle = elfcache;
+  binary_stream& handle = *elfcache;
   size_t i,nitems;
   Elf_Rela relent;
   __filesize_t fp, lfp;
@@ -1389,7 +1389,7 @@ void ELF_Parser::buildElf386RelChain()
 {
   size_t i,_nitems;
   TWindow *w;
-  binary_stream& handle = elfcache;
+  binary_stream& handle = *elfcache;
   __filesize_t fp;
   if(!(CurrElfChain = la_Build(0,sizeof(Elf_Reloc),MemOutBox))) return;
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
@@ -1495,7 +1495,7 @@ bool ELF_Parser::__readRelocName(Elf_Reloc  *erl, char *buff, size_t cbBuff)
 {
   Elf_Shdr shdr;
   Elf_Sym sym;
-  binary_stream& handle = elfcache;
+  binary_stream& handle = *elfcache;
   __filesize_t fp;
   bool ret = true;
   fp = handle.tell();
@@ -2148,9 +2148,9 @@ void ELF_Parser::__elfReadSegments(linearArray **to, bool is_virt )
 ELF_Parser::ELF_Parser(binary_stream& h,CodeGuider& _code_guider)
 	    :Binary_Parser(h,_code_guider)
 	    ,elf_min_va(FILESIZE_MAX)
-	    ,namecache(bNull)
-	    ,namecache2(bNull)
-	    ,elfcache(bNull)
+	    ,namecache(&bNull)
+	    ,namecache2(&bNull)
+	    ,elfcache(&bNull)
 	    ,main_handle(h)
 	    ,code_guider(_code_guider)
 {
@@ -2179,21 +2179,21 @@ ELF_Parser::ELF_Parser(binary_stream& h,CodeGuider& _code_guider)
      evm = &((struct tag_elfVAMap  *)va_map_virt->data)[i];
      if(evm->va < elf_min_va) elf_min_va = evm->va;
    }
-   namecache = *main_handle.dup();
-   namecache2 = *main_handle.dup();
-   elfcache = *main_handle.dup();
-   if(&namecache == &bNull) namecache = main_handle;
-   if(&namecache2 == &bNull) namecache2 = main_handle;
-   if(&elfcache == &bNull) elfcache = main_handle;
+   namecache = main_handle.dup();
+   namecache2 = main_handle.dup();
+   elfcache = main_handle.dup();
+   if(namecache == &bNull) namecache = &main_handle;
+   if(namecache2 == &bNull) namecache2 = &main_handle;
+   if(elfcache == &bNull) elfcache = &main_handle;
    /** Computing symbol table entry */
    __elfSymPtr = findSHEntry(main_handle, SHT_SYMTAB, &__elfNumSymTab, &__elfSymShTbl, &__elfSymEntSize);
 }
 
 ELF_Parser::~ELF_Parser()
 {
-   if(&namecache != &bNull && &namecache != &main_handle) delete &namecache;
-   if(&namecache2 != &bNull && &namecache2 != &main_handle) delete &namecache2;
-   if(&elfcache != &bNull && &elfcache != &main_handle) delete &elfcache;
+   if(namecache != &bNull && namecache != &main_handle) delete namecache;
+   if(namecache2 != &bNull && namecache2 != &main_handle) delete namecache2;
+   if(elfcache != &bNull && elfcache != &main_handle) delete elfcache;
    if(PubNames) { la_Destroy(PubNames); PubNames = 0; }
    if(CurrElfChain) { la_Destroy(CurrElfChain); CurrElfChain = 0; }
    la_Destroy(va_map_virt);
@@ -2329,12 +2329,12 @@ __filesize_t ELF_Parser::get_public_symbol(char *str,unsigned cb_str,unsigned *f
 {
     __filesize_t fpos;
     size_t idx;
-    if(!PubNames) elf_ReadPubNameList(elfcache,NULL);
+    if(!PubNames) elf_ReadPubNameList(*elfcache,NULL);
     fpos=fmtGetPubSym(*func_class,pa,as_prev,PubNames,idx);
     if(idx!=std::numeric_limits<size_t>::max()) {
 	struct PubName *it;
 	it = &((struct PubName  *)PubNames->data)[idx];
-	elf_ReadPubName(elfcache,it,str,cb_str);
+	elf_ReadPubName(*elfcache,it,str,cb_str);
 	str[cb_str-1] = 0;
     }
     return fpos;

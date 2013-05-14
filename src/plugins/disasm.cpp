@@ -66,7 +66,7 @@ DisMode::DisMode(Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& _
 	,DisasmPrepareMode(false)
 	,main_wnd(_main_wnd)
 	,main_handle(h)
-	,second_handle(bNull)
+	,second_handle(&bNull)
 	,bin_format(b)
 {
     size_t i,sz;
@@ -80,8 +80,8 @@ DisMode::DisMode(Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& _
     CurrStrLenBuff = new unsigned char [beye_context().tconsole().vio_height()];
     PrevStrLenAddr = new unsigned long [beye_context().tconsole().vio_height()];
     dis_comments   = new char [Comm_Size];
-    second_handle =*main_handle.dup();
-    if(&second_handle==&bNull) second_handle = main_handle;
+    second_handle = main_handle.dup();
+    if(second_handle==&bNull) second_handle = &main_handle;
     if((!CurrStrLenBuff) || (!PrevStrLenAddr) || (!dis_comments)) {
 	MemOutBox("Disassembler initialization");
 	::exit(EXIT_FAILURE);
@@ -91,13 +91,13 @@ DisMode::DisMode(Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& _
     sz=list.size();
     for(i=0;i<sz;i++) {
 	if(list[i]->type == def_platform) {
-	    activeDisasm=list[i]->query_interface(bin_format,second_handle,*this);
+	    activeDisasm=list[i]->query_interface(bin_format,*second_handle,*this);
 	    DefDisasmSel = i;
 	    break;
 	}
     }
     if(!activeDisasm) {
-	activeDisasm = list[0]->query_interface(bin_format,second_handle,*this);
+	activeDisasm = list[0]->query_interface(bin_format,*second_handle,*this);
 	DefDisasmSel = 0;
     }
     accept_actions();
@@ -111,7 +111,7 @@ DisMode::~DisMode()
     delete dis_comments;
     delete disCodeBuffer;
     delete disCodeBufPredict;
-    if(&second_handle!=&bNull && &second_handle!=&main_handle) delete &second_handle;
+    if(second_handle!=&bNull && second_handle!=&main_handle) delete second_handle;
 }
 
 DisMode::e_flag DisMode::flags() const { return UseCodeGuide | Disasm | Has_SearchEngine; }
@@ -135,7 +135,7 @@ bool DisMode::action_F2() /* disSelect_Disasm */
     retval = SelBoxA(modeName,nModes," Select disassembler: ",DefDisasmSel);
     if(retval != -1) {
 	delete activeDisasm;
-	activeDisasm = list[retval]->query_interface(bin_format,second_handle,*this);
+	activeDisasm = list[retval]->query_interface(bin_format,*second_handle,*this);
 	DefDisasmSel = retval;
 	accept_actions();
 	return true;
@@ -687,7 +687,7 @@ void DisMode::read_ini(Ini_Profile& ini)
 	HiLight = (int)strtoul(tmps.c_str(),NULL,10);
 	if(HiLight > 2) HiLight = 2;
 	if(activeDisasm) delete activeDisasm;
-	activeDisasm = list[DefDisasmSel]->query_interface(bin_format,second_handle,*this);
+	activeDisasm = list[DefDisasmSel]->query_interface(bin_format,*second_handle,*this);
 	accept_actions();
 	activeDisasm->read_ini(ini);
     }

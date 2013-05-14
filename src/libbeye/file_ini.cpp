@@ -79,28 +79,6 @@ enum {
     __INI_ITEM       =3  /**< required string is item */
 };
 
-#if 0
-static void dump_BFILE(BFILE *h) {
-fprintf(stderr,
-	"FilePos=%llu\n"
-	"Flength=%llu\n"
-	"FileName=%s\n"
-	"openmode=%u\n"
-	"optimize=%i\n"
-	"is_mmf=%i\n"
-	"primary_mmf=%u\n"
-	"is_eof=%u\n"
-	,h->FilePos
-	,h->FLength
-	,h->FileName
-	,h->openmode
-	,h->optimize
-	,h->is_mmf
-	,h->primary_mmf
-	,h->is_eof);
-}
-#endif
-
 namespace	usr {
 static const unsigned __C_EOF=0x1A;
 static const char iniOpenComment=';';

@@ -309,8 +309,8 @@ void BeyeContext::main_loop()
 	    __filesize_t p = flen - twidth;
 	    if((__fileoff_t)nfp < 0) nfp = 0;
 	    if(nfp > 0) if(nfp > p) nfp = p;
-	    bm_file().seek(nfp,binary_stream::Seek_Set);
 	}
+	bm_file().seek(nfp,binary_stream::Seek_Set);
 	DRAW:
 	if((activeMode->flags() & Plugin::Text) != Plugin::Text) savep = tell();
 	textshift = activeMode->paint(ch,textshift);

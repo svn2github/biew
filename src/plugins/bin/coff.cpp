@@ -618,7 +618,6 @@ Coff_Parser::Coff_Parser(binary_stream& h,CodeGuider& _code_guider)
 	MemOutBox("Coff386 initialization");
 	exit(EXIT_FAILURE);
     }
-    main_handle = main_handle;
     if((coff_cache = main_handle.dup()) == &bNull) coff_cache = &main_handle;
     if(COFF_WORD(coff386hdr.f_opthdr)) s_off += COFF_WORD(coff386hdr.f_opthdr);
     coff_cache->seek(s_off,binary_stream::Seek_Set);

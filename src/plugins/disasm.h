@@ -214,7 +214,7 @@ typedef unsigned char * MBuffer;
 	    std::vector<const Disassembler_Info*> list;
 	    TWindow&			main_wnd;
 	    binary_stream&		main_handle;
-	    binary_stream&		second_handle;
+	    binary_stream*		second_handle;
 	    Bin_Format&			bin_format;
     };
     inline DisMode::e_disarg operator~(DisMode::e_disarg a) { return static_cast<DisMode::e_disarg>(~static_cast<unsigned>(a)); }

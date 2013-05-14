@@ -78,8 +78,8 @@ namespace	usr {
 
 	    void		create_windows();
 
-	    binary_stream&	bm_file() const { return bm_file_handle; }
-	    binary_stream&	sc_bm_file() const { return sc_bm_file_handle; }
+	    binary_stream&	bm_file() const { return *bm_file_handle; }
+	    binary_stream&	sc_bm_file() const { return *sc_bm_file_handle; }
 	    bool		BMOpen(const std::string& fname);
 	    void		BMClose();
 	    static binary_stream* beyeOpenRO(const std::string& fname,unsigned cache_size);
@@ -137,8 +137,8 @@ namespace	usr {
 	    CodeGuider*		code_guider;
 	    addendum*		addons;
 	    class sysinfo*	sysinfo;
-	    binary_stream&	bm_file_handle;
-	    binary_stream&	sc_bm_file_handle;
+	    binary_stream*	bm_file_handle;
+	    binary_stream*	sc_bm_file_handle;
 	    TConsole*		_tconsole;
 	    LocalPtr<System>	_system;
 	    TWindow*		ErrorWnd;

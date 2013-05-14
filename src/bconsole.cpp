@@ -22,6 +22,7 @@ using namespace	usr;
 **/
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 
 #include "libbeye/kbd_code.h"
 #include "libbeye/osdep/tconsole.h"
@@ -823,15 +824,15 @@ static int  __FASTCALL__ __ListBox(const char** names,unsigned nlist,unsigned de
 		ofname[0] = 0;
 		if(GetStringDlg(ofname," Save info to file : "," [ENTER] - Proceed ",NAME_MSG))
 		{
-		  FILE * out;
-		  out = fopen(ofname,"wt");
-		  if(out)
+		  std::ofstream out;
+		  out.open(ofname,std::ios_base::out);
+		  if(out.is_open())
 		  {
 		    strncpy(ofname,title.c_str(),sizeof(ofname));
 		    ofname[sizeof(ofname)-1] = '\0';
 		    if(GetStringDlg(ofname," User comments : "," [ENTER] - Proceed "," Description : "))
 		    {
-		      fprintf(out,"%s\n\n",ofname);
+		      out<<ofname<<std::endl<<std::endl;
 		    }
 		    for(i = 0;i < nlist;i++)
 		    {
@@ -843,15 +844,15 @@ static int  __FASTCALL__ __ListBox(const char** names,unsigned nlist,unsigned de
 		      if(p)
 		      {
 			*p = 0;
-			fprintf(out,"%s",stmp);
-			for(j = p - stmp;j < 50;j++) fprintf(out," ");
-			fprintf(out," @%s",p+1);
+			out<<stmp;
+			for(j = p - stmp;j < 50;j++) out<<" ";
+			out<<" @"<<((any_t*)p+1);
 			if(p) *p = LB_ORD_DELIMITER;
 		      }
-		      else fprintf(out,"%s",names[i]);
-		      fprintf(out,"\n");
+		      else out<<names[i];
+		      out<<std::endl;
 		    }
-		    fclose(out);
+		    out.close();
 		  }
 		  else beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 		}

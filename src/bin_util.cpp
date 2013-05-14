@@ -17,6 +17,10 @@ using namespace	usr;
  * @since       1995
  * @note        Development, fixes and improvements
 **/
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
@@ -222,18 +226,17 @@ bool __FASTCALL__ __udnSaveList()
 {
     unsigned i;
     if(udn_list) {
-	FILE *out;
-	if((out = fopen(udn_fname.c_str(),"wt"))!=NULL) {
-	    fprintf(out,"; This is an automatically generated list of user-defined names\n"
-			"; for: %s\n"
-			"; by Beye-%s\n"
-			,beye_context().bm_file().filename().c_str()
-			,BEYE_VERSION);
+	std::ofstream out;
+	out.open(udn_fname.c_str(),std::ios_base::out);
+	if(out.is_open()) {
+	    out<<"; This is an automatically generated list of user-defined names"<<std::endl;
+	    out<<"; for: "<<beye_context().bm_file().filename()<<std::endl;
+	    out<<"; by Beye-"<<BEYE_VERSION<<std::endl;
 	    for(i=0;i<udn_list->nItems;i++)
-		fprintf(out,"%016llX:%s\n"
-		,((udn *)udn_list->data)[i].offset
-		,((udn *)udn_list->data)[i].name);
-	    fclose(out);
+		out<<std::hex<<std::setfill('0')<<std::setw(16)
+		    <<((udn *)udn_list->data)[i].offset<<":"
+		    <<((udn *)udn_list->data)[i].name<<std::endl;
+	    out.close();
 	    udn_modified=false;
 	    return true;
 	}
@@ -261,14 +264,15 @@ bool __FASTCALL__ udnSaveList() {
 bool __FASTCALL__  __udnLoadList() {
     unsigned i;
     udn item;
-    FILE *in;
-    if((in = fopen(udn_fname.c_str(),"rt"))!=NULL) {
+    std::ifstream in;
+    in.open(udn_fname.c_str(),std::ios_base::in);
+    if(in.is_open()) {
 	    char buff[4096],*brk;
 	    unsigned blen;
 	    i = 0;
-	    while(!feof(in)) {
+	    while(!in.eof()) {
 		buff[0]='\0';
-		fgets(buff,sizeof(buff),in);
+		in.getline(buff,sizeof(buff));
 		i++;
 		if(buff[0]==';'||buff[0]=='\0') continue;
 		brk=strchr(buff,':');
@@ -290,7 +294,7 @@ bool __FASTCALL__  __udnLoadList() {
 		if(udn_list)  la_AddData(udn_list,&item,NULL);
 		else break;
 	    }
-	    fclose(in);
+	    in.close();
 	    if(udn_list) la_Sort(udn_list,udn_compare);
 	    return true;
 	}

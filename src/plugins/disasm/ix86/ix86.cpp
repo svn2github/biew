@@ -20,6 +20,9 @@ using namespace	usr;
  * @date        11.2007
  * @note        Implemented x86 inline assembler as a NASM/YASM wrapper
 **/
+#include <iostream>
+#include <fstream>
+
 #include <string.h>
 #include <ctype.h>
 #include <limits.h>
@@ -6382,7 +6385,8 @@ AsmRet ix86_Disassembler::assembler(const char *code)
 {
   char codebuffer[CODEBUFFER_LEN];
   AsmRet result;
-  FILE *asmf, *bin, *err;
+  std::ofstream asmf;
+  std::ifstream bin, err;
   int i,c;
   char commandbuffer[FILENAME_MAX+1];
   std::string home;
@@ -6404,22 +6408,14 @@ AsmRet ix86_Disassembler::assembler(const char *code)
 
   //Generate NASM input file
   sprintf(commandbuffer, "%stmp0", home.c_str());
-  asmf = fopen(commandbuffer, "w");
-  if (!asmf) goto tmperror;
-  if (get_bitness() == DAB_USE16)
-  {
-    fprintf(asmf, "BITS 16");
-  }
-  else if (get_bitness() == DAB_USE64)
-  {
-    fprintf(asmf, "BITS 64");
-  }
-  else
-  {
-    fprintf(asmf, "BITS 32");
-  }
-  fprintf(asmf, "\n%s",code);
-  fclose(asmf);
+  asmf.open(commandbuffer,std::ios_base::out);
+  if (!asmf.is_open()) goto tmperror;
+  if (get_bitness() == DAB_USE16)	asmf<<"BITS 16";
+  else if (get_bitness() == DAB_USE64)	asmf<<"BITS 64";
+  else					asmf<<"BITS 32";
+  asmf<<std::endl;
+  asmf<<code;
+  asmf.close();
 
   //Build command line
   i=sprintf(commandbuffer, assemblers[active_assembler].run_command, home.c_str(), home.c_str(), home.c_str());
@@ -6439,14 +6435,15 @@ AsmRet ix86_Disassembler::assembler(const char *code)
 
   //Read result
   sprintf(commandbuffer, "%stmp1", home.c_str());
-  bin = fopen(commandbuffer, "r");
+  bin.open(commandbuffer,std::ios_base::in);
   if (!bin) goto asmerror;
   i=0;
-  while (((c = fgetc(bin)) != EOF) && (i<CODEBUFFER_LEN))
+  while (bin.good() && (i<CODEBUFFER_LEN))
   {
+    c=bin.get();
     codebuffer[i++]=(char)c;
   }
-  fclose(bin);
+  bin.close();
 
   if (i==CODEBUFFER_LEN) goto codetoolongerror;
   if (i==0) goto asmerror;
@@ -6459,11 +6456,12 @@ AsmRet ix86_Disassembler::assembler(const char *code)
 asmerror:
   //Read error message
   sprintf(commandbuffer, "%stmp2", home.c_str());
-  err = fopen(commandbuffer, "r");
-  if (!err) goto tmperror;
+  err.open(commandbuffer,std::ios_base::in);
+  if (!err.is_open()) goto tmperror;
   i=0;
-  while (((c = fgetc(err)) != EOF) && (i<CODEBUFFER_LEN-1))
+  while (err.good() && (i<CODEBUFFER_LEN-1))
   {
+    c = err.get();
     //Only get the 1st error line (usually the most informative)
     if ((((char)c) == '\r') || (((char)c) == '\n')) break;
 
@@ -6478,7 +6476,7 @@ asmerror:
       i=0;
     }
   }
-  fclose(err);
+  err.close();
   codebuffer[i]='\0';
   result.insn = (MBuffer)codebuffer;
   while (result.insn[0] == ' ') //Drop leading spaces
