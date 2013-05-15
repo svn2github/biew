@@ -1156,7 +1156,7 @@ int LX_Parser::query_bitness(__filesize_t pa) const
   return ret;
 }
 
-bool LX_Parser::address_resolving(char *addr,__filesize_t cfpos)
+bool LX_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
@@ -1164,28 +1164,28 @@ bool LX_Parser::address_resolving(char *addr,__filesize_t cfpos)
   uint32_t res;
   if(cfpos >= headshift() && cfpos < headshift() + sizeof(LXHEADER))
   {
-    strcpy(addr,"LXH :");
-    strcpy(&addr[5],Get4Digit(cfpos - headshift()));
+    addr="LXH :";
+    addr+=Get4Digit(cfpos - headshift());
   }
   else
   if(cfpos >= headshift() + lxe.lx.lxObjectTableOffset &&
      cfpos <  headshift() + lxe.lx.lxObjectTableOffset + sizeof(LX_OBJECT)*lxe.lx.lxObjectCount)
   {
-    strcpy(addr,"LXOD:");
-    strcpy(&addr[5],Get4Digit(cfpos - headshift() - lxe.lx.lxObjectTableOffset));
+    addr="LXOD:";
+    addr+=Get4Digit(cfpos - headshift() - lxe.lx.lxObjectTableOffset);
   }
   else
   if(cfpos >= headshift() + lxe.lx.lxObjectPageTableOffset &&
      cfpos <  headshift() + lxe.lx.lxObjectPageTableOffset + sizeof(LX_MAP_TABLE)*lxe.lx.lxPageCount)
   {
-    strcpy(addr,"LXPD:");
-    strcpy(&addr[5],Get4Digit(cfpos - headshift() - lxe.lx.lxObjectPageTableOffset));
+    addr="LXPD:";
+    addr+=Get4Digit(cfpos - headshift() - lxe.lx.lxObjectPageTableOffset);
   }
   else
    if((res=pa2va(cfpos))!=0)
    {
-     addr[0] = '.';
-     strcpy(&addr[1],Get8Digit(res));
+     addr = ".";
+     addr+=Get8Digit(res);
    }
    else bret = false;
   return bret;

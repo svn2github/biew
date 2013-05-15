@@ -32,7 +32,7 @@ namespace	usr {
 			   * @param r_shift      used only if APPREF_TRY_LABEL mode is set, contains real value of field, that required binding
 			   * @return             true if reference was appended
 			*/
-	    virtual bool		bind(const DisMode& _parent,char *str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift) { UNUSED(_parent); UNUSED(str); UNUSED(shift); UNUSED(flg); UNUSED(codelen); UNUSED(r_shift); return false; }
+	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift) { UNUSED(_parent); UNUSED(str); UNUSED(shift); UNUSED(flg); UNUSED(codelen); UNUSED(r_shift); return false; }
 
 			 /** Returns CPU platform, that required by format.
 			   * @note           Full list of platform please see in
@@ -51,7 +51,7 @@ namespace	usr {
 			 /** For displaying offset within struct in left address column.
 			   * @return         false if string is not modified.
 			  **/
-	    virtual bool		address_resolving(char *,__filesize_t) { return false; }
+	    virtual bool		address_resolving(std::string&,__filesize_t) { return false; }
 
 			 /** Converts virtual address to physical (means file offset).
 			   * @param va       indicates virtual address to be converted
@@ -71,13 +71,13 @@ namespace	usr {
 			   * @param _class    pointer to the memory where can be stored class of symbol (See SC_* conatnts)
 			   * @param pa        indicates physical offset within file
 			   * @param as_prev   indicates direction of symbol searching from given physical offset
-			   * @return          0 - if no symbol name available
+			   * @return          Bad_Address - if no symbol name available
 			   *                  in given direction (as_prev)
 			   *                  physical address of public symbol
 			   *                  which is found in given direction
 			  **/
-	    virtual __filesize_t	get_public_symbol(char* str,unsigned cb_str,unsigned *_class,
-							    __filesize_t pa,bool as_prev) { UNUSED(str); UNUSED(cb_str); UNUSED(_class); UNUSED(pa); UNUSED(as_prev); return Plugin::Bad_Address; }
+	    virtual __filesize_t	get_public_symbol(std::string& str,unsigned& _class,
+							    __filesize_t pa,bool as_prev) { UNUSED(str); UNUSED(_class); UNUSED(pa); UNUSED(as_prev); return Plugin::Bad_Address; }
 
 			 /** Determines attributes of object at given physical file address.
 			   * @param pa        indicates physical file offset of object
@@ -97,8 +97,8 @@ namespace	usr {
 			   *                  = 0, end = begin of first data or
 			   *                  code object).
 			  **/
-	    virtual unsigned		get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,
-							__filesize_t *start,__filesize_t *end,int *_class,int *bitness) { UNUSED(pa); UNUSED(name); UNUSED(cb_name); UNUSED(start); UNUSED(end); UNUSED(_class); UNUSED(bitness); return 0; }
+	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
+							__filesize_t& start,__filesize_t& end,int& _class,int& bitness) { UNUSED(pa); UNUSED(name); UNUSED(start); UNUSED(end); UNUSED(_class); UNUSED(bitness); return 0; }
     };
 
     struct Binary_Parser_Info {
@@ -106,5 +106,69 @@ namespace	usr {
 	bool		(*probe)(binary_stream& handle); /**< Checks format */
 	Binary_Parser* (*query_interface)(binary_stream&,CodeGuider&);
     };
+
+
+    struct symbolic_information {
+	__filesize_t pa;
+	__filesize_t nameoff;
+	__filesize_t addinfo;
+	__filesize_t attr;
+
+	bool operator<(const symbolic_information& rhs) const { return pa < rhs.pa; }
+    };
+
+    template<class T,class K>
+    inline typename T::const_iterator find_nearest(const T& obj, const K& key) {
+	typename T::const_iterator it;
+	it=obj.find(key);
+	if(it!=obj.end()) return it;
+	if(key.pa<(*obj.begin()).pa) return obj.begin();
+	typename T::const_iterator prev;
+	it=obj.begin();
+	prev=it;
+	it++;
+	for(;it!=obj.end();it++) {
+	    if((*prev).pa>=key.pa && key.pa < (*it).pa) return prev;
+	}
+	return obj.end();
+    }
+
+    template<class T,class K>
+    inline __filesize_t find_symbolic_information(const T& names,unsigned& func_class,K& key,bool as_prev,
+						typename T::const_iterator& index)
+{
+    __filesize_t ret_addr,cur_addr;
+    typename T::const_iterator i,idx;
+    if(names.empty()) return 0;
+    ret_addr = 0L;
+    index = idx = names.end();
+    i = find_nearest(names,key);
+    if(as_prev) idx = i;
+    else {
+	static typename T::const_iterator multiref_i = names.begin();
+	i = names.begin();
+	get_next:
+	while((cur_addr=(*i).pa)<=key.pa) {
+	    i++;
+	    if((cur_addr == key.pa && (*i).pa > (*multiref_i).pa) || (i == names.end())) break;
+	}
+	idx = i;
+	if(idx!=names.end()) ret_addr = cur_addr;
+	else ret_addr = 0L;
+	if(ret_addr && ret_addr == key.pa) {
+	    if((*idx).pa <= (*multiref_i).pa) { i = idx; goto get_next; }
+	    else multiref_i = idx;
+	}
+	else multiref_i = names.begin();
+    }
+    if(idx!=names.end()) {
+	ret_addr = (*idx).pa;
+	func_class = (*idx).attr;
+	if(idx==names.begin() && key.pa < ret_addr && as_prev) ret_addr = 0;
+	else index = idx;
+    }
+    return ret_addr;
+}
+
 } // namespace	usr
 #endif

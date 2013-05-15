@@ -208,7 +208,7 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 		lindex = (flen - sindex)/__inc;
 		rwidth = lindex > HWidth ? HWidth : (int)lindex;
 		len = HA_LEN();
-		::memcpy(outstr,code_guider.encode_address(sindex,hexAddressResolv),len);
+		::memcpy(outstr,code_guider.encode_address(sindex,hexAddressResolv).c_str(),len);
 		for(j = 0,freq = 0,lindex = sindex;j < rwidth;j++,lindex += __inc,freq++) {
 		    ::memcpy(&outstr[len],hexViewer[hmode].func(main_handle,lindex),dlen);
 		    len += dlen + 1;

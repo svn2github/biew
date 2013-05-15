@@ -104,6 +104,7 @@ namespace	usr {
     struct NERefChain {
 	unsigned offset;
 	unsigned number;
+	bool operator<(const NERefChain& rhs) const { return offset<rhs.offset; }
     };
 
     class LX_Parser;
@@ -124,16 +125,16 @@ namespace	usr {
 	    virtual __filesize_t	action_F8();
 	    virtual __filesize_t	action_F10();
 
-	    virtual bool		bind(const DisMode& _parent,char *str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
+	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
 	    virtual int			query_platform() const;
 	    virtual int			query_bitness(__filesize_t) const;
-	    virtual bool		address_resolving(char *,__filesize_t);
+	    virtual bool		address_resolving(std::string&,__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va);
 	    virtual __filesize_t	pa2va(__filesize_t pa);
-	    virtual __filesize_t	get_public_symbol(char *str,unsigned cb_str,unsigned *_class,
+	    virtual __filesize_t	get_public_symbol(std::string& str,unsigned& _class,
 							    __filesize_t pa,bool as_prev);
-	    virtual unsigned		get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,
-							__filesize_t *start,__filesize_t *end,int *_class,int *bitness);
+	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
+							__filesize_t& start,__filesize_t& end,int& _class,int& bitness);
 	protected:
 	    friend class LX_Parser;
 	    friend class LE_Parser;
@@ -144,9 +145,9 @@ namespace	usr {
 	    static const char*		GetPMWinAPI(unsigned flag);
 	    static const char*		__nedata[];
 	private:
-	    void			ne_ReadPubName(binary_stream&b_cache,const struct PubName *it,char *buff,unsigned cb_buff);
-	    bool			BuildReferStrNE(const DisMode&parent,char *str,RELOC_NE *rne,int flags,__filesize_t ulShift);
-	    void			rdImpNameNELX(char *buff,int blen,unsigned idx,bool useasoff,__filesize_t OffTable);
+	    std::string			ne_ReadPubName(binary_stream&b_cache,const symbolic_information& it);
+	    bool			BuildReferStrNE(const DisMode&parent,std::string& str,RELOC_NE *rne,int flags,__filesize_t ulShift);
+	    std::string			rdImpNameNELX(unsigned idx,bool useasoff,__filesize_t OffTable);
 	    unsigned			__findSpecType(__filesize_t sstart,__filesize_t ssize,unsigned segnum,__filesize_t target,char codelen,char type,unsigned defval);
 	    RELOC_NE*			__found_RNE_spec(__filesize_t segoff,__filesize_t slength,unsigned segnum,unsigned keyoff,char codelen,int type);
 	    RELOC_NE*			__found_RNE(__filesize_t segoff,__filesize_t slength,unsigned segnum,unsigned keyoff,char codelen);
@@ -170,7 +171,7 @@ namespace	usr {
 	    bool			NENRNamesReadItems(binary_stream&handle,memArray *names,unsigned nnames);
 	    bool			NERNamesReadItems(binary_stream&handle,memArray *names,unsigned nnames);
 	    bool			__ReadProcListNE(binary_stream&handle,memArray *obj,int modno);
-	    bool			isPresent(memArray *arr,unsigned nentry,char *_tmpl);
+	    bool			isPresent(memArray *arr,unsigned nentry,const std::string& _tmpl);
 	    void			ShowProcListNE(int modno);
 	    bool			__ReadModRefNamesNE(binary_stream&handle,memArray *obj);
 	    static void			EntPaintNE(TWindow *win,const any_t **names,unsigned start,unsigned nlist);
@@ -181,12 +182,12 @@ namespace	usr {
 	    static void	__FASTCALL__	PaintNewHeaderNE_2(TWindow *w);
 	    static void	__FASTCALL__	PaintNewHeaderNE_1(TWindow *w);
 	    static const char*		__getNEType(unsigned type);
-	    void			rd_ImpName(char *buff,int blen,unsigned idx,bool useasoff);
-	    bool			FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
+	    std::string			rd_ImpName(unsigned idx,bool useasoff);
+	    bool			FindPubName(std::string& buff,__filesize_t pa);
 	    __filesize_t		CalcEntryPointNE(unsigned segnum,unsigned offset);
 	    void			ne_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
 	    bool			ReadPubNames(binary_stream& handle,__filesize_t offset,void (__FASTCALL__ *mem_out)(const std::string&));
-	    unsigned			__get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,__filesize_t *start,__filesize_t *end,int *_class,int *bitness) const;
+	    unsigned			__get_object_attribute(__filesize_t pa,std::string& name,__filesize_t& start,__filesize_t& end,int& _class,int& bitness) const;
 
 	    static void			(__FASTCALL__ * nephead[])(TWindow* w);
     };

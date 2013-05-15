@@ -131,24 +131,23 @@ void CodeGuider::reset_go_address( int keycode )
     } else GoAddr.clear();
 }
 
-void CodeGuider::add_go_address(const DisMode& parent,char *str,__filesize_t addr)
+void CodeGuider::add_go_address(const DisMode& parent,std::string& str,__filesize_t addr)
 {
     TWindow& main_wnd = beye_context().main_wnd();
     tAbsCoord width = main_wnd.client_width();
     unsigned bytecodes=beye_context().active_mode().get_max_symbol_size()*2;
     int len,where;
     if(parent.prepare_mode()) return;
-    len = strlen((char *)str);
+    len = str.length();
     where = (parent.panel_mode() == DisMode::Panel_Full ? width :
 	    parent.panel_mode() == DisMode::Panel_Medium ? width-HA_LEN() : width-(HA_LEN()+1)-bytecodes) - 5;
     if(Alarm) {
 	size_t i,sz;
 	GoAddr.insert(GoAddr.begin(),std::make_pair(addr,parent.get_curr_line_num()));
 	if(len < where) {
-	    memset(&str[len],TWC_DEF_FILLER,where-len);
-	    str[where] = 0;
+	    str.append(where-len,TWC_DEF_FILLER);
 	}
-	strcat(str,codeguid_image);
+	str+=codeguid_image;
 	str[where + 3] = '0';
 	sz=GoAddr.size();
 	for(i = 1;i < sz;i++) {
@@ -159,10 +158,9 @@ void CodeGuider::add_go_address(const DisMode& parent,char *str,__filesize_t add
     } else {
 	GoAddr.push_back(std::make_pair(addr,parent.get_curr_line_num()));
 	if(len < where) {
-	    memset(&str[len],TWC_DEF_FILLER,where-len);
-	    str[where] = 0;
+	    str.append(where-len,TWC_DEF_FILLER);
 	}
-	strcpy((char *)&str[where],(char *)gidBuildKeyStr());
+	str+=gidBuildKeyStr();
     }
 }
 
@@ -192,12 +190,12 @@ __filesize_t CodeGuider::get_go_address(unsigned keycode)
     return ret;
 }
 
-char* CodeGuider::encode_address(__filesize_t cfpos,bool AddressDetail) const
+std::string CodeGuider::encode_address(__filesize_t cfpos,bool AddressDetail) const
 {
-    static char addr[11];
-    strcpy(addr,beye_context().is_file64()?Get16Digit(cfpos):Get8Digit(cfpos));
+    static std::string addr;
+    addr=beye_context().is_file64()?Get16Digit(cfpos):Get8Digit(cfpos);
     if(AddressDetail) beye_context().bin_format().address_resolving(addr,cfpos);
-    strcat(addr,": ");
+    addr+=": ";
     return addr;
 }
 } // namespace	usr

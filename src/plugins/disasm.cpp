@@ -301,7 +301,7 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 		CurrStrLenBuff[i] = dret.codelen;
 		main_wnd.set_color(browser_cset.main);
 		len_64=HA_LEN();
-		::memcpy(outstr,code_guider.encode_address(cfpos,hexAddressResolv),len_64);
+		::memcpy(outstr,code_guider.encode_address(cfpos,hexAddressResolv).c_str(),len_64);
 		len = 0;
 		if(disPanelMode < Panel_Full) {
 		    static char _clone;
@@ -529,7 +529,7 @@ void DisMode::disasm_screen(TWindow* ewnd,__filesize_t cp,__filesize_t flen,int 
     for(i = st;i < stop;i++) {
 	if(start + cp < flen) {
 	    len_64=HA_LEN();
-	    ::memcpy(outstr,code_guider.encode_address(cp + start,hexAddressResolv),len_64);
+	    ::memcpy(outstr,code_guider.encode_address(cp + start,hexAddressResolv).c_str(),len_64);
 	    main_wnd.set_color(browser_cset.main);
 	    main_wnd.direct_write(1,i + 1,outstr,len_64-1);
 	    dret = disassembler(cp + start,&EditorMem.buff[start],__DISF_NORMAL);
@@ -831,7 +831,7 @@ void  __FASTCALL__ disSetModifier(char *str,const char *modf)
   if(i+mlen > len) { str[i+mlen] = TWC_DEF_FILLER; str[i+mlen+1] = 0; }
 }
 
-bool DisMode::append_digits(binary_stream& handle,char *str,__filesize_t ulShift,int flg,char codelen,any_t*defval,e_disarg type)
+bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t ulShift,int flg,char codelen,any_t*defval,e_disarg type)
 {
  bool app;
  char comments[Comm_Size];
@@ -846,7 +846,7 @@ bool DisMode::append_digits(binary_stream& handle,char *str,__filesize_t ulShift
      static bool displayed = false;
      if(!displayed)
      {
-       strncpy(sout,str,sizeof(sout)-1);
+       strncpy(sout,str.c_str(),sizeof(sout)-1);
        sout[sizeof(sout)-1] = 0;
        if(!strlen(sout)) strcpy(sout,"disAppendDigits");
        beye_context().ErrMessageBox(sout," Internal disassembler error detected ");
@@ -898,7 +898,9 @@ bool DisMode::append_digits(binary_stream& handle,char *str,__filesize_t ulShift
 	if(dis_severity < CommSev_Func)
 	{
 	  strcpy(comments,".*");
-	  psym = bin_format.get_public_symbol(&comments[2],sizeof(comments)-2,&_class,pa,false);
+	  std::string stmp;
+	  psym = bin_format.get_public_symbol(stmp,_class,pa,false);
+	  strcat(comments,stmp.c_str());
 	  if(psym!=Plugin::Bad_Address) {
 	    if(psym != pa) comments[0] = 0;
 	    else
@@ -1050,7 +1052,7 @@ bool DisMode::append_digits(binary_stream& handle,char *str,__filesize_t ulShift
 					    ,((unsigned char *)defval)[7]);
 			 break;
     }
-    strcat(str,appstr);
+    str+=appstr;
    }
    if(comments[0])
    {
@@ -1062,11 +1064,11 @@ bool DisMode::append_digits(binary_stream& handle,char *str,__filesize_t ulShift
   return app;
 }
 
-bool DisMode::append_faddr(binary_stream& handle,char * str,__fileoff_t ulShift,__fileoff_t distin,__filesize_t r_sh,e_disaddr type,unsigned seg,char codelen)
+bool DisMode::append_faddr(binary_stream& handle,std::string& str,__fileoff_t ulShift,__fileoff_t distin,__filesize_t r_sh,e_disaddr type,unsigned seg,char codelen)
 {
  e_ref needref;
  __filesize_t fpos;
- char *modif_to;
+ size_t modif_to;
  DisasmRet dret;
  bool appended = false;
  int flg;
@@ -1089,7 +1091,7 @@ bool DisMode::append_faddr(binary_stream& handle,char * str,__fileoff_t ulShift,
      static bool displayed = false;
      if(!displayed)
      {
-       strncpy(sout,str,sizeof(sout)-1);
+       strncpy(sout,str.c_str(),sizeof(sout)-1);
        sout[sizeof(sout)-1] = 0;
        if(!strlen(sout)) strcpy(sout,"disAppendFAddr");
        beye_context().ErrMessageBox(sout," Internal disassembler error detected ");
@@ -1116,11 +1118,11 @@ bool DisMode::append_faddr(binary_stream& handle,char * str,__fileoff_t ulShift,
 	    if(bin_format.bind(*this,str,r_sh+dret.field,APREF_TRY_LABEL,dret.codelen,r_sh))
 	    {
 	      appended = true;
-	      modif_to = strchr(str,' ');
-	      if(modif_to)
+	      modif_to = str.find(' ');
+	      if(modif_to!=std::string::npos)
 	      {
-		while(*modif_to == ' ') modif_to++;
-		*(modif_to-1) = '*';
+		while(str[modif_to] == ' ') modif_to++;
+		str[modif_to-1] = '*';
 	      }
 	      if(!DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
 	    }
@@ -1157,11 +1159,11 @@ bool DisMode::append_faddr(binary_stream& handle,char * str,__fileoff_t ulShift,
 	if(app)
 	{
 	  appended = true; /* terminate appending any info anyway */
-	  modif_to = strchr(str,' ');
-	  if(modif_to)
+	  modif_to = str.find(' ');
+	  if(modif_to!=std::string::npos)
 	  {
-	    while(*modif_to == ' ') modif_to++;
-	    *(modif_to-1) = '*';
+	    while(str[modif_to] == ' ') modif_to++;
+	    str[modif_to-1] = '*';
 	  }
 	  if(!DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
 	}
@@ -1177,7 +1179,9 @@ bool DisMode::append_faddr(binary_stream& handle,char * str,__fileoff_t ulShift,
    if(hexAddressResolv)
    {
      r_sh = r_sh ? r_sh : (__filesize_t)ulShift;
-     appended = bin_format.address_resolving(&str[strlen(str)],r_sh);
+     std::string stmp;
+     appended = bin_format.address_resolving(stmp,r_sh);
+     str+=stmp;
    }
    if(!appended)
    {
@@ -1188,12 +1192,12 @@ bool DisMode::append_faddr(binary_stream& handle,char * str,__fileoff_t ulShift,
        const char * cptr;
        char lbuf[20];
        cptr = DumpMode ? "L" : "file:";
-       strcat(str,cptr);
+       str+=cptr;
 	if(beye_context().is_file64())
 	    sprintf(lbuf,"%016llX",r_sh);
 	else
 	    sprintf(lbuf,"%08lX",(unsigned long)r_sh);
-       strcat(str,lbuf);
+       str+=lbuf;
        appended = true;
      }
      else
@@ -1201,8 +1205,8 @@ bool DisMode::append_faddr(binary_stream& handle,char * str,__fileoff_t ulShift,
        const char * pstr = "";
        if(type & UseSeg)
        {
-	 strcat(str,Get4Digit(seg));
-	 strcat(str,":");
+	 str+=Get4Digit(seg);
+	 str+=":";
        }
        if(!type) pstr = Get2SignDig((char)distin);
        else
@@ -1213,7 +1217,7 @@ bool DisMode::append_faddr(binary_stream& handle,char * str,__fileoff_t ulShift,
 	  if(type & Near32)   pstr = Get8SignDig(distin);
 	  else
 	   if(type & Near64) pstr = Get16SignDig(distin);
-       strcat(str,pstr);
+       str+=pstr;
      }
      disNeedRef = needref;
    }

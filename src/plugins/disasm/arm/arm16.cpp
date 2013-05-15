@@ -149,7 +149,9 @@ const char* ARM_Disassembler::arm_reg_name[] =
 	READ_IMM(chr);\
 	if(prev) strcat(dret->str,",");\
 	strcat(dret->str,"#");\
-	parent.append_digits(main_handle,dret->str,ulShift,APREF_USE_TYPE,2,&val,DisMode::Arg_Word);\
+	std::string stmp = dret->str; \
+	parent.append_digits(main_handle,stmp,ulShift,APREF_USE_TYPE,2,&val,DisMode::Arg_Word);\
+	strcpy(dret->str,stmp.c_str()); \
 	if(smul) strcat(dret->str,smul);\
 	prev=1;\
     }
@@ -234,7 +236,9 @@ void ARM_Disassembler::arm16EncodeTail(DisasmRet *dret,uint16_t opcode,__filesiz
 	    tbuff=tbuff<<12;
 	else if(hh==1)
 	    tbuff=(tbuff<<1)&0xfffffffc;
-	parent.append_faddr(main_handle,dret->str,ulShift+1,(long)tbuff,ulShift+tbuff,DisMode::Near32,0,2);
+	std::string stmp=dret->str;
+	parent.append_faddr(main_handle,stmp,ulShift+1,(long)tbuff,ulShift+tbuff,DisMode::Near32,0,2);
+	strcpy(dret->str,stmp.c_str());
 	prev=1;
     }
     p=strchr(msk,'R');
@@ -291,7 +295,9 @@ void ARM_Disassembler::arm16Disassembler(DisasmRet *dret,__filesize_t ulShift,
     {
 	strcpy(dret->str,"???");
 	TabSpace(dret->str,TAB_POS);
-	parent.append_digits(main_handle,dret->str,ulShift,APREF_USE_TYPE,2,&opcode,DisMode::Arg_Word);
+	std::string stmp = dret->str;
+	parent.append_digits(main_handle,stmp,ulShift,APREF_USE_TYPE,2,&opcode,DisMode::Arg_Word);
+	strcpy(dret->str,stmp.c_str());
     }
 }
 

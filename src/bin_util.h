@@ -33,20 +33,10 @@ namespace	usr {
     inline uint64_t FMT_QWORD(uint64_t cval,bool is_big) { return is_big ? bswap_64(cval) :cval; }
 #endif
 
-    struct PubName {
-	__filesize_t pa;
-	__filesize_t nameoff;
-	__filesize_t addinfo;
-	__filesize_t attr;
-    };
-
-    tCompare __FASTCALL__ fmtComparePubNames(const any_t* v1,const any_t* v2);
-    __filesize_t __FASTCALL__ fmtGetPubSym(unsigned& func_class,__filesize_t pa,bool as_prev,
-					linearArray *PubNames,size_t& index);
-
     /** Reads user defined name at given offset!
     **/
     bool __FASTCALL__ udnFindName(__filesize_t pa,char *buff, unsigned cb_buff);
+    bool __FASTCALL__ udnFindName(__filesize_t pa,std::string& buff);
 
     /** Display select box to select user defined name and returns its offset.
     **/

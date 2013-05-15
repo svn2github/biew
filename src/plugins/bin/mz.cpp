@@ -263,7 +263,7 @@ bool MZ_Parser::isMZReferenced(__filesize_t shift,char len)
   return false;
 }
 
-bool MZ_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+bool MZ_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
   char stmp[256];
   bool ret = false;
@@ -273,15 +273,15 @@ bool MZ_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int fl
      unsigned wrd;
      _main_handle.seek(ulShift,binary_stream::Seek_Set);
      wrd = _main_handle.read(type_word);
-     strcat(str,Get4Digit(wrd));
-     strcat(str,"+PID");
+     str+=Get4Digit(wrd);
+     str+="+PID";
      ret = true;
   }
   if(!DumpMode && !EditMode && (flags & APREF_TRY_LABEL) && codelen == 4)
   {
     r_sh += (((__filesize_t)mz.mzHeaderSize) << 4);
-    if(udnFindName(r_sh,stmp,sizeof(stmp))==true) strcat(str,stmp);
-    else strcat(str,Get8Digit(r_sh));
+    if(udnFindName(r_sh,stmp,sizeof(stmp))==true) str+=stmp;
+    else str+=Get8Digit(r_sh);
     _code_guider.add_go_address(parent,str,r_sh);
     ret = true;
   }
@@ -308,23 +308,21 @@ MZ_Parser::MZ_Parser(binary_stream& h,CodeGuider& __code_guider)
 MZ_Parser::~MZ_Parser() {}
 int MZ_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-bool MZ_Parser::address_resolving(char *addr,__filesize_t cfpos)
+bool MZ_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 {
-  bool bret = true;
-  if(cfpos < sizeof(MZHEADER)+2) sprintf(addr,"MZH :%s",Get4Digit(cfpos));
-  else
-    if(cfpos >= sizeof(MZHEADER)+2 && cfpos < sizeof(MZHEADER)+2+(mz.mzRelocationCount<<2))
-    {
-      sprintf(addr,"MZRl:%s",Get4Digit(cfpos - sizeof(MZHEADER)));
+    bool bret = true;
+    if(cfpos < sizeof(MZHEADER)+2) {
+	addr="MZH :";
+	addr+=Get4Digit(cfpos);
+    } else if(cfpos >= sizeof(MZHEADER)+2 && cfpos < sizeof(MZHEADER)+2+(mz.mzRelocationCount<<2)) {
+	addr="MZRl:";
+	addr+=Get4Digit(cfpos - sizeof(MZHEADER));
+    } else if(cfpos >= HeadSize) {
+	addr = ".";
+	addr+=Get8Digit(MZ_Parser::pa2va(cfpos));
     }
-    else
-     if(cfpos >= HeadSize)
-     {
-       addr[0] = '.';
-       strcpy(&addr[1],Get8Digit(MZ_Parser::pa2va(cfpos)));
-     }
-     else bret = false;
-  return bret;
+    else bret = false;
+    return bret;
 }
 
 __filesize_t MZ_Parser::action_F1()

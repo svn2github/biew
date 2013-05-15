@@ -196,9 +196,10 @@ static std::string ff_fname="beye.$$$";
 static std::string xlat_fname;
 static __filesize_t ff_startpos = 0L,ff_len = 0L;
 
-static void  __FASTCALL__ printObject(std::ofstream& fout,unsigned obj_num,char *oname,int oclass,int obitness,__filesize_t size)
+static void  __FASTCALL__ printObject(std::ofstream& fout,unsigned obj_num,const std::string& oname,int oclass,int obitness,__filesize_t size)
 {
-  const char *name,*btn;
+  const char *btn;
+  std::string name;
   char onumname[30];
   switch(obitness)
   {
@@ -213,7 +214,7 @@ static void  __FASTCALL__ printObject(std::ofstream& fout,unsigned obj_num,char 
   name = oname[0] ? oname : oclass == OC_DATA ? "DUMP_DATA" :
 			    oclass == OC_CODE ? "DUMP_TEXT" :
 			    "Unknown";
-  if(!oname[0]) { sprintf(onumname,"%s%u",name,obj_num); name = onumname; }
+  if(!oname[0]) { sprintf(onumname,"%s%u",name.c_str(),obj_num); name = onumname; }
   fout<<std::endl<<"SEGMENT "<<name<<" BYTE PUBLIC "<<btn<<" '"<<(oclass == OC_DATA ? "DATA" : oclass == OC_CODE ? "CODE" : "NoObject")<<"'"<<std::endl;
   fout<<"; size: "<<std::dec<<size<<" bytes"<<std::endl<<std::endl;
 }
@@ -251,15 +252,18 @@ static unsigned  __FASTCALL__ printHelpComment(char *buff,MBuffer codebuff,Disas
 
 inline const char* GET_FUNC_CLASS(unsigned x) { return x == SC_LOCAL ? "private" : "public"; }
 
-static void  __FASTCALL__ make_addr_column(char *buff,__filesize_t offset)
+static void  __FASTCALL__ make_addr_column(std::string& buff,__filesize_t offset)
 {
    if(hexAddressResolv)
    {
-     buff[0] = 0;
+     buff.clear();
      beye_context().bin_format().address_resolving(buff,offset);
    }
-   else sprintf(buff,"L%s",Get8Digit(offset));
-   strcat(buff,":");
+   else {
+    buff="L";
+    buff+=Get8Digit(offset);
+   }
+   buff+=":";
 }
 
 static void __make_dump_name(const char *end)
@@ -299,7 +303,6 @@ static bool FStore()
 	    progress_wnd = PercentWnd("Saving ..."," Save block to file ");
 	    if(!(flags & FSDLG_ASMMODE)) { /** Write in binary mode */
 		std::ofstream fs;
-		binary_stream* h;
 		__filesize_t wsize,crpos,pwsize,awsize;
 		unsigned rem;
 		wsize = endpos - ff_startpos;
@@ -341,7 +344,8 @@ static bool FStore()
 		unsigned char *codebuff;
 		char *file_cache = NULL,*tmp_buff2 = NULL;
 		unsigned MaxInsnLen;
-		char func_name[300],obj_name[300],data_dis[300];
+		char data_dis[300];
+		std::string obj_name,func_name;
 		__filesize_t func_pa,stop;
 		unsigned func_class;
 		__filesize_t awsize,pwsize;
@@ -377,8 +381,8 @@ static bool FStore()
 		}
 		if(flags & FSDLG_STRUCTS) {
 		    obj_num = bctx.bin_format().get_object_attribute(ff_startpos,obj_name,
-						sizeof(obj_name),&obj_start,
-						&obj_end,&obj_class,&obj_bitness);
+						obj_start,
+						obj_end,obj_class,obj_bitness);
 		    obj_name[sizeof(obj_name)-1] = 0;
 		}
 #if 0
@@ -396,19 +400,18 @@ static bool FStore()
 		if(flags & FSDLG_STRUCTS) printObject(fout,obj_num,obj_name,obj_class,obj_bitness,obj_end - obj_start);
 		func_pa = 0;
 		if(flags & FSDLG_STRUCTS) {
-		    func_pa = bctx.bin_format().get_public_symbol(func_name,sizeof(func_name),
-						&func_class,ff_startpos,true);
-		    func_name[sizeof(func_name)-1] = 0;
+		    func_pa = bctx.bin_format().get_public_symbol(func_name,
+						func_class,ff_startpos,true);
 		    if(func_pa!=Plugin::Bad_Address) {
 			fout<<GET_FUNC_CLASS(func_class)<<" "<<func_name<<":"<<std::endl;
 			if(func_pa < ff_startpos && flags & FSDLG_COMMENT) {
 				fout<<"; ..."<<std::endl;
 			}
 		    }
-		    func_pa = bctx.bin_format().get_public_symbol(func_name,sizeof(func_name),
-						&func_class,ff_startpos,false);
+		    func_name.clear();
+		    func_pa = bctx.bin_format().get_public_symbol(func_name,
+						func_class,ff_startpos,false);
 		    if(func_pa==Plugin::Bad_Address) func_pa=0;
-		    func_name[sizeof(func_name)-1] = 0;
 		}
 		prcnt_counter = oprcnt_counter = 0;
 		awsize = endpos - ff_startpos;
@@ -420,9 +423,9 @@ static bool FStore()
 		    if(flags & FSDLG_STRUCTS) {
 			if(ff_startpos >= obj_end) {
 			    obj_num = bctx.bin_format().get_object_attribute(ff_startpos,obj_name,
-						sizeof(obj_name),&obj_start,
-						&obj_end,&obj_class,
-						&obj_bitness);
+						obj_start,
+						obj_end,obj_class,
+						obj_bitness);
 			    obj_name[sizeof(obj_name)-1] = 0;
 			    printObject(fout,obj_num,obj_name,obj_class,obj_bitness,obj_end - obj_start);
 			}
@@ -437,8 +440,9 @@ static bool FStore()
 				if(diff) fout<<"resb "<<std::dec<<diff<<"H"<<std::endl;
 				fout<<GET_FUNC_CLASS(func_class)<<" "<<func_name<<": ;at offset - "<<std::hex<<func_pa<<"H"<<std::endl;
 				ff_startpos = func_pa;
-				func_pa = bctx.bin_format().get_public_symbol(func_name,sizeof(func_name),
-						&func_class,ff_startpos,false);
+				func_name.clear();
+				func_pa = bctx.bin_format().get_public_symbol(func_name,
+						func_class,ff_startpos,false);
 				if(func_pa==Plugin::Bad_Address) func_pa=0;
 				func_name[sizeof(func_name)-1] = 0;
 				if(func_pa == ff_startpos) {
@@ -457,8 +461,9 @@ static bool FStore()
 			    while(ff_startpos == func_pa) {
 				/* print out here all public labels */
 				fout<<GET_FUNC_CLASS(func_class)<<" "<<func_name<<std::endl;
-				func_pa = bctx.bin_format().get_public_symbol(func_name,sizeof(func_name),
-						&func_class,ff_startpos,false);
+				func_name.clear();
+				func_pa = bctx.bin_format().get_public_symbol(func_name,
+						func_class,ff_startpos,false);
 				if(func_pa==Plugin::Bad_Address) func_pa=0;
 				func_name[sizeof(func_name)-1] = 0;
 				not_silly++;
@@ -516,7 +521,9 @@ static bool FStore()
 		    if(flags & FSDLG_STRUCTS) {
 			if(stop && stop > ff_startpos && ff_startpos + dret.codelen > stop) {
 			    unsigned lim,ii;
-			    make_addr_column(tmp_buff,ff_startpos);
+			    std::string stmp=(char*)tmp_buff;
+			    make_addr_column(stmp,ff_startpos);
+			    strcpy(tmp_buff,stmp.c_str());
 			    strcat(tmp_buff," db ");
 			    lim = (unsigned)(stop-ff_startpos);
 			    if(lim > MaxInsnLen) lim = MaxInsnLen;
@@ -525,7 +532,9 @@ static bool FStore()
 			} else goto normline;
 		    } else {
 			normline:
-			make_addr_column(tmp_buff,ff_startpos);
+			std::string stmp=(char*)tmp_buff;
+			make_addr_column(stmp,ff_startpos);
+			strcpy(tmp_buff,stmp.c_str());
 			sprintf(&tmp_buff[strlen(tmp_buff)]," %s",dret.str);
 		    }
 		    len = strlen(tmp_buff);

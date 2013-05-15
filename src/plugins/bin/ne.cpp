@@ -19,6 +19,7 @@ using namespace	usr;
  * @note        Development, fixes and improvements
 **/
 #include <algorithm>
+#include <set>
 
 #include <stdio.h>
 #include <string.h>
@@ -45,7 +46,7 @@ static const char* txt[]={ "NEHelp", "ModRef", "ResNam", "NRsNam", "", "Entry ",
 const char* NE_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
 static NEHEADER ne;
-static linearArray *PubNames = NULL;
+static std::set<symbolic_information> PubNames;
 
 static binary_stream* ne_cache = &bNull;
 static binary_stream* ne_cache1 = &bNull;
@@ -386,15 +387,13 @@ __filesize_t NE_Parser::action_F2()
  return fret;
 }
 
-bool NE_Parser::isPresent(memArray *arr,unsigned nentry,char *_tmpl)
+bool NE_Parser::isPresent(memArray *arr,unsigned nentry,const std::string& _tmpl)
 {
    unsigned i;
    bool ret = false;
-   if(nentry)
-   {
-     for(i = 0;i < nentry;i++)
-     {
-       if(strcmp((const char *)arr->data[i],_tmpl) == 0) { ret = true; break; }
+   if(nentry) {
+     for(i = 0;i < nentry;i++) {
+       if(_tmpl==(const char *)arr->data[i]) { ret = true; break; }
      }
    }
    return ret;
@@ -403,7 +402,7 @@ bool NE_Parser::isPresent(memArray *arr,unsigned nentry,char *_tmpl)
 bool NE_Parser::__ReadProcListNE(binary_stream& handle,memArray * obj,int modno)
 {
   unsigned i,count;
-  char buff[256];
+  std::string buff;
   SEGDEF tsd;
   modno++;
   count = 0;
@@ -427,16 +426,18 @@ bool NE_Parser::__ReadProcListNE(binary_stream& handle,memArray * obj,int modno)
 	 {
 	   if((rne.Type & 3) == 1)
 	   {
-	     sprintf(buff,"< By ordinal >   @%hu",rne.ordinal);
+	    char stmp[256];
+	     sprintf(stmp,"< By ordinal >   @%hu",rne.ordinal);
+	     buff=stmp;
 	   }
 	   else
 	   {
-	      rd_ImpName(buff,sizeof(buff),rne.ordinal,true);
+	      buff=rd_ImpName(rne.ordinal,true);
 	   }
 	   if(!isPresent(obj,count,buff))
 	   {
 	     if(IsKbdTerminate()) goto exit;
-	     if(!ma_AddString(obj,buff,true)) goto exit;
+	     if(!ma_AddString(obj,buff.c_str(),true)) goto exit;
 	   }
 	 }
       }
@@ -450,7 +451,8 @@ bool NE_Parser::__ReadProcListNE(binary_stream& handle,memArray * obj,int modno)
 void NE_Parser::ShowProcListNE( int modno )
 {
  binary_stream& handle = *ne_cache;
- char ptitle[80],name[50];
+ char ptitle[80];
+ std::string name;
  bool __bool;
  memArray* obj;
  TWindow *w;
@@ -462,8 +464,8 @@ void NE_Parser::ShowProcListNE( int modno )
  if(__bool)
  {
      if(!obj->nItems)  { beye_context().NotifyBox(NOT_ENTRY,MOD_REFER); return; }
-     rd_ImpName(name,sizeof(name),modno+1,false);
-     sprintf(ptitle,"%s%s ",IMPPROC_TABLE,name);
+     name=rd_ImpName(modno+1,false);
+     sprintf(ptitle,"%s%s ",IMPPROC_TABLE,name.c_str());
      ma_Display(obj,ptitle,LB_SORTABLE,-1);
  }
  ma_Destroy(obj);
@@ -941,7 +943,7 @@ static unsigned CurrChainSegment = 0xFFFF;
 static unsigned long CurrSegmentStart = 0;
 static unsigned long CurrSegmentLength = 0;
 static int           CurrSegmentHasReloc = -1;
-static linearArray *CurrNEChain = NULL;
+static std::set<NERefChain> CurrNEChain;
 static char __codelen,__type;
 
 tCompare NE_Parser::compare_chains(const any_t*v1,const any_t*v2)
@@ -957,11 +959,11 @@ void NE_Parser::BuildNERefChain(__filesize_t segoff,__filesize_t slength)
   unsigned nchains,i;
   __filesize_t reloc_off;
   TWindow * w;
-  if(!(CurrNEChain = la_Build(0,sizeof(NERefChain),MemOutBox))) return;
+//  if(!(CurrNEChain = la_Build(0,sizeof(NERefChain),MemOutBox))) return;
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
   w->goto_xy(1,1);
   w->printf(" Building reference chains for segment #%u",CurrChainSegment);
-  if(!PubNames) ne_ReadPubNameList(main_handle(),MemOutBox);
+  if(PubNames.empty()) ne_ReadPubNameList(main_handle(),MemOutBox);
   reloc_off = segoff + slength;
 
   main_handle().seek(reloc_off,binary_stream::Seek_Set);
@@ -978,23 +980,22 @@ void NE_Parser::BuildNERefChain(__filesize_t segoff,__filesize_t slength)
      if(IsKbdTerminate() || main_handle().eof()) break;
      nrc.offset = rne.RefOff;
      nrc.number = i;
-     if(!la_AddData(CurrNEChain,&nrc,MemOutBox)) { OutOfMem: break; }
-     if(!(rne.Type & 0x04) && rne.AddrType) /** if not additive fixup and not byte fixup */
-     {
-       while(1)
-       {
+     CurrNEChain.insert(nrc);
+     if(!(rne.Type & 0x04) && rne.AddrType) {/** if not additive fixup and not byte fixup */
+       while(1) {
 	 unsigned next_off;
-	 main_handle().seek(segoff + (__filesize_t)((NERefChain  *)CurrNEChain->data)[CurrNEChain->nItems - 1].offset,binary_stream::Seek_Set);
+	 std::set<NERefChain>::const_reverse_iterator it = CurrNEChain.rbegin();
+	 main_handle().seek(segoff + (__filesize_t)(*it).offset,binary_stream::Seek_Set);
 	 next_off =main_handle().read(type_word);
 	 if(main_handle().eof()) break;
-	 if(next_off > slength || next_off == 0xFFFF || next_off == ((NERefChain  *)CurrNEChain->data)[CurrNEChain->nItems - 1].offset) break;
+	 if(next_off > slength || next_off == 0xFFFF || next_off == (*it).offset) break;
 	 nrc.offset = next_off;
 	 nrc.number = i;
-	 if(!la_AddData(CurrNEChain,&nrc,MemOutBox)) goto OutOfMem;
+	 CurrNEChain.insert(nrc);
        }
      }
   }
-  la_Sort(CurrNEChain,compare_chains);
+//  la_Sort(CurrNEChain,compare_chains);
   delete w;
 }
 
@@ -1031,19 +1032,20 @@ tCompare NE_Parser::compare_ne(const any_t*e1,const any_t*e2)
 
 RELOC_NE* NE_Parser::__found_RNE(__filesize_t segoff,__filesize_t slength,unsigned segnum,unsigned keyoff,char codelen)
 {
-  NERefChain *found,key;
+  NERefChain key;
+  std::set<NERefChain>::const_iterator it;
   static RELOC_NE rne;
-  if(segnum != CurrChainSegment || !CurrNEChain)
+  if(segnum != CurrChainSegment || CurrNEChain.empty())
   {
-    if(CurrNEChain) la_Destroy(CurrNEChain);
+    CurrNEChain.clear();
     CurrChainSegment = segnum;
     BuildNERefChain(segoff,slength);
   }
   key.offset = keyoff;
   __codelen = codelen;
-  found = (NERefChain*)la_Find(CurrNEChain,&key,compare_ne);
-  if(found) {
-    main_handle().seek(segoff + slength + 2 + sizeof(RELOC_NE)*found->number,binary_stream::Seek_Set);
+  it = CurrNEChain.find(key);
+  if(it!=CurrNEChain.end()) {
+    main_handle().seek(segoff + slength + 2 + sizeof(RELOC_NE)*(*it).number,binary_stream::Seek_Set);
     main_handle().read(&rne,sizeof(rne));
     return &rne;
   }
@@ -1052,23 +1054,24 @@ RELOC_NE* NE_Parser::__found_RNE(__filesize_t segoff,__filesize_t slength,unsign
 
 RELOC_NE* NE_Parser::__found_RNE_spec(__filesize_t segoff,__filesize_t slength,unsigned segnum,unsigned keyoff,char codelen,int type)
 {
-  NERefChain *found,key;
+  NERefChain key;
+  std::set<NERefChain>::const_iterator it;
   static RELOC_NE rne;
-  if(segnum != CurrChainSegment || !CurrNEChain)
+  if(segnum != CurrChainSegment || CurrNEChain.empty())
   {
-    if(CurrNEChain) la_Destroy(CurrNEChain);
+    CurrNEChain.clear();
     CurrChainSegment = segnum;
     BuildNERefChain(segoff,slength);
   }
   key.offset = keyoff;
   __codelen = codelen;
   __type = type;
-  found = (NERefChain*)la_Find(CurrNEChain,&key,compare_ne_spec);
-  if(found)
+  it = CurrNEChain.find(key);
+  if(it!=CurrNEChain.end())
   {
     binary_stream* b_cache;
     b_cache = ne_cache;
-    b_cache->seek(segoff + slength + 2 + sizeof(RELOC_NE)*found->number,binary_stream::Seek_Set);
+    b_cache->seek(segoff + slength + 2 + sizeof(RELOC_NE)*(*it).number,binary_stream::Seek_Set);
     b_cache->read(&rne,sizeof(rne));
     return &rne;
   }
@@ -1085,7 +1088,7 @@ unsigned NE_Parser::__findSpecType(__filesize_t sstart,__filesize_t ssize,unsign
    return ret;
 }
 
-void NE_Parser::rdImpNameNELX(char *buff,int blen,unsigned idx,bool useasoff,__filesize_t OffTable)
+std::string NE_Parser::rdImpNameNELX(unsigned idx,bool useasoff,__filesize_t OffTable)
 {
   unsigned char len;
   __filesize_t name_off;
@@ -1104,19 +1107,21 @@ void NE_Parser::rdImpNameNELX(char *buff,int blen,unsigned idx,bool useasoff,__f
   else name_off += idx;
   b_cache->seek(name_off,binary_stream::Seek_Set);
   len = b_cache->read(type_byte);
-  len = len > blen ? blen : len;
+  char buff[len+1];
   b_cache->read(buff,len);
   buff[len] = 0;
+  return buff;
 }
 
-void NE_Parser::rd_ImpName(char *buff,int blen,unsigned idx,bool useasoff)
+std::string NE_Parser::rd_ImpName(unsigned idx,bool useasoff)
 {
-  rdImpNameNELX(buff,blen,idx,useasoff,headshift() + ne.neOffsetImportTable);
+  return rdImpNameNELX(idx,useasoff,headshift() + ne.neOffsetImportTable);
 }
 
-bool NE_Parser::BuildReferStrNE(const DisMode& parent,char *str,RELOC_NE *rne,int flags,__filesize_t ulShift)
+bool NE_Parser::BuildReferStrNE(const DisMode& parent,std::string& str,RELOC_NE *rne,int flags,__filesize_t ulShift)
 {
-  char buff[256];
+  std::string buff;
+  char stmp[4096];
   const char *pref;
   bool retrf;
   char reflen;
@@ -1135,17 +1140,17 @@ bool NE_Parser::BuildReferStrNE(const DisMode& parent,char *str,RELOC_NE *rne,in
       case 13: reflen = 4; pref = "off32 "; break;
       default: break;
   }
-  if(flags & APREF_USE_TYPE) strcat(str,pref);
+  if(flags & APREF_USE_TYPE) str+=pref;
   if((rne->Type & 3) == 1 || (rne->Type & 3) == 2) /** imported type */
   {
     retrf = true;
-    rd_ImpName(buff,sizeof(buff),rne->idx,0);
-    sprintf(&str[strlen(str)],"<%s>.",buff);
-    if((rne->Type & 3) == 1) sprintf(&str[strlen(str)],"@%hu",rne->ordinal);
+    buff=rd_ImpName(rne->idx,0);
+    sprintf(stmp,"<%s>.",buff.c_str());
+    str+=stmp;
+    if((rne->Type & 3) == 1) { sprintf(stmp,"@%hu",rne->ordinal); str+=stmp; }
     else
     {
-      rd_ImpName(buff,sizeof(buff),rne->ordinal,true);
-      strcat(str,buff);
+      str+=rd_ImpName(rne->ordinal,true);
     }
   }
   else
@@ -1155,12 +1160,13 @@ bool NE_Parser::BuildReferStrNE(const DisMode& parent,char *str,RELOC_NE *rne,in
      {
        __filesize_t ea;
        ea = CalcEntryNE(rne->ordinal,false);
-       if(FindPubName(buff,sizeof(buff),ea))
-	  sprintf(&str[strlen(str)],"%s",buff);
+       if(FindPubName(buff,ea))
+	  str+=buff;
        else
        {
 	 retrf = ea?true:false;
-	 sprintf(&str[strlen(str)],"(*this).@%hu",rne->ordinal);
+	 sprintf(stmp,"(*this).@%hu",rne->ordinal);
+	 str+=stmp;
        }
        if(!DumpMode && !EditMode && !(flags & APREF_USE_TYPE)) code_guider().add_go_address(parent,str,ea);
      }
@@ -1168,12 +1174,13 @@ bool NE_Parser::BuildReferStrNE(const DisMode& parent,char *str,RELOC_NE *rne,in
      {
        __filesize_t ep;
        ep = CalcEntryPointNE(rne->idx,rne->ordinal);
-       if(FindPubName(buff,sizeof(buff),ep))
-	 sprintf(&str[strlen(str)],"%s",buff);
+       if(FindPubName(buff,ep))
+	 str+=buff;
        else
        {
-	 if(need_virt) sprintf(&str[strlen(str)],".%08lX",(unsigned long)pa2va(ep));
-	 else sprintf(&str[strlen(str)],"(*this).seg<#%hu>:%sH",rne->idx,Get4Digit(rne->ordinal));
+	 if(need_virt) sprintf(stmp,".%08lX",(unsigned long)pa2va(ep));
+	 else sprintf(stmp,"(*this).seg<#%hu>:%sH",rne->idx,Get4Digit(rne->ordinal));
+	 str+=stmp;
 	 retrf = ep?true:false;
        }
        if(!DumpMode && !EditMode && !(flags & APREF_USE_TYPE)) code_guider().add_go_address(parent,str,ep);
@@ -1181,28 +1188,28 @@ bool NE_Parser::BuildReferStrNE(const DisMode& parent,char *str,RELOC_NE *rne,in
    }
    else
    {
-      strcat(str,"?OSFIXUP?");
+      str+="?OSFIXUP?";
    }
    if((rne->Type & 4) == 4)
    {
      __filesize_t data;
      if(reflen && reflen <= 4)
      {
-       strcat(str,"+");
+       str+="+";
        main_handle().seek(ulShift,binary_stream::Seek_Set);
        data = main_handle().read(type_dword);
-       strcat(str,reflen == 1 ? Get2Digit(data) : reflen == 2 ? Get4Digit(data) : Get8Digit(data));
+       str+=(reflen == 1)? Get2Digit(data) : (reflen == 2) ? Get4Digit(data) : Get8Digit(data);
      }
-     else strcat(str,",<add>");
+     else str+=",<add>";
    }
    return retrf;
 }
 
-bool NE_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+bool NE_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
     unsigned i;
     __filesize_t segpos,slength;
-    char buff[256];
+    std::string buff;
     if(flags & APREF_TRY_PIC) return false;
     if(ulShift >= CurrSegmentStart && ulShift <= CurrSegmentStart + CurrSegmentLength)
     {
@@ -1246,9 +1253,9 @@ bool NE_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int fl
 	   TryLabel:
 	   if(flags & APREF_TRY_LABEL)
 	   {
-	      if(FindPubName(buff,sizeof(buff),r_sh))
+	      if(FindPubName(buff,r_sh))
 	      {
-		strcat(str,buff);
+		str+=buff;
 		if(!DumpMode && !EditMode) code_guider().add_go_address(parent,str,r_sh);
 		return true;
 	      }
@@ -1263,7 +1270,7 @@ bool NE_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int fl
 /** return false if unsuccess true otherwise */
 bool NE_Parser::ReadPubNames(binary_stream& handle,__filesize_t offset,void (__FASTCALL__ *mem_out)(const std::string&))
 {
- struct PubName pnam;
+ symbolic_information pnam;
  ENTRY ent;
  unsigned ord,i = 0;
  __filesize_t noff;
@@ -1292,14 +1299,7 @@ bool NE_Parser::ReadPubNames(binary_stream& handle,__filesize_t offset,void (__F
        ret = false;
        break;
      }
-     if(pnam.pa)
-     {
-       if(!la_AddData(PubNames,&pnam,mem_out))
-       {
-	 ret = false;
-	 break;
-       }
-     }
+     if(pnam.pa) PubNames.insert(pnam);
    }
    i++;
    if(i > 0xFFFD || handle.eof()) { ret = false; break; }
@@ -1307,38 +1307,38 @@ bool NE_Parser::ReadPubNames(binary_stream& handle,__filesize_t offset,void (__F
  return ret;
 }
 
-void NE_Parser::ne_ReadPubName(binary_stream& b_cache,const struct PubName *it,
-			   char *buff,unsigned cb_buff)
+std::string NE_Parser::ne_ReadPubName(binary_stream& b_cache,const symbolic_information& it)
 {
     unsigned char rlen;
-    b_cache.seek(it->nameoff,binary_stream::Seek_Set);
+    b_cache.seek(it.nameoff,binary_stream::Seek_Set);
     rlen = b_cache.read(type_byte);
-    rlen = std::min(unsigned(rlen),cb_buff-1);
-    b_cache.read(buff,rlen);
-    buff[rlen] = 0;
+    char stmp[rlen+1];
+    b_cache.read(stmp,rlen);
+    stmp[rlen] = 0;
+    return stmp;
 }
 
-bool NE_Parser::FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
+bool NE_Parser::FindPubName(std::string& buff,__filesize_t pa)
 {
-    struct PubName *ret,key;
+    symbolic_information key;
+    std::set<symbolic_information>::const_iterator it;
     key.pa = pa;
-    if(!PubNames) ne_ReadPubNameList(*ne_cache2,MemOutBox);
-    ret = (PubName*)la_Find(PubNames,&key,fmtComparePubNames);
-    if(ret) {
-	ne_ReadPubName(*ne_cache2,ret,buff,cb_buff);
+    if(PubNames.empty()) ne_ReadPubNameList(*ne_cache2,MemOutBox);
+    it = PubNames.find(key);
+    if(it!=PubNames.end()) {
+	buff=ne_ReadPubName(*ne_cache2,*it);
 	return true;
     }
-    return udnFindName(pa,buff,cb_buff);
+    return udnFindName(pa,buff);
 }
 
 void NE_Parser::ne_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
 {
-   if((PubNames = la_Build(0,sizeof(struct PubName),mem_out)) != NULL)
    {
      ReadPubNames(handle,headshift() + ne.neOffsetResidentNameTable,mem_out);
      ReadPubNames(handle,ne.neOffsetNonResidentNameTable,mem_out);
-     if(PubNames->nItems)
-       la_Sort(PubNames,fmtComparePubNames);
+//     if(PubNames->nItems)
+//       la_Sort(PubNames,fmtComparePubNames);
    }
 }
 
@@ -1356,8 +1356,8 @@ NE_Parser::NE_Parser(binary_stream& h,CodeGuider& __code_guider)
 NE_Parser::~NE_Parser()
 {
   binary_stream& h = main_handle();
-  if(CurrNEChain) { la_Destroy(CurrNEChain); CurrNEChain = 0; }
-  if(PubNames)  { la_Destroy(PubNames); PubNames = 0; }
+  CurrNEChain.clear();
+  PubNames.clear();
   if(ne_cache != &bNull && ne_cache != &h) delete ne_cache;
   if(ne_cache2 != &bNull && ne_cache2 != &h) delete ne_cache2;
   if(ne_cache3 != &bNull && ne_cache3 != &h) delete ne_cache3;
@@ -1406,34 +1406,32 @@ __filesize_t NE_Parser::pa2va(__filesize_t pa)
   return 0L;
 }
 
-__filesize_t NE_Parser::get_public_symbol(char *str,unsigned cb_str,unsigned *func_class,
+__filesize_t NE_Parser::get_public_symbol(std::string& str,unsigned& func_class,
 			  __filesize_t pa,bool as_prev)
 {
     __filesize_t fpos;
-    size_t idx;
-    if(!PubNames) ne_ReadPubNameList(*ne_cache,NULL);
-    fpos=fmtGetPubSym(*func_class,pa,as_prev,PubNames,idx);
-    if(idx!=std::numeric_limits<size_t>::max()) {
-	struct PubName *it;
-	it = &((struct PubName  *)PubNames->data)[idx];
-	ne_ReadPubName(*ne_cache,it,str,cb_str);
-	str[cb_str-1] = 0;
+    if(PubNames.empty()) ne_ReadPubNameList(*ne_cache,NULL);
+    std::set<symbolic_information>::const_iterator idx;
+    symbolic_information key;
+    key.pa=pa;
+    fpos=find_symbolic_information(PubNames,func_class,key,as_prev,idx);
+    if(idx!=PubNames.end()) {
+	str=ne_ReadPubName(*ne_cache,*idx);
     }
     return fpos;
 }
 
-unsigned NE_Parser::__get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,
-		      __filesize_t *start,__filesize_t *end,int *_class,int *bitness) const
+unsigned NE_Parser::__get_object_attribute(__filesize_t pa,std::string& name,
+		      __filesize_t& start,__filesize_t& end,int& _class,int& bitness) const
 {
   __filesize_t currseg_st;
   unsigned i,segcount = ne.neSegmentTableCount,ret;
   bool found;
-  UNUSED(cb_name);
-  *start = 0;
-  *end = main_handle().flength();
-  *_class = OC_NOOBJECT;
-  *bitness = DAB_USE16;
-  name[0] = 0;
+  start = 0;
+  end = main_handle().flength();
+  _class = OC_NOOBJECT;
+  bitness = DAB_USE16;
+  name.clear();
   ret = 0;
   main_handle().seek((__fileoff_t)headshift() + ne.neOffsetSegmentTable,binary_stream::Seek_Set);
   found = false;
@@ -1442,55 +1440,55 @@ unsigned NE_Parser::__get_object_attribute(__filesize_t pa,char *name,unsigned c
     SEGDEF nesd_c;
     if(!ReadSegDefNE(&nesd_c,i+1)) return 0L;
     currseg_st = (((__filesize_t)nesd_c.sdOffset)<<ne.neLogicalSectorShiftCount);
-    if(!currseg_st) { *start = *end; continue; } /** BSS segment */
+    if(!currseg_st) { start = end; continue; } /** BSS segment */
     if(pa < currseg_st)
     {
-      *start = *end;
-      *end = currseg_st;
+      start = end;
+      end = currseg_st;
       found = true;
       ret = i;
       break;
     }
     if(pa >= currseg_st && pa < currseg_st + nesd_c.sdLength)
     {
-      *start = currseg_st;
-      *end = *start + nesd_c.sdLength;
-      *_class = nesd_c.sdFlags & 0x01 ? OC_DATA : OC_CODE;
-      *bitness = nesd_c.sdFlags & 0x2000 ? DAB_USE32 : DAB_USE16;
+      start = currseg_st;
+      end = start + nesd_c.sdLength;
+      _class = nesd_c.sdFlags & 0x01 ? OC_DATA : OC_CODE;
+      bitness = nesd_c.sdFlags & 0x2000 ? DAB_USE32 : DAB_USE16;
       ret = i+1;
       found = true;
       break;
     }
-    *start = currseg_st;
-    *end = currseg_st + nesd_c.sdLength;
+    start = currseg_st;
+    end = currseg_st + nesd_c.sdLength;
   }
   if(!found)
   {
-    *start = *end;
-    *end = main_handle().flength();
+    start = end;
+    end = main_handle().flength();
   }
   return ret;
 }
 
-unsigned NE_Parser::get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,
-		      __filesize_t *start,__filesize_t *end,int *_class,int *bitness) {
-    return __get_object_attribute(pa,name,cb_name,start,end,_class,bitness);
+unsigned NE_Parser::get_object_attribute(__filesize_t pa,std::string& name,
+		      __filesize_t& start,__filesize_t& end,int& _class,int& bitness) {
+    return __get_object_attribute(pa,name,start,end,_class,bitness);
 }
 
 int NE_Parser::query_bitness(__filesize_t pa) const
 {
   static __filesize_t st = 0,end = 0;
-  char name[1];
+  std::string name;
   int _class;
   static int bitness;
   if(!(pa >= st && pa < end))
   {
-    __get_object_attribute(pa,name,sizeof(name),&st,&end,&_class,&bitness);
+    __get_object_attribute(pa,name,st,end,_class,bitness);
   }
   return bitness;
 }
 
-bool NE_Parser::address_resolving(char *addr,__filesize_t cfpos)
+bool NE_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
@@ -1498,28 +1496,28 @@ bool NE_Parser::address_resolving(char *addr,__filesize_t cfpos)
   uint32_t res;
   if(cfpos >= headshift() && cfpos < headshift() + sizeof(NEHEADER))
   {
-     strcpy(addr,"NEH :");
-     strcpy(&addr[5],Get4Digit(cfpos - headshift()));
+     addr="NEH :";
+     addr+=Get4Digit(cfpos - headshift());
   }
   else
   if(cfpos >= headshift() + ne.neOffsetSegmentTable &&
      cfpos <  headshift() + ne.neOffsetSegmentTable + ne.neSegmentTableCount*sizeof(SEGDEF))
   {
-    strcpy(addr,"NESD:");
-    strcpy(&addr[5],Get4Digit(cfpos - headshift() - ne.neOffsetSegmentTable));
+    addr="NESD:";
+    addr+=Get4Digit(cfpos - headshift() - ne.neOffsetSegmentTable);
   }
   else
   if(cfpos >= headshift() + ne.neOffsetEntryTable &&
      cfpos <  headshift() + ne.neOffsetEntryTable + ne.neLengthEntryTable)
   {
-    strcpy(addr,"NEET:");
-    strcpy(&addr[5],Get4Digit(cfpos - headshift() - ne.neOffsetEntryTable));
+    addr="NEET:";
+    addr+=Get4Digit(cfpos - headshift() - ne.neOffsetEntryTable);
   }
   else
     if((res=pa2va(cfpos))!=0)
     {
-      addr[0] = '.';
-      strcpy(&addr[1],Get8Digit(res));
+      addr = ".";
+      addr+=Get8Digit(res);
     }
     else bret = false;
   return bret;

@@ -546,7 +546,8 @@ void About()
 __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
 {
   TWindow *hwnd,*wait_wnd;
-  char vaddr[64],prev_func[61],next_func[61],oname[25];
+  char vaddr[64];
+  std::string prev_func,next_func,oname;
   const char *btn;
   int obj_class,obj_bitness;
   unsigned obj_num,func_class;
@@ -562,15 +563,13 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
   vaddr[0] = '\0';
   sprintf(&vaddr[strlen(vaddr)],"%016llXH",va);
   prev_func_pa = next_func_pa = 0;
-  prev_func[0] = next_func[0] = '\0';
-  prev_func_pa = beye_context().bin_format().get_public_symbol(prev_func,sizeof(prev_func),
-					      &func_class,ctrl_pos,true);
-  next_func_pa = beye_context().bin_format().get_public_symbol(next_func,sizeof(next_func),
-					      &func_class,ctrl_pos,false);
-  prev_func[sizeof(prev_func)-1] = next_func[sizeof(next_func)-1] = '\0';
-  obj_num = beye_context().bin_format().get_object_attribute(ctrl_pos,oname,sizeof(oname),
-					  &obj_start,&obj_end,&obj_class,
-					  &obj_bitness);
+  prev_func_pa = beye_context().bin_format().get_public_symbol(prev_func,
+					      func_class,ctrl_pos,true);
+  next_func_pa = beye_context().bin_format().get_public_symbol(next_func,
+					      func_class,ctrl_pos,false);
+  obj_num = beye_context().bin_format().get_object_attribute(ctrl_pos,oname,
+					  obj_start,obj_end,obj_class,
+					  obj_bitness);
   oname[sizeof(oname)-1] = 0;
   if(!obj_num)
   {
@@ -600,14 +599,14 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
 	   ,ctrl_pos
 	   ,vaddr
 	   ,prev_func_pa == ctrl_pos ? "Curr." : "Prev."
-	   ,prev_func
-	   ,next_func
+	   ,prev_func.c_str()
+	   ,next_func.c_str()
 	   ,obj_num
 	   ,obj_class == OC_CODE ? "CODE" : obj_class == OC_DATA ? "DATA" : "no obj."
 	   ,btn
 	   ,obj_start
 	   ,obj_end
-	   ,oname
+	   ,oname.c_str()
 	   );
   ret_addr = ctrl_pos;
   while(1)

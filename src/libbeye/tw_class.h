@@ -21,6 +21,7 @@
 #error Never use this header file directly. Use twindow.h instead
 #endif
 
+#include <set>
 		   /** Defines class callback routine type
 		     * @return                0L if no action performed
 		     *                        not 0 depends from event
@@ -36,12 +37,13 @@ enum {
     __CS_ORDINAL=0x0000 /**< Indicates ordinal type of callback function */
 };
 /** Internal structure of text window class */
-typedef struct tagTwClass
-{
-  char*       name;     /**< name of class */
-  twClassFunc method;   /**< callback routine */
-  unsigned    flags;    /**< flags */
-}TwClass;
+struct TwClass {
+    std::string name;     /**< name of class */
+    twClassFunc method;   /**< callback routine */
+    unsigned    flags;    /**< flags */
+
+	bool operator<(const TwClass& rhs) const { return name<rhs.name; }
+};
 
 		   /** Registers new class
 		     * @return                true if successful
@@ -66,7 +68,7 @@ void __FASTCALL__ twcDestroyClassSet();
 		     *                        NULL if error occured
 		     * @param name            indicates symbolic name of class
 		    **/
-TwClass * __FASTCALL__ twcFindClass(const std::string& name);
+const TwClass* __FASTCALL__ twcFindClass(const std::string& name);
 
 #endif
 

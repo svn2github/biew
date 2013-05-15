@@ -31,14 +31,15 @@ typedef struct tag_rdoff_Header
   uint32_t header_len;
 }rdoff_Header;
 
-typedef struct tag_RDOFF_RELOC
-{
+struct RDOFF_RELOC {
   uint8_t  reflen; /**< length of references */
   uint8_t  is_rel; /**< is relative fixup */
   uint16_t segto;  /**< logical # of segment or ext. reference
 			    i.e. max external refers = 65536-2 */
   uint32_t offset; /**< offset from start of file */
-}RDOFF_RELOC;
+
+    bool operator<(const RDOFF_RELOC& rhs) const { return offset<rhs.offset; }
+};
 
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()

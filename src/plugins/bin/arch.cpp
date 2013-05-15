@@ -50,7 +50,7 @@ namespace	usr {
 
 	    virtual __filesize_t	show_header();
 	    virtual int			query_platform() const;
-	    virtual bool		address_resolving(char *,__filesize_t);
+	    virtual bool		address_resolving(std::string&,__filesize_t);
 	private:
 	    bool			archReadModList(memArray *obj,unsigned nnames,__filesize_t *addr);
 
@@ -183,15 +183,15 @@ Arch_Parser::Arch_Parser(binary_stream& h,CodeGuider& code_guider)
 }
 Arch_Parser::~Arch_Parser(){}
 
-bool Arch_Parser::address_resolving(char *addr,__filesize_t cfpos)
+bool Arch_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
   bool bret = true;
   if(cfpos < sizeof(ar_hdr))
   {
-    strcpy(addr,"arch.h:");
-    strcpy(&addr[7],Get2Digit(cfpos));
+    addr="arch.h:";
+    addr+=Get2Digit(cfpos);
   }
   else bret = false;
   return bret;

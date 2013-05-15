@@ -44,7 +44,7 @@ namespace	usr {
 
 	    virtual __filesize_t	show_header();
 	    virtual int			query_platform() const;
-	    virtual bool		address_resolving(char *,__filesize_t);
+	    virtual bool		address_resolving(std::string&,__filesize_t);
 	private:
 	    oldPharLap			oph;
 	    binary_stream&		main_handle;
@@ -108,15 +108,15 @@ oldPharLap_Parser::oldPharLap_Parser(binary_stream& h,CodeGuider& code_guider)
 
 oldPharLap_Parser::~oldPharLap_Parser(){}
 
-bool oldPharLap_Parser::address_resolving(char *addr,__filesize_t cfpos)
+bool oldPharLap_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
   bool bret = true;
   if(cfpos < sizeof(oldPharLap))
   {
-    strcpy(addr,"oplhdr:");
-    strcpy(&addr[7],Get2Digit(cfpos));
+    addr="oplhdr:";
+    addr+=Get2Digit(cfpos);
   }
   else bret = false;
   return bret;

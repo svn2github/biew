@@ -26,10 +26,10 @@ namespace	usr {
 	    virtual ~CodeGuider();
 
 	    void		reset_go_address( int keycode );
-	    void		add_go_address(const DisMode& parent,char *str,__filesize_t addr);
+	    void		add_go_address(const DisMode& parent,std::string& str,__filesize_t addr);
 	    void		add_back_address();
 	    __filesize_t	get_go_address(unsigned keycode);
-	    char*		encode_address(__filesize_t cfpos,bool aresolv) const;
+	    std::string		encode_address(__filesize_t cfpos,bool aresolv) const;
 	    const char*		image() const { return codeguid_image; }
 	private:
 	    char*		gidBuildKeyStr();

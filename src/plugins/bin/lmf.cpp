@@ -69,7 +69,7 @@ namespace	usr {
 	    virtual __filesize_t	show_header();
 	    virtual int			query_platform() const;
 	    virtual int			query_bitness(__filesize_t) const;
-	    virtual bool		address_resolving(char *,__filesize_t);
+	    virtual bool		address_resolving(std::string&,__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va);
 	    virtual __filesize_t	pa2va(__filesize_t pa);
 	private:
@@ -216,7 +216,7 @@ int LMF_Parser::query_bitness(__filesize_t pa) const
 	else return DAB_USE16;
 }
 
-bool LMF_Parser::address_resolving(char *addr,__filesize_t cfpos)
+bool LMF_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 {
 	unsigned i;
  /* Since this function is used in references resolving of disassembler
@@ -226,26 +226,31 @@ bool LMF_Parser::address_resolving(char *addr,__filesize_t cfpos)
 		if(hl[i].file_pos<=cfpos&&
 			cfpos<hl[i].file_pos+hl[i].header.data_nbytes+HDRSIZE())
 		{
-			if(cfpos<hl[i].file_pos+HDRSIZE())
-				sprintf(addr,"H%s:%s",Get2Digit(i),Get4Digit(cfpos-hl[i].file_pos));
+			if(cfpos<hl[i].file_pos+HDRSIZE()) {
+			    addr="H";
+			    addr+=Get2Digit(i);
+			    addr+=";";
+			    addr+=Get4Digit(cfpos-hl[i].file_pos);
+			}
 			else
 				switch(hl[i].header.rec_type)
 				{
 				case _LMF_DEFINITION_REC:
-					sprintf(addr,"Def:%s",
-						Get4Digit(cfpos-hl[i].file_pos-HDRSIZE()));
+					addr="Def:";
+					addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
 					break;
 				case _LMF_COMMENT_REC:
 					if(cfpos<hl[i].file_pos+HDRSIZE()+DATSIZE())
-						sprintf(addr,"Com:%s",
-							Get4Digit(cfpos-hl[i].file_pos-HDRSIZE()));
+					    addr="Com:";
+					    addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
 					break;
 				case _LMF_DATA_REC:
 				case _LMF_FIXUP_SEG_REC:
-					if(cfpos<hl[i].file_pos+HDRSIZE()+DATSIZE())
-						sprintf(addr,(hl[i].header.rec_type==_LMF_DATA_REC)?
-								"Dat:%s":"Fix:%s",
-							Get4Digit(cfpos-hl[i].file_pos-HDRSIZE()));
+					if(cfpos<hl[i].file_pos+HDRSIZE()+DATSIZE()) {
+						addr=(hl[i].header.rec_type==_LMF_DATA_REC)?
+							"Dat:":"Fix:";
+						addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
+					}
 /*					else
 						if(((xdef.seg[hl[i].data.index]>>28)&0xf)==_LMF_CODE)
 							sprintf(addr,"C:%06X",(cfpos-hl[i].file_pos+
@@ -258,20 +263,20 @@ bool LMF_Parser::address_resolving(char *addr,__filesize_t cfpos)
 					return false;
 					break;
 				case _LMF_FIXUP_80X87_REC:
-					sprintf(addr,"F87:%s",
-						Get4Digit(cfpos-hl[i].file_pos-HDRSIZE()));
+					addr="F87:";
+					addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
 					break;
 				case _LMF_EOF_REC:
-					sprintf(addr,"Eof:%s",
-						Get4Digit(cfpos-hl[i].file_pos-HDRSIZE()));
+					addr="Eof:";
+					addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
 					break;
 				case _LMF_RESOURCE_REC:
-					sprintf(addr,"Res:%s",
-						Get4Digit(cfpos-hl[i].file_pos-HDRSIZE()));
+					addr="Res:";
+					addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
 					break;
 				case _LMF_ENDDATA_REC:
-					sprintf(addr,"EnD:%s",
-						Get4Digit(cfpos-hl[i].file_pos-HDRSIZE()));
+					addr="EnD:";
+					addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
 					break;
 				default:
 					return false;

@@ -348,6 +348,7 @@ inline void __XchgB__(uint8_t* _val1,uint8_t* _val2) {
     *((uint8_t *)_val1) = _charv;
 #endif
 }
+
 /**
  * qst:
  * Do a quicksort
@@ -596,128 +597,6 @@ unsigned long __FASTCALL__ HLFindNearest(const any_t*key,any_t*base,unsigned lon
   }
   return  comp_result < 0 ? (start ? start - 1 : 0L)
 			  : end == nelem ? nelem-1 : end;
-}
-
-/*
-    print message when window system is not initialized
-
-    only this function must be used for error reporting
-	(do not use printf, fprintf, etc. !)
-*/
-
-linearArray * __FASTCALL__ la_Build( unsigned long nitems, unsigned size_of_item,
-			void (__FASTCALL__ *mem_out)(const std::string& ) )
-{
-  linearArray * ret;
-  ret = new linearArray;
-  if(ret)
-  {
-    memset(ret,0,sizeof(linearArray));
-    ret->itemSize = size_of_item;
-    if(nitems)
-    {
-      ret->data = mp_malloc(nitems*size_of_item);
-      if(ret->data)
-      {
-	ret->nSize = nitems;
-      }
-    }
-  }
-  else
-  {
-    if(mem_out) (*mem_out)("Creating array");
-  }
-  return ret;
-}
-
-void  __FASTCALL__ la_ForEach(linearArray *obj,void (__FASTCALL__ *iter_func)(any_t*))
-{
-  unsigned long i;
-  for(i = 0;i < obj->nItems;i++)
-  {
-     (*iter_func)(((char *)obj->data)+i*obj->itemSize);
-  }
-}
-
-void  __FASTCALL__ la_IterDestroy(linearArray *obj,void (__FASTCALL__ *del_it)(any_t*))
-{
-  la_ForEach(obj,del_it);
-  delete obj->data;
-  delete obj;
-}
-
-void  __FASTCALL__ la_Destroy(linearArray *obj)
-{
-  if(obj)
-  {
-    delete obj->data;
-    delete obj;
-  }
-}
-
-static const unsigned LST_STEP=16;
-
-any_t*  __FASTCALL__ la_AddData(linearArray *obj,const any_t*udata,void (__FASTCALL__ *mem_out)(const std::string& ))
-{
-  any_t* to;
-  if(obj->nSize > ULONG_MAX - (LST_STEP+1)) return 0;
-  if(obj->nItems + 1 > obj->nSize)
-  {
-    any_t*ptr;
-    if(!obj->data) ptr = mp_malloc((obj->nSize+LST_STEP)*obj->itemSize);
-    else           ptr = mp_realloc(obj->data,obj->itemSize*(obj->nSize+LST_STEP));
-    if(ptr)
-    {
-      obj->nSize = obj->nSize+LST_STEP;
-      obj->data = ptr;
-    }
-    else
-    {
-      if(mem_out) (*mem_out)("Building List");
-      return NULL;
-    }
-  }
-  to = ((char  *)obj->data) + obj->nItems*obj->itemSize;
-  memcpy(to,udata,obj->itemSize);
-  obj->nItems++;
-  return to;
-}
-
-void __FASTCALL__ la_DeleteData(linearArray *obj,unsigned long idx) {
-    char  *from;
-    char  *to;
-    if(idx >= obj->nItems) return;
-    to = ((char  *)obj->data) + idx*obj->itemSize;
-    from = ((char  *)obj->data) + (idx+1)*obj->itemSize;
-    memmove(to,from,(obj->nItems-(idx+1))*obj->itemSize);
-    obj->nItems--;
-}
-
-void         __FASTCALL__ la_Sort(linearArray *obj,func_compare compare)
-{
-  if(obj)
-    if(obj->nItems)
-      HQSort(obj->data,obj->nItems,obj->itemSize,compare);
-}
-
-any_t*__FASTCALL__ la_Find(linearArray * obj,const any_t*key,
-				    func_compare compare)
-{
-  any_t* ret = NULL;
-  if(obj)
-    if(obj->nItems)
-     ret = HLFind(key,obj->data,obj->nItems,obj->itemSize,compare);
-  return ret;
-}
-
-unsigned long __FASTCALL__ la_FindNearest(linearArray *obj,const any_t*key,
-					  func_compare compare)
-{
-  unsigned long ret = 0L;
-  if(obj)
-    if(obj->nItems)
-      ret = HLFindNearest(key,obj->data,obj->nItems,obj->itemSize,compare);
-  return ret;
 }
 
 any_t* rnd_fill(any_t* buffer,size_t size)

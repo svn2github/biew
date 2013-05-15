@@ -95,9 +95,12 @@ char*  ix86_Disassembler::GetDigitsApp(unsigned char loc_off,
 					char codelen,DisMode::e_disarg type)
 {
   ix86_appbuffer[0] = 0;
-  if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
-    parent.append_digits(main_handle,ix86_appbuffer,DisP->CodeAddress + loc_off,
+  if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) {
+    std::string stmp = ix86_appbuffer;
+    parent.append_digits(main_handle,stmp,DisP->CodeAddress + loc_off,
 		    APREF_USE_TYPE,codelen,&DisP->RealCmd[loc_off],type);
+    strcpy(ix86_appbuffer,stmp.c_str());
+  }
   return ix86_appbuffer;
 }
 
@@ -218,10 +221,11 @@ char * ix86_Disassembler::ix86_GetDigitTile(ix86Param* DisP,char wrd,char sgn,un
     type = sgn ? wrd ? ( USE_WIDE_DATA ? DisMode::Arg_Long : DisMode::Arg_Short ) : DisMode::Arg_Char:
 		 wrd ? ( USE_WIDE_DATA ? DisMode::Arg_DWord : DisMode::Arg_Word ) : DisMode::Arg_Byte;
     type |= DisMode::Arg_Imm;
-    ix86_dtile[0] = 0;
-    parent.append_digits(main_handle,ix86_dtile,
+    std::string stmp;
+    parent.append_digits(main_handle,stmp,
 		    DisP->CodeAddress + loc_off,
 		    APREF_USE_TYPE,cl,&DisP->RealCmd[loc_off],type);
+    strcpy(ix86_dtile,stmp.c_str());
   }
   DisP->codelen += cl;
   return ix86_dtile;
@@ -239,9 +243,12 @@ void ix86_Disassembler::arg_segoff(char * str,ix86Param *DisP)
     newpos = ((long)(seg) << 4) + off; /* It is computing of x86 real-mode address */
   }
   DisP->codelen += USE_WIDE_DATA ? 6 : 4;
-  if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
-    parent.append_faddr(main_handle,str,DisP->CodeAddress + 1,off,newpos,
+  if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) {
+    std::string stmp = str;
+    parent.append_faddr(main_handle,stmp,DisP->CodeAddress + 1,off,newpos,
 		   USE_WIDE_DATA ? DisMode::Far32 : DisMode::Far16,seg,DisP->codelen-1);
+    strcpy(str,stmp.c_str());
+  }
 }
 
 void ix86_Disassembler::arg_offset(char * str,ix86Param *DisP)
@@ -273,7 +280,9 @@ the 8-bit or 32-bit displacement value to 64 bits before adding it to the RIP.
   if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
   {
     newpos = DisP->CodeAddress + lshift + DisP->codelen;
-    parent.append_faddr(main_handle,str,DisP->CodeAddress + 1,lshift,newpos,modifier,0,DisP->codelen);
+    std::string stmp = str;
+    parent.append_faddr(main_handle,stmp,DisP->CodeAddress + 1,lshift,newpos,modifier,0,DisP->codelen);
+    strcpy(str,stmp.c_str());
   }
 }
 
@@ -835,17 +844,23 @@ void ix86_Disassembler::arg_imm(char *str,ix86Param *DisP)
 
 void ix86_Disassembler::arg_imm8(char *str,ix86Param *DisP)
 {
-  if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
-    parent.append_digits(main_handle,str,DisP->CodeAddress + DisP->codelen,
+  if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) {
+    std::string stmp = str;
+    parent.append_digits(main_handle,stmp,DisP->CodeAddress + DisP->codelen,
 		 APREF_USE_TYPE,1,&DisP->RealCmd[DisP->codelen],DisMode::Arg_Byte);
+    strcpy(str,stmp.c_str());
+  }
   DisP->codelen++;
 }
 
 void ix86_Disassembler::arg_imm16(char *str,ix86Param *DisP)
 {
-  if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
-    parent.append_digits(main_handle,str,DisP->CodeAddress + DisP->codelen,
+  if(!((DisP->flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) {
+    std::string stmp = str;
+    parent.append_digits(main_handle,stmp,DisP->CodeAddress + DisP->codelen,
 		 APREF_USE_TYPE,2,&DisP->RealCmd[DisP->codelen],DisMode::Arg_Word | DisMode::Arg_Imm);
+    strcpy(str,stmp.c_str());
+  }
   DisP->codelen+=2;
 }
 

@@ -302,7 +302,7 @@ TWindow::TWindow(tAbsCoord x1_, tAbsCoord y1_,
 		 twc_flag _flags, const std::string& classname)
 {
     create(x1_, y1_, _width, _height, _flags);
-    TwClass* cls;
+    const TwClass* cls;
     cls = twcFindClass(classname);
     if(cls) {
 	method = reinterpret_cast<any_t*>(cls->method);

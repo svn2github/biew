@@ -405,11 +405,13 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 			strcat(outstr,":");
 			lval=JVM_DWORD((uint32_t*)buffer, 1);
 			newpos=vartail_base+lval;
-			if(lval!=newpos)
-				parent.append_faddr(main_handle,outstr,ulShift,lval,
+			if(lval!=newpos) {
+			    std::string stmp = outstr;
+				parent.append_faddr(main_handle,stmp,ulShift,lval,
 						newpos,DisMode::Near32,0,4);
-				else
-				    strcat(outstr,Get8Digit(newpos));
+			    strcpy(outstr,stmp.c_str());
+			}else
+			    strcat(outstr,Get8Digit(newpos));
 		}
 		else
 		{
@@ -419,25 +421,26 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 			strcat(outstr,":");
 			lval=JVM_DWORD((uint32_t*)(&buffer[4]), 1);
 			newpos=vartail_base+lval;
-			if(lval!=newpos)
-				parent.append_faddr(main_handle,outstr,ulShift,lval,
+			if(lval!=newpos) {
+			    std::string stmp = outstr;
+				parent.append_faddr(main_handle,stmp,ulShift,lval,
 						newpos,DisMode::Near32,0,4);
-				else
-				    strcat(outstr,Get8Digit(newpos));
+			    strcpy(outstr,stmp.c_str());
+			} else
+			    strcat(outstr,Get8Digit(newpos));
 		}
 	}
      return ret;
   }
   if(jflags & JVM_LOOKUPSWITCH || jflags & JVM_TABLESWITCH)
   {
-    char prev_func[80];
+    std::string prev_func;
     unsigned func_class;
     vartail_flags=jflags;
     /* Sorry! We really need to know method offset to compute padding bytes */
-    prev_pa = bin_format.get_public_symbol(prev_func,sizeof(prev_func),
-					    &func_class,ulShift,true);
-    next_pa = bin_format.get_public_symbol(prev_func,sizeof(prev_func),
-					    &func_class,ulShift,false);
+    prev_pa = bin_format.get_public_symbol(prev_func,func_class,ulShift,true);
+    prev_func.clear();
+    next_pa = bin_format.get_public_symbol(prev_func,func_class,ulShift,false);
     if(next_pa==Plugin::Bad_Address) next_pa=main_handle.flength();
     if(prev_pa==Plugin::Bad_Address) prev_pa=0;
     if(!(prev_pa%4)) npadds = (ulShift+1-prev_pa)%4; /* align only if method is aligned */
@@ -495,10 +498,12 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 			strcat(outstr,Get8Digit(npairs));
 			strcat(outstr,",default:");
 			newpos=ulShift+(__fileoff_t)defval;
-			if(defval)
-				parent.append_faddr(main_handle,outstr,ulShift+idx+1+npadds,defval,
+			if(defval) {
+			    std::string stmp = outstr;
+				parent.append_faddr(main_handle,stmp,ulShift+idx+1+npadds,defval,
 						newpos,DisMode::Near32,0,4);
-			else
+			    strcpy(outstr,stmp.c_str());
+			} else
 				strcat(outstr,Get8Digit(newpos));
 		}
 	    }
@@ -513,10 +518,12 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		{
 			strcat(outstr," default:");
 			newpos=ulShift+(__fileoff_t)defval;
-			if(defval)
-				parent.append_faddr(main_handle,outstr,ulShift+idx+1+npadds,defval,
+			if(defval) {
+			    std::string stmp = outstr;
+				parent.append_faddr(main_handle,stmp,ulShift+idx+1+npadds,defval,
 						newpos,DisMode::Near32,0,4);
-			else
+			    strcpy(outstr,stmp.c_str());
+			} else
 				strcat(outstr,Get8Digit(newpos));
 		}
 	    }
@@ -555,8 +562,10 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		    if((jflags & JVM_CODEREF)==JVM_CODEREF && sval)
 		    {
 			newpos = ulShift + (signed short)sval;
-			parent.append_faddr(main_handle,outstr,ulShift + 1,sval,
+			std::string stmp = outstr;
+			parent.append_faddr(main_handle,stmp,ulShift + 1,sval,
 					newpos,DisMode::Near16,0,2);
+			strcpy(outstr,stmp.c_str());
 		    }
 		    else
 		    if((jflags & JVM_OBJREF1)==JVM_OBJREF1)
@@ -567,10 +576,12 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 			strcat(outstr,Get2Digit(buffer[idx+1]));
 		    }
 		    else
-		    if(jflags & JVM_OBJREFMASK)
-		    parent.append_digits(main_handle,outstr,ulShift+idx,
+		    if(jflags & JVM_OBJREFMASK) {
+		    std::string stmp = outstr;
+		    parent.append_digits(main_handle,stmp,ulShift+idx,
 			APREF_USE_TYPE,2,&sval,DisMode::Arg_Word);
-		    else strcat(outstr,Get4Digit(sval));
+		    strcpy(outstr,stmp.c_str());
+		    } else strcat(outstr,Get4Digit(sval));
 		    break;
 		}
 		default:
@@ -582,16 +593,20 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		    if((jflags & JVM_CODEREF)==JVM_CODEREF && lval)
 		    {
 			newpos = ulShift + (__fileoff_t)lval;
-			parent.append_faddr(main_handle,outstr,ulShift + 1,lval,
+			std::string stmp = outstr;
+			parent.append_faddr(main_handle,stmp,ulShift + 1,lval,
 					newpos,DisMode::Near32,0,4);
+			strcpy(outstr,stmp.c_str());
 		    }
 		    else
 		    if((jflags & JVM_OBJREF2)==JVM_OBJREF2)
 		    {
 			unsigned short sval;
 			sval=JVM_WORD((uint16_t*)(&buffer[idx]),1);
-			parent.append_digits(main_handle,outstr,ulShift,
+			std::string stmp = outstr;
+			parent.append_digits(main_handle,stmp,ulShift,
 				    APREF_USE_TYPE,2,&sval,DisMode::Arg_Word);
+			strcpy(outstr,stmp.c_str());
 			strcat(outstr,",");
 			if((jflags & JVM_CONST1)==JVM_CONST1) strcat(outstr,Get2Digit(buffer[idx+2]));
 			else
@@ -601,15 +616,19 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 			}
 		    }
 		    else
-		    if(jflags & JVM_OBJREFMASK)
-		    parent.append_digits(main_handle,outstr,ulShift+idx,
+		    if(jflags & JVM_OBJREFMASK) {
+		    std::string stmp = outstr;
+		    parent.append_digits(main_handle,stmp,ulShift+idx,
 			APREF_USE_TYPE,4,&lval,DisMode::Arg_DWord);
-		    else strcat(outstr,Get8Digit(lval));
+		    strcpy(outstr,stmp.c_str());
+		    } else strcat(outstr,Get8Digit(lval));
 		    break;
 		}
 		case 8:
-		    parent.append_digits(main_handle,outstr,ulShift+idx,
+		    std::string stmp = outstr;
+		    parent.append_digits(main_handle,stmp,ulShift+idx,
 			APREF_USE_TYPE,8,&buffer[idx],DisMode::Arg_QWord);
+		    strcpy(outstr,stmp.c_str());
 		    break;
 	    }
 	}

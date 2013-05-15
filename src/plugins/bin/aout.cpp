@@ -48,7 +48,7 @@ namespace	usr {
 	    virtual int			query_platform() const;
 	    virtual int			query_bitness(__filesize_t) const;
 	    virtual int			query_endian(__filesize_t) const;
-	    virtual bool		address_resolving(char *,__filesize_t);
+	    virtual bool		address_resolving(std::string&,__filesize_t);
 	    static bool			check_fmt(uint32_t id);
 	private:
 	    bool			probe_fmt(uint32_t id);
@@ -182,15 +182,15 @@ int AOut_Parser::query_endian(__filesize_t off) const
    return is_msbf?DAE_BIG:DAE_LITTLE;
 }
 
-bool AOut_Parser::address_resolving(char *addr,__filesize_t fpos)
+bool AOut_Parser::address_resolving(std::string& addr,__filesize_t fpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
   bool bret = true;
   if(fpos < sizeof(struct external_exec))
   {
-    strcpy(addr,"a.outh:");
-    strcpy(&addr[7],Get2Digit(fpos));
+    addr="a.outh:";
+    addr+=Get2Digit(fpos);
   }
   else bret = false;
   return bret;

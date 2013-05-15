@@ -150,7 +150,7 @@ typedef unsigned char * MBuffer;
     strcpy(outstr,"calln32 ");
     disAppendFAddr(outstr, 0x1004, 0x12345678, 0x1002, DISADR_NEAR32, 0, 4);
 **/
-	    virtual bool		append_faddr(binary_stream& handle,char * str,__fileoff_t ulShift,__fileoff_t distin,__filesize_t r_sh,e_disaddr type,unsigned seg,char codelen);
+	    virtual bool		append_faddr(binary_stream& handle,std::string& str,__fileoff_t ulShift,__fileoff_t distin,__filesize_t r_sh,e_disaddr type,unsigned seg,char codelen);
 /** Appends symbolic information instead digits to instruction string
     @param str       string to be appended
     @param flags     same as described in reg_form.h (APREF_* family)
@@ -177,7 +177,7 @@ typedef unsigned char * MBuffer;
     disAppendDigits(outstr, 0x5680, 1, 2, 0x1234, DISARG_WORD);
     strcat(outstr,"]");
 **/
-	    virtual bool		append_digits(binary_stream& handle,char *str,__filesize_t ulShift,int flags,char codelen,any_t*defval,e_disarg type);
+	    virtual bool		append_digits(binary_stream& handle,std::string& str,__filesize_t ulShift,int flags,char codelen,any_t*defval,e_disarg type);
 
 	    virtual e_panel		panel_mode() const { return disPanelMode; }
 	    virtual bool		prepare_mode() const { return DisasmPrepareMode; }

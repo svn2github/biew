@@ -320,29 +320,29 @@ __filesize_t LE_Parser::action_F1()
   return beye_context().tell();
 }
 
-bool LE_Parser::address_resolving(char *addr,__filesize_t cfpos)
+bool LE_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
   bool bret = true;
   if(cfpos >= headshift() && cfpos < headshift() + sizeof(LEHEADER))
   {
-     strcpy(addr,"LEH :");
-     strcpy(&addr[5],Get4Digit(cfpos - headshift()));
+     addr="LEH :";
+     addr+=Get4Digit(cfpos - headshift());
   }
   else
   if(cfpos >= headshift() + lxe.le.leObjectTableOffset &&
      cfpos <  headshift() + lxe.le.leObjectTableOffset + sizeof(LX_OBJECT)*lxe.le.leObjectCount)
   {
-     strcpy(addr,"LEOD:");
-     strcpy(&addr[5],Get4Digit(cfpos - headshift() - lxe.le.leObjectTableOffset));
+     addr="LEOD:";
+     addr+=Get4Digit(cfpos - headshift() - lxe.le.leObjectTableOffset);
   }
   else
   if(cfpos >= headshift() + lxe.le.leObjectPageMapTableOffset &&
      cfpos <  headshift() + lxe.le.leObjectPageMapTableOffset + sizeof(LE_PAGE)*lxe.le.lePageCount)
   {
-    strcpy(addr,"LEPD:");
-    strcpy(&addr[5],Get4Digit(cfpos - headshift() - lxe.le.leObjectPageMapTableOffset));
+    addr="LEPD:";
+    addr+=Get4Digit(cfpos - headshift() - lxe.le.leObjectPageMapTableOffset);
   }
   else bret = false;
   return bret;

@@ -116,7 +116,7 @@ namespace	usr {
 	    virtual __filesize_t	action_F10() const;
 
 	    virtual __filesize_t	show_header() const;
-	    virtual bool		bind(const DisMode& _parent,char *str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift) const;
+	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift) const;
 
 	    virtual int			query_platform() const;
 
@@ -129,7 +129,7 @@ namespace	usr {
 			 /** For displaying offset within struct in left address column.
 			   * @return         false if string is not modified.
 			  **/
-	    virtual bool		address_resolving(char * str,__filesize_t off) const;
+	    virtual bool		address_resolving(std::string& str,__filesize_t off) const;
 
 			 /** Converts virtual address to physical (means file offset).
 			   * @param va       indicates virtual address to be converted
@@ -156,7 +156,7 @@ namespace	usr {
 			   *                  physical address of public symbol
 			   *                  which is found in given direction
 			  **/
-	    virtual __filesize_t	get_public_symbol(char *str,unsigned cb_str,unsigned *_class,__filesize_t pa,bool as_prev) const;
+	    virtual __filesize_t	get_public_symbol(std::string& str,unsigned& _class,__filesize_t pa,bool as_prev) const;
 
 			 /** Determines attributes of object at given physical file address.
 			   * @param pa        indicates physical file offset of object
@@ -176,7 +176,7 @@ namespace	usr {
 			   *                  = 0, end = begin of first data or
 			   *                  code object).
 			  **/
-	    virtual unsigned		get_object_attribute(__filesize_t pa,char *_name,unsigned cb_name,__filesize_t *start,__filesize_t *end,int *_class,int *bitness) const;
+	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& _name,__filesize_t& start,__filesize_t& end,int& _class,int& bitness) const;
 	private:
 	    std::vector<const Binary_Parser_Info*>	formats;
 	    size_t			active_format;

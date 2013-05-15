@@ -101,7 +101,7 @@ __filesize_t Bin_Format::action_F9()  const { return detectedFormat->action_F9()
 __filesize_t Bin_Format::action_F10() const { return detectedFormat->action_F10(); }
 
 __filesize_t Bin_Format::show_header() const { return detectedFormat->show_header(); }
-bool	Bin_Format::bind(const DisMode& _parent,char *str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift) const
+bool	Bin_Format::bind(const DisMode& _parent,std::string& str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift) const
 {
     return detectedFormat->bind(_parent,str,shift,flg,codelen,r_shift);
 }
@@ -110,7 +110,7 @@ int	Bin_Format::query_platform() const { return detectedFormat->query_platform()
 int	Bin_Format::query_bitness(__filesize_t off) const { return detectedFormat->query_bitness(off); }
 int	Bin_Format::query_endian(__filesize_t off) const { return detectedFormat->query_endian(off); }
 
-bool	Bin_Format::address_resolving(char * str,__filesize_t off) const
+bool	Bin_Format::address_resolving(std::string& str,__filesize_t off) const
 {
     return detectedFormat->address_resolving(str,off);
 }
@@ -128,13 +128,13 @@ __filesize_t Bin_Format::pa2va(__filesize_t pa) const
     return rc;
 }
 
-__filesize_t Bin_Format::get_public_symbol(char *str,unsigned cb_str,unsigned *_class,__filesize_t pa,bool as_prev) const
+__filesize_t Bin_Format::get_public_symbol(std::string& str,unsigned& _class,__filesize_t pa,bool as_prev) const
 {
-    __filesize_t rc=detectedFormat->get_public_symbol(str,cb_str,_class,pa,as_prev);
+    __filesize_t rc=detectedFormat->get_public_symbol(str,_class,pa,as_prev);
     if(!rc) rc = Plugin::Bad_Address;
     return rc;
 }
 
-unsigned Bin_Format::get_object_attribute(__filesize_t pa,char *_name,unsigned cb_name,__filesize_t *start,__filesize_t *end,int *_class,int *bitness) const { return detectedFormat->get_object_attribute(pa,_name,cb_name,start,end,_class,bitness); }
+unsigned Bin_Format::get_object_attribute(__filesize_t pa,std::string& _name,__filesize_t& start,__filesize_t& end,int& _class,int& bitness) const { return detectedFormat->get_object_attribute(pa,_name,start,end,_class,bitness); }
 
 } // namespace	usr

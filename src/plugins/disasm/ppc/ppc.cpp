@@ -143,14 +143,18 @@ void PPC_Disassembler::ppc_Encode_args(char *ostr,uint32_t opcode,
 		if(len>6) {
 		    int aa = PPC_GET_BITS(opcode,30,1);
 		    unsigned long distin = (value<<2) + (aa?0:ulShift);
-		    parent.append_faddr(main_handle,ostr,dig_off,value,distin,
+		    std::string stmp = ostr;
+		    parent.append_faddr(main_handle,stmp,dig_off,value,distin,
 				DisMode::Near32,0,dig_sz);
+		    strcpy(ostr,stmp.c_str());
 		}
 		else goto do_digs;
 	    }
 	    else {
 		do_digs:
-		parent.append_digits(main_handle,ostr,dig_off,APREF_USE_TYPE,dig_sz,&opcode,dig_flg);
+		std::string stmp = ostr;
+		parent.append_digits(main_handle,stmp,dig_off,APREF_USE_TYPE,dig_sz,&opcode,dig_flg);
+		strcpy(ostr,stmp.c_str());
 	    }
 	}
     }
@@ -1477,7 +1481,9 @@ DisasmRet PPC_Disassembler::disassembler(__filesize_t ulShift,
 	{
 		strcpy(dret.str,"db");
 		TabSpace(dret.str,TAB_POS);
-		parent.append_digits(main_handle,dret.str,ulShift,APREF_USE_TYPE,4,&opcode,DisMode::Arg_DWord);
+		std::string stmp = dret.str;
+		parent.append_digits(main_handle,stmp,ulShift,APREF_USE_TYPE,4,&opcode,DisMode::Arg_DWord);
+		strcpy(dret.str,stmp.c_str());
 	}
 	dret.pro_clone=0;
     }

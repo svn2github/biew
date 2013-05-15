@@ -49,6 +49,7 @@ using namespace	usr;
     http://www.muppetlabs.com/~breadbox/software/
 */
 #include <algorithm>
+#include <set>
 
 #include <limits.h>
 #include <string.h>
@@ -72,11 +73,20 @@ using namespace	usr;
 #include "beye.h"
 
 namespace	usr {
+    struct VA_map {
+	__filesize_t va;
+	__filesize_t size;
+	__filesize_t foff;
+	__filesize_t nameoff;
+	__filesize_t flags;
+    };
     struct Elf_Reloc {
 	__filesize_t  offset;
 	__filesize_t  info;
 	__filesize_t  addend;
 	__filesize_t  sh_idx;
+
+	bool operator<(const Elf_Reloc& rhs) const { return offset<rhs.offset; }
     };
     class ELF_Parser : public Binary_Parser {
 	public:
@@ -92,29 +102,28 @@ namespace	usr {
 	    virtual __filesize_t	action_F10();
 
 	    virtual __filesize_t	show_header();
-	    virtual bool		bind(const DisMode& _parent,char *str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
+	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
 	    virtual int			query_platform() const;
 	    virtual int			query_bitness(__filesize_t) const;
 	    virtual int			query_endian(__filesize_t) const;
-	    virtual bool		address_resolving(char *,__filesize_t);
+	    virtual bool		address_resolving(std::string&,__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va);
 	    virtual __filesize_t	pa2va(__filesize_t pa);
-	    virtual __filesize_t	get_public_symbol(char *str,unsigned cb_str,unsigned *_class,
+	    virtual __filesize_t	get_public_symbol(std::string& str,unsigned& _class,
 							    __filesize_t pa,bool as_prev);
-	    virtual unsigned		get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,
-							__filesize_t *start,__filesize_t *end,int *_class,int *bitness);
+	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
+							__filesize_t& start,__filesize_t& end,int& _class,int& bitness);
 	private:
-	    void			elf_ReadPubName(binary_stream&b_cache,const struct PubName *it,char *buff,unsigned cb_buff);
-	    static tCompare __FASTCALL__ compare_pubnames(const any_t *v1,const any_t *v2);
-	    void			__elfReadSegments(linearArray **to,bool is_virt);
+	    std::string			elf_ReadPubName(binary_stream&b_cache,const symbolic_information& it);
+	    void			__elfReadSegments(std::map<__filesize_t,VA_map>& to,bool is_virt);
 	    void			displayELFdyninfo(__filesize_t f_off,unsigned nitems);
-	    bool			BuildReferStrElf(char *str,Elf_Reloc *erl,int flags,unsigned codelen,__filesize_t defval);
-	    bool			BuildReferStrElf_ppc(char *str,Elf_Reloc *erl,int flags,unsigned codelen,__filesize_t defval);
-	    bool			BuildReferStrElf_x86_64(char *str,Elf_Reloc *erl,int flags,unsigned codelen,__filesize_t defval);
-	    bool			BuildReferStrElf_i386(char *str,Elf_Reloc *erl,int flags,unsigned codelen,__filesize_t defval);
-	    bool			BuildReferStrElf_arm(char *str,Elf_Reloc *erl,int flags,unsigned codelen,__filesize_t defval);
-	    bool			__readRelocName(Elf_Reloc *erl,char *buff,size_t cbBuff);
-	    Elf_Reloc *			__found_ElfRel(__filesize_t offset);
+	    bool			BuildReferStrElf(std::string& str,Elf_Reloc *erl,int flags,unsigned codelen,__filesize_t defval);
+	    bool			BuildReferStrElf_ppc(std::string& str,Elf_Reloc *erl,int flags,unsigned codelen,__filesize_t defval);
+	    bool			BuildReferStrElf_x86_64(std::string& str,Elf_Reloc *erl,int flags,unsigned codelen,__filesize_t defval);
+	    bool			BuildReferStrElf_i386(std::string& str,Elf_Reloc *erl,int flags,unsigned codelen,__filesize_t defval);
+	    bool			BuildReferStrElf_arm(std::string& str,Elf_Reloc *erl,int flags,unsigned codelen,__filesize_t defval);
+	    bool			__readRelocName(Elf_Reloc *erl,std::string& buff);
+	    std::set<Elf_Reloc>::const_iterator	__found_ElfRel(__filesize_t offset);
 	    void			buildElf386RelChain();
 	    void			__elfReadRelaSection(__filesize_t offset,__filesize_t size,__filesize_t sh_link,__filesize_t info,__filesize_t entsize);
 	    void			__elfReadRelSection(__filesize_t offset,__filesize_t size,__filesize_t sh_link,__filesize_t info,__filesize_t entsize);
@@ -129,7 +138,6 @@ namespace	usr {
 	    inline uint32_t		bioRead25(binary_stream&handle2) const { return handle2.read(type_dword)&0x01FFFFFFUL; };
 	    inline uint32_t		bioRead30(binary_stream&handle2) const { return handle2.read(type_dword)&0x3FFFFFFFUL; };
 	    __filesize_t		get_f_offset(__filesize_t r_offset,__filesize_t sh_link);
-	    static tCompare __FASTCALL__ compare_elf_reloc(const any_t *e1,const any_t *e2);
 	    __filesize_t		displayELFdyntab(__filesize_t dynptr,unsigned long nitem,long entsize);
 	    __filesize_t		displayELFsymtab();
 	    __filesize_t		__calcSymEntry(binary_stream&handle,__filesize_t num,bool display_msg);
@@ -149,21 +157,20 @@ namespace	usr {
 	    const char*			elf_otype(unsigned id) const;
 	    const char*			elf_data(unsigned char id) const;
 	    const char*			elf_class(unsigned char id) const;
-	    void			elf386_readnametableex(__filesize_t off,char *buf,unsigned blen);
-	    void			elf386_readnametable(__filesize_t off,char *buf,unsigned blen);
+	    std::string			elf386_readnametableex(__filesize_t off);
+	    std::string			elf386_readnametable(__filesize_t off);
 	    static tCompare __FASTCALL__ vamap_comp_phys(const any_t *v1,const any_t *v2);
 	    static tCompare __FASTCALL__ vamap_comp_virt(const any_t *v1,const any_t *v2);
 	    __filesize_t		findSHEntry(binary_stream&b_cache,unsigned long type,unsigned long *nitems,__filesize_t *link,unsigned long *ent_size);
 	    __filesize_t		findPHPubSyms(unsigned long *number,unsigned long *ent_size,__filesize_t *act_shtbl);
 	    __filesize_t		findPHDynEntry(unsigned long type,__filesize_t dynptr,unsigned long nitems);
 	    __filesize_t		findPHEntry(unsigned long type,unsigned *nitems);
-	    bool			FindPubName(char *buff,unsigned cb_buff,__filesize_t pa);
+	    bool			FindPubName(std::string& buff,__filesize_t pa);
 	    void			elf_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
 
 	    bool		is_msbf; /* is most significand byte first */
 	    bool		is_64bit;
 	    class Elf*		Elf;
-	    linearArray*	PubNames;
 
 	    __filesize_t	active_shtbl;
 	    __filesize_t	elf_min_va;
@@ -177,24 +184,16 @@ namespace	usr {
 	    binary_stream*	namecache2;
 	    binary_stream*	elfcache;
 
-	    linearArray*	va_map_phys;
-	    linearArray*	va_map_virt;
-	    linearArray*	CurrElfChain;
+	    std::map<__filesize_t,VA_map>	va_map_virt;
+	    std::map<__filesize_t,VA_map>	va_map_phys;
+	    std::set<Elf_Reloc>			CurrElfChain;
+	    std::set<symbolic_information>	PubNames;
 
 	    binary_stream&	main_handle;
 	    CodeGuider&		code_guider;
     };
 static const char* txt[]={ "ELFhlp", "DynInf", "DynSec", "", "", "", "SymTab", "", "SecHdr", "PrgDef" };
 const char* ELF_Parser::prompt(unsigned idx) const { return txt[idx]; }
-
-struct tag_elfVAMap
-{
-  __filesize_t va;
-  __filesize_t size;
-  __filesize_t foff;
-  __filesize_t nameoff;
-  __filesize_t flags;
-};
 
 __filesize_t  ELF_Parser::findPHEntry(unsigned long type,unsigned *nitems)
 {
@@ -315,79 +314,76 @@ __filesize_t ELF_Parser::findSHEntry(binary_stream& b_cache, unsigned long type,
 
 tCompare ELF_Parser::vamap_comp_virt(const any_t*v1,const any_t*v2)
 {
-  const struct tag_elfVAMap  *pnam1, *pnam2;
-  pnam1 = (const struct tag_elfVAMap  *)v1;
-  pnam2 = (const struct tag_elfVAMap  *)v2;
+  const struct VA_map  *pnam1, *pnam2;
+  pnam1 = (const struct VA_map  *)v1;
+  pnam2 = (const struct VA_map  *)v2;
   return pnam1->va<pnam2->va?-1:pnam1->va>pnam2->va?1:0;
 }
 
 tCompare ELF_Parser::vamap_comp_phys(const any_t*v1,const any_t*v2)
 {
-  const struct tag_elfVAMap  *pnam1, *pnam2;
-  pnam1 = (const struct tag_elfVAMap  *)v1;
-  pnam2 = (const struct tag_elfVAMap  *)v2;
+  const struct VA_map  *pnam1, *pnam2;
+  pnam1 = (const struct VA_map  *)v1;
+  pnam2 = (const struct VA_map  *)v2;
   return pnam1->foff<pnam2->foff?-1:pnam1->foff>pnam2->foff?1:0;
 }
 
 __filesize_t ELF_Parser::va2pa(__filesize_t va)
 {
-  unsigned long i;
-  if(va_map_virt)
-  for(i = 0; i < va_map_virt->nItems;i++)
-  {
-    struct tag_elfVAMap  *evm;
-    evm = &((struct tag_elfVAMap  *)va_map_virt->data)[i];
-    if(va >= evm->va && va < evm->va + evm->size) return evm->foff + (va - evm->va);
+  if(!va_map_virt.empty())
+  for(std::map<__filesize_t,VA_map>::const_iterator it = va_map_virt.begin();it!=va_map_virt.end();it++) {
+    if(va >= (*it).first && va < (*it).first + (*it).second.size) return (*it).second.foff + (va - (*it).first);
   }
   return 0L;
 }
 
 __filesize_t ELF_Parser::pa2va(__filesize_t pa)
 {
-  unsigned long i;
   __filesize_t ret;
   ret = 0L;
-  for(i = 0; i < va_map_phys->nItems;i++)
+  for(std::map<__filesize_t,VA_map>::const_iterator it = va_map_phys.begin();it!=va_map_phys.end();it++)
   {
-    struct tag_elfVAMap  *evm;
-    evm = &((struct tag_elfVAMap  *)va_map_phys->data)[i];
-    if(pa >= evm->foff && pa < evm->foff + evm->size)
-    {
-      ret = evm->va + (pa - evm->foff);
+    if(pa >= (*it).first && pa < (*it).first + (*it).second.size) {
+      ret = (*it).second.va + (pa - (*it).first);
       break;
     }
   }
   return ret;
 }
 
-void ELF_Parser::elf386_readnametable(__filesize_t off,char *buf,unsigned blen)
+std::string ELF_Parser::elf386_readnametable(__filesize_t off)
 {
+    std::string rc;
   __filesize_t foff;
   Elf_Shdr sh;
   unsigned char ch;
   unsigned freq;
 
   binary_stream& b_cache = *namecache,&b_cache2 = *namecache2;
+//  binary_stream& b_cache = main_handle,&b_cache2 = main_handle;
   foff = Elf->ehdr().e_shoff+Elf->ehdr().e_shstrndx*Elf->ehdr().e_shentsize;
   sh=Elf->read_shdr(b_cache2,foff);
   foff = sh.sh_offset + off;
   freq = 0;
+  b_cache.seek(foff,binary_stream::Seek_Set);
   while(1)
   {
-     b_cache.seek(foff++,binary_stream::Seek_Set);
      ch = b_cache.read(type_byte);
-     buf[freq++] = ch;
-     if(!ch || freq >= blen || b_cache.eof()) break;
+     if(!ch || b_cache.eof()) break;
+     rc+=ch;
   }
+  return rc;
 }
 
-void ELF_Parser::elf386_readnametableex(__filesize_t off,char *buf,unsigned blen)
+std::string ELF_Parser::elf386_readnametableex(__filesize_t off)
 {
+    std::string rc;
   __filesize_t foff;
   Elf_Shdr sh;
   unsigned char ch;
   unsigned freq;
   binary_stream& b_cache = *namecache,&b_cache2 = *namecache2;
+//  binary_stream& b_cache = main_handle,&b_cache2 = main_handle;
   if(Elf->ehdr().e_shoff)
   {
     foff = Elf->ehdr().e_shoff+active_shtbl*Elf->ehdr().e_shentsize;
@@ -398,13 +394,14 @@ void ELF_Parser::elf386_readnametableex(__filesize_t off,char *buf,unsigned blen
      required string table */
   else  foff = active_shtbl + off;
   freq = 0;
+  b_cache.seek(foff,binary_stream::Seek_Set);
   while(1)
   {
-     b_cache.seek(foff++,binary_stream::Seek_Set);
      ch = b_cache.read(type_byte);
-     buf[freq++] = ch;
-     if(!ch || freq >= blen || b_cache.eof()) break;
+     if(!ch || b_cache.eof()) break;
+     rc+=ch;
   }
+  return rc;
 }
 
 const char* ELF_Parser::elf_class(unsigned char id) const
@@ -774,17 +771,16 @@ bool ELF_Parser::__elfReadSecHdr(binary_stream& handle,memArray *obj,unsigned nn
   for(i = 0;i < nnames;i++)
   {
    Elf_Shdr shdr;
-   char tmp[17];
+   std::string tmp;
    __filesize_t fp;
    char stmp[80];
    if(IsKbdTerminate() || handle.eof()) break;
    fp = handle.tell();
    shdr=Elf->read_shdr(handle,fp);
-   elf386_readnametable(shdr.sh_name,tmp,sizeof(tmp));
+   tmp=elf386_readnametable(shdr.sh_name);
    handle.seek(fp+Elf->ehdr().e_shentsize,binary_stream::Seek_Set);
-   tmp[16] = 0;
    sprintf(stmp,"%-16s %-6s %c%c%c %08lX %08lX %08lX %04hX %04hX %04hX %04hX",
-		tmp,
+		tmp.c_str(),
 		elf_encode_sh_type(shdr.sh_type),
 		(shdr.sh_flags & SHF_WRITE) == SHF_WRITE ? 'W' : ' ',
 		(shdr.sh_flags & SHF_ALLOC) == SHF_ALLOC ? 'A' : ' ',
@@ -857,7 +853,7 @@ bool ELF_Parser::ELF_IS_SECTION_PHYSICAL(unsigned sec_num) const
 bool ELF_Parser::__elfReadSymTab(binary_stream& handle,memArray *obj,unsigned nsym)
 {
  size_t i,tlen;
- char text[37];
+  std::string text;
   tlen=is_64bit?29:37;
   handle.seek(__elfSymPtr,binary_stream::Seek_Set);
   for(i = 0;i < nsym;i++)
@@ -869,11 +865,10 @@ bool ELF_Parser::__elfReadSymTab(binary_stream& handle,memArray *obj,unsigned ns
    fp = handle.tell();
    sym=Elf->read_sym(handle,fp);
    handle.seek(fp+__elfSymEntSize,binary_stream::Seek_Set);
-   elf386_readnametableex(sym.st_name,text,tlen); // !!! HACK
-   text[tlen-1] = 0;
+   text=elf386_readnametableex(sym.st_name); // !!! HACK
    if(is_64bit)
    sprintf(stmp,"%-29s %016llX %08lX %04hX %s %s %s"
-	       ,text
+	       ,text.c_str()
 	       ,(unsigned long long)sym.st_value
 	       ,(unsigned)sym.st_size
 	       ,sym.st_other
@@ -883,7 +878,7 @@ bool ELF_Parser::__elfReadSymTab(binary_stream& handle,memArray *obj,unsigned ns
 	       );
    else
    sprintf(stmp,"%-37s %08lX %08lX %04hX %s %s %s"
-	       ,text
+	       ,text.c_str()
 	       ,(unsigned)sym.st_value
 	       ,(unsigned)sym.st_size
 	       ,sym.st_other
@@ -899,32 +894,33 @@ bool ELF_Parser::__elfReadSymTab(binary_stream& handle,memArray *obj,unsigned ns
 bool ELF_Parser::__elfReadDynTab(binary_stream& handle,memArray *obj, unsigned ntbl,__filesize_t entsize)
 {
  size_t i;
- char sout[80];
+ std::string sout;
  unsigned len,rlen,rborder;
   for(i = 0;i < ntbl;i++)
   {
    __filesize_t fp;
-   char stmp[80];
+   std::string stmp;
    Elf_Dyn pdyn;
    fp = handle.tell();
    pdyn=Elf->read_dyn(handle,fp);
    handle.seek(fp+entsize,binary_stream::Seek_Set);
    fp = handle.tell();
    /* Note: elf-64 specs requre ELF_XWORD here! But works ELF_WORD !!! */
-   elf386_readnametableex(pdyn.d_tag,sout,sizeof(sout));
-   len = strlen(sout);
+   sout=elf386_readnametableex(pdyn.d_tag);
+   len = sout.length();
    rborder=is_64bit?52:60;
    if(len > rborder-4) len = rborder-7;
    if(IsKbdTerminate() || handle.eof()) break;
-   strncpy(stmp,sout,len);
-   stmp[len] = 0;
-   if(len > rborder-4) strcat(stmp,"...");
-   rlen = strlen(stmp);
-   if(rlen < rborder) { memset(&stmp[rlen],' ',rborder-rlen); stmp[rborder] = 0; }
+   stmp=sout;
+   if(len > rborder-4) stmp+="...";
+   rlen = stmp.length();
+//   if(rlen < rborder) { memset(&stmp[rlen],' ',rborder-rlen); stmp[rborder] = 0; }
+   char sbuf[256];
    if(is_64bit)
-    sprintf(&stmp[strlen(stmp)]," vma=%016llXH",(unsigned long long)pdyn.d_un.d_val);
+    sprintf(sbuf," vma=%016llXH",(unsigned long long)pdyn.d_un.d_val);
    else
-    sprintf(&stmp[strlen(stmp)]," vma=%08lXH",(unsigned long)pdyn.d_un.d_val);
+    sprintf(sbuf," vma=%08lXH",(unsigned long)pdyn.d_un.d_val);
+   stmp+=sbuf;
    if(!ma_AddString(obj,stmp,true)) break;
    handle.seek(fp,binary_stream::Seek_Set);
   }
@@ -1123,14 +1119,6 @@ __filesize_t ELF_Parser::action_F3()
 /***************************************************************************/
 /************************ RELOCATION FOR ELF *******************************/
 /***************************************************************************/
-tCompare ELF_Parser::compare_elf_reloc(const any_t*e1,const any_t*e2)
-{
-  const Elf_Reloc  *p1, *p2;
-  p1 = (const Elf_Reloc  *)e1;
-  p2 = (const Elf_Reloc  *)e2;
-  return p1->offset<p2->offset?-1:p1->offset>p2->offset?1:0;
-}
-
 __filesize_t ELF_Parser::get_f_offset(__filesize_t r_offset,__filesize_t sh_link)
 {
   /*
@@ -1349,7 +1337,8 @@ void ELF_Parser::__elfReadRelSection(__filesize_t offset,
       case EM_PPC64: __elf_ppc_read_erc(handle2,&erc); break;
     }
     erc.sh_idx = sh_link;
-    if(!la_AddData(CurrElfChain,&erc,NULL)) break;
+    CurrElfChain.insert(erc);
+//    if(!la_AddData(CurrElfChain,&erc,NULL)) break;
   }
   handle2.seek(sfp,binary_stream::Seek_Set);
   handle.seek(fp,binary_stream::Seek_Set);
@@ -1380,7 +1369,8 @@ void ELF_Parser::__elfReadRelaSection(__filesize_t offset,
     erc.info = relent.r_info;
     erc.addend = relent.r_addend;
     erc.sh_idx = sh_link;
-    if(!la_AddData(CurrElfChain,&erc,NULL)) break;
+    CurrElfChain.insert(erc);
+//    if(!la_AddData(CurrElfChain,&erc,NULL)) break;
   }
   handle.seek(fp,binary_stream::Seek_Set);
 }
@@ -1391,7 +1381,7 @@ void ELF_Parser::buildElf386RelChain()
   TWindow *w;
   binary_stream& handle = *elfcache;
   __filesize_t fp;
-  if(!(CurrElfChain = la_Build(0,sizeof(Elf_Reloc),MemOutBox))) return;
+//  if(!(CurrElfChain = la_Build(0,sizeof(Elf_Reloc),MemOutBox))) return;
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
   w->goto_xy(1,1);
   w->puts(BUILD_REFS);
@@ -1477,21 +1467,21 @@ void ELF_Parser::buildElf386RelChain()
       }
     }
   }
-  la_Sort(CurrElfChain,compare_elf_reloc);
+//  la_Sort(CurrElfChain,compare_elf_reloc);
   handle.seek(fp,binary_stream::Seek_Set);
   delete w;
   return;
 }
 
-Elf_Reloc* ELF_Parser::__found_ElfRel(__filesize_t offset)
+std::set<Elf_Reloc>::const_iterator ELF_Parser::__found_ElfRel(__filesize_t offset)
 {
   Elf_Reloc key;
-  if(!CurrElfChain) buildElf386RelChain();
+  if(CurrElfChain.empty()) buildElf386RelChain();
   key.offset = offset;
-  return (Elf_Reloc*)la_Find(CurrElfChain,&key,compare_elf_reloc);
+  return CurrElfChain.find(key);
 }
 
-bool ELF_Parser::__readRelocName(Elf_Reloc  *erl, char *buff, size_t cbBuff)
+bool ELF_Parser::__readRelocName(Elf_Reloc* erl, std::string& buff)
 {
   Elf_Shdr shdr;
   Elf_Sym sym;
@@ -1523,10 +1513,9 @@ bool ELF_Parser::__readRelocName(Elf_Reloc  *erl, char *buff, size_t cbBuff)
     }
     handle.seek(r_sym*__elfSymEntSize,binary_stream::Seek_Cur);
     sym=Elf->read_sym(handle,handle.tell());
-    elf386_readnametableex(sym.st_name,buff,cbBuff);
-    buff[cbBuff-1] = '\0';
+    buff=elf386_readnametableex(sym.st_name);
     active_shtbl = old_active;
-    if(!buff[0])
+    if(buff.empty())
     {
       /* reading name failed - try read at least section name */
       if(IsSectionsPresent)
@@ -1536,26 +1525,26 @@ bool ELF_Parser::__readRelocName(Elf_Reloc  *erl, char *buff, size_t cbBuff)
 	  ELF_IS_SECTION_PHYSICAL(sym.st_shndx))
        {
          shdr=Elf->read_shdr(handle,Elf->ehdr().e_shoff+sym.st_shndx*Elf->ehdr().e_shentsize);
-	 if(!FindPubName(buff, cbBuff, shdr.sh_offset+erl->addend))
-		      elf386_readnametable(shdr.sh_name,buff,cbBuff);
+	 if(!FindPubName(buff, shdr.sh_offset+erl->addend))
+		buff=elf386_readnametable(shdr.sh_name);
        }
       }
-      if(!buff[0]) strcpy(buff,"?noname");
+      if(buff.empty()) buff="?noname";
     }
   }
   handle.seek(fp,binary_stream::Seek_Set);
   return ret;
 }
 
-bool ELF_Parser::BuildReferStrElf_arm(char *str,
-							Elf_Reloc  *erl,
-							int flags,unsigned codelen,
-							__filesize_t defval)
+bool ELF_Parser::BuildReferStrElf_arm(std::string& str,
+					Elf_Reloc  *erl,
+					int flags,unsigned codelen,
+					__filesize_t defval)
 {
   bool retval = true;
   uint32_t r_type;
   bool ret=false, use_addend = false;
-  char buff[300];
+  std::string buff;
   UNUSED(codelen);
   UNUSED(defval);
   r_type = ELF32_R_TYPE(erl->info);
@@ -1573,10 +1562,10 @@ bool ELF_Parser::BuildReferStrElf_arm(char *str,
     case R_ARM_ABS12:
     case R_ARM_ABS16:
     case R_ARM_ABS32:  /* symbol + addendum */
-		   ret = __readRelocName(erl, buff, sizeof(buff));
-		   if(buff[0] && ret)
+		   ret = __readRelocName(erl, buff);
+		   if(!buff.empty() && ret)
 		   {
-		     strcat(str,buff);
+		     str+=buff;
 		     use_addend = true;
 		   }
 		   else retval = false;
@@ -1584,31 +1573,31 @@ bool ELF_Parser::BuildReferStrElf_arm(char *str,
     case R_ARM_THM_PC8:
     case R_ARM_THM_PC12:
     case R_ARM_PC24: /* symbol + addendum - this */
-		   ret = __readRelocName(erl, buff, sizeof(buff));
-		   if(buff[0] && ret)
+		   ret = __readRelocName(erl, buff);
+		   if(!buff.empty() && ret)
 		   {
-		     strcat(str,buff);
+		     str+=buff;
 		     /* strcat(str,"-.here"); <- it's commented for readability */
 		     use_addend = true;
 		   }
 		   else retval = false;
 		   break;
     case R_ARM_PLT32: /* PLT[offset] + addendum - this */
-		   strcat(str,"PLT-");
-		   strcat(str,Get8Digit(erl->offset));
+		   str+="PLT-";
+		   str+=Get8Digit(erl->offset);
 		   use_addend = true;
 		   break;
     case R_ARM_GLOB_DAT:  /* symbol */
     case R_ARM_JUMP_SLOT:  /* symbol */
-		   ret = __readRelocName(erl, buff, sizeof(buff));
-		   if(buff[0] && ret) strcat(str,buff);
+		   ret = __readRelocName(erl, buff);
+		   if(!buff.empty() && ret) str+=buff;
 		   break;
     case R_ARM_GOTOFF32: /* symbol + addendum - GOT */
-		   ret = __readRelocName(erl, buff, sizeof(buff));
-		   if(buff[0] && ret)
+		   ret = __readRelocName(erl, buff);
+		   if(!buff.empty() && ret)
 		   {
-		     strcat(str,buff);
-		     strcat(str,"-GOT");
+		     str+=buff;
+		     str+="-GOT";
 		     use_addend = true;
 		   }
 		   else retval = false;
@@ -1617,21 +1606,21 @@ bool ELF_Parser::BuildReferStrElf_arm(char *str,
   if(erl->addend && use_addend && ret &&
      !(flags & APREF_TRY_LABEL)) /* <- it for readability */
   {
-    strcat(str,"+");
-    strcat(str,Get8Digit(erl->addend));
+    str+="+";
+    str+=Get8Digit(erl->addend);
   }
   return retval;
 }
 
-bool ELF_Parser::BuildReferStrElf_i386(char *str,
-							Elf_Reloc  *erl,
-							int flags,unsigned codelen,
-							__filesize_t defval)
+bool ELF_Parser::BuildReferStrElf_i386(std::string& str,
+					Elf_Reloc  *erl,
+					int flags,unsigned codelen,
+					__filesize_t defval)
 {
   bool retval = true;
   uint32_t r_type;
   bool ret=false, use_addend = false;
-  char buff[300];
+  std::string buff;
   UNUSED(codelen);
   UNUSED(defval);
   r_type = ELF32_R_TYPE(erl->info);
@@ -1647,10 +1636,10 @@ bool ELF_Parser::BuildReferStrElf_i386(char *str,
     case R_386_GNU_8:
     case R_386_GNU_16:
     case R_386_32:  /* symbol + addendum */
-		   ret = __readRelocName(erl, buff, sizeof(buff));
-		   if(buff[0] && ret)
+		   ret = __readRelocName(erl, buff);
+		   if(!buff.empty() && ret)
 		   {
-		     strcat(str,buff);
+		     str+=buff;
 		     use_addend = true;
 		   }
 		   else retval = false;
@@ -1658,63 +1647,63 @@ bool ELF_Parser::BuildReferStrElf_i386(char *str,
     case R_386_GNU_PC8:
     case R_386_GNU_PC16:
     case R_386_PC32: /* symbol + addendum - this */
-		   ret = __readRelocName(erl, buff, sizeof(buff));
-		   if(buff[0] && ret)
+		   ret = __readRelocName(erl, buff);
+		   if(!buff.empty() && ret)
 		   {
-		     strcat(str,buff);
+		     str+=buff;
 		     /* strcat(str,"-.here"); <- it's commented for readability */
 		     use_addend = true;
 		   }
 		   else retval = false;
 		   break;
     case R_386_GOT32: /* GOT[offset] + addendum - this */
-		   strcat(str,"GOT-");
-		   strcat(str,Get8Digit(erl->offset));
+		   str+="GOT-";
+		   str+=Get8Digit(erl->offset);
 		   use_addend = true;
 		   break;
     case R_386_PLT32: /* PLT[offset] + addendum - this */
-		   strcat(str,"PLT-");
-		   strcat(str,Get8Digit(erl->offset));
+		   str+="PLT-";
+		   str+=Get8Digit(erl->offset);
 		   use_addend = true;
 		   break;
     case R_386_GLOB_DAT:  /* symbol */
     case R_386_JMP_SLOT:  /* symbol */
-		   ret = __readRelocName(erl, buff, sizeof(buff));
-		   if(buff[0] && ret) strcat(str,buff);
+		   ret = __readRelocName(erl, buff);
+		   if(!buff.empty() && ret) str+=buff;
 		   break;
     case R_386_GOTOFF: /* symbol + addendum - GOT */
-		   ret = __readRelocName(erl, buff, sizeof(buff));
-		   if(buff[0] && ret)
+		   ret = __readRelocName(erl, buff);
+		   if(!buff.empty() && ret)
 		   {
-		     strcat(str,buff);
-		     strcat(str,"-GOT");
+		     str+=buff;
+		     str+="-GOT";
 		     use_addend = true;
 		   }
 		   else retval = false;
 		   break;
     case R_386_GOTPC: /* GOT + addendum - this */
-		   strcat(str,"GOT-.here");
+		   str+="GOT-.here";
 		   use_addend = true;
 		   break;
   }
   if(erl->addend && use_addend && ret &&
      !(flags & APREF_TRY_LABEL)) /* <- it for readability */
   {
-    strcat(str,"+");
-    strcat(str,Get8Digit(erl->addend));
+    str+="+";
+    str+=Get8Digit(erl->addend);
   }
   return retval;
 }
 
-bool ELF_Parser::BuildReferStrElf_x86_64(char *str,
-							Elf_Reloc  *erl,
-							int flags,unsigned codelen,
-							__filesize_t defval)
+bool ELF_Parser::BuildReferStrElf_x86_64(std::string& str,
+					Elf_Reloc  *erl,
+					int flags,unsigned codelen,
+					__filesize_t defval)
 {
   bool retval = true;
   uint32_t r_type;
   bool ret=false, use_addend = false;
-  char buff[300];
+  std::string buff;
   UNUSED(codelen);
   UNUSED(defval);
   r_type = ELF32_R_TYPE(erl->info);
@@ -1731,10 +1720,10 @@ bool ELF_Parser::BuildReferStrElf_x86_64(char *str,
     case R_X86_64_16:
     case R_X86_64_32:
     case R_X86_64_64:  /* symbol + addendum */
-		   ret = __readRelocName(erl, buff, sizeof(buff));
-		   if(buff[0] && ret)
+		   ret = __readRelocName(erl, buff);
+		   if(!buff.empty() && ret)
 		   {
-		     strcat(str,buff);
+		     str+=buff;
 		     use_addend = true;
 		   }
 		   else retval = false;
@@ -1743,75 +1732,75 @@ bool ELF_Parser::BuildReferStrElf_x86_64(char *str,
     case R_X86_64_PC16:
     case R_X86_64_PC32:
     case R_X86_64_PC64: /* symbol + addendum - this */
-		   ret = __readRelocName(erl, buff, sizeof(buff));
-		   if(buff[0] && ret)
+		   ret = __readRelocName(erl, buff);
+		   if(!buff.empty() && ret)
 		   {
-		     strcat(str,buff);
+		     str+=buff;
 		     /* strcat(str,"-.here"); <- it's commented for readability */
 		     use_addend = true;
 		   }
 		   else retval = false;
 		   break;
     case R_X86_64_GOT32:
-		   strcat(str,"GOT-");
-		   strcat(str,Get8Digit(erl->offset));
+		   str+="GOT-";
+		   str+=Get8Digit(erl->offset);
 		   use_addend = true;
 		   break;
     case R_X86_64_GOT64:
     case R_X86_64_GOTPC64:
     case R_X86_64_GOTPLT64: /* GOT[offset] + addendum - this */
-		   strcat(str,"GOT-");
-		   strcat(str,Get16Digit(erl->offset));
+		   str+="GOT-";
+		   str+=Get16Digit(erl->offset);
 		   use_addend = true;
 		   break;
     case R_X86_64_PLT32:
-		   strcat(str,"PLT-");
-		   strcat(str,Get8Digit(erl->offset));
+		   str+="PLT-";
+		   str+=Get8Digit(erl->offset);
 		   use_addend = true;
 		   break;
     case R_X86_64_PLTOFF64: /* PLT[offset] + addendum - this */
-		   strcat(str,"PLT-");
-		   strcat(str,Get16Digit(erl->offset));
+		   str+="PLT-";
+		   str+=Get16Digit(erl->offset);
 		   use_addend = true;
 		   break;
     case R_X86_64_GLOB_DAT:  /* symbol */
     case R_X86_64_JUMP_SLOT:  /* symbol */
-		   ret = __readRelocName(erl, buff, sizeof(buff));
-		   if(buff[0] && ret) strcat(str,buff);
+		   ret = __readRelocName(erl, buff);
+		   if(!buff.empty() && ret) str+=buff;
 		   break;
     case R_X86_64_GOTOFF64: /* symbol + addendum - GOT */
-		   ret = __readRelocName(erl, buff, sizeof(buff));
-		   if(buff[0] && ret)
+		   ret = __readRelocName(erl, buff);
+		   if(!buff.empty() && ret)
 		   {
-		     strcat(str,buff);
-		     strcat(str,"-GOT");
+		     str+=buff;
+		     str+="-GOT";
 		     use_addend = true;
 		   }
 		   else retval = false;
 		   break;
     case R_X86_64_GOTPCREL64: /* GOT + addendum - this */
-		   strcat(str,"GOT-.here");
+		   str+="GOT-.here";
 		   use_addend = true;
 		   break;
   }
   if(erl->addend && use_addend && ret &&
      !(flags & APREF_TRY_LABEL)) /* <- it for readability */
   {
-    strcat(str,"+");
-    strcat(str,Get8Digit(erl->addend));
+    str+="+";
+    str+=Get8Digit(erl->addend);
   }
   return retval;
 }
 
-bool ELF_Parser::BuildReferStrElf_ppc(char *str,
-							Elf_Reloc  *erl,
-							int flags,unsigned codelen,
-							__filesize_t defval)
+bool ELF_Parser::BuildReferStrElf_ppc(std::string& str,
+					Elf_Reloc  *erl,
+					int flags,unsigned codelen,
+					__filesize_t defval)
 {
   bool retval = true;
   uint32_t r_type;
   bool ret=false, use_addend = false;
-  char buff[300];
+  std::string buff;
   UNUSED(codelen);
   UNUSED(defval);
   r_type = ELF32_R_TYPE(erl->info);
@@ -1836,10 +1825,10 @@ bool ELF_Parser::BuildReferStrElf_ppc(char *str,
     case R_PPC_UADDR32:
     case R_PPC64_ADDR64:
     case R_PPC64_UADDR64: /* symbol + addendum */
-		   ret = __readRelocName(erl, buff, sizeof(buff));
-		   if(buff[0] && ret)
+		   ret = __readRelocName(erl, buff);
+		   if(!buff.empty() && ret)
 		   {
-		     strcat(str,buff);
+		     str+=buff;
 		     use_addend = true;
 		   }
 		   else retval = false;
@@ -1854,10 +1843,10 @@ bool ELF_Parser::BuildReferStrElf_ppc(char *str,
     case R_PPC_REL24:
     case R_PPC_REL32:
     case R_PPC64_REL64: /* symbol + addendum - this */
-		   ret = __readRelocName(erl, buff, sizeof(buff));
-		   if(buff[0] && ret)
+		   ret = __readRelocName(erl, buff);
+		   if(!buff.empty() && ret)
 		   {
-		     strcat(str,buff);
+		     str+=buff;
 		     /* strcat(str,"-.here"); <- it's commented for readability */
 		     use_addend = true;
 		   }
@@ -1866,42 +1855,42 @@ bool ELF_Parser::BuildReferStrElf_ppc(char *str,
     case R_PPC_GOT16_LO:
     case R_PPC_GOT16_HI:
     case R_PPC_GOT16_HA:
-		   strcat(str,"GOT-");
-		strcat(str,Get8Digit(erl->offset));
+		   str+="GOT-";
+		    str+=Get8Digit(erl->offset);
 		   use_addend = true;
 		   break;
     case R_PPC_PLT16_LO:
     case R_PPC_PLT16_HI:
     case R_PPC_PLT16_HA:
     case R_PPC_PLT32:
-		   strcat(str,"PLT-");
-		   strcat(str,Get8Digit(erl->offset));
+		   str+="PLT-";
+		   str+=Get8Digit(erl->offset);
 		   use_addend = true;
 		   break;
     case R_PPC64_PLT64: /* PLT[offset] + addendum - this */
-		   strcat(str,"PLT-");
-		   strcat(str,Get16Digit(erl->offset));
+		   str+="PLT-";
+		   str+=Get16Digit(erl->offset);
 		   use_addend = true;
 		   break;
     case R_PPC_GLOB_DAT:  /* symbol */
     case R_PPC_JMP_SLOT:  /* symbol */
-		   ret = __readRelocName(erl, buff, sizeof(buff));
-		   if(buff[0] && ret) strcat(str,buff);
+		   ret = __readRelocName(erl, buff);
+		   if(buff[0] && ret) str+=buff;
 		   break;
   }
   if(erl->addend && use_addend && ret &&
      !(flags & APREF_TRY_LABEL)) /* <- it for readability */
   {
-    strcat(str,"+");
-    strcat(str,Get8Digit(erl->addend));
+    str+="+";
+    str+=Get8Digit(erl->addend);
   }
   return retval;
 }
 
-bool ELF_Parser::BuildReferStrElf(char *str,
-							Elf_Reloc  *erl,
-							int flags,unsigned codelen,
-							__filesize_t defval)
+bool ELF_Parser::BuildReferStrElf(std::string& str,
+				Elf_Reloc  *erl,
+				int flags,unsigned codelen,
+				__filesize_t defval)
 {
     switch(Elf->ehdr().e_machine)
     {
@@ -1988,11 +1977,11 @@ __filesize_t ELF_Parser::action_F2()
   return fpos;
 }
 
-bool ELF_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+bool ELF_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
-  char buff[400];
+  std::string buff;
   bool ret = false;
-  Elf_Reloc  *erl;
+  std::set<Elf_Reloc>::const_iterator erl;
   __filesize_t defval;
   main_handle.seek(ulShift,binary_stream::Seek_Set);
   switch(codelen) {
@@ -2024,31 +2013,33 @@ bool ELF_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int f
        }
        return false;
   }
-  if(!PubNames) elf_ReadPubNameList(main_handle,MemOutBox);
-  if((erl = __found_ElfRel(ulShift)) != NULL)
+  if(PubNames.empty()) elf_ReadPubNameList(main_handle,MemOutBox);
+  if((erl = __found_ElfRel(ulShift)) != CurrElfChain.end())
   {
-    ret = BuildReferStrElf(str,erl,flags,codelen,defval);
+    Elf_Reloc r = (*erl);
+    ret = BuildReferStrElf(str,&r,flags,codelen,defval);
   }
   if(!ret && Elf->ehdr().e_type>ET_REL && codelen>=4)
   {
     uint32_t id;
     main_handle.seek(ulShift,binary_stream::Seek_Set);
     id = main_handle.read(type_dword);
-    if((erl = __found_ElfRel(va2pa(id))) != NULL)
+    if((erl = __found_ElfRel(va2pa(id))) != CurrElfChain.end())
     {
-      ret = BuildReferStrElf(str,erl,flags,codelen,defval);
+      Elf_Reloc r = (*erl);
+      ret = BuildReferStrElf(str,&r,flags,codelen,defval);
     }
   }
   if(!ret)
   {
-    memset(buff,-1,sizeof(buff));
+    buff="FFFFFFFF";
     if(flags & APREF_TRY_LABEL)
     {
-       if(FindPubName(buff,sizeof(buff),r_sh))
+       if(FindPubName(buff,r_sh))
        {
-	 if(strlen(buff))
+	 if(buff.length())
 	 {
-	   strcat(str,buff);
+	   str+=buff;
 	   if(!DumpMode && !EditMode) code_guider.add_go_address(parent,str,r_sh);
 	   ret = true;
 	 }
@@ -2058,11 +2049,11 @@ bool ELF_Parser::bind(const DisMode& parent,char *str,__filesize_t ulShift,int f
   return ret;
 }
 
-void ELF_Parser::__elfReadSegments(linearArray **to, bool is_virt )
+void ELF_Parser::__elfReadSegments(std::map<__filesize_t,VA_map>& to, bool is_virt )
 {
  Elf_Phdr phdr;
  Elf_Shdr shdr;
- struct tag_elfVAMap vamap;
+ struct VA_map vamap;
  __filesize_t fp;
  unsigned va_map_count;
  bool test;
@@ -2075,10 +2066,10 @@ void ELF_Parser::__elfReadSegments(linearArray **to, bool is_virt )
    if(IsSectionsPresent) /* Section headers are present */
    {
      va_map_count = Elf->ehdr().e_shnum;
-     if(!(*to = la_Build(0,sizeof(struct tag_elfVAMap),MemOutBox)))
-     {
-       exit(EXIT_FAILURE);
-     }
+//     if(!(*to = la_Build(0,sizeof(struct VA_map),MemOutBox)))
+//     {
+//       exit(EXIT_FAILURE);
+//     }
      main_handle.seek(Elf->ehdr().e_shoff,binary_stream::Seek_Set);
      for(i = 0;i < va_map_count;i++)
      {
@@ -2102,12 +2093,13 @@ void ELF_Parser::__elfReadSegments(linearArray **to, bool is_virt )
 	 if(flg & SHF_EXECINSTR) x_flags |= PF_X;
 	 vamap.flags = x_flags;
 	 test = is_virt ? va2pa(vamap.va) != 0 : pa2va(vamap.foff) != 0;
-	 if(!test)
-	 {
-	   if(!la_AddData(*to,&vamap,MemOutBox)) exit(EXIT_FAILURE);
+	 if(!test) {
+	  if(is_virt) to.insert(std::make_pair(vamap.va,vamap));
+	  else        to.insert(std::make_pair(vamap.foff,vamap));
+//	   if(!la_AddData(*to,&vamap,MemOutBox)) exit(EXIT_FAILURE);
 	   /** We must sort va_map after adding of each element because ELF section
 	       header has unsorted and nested elements */
-	   la_Sort(*to,is_virt ? vamap_comp_virt : vamap_comp_phys);
+//	   la_Sort(*to,is_virt ? vamap_comp_virt : vamap_comp_phys);
 	 }
        }
      }
@@ -2115,10 +2107,10 @@ void ELF_Parser::__elfReadSegments(linearArray **to, bool is_virt )
    else /* Try to build program headers map */
     if((va_map_count = Elf->ehdr().e_phnum) != 0) /* Program headers are present */
     {
-      if(!(*to = la_Build(va_map_count,sizeof(struct tag_elfVAMap),MemOutBox)))
-      {
-	exit(EXIT_FAILURE);
-      }
+//      if(!(*to = la_Build(va_map_count,sizeof(struct VA_map),MemOutBox)))
+//      {
+//	exit(EXIT_FAILURE);
+//      }
       main_handle.seek(Elf->ehdr().e_phoff,binary_stream::Seek_Set);
       for(i = 0;i < va_map_count;i++)
       {
@@ -2131,15 +2123,16 @@ void ELF_Parser::__elfReadSegments(linearArray **to, bool is_virt )
 	vamap.nameoff = phdr.p_type & 0x000000FFUL ? ~phdr.p_type : 0xFFFFFFFFUL;
 	vamap.flags = phdr.p_flags;
 	test = is_virt ? va2pa(vamap.va) != 0 : pa2va(vamap.foff) != 0;
-	if(!test)
-	{
-	  if(!la_AddData(*to,&vamap,MemOutBox))
-	  {
-	    exit(EXIT_FAILURE);
-	  }
+	if(!test) {
+	  if(is_virt) to.insert(std::make_pair(vamap.va,vamap));
+	  else        to.insert(std::make_pair(vamap.foff,vamap));
+//	  if(!la_AddData(*to,&vamap,MemOutBox))
+//	  {
+//	    exit(EXIT_FAILURE);
+//	  }
 	  /** We must sort va_map after adding of each element because ELF program
 	      header has unsorted and has nested elements */
-	  la_Sort(*to,is_virt ? vamap_comp_virt : vamap_comp_phys);
+//	  la_Sort(*to,is_virt ? vamap_comp_virt : vamap_comp_phys);
 	}
       }
     }
@@ -2155,7 +2148,6 @@ ELF_Parser::ELF_Parser(binary_stream& h,CodeGuider& _code_guider)
 	    ,code_guider(_code_guider)
 {
     __filesize_t fs;
-    size_t i;
     uint8_t buf[16];
     main_handle.seek(0,binary_stream::Seek_Set);
     main_handle.read(buf,16);
@@ -2169,15 +2161,13 @@ ELF_Parser::ELF_Parser(binary_stream& h,CodeGuider& _code_guider)
 		       Elf->ehdr().e_shoff < fs &&
 		       Elf->ehdr().e_shoff +
 		       Elf->ehdr().e_shnum*Elf->ehdr().e_shentsize <= fs;
-   __elfReadSegments(&va_map_virt,true);
-   __elfReadSegments(&va_map_phys,false);
+   __elfReadSegments(va_map_virt,true);
+   __elfReadSegments(va_map_phys,false);
    /** Find min value of virtual address */
-   if(va_map_virt)
-   for(i = 0; i < va_map_virt->nItems;i++)
+   if(!va_map_virt.empty())
+   for(std::map<__filesize_t,VA_map>::const_iterator it = va_map_virt.begin(); it!=va_map_virt.end();it++)
    {
-     struct tag_elfVAMap  *evm;
-     evm = &((struct tag_elfVAMap  *)va_map_virt->data)[i];
-     if(evm->va < elf_min_va) elf_min_va = evm->va;
+     if((*it).first < elf_min_va) elf_min_va = (*it).first;
    }
    namecache = main_handle.dup();
    namecache2 = main_handle.dup();
@@ -2194,10 +2184,8 @@ ELF_Parser::~ELF_Parser()
    if(namecache != &bNull && namecache != &main_handle) delete namecache;
    if(namecache2 != &bNull && namecache2 != &main_handle) delete namecache2;
    if(elfcache != &bNull && elfcache != &main_handle) delete elfcache;
-   if(PubNames) { la_Destroy(PubNames); PubNames = 0; }
-   if(CurrElfChain) { la_Destroy(CurrElfChain); CurrElfChain = 0; }
-   la_Destroy(va_map_virt);
-   la_Destroy(va_map_phys);
+//   if(PubNames) { la_Destroy(PubNames); PubNames = 0; }
+//   if(CurrElfChain) { la_Destroy(CurrElfChain); CurrElfChain = 0; }
    delete Elf;
 }
 
@@ -2213,7 +2201,7 @@ __filesize_t ELF_Parser::action_F1()
   return beye_context().tell();
 }
 
-bool ELF_Parser::address_resolving(char *addr,__filesize_t cfpos)
+bool ELF_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
@@ -2221,49 +2209,39 @@ bool ELF_Parser::address_resolving(char *addr,__filesize_t cfpos)
   __filesize_t res;
   if(cfpos < Elf->ehdr_size())
   {
-    strcpy(addr,"ELFhdr:");
-    strcpy(&addr[7],Get2Digit(cfpos));
+    addr="ELFhdr:";
+    addr+=Get2Digit(cfpos);
   }
   else
     if((res=pa2va(cfpos))!=0)
     {
-      addr[0] = '.';
-      strcpy(&addr[1],Get8Digit(res));
+      addr = ".";
+      addr+=Get8Digit(res);
     }
     else bret = false;
   return bret;
 }
 
-tCompare ELF_Parser::compare_pubnames(const any_t*v1,const any_t*v2)
+bool ELF_Parser::FindPubName(std::string& buff,__filesize_t pa)
 {
-  const struct PubName  *pnam1, *pnam2;
-  pnam1 = (const struct PubName  *)v1;
-  pnam2 = (const struct PubName  *)v2;
-  return __CmpLong__(pnam1->pa,pnam2->pa);
-}
-
-bool ELF_Parser::FindPubName(char *buff,unsigned cb_buff,__filesize_t pa)
-{
-  struct PubName *ret,key;
+  symbolic_information key;
+  std::set<symbolic_information>::const_iterator ret;
   key.pa = pa;
-  ret = (PubName*)la_Find(PubNames,&key,compare_pubnames);
-  if(ret)
-  {
-    active_shtbl = ret->addinfo;
-    elf386_readnametableex(ret->nameoff,buff,cb_buff);
-    buff[cb_buff-1] = 0;
+  ret = PubNames.find(key);
+  if(ret!=PubNames.end()) {
+    active_shtbl = (*ret).addinfo;
+    buff=elf386_readnametableex((*ret).nameoff);
     return true;
   }
-  return udnFindName(pa,buff,cb_buff);
+  return udnFindName(pa,buff);
 }
 
 void ELF_Parser::elf_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
 {
   __filesize_t fpos,fp,tableptr,pubname_shtbl;
   unsigned long i,number,ent_size,nitems;
-  struct PubName epn;
+  struct symbolic_information epn;
   binary_stream& b_cache = handle;
-  if(!(PubNames = la_Build(0,sizeof(struct PubName),mem_out))) return;
   fpos = b_cache.tell();
   tableptr = findSHEntry(b_cache, SHT_DYNSYM, &number, &pubname_shtbl, &ent_size);
   if(!tableptr)
@@ -2271,7 +2249,6 @@ void ELF_Parser::elf_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *m
     tableptr = findPHPubSyms(&nitems, &ent_size, &pubname_shtbl);
     number = nitems;
   }
-  if(!(PubNames = la_Build(0,sizeof(struct PubName),mem_out))) return;
   if(tableptr)
   {
     b_cache.seek(tableptr,binary_stream::Seek_Set);
@@ -2286,7 +2263,8 @@ void ELF_Parser::elf_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *m
      epn.pa = va2pa(pdyn.d_un.d_val);
      epn.addinfo = pubname_shtbl;
      epn.attr = ELF_ST_INFO(STB_GLOBAL,STT_NOTYPE);
-     if(!la_AddData(PubNames,&epn,mem_out)) break;
+     PubNames.insert(epn);
+//     if(!la_AddData(PubNames,&epn,mem_out)) break;
     }
   }
   /** If present symbolic information we must read it */
@@ -2308,76 +2286,69 @@ void ELF_Parser::elf_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *m
 	epn.nameoff = sym.st_name;
 	epn.addinfo = __elfSymShTbl;
 	epn.attr = sym.st_info;
-	if(!la_AddData(PubNames,&epn,MemOutBox)) break;
+	PubNames.insert(epn);
+//	if(!la_AddData(PubNames,&epn,MemOutBox)) break;
       }
     }
   }
-  la_Sort(PubNames,compare_pubnames);
+//  la_Sort(PubNames,compare_pubnames);
   b_cache.seek(fpos,binary_stream::Seek_Set);
 }
 
-void ELF_Parser::elf_ReadPubName(binary_stream& b_cache,const struct PubName *it,
-			    char *buff,unsigned cb_buff)
+std::string ELF_Parser::elf_ReadPubName(binary_stream& b_cache,const symbolic_information& it)
 {
    UNUSED(b_cache);
-   active_shtbl = it->addinfo;
-   elf386_readnametableex(it->nameoff,buff,cb_buff);
+   active_shtbl = it.addinfo;
+   return elf386_readnametableex(it.nameoff);
 }
 
-__filesize_t ELF_Parser::get_public_symbol(char *str,unsigned cb_str,unsigned *func_class,
+__filesize_t ELF_Parser::get_public_symbol(std::string& str,unsigned& func_class,
 			   __filesize_t pa,bool as_prev)
 {
     __filesize_t fpos;
-    size_t idx;
-    if(!PubNames) elf_ReadPubNameList(*elfcache,NULL);
-    fpos=fmtGetPubSym(*func_class,pa,as_prev,PubNames,idx);
-    if(idx!=std::numeric_limits<size_t>::max()) {
-	struct PubName *it;
-	it = &((struct PubName  *)PubNames->data)[idx];
-	elf_ReadPubName(*elfcache,it,str,cb_str);
-	str[cb_str-1] = 0;
+    if(PubNames.empty()) elf_ReadPubNameList(*elfcache,NULL);
+    std::set<symbolic_information>::const_iterator idx;
+    symbolic_information key;
+    key.pa=pa;
+    fpos=find_symbolic_information(PubNames,func_class,key,as_prev,idx);
+    if(idx!=PubNames.end()) {
+	str=elf_ReadPubName(*elfcache,*idx);
     }
     return fpos;
 }
 
-unsigned ELF_Parser::get_object_attribute(__filesize_t pa,char *name,unsigned cb_name,
-		       __filesize_t *start,__filesize_t *end,int *_class,int *bitness)
+unsigned ELF_Parser::get_object_attribute(__filesize_t pa,std::string& name,
+		       __filesize_t& start,__filesize_t& end,int& _class,int& bitness)
 {
   unsigned i,ret;
-  struct tag_elfVAMap *evam;
-  *start = 0;
-  *end = main_handle.flength();
-  *_class = OC_NOOBJECT;
-  *bitness = query_bitness(pa);
+  start = 0;
+  end = main_handle.flength();
+  _class = OC_NOOBJECT;
+  bitness = query_bitness(pa);
   name[0] = 0;
   ret = 0;
-  evam = (tag_elfVAMap*)va_map_phys->data;
-  for(i = 0;i < va_map_phys->nItems;i++)
-  {
-    if(!(evam[i].foff && evam[i].size)) continue;
-    if(pa >= *start && pa < evam[i].foff)
-    {
+  for(std::map<__filesize_t,VA_map>::const_iterator it = va_map_phys.begin();it !=va_map_phys.end();it++) {
+    if(!((*it).first && (*it).second.size)) continue;
+    if(pa >= start && pa < (*it).first) {
       /** means between two objects */
-      *end = evam[i].foff;
+      end = (*it).first;
       ret = 0;
       break;
     }
-    if(pa >= evam[i].foff &&
-       pa < evam[i].foff + evam[i].size)
-    {
-      *start = evam[i].foff;
-      *end = *start + evam[i].size;
-      if(evam[i].flags)
+    if(pa >= (*it).first && pa < (*it).first + (*it).second.size) {
+      start = (*it).first;
+      end = start + (*it).second.size;
+      if((*it).second.flags)
       {
-	if(evam[i].flags & PF_X) *_class = OC_CODE;
-	else                     *_class = OC_DATA;
+	if((*it).second.flags & PF_X) _class = OC_CODE;
+	else                          _class = OC_DATA;
       }
-      else  *_class = OC_NOOBJECT;
-      elf386_readnametable(evam[i].nameoff,name,cb_name);
+      else  _class = OC_NOOBJECT;
+      name=elf386_readnametable((*it).second.nameoff);
       ret = i+1;
       break;
     }
-    *start = evam[i].foff + evam[i].size;
+    start = (*it).first + (*it).second.size;
   }
   return ret;
 }

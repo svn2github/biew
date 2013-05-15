@@ -115,7 +115,9 @@ DisasmRet Data_Disassembler::disassembler(__filesize_t ulShift,
     }
     ret.codelen = cl;
     strcpy(outstr,preface);
-    parent.append_digits(main_handle,outstr,ulShift,APREF_USE_TYPE,cl,buffer,type);
+    std::string stmp = outstr;
+    parent.append_digits(main_handle,stmp,ulShift,APREF_USE_TYPE,cl,buffer,type);
+    strcpy(outstr,stmp.c_str());
   }
   else
     if(flags & __DISF_GETTYPE) ret.pro_clone = __INSNT_ORDINAL;
