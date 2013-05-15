@@ -383,7 +383,6 @@ static bool FStore()
 		    obj_num = bctx.bin_format().get_object_attribute(ff_startpos,obj_name,
 						obj_start,
 						obj_end,obj_class,obj_bitness);
-		    obj_name[sizeof(obj_name)-1] = 0;
 		}
 #if 0
 		    if(!obj_num) goto defobj;
@@ -426,7 +425,6 @@ static bool FStore()
 						obj_start,
 						obj_end,obj_class,
 						obj_bitness);
-			    obj_name[sizeof(obj_name)-1] = 0;
 			    printObject(fout,obj_num,obj_name,obj_class,obj_bitness,obj_end - obj_start);
 			}
 			if(obj_class == OC_NOOBJECT) {
@@ -444,7 +442,6 @@ static bool FStore()
 				func_pa = bctx.bin_format().get_public_symbol(func_name,
 						func_class,ff_startpos,false);
 				if(func_pa==Plugin::Bad_Address) func_pa=0;
-				func_name[sizeof(func_name)-1] = 0;
 				if(func_pa == ff_startpos) {
 				    fout<<"...Probably internal error of beye..."<<std::endl;
 				    break;
@@ -465,7 +462,6 @@ static bool FStore()
 				func_pa = bctx.bin_format().get_public_symbol(func_name,
 						func_class,ff_startpos,false);
 				if(func_pa==Plugin::Bad_Address) func_pa=0;
-				func_name[sizeof(func_name)-1] = 0;
 				not_silly++;
 				if(not_silly > 100) {
 				    fout<<"; [snipped out] ..."<<std::endl;

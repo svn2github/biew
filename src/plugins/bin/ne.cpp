@@ -946,14 +946,6 @@ static int           CurrSegmentHasReloc = -1;
 static std::set<NERefChain> CurrNEChain;
 static char __codelen,__type;
 
-tCompare NE_Parser::compare_chains(const any_t*v1,const any_t*v2)
-{
-  const NERefChain  * c1, * c2;
-  c1 = (const NERefChain  *)v1;
-  c2 = (const NERefChain  *)v2;
-  return __CmpLong__(c1->offset,c2->offset);
-}
-
 void NE_Parser::BuildNERefChain(__filesize_t segoff,__filesize_t slength)
 {
   unsigned nchains,i;
@@ -997,37 +989,6 @@ void NE_Parser::BuildNERefChain(__filesize_t segoff,__filesize_t slength)
   }
 //  la_Sort(CurrNEChain,compare_chains);
   delete w;
-}
-
-tCompare NE_Parser::compare_ne_spec(const any_t*e1,const any_t*e2)
-{
-  const NERefChain  *r1, *r2;
-  RELOC_NE rne;
-  tCompare ret;
-  r1 = reinterpret_cast<const NERefChain*>(e1);
-  r2 = reinterpret_cast<const NERefChain*>(e2);
-  if(r2->offset >= r1->offset && r2->offset < r1->offset + __codelen)
-  {
-    beye_context().sc_bm_file().seek(CurrSegmentStart + CurrSegmentLength + 2 + sizeof(RELOC_NE)*r2->number,binary_stream::Seek_Set);
-    beye_context().sc_bm_file().read(&rne,sizeof(RELOC_NE));
-    if(rne.Type == __type)  return 0;
-  }
-  if(r1->offset < r2->offset) ret = -1;
-  else                        ret = 1;
-  return ret;
-}
-
-tCompare NE_Parser::compare_ne(const any_t*e1,const any_t*e2)
-{
-  const NERefChain  *r1, *r2;
-  int ret;
-  r1 = reinterpret_cast<const NERefChain*>(e1);
-  r2 = reinterpret_cast<const NERefChain*>(e2);
-  if(r2->offset >= r1->offset && r2->offset < r1->offset + __codelen) ret = 0;
-  else
-    if(r1->offset < r2->offset) ret = -1;
-    else                        ret = 1;
-  return ret;
 }
 
 RELOC_NE* NE_Parser::__found_RNE(__filesize_t segoff,__filesize_t slength,unsigned segnum,unsigned keyoff,char codelen)

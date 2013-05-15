@@ -78,8 +78,6 @@ namespace	usr {
 	    int			NLMbitness(__filesize_t off);
 	    bool		BuildReferStrNLM(std::string& str,const RELOC_NLM& rne,int flags);
 	    void		BuildRelocNlm();
-	    static tCompare	nlm_compare_f(const any_t *e1,const any_t *e2);
-	    static tCompare	nlm_compare_s(const any_t *e1,const any_t *e2);
 	    bool		__ReadModRefNamesNLM(binary_stream&handle,memArray *obj,unsigned nnames);
 	    bool		NLMNamesReadItems(binary_stream&handle,memArray *obj,unsigned nnames);
 	    __filesize_t	CalcEntryNLM(unsigned ord,bool dispmsg);
@@ -483,22 +481,6 @@ __filesize_t NLM_Parser::action_F3()
 /***************************************************************************/
 /************************  FOR NLM  ****************************************/
 /***************************************************************************/
-tCompare NLM_Parser::nlm_compare_s(const any_t*e1,const any_t*e2)
-{
-  const RELOC_NLM  *r1, *r2;
-  r1 = reinterpret_cast<const RELOC_NLM*>(e1);
-  r2 = reinterpret_cast<const RELOC_NLM*>(e2);
-  return __CmpLong__(r1->offset,r2->offset);
-}
-
-tCompare NLM_Parser::nlm_compare_f(const any_t*e1,const any_t*e2)
-{
-  const RELOC_NLM  *r1, *r2;
-  r1 = reinterpret_cast<const RELOC_NLM*>(e1);
-  r2 = reinterpret_cast<const RELOC_NLM*>(e2);
-  return __CmpLong__(r1->offset,r2->offset);
-}
-
 void NLM_Parser::BuildRelocNlm()
 {
   unsigned i,j;

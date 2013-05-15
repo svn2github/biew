@@ -84,7 +84,6 @@ namespace	usr {
 	    bool			BuildReferStrPE(std::string& str,const RELOC_PE& rpe,int flags);
 	    std::set<RELOC_PE>::const_iterator	__found_RPE(__filesize_t laddr);
 	    void			BuildPERefChain();
-	    static tCompare		compare_pe_reloc_s(const any_t *e1,const any_t *e2);
 	    bool			PEReadRVAs(binary_stream&handle,memArray *obj,unsigned nnames);
 	    __filesize_t		CalcEntryPE(unsigned ordinal,bool dispmsg);
 	    unsigned			PEExportNumItems(binary_stream&handle);
@@ -936,14 +935,6 @@ __filesize_t PE_Parser::action_F9()
 /***************************************************************************/
 /************************  FOR PE  *****************************************/
 /***************************************************************************/
-tCompare PE_Parser::compare_pe_reloc_s(const any_t*e1,const any_t*e2)
-{
-  const RELOC_PE  *p1, *p2;
-  p1 = (const RELOC_PE  *)e1;
-  p2 = (const RELOC_PE  *)e2;
-  return ((p1->laddr) < (p2->laddr) ? -1 : (p1->laddr) > (p2->laddr) ? 1 : 0);
-}
-
 void PE_Parser::BuildPERefChain()
 {
   __filesize_t  phys,cpos;

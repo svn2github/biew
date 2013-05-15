@@ -151,9 +151,6 @@ namespace	usr {
 	    unsigned			__findSpecType(__filesize_t sstart,__filesize_t ssize,unsigned segnum,__filesize_t target,char codelen,char type,unsigned defval);
 	    RELOC_NE*			__found_RNE_spec(__filesize_t segoff,__filesize_t slength,unsigned segnum,unsigned keyoff,char codelen,int type);
 	    RELOC_NE*			__found_RNE(__filesize_t segoff,__filesize_t slength,unsigned segnum,unsigned keyoff,char codelen);
-	    static tCompare		compare_ne(const any_t *e1,const any_t *e2);
-	    static tCompare		compare_ne_spec(const any_t *e1,const any_t *e2);
-	    static tCompare		compare_chains(const any_t *v1,const any_t *v2);
 	    void			BuildNERefChain(__filesize_t segoff,__filesize_t slength);
 	    unsigned int		GetResourceGroupCountNE(binary_stream&handle);
 	    bool			__ReadResourceGroupNE(binary_stream&handle,memArray *obj,unsigned nitems,long *addr);

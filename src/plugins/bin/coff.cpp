@@ -87,8 +87,6 @@ namespace	usr {
 	    static inline uint16_t COFF_WORD(const uint8_t* cval) { return (uint16_t)(*(const uint16_t *)(const uint8_t *)cval); }
 	    static inline uint32_t COFF_DWORD(const uint8_t* cval) { return (uint32_t)(*(const uint32_t *)(const uint8_t *)cval); }
 
-	    static tCompare __FASTCALL__ coff386_compare_rels(const any_t *e1,const any_t *e2);
-
 	    struct external_filehdr	coff386hdr;
 	    AOUTHDR		coff386ahdr;
 	    SCNHDR*		coff386so;
@@ -453,14 +451,6 @@ __filesize_t Coff_Parser::action_F7()
 /***************************************************************************/
 /*********************  REFS COFF386  **************************************/
 /***************************************************************************/
-tCompare __FASTCALL__ Coff_Parser::coff386_compare_rels(const any_t*e1,const any_t*e2)
-{
-  const RELOC_COFF386  *r1, *r2;
-  r1 = reinterpret_cast<const RELOC_COFF386*>(e1);
-  r2 = reinterpret_cast<const RELOC_COFF386*>(e2);
-  return __CmpLong__(r1->offset,r2->offset);
-}
-
 void Coff_Parser::BuildRelocCoff386()
 {
   TWindow * w;

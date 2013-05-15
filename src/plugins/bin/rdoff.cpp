@@ -75,9 +75,7 @@ namespace	usr {
 	    void			rdoff_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
 	    bool			rdoffBuildReferStr(const DisMode&parent,std::string& str,const RDOFF_RELOC& reloc,__filesize_t ulShift,int flags);
 	    void			BuildRelocRDOFF();
-	    static tCompare		rdoff_compare_reloc(const any_t *e1,const any_t *e2);
 	    bool			rdoff_skiprec(unsigned char type);
-	    static tCompare		compare_impnames(const any_t *v1,const any_t *v2);
 	    bool			FindPubName(std::string& buff,__filesize_t pa);
 	    void			ReadImpNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
 	    __filesize_t		rdoff_FindExport(const std::string& name);
@@ -389,14 +387,6 @@ __filesize_t RDOff_Parser::show_header()
   return fpos;
 }
 
-tCompare RDOff_Parser::rdoff_compare_reloc(const any_t*e1,const any_t*e2)
-{
-  const RDOFF_RELOC  *r1, *r2;
-  r1 = reinterpret_cast<const RDOFF_RELOC*>(e1);
-  r2 = reinterpret_cast<const RDOFF_RELOC*>(e2);
-  return __CmpLong__(r1->offset,r2->offset);
-}
-
 void  RDOff_Parser::BuildRelocRDOFF()
 {
   unsigned char rec;
@@ -663,14 +653,6 @@ void RDOff_Parser::rdoff_ReadPubNameList(binary_stream& handle,void (__FASTCALL_
     }
  }
 // if(PubNames->nItems) la_Sort(PubNames,fmtComparePubNames);
-}
-
-tCompare RDOff_Parser::compare_impnames(const any_t*v1,const any_t*v2)
-{
-  const struct rdoff_ImpName  *pnam1, *pnam2;
-  pnam1 = (const struct rdoff_ImpName  *)v1;
-  pnam2 = (const struct rdoff_ImpName  *)v2;
-  return __CmpLong__(pnam1->lsegno,pnam2->lsegno);
 }
 
 void  RDOff_Parser::ReadImpNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))

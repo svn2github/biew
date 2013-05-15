@@ -81,10 +81,10 @@ namespace	usr {
 	__filesize_t flags;
     };
     struct Elf_Reloc {
-	__filesize_t  offset;
-	__filesize_t  info;
-	__filesize_t  addend;
-	__filesize_t  sh_idx;
+	__filesize_t	offset;
+	__filesize_t	info;
+	__filesize_t	addend;
+	__filesize_t	sh_idx;
 
 	bool operator<(const Elf_Reloc& rhs) const { return offset<rhs.offset; }
     };
@@ -159,8 +159,6 @@ namespace	usr {
 	    const char*			elf_class(unsigned char id) const;
 	    std::string			elf386_readnametableex(__filesize_t off);
 	    std::string			elf386_readnametable(__filesize_t off);
-	    static tCompare __FASTCALL__ vamap_comp_phys(const any_t *v1,const any_t *v2);
-	    static tCompare __FASTCALL__ vamap_comp_virt(const any_t *v1,const any_t *v2);
 	    __filesize_t		findSHEntry(binary_stream&b_cache,unsigned long type,unsigned long *nitems,__filesize_t *link,unsigned long *ent_size);
 	    __filesize_t		findPHPubSyms(unsigned long *number,unsigned long *ent_size,__filesize_t *act_shtbl);
 	    __filesize_t		findPHDynEntry(unsigned long type,__filesize_t dynptr,unsigned long nitems);
@@ -312,22 +310,6 @@ __filesize_t ELF_Parser::findSHEntry(binary_stream& b_cache, unsigned long type,
   return tableptr;
 }
 
-tCompare ELF_Parser::vamap_comp_virt(const any_t*v1,const any_t*v2)
-{
-  const struct VA_map  *pnam1, *pnam2;
-  pnam1 = (const struct VA_map  *)v1;
-  pnam2 = (const struct VA_map  *)v2;
-  return pnam1->va<pnam2->va?-1:pnam1->va>pnam2->va?1:0;
-}
-
-tCompare ELF_Parser::vamap_comp_phys(const any_t*v1,const any_t*v2)
-{
-  const struct VA_map  *pnam1, *pnam2;
-  pnam1 = (const struct VA_map  *)v1;
-  pnam2 = (const struct VA_map  *)v2;
-  return pnam1->foff<pnam2->foff?-1:pnam1->foff>pnam2->foff?1:0;
-}
-
 __filesize_t ELF_Parser::va2pa(__filesize_t va)
 {
   if(!va_map_virt.empty())
@@ -357,14 +339,12 @@ std::string ELF_Parser::elf386_readnametable(__filesize_t off)
   __filesize_t foff;
   Elf_Shdr sh;
   unsigned char ch;
-  unsigned freq;
 
   binary_stream& b_cache = *namecache,&b_cache2 = *namecache2;
 //  binary_stream& b_cache = main_handle,&b_cache2 = main_handle;
   foff = Elf->ehdr().e_shoff+Elf->ehdr().e_shstrndx*Elf->ehdr().e_shentsize;
   sh=Elf->read_shdr(b_cache2,foff);
   foff = sh.sh_offset + off;
-  freq = 0;
   b_cache.seek(foff,binary_stream::Seek_Set);
   while(1)
   {
@@ -381,7 +361,6 @@ std::string ELF_Parser::elf386_readnametableex(__filesize_t off)
   __filesize_t foff;
   Elf_Shdr sh;
   unsigned char ch;
-  unsigned freq;
   binary_stream& b_cache = *namecache,&b_cache2 = *namecache2;
 //  binary_stream& b_cache = main_handle,&b_cache2 = main_handle;
   if(Elf->ehdr().e_shoff)
@@ -393,7 +372,6 @@ std::string ELF_Parser::elf386_readnametableex(__filesize_t off)
   /* if section headers are lost then active_shtbl should directly point to
      required string table */
   else  foff = active_shtbl + off;
-  freq = 0;
   b_cache.seek(foff,binary_stream::Seek_Set);
   while(1)
   {
@@ -852,9 +830,8 @@ bool ELF_Parser::ELF_IS_SECTION_PHYSICAL(unsigned sec_num) const
 
 bool ELF_Parser::__elfReadSymTab(binary_stream& handle,memArray *obj,unsigned nsym)
 {
- size_t i,tlen;
+  size_t i;
   std::string text;
-  tlen=is_64bit?29:37;
   handle.seek(__elfSymPtr,binary_stream::Seek_Set);
   for(i = 0;i < nsym;i++)
   {
@@ -893,9 +870,9 @@ bool ELF_Parser::__elfReadSymTab(binary_stream& handle,memArray *obj,unsigned ns
 
 bool ELF_Parser::__elfReadDynTab(binary_stream& handle,memArray *obj, unsigned ntbl,__filesize_t entsize)
 {
- size_t i;
- std::string sout;
- unsigned len,rlen,rborder;
+  size_t i;
+  std::string sout;
+  unsigned len,rborder;
   for(i = 0;i < ntbl;i++)
   {
    __filesize_t fp;
@@ -913,7 +890,6 @@ bool ELF_Parser::__elfReadDynTab(binary_stream& handle,memArray *obj, unsigned n
    if(IsKbdTerminate() || handle.eof()) break;
    stmp=sout;
    if(len > rborder-4) stmp+="...";
-   rlen = stmp.length();
 //   if(rlen < rborder) { memset(&stmp[rlen],' ',rborder-rlen); stmp[rborder] = 0; }
    char sbuf[256];
    if(is_64bit)
@@ -2239,18 +2215,13 @@ bool ELF_Parser::FindPubName(std::string& buff,__filesize_t pa)
 void ELF_Parser::elf_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
 {
   __filesize_t fpos,fp,tableptr,pubname_shtbl;
-  unsigned long i,number,ent_size,nitems;
+  unsigned long i,number,ent_size;
   struct symbolic_information epn;
   binary_stream& b_cache = handle;
   fpos = b_cache.tell();
   tableptr = findSHEntry(b_cache, SHT_DYNSYM, &number, &pubname_shtbl, &ent_size);
-  if(!tableptr)
-  {
-    tableptr = findPHPubSyms(&nitems, &ent_size, &pubname_shtbl);
-    number = nitems;
-  }
-  if(tableptr)
-  {
+  if(!tableptr) tableptr = findPHPubSyms(&number, &ent_size, &pubname_shtbl);
+  if(tableptr) {
     b_cache.seek(tableptr,binary_stream::Seek_Set);
     for(i = 0;i < number;i++)
     {
