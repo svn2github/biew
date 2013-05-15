@@ -53,7 +53,7 @@ static std::string udn_fname;
 static bool __FASTCALL__ udnAddItem() {
     __filesize_t off;
     udn item;
-    std::set<udn>::const_iterator prev;
+    std::set<udn>::const_iterator prev=udn_list.end();
     char ud_name[256],prompt[256];
     off = beye_context().tell();
     sprintf(prompt," Name for %08X offset: ",off);
@@ -66,6 +66,7 @@ static bool __FASTCALL__ udnAddItem() {
     }
     if(GetStringDlg(ud_name,prompt," [ENTER] - Proceed ",NAME_MSG))
     {
+	if(prev!=udn_list.end()) udn_list.erase(prev);
 	if(!udn_list.empty()) {
 	    strcpy(item.name,ud_name);
 	    item.offset=off;
