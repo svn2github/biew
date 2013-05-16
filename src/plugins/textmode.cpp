@@ -106,7 +106,7 @@ static char		detected_syntax_name[FILENAME_MAX+1];
 
     class TextMode : public Plugin {
 	public:
-	    TextMode(Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider);
+	    TextMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider);
 	    virtual ~TextMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -172,7 +172,7 @@ static char		detected_syntax_name[FILENAME_MAX+1];
 	    unsigned			defNLSSet;
 	    TWindow&			main_wnd;
 	    binary_stream&		main_handle;
-	    Bin_Format&			bin_format;
+	    const Bin_Format&		bin_format;
     };
 
 bool TextMode::test_leading_escape(__fileoff_t cpos) const {
@@ -948,7 +948,7 @@ void TextMode::drawBound(TWindow& w,int x,int y,char ch) const
   w.set_color(browser_cset.main);
 }
 
-TextMode::TextMode(Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider)
+TextMode::TextMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider)
 	:Plugin(b,h,_main_wnd,code_guider)
 	,HiLight(1)
 	,bin_mode(MOD_PLAIN)
@@ -1260,7 +1260,7 @@ unsigned TextMode::get_symbol_size() const { return activeNLS->get_symbol_size()
 unsigned TextMode::get_max_line_length() const { return strmaxlen; }
 TextMode::e_flag TextMode::flags() const { return Text|Has_ConvertCP; }
 
-static Plugin* query_interface(Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider) { return new(zeromem) TextMode(b,h,main_wnd,code_guider); }
+static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider) { return new(zeromem) TextMode(b,h,main_wnd,code_guider); }
 
 extern const Plugin_Info textMode = {
     "~Text mode",	/**< plugin name */

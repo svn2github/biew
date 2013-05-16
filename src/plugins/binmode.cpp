@@ -46,7 +46,7 @@ namespace	usr {
     };
     class BinMode : public Plugin {
 	public:
-	    BinMode(Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider);
+	    BinMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider);
 	    virtual ~BinMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -77,10 +77,10 @@ namespace	usr {
 	    unsigned		bin_mode; /**< points to currently selected mode text mode */
 	    TWindow&		main_wnd;
 	    binary_stream&	main_handle;
-	    Bin_Format&		bin_format;
+	    const Bin_Format&	bin_format;
     };
 
-BinMode::BinMode(Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider)
+BinMode::BinMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider)
 	:Plugin(b,h,_main_wnd,code_guider)
 	,virtWidthCorr(0)
 	,bin_mode(MOD_PLAIN)
@@ -306,7 +306,7 @@ void BinMode::save_ini(Ini_Profile& ini)
 unsigned BinMode::get_symbol_size() const { return bin_mode==MOD_PLAIN?1:2; }
 unsigned BinMode::get_max_line_length() const { return main_wnd.client_width(); }
 
-static Plugin* query_interface(Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider) { return new(zeromem) BinMode(b,h,main_wnd,code_guider); }
+static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider) { return new(zeromem) BinMode(b,h,main_wnd,code_guider); }
 
 extern const Plugin_Info binMode = {
     "~Binary mode",	/**< plugin name */

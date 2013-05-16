@@ -37,7 +37,7 @@ using namespace	usr;
 namespace	usr {
     class PPC_Disassembler : public Disassembler {
 	public:
-	    PPC_Disassembler(Bin_Format& b,binary_stream& h,DisMode& parent);
+	    PPC_Disassembler(const Bin_Format& b,binary_stream& h,DisMode& parent);
 	    virtual ~PPC_Disassembler();
 	
 	    virtual const char*	prompt(unsigned idx) const;
@@ -64,7 +64,7 @@ namespace	usr {
 
 	    DisMode&		parent;
 	    binary_stream&	main_handle;
-	    Bin_Format&		bin_format;
+	    const Bin_Format&	bin_format;
 	    char*		outstr;
 	    int			ppcBitness;
 	    int			ppcBigEndian;
@@ -1652,7 +1652,7 @@ bool PPC_Disassembler::action_F5()
   return false;
 }
 
-PPC_Disassembler::PPC_Disassembler(Bin_Format& b,binary_stream& h,DisMode& _parent )
+PPC_Disassembler::PPC_Disassembler(const Bin_Format& b,binary_stream& h,DisMode& _parent )
 		:Disassembler(b,h,_parent)
 		,parent(_parent)
 		,main_handle(h)
@@ -1713,7 +1713,7 @@ const char* PPC_Disassembler::prompt(unsigned idx) const {
     return "";
 }
 
-static Disassembler* query_interface(Bin_Format& b,binary_stream& h,DisMode& _parent) { return new(zeromem) PPC_Disassembler(b,h,_parent); }
+static Disassembler* query_interface(const Bin_Format& b,binary_stream& h,DisMode& _parent) { return new(zeromem) PPC_Disassembler(b,h,_parent); }
 
 extern const Disassembler_Info ppc_disassembler_info = {
     DISASM_CPU_PPC,

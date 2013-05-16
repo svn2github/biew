@@ -163,7 +163,7 @@ char ARM_Disassembler::clone_short_name( unsigned long clone )
   return ' ';
 }
 
-ARM_Disassembler::ARM_Disassembler(Bin_Format& b,binary_stream& h,DisMode& _parent )
+ARM_Disassembler::ARM_Disassembler(const Bin_Format& b,binary_stream& h,DisMode& _parent )
 	    :Disassembler(b,h,_parent)
 	    ,parent(_parent)
 	    ,main_handle(h)
@@ -261,7 +261,7 @@ const char* ARM_Disassembler::prompt(unsigned idx) const {
     return "";
 }
 
-static Disassembler* query_interface(Bin_Format& b,binary_stream& h,DisMode& _parent) { return new(zeromem) ARM_Disassembler(b,h,_parent); }
+static Disassembler* query_interface(const Bin_Format& b,binary_stream& h,DisMode& _parent) { return new(zeromem) ARM_Disassembler(b,h,_parent); }
 
 extern const Disassembler_Info arm_disassembler_info = {
     DISASM_CPU_ARM,

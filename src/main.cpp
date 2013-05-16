@@ -544,7 +544,7 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
    retval = EXIT_FAILURE;
    goto Bye;
  }
- BeyeCtx->bin_format().detect_format(BeyeCtx->sc_bm_file());
+ BeyeCtx->detect_format(BeyeCtx->sc_bm_file());
  BeyeCtx->init_modes(ini);
  delete &ini;
  BeyeCtx->PaintTitle();
@@ -754,7 +754,7 @@ Plugin& BeyeContext::active_mode() const {
     beye_priv& priv = static_cast<beye_priv&>(opaque);
     return *priv.activeMode;
 }
-Bin_Format& BeyeContext::bin_format() const {
+const Bin_Format& BeyeContext::bin_format() const {
     beye_priv& priv = static_cast<beye_priv&>(opaque);
     return *priv._bin_format;
 }
@@ -804,6 +804,11 @@ binary_stream& BeyeContext::bm_file() const {
 binary_stream& BeyeContext::sc_bm_file() const {
     beye_priv& priv = static_cast<beye_priv&>(opaque);
     return *priv.sc_bm_file_handle;
+}
+
+void BeyeContext::detect_format(binary_stream& handle) {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    priv._bin_format->detect_format(handle);
 }
 
 static bool test_antiviral_protection(int* verbose)

@@ -56,7 +56,7 @@ namespace	usr {
 
     class Java_Disassembler : public Disassembler {
 	public:
-	    Java_Disassembler(Bin_Format& b,binary_stream& h,DisMode& parent);
+	    Java_Disassembler(const Bin_Format& b,binary_stream& h,DisMode& parent);
 	    virtual ~Java_Disassembler();
 	
 	    virtual const char*	prompt(unsigned idx) const;
@@ -75,7 +75,7 @@ namespace	usr {
 	private:
 	    DisMode&		parent;
 	    binary_stream&	main_handle;
-	    Bin_Format&		bin_format;
+	    const Bin_Format&	bin_format;
 	    char*		outstr;
 	    unsigned		vartail;
 	    __filesize_t	vartail_base, vartail_start, vartail_flags, vartail_idx;
@@ -661,7 +661,7 @@ char Java_Disassembler::clone_short_name( unsigned long clone )
   return ' ';
 }
 
-Java_Disassembler::Java_Disassembler(Bin_Format& b,binary_stream& h,DisMode& _parent )
+Java_Disassembler::Java_Disassembler(const Bin_Format& b,binary_stream& h,DisMode& _parent )
 		:Disassembler(b,h,_parent)
 		,parent(_parent)
 		,main_handle(h)
@@ -691,7 +691,7 @@ const char* Java_Disassembler::prompt(unsigned idx) const {
     return "";
 }
 
-static Disassembler* query_interface(Bin_Format& b,binary_stream& h,DisMode& _parent) { return new(zeromem) Java_Disassembler(b,h,_parent); }
+static Disassembler* query_interface(const Bin_Format& b,binary_stream& h,DisMode& _parent) { return new(zeromem) Java_Disassembler(b,h,_parent); }
 extern const Disassembler_Info java_disassembler_info = {
     DISASM_JAVA,
     "~Java",	/**< plugin name */

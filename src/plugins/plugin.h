@@ -24,7 +24,7 @@ namespace	usr {
 		Has_ConvertCP	=0x0010
 	    };
 
-	    Plugin(Bin_Format&,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider) { UNUSED(h); UNUSED(main_wnd); UNUSED(code_guider); }
+	    Plugin(const Bin_Format&,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider) { UNUSED(h); UNUSED(main_wnd); UNUSED(code_guider); }
 	    virtual ~Plugin() {}
 
 	    virtual const char*		prompt(unsigned idx) const = 0;	/**< on Ctrl-Fx selection */
@@ -89,7 +89,7 @@ namespace	usr {
 
     struct Plugin_Info {
 	const char* name;
-	Plugin* (*query_interface)(Bin_Format&,binary_stream&,TWindow&,CodeGuider&);
+	Plugin* (*query_interface)(const Bin_Format&,binary_stream&,TWindow&,CodeGuider&);
     };
 
     class Binary_Parser;

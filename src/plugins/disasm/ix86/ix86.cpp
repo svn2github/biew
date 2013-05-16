@@ -6289,7 +6289,7 @@ const assembler_t ix86_Disassembler::assemblers[] = {
 #define pclose(fp) fclose(fp)
 #endif
 
-ix86_Disassembler::ix86_Disassembler(Bin_Format& b,binary_stream& h,DisMode& _parent )
+ix86_Disassembler::ix86_Disassembler(const Bin_Format& b,binary_stream& h,DisMode& _parent )
 		    :Disassembler(b,h,_parent)
 		    ,parent(_parent)
 		    ,main_handle(h)
@@ -6516,7 +6516,7 @@ done:
   return result;
 }
 
-static Disassembler* query_interface(Bin_Format& b,binary_stream& h,DisMode& parent) { return new(zeromem) ix86_Disassembler(b,h,parent); }
+static Disassembler* query_interface(const Bin_Format& b,binary_stream& h,DisMode& parent) { return new(zeromem) ix86_Disassembler(b,h,parent); }
 
 extern const Disassembler_Info ix86_disassembler_info = {
     DISASM_CPU_IX86,

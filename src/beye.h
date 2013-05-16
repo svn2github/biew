@@ -53,7 +53,7 @@ namespace	usr {
 	    void		quick_select_mode();
 	    bool		select_mode();
 	    Plugin&		active_mode() const;
-	    Bin_Format&		bin_format() const;
+	    const Bin_Format&	bin_format() const;
 	    const Plugin_Info*	mode_info() const;
 	    TConsole&		tconsole() const;
 	    System&		system() const;
@@ -77,6 +77,7 @@ namespace	usr {
 	    void		PaintTitle() const;
 
 	    void		create_windows();
+	    void		detect_format(binary_stream&);
 
 	    binary_stream&	bm_file() const;
 	    binary_stream&	sc_bm_file() const;
