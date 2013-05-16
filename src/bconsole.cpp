@@ -533,20 +533,20 @@ void BeyeContext::message_box(const std::string& text,const std::string& title,
     slen = text.length() + 3;
     tlen = title.length() + 2;
     slen = std::min(std::max(slen,tlen)+1,unsigned(78));
-    ErrorWnd->resize(slen,3);
-    ErrorWnd->into_center();
-    ErrorWnd->set_frame(TWindow::DOUBLE_FRAME,frame);
-    ErrorWnd->set_title(title,TWindow::TMode_Center,frame);
-    ErrorWnd->set_color(base);
-    ErrorWnd->clear();
-    ErrorWnd->show_on_top();
-    ErrorWnd->goto_xy(2,1);
-    ErrorWnd->puts(text);
+    error_wnd().resize(slen,3);
+    error_wnd().into_center();
+    error_wnd().set_frame(TWindow::DOUBLE_FRAME,frame);
+    error_wnd().set_title(title,TWindow::TMode_Center,frame);
+    error_wnd().set_color(base);
+    error_wnd().clear();
+    error_wnd().show_on_top();
+    error_wnd().goto_xy(2,1);
+    error_wnd().puts(text);
     do {
-	evt = GetEvent(drawEmptyPrompt,NULL,ErrorWnd);
+	evt = GetEvent(drawEmptyPrompt,NULL,&(error_wnd()));
     }while(!(evt == KE_ESCAPE || evt == KE_F(10) || evt == KE_SPACE || evt == KE_ENTER));
-    ErrorWnd->hide();
-    ErrorWnd->resize(beye_context().tconsole().vio_width(),beye_context().tconsole().vio_height()); /* It for reserving memory */
+    error_wnd().hide();
+    error_wnd().resize(beye_context().tconsole().vio_width(),beye_context().tconsole().vio_height()); /* It for reserving memory */
 }
 
 void BeyeContext::TMessageBox(const std::string& text,const std::string& title) const

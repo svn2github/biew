@@ -592,20 +592,20 @@ __filesize_t BeyeContext::search( bool is_continue )
     {
       unsigned cp_symb_size;
       if(is_continue) lmem = FoundTextSt;
-      cp_symb_size = activeMode->get_symbol_size();
+      cp_symb_size = active_mode().get_symbol_size();
       if((beyeSearchFlg & SF_REVERSE) && lmem) lmem-=cp_symb_size;
       else if(lmem < flen) lmem+=cp_symb_size;
     }
     __found = false;
-    found = (beyeSearchFlg & SF_PLUGINS) && (activeMode->flags() & Plugin::Has_SearchEngine) ?
-       activeMode->search_engine(prcntswnd,lmem,&slen,beyeSearchFlg,
+    found = (beyeSearchFlg & SF_PLUGINS) && (active_mode().flags() & Plugin::Has_SearchEngine) ?
+       active_mode().search_engine(prcntswnd,lmem,&slen,beyeSearchFlg,
 				 is_continue,&__found):
        __adv_find(lmem,&slen);
     delete prcntswnd;
     if(__found)
     {
        FoundTextSt = found;
-       FoundTextEnd = found + slen*activeMode->get_symbol_size();
+       FoundTextEnd = found + slen*active_mode().get_symbol_size();
        /* it is not an error of search engine it is special case:
 	  adv_find function don't want to use a file stream directly */
        if(FoundTextEnd > flen) FoundTextEnd = flen;

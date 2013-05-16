@@ -35,17 +35,17 @@ using namespace	usr;
 #include "plugins/plugin.h"
 
 namespace	usr {
-static void  __FASTCALL__ ShowFunKey(TWindow* w,const char * key,const char * text)
+static void  __FASTCALL__ ShowFunKey(TWindow& w,const char * key,const char * text)
 {
- w->set_color(prompt_cset.digit);
- w->puts(key);
- w->set_color(prompt_cset.button);
- w->puts(text);
+    w.set_color(prompt_cset.digit);
+    w.puts(key);
+    w.set_color(prompt_cset.button);
+    w.puts(text);
 }
 
 static const char * ftext[] = { "1"," 2"," 3"," 4"," 5"," 6"," 7"," 8"," 9","10" };
 
-static void  __FASTCALL__ drawControlKeys(TWindow* w,int flg)
+static void  __FASTCALL__ drawControlKeys(TWindow& w,int flg)
 {
   char ckey;
   if(flg & KS_SHIFT) ckey = 'S';
@@ -54,9 +54,9 @@ static void  __FASTCALL__ drawControlKeys(TWindow* w,int flg)
     else
       if(flg & KS_CTRL) ckey = 'C';
       else              ckey = ' ';
-  w->goto_xy(1,1);
-  w->set_color(prompt_cset.control);
-  w->putch(ckey);
+  w.goto_xy(1,1);
+  w.set_color(prompt_cset.control);
+  w.putch(ckey);
 }
 
 void BeyeContext::draw_multi_prompt(const char * const norm[], const char *const shift[], const char * const alt[], const char * const ctrl[]) const
@@ -65,8 +65,8 @@ void BeyeContext::draw_multi_prompt(const char * const norm[], const char *const
   int flg = beye_context().tconsole().kbd_get_shifts();
   int i;
   const char * cptr;
-  PromptWnd->freeze();
-  PromptWnd->goto_xy(2,1);
+  prompt_wnd().freeze();
+  prompt_wnd().goto_xy(2,1);
   for(i = 0;i < 10;i++)
   {
     /* todo: it might be better to ensure that if
@@ -81,10 +81,10 @@ void BeyeContext::draw_multi_prompt(const char * const norm[], const char *const
 	cptr = ctrl && ctrl[i] && ctrl[i][0] ? ctrl[i] : "      ";
     else cptr = norm && norm[i] && norm[i][0] ? norm[i] : "      ";
 
-    ShowFunKey(PromptWnd,ftext[i],cptr);
+    ShowFunKey(prompt_wnd(),ftext[i],cptr);
   }
-  drawControlKeys(PromptWnd,flg);
-  PromptWnd->refresh();
+  drawControlKeys(prompt_wnd(),flg);
+  prompt_wnd().refresh();
 }
 
 void __FASTCALL__ __drawSinglePrompt(const char *prmt[])

@@ -50,33 +50,33 @@ void BeyeContext::paint_Etitle( int shift,bool use_shift ) const
 {
   unsigned eidx;
   char byte,obyte;
-  TitleWnd->freeze();
-  TitleWnd->goto_xy(1,1);
-  TitleWnd->clreol();
-  TitleWnd->printf("%08lX: ",edit_cp + shift);
+  title_wnd().freeze();
+  title_wnd().goto_xy(1,1);
+  title_wnd().clreol();
+  title_wnd().printf("%08lX: ",edit_cp + shift);
   eidx = use_shift ? (unsigned)shift : edit_y*EditorMem.width+edit_x;
   byte  = EditorMem.buff[eidx];
   obyte = EditorMem.save[eidx];
-  if(byte != obyte) TitleWnd->set_color(title_cset.change);
-  TitleWnd->printf("%c %02XH %sH %sB "
+  if(byte != obyte) title_wnd().set_color(title_cset.change);
+  title_wnd().printf("%c %02XH %sH %sB "
 	   ,byte ? byte : ' '
 	   ,byte & 0x00FF
 	   ,Get2SignDig(byte)
 	   ,GetBinary(byte));
-  TitleWnd->set_color(title_cset.main);
+  title_wnd().set_color(title_cset.main);
   if(byte != obyte)
   {
-    TitleWnd->printf("ORIGINAL: %c %02XH %sH %sB "
+    title_wnd().printf("ORIGINAL: %c %02XH %sH %sB "
 	     ,obyte ? obyte : ' '
 	     ,obyte & 0x00FF
 	     ,Get2SignDig(obyte)
 	     ,GetBinary(obyte));
   }
   else
-    TitleWnd->printf("                                ");
-  TitleWnd->printf("MASK: %sH"
+    title_wnd().printf("                                ");
+  title_wnd().printf("MASK: %sH"
 	   ,Get2Digit(edit_XX));
-  TitleWnd->refresh();
+  title_wnd().refresh();
 }
 
 bool __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size)

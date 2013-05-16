@@ -60,6 +60,68 @@ using namespace	usr;
 #include "plugins/plugin.h"
 
 namespace	usr {
+static const unsigned SHORT_PATH_LEN=__TVIO_MAXSCREENWIDTH-54;
+    struct beye_priv : public Opaque {
+	beye_priv(const std::vector<std::string>& _argv, const std::map<std::string,std::string>& _envm);
+	virtual ~beye_priv();
+	Plugin*			activeMode;
+	Bin_Format*		_bin_format;
+	const std::vector<std::string>& argv;
+	const std::map<std::string,std::string>& envm;
+	std::vector<std::string> ListFile;
+	std::string		LastOpenFileName;
+	char*			_shortname;
+	std::string		ini_name;
+	bool			UseIniFile;
+	size_t			LastMode;
+	unsigned int		beye_mode;
+	unsigned		defMainModeSel;
+	__filesize_t		new_file_size;
+	std::vector<const Plugin_Info*> modes;
+	CodeGuider*		code_guider;
+	addendum*		addons;
+	class sysinfo*		sysinfo;
+	binary_stream*		bm_file_handle;
+	binary_stream*		sc_bm_file_handle;
+	TConsole*		_tconsole;
+	LocalPtr<System>	_system;
+	TWindow*		ErrorWnd;
+	TWindow*		TitleWnd;
+	TWindow*		PromptWnd;
+	TWindow*		MainWnd;
+    };
+
+beye_priv::beye_priv(const std::vector<std::string>& _argv, const std::map<std::string,std::string>& _envm)
+	:argv(_argv)
+	,envm(_envm)
+	,UseIniFile(true)
+	,beye_mode(UINT_MAX)
+	,defMainModeSel(1)
+	,new_file_size(FILESIZE_MAX)
+	,code_guider(new(zeromem) CodeGuider)
+	,bm_file_handle(&bNull)
+	,sc_bm_file_handle(&bNull)
+	,_system(new(zeromem) System) {
+    addons = new(zeromem) addendum;
+    sysinfo= new(zeromem) class sysinfo;
+    _bin_format = new(zeromem) Bin_Format(*code_guider);
+    _shortname = new char[SHORT_PATH_LEN + 1];
+}
+beye_priv::~beye_priv() {
+    delete activeMode;
+    delete _bin_format;
+
+    delete sysinfo;
+    delete addons;
+    delete _shortname;
+    delete code_guider;
+
+    if(MainWnd) delete MainWnd;
+    if(PromptWnd) delete PromptWnd;
+    if(TitleWnd) delete TitleWnd;
+    if(ErrorWnd) delete ErrorWnd;
+}
+
 extern const Plugin_Info binMode;
 extern const Plugin_Info textMode;
 extern const Plugin_Info hexMode;
@@ -73,7 +135,6 @@ static Opaque		opaque2;
 
 static volatile char antiviral_hole2[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 
-static const unsigned SHORT_PATH_LEN=__TVIO_MAXSCREENWIDTH-54;
 
 static volatile char antiviral_hole3[__VM_PAGE_SIZE__] __PAGE_ALIGNED__;
 
@@ -85,16 +146,17 @@ BeyeContext& beye_context() { return *BeyeCtx; }
 
 bool BeyeContext::select_mode()
 {
-    size_t i,nModes = modes.size();
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    size_t i,nModes = priv.modes.size();
     const char *modeName[nModes];
     int retval;
 
-    for(i = 0;i < nModes;i++) modeName[i] = modes[i]->name;
-    retval = SelBoxA(modeName,nModes," Select translation mode: ",defMainModeSel);
+    for(i = 0;i < nModes;i++) modeName[i] = priv.modes[i]->name;
+    retval = SelBoxA(modeName,nModes," Select translation mode: ",priv.defMainModeSel);
     if(retval != -1) {
-	defMainModeSel = retval;
-	delete activeMode;
-	activeMode = modes[defMainModeSel]->query_interface(bin_format(),*bm_file_handle,*MainWnd,*code_guider);
+	priv.defMainModeSel = retval;
+	delete priv.activeMode;
+	priv.activeMode = priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider);
 	return true;
     }
     return false;
@@ -102,49 +164,53 @@ bool BeyeContext::select_mode()
 
 void BeyeContext::init_modes( Ini_Profile& ini )
 {
-    if(!activeMode) activeMode = modes[defMainModeSel]->query_interface(bin_format(),*bm_file_handle,*MainWnd,*code_guider);
-    activeMode->read_ini(ini);
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    if(!priv.activeMode) priv.activeMode = priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider);
+    priv.activeMode->read_ini(ini);
 }
 
 void BeyeContext::quick_select_mode()
 {
-    size_t nModes = modes.size();
-    if(defMainModeSel < nModes - 1) defMainModeSel++;
-    else                            defMainModeSel = 0;
-    delete activeMode;
-    activeMode = modes[defMainModeSel]->query_interface(bin_format(),*bm_file_handle,*MainWnd,*code_guider);
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    size_t nModes = priv.modes.size();
+    if(priv.defMainModeSel < nModes - 1) priv.defMainModeSel++;
+    else                            priv.defMainModeSel = 0;
+    delete priv.activeMode;
+    priv.activeMode = priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider);
 }
 
 void BeyeContext::make_shortname()
 {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
   unsigned l;
-  unsigned slen = TitleWnd->client_width()-54;
+  unsigned slen = priv.TitleWnd->client_width()-54;
   l = ArgVector1.length();
-  if(l <= slen) strcpy(_shortname,ArgVector1.c_str());
+  if(l <= slen) strcpy(priv._shortname,ArgVector1.c_str());
   else
   {
-    strncpy(_shortname,ArgVector1.c_str(),slen/2 - 3);
-    _shortname[slen/2-4] = 0;
-    strcat(_shortname,"...");
-    strcat(_shortname,&ArgVector1.c_str()[l - slen/2]);
+    strncpy(priv._shortname,ArgVector1.c_str(),slen/2 - 3);
+    priv._shortname[slen/2-4] = 0;
+    strcat(priv._shortname,"...");
+    strcat(priv._shortname,&ArgVector1.c_str()[l - slen/2]);
   }
-  _system->nls_cmdline2oem((unsigned char *)_shortname,strlen(_shortname));
+  priv._system->nls_cmdline2oem((unsigned char *)priv._shortname,strlen(priv._shortname));
 }
 
 void BeyeContext::auto_detect_mode()
 {
-    size_t i,n = modes.size();
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    size_t i,n = priv.modes.size();
     Plugin* mode;
     for(i = 0;i < n;i++) {
-	mode = modes[i]->query_interface(bin_format(),*bm_file_handle,*MainWnd,*code_guider);
+	mode = priv.modes[i]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider);
 	if(mode->detect()) {
-	    defMainModeSel = i;
+	    priv.defMainModeSel = i;
 	    break;
 	}
 	delete mode; mode = NULL;
     }
     if(mode) delete mode;
-    activeMode = modes[defMainModeSel]->query_interface(bin_format(),*bm_file_handle,*MainWnd,*code_guider);
+    priv.activeMode = priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider);
     beye_context().bm_file().seek(0,binary_stream::Seek_Set);
 }
 
@@ -177,63 +243,66 @@ int BeyeContext::queryKey(const std::string& arg)
 
 void BeyeContext::parse_cmdline( const std::vector<std::string>& ArgVector )
 {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
   unsigned i;
-  ListFile.clear();
+  priv.ListFile.clear();
   for(i = 1;i < ArgVector.size();i++)
   {
      int beye_key;
      beye_key = queryKey(ArgVector[i]);
      switch(beye_key)
      {
-       case 0: beye_mode = UINT_MAX; break;
-       case 1: beye_mode = 1; break;
-       case 2: beye_mode = 3; break;
-       case 3: beye_mode = 2; break;
-       case 4: beye_mode = 0; break;
+       case 0: priv.beye_mode = UINT_MAX; break;
+       case 1: priv.beye_mode = 1; break;
+       case 2: priv.beye_mode = 3; break;
+       case 3: priv.beye_mode = 2; break;
+       case 4: priv.beye_mode = 0; break;
        case 5:
-		new_file_size = strtoull(ArgVector[++i].c_str(),NULL,10);
+		priv.new_file_size = strtoull(ArgVector[++i].c_str(),NULL,10);
 		break;
-       case 6: UseIniFile = false; break;
+       case 6: priv.UseIniFile = false; break;
        case 7: i++; break; // parsed early
        case 8: i++; break; // parsed early
-       case 9: ListFile.clear(); return;
-       default: ListFile.push_back(ArgVector[i]);
+       case 9: priv.ListFile.clear(); return;
+       default: priv.ListFile.push_back(ArgVector[i]);
      }
   }
-  if(!ListFile.empty()) ArgVector1 = ListFile[0];
+  if(!priv.ListFile.empty()) ArgVector1 = priv.ListFile[0];
 }
 
 bool BeyeContext::LoadInfo( )
 {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
     make_shortname();
-    if(new_file_size != FILESIZE_MAX) {
+    if(priv.new_file_size != FILESIZE_MAX) {
 	binary_stream* h = new(zeromem) binary_stream;
 	if(binary_stream::exists(beye_context().ArgVector1) == false) h->create(beye_context().ArgVector1);
 	else {
 	    if(!h->open(beye_context().ArgVector1,binary_stream::FO_READWRITE | binary_stream::SO_DENYNONE))
 		h->open(ArgVector1,binary_stream::FO_READWRITE | binary_stream::SO_COMPAT);
 	}
-	h->chsize(new_file_size);
+	h->chsize(priv.new_file_size);
         delete h;
     }
     if(BMOpen(ArgVector1) != true) return false;
-    if(beye_mode != UINT_MAX) defMainModeSel = beye_mode;
+    if(priv.beye_mode != UINT_MAX) priv.defMainModeSel = priv.beye_mode;
     else {
-	if(LastMode >= modes.size() || !is_valid_ini_args()) auto_detect_mode();
-	else defMainModeSel = LastMode;
+	if(priv.LastMode >= priv.modes.size() || !is_valid_ini_args()) auto_detect_mode();
+	else priv.defMainModeSel = priv.LastMode;
     }
     return true;
 }
 
 void BeyeContext::PaintTitle() const
 {
- TitleWnd->freeze();
- TitleWnd->goto_xy(1,1);
- TitleWnd->clreol();
- TitleWnd->printf("File : %s",short_name());
- TitleWnd->goto_xy(TitleWnd->client_width()-43,1);
- TitleWnd->printf("Size : %8llu bytes",flength());
- TitleWnd->refresh();
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    priv.TitleWnd->freeze();
+    priv.TitleWnd->goto_xy(1,1);
+    priv.TitleWnd->clreol();
+    priv.TitleWnd->printf("File : %s",short_name());
+    priv.TitleWnd->goto_xy(priv.TitleWnd->client_width()-43,1);
+    priv.TitleWnd->printf("Size : %8llu bytes",flength());
+    priv.TitleWnd->refresh();
 }
 
 static void MyAtExit()
@@ -244,23 +313,25 @@ static void MyAtExit()
 
 bool BeyeContext::is_valid_ini_args( ) const
 {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
   return iniSettingsAnywhere ? true :
 	 !ArgVector1.empty() ?
-	 ArgVector1==LastOpenFileName ?
-	 beye_mode != UINT_MAX && beye_mode != LastMode ?
+	 ArgVector1==priv.LastOpenFileName ?
+	 priv.beye_mode != UINT_MAX && priv.beye_mode != priv.LastMode ?
 	 false : true : false : false;
 }
 
 Ini_Profile& BeyeContext::load_ini_info()
 {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
   char buf[20];
   std::string tmp,stmp;
   Ini_Profile& ini = *new(zeromem) Ini_Profile;
   const char* iname;
   iname = ::getenv("BEYE_INI");
-  if(iname) ini_name=iname;
-  if(ini_name.empty()) ini_name = _system->get_ini_name("beye");
-  if(UseIniFile) ini.open(ini_name);
+  if(iname) priv.ini_name=iname;
+  if(priv.ini_name.empty()) priv.ini_name = priv._system->get_ini_name("beye");
+  if(priv.UseIniFile) ini.open(priv.ini_name);
   help_name=read_profile_string(ini,"Beye","Setup","HelpName","");
   skin_name=read_profile_string(ini,"Beye","Setup","SkinName","");
   syntax_name=read_profile_string(ini,"Beye","Setup","SyntaxName","");
@@ -279,10 +350,10 @@ Ini_Profile& BeyeContext::load_ini_info()
   if(stricmp(tmp.c_str(),"on") == 0) beyeSearchFlg |= SF_PLUGINS;
   tmp=read_profile_string(ini,"Beye","Search","AsHex","off");
   if(stricmp(tmp.c_str(),"on") == 0) beyeSearchFlg |= SF_ASHEX;
-  LastOpenFileName=read_profile_string(ini,"Beye","Browser","LastOpen","");
-  sprintf(buf,"%u",LastMode); /* [dBorca] so that src and dst won't overlap for strncpy */
+  priv.LastOpenFileName=read_profile_string(ini,"Beye","Browser","LastOpen","");
+  sprintf(buf,"%u",priv.LastMode); /* [dBorca] so that src and dst won't overlap for strncpy */
   tmp=read_profile_string(ini,"Beye","Browser","LastMode",buf);
-  LastMode = (size_t)strtoul(tmp.c_str(),NULL,10);
+  priv.LastMode = (size_t)strtoul(tmp.c_str(),NULL,10);
   tmp=read_profile_string(ini,"Beye","Browser","Offset","0");
   LastOffset = atoll(tmp.c_str());
   ini_ver=read_profile_string(ini,"Beye","Setup","Version","");
@@ -309,10 +380,11 @@ Ini_Profile& BeyeContext::load_ini_info()
 
 void BeyeContext::save_ini_info() const
 {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
   char tmp[20];
   search_buff[search_len] = 0;
   Ini_Profile& ini = *new(zeromem) Ini_Profile;
-  ini.open(ini_name);
+  ini.open(priv.ini_name);
   write_profile_string(ini,"Beye","Setup","HelpName",help_name.c_str());
   write_profile_string(ini,"Beye","Setup","SkinName",skin_name.c_str());
   write_profile_string(ini,"Beye","Setup","SyntaxName",syntax_name.c_str());
@@ -325,7 +397,7 @@ void BeyeContext::save_ini_info() const
   write_profile_string(ini,"Beye","Search","UsePlugin",beyeSearchFlg & SF_PLUGINS ? "on" : "off");
   write_profile_string(ini,"Beye","Search","AsHex",beyeSearchFlg & SF_ASHEX ? "on" : "off");
   write_profile_string(ini,"Beye","Browser","LastOpen",ArgVector1.c_str());
-  sprintf(tmp,"%u",defMainModeSel);
+  sprintf(tmp,"%u",priv.defMainModeSel);
   write_profile_string(ini,"Beye","Browser","LastMode",tmp);
   sprintf(tmp,"%llu",LastOffset);
   write_profile_string(ini,"Beye","Browser","Offset",tmp);
@@ -346,7 +418,7 @@ void BeyeContext::save_ini_info() const
   strcpy(tmp,iniUseExtProgs ? "yes" : "no");
   write_profile_string(ini,"Beye","Setup","UseExternalProgs",tmp);
   write_profile_string(ini,"Beye","Setup","Codepage",codepage.c_str());
-  activeMode->save_ini(ini);
+  priv.activeMode->save_ini(ini);
   udnTerm(ini);
   delete &ini;
 }
@@ -355,12 +427,13 @@ static binary_stream::ftime ftim;
 static bool ftim_ok = false;
 
 void BeyeContext::show_usage() const {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
     unsigned evt,i,nln,h,y;
     TWindow *win;
     nln = sizeof(beyeArg)/sizeof(struct tagbeyeArg);
     h = nln+4;
-    y = _tconsole->vio_height()/2-h/2;
-    win = new(zeromem) TWindow(2,y,_tconsole->vio_width()-2,h+1,TWindow::Flag_None | TWindow::Flag_NLS);
+    y = priv._tconsole->vio_height()/2-h/2;
+    win = new(zeromem) TWindow(2,y,priv._tconsole->vio_width()-2,h+1,TWindow::Flag_None | TWindow::Flag_NLS);
     if(!win) goto done;
     win->set_title(BEYE_VER_MSG,TWindow::TMode_Center,error_cset.border);
     win->into_center();
@@ -377,7 +450,7 @@ void BeyeContext::show_usage() const {
     }
     win->show();
     do {
-	evt = GetEvent(NULL,NULL,ErrorWnd);
+	evt = GetEvent(NULL,NULL,priv.ErrorWnd);
     }while(!(evt == KE_ESCAPE || evt == KE_F(10) || evt == KE_ENTER));
     delete win;
     done:
@@ -385,28 +458,29 @@ void BeyeContext::show_usage() const {
 }
 
 void	BeyeContext::create_windows() {
-    ErrorWnd = new(zeromem) TWindow(1,1,51,17,TWindow::Flag_None | TWindow::Flag_NLS);
-    if(ErrorWnd) ErrorWnd->set_title(" Error ",TWindow::TMode_Center,error_cset.border);
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    priv.ErrorWnd = new(zeromem) TWindow(1,1,51,17,TWindow::Flag_None | TWindow::Flag_NLS);
+    if(priv.ErrorWnd) priv.ErrorWnd->set_title(" Error ",TWindow::TMode_Center,error_cset.border);
     else { std::cerr<<"fatal error: can't create window"<<std::endl; ::exit(EXIT_FAILURE); }
-    ErrorWnd->into_center();
-    ErrorWnd->set_color(error_cset.main);
-    ErrorWnd->set_frame(TWindow::DOUBLE_FRAME,error_cset.border);
-    PromptWnd = new(zeromem) TWindow(1,_tconsole->vio_height(),_tconsole->vio_width()-1,1,TWindow::Flag_NLS);
-    PromptWnd->set_color(prompt_cset.digit);
-    PromptWnd->clear();
-    PromptWnd->show();
+    priv.ErrorWnd->into_center();
+    priv.ErrorWnd->set_color(error_cset.main);
+    priv.ErrorWnd->set_frame(TWindow::DOUBLE_FRAME,error_cset.border);
+    priv.PromptWnd = new(zeromem) TWindow(1,priv._tconsole->vio_height(),priv._tconsole->vio_width()-1,1,TWindow::Flag_NLS);
+    priv.PromptWnd->set_color(prompt_cset.digit);
+    priv.PromptWnd->clear();
+    priv.PromptWnd->show();
     if(BeyeCtx->ini_ver!=BEYE_VERSION) {
 	class Setup* setup = new class Setup;
 	setup->run();
 	delete setup;
     }
-    TitleWnd = new(zeromem) TWindow(1,1,_tconsole->vio_width(),1,TWindow::Flag_None);
-    TitleWnd->set_color(title_cset.main);
-    TitleWnd->clear();
-    TitleWnd->show();
-    MainWnd = new(zeromem) TWindow(1,2,_tconsole->vio_width(),_tconsole->vio_height()-2,TWindow::Flag_None);
-    MainWnd->set_color(browser_cset.main);
-    MainWnd->clear();
+    priv.TitleWnd = new(zeromem) TWindow(1,1,priv._tconsole->vio_width(),1,TWindow::Flag_None);
+    priv.TitleWnd->set_color(title_cset.main);
+    priv.TitleWnd->clear();
+    priv.TitleWnd->show();
+    priv.MainWnd = new(zeromem) TWindow(1,2,priv._tconsole->vio_width(),priv._tconsole->vio_height()-2,TWindow::Flag_None);
+    priv.MainWnd->set_color(browser_cset.main);
+    priv.MainWnd->clear();
 }
 
 int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::string>& envm)
@@ -486,24 +560,25 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
 
 bool BeyeContext::new_source()
 {
-  int i;
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    int i;
     bool ret;
     unsigned j,freq;
     static int prev_file;
     char ** nlsListFile;
-    size_t sz=ListFile.size();
+    size_t sz=priv.ListFile.size();
     nlsListFile = new char*[sz];
     if(nlsListFile) {
 	for(j = 0;j < sz;j++) {
-	    nlsListFile[j] = new char [ListFile[j].length()+1];
+	    nlsListFile[j] = new char [priv.ListFile[j].length()+1];
 	    if(!nlsListFile[j]) break;
 	}
     } else { MemOutBox("Initializing List of File\n"); return 0; }
     for(freq = 0;freq < j;freq++) {
 	unsigned ls;
-	ls = ListFile[freq].length();
-	::memcpy(nlsListFile[freq],ListFile[freq].c_str(),ls+1);
-	_system->nls_cmdline2oem((unsigned char *)nlsListFile[freq],ls);
+	ls = priv.ListFile[freq].length();
+	::memcpy(nlsListFile[freq],priv.ListFile[freq].c_str(),ls+1);
+	priv._system->nls_cmdline2oem((unsigned char *)nlsListFile[freq],ls);
     }
     i = SelBoxA(const_cast<const char**>(nlsListFile),j," Select new file: ",prev_file);
     ret = 0;
@@ -512,24 +587,24 @@ bool BeyeContext::new_source()
     if(i != -1) {
 	if(iniPreserveTime && ftim_ok) binary_stream::set_ftime(ArgVector1,ftim);
 	BMClose();
-	ftim_ok = binary_stream::get_ftime(ListFile[i],ftim);
-	if(BMOpen(ListFile[i]) == true) {
-	    ArgVector1 = ListFile[i];
-	    delete _bin_format;
-	    delete activeMode;
+	ftim_ok = binary_stream::get_ftime(priv.ListFile[i],ftim);
+	if(BMOpen(priv.ListFile[i]) == true) {
+	    ArgVector1 = priv.ListFile[i];
+	    delete priv._bin_format;
+	    delete priv.activeMode;
 	    make_shortname();
-	    _bin_format = new(zeromem) Bin_Format(*code_guider);
-	    _bin_format->detect_format(*sc_bm_file_handle);
-	    activeMode=modes[defMainModeSel]->query_interface(bin_format(),*bm_file_handle,*MainWnd,*code_guider);
+	    priv._bin_format = new(zeromem) Bin_Format(*priv.code_guider);
+	    priv._bin_format->detect_format(*priv.sc_bm_file_handle);
+	    priv.activeMode=priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider);
 	    ret = true;
 	} else {
 	    if(BMOpen(ArgVector1) != true) ::exit(EXIT_FAILURE);
-	    delete _bin_format;
-	    delete activeMode;
+	    delete priv._bin_format;
+	    delete priv.activeMode;
 	    make_shortname();
-	    _bin_format = new(zeromem) Bin_Format(*code_guider);
-	    _bin_format->detect_format(*sc_bm_file_handle);
-	    activeMode=modes[defMainModeSel]->query_interface(bin_format(),*bm_file_handle,*MainWnd,*code_guider);
+	    priv._bin_format = new(zeromem) Bin_Format(*priv.code_guider);
+	    priv._bin_format->detect_format(*priv.sc_bm_file_handle);
+	    priv.activeMode=priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider);
 	    ret = false;
 	}
     }
@@ -542,8 +617,9 @@ std::string BeyeContext::read_profile_string(Ini_Profile& ini,
 			       const std::string& _item,
 			       const std::string& def_value) const
 {
-  return UseIniFile ? ini.read(section,subsection,_item,def_value)
-		    : def_value;
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    return priv.UseIniFile ? ini.read(section,subsection,_item,def_value)
+			: def_value;
 }
 
 bool BeyeContext::write_profile_string(Ini_Profile& ini,
@@ -552,9 +628,8 @@ bool BeyeContext::write_profile_string(Ini_Profile& ini,
 					  const std::string& item,
 					  const std::string& value) const
 {
-  return ini.write(section,subsection,item,value);
+    return ini.write(section,subsection,item,value);
 }
-
 
 BeyeContext::BeyeContext(const std::vector<std::string>& _argv, const std::map<std::string,std::string>& _envm)
 	    :vioIniFlags(0L)
@@ -565,54 +640,36 @@ BeyeContext::BeyeContext(const std::vector<std::string>& _argv, const std::map<s
 	    ,iniPreserveTime(false)
 	    ,iniUseExtProgs(false)
 	    ,LastOffset(0L)
-	    ,argv(_argv)
-	    ,envm(_envm)
-	    ,UseIniFile(true)
-	    ,beye_mode(UINT_MAX)
-	    ,defMainModeSel(1)
-	    ,new_file_size(FILESIZE_MAX)
-	    ,code_guider(new(zeromem) CodeGuider)
-	    ,bm_file_handle(&bNull)
-	    ,sc_bm_file_handle(&bNull)
-	    ,_system(new(zeromem) System)
+	    ,opaque(*new(zeromem) beye_priv(_argv,_envm))
 {
-    addons = new(zeromem) addendum;
-    sysinfo= new(zeromem) class sysinfo;
-
-    modes.push_back(&textMode);
-    modes.push_back(&binMode);
-    modes.push_back(&hexMode);
-    modes.push_back(&disMode);
-
-    _bin_format = new(zeromem) Bin_Format(*code_guider);
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    priv.modes.push_back(&textMode);
+    priv.modes.push_back(&binMode);
+    priv.modes.push_back(&hexMode);
+    priv.modes.push_back(&disMode);
 
     codepage="CP866";
     scheme_name="Built-in";
-    if(argv.size()>1) ArgVector1 = argv[1];
-    _shortname = new char[SHORT_PATH_LEN + 1];
-    LastMode = modes.size()+10;
+    if(priv.argv.size()>1) ArgVector1 = priv.argv[1];
+    priv.LastMode = priv.modes.size()+10;
 }
 
 BeyeContext::~BeyeContext() {
-    delete activeMode;
-    delete _bin_format;
-
-    delete sysinfo;
-    delete addons;
-    delete _shortname;
-    delete code_guider;
     BMClose();
-
-    if(MainWnd) delete MainWnd;
-    if(PromptWnd) delete PromptWnd;
-    if(TitleWnd) delete TitleWnd;
-    if(ErrorWnd) delete ErrorWnd;
     termBConsole();
 }
-const std::vector<std::string>& BeyeContext::list_file() const { return ListFile; }
-
-void BeyeContext::select_tool() const { addons->select(); }
-void BeyeContext::select_sysinfo() const { sysinfo->select(); }
+const std::vector<std::string>& BeyeContext::list_file() const {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    return priv.ListFile;
+}
+void BeyeContext::select_tool() const {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    priv.addons->select();
+}
+void BeyeContext::select_sysinfo() const {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    priv.sysinfo->select();
+}
 
 binary_stream* BeyeContext::beyeOpenRO(const std::string& fname,unsigned cache_size)
 {
@@ -629,12 +686,13 @@ binary_stream* BeyeContext::beyeOpenRO(const std::string& fname,unsigned cache_s
     return fret;
 }
 
-binary_stream* BeyeContext:: beyeOpenRW(const std::string& fname,unsigned cache_size)
+binary_stream* BeyeContext::beyeOpenRW(const std::string& fname,unsigned cache_size)
 {
     binary_stream* fret;
     if(!binary_stream::exists(fname)) return &bNull;
-    if(beye_context().fioUseMMF)fret= new(zeromem) MMFile;
-    else			fret= new(zeromem) BBio_File(cache_size,BBio_File::Opt_Db);
+    fret= beye_context().fioUseMMF? new(zeromem) MMFile :
+				    new(zeromem) binary_stream;
+//				    new(zeromem) BBio_File(cache_size,BBio_File::Opt_Db);
     bool rc;
     rc = fret->open(fname,binary_stream::FO_READWRITE | binary_stream::SO_DENYNONE);
     if(rc == false)
@@ -645,6 +703,7 @@ binary_stream* BeyeContext:: beyeOpenRW(const std::string& fname,unsigned cache_
 
 bool BeyeContext::BMOpen(const std::string& fname)
 {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
   binary_stream *bm,*sc;
   bm = beyeOpenRO(fname,BBIO_CACHE_SIZE);
   if(bm == &bNull)
@@ -652,29 +711,100 @@ bool BeyeContext::BMOpen(const std::string& fname)
     errnoMessageBox(OPEN_FAIL,"",errno);
     return false;
   }
-  if(bm_file_handle != &bNull) delete bm_file_handle;
-  bm_file_handle = bm;
-  sc = bm_file_handle->dup();
+  if(priv.bm_file_handle != &bNull) delete priv.bm_file_handle;
+  priv.bm_file_handle = bm;
+  sc = priv.bm_file_handle->dup();
   if(sc == &bNull)
   {
     errnoMessageBox(DUP_FAIL,"",errno);
     return false;
   }
-  if(sc_bm_file_handle != &bNull) delete sc_bm_file_handle;
-  sc_bm_file_handle = sc;
+  if(priv.sc_bm_file_handle != &bNull) delete priv.sc_bm_file_handle;
+  priv.sc_bm_file_handle = sc;
   return true;
 }
 
 void BeyeContext::BMClose()
 {
-  if(bm_file_handle != &bNull) delete bm_file_handle;
-  bm_file_handle = &bNull;
-  if(sc_bm_file_handle != &bNull) delete sc_bm_file_handle;
-  sc_bm_file_handle = &bNull;
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+  if(priv.bm_file_handle != &bNull) delete priv.bm_file_handle;
+  priv.bm_file_handle = &bNull;
+  if(priv.sc_bm_file_handle != &bNull) delete priv.sc_bm_file_handle;
+  priv.sc_bm_file_handle = &bNull;
 }
 
-__filesize_t BeyeContext::flength() const { return bm_file_handle->flength(); }
-__filesize_t BeyeContext::tell() const { return bm_file_handle->tell(); }
+__filesize_t BeyeContext::flength() const {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    return priv.bm_file_handle->flength();
+}
+__filesize_t BeyeContext::tell() const {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    return priv.bm_file_handle->tell();
+}
+bool BeyeContext::is_file64() const {
+    return flength() > std::numeric_limits<uint32_t>::max();
+}
+
+const char* BeyeContext::short_name() const {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    return priv._shortname;
+}
+
+Plugin& BeyeContext::active_mode() const {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    return *priv.activeMode;
+}
+Bin_Format& BeyeContext::bin_format() const {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    return *priv._bin_format;
+}
+const Plugin_Info* BeyeContext::mode_info() const {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    return priv.modes[priv.defMainModeSel];
+}
+
+TConsole& BeyeContext::tconsole() const {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    return *priv._tconsole;
+}
+System& BeyeContext::system() const {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    return *priv._system;
+}
+
+CodeGuider& BeyeContext::codeguider() const {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    return *priv.code_guider;
+}
+
+TWindow& BeyeContext::main_wnd() const {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    return *priv.MainWnd;
+}
+
+TWindow& BeyeContext::error_wnd() const {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    return *priv.ErrorWnd;
+}
+
+TWindow& BeyeContext::title_wnd() const {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    return *priv.TitleWnd;
+}
+
+TWindow& BeyeContext::prompt_wnd() const {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    return *priv.PromptWnd;
+}
+
+binary_stream& BeyeContext::bm_file() const {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    return *priv.bm_file_handle;
+}
+binary_stream& BeyeContext::sc_bm_file() const {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    return *priv.sc_bm_file_handle;
+}
 
 static bool test_antiviral_protection(int* verbose)
 {

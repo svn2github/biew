@@ -37,7 +37,7 @@ namespace	usr {
 	    bool		LoadInfo();
 	    bool		is_valid_ini_args() const;
 	    const std::vector<std::string>& list_file() const;
-	    const char*		short_name() const { return _shortname; }
+	    const char*		short_name() const;
 	    void		make_shortname();
 	    std::string		read_profile_string(Ini_Profile& ini,
 						    const std::string& section,
@@ -52,11 +52,11 @@ namespace	usr {
 	    void		init_modes(Ini_Profile& ini);
 	    void		quick_select_mode();
 	    bool		select_mode();
-	    Plugin&		active_mode() const { return *activeMode; }
-	    Bin_Format&		bin_format() const { return *_bin_format; }
-	    const Plugin_Info*	mode_info() const { return modes[defMainModeSel]; }
-	    TConsole&		tconsole() const { return *_tconsole; }
-	    System&		system() const { return *_system; }
+	    Plugin&		active_mode() const;
+	    Bin_Format&		bin_format() const;
+	    const Plugin_Info*	mode_info() const;
+	    TConsole&		tconsole() const;
+	    System&		system() const;
 	    void		show_usage() const;
 	    void		main_loop();
 		   /** Main search routine
@@ -71,22 +71,22 @@ namespace	usr {
 	    void		select_tool() const;
 	    void		select_sysinfo() const;
 
-	    CodeGuider&		codeguider() const { return *code_guider; }
-	    TWindow&		main_wnd() const { return *MainWnd; }
+	    CodeGuider&		codeguider() const;
+	    TWindow&		main_wnd() const;
 
 	    void		PaintTitle() const;
 
 	    void		create_windows();
 
-	    binary_stream&	bm_file() const { return *bm_file_handle; }
-	    binary_stream&	sc_bm_file() const { return *sc_bm_file_handle; }
+	    binary_stream&	bm_file() const;
+	    binary_stream&	sc_bm_file() const;
 	    bool		BMOpen(const std::string& fname);
 	    void		BMClose();
 	    static binary_stream* beyeOpenRO(const std::string& fname,unsigned cache_size);
 	    static binary_stream* beyeOpenRW(const std::string& fname,unsigned cache_size);
 	    __filesize_t	flength() const;
 	    __filesize_t	tell() const;
-	    bool		is_file64() const { return flength() > std::numeric_limits<uint32_t>::max(); }
+	    bool		is_file64() const;
 
 	    void		TMessageBox(const std::string& text,const std::string& title) const;
 	    void		NotifyBox(const std::string& text,const std::string& title) const;
@@ -112,6 +112,10 @@ namespace	usr {
 	    bool iniPreserveTime;
 	    bool iniUseExtProgs;
 	    __filesize_t LastOffset;
+	protected:
+	    TWindow&		error_wnd() const;
+	    TWindow&		title_wnd() const;
+	    TWindow&		prompt_wnd() const;
 	private:
 	    void		auto_detect_mode();
 	    int			queryKey(const std::string& arg);
@@ -119,32 +123,7 @@ namespace	usr {
 					    ColorAttr base,ColorAttr frame) const;
 	    void		draw_title() const;
 
-	    Opaque		opaque;
-	    Plugin*		activeMode;
-	    Bin_Format*		_bin_format;
-	    const std::vector<std::string>& argv;
-	    const std::map<std::string,std::string>& envm;
-	    std::vector<std::string> ListFile;
-	    std::string		LastOpenFileName;
-	    char*		_shortname;
-	    std::string		ini_name;
-	    bool		UseIniFile;
-	    size_t		LastMode;
-	    unsigned int	beye_mode;
-	    unsigned		defMainModeSel;
-	    __filesize_t	new_file_size;
-	    std::vector<const Plugin_Info*> modes;
-	    CodeGuider*		code_guider;
-	    addendum*		addons;
-	    class sysinfo*	sysinfo;
-	    binary_stream*	bm_file_handle;
-	    binary_stream*	sc_bm_file_handle;
-	    TConsole*		_tconsole;
-	    LocalPtr<System>	_system;
-	    TWindow*		ErrorWnd;
-	    TWindow*		TitleWnd;
-	    TWindow*		PromptWnd;
-	    TWindow*		MainWnd;
+	    Opaque&		opaque;
     };
     BeyeContext& beye_context();
 
