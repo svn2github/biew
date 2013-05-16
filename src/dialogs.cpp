@@ -17,6 +17,8 @@ using namespace	usr;
  * @since       1995
  * @note        Development, fixes and improvements
 **/
+#include <string>
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -26,7 +28,7 @@ using namespace	usr;
 #include "beyehelp.h"
 #include "bconsole.h"
 #include "beyeutil.h"
-#include "bin_util.h"
+#include "udn.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/twindow.h"
 #include "beye.h"

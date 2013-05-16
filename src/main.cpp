@@ -42,7 +42,7 @@ using namespace	usr;
 #include "beye.h"
 #include "bconsole.h"
 #include "colorset.h"
-#include "bin_util.h"
+#include "udn.h"
 #include "codeguid.h"
 #include "editor.h"
 #include "tstrings.h"

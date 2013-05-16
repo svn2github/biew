@@ -27,7 +27,7 @@ using namespace	usr;
 #include <limits.h>
 
 #include "colorset.h"
-#include "bin_util.h"
+#include "udn.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/nlm.h"
 #include "codeguid.h"

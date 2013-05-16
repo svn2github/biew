@@ -34,7 +34,7 @@ using namespace	usr;
 
 #include "beye.h"
 #include "colorset.h"
-#include "bin_util.h"
+#include "udn.h"
 #include "plugins/hexmode.h"
 #include "plugins/disasm.h"
 #include "beyeutil.h"

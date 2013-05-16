@@ -24,7 +24,7 @@ using namespace	usr;
 
 #include "bconsole.h"
 #include "beyehelp.h"
-#include "bin_util.h"
+#include "udn.h"
 #include "colorset.h"
 #include "codeguid.h"
 #include "reg_form.h"

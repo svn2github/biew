@@ -26,7 +26,7 @@ using namespace	usr;
 #include "colorset.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/lx_le.h"
-#include "bin_util.h"
+#include "udn.h"
 #include "beyehelp.h"
 #include "tstrings.h"
 #include "beyeutil.h"

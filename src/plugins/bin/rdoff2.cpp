@@ -22,7 +22,7 @@ using namespace	usr;
 #include "plugins/disasm.h"
 #include "plugins/bin/rdoff2.h"
 #include "reg_form.h"
-#include "bin_util.h"
+#include "udn.h"
 #include "bconsole.h"
 #include "beyehelp.h"
 #include "libbeye/kbd_code.h"

@@ -1,6 +1,9 @@
+#include "config.h"
+#include "libbeye/libbeye.h"
+using namespace	usr;
 /**
  * @namespace	usr
- * @file        bin_util.h
+ * @file        udn.h
  * @brief       This file contains prototypes of common functions of
  *              plugins\bin of BEYE project.
  * @version     -
@@ -15,24 +18,11 @@
  * @since       1995
  * @note        Development, fixes and improvements
 **/
-#ifndef __BIN_UTIL__H
-#define __BIN_UTIL__H
-
-#include "libbeye/bswap.h"
-#include "libbeye/bstream.h"
-#include "beyeutil.h"
+#ifndef __UDN_HPP_INCLUDED
+#define __UDN_HPP_INCLUDED 1
 
 namespace	usr {
-#if __BYTE_ORDER == __BIG_ENDIAN
-    inline uint16_t FMT_WORD(uint16_t cval,bool is_big) { return !is_big ? bswap_16(cval) : cval; }
-    inline uint32_t FMT_DWORD(uint32_t cval,bool is_big) { return !is_big ? bswap_32(cval) :cval; }
-    inline uint64_t FMT_QWORD(uint64_t cval,bool is_big) { return !is_big ? bswap_64(cval) :cval; }
-#else
-    inline uint16_t FMT_WORD(uint16_t cval,bool is_big) { return is_big ? bswap_16(cval) : cval; }
-    inline uint32_t FMT_DWORD(uint32_t cval,bool is_big) { return is_big ? bswap_32(cval) :cval; }
-    inline uint64_t FMT_QWORD(uint64_t cval,bool is_big) { return is_big ? bswap_64(cval) :cval; }
-#endif
-
+    class Ini_Profile;
     /** Reads user defined name at given offset!
     **/
     bool __FASTCALL__ udnFindName(__filesize_t pa,char *buff, unsigned cb_buff);

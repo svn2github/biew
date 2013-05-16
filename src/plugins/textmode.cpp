@@ -29,7 +29,7 @@ using namespace	usr;
 #include "beye.h"
 #include "plugins/textmode.h"
 #include "colorset.h"
-#include "bin_util.h"
+#include "udn.h"
 #include "beyeutil.h"
 #include "beyehelp.h"
 #include "bconsole.h"

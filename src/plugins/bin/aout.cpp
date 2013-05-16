@@ -23,7 +23,7 @@ using namespace	usr;
 #include "libbeye/bswap.h"
 #include "colorset.h"
 #include "beyeutil.h"
-#include "bin_util.h"
+#include "udn.h"
 #include "beyehelp.h"
 #include "bconsole.h"
 #include "reg_form.h"
@@ -54,6 +54,15 @@ namespace	usr {
 	    bool			probe_fmt(uint32_t id);
 	    const char*			aout_encode_machine(uint32_t info,unsigned *id) const;
 	    const char*			aout_encode_hdr(uint32_t info) const;
+#if __BYTE_ORDER == __BIG_ENDIAN
+	    inline uint16_t FMT_WORD(uint16_t cval,bool is_big) const { return !is_big ? bswap_16(cval) : cval; }
+	    inline uint32_t FMT_DWORD(uint32_t cval,bool is_big) const { return !is_big ? bswap_32(cval) :cval; }
+	    inline uint64_t FMT_QWORD(uint64_t cval,bool is_big) const { return !is_big ? bswap_64(cval) :cval; }
+#else
+	    inline uint16_t FMT_WORD(uint16_t cval,bool is_big) const { return is_big ? bswap_16(cval) : cval; }
+	    inline uint32_t FMT_DWORD(uint32_t cval,bool is_big) const { return is_big ? bswap_32(cval) :cval; }
+	    inline uint64_t FMT_QWORD(uint64_t cval,bool is_big) const { return is_big ? bswap_64(cval) :cval; }
+#endif
 	    inline uint16_t		AOUT_HALF(const uint16_t* cval) const { return FMT_WORD(*cval,is_msbf); }
 	    inline uint32_t		AOUT_WORD(const uint32_t* cval) const { return FMT_DWORD(*cval,is_msbf); }
 	    inline uint64_t		AOUT_QWORD(const uint64_t* cval) const { return FMT_QWORD(*cval,is_msbf); }

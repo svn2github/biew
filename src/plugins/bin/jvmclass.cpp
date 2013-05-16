@@ -29,7 +29,7 @@ using namespace	usr;
 #include "bconsole.h"
 #include "beyehelp.h"
 #include "beyeutil.h"
-#include "bin_util.h"
+#include "udn.h"
 #include "colorset.h"
 #include "codeguid.h"
 #include "reg_form.h"
@@ -37,6 +37,7 @@ using namespace	usr;
 #include "plugins/disasm.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/bstream.h"
+#include "libbeye/bswap.h"
 #include "plugins/binary_parser.h"
 #include "beye.h"
 
@@ -126,6 +127,15 @@ typedef struct ClassFile_s
 	    __filesize_t		__ShowAttributes(const std::string& title);
 	    void			jvm_ReadPubNameList(binary_stream& handle);
 
+#if __BYTE_ORDER == __BIG_ENDIAN
+	    inline uint16_t FMT_WORD(uint16_t cval,bool is_big) const { return !is_big ? bswap_16(cval) : cval; }
+	    inline uint32_t FMT_DWORD(uint32_t cval,bool is_big) const { return !is_big ? bswap_32(cval) :cval; }
+	    inline uint64_t FMT_QWORD(uint64_t cval,bool is_big) const { return !is_big ? bswap_64(cval) :cval; }
+#else
+	    inline uint16_t FMT_WORD(uint16_t cval,bool is_big) const { return is_big ? bswap_16(cval) : cval; }
+	    inline uint32_t FMT_DWORD(uint32_t cval,bool is_big) const { return is_big ? bswap_32(cval) :cval; }
+	    inline uint64_t FMT_QWORD(uint64_t cval,bool is_big) const { return is_big ? bswap_64(cval) :cval; }
+#endif
 	    inline uint16_t JVM_WORD(const uint16_t* cval,bool is_msbf) const { return FMT_WORD(*cval,is_msbf); }
 	    inline uint32_t JVM_DWORD(const uint32_t* cval,bool is_msbf) const { return FMT_DWORD(*cval,is_msbf); }
 	    inline uint64_t JVM_QWORD(const uint64_t* cval,bool is_msbf) const { return FMT_QWORD(*cval,is_msbf); }

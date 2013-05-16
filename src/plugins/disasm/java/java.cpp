@@ -28,8 +28,8 @@ using namespace	usr;
 #include "bconsole.h"
 #include "beyehelp.h"
 #include "beyeutil.h"
-#include "bin_util.h"
 #include "reg_form.h"
+#include "libbeye/bswap.h"
 #include "libbeye/file_ini.h"
 
 namespace	usr {
@@ -345,6 +345,15 @@ const java_codes_t Java_Disassembler::java_codes[256]=
   /*0xFF*/ { "impdep2", 0 }
 };
 
+#if __BYTE_ORDER == __BIG_ENDIAN
+    inline uint16_t FMT_WORD(uint16_t cval,bool is_big) { return !is_big ? bswap_16(cval) : cval; }
+    inline uint32_t FMT_DWORD(uint32_t cval,bool is_big) { return !is_big ? bswap_32(cval) :cval; }
+    inline uint64_t FMT_QWORD(uint64_t cval,bool is_big) { return !is_big ? bswap_64(cval) :cval; }
+#else
+    inline uint16_t FMT_WORD(uint16_t cval,bool is_big) { return is_big ? bswap_16(cval) : cval; }
+    inline uint32_t FMT_DWORD(uint32_t cval,bool is_big) { return is_big ? bswap_32(cval) :cval; }
+    inline uint64_t FMT_QWORD(uint64_t cval,bool is_big) { return is_big ? bswap_64(cval) :cval; }
+#endif
 inline uint16_t JVM_WORD(const uint16_t* cval,bool is_msbf) { return FMT_WORD(*cval,is_msbf); }
 inline uint32_t JVM_DWORD(const uint32_t* cval,bool is_msbf) { return FMT_DWORD(*cval,is_msbf); }
 inline uint64_t JVM_QWORD(const uint64_t* cval,bool is_msbf) { return FMT_QWORD(*cval,is_msbf); }

@@ -59,7 +59,7 @@ using namespace	usr;
 #include "colorset.h"
 #include "plugins/bin/elf.h"
 #include "plugins/disasm.h"
-#include "bin_util.h"
+#include "udn.h"
 #include "codeguid.h"
 #include "beyehelp.h"
 #include "tstrings.h"

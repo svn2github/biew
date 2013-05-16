@@ -44,7 +44,6 @@ LIBS += $(EXTRALIBS)
 SRCS = bconsole.cpp\
     beyehelp.cpp\
     beyeutil.cpp\
-    bin_util.cpp\
     codeguid.cpp\
     colorset.cpp\
     dialogs.cpp\
@@ -56,7 +55,8 @@ SRCS = bconsole.cpp\
     mainloop.cpp\
     search.cpp\
     setup.cpp\
-    tstrings.cpp
+    tstrings.cpp\
+    udn.cpp
 
 OBJS=$(SRCS:.cpp=.o)
 
