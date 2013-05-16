@@ -104,7 +104,7 @@ namespace	usr {
 	    __filesize_t		CalcPEObjectEntry(__fileoff_t offset);
 	    bool			FindPubName(std::string& buff,__filesize_t pa);
 	    static __fileoff_t		CalcOverlayOffset(__filesize_t);
-	    void			pe_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
+	    void			pe_ReadPubNameList(binary_stream& handle);
 	    unsigned			fioReadWord(binary_stream& handle,__filesize_t offset,binary_stream::e_seek origin);
 	    __filesize_t		fioReadDWord(binary_stream& handle,__filesize_t offset,binary_stream::e_seek origin);
 	    __filesize_t		fioReadDWord2Phys(binary_stream& handle,__filesize_t offset,binary_stream::e_seek origin);
@@ -945,7 +945,7 @@ void PE_Parser::BuildPERefChain()
   TWindow *w;
 //  if(!(CurrPEChain = la_Build(0,sizeof(RELOC_PE),MemOutBox))) return;
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
-  if(PubNames.empty()) pe_ReadPubNameList(main_handle(),MemOutBox);
+  if(PubNames.empty()) pe_ReadPubNameList(main_handle());
   w->goto_xy(1,1);
   w->puts(BUILD_REFS);
   binary_stream& handle = *pe_cache;
@@ -1185,7 +1185,7 @@ bool PE_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift
   }
   if(!retrf && (flags & APREF_TRY_LABEL))
   {
-     if(PubNames.empty()) pe_ReadPubNameList(main_handle(),MemOutBox);
+     if(PubNames.empty()) pe_ReadPubNameList(main_handle());
      if(FindPubName(buff,r_sh))
      {
        str+=buff;
@@ -1335,7 +1335,7 @@ bool PE_Parser::FindPubName(std::string& buff,__filesize_t pa)
     symbolic_information key;
     std::set<symbolic_information>::const_iterator it;
     key.pa = pa;
-    if(PubNames.empty()) pe_ReadPubNameList(*pe_cache4,MemOutBox);
+    if(PubNames.empty()) pe_ReadPubNameList(*pe_cache4);
     it = PubNames.find(key);
     if(it!=PubNames.end()) {
 	buff=pe_ReadPubName(*pe_cache4,*it);
@@ -1344,7 +1344,7 @@ bool PE_Parser::FindPubName(std::string& buff,__filesize_t pa)
     return udnFindName(pa,buff);
 }
 
-void PE_Parser::pe_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
+void PE_Parser::pe_ReadPubNameList(binary_stream& handle)
 {
   unsigned long i,nitems,expaddr,nameptr,nameaddr,entry_pa;
   unsigned ord;
@@ -1369,7 +1369,7 @@ void PE_Parser::pe_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem
 __filesize_t PE_Parser::get_public_symbol(std::string& str,unsigned& func_class,__filesize_t pa,bool as_prev)
 {
     __filesize_t fpos;
-    if(PubNames.empty()) pe_ReadPubNameList(*pe_cache,NULL);
+    if(PubNames.empty()) pe_ReadPubNameList(*pe_cache);
     std::set<symbolic_information>::const_iterator idx;
     symbolic_information key;
     key.pa=pa;

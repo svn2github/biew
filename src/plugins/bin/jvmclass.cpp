@@ -124,7 +124,7 @@ typedef struct ClassFile_s
 	    void			skip_constant_pool(binary_stream&handle,unsigned nitems);
 	    unsigned			skip_constant(binary_stream&handle,unsigned char id);
 	    __filesize_t		__ShowAttributes(const std::string& title);
-	    void			jvm_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
+	    void			jvm_ReadPubNameList(binary_stream& handle);
 
 	    inline uint16_t JVM_WORD(const uint16_t* cval,bool is_msbf) const { return FMT_WORD(*cval,is_msbf); }
 	    inline uint32_t JVM_DWORD(const uint32_t* cval,bool is_msbf) const { return FMT_DWORD(*cval,is_msbf); }
@@ -791,7 +791,7 @@ std::string JVM_Parser::jvm_ReadPubName(binary_stream& b_cache,const symbolic_in
     return buff;
 }
 
-void JVM_Parser::jvm_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
+void JVM_Parser::jvm_ReadPubNameList(binary_stream& handle)
 {
  __filesize_t fpos;
  unsigned i;
@@ -872,7 +872,7 @@ __filesize_t JVM_Parser::get_public_symbol(std::string& str,unsigned& func_class
 {
     binary_stream& b_cache = main_handle;
     __filesize_t fpos;
-    if(PubNames.empty()) jvm_ReadPubNameList(b_cache,NULL);
+    if(PubNames.empty()) jvm_ReadPubNameList(b_cache);
     std::set<symbolic_information>::const_iterator idx;
     symbolic_information key;
     key.pa=pa;

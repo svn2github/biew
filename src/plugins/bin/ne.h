@@ -182,8 +182,8 @@ namespace	usr {
 	    std::string			rd_ImpName(unsigned idx,bool useasoff);
 	    bool			FindPubName(std::string& buff,__filesize_t pa);
 	    __filesize_t		CalcEntryPointNE(unsigned segnum,unsigned offset);
-	    void			ne_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
-	    bool			ReadPubNames(binary_stream& handle,__filesize_t offset,void (__FASTCALL__ *mem_out)(const std::string&));
+	    void			ne_ReadPubNameList(binary_stream& handle);
+	    bool			ReadPubNames(binary_stream& handle,__filesize_t offset);
 	    unsigned			__get_object_attribute(__filesize_t pa,std::string& name,__filesize_t& start,__filesize_t& end,int& _class,int& bitness) const;
 
 	    static void			(__FASTCALL__ * nephead[])(TWindow* w);

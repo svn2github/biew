@@ -955,7 +955,7 @@ void NE_Parser::BuildNERefChain(__filesize_t segoff,__filesize_t slength)
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
   w->goto_xy(1,1);
   w->printf(" Building reference chains for segment #%u",CurrChainSegment);
-  if(PubNames.empty()) ne_ReadPubNameList(main_handle(),MemOutBox);
+  if(PubNames.empty()) ne_ReadPubNameList(main_handle());
   reloc_off = segoff + slength;
 
   main_handle().seek(reloc_off,binary_stream::Seek_Set);
@@ -1229,7 +1229,7 @@ bool NE_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift
 }
 
 /** return false if unsuccess true otherwise */
-bool NE_Parser::ReadPubNames(binary_stream& handle,__filesize_t offset,void (__FASTCALL__ *mem_out)(const std::string&))
+bool NE_Parser::ReadPubNames(binary_stream& handle,__filesize_t offset)
 {
  symbolic_information pnam;
  ENTRY ent;
@@ -1284,7 +1284,7 @@ bool NE_Parser::FindPubName(std::string& buff,__filesize_t pa)
     symbolic_information key;
     std::set<symbolic_information>::const_iterator it;
     key.pa = pa;
-    if(PubNames.empty()) ne_ReadPubNameList(*ne_cache2,MemOutBox);
+    if(PubNames.empty()) ne_ReadPubNameList(*ne_cache2);
     it = PubNames.find(key);
     if(it!=PubNames.end()) {
 	buff=ne_ReadPubName(*ne_cache2,*it);
@@ -1293,11 +1293,11 @@ bool NE_Parser::FindPubName(std::string& buff,__filesize_t pa)
     return udnFindName(pa,buff);
 }
 
-void NE_Parser::ne_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
+void NE_Parser::ne_ReadPubNameList(binary_stream& handle)
 {
    {
-     ReadPubNames(handle,headshift() + ne.neOffsetResidentNameTable,mem_out);
-     ReadPubNames(handle,ne.neOffsetNonResidentNameTable,mem_out);
+     ReadPubNames(handle,headshift() + ne.neOffsetResidentNameTable);
+     ReadPubNames(handle,ne.neOffsetNonResidentNameTable);
 //     if(PubNames->nItems)
 //       la_Sort(PubNames,fmtComparePubNames);
    }
@@ -1371,7 +1371,7 @@ __filesize_t NE_Parser::get_public_symbol(std::string& str,unsigned& func_class,
 			  __filesize_t pa,bool as_prev)
 {
     __filesize_t fpos;
-    if(PubNames.empty()) ne_ReadPubNameList(*ne_cache,NULL);
+    if(PubNames.empty()) ne_ReadPubNameList(*ne_cache);
     std::set<symbolic_information>::const_iterator idx;
     symbolic_information key;
     key.pa=pa;

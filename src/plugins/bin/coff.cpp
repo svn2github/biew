@@ -82,7 +82,7 @@ namespace	usr {
 	    std::string			coffReadLongName(binary_stream&handle,__filesize_t offset);
 	    bool			FindPubName(std::string& buff,__filesize_t pa);
 	    std::string			coff_ReadPubName(binary_stream&b_cache,const symbolic_information& it);
-	    void			coff_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
+	    void			coff_ReadPubNameList(binary_stream& handle);
 
 	    static inline uint16_t COFF_WORD(const uint8_t* cval) { return (uint16_t)(*(const uint16_t *)(const uint8_t *)cval); }
 	    static inline uint32_t COFF_DWORD(const uint8_t* cval) { return (uint32_t)(*(const uint32_t *)(const uint8_t *)cval); }
@@ -457,7 +457,7 @@ void Coff_Parser::BuildRelocCoff386()
   size_t j,segcount, nr;
   RELOC_COFF386 rel;
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
-  if(PubNames.empty()) coff_ReadPubNameList(main_handle,MemOutBox);
+  if(PubNames.empty()) coff_ReadPubNameList(main_handle);
   w->goto_xy(1,1);
   w->puts(BUILD_REFS);
   for(segcount = 0;segcount < COFF_WORD(coff386hdr.f_nscns);segcount++)
@@ -570,7 +570,7 @@ bool Coff_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShi
   std::string buff;
   ret = false;
   if(flags & APREF_TRY_PIC) return ret;
-  if(PubNames.empty()) coff_ReadPubNameList(main_handle,MemOutBox);
+  if(PubNames.empty()) coff_ReadPubNameList(main_handle);
   if((COFF_WORD(coff386hdr.f_flags) & F_RELFLG) == F_RELFLG) goto try_pub;
   if(RelocCoff386.empty()) BuildRelocCoff386();
   key.offset = ulShift;
@@ -664,8 +664,7 @@ std::string Coff_Parser::coff_ReadPubName(binary_stream& b_cache,const symbolic_
     }
 }
 
-void Coff_Parser::coff_ReadPubNameList(binary_stream& handle,
-				    void (__FASTCALL__ *mem_out)(const std::string&))
+void Coff_Parser::coff_ReadPubNameList(binary_stream& handle)
 {
  unsigned i,nnames;
  symbolic_information pn;
@@ -709,7 +708,7 @@ __filesize_t Coff_Parser::get_public_symbol(std::string& str,unsigned& func_clas
 			  __filesize_t pa,bool as_prev)
 {
     __filesize_t fpos;
-    if(PubNames.empty()) coff_ReadPubNameList(*coff_cache,NULL);
+    if(PubNames.empty()) coff_ReadPubNameList(*coff_cache);
     std::set<symbolic_information>::const_iterator idx;
     symbolic_information key;
     key.pa=pa;

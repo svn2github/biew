@@ -164,7 +164,7 @@ namespace	usr {
 	    __filesize_t		findPHDynEntry(unsigned long type,__filesize_t dynptr,unsigned long nitems);
 	    __filesize_t		findPHEntry(unsigned long type,unsigned *nitems);
 	    bool			FindPubName(std::string& buff,__filesize_t pa);
-	    void			elf_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
+	    void			elf_ReadPubNameList(binary_stream& handle);
 
 	    bool		is_msbf; /* is most significand byte first */
 	    bool		is_64bit;
@@ -1989,7 +1989,7 @@ bool ELF_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
        }
        return false;
   }
-  if(PubNames.empty()) elf_ReadPubNameList(main_handle,MemOutBox);
+  if(PubNames.empty()) elf_ReadPubNameList(main_handle);
   if((erl = __found_ElfRel(ulShift)) != CurrElfChain.end())
   {
     Elf_Reloc r = (*erl);
@@ -2212,7 +2212,7 @@ bool ELF_Parser::FindPubName(std::string& buff,__filesize_t pa)
   return udnFindName(pa,buff);
 }
 
-void ELF_Parser::elf_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
+void ELF_Parser::elf_ReadPubNameList(binary_stream& handle)
 {
   __filesize_t fpos,fp,tableptr,pubname_shtbl;
   unsigned long i,number,ent_size;
@@ -2235,7 +2235,6 @@ void ELF_Parser::elf_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *m
      epn.addinfo = pubname_shtbl;
      epn.attr = ELF_ST_INFO(STB_GLOBAL,STT_NOTYPE);
      PubNames.insert(epn);
-//     if(!la_AddData(PubNames,&epn,mem_out)) break;
     }
   }
   /** If present symbolic information we must read it */
@@ -2277,7 +2276,7 @@ __filesize_t ELF_Parser::get_public_symbol(std::string& str,unsigned& func_class
 			   __filesize_t pa,bool as_prev)
 {
     __filesize_t fpos;
-    if(PubNames.empty()) elf_ReadPubNameList(*elfcache,NULL);
+    if(PubNames.empty()) elf_ReadPubNameList(*elfcache);
     std::set<symbolic_information>::const_iterator idx;
     symbolic_information key;
     key.pa=pa;

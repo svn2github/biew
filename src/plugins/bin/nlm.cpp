@@ -74,7 +74,7 @@ namespace	usr {
 							__filesize_t& start,__filesize_t& end,int& _class,int& bitness);
 	private:
 	    std::string		nlm_ReadPubName(binary_stream&b_cache,const symbolic_information& it);
-	    void		nlm_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&));
+	    void		nlm_ReadPubNameList(binary_stream& handle);
 	    int			NLMbitness(__filesize_t off);
 	    bool		BuildReferStrNLM(std::string& str,const RELOC_NLM& rne,int flags);
 	    void		BuildRelocNlm();
@@ -491,7 +491,7 @@ void NLM_Parser::BuildRelocNlm()
   RELOC_NLM rel;
 //  if(!(RelocNlm = la_Build(0,sizeof(RELOC_NLM),MemOutBox))) return;
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
-  if(PubNames.empty()) nlm_ReadPubNameList(main_handle,MemOutBox);
+  if(PubNames.empty()) nlm_ReadPubNameList(main_handle);
   w->goto_xy(1,1);
   w->puts(BUILD_REFS);
   /** -- for external references */
@@ -526,7 +526,6 @@ void NLM_Parser::BuildRelocNlm()
     rel.nameoff = -1;
     RelocNlm.insert(rel);
   }
-  next:
 //  la_Sort(RelocNlm,nlm_compare_s);
   delete w;
 }
@@ -587,7 +586,7 @@ bool NLM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
   }
   if(!retrf && (flags & APREF_TRY_LABEL))
   {
-     if(PubNames.empty()) nlm_ReadPubNameList(main_handle,MemOutBox);
+     if(PubNames.empty()) nlm_ReadPubNameList(main_handle);
      if(FindPubName(buff,r_sh))
      {
        str+=buff;
@@ -663,7 +662,7 @@ bool NLM_Parser::FindPubName(std::string& buff,__filesize_t pa)
   symbolic_information key;
   std::set<symbolic_information>::const_iterator ret;
   key.pa = pa;
-  if(PubNames.empty()) nlm_ReadPubNameList(*nlm_cache,MemOutBox);
+  if(PubNames.empty()) nlm_ReadPubNameList(*nlm_cache);
   ret = PubNames.find(key);
   if(ret!=PubNames.end()) {
     buff=nlm_ReadPubName(*nlm_cache,*ret);
@@ -672,7 +671,7 @@ bool NLM_Parser::FindPubName(std::string& buff,__filesize_t pa)
   return udnFindName(pa,buff);
 }
 
-void NLM_Parser::nlm_ReadPubNameList(binary_stream& handle,void (__FASTCALL__ *mem_out)(const std::string&))
+void NLM_Parser::nlm_ReadPubNameList(binary_stream& handle)
 {
  unsigned char length;
  unsigned i;
@@ -697,7 +696,7 @@ __filesize_t NLM_Parser::get_public_symbol(std::string& str,unsigned& func_class
 			   __filesize_t pa,bool as_prev)
 {
     __filesize_t fpos;
-    if(PubNames.empty()) nlm_ReadPubNameList(*nlm_cache,NULL);
+    if(PubNames.empty()) nlm_ReadPubNameList(*nlm_cache);
     std::set<symbolic_information>::const_iterator idx;
     symbolic_information key;
     key.pa=pa;
