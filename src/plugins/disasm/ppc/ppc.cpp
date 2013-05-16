@@ -1603,7 +1603,7 @@ bool PPC_Disassembler::action_F3()
   unsigned nModes;
   int i;
   nModes = sizeof(ppc_bitness_names)/sizeof(char *);
-  i = SelBoxA(ppc_bitness_names,nModes," Select bitness mode: ",ppcBitness);
+  i = ListBox(ppc_bitness_names,nModes," Select bitness mode: ",LB_SELECTIVE|LB_USEACC,ppcBitness);
   if(i != -1)
   {
     ppcBitness = ((i==0)?DAB_USE32:DAB_USE64);
@@ -1623,7 +1623,7 @@ bool PPC_Disassembler::action_F4()
   unsigned nModes;
   int i;
   nModes = sizeof(ppc_endian_names)/sizeof(char *);
-  i = SelBoxA(ppc_endian_names,nModes," Select endian mode: ",ppcBigEndian);
+  i = ListBox(ppc_endian_names,nModes," Select endian mode: ",LB_SELECTIVE|LB_USEACC,ppcBigEndian);
   if(i != -1)
   {
     ppcBigEndian = i;
@@ -1643,7 +1643,7 @@ bool PPC_Disassembler::action_F5()
   unsigned nModes;
   int i;
   nModes = sizeof(ppc_dialect_names)/sizeof(char *);
-  i = SelBoxA(ppc_dialect_names,nModes," Select PPC dialect: ",ppcDialect);
+  i = ListBox(ppc_dialect_names,nModes," Select PPC dialect: ",LB_SELECTIVE|LB_USEACC,ppcDialect);
   if(i != -1)
   {
     ppcDialect = i;

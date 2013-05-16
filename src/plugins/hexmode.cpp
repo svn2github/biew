@@ -293,7 +293,7 @@ bool HexMode::action_F2() /* hexSelectMode */
     int retval;
     nModes = sizeof(hexViewer)/sizeof(hexView);
     for(i = 0;i < nModes;i++) names[i] = hexViewer[i].name;
-    retval = SelBoxA(names,nModes," Select hexadecimal mode: ",hmode);
+    retval = ListBox(names,nModes," Select hexadecimal mode: ",LB_SELECTIVE|LB_USEACC,hmode);
     if(retval != -1) {
 	hmode = retval;
 	check_width_corr();
@@ -313,7 +313,7 @@ bool HexMode::action_F3 () /* hexSelectEndian */
     size_t nModes;
     int retval;
     nModes = sizeof(nendian)/sizeof(char *);
-    retval = SelBoxA(nendian,nModes," Select endian mode: ",hendian);
+    retval = ListBox(nendian,nModes," Select endian mode: ",LB_SELECTIVE|LB_USEACC,hendian);
     if(retval != -1) {
 	hendian = retval;
 	return true;
@@ -332,7 +332,7 @@ bool hexAddressResolution(unsigned& har)
     unsigned nModes;
     int i;
     nModes = sizeof(aresolv)/sizeof(char *);
-    i = SelBoxA(aresolv,nModes," Select address resolving: ",(unsigned)har);
+    i = ListBox(aresolv,nModes," Select address resolving: ",LB_SELECTIVE|LB_USEACC,(unsigned)har);
     if(i != -1) {
 	har = i ? true : false;
 	return true;

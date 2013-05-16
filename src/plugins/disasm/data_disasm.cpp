@@ -72,7 +72,7 @@ bool Data_Disassembler::action_F3()
   unsigned nModes;
   int i;
   nModes = sizeof(width_names)/sizeof(char *);
-  i = SelBoxA(width_names,nModes," Select bitness mode: ",nulWidth);
+  i = ListBox(width_names,nModes," Select bitness mode: ",LB_SELECTIVE|LB_USEACC,nulWidth);
   if(i != -1)
   {
     nulWidth = i;

@@ -97,7 +97,7 @@ void CPUPerformance_Addon::run()
    data_size = strchr(cpu_info, 0) - cpu_info;
    if(!(str_ptr = cpuPointStrings(cpu_info,data_size,&nstr)))
       { PFREE(cpu_info); goto mem_out; }
-   DisplayBox(const_cast<const char**>(str_ptr),(unsigned)nstr - 1," CPU information ");
+   ListBox(const_cast<const char**>(str_ptr),(unsigned)nstr - 1," CPU information ",0);
    PFREE(str_ptr);
    PFREE(cpu_info);
 }

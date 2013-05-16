@@ -280,6 +280,6 @@ bool __FASTCALL__ ma_AddString(memArray *obj,const std::string& udata,bool inter
 
 int __FASTCALL__ ma_Display(memArray *obj,const std::string& title,int flg, unsigned defsel)
 {
-  return CommonListBox((const char**)obj->data,obj->nItems,title,flg,defsel);
+  return ListBox((const char**)obj->data,obj->nItems,title,flg,defsel);
 }
 } // namespace	usr

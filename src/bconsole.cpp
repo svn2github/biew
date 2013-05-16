@@ -349,7 +349,6 @@ static long PercentWndCallBack(TWindow *it,unsigned event, unsigned long param,c
   return 0L;
 }
 
-
 TWindow *__FASTCALL__ PercentWnd(const std::string& text,const std::string& title)
 {
   TWindow *ret;
@@ -425,77 +424,25 @@ bool __FASTCALL__ ShowPercentInWnd(TWindow *pw,unsigned percents)
   return ret;
 }
 
-static TWindow *  __FASTCALL__ _CreateWindowDD(const std::string& title,tAbsCoord x2,tAbsCoord y2,bool is_nls)
+TWindow * __FASTCALL__ CrtDlgWndnls(const std::string& title,tAbsCoord width,tAbsCoord height )
 {
  TWindow *win;
  TWindow::twc_flag flags;
- unsigned char frame[8];
- flags = TWindow::Flag_Has_Frame;
- if(is_nls) flags |= TWindow::Flag_NLS;
- win = new(zeromem) TWindow(0,0,x2+2,y2+2,flags);
+ flags = TWindow::Flag_Has_Frame|TWindow::Flag_NLS;
+ win = new(zeromem) TWindow(0,0,width+2,height+2,flags);
  win->into_center();
  win->set_color(dialog_cset.main);
  win->clear();
- memcpy(frame,TWindow::DOUBLE_FRAME,8);
- if(!is_nls) beye_context().system().nls_oem2osdep((unsigned char *)frame,8);
- win->set_frame(frame,dialog_cset.border);
+ win->set_frame(TWindow::DOUBLE_FRAME,dialog_cset.border);
  if(!title.empty()) win->set_title(title,TWindow::TMode_Center,dialog_cset.title);
  win->show();
  return win;
 }
 
-inline TWindow* _CreateWindowDDnls(const std::string& title,tAbsCoord x2,tAbsCoord y2) { return _CreateWindowDD(title,x2,y2,true); }
-
-TWindow * __FASTCALL__ CrtDlgWnd(const std::string& title,tAbsCoord width,tAbsCoord height )
-{
-  return _CreateWindowDD(title,width,height,false);
-}
-
-TWindow * __FASTCALL__ CrtDlgWndnls(const std::string& title,tAbsCoord width,tAbsCoord height )
-{
-  return _CreateWindowDDnls(title,width,height);
-}
-
-static TWindow *  __FASTCALL__ _CrtMnuWindowDD(const std::string& title,tAbsCoord x1, tAbsCoord y1, tAbsCoord x2,tAbsCoord y2,bool is_nls)
+TWindow * __FASTCALL__ CrtHlpWndnls(const std::string& title,tAbsCoord x2,tAbsCoord y2)
 {
  TWindow *win;
- TWindow::twc_flag flags = TWindow::Flag_Has_Frame;
- if(is_nls) flags |= TWindow::Flag_NLS;
- win = new(zeromem) TWindow(x1,y1,x2-x1+2,y2-y1+2,flags);
- if(!x1 && !y1) win->into_center();
- win->set_color(menu_cset.main);
- win->clear();
- win->set_frame(TWindow::DOUBLE_FRAME,menu_cset.border);
- if(!title.empty()) win->set_title(title,TWindow::TMode_Center,menu_cset.title);
- win->show();
- return win;
-}
-
-TWindow * __FASTCALL__ CrtMnuWnd(const std::string& title,tAbsCoord x1, tAbsCoord y1,tAbsCoord x2,tAbsCoord y2)
-{
-  return _CrtMnuWindowDD(title,x1,y1,x2,y2,false);
-}
-
-TWindow * __FASTCALL__ CrtMnuWndnls(const std::string& title,tAbsCoord x1, tAbsCoord y1,tAbsCoord x2,tAbsCoord y2)
-{
-  return _CrtMnuWindowDD(title,x1,y1,x2,y2,true);
-}
-
-TWindow * __FASTCALL__ CrtLstWnd(const std::string& title,tAbsCoord x2,tAbsCoord y2)
-{
-  return _CrtMnuWindowDD(title,0,0,x2,y2,false);
-}
-
-TWindow * __FASTCALL__ CrtLstWndnls(const std::string& title,tAbsCoord x2,tAbsCoord y2)
-{
-  return _CrtMnuWindowDD(title,0,0,x2,y2,true);
-}
-
-static TWindow *  __FASTCALL__ _CreateHlpWnd(const std::string& title,tAbsCoord x2,tAbsCoord y2,bool is_nls)
-{
- TWindow *win;
- TWindow::twc_flag flags = TWindow::Flag_Has_Frame;
- if(is_nls) flags |= TWindow::Flag_NLS;
+ TWindow::twc_flag flags = TWindow::Flag_Has_Frame|TWindow::Flag_NLS;
  win = new(zeromem) TWindow(0,0,x2+2,y2+2,flags);
  win->into_center();
  win->set_color(help_cset.main);
@@ -506,14 +453,18 @@ static TWindow *  __FASTCALL__ _CreateHlpWnd(const std::string& title,tAbsCoord 
  return win;
 }
 
-TWindow * __FASTCALL__ CrtHlpWnd(const std::string& title,tAbsCoord x2,tAbsCoord y2)
+static TWindow *  __FASTCALL__ _CrtMnuWindowDD(const std::string& title,tAbsCoord x1, tAbsCoord y1, tAbsCoord x2,tAbsCoord y2)
 {
-  return _CreateHlpWnd(title,x2,y2,false);
-}
-
-TWindow * __FASTCALL__ CrtHlpWndnls(const std::string& title,tAbsCoord x2,tAbsCoord y2)
-{
-  return _CreateHlpWnd(title,x2,y2,true);
+ TWindow *win;
+ TWindow::twc_flag flags = TWindow::Flag_Has_Frame|TWindow::Flag_NLS;
+ win = new(zeromem) TWindow(x1,y1,x2-x1+2,y2-y1+2,flags);
+ if(!x1 && !y1) win->into_center();
+ win->set_color(menu_cset.main);
+ win->clear();
+ win->set_frame(TWindow::DOUBLE_FRAME,menu_cset.border);
+ if(!title.empty()) win->set_title(title,TWindow::TMode_Center,menu_cset.title);
+ win->show();
+ return win;
 }
 
 TWindow * __FASTCALL__ CreateEditor(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsCoord Y2,TWindow::twc_flag flags)
@@ -713,7 +664,7 @@ static tCompare __FASTCALL__ listcompare(const any_t* v1,const any_t* v2)
   return ret;
 }
 
-static int  __FASTCALL__ __ListBox(const char** names,unsigned nlist,unsigned defsel,const std::string& title,int assel)
+int __FASTCALL__ ListBox(const char** names,unsigned nlist,const std::string& title,int assel,unsigned defsel)
 {
  TWindow * wlist;
  char *acctable = 0;
@@ -780,11 +731,11 @@ static int  __FASTCALL__ __ListBox(const char** names,unsigned nlist,unsigned de
  mwidth += 4;
  if(mwidth > (unsigned)(beye_context().tconsole().vio_width()-1)) mwidth = beye_context().tconsole().vio_width()-1;         // maximal width increased to beye_context().tconsole().vio_width()-1 -XF
  height = nlist < (unsigned)(beye_context().tconsole().vio_height() - 4) ? nlist : beye_context().tconsole().vio_height() - 4;
- wlist = CrtLstWndnls(title,mwidth-1,height);
+ wlist = _CrtMnuWindowDD(title,0,0,mwidth-1,height);
  if((assel & LB_SELECTIVE) == LB_SELECTIVE) wlist->set_footer(" [ENTER] - Go ",TWindow::TMode_Right,dialog_cset.selfooter);
  restart:
  ostart = start = cursor = ocursor = 0;
- if(defsel != UINT_MAX && defsel < nlist)
+ if(defsel != std::numeric_limits<size_t>::max() && defsel < nlist)
  {
     cursor = defsel;
     while((unsigned)cursor > height) { start += height; cursor -= height; }
@@ -846,7 +797,7 @@ static int  __FASTCALL__ __ListBox(const char** names,unsigned nlist,unsigned de
 			*p = 0;
 			out<<stmp;
 			for(j = p - stmp;j < 50;j++) out<<" ";
-			out<<" @"<<((any_t*)p+1);
+			out<<" @"<<(p+1);
 			if(p) *p = LB_ORD_DELIMITER;
 		      }
 		      else out<<names[i];
@@ -965,42 +916,12 @@ static int  __FASTCALL__ __ListBox(const char** names,unsigned nlist,unsigned de
  return ret;
 }
 
-int __FASTCALL__ CommonListBox(const char** names,unsigned nlist,const std::string& title,int acc,unsigned defsel)
-{
-  return __ListBox(names,nlist,defsel,title,acc);
-}
-
-void __FASTCALL__ DisplayBox(const char** names,unsigned nlist,const std::string& title)
-{
-  __ListBox(names,nlist,UINT_MAX,title,0); /** not sortable & not selective */
-}
-
-void __FASTCALL__ ListBox(const char** names,unsigned nlist,const std::string& title)
-{
-  __ListBox(names,nlist,UINT_MAX,title,LB_SORTABLE);
-}
-
-int __FASTCALL__ SelListBox(const char** names,unsigned nlist,const std::string& title,unsigned defsel)
-{
-  return __ListBox(names,nlist,defsel,title,LB_SELECTIVE | LB_SORTABLE);
-}
-
-int __FASTCALL__ SelBox(const char** names,unsigned nlist,const std::string& title,unsigned defsel)
-{
-  return __ListBox(names,nlist,defsel,title,LB_SELECTIVE);
-}
-
-int __FASTCALL__ SelBoxA(const char** names,unsigned nlist,const std::string& title,unsigned defsel)
-{
-  return __ListBox(names,nlist,defsel,title,LB_SELECTIVE | LB_USEACC);
-}
-
 int __FASTCALL__ PageBox(unsigned width,unsigned height,const any_t** __obj,unsigned nobj,pagefunc func)
 {
  TWindow * wlist;
  int start,ostart,ret;
  if(height>beye_context().tconsole().vio_height()-2) height=beye_context().tconsole().vio_height()-2;
- wlist = _CreateWindowDD("",width-1,height,true);
+ wlist = CrtDlgWndnls("",width-1,height);
  ostart = start = 0;
  (*func)(wlist,__obj,(unsigned)start,nobj);
  for(;;)

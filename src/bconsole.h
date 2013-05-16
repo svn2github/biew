@@ -20,6 +20,8 @@
 #ifndef __BCONSOLE__H
 #define __BCONSOLE__H
 
+#include <limits>
+
 #include "libbeye/twindow.h"
 
 namespace	usr {
@@ -30,16 +32,9 @@ namespace	usr {
 
     typedef void (__FASTCALL__ * pagefunc)(TWindow *win,const any_t**__obj,unsigned i__obj,unsigned total_obj);
 
-    TWindow *    __FASTCALL__ CrtDlgWnd(const std::string&,tAbsCoord,tAbsCoord);
     TWindow *    __FASTCALL__ CrtDlgWndnls(const std::string&,tAbsCoord,tAbsCoord);
-    TWindow *    __FASTCALL__ CrtMnuWnd(const std::string&,tAbsCoord,tAbsCoord,tAbsCoord,tAbsCoord);
-    TWindow *    __FASTCALL__ CrtMnuWndnls(const std::string&,tAbsCoord,tAbsCoord,tAbsCoord,tAbsCoord);
-    TWindow *    __FASTCALL__ CrtLstWnd(const std::string&,tAbsCoord,tAbsCoord);
-    TWindow *    __FASTCALL__ CrtLstWndnls(const std::string&,tAbsCoord,tAbsCoord);
-    TWindow *    __FASTCALL__ CrtHlpWnd(const std::string&,tAbsCoord,tAbsCoord);
     TWindow *    __FASTCALL__ CrtHlpWndnls(const std::string&,tAbsCoord,tAbsCoord);
     TWindow *    __FASTCALL__ CreateEditor(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsCoord Y2,TWindow::twc_flag flags);
-    void         __FASTCALL__ DisplayBox(const char **names,unsigned nlist,const std::string& title);
 
 /** Edit string styles */
 enum {
@@ -78,7 +73,6 @@ enum {
 					void (*func)());
     int          __FASTCALL__ xeditstring(TWindow* w,char *s,const char *legal,
 					unsigned maxlength, void(*func)());
-    void         __FASTCALL__ ListBox(const char ** names,unsigned nlist,const std::string& title);
     int          __FASTCALL__ PageBox(unsigned width,unsigned height,const any_t** __obj,
 				 unsigned nobj,pagefunc func);
     void         __FASTCALL__ MemOutBox(const std::string& user_msg);
@@ -126,14 +120,8 @@ enum {
 
     LB_ORD_DELIMITER =0x7F
 };
-    int          __FASTCALL__ CommonListBox(const char** names,unsigned nlist,const std::string& title,
-				      int acc,unsigned defsel);
-    int          __FASTCALL__ SelBox(const char** names,unsigned nlist,const std::string& title,
-			       unsigned defsel);
-    int          __FASTCALL__ SelBoxA(const char** names,unsigned nlist,const std::string& title,
-				unsigned defsel);
-    int         __FASTCALL__ SelListBox(const char** names,unsigned nlist,const std::string& title,
-				   unsigned defsel);
+    int          __FASTCALL__ ListBox(const char** names,unsigned nlist,const std::string& title,
+				      int acc,unsigned defsel=std::numeric_limits<size_t>::max());
 
     TWindow *    __FASTCALL__ PercentWnd(const std::string& text,const std::string& title);
 

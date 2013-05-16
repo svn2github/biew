@@ -417,7 +417,7 @@ static bool __FASTCALL__ ru_select_table()
   unsigned nModes;
   int i;
   nModes = sizeof(ru_cp_names)/sizeof(char *);
-  i = SelBoxA(ru_cp_names,nModes," Select cyrillic code page: ",cp_mode);
+  i = ListBox(ru_cp_names,nModes," Select cyrillic code page: ",LB_SELECTIVE|LB_USEACC,cp_mode);
   if(i != -1)
   {
     cp_mode = i;

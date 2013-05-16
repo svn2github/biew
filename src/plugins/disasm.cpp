@@ -132,7 +132,7 @@ bool DisMode::action_F2() /* disSelect_Disasm */
     int retval;
 
     for(i = 0;i < nModes;i++) modeName[i] = list[i]->name;
-    retval = SelBoxA(modeName,nModes," Select disassembler: ",DefDisasmSel);
+    retval = ListBox(modeName,nModes," Select disassembler: ",LB_SELECTIVE|LB_USEACC,DefDisasmSel);
     if(retval != -1) {
 	delete activeDisasm;
 	activeDisasm = list[retval]->query_interface(bin_format,*second_handle,*this);
@@ -444,7 +444,7 @@ bool DisMode::action_F8() /* disReferenceResolving */
     int retval;
     bool ret;
     nModes = sizeof(refsdepth_names)/sizeof(char *);
-    retval = SelBoxA(refsdepth_names,nModes," Reference resolving depth: ",disNeedRef);
+    retval = ListBox(refsdepth_names,nModes," Reference resolving depth: ",LB_SELECTIVE|LB_USEACC,disNeedRef);
     if(retval != -1) {
 	disNeedRef = e_ref(retval);
 	ret = true;
@@ -464,7 +464,7 @@ bool DisMode::action_F7() /* disSelectPanelMode */
     unsigned nModes;
     int i;
     nModes = sizeof(panmod_names)/sizeof(char *);
-    i = SelBoxA(panmod_names,nModes," Select panel mode: ",disPanelMode);
+    i = ListBox(panmod_names,nModes," Select panel mode: ",LB_SELECTIVE|LB_USEACC,disPanelMode);
     if(i != -1) {
 	disPanelMode = e_panel(i);
 	return true;
@@ -484,7 +484,7 @@ bool DisMode::action_F9() /* disSelectHiLight */
     unsigned nModes;
     int i;
     nModes = sizeof(hilight_names)/sizeof(char *);
-    i = SelBoxA(hilight_names,nModes," Select highlight mode: ",HiLight);
+    i = ListBox(hilight_names,nModes," Select highlight mode: ",LB_SELECTIVE|LB_USEACC,HiLight);
     if(i != -1) {
 	HiLight = i;
 	return true;

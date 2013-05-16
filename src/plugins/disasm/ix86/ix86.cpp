@@ -6233,7 +6233,7 @@ bool ix86_Disassembler::action_F3()
   int i;
   nModes = sizeof(use_names)/sizeof(char *);
   if(BITNESS == DAB_AUTO) BITNESS = 3;
-  i = SelBoxA(use_names,nModes," Select bitness mode: ",BITNESS);
+  i = ListBox(use_names,nModes," Select bitness mode: ",LB_SELECTIVE|LB_USEACC,BITNESS);
   if(i != -1)
   {
     if(i == 3) i = DAB_AUTO;

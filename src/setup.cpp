@@ -103,7 +103,7 @@ bool Setup::select_codepage()
   unsigned nModes;
   int i;
   nModes = sizeof(cp_list)/sizeof(char *);
-  i = SelBoxA(cp_list,nModes," Select single-byte codepage: ",default_cp);
+  i = ListBox(cp_list,nModes," Select single-byte codepage: ",LB_SELECTIVE|LB_USEACC,default_cp);
   if(i != -1)
   {
     unsigned len;

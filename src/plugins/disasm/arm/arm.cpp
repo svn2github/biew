@@ -222,7 +222,7 @@ bool ARM_Disassembler::action_F3()
   unsigned nModes;
   int i;
   nModes = sizeof(arm_bitness_names)/sizeof(char *);
-  i = SelBoxA(arm_bitness_names,nModes," Select bitness mode: ",armBitness);
+  i = ListBox(arm_bitness_names,nModes," Select bitness mode: ",LB_SELECTIVE|LB_USEACC,armBitness);
   if(i != -1)
   {
     armBitness = ((i==0)?DAB_USE16:DAB_USE32);
@@ -242,7 +242,7 @@ bool ARM_Disassembler::action_F4()
   unsigned nModes;
   int i;
   nModes = sizeof(arm_endian_names)/sizeof(char *);
-  i = SelBoxA(arm_endian_names,nModes," Select endian mode: ",armBigEndian);
+  i = ListBox(arm_endian_names,nModes," Select endian mode: ",LB_SELECTIVE|LB_USEACC,armBigEndian);
   if(i != -1)
   {
     armBigEndian = i;

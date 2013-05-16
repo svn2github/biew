@@ -152,7 +152,7 @@ bool BeyeContext::select_mode()
     int retval;
 
     for(i = 0;i < nModes;i++) modeName[i] = priv.modes[i]->name;
-    retval = SelBoxA(modeName,nModes," Select translation mode: ",priv.defMainModeSel);
+    retval = ListBox(modeName,nModes," Select translation mode: ",LB_SELECTIVE|LB_USEACC,priv.defMainModeSel);
     if(retval != -1) {
 	priv.defMainModeSel = retval;
 	delete priv.activeMode;
@@ -580,7 +580,7 @@ bool BeyeContext::new_source()
 	::memcpy(nlsListFile[freq],priv.ListFile[freq].c_str(),ls+1);
 	priv._system->nls_cmdline2oem((unsigned char *)nlsListFile[freq],ls);
     }
-    i = SelBoxA(const_cast<const char**>(nlsListFile),j," Select new file: ",prev_file);
+    i = ListBox(const_cast<const char**>(nlsListFile),j," Select new file: ",LB_SELECTIVE|LB_USEACC,prev_file);
     ret = 0;
     for(freq = 0;freq < j;freq++) delete nlsListFile[freq];
     delete nlsListFile;

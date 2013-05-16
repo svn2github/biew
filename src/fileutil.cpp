@@ -1147,7 +1147,7 @@ bool FileUtils()
   bool ret;
   static unsigned def_sel = 0;
   nUtils = sizeof(fu_names)/sizeof(char *);
-  retval = SelBoxA(fu_names,nUtils," File utilities: ",def_sel);
+  retval = ListBox(fu_names,nUtils," File utilities: ",LB_SELECTIVE|LB_USEACC,def_sel);
   if(retval != -1)
   {
      TWindow * w;
