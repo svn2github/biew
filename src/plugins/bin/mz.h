@@ -45,7 +45,7 @@ namespace	usr {
 #endif
     class MZ_Parser : public Binary_Parser {
 	public:
-	    MZ_Parser(binary_stream& h,CodeGuider&);
+	    MZ_Parser(binary_stream& h,CodeGuider&,udn&);
 	    virtual ~MZ_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -63,6 +63,7 @@ namespace	usr {
 	    CodeGuider&			code_guider() const { return _code_guider; }
 	    binary_stream&		main_handle() const { return _main_handle; }
 	    virtual __filesize_t	headshift() const { return _headshift; }
+	    udn&			_udn() const { return __udn; }
 	private:
 	    const char*			QueryAddInfo( unsigned char *memmap );
 	    const char*			QueryAddInfo();
@@ -79,6 +80,7 @@ namespace	usr {
 	    __filesize_t	_headshift;
 	    binary_stream&	_main_handle;
 	    CodeGuider&		_code_guider;
+	    udn&		__udn;
     };
 } // namespace	usr
 #endif

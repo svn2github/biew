@@ -33,7 +33,7 @@ using namespace	usr;
 namespace	usr {
     class RDOff2_Parser : public Binary_Parser {
 	public:
-	    RDOff2_Parser(binary_stream&,CodeGuider&);
+	    RDOff2_Parser(binary_stream&,CodeGuider&,udn&);
 	    virtual ~RDOff2_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -43,6 +43,7 @@ namespace	usr {
 	    virtual int			query_platform() const;
 	private:
 	    binary_stream&		main_handle;
+	    udn&			_udn;
     };
 static const char* txt[]={"RdHelp","","","","","","","","",""};
 const char* RDOff2_Parser::prompt(unsigned idx) const { return txt[idx]; }
@@ -93,9 +94,10 @@ __filesize_t RDOff2_Parser::action_F1()
 }
 
 
-RDOff2_Parser::RDOff2_Parser(binary_stream& h,CodeGuider& code_guider)
-	    :Binary_Parser(h,code_guider)
+RDOff2_Parser::RDOff2_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
+	    ,_udn(u)
 {}
 RDOff2_Parser::~RDOff2_Parser() {}
 
@@ -109,7 +111,7 @@ static bool probe(binary_stream& main_handle) {
 	 memcmp(rbuff,"RDOFF\x2",sizeof(rbuff)) == 0;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) RDOff2_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) RDOff2_Parser(h,_parent,u); }
 extern const Binary_Parser_Info rdoff2_info = {
     "RDOFF v2 (Relocatable Dynamic Object File Format)",	/**< plugin name */
     probe,

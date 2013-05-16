@@ -38,7 +38,7 @@ using namespace	usr;
 namespace	usr {
     class AOut_Parser : public Binary_Parser {
 	public:
-	    AOut_Parser(binary_stream&,CodeGuider&);
+	    AOut_Parser(binary_stream&,CodeGuider&,udn&);
 	    virtual ~AOut_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -70,6 +70,7 @@ namespace	usr {
 	    bool is_msbf; /* is most significand byte first */
 	    bool is_64bit;
 	    binary_stream&		main_handle;
+	    udn&			_udn;
     };
 static const char* txt[]={ "AOutHl", "", "", "", "", "", "", "", "", "" };
 const char* AOut_Parser::prompt(unsigned idx) const { return txt[idx]; }
@@ -166,9 +167,10 @@ bool AOut_Parser::probe_fmt( uint32_t id )
   return a32 || a64 || N_MAGIC(id)==CMAGIC;
 }
 
-AOut_Parser::AOut_Parser(binary_stream& h,CodeGuider&c)
-	    :Binary_Parser(h,c)
+AOut_Parser::AOut_Parser(binary_stream& h,CodeGuider&c,udn& u)
+	    :Binary_Parser(h,c,u)
 	    ,main_handle(h)
+	    ,_udn(u)
 {
     uint32_t id;
     main_handle.seek(0,binary_stream::Seek_Set);
@@ -230,7 +232,7 @@ static bool probe(binary_stream& main_handle) {
   return 0;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) AOut_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) AOut_Parser(h,_parent,u); }
 extern const Binary_Parser_Info aout_info = {
     "a.out (Assembler and link Output)",	/**< plugin name */
     probe,

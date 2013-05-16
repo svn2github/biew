@@ -36,7 +36,7 @@ using namespace	usr;
 namespace	usr {
     class oldPharLap_Parser : public Binary_Parser {
 	public:
-	    oldPharLap_Parser(binary_stream&,CodeGuider&);
+	    oldPharLap_Parser(binary_stream&,CodeGuider&,udn&);
 	    virtual ~oldPharLap_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -48,6 +48,7 @@ namespace	usr {
 	private:
 	    oldPharLap			oph;
 	    binary_stream&		main_handle;
+	    udn&			_udn;
     };
 static const char* txt[]={"PLHelp","","","","","","","","",""};
 const char* oldPharLap_Parser::prompt(unsigned idx) const { return txt[idx]; }
@@ -98,9 +99,10 @@ __filesize_t oldPharLap_Parser::show_header()
   return fpos;
 }
 
-oldPharLap_Parser::oldPharLap_Parser(binary_stream& h,CodeGuider& code_guider)
-		:Binary_Parser(h,code_guider)
+oldPharLap_Parser::oldPharLap_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
+		:Binary_Parser(h,code_guider,u)
 		,main_handle(h)
+		,_udn(u)
 {
     main_handle.seek(0,binary_stream::Seek_Set);
     main_handle.read(&oph,sizeof(oph));
@@ -138,7 +140,7 @@ static bool probe(binary_stream& main_handle) {
    return false;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) oldPharLap_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) oldPharLap_Parser(h,_parent,u); }
 extern const Binary_Parser_Info oldpharlap_info = {
     "PharLap",	/**< plugin name */
     probe,

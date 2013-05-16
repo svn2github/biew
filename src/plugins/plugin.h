@@ -12,6 +12,7 @@ namespace	usr {
     class Ini_Profile;
     class DisMode;
     class Bin_Format;
+    class udn;
     class Plugin : public Opaque {
 	public:
 	    static const __filesize_t Bad_Address = __filesize_t(-1);
@@ -24,7 +25,7 @@ namespace	usr {
 		Has_ConvertCP	=0x0010
 	    };
 
-	    Plugin(const Bin_Format&,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider) { UNUSED(h); UNUSED(main_wnd); UNUSED(code_guider); }
+	    Plugin(const Bin_Format&,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& _udn) { UNUSED(h); UNUSED(main_wnd); UNUSED(code_guider); UNUSED(_udn); }
 	    virtual ~Plugin() {}
 
 	    virtual const char*		prompt(unsigned idx) const = 0;	/**< on Ctrl-Fx selection */
@@ -89,14 +90,14 @@ namespace	usr {
 
     struct Plugin_Info {
 	const char* name;
-	Plugin* (*query_interface)(const Bin_Format&,binary_stream&,TWindow&,CodeGuider&);
+	Plugin* (*query_interface)(const Bin_Format&,binary_stream&,TWindow&,CodeGuider&,udn&);
     };
 
     class Binary_Parser;
     struct Binary_Parser_Info;
     class Bin_Format : public Opaque {
 	public:
-	    Bin_Format(CodeGuider& parent);
+	    Bin_Format(CodeGuider& parent,udn& _udn);
 	    virtual ~Bin_Format();
 
 	    virtual void		detect_format(binary_stream& handle);
@@ -182,6 +183,7 @@ namespace	usr {
 	    size_t			active_format;
 	    Binary_Parser*		detectedFormat;
 	    CodeGuider&			parent;
+	    udn&			_udn;
     };
 } //namespace	usr
 #endif

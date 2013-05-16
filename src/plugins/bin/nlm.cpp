@@ -51,7 +51,7 @@ namespace	usr {
     };
     class NLM_Parser : public Binary_Parser {
 	public:
-	    NLM_Parser(binary_stream&,CodeGuider&);
+	    NLM_Parser(binary_stream&,CodeGuider&,udn&);
 	    virtual ~NLM_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -92,6 +92,7 @@ namespace	usr {
 
 	    binary_stream&	main_handle;
 	    CodeGuider&		code_guider;
+	    udn&		_udn;
     };
 static const char* txt[]={ "NlmHlp", "ModRef", "PubDef", "", "ExtNam", "", "", "NlmHdr", "", "" };
 const char* NLM_Parser::prompt(unsigned idx) const { return txt[idx]; }
@@ -597,11 +598,12 @@ bool NLM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
   return retrf;
 }
 
-NLM_Parser::NLM_Parser(binary_stream& h,CodeGuider& _code_guider)
-	    :Binary_Parser(h,_code_guider)
+NLM_Parser::NLM_Parser(binary_stream& h,CodeGuider& _code_guider,udn& u)
+	    :Binary_Parser(h,_code_guider,u)
 	    ,nlm_cache(&bNull)
 	    ,main_handle(h)
 	    ,code_guider(_code_guider)
+	    ,_udn(u)
 {
     main_handle.seek(0,binary_stream::Seek_Set);
     main_handle.read(&nlm,sizeof(Nlm_Internal_Fixed_Header));
@@ -668,7 +670,7 @@ bool NLM_Parser::FindPubName(std::string& buff,__filesize_t pa)
     buff=nlm_ReadPubName(*nlm_cache,*ret);
     return true;
   }
-  return udnFindName(pa,buff);
+  return _udn.find(pa,buff);
 }
 
 void NLM_Parser::nlm_ReadPubNameList(binary_stream& handle)
@@ -766,7 +768,7 @@ static bool probe(binary_stream& main_handle) {
   return memcmp(ctrl,NLM_SIGNATURE,NLM_SIGNATURE_SIZE) == 0;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) NLM_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) NLM_Parser(h,_parent,u); }
 extern const Binary_Parser_Info nlm_info = {
     "nlm-i386 (Novell Loadable Module)",	/**< plugin name */
     probe,

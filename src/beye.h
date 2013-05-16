@@ -25,6 +25,7 @@ namespace	usr {
     class System;
     class TConsole;
     class TWindow;
+    class udn;
     class BeyeContext : public Opaque {
 	public:
 	    BeyeContext(const std::vector<std::string>& argv, const std::map<std::string,std::string>& envm);
@@ -88,6 +89,8 @@ namespace	usr {
 	    __filesize_t	flength() const;
 	    __filesize_t	tell() const;
 	    bool		is_file64() const;
+
+	    udn&		_udn() const;
 
 	    void		TMessageBox(const std::string& text,const std::string& title) const;
 	    void		NotifyBox(const std::string& text,const std::string& title) const;

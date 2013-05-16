@@ -61,7 +61,7 @@ struct SisHeader {
 
     class Sis_Parser : public Binary_Parser {
 	public:
-	    Sis_Parser(binary_stream&,CodeGuider&);
+	    Sis_Parser(binary_stream&,CodeGuider&,udn&);
 	    virtual ~Sis_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -72,13 +72,15 @@ struct SisHeader {
 	    __filesize_t		show_sis3_header();
 
 	    binary_stream&		main_handle;
+	    udn&			_udn;
     };
 static const char* txt[]={"","","","","","","","","",""};
 const char* Sis_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-Sis_Parser::Sis_Parser(binary_stream& h,CodeGuider& code_guider)
-	    :Binary_Parser(h,code_guider)
+Sis_Parser::Sis_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
+	    ,_udn(u)
 {}
 Sis_Parser::~Sis_Parser() {}
 int  Sis_Parser::query_platform() const { return DISASM_CPU_ARM; }
@@ -167,7 +169,7 @@ static bool probe(binary_stream& main_handle) {
     return false;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) Sis_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) Sis_Parser(h,_parent,u); }
 extern const Binary_Parser_Info sis_info = {
     "Sis(EPOC) Symbian OS installable file",	/**< plugin name */
     probe,

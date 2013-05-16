@@ -258,7 +258,7 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
       case KE_F(1):  hlpDisplay(6);
 		     update = false;
 		     break;
-      case KE_F(5):  if(udnSelectName(addr)) {
+      case KE_F(5):  if(beye_context()._udn().select(*addr)) {
 			if(beye_context().is_file64()) sprintf(str,"%016llX",*addr);
 			else		 sprintf(str,"%08lX",(unsigned long)*addr);
 		     }

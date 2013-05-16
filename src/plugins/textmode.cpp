@@ -106,7 +106,7 @@ static char		detected_syntax_name[FILENAME_MAX+1];
 
     class TextMode : public Plugin {
 	public:
-	    TextMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider);
+	    TextMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn&);
 	    virtual ~TextMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -173,6 +173,7 @@ static char		detected_syntax_name[FILENAME_MAX+1];
 	    TWindow&			main_wnd;
 	    binary_stream&		main_handle;
 	    const Bin_Format&		bin_format;
+	    udn&			_udn;
     };
 
 bool TextMode::test_leading_escape(__fileoff_t cpos) const {
@@ -948,8 +949,8 @@ void TextMode::drawBound(TWindow& w,int x,int y,char ch) const
   w.set_color(browser_cset.main);
 }
 
-TextMode::TextMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider)
-	:Plugin(b,h,_main_wnd,code_guider)
+TextMode::TextMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn& u)
+	:Plugin(b,h,_main_wnd,code_guider,u)
 	,HiLight(1)
 	,bin_mode(MOD_PLAIN)
 	,txtHandle(&bNull)
@@ -958,6 +959,7 @@ TextMode::TextMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeG
 	,main_wnd(_main_wnd)
 	,main_handle(h)
 	,bin_format(b)
+	,_udn(u)
 {
     buff = new char [MAX_STRLEN];
     tlines = new TSTR[__TVIO_MAXSCREENWIDTH];
@@ -1187,7 +1189,7 @@ inline bool  __FASTCALL__ isBinByte(unsigned char ch)
   return ch < 32 && !isspace(ch & 0xFF) && ch != 0x08 && ch != 0x1A;
 }
 
-bool TextMode::action_F10() { return udnUserNames(); }
+bool TextMode::action_F10() { return _udn.names(); }
 
 bool TextMode::detect()
 {
@@ -1260,7 +1262,7 @@ unsigned TextMode::get_symbol_size() const { return activeNLS->get_symbol_size()
 unsigned TextMode::get_max_line_length() const { return strmaxlen; }
 TextMode::e_flag TextMode::flags() const { return Text|Has_ConvertCP; }
 
-static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider) { return new(zeromem) TextMode(b,h,main_wnd,code_guider); }
+static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& u) { return new(zeromem) TextMode(b,h,main_wnd,code_guider,u); }
 
 extern const Plugin_Info textMode = {
     "~Text mode",	/**< plugin name */

@@ -36,7 +36,7 @@ using namespace	usr;
 namespace	usr {
     class ASF_Parser : public Binary_Parser {
 	public:
-	    ASF_Parser(binary_stream& h,CodeGuider&);
+	    ASF_Parser(binary_stream& h,CodeGuider&,udn&);
 	    virtual ~ASF_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -45,6 +45,7 @@ namespace	usr {
 	    virtual int			query_platform() const;
 	private:
 	    binary_stream&	main_handle;
+	    udn&		_udn;
     };
 static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
 const char* ASF_Parser::prompt(unsigned idx) const { return txt[idx]; }
@@ -55,9 +56,10 @@ __filesize_t ASF_Parser::show_header()
     return beye_context().tell();
 }
 
-ASF_Parser::ASF_Parser(binary_stream& h,CodeGuider& code_guider)
-	    :Binary_Parser(h,code_guider)
+ASF_Parser::ASF_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
+	    ,_udn(u)
 {}
 ASF_Parser::~ASF_Parser() {}
 
@@ -73,7 +75,7 @@ static bool probe(binary_stream& main_handle) {
 
 int ASF_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) ASF_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) ASF_Parser(h,_parent,u); }
 extern const Binary_Parser_Info asf_info = {
     "Advanced stream file format v1",	/**< plugin name */
     probe,

@@ -74,7 +74,7 @@ struct AVIStreamHeader {
 
     class AVI_Parser : public Binary_Parser {
 	public:
-	    AVI_Parser(binary_stream&,CodeGuider&);
+	    AVI_Parser(binary_stream&,CodeGuider&,udn&);
 	    virtual ~AVI_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -87,6 +87,7 @@ struct AVIStreamHeader {
 	    __filesize_t		avi_find_chunk(__filesize_t off,unsigned long id) const;
 
 	    binary_stream&	main_handle;
+	    udn&		_udn;
 
 	    static const uint32_t formtypeAVI             =mmioFOURCC('A', 'V', 'I', ' ');
 	    static const uint32_t listtypeAVIHEADER       =mmioFOURCC('h', 'd', 'r', 'l');
@@ -117,9 +118,10 @@ struct AVIStreamHeader {
 static const char* txt[]={ "", "Audio", "Video", "", "", "", "", "", "", "" };
 const char* AVI_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-AVI_Parser::AVI_Parser(binary_stream& h,CodeGuider& code_guider)
-	    :Binary_Parser(h,code_guider)
+AVI_Parser::AVI_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
+	    ,_udn(u)
 {}
 AVI_Parser::~AVI_Parser() {}
 int AVI_Parser::query_platform() const { return DISASM_DEFAULT; }
@@ -355,7 +357,7 @@ static bool probe(binary_stream& main_handle) {
     return false;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) AVI_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) AVI_Parser(h,_parent,u); }
 extern const Binary_Parser_Info avi_info = {
     "Audio Video Interleaved format",	/**< plugin name */
     probe,

@@ -72,7 +72,7 @@ struct E32ImageHeader {
 
     class SisX_Parser : public Binary_Parser {
 	public:
-	    SisX_Parser(binary_stream&,CodeGuider&);
+	    SisX_Parser(binary_stream&,CodeGuider&,udn&);
 	    virtual ~SisX_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -83,13 +83,15 @@ struct E32ImageHeader {
 	    __filesize_t		show_sis3_header();
 
 	    binary_stream&		main_handle;
+	    udn&			_udn;
     };
 static const char* txt[]={"","","","","","","","","",""};
 const char* SisX_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-SisX_Parser::SisX_Parser(binary_stream& h,CodeGuider& code_guider)
-	    :Binary_Parser(h,code_guider)
+SisX_Parser::SisX_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
+	    ,_udn(u)
 {}
 SisX_Parser::~SisX_Parser() {}
 int  SisX_Parser::query_platform() const {
@@ -194,8 +196,7 @@ static bool probe(binary_stream& main_handle) {
     return false;
 }
 
-
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) SisX_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) SisX_Parser(h,_parent,u); }
 extern const Binary_Parser_Info sisx_info = {
     "SisX(EPOC) Symbian OS executable file",	/**< plugin name */
     probe,

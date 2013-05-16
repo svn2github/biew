@@ -181,9 +181,10 @@ const char* Wave_Parser::wtag_find_name(unsigned short wtag)
     return "Unknown";
 }
 
-Wave_Parser::Wave_Parser(binary_stream& h,CodeGuider& code_guider)
-	    :Binary_Parser(h,code_guider)
+Wave_Parser::Wave_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
+	    ,_udn(u)
 {}
 Wave_Parser::~Wave_Parser() {}
 int  Wave_Parser::query_platform() const { return DISASM_DEFAULT; }
@@ -261,7 +262,7 @@ static bool probe(binary_stream& main_handle) {
     return false;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) Wave_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) Wave_Parser(h,_parent,u); }
 extern const Binary_Parser_Info wav_info = {
     "RIFF WAVE format",	/**< plugin name */
     probe,

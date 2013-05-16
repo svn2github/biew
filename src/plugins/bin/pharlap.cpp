@@ -38,7 +38,7 @@ using namespace	usr;
 namespace	usr {
     class PharLap_Parser : public Binary_Parser {
 	public:
-	    PharLap_Parser(binary_stream&,CodeGuider&);
+	    PharLap_Parser(binary_stream&,CodeGuider&,udn&);
 	    virtual ~PharLap_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -56,6 +56,7 @@ namespace	usr {
 	    static void __FASTCALL__	PLSegPaint(TWindow * win,const any_t** names,unsigned start,unsigned nlist);
 
 	    binary_stream&		main_handle;
+	    udn&			_udn;
 	    binary_stream*		pl_cache;
 	    newPharLap			nph;
     };
@@ -268,9 +269,10 @@ __filesize_t PharLap_Parser::action_F9()
  return fpos;
 }
 
-PharLap_Parser::PharLap_Parser(binary_stream& h,CodeGuider& code_guider)
-	    :Binary_Parser(h,code_guider)
+PharLap_Parser::PharLap_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
+	    ,_udn(u)
 	    ,pl_cache(&bNull)
 {
     main_handle.seek(0,binary_stream::Seek_Set);
@@ -313,7 +315,7 @@ static bool probe(binary_stream& main_handle) {
    return false;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) PharLap_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) PharLap_Parser(h,_parent,u); }
 extern const Binary_Parser_Info pharlap_info = {
     "PharLap",	/**< plugin name */
     probe,

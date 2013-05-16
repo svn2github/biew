@@ -36,7 +36,7 @@ using namespace	usr;
 namespace	usr {
     class Jpeg_Parser : public Binary_Parser {
 	public:
-	    Jpeg_Parser(binary_stream&,CodeGuider&);
+	    Jpeg_Parser(binary_stream&,CodeGuider&,udn&);
 	    virtual ~Jpeg_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -45,13 +45,15 @@ namespace	usr {
 	    virtual int			query_platform() const;
 	private:
 	    binary_stream&	main_handle;
+	    udn&		_udn;
     };
 static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
 const char* Jpeg_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-Jpeg_Parser::Jpeg_Parser(binary_stream& h,CodeGuider& code_guider)
-	    :Binary_Parser(h,code_guider)
+Jpeg_Parser::Jpeg_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
+	    ,_udn(u)
 {}
 Jpeg_Parser::~Jpeg_Parser() {}
 int Jpeg_Parser::query_platform() const { return DISASM_DEFAULT; }
@@ -73,7 +75,7 @@ static bool probe(binary_stream& main_handle) {
     return false;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) Jpeg_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) Jpeg_Parser(h,_parent,u); }
 extern const Binary_Parser_Info jpeg_info = {
     "JPEG file format",	/**< plugin name */
     probe,

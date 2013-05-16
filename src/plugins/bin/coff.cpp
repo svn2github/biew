@@ -49,7 +49,7 @@ namespace	usr {
     };
     class Coff_Parser : public Binary_Parser {
 	public:
-	    Coff_Parser(binary_stream&,CodeGuider&);
+	    Coff_Parser(binary_stream&,CodeGuider&,udn&);
 	    virtual ~Coff_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -99,6 +99,7 @@ namespace	usr {
 
 	    binary_stream&	main_handle;
 	    CodeGuider&		code_guider;
+	    udn&		_udn;
     };
 static const char* txt[]={ "CofHlp", "", "", "", "", "", "SymTab", "", "", "Objects" };
 const char* Coff_Parser::prompt(unsigned idx) const { return txt[idx]; }
@@ -113,7 +114,7 @@ bool Coff_Parser::FindPubName(std::string& buff,__filesize_t pa)
     buff=coff_ReadPubName(*coff_cache,*ret);
     return true;
   }
-  return udnFindName(pa,buff);
+  return _udn.find(pa,buff);
 }
 
 std::string Coff_Parser::coffReadLongName(binary_stream& handle,__filesize_t offset)
@@ -590,10 +591,11 @@ bool Coff_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShi
   return ret;
 }
 
-Coff_Parser::Coff_Parser(binary_stream& h,CodeGuider& _code_guider)
-	    :Binary_Parser(h,_code_guider)
+Coff_Parser::Coff_Parser(binary_stream& h,CodeGuider& _code_guider,udn& u)
+	    :Binary_Parser(h,_code_guider,u)
 	    ,main_handle(h)
 	    ,code_guider(_code_guider)
+	    ,_udn(u)
 {
     __filesize_t s_off = sizeof(coff386hdr);
     uint_fast16_t i;
@@ -762,7 +764,7 @@ static bool probe(binary_stream& main_handle) {
     return !(I386BADMAG(id));
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) Coff_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) Coff_Parser(h,_parent,u); }
 extern const Binary_Parser_Info coff_info = {
     "coff-i386 (Common Object File Format)",	/**< plugin name */
     probe,

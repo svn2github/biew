@@ -91,7 +91,7 @@ typedef unsigned char * MBuffer;
 		Panel_Wide   =0        /**< full mode of panel: instruction only */
 	    };
 
-	    DisMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider);
+	    DisMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn&);
 	    virtual ~DisMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -216,6 +216,7 @@ typedef unsigned char * MBuffer;
 	    binary_stream&		main_handle;
 	    binary_stream*		second_handle;
 	    const Bin_Format&		bin_format;
+	    udn&			_udn;
     };
     inline DisMode::e_disarg operator~(DisMode::e_disarg a) { return static_cast<DisMode::e_disarg>(~static_cast<unsigned>(a)); }
     inline DisMode::e_disarg operator|(DisMode::e_disarg a, DisMode::e_disarg b) { return static_cast<DisMode::e_disarg>(static_cast<unsigned>(a)|static_cast<unsigned>(b)); }

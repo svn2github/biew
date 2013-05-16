@@ -38,8 +38,9 @@ extern const Binary_Parser_Info lmf_info;
 extern const Binary_Parser_Info mz_info;
 extern const Binary_Parser_Info dossys_info;
 
-Bin_Format::Bin_Format(CodeGuider& _parent)
+Bin_Format::Bin_Format(CodeGuider& _parent,udn& __udn)
 	    :parent(_parent)
+	    ,_udn(__udn)
 {
     formats.push_back(&ne_info);
     formats.push_back(&pe_info);
@@ -79,7 +80,7 @@ void Bin_Format::detect_format(binary_stream& handle)
     size_t i,sz=formats.size();
     for(i = 0;i < sz;i++) {
 	if(formats[i]->probe(handle)) {
-	    detectedFormat = formats[i]->query_interface(handle,parent);
+	    detectedFormat = formats[i]->query_interface(handle,parent,_udn);
 	    active_format = i;
 	    break;
 	}

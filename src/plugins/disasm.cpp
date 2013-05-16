@@ -58,8 +58,8 @@ namespace	usr {
     extern const Disassembler_Info ppc_disassembler_info;
     extern const Disassembler_Info java_disassembler_info;
 
-DisMode::DisMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& _code_guider)
-	:Plugin(b,h,_main_wnd,_code_guider)
+DisMode::DisMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& _code_guider,udn& u)
+	:Plugin(b,h,_main_wnd,_code_guider,u)
 	,DefDisasmSel(__DEFAULT_DISASM)
 	,HiLight(1)
 	,code_guider(_code_guider)
@@ -68,6 +68,7 @@ DisMode::DisMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGui
 	,main_handle(h)
 	,second_handle(&bNull)
 	,bin_format(b)
+	,_udn(u)
 {
     size_t i,sz;
     unsigned def_platform;
@@ -492,7 +493,7 @@ bool DisMode::action_F9() /* disSelectHiLight */
     return false;
 }
 
-bool DisMode::action_F10() { return udnUserNames(); }
+bool DisMode::action_F10() { return _udn.names(); }
 
 bool DisMode::detect() { return true; }
 
@@ -1247,7 +1248,7 @@ bool hexAddressResolution(unsigned& har);
 bool DisMode::action_F6() { return hexAddressResolution(hexAddressResolv); }
 unsigned DisMode::get_max_line_length() const { return get_max_symbol_size(); }
 
-static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider) { return new(zeromem) DisMode(b,h,main_wnd,code_guider); }
+static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& u) { return new(zeromem) DisMode(b,h,main_wnd,code_guider,u); }
 
 extern const Plugin_Info disMode = {
     "~Disassembler",	/**< plugin name */

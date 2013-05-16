@@ -42,7 +42,7 @@ using namespace	usr;
 namespace	usr {
     class HexMode : public Plugin {
 	public:
-	    HexMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider);
+	    HexMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn&);
 	    virtual ~HexMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -78,18 +78,20 @@ namespace	usr {
 	    TWindow&		main_wnd;
 	    binary_stream&	main_handle;
 	    const Bin_Format&	bin_format;
+	    udn&		_udn;
     };
 unsigned	hexAddressResolv;
 static unsigned hendian;
 
-HexMode::HexMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& _code_guider)
-	:Plugin(b,h,_main_wnd,_code_guider)
+HexMode::HexMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& _code_guider,udn& u)
+	:Plugin(b,h,_main_wnd,_code_guider,u)
 	,code_guider(_code_guider)
 	,virtWidthCorr(0)
 	,hmode(1)
 	,main_wnd(_main_wnd)
 	,main_handle(h)
 	,bin_format(b)
+	,_udn(u)
 {}
 HexMode::~HexMode() {}
 
@@ -354,7 +356,7 @@ bool HexMode::action_F8() /* hexIncVirtWidth */
     return false;
 }
 
-bool HexMode::action_F10() { return udnUserNames(); }
+bool HexMode::action_F10() { return _udn.names(); }
 
 bool HexMode::detect() { return true; }
 
@@ -476,7 +478,7 @@ void HexMode::save_ini(Ini_Profile&  ini)
 unsigned HexMode::get_symbol_size() const { return 1; }
 unsigned HexMode::get_max_line_length() const { return hexViewer[hmode].width(); }
 
-static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider) { return new(zeromem) HexMode(b,h,main_wnd,code_guider); }
+static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& u) { return new(zeromem) HexMode(b,h,main_wnd,code_guider,u); }
 
 extern const Plugin_Info hexMode = {
     "~Hexadecimal mode",	/**< plugin name */

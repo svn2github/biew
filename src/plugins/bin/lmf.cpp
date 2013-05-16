@@ -59,7 +59,7 @@ namespace	usr {
 
     class LMF_Parser : public Binary_Parser {
 	public:
-	    LMF_Parser(binary_stream&,CodeGuider&);
+	    LMF_Parser(binary_stream&,CodeGuider&,udn&);
 	    virtual ~LMF_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -86,6 +86,7 @@ namespace	usr {
 	    uint32_t		segbase[MAXSEG];
 
 	    binary_stream&	main_handle;
+	    udn&		_udn;
 
 	    static const char*	lmftypes[];
     };
@@ -114,9 +115,10 @@ inline size_t DEFSIZE() { return sizeof(lmf_definition); }
 inline size_t DATSIZE() { return sizeof(lmf_data); }
 inline size_t HDRSIZE() { return sizeof(lmf_header); }
 
-LMF_Parser::LMF_Parser(binary_stream& _h,CodeGuider& code_guider)
-	    :Binary_Parser(_h,code_guider)
+LMF_Parser::LMF_Parser(binary_stream& _h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(_h,code_guider,u)
 	    ,main_handle(_h)
+	    ,_udn(u)
 {
     uint32_t i;
     int32_t j,p=0;
@@ -556,7 +558,7 @@ static bool probe(binary_stream& main_handle)
 }
 
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) LMF_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) LMF_Parser(h,_parent,u); }
 extern const Binary_Parser_Info lmf_info = {
     "lmf (QNX4 executable file)",	/**< plugin name */
     probe,

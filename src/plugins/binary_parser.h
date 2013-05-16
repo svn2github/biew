@@ -4,9 +4,10 @@
 namespace	usr {
     class binary_stream;
     class CodeGuider;
+    class udn;
     class Binary_Parser : public Opaque {
 	public:
-	    Binary_Parser(binary_stream&,CodeGuider&) {}
+	    Binary_Parser(binary_stream&,CodeGuider&,udn&) {}
 	    virtual ~Binary_Parser() {}
 
 	    virtual const char*		prompt(unsigned idx) const = 0;   /**< on ALT-Fx selection */
@@ -104,7 +105,7 @@ namespace	usr {
     struct Binary_Parser_Info {
 	const char*	name;
 	bool		(*probe)(binary_stream& handle); /**< Checks format */
-	Binary_Parser* (*query_interface)(binary_stream&,CodeGuider&);
+	Binary_Parser* (*query_interface)(binary_stream&,CodeGuider&,udn&);
     };
 
 

@@ -1031,8 +1031,8 @@ __filesize_t LX_Parser::action_F5()
     return beye_context().tell();
 }
 
-LX_Parser::LX_Parser(binary_stream& h,CodeGuider& __code_guider)
-	:MZ_Parser(h,__code_guider)
+LX_Parser::LX_Parser(binary_stream& h,CodeGuider& __code_guider,udn& u)
+	:MZ_Parser(h,__code_guider,u)
 {
     main_handle().seek(headshift(),binary_stream::Seek_Set);
     main_handle().read(&lxe.lx,sizeof(LXHEADER));
@@ -1203,7 +1203,7 @@ static bool probe(binary_stream& main_handle)
     return false;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) LX_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) LX_Parser(h,_parent,u); }
 extern const Binary_Parser_Info lx_info = {
     "LX (Linear eXecutable)",	/**< plugin name */
     probe,

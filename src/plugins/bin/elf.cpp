@@ -90,7 +90,7 @@ namespace	usr {
     };
     class ELF_Parser : public Binary_Parser {
 	public:
-	    ELF_Parser(binary_stream&,CodeGuider&);
+	    ELF_Parser(binary_stream&,CodeGuider&,udn&);
 	    virtual ~ELF_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -189,6 +189,7 @@ namespace	usr {
 
 	    binary_stream&	main_handle;
 	    CodeGuider&		code_guider;
+	    udn&		_udn;
     };
 static const char* txt[]={ "ELFhlp", "DynInf", "DynSec", "", "", "", "SymTab", "", "SecHdr", "PrgDef" };
 const char* ELF_Parser::prompt(unsigned idx) const { return txt[idx]; }
@@ -2114,14 +2115,15 @@ void ELF_Parser::__elfReadSegments(std::map<__filesize_t,VA_map>& to, bool is_vi
     }
 }
 
-ELF_Parser::ELF_Parser(binary_stream& h,CodeGuider& _code_guider)
-	    :Binary_Parser(h,_code_guider)
+ELF_Parser::ELF_Parser(binary_stream& h,CodeGuider& _code_guider,udn& u)
+	    :Binary_Parser(h,_code_guider,u)
 	    ,elf_min_va(FILESIZE_MAX)
 	    ,namecache(&bNull)
 	    ,namecache2(&bNull)
 	    ,elfcache(&bNull)
 	    ,main_handle(h)
 	    ,code_guider(_code_guider)
+	    ,_udn(u)
 {
     __filesize_t fs;
     uint8_t buf[16];
@@ -2209,7 +2211,7 @@ bool ELF_Parser::FindPubName(std::string& buff,__filesize_t pa)
     buff=elf386_readnametableex((*ret).nameoff);
     return true;
   }
-  return udnFindName(pa,buff);
+  return _udn.find(pa,buff);
 }
 
 void ELF_Parser::elf_ReadPubNameList(binary_stream& handle)
@@ -2342,7 +2344,7 @@ static bool probe(binary_stream& main_handle) {
 //  [0] == EI_MAG0 && id[1] == EI_MAG1 && id[2] == 'L' && id[3] == 'F';
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) ELF_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) ELF_Parser(h,_parent,u); }
 extern const Binary_Parser_Info elf_info = {
     "ELF (Executable and Linking Format)",	/**< plugin name */
     probe,

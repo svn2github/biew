@@ -39,7 +39,7 @@ using namespace	usr;
 namespace	usr {
     class MP3_Parser : public Binary_Parser {
 	public:
-	    MP3_Parser(binary_stream&,CodeGuider&);
+	    MP3_Parser(binary_stream&,CodeGuider&,udn&);
 	    virtual ~MP3_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -57,6 +57,7 @@ namespace	usr {
 	    static int		read_id3v22_tags(binary_stream&,unsigned flags,unsigned hsize);
 	private:
 	    binary_stream&	main_handle;
+	    udn&		_udn;
     };
 static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
 const char* MP3_Parser::prompt(unsigned idx) const { return txt[idx]; }
@@ -436,9 +437,10 @@ __filesize_t MP3_Parser::show_header()
  return fpos;
 }
 
-MP3_Parser::MP3_Parser(binary_stream& h,CodeGuider& code_guider)
-	    :Binary_Parser(h,code_guider)
+MP3_Parser::MP3_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
+	    ,_udn(u)
 {}
 MP3_Parser::~MP3_Parser() {}
 int MP3_Parser::query_platform() const { return DISASM_DEFAULT; }
@@ -477,7 +479,7 @@ static bool probe(binary_stream& main_handle) {
     return true;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) MP3_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) MP3_Parser(h,_parent,u); }
 extern const Binary_Parser_Info mp3_info = {
     "MP3 file format",	/**< plugin name */
     probe,

@@ -1290,7 +1290,7 @@ bool NE_Parser::FindPubName(std::string& buff,__filesize_t pa)
 	buff=ne_ReadPubName(*ne_cache2,*it);
 	return true;
     }
-    return udnFindName(pa,buff);
+    return _udn().find(pa,buff);
 }
 
 void NE_Parser::ne_ReadPubNameList(binary_stream& handle)
@@ -1303,8 +1303,8 @@ void NE_Parser::ne_ReadPubNameList(binary_stream& handle)
    }
 }
 
-NE_Parser::NE_Parser(binary_stream& h,CodeGuider& __code_guider)
-	:MZ_Parser(h,__code_guider)
+NE_Parser::NE_Parser(binary_stream& h,CodeGuider& __code_guider,udn& u)
+	:MZ_Parser(h,__code_guider,u)
 {
     h.seek(headshift(),binary_stream::Seek_Set);
     h.read(&ne,sizeof(NEHEADER));
@@ -1497,7 +1497,7 @@ static bool probe(binary_stream& main_handle) {
     return false;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) NE_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) NE_Parser(h,_parent,u); }
 extern const Binary_Parser_Info ne_info = {
     "NE (New Exe)",	/**< plugin name */
     probe,

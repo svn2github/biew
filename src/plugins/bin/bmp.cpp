@@ -35,7 +35,7 @@ using namespace	usr;
 namespace	usr {
     class BMP_Parser : public Binary_Parser {
 	public:
-	    BMP_Parser(binary_stream& h,CodeGuider&);
+	    BMP_Parser(binary_stream& h,CodeGuider&,udn&);
 	    virtual ~BMP_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -44,13 +44,15 @@ namespace	usr {
 	    virtual int			query_platform() const;
 	private:
 	    binary_stream&	main_handle;
+	    udn&		_udn;
     };
 static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
 const char* BMP_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-BMP_Parser::BMP_Parser(binary_stream& h,CodeGuider& code_guider)
-	    :Binary_Parser(h,code_guider)
+BMP_Parser::BMP_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
+	    ,_udn(u)
 {}
 BMP_Parser::~BMP_Parser() {}
 int BMP_Parser::query_platform() const { return DISASM_DEFAULT; }
@@ -101,7 +103,7 @@ static bool probe(binary_stream& main_handle) {
     return false;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) BMP_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) BMP_Parser(h,_parent,u); }
 extern const Binary_Parser_Info bmp_info = {
     "BitMaP file format",	/**< plugin name */
     probe,

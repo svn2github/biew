@@ -58,7 +58,7 @@ namespace	usr {
 
     class PE_Parser : public MZ_Parser {
 	public:
-	    PE_Parser(binary_stream&,CodeGuider&);
+	    PE_Parser(binary_stream&,CodeGuider&,udn&);
 	    virtual ~PE_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -1024,7 +1024,6 @@ void PE_Parser::BuildPERefChain()
       if(is_eof) break;
     }
   }
-  bye:
 //  la_Sort(CurrPEChain,compare_pe_reloc_s);
   delete w;
 }
@@ -1196,8 +1195,8 @@ bool PE_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift
   return retrf;
 }
 
-PE_Parser::PE_Parser(binary_stream& h,CodeGuider& __code_guider)
-	:MZ_Parser(h,__code_guider)
+PE_Parser::PE_Parser(binary_stream& h,CodeGuider& __code_guider,udn& u)
+	:MZ_Parser(h,__code_guider,u)
 	,pe_cache1(&bNull)
 	,pe_cache2(&bNull)
 	,pe_cache3(&bNull)
@@ -1341,7 +1340,7 @@ bool PE_Parser::FindPubName(std::string& buff,__filesize_t pa)
 	buff=pe_ReadPubName(*pe_cache4,*it);
 	return true;
     }
-    return udnFindName(pa,buff);
+    return _udn().find(pa,buff);
 }
 
 void PE_Parser::pe_ReadPubNameList(binary_stream& handle)
@@ -1461,7 +1460,7 @@ static bool probe(binary_stream& main_handle) {
    return false;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) PE_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) PE_Parser(h,_parent,u); }
 extern const Binary_Parser_Info pe_info = {
     "PE (Portable Executable)",	/**< plugin name */
     probe,

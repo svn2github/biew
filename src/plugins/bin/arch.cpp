@@ -41,7 +41,7 @@ using namespace	usr;
 namespace	usr {
     class Arch_Parser : public Binary_Parser {
 	public:
-	    Arch_Parser(binary_stream&,CodeGuider&);
+	    Arch_Parser(binary_stream&,CodeGuider&,udn&);
 	    virtual ~Arch_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -56,6 +56,7 @@ namespace	usr {
 
 	    ar_hdr		arch;
 	    binary_stream&	main_handle;
+	    udn&		_udn;
     };
 static const char* txt[]={ "ArcHlp", "", "ModLst", "", "", "", "", "", "", "" };
 const char* Arch_Parser::prompt(unsigned idx) const { return txt[idx]; }
@@ -174,9 +175,10 @@ __filesize_t Arch_Parser::action_F3()
    return fpos;
 }
 
-Arch_Parser::Arch_Parser(binary_stream& h,CodeGuider& code_guider)
-	    :Binary_Parser(h,code_guider)
+Arch_Parser::Arch_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
+	    ,_udn(u)
 {
     main_handle.seek(0,binary_stream::Seek_Set);
     main_handle.read(&arch,sizeof(arch));
@@ -212,7 +214,7 @@ static bool probe(binary_stream& main_handle) {
 
 int Arch_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-static Binary_Parser* query_interface(binary_stream& main_handle,CodeGuider& _parent) { return new(zeromem) Arch_Parser(main_handle,_parent); }
+static Binary_Parser* query_interface(binary_stream& main_handle,CodeGuider& _parent,udn& u) { return new(zeromem) Arch_Parser(main_handle,_parent,u); }
 extern const Binary_Parser_Info arch_info = {
     "arch (Archive)",	/**< plugin name */
     probe,

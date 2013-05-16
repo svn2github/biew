@@ -37,7 +37,7 @@ namespace	usr {
 #define MOV_FOURCC(a,b,c,d) ((a<<24)|(b<<16)|(c<<8)|(d))
     class MOV_Parser : public Binary_Parser {
 	public:
-	    MOV_Parser(binary_stream&,CodeGuider&);
+	    MOV_Parser(binary_stream&,CodeGuider&,udn&);
 	    virtual ~MOV_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -48,6 +48,7 @@ namespace	usr {
 	    static __filesize_t		mov_find_chunk(binary_stream& main_handle,__filesize_t off,unsigned long id);
 	private:
 	    binary_stream&	main_handle;
+	    udn&		_udn;
     };
 static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
 const char* MOV_Parser::prompt(unsigned idx) const { return txt[idx]; }
@@ -68,9 +69,10 @@ __filesize_t MOV_Parser::mov_find_chunk(binary_stream& main_handle,__filesize_t 
 }
 
 
-MOV_Parser::MOV_Parser(binary_stream& h,CodeGuider& code_guider)
-	    :Binary_Parser(h,code_guider)
+MOV_Parser::MOV_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
+	    ,_udn(u)
 {}
 MOV_Parser::~MOV_Parser() {}
 int MOV_Parser::query_platform() const { return DISASM_DEFAULT; }
@@ -89,7 +91,7 @@ static bool probe(binary_stream& main_handle) {
     return false;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) MOV_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) MOV_Parser(h,_parent,u); }
 extern const Binary_Parser_Info mov_info = {
     "MOV file format",	/**< plugin name */
     probe,

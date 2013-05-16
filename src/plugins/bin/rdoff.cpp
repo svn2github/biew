@@ -50,7 +50,7 @@ namespace	usr {
 
     class RDOff_Parser : public Binary_Parser {
 	public:
-	    RDOff_Parser(binary_stream&,CodeGuider&);
+	    RDOff_Parser(binary_stream&,CodeGuider&,udn&);
 	    virtual ~RDOff_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -88,6 +88,7 @@ namespace	usr {
 	    unsigned char		__codelen;
 	    binary_stream&		main_handle;
 	    CodeGuider&			code_guider;
+	    udn&			_udn;
     };
 static const char* txt[]={ "RdHelp", "ModRef", "Export", "", "Import", "", "", "", "", "" };
 const char* RDOff_Parser::prompt(unsigned idx) const { return txt[idx]; }
@@ -561,10 +562,11 @@ bool RDOff_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulSh
   return ret;
 }
 
-RDOff_Parser::RDOff_Parser(binary_stream& h,CodeGuider& _code_guider)
-	    :Binary_Parser(h,_code_guider)
+RDOff_Parser::RDOff_Parser(binary_stream& h,CodeGuider& _code_guider,udn& u)
+	    :Binary_Parser(h,_code_guider,u)
 	    ,main_handle(h)
 	    ,code_guider(_code_guider)
+	    ,_udn(u)
 {
     unsigned long cs_len;
     main_handle.seek(6,binary_stream::Seek_Set);
@@ -610,7 +612,7 @@ bool RDOff_Parser::FindPubName(std::string& buff,__filesize_t pa)
     buff=rdoff_ReadPubName(b_cache,*ret);
     return true;
   }
-  return udnFindName(pa,buff);
+  return _udn.find(pa,buff);
 }
 
 void RDOff_Parser::rdoff_ReadPubNameList(binary_stream& handle)
@@ -805,7 +807,7 @@ static bool probe(binary_stream& main_handle) {
 	    memcmp(rbuff,"RDOFF\x1",sizeof(rbuff)) == 0;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) RDOff_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) RDOff_Parser(h,_parent,u); }
 extern const Binary_Parser_Info rdoff_info = {
     "RDOFF (Relocatable Dynamic Object File Format)",	/**< plugin name */
     probe,

@@ -265,7 +265,7 @@ bool MZ_Parser::isMZReferenced(__filesize_t shift,char len)
 
 bool MZ_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
-  char stmp[256];
+  std::string stmp;
   bool ret = false;
   if(flags & APREF_TRY_PIC) return false;
   if(isMZReferenced(ulShift,codelen))
@@ -280,7 +280,7 @@ bool MZ_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift
   if(!DumpMode && !EditMode && (flags & APREF_TRY_LABEL) && codelen == 4)
   {
     r_sh += (((__filesize_t)mz.mzHeaderSize) << 4);
-    if(udnFindName(r_sh,stmp,sizeof(stmp))==true) str+=stmp;
+    if(__udn.find(r_sh,stmp)==true) str+=stmp;
     else str+=Get8Digit(r_sh);
     _code_guider.add_go_address(parent,str,r_sh);
     ret = true;
@@ -289,10 +289,11 @@ bool MZ_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift
 }
 
 /* Special case: this module must not use init and destroy */
-MZ_Parser::MZ_Parser(binary_stream& h,CodeGuider& __code_guider)
-	    :Binary_Parser(h,__code_guider)
+MZ_Parser::MZ_Parser(binary_stream& h,CodeGuider& __code_guider,udn& u)
+	    :Binary_Parser(h,__code_guider,u)
 	    ,_main_handle(h)
 	    ,_code_guider(__code_guider)
+	    ,__udn(u)
 {
     unsigned char id[2];
     _main_handle.seek(0,binary_stream::Seek_Set);
@@ -352,7 +353,7 @@ static bool probe(binary_stream& _main_handle) {
     return false;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent) { return new(zeromem) MZ_Parser(h,_parent); }
+static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) MZ_Parser(h,_parent,u); }
 extern const Binary_Parser_Info mz_info = {
     "MZ (Old DOS-exe)",	/**< plugin name */
     probe,
