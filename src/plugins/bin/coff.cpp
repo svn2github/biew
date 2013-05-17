@@ -607,7 +607,7 @@ Coff_Parser::Coff_Parser(binary_stream& h,CodeGuider& _code_guider,udn& u)
 	MemOutBox("Coff386 initialization");
 	exit(EXIT_FAILURE);
     }
-    if((coff_cache = main_handle.dup()) == &bNull) coff_cache = &main_handle;
+    coff_cache = main_handle.dup();
     if(COFF_WORD(coff386hdr.f_opthdr)) s_off += COFF_WORD(coff386hdr.f_opthdr);
     coff_cache->seek(s_off,binary_stream::Seek_Set);
     for(i = 0;i < nsections;i++) coff_cache->read(&coff386so[i],sizeof(SCNHDR));
@@ -617,7 +617,7 @@ Coff_Parser::Coff_Parser(binary_stream& h,CodeGuider& _code_guider,udn& u)
 Coff_Parser::~Coff_Parser()
 {
   delete coff386so;
-  if(coff_cache != &bNull && coff_cache != &main_handle) delete coff_cache;
+  if(coff_cache != &main_handle) delete coff_cache;
 }
 
 int Coff_Parser::query_bitness(__filesize_t off) const

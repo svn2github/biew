@@ -100,8 +100,6 @@ beye_priv::beye_priv(const std::vector<std::string>& _argv, const std::map<std::
 	,defMainModeSel(1)
 	,new_file_size(FILESIZE_MAX)
 	,code_guider(new(zeromem) CodeGuider)
-	,bm_file_handle(&bNull)
-	,sc_bm_file_handle(&bNull)
 	,_system(new(zeromem) System) {
     addons = new(zeromem) addendum;
     sysinfo= new(zeromem) class sysinfo;
@@ -676,30 +674,30 @@ void BeyeContext::select_sysinfo() const {
 binary_stream* BeyeContext::beyeOpenRO(const std::string& fname,unsigned cache_size)
 {
     binary_stream* fret;
-    if(!binary_stream::exists(fname)) return &bNull;
+    if(!binary_stream::exists(fname)) return NULL;
     if(beye_context().fioUseMMF)fret= new(zeromem) MMFile;
 //    else			fret= new(zeromem) BBio_File(cache_size,BBio_File::Opt_Db);
-    else			fret= new(zeromem) binary_stream();
+    else			fret= new(zeromem) binary_stream;
     bool rc;
     rc = fret->open(fname,binary_stream::FO_READONLY | binary_stream::SO_DENYNONE);
     if(rc == false)
 	rc = fret->open(fname,binary_stream::FO_READONLY | binary_stream::SO_COMPAT);
-    if(rc==false) { delete fret; fret=&bNull; }
+    if(rc==false) { delete fret; fret=NULL; }
     return fret;
 }
 
 binary_stream* BeyeContext::beyeOpenRW(const std::string& fname,unsigned cache_size)
 {
     binary_stream* fret;
-    if(!binary_stream::exists(fname)) return &bNull;
+    if(!binary_stream::exists(fname)) return NULL;
     fret= beye_context().fioUseMMF? new(zeromem) MMFile :
-				    new(zeromem) binary_stream;
 //				    new(zeromem) BBio_File(cache_size,BBio_File::Opt_Db);
+				    new(zeromem) binary_stream;
     bool rc;
     rc = fret->open(fname,binary_stream::FO_READWRITE | binary_stream::SO_DENYNONE);
     if(rc == false)
 	rc = fret->open(fname,binary_stream::FO_READWRITE | binary_stream::SO_COMPAT);
-    if(rc==false) { delete fret; fret=&bNull; }
+    if(rc==false) { delete fret; fret=NULL; }
     return fret;
 }
 
@@ -708,20 +706,18 @@ bool BeyeContext::BMOpen(const std::string& fname)
     beye_priv& priv = static_cast<beye_priv&>(opaque);
   binary_stream *bm,*sc;
   bm = beyeOpenRO(fname,BBIO_CACHE_SIZE);
-  if(bm == &bNull)
-  {
+  if(bm == NULL) {
     errnoMessageBox(OPEN_FAIL,"",errno);
     return false;
   }
-  if(priv.bm_file_handle != &bNull) delete priv.bm_file_handle;
+  if(priv.bm_file_handle != NULL) delete priv.bm_file_handle;
   priv.bm_file_handle = bm;
   sc = priv.bm_file_handle->dup();
-  if(sc == &bNull)
-  {
+  if(sc == NULL) {
     errnoMessageBox(DUP_FAIL,"",errno);
     return false;
   }
-  if(priv.sc_bm_file_handle != &bNull) delete priv.sc_bm_file_handle;
+  if(priv.sc_bm_file_handle != NULL) delete priv.sc_bm_file_handle;
   priv.sc_bm_file_handle = sc;
   return true;
 }
@@ -729,10 +725,8 @@ bool BeyeContext::BMOpen(const std::string& fname)
 void BeyeContext::BMClose()
 {
     beye_priv& priv = static_cast<beye_priv&>(opaque);
-  if(priv.bm_file_handle != &bNull) delete priv.bm_file_handle;
-  priv.bm_file_handle = &bNull;
-  if(priv.sc_bm_file_handle != &bNull) delete priv.sc_bm_file_handle;
-  priv.sc_bm_file_handle = &bNull;
+  if(priv.bm_file_handle != NULL) delete priv.bm_file_handle;
+  if(priv.sc_bm_file_handle != NULL) delete priv.sc_bm_file_handle;
 }
 
 __filesize_t BeyeContext::flength() const {

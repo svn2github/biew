@@ -64,8 +64,7 @@ static bool ChSize()
        std::string fname = beye_context().bm_file().filename();
        binary_stream* bHandle;
        bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
-       if(bHandle == &bNull)
-       {
+       if(bHandle == NULL) {
 	 err:
 	 beye_context().errnoMessageBox(RESIZE_FAIL,"",my_errno);
 	 return false;
@@ -176,12 +175,9 @@ static bool InsDelBlock()
     if(psize < 0) if(start+labs(psize) > beye_context().flength()) { beye_context().ErrMessageBox("Use change size operation instead of block deletion",""); return 0; }
     fname = beye_context().bm_file().filename();
     bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
-    if(bHandle == &bNull)
-    {
+    if(bHandle == NULL) {
       beye_context().errnoMessageBox(OPEN_FAIL,"",errno);
-    }
-    else
-    {
+    } else {
       if(psize < 0) ret = DelBlock(bHandle,start,psize);
       else          ret = InsBlock(bHandle,start,psize);
       delete bHandle;
@@ -603,7 +599,6 @@ static bool FRestore()
    ff_fname=ffname;
    __filesize_t flen,lval;
    binary_stream* h = new(zeromem) binary_stream;
-   binary_stream* bHandle;
    std::string fname;
    endpos = ff_startpos + ff_len;
    if(!h->open(ff_fname,binary_stream::FO_READONLY | binary_stream::SO_DENYNONE)) {
@@ -641,11 +636,10 @@ static bool FRestore()
        return false;
      }
      fname = beye_context().bm_file().filename();
-     bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
-     if(bHandle != &bNull)
-     {
-       while(wsize)
-       {
+     std::fstream fs;
+     fs.open(fname.c_str(),std::ios_base::in|std::ios_base::out|std::ios_base::binary);
+     if(fs.is_open()) {
+       while(wsize) {
 	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
 	 if(!h->read(tmp_buff,remaind)) {
 	   beye_context().errnoMessageBox(READ_FAIL,"",errno);
@@ -653,9 +647,9 @@ static bool FRestore()
 	   ret = false;
 	   goto bye;
 	 }
-	 bHandle->seek(cwpos,binary_stream::Seek_Set);
-	 if(!bHandle->write(tmp_buff,remaind))
-	 {
+	 fs.seekp(cwpos,std::ios_base::beg);
+	 fs.write((const char*)tmp_buff,remaind);
+	 if(!fs.good()) {
 	   beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
@@ -664,7 +658,7 @@ static bool FRestore()
 	 cwpos += remaind;
        }
        bye:
-       delete bHandle;
+       fs.close();
        beye_context().bm_file().reread();
      }
      else beye_context().errnoMessageBox(OPEN_FAIL,"",errno);
@@ -744,7 +738,6 @@ static bool CryptBlock()
      __filesize_t wsize,cwpos;
      unsigned remaind;
      std::string fname;
-     binary_stream* bHandle;
      any_t*tmp_buff;
      cpos = beye_context().tell();
      wsize = endpos - ff_startpos;
@@ -756,23 +749,23 @@ static bool CryptBlock()
        return false;
      }
      fname = beye_context().bm_file().filename();
-     bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
-     if(bHandle != &bNull)
-     {
-       bHandle->seek(ff_startpos,binary_stream::Seek_Set);
+     std::fstream fs;
+     fs.open(fname.c_str(),std::ios_base::in|std::ios_base::out|std::ios_base::binary);
+     if(fs.is_open()) {
+       fs.seekg(ff_startpos,std::ios_base::beg);
        while(wsize)
        {
 	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
-	 if(!bHandle->read(tmp_buff,remaind))
-	 {
+	 fs.read((char*)tmp_buff,remaind);
+	 if(!fs.good()) {
 	   beye_context().errnoMessageBox(READ_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
 	 }
 	 CryptFunc((char*)tmp_buff,remaind,pass);
-	 bHandle->seek(cwpos,binary_stream::Seek_Set);
-	 if(!(bHandle->write(tmp_buff,remaind)))
-	 {
+	 fs.seekp(cwpos,std::ios_base::beg);
+	 fs.write((const char*)tmp_buff,remaind);
+	 if(!fs.good()) {
 	   beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
@@ -781,7 +774,7 @@ static bool CryptBlock()
 	 cwpos += remaind;
        }
        bye:
-       delete bHandle;
+       fs.close();
        beye_context().bm_file().reread();
      }
      delete tmp_buff;
@@ -848,7 +841,7 @@ static bool ReverseBlock()
      __filesize_t wsize,cwpos;
      unsigned remaind;
      std::string fname;
-     binary_stream* bHandle;
+     std::fstream fs;
      any_t*tmp_buff;
      cpos = beye_context().tell();
      wsize = endpos - ff_startpos;
@@ -860,23 +853,22 @@ static bool ReverseBlock()
        return false;
      }
      fname = beye_context().bm_file().filename();
-     bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
-     if(bHandle != &bNull)
-     {
-       bHandle->seek(ff_startpos,binary_stream::Seek_Set);
+     fs.open(fname.c_str(),std::ios_base::in|std::ios_base::out|std::ios_base::binary);
+     if(fs.is_open()) {
+       fs.seekg(ff_startpos,std::ios_base::beg);
        while(wsize)
        {
 	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
-	 if(!bHandle->read(tmp_buff,remaind))
-	 {
+	 fs.read((char*)tmp_buff,remaind);
+	 if(!fs.good()) {
 	   beye_context().errnoMessageBox(READ_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
 	 }
 	 EndianifyBlock((char*)tmp_buff,remaind, flags & FSDLG_BTNSMASK);
-	 bHandle->seek(cwpos,binary_stream::Seek_Set);
-	 if(!(bHandle->write(tmp_buff,remaind)))
-	 {
+	 fs.seekp(cwpos,std::ios_base::beg);
+	 fs.write((const char*)tmp_buff,remaind);
+	 if(!fs.good()) {
 	   beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
@@ -885,7 +877,7 @@ static bool ReverseBlock()
 	 cwpos += remaind;
        }
        bye:
-       delete bHandle;
+       fs.close();
        beye_context().bm_file().reread();
      }
      delete tmp_buff;
@@ -934,15 +926,14 @@ static bool XLatBlock()
      __filesize_t wsize,cwpos;
      unsigned remaind;
      std::string fname;
-     binary_stream* bHandle,* xHandle;
      any_t*tmp_buff;
      cpos = beye_context().tell();
      wsize = endpos - ff_startpos;
      cwpos = ff_startpos;
      /* Parse xlat file */
+     binary_stream* xHandle;
      xHandle = BeyeContext::beyeOpenRO(xlat_fname,BBIO_SMALL_CACHE_SIZE);
-     if(xHandle == &bNull)
-     {
+     if(xHandle == NULL) {
        beye_context().ErrMessageBox("Can't open xlat file", "");
        return false;
      }
@@ -968,24 +959,23 @@ static bool XLatBlock()
        MemOutBox("temporary buffer initialization");
        return false;
      }
+     std::fstream fs;
      fname = beye_context().bm_file().filename();
-     bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
-     if(bHandle != &bNull)
-     {
-       bHandle->seek(ff_startpos,binary_stream::Seek_Set);
-       while(wsize)
-       {
+     fs.open(fname.c_str(),std::ios_base::binary);
+     if(fs.is_open()) {
+       fs.seekg(ff_startpos,std::ios_base::beg);
+       while(wsize) {
 	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
-	 if(!bHandle->read(tmp_buff,remaind))
-	 {
+	 fs.read((char*)tmp_buff,remaind);
+	 if(!fs.good()) {
 	   beye_context().errnoMessageBox(READ_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
 	 }
 	 TranslateBlock((char*)tmp_buff,remaind, xlt);
-	 bHandle->seek(cwpos,binary_stream::Seek_Set);
-	 if(!(bHandle->write(tmp_buff,remaind)))
-	 {
+	 fs.seekp(cwpos,std::ios_base::beg);
+	 fs.write((const char*)tmp_buff,remaind);
+	 if(!fs.good()) {
 	   beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 	   ret = false;
 	   goto bye;
@@ -994,7 +984,7 @@ static bool XLatBlock()
 	 cwpos += remaind;
        }
        bye:
-       delete bHandle;
+       fs.close();
        beye_context().bm_file().reread();
      }
      delete tmp_buff;

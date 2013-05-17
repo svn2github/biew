@@ -2118,9 +2118,9 @@ void ELF_Parser::__elfReadSegments(std::map<__filesize_t,VA_map>& to, bool is_vi
 ELF_Parser::ELF_Parser(binary_stream& h,CodeGuider& _code_guider,udn& u)
 	    :Binary_Parser(h,_code_guider,u)
 	    ,elf_min_va(FILESIZE_MAX)
-	    ,namecache(&bNull)
-	    ,namecache2(&bNull)
-	    ,elfcache(&bNull)
+	    ,namecache(&h)
+	    ,namecache2(&h)
+	    ,elfcache(&h)
 	    ,main_handle(h)
 	    ,code_guider(_code_guider)
 	    ,_udn(u)
@@ -2150,18 +2150,15 @@ ELF_Parser::ELF_Parser(binary_stream& h,CodeGuider& _code_guider,udn& u)
    namecache = main_handle.dup();
    namecache2 = main_handle.dup();
    elfcache = main_handle.dup();
-   if(namecache == &bNull) namecache = &main_handle;
-   if(namecache2 == &bNull) namecache2 = &main_handle;
-   if(elfcache == &bNull) elfcache = &main_handle;
    /** Computing symbol table entry */
    __elfSymPtr = findSHEntry(main_handle, SHT_SYMTAB, &__elfNumSymTab, &__elfSymShTbl, &__elfSymEntSize);
 }
 
 ELF_Parser::~ELF_Parser()
 {
-   if(namecache != &bNull && namecache != &main_handle) delete namecache;
-   if(namecache2 != &bNull && namecache2 != &main_handle) delete namecache2;
-   if(elfcache != &bNull && elfcache != &main_handle) delete elfcache;
+   if(namecache != &main_handle) delete namecache;
+   if(namecache2 != &main_handle) delete namecache2;
+   if(elfcache != &main_handle) delete elfcache;
 //   if(PubNames) { la_Destroy(PubNames); PubNames = 0; }
 //   if(CurrElfChain) { la_Destroy(CurrElfChain); CurrElfChain = 0; }
    delete Elf;

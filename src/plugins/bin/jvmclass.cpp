@@ -674,15 +674,15 @@ JVM_Parser::JVM_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
     jvm_header.header_length=main_handle.tell();
     main_handle.seek(fpos,binary_stream::Seek_Set);
     binary_stream& bh = main_handle;
-    if((jvm_cache = bh.dup()) == &bNull) jvm_cache = &bh;
-    if((pool_cache = bh.dup()) == &bNull) pool_cache = &bh;
+    jvm_cache = bh.dup();
+    pool_cache = bh.dup();
 }
 
 JVM_Parser::~JVM_Parser()
 {
   binary_stream& bh=main_handle;
-  if(jvm_cache != &bNull && jvm_cache != &bh) delete jvm_cache;
-  if(pool_cache != &bNull && pool_cache != &bh) delete pool_cache;
+  if(jvm_cache != &bh) delete jvm_cache;
+  if(pool_cache != &bh) delete pool_cache;
 }
 
 int JVM_Parser::query_platform() const { return DISASM_JAVA; }

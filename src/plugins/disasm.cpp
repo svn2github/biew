@@ -66,7 +66,7 @@ DisMode::DisMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGui
 	,DisasmPrepareMode(false)
 	,main_wnd(_main_wnd)
 	,main_handle(h)
-	,second_handle(&bNull)
+	,second_handle(&h)
 	,bin_format(b)
 	,_udn(u)
 {
@@ -82,7 +82,6 @@ DisMode::DisMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGui
     PrevStrLenAddr = new unsigned long [beye_context().tconsole().vio_height()];
     dis_comments   = new char [Comm_Size];
     second_handle = main_handle.dup();
-    if(second_handle==&bNull) second_handle = &main_handle;
     if((!CurrStrLenBuff) || (!PrevStrLenAddr) || (!dis_comments)) {
 	MemOutBox("Disassembler initialization");
 	::exit(EXIT_FAILURE);
@@ -112,7 +111,7 @@ DisMode::~DisMode()
     delete dis_comments;
     delete disCodeBuffer;
     delete disCodeBufPredict;
-    if(second_handle!=&bNull && second_handle!=&main_handle) delete second_handle;
+    if(second_handle!=&main_handle) delete second_handle;
 }
 
 DisMode::e_flag DisMode::flags() const { return UseCodeGuide | Disasm | Has_SearchEngine; }
@@ -632,14 +631,15 @@ int DisMode::full_asm_edit(TWindow * ewnd)
 	    case KE_CTL_F(3): beye_context().select_tool(); continue;
 	    case KE_F(2)    :
 		{
-		    binary_stream* bHandle;
+		    std::ofstream fs;
 		    std::string fname;
 		    fname = main_handle.filename();
-		    if((bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE)) != &bNull) {
-			bHandle->seek(edit_cp,binary_stream::Seek_Set);
-			if(!bHandle->write((any_t*)EditorMem.buff,rlen))
+		    fs.open(fname.c_str(),std::ios_base::binary);
+		    if(fs.is_open()) {
+			fs.seekp(edit_cp,std::ios_base::beg);
+			if(!fs.write((const char*)EditorMem.buff,rlen))
 			    beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
-			delete bHandle;
+			fs.close();
 			main_handle.reread();
 		    } else beye_context().errnoMessageBox("Can't reopen","",errno);
 		}

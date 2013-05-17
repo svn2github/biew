@@ -75,7 +75,7 @@ namespace	usr {
 	    virtual bool		write(uint64_t dwVal);
 	    virtual bool		write(const any_t* buffer,unsigned cbBuffer);
 	    virtual bool		dup(BBio_File&) const;
-	    virtual binary_stream*	dup() const;
+	    virtual binary_stream*	dup();
     private:
 	    /** Virtual file buffer structure */
 	    class binary_cache {

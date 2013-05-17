@@ -32,7 +32,7 @@ namespace	usr {
 	    virtual bool		write(const any_t* buffer,unsigned cbBuffer);
 	    virtual bool		chsize(__filesize_t newsize);
 	    virtual bool		dup(MMFile&) const;
-	    virtual binary_stream*	dup() const;
+	    virtual binary_stream*	dup();
 	    virtual bool		reread();
 	    virtual any_t*		buffer() const;
 	protected:

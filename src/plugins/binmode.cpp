@@ -222,23 +222,24 @@ const char*   BinMode::misckey_name() const { return "Modify"; }
 void BinMode::save_video(Opaque& _this,unsigned char *buff,unsigned size)
 {
     BinMode& it = static_cast<BinMode&>(_this);
-    binary_stream* bHandle;
+    std::ofstream fs;
     std::string fname;
     unsigned i;
     fname = beye_context().bm_file().filename();
-    bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
-    if(bHandle == &bNull) {
+    fs.open(fname.c_str(),std::ios_base::binary);
+    if(!fs.is_open()) {
 	err:
 	beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 	return;
     }
-    bHandle->seek(beye_context().tell(),binary_stream::Seek_Set);
-    if(it.bin_mode==MOD_REVERSE) bHandle->seek(1,binary_stream::Seek_Cur);
+    fs.seekp(beye_context().tell(),std::ios_base::beg);
+    if(it.bin_mode==MOD_REVERSE) fs.seekp(1,std::ios_base::cur);
     for(i=0;i<size;i++) {
-	if(!bHandle->write((uint8_t)buff[i])) goto err;
-	bHandle->seek(1,binary_stream::Seek_Cur);
+	fs.put((uint8_t)buff[i]);
+	if(!fs.good()) goto err;
+	fs.seekp(1,std::ios_base::cur);
     }
-    delete bHandle;
+    fs.close();
     beye_context().bm_file().reread();
 }
 

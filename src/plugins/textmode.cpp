@@ -953,7 +953,7 @@ TextMode::TextMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeG
 	:Plugin(b,h,_main_wnd,code_guider,u)
 	,HiLight(1)
 	,bin_mode(MOD_PLAIN)
-	,txtHandle(&bNull)
+	,txtHandle(&h)
 	,maxstrlen(MAX_STRLEN)
 	,activeNLS(&RussianNLS)
 	,main_wnd(_main_wnd)
@@ -969,7 +969,7 @@ TextMode::TextMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeG
 	::exit(EXIT_FAILURE);
     }
     binary_stream& bh = main_handle;
-    if((txtHandle = bh.dup()) == &bNull) txtHandle = &bh;
+    txtHandle = bh.dup();
     ::memset(&syntax_hl,0,sizeof(syntax_hl));
     /* Fill operator's hash */
     ::memset(syntax_hl.op_hash,text_cset.normal,sizeof(syntax_hl.op_hash));
@@ -982,7 +982,7 @@ TextMode::~TextMode() {
     delete tlines;
     delete ptlines;
     binary_stream& bh = main_handle;
-    if(txtHandle != &bh) { delete txtHandle; txtHandle = &bNull; }
+    if(txtHandle != &bh) delete txtHandle;
     if(syntax_hl.name) delete syntax_hl.name;
     if(escape) delete escape;
     escape=NULL;

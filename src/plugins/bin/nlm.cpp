@@ -600,19 +600,19 @@ bool NLM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
 
 NLM_Parser::NLM_Parser(binary_stream& h,CodeGuider& _code_guider,udn& u)
 	    :Binary_Parser(h,_code_guider,u)
-	    ,nlm_cache(&bNull)
+	    ,nlm_cache(&h)
 	    ,main_handle(h)
 	    ,code_guider(_code_guider)
 	    ,_udn(u)
 {
     main_handle.seek(0,binary_stream::Seek_Set);
     main_handle.read(&nlm,sizeof(Nlm_Internal_Fixed_Header));
-    if((nlm_cache = main_handle.dup()) == &bNull) nlm_cache = &main_handle;
+    nlm_cache = main_handle.dup();
 }
 
 NLM_Parser::~NLM_Parser()
 {
-    if(nlm_cache != &bNull && nlm_cache != &main_handle) delete nlm_cache;
+    if(nlm_cache != &main_handle) delete nlm_cache;
 }
 
 int NLM_Parser::query_bitness(__filesize_t off) const

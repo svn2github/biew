@@ -191,10 +191,10 @@ bool binary_stream::dup(binary_stream& it) const
     return true;
 }
 
-binary_stream* binary_stream::dup() const
+binary_stream* binary_stream::dup()
 {
     binary_stream* ret = new(zeromem) binary_stream;
-    if(!dup(*ret)) return &bNull;
+    if(!dup(*ret)) return this;
     return ret;
 }
 
@@ -248,5 +248,4 @@ bool binary_stream::set_ftime(const std::string& name,const ftime& data)
     return ::utime(name.c_str(),&ubuf) ? false : true;
 }
 
-binary_stream bNull; /**< Stream associated with STDERR */
 } // namespace	usr

@@ -210,10 +210,10 @@ bool BBio_File::dup(BBio_File& it) const
     return rc;
 }
 
-binary_stream* BBio_File::dup() const
+binary_stream* BBio_File::dup()
 {
     BBio_File* ret = new(zeromem) BBio_File(vfb.buffsize(),Opt_Db);
-    if(!dup(*ret)) return &bNull;
+    if(!dup(*ret)) return this;
     return ret;
 }
 

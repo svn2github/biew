@@ -157,19 +157,19 @@ void __FASTCALL__ CheckXYBounds()
 
 void __FASTCALL__ editSaveContest()
 {
-  binary_stream* bHandle;
+  std::ofstream fs;
   std::string fname;
   fname = beye_context().bm_file().filename();
-  bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
-  if(bHandle == &bNull)
-  {
+  fs.open(fname.c_str(),std::ios_base::binary);
+  if(!fs.is_open()) {
       err:
       beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
       return;
   }
-  bHandle->seek(edit_cp,binary_stream::Seek_Set);
-  if(!bHandle->write((any_t*)EditorMem.buff,EditorMem.size)) goto err;
-  delete bHandle;
+  fs.seekp(edit_cp,std::ios_base::beg);
+  fs.write((const char*)EditorMem.buff,EditorMem.size);
+  if(!fs.good()) goto err;
+  fs.close();
   beye_context().bm_file().reread();
 }
 

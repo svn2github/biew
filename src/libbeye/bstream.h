@@ -185,7 +185,7 @@ namespace	usr {
 		     *                        characteristics.
 		    **/
 	    virtual bool		dup(binary_stream&) const;
-	    virtual binary_stream*		dup() const;
+	    virtual binary_stream*		dup();
 
 		   /** Returns low-level OS handle of opened stream.
 		     * @return                OS handle of opened stream
@@ -222,7 +222,6 @@ namespace	usr {
 	    std::string			fname;
 	    __filesize_t		fsize;
     };
-    extern binary_stream bNull; /**< Stream associated with STDERR */
 } // namespace	usr
 
 #endif

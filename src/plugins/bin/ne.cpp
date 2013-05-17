@@ -48,10 +48,10 @@ const char* NE_Parser::prompt(unsigned idx) const { return txt[idx]; }
 static NEHEADER ne;
 static std::set<symbolic_information> PubNames;
 
-static binary_stream* ne_cache = &bNull;
-static binary_stream* ne_cache1 = &bNull;
-static binary_stream* ne_cache2 = &bNull;
-static binary_stream* ne_cache3 = &bNull;
+static binary_stream* ne_cache = NULL;
+static binary_stream* ne_cache1 = NULL;
+static binary_stream* ne_cache2 = NULL;
+static binary_stream* ne_cache3 = NULL;
 
 const char* NE_Parser::__nedata[] =
 {
@@ -1308,10 +1308,10 @@ NE_Parser::NE_Parser(binary_stream& h,CodeGuider& __code_guider,udn& u)
 {
     h.seek(headshift(),binary_stream::Seek_Set);
     h.read(&ne,sizeof(NEHEADER));
-    if((ne_cache3 = h.dup()) == &bNull) ne_cache3 = &h;
-    if((ne_cache1 = h.dup()) == &bNull) ne_cache2 = &h;
-    if((ne_cache = h.dup()) == &bNull) ne_cache = &h;
-    if((ne_cache2 = h.dup()) == &bNull) ne_cache2 = &h;
+    ne_cache3 = h.dup();
+    ne_cache1 = h.dup();
+    ne_cache = h.dup();
+    ne_cache2 = h.dup();
 }
 
 NE_Parser::~NE_Parser()
@@ -1319,10 +1319,10 @@ NE_Parser::~NE_Parser()
   binary_stream& h = main_handle();
   CurrNEChain.clear();
   PubNames.clear();
-  if(ne_cache != &bNull && ne_cache != &h) delete ne_cache;
-  if(ne_cache2 != &bNull && ne_cache2 != &h) delete ne_cache2;
-  if(ne_cache3 != &bNull && ne_cache3 != &h) delete ne_cache3;
-  if(ne_cache1 != &bNull && ne_cache1 != &h) delete ne_cache1;
+  if(ne_cache != &h) delete ne_cache;
+  if(ne_cache2 != &h) delete ne_cache2;
+  if(ne_cache3 != &h) delete ne_cache3;
+  if(ne_cache1 != &h) delete ne_cache1;
 }
 
 __filesize_t NE_Parser::action_F1()

@@ -47,10 +47,10 @@ bool MMFile::dup(MMFile& it) const
     return true;
 }
 
-binary_stream* MMFile::dup() const
+binary_stream* MMFile::dup()
 {
     MMFile* ret = new(zeromem) MMFile;
-    if(!dup(*ret)) return &bNull;
+    if(!dup(*ret)) return this;
     return ret;
 }
 

@@ -1036,13 +1036,13 @@ LX_Parser::LX_Parser(binary_stream& h,CodeGuider& __code_guider,udn& u)
 {
     main_handle().seek(headshift(),binary_stream::Seek_Set);
     main_handle().read(&lxe.lx,sizeof(LXHEADER));
-    if((lx_cache = main_handle().dup()) == &bNull) lx_cache = &main_handle();
+    lx_cache = main_handle().dup();
 }
 
 LX_Parser::~LX_Parser()
 {
    binary_stream& _mh = main_handle();
-   if(lx_cache != &bNull && lx_cache != &_mh) delete lx_cache;
+   if(lx_cache != &_mh) delete lx_cache;
 }
 
 __filesize_t LX_Parser::action_F1()

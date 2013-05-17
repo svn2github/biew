@@ -133,7 +133,7 @@ static __fileoff_t overlayPE = -1L;
 static __filesize_t entryPE = 0;
 
 static int is_64bit;
-static binary_stream* pe_cache=&bNull;
+static binary_stream* pe_cache=NULL;
 
 typedef union {
   PE32HEADER   pe32;
@@ -1197,10 +1197,10 @@ bool PE_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift
 
 PE_Parser::PE_Parser(binary_stream& h,CodeGuider& __code_guider,udn& u)
 	:MZ_Parser(h,__code_guider,u)
-	,pe_cache1(&bNull)
-	,pe_cache2(&bNull)
-	,pe_cache3(&bNull)
-	,pe_cache4(&bNull)
+	,pe_cache1(&h)
+	,pe_cache2(&h)
+	,pe_cache3(&h)
+	,pe_cache4(&h)
 {
    int i;
 
@@ -1232,11 +1232,11 @@ PE_Parser::PE_Parser(binary_stream& h,CodeGuider& __code_guider,udn& u)
    }
 
    binary_stream& __main_handle = main_handle();
-   if((pe_cache = __main_handle.dup()) == &bNull) pe_cache = &__main_handle;
-   if((pe_cache1 = __main_handle.dup()) == &bNull) pe_cache1 = &__main_handle;
-   if((pe_cache2 = __main_handle.dup()) == &bNull) pe_cache2 = &__main_handle;
-   if((pe_cache3 = __main_handle.dup()) == &bNull) pe_cache3 = &__main_handle;
-   if((pe_cache4 = __main_handle.dup()) == &bNull) pe_cache4 = &__main_handle;
+   pe_cache = __main_handle.dup();
+   pe_cache1 = __main_handle.dup();
+   pe_cache2 = __main_handle.dup();
+   pe_cache3 = __main_handle.dup();
+   pe_cache4 = __main_handle.dup();
 }
 
 PE_Parser::~PE_Parser()
@@ -1244,11 +1244,11 @@ PE_Parser::~PE_Parser()
   binary_stream& __main_handle = main_handle();
   if(peVA) delete peVA;
   if(peDir) delete peDir;
-  if(pe_cache != &bNull && pe_cache != &__main_handle) delete pe_cache;
-  if(pe_cache1 != &bNull && pe_cache1 != &__main_handle) delete pe_cache1;
-  if(pe_cache2 != &bNull && pe_cache2 != &__main_handle) delete pe_cache2;
-  if(pe_cache3 != &bNull && pe_cache3 != &__main_handle) delete pe_cache3;
-  if(pe_cache4 != &bNull && pe_cache4 != &__main_handle) delete pe_cache4;
+  if(pe_cache != &__main_handle) delete pe_cache;
+  if(pe_cache1 != &__main_handle) delete pe_cache1;
+  if(pe_cache2 != &__main_handle) delete pe_cache2;
+  if(pe_cache3 != &__main_handle) delete pe_cache3;
+  if(pe_cache4 != &__main_handle) delete pe_cache4;
 }
 
 int PE_Parser::query_bitness(__filesize_t off) const
@@ -1348,7 +1348,7 @@ void PE_Parser::pe_ReadPubNameList(binary_stream& handle)
   unsigned long i,nitems,expaddr,nameptr,nameaddr,entry_pa;
   unsigned ord;
   symbolic_information pn;
-  binary_stream& b_cache = (pe_cache4 == &bNull) ? handle : *pe_cache4;
+  binary_stream& b_cache = *pe_cache4;
   nitems = PEExportNumItems(handle);
   expaddr  = RVA2Phys(et.etOrdinalTableRVA);
   nameptr = RVA2Phys(et.etNamePtrTableRVA);

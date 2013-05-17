@@ -273,16 +273,16 @@ PharLap_Parser::PharLap_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
 	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
 	    ,_udn(u)
-	    ,pl_cache(&bNull)
+	    ,pl_cache(&h)
 {
     main_handle.seek(0,binary_stream::Seek_Set);
     main_handle.read(&nph,sizeof(nph));
-    if((pl_cache = main_handle.dup()) == &bNull) pl_cache = &main_handle;
+    pl_cache = main_handle.dup();
 }
 
 PharLap_Parser::~PharLap_Parser()
 {
-    if(pl_cache != &bNull && pl_cache != &main_handle) delete pl_cache;
+    if(pl_cache != &main_handle) delete pl_cache;
 }
 
 bool PharLap_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
