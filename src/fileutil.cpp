@@ -892,12 +892,8 @@ static bool ReverseBlock()
 static void  __FASTCALL__ TranslateBlock(char * buff,unsigned len, const unsigned char *xlt)
 {
   unsigned i;
-  for(i = 0;i < len;i++)
-  {
-    buff[i] = xlt[(int)buff[i]];
-  }
+  for(i = 0;i < len;i++) buff[i] = xlt[(int)buff[i]];
 }
-
 
 static bool XLatBlock()
 {
