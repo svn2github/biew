@@ -37,7 +37,6 @@ using namespace	usr;
 #include "codeguid.h"
 #include "beyehelp.h"
 #include "tstrings.h"
-#include "beyeutil.h"
 #include "bconsole.h"
 #include "reg_form.h"
 #include "libbeye/kbd_code.h"

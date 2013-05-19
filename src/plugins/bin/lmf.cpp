@@ -28,7 +28,6 @@ using namespace	usr;
 #include "reg_form.h"
 #include "udn.h"
 #include "beyehelp.h"
-#include "beyeutil.h"
 #include "bconsole.h"
 #include "tstrings.h"
 #include "plugins/disasm.h"

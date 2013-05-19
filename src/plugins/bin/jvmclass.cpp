@@ -28,7 +28,6 @@ using namespace	usr;
 
 #include "bconsole.h"
 #include "beyehelp.h"
-#include "beyeutil.h"
 #include "udn.h"
 #include "colorset.h"
 #include "codeguid.h"

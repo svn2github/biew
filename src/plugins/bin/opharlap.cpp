@@ -22,7 +22,6 @@ using namespace	usr;
 
 #include "colorset.h"
 #include "udn.h"
-#include "beyeutil.h"
 #include "beyehelp.h"
 #include "bconsole.h"
 #include "reg_form.h"

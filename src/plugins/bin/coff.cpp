@@ -31,7 +31,6 @@ using namespace	usr;
 #include "colorset.h"
 #include "bconsole.h"
 #include "udn.h"
-#include "beyeutil.h"
 #include "beyehelp.h"
 #include "plugins/bin/coff.h"
 #include "plugins/disasm.h"

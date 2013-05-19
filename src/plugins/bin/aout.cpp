@@ -22,7 +22,6 @@ using namespace	usr;
 
 #include "libbeye/bswap.h"
 #include "colorset.h"
-#include "beyeutil.h"
 #include "udn.h"
 #include "beyehelp.h"
 #include "bconsole.h"

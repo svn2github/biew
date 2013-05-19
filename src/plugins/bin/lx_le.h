@@ -18,7 +18,6 @@
 #define __LX_LE_INC
 
 #include "config.h"
-#include "beyeutil.h"
 #include "libbeye/bstream.h"
 #include "mz.h"
 #include "ne.h"

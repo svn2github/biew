@@ -28,7 +28,6 @@ using namespace	usr;
 #include "udn.h"
 #include "beyehelp.h"
 #include "bconsole.h"
-#include "beyeutil.h"
 #include "reg_form.h"
 #include "tstrings.h"
 #include "plugins/bin/arch.h"

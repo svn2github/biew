@@ -18,7 +18,6 @@
 #define __MZ_INC
 
 #include "config.h"
-#include "beyeutil.h"
 #include "plugins/binary_parser.h"
 
 namespace	usr {

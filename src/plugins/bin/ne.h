@@ -18,7 +18,6 @@
 #define __NE_INC
 
 #include "config.h"
-#include "beyeutil.h"
 #include "libbeye/bstream.h"
 #include "mz.h"
 
