@@ -243,32 +243,25 @@ bool  __FASTCALL__ ma_AddData(memArray *obj,const any_t*udata,unsigned len,bool 
 {
   char *new_item;
   if(obj->nSize > UINT_MAX - (LST_STEP+1)) return 0;
-  if(obj->nItems + 1 > obj->nSize)
-  {
+  if(obj->nItems + 1 > obj->nSize) {
     any_t*ptr;
     if(!obj->data) ptr = new char*[obj->nSize+LST_STEP];
     else           ptr = mp_realloc(obj->data,sizeof(char *)*(obj->nSize+LST_STEP));
-    if(ptr)
-    {
+    if(ptr) {
       obj->nSize = obj->nSize+LST_STEP;
       obj->data = (any_t**)ptr;
     }
     else goto err;
   }
   new_item = new char [len];
-  if(new_item)
-  {
+  if(new_item) {
     memcpy(new_item,udata,len);
     obj->data[obj->nItems++] = new_item;
     return true;
   }
-  else
-  {
+  else {
     err:
-    if(interact)
-    {
-      MemOutBox("Building list");
-    }
+    if(interact) MemOutBox("Building list");
   }
   return false;
 }
