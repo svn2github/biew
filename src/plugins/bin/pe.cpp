@@ -89,7 +89,7 @@ namespace	usr {
 	    unsigned			PEExportNumItems(binary_stream& handle);
 	    std::vector<std::string>	PEExportReadItems(binary_stream& handle,size_t nnames);
 	    unsigned			__peReadASCIIZName(binary_stream& handle,__filesize_t offset,std::string& buff);
-	    static __filesize_t		RVA2Phys(__filesize_t rva);
+	    __filesize_t		RVA2Phys(__filesize_t rva) const;
 	    std::string			writeExportVA(__filesize_t va,binary_stream&handle);
 	    std::vector<std::string>	__ReadImpContPE(binary_stream& handle,size_t nnames);
 	    unsigned			GetImpCountPE(binary_stream& handle);
@@ -98,8 +98,8 @@ namespace	usr {
 	    std::vector<PE_OBJECT>	__ReadObjectsPE(binary_stream& handle,size_t n) const;
 	    void			ObjPaintPE(TWindow& win,const std::vector<PE_OBJECT>& names,unsigned start) const;
 	    void			PaintNewHeaderPE(TWindow& win,const std::vector<std::string>& ptr,unsigned tpage) const;
-	    void			PaintNewHeaderPE_2(TWindow& w) const;
-	    void			PaintNewHeaderPE_1(TWindow& w) const;
+	    void			PaintNewHeaderPE_2(TWindow& w,__filesize_t&) const;
+	    void			PaintNewHeaderPE_1(TWindow& w,__filesize_t&) const;
 	    const char*			PECPUType() const;
 	    __filesize_t		CalcPEObjectEntry(__fileoff_t offset) const;
 	    bool			FindPubName(std::string& buff,__filesize_t pa);
@@ -122,19 +122,20 @@ namespace	usr {
 	    PERVA*		peDir;
 	    std::set<symbolic_information>	PubNames;
 
-	    static void			(PE_Parser::*pephead[])(TWindow&) const;
+	    __fileoff_t		overlayPE;
+
+	    bool is_64bit;
+	    binary_stream*	pe_cache;
+
+	    static void			(PE_Parser::*pephead[])(TWindow&,__filesize_t&) const;
     };
 static const char* txt[]={ "PEHelp", "Import", "Export","", "","","", "PEHead", "Dir   ", "Object" };
 const char* PE_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
 #define ARRAY_SIZE(x)       (sizeof(x)/sizeof(x[0]))
 
-static __fileoff_t overlayPE = -1L;
-static __filesize_t entryPE = 0;
 
-static int is_64bit;
-static binary_stream* pe_cache=NULL;
-
+static __filesize_t	entryPE;
 typedef union {
   PE32HEADER   pe32;
   PE32P_HEADER pe32p;
@@ -156,7 +157,7 @@ __filesize_t PE_Parser::CalcPEObjectEntry(__fileoff_t offset) const
  return offset;
 }
 
-__filesize_t PE_Parser::RVA2Phys(__filesize_t rva)
+__filesize_t PE_Parser::RVA2Phys(__filesize_t rva) const
 {
  int i;
  __filesize_t npages,poff,obj_rva,pphys,ret,size;
@@ -252,11 +253,11 @@ const char* PE_Parser::PECPUType() const
     return "Unknown";
 }
 
-void PE_Parser::PaintNewHeaderPE_1(TWindow& w) const
+void PE_Parser::PaintNewHeaderPE_1(TWindow& w,__filesize_t& entry_PE) const
 {
   const char *fmt;
   time_t tval;
-  entryPE = RVA2Phys(pe.peEntryPointRVA);
+  entry_PE = RVA2Phys(pe.peEntryPointRVA);
   tval = pe.peTimeDataStamp;
   w.printf(
 	   "Signature                      = '%c%c' (Type: %04X)\n"
@@ -296,7 +297,7 @@ void PE_Parser::PaintNewHeaderPE_1(TWindow& w) const
 	   ,Gebool(pe.peFlags & 0x2000)
 	   ,(int)pe.peLMajor,(int)pe.peLMinor);
   w.set_color(dialog_cset.entry);
-  w.printf("EntryPoint RVA    %s = %08lXH (Offset: %08lXH)",pe.peFlags & 0x2000 ? "[ LibEntry ]" : "[ EXEEntry ]",pe.peEntryPointRVA,entryPE); w.clreol();
+  w.printf("EntryPoint RVA    %s = %08lXH (Offset: %08lXH)",pe.peFlags & 0x2000 ? "[ LibEntry ]" : "[ EXEEntry ]",pe.peEntryPointRVA,entry_PE); w.clreol();
   w.set_color(dialog_cset.main);
   if(is_64bit)
     fmt = "\nImage base                   = %016llXH\n"
@@ -309,7 +310,7 @@ void PE_Parser::PaintNewHeaderPE_1(TWindow& w) const
 	   ,PE32_HDR(pe32,peObjectAlign));
 }
 
-void PE_Parser::PaintNewHeaderPE_2(TWindow& w) const
+void PE_Parser::PaintNewHeaderPE_2(TWindow& w,__filesize_t& entry_PE) const
 {
   const char *fmt;
   static const char * subSystem[] =
@@ -379,15 +380,14 @@ void PE_Parser::PaintNewHeaderPE_2(TWindow& w) const
 	   ,PE32_HDR(pe32,peStackCommitSize)
 	   ,PE32_HDR(pe32,peHeapReserveSize)
 	   ,PE32_HDR(pe32,peHeapCommitSize));
-  if (CalcOverlayOffset(MZ_Parser::is_new_exe(beye_context().sc_bm_file())) != -1) {
-    entryPE = overlayPE;
+  if ((entry_PE=CalcOverlayOffset(MZ_Parser::is_new_exe(beye_context().sc_bm_file()))) != -1) {
     w.set_color(dialog_cset.entry);
-    w.printf("\nOverlay                        = %08lXH", entryPE); w.clreol();
+    w.printf("\nOverlay                        = %08lXH", entry_PE); w.clreol();
     w.set_color(dialog_cset.main);
   }
 }
 
-void (PE_Parser::*PE_Parser::pephead[])(TWindow&) const = /* [dBorca] the table is const, not the any_t*/
+void (PE_Parser::*PE_Parser::pephead[])(TWindow&,__filesize_t&) const = /* [dBorca] the table is const, not the any_t*/
 {
     &PE_Parser::PaintNewHeaderPE_1,
     &PE_Parser::PaintNewHeaderPE_2
@@ -403,7 +403,7 @@ void PE_Parser::PaintNewHeaderPE(TWindow& win,const std::vector<std::string>& pt
     win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
     if(tpage < 2) {
 	win.goto_xy(1,1);
-	(this->*pephead[tpage])(win);
+	(this->*pephead[tpage])(win,entryPE);
     }
     win.refresh_full();
 }
@@ -497,7 +497,8 @@ std::vector<PE_OBJECT> PE_Parser::__ReadObjectsPE(binary_stream& handle,size_t n
 
 __fileoff_t PE_Parser::CalcOverlayOffset(__filesize_t ___headshift) const
 {
-    if (overlayPE == -1 && pe.peObjects) {
+    __filesize_t overlay_PE=overlayPE;
+    if (overlay_PE == -1 && pe.peObjects) {
 	pe_cache->seek(0x18 + pe.peNTHdrSize + ___headshift, binary_stream::Seek_Set);
 	std::vector<PE_OBJECT> objs = __ReadObjectsPE(*pe_cache, pe.peObjects);
 	if (!objs.empty()) {
@@ -505,11 +506,11 @@ __fileoff_t PE_Parser::CalcOverlayOffset(__filesize_t ___headshift) const
 	    for (i = 0; i < pe.peObjects; i++) {
 		PE_OBJECT& o = objs[i];
 		__fileoff_t end = o.oPhysicalOffset + ((o.oPhysicalSize + (PE32_HDR(pe32,peFileAlign) - 1)) & ~(PE32_HDR(pe32,peFileAlign) - 1));
-		if (overlayPE < end) overlayPE = end;
+		if (overlay_PE < end) overlay_PE = end;
 	    }
 	}
     }
-    return overlayPE;
+    return overlay_PE;
 }
 
 __filesize_t PE_Parser::action_F10()
@@ -1158,6 +1159,8 @@ PE_Parser::PE_Parser(binary_stream& h,CodeGuider& __code_guider,udn& u)
 	,pe_cache2(&h)
 	,pe_cache3(&h)
 	,pe_cache4(&h)
+	,overlayPE(-1L)
+	,pe_cache(&h)
 {
    int i;
 

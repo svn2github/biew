@@ -186,6 +186,14 @@ namespace	usr {
 	    bool			ReadPubNames(binary_stream& handle,__filesize_t offset);
 	    unsigned			__get_object_attribute(__filesize_t pa,std::string& name,__filesize_t& start,__filesize_t& end,int& _class,int& bitness) const;
 
+	    NEHEADER ne;
+	    std::set<symbolic_information> PubNames;
+
+	    binary_stream* ne_cache;
+	    binary_stream* ne_cache1;
+	    binary_stream* ne_cache2;
+	    binary_stream* ne_cache3;
+
 	    static void			(NE_Parser::*nephead[])(TWindow& w) const;
     };
 } // namespace	usr

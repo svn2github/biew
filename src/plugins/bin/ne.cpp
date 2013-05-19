@@ -45,14 +45,6 @@ namespace	usr {
 static const char* txt[]={ "NEHelp", "ModRef", "ResNam", "NRsNam", "", "Entry ", "ResTbl", "NE Hdr", "", "SegDef" };
 const char* NE_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-static NEHEADER ne;
-static std::set<symbolic_information> PubNames;
-
-static binary_stream* ne_cache = NULL;
-static binary_stream* ne_cache1 = NULL;
-static binary_stream* ne_cache2 = NULL;
-static binary_stream* ne_cache3 = NULL;
-
 const char* NE_Parser::__nedata[] =
 {
   "NOAUTODATA",
