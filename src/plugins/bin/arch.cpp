@@ -52,7 +52,7 @@ namespace	usr {
 	    virtual int			query_platform() const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
 	private:
-	    bool			archReadModList(memArray *obj,unsigned nnames,__filesize_t *addr);
+	    std::vector<std::string>	archReadModList(size_t nnames,__filesize_t* addr);
 
 	    ar_hdr		arch;
 	    binary_stream&	main_handle;
@@ -102,77 +102,72 @@ __filesize_t Arch_Parser::show_header()
   return fpos;
 }
 
-bool Arch_Parser::archReadModList(memArray *obj,unsigned nnames,__filesize_t *addr)
+std::vector<std::string> Arch_Parser::archReadModList(size_t nnames,__filesize_t *addr)
 {
-  __filesize_t foff,flen;
-  unsigned i;
-  char stmp[80];
-  flen = main_handle.flength();
-  for(i = 0;i < nnames;i++)
-  {
-    bool is_eof;
-    /**
-       Some archives sometimes have big and sometimes little endian.
-       Here is a horrible attempt to determine it.
-    */
-    foff = addr[i];
-    if(foff > flen)  foff = be2me_32(foff);
-    if(IsKbdTerminate()) break;
-    main_handle.seek(foff,binary_stream::Seek_Set);
-    main_handle.read(stmp,sizeof(ar_sub_hdr));
-    is_eof = main_handle.eof();
-    stmp[sizeof(ar_sub_hdr)-2] = 0;
-    if(!ma_AddString(obj,is_eof ? CORRUPT_BIN_MSG : stmp,true)) break;
-    if(is_eof) break;
-  }
-  return true;
+    std::vector<std::string> rc;
+    __filesize_t foff,flen;
+    unsigned i;
+    char stmp[80];
+    flen = main_handle.flength();
+    for(i = 0;i < nnames;i++) {
+	bool is_eof;
+/**
+    Some archives sometimes have big and sometimes little endian.
+    Here is a horrible attempt to determine it.
+*/
+	foff = addr[i];
+	if(foff > flen)  foff = be2me_32(foff);
+	if(IsKbdTerminate()) break;
+	main_handle.seek(foff,binary_stream::Seek_Set);
+	main_handle.read(stmp,sizeof(ar_sub_hdr));
+	is_eof = main_handle.eof();
+	stmp[sizeof(ar_sub_hdr)-2] = 0;
+	rc.push_back(is_eof ? CORRUPT_BIN_MSG : stmp);
+	if(is_eof) break;
+    }
+    return rc;
 }
 
 __filesize_t Arch_Parser::action_F3()
 {
-   memArray *obj;
-   __filesize_t *addr;
-   unsigned long rnames,bnames;
-   unsigned nnames;
-   __filesize_t fpos,flen;
-   fpos = beye_context().tell();
-   flen = main_handle.flength();
+    __filesize_t *addr;
+    unsigned long rnames,bnames;
+    unsigned nnames;
+    __filesize_t fpos,flen;
+    fpos = beye_context().tell();
+    flen = main_handle.flength();
     main_handle.seek(sizeof(ar_hdr),binary_stream::Seek_Set);
     rnames = main_handle.read(type_dword);
-   bnames = be2me_32(rnames);
+    bnames = be2me_32(rnames);
    /**
       Some archives sometimes have big and sometimes little endian.
       Here is a horrible attempt to determine it.
    */
-   if(!(nnames = (unsigned)std::min(rnames,bnames))) { beye_context().NotifyBox(NOT_ENTRY,"Archive modules list"); return fpos; }
+    if(!(nnames = (unsigned)std::min(rnames,bnames))) { beye_context().NotifyBox(NOT_ENTRY,"Archive modules list"); return fpos; }
    /**
       Some archives sometimes have length and sometimes number of entries
       Here is a horrible attempt to determine it.
    */
-   if(!(nnames%4)) nnames/=sizeof(unsigned long);
-   if(!(obj = ma_Build(nnames,true))) return fpos;
-   if(!(addr = new __filesize_t [nnames])) goto exit;
+    if(!(nnames%4)) nnames/=sizeof(unsigned long);
+    if(!(addr = new __filesize_t [nnames])) return fpos;
     main_handle.seek(sizeof(ar_hdr)+sizeof(unsigned long),binary_stream::Seek_Set);
     main_handle.read(addr,sizeof(unsigned long)*nnames);
-   if(archReadModList(obj,nnames,addr))
-   {
-     int ret;
-     ret = ma_Display(obj," Archive modules list ",LB_SELECTIVE,-1);
-     if(ret != -1)
-     {
-       /**
-	  Some archives sometimes have big and sometimes little endian.
-	  Here is a horrible attempt to determine it.
-       */
-       fpos = addr[ret];
-       if(fpos > flen) fpos = be2me_32(fpos);
-       fpos += sizeof(ar_sub_hdr);
-     }
-   }
-   delete addr;
-   exit:
-   ma_Destroy(obj);
-   return fpos;
+    std::vector<std::string> objs = archReadModList(nnames,addr);
+    if(!objs.empty()) {
+	int ret;
+	ret = ListBox(objs," Archive modules list ",LB_SELECTIVE,-1);
+	if(ret != -1) {
+	/**
+	    Some archives sometimes have big and sometimes little endian.
+	    Here is a horrible attempt to determine it.
+	*/
+	    fpos = addr[ret];
+	    if(fpos > flen) fpos = be2me_32(fpos);
+	    fpos += sizeof(ar_sub_hdr);
+	}
+    }
+    delete addr;
+    return fpos;
 }
 
 Arch_Parser::Arch_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)

@@ -298,45 +298,45 @@ typedef struct tagLXResource
 	    binary_stream*		lx_cache;
 	    virtual __filesize_t	CalcEntryPoint(unsigned long objnum,__filesize_t _offset) const;
 	    virtual __filesize_t	CalcPageEntry(unsigned long pageidx) const;
-	    const char*			lxeGetMapAttr(unsigned long attr);
-	    void			ShowFwdModOrdLX(const LX_ENTRY *lxent);
+	    const char*			lxeGetMapAttr(unsigned long attr) const;
+	    void			ShowFwdModOrdLX(const LX_ENTRY& lxent) const;
 	    unsigned			LXNRNamesNumItems(binary_stream&handle);
-	    bool			LXNRNamesReadItems(binary_stream&handle,memArray *obj,unsigned nnames);
+	    std::vector<std::string>	LXNRNamesReadItems(binary_stream&handle,size_t nnames);
 	    unsigned			LXRNamesNumItems(binary_stream&handle);
-	    bool			LXRNamesReadItems(binary_stream&handle,memArray *obj,unsigned nnames);
+	    std::vector<std::string>	LXRNamesReadItems(binary_stream&handle,size_t nnames);
 	protected:
 	    static union LX_LE lxe;
 	private:
-	    bool			__ReadResourceGroupLX(binary_stream&handle,memArray *obj,unsigned nitems,long *addr);
-	    bool			__ReadMapTblLX(binary_stream&handle,memArray *obj,unsigned n);
-	    static void __FASTCALL__	PaintEntriesLX(TWindow *win,const any_t **names,unsigned start,unsigned nlist);
-	    static void			entrypaintLX(TWindow *w,const LX_ENTRY *nam);
-	    static const char*		entryTypeLX(unsigned char type);
-	    __filesize_t		CalcEntryBungleLX(unsigned ordinal,bool dispmsg);
-	    __filesize_t		CalcEntryLX(const LX_ENTRY *lxent);
-	    void			ReadLXLEImpName(__filesize_t offtable,unsigned num,char *str);
-	    void			ReadLXLEImpMod(__filesize_t offtable,unsigned num,char *str);
+	    std::vector<std::string>	__ReadResourceGroupLX(binary_stream& handle,size_t nitems,long* addr);
+	    std::vector<std::string>	__ReadMapTblLX(binary_stream& handle,size_t n);
+	    void			PaintEntriesLX(TWindow& win,const std::vector<LX_ENTRY>& names,unsigned start) const;
+	    void			entrypaintLX(TWindow& w,const LX_ENTRY& nam) const;
+	    const char*			entryTypeLX(unsigned char type) const;
+	    __filesize_t		CalcEntryBungleLX(unsigned ordinal,bool dispmsg) const;
+	    __filesize_t		CalcEntryLX(const LX_ENTRY& lxent) const;
+	    void			ReadLXLEImpName(__filesize_t offtable,unsigned num,char *str) const;
+	    void			ReadLXLEImpMod(__filesize_t offtable,unsigned num,char *str) const;
 	    __filesize_t		__calcPageEntry(LX_MAP_TABLE *mt) const;
 	    void			lxReadPageDesc(binary_stream&handle,LX_MAP_TABLE *mt,unsigned long pageidx) const;
-	    bool			__ReadEntriesLX(binary_stream&handle,memArray *obj);
-	    bool			__ReadObjectsLX(binary_stream&handle,memArray *obj,unsigned n);
-	    static void __FASTCALL__	ObjPaintLX(TWindow *win,const any_t **names,unsigned start,unsigned nlist);
-	    static void			objpaintLX(TWindow *w,const LX_OBJECT *nam);
-	    bool			__ReadModRefNamesLX(binary_stream&handle,memArray *obj,unsigned nnames);
-	    bool			LXImpNamesReadItems(binary_stream&handle,memArray *obj,unsigned nnames);
+	    std::vector<LX_ENTRY>	__ReadEntriesLX(binary_stream& handle);
+	    std::vector<LX_OBJECT>	__ReadObjectsLX(binary_stream& handle,size_t n);
+	    void			ObjPaintLX(TWindow& win,const std::vector<LX_OBJECT>& names,unsigned start) const;
+	    void			objpaintLX(TWindow& w,const LX_OBJECT& nam) const;
+	    std::vector<std::string>	__ReadModRefNamesLX(binary_stream&handle,size_t nnames);
+	    std::vector<std::string>	LXImpNamesReadItems(binary_stream&handle,size_t nnames);
 	    unsigned			LXImpNamesNumItems(binary_stream&handle);
-	    static void __FASTCALL__	PaintNewHeaderLX(TWindow *win,const any_t **ptr,unsigned npage,unsigned tpage);
-	    static void			PaintNewHeaderLX_3(TWindow *w);
-	    static void			PaintNewHeaderLX_2(TWindow *w);
-	    static void			PaintNewHeaderLX_1(TWindow *w);
-	    static const char*		__getOSModType(char type);
-	    static const char*		GetOSTypeLX(int num);
-	    static const char*		GetCPUTypeLX(int num);
-	    static const char*		GetOrderingLX(unsigned char type);
+	    void			PaintNewHeaderLX(TWindow& win,const std::vector<std::string>& obj,unsigned tpage) const;
+	    void			PaintNewHeaderLX_3(TWindow& w) const;
+	    void			PaintNewHeaderLX_2(TWindow& w) const;
+	    void			PaintNewHeaderLX_1(TWindow& w) const;
+	    const char*			__getOSModType(char type) const;
+	    const char*			GetOSTypeLX(int num) const;
+	    const char*			GetCPUTypeLX(int num) const;
+	    const char*			GetOrderingLX(unsigned char type) const;
 
-	    static void			(* lxphead[])(TWindow*);
+	    static void			(LX_Parser::*lxphead[])(TWindow&) const;
 
-	    static __filesize_t LXEntryPoint;
+	    __filesize_t		LXEntryPoint;
     };
 
     class LE_Parser : public LX_Parser {
@@ -356,10 +356,10 @@ typedef struct tagLXResource
 	    virtual __filesize_t	CalcEntryPoint(unsigned long objnum,__filesize_t _offset) const;
 	    virtual __filesize_t	CalcPageEntry(unsigned long pageidx) const;
 	private:
-	    __filesize_t		CalcEntryBungleLE(unsigned ordinal,bool dispmsg);
-	    __filesize_t		CalcEntryLE(const LX_ENTRY *lxent);
+	    __filesize_t		CalcEntryBungleLE(unsigned ordinal,bool dispmsg) const;
+	    __filesize_t		CalcEntryLE(const LX_ENTRY& lxent) const;
 	    __filesize_t		__calcPageEntryLE(LE_PAGE *mt,unsigned long idx) const;
-	    bool			__ReadMapTblLE(binary_stream&handle,memArray *obj,unsigned n);
+	    std::vector<std::string>	__ReadMapTblLE(binary_stream&handle,size_t n);
     };
 } // namespace	usr
 #endif

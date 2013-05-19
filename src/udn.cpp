@@ -68,20 +68,20 @@ bool udn::add_item() {
     return false;
 }
 
-bool udn::read_items(binary_stream& handle,memArray* _names,unsigned nnames)
+std::vector<std::string> udn::read_items(size_t nnames)
 {
+    std::vector<std::string> rc;
     char stmp[256];
-    unsigned i;
-    UNUSED(handle);
+    size_t i;
     std::set<udn_record>::iterator it=udn_list.begin();
     for(i=0;i<nnames;i++) {
 	sprintf(stmp,"%-40s %08lX"
 		,(*it).name
 		,(*it).offset);
 	it++;
-	if(!ma_AddString(_names,stmp,true)) break;
+	rc.push_back(stmp);
     }
-    return true;
+    return rc;
 }
 
 bool udn::delete_item() {
@@ -90,19 +90,12 @@ bool udn::delete_item() {
     std::string title = " User-defined Names (aka bookmarks) ";
     ssize_t nnames = udn_list.size();
     int flags = LB_SELECTIVE;
-    bool bval;
-    memArray* obj;
-    TWindow* w;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
-    w = PleaseWaitWnd();
-    bval = read_items(beye_context().sc_bm_file(),obj,nnames);
+    TWindow* w = PleaseWaitWnd();
+    std::vector<std::string> objs = read_items(nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ret = ma_Display(obj,title,flags,-1);
-    }
-    ma_Destroy(obj);
-    exit:
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ret = ListBox(objs,title,flags,-1);
+exit:
     if(ret!=-1) {
 	int i=0;
 	std::set<udn_record>::iterator it;
@@ -119,19 +112,12 @@ bool udn::select(__filesize_t& off) {
     std::string title = " User-defined Names (aka bookmarks) ";
     ssize_t nnames = udn_list.size();
     int flags = LB_SELECTIVE;
-    bool bval;
-    memArray* obj;
-    TWindow* w;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
-    w = PleaseWaitWnd();
-    bval = read_items(beye_context().sc_bm_file(),obj,nnames);
+    TWindow* w = PleaseWaitWnd();
+    std::vector<std::string> objs = read_items(nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ret = ma_Display(obj,title,flags,-1);
-    }
-    ma_Destroy(obj);
-    exit:
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ret = ListBox(objs,title,flags,-1);
+exit:
     if(ret!=-1) {
 	int i=0;
 	std::set<udn_record>::const_iterator it;

@@ -140,7 +140,7 @@ namespace	usr {
 	    friend class LE_Parser;
 	    friend class PE_Parser;
 	    static unsigned		GetNamCountNE(binary_stream&handle,__filesize_t offset);
-	    static bool			RNamesReadItems(binary_stream&handle,memArray *obj,unsigned nnames,__filesize_t offset);
+	    static std::vector<std::string> RNamesReadItems(binary_stream& handle,size_t nnames,__filesize_t offset);
 
 	    static const char*		GetPMWinAPI(unsigned flag);
 	    static const char*		__nedata[];
@@ -153,32 +153,32 @@ namespace	usr {
 	    RELOC_NE*			__found_RNE(__filesize_t segoff,__filesize_t slength,unsigned segnum,unsigned keyoff,char codelen);
 	    void			BuildNERefChain(__filesize_t segoff,__filesize_t slength);
 	    unsigned int		GetResourceGroupCountNE(binary_stream&handle);
-	    bool			__ReadResourceGroupNE(binary_stream&handle,memArray *obj,unsigned nitems,long *addr);
+	    std::vector<std::string>	__ReadResourceGroupNE(binary_stream&handle,size_t nitems,long *addr);
 	    char*			GetResourceIDNE(binary_stream&handle,unsigned rid,__filesize_t BegResTab);
 	    unsigned			GetEntryCountNE();
-	    bool			__ReadEntryTableNE(binary_stream&handle,memArray *obj);
+	    std::vector<ENTRY>		__ReadEntryTableNE(binary_stream& handle);
 	    __filesize_t		CalcEntryNE(unsigned ord,bool dispmsg);
 	    bool			ReadSegDefNE(SEGDEF *obj,unsigned segnum) const;
 	    bool			ReadEntryNE(ENTRY *obj,unsigned entnum);
-	    void			SkipEntryItemNE(binary_stream&handle,unsigned char etype);
-	    void			ReadEntryItemNE(binary_stream&handle,ENTRY *obj,unsigned char etype);
-	    unsigned			NENRNamesNumItems(binary_stream&handle);
-	    unsigned			NERNamesNumItems(binary_stream&handle);
-	    bool			__ReadSegTableNE(binary_stream&handle,memArray *obj,unsigned nnames);
-	    bool			NENRNamesReadItems(binary_stream&handle,memArray *names,unsigned nnames);
-	    bool			NERNamesReadItems(binary_stream&handle,memArray *names,unsigned nnames);
-	    bool			__ReadProcListNE(binary_stream&handle,memArray *obj,int modno);
-	    bool			isPresent(memArray *arr,unsigned nentry,const std::string& _tmpl);
+	    void			SkipEntryItemNE(binary_stream& handle,unsigned char etype);
+	    void			ReadEntryItemNE(binary_stream& handle,ENTRY *obj,unsigned char etype);
+	    unsigned			NENRNamesNumItems(binary_stream& handle);
+	    unsigned			NERNamesNumItems(binary_stream& handle);
+	    std::vector<SEGDEF>		__ReadSegTableNE(binary_stream& handle,size_t nnames);
+	    std::vector<std::string>	NENRNamesReadItems(binary_stream& handle,size_t nnames);
+	    std::vector<std::string>	NERNamesReadItems(binary_stream& handle,size_t nnames);
+	    std::vector<std::string>	__ReadProcListNE(binary_stream& handle,int modno);
+	    bool			isPresent(const std::vector<std::string>& objs,const std::string& _tmpl) const;
 	    void			ShowProcListNE(int modno);
-	    bool			__ReadModRefNamesNE(binary_stream&handle,memArray *obj);
-	    static void			EntPaintNE(TWindow *win,const any_t **names,unsigned start,unsigned nlist);
-	    static void			SegPaintNE(TWindow *win,const any_t **names,unsigned start,unsigned nlist);
-	    static void			paintdummyentryNE(TWindow *w);
-	    static void			entpaintNE(TWindow *w,const ENTRY *nam,unsigned flags);
-	    static void			PaintNewHeaderNE(TWindow *win,const any_t **ptr,unsigned npage,unsigned tpage);
-	    static void	__FASTCALL__	PaintNewHeaderNE_2(TWindow *w);
-	    static void	__FASTCALL__	PaintNewHeaderNE_1(TWindow *w);
-	    static const char*		__getNEType(unsigned type);
+	    std::vector<std::string>	__ReadModRefNamesNE(binary_stream& handle);
+	    void			EntPaintNE(TWindow& win,const std::vector<ENTRY>& names,unsigned start) const;
+	    void			SegPaintNE(TWindow& win,const std::vector<SEGDEF>& names,unsigned start) const;
+	    void			paintdummyentryNE(TWindow& w) const;
+	    void			entpaintNE(TWindow& w,const ENTRY& nam,unsigned flags) const;
+	    void			PaintNewHeaderNE(TWindow& win,const std::vector<std::string>& ptr,unsigned npage) const;
+	    void			PaintNewHeaderNE_2(TWindow& w) const;
+	    void			PaintNewHeaderNE_1(TWindow& w) const;
+	    const char*			__getNEType(unsigned type) const;
 	    std::string			rd_ImpName(unsigned idx,bool useasoff);
 	    bool			FindPubName(std::string& buff,__filesize_t pa);
 	    __filesize_t		CalcEntryPointNE(unsigned segnum,unsigned offset);
@@ -186,7 +186,7 @@ namespace	usr {
 	    bool			ReadPubNames(binary_stream& handle,__filesize_t offset);
 	    unsigned			__get_object_attribute(__filesize_t pa,std::string& name,__filesize_t& start,__filesize_t& end,int& _class,int& bitness) const;
 
-	    static void			(__FASTCALL__ * nephead[])(TWindow* w);
+	    static void			(NE_Parser::*nephead[])(TWindow& w) const;
     };
 } // namespace	usr
 #endif

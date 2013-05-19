@@ -179,7 +179,7 @@ void Beye_Help::paint(TWindow *win,const char * * names,unsigned nlist,unsigned 
 
 typedef char *lpstr;
 
-int Beye_Help::__ListBox(const char** names,unsigned nlist,const std::string& title) const
+int Beye_Help::ListBox(const char** names,unsigned nlist,const std::string& title) const
 {
  TWindow * wlist;
  unsigned i,j,height,mwidth = title.length();
@@ -398,7 +398,7 @@ void __FASTCALL__ hlpDisplay( unsigned long item_id )
   {
     if(!(str_ptr = (const char**)bhelp.point_strings(data,data_size,&nstr))) goto mem_off;
     title = data;
-    bhelp.__ListBox(str_ptr,(unsigned)nstr,title);
+    bhelp.ListBox(str_ptr,(unsigned)nstr,title);
     delete str_ptr;
   }
   delete data;

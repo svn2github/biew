@@ -147,62 +147,52 @@ bool  RDOff_Parser::rdoff_skiprec(unsigned char type)
 
 __filesize_t RDOff_Parser::action_F3()
 {
-  __filesize_t fpos;
-  unsigned char rec;
-  unsigned i;
-  char str[33],sout[256];
-  unsigned char segno;
-  __filesize_t segoff;
-  __filesize_t abs_off;
-  memArray * rdoff_et;
-  fpos = beye_context().tell();
-  if(!(rdoff_et = ma_Build(0,true))) return fpos;
-  main_handle.seek(10,binary_stream::Seek_Set);
-  while(main_handle.tell() < rdoff_hdrlen + 5)
-  {
-    bool is_eof;
-    rec = main_handle.read(type_byte);
-    is_eof = false;
-    if(rec == 3)
-    {
-      char ch;
-      segno = main_handle.read(type_byte);
-      segoff = main_handle.read(type_dword);
-      for(i = 0;i < 32;i++)
-      {
-	ch = main_handle.read(type_byte);
-	str[i] = ch;
-	is_eof = main_handle.eof();
-	if(!ch || is_eof) break;
-      }
-      str[i] = 0;
-      abs_off = segno == 0 ? cs_start : segno == 1 ? ds_start : FILESIZE_MAX;
-      if(abs_off < FILESIZE_MAX) abs_off += segoff;
-      sprintf(sout,"%-50s offset=%08lXH",str,(unsigned long)abs_off);
-      if(!ma_AddString(rdoff_et,sout,true) || is_eof) break;
+    __filesize_t fpos;
+    unsigned char rec;
+    unsigned i;
+    char str[33],sout[256];
+    unsigned char segno;
+    __filesize_t segoff;
+    __filesize_t abs_off;
+    std::vector<std::string> rdoff_et;
+    fpos = beye_context().tell();
+    main_handle.seek(10,binary_stream::Seek_Set);
+    while(main_handle.tell() < rdoff_hdrlen + 5) {
+	bool is_eof;
+	rec = main_handle.read(type_byte);
+	is_eof = false;
+	if(rec == 3) {
+	    char ch;
+	    segno = main_handle.read(type_byte);
+	    segoff = main_handle.read(type_dword);
+	    for(i = 0;i < 32;i++) {
+		ch = main_handle.read(type_byte);
+		str[i] = ch;
+		is_eof = main_handle.eof();
+		if(!ch || is_eof) break;
+	    }
+	    str[i] = 0;
+	    abs_off = segno == 0 ? cs_start : segno == 1 ? ds_start : FILESIZE_MAX;
+	    if(abs_off < FILESIZE_MAX) abs_off += segoff;
+	    sprintf(sout,"%-50s offset=%08lXH",str,(unsigned long)abs_off);
+	    rdoff_et.push_back(sout);
+	    if(is_eof) break;
+	} else {
+	    if(!rdoff_skiprec(rec)) goto exit;
+	    if(main_handle.eof()) break;
+	}
     }
-    else
-    {
-      if(!rdoff_skiprec(rec)) goto exit;
-      if(main_handle.eof()) break;
-    }
-  }
-  if(rdoff_et->nItems)
-  {
-    int ret;
-    ret = ma_Display(rdoff_et,EXP_TABLE,LB_SELECTIVE,0);
-    if(ret != -1)
-    {
-      char *rets;
-      rets = ((char **)rdoff_et->data)[ret];
-      rets = strstr(rets,"offset=");
-      if(rets) fpos = strtoul(&rets[7],NULL,16);
-    }
-  }
-  else                 beye_context().NotifyBox(NOT_ENTRY,EXP_TABLE);
-  exit:
-  ma_Destroy(rdoff_et);
-  return fpos;
+    if(!rdoff_et.empty()) {
+	int ret;
+	ret = ListBox(rdoff_et,EXP_TABLE,LB_SELECTIVE,0);
+	if(ret != -1) {
+	    const char *rets;
+	    rets = strstr(rdoff_et[ret].c_str(),"offset=");
+	    if(rets) fpos = strtoul(&rets[7],NULL,16);
+	}
+    } else beye_context().NotifyBox(NOT_ENTRY,EXP_TABLE);
+exit:
+    return fpos;
 }
 
 __filesize_t RDOff_Parser::rdoff_FindExport(const std::string& name)
@@ -254,85 +244,73 @@ __filesize_t RDOff_Parser::rdoff_FindExport(const std::string& name)
 
 __filesize_t RDOff_Parser::action_F2()
 {
-  __filesize_t fpos;
-  unsigned char rec;
-  unsigned i;
-  char str[129];
-  memArray * rdoff_mr;
-  fpos = beye_context().tell();
-  if(!(rdoff_mr = ma_Build(0,true))) return fpos;
-  main_handle.seek(10,binary_stream::Seek_Set);
-  while(main_handle.tell() < rdoff_hdrlen + 5)
-  {
-    bool is_eof;
-    rec = main_handle.read(type_byte);
-    is_eof = false;
-    if(rec == 4)
-    {
-      char ch;
-      for(i = 0;i < 128;i++)
-      {
-	ch = main_handle.read(type_byte);
-	is_eof = main_handle.eof();
-	str[i] = ch;
-	if(!ch || is_eof) break;
-      }
-      str[i] = 0;
-      if(!ma_AddString(rdoff_mr,str,true) || is_eof) break;
+    __filesize_t fpos;
+    unsigned char rec;
+    unsigned i;
+    char str[129];
+    std::vector<std::string> rdoff_mr;
+    fpos = beye_context().tell();
+    main_handle.seek(10,binary_stream::Seek_Set);
+    while(main_handle.tell() < rdoff_hdrlen + 5) {
+	bool is_eof;
+	rec = main_handle.read(type_byte);
+	is_eof = false;
+	if(rec == 4) {
+	    char ch;
+	    for(i = 0;i < 128;i++) {
+		ch = main_handle.read(type_byte);
+		is_eof = main_handle.eof();
+		str[i] = ch;
+		if(!ch || is_eof) break;
+	    }
+	    str[i] = 0;
+	    rdoff_mr.push_back(str);
+	    if(is_eof) break;
+	} else {
+	    if(!rdoff_skiprec(rec)) goto exit;
+	    if(main_handle.eof()) break;
+	}
     }
-    else
-    {
-      if(!rdoff_skiprec(rec)) goto exit;
-      if(main_handle.eof()) break;
-    }
-  }
-  if(rdoff_mr->nItems) ma_Display(rdoff_mr,MOD_REFER,LB_SORTABLE,0);
-  else                 beye_context().NotifyBox(NOT_ENTRY,MOD_REFER);
-  exit:
-  ma_Destroy(rdoff_mr);
-  return fpos;
+    if(!rdoff_mr.empty()) ListBox(rdoff_mr,MOD_REFER,LB_SORTABLE,0);
+    else                  beye_context().NotifyBox(NOT_ENTRY,MOD_REFER);
+exit:
+    return fpos;
 }
 
 __filesize_t RDOff_Parser::action_F5()
 {
-  __filesize_t fpos;
-  unsigned char rec;
-  unsigned i;
-  char str[33];
-  memArray * rdoff_it;
-  fpos = beye_context().tell();
-  if(!(rdoff_it = ma_Build(0,true))) return fpos;
-  main_handle.seek(10,binary_stream::Seek_Set);
-  while(main_handle.tell() < rdoff_hdrlen + 5)
-  {
-    bool is_eof;
-    rec = main_handle.read(type_byte);
-    is_eof = false;
-    if(rec == 2)
-    {
-      char ch;
-      main_handle.seek(2,binary_stream::Seek_Cur);
-      for(i = 0;i < 32;i++)
-      {
-	ch = main_handle.read(type_byte);
-	is_eof = main_handle.eof();
-	str[i] = ch;
-	if(!ch || is_eof) break;
-      }
-      str[i] = 0;
-      if(!ma_AddString(rdoff_it,str,true) || is_eof) break;
+    __filesize_t fpos;
+    unsigned char rec;
+    unsigned i;
+    char str[33];
+    std::vector<std::string> rdoff_it;
+    fpos = beye_context().tell();
+    main_handle.seek(10,binary_stream::Seek_Set);
+    while(main_handle.tell() < rdoff_hdrlen + 5) {
+	bool is_eof;
+	rec = main_handle.read(type_byte);
+	is_eof = false;
+	if(rec == 2) {
+	    char ch;
+	    main_handle.seek(2,binary_stream::Seek_Cur);
+	    for(i = 0;i < 32;i++) {
+		ch = main_handle.read(type_byte);
+		is_eof = main_handle.eof();
+		str[i] = ch;
+		if(!ch || is_eof) break;
+	    }
+	    str[i] = 0;
+	    rdoff_it.push_back(str);
+	    if(is_eof) break;
+	} else {
+	    if(!rdoff_skiprec(rec)) goto exit;
+	    if(main_handle.eof()) break;
+	}
     }
-    else
-    {
-      if(!rdoff_skiprec(rec)) goto exit;
-      if(main_handle.eof()) break;
-    }
-  }
-  if(rdoff_it->nItems) ma_Display(rdoff_it,IMPPROC_TABLE,LB_SORTABLE,0);
-  else                 beye_context().NotifyBox(NOT_ENTRY,EXP_TABLE);
-  exit:
-  ma_Destroy(rdoff_it);
-  return fpos;
+    if(!rdoff_it.empty()) ListBox(rdoff_it,IMPPROC_TABLE,LB_SORTABLE,0);
+    else                  beye_context().NotifyBox(NOT_ENTRY,EXP_TABLE);
+exit:
+    return fpos;
 }
 
 __filesize_t RDOff_Parser::show_header()

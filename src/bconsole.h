@@ -19,9 +19,10 @@
 **/
 #ifndef __BCONSOLE__H
 #define __BCONSOLE__H
-
 #include <limits>
+#include <vector>
 
+#include "libbeye/kbd_code.h"
 #include "libbeye/twindow.h"
 
 namespace	usr {
@@ -73,8 +74,6 @@ enum {
 					void (*func)());
     int          __FASTCALL__ xeditstring(TWindow* w,char *s,const char *legal,
 					unsigned maxlength, void(*func)());
-    int          __FASTCALL__ PageBox(unsigned width,unsigned height,const any_t** __obj,
-				 unsigned nobj,pagefunc func);
     void         __FASTCALL__ MemOutBox(const std::string& user_msg);
     TWindow *    __FASTCALL__ PleaseWaitWnd();
 
@@ -123,6 +122,9 @@ enum {
     int          __FASTCALL__ ListBox(const char** names,unsigned nlist,const std::string& title,
 				      int acc,unsigned defsel=std::numeric_limits<size_t>::max());
 
+    int          __FASTCALL__ ListBox(std::vector<std::string>& list,const std::string& title,
+				      int acc,unsigned defsel=std::numeric_limits<size_t>::max());
+
     TWindow *    __FASTCALL__ PercentWnd(const std::string& text,const std::string& title);
 
 			   /** return true - if can continue
@@ -138,5 +140,41 @@ enum {
     void __FASTCALL__ __drawSinglePrompt(const char *prmt[]);
 
     bool __FASTCALL__ ungotstring(char *string);
+
+    void   drawEmptyPrompt();
+    template<class S,class T>
+    int PageBox(unsigned width,unsigned height,const T& obj,const S& s,void (S::*f)(TWindow&,const T&,unsigned) const)
+    {
+	TWindow* wlist;
+	int start,ostart,ret;
+	size_t nobj = obj.size();
+
+	wlist = CrtDlgWndnls("",width-1,height);
+	ostart = start = 0;
+	(s.*f)(*wlist,obj,(unsigned)start);
+	for(;;) {
+	unsigned ch;
+	ch = GetEvent(drawEmptyPrompt,NULL,wlist);
+	if(ch == KE_ESCAPE || ch == KE_F(10)) { ret = -1; break; }
+	if(ch == KE_ENTER)                    { ret = start; break; }
+	switch(ch) {
+	    case KE_PGDN : start ++; break;
+	    case KE_PGUP   : start --; break;
+	    case KE_CTL_PGDN : start = nobj - 1; break;
+	    case KE_CTL_PGUP : start = 0; break;
+	    default : break;
+	};
+	if(start < 0) start = 0;
+	if((unsigned)start > nobj - 1) start = nobj - 1;
+	if(start != ostart) {
+	    ostart = start;
+	    wlist->goto_xy(1,1);
+	    (s.*f)(*wlist,obj,(unsigned)start);
+	}
+    }
+    delete wlist;
+    return ret;
+    }
+
 } // namespace	usr
 #endif

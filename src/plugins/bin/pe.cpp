@@ -84,26 +84,26 @@ namespace	usr {
 	    bool			BuildReferStrPE(std::string& str,const RELOC_PE& rpe,int flags);
 	    std::set<RELOC_PE>::const_iterator	__found_RPE(__filesize_t laddr);
 	    void			BuildPERefChain();
-	    bool			PEReadRVAs(binary_stream&handle,memArray *obj,unsigned nnames);
+	    std::vector<std::string>	PEReadRVAs();
 	    __filesize_t		CalcEntryPE(unsigned ordinal,bool dispmsg);
-	    unsigned			PEExportNumItems(binary_stream&handle);
-	    bool			PEExportReadItems(binary_stream&handle,memArray *obj,unsigned nnames);
-	    unsigned			__peReadASCIIZName(binary_stream&handle,__filesize_t offset,std::string& buff);
+	    unsigned			PEExportNumItems(binary_stream& handle);
+	    std::vector<std::string>	PEExportReadItems(binary_stream& handle,size_t nnames);
+	    unsigned			__peReadASCIIZName(binary_stream& handle,__filesize_t offset,std::string& buff);
 	    static __filesize_t		RVA2Phys(__filesize_t rva);
 	    std::string			writeExportVA(__filesize_t va,binary_stream&handle);
-	    bool			__ReadImpContPE(binary_stream&handle,memArray *obj,unsigned nnames);
-	    unsigned			GetImpCountPE(binary_stream&handle);
-	    unsigned			__ReadImportPE(binary_stream&handle,__filesize_t phys,memArray *obj,unsigned nnames);
-	    unsigned			GetImportCountPE(binary_stream&handle,__filesize_t phys);
-	    static bool			__ReadObjectsPE(binary_stream&handle,memArray *obj,unsigned n);
-	    static void __FASTCALL__	ObjPaintPE(TWindow *win,const any_t **names,unsigned start,unsigned nlist);
-	    static void			PaintNewHeaderPE(TWindow *win,const any_t **ptr,unsigned npage,unsigned tpage);
-	    static void			PaintNewHeaderPE_2(TWindow *w);
-	    static void			PaintNewHeaderPE_1(TWindow *w);
-	    static const char*		PECPUType();
-	    __filesize_t		CalcPEObjectEntry(__fileoff_t offset);
+	    std::vector<std::string>	__ReadImpContPE(binary_stream& handle,size_t nnames);
+	    unsigned			GetImpCountPE(binary_stream& handle);
+	    std::vector<std::string>	__ReadImportPE(binary_stream& handle,__filesize_t phys,size_t nnames);
+	    unsigned			GetImportCountPE(binary_stream& handle,__filesize_t phys);
+	    std::vector<PE_OBJECT>	__ReadObjectsPE(binary_stream& handle,size_t n) const;
+	    void			ObjPaintPE(TWindow& win,const std::vector<PE_OBJECT>& names,unsigned start) const;
+	    void			PaintNewHeaderPE(TWindow& win,const std::vector<std::string>& ptr,unsigned tpage) const;
+	    void			PaintNewHeaderPE_2(TWindow& w) const;
+	    void			PaintNewHeaderPE_1(TWindow& w) const;
+	    const char*			PECPUType() const;
+	    __filesize_t		CalcPEObjectEntry(__fileoff_t offset) const;
 	    bool			FindPubName(std::string& buff,__filesize_t pa);
-	    static __fileoff_t		CalcOverlayOffset(__filesize_t);
+	    __fileoff_t			CalcOverlayOffset(__filesize_t) const;
 	    void			pe_ReadPubNameList(binary_stream& handle);
 	    unsigned			fioReadWord(binary_stream& handle,__filesize_t offset,binary_stream::e_seek origin);
 	    __filesize_t		fioReadDWord(binary_stream& handle,__filesize_t offset,binary_stream::e_seek origin);
@@ -122,7 +122,7 @@ namespace	usr {
 	    PERVA*		peDir;
 	    std::set<symbolic_information>	PubNames;
 
-	    static void			(* const pephead[])(TWindow *);
+	    static void			(PE_Parser::*pephead[])(TWindow&) const;
     };
 static const char* txt[]={ "PEHelp", "Import", "Export","", "","","", "PEHead", "Dir   ", "Object" };
 const char* PE_Parser::prompt(unsigned idx) const { return txt[idx]; }
@@ -148,7 +148,7 @@ static PE_ADDR* peVA;
 #define PE32_HDR_SIZE() (is_64bit?sizeof(PE32P_HEADER):sizeof(PE32HEADER))
 #define PE_HDR_SIZE() (sizeof(PEHEADER) + PE32_HDR_SIZE())
 
-__filesize_t PE_Parser::CalcPEObjectEntry(__fileoff_t offset)
+__filesize_t PE_Parser::CalcPEObjectEntry(__fileoff_t offset) const
 {
  __filesize_t intp;
  intp = offset / PE32_HDR(pe32,peFileAlign);
@@ -203,7 +203,7 @@ __filesize_t PE_Parser::fioReadDWord2Phys(binary_stream& handle,__filesize_t off
  return RVA2Phys(dword);
 }
 
-const char* PE_Parser::PECPUType()
+const char* PE_Parser::PECPUType() const
 {
     static const struct {
        int code;
@@ -252,13 +252,13 @@ const char* PE_Parser::PECPUType()
     return "Unknown";
 }
 
-void PE_Parser::PaintNewHeaderPE_1(TWindow* w)
+void PE_Parser::PaintNewHeaderPE_1(TWindow& w) const
 {
   const char *fmt;
   time_t tval;
   entryPE = RVA2Phys(pe.peEntryPointRVA);
   tval = pe.peTimeDataStamp;
-  w->printf(
+  w.printf(
 	   "Signature                      = '%c%c' (Type: %04X)\n"
 	   "Required CPU Type              = %s\n"
 	   "Number of object entries       = %hu\n"
@@ -295,21 +295,21 @@ void PE_Parser::PaintNewHeaderPE_1(TWindow* w)
 	   ,Gebool(pe.peFlags & 0x1000)
 	   ,Gebool(pe.peFlags & 0x2000)
 	   ,(int)pe.peLMajor,(int)pe.peLMinor);
-  w->set_color(dialog_cset.entry);
-  w->printf("EntryPoint RVA    %s = %08lXH (Offset: %08lXH)",pe.peFlags & 0x2000 ? "[ LibEntry ]" : "[ EXEEntry ]",pe.peEntryPointRVA,entryPE); w->clreol();
-  w->set_color(dialog_cset.main);
+  w.set_color(dialog_cset.entry);
+  w.printf("EntryPoint RVA    %s = %08lXH (Offset: %08lXH)",pe.peFlags & 0x2000 ? "[ LibEntry ]" : "[ EXEEntry ]",pe.peEntryPointRVA,entryPE); w.clreol();
+  w.set_color(dialog_cset.main);
   if(is_64bit)
     fmt = "\nImage base                   = %016llXH\n"
 	  "Object aligning                = %08lXH";
   else
     fmt = "\nImage base                   = %08lXH\n"
 	  "Object aligning                = %08lXH";
-  w->printf(fmt
+  w.printf(fmt
 	   ,PE32_HDR(pe32,peImageBase)
 	   ,PE32_HDR(pe32,peObjectAlign));
 }
 
-void PE_Parser::PaintNewHeaderPE_2(TWindow* w)
+void PE_Parser::PaintNewHeaderPE_2(TWindow& w) const
 {
   const char *fmt;
   static const char * subSystem[] =
@@ -331,7 +331,7 @@ void PE_Parser::PaintNewHeaderPE_2(TWindow* w)
     "X-Box",
   };
 
-  w->printf(
+  w.printf(
 	   "Size of Text                   = %08lXH\n"
 	   "Size of Data                   = %08lXH\n"
 	   "Size of BSS                    = %08lXH\n"
@@ -374,66 +374,66 @@ void PE_Parser::PaintNewHeaderPE_2(TWindow* w)
 	   "Stack commit size              = %lu bytes\n"
 	   "Heap reserve size              = %lu bytes\n"
 	   "Heap commit size               = %lu bytes";
-   w->printf(fmt
+   w.printf(fmt
 	   ,PE32_HDR(pe32,peStackReserveSize)
 	   ,PE32_HDR(pe32,peStackCommitSize)
 	   ,PE32_HDR(pe32,peHeapReserveSize)
 	   ,PE32_HDR(pe32,peHeapCommitSize));
   if (CalcOverlayOffset(MZ_Parser::is_new_exe(beye_context().sc_bm_file())) != -1) {
     entryPE = overlayPE;
-    w->set_color(dialog_cset.entry);
-    w->printf("\nOverlay                        = %08lXH", entryPE); w->clreol();
-    w->set_color(dialog_cset.main);
+    w.set_color(dialog_cset.entry);
+    w.printf("\nOverlay                        = %08lXH", entryPE); w.clreol();
+    w.set_color(dialog_cset.main);
   }
 }
 
-void (* const PE_Parser::pephead[])(TWindow*) = /* [dBorca] the table is const, not the any_t*/
+void (PE_Parser::*PE_Parser::pephead[])(TWindow&) const = /* [dBorca] the table is const, not the any_t*/
 {
-    PaintNewHeaderPE_1,
-    PaintNewHeaderPE_2
+    &PE_Parser::PaintNewHeaderPE_1,
+    &PE_Parser::PaintNewHeaderPE_2
 };
 
-void PE_Parser::PaintNewHeaderPE(TWindow * win,const any_t**ptr,unsigned npage,unsigned tpage)
+void PE_Parser::PaintNewHeaderPE(TWindow& win,const std::vector<std::string>& ptr,unsigned tpage) const
 {
-  char text[80];
-  UNUSED(ptr);
-  win->freeze();
-  win->clear();
-  sprintf(text," Portable Executable Header [%d/%d] ",npage + 1,tpage);
-  win->set_title(text,TWindow::TMode_Center,dialog_cset.title);
-  win->set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
-  if(npage < 2)
-  {
-    win->goto_xy(1,1);
-    (*(pephead[npage]))(win);
-  }
-  win->refresh_full();
+    char text[80];
+    win.freeze();
+    win.clear();
+    sprintf(text," Portable Executable Header [%d/%d] ",ptr.size() + 1,tpage);
+    win.set_title(text,TWindow::TMode_Center,dialog_cset.title);
+    win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
+    if(tpage < 2) {
+	win.goto_xy(1,1);
+	(this->*pephead[tpage])(win);
+    }
+    win.refresh_full();
 }
 
 __filesize_t PE_Parser::action_F8()
 {
- __fileoff_t fpos;
- fpos = beye_context().tell();
- if(PageBox(70,21,NULL,2,PaintNewHeaderPE) != -1 && entryPE && entryPE < main_handle().flength()) fpos = entryPE;
- return fpos;
+    __fileoff_t fpos;
+    fpos = beye_context().tell();
+    std::vector<std::string> v;
+    v.push_back("");
+    v.push_back("");
+    if(PageBox(70,21,v,*this,&PE_Parser::PaintNewHeaderPE) != -1 && entryPE && entryPE < main_handle().flength()) fpos = entryPE;
+    return fpos;
 }
 
-void PE_Parser::ObjPaintPE(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
+void PE_Parser::ObjPaintPE(TWindow& win,const std::vector<PE_OBJECT>& names,unsigned start) const
 {
- char buffer[81];
- const PE_OBJECT ** nam = (const PE_OBJECT **)names;
- const PE_OBJECT *  objs = nam[start];
- win->freeze();
- win->clear();
- sprintf(buffer," Object Table [ %u / %u ] ",start + 1,nlist);
- win->set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
- win->set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
- win->goto_xy(1,1);
+    char buffer[81];
+    win.freeze();
+    win.clear();
+    sprintf(buffer," Object Table [ %u / %u ] ",start + 1,names.size());
+    win.set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+    win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
+    win.goto_xy(1,1);
+    const PE_OBJECT& nam = names[start];
 
- memcpy(buffer, objs->oName, 8);
- buffer[8] = 0;
+    memcpy(buffer, nam.oName, 8);
+    buffer[8] = 0;
 
- win->printf(
+    win.printf(
 	  "Object Name                    = %8s\n"
 	  "Virtual Size                   = %lX bytes\n"
 	  "RVA (relative virtual address) = %08lX\n"
@@ -455,87 +455,78 @@ void PE_Parser::ObjPaintPE(TWindow * win,const any_t** names,unsigned start,unsi
 	  "   Alignment                   = %u %s\n"
 
 	  ,buffer
-	  ,objs->oVirtualSize
-	  ,objs->oRVA
-	  ,objs->oPhysicalSize
-	  ,objs->oPhysicalOffset
-	  ,objs->oNReloc
-	  ,objs->oRelocPtr
-	  ,objs->oNLineNumb
-	  ,objs->oLineNumbPtr
-	  ,objs->oFlags
+	  ,nam.oVirtualSize
+	  ,nam.oRVA
+	  ,nam.oPhysicalSize
+	  ,nam.oPhysicalOffset
+	  ,nam.oNReloc
+	  ,nam.oRelocPtr
+	  ,nam.oNLineNumb
+	  ,nam.oLineNumbPtr
+	  ,nam.oFlags
 
-	  ,Gebool(objs->oFlags & 0x00000020UL), Gebool(objs->oFlags & 0x10000000UL)
-	  ,Gebool(objs->oFlags & 0x00000040UL), Gebool(objs->oFlags & 0x20000000UL)
-	  ,Gebool(objs->oFlags & 0x00000080UL), Gebool(objs->oFlags & 0x40000000UL)
-	  ,Gebool(objs->oFlags & 0x00001000UL), Gebool(objs->oFlags & 0x80000000UL)
-	  ,Gebool(objs->oFlags & 0x00000200UL)
-	  ,Gebool(objs->oFlags & 0x00000800UL)
-	  ,Gebool(objs->oFlags & 0x01000000UL)
-	  ,Gebool(objs->oFlags & 0x02000000UL)
-	  ,Gebool(objs->oFlags & 0x04000000UL)
-	  ,Gebool(objs->oFlags & 0x08000000UL)
+	  ,Gebool(nam.oFlags & 0x00000020UL), Gebool(nam.oFlags & 0x10000000UL)
+	  ,Gebool(nam.oFlags & 0x00000040UL), Gebool(nam.oFlags & 0x20000000UL)
+	  ,Gebool(nam.oFlags & 0x00000080UL), Gebool(nam.oFlags & 0x40000000UL)
+	  ,Gebool(nam.oFlags & 0x00001000UL), Gebool(nam.oFlags & 0x80000000UL)
+	  ,Gebool(nam.oFlags & 0x00000200UL)
+	  ,Gebool(nam.oFlags & 0x00000800UL)
+	  ,Gebool(nam.oFlags & 0x01000000UL)
+	  ,Gebool(nam.oFlags & 0x02000000UL)
+	  ,Gebool(nam.oFlags & 0x04000000UL)
+	  ,Gebool(nam.oFlags & 0x08000000UL)
 
-	  ,objs->oFlags&0x00F00000 ? 1 << (((objs->oFlags&0x00F00000)>>20)-1) : 0
-	  ,objs->oFlags&0x00F00000 ? "byte(s)" : "(default)");
+	  ,nam.oFlags&0x00F00000 ? 1 << (((nam.oFlags&0x00F00000)>>20)-1) : 0
+	  ,nam.oFlags&0x00F00000 ? "byte(s)" : "(default)");
 
- win->refresh_full();
+    win.refresh_full();
 }
 
-bool PE_Parser::__ReadObjectsPE(binary_stream& handle,memArray * obj,unsigned n)
+std::vector<PE_OBJECT> PE_Parser::__ReadObjectsPE(binary_stream& handle,size_t n) const
 {
- unsigned i;
-  for(i = 0;i < n;i++)
-  {
-    PE_OBJECT po;
-    if(IsKbdTerminate() || handle.eof()) break;
-    handle.read(&po,sizeof(PE_OBJECT));
-    if(!ma_AddData(obj,&po,sizeof(PE_OBJECT),true)) break;
-  }
-  return true;
-}
-
-__fileoff_t PE_Parser::CalcOverlayOffset(__filesize_t headshift)
-{
-  if (overlayPE == -1 && pe.peObjects) {
-    memArray *obj;
-    if ((obj = ma_Build(pe.peObjects, true))) {
-      pe_cache->seek(0x18 + pe.peNTHdrSize + headshift, binary_stream::Seek_Set);
-      if (__ReadObjectsPE(*pe_cache, obj, pe.peObjects)) {
-	int i;
-	for (i = 0; i < pe.peObjects; i++) {
-	  PE_OBJECT *o = (PE_OBJECT *)obj->data[i];
-	  __fileoff_t end = o->oPhysicalOffset + ((o->oPhysicalSize + (PE32_HDR(pe32,peFileAlign) - 1)) & ~(PE32_HDR(pe32,peFileAlign) - 1));
-	  if (overlayPE < end) {
-	    overlayPE = end;
-	  }
-	}
-      }
-      ma_Destroy(obj);
+    std::vector<PE_OBJECT> rc;
+    unsigned i;
+    for(i = 0;i < n;i++) {
+	PE_OBJECT po;
+	if(IsKbdTerminate() || handle.eof()) break;
+	handle.read(&po,sizeof(PE_OBJECT));
+	rc.push_back(po);
     }
-  }
-  return overlayPE;
+    return rc;
+}
+
+__fileoff_t PE_Parser::CalcOverlayOffset(__filesize_t ___headshift) const
+{
+    if (overlayPE == -1 && pe.peObjects) {
+	pe_cache->seek(0x18 + pe.peNTHdrSize + ___headshift, binary_stream::Seek_Set);
+	std::vector<PE_OBJECT> objs = __ReadObjectsPE(*pe_cache, pe.peObjects);
+	if (!objs.empty()) {
+	    int i;
+	    for (i = 0; i < pe.peObjects; i++) {
+		PE_OBJECT& o = objs[i];
+		__fileoff_t end = o.oPhysicalOffset + ((o.oPhysicalSize + (PE32_HDR(pe32,peFileAlign) - 1)) & ~(PE32_HDR(pe32,peFileAlign) - 1));
+		if (overlayPE < end) overlayPE = end;
+	    }
+	}
+    }
+    return overlayPE;
 }
 
 __filesize_t PE_Parser::action_F10()
 {
- __filesize_t fpos;
- binary_stream& handle = *pe_cache;
- unsigned nnames;
- memArray * obj;
- fpos = beye_context().tell();
- nnames = pe.peObjects;
- if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
- if(!(obj = ma_Build(nnames,true))) return fpos;
- handle.seek(0x18 + pe.peNTHdrSize + headshift(),binary_stream::Seek_Set);
- if(__ReadObjectsPE(handle,obj,nnames))
- {
-  int ret;
-    ret = PageBox(70,19,(const any_t**)obj->data,obj->nItems,ObjPaintPE);
-    if(ret != -1)  fpos = CalcPEObjectEntry(((PE_OBJECT *)obj->data[ret])->oPhysicalOffset);
- }
- ma_Destroy(obj);
- return fpos;
+    __filesize_t fpos;
+    binary_stream& handle = *pe_cache;
+    unsigned nnames;
+    fpos = beye_context().tell();
+    nnames = pe.peObjects;
+    if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
+    handle.seek(0x18 + pe.peNTHdrSize + headshift(),binary_stream::Seek_Set);
+    std::vector<PE_OBJECT> objs = __ReadObjectsPE(handle,nnames);
+    if(!objs.empty()) {
+	int ret = PageBox(70,19,objs,*this,&PE_Parser::ObjPaintPE);
+	if(ret != -1)  fpos = CalcPEObjectEntry(objs[ret].oPhysicalOffset);
+    }
+    return fpos;
 }
 
 unsigned PE_Parser::GetImportCountPE(binary_stream& handle,__filesize_t phys)
@@ -575,27 +566,27 @@ unsigned PE_Parser::__peReadASCIIZName(binary_stream& handle,__filesize_t offset
   return j;
 }
 
-unsigned  PE_Parser::__ReadImportPE(binary_stream& handle,__filesize_t phys,memArray *obj,unsigned nnames)
+std::vector<std::string> PE_Parser::__ReadImportPE(binary_stream& handle,__filesize_t phys,size_t nnames)
 {
-  unsigned i;
-  __filesize_t fpos = handle.tell();
-  __filesize_t rva,addr;
-  handle.seek(phys,binary_stream::Seek_Set);
-  for(i = 0;i < nnames;i++)
-  {
-    std::string tmp;
-    bool is_eof;
-    rva = fioReadDWord(handle,12L,binary_stream::Seek_Cur);
-    handle.seek(4L,binary_stream::Seek_Cur);
-    addr = RVA2Phys(rva);
-    __peReadASCIIZName(handle,addr,tmp);
-    if(IsKbdTerminate()) break;
-    is_eof = handle.eof();
-    if(!ma_AddString(obj,is_eof ? CORRUPT_BIN_MSG : tmp.c_str(),true)) break;
-    if(is_eof) break;
-  }
-  handle.seek(fpos,binary_stream::Seek_Set);
-  return obj->nItems;
+    std::vector<std::string> rc;
+    size_t i;
+    __filesize_t fpos = handle.tell();
+    __filesize_t rva,addr;
+    handle.seek(phys,binary_stream::Seek_Set);
+    for(i = 0;i < nnames;i++) {
+	std::string tmp;
+	bool is_eof;
+	rva = fioReadDWord(handle,12L,binary_stream::Seek_Cur);
+	handle.seek(4L,binary_stream::Seek_Cur);
+	addr = RVA2Phys(rva);
+	__peReadASCIIZName(handle,addr,tmp);
+	if(IsKbdTerminate()) break;
+	is_eof = handle.eof();
+	rc.push_back(is_eof ? CORRUPT_BIN_MSG : tmp);
+	if(is_eof) break;
+    }
+    handle.seek(fpos,binary_stream::Seek_Set);
+    return rc;
 }
 
 unsigned PE_Parser::GetImpCountPE(binary_stream& handle)
@@ -616,68 +607,56 @@ unsigned PE_Parser::GetImpCountPE(binary_stream& handle)
  return count;
 }
 
-bool PE_Parser:: __ReadImpContPE(binary_stream& handle,memArray * obj,unsigned nnames)
+std::vector<std::string> PE_Parser:: __ReadImpContPE(binary_stream& handle,size_t nnames)
 {
-  unsigned i,VA;
-  uint64_t Hint;
-  int cond;
-  __filesize_t rphys;
-  handle.seek(addr_shift_pe,binary_stream::Seek_Set);
-  VA = pa2va(addr_shift_pe);
-  for(i = 0;i < nnames;i++)
-  {
-    char stmp[300];
-    bool is_eof;
-    sprintf(stmp,".%08X: ", VA);
-    VA += 4;
-    Hint = is_64bit?handle.read(type_qword):handle.read(type_dword);
-    cond=0;
-    if(is_64bit) { if(Hint & 0x8000000000000000ULL) cond = 1; }
-    else         { if(Hint & 0x0000000080000000ULL) cond = 1; }
-    if(!cond)
-    {
-      rphys = RVA2Phys(is_64bit?(Hint&0x7FFFFFFFFFFFFFFFULL):(Hint&0x7FFFFFFFUL));
-      if(rphys > main_handle().flength() || handle.eof())
-      {
-	if(!ma_AddString(obj,CORRUPT_BIN_MSG,true)) break;
-      }
-      else
-      {
-	std::string tmp;
-	__peReadASCIIZName(handle,rphys+2,tmp);
-	strcat(stmp,tmp.c_str());
-      }
+    std::vector<std::string> rc;
+    size_t i;
+    unsigned VA;
+    uint64_t Hint;
+    int cond;
+    __filesize_t rphys;
+    handle.seek(addr_shift_pe,binary_stream::Seek_Set);
+    VA = pa2va(addr_shift_pe);
+    for(i = 0;i < nnames;i++) {
+	char stmp[300];
+	bool is_eof;
+	sprintf(stmp,".%08X: ", VA);
+	VA += 4;
+	Hint = is_64bit?handle.read(type_qword):handle.read(type_dword);
+	cond=0;
+	if(is_64bit) { if(Hint & 0x8000000000000000ULL) cond = 1; }
+	else         { if(Hint & 0x0000000080000000ULL) cond = 1; }
+	if(!cond) {
+	    rphys = RVA2Phys(is_64bit?(Hint&0x7FFFFFFFFFFFFFFFULL):(Hint&0x7FFFFFFFUL));
+	    if(rphys > main_handle().flength() || handle.eof())
+		rc.push_back(CORRUPT_BIN_MSG);
+	    else {
+		std::string tmp;
+		__peReadASCIIZName(handle,rphys+2,tmp);
+		strcat(stmp,tmp.c_str());
+	    }
+	} else {
+	    char tmp[80];
+	    if(is_64bit) sprintf(tmp,"< By ordinal >   @%llu",Hint & 0x7FFFFFFFFFFFFFFFULL);
+	    else         sprintf(tmp,"< By ordinal >   @%lu" ,(uint32_t)(Hint & 0x7FFFFFFFUL));
+	    strcat(stmp,tmp);
+	}
+	is_eof = handle.eof();
+	rc.push_back(is_eof ? CORRUPT_BIN_MSG : stmp);
+	if(IsKbdTerminate() || is_eof) break;
     }
-    else
-    {
-      char tmp[80];
-      if(is_64bit) sprintf(tmp,"< By ordinal >   @%llu",Hint & 0x7FFFFFFFFFFFFFFFULL);
-      else         sprintf(tmp,"< By ordinal >   @%lu" ,(uint32_t)(Hint & 0x7FFFFFFFUL));
-      strcat(stmp,tmp);
-    }
-    is_eof = handle.eof();
-    if(!ma_AddString(obj,is_eof ? CORRUPT_BIN_MSG : stmp,true)) break;
-    if(IsKbdTerminate() || is_eof) break;
-  }
-  return true;
+    return rc;
 }
 
 void PE_Parser::ShowModContextPE(const std::string& title) {
     ssize_t nnames = GetImpCountPE(main_handle());
     int flags = LB_SORTABLE;
-    bool bval;
-    memArray* obj;
-    TWindow* w;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
-    w = PleaseWaitWnd();
-    bval = __ReadImpContPE(main_handle(),obj,nnames);
+    TWindow* w = PleaseWaitWnd();
+    std::vector<std::string> objs = __ReadImpContPE(main_handle(),nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ma_Display(obj,title,flags,-1);
-    }
-    ma_Destroy(obj);
-    exit:
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ListBox(objs,title,flags,-1);
+exit:
     return;
 }
 
@@ -685,7 +664,6 @@ __filesize_t PE_Parser::action_F2()
 {
     binary_stream& handle = *pe_cache;
     char petitle[80];
-    memArray* obj;
     unsigned nnames;
     __filesize_t phys,fret;
     fret = beye_context().tell();
@@ -693,17 +671,17 @@ __filesize_t PE_Parser::action_F2()
     handle.seek(0L,binary_stream::Seek_Set);
     phys = RVA2Phys(peDir[PE_IMPORT].rva);
     if(!(nnames = GetImportCountPE(handle,phys))) goto not_found;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
-    if(__ReadImportPE(handle,phys,obj,nnames)) {
+    std::vector<std::string> objs = __ReadImportPE(handle,phys,nnames);
+    if(!objs.empty()) {
 	int i;
 	i = 0;
 	while(1) {
 	    ImportDirPE imp_pe;
 	    unsigned long magic;
 
-	    i = ma_Display(obj,MOD_REFER,LB_SELECTIVE,i);
+	    i = ListBox(objs,MOD_REFER,LB_SELECTIVE,i);
 	    if(i == -1) break;
-	    sprintf(petitle,"%s%s ",IMPPROC_TABLE,(char *)obj->data[i]);
+	    sprintf(petitle,"%s%s ",IMPPROC_TABLE,objs[i].c_str());
 	    handle.seek(phys + i*sizeof(ImportDirPE),binary_stream::Seek_Set);
 	    handle.read(&imp_pe,sizeof(ImportDirPE));
 	    if(handle.eof()) break;
@@ -714,8 +692,6 @@ __filesize_t PE_Parser::action_F2()
 	    ShowModContextPE(petitle);
 	}
     }
-    ma_Destroy(obj);
-    exit:
     return fret;
 }
 
@@ -734,53 +710,51 @@ std::string PE_Parser::writeExportVA(__filesize_t va, binary_stream& handle)
     return rc;
 }
 
-bool PE_Parser::PEExportReadItems(binary_stream& handle,memArray * obj,unsigned nnames)
+std::vector<std::string> PE_Parser::PEExportReadItems(binary_stream& handle,size_t nnames)
 {
-  __filesize_t nameaddr,expaddr,nameptr;
-  unsigned long *addr;
-  unsigned i,ord;
-  char buff[80];
+    std::vector<std::string> rc;
+    __filesize_t nameaddr,expaddr,nameptr;
+    unsigned long *addr;
+    unsigned i,ord;
+    char buff[80];
 
-  nameptr = RVA2Phys(et.etNamePtrTableRVA);
-  expaddr = RVA2Phys(et.etOrdinalTableRVA);
-  if(!(addr = new unsigned long[nnames])) return true;
-  handle.seek(RVA2Phys(et.etAddressTableRVA),binary_stream::Seek_Set);
-  handle.read(addr,sizeof(unsigned long)*nnames);
+    nameptr = RVA2Phys(et.etNamePtrTableRVA);
+    expaddr = RVA2Phys(et.etOrdinalTableRVA);
+    if(!(addr = new unsigned long[nnames])) return rc;
+    handle.seek(RVA2Phys(et.etAddressTableRVA),binary_stream::Seek_Set);
+    handle.read(addr,sizeof(unsigned long)*nnames);
 
-  for(i = 0;i < et.etNumNamePtrs;i++)
-  {
-    std::string stmp;
-    bool is_eof;
-    nameaddr = fioReadDWord2Phys(handle,nameptr + 4*i,binary_stream::Seek_Set);
-    __peReadASCIIZName(handle,nameaddr, stmp);
-    if(IsKbdTerminate()) break;
-    ord = fioReadWord(handle,expaddr + i*2,binary_stream::Seek_Set);
-    is_eof = handle.eof();
-    sprintf(buff,"%c%-9lu ", LB_ORD_DELIMITER, ord+(unsigned long)et.etOrdinalBase);
-    std::string s;
-    s=writeExportVA(addr[ord], handle);
-    strcpy(&buff[11],s.c_str());
-    addr[ord] = 0;
-    stmp+=buff;
-    if(!ma_AddString(obj,is_eof ? CORRUPT_BIN_MSG : stmp.c_str(),true)) break;  // -XF removed PFree(stmp)
-    if(is_eof) break;
-  }
-
-  for(i = 0;i < nnames;i++)
-  {
-    if(addr[i])
-    {
-      ord = i+et.etOrdinalBase;
-      sprintf(buff," < by ordinal > %c%-9lu ",LB_ORD_DELIMITER, (unsigned long)ord);
-      std::string s;
-      s=writeExportVA(addr[i], handle);
-      strcpy(&buff[27],s.c_str());
-      if(!ma_AddString(obj,buff,true)) break;
+    for(i = 0;i < et.etNumNamePtrs;i++) {
+	std::string stmp;
+	bool is_eof;
+	nameaddr = fioReadDWord2Phys(handle,nameptr + 4*i,binary_stream::Seek_Set);
+	__peReadASCIIZName(handle,nameaddr, stmp);
+	if(IsKbdTerminate()) break;
+	ord = fioReadWord(handle,expaddr + i*2,binary_stream::Seek_Set);
+	is_eof = handle.eof();
+	sprintf(buff,"%c%-9lu ", LB_ORD_DELIMITER, ord+(unsigned long)et.etOrdinalBase);
+	std::string s;
+	s=writeExportVA(addr[ord], handle);
+	strcpy(&buff[11],s.c_str());
+	addr[ord] = 0;
+	stmp+=buff;
+	rc.push_back(is_eof ? CORRUPT_BIN_MSG : stmp);  // -XF removed PFree(stmp)
+	if(is_eof) break;
     }
-  }
 
-  delete addr;
-  return true;
+    for(i = 0;i < nnames;i++) {
+	if(addr[i]) {
+	    ord = i+et.etOrdinalBase;
+	    sprintf(buff," < by ordinal > %c%-9lu ",LB_ORD_DELIMITER, (unsigned long)ord);
+	    std::string s;
+	    s=writeExportVA(addr[i], handle);
+	    strcpy(&buff[27],s.c_str());
+	    rc.push_back(buff);
+	}
+    }
+
+    delete addr;
+    return rc;
 }
 
 unsigned PE_Parser::PEExportNumItems(binary_stream& handle)
@@ -842,69 +816,59 @@ __filesize_t PE_Parser::action_F3()
     std::string title = exp_nam;
     ssize_t nnames = PEExportNumItems(main_handle());
     int flags = LB_SELECTIVE | LB_SORTABLE;
-    bool bval;
-    memArray* obj;
     TWindow* w;
     ret = -1;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = PEExportReadItems(main_handle(),obj,nnames);
+    std::vector<std::string> objs = PEExportReadItems(main_handle(),nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ret = ma_Display(obj,title,flags,-1);
-	if(ret != -1) {
-	    const char* cptr;
-	    char buff[40];
-	    cptr = strrchr((char*)obj->data[ret],LB_ORD_DELIMITER);
-	    cptr++;
-	    strcpy(buff,cptr);
-	    ordinal = atoi(buff);
-	}
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ret = ListBox(objs,title,flags,-1);
+    if(ret != -1) {
+	const char* cptr;
+	char buff[40];
+	cptr = strrchr(objs[ret].c_str(),LB_ORD_DELIMITER);
+	cptr++;
+	strcpy(buff,cptr);
+	ordinal = atoi(buff);
     }
-    ma_Destroy(obj);
-    exit:
+exit:
     if(ret != -1) fpos = CalcEntryPE(ordinal,true);
     return fpos;
 }
 
-bool PE_Parser::PEReadRVAs(binary_stream& handle, memArray * obj, unsigned nnames)
+std::vector<std::string> PE_Parser::PEReadRVAs()
 {
-  unsigned i;
-  static const char *rvaNames[] =
-  {
-      "~Export Table        ",
-      "~Import Table        ",
-      "~Resource Table      ",
-      "E~xception Table     ",
-      "Sec~urity Table      ",
-      "Re~location Table    ",
-      "~Debug Information   ",
-      "Image De~scription   ",
-      "~Machine Specific    ",
-      "~Thread Local Storage",
-      "Load Confi~guration  ",
-      "~Bound Import Table  ",
-      "Import ~Adress Table ",
-      "Dela~y Import Table  ",
-      "~COM+                ",
-      "Reser~ved            "
-  };
-  UNUSED(handle);
-  UNUSED(nnames);
-  for (i=0; i<PE32_HDR(pe32,peDirSize); i++)
-  {
-    char foo[80];
+    std::vector<std::string> rc;
+    unsigned i;
+    static const char *rvaNames[] = {
+	"~Export Table        ",
+	"~Import Table        ",
+	"~Resource Table      ",
+	"E~xception Table     ",
+	"Sec~urity Table      ",
+	"Re~location Table    ",
+	"~Debug Information   ",
+	"Image De~scription   ",
+	"~Machine Specific    ",
+	"~Thread Local Storage",
+	"Load Confi~guration  ",
+	"~Bound Import Table  ",
+	"Import ~Adress Table ",
+	"Dela~y Import Table  ",
+	"~COM+                ",
+	"Reser~ved            "
+    };
 
-    sprintf(foo, "%s  %08lX  %8lu",
-	i<ARRAY_SIZE(rvaNames) ? rvaNames[i] : "Unknown             ",
-	(unsigned long)peDir[i].rva,
-	(unsigned long)peDir[i].size);
-    if (!ma_AddString(obj, foo, true))
-	return false;
-  }
+    for (i=0; i<PE32_HDR(pe32,peDirSize); i++) {
+	char foo[80];
 
-  return true;
+	sprintf(foo, "%s  %08lX  %8lu",
+	    i<ARRAY_SIZE(rvaNames) ? rvaNames[i] : "Unknown             ",
+	    (unsigned long)peDir[i].rva,
+	    (unsigned long)peDir[i].size);
+	rc.push_back(foo);
+    }
+    return rc;
 }
 
 __filesize_t PE_Parser::action_F9()
@@ -912,22 +876,15 @@ __filesize_t PE_Parser::action_F9()
     __filesize_t fpos = beye_context().tell();
     int ret;
     std::string title = " Directory Entry       RVA           size ";
-    ssize_t nnames = PE32_HDR(pe32,peDirSize);
     int flags = LB_SELECTIVE | LB_USEACC;
-    bool bval;
-    memArray* obj;
     TWindow* w;
     ret = -1;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = PEReadRVAs(main_handle(),obj,nnames);
+    std::vector<std::string> objs = PEReadRVAs();
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ret = ma_Display(obj,title,flags,-1);
-    }
-    ma_Destroy(obj);
-    exit:
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ret = ListBox(objs,title,flags,-1);
+exit:
     if (ret!=-1 && peDir[ret].rva) fpos = RVA2Phys(peDir[ret].rva);
     return fpos;
 }

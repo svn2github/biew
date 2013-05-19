@@ -70,22 +70,22 @@ namespace	usr {
 							__filesize_t& start,__filesize_t& end,int& _class,int& bitness);
 	private:
 	    __filesize_t		BuildReferStrCoff386(const DisMode&parent,std::string& str,const RELOC_COFF386& rne,int flags);
-	    bool			coffSymTabReadItemsIdx(binary_stream&handle,unsigned long idx,std::string& name,unsigned *secnum,__filesize_t *offset);
+	    bool			coffSymTabReadItemsIdx(binary_stream&handle,unsigned long idx,std::string& name,unsigned& secnum,__filesize_t& offset);
 	    void			BuildRelocCoff386();
 	    __filesize_t		CalcEntryCoff(unsigned long idx,bool display_msg);
-	    bool			coffSymTabReadItems(binary_stream&handle,memArray *obj,unsigned nnames);
+	    std::vector<std::string>	coffSymTabReadItems(binary_stream&handle,size_t nnames);
 	    const char*			coffEncodeClass(unsigned _class) const;
 	    const char*			coffEncodeType(unsigned type) const;
 	    const char*			coff386_encode_hdr(unsigned info) const;
-	    bool			__coffReadObjects(binary_stream&handle,memArray *obj,unsigned n);
-	    static void			coffObjPaint(TWindow *win,const any_t **names,unsigned start,unsigned nlist);
+	    std::vector<SCNHDR>		__coffReadObjects(binary_stream& handle,size_t n);
+	    void			paint_pages(TWindow& win,const std::vector<SCNHDR>& names,unsigned start) const;
 	    std::string			coffReadLongName(binary_stream&handle,__filesize_t offset);
 	    bool			FindPubName(std::string& buff,__filesize_t pa);
 	    std::string			coff_ReadPubName(binary_stream&b_cache,const symbolic_information& it);
 	    void			coff_ReadPubNameList(binary_stream& handle);
 
-	    static inline uint16_t COFF_WORD(const uint8_t* cval) { return (uint16_t)(*(const uint16_t *)(const uint8_t *)cval); }
-	    static inline uint32_t COFF_DWORD(const uint8_t* cval) { return (uint32_t)(*(const uint32_t *)(const uint8_t *)cval); }
+	    inline uint16_t		COFF_WORD(const uint8_t* cval) const { return (uint16_t)(*(const uint16_t *)(const uint8_t *)cval); }
+	    inline uint32_t		COFF_DWORD(const uint8_t* cval) const { return (uint32_t)(*(const uint32_t *)(const uint8_t *)cval); }
 
 	    struct external_filehdr	coff386hdr;
 	    AOUTHDR		coff386ahdr;
@@ -160,18 +160,16 @@ __filesize_t Coff_Parser::pa2va(__filesize_t pa)
   return 0L;
 }
 
-void Coff_Parser::coffObjPaint(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
+void Coff_Parser::paint_pages(TWindow& win,const std::vector<SCNHDR>& objs,unsigned start) const
 {
- char buffer[81];
- const SCNHDR ** obj = (const SCNHDR **)names;
- const SCNHDR *  objs = obj[start];
- win->freeze();
- win->clear();
- sprintf(buffer," Object Table [ %u / %u ] ",start + 1,nlist);
- win->set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
- win->set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
- win->goto_xy(1,1);
- win->printf(
+    char buffer[81];
+    win.freeze();
+    win.clear();
+    sprintf(buffer," Object Table [ %u / %u ] ",start + 1,objs.size());
+    win.set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+    win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
+    win.goto_xy(1,1);
+    win.printf(
 	  "Object Name                    = %8s\n"
 	  "Physical address               = %08lXH\n"
 	  "Virtual address                = %08lXH\n"
@@ -185,58 +183,55 @@ void Coff_Parser::coffObjPaint(TWindow * win,const any_t** names,unsigned start,
 	  "  [%c] - section type is text\n"
 	  "  [%c] - section type is data\n"
 	  "  [%c] - section type is bss"
-	  ,objs->s_name
-	  ,COFF_DWORD(objs->s_paddr)
-	  ,COFF_DWORD(objs->s_vaddr)
-	  ,COFF_DWORD(objs->s_size)
-	  ,COFF_DWORD(objs->s_scnptr)
-	  ,COFF_DWORD(objs->s_relptr)
-	  ,COFF_DWORD(objs->s_lnnoptr)
-	  ,COFF_WORD(objs->s_nreloc)
-	  ,COFF_WORD(objs->s_nlnno)
-	  ,COFF_DWORD(objs->s_flags)
-	  ,Gebool((COFF_DWORD(objs->s_flags) & STYP_TEXT) == STYP_TEXT)
-	  ,Gebool((COFF_DWORD(objs->s_flags) & STYP_DATA) == STYP_DATA)
-	  ,Gebool((COFF_DWORD(objs->s_flags) & STYP_BSS) == STYP_BSS)
+	  ,objs[start].s_name
+	  ,COFF_DWORD(objs[start].s_paddr)
+	  ,COFF_DWORD(objs[start].s_vaddr)
+	  ,COFF_DWORD(objs[start].s_size)
+	  ,COFF_DWORD(objs[start].s_scnptr)
+	  ,COFF_DWORD(objs[start].s_relptr)
+	  ,COFF_DWORD(objs[start].s_lnnoptr)
+	  ,COFF_WORD(objs[start].s_nreloc)
+	  ,COFF_WORD(objs[start].s_nlnno)
+	  ,COFF_DWORD(objs[start].s_flags)
+	  ,Gebool((COFF_DWORD(objs[start].s_flags) & STYP_TEXT) == STYP_TEXT)
+	  ,Gebool((COFF_DWORD(objs[start].s_flags) & STYP_DATA) == STYP_DATA)
+	  ,Gebool((COFF_DWORD(objs[start].s_flags) & STYP_BSS) == STYP_BSS)
 	  );
- win->refresh_full();
+    win.refresh_full();
 }
 
-bool Coff_Parser::__coffReadObjects(binary_stream& handle,memArray * obj,unsigned n)
+std::vector<SCNHDR> Coff_Parser::__coffReadObjects(binary_stream& handle,size_t n)
 {
- size_t i;
-  for(i = 0;i < n;i++)
-  {
-    SCNHDR po;
-    if(IsKbdTerminate() || handle.eof()) break;
-    handle.read(&po,sizeof(SCNHDR));
-    if(!ma_AddData(obj,&po,sizeof(SCNHDR),true)) break;
-  }
-  return true;
+    std::vector<SCNHDR> rc;
+    size_t i;
+    for(i = 0;i < n;i++) {
+	SCNHDR po;
+	if(IsKbdTerminate() || handle.eof()) break;
+	handle.read(&po,sizeof(SCNHDR));
+	rc.push_back(po);
+    }
+    return rc;
 }
 
 __filesize_t Coff_Parser::action_F10()
 {
- binary_stream* handle;
- unsigned nnames;
- __filesize_t fpos,off;
- memArray * obj;
- fpos = beye_context().tell();
- nnames = COFF_WORD(coff386hdr.f_nscns);
- if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
- if(!(obj = ma_Build(nnames,true))) return fpos;
- handle = coff_cache;
- off = sizeof(coff386hdr);
- if(COFF_WORD(coff386hdr.f_opthdr)) off += COFF_WORD(coff386hdr.f_opthdr);
- handle->seek(off,binary_stream::Seek_Set);
- if(__coffReadObjects(*handle,obj,nnames))
- {
-  int ret;
-    ret = PageBox(70,13,(const any_t**)obj->data,obj->nItems,coffObjPaint);
-    if(ret != -1)  fpos = COFF_DWORD(((SCNHDR *)obj->data[ret])->s_scnptr);
- }
- ma_Destroy(obj);
- return fpos;
+    binary_stream* handle;
+    unsigned nnames;
+    __filesize_t fpos,off;
+    fpos = beye_context().tell();
+    nnames = COFF_WORD(coff386hdr.f_nscns);
+    if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
+    handle = coff_cache;
+    off = sizeof(coff386hdr);
+    if(COFF_WORD(coff386hdr.f_opthdr)) off += COFF_WORD(coff386hdr.f_opthdr);
+    handle->seek(off,binary_stream::Seek_Set);
+    std::vector<SCNHDR> objs = __coffReadObjects(*handle,nnames);
+    if(!objs.empty()) {
+	int ret;
+	ret = PageBox(70,13,objs,*this,&Coff_Parser::paint_pages);
+	if(ret != -1)  fpos = COFF_DWORD(objs[ret].s_scnptr);
+    }
+    return fpos;
 }
 
 const char* Coff_Parser::coff386_encode_hdr(unsigned info) const
@@ -370,34 +365,34 @@ const char* Coff_Parser::coffEncodeClass(unsigned _class) const
   return ret;
 }
 
-bool Coff_Parser::coffSymTabReadItems(binary_stream& handle,memArray * obj,unsigned nnames)
+std::vector<std::string> Coff_Parser::coffSymTabReadItems(binary_stream& handle,size_t nnames)
 {
- unsigned i;
- unsigned length;
- handle.seek(COFF_DWORD(coff386hdr.f_symptr),binary_stream::Seek_Set);
- for(i = 0;i < nnames;i++)
- {
-   struct external_syment cse;
-   std::string stmp;
-   handle.read(&cse,sizeof(struct external_syment));
-   if(COFF_DWORD(cse.e.e.e_zeroes) == 0L &&
-      COFF_DWORD(cse.e.e.e_offset) >= 4)
-	stmp=coffReadLongName(handle,COFF_DWORD(cse.e.e.e_offset));
-   else stmp.assign((char*)cse.e.e_name,E_SYMNMLEN);
-   if(IsKbdTerminate() || handle.eof()) break;
-   length = stmp.length();
-   if(length > 38) stmp.replace(38,std::string::npos,">>>");
+    std::vector<std::string> rc;
+    unsigned i;
+    unsigned length;
+    handle.seek(COFF_DWORD(coff386hdr.f_symptr),binary_stream::Seek_Set);
+    for(i = 0;i < nnames;i++) {
+	struct external_syment cse;
+	std::string stmp;
+	handle.read(&cse,sizeof(struct external_syment));
+	if(COFF_DWORD(cse.e.e.e_zeroes) == 0L &&
+	    COFF_DWORD(cse.e.e.e_offset) >= 4)
+	    stmp=coffReadLongName(handle,COFF_DWORD(cse.e.e.e_offset));
+	else stmp.assign((char*)cse.e.e_name,E_SYMNMLEN);
+	if(IsKbdTerminate() || handle.eof()) break;
+	length = stmp.length();
+	if(length > 38) stmp.replace(38,std::string::npos,">>>");
 //   else  {  memset(&stmp[length],' ',38-length);  stmp[38] = 0; }
-    char sbuf;
-   sprintf(&sbuf,"(%04hX.%08lX) %s.%s"
+	char sbuf;
+	sprintf(&sbuf,"(%04hX.%08lX) %s.%s"
 	   ,COFF_WORD(cse.e_scnum)
 	   ,(unsigned long)COFF_DWORD(cse.e_value)
 	   ,coffEncodeClass(cse.e_sclass[0])
 	   ,coffEncodeType(COFF_WORD(cse.e_type)));
-    stmp+=sbuf;
-   if(!ma_AddString(obj,stmp.c_str(),true)) break;
- }
- return true;
+	stmp+=sbuf;
+	rc.push_back(stmp);
+    }
+    return rc;
 }
 
 __filesize_t Coff_Parser::CalcEntryCoff(unsigned long idx,bool display_msg)
@@ -431,20 +426,14 @@ __filesize_t Coff_Parser::action_F7()
     std::string title = "Symbol Table";
     ssize_t nnames = COFF_DWORD(coff386hdr.f_nsyms);
     int flags = LB_SELECTIVE;
-    bool bval;
-    memArray* obj;
     TWindow* w;
     ret = -1;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = coffSymTabReadItems(main_handle,obj,nnames);
+    std::vector<std::string> objs = coffSymTabReadItems(main_handle,nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ret = ma_Display(obj,title,flags,-1);
-    }
-    ma_Destroy(obj);
-    exit:
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ret = ListBox(objs,title,flags,-1);
+exit:
     if(ret != -1) fpos = CalcEntryCoff(ret,true);
     return fpos;
 }
@@ -479,30 +468,25 @@ void Coff_Parser::BuildRelocCoff386()
     }
     if(is_eof) break;
   }
-  next:
-//  la_Sort(RelocCoff386,coff386_compare_rels);
   delete w;
 }
 
 bool Coff_Parser::coffSymTabReadItemsIdx(binary_stream& handle,unsigned long idx,
 					std::string& name,
-					unsigned *secnum,
-					__filesize_t *offset)
+					unsigned& secnum,
+					__filesize_t& offset)
 {
- struct external_syment cse;
- if(idx >= COFF_DWORD(coff386hdr.f_nsyms)) return false;
- handle.seek(COFF_DWORD(coff386hdr.f_symptr) + idx*sizeof(struct external_syment),binary_stream::Seek_Set);
- handle.read(&cse,sizeof(struct external_syment));
- if(COFF_DWORD(cse.e.e.e_zeroes) == 0L &&
-    COFF_DWORD(cse.e.e.e_offset) >= 4)
+    struct external_syment cse;
+    if(idx >= COFF_DWORD(coff386hdr.f_nsyms)) return false;
+    handle.seek(COFF_DWORD(coff386hdr.f_symptr) + idx*sizeof(struct external_syment),binary_stream::Seek_Set);
+    handle.read(&cse,sizeof(struct external_syment));
+    if(COFF_DWORD(cse.e.e.e_zeroes) == 0L &&
+	COFF_DWORD(cse.e.e.e_offset) >= 4)
 	name=coffReadLongName(handle,COFF_DWORD(cse.e.e.e_offset));
- else
- {
-   name.assign((char*)cse.e.e_name,E_SYMNMLEN);
- }
- *secnum = COFF_WORD(cse.e_scnum);
- *offset = COFF_DWORD(cse.e_value);
- return true;
+    else name.assign((char*)cse.e.e_name,E_SYMNMLEN);
+    secnum = COFF_WORD(cse.e_scnum);
+    offset = COFF_DWORD(cse.e_value);
+    return true;
 }
 
 __filesize_t Coff_Parser::BuildReferStrCoff386(const DisMode& parent,std::string& str,const RELOC_COFF386& rne,int flags)
@@ -510,7 +494,7 @@ __filesize_t Coff_Parser::BuildReferStrCoff386(const DisMode& parent,std::string
   __filesize_t offset,s,e;
   bool retval;
   unsigned long val;
-  uint_fast16_t secnum=0;
+  unsigned secnum=0;
   bool is_idx,val_assigned;
   int c,b;
   std::string secname;
@@ -519,7 +503,7 @@ __filesize_t Coff_Parser::BuildReferStrCoff386(const DisMode& parent,std::string
   main_handle.seek(rne.offset,binary_stream::Seek_Set);
   val = main_handle.read(type_dword);
   /* rne->nameoff it's only pointer to name descriptor */
-  is_idx = coffSymTabReadItemsIdx(*coff_cache,rne.nameoff,name,(unsigned*)&secnum,&offset);
+  is_idx = coffSymTabReadItemsIdx(*coff_cache,rne.nameoff,name,secnum,offset);
   val_assigned = false;
   if(is_idx)
   {

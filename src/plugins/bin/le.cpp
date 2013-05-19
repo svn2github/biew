@@ -39,20 +39,20 @@ namespace	usr {
 static const char* txt[]={ "LEHelp", "Import", "ResNam", "NRsNam", "ImpNam", "Entry ", "", "LEHead", "MapTbl", "Object" };
 const char* LE_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-bool LE_Parser::__ReadMapTblLE(binary_stream& handle,memArray * obj,unsigned n)
+std::vector<std::string> LE_Parser::__ReadMapTblLE(binary_stream& handle,size_t n)
 {
- size_t i;
-  handle.seek(lxe.le.leObjectPageMapTableOffset + headshift(),binary_stream::Seek_Set);
-  for(i = 0;i < n;i++)
-  {
-    LE_PAGE lep;
-    char stmp[80];
-    if(IsKbdTerminate() || handle.eof()) break;
-    handle.read(&lep,sizeof(LE_PAGE));
-    sprintf(stmp,"#=%08lXH Flags: %04hX = %s",(long)lep.number,lep.flags,lxeGetMapAttr(lep.flags));
-    if(!ma_AddString(obj,stmp,true)) break;
-  }
-  return true;
+    std::vector<std::string> rc;
+    size_t i;
+    handle.seek(lxe.le.leObjectPageMapTableOffset + headshift(),binary_stream::Seek_Set);
+    for(i = 0;i < n;i++) {
+	LE_PAGE lep;
+	char stmp[80];
+	if(IsKbdTerminate() || handle.eof()) break;
+	handle.read(&lep,sizeof(LE_PAGE));
+	sprintf(stmp,"#=%08lXH Flags: %04hX = %s",(long)lep.number,lep.flags,lxeGetMapAttr(lep.flags));
+	rc.push_back(stmp);
+    }
+    return rc;
 }
 
 __filesize_t  LE_Parser::__calcPageEntryLE(LE_PAGE *mt,unsigned long idx) const
@@ -134,26 +134,25 @@ __filesize_t LE_Parser::CalcEntryPoint(unsigned long objnum,__filesize_t _offset
   return ret;
 }
 
-__filesize_t LE_Parser::CalcEntryLE(const LX_ENTRY *lxent)
+__filesize_t LE_Parser::CalcEntryLE(const LX_ENTRY& lxent) const
 {
-  __filesize_t ret;
-  ret = beye_context().tell();
-      switch(lxent->b32_type)
-      {
-	case 1: ret = CalcEntryPoint(lxent->b32_obj,lxent->entry.e32_variant.e32_offset.offset16);
+    __filesize_t ret;
+    ret = beye_context().tell();
+    switch(lxent.b32_type) {
+	case 1: ret = CalcEntryPoint(lxent.b32_obj,lxent.entry.e32_variant.e32_offset.offset16);
 		      break;
-	case 2: ret = CalcEntryPoint(lxent->b32_obj,lxent->entry.e32_variant.e32_callgate.offset);
+	case 2: ret = CalcEntryPoint(lxent.b32_obj,lxent.entry.e32_variant.e32_callgate.offset);
 		      break;
-	case 3: ret = CalcEntryPoint(lxent->b32_obj,lxent->entry.e32_variant.e32_offset.offset32);
+	case 3: ret = CalcEntryPoint(lxent.b32_obj,lxent.entry.e32_variant.e32_offset.offset32);
 		      break;
 	case 4: ShowFwdModOrdLX(lxent);
 	case 5:
 	default: break;
-      }
-  return ret;
+    }
+    return ret;
 }
 
-__filesize_t LE_Parser::CalcEntryBungleLE(unsigned ordinal,bool dispmsg)
+__filesize_t LE_Parser::CalcEntryBungleLE(unsigned ordinal,bool dispmsg) const
 {
   binary_stream* handle;
   bool found;
@@ -205,7 +204,7 @@ __filesize_t LE_Parser::CalcEntryBungleLE(unsigned ordinal,bool dispmsg)
    }
    if(found) break;
  }
- if(found) ret = CalcEntryLE((LX_ENTRY *)&lxent);
+ if(found) ret = CalcEntryLE(lxent);
  else      if(dispmsg) beye_context().ErrMessageBox(NOT_ENTRY,"");
  return ret;
 }
@@ -217,20 +216,14 @@ __filesize_t LE_Parser::action_F10()
     std::string title = " Map of pages ";
     ssize_t nnames = (unsigned)lxe.le.lePageCount;
     int flags = LB_SELECTIVE;
-    bool bval;
-    memArray* obj;
     TWindow* w;
     ret = -1;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = __ReadMapTblLE(main_handle(),obj,nnames);
+    std::vector<std::string> objs = __ReadMapTblLE(main_handle(),nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ret = ma_Display(obj,title,flags,-1);
-    }
-    ma_Destroy(obj);
-    exit:
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ret = ListBox(objs,title,flags,-1);
+exit:
     if(ret != -1) fpos = CalcPageEntry(ret + 1);
     return fpos;
 }
@@ -243,28 +236,22 @@ __filesize_t LE_Parser::action_F3()
     std::string title = RES_NAMES;
     ssize_t nnames = LXRNamesNumItems(main_handle());
     int flags = LB_SELECTIVE | LB_SORTABLE;
-    bool bval;
-    memArray* obj;
     TWindow* w;
     ret = -1;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = LXRNamesReadItems(main_handle(),obj,nnames);
+    std::vector<std::string> objs = LXRNamesReadItems(main_handle(),nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ret = ma_Display(obj,title,flags,-1);
-	if(ret != -1) {
-	    const char* cptr;
-	    char buff[40];
-	    cptr = strrchr((char*)obj->data[ret],LB_ORD_DELIMITER);
-	    cptr++;
-	    strcpy(buff,cptr);
-	    ordinal = atoi(buff);
-	}
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ret = ListBox(objs,title,flags,-1);
+    if(ret != -1) {
+	const char* cptr;
+	char buff[40];
+	cptr = strrchr(objs[ret].c_str(),LB_ORD_DELIMITER);
+	cptr++;
+	strcpy(buff,cptr);
+	ordinal = atoi(buff);
     }
-    ma_Destroy(obj);
-    exit:
+exit:
     if(ret != -1) fpos = CalcEntryBungleLE(ordinal,true);
     return fpos;
 }
@@ -277,28 +264,22 @@ __filesize_t LE_Parser::action_F4()
     std::string title = NORES_NAMES;
     ssize_t nnames = LXNRNamesNumItems(main_handle());
     int flags = LB_SELECTIVE | LB_SORTABLE;
-    bool bval;
-    memArray* obj;
     TWindow* w;
     ret = -1;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = LXNRNamesReadItems(main_handle(),obj,nnames);
+    std::vector<std::string> objs = LXNRNamesReadItems(main_handle(),nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ret = ma_Display(obj,title,flags,-1);
-	if(ret != -1) {
-	    const char* cptr;
-	    char buff[40];
-	    cptr = strrchr((char*)obj->data[ret],LB_ORD_DELIMITER);
-	    cptr++;
-	    strcpy(buff,cptr);
-	    ordinal = atoi(buff);
-	}
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ret = ListBox(objs,title,flags,-1);
+    if(ret != -1) {
+	const char* cptr;
+	char buff[40];
+	cptr = strrchr(objs[ret].c_str(),LB_ORD_DELIMITER);
+	cptr++;
+	strcpy(buff,cptr);
+	ordinal = atoi(buff);
     }
-    ma_Destroy(obj);
-    exit:
+exit:
     if(ret != -1) fpos = CalcEntryBungleLE(ordinal,true);
     return fpos;
 }

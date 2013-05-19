@@ -81,7 +81,7 @@ namespace	usr {
 						    bool is_hl) const;
 		       /** Paints line of help */
 	    virtual void		paint_line(TWindow *win,unsigned y,const std::string& str, bool is_hl) const;
-	    virtual int			__ListBox(const char** names,unsigned nlist,const std::string& title) const;
+	    virtual int			ListBox(const char** names,unsigned nlist,const std::string& title) const;
 	private:
 	    void			paint(TWindow *win,const char * * names,unsigned nlist,unsigned start,unsigned height,unsigned width) const;
 	    bool			find_item(unsigned long item_id);

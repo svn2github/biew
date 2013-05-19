@@ -74,7 +74,7 @@ namespace	usr {
 	    virtual __filesize_t	pa2va(__filesize_t pa);
 	private:
 	    void			failed_lmf() const;
-	    bool			lmf_ReadSecHdr(binary_stream& handle,memArray *obj,unsigned nnames);
+	    std::vector<std::string>	lmf_ReadSecHdr(binary_stream& handle,size_t nnames);
 
 	    lmf_headers_list*	hl;
 	    lmf_xdef		xdef;
@@ -348,17 +348,16 @@ __filesize_t LMF_Parser::pa2va(__filesize_t pa)
 	return addr;
 }
 
-bool LMF_Parser::lmf_ReadSecHdr(binary_stream& handle,memArray *obj,unsigned nnames)
+std::vector<std::string> LMF_Parser::lmf_ReadSecHdr(binary_stream& handle,size_t nnames)
 {
+    std::vector<std::string> rc;
 	unsigned i;
 	char tmp[30];
 	char stmp[80];
 	UNUSED(handle);
 	UNUSED(nnames);
-	for(i=0;i<=reclast;i++)
-	{
-		switch(hl[i].header.rec_type)
-		{
+	for(i=0;i<=reclast;i++) {
+		switch(hl[i].header.rec_type) {
 		case _LMF_DEFINITION_REC:
 			sprintf(tmp,"%s %s",
 				(xdef.def.cflags&_PCF_32BIT)?"32-bit":"16-bit",
@@ -400,9 +399,9 @@ bool LMF_Parser::lmf_ReadSecHdr(binary_stream& handle,memArray *obj,unsigned nna
 				(hl[i].header.rec_type<10)?
 					lmftypes[hl[i].header.rec_type]:lmftypes[10]);
 		}
-		if(!ma_AddString(obj,stmp,true)) break;
+		rc.push_back(stmp);
 	}
-	return true;
+	return rc;
 }
 
 __filesize_t LMF_Parser::action_F9()
@@ -412,20 +411,14 @@ __filesize_t LMF_Parser::action_F9()
     std::string title = " Num Type              Seg Virtual addresses   ";
     ssize_t nnames = reclast+1;
     int flags = LB_SELECTIVE;
-    bool bval;
-    memArray* obj;
     TWindow* w;
     ret = -1;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = lmf_ReadSecHdr(main_handle,obj,nnames);
+    std::vector<std::string> objs = lmf_ReadSecHdr(main_handle,nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ret = ma_Display(obj,title,flags,-1);
-    }
-    ma_Destroy(obj);
-    exit:
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ret = ListBox(objs,title,flags,-1);
+exit:
     if(ret!=-1) fpos=hl[ret].file_pos;
     return fpos;
 }

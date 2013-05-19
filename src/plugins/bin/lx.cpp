@@ -40,7 +40,6 @@ namespace	usr {
 static const char* txt[]={ "LXhelp", "Import", "ResNam", "NRsNam", "ImpNam", "Entry ", "ResTbl", "LXHead", "MapTbl", "Object" };
 const char* LX_Parser::prompt(unsigned idx) const { return txt[idx]; }
 union LX_LE LX_Parser::lxe;
-__filesize_t LX_Parser::LXEntryPoint=0;
 
 static const char * LXordering[] =
 {
@@ -84,32 +83,32 @@ const char * __osModType[] =
   "PROT. MODE VIRTUAL DEVICE DRIVER"
 };
 
-const char* LX_Parser::GetOrderingLX(unsigned char type)
+const char* LX_Parser::GetOrderingLX(unsigned char type) const
 {
  if(type < 2) return LXordering[type];
  else         return "";
 }
 
-const char* LX_Parser::GetCPUTypeLX(int num)
+const char* LX_Parser::GetCPUTypeLX(int num) const
 {
  if(num > 5) num = 0;
  return LXcputype[num];
 }
 
-const char* LX_Parser::GetOSTypeLX(int num)
+const char* LX_Parser::GetOSTypeLX(int num) const
 {
   if(num > 4) num = 0;
   return LXostype[num];
 }
 
-const char* LX_Parser::__getOSModType(char type)
+const char* LX_Parser::__getOSModType(char type) const
 {
   return __osModType[type & 0x07];
 }
 
-void LX_Parser::PaintNewHeaderLX_1(TWindow* w)
+void LX_Parser::PaintNewHeaderLX_1(TWindow& w) const
 {
-  w->printf(
+  w.printf(
 	   "Signature                        = '%c%c'\n"
 	   "Byte order                       = %02XH (%s)\n"
 	   "Word order                       = %02XH (%s)\n"
@@ -156,17 +155,17 @@ void LX_Parser::PaintNewHeaderLX_1(TWindow* w)
 	   ,lxe.lx.lxESP);
 }
 
-void LX_Parser::PaintNewHeaderLX_2(TWindow* w)
+void LX_Parser::PaintNewHeaderLX_2(TWindow& w) const
 {
-  w->printf(
+  w.printf(
 	   "Page size                        = %08lXH\n"
 	   "Page offset shift                = %08lXH\n"
 	   "Fixup section size               = %08lXH\n"
 	   ,lxe.lx.lxPageSize
 	   ,lxe.lx.lxPageOffsetShift
 	   ,lxe.lx.lxFixupSectionSize);
-  w->printf("Page checksum                    = %08lXH\n",lxe.lx.lxFixupSectionChecksum);
-  w->printf(
+  w.printf("Page checksum                    = %08lXH\n",lxe.lx.lxFixupSectionChecksum);
+  w.printf(
 	   "Loader section size              = %08lXH\n"
 	   "Loader section checksum          = %08lXH\n"
 	   "Object table offset              = %08lXH\n"
@@ -203,9 +202,9 @@ void LX_Parser::PaintNewHeaderLX_2(TWindow* w)
 	   ,lxe.lx.lxImportProcedureTableOffset);
 }
 
-void LX_Parser::PaintNewHeaderLX_3(TWindow* w)
+void LX_Parser::PaintNewHeaderLX_3(TWindow& w) const
 {
-  w->printf(
+  w.printf(
 	   "Per - page checksum  offset      = %08lXH\n"
 	   "Data pages offset                = %08lXH\n"
 	   "Number of preload pages          = %08lXH\n"
@@ -218,7 +217,7 @@ void LX_Parser::PaintNewHeaderLX_3(TWindow* w)
 	   ,lxe.lx.lxNonResidentNameTableOffset
 	   ,lxe.lx.lxNonResidentNameTableLength
 	   ,lxe.lx.lxNonResidentNameTableChecksum);
-    w->printf(
+    w.printf(
 	     "Auto DS objects number           = %08lXH\n"
 	     "Debug info offset                = %08lXH\n"
 	     "Debug info length                = %08lXH\n"
@@ -233,62 +232,65 @@ void LX_Parser::PaintNewHeaderLX_3(TWindow* w)
 	     ,lxe.lx.lxNumberInstanceDemand
 	     ,lxe.lx.lxHeapSize
 	     ,lxe.lx.lxStackSize);
-  w->set_color(dialog_cset.entry);
-  w->printf(">Entry Point                     = %08lXH",LXEntryPoint);
-  w->clreol();
-  w->set_color(dialog_cset.main);
+  w.set_color(dialog_cset.entry);
+  w.printf(">Entry Point                     = %08lXH",LXEntryPoint);
+  w.clreol();
+  w.set_color(dialog_cset.main);
 }
 
-void (* LX_Parser::lxphead[])(TWindow*) =
+void (LX_Parser::*LX_Parser::lxphead[])(TWindow&) const =
 {
-  &LX_Parser::PaintNewHeaderLX_1,
-  &LX_Parser::PaintNewHeaderLX_2,
-  &LX_Parser::PaintNewHeaderLX_3
+    &LX_Parser::PaintNewHeaderLX_1,
+    &LX_Parser::PaintNewHeaderLX_2,
+    &LX_Parser::PaintNewHeaderLX_3
 };
 
-void LX_Parser::PaintNewHeaderLX(TWindow * win,const any_t**ptr,unsigned npage,unsigned tpage)
+void LX_Parser::PaintNewHeaderLX(TWindow& win,const std::vector<std::string>& ptr,unsigned npage) const
 {
   char text[80];
   UNUSED(ptr);
-  win->freeze();
-  win->clear();
-  sprintf(text," Linear eXecutable Header [%d/%d] ",npage + 1,tpage);
-  win->set_title(text,TWindow::TMode_Center,dialog_cset.title);
-  win->set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
+  win.freeze();
+  win.clear();
+  sprintf(text," Linear eXecutable Header [%d/%d] ",npage + 1,ptr.size());
+  win.set_title(text,TWindow::TMode_Center,dialog_cset.title);
+  win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
   if(npage < 3)
   {
-    win->goto_xy(1,1);
-    (*(lxphead[npage]))(win);
+    win.goto_xy(1,1);
+    (this->*lxphead[npage])(win);
   }
-  win->refresh_full();
+  win.refresh_full();
 }
 
 __filesize_t LX_Parser::action_F8()
 {
-  __filesize_t fpos;
-  LXEntryPoint = CalcEntryPoint(lxe.lx.lxEIPObjectNumbers,lxe.lx.lxEIP);
-  if(LXEntryPoint == FILESIZE_MAX) LXEntryPoint = 0;
-  fpos = beye_context().tell();
-  if(PageBox(70,21,NULL,3,PaintNewHeaderLX) != -1)
-  {
-    if(LXEntryPoint) fpos = LXEntryPoint;
-  }
-  return fpos;
+    __filesize_t fpos;
+    LXEntryPoint = CalcEntryPoint(lxe.lx.lxEIPObjectNumbers,lxe.lx.lxEIP);
+    if(LXEntryPoint == FILESIZE_MAX) LXEntryPoint = 0;
+    fpos = beye_context().tell();
+    std::vector<std::string> v;
+    v.push_back("");
+    v.push_back("");
+    v.push_back("");
+    if(PageBox(70,21,v,*this,&LX_Parser::PaintNewHeaderLX) != -1) {
+	if(LXEntryPoint) fpos = LXEntryPoint;
+    }
+    return fpos;
 }
 
 unsigned LX_Parser::LXRNamesNumItems(binary_stream& handle)
 {
-  return NE_Parser::GetNamCountNE(handle,headshift() + lxe.lx.lxResidentNameTableOffset);
+    return NE_Parser::GetNamCountNE(handle,headshift() + lxe.lx.lxResidentNameTableOffset);
 }
 
 unsigned LX_Parser::LXNRNamesNumItems(binary_stream& handle)
 {
-  return NE_Parser::GetNamCountNE(handle,lxe.lx.lxNonResidentNameTableOffset);
+    return NE_Parser::GetNamCountNE(handle,lxe.lx.lxNonResidentNameTableOffset);
 }
 
-bool LX_Parser::LXRNamesReadItems(binary_stream& handle,memArray * obj,unsigned nnames)
+std::vector<std::string> LX_Parser::LXRNamesReadItems(binary_stream& handle,size_t nnames)
 {
-   return NE_Parser::RNamesReadItems(handle,obj,nnames,lxe.lx.lxResidentNameTableOffset + headshift());
+    return NE_Parser::RNamesReadItems(handle,nnames,lxe.lx.lxResidentNameTableOffset + headshift());
 }
 
 unsigned LX_Parser::LXImpNamesNumItems(binary_stream& handle)
@@ -310,49 +312,49 @@ unsigned LX_Parser::LXImpNamesNumItems(binary_stream& handle)
   return count;
 }
 
-bool LX_Parser::LXImpNamesReadItems(binary_stream& handle,memArray * obj,unsigned nnames)
+std::vector<std::string> LX_Parser::LXImpNamesReadItems(binary_stream& handle,size_t nnames)
 {
- unsigned i;
- unsigned char byte;
- handle.seek(lxe.lx.lxImportProcedureTableOffset + headshift(),binary_stream::Seek_Set);
- for(i = 0;i < nnames;i++)
- {
-   char nam[256];
-   byte = handle.read(type_byte);
-   if(IsKbdTerminate() || handle.eof()) break;
-   handle.read(nam,byte);
-   nam[byte] = 0;
-   if(!ma_AddString(obj,nam,true)) break;
- }
- return true;
+    std::vector<std::string> rc;
+    size_t i;
+    unsigned char byte;
+    handle.seek(lxe.lx.lxImportProcedureTableOffset + headshift(),binary_stream::Seek_Set);
+    for(i = 0;i < nnames;i++) {
+	char nam[256];
+	byte = handle.read(type_byte);
+	if(IsKbdTerminate() || handle.eof()) break;
+	handle.read(nam,byte);
+	nam[byte] = 0;
+	rc.push_back(nam);
+    }
+    return rc;
 }
 
-bool LX_Parser::LXNRNamesReadItems(binary_stream& handle,memArray * obj,unsigned nnames)
+std::vector<std::string> LX_Parser::LXNRNamesReadItems(binary_stream& handle,size_t nnames)
 {
-   return NE_Parser::RNamesReadItems(handle,obj,nnames,lxe.lx.lxNonResidentNameTableOffset);
+    return NE_Parser::RNamesReadItems(handle,nnames,lxe.lx.lxNonResidentNameTableOffset);
 }
 
-bool LX_Parser::__ReadModRefNamesLX(binary_stream& handle,memArray * obj,unsigned nnames)
+std::vector<std::string> LX_Parser::__ReadModRefNamesLX(binary_stream& handle,size_t nnames)
 {
- unsigned i;
- unsigned char byte;
- handle.seek(lxe.lx.lxImportModuleTableOffset + headshift(),binary_stream::Seek_Set);
- for(i = 0;i < nnames;i++)
- {
-   char nam[256];
-   byte = handle.read(type_byte);
-   if(IsKbdTerminate() || handle.eof()) break;
-   handle.read(nam,byte);
-   nam[byte] = 0;
-   if(!ma_AddString(obj,nam,true)) break;
- }
- return true;
+    std::vector<std::string> rc;
+    unsigned i;
+    unsigned char byte;
+    handle.seek(lxe.lx.lxImportModuleTableOffset + headshift(),binary_stream::Seek_Set);
+    for(i = 0;i < nnames;i++) {
+	char nam[256];
+	byte = handle.read(type_byte);
+	if(IsKbdTerminate() || handle.eof()) break;
+	handle.read(nam,byte);
+	nam[byte] = 0;
+	rc.push_back(nam);
+    }
+    return rc;
 }
 
-void LX_Parser::objpaintLX(TWindow* w,const LX_OBJECT *nam)
+void LX_Parser::objpaintLX(TWindow& w,const LX_OBJECT& nam) const
 {
- w->goto_xy(1,1);
- w->printf(
+    w.goto_xy(1,1);
+    w.printf(
 	  "Virtual Size                         = %lX bytes\n"
 	  "BVA (base virtual address)           = %08lX\n"
 	  "FLAGS: %lX\n"
@@ -374,99 +376,95 @@ void LX_Parser::objpaintLX(TWindow* w,const LX_OBJECT *nam)
 	  "   [%c] Object is loadable to High Memory (>512MiB)\n"
 	  "Object page map index                = %lu\n"
 	  "Number of entries in object page map = %lu"
-	  ,nam->o32_size
-	  ,nam->o32_base
-	  ,nam->o32_flags
-	  ,Gebool((nam->o32_flags & 0x00000001L) == 0x00000001L)
-	  ,Gebool((nam->o32_flags & 0x00000002L) == 0x00000002L)
-	  ,Gebool((nam->o32_flags & 0x00000004L) == 0x00000004L)
-	  ,Gebool((nam->o32_flags & 0x00000008L) == 0x00000008L)
-	  ,Gebool((nam->o32_flags & 0x00000010L) == 0x00000010L)
-	  ,Gebool((nam->o32_flags & 0x00000020L) == 0x00000020L)
-	  ,Gebool((nam->o32_flags & 0x00000040L) == 0x00000040L)
-	  ,Gebool((nam->o32_flags & 0x00000080L) == 0x00000080L)
-	  ,Gebool((nam->o32_flags & 0x00000100L) == 0x00000100L)
-	  ,Gebool((nam->o32_flags & 0x00000200L) == 0x00000200L)
-	  ,Gebool((nam->o32_flags & 0x00000400L) == 0x00000400L)
-	  ,Gebool((nam->o32_flags & 0x00001000L) == 0x00001000L)
-	  ,Gebool((nam->o32_flags & 0x00002000L) == 0x00002000L)
-	  ,Gebool((nam->o32_flags & 0x00004000L) == 0x00004000L)
-	  ,Gebool((nam->o32_flags & 0x00008000L) == 0x00008000L)
-	  ,Gebool((nam->o32_flags & 0x00010000L) == 0x00010000L)
-	  ,nam->o32_pagemap
-	  ,nam->o32_mapsize);
+	  ,nam.o32_size
+	  ,nam.o32_base
+	  ,nam.o32_flags
+	  ,Gebool((nam.o32_flags & 0x00000001L) == 0x00000001L)
+	  ,Gebool((nam.o32_flags & 0x00000002L) == 0x00000002L)
+	  ,Gebool((nam.o32_flags & 0x00000004L) == 0x00000004L)
+	  ,Gebool((nam.o32_flags & 0x00000008L) == 0x00000008L)
+	  ,Gebool((nam.o32_flags & 0x00000010L) == 0x00000010L)
+	  ,Gebool((nam.o32_flags & 0x00000020L) == 0x00000020L)
+	  ,Gebool((nam.o32_flags & 0x00000040L) == 0x00000040L)
+	  ,Gebool((nam.o32_flags & 0x00000080L) == 0x00000080L)
+	  ,Gebool((nam.o32_flags & 0x00000100L) == 0x00000100L)
+	  ,Gebool((nam.o32_flags & 0x00000200L) == 0x00000200L)
+	  ,Gebool((nam.o32_flags & 0x00000400L) == 0x00000400L)
+	  ,Gebool((nam.o32_flags & 0x00001000L) == 0x00001000L)
+	  ,Gebool((nam.o32_flags & 0x00002000L) == 0x00002000L)
+	  ,Gebool((nam.o32_flags & 0x00004000L) == 0x00004000L)
+	  ,Gebool((nam.o32_flags & 0x00008000L) == 0x00008000L)
+	  ,Gebool((nam.o32_flags & 0x00010000L) == 0x00010000L)
+	  ,nam.o32_pagemap
+	  ,nam.o32_mapsize);
 }
 
-void LX_Parser::ObjPaintLX(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
+void LX_Parser::ObjPaintLX(TWindow& win,const std::vector<LX_OBJECT>& names,unsigned start) const
 {
- char buffer[81];
- const LX_OBJECT ** nam = (const LX_OBJECT **)names;
- win->freeze();
- win->clear();
- sprintf(buffer," Object Table [ %u / %u ] ",start + 1,nlist);
- win->set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
- win->set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
- objpaintLX(win,nam[start]);
- win->refresh_full();
+    char buffer[81];
+    win.freeze();
+    win.clear();
+    sprintf(buffer," Object Table [ %u / %u ] ",start + 1,names.size());
+    win.set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+    win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
+    objpaintLX(win,names[start]);
+    win.refresh_full();
 }
 
-bool LX_Parser::__ReadObjectsLX(binary_stream& handle,memArray * obj,unsigned n)
+std::vector<LX_OBJECT> LX_Parser::__ReadObjectsLX(binary_stream& handle,size_t n)
 {
- size_t i;
-  for(i = 0;i < n;i++)
-  {
-    LX_OBJECT lxo;
-    if(IsKbdTerminate() || handle.eof()) break;
-    handle.read(&lxo,sizeof(LX_OBJECT));
-    if(!ma_AddData(obj,&lxo,sizeof(LX_OBJECT),true)) break;
-  }
-  return true;
+    std::vector<LX_OBJECT> rc;
+    size_t i;
+    for(i = 0;i < n;i++) {
+	LX_OBJECT lxo;
+	if(IsKbdTerminate() || handle.eof()) break;
+	handle.read(&lxo,sizeof(LX_OBJECT));
+	rc.push_back(lxo);
+    }
+    return rc;
 }
 
-bool LX_Parser::__ReadEntriesLX(binary_stream& handle,memArray *obj)
+std::vector<LX_ENTRY> LX_Parser::__ReadEntriesLX(binary_stream& handle)
 {
- unsigned i;
- unsigned char j;
- unsigned char cnt,type;
- uint_fast16_t numobj = 0;
- LX_ENTRY _lxe;
- i = 0;
- while(1)
- {
-   bool is_eof;
-   is_eof = false;
-   cnt = handle.read(type_byte);
-   type = handle.read(type_byte);
-   if(!cnt) break;
-   if(type) numobj = handle.read(type_word);
-   for(j = 0;j < cnt;j++,i++)
-   {
-     char size;
-     switch(type)
-     {
-       case 0: size = 0; break;
-       case 1: size = 2; break;
-       case 2:
-       case 0x80:
-       case 3: size = 4; break;
-       default:
-       case 4: size = 6; break;
-     }
-     is_eof = handle.eof();
-     if(IsKbdTerminate() || is_eof) goto exit;
-     _lxe.b32_type = type;
-     if(size)
-     {
-       _lxe.b32_obj = numobj;
-       _lxe.entry.e32_flags = handle.read(type_byte);
-       handle.read(&_lxe.entry.e32_variant,size);
-     }
-     if(!ma_AddData(obj,&_lxe,sizeof(LX_ENTRY),true)) goto exit;
-   }
-   if(is_eof) break;
- }
- exit:
- return true;
+    std::vector<LX_ENTRY> rc;
+    unsigned i;
+    unsigned char j;
+    unsigned char cnt,type;
+    uint_fast16_t numobj = 0;
+    LX_ENTRY _lxe;
+    i = 0;
+    while(1) {
+	bool is_eof;
+	is_eof = false;
+	cnt = handle.read(type_byte);
+	type = handle.read(type_byte);
+	if(!cnt) break;
+	if(type) numobj = handle.read(type_word);
+	for(j = 0;j < cnt;j++,i++) {
+	    char size;
+	    switch(type) {
+		case 0: size = 0; break;
+		case 1: size = 2; break;
+		case 2:
+		case 0x80:
+		case 3: size = 4; break;
+		default:
+		case 4: size = 6; break;
+	    }
+	    is_eof = handle.eof();
+	    if(IsKbdTerminate() || is_eof) goto exit;
+	    _lxe.b32_type = type;
+	    if(size) {
+		_lxe.b32_obj = numobj;
+		_lxe.entry.e32_flags = handle.read(type_byte);
+		handle.read(&_lxe.entry.e32_variant,size);
+	    }
+	    rc.push_back(_lxe);
+	}
+	if(is_eof) break;
+    }
+exit:
+    return rc;
 }
 
 void LX_Parser::lxReadPageDesc(binary_stream& handle,LX_MAP_TABLE *mt,unsigned long pageidx) const
@@ -522,7 +520,7 @@ __filesize_t LX_Parser::CalcEntryPoint(unsigned long objnum,__filesize_t _offset
   return __calcPageEntry(&mt) + diff;
 }
 
-void LX_Parser::ReadLXLEImpMod(__filesize_t offtable,unsigned num,char *str)
+void LX_Parser::ReadLXLEImpMod(__filesize_t offtable,unsigned num,char *str) const
 {
   binary_stream* handle;
   unsigned i;
@@ -541,7 +539,7 @@ void LX_Parser::ReadLXLEImpMod(__filesize_t offtable,unsigned num,char *str)
   strcat(str,buff);
 }
 
-void LX_Parser::ReadLXLEImpName(__filesize_t offtable,unsigned num,char *str)
+void LX_Parser::ReadLXLEImpName(__filesize_t offtable,unsigned num,char *str) const
 {
   binary_stream* handle;
   unsigned char len;
@@ -554,40 +552,37 @@ void LX_Parser::ReadLXLEImpName(__filesize_t offtable,unsigned num,char *str)
   strcat(str,buff);
 }
 
-void LX_Parser::ShowFwdModOrdLX(const LX_ENTRY *lxent)
+void LX_Parser::ShowFwdModOrdLX(const LX_ENTRY& lxent) const
 {
-  char buff[513];
-  buff[0] = 0;
-  ReadLXLEImpMod(lxe.lx.lxImportModuleTableOffset + headshift(),lxent->entry.e32_variant.e32_fwd.modord,buff);
-  strcat(buff,".");
-  if((lxent->entry.e32_flags & 0x01) == 0x01)
-  {
-    sprintf(&buff[strlen(buff)],"@%u",(unsigned)lxent->entry.e32_variant.e32_fwd.value);
-  }
-  else ReadLXLEImpName(lxe.lx.lxImportProcedureTableOffset + headshift(),(unsigned)lxent->entry.e32_variant.e32_fwd.value,buff);
-  beye_context().TMessageBox(buff," Forwarder entry point ");
+    char buff[513];
+    buff[0] = 0;
+    ReadLXLEImpMod(lxe.lx.lxImportModuleTableOffset + headshift(),lxent.entry.e32_variant.e32_fwd.modord,buff);
+    strcat(buff,".");
+    if((lxent.entry.e32_flags & 0x01) == 0x01)
+	sprintf(&buff[strlen(buff)],"@%u",(unsigned)lxent.entry.e32_variant.e32_fwd.value);
+    else ReadLXLEImpName(lxe.lx.lxImportProcedureTableOffset + headshift(),(unsigned)lxent.entry.e32_variant.e32_fwd.value,buff);
+    beye_context().TMessageBox(buff," Forwarder entry point ");
 }
 
-__filesize_t LX_Parser::CalcEntryLX(const LX_ENTRY *lxent)
+__filesize_t LX_Parser::CalcEntryLX(const LX_ENTRY& lxent) const
 {
-  __filesize_t ret;
-  ret = beye_context().tell();
-      switch(lxent->b32_type)
-      {
-	case 1: ret = CalcEntryPoint(lxent->b32_obj,lxent->entry.e32_variant.e32_offset.offset16);
+    __filesize_t ret;
+    ret = beye_context().tell();
+    switch(lxent.b32_type) {
+	case 1: ret = CalcEntryPoint(lxent.b32_obj,lxent.entry.e32_variant.e32_offset.offset16);
 		      break;
-	case 2: ret = CalcEntryPoint(lxent->b32_obj,lxent->entry.e32_variant.e32_callgate.offset);
+	case 2: ret = CalcEntryPoint(lxent.b32_obj,lxent.entry.e32_variant.e32_callgate.offset);
 		      break;
-	case 3: ret = CalcEntryPoint(lxent->b32_obj,lxent->entry.e32_variant.e32_offset.offset32);
+	case 3: ret = CalcEntryPoint(lxent.b32_obj,lxent.entry.e32_variant.e32_offset.offset32);
 		      break;
 	case 4: ShowFwdModOrdLX(lxent);
 	case 5:
 	default: break;
-      }
-  return ret;
+    }
+    return ret;
 }
 
-__filesize_t LX_Parser::CalcEntryBungleLX(unsigned ordinal,bool dispmsg)
+__filesize_t LX_Parser::CalcEntryBungleLX(unsigned ordinal,bool dispmsg) const
 {
   binary_stream* handle;
   bool found;
@@ -643,30 +638,27 @@ __filesize_t LX_Parser::CalcEntryBungleLX(unsigned ordinal,bool dispmsg)
    }
    if(found || is_eof) break;
  }
- if(found) ret = CalcEntryLX((LX_ENTRY *)&lxent);
+ if(found) ret = CalcEntryLX(lxent);
  else      if(dispmsg) beye_context().ErrMessageBox(NOT_ENTRY,"");
  return ret;
 }
 
 __filesize_t LX_Parser::action_F10()
 {
- binary_stream& handle = *lx_cache;
- __filesize_t fpos;
- unsigned nnames;
- memArray * obj;
- fpos = beye_context().tell();
- nnames = (unsigned)lxe.lx.lxObjectCount;
- if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
- if(!(obj = ma_Build(nnames,true))) return fpos;
- handle.seek(lxe.lx.lxObjectTableOffset + headshift(),binary_stream::Seek_Set);
- if(__ReadObjectsLX(handle,obj,nnames))
- {
-  int ret;
-    ret = PageBox(70,20,(const any_t**)obj->data,obj->nItems,ObjPaintLX);
-    if(ret != -1)  fpos = CalcPageEntry(((LX_OBJECT *)obj->data[ret])->o32_pagemap);
- }
- ma_Destroy(obj);
- return fpos;
+    binary_stream& handle = *lx_cache;
+    __filesize_t fpos;
+    unsigned nnames;
+    fpos = beye_context().tell();
+    nnames = (unsigned)lxe.lx.lxObjectCount;
+    if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
+    handle.seek(lxe.lx.lxObjectTableOffset + headshift(),binary_stream::Seek_Set);
+    std::vector<LX_OBJECT> objs = __ReadObjectsLX(handle,nnames);
+    if(!objs.empty()) {
+	int ret;
+	ret = PageBox(70,20,objs,*this,&LX_Parser::ObjPaintLX);
+	if(ret != -1)  fpos = CalcPageEntry(objs[ret].o32_pagemap);
+    }
+    return fpos;
 }
 
 const char * mapattr[] =
@@ -679,7 +671,7 @@ const char * mapattr[] =
 "Iterated Data Page Type II"
 };
 
-const char* LX_Parser::lxeGetMapAttr(unsigned long attr)
+const char* LX_Parser::lxeGetMapAttr(unsigned long attr) const
 {
   if (attr > 5) return "Unknown";
   else  return mapattr[attr];
@@ -695,113 +687,96 @@ const char *__e32type[] =
   "TypeInfo"
 };
 
-const char* LX_Parser::entryTypeLX(unsigned char type)
+const char* LX_Parser::entryTypeLX(unsigned char type) const
 {
    if(type < 6) return __e32type[type];
    else         return "Unknown";
 }
 
-void LX_Parser::entrypaintLX(TWindow* w,const LX_ENTRY *nam)
+void LX_Parser::entrypaintLX(TWindow& w,const LX_ENTRY& nam) const
 {
- if(!nam->b32_type)
- {
-   w->goto_xy(35,4);
-   w->printf("Unused");
- }
- else
- {
-   w->goto_xy(1,1);
-   w->printf(
+    if(!nam.b32_type) {
+	w.goto_xy(35,4);
+	w.printf("Unused");
+    } else {
+	w.goto_xy(1,1);
+	w.printf(
 	    "Entry type: %s\n"
 	    "Object number : %hd\n"
 	    "Flags: %02XH\n"
-	    ,entryTypeLX(nam->b32_type)
-	    ,nam->b32_obj
-	    ,(int)nam->entry.e32_flags);
-   if(nam->b32_type != 4)
-   {
-     w->printf(
+	    ,entryTypeLX(nam.b32_type)
+	    ,nam.b32_obj
+	    ,(int)nam.entry.e32_flags);
+	if(nam.b32_type != 4) {
+	    w.printf(
 	      "   [%c] Exported Entry\n"
 	      "   [%c] Used Shared Data\n"
 	      "   %02XH - parameter word count mask\n"
-	      ,Gebool((nam->entry.e32_flags & 0x01) == 0x01)
-	      ,Gebool((nam->entry.e32_flags & 0x02) == 0x02)
-	      ,(int)(nam->entry.e32_flags >> 2));
-   }
-   else
-   {
-     w->printf(
+	      ,Gebool((nam.entry.e32_flags & 0x01) == 0x01)
+	      ,Gebool((nam.entry.e32_flags & 0x02) == 0x02)
+	      ,(int)(nam.entry.e32_flags >> 2));
+	} else {
+	    w.printf(
 	      "\n"
 	      "   [%c] Import by ordinal\n"
 	      "\n"
-	      ,Gebool((nam->entry.e32_flags & 0x01) == 0x01));
-   }
-   if(nam->b32_type == 1)
-   {
-     w->printf(
+	      ,Gebool((nam.entry.e32_flags & 0x01) == 0x01));
+	}
+	if(nam.b32_type == 1) {
+	    w.printf(
 	      "Entry offset : %04hXH\n"
 	      "\n"
-	      ,nam->entry.e32_variant.e32_offset.offset16);
-   }
-   else
-      if(nam->b32_type == 3)
-      {
-	w->printf(
+	      ,nam.entry.e32_variant.e32_offset.offset16);
+	} else if(nam.b32_type == 3) {
+	    w.printf(
 		"Entry offset : %08XH\n"
 		 "\n"
-		 ,nam->entry.e32_variant.e32_offset.offset32);
-      }
-      else
-      if(nam->b32_type == 2)
-      {
-       w->printf(
+		 ,nam.entry.e32_variant.e32_offset.offset32);
+	} else if(nam.b32_type == 2) {
+	    w.printf(
 		"Callgate offset : %04hXH\n"
 		"Callgate selector : %04hXH\n"
-		,nam->entry.e32_variant.e32_callgate.offset
-		,nam->entry.e32_variant.e32_callgate.callgate);
-      }
-      else
-       if(nam->b32_type == 4)
-       {
-	 w->printf(
+		,nam.entry.e32_variant.e32_callgate.offset
+		,nam.entry.e32_variant.e32_callgate.callgate);
+	} else if(nam.b32_type == 4) {
+	    w.printf(
 		  "Module ordinal number : %04hXH\n"
 		  "Proc name offset or ordinal : %04hXH\n"
-		  ,nam->entry.e32_variant.e32_fwd.modord
-		  ,nam->entry.e32_variant.e32_fwd.value);
-       }
-   }
+		  ,nam.entry.e32_variant.e32_fwd.modord
+		  ,nam.entry.e32_variant.e32_fwd.value);
+	}
+    }
 }
 
-void LX_Parser::PaintEntriesLX(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
+void LX_Parser::PaintEntriesLX(TWindow& win,const std::vector<LX_ENTRY>& names,unsigned start) const
 {
- char buffer[81];
- const LX_ENTRY ** nam = (const LX_ENTRY **)names;
- win->freeze();
- win->clear();
- sprintf(buffer," Entries Table [ %u / %u ] ",start + 1,nlist);
- win->set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
- win->set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
- entrypaintLX(win,nam[start]);
- win->refresh_full();
+    char buffer[81];
+    win.freeze();
+    win.clear();
+    sprintf(buffer," Entries Table [ %u / %u ] ",start + 1,names.size());
+    win.set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+    win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
+    entrypaintLX(win,names[start]);
+    win.refresh_full();
 }
 
-bool LX_Parser::__ReadMapTblLX(binary_stream& handle,memArray * obj,unsigned n)
+std::vector<std::string> LX_Parser::__ReadMapTblLX(binary_stream& handle,size_t n)
 {
-  size_t i;
-  for(i = 0;i < n;i++)
-  {
-    LX_MAP_TABLE mt;
-    char stmp[80];
-    if(IsKbdTerminate() || handle.eof()) break;
-    lxReadPageDesc(handle,&mt,i+1);
-    sprintf(stmp,"Off=%08lXH Siz=%04hXH Flg:%04hXH=%s",
+    std::vector<std::string> rc;
+    size_t i;
+    for(i = 0;i < n;i++) {
+	LX_MAP_TABLE mt;
+	char stmp[80];
+	if(IsKbdTerminate() || handle.eof()) break;
+	lxReadPageDesc(handle,&mt,i+1);
+	sprintf(stmp,"Off=%08lXH Siz=%04hXH Flg:%04hXH=%s",
 		 (unsigned long)mt.o32_pagedataoffset,
 		 mt.o32_pagesize,
 		 mt.o32_pageflags,
 		 (const char *)lxeGetMapAttr(mt.o32_pageflags));
-    if(!ma_AddString(obj,(const char *)stmp,true)) break;
-  }
-  return true;
+	rc.push_back(stmp);
+    }
+    return rc;
 }
 
 __filesize_t LX_Parser::action_F9()
@@ -811,44 +786,32 @@ __filesize_t LX_Parser::action_F9()
     std::string title = " Map of pages ";
     ssize_t nnames = (unsigned)lxe.lx.lxPageCount;
     int flags = LB_SELECTIVE;
-    bool bval;
-    memArray* obj;
     TWindow* w;
     ret = -1;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = __ReadMapTblLX(main_handle(),obj,nnames);
+    std::vector<std::string> objs = __ReadMapTblLX(main_handle(),nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ret = ma_Display(obj,title,flags,-1);
-    }
-    ma_Destroy(obj);
-    exit:
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ret = ListBox(objs,title,flags,-1);
+exit:
     if(ret != -1) fpos = CalcPageEntry(ret + 1);
     return fpos;
 }
 
 __filesize_t LX_Parser::action_F6()
 {
- binary_stream& handle = *lx_cache;
- __filesize_t fpos;
- memArray * obj;
- fpos = beye_context().tell();
- if(!lxe.lx.lxEntryTableOffset) { beye_context().NotifyBox(NOT_ENTRY," Entry Table "); return fpos; }
- handle.seek(lxe.lx.lxEntryTableOffset + headshift(),binary_stream::Seek_Set);
- if(!(obj = ma_Build(0,true))) goto exit;
- if(__ReadEntriesLX(handle,obj))
- {
+    binary_stream& handle = *lx_cache;
+    __filesize_t fpos;
+    fpos = beye_context().tell();
+    if(!lxe.lx.lxEntryTableOffset) { beye_context().NotifyBox(NOT_ENTRY," Entry Table "); return fpos; }
+    handle.seek(lxe.lx.lxEntryTableOffset + headshift(),binary_stream::Seek_Set);
+    std::vector<LX_ENTRY> objs = __ReadEntriesLX(handle);
     int ret;
-    if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY," Entry Table "); goto bye; }
-    ret = PageBox(70,8,(const any_t**)obj->data,obj->nItems,PaintEntriesLX);
-    if(ret != -1)  fpos = CalcEntryLX((const LX_ENTRY*)obj->data[ret]);
- }
- bye:
- ma_Destroy(obj);
- exit:
- return fpos;
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY," Entry Table "); goto bye; }
+    ret = PageBox(70,8,objs,*this,&LX_Parser::PaintEntriesLX);
+    if(ret != -1)  fpos = CalcEntryLX(objs[ret]);
+bye:
+    return fpos;
 }
 
 const char * ResourceGrNamesLX[] =
@@ -877,48 +840,42 @@ const char * ResourceGrNamesLX[] =
   "DBCS font drive"
 };
 
-bool LX_Parser::__ReadResourceGroupLX(binary_stream& handle,memArray *obj,unsigned nitems,long * addr)
+std::vector<std::string> LX_Parser::__ReadResourceGroupLX(binary_stream& handle,size_t nitems,long* addr)
 {
- unsigned i;
- LXResource lxr;
- for(i = 0;i < nitems;i++)
- {
-    char stmp[81];
-    handle.read(&lxr,sizeof(LXResource));
-    addr[i] = lxr.offset;
-    if(IsKbdTerminate() || handle.eof()) break;
-    sprintf(stmp,"%6hu = ",lxr.nameID);
-    if(lxr.typeID < sizeof(ResourceGrNamesLX)/sizeof(char *)) strcat(stmp,ResourceGrNamesLX[lxr.typeID]);
-    else  sprintf(&stmp[strlen(stmp)],"Unknown < %04hXH >",lxr.typeID);
-    sprintf(&stmp[strlen(stmp)]," obj=%04hXH.%08lXH"
+    std::vector<std::string> rc;
+    unsigned i;
+    LXResource lxr;
+    for(i = 0;i < nitems;i++) {
+	char stmp[81];
+	handle.read(&lxr,sizeof(LXResource));
+	addr[i] = lxr.offset;
+	if(IsKbdTerminate() || handle.eof()) break;
+	sprintf(stmp,"%6hu = ",lxr.nameID);
+	if(lxr.typeID < sizeof(ResourceGrNamesLX)/sizeof(char *)) strcat(stmp,ResourceGrNamesLX[lxr.typeID]);
+	else  sprintf(&stmp[strlen(stmp)],"Unknown < %04hXH >",lxr.typeID);
+	sprintf(&stmp[strlen(stmp)]," obj=%04hXH.%08lXH"
 			       ,lxr.object
 			       ,(unsigned long)lxr.offset);
-    if(!ma_AddString(obj,stmp,true)) break;
- }
- return true;
+	rc.push_back(stmp);
+    }
+    return rc;
 }
 
 __filesize_t LX_Parser::action_F7()
 {
- __filesize_t fpos;
- binary_stream& handle = *lx_cache;
- memArray * obj;
- long * raddr;
- unsigned nrgroup;
- fpos = beye_context().tell();
- handle.seek((__fileoff_t)headshift() + lxe.lx.lxResourceTableOffset,binary_stream::Seek_Set);
- nrgroup = (unsigned)lxe.lx.lxNumberResourceTableEntries;
- if(!nrgroup) { beye_context().NotifyBox(NOT_ENTRY," Resources "); return fpos; }
- if(!(obj = ma_Build(nrgroup,true))) goto exit;
- if(!(raddr  = new long [nrgroup])) return fpos;
- if(__ReadResourceGroupLX(handle,obj,nrgroup,raddr))
- {
-   ma_Display(obj," Resource groups : ",LB_SORTABLE,-1);
- }
- ma_Destroy(obj);
- delete raddr;
- exit:
- return fpos;
+    __filesize_t fpos;
+    binary_stream& handle = *lx_cache;
+    long* raddr;
+    unsigned nrgroup;
+    fpos = beye_context().tell();
+    handle.seek((__fileoff_t)headshift() + lxe.lx.lxResourceTableOffset,binary_stream::Seek_Set);
+    nrgroup = (unsigned)lxe.lx.lxNumberResourceTableEntries;
+    if(!nrgroup) { beye_context().NotifyBox(NOT_ENTRY," Resources "); return fpos; }
+    if(!(raddr  = new long [nrgroup])) return fpos;
+    std::vector<std::string> objs = __ReadResourceGroupLX(handle,nrgroup,raddr);
+    if(!objs.empty()) ListBox(objs," Resource groups : ",LB_SORTABLE,-1);
+    delete raddr;
+    return fpos;
 }
 
 __filesize_t LX_Parser::action_F2()
@@ -926,19 +883,13 @@ __filesize_t LX_Parser::action_F2()
     std::string title = MOD_REFER;
     ssize_t nnames = (unsigned)lxe.lx.lxImportModuleTableEntries;
     int flags = LB_SELECTIVE;
-    bool bval;
-    memArray* obj;
     TWindow* w;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = __ReadModRefNamesLX(main_handle(),obj,nnames);
+    std::vector<std::string> objs = __ReadModRefNamesLX(main_handle(),nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ma_Display(obj,title,flags,-1);
-    }
-    ma_Destroy(obj);
-    exit:
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ListBox(objs,title,flags,-1);
+exit:
     return beye_context().tell();
 }
 
@@ -950,28 +901,22 @@ __filesize_t LX_Parser::action_F3()
     std::string title = RES_NAMES;
     ssize_t nnames = LXRNamesNumItems(main_handle());
     int flags = LB_SELECTIVE | LB_SORTABLE;
-    bool bval;
-    memArray* obj;
     TWindow* w;
     ret = -1;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = LXRNamesReadItems(main_handle(),obj,nnames);
+    std::vector<std::string> objs = LXRNamesReadItems(main_handle(),nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ret = ma_Display(obj,title,flags,-1);
-	if(ret != -1) {
-	    const char* cptr;
-	    char buff[40];
-	    cptr = strrchr((char*)obj->data[ret],LB_ORD_DELIMITER);
-	    cptr++;
-	    strcpy(buff,cptr);
-	    ordinal = atoi(buff);
-	}
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ret = ListBox(objs,title,flags,-1);
+    if(ret != -1) {
+	const char* cptr;
+	char buff[40];
+	cptr = strrchr(objs[ret].c_str(),LB_ORD_DELIMITER);
+	cptr++;
+	strcpy(buff,cptr);
+	ordinal = atoi(buff);
     }
-    ma_Destroy(obj);
-    exit:
+exit:
     if(ret != -1) fpos = CalcEntryBungleLX(ordinal,true);
     return fpos;
 }
@@ -984,28 +929,22 @@ __filesize_t LX_Parser::action_F4()
     std::string title = NORES_NAMES;
     ssize_t nnames = LXNRNamesNumItems(main_handle());
     int flags = LB_SELECTIVE | LB_SORTABLE;
-    bool bval;
-    memArray* obj;
     TWindow* w;
     ret = -1;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = LXNRNamesReadItems(main_handle(),obj,nnames);
+    std::vector<std::string> objs = LXNRNamesReadItems(main_handle(),nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ret = ma_Display(obj,title,flags,-1);
-	if(ret != -1) {
-	    const char* cptr;
-	    char buff[40];
-	    cptr = strrchr((char*)obj->data[ret],LB_ORD_DELIMITER);
-	    cptr++;
-	    strcpy(buff,cptr);
-	    ordinal = atoi(buff);
-	}
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ret = ListBox(objs,title,flags,-1);
+    if(ret != -1) {
+	const char* cptr;
+	char buff[40];
+	cptr = strrchr(objs[ret].c_str(),LB_ORD_DELIMITER);
+	cptr++;
+	strcpy(buff,cptr);
+	ordinal = atoi(buff);
     }
-    ma_Destroy(obj);
-    exit:
+exit:
     if(ret != -1) fpos = CalcEntryBungleLX(ordinal,true);
     return fpos;
 }
@@ -1015,19 +954,13 @@ __filesize_t LX_Parser::action_F5()
     std::string title = IMPPROC_TABLE;
     ssize_t nnames = LXImpNamesNumItems(main_handle());
     int flags = LB_SORTABLE;
-    bool bval;
-    memArray* obj;
     TWindow* w;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = LXImpNamesReadItems(main_handle(),obj,nnames);
+    std::vector<std::string> objs = LXImpNamesReadItems(main_handle(),nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ma_Display(obj,title,flags,-1);
-    }
-    ma_Destroy(obj);
-    exit:
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ListBox(objs,title,flags,-1);
+exit:
     return beye_context().tell();
 }
 

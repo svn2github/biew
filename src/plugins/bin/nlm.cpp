@@ -78,10 +78,10 @@ namespace	usr {
 	    int			NLMbitness(__filesize_t off);
 	    bool		BuildReferStrNLM(std::string& str,const RELOC_NLM& rne,int flags);
 	    void		BuildRelocNlm();
-	    bool		__ReadModRefNamesNLM(binary_stream&handle,memArray *obj,unsigned nnames);
-	    bool		NLMNamesReadItems(binary_stream&handle,memArray *obj,unsigned nnames);
+	    std::vector<std::string> __ReadModRefNamesNLM(binary_stream& handle,size_t nnames);
+	    std::vector<std::string> NLMNamesReadItems(binary_stream& handle,size_t nnames);
 	    __filesize_t	CalcEntryNLM(unsigned ord,bool dispmsg);
-	    bool		__ReadExtRefNamesNLM(binary_stream&handle,memArray *obj,unsigned n);
+	    std::vector<std::string>	__ReadExtRefNamesNLM(binary_stream& handle,size_t n);
 	    bool		FindPubName(std::string& buff,__filesize_t pa);
 
 	    Nlm_Internal_Fixed_Header nlm;
@@ -319,24 +319,24 @@ __filesize_t NLM_Parser::action_F8()
   return fpos;
 }
 
-bool NLM_Parser::__ReadExtRefNamesNLM(binary_stream& handle,memArray * obj,unsigned n)
+std::vector<std::string> NLM_Parser::__ReadExtRefNamesNLM(binary_stream& handle,size_t n)
 {
- unsigned i;
- handle.seek(nlm.nlm_externalReferencesOffset,binary_stream::Seek_Set);
- for(i = 0;i < n;i++)
- {
-   char stmp[256];
-   unsigned char length;
-   unsigned long nrefs;
-   length = handle.read(type_byte);
-   if(IsKbdTerminate() || handle.eof()) break;
-   handle.read(stmp,length);
-   stmp[length] = 0;
-   nrefs = handle.read(type_dword);
-   handle.seek(nrefs*4,binary_stream::Seek_Cur);
-   if(!ma_AddString(obj,stmp,true)) break;
- }
- return true;
+    std::vector<std::string> rc;
+    size_t i;
+    handle.seek(nlm.nlm_externalReferencesOffset,binary_stream::Seek_Set);
+    for(i = 0;i < n;i++) {
+	char stmp[256];
+	unsigned char length;
+	unsigned long nrefs;
+	length = handle.read(type_byte);
+	if(IsKbdTerminate() || handle.eof()) break;
+	handle.read(stmp,length);
+	stmp[length] = 0;
+	nrefs = handle.read(type_dword);
+	handle.seek(nrefs*4,binary_stream::Seek_Cur);
+	rc.push_back(stmp);
+    }
+    return rc;
 }
 
 __filesize_t NLM_Parser::CalcEntryNLM(unsigned ord,bool dispmsg)
@@ -367,27 +367,25 @@ __filesize_t NLM_Parser::CalcEntryNLM(unsigned ord,bool dispmsg)
  return ret;
 }
 
-bool NLM_Parser::NLMNamesReadItems(binary_stream& handle,memArray * obj,unsigned nnames)
+std::vector<std::string> NLM_Parser::NLMNamesReadItems(binary_stream& handle,size_t nnames)
 {
- unsigned char length;
- unsigned i;
- handle.seek(nlm.nlm_publicsOffset,binary_stream::Seek_Set);
- for(i = 0;i < nnames;i++)
- {
-   char stmp[256];
-   length = handle.read(type_byte);
-   if(IsKbdTerminate() || handle.eof()) break;
-   if(length > 66)
-   {
-     handle.read(stmp,66);
-     handle.seek(length - 66,binary_stream::Seek_Cur);
-     strcat(stmp,">>>");
-   }
-   else { handle.read(stmp,length); stmp[length] = 0; }
-   handle.seek(4L,binary_stream::Seek_Cur);
-   if(!ma_AddString(obj,stmp,true)) break;
- }
- return true;
+    std::vector<std::string> rc;
+    unsigned char length;
+    unsigned i;
+    handle.seek(nlm.nlm_publicsOffset,binary_stream::Seek_Set);
+    for(i = 0;i < nnames;i++) {
+	char stmp[256];
+	length = handle.read(type_byte);
+	if(IsKbdTerminate() || handle.eof()) break;
+	if(length > 66) {
+	    handle.read(stmp,66);
+	    handle.seek(length - 66,binary_stream::Seek_Cur);
+	    strcat(stmp,">>>");
+	} else { handle.read(stmp,length); stmp[length] = 0; }
+	handle.seek(4L,binary_stream::Seek_Cur);
+	rc.push_back(stmp);
+    }
+    return rc;
 }
 
 __filesize_t NLM_Parser::action_F5()
@@ -395,42 +393,34 @@ __filesize_t NLM_Parser::action_F5()
     std::string title = EXT_REFER;
     ssize_t nnames = (unsigned)nlm.nlm_numberOfExternalReferences;
     int flags = LB_SORTABLE;
-    bool bval;
-    memArray* obj;
-    TWindow* w;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
-    w = PleaseWaitWnd();
-    bval = __ReadExtRefNamesNLM(main_handle,obj,nnames);
+    TWindow* w = PleaseWaitWnd();
+    std::vector<std::string> objs = __ReadExtRefNamesNLM(main_handle,nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ma_Display(obj,title,flags,-1);
-    }
-    ma_Destroy(obj);
-    exit:
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ListBox(objs,title,flags,-1);
+exit:
     return beye_context().tell();
 }
 
-bool NLM_Parser::__ReadModRefNamesNLM(binary_stream& handle,memArray * obj,unsigned nnames)
+std::vector<std::string> NLM_Parser::__ReadModRefNamesNLM(binary_stream& handle,size_t nnames)
 {
- unsigned char length;
- unsigned i;
- handle.seek(nlm.nlm_moduleDependencyOffset,binary_stream::Seek_Set);
- for(i = 0;i < nnames;i++)
- {
-   char stmp[256];
-   length = handle.read(type_byte);
-   if(IsKbdTerminate() || handle.eof()) break;
-   if(length > 66)
-   {
-     handle.read(stmp,66);
-     handle.seek(length - 66,binary_stream::Seek_Cur);
-     strcat(stmp,">>>");
-   }
-   else { handle.read(stmp,length); stmp[length] = 0; }
-   if(!ma_AddString(obj,stmp,true)) break;
- }
- return true;
+    std::vector<std::string> rc;
+    unsigned char length;
+    unsigned i;
+    handle.seek(nlm.nlm_moduleDependencyOffset,binary_stream::Seek_Set);
+    for(i = 0;i < nnames;i++) {
+	char stmp[256];
+	length = handle.read(type_byte);
+	if(IsKbdTerminate() || handle.eof()) break;
+	if(length > 66) {
+	    handle.read(stmp,66);
+	    handle.seek(length - 66,binary_stream::Seek_Cur);
+	    strcat(stmp,">>>");
+	}
+	else { handle.read(stmp,length); stmp[length] = 0; }
+	rc.push_back(stmp);
+    }
+    return rc;
 }
 
 __filesize_t NLM_Parser::action_F2()
@@ -438,19 +428,12 @@ __filesize_t NLM_Parser::action_F2()
     std::string title = MOD_REFER;
     ssize_t nnames = (unsigned)nlm.nlm_numberOfModuleDependencies;
     int flags = LB_SORTABLE;
-    bool bval;
-    memArray* obj;
-    TWindow* w;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
-    w = PleaseWaitWnd();
-    bval = __ReadModRefNamesNLM(main_handle,obj,nnames);
+    TWindow* w = PleaseWaitWnd();
+    std::vector<std::string> objs = __ReadModRefNamesNLM(main_handle,nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ma_Display(obj,title,flags,-1);
-    }
-    ma_Destroy(obj);
-    exit:
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ListBox(objs,title,flags,-1);
+exit:
     return beye_context().tell();
 }
 
@@ -461,20 +444,14 @@ __filesize_t NLM_Parser::action_F3()
     std::string title = EXP_TABLE;
     ssize_t nnames = (unsigned)nlm.nlm_numberOfPublics;
     int flags = LB_SELECTIVE;
-    bool bval;
-    memArray* obj;
     TWindow* w;
     ret = -1;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = NLMNamesReadItems(main_handle,obj,nnames);
+    std::vector<std::string> objs = NLMNamesReadItems(main_handle,nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ret = ma_Display(obj,title,flags,-1);
-    }
-    ma_Destroy(obj);
-    exit:
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ret = ListBox(objs,title,flags,-1);
+exit:
     if(ret != -1) fpos = CalcEntryNLM(ret,true);
     return fpos;
 }

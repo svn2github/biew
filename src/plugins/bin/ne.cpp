@@ -70,7 +70,7 @@ const char * __neExeType[] =
    "Windows Dev386"
 };
 
-const char* NE_Parser::__getNEType(unsigned type)
+const char* NE_Parser::__getNEType(unsigned type) const
 {
   if(type > 4) type = 0;
   return __neExeType[type];
@@ -91,9 +91,9 @@ const char* NE_Parser::GetPMWinAPI(unsigned flag)
  return PMWinAPI[flag];
 }
 
-void NE_Parser::PaintNewHeaderNE_1(TWindow* w)
+void NE_Parser::PaintNewHeaderNE_1(TWindow& w) const
 {
-  w->printf(
+  w.printf(
 	   "Signature                      = '%c%c'\n"
 	   "Linker Version.Revision        = %hd.%hd\n"
 	   "Offset of Entry Table          = %XH\n"
@@ -142,9 +142,9 @@ void NE_Parser::PaintNewHeaderNE_1(TWindow* w)
 
 static __filesize_t entryNE;
 
-void NE_Parser::PaintNewHeaderNE_2(TWindow* w)
+void NE_Parser::PaintNewHeaderNE_2(TWindow& w) const
 {
-  w->printf(
+  w.printf(
 	   "SS : SP                        = %04hXH:%04hXH\n"
 	   "Segment Table Count            = %hu\n"
 	   "Module Reference Table Count   = %hu\n"
@@ -188,97 +188,96 @@ void NE_Parser::PaintNewHeaderNE_2(TWindow* w)
     high = ne.neWindowsVersion >> 8;
     low  = ne.neWindowsVersion & 0xFF;
 	/* End of correction */
-    w->set_color(dialog_cset.addinfo);
-    w->printf("Offset of Fast Load Area       = %04hXH"
-	     ,ne.neOffsetFastLoadArea); w->clreol();
-    w->printf("\nLength of Fast Load Area       = %hu"
-	     ,ne.neLengthFastLoadArea); w->clreol();
-    w->printf("\nWindows version                = %02hu.%02hu"
-	     ,(unsigned int)high,(unsigned int)low); w->clreol();
-    w->printf("\n");
+    w.set_color(dialog_cset.addinfo);
+    w.printf("Offset of Fast Load Area       = %04hXH"
+	     ,ne.neOffsetFastLoadArea); w.clreol();
+    w.printf("\nLength of Fast Load Area       = %hu"
+	     ,ne.neLengthFastLoadArea); w.clreol();
+    w.printf("\nWindows version                = %02hu.%02hu"
+	     ,(unsigned int)high,(unsigned int)low); w.clreol();
+    w.printf("\n");
   }
-  w->set_color(dialog_cset.entry);
-  w->printf(">Entry Point   %s = %08XH",( ne.neContestEXE & 32768L ) ? "[ LibEntry ]   " : "[ EXEEntry ] ",entryNE);
-  w->clreol();
-  w->set_color(dialog_cset.main);
+  w.set_color(dialog_cset.entry);
+  w.printf(">Entry Point   %s = %08XH",( ne.neContestEXE & 32768L ) ? "[ LibEntry ]   " : "[ EXEEntry ] ",entryNE);
+  w.clreol();
+  w.set_color(dialog_cset.main);
 }
 
-void (__FASTCALL__ * NE_Parser::nephead[])(TWindow* w) =
+void (NE_Parser::*NE_Parser::nephead[])(TWindow& w) const =
 {
-  &NE_Parser::PaintNewHeaderNE_1,
-  &NE_Parser::PaintNewHeaderNE_2
+    &NE_Parser::PaintNewHeaderNE_1,
+    &NE_Parser::PaintNewHeaderNE_2
 };
 
-void NE_Parser::PaintNewHeaderNE(TWindow * win,const any_t**ptr,unsigned npage,unsigned tpage)
+void NE_Parser::PaintNewHeaderNE(TWindow& win,const std::vector<std::string>& ptr,unsigned tpage) const
 {
-  char text[80];
-  UNUSED(ptr);
-  win->freeze();
-  win->clear();
-  sprintf(text," New Executable Header [%d/%d] ",npage + 1,tpage);
-  win->set_title(text,TWindow::TMode_Center,dialog_cset.title);
-  win->set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
-  if(npage < 2)
-  {
-    win->goto_xy(1,1);
-    (*(nephead[npage]))(win);
-  }
-  win->refresh_full();
+    char text[80];
+    win.freeze();
+    win.clear();
+    sprintf(text," New Executable Header [%d/%d] ",ptr.size() + 1,tpage);
+    win.set_title(text,TWindow::TMode_Center,dialog_cset.title);
+    win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
+    if(tpage < 2) {
+	win.goto_xy(1,1);
+	(this->*nephead[tpage])(win);
+    }
+    win.refresh_full();
 }
 
 __filesize_t NE_Parser::action_F8()
 {
-  __fileoff_t pos;
-  unsigned CS,IP;
-  CS = (unsigned)((ne.neCSIPvalue) >> 16);  /** segment number */
-  IP = (unsigned)(ne.neCSIPvalue & 0xFFFF); /** offset within segment */
-  entryNE = CalcEntryPointNE(CS,IP);
-  pos = beye_context().tell();
-  if(PageBox(70,22,NULL,2,PaintNewHeaderNE) != -1 && entryNE) pos = entryNE;
-  return pos;
+    __fileoff_t pos;
+    unsigned CS,IP;
+    CS = (unsigned)((ne.neCSIPvalue) >> 16);  /** segment number */
+    IP = (unsigned)(ne.neCSIPvalue & 0xFFFF); /** offset within segment */
+    entryNE = CalcEntryPointNE(CS,IP);
+    pos = beye_context().tell();
+    std::vector<std::string> v;
+    v.push_back("");
+    v.push_back("");
+    if(PageBox(70,22,v,*this,&NE_Parser::PaintNewHeaderNE) != -1 && entryNE) pos = entryNE;
+    return pos;
 }
 
-void NE_Parser::entpaintNE(TWindow* w,const ENTRY *nam,unsigned flags)
+void NE_Parser::entpaintNE(TWindow& w,const ENTRY& nam,unsigned flags) const
 {
-  w->goto_xy(1,1);
-  w->printf(
+    w.goto_xy(1,1);
+    w.printf(
 	   "Entry Point for %s segment\n"
 	   "Entry point is %s EXPORTED\n"
 	   "The Entry %s uses SHARED data segment\n"
 	   "Numbers of word that compose the stack %u\n"
 	   "Segment offset = %XH bytes\n"
 	   "Segment number = %u"
-	   ,(unsigned char)(nam->eFixed) == 0xFF ? "MOVEABLE" : "FIXED"
+	   ,(unsigned char)(nam.eFixed) == 0xFF ? "MOVEABLE" : "FIXED"
 	   ,flags & 0x0001 ? "  " : "NO"
 	   ,flags & 0x0002 ? "  " : "NO"
 	   ,(flags & 0xFFF4 >> 2)
-	   ,nam->eSegOff
-	   ,((unsigned)((unsigned char)(nam->eSegNum))));
+	   ,nam.eSegOff
+	   ,((unsigned)((unsigned char)(nam.eSegNum))));
 }
 
-void NE_Parser::paintdummyentryNE(TWindow* w)
+void NE_Parser::paintdummyentryNE(TWindow& w) const
 {
-    w->goto_xy(1,3);
-    w->printf("   Entry point not present ( Dummy bungle )");
+    w.goto_xy(1,3);
+    w.printf("   Entry point not present ( Dummy bungle )");
 }
 
-void NE_Parser::SegPaintNE(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
+void NE_Parser::SegPaintNE(TWindow& win,const std::vector<SEGDEF>& names,unsigned start) const
 {
- char buffer[81];
- const SEGDEF ** nam = (const SEGDEF **)names;
- unsigned flags = nam[start]->sdFlags;
- win->freeze();
- win->clear();
- sprintf(buffer," Segment Table [ %u / %u ] ",start + 1,nlist);
- win->set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
- win->set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
- win->goto_xy(1,1);
- if(nam[start]->sdOffset)
-   win->printf("Relative offset from begining in sectors     = %04hXH\n"
-	    ,nam[start]->sdOffset);
- else
-   win->printf("No data of segment in the file\n");
- win->printf(
+    char buffer[81];
+    unsigned flags = names[start].sdFlags;
+    win.freeze();
+    win.clear();
+    sprintf(buffer," Segment Table [ %u / %u ] ",start + 1,names.size());
+    win.set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+    win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
+    win.goto_xy(1,1);
+    if(names[start].sdOffset)
+	win.printf("Relative offset from begining in sectors     = %04hXH\n",names[start].sdOffset);
+    else
+	win.printf("No data of segment in the file\n");
+    win.printf(
 	  "Length of segments                           = %hu bytes\n"
 	  "Minimum allocated memory for segment         = %hu bytes\n"
 	  "Segment is :                                   %s\n"
@@ -295,8 +294,8 @@ void NE_Parser::SegPaintNE(TWindow * win,const any_t** names,unsigned start,unsi
 	  "Segment bitness :                              %d\n"
 	  " [%c] - Huge memory segment (sizes is sector units)\n"
 	  " [%c] - GDT allocation requested"
-	  ,nam[start]->sdLength ? nam[start]->sdLength : (unsigned short)0xFFFF
-	  ,nam[start]->sdMinMemory ? nam[start]->sdMinMemory : (unsigned short)0xFFFF
+	  ,names[start].sdLength ? names[start].sdLength : (unsigned short)0xFFFF
+	  ,names[start].sdMinMemory ? names[start].sdMinMemory : (unsigned short)0xFFFF
 	  ,(flags & 0x0001) ? "DATA" : "CODE"
 	  ,Gebool((flags & 0x0002) == 0x0002)
 	  ,Gebool((flags & 0x0004) == 0x0004)
@@ -311,206 +310,175 @@ void NE_Parser::SegPaintNE(TWindow * win,const any_t** names,unsigned start,unsi
 	  ,(flags & 0x2000) ? 32 : 16
 	  ,Gebool((flags & 0x4000) == 0x0400)
 	  ,Gebool((flags & 0x8000) == 0x0800));
- win->refresh_full();
+    win.refresh_full();
 }
 
-void NE_Parser::EntPaintNE(TWindow * win,const any_t** names,unsigned start,unsigned nlist)
+void NE_Parser::EntPaintNE(TWindow& win,const std::vector<ENTRY>& names,unsigned start) const
 {
- char buffer[81];
- const ENTRY ** nam = (const ENTRY **)names;
- unsigned flags = nam[start]->eFlags;
- win->freeze();
- win->clear();
- sprintf(buffer," Entry Point [ %u / %u ] ",start + 1,nlist);
- win->set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
- win->set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
- if(nam[start]->eFixed) entpaintNE(win,nam[start],flags);
- else paintdummyentryNE(win);
- win->refresh_full();
+    char buffer[81];
+    unsigned flags = names[start].eFlags;
+    win.freeze();
+    win.clear();
+    sprintf(buffer," Entry Point [ %u / %u ] ",start + 1,names.size());
+    win.set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+    win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
+    if(names[start].eFixed) entpaintNE(win,names[start],flags);
+    else paintdummyentryNE(win);
+    win.refresh_full();
 }
 
-bool NE_Parser::__ReadModRefNamesNE(binary_stream& handle,memArray * obj)
+std::vector<std::string> NE_Parser::__ReadModRefNamesNE(binary_stream& handle)
 {
- unsigned i;
- uint_fast16_t offTable;
- handle.seek(ne.neOffsetModuleReferenceTable + headshift(),binary_stream::Seek_Set);
- for(i = 0;i < ne.neModuleReferenceTableCount;i++)
- {
-   __filesize_t NameOff;
-   unsigned char length;
-   __filesize_t fp;
-   char stmp[256];
-   offTable = handle.read(type_word);
-   fp = handle.tell();
-   NameOff = (__fileoff_t)headshift() + offTable + ne.neOffsetImportTable;
-   handle.seek(NameOff,binary_stream::Seek_Set);
-   length = handle.read(type_byte);
-   if(IsKbdTerminate() || handle.eof()) break;
-   handle.read(stmp,length);
-   stmp[length] = 0;
-   handle.seek(fp,binary_stream::Seek_Set);
-   if(!ma_AddString(obj,stmp,true)) break;
- }
- return true;
+    std::vector<std::string> rc;
+    unsigned i;
+    uint_fast16_t offTable;
+    handle.seek(ne.neOffsetModuleReferenceTable + headshift(),binary_stream::Seek_Set);
+    for(i = 0;i < ne.neModuleReferenceTableCount;i++) {
+	__filesize_t NameOff;
+	unsigned char length;
+	__filesize_t fp;
+	char stmp[256];
+	offTable = handle.read(type_word);
+	fp = handle.tell();
+	NameOff = (__fileoff_t)headshift() + offTable + ne.neOffsetImportTable;
+	handle.seek(NameOff,binary_stream::Seek_Set);
+	length = handle.read(type_byte);
+	if(IsKbdTerminate() || handle.eof()) break;
+	handle.read(stmp,length);
+	stmp[length] = 0;
+	handle.seek(fp,binary_stream::Seek_Set);
+	rc.push_back(stmp);
+    }
+    return rc;
 }
 
 __filesize_t NE_Parser::action_F2()
 {
- binary_stream& handle = *ne_cache;
- int ret;
- bool bval;
- unsigned nnames;
- __filesize_t fret;
- memArray * obj;
- TWindow * w;
- fret = beye_context().tell();
- handle.seek(0L,binary_stream::Seek_Set);
- if(!(nnames = ne.neModuleReferenceTableCount)) { beye_context().NotifyBox(NOT_ENTRY,MOD_REFER); return fret; }
- if(!(obj = ma_Build(nnames,true))) goto exit;
- w = PleaseWaitWnd();
- bval = __ReadModRefNamesNE(handle,obj);
- delete w;
- if(bval)
- {
-   while(1)
-   {
-     ret = ma_Display(obj,MOD_REFER,LB_SELECTIVE | LB_SORTABLE,-1);
-     if(ret != -1)
-     {
-       ShowProcListNE(ret);
-     }
-     else break;
+    binary_stream& handle = *ne_cache;
+    int ret;
+    unsigned nnames;
+    __filesize_t fret;
+    TWindow * w;
+    fret = beye_context().tell();
+    handle.seek(0L,binary_stream::Seek_Set);
+    if(!(nnames = ne.neModuleReferenceTableCount)) { beye_context().NotifyBox(NOT_ENTRY,MOD_REFER); return fret; }
+    w = PleaseWaitWnd();
+    std::vector<std::string> objs = __ReadModRefNamesNE(handle);
+    delete w;
+    while(1) {
+	ret = ListBox(objs,MOD_REFER,LB_SELECTIVE | LB_SORTABLE,-1);
+	if(ret != -1) ShowProcListNE(ret);
+	else break;
    }
- }
- ma_Destroy(obj);
- exit:
- return fret;
+    return fret;
 }
 
-bool NE_Parser::isPresent(memArray *arr,unsigned nentry,const std::string& _tmpl)
+bool NE_Parser::isPresent(const std::vector<std::string>& objs,const std::string& _tmpl) const
 {
-   unsigned i;
-   bool ret = false;
-   if(nentry) {
-     for(i = 0;i < nentry;i++) {
-       if(_tmpl==(const char *)arr->data[i]) { ret = true; break; }
-     }
-   }
-   return ret;
-}
-
-bool NE_Parser::__ReadProcListNE(binary_stream& handle,memArray * obj,int modno)
-{
-  unsigned i,count;
-  std::string buff;
-  SEGDEF tsd;
-  modno++;
-  count = 0;
-
-  handle.seek(headshift()+ne.neOffsetSegmentTable,binary_stream::Seek_Set);
-  for(i = 0;i < ne.neSegmentTableCount;i++)
-  {
-    handle.read(&tsd,sizeof(SEGDEF));
-    if(tsd.sdLength && tsd.sdOffset && tsd.sdFlags & 0x0100)
-    {
-      __filesize_t spos;
-      uint_fast16_t j,nrelocs;
-      RELOC_NE rne;
-      spos = handle.tell();
-      handle.seek(((__fileoff_t)(tsd.sdOffset) << ne.neLogicalSectorShiftCount) + tsd.sdLength,binary_stream::Seek_Set);
-      nrelocs = handle.read(type_word);
-      for(j = 0;j < nrelocs;j++)
-      {
-	 handle.read(&rne,sizeof(RELOC_NE));
-	 if((rne.Type & 3) && rne.idx == modno)
-	 {
-	   if((rne.Type & 3) == 1)
-	   {
-	    char stmp[256];
-	     sprintf(stmp,"< By ordinal >   @%hu",rne.ordinal);
-	     buff=stmp;
-	   }
-	   else
-	   {
-	      buff=rd_ImpName(rne.ordinal,true);
-	   }
-	   if(!isPresent(obj,count,buff))
-	   {
-	     if(IsKbdTerminate()) goto exit;
-	     if(!ma_AddString(obj,buff.c_str(),true)) goto exit;
-	   }
-	 }
-      }
-      handle.seek(spos,binary_stream::Seek_Set);
+    unsigned i;
+    bool ret = false;
+    size_t nentry = objs.size();
+    for(i = 0;i < nentry;i++) {
+	if(_tmpl==objs[i]) { ret = true; break; }
     }
-  }
-  exit:
-  return true;
+    return ret;
+}
+
+std::vector<std::string> NE_Parser::__ReadProcListNE(binary_stream& handle,int modno)
+{
+    std::vector<std::string> rc;
+    unsigned i;
+    std::string buff;
+    SEGDEF tsd;
+    modno++;
+
+    handle.seek(headshift()+ne.neOffsetSegmentTable,binary_stream::Seek_Set);
+    for(i = 0;i < ne.neSegmentTableCount;i++) {
+	handle.read(&tsd,sizeof(SEGDEF));
+	if(tsd.sdLength && tsd.sdOffset && tsd.sdFlags & 0x0100) {
+	    __filesize_t spos;
+	    uint_fast16_t j,nrelocs;
+	    RELOC_NE rne;
+	    spos = handle.tell();
+	    handle.seek(((__fileoff_t)(tsd.sdOffset) << ne.neLogicalSectorShiftCount) + tsd.sdLength,binary_stream::Seek_Set);
+	    nrelocs = handle.read(type_word);
+	    for(j = 0;j < nrelocs;j++) {
+		handle.read(&rne,sizeof(RELOC_NE));
+		if((rne.Type & 3) && rne.idx == modno) {
+		    if((rne.Type & 3) == 1) {
+			char stmp[256];
+			sprintf(stmp,"< By ordinal >   @%hu",rne.ordinal);
+			buff=stmp;
+		    } else buff=rd_ImpName(rne.ordinal,true);
+		    if(!isPresent(rc,buff)) {
+			if(IsKbdTerminate()) goto exit;
+			rc.push_back(buff);
+		    }
+		}
+	    }
+	    handle.seek(spos,binary_stream::Seek_Set);
+	}
+    }
+exit:
+    return rc;
 }
 
 void NE_Parser::ShowProcListNE( int modno )
 {
- binary_stream& handle = *ne_cache;
- char ptitle[80];
- std::string name;
- bool __bool;
- memArray* obj;
- TWindow *w;
- handle.seek(0L,binary_stream::Seek_Set);
- w = PleaseWaitWnd();
- if(!(obj = ma_Build(0,true))) return;
- __bool = __ReadProcListNE(handle,obj,modno);
- delete w;
- if(__bool)
- {
-     if(!obj->nItems)  { beye_context().NotifyBox(NOT_ENTRY,MOD_REFER); return; }
-     name=rd_ImpName(modno+1,false);
-     sprintf(ptitle,"%s%s ",IMPPROC_TABLE,name.c_str());
-     ma_Display(obj,ptitle,LB_SORTABLE,-1);
- }
- ma_Destroy(obj);
+    binary_stream& handle = *ne_cache;
+    char ptitle[80];
+    std::string name;
+    TWindow *w;
+    handle.seek(0L,binary_stream::Seek_Set);
+    w = PleaseWaitWnd();
+    std::vector<std::string> objs = __ReadProcListNE(handle,modno);
+    delete w;
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,MOD_REFER); return; }
+    name=rd_ImpName(modno+1,false);
+    sprintf(ptitle,"%s%s ",IMPPROC_TABLE,name.c_str());
+    ListBox(objs,ptitle,LB_SORTABLE,-1);
 }
 
-bool NE_Parser::RNamesReadItems(binary_stream& handle,memArray * obj,unsigned nnames,__filesize_t offset)
+std::vector<std::string> NE_Parser::RNamesReadItems(binary_stream& handle,size_t nnames,__filesize_t offset)
 {
- unsigned char length;
- unsigned Ordinal;
- unsigned i;
- char stmp[300]; /* max255 + @ordinal */
- handle.seek(offset,binary_stream::Seek_Set);
- for(i = 0;i < nnames;i++)
- {
-   length = handle.read(type_byte);
-   if(IsKbdTerminate() || handle.eof()) break;
-   handle.read(stmp,length);
-   Ordinal = handle.read(type_word);
-   sprintf(&stmp[length],"%c%-5u",LB_ORD_DELIMITER, Ordinal);
-   if(!ma_AddString(obj,stmp,true)) break;
- }
- return true;
+    std::vector<std::string> rc;
+    unsigned char length;
+    unsigned Ordinal;
+    unsigned i;
+    char stmp[300]; /* max255 + @ordinal */
+    handle.seek(offset,binary_stream::Seek_Set);
+    for(i = 0;i < nnames;i++) {
+	length = handle.read(type_byte);
+	if(IsKbdTerminate() || handle.eof()) break;
+	handle.read(stmp,length);
+	Ordinal = handle.read(type_word);
+	sprintf(&stmp[length],"%c%-5u",LB_ORD_DELIMITER, Ordinal);
+	rc.push_back(stmp);
+    }
+    return rc;
 }
 
-bool NE_Parser::NERNamesReadItems(binary_stream& handle,memArray * names,unsigned nnames)
+std::vector<std::string> NE_Parser::NERNamesReadItems(binary_stream& handle,size_t nnames)
 {
-   return RNamesReadItems(handle,names,nnames,ne.neOffsetResidentNameTable + headshift());
+    return RNamesReadItems(handle,nnames,ne.neOffsetResidentNameTable + headshift());
 }
 
-bool NE_Parser::NENRNamesReadItems(binary_stream& handle,memArray * names,unsigned nnames)
+std::vector<std::string> NE_Parser::NENRNamesReadItems(binary_stream& handle,size_t nnames)
 {
-   return RNamesReadItems(handle,names,nnames,ne.neOffsetNonResidentNameTable);
+    return RNamesReadItems(handle,nnames,ne.neOffsetNonResidentNameTable);
 }
 
-bool  NE_Parser::__ReadSegTableNE(binary_stream& handle,memArray * obj,unsigned nnames)
+std::vector<SEGDEF> NE_Parser::__ReadSegTableNE(binary_stream& handle,size_t nnames)
 {
- unsigned i;
- for(i = 0;i < nnames;i++)
- {
-   SEGDEF sd;
-   if(IsKbdTerminate() || handle.eof()) break;
-   handle.read(&sd,sizeof(SEGDEF));
-   if(!ma_AddData(obj,&sd,sizeof(SEGDEF),true)) break;
- }
- return true;
+    std::vector<SEGDEF> rc;
+    unsigned i;
+    for(i = 0;i < nnames;i++) {
+	SEGDEF sd;
+	if(IsKbdTerminate() || handle.eof()) break;
+	handle.read(&sd,sizeof(SEGDEF));
+	rc.push_back(sd);
+    }
+    return rc;
 }
 
 unsigned NE_Parser::GetNamCountNE(binary_stream& handle,__filesize_t offset )
@@ -643,48 +611,40 @@ __filesize_t  NE_Parser::CalcEntryNE(unsigned ord,bool dispmsg)
 
 __filesize_t NE_Parser::action_F10()
 {
- binary_stream& handle = *ne_cache;
- unsigned nnames;
- __filesize_t fpos;
- memArray * obj;
- nnames = ne.neSegmentTableCount;
- fpos = beye_context().tell();
- if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Segment Definition "); return fpos; }
- if(!(obj = ma_Build(nnames,true))) return fpos;
- handle.seek((__fileoff_t)headshift() + ne.neOffsetSegmentTable,binary_stream::Seek_Set);
- if(__ReadSegTableNE(handle,obj,nnames))
- {
-    int i;
-    i = PageBox(65,17,(const any_t**)obj->data,obj->nItems,SegPaintNE) + 1;
-    if(i > 0)
-    {
-      fpos = ((__filesize_t)((const SEGDEF *)obj->data[i-1])->sdOffset)<<ne.neLogicalSectorShiftCount;
+    binary_stream& handle = *ne_cache;
+    unsigned nnames;
+    __filesize_t fpos;
+    nnames = ne.neSegmentTableCount;
+    fpos = beye_context().tell();
+    if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Segment Definition "); return fpos; }
+    handle.seek((__fileoff_t)headshift() + ne.neOffsetSegmentTable,binary_stream::Seek_Set);
+    std::vector<SEGDEF> objs = __ReadSegTableNE(handle,nnames);
+    if(!objs.empty()) {
+	int i = PageBox(65,17,objs,*this,&NE_Parser::SegPaintNE) + 1;
+	if(i > 0) fpos = (__filesize_t)objs[i-1].sdOffset<<ne.neLogicalSectorShiftCount;
     }
- }
- ma_Destroy(obj);
- return fpos;
+    return fpos;
 }
 
-bool NE_Parser::__ReadEntryTableNE(binary_stream& handle,memArray * obj)
+std::vector<ENTRY> NE_Parser::__ReadEntryTableNE(binary_stream& handle)
 {
- unsigned i;
- unsigned char j,nentry;
- i = 0;
- while(1)
- {
-   unsigned char etype;
-   nentry = handle.read(type_byte);
-   if(nentry == 0 || handle.eof()) break;
-   etype = handle.read(type_byte);
-   for(j = 0;j < nentry;j++,i++)
-   {
-     ENTRY ent;
-     if(IsKbdTerminate()) break;
-     ReadEntryItemNE(handle,&ent,etype);
-     if(!ma_AddData(obj,&ent,sizeof(ENTRY),true)) break;
-   }
- }
- return true;
+    std::vector<ENTRY> rc;
+    unsigned i;
+    unsigned char j,nentry;
+    i = 0;
+    while(1) {
+	unsigned char etype;
+	nentry = handle.read(type_byte);
+	if(nentry == 0 || handle.eof()) break;
+	etype = handle.read(type_byte);
+	for(j = 0;j < nentry;j++,i++) {
+	    ENTRY ent;
+	    if(IsKbdTerminate()) break;
+	    ReadEntryItemNE(handle,&ent,etype);
+	    rc.push_back(ent);
+	}
+    }
+    return rc;
 }
 
 unsigned NE_Parser::GetEntryCountNE()
@@ -711,23 +671,19 @@ unsigned NE_Parser::GetEntryCountNE()
 
 __filesize_t NE_Parser::action_F6()
 {
- binary_stream& handle = *ne_cache;
- unsigned nnames;
- __filesize_t fpos;
- memArray * obj;
- nnames = GetEntryCountNE();
- fpos = beye_context().tell();
- if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Entries "); return fpos; }
- if(!(obj = ma_Build(nnames,true))) return fpos;
- handle.seek((__fileoff_t)headshift() + ne.neOffsetEntryTable,binary_stream::Seek_Set);
- if(__ReadEntryTableNE(handle,obj))
- {
-  int i;
-    i = PageBox(50,6,(const any_t**)obj->data,obj->nItems,EntPaintNE) + 1;
-    if(i > 0)  fpos = CalcEntryNE(i,true);
- }
- ma_Destroy(obj);
- return fpos;
+    binary_stream& handle = *ne_cache;
+    unsigned nnames;
+    __filesize_t fpos;
+    nnames = GetEntryCountNE();
+    fpos = beye_context().tell();
+    if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Entries "); return fpos; }
+    handle.seek((__fileoff_t)headshift() + ne.neOffsetEntryTable,binary_stream::Seek_Set);
+    std::vector<ENTRY> objs = __ReadEntryTableNE(handle);
+    if(!objs.empty()) {
+	int i = PageBox(50,6,objs,*this,&NE_Parser::EntPaintNE) + 1;
+	if(i > 0)  fpos = CalcEntryNE(i,true);
+    }
+    return fpos;
 }
 
 const char * ResourceGrNames[] =
@@ -775,49 +731,46 @@ char* NE_Parser::GetResourceIDNE(binary_stream& handle,unsigned rid,__filesize_t
  return buff;
 }
 
-bool NE_Parser::__ReadResourceGroupNE(binary_stream& handle,memArray *obj,unsigned nitems,long * addr)
+std::vector<std::string> NE_Parser::__ReadResourceGroupNE(binary_stream& handle,size_t nitems,long * addr)
 {
- unsigned i,j;
- uint_fast16_t rcAlign,rTypeID,rcount;
- unsigned long BegResTab;
- char buff[81];
- BegResTab = handle.tell();
- rcAlign = handle.read(type_word);
- for(i = 0;i < nitems;i++)
- {
-    addr[i++] = handle.tell();
-    rTypeID = handle.read(type_word);
-    rcount = handle.read(type_word);
-    handle.seek(4,binary_stream::Seek_Cur);
-    if(IsKbdTerminate() || handle.eof()) break;
-    if(rTypeID & 0x8000)
-    {
-      rTypeID &= 0x7FFF;
-      if(rTypeID < 17) strcpy(buff,ResourceGrNames[rTypeID]);
-      else             sprintf(buff,"< Ordinal type: %04hXH >",rTypeID);
-    }
-    else  sprintf(buff,"\"%s\"",GetResourceIDNE(handle,rTypeID,BegResTab));
-    if(!ma_AddString(obj,buff,true)) break;
-    for(j = 0;j < rcount;j++)
-    {
-      NAMEINFO nam;
-      char stmp[81];
-      if(IsKbdTerminate() || handle.eof()) break;
-      handle.read(&nam,sizeof(NAMEINFO));
-      addr[i++] = ((unsigned long)nam.rnOffset)<<rcAlign;
-      sprintf(stmp," %s <length: %04hXH> %s %s %s",
+    std::vector<std::string> rc;
+    unsigned i,j;
+    uint_fast16_t rcAlign,rTypeID,rcount;
+    unsigned long BegResTab;
+    char buff[81];
+    BegResTab = handle.tell();
+    rcAlign = handle.read(type_word);
+    for(i = 0;i < nitems;i++) {
+	addr[i++] = handle.tell();
+	rTypeID = handle.read(type_word);
+	rcount = handle.read(type_word);
+	handle.seek(4,binary_stream::Seek_Cur);
+	if(IsKbdTerminate() || handle.eof()) break;
+	if(rTypeID & 0x8000) {
+	    rTypeID &= 0x7FFF;
+	    if(rTypeID < 17) strcpy(buff,ResourceGrNames[rTypeID]);
+	    else             sprintf(buff,"< Ordinal type: %04hXH >",rTypeID);
+	}
+	else  sprintf(buff,"\"%s\"",GetResourceIDNE(handle,rTypeID,BegResTab));
+	rc.push_back(buff);
+	for(j = 0;j < rcount;j++)  {
+	    NAMEINFO nam;
+	    char stmp[81];
+	    if(IsKbdTerminate() || handle.eof()) break;
+	    handle.read(&nam,sizeof(NAMEINFO));
+	    addr[i++] = ((unsigned long)nam.rnOffset)<<rcAlign;
+	    sprintf(stmp," %s <length: %04hXH> %s %s %s",
 		   GetResourceIDNE(handle,nam.rnID,BegResTab),
 		   (unsigned)((unsigned long)nam.rnLength)<<rcAlign,
 		   ((nam.rnFlags & 0x0010) ? "MOVEABLE" : "FIXED"),
 		   ((nam.rnFlags & 0x0020) ? "PURE"     : "IMPURE"),
 		   ((nam.rnFlags & 0x0040) ? "PRELOAD"  : "LOADONCALL")
 		   );
-      if(!ma_AddString(obj,stmp,true)) goto exit;
+	    rc.push_back(stmp);
+	}
+	i--;
     }
-    i--;
- }
- exit:
- return true;
+    return rc;
 }
 
 unsigned int NE_Parser::GetResourceGroupCountNE(binary_stream& handle)
@@ -846,26 +799,21 @@ unsigned int NE_Parser::GetResourceGroupCountNE(binary_stream& handle)
 
 __filesize_t NE_Parser::action_F7()
 {
- __filesize_t fpos;
- binary_stream& handle = *ne_cache;
- memArray* rgroup;
- long * raddr;
- unsigned nrgroup;
- fpos = beye_context().tell();
- handle.seek((__fileoff_t)headshift() + ne.neOffsetResourceTable,binary_stream::Seek_Set);
- if(!(nrgroup = GetResourceGroupCountNE(handle))) { beye_context().NotifyBox(NOT_ENTRY," Resources "); return fpos; }
- if(!(rgroup = ma_Build(nrgroup,true))) goto exit;
- if(!(raddr  = new long [nrgroup])) return fpos;
- if(__ReadResourceGroupNE(handle,rgroup,nrgroup,raddr))
- {
-  int i;
-   i = ma_Display(rgroup," Resource groups : ",LB_SELECTIVE,-1);
-   if(i != -1) fpos = raddr[i];
- }
- delete raddr;
- ma_Destroy(rgroup);
- exit:
- return fpos;
+    __filesize_t fpos;
+    binary_stream& handle = *ne_cache;
+    long * raddr;
+    unsigned nrgroup;
+    fpos = beye_context().tell();
+    handle.seek((__fileoff_t)headshift() + ne.neOffsetResourceTable,binary_stream::Seek_Set);
+    if(!(nrgroup = GetResourceGroupCountNE(handle))) { beye_context().NotifyBox(NOT_ENTRY," Resources "); return fpos; }
+    if(!(raddr  = new long [nrgroup])) return fpos;
+    std::vector<std::string> objs = __ReadResourceGroupNE(handle,nrgroup,raddr);
+    if(!objs.empty()) {
+	int i = ListBox(objs," Resource groups : ",LB_SELECTIVE,-1);
+	if(i != -1) fpos = raddr[i];
+    }
+    delete raddr;
+    return fpos;
 }
 
 __filesize_t NE_Parser::action_F3()
@@ -876,28 +824,22 @@ __filesize_t NE_Parser::action_F3()
     std::string title = RES_NAMES;
     ssize_t nnames = NERNamesNumItems(main_handle());
     int flags = LB_SELECTIVE | LB_SORTABLE;
-    bool bval;
-    memArray* obj;
     TWindow* w;
     ret = -1;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = NERNamesReadItems(main_handle(),obj,nnames);
+    std::vector<std::string> objs = NERNamesReadItems(main_handle(),nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ret = ma_Display(obj,title,flags,-1);
-	if(ret != -1) {
-	    const char* cptr;
-	    char buff[40];
-	    cptr = strrchr((char*)obj->data[ret],LB_ORD_DELIMITER);
-	    cptr++;
-	    strcpy(buff,cptr);
-	    ordinal = atoi(buff);
-	}
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ret = ListBox(objs,title,flags,-1);
+    if(ret != -1) {
+	const char* cptr;
+	char buff[40];
+	cptr = strrchr(objs[ret].c_str(),LB_ORD_DELIMITER);
+	cptr++;
+	strcpy(buff,cptr);
+	ordinal = atoi(buff);
     }
-    ma_Destroy(obj);
-    exit:
+exit:
     if(ret != -1) fpos = CalcEntryNE(ordinal,true);
     return fpos;
 }
@@ -910,28 +852,22 @@ __filesize_t NE_Parser::action_F4()
     std::string title = NORES_NAMES;
     ssize_t nnames = NENRNamesNumItems(main_handle());
     int flags = LB_SELECTIVE | LB_SORTABLE;
-    bool bval;
-    memArray* obj;
     TWindow* w;
     ret = -1;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = NENRNamesReadItems(main_handle(),obj,nnames);
+    std::vector<std::string> objs = NENRNamesReadItems(main_handle(),nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ret = ma_Display(obj,title,flags,-1);
-	if(ret != -1) {
-	    const char* cptr;
-	    char buff[40];
-	    cptr = strrchr((char*)obj->data[ret],LB_ORD_DELIMITER);
-	    cptr++;
-	    strcpy(buff,cptr);
-	    ordinal = atoi(buff);
-	}
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ret = ListBox(objs,title,flags,-1);
+    if(ret != -1) {
+	const char* cptr;
+	char buff[40];
+	cptr = strrchr(objs[ret].c_str(),LB_ORD_DELIMITER);
+	cptr++;
+	strcpy(buff,cptr);
+	ordinal = atoi(buff);
     }
-    ma_Destroy(obj);
-    exit:
+exit:
     if(ret != -1) fpos = CalcEntryNE(ordinal,true);
     return fpos;
 }

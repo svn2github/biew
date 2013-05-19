@@ -15,9 +15,9 @@ using namespace	usr;
 **/
 #ifndef __UDN_HPP_INCLUDED
 #define __UDN_HPP_INCLUDED 1
+#include <vector>
+#include <string>
 #include <set>
-
-#include "beyeutil.h"
 
 namespace	usr {
     class Ini_Profile;
@@ -55,7 +55,7 @@ namespace	usr {
 	private:
 	    bool		add_item();
 	    bool		delete_item();
-	    bool		read_items(binary_stream& handle,memArray* names,unsigned nnames);
+	    std::vector<std::string>	read_items(size_t nnames);
 	    bool		__load_list();
 	    bool		load_list();
 	    bool		save_list();

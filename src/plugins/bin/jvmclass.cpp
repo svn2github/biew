@@ -112,11 +112,11 @@ typedef struct ClassFile_s
 	private:
 	    std::string			jvm_ReadPubName(binary_stream&b_cache,const symbolic_information& it);
 	    void			decode_acc_flags(unsigned flags,char *str) const;
-	    bool			jvm_read_pool(binary_stream&handle,memArray *names,unsigned nnames);
-	    bool			jvm_read_fields(binary_stream&handle,memArray *names,unsigned nnames);
-	    bool			jvm_read_methods(binary_stream&handle,memArray *names,unsigned nnames);
-	    bool			jvm_read_attributes(binary_stream&handle,memArray *names,unsigned nnames);
-	    bool			jvm_read_interfaces(binary_stream&handle,memArray *names,unsigned nnames);
+	    std::vector<std::string>	jvm_read_pool(binary_stream&handle,size_t nnames);
+	    std::vector<std::string>	jvm_read_fields(binary_stream&handle,size_t nnames);
+	    std::vector<std::string>	jvm_read_methods(binary_stream&handle,size_t nnames);
+	    std::vector<std::string>	jvm_read_attributes(binary_stream&handle,size_t nnames);
+	    std::vector<std::string>	jvm_read_interfaces(binary_stream&handle,size_t nnames);
 	    void			skip_fields(unsigned nitems,int attr);
 	    void			skip_attributes(binary_stream&handle,unsigned nitems);
 	    std::string			get_class_name(binary_stream&handle,unsigned idx);
@@ -264,23 +264,23 @@ void JVM_Parser::skip_fields(unsigned nitems,int attr)
     }
 }
 
-bool JVM_Parser::jvm_read_interfaces(binary_stream& handle,memArray * names,unsigned nnames)
+std::vector<std::string> JVM_Parser::jvm_read_interfaces(binary_stream& handle,size_t nnames)
 {
+    std::vector<std::string> rc;
     unsigned i;
     __filesize_t fpos;
     unsigned short id;
     std::string str;
     handle.seek(jvm_header.interfaces_offset,binary_stream::Seek_Set);
-    for(i=0;i<nnames;i++)
-    {
+    for(i=0;i<nnames;i++) {
 	id=handle.read(type_word);
 	fpos=handle.tell();
 	id=JVM_WORD(&id,1);
 	str=get_class_name(handle,id);
-	if(!ma_AddString(names,str.c_str(),true)) break;
+	rc.push_back(str);
 	handle.seek(fpos,binary_stream::Seek_Set);
     }
-    return true;
+    return rc;
 }
 
 __filesize_t JVM_Parser::action_F2()
@@ -289,42 +289,35 @@ __filesize_t JVM_Parser::action_F2()
     std::string title = " interfaces ";
     ssize_t nnames = jvm_header.interfaces_count;
     int flags = LB_SORTABLE;
-    bool bval;
-    memArray* obj;
-    TWindow* w;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
-    w = PleaseWaitWnd();
-    bval = jvm_read_interfaces(main_handle,obj,nnames);
+    TWindow* w = PleaseWaitWnd();
+    std::vector<std::string> objs = jvm_read_interfaces(main_handle,nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ma_Display(obj,title,flags,-1);
-    }
-    ma_Destroy(obj);
-    exit:
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ListBox(objs,title,flags,-1);
+exit:
     return fpos;
 }
 
-bool JVM_Parser::jvm_read_attributes(binary_stream& handle,memArray * names,unsigned nnames)
+std::vector<std::string> JVM_Parser::jvm_read_attributes(binary_stream& handle,size_t nnames)
 {
+    std::vector<std::string> rc;
     unsigned i;
     __filesize_t fpos;
     uint32_t len;
     char sout[100];
     std::string str;
     handle.seek(jvm_header.attributes_offset,binary_stream::Seek_Set);
-    for(i=0;i<nnames;i++)
-    {
+    for(i=0;i<nnames;i++) {
 	fpos=handle.tell();
 	str=get_name(handle);
 	handle.seek(fpos+2,binary_stream::Seek_Set);
 	len=handle.read(type_dword);
 	len=JVM_DWORD(&len,1);
 	sprintf(sout,"%08lXH %s",(long)len,str.c_str());
-	if(!ma_AddString(names,sout,true)) break;
+	rc.push_back(sout);
 	handle.seek(len,binary_stream::Seek_Cur);
     }
-    return true;
+    return rc;
 }
 
 __filesize_t  JVM_Parser::__ShowAttributes(const std::string& title)
@@ -333,20 +326,14 @@ __filesize_t  JVM_Parser::__ShowAttributes(const std::string& title)
     int ret;
     ssize_t nnames = jvm_header.attributes_count;
     int flags = LB_SELECTIVE;
-    bool bval;
-    memArray* obj;
     TWindow* w;
     ret = -1;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = jvm_read_attributes(main_handle,obj,nnames);
+    std::vector<std::string> objs = jvm_read_attributes(main_handle,nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ret = ma_Display(obj,title,flags,-1);
-    }
-    ma_Destroy(obj);
-    exit:
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ret = ListBox(objs,title,flags,-1);
+exit:
     if(ret!=-1) {
 	unsigned i;
 	main_handle.seek(jvm_header.attributes_offset,binary_stream::Seek_Set);
@@ -368,16 +355,16 @@ __filesize_t JVM_Parser::action_F10()
     return __ShowAttributes(" length   attributes ");
 }
 
-bool JVM_Parser::jvm_read_methods(binary_stream& handle,memArray * names,unsigned nnames)
+std::vector<std::string> JVM_Parser::jvm_read_methods(binary_stream& handle,size_t nnames)
 {
+    std::vector<std::string> rc;
     unsigned i;
     __filesize_t fpos;
     unsigned short flg,sval,acount;
     char sout[256];
     std::string str,str2;
     handle.seek(jvm_header.methods_offset,binary_stream::Seek_Set);
-    for(i=0;i<nnames;i++)
-    {
+    for(i=0;i<nnames;i++) {
 	fpos=handle.tell();
 	flg=handle.read(type_word);
 	flg=JVM_WORD(&flg,1);
@@ -389,9 +376,9 @@ bool JVM_Parser::jvm_read_methods(binary_stream& handle,memArray * names,unsigne
 	acount=JVM_WORD(&sval,1);
 	skip_attributes(handle,acount);
 	sprintf(sout,"%04XH %04XH %s %s",acount,flg,str.c_str(),str2.c_str());
-	if(!ma_AddString(names,sout,true)) break;
+	rc.push_back(sout);
     }
-    return true;
+    return rc;
 }
 
 __filesize_t JVM_Parser::action_F3()
@@ -401,20 +388,14 @@ __filesize_t JVM_Parser::action_F3()
     std::string title = " length   attributes ";
     ssize_t nnames = jvm_header.methods_count;
     int flags = LB_SELECTIVE;
-    bool bval;
-    memArray* obj;
     TWindow* w;
     ret = -1;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = jvm_read_methods(main_handle,obj,nnames);
+    std::vector<std::string> objs = jvm_read_methods(main_handle,nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ret = ma_Display(obj,title,flags,-1);
-    }
-    ma_Destroy(obj);
-    exit:
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ret = ListBox(objs,title,flags,-1);
+exit:
     if(ret!=-1) {
 	std::string str;
 	unsigned i;
@@ -446,16 +427,16 @@ __filesize_t JVM_Parser::action_F3()
     return fpos;
 }
 
-bool JVM_Parser::jvm_read_fields(binary_stream& handle,memArray * names,unsigned nnames)
+std::vector<std::string> JVM_Parser::jvm_read_fields(binary_stream& handle,size_t nnames)
 {
+    std::vector<std::string> rc;
     unsigned i;
     __filesize_t fpos;
     unsigned short flg,sval,acount;
     char sout[256];
     std::string str,str2;
     handle.seek(jvm_header.fields_offset,binary_stream::Seek_Set);
-    for(i=0;i<nnames;i++)
-    {
+    for(i=0;i<nnames;i++) {
 	fpos=handle.tell();
 	flg=handle.read(type_word);
 	flg=JVM_WORD(&flg,1);
@@ -467,9 +448,9 @@ bool JVM_Parser::jvm_read_fields(binary_stream& handle,memArray * names,unsigned
 	acount=JVM_WORD(&sval,1);
 	skip_attributes(handle,acount);
 	sprintf(sout,"%04XH %04XH %s %s",acount,flg,str.c_str(),str2.c_str());
-	if(!ma_AddString(names,sout,true)) break;
+	rc.push_back(sout);
     }
-    return true;
+    return rc;
 }
 
 __filesize_t JVM_Parser::action_F4()
@@ -479,20 +460,14 @@ __filesize_t JVM_Parser::action_F4()
     std::string title = " length   attributes ";
     ssize_t nnames = jvm_header.fields_count;
     int flags = LB_SELECTIVE;
-    bool bval;
-    memArray* obj;
     TWindow* w;
     ret = -1;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
     w = PleaseWaitWnd();
-    bval = jvm_read_fields(main_handle,obj,nnames);
+    std::vector<std::string> objs = jvm_read_fields(main_handle,nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ret = ma_Display(obj,title,flags,-1);
-    }
-    ma_Destroy(obj);
-    exit:
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ret = ListBox(objs,title,flags,-1);
+exit:
     if(ret!=-1) {
 	std::string str;
 	unsigned i;
@@ -524,8 +499,9 @@ __filesize_t JVM_Parser::action_F4()
     return fpos;
 }
 
-bool JVM_Parser::jvm_read_pool(binary_stream& handle,memArray * names,unsigned nnames)
+std::vector<std::string> JVM_Parser::jvm_read_pool(binary_stream& handle,size_t nnames)
 {
+    std::vector<std::string> rc;
     __filesize_t fpos;
     uint32_t lval,lval2;
     unsigned i;
@@ -534,12 +510,10 @@ bool JVM_Parser::jvm_read_pool(binary_stream& handle,memArray * names,unsigned n
     char sout[256];
     std::string str,str2;
     handle.seek(jvm_header.constants_offset,binary_stream::Seek_Set);
-    for(i=0;i<nnames;i++)
-    {
+    for(i=0;i<nnames;i++) {
 	fpos=handle.tell();
 	utag=handle.read(type_byte);
-	switch(utag)
-	{
+	switch(utag) {
 	    case CONSTANT_STRING:
 	    case CONSTANT_CLASS:
 			fpos=handle.tell();
@@ -599,9 +573,9 @@ bool JVM_Parser::jvm_read_pool(binary_stream& handle,memArray * names,unsigned n
 			i=nnames;
 			break;
 	}
-	if(!ma_AddString(names,sout,true)) break;
+	rc.push_back(sout);
     }
-    return true;
+    return rc;
 }
 
 __filesize_t JVM_Parser::action_F8()
@@ -610,19 +584,12 @@ __filesize_t JVM_Parser::action_F8()
     std::string title = " Constant pool ";
     ssize_t nnames = jvm_header.constant_pool_count;
     int flags = LB_SORTABLE;
-    bool bval;
-    memArray* obj;
-    TWindow* w;
-    if(!(obj = ma_Build(nnames,true))) goto exit;
-    w = PleaseWaitWnd();
-    bval = jvm_read_pool(main_handle,obj,nnames);
+    TWindow* w = PleaseWaitWnd();
+    std::vector<std::string> objs = jvm_read_pool(main_handle,nnames);
     delete w;
-    if(bval) {
-	if(!obj->nItems) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
-	ma_Display(obj,title,flags,-1);
-    }
-    ma_Destroy(obj);
-    exit:
+    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    ListBox(objs,title,flags,-1);
+exit:
     return fpos;
 }
 
