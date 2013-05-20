@@ -164,42 +164,6 @@ namespace	usr {
     void  __FASTCALL__ HQSort(any_t*base, unsigned long num, unsigned width,
 				 func_compare fcompare);
 
-		   /** Performs a quick search on a sorted array.
-		     * @return                pointer to the first matching element if found, otherwise NULL is returned
-		     * @param key             pointer to the key
-		     * @param base            specifies array being sorted
-		     * @param nelem           specifies number of elements in array
-		     * @param width           specifies with (in bytes) of one element of array
-		     * @param fcompare        specifies pointer to user defined function
-		     * @warning               Function can to cause infinity loop
-		     *                        if array is unsorted
-		     * @note                  Using own code for qsort and bsearch
-		     *                        functions is guarantee of stable work
-		     * @see                   HQSort HLFindNearest
-		    **/
-    any_t* __FASTCALL__ HLFind(const any_t*key,
-				     any_t*base,
-				     unsigned long nelem,unsigned width,
-				     func_compare fcompare);
-
-		   /** Performs a quick search on a sorted array of nearest element.
-		     * @return                index of nearest element of array toward zero.
-		     * @param key             pointer to the key
-		     * @param base            specifies array being sorted
-		     * @param nelem           specifies number of elements in array
-		     * @param width           specifies with (in bytes) of one element of array
-		     * @param fcompare        specifies pointer to user defined function
-		     * @warning               Function can to cause infinity loop
-		     *                        if array is unsorted
-		     * @note                  Using own code for qsort and bsearch
-		     *                        functions is guarantee of stable work
-		     * @see                   HQSort HLFind
-		    **/
-    unsigned long __FASTCALL__ HLFindNearest(const any_t*key,
-				     any_t*base,
-				     unsigned long nelem,unsigned width,
-				     func_compare fcompare);
-
 		   /** Tests wether character is a separator
 		     * @return                true if given character is separator
 		     * @param ch              character to be tested

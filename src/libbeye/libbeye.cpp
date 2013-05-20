@@ -543,62 +543,6 @@ void __FASTCALL__ HQSort(any_t*base0,unsigned long num, unsigned width,
   }
 }
 
-any_t* __FASTCALL__ HLFind(const any_t*key,any_t*base,unsigned long nelem,unsigned width,
-				    func_compare compare)
-{
-  unsigned long iter,start,end;
-  any_t*it;
-  tCompare comp_result;
-  start = 0;
-  end = nelem;
-  iter = nelem >> 1;
-  while(1)
-  {
-     it = (char  *)base + iter*width;
-     comp_result = (*compare)(key,it);
-     if(!comp_result)  return it;
-     if(end - start < 5) break;
-     if(comp_result > 0) start = iter;
-     else                end = iter;
-     iter = start + ((end - start) >> 1L);
-  }
-  for(iter = start;iter < end;iter++)
-  {
-     it = (char  *)base + iter*width;
-     if(!(*compare)(key,it)) return it;
-  }
-  return NULL;
-}
-
-unsigned long __FASTCALL__ HLFindNearest(const any_t*key,any_t*base,unsigned long nelem,
-			    unsigned width,
-			    func_compare compare)
-{
-  unsigned long iter,start,end;
-  tCompare comp_result,comp_result2;
-  start = 0;
-  end = nelem;
-  iter = nelem >> 1;
-  while(1)
-  {
-     comp_result = (*compare)(key,(char  *)base + iter*width);
-     if(!comp_result) return iter;
-     if(end - start < 5) break;
-     if(comp_result > 0) start = iter;
-     else                end = iter;
-     iter = start + ((end - start)>>1L);
-  }
-  for(iter = start;iter < end;iter++)
-  {
-     comp_result = (*compare)(key,(char  *)base + iter*width);
-     comp_result2 = iter < (nelem-1) ? (*compare)(key,(char  *)base + (iter+1)*width):
-			       -1;
-     if(comp_result >= 0 && comp_result2 < 0) return iter;
-  }
-  return  comp_result < 0 ? (start ? start - 1 : 0L)
-			  : end == nelem ? nelem-1 : end;
-}
-
 any_t* rnd_fill(any_t* buffer,size_t size)
 {
     unsigned i;
