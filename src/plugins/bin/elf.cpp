@@ -165,14 +165,14 @@ namespace	usr {
 	    virtual __filesize_t	action_F9();
 	    virtual __filesize_t	action_F10();
 
-	    virtual __filesize_t	show_header();
+	    virtual __filesize_t	show_header() const;
 	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
 	    virtual int			query_platform() const;
 	    virtual int			query_bitness(__filesize_t) const;
 	    virtual int			query_endian(__filesize_t) const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
-	    virtual __filesize_t	va2pa(__filesize_t va);
-	    virtual __filesize_t	pa2va(__filesize_t pa);
+	    virtual __filesize_t	va2pa(__filesize_t va) const;
+	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 	    virtual __filesize_t	get_public_symbol(std::string& str,unsigned& _class,
 							    __filesize_t pa,bool as_prev);
 	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
@@ -185,8 +185,6 @@ namespace	usr {
 	    unsigned long		sym_ent_size() const { return __elfSymEntSize; }
 	    __filesize_t		findPHEntry(unsigned long type,unsigned& nitems) const;
 	    bool			FindPubName(std::string& buff,__filesize_t pa) const;
-	    __filesize_t		_va2pa(__filesize_t va) const;
-	    __filesize_t		_pa2va(__filesize_t pa) const;
 	private:
 	    std::string			elf_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
 	    void			__elfReadSegments(std::map<__filesize_t,VA_map>& to,bool is_virt) const;
@@ -303,9 +301,9 @@ __filesize_t ELF_Parser::findPHPubSyms(unsigned long& number,
        are lost */
     dyn_ptr = dynptr = findPHEntry(PT_DYNAMIC,nitems);
     if(dynptr) {
-	dynptr = _va2pa(findPHDynEntry(DT_SYMTAB,dyn_ptr,nitems));
+	dynptr = va2pa(findPHDynEntry(DT_SYMTAB,dyn_ptr,nitems));
 	if(dynptr) {
-	    act_shtbl = _va2pa(findPHDynEntry(DT_STRTAB,dyn_ptr,nitems));
+	    act_shtbl = va2pa(findPHDynEntry(DT_STRTAB,dyn_ptr,nitems));
 	    ent_size = findPHDynEntry(DT_SYMENT,dyn_ptr,nitems);
        /* Only way to determine size of symbol table entries it's find
 	   nearest section that follows DT_SYMTAB.
@@ -321,7 +319,7 @@ __filesize_t ELF_Parser::findPHPubSyms(unsigned long& number,
 		dyntab=elf_reader->read_dyn(main_handle,dptr);
 		if(main_handle.eof()) break;
 		dptr += elf_reader->dyn_size();
-		cur_ptr = _va2pa(dyntab.d_un.d_ptr);
+		cur_ptr = va2pa(dyntab.d_un.d_ptr);
 		if(cur_ptr > dynptr && cur_ptr < max_val) max_val = cur_ptr;
 	    }
 	    main_handle.seek(_fpos,binary_stream::Seek_Set);
@@ -357,31 +355,27 @@ __filesize_t ELF_Parser::findSHEntry(binary_stream& b_cache, unsigned long type,
     return tableptr;
 }
 
-__filesize_t ELF_Parser::_va2pa(__filesize_t va) const
+__filesize_t ELF_Parser::va2pa(__filesize_t va) const
 {
-  if(!va_map_virt.empty())
-  for(std::map<__filesize_t,VA_map>::const_iterator it = va_map_virt.begin();it!=va_map_virt.end();it++) {
-    if(va >= (*it).first && va < (*it).first + (*it).second.size) return (*it).second.foff + (va - (*it).first);
-  }
-  return 0L;
-}
-
-__filesize_t ELF_Parser::_pa2va(__filesize_t pa) const
-{
-  __filesize_t ret;
-  ret = 0L;
-  for(std::map<__filesize_t,VA_map>::const_iterator it = va_map_phys.begin();it!=va_map_phys.end();it++)
-  {
-    if(pa >= (*it).first && pa < (*it).first + (*it).second.size) {
-      ret = (*it).second.va + (pa - (*it).first);
-      break;
+    if(!va_map_virt.empty())
+    for(std::map<__filesize_t,VA_map>::const_iterator it = va_map_virt.begin();it!=va_map_virt.end();it++) {
+	if(va >= (*it).first && va < (*it).first + (*it).second.size) return (*it).second.foff + (va - (*it).first);
     }
-  }
-  return ret;
+    return 0L;
 }
 
-__filesize_t ELF_Parser::va2pa(__filesize_t va) { return _va2pa(va); }
-__filesize_t ELF_Parser::pa2va(__filesize_t pa) { return _pa2va(pa); }
+__filesize_t ELF_Parser::pa2va(__filesize_t pa) const
+{
+    __filesize_t ret;
+    ret = 0L;
+    for(std::map<__filesize_t,VA_map>::const_iterator it = va_map_phys.begin();it!=va_map_phys.end();it++) {
+	if(pa >= (*it).first && pa < (*it).first + (*it).second.size) {
+	    ret = (*it).second.va + (pa - (*it).first);
+	    break;
+	}
+    }
+    return ret;
+}
 
 std::string ELF_Parser::elf_class(unsigned char id) const
 {
@@ -586,7 +580,7 @@ std::string ELF_Parser::elf_osabi(unsigned char id) const
   }
 }
 
-__filesize_t ELF_Parser::show_header()
+__filesize_t ELF_Parser::show_header() const
 {
   __filesize_t fpos;
   TWindow *w;
@@ -975,7 +969,7 @@ __filesize_t ELF_Parser::__calcSymEntry(binary_stream& handle,__filesize_t num,b
 */
      fpos = elf_reader->ehdr().e_type == ET_REL ?
 	    sec.sh_offset + it.st_value:
-	    _va2pa(it.st_value);
+	    va2pa(it.st_value);
    else
      if(display_msg) beye_context().ErrMessageBox(NO_ENTRY,BAD_ENTRY);
    return fpos;
@@ -1025,7 +1019,7 @@ __filesize_t ELF_Parser::displayELFdyntab(__filesize_t dynptr,
 		__filesize_t addr_probe;
 		addr_probe = is_64bit?strtoull(&addr[4],NULL,16):strtoul(&addr[4],NULL,16);
 		if(addr_probe && addr_probe >= elf_min_va) {
-		    addr_probe = _va2pa(addr_probe);
+		    addr_probe = va2pa(addr_probe);
 		    if(addr_probe && addr_probe < main_handle.flength()) fpos = addr_probe;
 		    else goto not_entry;
 		} else goto not_entry;
@@ -1087,7 +1081,7 @@ __filesize_t ELF_Parser::get_f_offset(__filesize_t r_offset,__filesize_t sh_link
 		  handle.seek(fp,binary_stream::Seek_Set);
 		  f_offset = shdr.sh_offset + r_offset;
 		}
-     default: f_offset = _va2pa(r_offset);
+     default: f_offset = va2pa(r_offset);
 	      break;
   }
   return f_offset;
@@ -1209,10 +1203,10 @@ void ELF_Parser::buildElf386RelChain()
     __filesize_t dyn_ptr,dynptr,link,type;
     unsigned tsize,nitems;
     dynptr = findPHEntry(PT_DYNAMIC,nitems);
-    link = _va2pa(findPHDynEntry(DT_SYMTAB,dynptr,nitems));
+    link = va2pa(findPHDynEntry(DT_SYMTAB,dynptr,nitems));
     if(dynptr)
     {
-      dyn_ptr = _va2pa(findPHDynEntry(DT_RELA,dynptr,nitems));
+      dyn_ptr = va2pa(findPHDynEntry(DT_RELA,dynptr,nitems));
       if(dyn_ptr)
       {
 	tsize = findPHDynEntry(DT_RELASZ,dynptr,nitems);
@@ -1222,7 +1216,7 @@ void ELF_Parser::buildElf386RelChain()
 			     0,/* only executable can lose sections */
 			     sizeof(Elf386_External_Rela));
       }
-      dyn_ptr = _va2pa(findPHDynEntry(DT_REL,dynptr,nitems));
+      dyn_ptr = va2pa(findPHDynEntry(DT_REL,dynptr,nitems));
       if(dyn_ptr)
       {
 	tsize = findPHDynEntry(DT_RELSZ,dynptr,nitems);
@@ -1232,7 +1226,7 @@ void ELF_Parser::buildElf386RelChain()
 			    0,/* only executable can lose sections */
 			    sizeof(Elf386_External_Rel));
       }
-      dyn_ptr = _va2pa(findPHDynEntry(DT_JMPREL,dynptr,nitems));
+      dyn_ptr = va2pa(findPHDynEntry(DT_JMPREL,dynptr,nitems));
       if(dyn_ptr)
       {
 	tsize = findPHDynEntry(DT_PLTRELSZ,dynptr,nitems);
@@ -1276,7 +1270,7 @@ void ELF_Parser::displayELFdyninfo(__filesize_t f_off,unsigned nitems) const
     bool is_add;
     char stmp[80];
     stroff = 0;
-    stroff = _va2pa(findPHDynEntry(DT_STRTAB,f_off,nitems));
+    stroff = va2pa(findPHDynEntry(DT_STRTAB,f_off,nitems));
     if(!stroff) { beye_context().NotifyBox(" String information not found!",NULL); return; }
     main_handle.seek(f_off,binary_stream::Seek_Set);
     strcpy(stmp,S_INTERPRETER);
@@ -1366,7 +1360,7 @@ bool ELF_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
 	 dyn_ent = findPHDynEntry(DT_PLTGOT,dynptr,nitems);
 	 if(dyn_ent)
 	 {
-	   got_off = _va2pa(dyn_ent);
+	   got_off = va2pa(dyn_ent);
 	   return bind(parent,str, got_off + off_in_got, flags & ~APREF_TRY_PIC, codelen, r_sh);
 	 }
        }
@@ -1383,7 +1377,7 @@ bool ELF_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
     uint32_t id;
     main_handle.seek(ulShift,binary_stream::Seek_Set);
     id = main_handle.read(type_dword);
-    if((erl = __found_ElfRel(_va2pa(id))) != CurrElfChain.end())
+    if((erl = __found_ElfRel(va2pa(id))) != CurrElfChain.end())
     {
       Elf_Reloc r = (*erl);
       ret = elf_arch->build_refer_str(*elfcache,str,r,flags,codelen,defval);
@@ -1451,7 +1445,7 @@ void ELF_Parser::__elfReadSegments(std::map<__filesize_t,VA_map>& to, bool is_vi
 	 if(flg & SHF_WRITE)     x_flags |= PF_W;
 	 if(flg & SHF_EXECINSTR) x_flags |= PF_X;
 	 vamap.flags = x_flags;
-	 test = is_virt ? _va2pa(vamap.va) != 0 : _pa2va(vamap.foff) != 0;
+	 test = is_virt ? va2pa(vamap.va) != 0 : pa2va(vamap.foff) != 0;
 	 if(!test) {
 	  if(is_virt) to.insert(std::make_pair(vamap.va,vamap));
 	  else        to.insert(std::make_pair(vamap.foff,vamap));
@@ -1481,7 +1475,7 @@ void ELF_Parser::__elfReadSegments(std::map<__filesize_t,VA_map>& to, bool is_vi
 	vamap.foff = phdr.p_offset;
 	vamap.nameoff = phdr.p_type & 0x000000FFUL ? ~phdr.p_type : 0xFFFFFFFFUL;
 	vamap.flags = phdr.p_flags;
-	test = is_virt ? _va2pa(vamap.va) != 0 : _pa2va(vamap.foff) != 0;
+	test = is_virt ? va2pa(vamap.va) != 0 : pa2va(vamap.foff) != 0;
 	if(!test) {
 	  if(is_virt) to.insert(std::make_pair(vamap.va,vamap));
 	  else        to.insert(std::make_pair(vamap.foff,vamap));
@@ -1567,21 +1561,17 @@ bool ELF_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
-  bool bret = true;
-  __filesize_t res;
-  if(cfpos < elf_reader->ehdr_size())
-  {
-    addr="ELFhdr:";
-    addr+=Get2Digit(cfpos);
-  }
-  else
-    if((res=_pa2va(cfpos))!=0)
-    {
-      addr = ".";
-      addr+=Get8Digit(res);
+    bool bret = true;
+    __filesize_t res;
+    if(cfpos < elf_reader->ehdr_size()) {
+	addr="ELFhdr:";
+	addr+=Get2Digit(cfpos);
+    } else if((res=pa2va(cfpos))!=0) {
+	addr = ".";
+	addr+=Get8Digit(res);
     }
     else bret = false;
-  return bret;
+    return bret;
 }
 
 bool ELF_Parser::FindPubName(std::string& buff,__filesize_t pa) const
@@ -1616,7 +1606,7 @@ void ELF_Parser::elf_ReadPubNameList(binary_stream& handle)
      if(b_cache.eof()) break;
      b_cache.seek(fp+ent_size,binary_stream::Seek_Set);
      epn.nameoff = pdyn.d_tag;
-     epn.pa = _va2pa(pdyn.d_un.d_val);
+     epn.pa = va2pa(pdyn.d_un.d_val);
      epn.addinfo = pubname_shtbl;
      epn.attr = ELF_ST_INFO(STB_GLOBAL,STT_NOTYPE);
      PubNames.insert(epn);
@@ -2273,7 +2263,7 @@ bool Elf_Arch::read_reloc_name(binary_stream& handle,const Elf_Reloc& erl, std::
 	    __filesize_t dynptr;
 	    unsigned nitems;
 	    dynptr = parent().findPHEntry(PT_DYNAMIC,nitems);
-	    parent().set_active_shtbl(parent()._va2pa(parent().findPHDynEntry(DT_STRTAB,dynptr,nitems)));
+	    parent().set_active_shtbl(parent().va2pa(parent().findPHDynEntry(DT_STRTAB,dynptr,nitems)));
 	}
 	handle.seek(r_sym*parent().sym_ent_size(),binary_stream::Seek_Cur);
 	sym=reader().read_sym(handle,handle.tell());

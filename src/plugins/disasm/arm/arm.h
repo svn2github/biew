@@ -45,26 +45,26 @@ namespace	usr {
 	    virtual DisasmRet	disassembler(__filesize_t shift,MBuffer insn_buff,unsigned flags);
 
 	    virtual void	show_short_help() const;
-	    virtual int		max_insn_len();
+	    virtual int		max_insn_len() const;
 	    virtual ColorAttr	get_insn_color(unsigned long clone);
 	    virtual ColorAttr	get_opcode_color(unsigned long clone);
 
-	    virtual int		get_bitness();
+	    virtual int		get_bitness() const;
 	    virtual char	clone_short_name(unsigned long clone);
 	    virtual void	read_ini(Ini_Profile&);
 	    virtual void	save_ini(Ini_Profile&);
 	private:
-	    void		arm16EncodeTail(DisasmRet *dret,uint16_t opcode,__filesize_t ulShift,const char *msk,long flags);
+	    void		arm16EncodeTail(DisasmRet *dret,uint16_t opcode,__filesize_t ulShift,const char *msk,long flags) const;
 	    void		arm16Init();
 	    void		arm16Term();
 	    void		arm16Disassembler(DisasmRet *dret,__filesize_t ulShift,
-						uint16_t opcode, unsigned flags);
+						uint16_t opcode, unsigned flags) const;
 
-	    void		arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,uint32_t opcode, unsigned flags,unsigned _index);
+	    void		arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,uint32_t opcode, unsigned flags,unsigned _index) const;
 	    void		arm32Init();
 	    void		arm32Term();
 	    void		arm32Disassembler(DisasmRet *dret,__filesize_t ulShift,
-						uint32_t opcode, unsigned flags);
+						uint32_t opcode, unsigned flags) const;
 
 	    DisMode&		parent;
 	    binary_stream&	main_handle;

@@ -496,7 +496,7 @@ bool DisMode::action_F10() { return _udn.names(); }
 
 bool DisMode::detect() { return true; }
 
-bool DisMode::def_asm_action(int _lastbyte,int start)
+bool DisMode::def_asm_action(int _lastbyte,int start) const
 {
     int _index;
     bool redraw,dox;

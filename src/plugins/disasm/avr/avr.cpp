@@ -58,11 +58,11 @@ namespace	usr {
 	    virtual DisasmRet	disassembler(__filesize_t shift,MBuffer insn_buff,unsigned flags);
 
 	    virtual void	show_short_help() const;
-	    virtual int		max_insn_len();
+	    virtual int		max_insn_len() const;
 	    virtual ColorAttr	get_insn_color(unsigned long clone);
 	    virtual ColorAttr	get_opcode_color(unsigned long clone);
 
-	    virtual int		get_bitness();
+	    virtual int		get_bitness() const;
 	    virtual char	clone_short_name(unsigned long clone);
 	private:
 	    static void		avr_assert( int expression );
@@ -522,17 +522,14 @@ avrhlp_bye:
   bhelp.close();
 }
 
-int AVR_Disassembler::max_insn_len()
+int AVR_Disassembler::max_insn_len() const
 {
-  const struct avr_opcodes_s *opcode;
-  int size = 0;
-
-  for ( opcode = avr_opcodes; opcode->name; opcode++ )
-  {
-    size = std::max( opcode->insn_size, size);
-  }
-
-  return (size << 2);
+    const struct avr_opcodes_s *opcode;
+    int size = 0;
+    for ( opcode = avr_opcodes; opcode->name; opcode++ ) {
+	size = std::max( opcode->insn_size, size);
+    }
+    return (size << 2);
 }
 
 ColorAttr AVR_Disassembler::get_opcode_color( unsigned long clone )
@@ -546,10 +543,7 @@ ColorAttr AVR_Disassembler::get_insn_color( unsigned long clone )
   return disasm_cset.cpu_cset[0].clone[clone & 0xff];
 }
 
-int AVR_Disassembler::get_bitness()
-{
-  return DAB_USE16;
-}
+int AVR_Disassembler::get_bitness() const { return DAB_USE16; }
 
 char AVR_Disassembler::clone_short_name( unsigned long clone )
 {

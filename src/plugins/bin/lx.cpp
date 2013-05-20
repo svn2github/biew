@@ -982,72 +982,64 @@ __filesize_t LX_Parser::action_F1()
   return beye_context().tell();
 }
 
-__filesize_t LX_Parser::va2pa(__filesize_t va)
+__filesize_t LX_Parser::va2pa(__filesize_t va) const
 {
- /* First we must determine object number for given virtual address */
-  binary_stream& handle = *lx_cache;
-  unsigned long i,diff,oidx;
-  __filesize_t rva,pa;
-  LX_OBJECT lo;
-  LX_MAP_TABLE mt;
-  handle.seek(lxe.lx.lxObjectTableOffset + headshift(),binary_stream::Seek_Set);
-  pa = oidx = 0; /* means: error */
-  for(i = 0;i < lxe.lx.lxObjectCount;i++)
-  {
-    handle.read((any_t*)&lo,sizeof(LX_OBJECT));
-    if(lo.o32_base <= va && va < lo.o32_base + lo.o32_size)
-    {
-      oidx = i+1;
-      break;
+    /* First we must determine object number for given virtual address */
+    binary_stream& handle = *lx_cache;
+    unsigned long i,diff,oidx;
+    __filesize_t rva,pa;
+    LX_OBJECT lo;
+    LX_MAP_TABLE mt;
+    handle.seek(lxe.lx.lxObjectTableOffset + headshift(),binary_stream::Seek_Set);
+    pa = oidx = 0; /* means: error */
+    for(i = 0;i < lxe.lx.lxObjectCount;i++) {
+	handle.read((any_t*)&lo,sizeof(LX_OBJECT));
+	if(lo.o32_base <= va && va < lo.o32_base + lo.o32_size)  {
+	    oidx = i+1;
+	    break;
+	}
     }
-  }
-  /* Secondly we must determine page within object */
-  if(oidx)
-  {
-    rva = va - lo.o32_base;
-    i = rva / lxe.lx.lxPageSize;
-    diff = rva - i*lxe.lx.lxPageSize;
-    lxReadPageDesc(handle,&mt,i+lo.o32_pagemap);
-    pa = __calcPageEntry(&mt) + diff;
-  }
-  return pa;
+    /* Secondly we must determine page within object */
+    if(oidx) {
+	rva = va - lo.o32_base;
+	i = rva / lxe.lx.lxPageSize;
+	diff = rva - i*lxe.lx.lxPageSize;
+	lxReadPageDesc(handle,&mt,i+lo.o32_pagemap);
+	pa = __calcPageEntry(&mt) + diff;
+    }
+    return pa;
 }
 
-__filesize_t LX_Parser::pa2va(__filesize_t pa)
+__filesize_t LX_Parser::pa2va(__filesize_t pa) const
 {
- /* First we must determine page for given physical address */
-  binary_stream& handle = *lx_cache;
-  unsigned long i,pidx,pagentry;
-  __filesize_t rva,va;
-  LX_OBJECT lo;
-  LX_MAP_TABLE mt;
-  pagentry = va = pidx = 0;
-  for(i = 0;i < lxe.lx.lxPageCount;i++)
-  {
-    lxReadPageDesc(handle,&mt,i+1);
-    pagentry = __calcPageEntry(&mt);
-    if(pagentry <= pa && pa < pagentry + mt.o32_pagesize)
-    {
-      pidx = i+1;
-      break;
+    /* First we must determine page for given physical address */
+    binary_stream& handle = *lx_cache;
+    unsigned long i,pidx,pagentry;
+    __filesize_t rva,va;
+    LX_OBJECT lo;
+    LX_MAP_TABLE mt;
+    pagentry = va = pidx = 0;
+    for(i = 0;i < lxe.lx.lxPageCount;i++) {
+	lxReadPageDesc(handle,&mt,i+1);
+	pagentry = __calcPageEntry(&mt);
+	if(pagentry <= pa && pa < pagentry + mt.o32_pagesize) {
+	    pidx = i+1;
+	    break;
+	}
     }
-  }
-  /* Secondly we must determine object number for given physical address */
-  if(pidx)
-  {
-    rva = pa - pagentry + (pidx-1)*lxe.lx.lxPageSize;
-    handle.seek(lxe.lx.lxObjectTableOffset + headshift(),binary_stream::Seek_Set);
-    for(i = 0;i < lxe.lx.lxObjectCount;i++)
-    {
-      handle.read((any_t*)&lo,sizeof(LX_OBJECT));
-      if(lo.o32_pagemap <= pidx && pidx < lo.o32_pagemap + lo.o32_mapsize)
-      {
-	va = lo.o32_base + rva;
-	break;
-      }
+    /* Secondly we must determine object number for given physical address */
+    if(pidx) {
+	rva = pa - pagentry + (pidx-1)*lxe.lx.lxPageSize;
+	handle.seek(lxe.lx.lxObjectTableOffset + headshift(),binary_stream::Seek_Set);
+	for(i = 0;i < lxe.lx.lxObjectCount;i++) {
+	    handle.read((any_t*)&lo,sizeof(LX_OBJECT));
+	    if(lo.o32_pagemap <= pidx && pidx < lo.o32_pagemap + lo.o32_mapsize) {
+		va = lo.o32_base + rva;
+		break;
+	    }
+	}
     }
-  }
-  return va;
+    return va;
 }
 
 int LX_Parser::query_bitness(__filesize_t pa) const

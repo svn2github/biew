@@ -41,7 +41,7 @@ namespace	usr {
 
 	    virtual const char*		prompt(unsigned idx) const;
 
-	    virtual __filesize_t	show_header();
+	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 
 	    static __filesize_t		mov_find_chunk(binary_stream& main_handle,__filesize_t off,unsigned long id);
@@ -76,7 +76,7 @@ MOV_Parser::MOV_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
 MOV_Parser::~MOV_Parser() {}
 int MOV_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-__filesize_t MOV_Parser::show_header()
+__filesize_t MOV_Parser::show_header() const
 {
     beye_context().ErrMessageBox("Not implemented yet!","MOV format");
     return beye_context().tell();

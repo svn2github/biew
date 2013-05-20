@@ -409,7 +409,7 @@ const char* ARM_Disassembler::arm_wreg_name[] =
 }
 
 void ARM_Disassembler::arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
-					uint32_t opcode, unsigned flags,unsigned _index)
+					uint32_t opcode, unsigned flags,unsigned _index) const
 {
     unsigned i,idx,val,prev;
     const char *msk=opcode32_table[_index].mask;
@@ -585,7 +585,7 @@ void ARM_Disassembler::arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
 }
 
 void ARM_Disassembler::arm32Disassembler(DisasmRet *dret,__filesize_t ulShift,
-					uint32_t opcode, unsigned flags)
+					uint32_t opcode, unsigned flags) const
 {
     int done;
     unsigned i,ix,n,idx,val;

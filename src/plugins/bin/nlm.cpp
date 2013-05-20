@@ -60,13 +60,13 @@ namespace	usr {
 	    virtual __filesize_t	action_F5();
 	    virtual __filesize_t	action_F8();
 
-	    virtual __filesize_t	show_header();
+	    virtual __filesize_t	show_header() const;
 	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
 	    virtual int			query_platform() const;
 	    virtual int			query_bitness(__filesize_t) const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
-	    virtual __filesize_t	va2pa(__filesize_t va);
-	    virtual __filesize_t	pa2va(__filesize_t pa);
+	    virtual __filesize_t	va2pa(__filesize_t va) const;
+	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 	    virtual __filesize_t	get_public_symbol(std::string& str,unsigned& _class,
 							    __filesize_t pa,bool as_prev);
 	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
@@ -96,7 +96,7 @@ namespace	usr {
 static const char* txt[]={ "NlmHlp", "ModRef", "PubDef", "", "ExtNam", "", "", "NlmHdr", "", "" };
 const char* NLM_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-__filesize_t NLM_Parser::show_header()
+__filesize_t NLM_Parser::show_header() const
 {
   __filesize_t fpos;
   char modName[NLM_MODULE_NAME_SIZE];
@@ -724,15 +724,15 @@ unsigned NLM_Parser::get_object_attribute(__filesize_t pa,std::string& name,
   return ret;
 }
 
-__filesize_t NLM_Parser::va2pa(__filesize_t va)
+__filesize_t NLM_Parser::va2pa(__filesize_t va) const
 {
-  return va + std::min(nlm.nlm_codeImageOffset,nlm.nlm_dataImageOffset);
+    return va + std::min(nlm.nlm_codeImageOffset,nlm.nlm_dataImageOffset);
 }
 
-__filesize_t NLM_Parser::pa2va(__filesize_t pa)
+__filesize_t NLM_Parser::pa2va(__filesize_t pa) const
 {
-  __filesize_t base = std::min(nlm.nlm_codeImageOffset,nlm.nlm_dataImageOffset);
-  return pa > base ? pa - base : 0L;
+    __filesize_t base = std::min(nlm.nlm_codeImageOffset,nlm.nlm_dataImageOffset);
+    return pa > base ? pa - base : 0L;
 }
 
 int NLM_Parser::query_platform() const { return DISASM_CPU_IX86; }

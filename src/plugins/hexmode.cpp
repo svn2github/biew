@@ -70,7 +70,7 @@ namespace	usr {
 	    virtual void		save_ini(Ini_Profile& );
 	private:
 	    void		check_width_corr();
-	    int			full_hex_edit(TWindow * txtwnd,TWindow *hexwnd);
+	    int			full_hex_edit(TWindow * txtwnd,TWindow *hexwnd) const;
 
 	    CodeGuider&		code_guider;
 	    unsigned		virtWidthCorr;
@@ -285,7 +285,7 @@ void HexMode::misckey_action () /* EditHex */
 
 void HexMode::check_width_corr()
 {
-  if(virtWidthCorr>(unsigned)hexViewer[hmode].width()-1) virtWidthCorr=hexViewer[hmode].width()-1;
+    if(virtWidthCorr>(unsigned)hexViewer[hmode].width()-1) virtWidthCorr=hexViewer[hmode].width()-1;
 }
 
 bool HexMode::action_F2() /* hexSelectMode */
@@ -360,7 +360,7 @@ bool HexMode::action_F10() { return _udn.names(); }
 
 bool HexMode::detect() { return true; }
 
-int HexMode::full_hex_edit(TWindow* txtwnd,TWindow* hexwnd)
+int HexMode::full_hex_edit(TWindow* txtwnd,TWindow* hexwnd) const
 {
     size_t i,j;
     unsigned mlen;

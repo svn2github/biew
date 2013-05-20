@@ -156,7 +156,7 @@ const char* ARM_Disassembler::arm_reg_name[] =
 	prev=1;\
     }
 
-void ARM_Disassembler::arm16EncodeTail(DisasmRet *dret,uint16_t opcode,__filesize_t ulShift,const char *msk,long flags)
+void ARM_Disassembler::arm16EncodeTail(DisasmRet *dret,uint16_t opcode,__filesize_t ulShift,const char *msk,long flags) const
 {
     unsigned i,idx,val,prev,bracket;
     int s,d,m,n;
@@ -263,7 +263,7 @@ void ARM_Disassembler::arm16EncodeTail(DisasmRet *dret,uint16_t opcode,__filesiz
 }
 
 void ARM_Disassembler::arm16Disassembler(DisasmRet *dret,__filesize_t ulShift,
-					uint16_t opcode, unsigned flags)
+					uint16_t opcode, unsigned flags) const
 {
     int done;
     unsigned i,n;

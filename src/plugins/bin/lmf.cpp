@@ -65,12 +65,12 @@ namespace	usr {
 	    virtual __filesize_t	action_F1();
 	    virtual __filesize_t	action_F9();
 
-	    virtual __filesize_t	show_header();
+	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 	    virtual int			query_bitness(__filesize_t) const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
-	    virtual __filesize_t	va2pa(__filesize_t va);
-	    virtual __filesize_t	pa2va(__filesize_t pa);
+	    virtual __filesize_t	va2pa(__filesize_t va) const;
+	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 	private:
 	    void			failed_lmf() const;
 	    std::vector<std::string>	lmf_ReadSecHdr(binary_stream& handle,size_t nnames) const;
@@ -288,7 +288,7 @@ bool LMF_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 	return false;
 }
 
-__filesize_t LMF_Parser::va2pa(__filesize_t va)
+__filesize_t LMF_Parser::va2pa(__filesize_t va) const
 {
 	unsigned i,j;
 	int seclen;
@@ -324,7 +324,7 @@ __filesize_t LMF_Parser::va2pa(__filesize_t va)
 	return addr;
 }
 
-__filesize_t LMF_Parser::pa2va(__filesize_t pa)
+__filesize_t LMF_Parser::pa2va(__filesize_t pa) const
 {
 	unsigned i;
 	int seclen;
@@ -422,7 +422,7 @@ exit:
     return fpos;
 }
 
-__filesize_t LMF_Parser::show_header()
+__filesize_t LMF_Parser::show_header() const
 {
 	unsigned i,j,k;
 	__filesize_t fpos;

@@ -42,10 +42,10 @@ namespace	usr {
 	    virtual DisasmRet	disassembler(__filesize_t shift,MBuffer insn_buff,unsigned flags);
 
 	    virtual void	show_short_help() const;
-	    virtual int		max_insn_len();
+	    virtual int		max_insn_len() const;
 	    virtual ColorAttr	get_insn_color(unsigned long clone);
 
-	    virtual int		get_bitness();
+	    virtual int		get_bitness() const;
 	    virtual char	clone_short_name(unsigned long clone);
 	    virtual void	read_ini(Ini_Profile&);
 	    virtual void	save_ini(Ini_Profile&);
@@ -138,13 +138,13 @@ void Data_Disassembler::show_short_help() const
   hlpDisplay(20010);
 }
 
-int Data_Disassembler::max_insn_len() { return 8; }
+int Data_Disassembler::max_insn_len() const { return 8; }
 ColorAttr Data_Disassembler::get_insn_color( unsigned long clone )
 {
   UNUSED(clone);
   return disasm_cset.cpu_cset[0].clone[0];
 }
-int Data_Disassembler::get_bitness() { return DAB_USE16; }
+int Data_Disassembler::get_bitness() const { return DAB_USE16; }
 char Data_Disassembler::clone_short_name( unsigned long clone )
 {
   UNUSED(clone);

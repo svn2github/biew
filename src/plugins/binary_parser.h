@@ -23,7 +23,7 @@ namespace	usr {
 	    virtual __filesize_t	action_F9() { return Plugin::Bad_Address; }
 	    virtual __filesize_t	action_F10(){ return Plugin::Bad_Address; }
 
-	    virtual __filesize_t	show_header() { return Plugin::Bad_Address; }  /**< if not an MZ style format */
+	    virtual __filesize_t	show_header() const { return Plugin::Bad_Address; }  /**< if not an MZ style format */
 			/**
 			  Binss disassembler reference to string.
 			   * @param str          string buffer for append to
@@ -58,13 +58,13 @@ namespace	usr {
 			   * @param va       indicates virtual address to be converted
 			   * @return         0 if operation meaningless
 			  **/
-	    virtual __filesize_t	va2pa(__filesize_t) { return Plugin::Bad_Address; }
+	    virtual __filesize_t	va2pa(__filesize_t) const { return Plugin::Bad_Address; }
 
 			 /** Converts physical address to virtual.
 			   * @param pa       indicates physical address to be converted
 			   * @note           seg pointer can be NULL
 			  **/
-	    virtual __filesize_t	pa2va(__filesize_t) { return Plugin::Bad_Address; }
+	    virtual __filesize_t	pa2va(__filesize_t) const { return Plugin::Bad_Address; }
 
 			 /** Fills the string with public symbol
 			   * @param str       pointer to the string to be filled

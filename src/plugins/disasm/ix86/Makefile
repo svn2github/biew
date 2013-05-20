@@ -1,6 +1,6 @@
 include ../../../../config.mak
 
-CXXSRCS = ix86.cpp ix86_fpu.cpp ix86_fun.cpp
+CXXSRCS = ix86_fpu.cpp ix86_fun.cpp ix86.cpp
 SRCS    =
 OBJS	= $(SRCS:.c=.o)
 CXXOBJS	= $(CXXSRCS:.cpp=.o)

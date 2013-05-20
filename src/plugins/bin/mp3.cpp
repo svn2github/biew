@@ -43,7 +43,7 @@ namespace	usr {
 
 	    virtual const char*		prompt(unsigned idx) const;
 
-	    virtual __filesize_t	show_header();
+	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 
 	    static int		mp_decode_mp3_header(unsigned char *hbuf,int *fmt,int *brate,int *samplerate,int *channels);
@@ -379,7 +379,7 @@ int MP3_Parser::Xing_test(binary_stream& main_handle,char *hdr,int *scale,int *l
     return is_xing;
 }
 
-__filesize_t MP3_Parser::show_header()
+__filesize_t MP3_Parser::show_header() const
 {
  unsigned keycode;
  TWindow * hwnd;

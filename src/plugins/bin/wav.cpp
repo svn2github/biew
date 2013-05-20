@@ -188,7 +188,7 @@ Wave_Parser::Wave_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
 Wave_Parser::~Wave_Parser() {}
 int  Wave_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-__filesize_t Wave_Parser::wav_find_chunk(__filesize_t off,unsigned long id)
+__filesize_t Wave_Parser::wav_find_chunk(__filesize_t off,unsigned long id) const
 {
     unsigned long ids,size,type;
     main_handle.seek(off,binary_stream::Seek_Set);
@@ -211,7 +211,7 @@ __filesize_t Wave_Parser::wav_find_chunk(__filesize_t off,unsigned long id)
     return -1;
 }
 
-__filesize_t Wave_Parser::show_header()
+__filesize_t Wave_Parser::show_header() const
 {
  unsigned keycode;
  TWindow * hwnd;

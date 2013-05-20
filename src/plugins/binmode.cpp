@@ -71,7 +71,7 @@ namespace	usr {
 	    virtual void		read_ini(Ini_Profile& );
 	    virtual void		save_ini(Ini_Profile& );
 	private:
-	    static void	save_video(Opaque& _this,unsigned char *buff,unsigned size);
+	    static void		save_video(Opaque& _this,unsigned char *buff,unsigned size);
 
 	    unsigned		virtWidthCorr;
 	    unsigned		bin_mode; /**< points to currently selected mode text mode */

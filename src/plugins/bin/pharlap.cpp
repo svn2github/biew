@@ -45,7 +45,7 @@ namespace	usr {
 	    virtual __filesize_t	action_F9();
 	    virtual __filesize_t	action_F10();
 
-	    virtual __filesize_t	show_header();
+	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
 	private:
@@ -62,7 +62,7 @@ namespace	usr {
 static const char* txt[]={ "PLHelp", "", "", "", "", "", "", "", "RunTim", "SegInf" };
 const char* PharLap_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-__filesize_t PharLap_Parser::show_header()
+__filesize_t PharLap_Parser::show_header() const
 {
   __filesize_t fpos;
   TWindow *w;

@@ -56,13 +56,13 @@ namespace	usr {
 	    virtual __filesize_t	action_F7();
 	    virtual __filesize_t	action_F10();
 
-	    virtual __filesize_t	show_header();
+	    virtual __filesize_t	show_header() const;
 	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
 	    virtual int			query_platform() const;
 	    virtual int			query_bitness(__filesize_t) const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
-	    virtual __filesize_t	va2pa(__filesize_t va);
-	    virtual __filesize_t	pa2va(__filesize_t pa);
+	    virtual __filesize_t	va2pa(__filesize_t va) const;
+	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 	    virtual __filesize_t	get_public_symbol(std::string& str,unsigned& _class,
 							    __filesize_t pa,bool as_prev);
 	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
@@ -135,30 +135,26 @@ std::string Coff_Parser::coffReadLongName(binary_stream& handle,__filesize_t off
    return rc;
 }
 
-__filesize_t Coff_Parser::va2pa(__filesize_t va)
+__filesize_t Coff_Parser::va2pa(__filesize_t va) const
 {
-  uint_fast16_t i;
-  for(i = 0;i < nsections;i++)
-  {
-    if(va >= COFF_DWORD(coff386so[i].s_vaddr) && va <= COFF_DWORD(coff386so[i].s_vaddr)+COFF_DWORD(coff386so[i].s_size))
-    {
-      return COFF_DWORD(coff386so[i].s_scnptr) + (va - COFF_DWORD(coff386so[i].s_vaddr));
+    uint_fast16_t i;
+    for(i = 0;i < nsections;i++) {
+	if(va >= COFF_DWORD(coff386so[i].s_vaddr) && va <= COFF_DWORD(coff386so[i].s_vaddr)+COFF_DWORD(coff386so[i].s_size)) {
+	    return COFF_DWORD(coff386so[i].s_scnptr) + (va - COFF_DWORD(coff386so[i].s_vaddr));
+	}
     }
-  }
-  return 0L;
+    return 0L;
 }
 
-__filesize_t Coff_Parser::pa2va(__filesize_t pa)
+__filesize_t Coff_Parser::pa2va(__filesize_t pa) const
 {
-  uint_fast16_t i;
-  for(i = 0;i < nsections;i++)
-  {
-    if(pa >= COFF_DWORD(coff386so[i].s_scnptr) && pa <= COFF_DWORD(coff386so[i].s_scnptr)+COFF_DWORD(coff386so[i].s_size))
-    {
-      return COFF_DWORD(coff386so[i].s_vaddr) + (pa - COFF_DWORD(coff386so[i].s_scnptr));
+    uint_fast16_t i;
+    for(i = 0;i < nsections;i++) {
+	if(pa >= COFF_DWORD(coff386so[i].s_scnptr) && pa <= COFF_DWORD(coff386so[i].s_scnptr)+COFF_DWORD(coff386so[i].s_size)) {
+	    return COFF_DWORD(coff386so[i].s_vaddr) + (pa - COFF_DWORD(coff386so[i].s_scnptr));
+	}
     }
-  }
-  return 0L;
+    return 0L;
 }
 
 void Coff_Parser::paint_pages(TWindow& win,const std::vector<SCNHDR>& objs,unsigned start) const
@@ -247,7 +243,7 @@ const char* Coff_Parser::coff386_encode_hdr(unsigned info) const
    }
 }
 
-__filesize_t Coff_Parser::show_header()
+__filesize_t Coff_Parser::show_header() const
 {
   __filesize_t fpos,entry,v_entry;
   unsigned keycode;

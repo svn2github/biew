@@ -65,10 +65,10 @@ namespace	usr {
 	    virtual DisasmRet	disassembler(__filesize_t shift,MBuffer insn_buff,unsigned flags);
 
 	    virtual void	show_short_help() const;
-	    virtual int		max_insn_len();
+	    virtual int		max_insn_len() const;
 	    virtual ColorAttr	get_insn_color(unsigned long clone);
 
-	    virtual int		get_bitness();
+	    virtual int		get_bitness() const;
 	    virtual char	clone_short_name(unsigned long clone);
 	    virtual void	read_ini(Ini_Profile&);
 	    virtual void	save_ini(Ini_Profile&);
@@ -657,13 +657,13 @@ bool Java_Disassembler::action_F1()
   return false;
 }
 
-int Java_Disassembler::max_insn_len() { return 13; }
+int Java_Disassembler::max_insn_len() const { return 13; }
 ColorAttr Java_Disassembler::get_insn_color( unsigned long clone )
 {
   UNUSED(clone);
   return disasm_cset.cpu_cset[0].clone[0];
 }
-int Java_Disassembler::get_bitness() { return DAB_USE16; }
+int Java_Disassembler::get_bitness() const { return DAB_USE16; }
 char Java_Disassembler::clone_short_name( unsigned long clone )
 {
   UNUSED(clone);

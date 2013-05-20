@@ -128,8 +128,8 @@ namespace	usr {
 	    virtual int			query_platform() const;
 	    virtual int			query_bitness(__filesize_t) const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
-	    virtual __filesize_t	va2pa(__filesize_t va);
-	    virtual __filesize_t	pa2va(__filesize_t pa);
+	    virtual __filesize_t	va2pa(__filesize_t va) const;
+	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 	    virtual __filesize_t	get_public_symbol(std::string& str,unsigned& _class,
 							    __filesize_t pa,bool as_prev);
 	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
@@ -144,8 +144,6 @@ namespace	usr {
 	    static std::string		GetPMWinAPI(unsigned flag);
 	    static const char*		__nedata[];
 	private:
-	    __filesize_t		_va2pa(__filesize_t va) const;
-	    __filesize_t		_pa2va(__filesize_t pa) const;
 	    std::string			ne_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
 	    bool			BuildReferStrNE(const DisMode&parent,std::string& str,const RELOC_NE& rne,int flags,__filesize_t ulShift);
 	    std::string			rdImpNameNELX(unsigned idx,bool useasoff,__filesize_t OffTable) const;

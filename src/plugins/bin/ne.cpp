@@ -1041,7 +1041,7 @@ bool NE_Parser::BuildReferStrNE(const DisMode& parent,std::string& str,const REL
 	    ep = CalcEntryPointNE(rne.idx,rne.ordinal);
 	    if(FindPubName(buff,ep)) str+=buff;
 	    else {
-		if(need_virt) sprintf(stmp,".%08lX",(unsigned long)_pa2va(ep));
+		if(need_virt) sprintf(stmp,".%08lX",(unsigned long)pa2va(ep));
 		else sprintf(stmp,"(*this).seg<#%hu>:%sH",rne.idx,Get4Digit(rne.ordinal));
 		str+=stmp;
 		retrf = ep?true:false;
@@ -1215,7 +1215,7 @@ __filesize_t NE_Parser::action_F1()
   return beye_context().tell();
 }
 
-__filesize_t NE_Parser::_va2pa(__filesize_t va) const
+__filesize_t NE_Parser::va2pa(__filesize_t va) const
 {
   SEGDEF nesd;
   uint_fast16_t seg,off;
@@ -1225,7 +1225,7 @@ __filesize_t NE_Parser::_va2pa(__filesize_t va) const
   return nesd.sdOffset ? (((__filesize_t)nesd.sdOffset)<<ne.neLogicalSectorShiftCount) + off : 0;
 }
 
-__filesize_t NE_Parser::_pa2va(__filesize_t pa) const
+__filesize_t NE_Parser::pa2va(__filesize_t pa) const
 {
   unsigned i,segcount = ne.neSegmentTableCount;
   __filesize_t currseg_st,nextseg_st;
@@ -1243,9 +1243,6 @@ __filesize_t NE_Parser::_pa2va(__filesize_t pa) const
   }
   return 0L;
 }
-
-__filesize_t NE_Parser::va2pa(__filesize_t va) { return _va2pa(va); }
-__filesize_t NE_Parser::pa2va(__filesize_t pa) { return _pa2va(pa); }
 
 __filesize_t NE_Parser::get_public_symbol(std::string& str,unsigned& func_class,
 			  __filesize_t pa,bool as_prev)

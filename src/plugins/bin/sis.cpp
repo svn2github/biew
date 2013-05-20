@@ -65,10 +65,10 @@ struct SisHeader {
 
 	    virtual const char*		prompt(unsigned idx) const;
 
-	    virtual __filesize_t	show_header();
+	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 	private:
-	    __filesize_t		show_sis3_header();
+	    __filesize_t		show_sis3_header() const;
 
 	    binary_stream&		main_handle;
 	    udn&			_udn;
@@ -84,13 +84,13 @@ Sis_Parser::Sis_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
 Sis_Parser::~Sis_Parser() {}
 int  Sis_Parser::query_platform() const { return DISASM_CPU_ARM; }
 
-__filesize_t Sis_Parser::show_sis3_header()
+__filesize_t Sis_Parser::show_sis3_header() const
 {
     beye_context().ErrMessageBox("Not implemented yet!","Sis v3 header");
     return beye_context().tell();
 }
 
-__filesize_t Sis_Parser::show_header()
+__filesize_t Sis_Parser::show_header() const
 {
  unsigned keycode;
  TWindow * hwnd;

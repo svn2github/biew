@@ -5322,7 +5322,7 @@ char ix86_Disassembler::ix86_segpref[4] = "";
 
 const unsigned char ix86_Disassembler::leave_insns[] = { 0x07, 0x17, 0x1F, 0x58, 0x59, 0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F, 0x61, 0x90, 0xC9 };
 
-bool ix86_Disassembler::is_listed(unsigned char insn,const unsigned char *list,size_t listsize)
+bool ix86_Disassembler::is_listed(unsigned char insn,const unsigned char *list,size_t listsize) const
 {
   size_t i;
   for(i = 0;i < listsize;i++) if(insn == list[i]) return true;
@@ -5334,22 +5334,22 @@ bool ix86_Disassembler::is_listed(unsigned char insn,const unsigned char *list,s
   [legacy prefix] [REX] [Opcode] ...
   legacy prefixes: 26 2E 36 3E 64 65 66 67 F0 F3 F2
 */
-MBuffer ix86_Disassembler::parse_REX_type(MBuffer insn,char *up,ix86Param* DisP)
+MBuffer ix86_Disassembler::parse_REX_type(MBuffer insn,char *up,ix86Param& DisP) const
 {
-    if(x86_Bitness == DAB_USE64 && !(DisP->pfx&PFX_REX)) {
-	DisP->pfx|=PFX_REX;
-	DisP->REX = insn[0];
+    if(x86_Bitness == DAB_USE64 && !(DisP.pfx&PFX_REX)) {
+	DisP.pfx|=PFX_REX;
+	DisP.REX = insn[0];
     }
     (*up)++;
     return &insn[1];
 }
 
-void ix86_Disassembler::ix86_gettype(DisasmRet *dret,ix86Param *_DisP)
+void ix86_Disassembler::ix86_gettype(DisasmRet *dret,ix86Param& _DisP) const
 {
  MBuffer insn;
  char ua,ud,up,has_lock,has_rep,has_seg;
  bool has_vex;
- insn = &_DisP->RealCmd[0];
+ insn = &_DisP.RealCmd[0];
  dret->pro_clone = __INSNT_ORDINAL;
  has_vex = has_lock = has_rep = has_seg = 0;
  up = ua = ud = 0;
@@ -5399,15 +5399,15 @@ void ix86_Disassembler::ix86_gettype(DisasmRet *dret,ix86Param *_DisP)
 		if(x86_Bitness != DAB_USE64) goto do_seg;
 		goto MakePref;
    case 0x66:
-		_DisP->pfx|=PFX_66;
+		_DisP.pfx|=PFX_66;
 	      ud++;
 	      goto MakePref;
    case 0x67:
-		_DisP->pfx|=PFX_67;
+		_DisP.pfx|=PFX_67;
 	      ua++;
 	      goto MakePref;
    case 0xF0:
-		_DisP->pfx|=PFX_LOCK;
+		_DisP.pfx|=PFX_LOCK;
 	      if(has_lock + has_rep) break;
 	      has_lock++;
 	      goto MakePref;
@@ -5422,13 +5422,13 @@ void ix86_Disassembler::ix86_gettype(DisasmRet *dret,ix86Param *_DisP)
 	      insn=&insn[1];
 	      goto MakePref;
    case 0xF2:
-		_DisP->pfx|=PFX_F2_REPNE;
+		_DisP.pfx|=PFX_F2_REPNE;
 	      if(has_rep + has_lock)  break;
 	      has_rep++;
 	      goto MakePref;
    case 0xF3:
 	      if(insn[1] == 0x90) goto get_type;
-		_DisP->pfx|=PFX_F3_REP;
+		_DisP.pfx|=PFX_F3_REP;
 	      if(has_rep + has_lock) break;
 	      has_rep++;
 	      goto MakePref;
@@ -5439,13 +5439,13 @@ void ix86_Disassembler::ix86_gettype(DisasmRet *dret,ix86Param *_DisP)
 	      goto RepeateByPrefix;
  }
   /** First check for SSE extensions */
-  if(insn[0] == 0x0F && (_DisP->pfx&(PFX_66|PFX_F2_REPNE|PFX_F3_REP))) {
+  if(insn[0] == 0x0F && (_DisP.pfx&(PFX_66|PFX_F2_REPNE|PFX_F3_REP))) {
     const ix86_ExOpcodes *SSE2_ext=ix86_extable;
-    if(_DisP->pfx&PFX_F2_REPNE) SSE2_ext=ix86_F20F_PentiumTable;
+    if(_DisP.pfx&PFX_F2_REPNE) SSE2_ext=ix86_F20F_PentiumTable;
     else
-    if(_DisP->pfx&PFX_F3_REP)   SSE2_ext=ix86_F30F_PentiumTable;
+    if(_DisP.pfx&PFX_F3_REP)   SSE2_ext=ix86_F30F_PentiumTable;
     else
-    if(_DisP->pfx&PFX_66)       SSE2_ext=ix86_660F_PentiumTable;
+    if(_DisP.pfx&PFX_66)       SSE2_ext=ix86_660F_PentiumTable;
     if(!(
 		x86_Bitness==DAB_USE64?
 		SSE2_ext[insn[1]].name64:
@@ -5455,8 +5455,8 @@ void ix86_Disassembler::ix86_gettype(DisasmRet *dret,ix86Param *_DisP)
  get_type:
   if(x86_Bitness == DAB_USE64)
   {
-    _DisP->mode|= MOD_WIDE_ADDR;
-    if(_DisP->pfx&PFX_REX && ((_DisP->REX & 0x0F)>>3) != 0) _DisP->mode|=MOD_WIDE_DATA;
+    _DisP.mode|= MOD_WIDE_ADDR;
+    if(_DisP.pfx&PFX_REX && ((_DisP.REX & 0x0F)>>3) != 0) _DisP.mode|=MOD_WIDE_DATA;
   }
    if((insn[0] & 0xF6) == 0xC2)
    {
@@ -5483,15 +5483,15 @@ void ix86_Disassembler::ix86_gettype(DisasmRet *dret,ix86Param *_DisP)
      }
      else
      if(insn[0] == 0xFF &&
-	(((insn[1] & 0x27) == 0x25 && (_DisP->mode&MOD_WIDE_ADDR)) ||
-	((insn[1] & 0x27) == 0x26 && !(_DisP->mode&MOD_WIDE_ADDR))))
+	(((insn[1] & 0x27) == 0x25 && (_DisP.mode&MOD_WIDE_ADDR)) ||
+	((insn[1] & 0x27) == 0x26 && !(_DisP.mode&MOD_WIDE_ADDR))))
      {
 	dret->pro_clone = __INSNT_JMPVVT;
 	dret->codelen = (insn[1] & 0x27) == 0x25 ? 4 : 2;
 	dret->field = 2;
      }
      else
-     if(insn[0] == 0xFF && insn[1] == 0xA3 && (_DisP->mode&MOD_WIDE_ADDR))
+     if(insn[0] == 0xFF && insn[1] == 0xA3 && (_DisP.mode&MOD_WIDE_ADDR))
      {
 	dret->pro_clone = __INSNT_JMPPIC;
 	dret->codelen = 4;
@@ -5532,7 +5532,7 @@ void ix86_Disassembler::ix86_gettype(DisasmRet *dret,ix86Param *_DisP)
 	    if(insn[i] == 0x81 && (insn[i+1] == 0xC4 || insn[i+1] == 0xEC))
 	    { /* sub/add esp, long_num */
 	      leave_cond = true;
-	      i += (_DisP->mode&MOD_WIDE_DATA) ? 5 : 3;
+	      i += (_DisP.mode&MOD_WIDE_DATA) ? 5 : 3;
 	    }
 	  }
 	  if(!leave_cond) break;
@@ -5546,61 +5546,61 @@ void ix86_Disassembler::ix86_gettype(DisasmRet *dret,ix86Param *_DisP)
      }
 }
 
-unsigned char ix86_Disassembler::parse_REX(unsigned char code,ix86Param* DisP)
+unsigned char ix86_Disassembler::parse_REX(unsigned char code,ix86Param& DisP) const
 {
-    if(x86_Bitness == DAB_USE64 && !(DisP->pfx&PFX_REX))
+    if(x86_Bitness == DAB_USE64 && !(DisP.pfx&PFX_REX))
     {
-	DisP->pfx|=PFX_REX;
-	DisP->REX = code;
+	DisP.pfx|=PFX_REX;
+	DisP.REX = code;
     }
-    DisP->CodeAddress++;
-    DisP->RealCmd = &DisP->RealCmd[1];
-    return DisP->RealCmd[0];
+    DisP.CodeAddress++;
+    DisP.RealCmd = &DisP.RealCmd[1];
+    return DisP.RealCmd[0];
 }
 
-void ix86_Disassembler::parse_VEX_pp(ix86Param* DisP) {
-    if((DisP->VEX_vlp & 0x03) == 0x01) DisP->pfx|=PFX_66;
+void ix86_Disassembler::parse_VEX_pp(ix86Param& DisP) const {
+    if((DisP.VEX_vlp & 0x03) == 0x01) DisP.pfx|=PFX_66;
     else
-    if((DisP->VEX_vlp & 0x03) == 0x02) DisP->pfx|=PFX_F3_REP;
+    if((DisP.VEX_vlp & 0x03) == 0x02) DisP.pfx|=PFX_F3_REP;
     else
-    if((DisP->VEX_vlp & 0x03) == 0x03) DisP->pfx|=PFX_F2_REPNE;
+    if((DisP.VEX_vlp & 0x03) == 0x03) DisP.pfx|=PFX_F2_REPNE;
 }
 
-void ix86_Disassembler::parse_VEX_C4(ix86Param* DisP) {
+void ix86_Disassembler::parse_VEX_C4(ix86Param& DisP) const {
   unsigned char code;
-  DisP->pfx|=PFX_VEX;
-  DisP->pfx|=PFX_REX;
-  code=DisP->RealCmd[1];
-  DisP->REX=0x40;
-  DisP->VEX_m = code&0x1F;
-  DisP->REX|=((code>>5)&0x01);    /* make B */
-  DisP->REX|=((code>>6)&0x01)<<1; /* make X */
-  DisP->REX|=((code>>7)&0x01)<<2; /* make R */
-  code=DisP->RealCmd[2];
-  DisP->REX|=((code>>7)&0x01)<<3; /* make W */
-  DisP->REX^=0x0F;                /* complenent it */
-  DisP->VEX_vlp=code&0x7F;
+  DisP.pfx|=PFX_VEX;
+  DisP.pfx|=PFX_REX;
+  code=DisP.RealCmd[1];
+  DisP.REX=0x40;
+  DisP.VEX_m = code&0x1F;
+  DisP.REX|=((code>>5)&0x01);    /* make B */
+  DisP.REX|=((code>>6)&0x01)<<1; /* make X */
+  DisP.REX|=((code>>7)&0x01)<<2; /* make R */
+  code=DisP.RealCmd[2];
+  DisP.REX|=((code>>7)&0x01)<<3; /* make W */
+  DisP.REX^=0x0F;                /* complenent it */
+  DisP.VEX_vlp=code&0x7F;
   parse_VEX_pp(DisP);
 }
 
-void ix86_Disassembler::parse_VEX_C5(ix86Param* DisP) {
+void ix86_Disassembler::parse_VEX_C5(ix86Param& DisP) const {
   unsigned char code;
-  DisP->pfx|=PFX_VEX;
-  DisP->pfx|=PFX_REX;
-  DisP->REX=0x4F;
-  code=DisP->RealCmd[1];
-  DisP->REX|=((code>>7)&0x01)<<2; /* make R */
-  DisP->REX^=0x0F;                /* complenent it */
-  DisP->VEX_m = 0x01; /* Fake 0Fh opcode*/
-  DisP->VEX_vlp=code&0x7F;
+  DisP.pfx|=PFX_VEX;
+  DisP.pfx|=PFX_REX;
+  DisP.REX=0x4F;
+  code=DisP.RealCmd[1];
+  DisP.REX|=((code>>7)&0x01)<<2; /* make R */
+  DisP.REX^=0x0F;                /* complenent it */
+  DisP.VEX_m = 0x01; /* Fake 0Fh opcode*/
+  DisP.VEX_vlp=code&0x7F;
   parse_VEX_pp(DisP);
 }
 
-void ix86_Disassembler::parse_XOP_8F(ix86Param* DisP) {
+void ix86_Disassembler::parse_XOP_8F(ix86Param& DisP) const {
     parse_VEX_C4(DisP);
-    DisP->pfx|=PFX_XOP;
-    DisP->XOP_m = DisP->VEX_m;
-    DisP->VEX_m = 0x01; /* Fake 0Fh opcode*/
+    DisP.pfx|=PFX_XOP;
+    DisP.XOP_m = DisP.VEX_m;
+    DisP.VEX_m = 0x01; /* Fake 0Fh opcode*/
 }
 
 DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
@@ -5631,7 +5631,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
  */
  if(flags & __DISF_GETTYPE)
  {
-   ix86_gettype(&Ret,&DisP);
+   ix86_gettype(&Ret,DisP);
    goto Bye;
  }
 
@@ -5691,7 +5691,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
    case 0x4F: if(x86_Bitness == DAB_USE64 && !(DisP.pfx&PFX_REX))
 	      {
 		has_rex=1;
-		code=parse_REX(code,&DisP);
+		code=parse_REX(code,DisP);
 		up++;
 		goto RepeateByPrefix;
 	      }
@@ -5753,7 +5753,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
 		if(x86_Bitness == DAB_USE64) has_xop++;
 		else if((DisP.RealCmd[1]&0xC0)==0xC0) has_xop++;
 		if(has_xop) {
-		    parse_XOP_8F(&DisP);
+		    parse_XOP_8F(DisP);
 		    DisP.CodeAddress+=2;
 		    up+=2;
 		    DisP.RealCmd = &DisP.RealCmd[2];
@@ -5764,7 +5764,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
 		if(x86_Bitness == DAB_USE64) has_vex++;
 		else if((DisP.RealCmd[1]&0xC0)==0xC0) has_vex++;
 		if(has_vex) {
-		    parse_VEX_C4(&DisP);
+		    parse_VEX_C4(DisP);
 		    DisP.CodeAddress+=2;
 		    up+=2;
 		    DisP.RealCmd = &DisP.RealCmd[2];
@@ -5775,7 +5775,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
 		if(x86_Bitness == DAB_USE64) has_vex++;
 		else if((DisP.RealCmd[1]&0xC0)==0xC0) has_vex++;
 		if(has_vex) {
-		    parse_VEX_C5(&DisP);
+		    parse_VEX_C5(DisP);
 		    DisP.CodeAddress++;
 		    up++;
 		    DisP.RealCmd = &DisP.RealCmd[1];
@@ -5843,7 +5843,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
     else
     if((DisP.pfx&PFX_VEX) && DisP.VEX_m==0x03) ecode = 0x3A;
 
-    SSE2_ext=ix86_prepare_flags(SSE2_ext,&DisP,&ecode,&up);
+    SSE2_ext=ix86_prepare_flags(SSE2_ext,DisP,&ecode,&up);
 
     if((DisP.pfx&PFX_VEX) && DisP.VEX_m>1) {
 	DisP.RealCmd=&DisP.RealCmd[-1];
@@ -5874,7 +5874,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
 	mthd=((x86_Bitness==DAB_USE64)?SSE2_ext[ecode].method64:SSE2_ext[ecode].method);
 	if(mthd) {
 		TabSpace(Ret.str,TAB_POS);
-		(this->*mthd)(Ret.str,&DisP);
+		(this->*mthd)(Ret.str,DisP);
 	}
 	goto ExitDisAsm;
     }
@@ -5890,13 +5890,13 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
 	ix86_method mtd = _this->method;
 	TabSpace(Ret.str,TAB_POS);
 	DisP.insn_flags = _this->flags64;
-	(this->*mtd)(Ret.str,&DisP);
+	(this->*mtd)(Ret.str,DisP);
     }
     else if(DisP.XOP_m==0x09 &&_this->method64) {
 	ix86_method mtd = _this->method64;
 	TabSpace(Ret.str,TAB_POS);
 	DisP.insn_flags = _this->pro_clone;
-	(this->*mtd)(Ret.str,&DisP);
+	(this->*mtd)(Ret.str,DisP);
     }
  }
  else {
@@ -5924,7 +5924,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
 	ix86_method mtd = ix86_table[code].method64;
 	DisP.insn_flags = ix86_table[code].flags64;
 	TabSpace(Ret.str,TAB_POS);
-	(this->*mtd)(Ret.str,&DisP);
+	(this->*mtd)(Ret.str,DisP);
    }
  }
  else
@@ -5933,7 +5933,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
 	ix86_method mtd = ix86_table[code].method;
 	DisP.insn_flags = ix86_table[code].pro_clone;
 	TabSpace(Ret.str,TAB_POS);
-	(this->*mtd)(Ret.str,&DisP);
+	(this->*mtd)(Ret.str,DisP);
  }
  /** Special case for jmp call ret modify table name */
  switch(code)
@@ -6244,8 +6244,8 @@ bool ix86_Disassembler::action_F3()
   return false;
 }
 
-int ix86_Disassembler::max_insn_len() { return MAX_IX86_INSN_LEN; }
-int ix86_Disassembler::get_bitness() { return BITNESS; }
+int ix86_Disassembler::max_insn_len() const { return MAX_IX86_INSN_LEN; }
+int ix86_Disassembler::get_bitness() const { return BITNESS; }
 char ix86_Disassembler::clone_short_name(unsigned long clone) { if(x86_Bitness == DAB_USE64) return 'a'; else return ix86CloneSNames[((clone&IX86_CLONEMASK)>>8)&0x07]; }
 
 /*

@@ -47,7 +47,7 @@ namespace	usr {
 	    virtual __filesize_t	action_F1();
 	    virtual __filesize_t	action_F3();
 
-	    virtual __filesize_t	show_header();
+	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
 	private:
@@ -60,7 +60,7 @@ namespace	usr {
 static const char* txt[]={ "ArcHlp", "", "ModLst", "", "", "", "", "", "", "" };
 const char* Arch_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-__filesize_t Arch_Parser::show_header()
+__filesize_t Arch_Parser::show_header() const
 {
   __filesize_t fpos;
   unsigned evt;

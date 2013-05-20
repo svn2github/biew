@@ -190,7 +190,7 @@ typedef unsigned char * MBuffer;
 	    void			accept_actions();
 	    void			fill_prev_asm_page(__filesize_t bound,unsigned predist);
 	    void			prepare_asm_lines(int keycode,__filesize_t cfpos);
-	    bool			def_asm_action(int _lastbyte,int start);
+	    bool			def_asm_action(int _lastbyte,int start) const;
 	    void			disasm_screen(TWindow* ewnd,__filesize_t cp,__filesize_t flen,int st,int stop,int start);
 	    int				full_asm_edit(TWindow * ewnd);
 
@@ -300,13 +300,13 @@ typedef unsigned char * MBuffer;
 	    virtual AsmRet	assembler(const char *str);
 
 	    virtual void	show_short_help() const = 0; /**< displays short help */
-	    virtual int		max_insn_len() = 0; /**< Max length of 1 disasm instruction */
+	    virtual int		max_insn_len() const = 0; /**< Max length of 1 disasm instruction */
 	    virtual ColorAttr	get_insn_color(unsigned long clone) { UNUSED(clone); return browser_cset.main; } /**< returns color of instruction */
 	    virtual ColorAttr	get_opcode_color(unsigned long clone) { UNUSED(clone); return disasm_cset.opcodes; } /**< returns color of instruction */
 	    virtual ColorAttr	get_alt_insn_color(unsigned long clone) { return get_insn_color(clone); } /**< returns color of instruction */
 	    virtual ColorAttr	get_alt_opcode_color(unsigned long clone) { return get_opcode_color(clone); } /**< returns color of instruction */
 
-	    virtual int		get_bitness() = 0;  /**< returns currently used bitness */
+	    virtual int		get_bitness() const = 0;  /**< returns currently used bitness */
 	    virtual char	clone_short_name(unsigned long clone) = 0; /**< returns short clone name of instruction */
 	    virtual void	read_ini(Ini_Profile&) {}  /**< reads settings of plugin from .ini file */
 	    virtual void	save_ini(Ini_Profile&) {}  /**< stores settings of plugin into .ini file */

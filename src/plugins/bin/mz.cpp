@@ -38,15 +38,8 @@ namespace	usr {
 static const char* txt[]={"MZHelp","","","","","","","","",""};
 const char* MZ_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-__filesize_t MZ_Parser::va2pa(__filesize_t va)
-{
-  return va >= HeadSize ? va + HeadSize : 0L;
-}
-
-__filesize_t MZ_Parser::pa2va(__filesize_t pa)
-{
-  return pa >= HeadSize ? pa - HeadSize : 0L;
-}
+__filesize_t MZ_Parser::va2pa(__filesize_t va) const { return va >= HeadSize ? va + HeadSize : 0L; }
+__filesize_t MZ_Parser::pa2va(__filesize_t pa) const { return pa >= HeadSize ? pa - HeadSize : 0L; }
 
 std::string MZ_Parser::QueryAddInfo( unsigned char *memmap ) const
 {
@@ -104,7 +97,7 @@ std::string MZ_Parser::QueryAddInfo() const
     return "";
 }
 
-__filesize_t MZ_Parser::show_header()
+__filesize_t MZ_Parser::show_header() const
 {
     unsigned keycode;
     TWindow * hwnd;

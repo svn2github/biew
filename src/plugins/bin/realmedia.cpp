@@ -40,7 +40,7 @@ namespace	usr {
 
 	    virtual const char*		prompt(unsigned idx) const;
 
-	    virtual __filesize_t	show_header();
+	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 	private:
 	    binary_stream&		main_handle;
@@ -49,7 +49,7 @@ namespace	usr {
 static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
 const char* RM_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-__filesize_t RM_Parser::show_header()
+__filesize_t RM_Parser::show_header() const
 {
     beye_context().ErrMessageBox("Not implemented yet!","RM format");
     return beye_context().tell();

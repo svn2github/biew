@@ -76,12 +76,12 @@ typedef struct __attribute__((__packed__))
 
 	    virtual const char*		prompt(unsigned idx) const;
 
-	    virtual __filesize_t	show_header();
+	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 
 	    static const char*		wtag_find_name(unsigned short wtag);
 	private:
-	    __filesize_t		wav_find_chunk(__filesize_t off,unsigned long id);
+	    __filesize_t		wav_find_chunk(__filesize_t off,unsigned long id) const;
 
 	    binary_stream&		main_handle;
 	    udn&			_udn;

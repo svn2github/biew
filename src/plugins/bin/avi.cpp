@@ -80,7 +80,7 @@ struct AVIStreamHeader {
 	    virtual __filesize_t	action_F2();
 	    virtual __filesize_t	action_F3();
 
-	    virtual __filesize_t	show_header();
+	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 	private:
 	    __filesize_t		avi_find_chunk(__filesize_t off,unsigned long id) const;
@@ -148,7 +148,7 @@ __filesize_t AVI_Parser::avi_find_chunk(__filesize_t off,unsigned long id) const
     return -1;
 }
 
-__filesize_t AVI_Parser::show_header()
+__filesize_t AVI_Parser::show_header() const
 {
  unsigned keycode;
  TWindow * hwnd;

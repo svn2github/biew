@@ -145,7 +145,7 @@ void ARM_Disassembler::show_short_help() const
  bhelp.close();
 }
 
-int ARM_Disassembler::max_insn_len() { return 8; }
+int ARM_Disassembler::max_insn_len() const { return 8; }
 ColorAttr ARM_Disassembler::get_insn_color( unsigned long clone )
 {
   if((clone & ARM_XSCALE)==ARM_XSCALE) return disasm_cset.engine[2].engine;
@@ -156,7 +156,7 @@ ColorAttr ARM_Disassembler::get_insn_color( unsigned long clone )
 }
 ColorAttr ARM_Disassembler::get_opcode_color( unsigned long clone ) { return get_insn_color(clone); }
 
-int ARM_Disassembler::get_bitness() { return armBitness; }
+int ARM_Disassembler::get_bitness() const { return armBitness; }
 char ARM_Disassembler::clone_short_name( unsigned long clone )
 {
   UNUSED(clone);

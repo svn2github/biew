@@ -41,11 +41,11 @@ namespace	usr {
 	    virtual const char*		prompt(unsigned idx) const;
 	    virtual __filesize_t	action_F1();
 
-	    virtual __filesize_t	show_header();
+	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
-	    virtual __filesize_t	va2pa(__filesize_t va);
-	    virtual __filesize_t	pa2va(__filesize_t pa);
+	    virtual __filesize_t	va2pa(__filesize_t va) const;
+	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 	private:
 	    DOSDRIVER		drv;
 	    binary_stream&	main_handle;
@@ -54,7 +54,7 @@ namespace	usr {
 static const char* txt[]={ "SysHlp", "", "", "", "", "", "", "", "", "" };
 const char* DosSys_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-__filesize_t DosSys_Parser::show_header()
+__filesize_t DosSys_Parser::show_header() const
 {
  int keycode;
  TWindow *hwnd;
@@ -134,15 +134,8 @@ __filesize_t DosSys_Parser::action_F1()
   return beye_context().tell();
 }
 
-__filesize_t DosSys_Parser::va2pa(__filesize_t va)
-{
-  return va;
-}
-
-__filesize_t DosSys_Parser::pa2va(__filesize_t pa)
-{
-  return pa;
-}
+__filesize_t DosSys_Parser::va2pa(__filesize_t va) const { return va; }
+__filesize_t DosSys_Parser::pa2va(__filesize_t pa) const { return pa; }
 
 static bool probe(binary_stream& main_handle) {
   unsigned char id[4];

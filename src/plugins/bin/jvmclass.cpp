@@ -97,13 +97,13 @@ typedef struct ClassFile_s
 	    virtual __filesize_t	action_F8();
 	    virtual __filesize_t	action_F10();
 
-	    virtual __filesize_t	show_header();
+	    virtual __filesize_t	show_header() const;
 	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
 	    virtual int			query_platform() const;
 	    virtual int			query_bitness(__filesize_t) const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
-	    virtual __filesize_t	va2pa(__filesize_t va);
-	    virtual __filesize_t	pa2va(__filesize_t pa);
+	    virtual __filesize_t	va2pa(__filesize_t va) const;
+	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 	    virtual __filesize_t	get_public_symbol(std::string& str,unsigned& _class,
 							    __filesize_t pa,bool as_prev);
 	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
@@ -663,7 +663,7 @@ void JVM_Parser::decode_acc_flags(unsigned flags, char *str) const
     strcat(str," ");
 }
 
-__filesize_t JVM_Parser::show_header()
+__filesize_t JVM_Parser::show_header() const
 {
     __filesize_t entry;
     TWindow * hwnd;
@@ -710,15 +710,8 @@ __filesize_t JVM_Parser::show_header()
     return entry;
 }
 
-__filesize_t JVM_Parser::va2pa(__filesize_t va)
-{
-  return  va + jvm_header.code_offset;
-}
-
-__filesize_t JVM_Parser::pa2va(__filesize_t pa)
-{
-  return pa >= jvm_header.code_offset ? pa - jvm_header.code_offset : 0L;
-}
+__filesize_t JVM_Parser::va2pa(__filesize_t va) const { return  va + jvm_header.code_offset; }
+__filesize_t JVM_Parser::pa2va(__filesize_t pa) const { return pa >= jvm_header.code_offset ? pa - jvm_header.code_offset : 0L; }
 
 bool JVM_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 {

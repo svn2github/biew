@@ -76,7 +76,7 @@ struct E32ImageHeader {
 
 	    virtual const char*		prompt(unsigned idx) const;
 
-	    virtual __filesize_t	show_header();
+	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 	private:
 	    __filesize_t		show_sis3_header();
@@ -104,7 +104,7 @@ int  SisX_Parser::query_platform() const {
  return id;
 }
 
-__filesize_t SisX_Parser::show_header()
+__filesize_t SisX_Parser::show_header() const
 {
  unsigned keycode;
  TWindow * hwnd;

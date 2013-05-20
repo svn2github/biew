@@ -28,25 +28,25 @@ using namespace	usr;
 namespace	usr {
 extern char *ix86_appstr;
 
-char*  ix86_Disassembler::SetNameTab(char * str,const char * name)
+char*  ix86_Disassembler::SetNameTab(char * str,const char * name) const
 {
  strcpy(str,name);
  TabSpace(str,TAB_POS);
  return str;
 }
 
-char*  ix86_Disassembler::SC(const char * name1,const char * name2)
+char*  ix86_Disassembler::SC(const char * name1,const char * name2) const
 {
  SetNameTab(ix86_appstr,name1);
  strcat(ix86_appstr,name2);
  return ix86_appstr;
 }
 
-char*  ix86_Disassembler::SetNameTabD(char * str,const char * name,unsigned char size,ix86Param *DisP)
+char*  ix86_Disassembler::SetNameTabD(char * str,const char * name,unsigned char size,ix86Param& DisP) const
 {
  strcpy(str,name);
  strcat(str," ");
- if(size < 7 && ((DisP->RealCmd[1] >> 6) & 0x03) != 3) strcat(str,ix86_sizes[size]);
+ if(size < 7 && ((DisP.RealCmd[1] >> 6) & 0x03) != 3) strcat(str,ix86_sizes[size]);
  TabSpace(str,TAB_POS);
  return str;
 }
@@ -54,10 +54,10 @@ char*  ix86_Disassembler::SetNameTabD(char * str,const char * name,unsigned char
 static char stx[] = "st(x)";
 #define MakeST(str,num) { stx[3] = (num)+'0'; strcat(str,stx); }
 
-char*  ix86_Disassembler::__UniFPUfunc(char * str,const char * cmd,char opsize,char direct,ix86Param *DisP)
+char*  ix86_Disassembler::__UniFPUfunc(char * str,const char * cmd,char opsize,char direct,ix86Param& DisP) const
 {
- char mod = ( DisP->RealCmd[1] & 0xC0 ) >> 6;
- char reg = DisP->RealCmd[1] & 0x07;
+ char mod = ( DisP.RealCmd[1] & 0xC0 ) >> 6;
+ char reg = DisP.RealCmd[1] & 0x07;
  char *modrm;
  modrm = ix86_getModRM(true,mod,reg,DisP);
  SetNameTabD(str,cmd,opsize,DisP);
@@ -69,10 +69,10 @@ char*  ix86_Disassembler::__UniFPUfunc(char * str,const char * cmd,char opsize,c
  return str;
 }
 
-char*  ix86_Disassembler::__MemFPUfunc(char * str,const char * cmd,char opsize,ix86Param *DisP)
+char*  ix86_Disassembler::__MemFPUfunc(char * str,const char * cmd,char opsize,ix86Param& DisP) const
 {
- char mod = ( DisP->RealCmd[1] & 0xC0 ) >> 6;
- char reg = DisP->RealCmd[1] & 0x07;
+ char mod = ( DisP.RealCmd[1] & 0xC0 ) >> 6;
+ char reg = DisP.RealCmd[1] & 0x07;
  char *modrm;
  modrm = ix86_getModRM(true,mod,reg,DisP);
  SetNameTabD(str,cmd,opsize,DisP);
@@ -80,52 +80,52 @@ char*  ix86_Disassembler::__MemFPUfunc(char * str,const char * cmd,char opsize,i
  return str;
 }
 
-char*  ix86_Disassembler::FPUmem(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUmem(char * str,const char * cmd,ix86Param& DisP) const
 {
   return __MemFPUfunc(str,cmd,DUMMY_PTR,DisP);
 }
 
-char*  ix86_Disassembler::FPUmem64mem32(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUmem64mem32(char * str,const char * cmd,ix86Param& DisP) const
 {
- return __UniFPUfunc(str,cmd,DisP->RealCmd[0] & 0x04 ? QWORD_PTR : DWORD_PTR,0,DisP);
+ return __UniFPUfunc(str,cmd,DisP.RealCmd[0] & 0x04 ? QWORD_PTR : DWORD_PTR,0,DisP);
 }
 
-char*  ix86_Disassembler::FPUmem64mem32st(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUmem64mem32st(char * str,const char * cmd,ix86Param& DisP) const
 {
- return __UniFPUfunc(str,cmd,DisP->RealCmd[0] & 0x04 ? QWORD_PTR : DWORD_PTR,1,DisP);
+ return __UniFPUfunc(str,cmd,DisP.RealCmd[0] & 0x04 ? QWORD_PTR : DWORD_PTR,1,DisP);
 }
 
-char*  ix86_Disassembler::FPUint16int32(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUint16int32(char * str,const char * cmd,ix86Param& DisP) const
 {
- return __UniFPUfunc(str,cmd,DisP->RealCmd[0] & 0x04 ? WORD_PTR : DWORD_PTR,0,DisP);
+ return __UniFPUfunc(str,cmd,DisP.RealCmd[0] & 0x04 ? WORD_PTR : DWORD_PTR,0,DisP);
 }
 
-char*  ix86_Disassembler::FPUint16int32st(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUint16int32st(char * str,const char * cmd,ix86Param& DisP) const
 {
- return __UniFPUfunc(str,cmd,DisP->RealCmd[0] & 0x04 ? WORD_PTR : DWORD_PTR,1,DisP);
+ return __UniFPUfunc(str,cmd,DisP.RealCmd[0] & 0x04 ? WORD_PTR : DWORD_PTR,1,DisP);
 }
 
-char*  ix86_Disassembler::FPUint64(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUint64(char * str,const char * cmd,ix86Param& DisP) const
 {
  return __UniFPUfunc(str,cmd,QWORD_PTR,0,DisP);
 }
 
-char*  ix86_Disassembler::FPUint64st(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUint64st(char * str,const char * cmd,ix86Param& DisP) const
 {
  return __UniFPUfunc(str,cmd,QWORD_PTR,1,DisP);
 }
 
-char*  ix86_Disassembler::FPUstint32(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUstint32(char * str,const char * cmd,ix86Param& DisP) const
 {
  return __UniFPUfunc(str,cmd,DWORD_PTR,0,DisP);
 }
 
-char*  ix86_Disassembler::FPUld(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUld(char * str,const char * cmd,ix86Param& DisP) const
 {
  return __UniFPUfunc(str,cmd,DUMMY_PTR,0,DisP);
 }
 
-char*  ix86_Disassembler::FPUstisti(char * str,const char * cmd,char code1,char code2)
+char*  ix86_Disassembler::FPUstisti(char * str,const char * cmd,char code1,char code2) const
 {
  SetNameTab(str,cmd);
  MakeST(str,code1 & 0x07);
@@ -134,49 +134,49 @@ char*  ix86_Disassembler::FPUstisti(char * str,const char * cmd,char code1,char 
  return str;
 }
 
-char*  ix86_Disassembler::FPUst0sti(char * str,const char * cmd,char code1)
+char*  ix86_Disassembler::FPUst0sti(char * str,const char * cmd,char code1) const
 {
  return FPUstisti(str,cmd,0,code1);
 }
 
-char*  ix86_Disassembler::FPUstist0(char * str,const char * cmd,char code1)
+char*  ix86_Disassembler::FPUstist0(char * str,const char * cmd,char code1) const
 {
  return FPUstisti(str,cmd,code1,0);
 }
 
-char*  ix86_Disassembler::FPUldtword(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUldtword(char * str,const char * cmd,ix86Param& DisP) const
 {
  return __UniFPUfunc(str,cmd,TWORD_PTR,0,DisP);
 }
 
-char*  ix86_Disassembler::FPUsttword(char * str,const char * cmd,ix86Param *DisP)
+char*  ix86_Disassembler::FPUsttword(char * str,const char * cmd,ix86Param& DisP) const
 {
   return __UniFPUfunc(str,cmd,TWORD_PTR,1,DisP);
 }
 
-char*  ix86_Disassembler::FPUcmdsti(char * str,const char * name,char code)
+char*  ix86_Disassembler::FPUcmdsti(char * str,const char * name,char code) const
 {
   SetNameTab(str,name);
   MakeST(str,code & 0x07);
   return str;
 }
 
-char*  ix86_Disassembler::FPUcmdst0(char * str,const char * name)
+char*  ix86_Disassembler::FPUcmdst0(char * str,const char * name) const
 {
   return FPUcmdsti(str,name,0);
 }
 
-char*  ix86_Disassembler::FPUcmdsti_2(char * str,const char * name1,const char * name2,char code)
+char*  ix86_Disassembler::FPUcmdsti_2(char * str,const char * name1,const char * name2,char code) const
 {
   return FPUcmdsti(str,code & 0x08 ? name2 : name1,code);
 }
 
-char*  ix86_Disassembler::FPUst0sti_2(char * str,const char * name1,const char * name2,char code)
+char*  ix86_Disassembler::FPUst0sti_2(char * str,const char * name1,const char * name2,char code) const
 {
  return FPUst0sti(str,code & 0x08 ? name2 : name1,code);
 }
 
-char*  ix86_Disassembler::FPUstist0_2(char * str,const char * name1,const char * name2,char code)
+char*  ix86_Disassembler::FPUstist0_2(char * str,const char * name1,const char * name2,char code) const
 {
  return FPUstist0(str,code & 0x08 ? name2 : name1,code);
 }
@@ -265,13 +265,13 @@ const char* ix86_Disassembler::FCMOVc[] = { "fcmovl", "fcmove", "fcmovle", "fcmo
 const char* ix86_Disassembler::FCMOVnc[] = { "fcmovge", "fcmovne", "fcmovg", "fcmovnu", "fcmov?", "fucomi", "fcomi", "f?comi" };
 const char* ix86_Disassembler::FxCOMIP[] = { "f???", "f???", "f???", "f???", "f???", "fucomip", "fcomip", "f???" };
 
-void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param *DisP)
+void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param& DisP) const
 {
- unsigned char code = DisP->RealCmd[0],code1 = DisP->RealCmd[1];
+ unsigned char code = DisP.RealCmd[0],code1 = DisP.RealCmd[1];
  unsigned char rm = ( code1 & 0x38 ) >> 3;
  FPUroutine mtd;
- DisP->codelen = 2;
- DisP->pro_clone |= INSN_FPU;
+ DisP.codelen = 2;
+ DisP.pro_clone |= INSN_FPU;
  SetNameTab(str,"f???");
  switch(code)
  {
@@ -292,8 +292,8 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param *DisP)
 		else    FPUcmdst0(str,D9Fx[code1 & 0x0F]);
 		if(code1 == 0xF5 || code1 == 0xFB || code1 == 0xFE || code1 == 0xFF)
 		if(x86_Bitness != DAB_USE64)
-			DisP->pro_clone &= ~IX86_CPUMASK;
-			DisP->pro_clone |= IX86_CPU386|INSN_FPU;
+			DisP.pro_clone &= ~IX86_CPUMASK;
+			DisP.pro_clone |= IX86_CPU386|INSN_FPU;
 	      }
 	      else
 		if(code1 == 0xD0) strcpy(str,"fnop");
@@ -307,15 +307,15 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param *DisP)
    case 0xDA :
 	    if(code1 == 0xE9)
 	    {
-		if(x86_Bitness != DAB_USE64) DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
-	      DisP->pro_clone |= IX86_CPU386|INSN_FPU;
+		if(x86_Bitness != DAB_USE64) DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
+	      DisP.pro_clone |= IX86_CPU386|INSN_FPU;
 	      strcpy(str,SC("fucompp","st(1)"));
 	    }
 	    else
 	      if((code1 & 0xC0) == 0xC0)
 	      {
-		if(x86_Bitness != DAB_USE64) DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
-		DisP->pro_clone |= IX86_CPU686|INSN_FPU;
+		if(x86_Bitness != DAB_USE64) DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
+		DisP.pro_clone |= IX86_CPU686|INSN_FPU;
 		FPUst0sti(str,FCMOVc[(code1 >> 3) & 0x07],code1);
 	      }
 	      else
@@ -328,8 +328,8 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param *DisP)
 		if(x86_Bitness != DAB_USE64)
 		{
 			strcpy(str,SC("frint2","st(0)"));
-			DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP|IX86_CLONEMASK);
-			DisP->pro_clone |= IX86_CPU486|INSN_FPU|IX86_CYRIX;
+			DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP|IX86_CLONEMASK);
+			DisP.pro_clone |= IX86_CPU486|INSN_FPU|IX86_CYRIX;
 		}
 		else strcpy(str,"f???");
 		break;
@@ -342,8 +342,8 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param *DisP)
 		  strcpy(str,DBEx[_index]);
 		  if(x86_Bitness != DAB_USE64)
 		  if(_index == 4) {
-		    DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
-		    DisP->pro_clone |= IX86_CPU286|INSN_FPU;
+		    DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
+		    DisP.pro_clone |= IX86_CPU286|INSN_FPU;
 		  }
 	       }
 	       else
@@ -355,8 +355,8 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param *DisP)
 	       {
 		  XC0:
 		  if(x86_Bitness != DAB_USE64)
-		  DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
-		  DisP->pro_clone |= IX86_CPU386|INSN_FPU;
+		  DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
+		  DisP.pro_clone |= IX86_CPU386|INSN_FPU;
 		  FPUst0sti(str,FCMOVnc[(code1 >> 3) & 0x07],code1);
 	       }
 	       else
@@ -366,8 +366,8 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param *DisP)
 		 if(rm==1
 		  && x86_Bitness != DAB_USE64
 		 ) {
-		    DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
-		    DisP->pro_clone |= IX86_P5|INSN_FPU;
+		    DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
+		    DisP.pro_clone |= IX86_P5|INSN_FPU;
 		 }
 	       }
 	    }
@@ -387,8 +387,8 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param *DisP)
 		if(x86_Bitness != DAB_USE64)
 		{
 			strcpy(str,SC("frichop","st(0)"));
-			DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP|IX86_CLONEMASK);
-			DisP->pro_clone |= IX86_CPU486|INSN_FPU|IX86_CYRIX;
+			DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP|IX86_CLONEMASK);
+			DisP.pro_clone |= IX86_CPU486|INSN_FPU|IX86_CYRIX;
 		}
 		else strcpy(str, "f???");
 		break;
@@ -400,8 +400,8 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param *DisP)
 		  if((code1 & 0xF0) == 0xE0)
 		  {
 		    if(x86_Bitness != DAB_USE64)
-		    DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
-		    DisP->pro_clone |= IX86_CPU386|INSN_FPU;
+		    DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
+		    DisP.pro_clone |= IX86_CPU386|INSN_FPU;
 		    FPUcmdsti_2(str,"fucom","fucomp",code1);
 		  }
 		  else
@@ -411,8 +411,8 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param *DisP)
 		    if(rm==1
 		  && x86_Bitness != DAB_USE64
 		    ) {
-			DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
-			DisP->pro_clone |= IX86_P5|INSN_FPU;
+			DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
+			DisP.pro_clone |= IX86_P5|INSN_FPU;
 		    }
 		  }
 	      break;
@@ -434,20 +434,20 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param *DisP)
 			 break;
 	     case 0xE1:  strcpy(str,SC("fnstdw","ax"));
 			 if(x86_Bitness != DAB_USE64)
-			 DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
-			 DisP->pro_clone |= IX86_CPU386|INSN_FPU;
+			 DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
+			 DisP.pro_clone |= IX86_CPU386|INSN_FPU;
 			 break;
 	     case 0xE2:  strcpy(str,SC("fnstsg","ax"));
 			 if(x86_Bitness != DAB_USE64)
-			 DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
-			 DisP->pro_clone |= IX86_CPU386|INSN_FPU;
+			 DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
+			 DisP.pro_clone |= IX86_CPU386|INSN_FPU;
 			 break;
 	     case 0xFC:
 			 if(x86_Bitness != DAB_USE64)
 			 {
 			 strcpy(str,SC("frinear","st(0)"));
-			 DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP|IX86_CLONEMASK);
-			 DisP->pro_clone |= IX86_CPU486|INSN_FPU|IX86_CYRIX;
+			 DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP|IX86_CLONEMASK);
+			 DisP.pro_clone |= IX86_CPU486|INSN_FPU|IX86_CYRIX;
 			 }
 			 else strcpy(str,"f???");
 			 break;
@@ -456,16 +456,16 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param *DisP)
 		if((code1 & 0xE0) == 0xE0)
 		{
 		  if(x86_Bitness != DAB_USE64)
-		  DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
-		  DisP->pro_clone |= IX86_CPU686|INSN_FPU;
+		  DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
+		  DisP.pro_clone |= IX86_CPU686|INSN_FPU;
 		  FPUst0sti(str,FxCOMIP[(code1 >> 3) & 0x07],code1);
 		}
 		else
 		if((code1 & 0xC0) == 0xC0)
 		{
 		 if(x86_Bitness != DAB_USE64)
-		  DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
-		  DisP->pro_clone |= IX86_CPU386|INSN_FPU;
+		  DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
+		  DisP.pro_clone |= IX86_CPU386|INSN_FPU;
 		  FPUcmdsti_2(str,"ffreep","f???",code1);
 		}
 		else
@@ -475,8 +475,8 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param *DisP)
 		   if(rm==1
 		  && x86_Bitness != DAB_USE64
 		   ) {
-		    DisP->pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
-		    DisP->pro_clone |= IX86_P5|INSN_FPU;
+		    DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
+		    DisP.pro_clone |= IX86_P5|INSN_FPU;
 		   }
 		}
 	      }

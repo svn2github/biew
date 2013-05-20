@@ -43,7 +43,7 @@ namespace	usr {
 	    virtual const char*		prompt(unsigned idx) const;
 	    virtual __filesize_t	action_F1();
 
-	    virtual __filesize_t	show_header();
+	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 	    virtual int			query_bitness(__filesize_t) const;
 	    virtual int			query_endian(__filesize_t) const;
@@ -107,7 +107,7 @@ const char* AOut_Parser::aout_encode_machine(uint32_t info,unsigned* id) const
    }
 }
 
-__filesize_t AOut_Parser::show_header()
+__filesize_t AOut_Parser::show_header() const
 {
   struct external_exec aout;
   __filesize_t fpos;

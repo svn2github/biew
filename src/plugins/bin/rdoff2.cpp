@@ -39,7 +39,7 @@ namespace	usr {
 	    virtual const char*		prompt(unsigned idx) const;
 	    virtual __filesize_t	action_F1();
 
-	    virtual __filesize_t	show_header();
+	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 	private:
 	    binary_stream&		main_handle;
@@ -48,7 +48,7 @@ namespace	usr {
 static const char* txt[]={"RdHelp","","","","","","","","",""};
 const char* RDOff2_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-__filesize_t RDOff2_Parser::show_header()
+__filesize_t RDOff2_Parser::show_header() const
 {
   int endian;
   __filesize_t fpos;

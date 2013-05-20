@@ -39,7 +39,7 @@ namespace	usr {
 
 	    virtual const char*		prompt(unsigned idx) const;
 
-	    virtual __filesize_t	show_header();
+	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 	private:
 	    binary_stream&	main_handle;
@@ -56,7 +56,7 @@ BMP_Parser::BMP_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
 BMP_Parser::~BMP_Parser() {}
 int BMP_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-__filesize_t BMP_Parser::show_header()
+__filesize_t BMP_Parser::show_header() const
 {
  unsigned keycode;
  TWindow * hwnd;

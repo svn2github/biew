@@ -58,13 +58,13 @@ namespace	usr {
 	    virtual __filesize_t	action_F3();
 	    virtual __filesize_t	action_F5();
 
-	    virtual __filesize_t	show_header();
+	    virtual __filesize_t	show_header() const;
 	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
 	    virtual int			query_platform() const;
 	    virtual int			query_bitness(__filesize_t) const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
-	    virtual __filesize_t	va2pa(__filesize_t va);
-	    virtual __filesize_t	pa2va(__filesize_t pa);
+	    virtual __filesize_t	va2pa(__filesize_t va) const;
+	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 	    virtual __filesize_t	get_public_symbol(std::string& str,unsigned& _class,
 							    __filesize_t pa,bool as_prev);
 	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
@@ -312,7 +312,7 @@ exit:
     return fpos;
 }
 
-__filesize_t RDOff_Parser::show_header()
+__filesize_t RDOff_Parser::show_header() const
 {
   int endian;
   __filesize_t fpos,entry;
@@ -324,10 +324,7 @@ __filesize_t RDOff_Parser::show_header()
   hs_len = main_handle.read(type_dword);
   main_handle.seek(hs_len,binary_stream::Seek_Cur);
   cs_len = main_handle.read(type_dword);
-  main_handle.seek(cs_len,binary_stream::Seek_Cur);
-  ds_len = main_handle.read(type_dword);
-  cs_start = hs_len + 14;
-  ds_start = cs_start + cs_len + 4;
+
   w = CrtDlgWndnls(endian == 0x01 ? " RDOFF big endian " : " RDOFF little endian ",54,6);
   w->goto_xy(1,1);
   w->printf(
@@ -744,15 +741,8 @@ unsigned RDOff_Parser::get_object_attribute(__filesize_t pa,std::string& name,
   return ret;
 }
 
-__filesize_t RDOff_Parser::va2pa(__filesize_t va)
-{
-  return va + cs_start;
-}
-
-__filesize_t RDOff_Parser::pa2va(__filesize_t pa)
-{
-  return pa > cs_start ? pa - cs_start : 0L;
-}
+__filesize_t RDOff_Parser::va2pa(__filesize_t va) const { return va + cs_start; }
+__filesize_t RDOff_Parser::pa2va(__filesize_t pa) const { return pa > cs_start ? pa - cs_start : 0L; }
 
 bool RDOff_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 {

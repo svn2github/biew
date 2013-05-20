@@ -291,8 +291,8 @@ typedef struct tagLXResource
 	    virtual int			query_platform() const;
 	    virtual int			query_bitness(__filesize_t) const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
-	    virtual __filesize_t	va2pa(__filesize_t va);
-	    virtual __filesize_t	pa2va(__filesize_t pa);
+	    virtual __filesize_t	va2pa(__filesize_t va) const;
+	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 	protected:
 	    binary_stream*		lx_cache;
 	    virtual __filesize_t	CalcEntryPoint(unsigned long objnum,__filesize_t _offset) const;

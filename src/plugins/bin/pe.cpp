@@ -131,15 +131,13 @@ namespace	usr {
 	    virtual int			query_platform() const;
 	    virtual int			query_bitness(__filesize_t) const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
-	    virtual __filesize_t	va2pa(__filesize_t va);
-	    virtual __filesize_t	pa2va(__filesize_t pa);
+	    virtual __filesize_t	va2pa(__filesize_t va) const;
+	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 	    virtual __filesize_t	get_public_symbol(std::string& str,unsigned& _class,
 							    __filesize_t pa,bool as_prev);
 	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
 							__filesize_t& start,__filesize_t& end,int& _class,int& bitness);
 	private:
-	    __filesize_t		_va2pa(__filesize_t va) const;
-	    __filesize_t		_pa2va(__filesize_t pa) const;
 	    std::string			pe_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
 	    bool			BuildReferStrPE(std::string& str,const RELOC_PE& rpe,int flags) const;
 	    std::set<RELOC_PE>::const_iterator	__found_RPE(__filesize_t laddr) const;
@@ -668,7 +666,7 @@ std::vector<std::string> PE_Parser:: __ReadImpContPE(binary_stream& handle,size_
     int cond;
     __filesize_t rphys;
     handle.seek(addr_shift_pe,binary_stream::Seek_Set);
-    VA = _pa2va(addr_shift_pe);
+    VA = pa2va(addr_shift_pe);
     for(i = 0;i < nnames;i++) {
 	char stmp[300];
 	bool is_eof;
@@ -1141,13 +1139,13 @@ bool PE_Parser::BuildReferStrPE(std::string& str,const RELOC_PE& rpe,int flags) 
 		  pe_how = "((low16)";
 		  break;
 	  case 3: /** HIGHLOW */
-		  point_to = _va2pa(value);
+		  point_to = va2pa(value);
 		  pe_how = "((off32)";
 		  break;
 	  case 4: /** HIGHADJUST */
 		  handle.seek(value,binary_stream::Seek_Set);
 		  value = handle.read(type_dword);
-		  point_to = _va2pa(value);
+		  point_to = va2pa(value);
 		  pe_how = "((full32)";
 		  break;
 	  case 5: /** MIPS JUMP ADDR */
@@ -1305,35 +1303,30 @@ bool PE_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
   return bret;
 }
 
-__filesize_t PE_Parser::_va2pa(__filesize_t va) const
+__filesize_t PE_Parser::va2pa(__filesize_t va) const
 {
-  return va >= reader->header().peImageBase ? RVA2Phys(va-reader->header().peImageBase) : 0L;
+    return va >= reader->header().peImageBase ? RVA2Phys(va-reader->header().peImageBase) : 0L;
 }
 
-__filesize_t PE_Parser::_pa2va(__filesize_t pa) const
+__filesize_t PE_Parser::pa2va(__filesize_t pa) const
 {
-  int i;
-  __filesize_t ret_addr;
-  main_handle().seek(0x18 + pe.peNTHdrSize + headshift(),binary_stream::Seek_Set);
-  ret_addr = 0;
-  for(i = 0;i < pe.peObjects;i++)
-  {
-    PE_OBJECT po;
-    __filesize_t obj_pa;
-    if(IsKbdTerminate() || main_handle().eof()) break;
-    main_handle().read(&po,sizeof(PE_OBJECT));
-    obj_pa = CalcPEObjectEntry(po.oPhysicalOffset);
-    if(pa >= obj_pa && pa < obj_pa + po.oPhysicalSize)
-    {
-      ret_addr = po.oRVA + (pa - obj_pa) + reader->header().peImageBase;
-      break;
+    int i;
+    __filesize_t ret_addr;
+    main_handle().seek(0x18 + pe.peNTHdrSize + headshift(),binary_stream::Seek_Set);
+    ret_addr = 0;
+    for(i = 0;i < pe.peObjects;i++) {
+	PE_OBJECT po;
+	__filesize_t obj_pa;
+	if(IsKbdTerminate() || main_handle().eof()) break;
+	main_handle().read(&po,sizeof(PE_OBJECT));
+	obj_pa = CalcPEObjectEntry(po.oPhysicalOffset);
+	if(pa >= obj_pa && pa < obj_pa + po.oPhysicalSize) {
+	    ret_addr = po.oRVA + (pa - obj_pa) + reader->header().peImageBase;
+	    break;
+	}
     }
-  }
-  return ret_addr;
+    return ret_addr;
 }
-
-__filesize_t PE_Parser::va2pa(__filesize_t va) { return _va2pa(va); }
-__filesize_t PE_Parser::pa2va(__filesize_t pa) { return _pa2va(pa); }
 
 std::string PE_Parser::pe_ReadPubName(binary_stream& b_cache,const symbolic_information& it) const
 {

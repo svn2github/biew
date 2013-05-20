@@ -40,7 +40,7 @@ namespace	usr {
 
 	    virtual const char*		prompt(unsigned idx) const;
 
-	    virtual __filesize_t	show_header();
+	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 	private:
 	    binary_stream&	main_handle;
@@ -57,7 +57,7 @@ Jpeg_Parser::Jpeg_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
 Jpeg_Parser::~Jpeg_Parser() {}
 int Jpeg_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-__filesize_t Jpeg_Parser::show_header()
+__filesize_t Jpeg_Parser::show_header() const
 {
     beye_context().ErrMessageBox("Not implemented yet!","JPEG format");
     return beye_context().tell();
