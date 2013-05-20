@@ -38,7 +38,6 @@ using namespace	usr;
 namespace	usr {
 static const char* txt[]={ "LXhelp", "Import", "ResNam", "NRsNam", "ImpNam", "Entry ", "ResTbl", "LXHead", "MapTbl", "Object" };
 const char* LX_Parser::prompt(unsigned idx) const { return txt[idx]; }
-union LX_LE LX_Parser::lxe;
 
 static const char * LXordering[] =
 {
@@ -142,7 +141,7 @@ void LX_Parser::PaintNewHeaderLX_1(TWindow& w) const
 	   ,Gebool((lxe.lx.lxModuleFlags & 0x00000004L) == 0x00000004L)
 	   ,Gebool((lxe.lx.lxModuleFlags & 0x00000010L) == 0x00000010L)
 	   ,Gebool((lxe.lx.lxModuleFlags & 0x00000020L) == 0x00000020L)
-	   ,NE_Parser::GetPMWinAPI((unsigned)(lxe.lx.lxModuleFlags))
+	   ,NE_Parser::GetPMWinAPI((unsigned)(lxe.lx.lxModuleFlags)).c_str()
 	   ,Gebool((lxe.lx.lxModuleFlags & 0x00002000L) == 0x00002000L)
 	   ,__getOSModType(((lxe.lx.lxModuleFlags & 0x00038000L) >> 15) & 0x07)
 	   ,Gebool((lxe.lx.lxModuleFlags & 0x00080000L) == 0x00080000L)
@@ -277,22 +276,22 @@ __filesize_t LX_Parser::action_F8()
     return fpos;
 }
 
-unsigned LX_Parser::LXRNamesNumItems(binary_stream& handle)
+unsigned LX_Parser::LXRNamesNumItems(binary_stream& handle) const
 {
     return NE_Parser::GetNamCountNE(handle,headshift() + lxe.lx.lxResidentNameTableOffset);
 }
 
-unsigned LX_Parser::LXNRNamesNumItems(binary_stream& handle)
+unsigned LX_Parser::LXNRNamesNumItems(binary_stream& handle) const
 {
     return NE_Parser::GetNamCountNE(handle,lxe.lx.lxNonResidentNameTableOffset);
 }
 
-std::vector<std::string> LX_Parser::LXRNamesReadItems(binary_stream& handle,size_t nnames)
+std::vector<std::string> LX_Parser::LXRNamesReadItems(binary_stream& handle,size_t nnames) const
 {
     return NE_Parser::RNamesReadItems(handle,nnames,lxe.lx.lxResidentNameTableOffset + headshift());
 }
 
-unsigned LX_Parser::LXImpNamesNumItems(binary_stream& handle)
+unsigned LX_Parser::LXImpNamesNumItems(binary_stream& handle) const
 {
   __filesize_t fpos;
   unsigned char len;
@@ -311,7 +310,7 @@ unsigned LX_Parser::LXImpNamesNumItems(binary_stream& handle)
   return count;
 }
 
-std::vector<std::string> LX_Parser::LXImpNamesReadItems(binary_stream& handle,size_t nnames)
+std::vector<std::string> LX_Parser::LXImpNamesReadItems(binary_stream& handle,size_t nnames) const
 {
     std::vector<std::string> rc;
     size_t i;
@@ -328,12 +327,12 @@ std::vector<std::string> LX_Parser::LXImpNamesReadItems(binary_stream& handle,si
     return rc;
 }
 
-std::vector<std::string> LX_Parser::LXNRNamesReadItems(binary_stream& handle,size_t nnames)
+std::vector<std::string> LX_Parser::LXNRNamesReadItems(binary_stream& handle,size_t nnames) const
 {
     return NE_Parser::RNamesReadItems(handle,nnames,lxe.lx.lxNonResidentNameTableOffset);
 }
 
-std::vector<std::string> LX_Parser::__ReadModRefNamesLX(binary_stream& handle,size_t nnames)
+std::vector<std::string> LX_Parser::__ReadModRefNamesLX(binary_stream& handle,size_t nnames) const
 {
     std::vector<std::string> rc;
     unsigned i;
@@ -410,7 +409,7 @@ void LX_Parser::ObjPaintLX(TWindow& win,const std::vector<LX_OBJECT>& names,unsi
     win.refresh_full();
 }
 
-std::vector<LX_OBJECT> LX_Parser::__ReadObjectsLX(binary_stream& handle,size_t n)
+std::vector<LX_OBJECT> LX_Parser::__ReadObjectsLX(binary_stream& handle,size_t n) const
 {
     std::vector<LX_OBJECT> rc;
     size_t i;
@@ -423,7 +422,7 @@ std::vector<LX_OBJECT> LX_Parser::__ReadObjectsLX(binary_stream& handle,size_t n
     return rc;
 }
 
-std::vector<LX_ENTRY> LX_Parser::__ReadEntriesLX(binary_stream& handle)
+std::vector<LX_ENTRY> LX_Parser::__ReadEntriesLX(binary_stream& handle) const
 {
     std::vector<LX_ENTRY> rc;
     unsigned i;
@@ -759,7 +758,7 @@ void LX_Parser::PaintEntriesLX(TWindow& win,const std::vector<LX_ENTRY>& names,u
     win.refresh_full();
 }
 
-std::vector<std::string> LX_Parser::__ReadMapTblLX(binary_stream& handle,size_t n)
+std::vector<std::string> LX_Parser::__ReadMapTblLX(binary_stream& handle,size_t n) const
 {
     std::vector<std::string> rc;
     size_t i;
@@ -1092,35 +1091,26 @@ bool LX_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 {
  /* Since this function is used in references resolving of disassembler
     it must be seriously optimized for speed. */
-  bool bret = true;
-  uint32_t res;
-  if(cfpos >= headshift() && cfpos < headshift() + sizeof(LXHEADER))
-  {
-    addr="LXH :";
-    addr+=Get4Digit(cfpos - headshift());
-  }
-  else
-  if(cfpos >= headshift() + lxe.lx.lxObjectTableOffset &&
-     cfpos <  headshift() + lxe.lx.lxObjectTableOffset + sizeof(LX_OBJECT)*lxe.lx.lxObjectCount)
-  {
-    addr="LXOD:";
-    addr+=Get4Digit(cfpos - headshift() - lxe.lx.lxObjectTableOffset);
-  }
-  else
-  if(cfpos >= headshift() + lxe.lx.lxObjectPageTableOffset &&
-     cfpos <  headshift() + lxe.lx.lxObjectPageTableOffset + sizeof(LX_MAP_TABLE)*lxe.lx.lxPageCount)
-  {
-    addr="LXPD:";
-    addr+=Get4Digit(cfpos - headshift() - lxe.lx.lxObjectPageTableOffset);
-  }
-  else
-   if((res=pa2va(cfpos))!=0)
-   {
-     addr = ".";
-     addr+=Get8Digit(res);
-   }
-   else bret = false;
-  return bret;
+    bool bret = true;
+    uint32_t res;
+    if(cfpos >= headshift() && cfpos < headshift() + sizeof(LXHEADER)) {
+	addr="LXH :";
+	addr+=Get4Digit(cfpos - headshift());
+    } else if(cfpos >= headshift() + lxe.lx.lxObjectTableOffset &&
+		cfpos <  headshift() + lxe.lx.lxObjectTableOffset + sizeof(LX_OBJECT)*lxe.lx.lxObjectCount) {
+	addr="LXOD:";
+	addr+=Get4Digit(cfpos - headshift() - lxe.lx.lxObjectTableOffset);
+    }
+    else if(cfpos >= headshift() + lxe.lx.lxObjectPageTableOffset &&
+	    cfpos <  headshift() + lxe.lx.lxObjectPageTableOffset + sizeof(LX_MAP_TABLE)*lxe.lx.lxPageCount) {
+	addr="LXPD:";
+	addr+=Get4Digit(cfpos - headshift() - lxe.lx.lxObjectPageTableOffset);
+    } else if((res=pa2va(cfpos))!=0) {
+	addr = ".";
+	addr+=Get8Digit(res);
+    }
+    else bret = false;
+    return bret;
 }
 
 int LX_Parser::query_platform() const { return DISASM_CPU_IX86; }

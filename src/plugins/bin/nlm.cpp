@@ -72,16 +72,16 @@ namespace	usr {
 	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
 							__filesize_t& start,__filesize_t& end,int& _class,int& bitness);
 	private:
-	    std::string		nlm_ReadPubName(binary_stream&b_cache,const symbolic_information& it);
+	    std::string		nlm_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
 	    void		nlm_ReadPubNameList(binary_stream& handle);
-	    int			NLMbitness(__filesize_t off);
+	    int			NLMbitness(__filesize_t off) const;
 	    bool		BuildReferStrNLM(std::string& str,const RELOC_NLM& rne,int flags);
 	    void		BuildRelocNlm();
-	    std::vector<std::string> __ReadModRefNamesNLM(binary_stream& handle,size_t nnames);
-	    std::vector<std::string> NLMNamesReadItems(binary_stream& handle,size_t nnames);
-	    __filesize_t	CalcEntryNLM(unsigned ord,bool dispmsg);
-	    std::vector<std::string>	__ReadExtRefNamesNLM(binary_stream& handle,size_t n);
-	    bool		FindPubName(std::string& buff,__filesize_t pa);
+	    std::vector<std::string> __ReadModRefNamesNLM(binary_stream& handle,size_t nnames) const;
+	    std::vector<std::string> NLMNamesReadItems(binary_stream& handle,size_t nnames) const;
+	    __filesize_t	CalcEntryNLM(unsigned ord,bool dispmsg) const;
+	    std::vector<std::string>	__ReadExtRefNamesNLM(binary_stream& handle,size_t n) const;
+	    bool		FindPubName(std::string& buff,__filesize_t pa) const;
 
 	    Nlm_Internal_Fixed_Header nlm;
 	    std::set<symbolic_information>	PubNames;
@@ -318,7 +318,7 @@ __filesize_t NLM_Parser::action_F8()
   return fpos;
 }
 
-std::vector<std::string> NLM_Parser::__ReadExtRefNamesNLM(binary_stream& handle,size_t n)
+std::vector<std::string> NLM_Parser::__ReadExtRefNamesNLM(binary_stream& handle,size_t n) const
 {
     std::vector<std::string> rc;
     size_t i;
@@ -338,7 +338,7 @@ std::vector<std::string> NLM_Parser::__ReadExtRefNamesNLM(binary_stream& handle,
     return rc;
 }
 
-__filesize_t NLM_Parser::CalcEntryNLM(unsigned ord,bool dispmsg)
+__filesize_t NLM_Parser::CalcEntryNLM(unsigned ord,bool dispmsg) const
 {
  unsigned char length;
  unsigned i;
@@ -366,7 +366,7 @@ __filesize_t NLM_Parser::CalcEntryNLM(unsigned ord,bool dispmsg)
  return ret;
 }
 
-std::vector<std::string> NLM_Parser::NLMNamesReadItems(binary_stream& handle,size_t nnames)
+std::vector<std::string> NLM_Parser::NLMNamesReadItems(binary_stream& handle,size_t nnames) const
 {
     std::vector<std::string> rc;
     unsigned char length;
@@ -401,7 +401,7 @@ exit:
     return beye_context().tell();
 }
 
-std::vector<std::string> NLM_Parser::__ReadModRefNamesNLM(binary_stream& handle,size_t nnames)
+std::vector<std::string> NLM_Parser::__ReadModRefNamesNLM(binary_stream& handle,size_t nnames) const
 {
     std::vector<std::string> rc;
     unsigned char length;
@@ -517,6 +517,7 @@ bool NLM_Parser::BuildReferStrNLM(std::string& str,const RELOC_NLM& rne,int flag
   b_cache = nlm_cache;
   b_cache->seek(rne.nameoff,binary_stream::Seek_Set);
   retrf = true;
+  if(PubNames.empty()) nlm_ReadPubNameList(*nlm_cache);
   if(rne.nameoff != 0xFFFFFFFFUL)
   {
     len = b_cache->read(type_byte);
@@ -624,7 +625,7 @@ __filesize_t NLM_Parser::action_F1()
   return beye_context().tell();
 }
 
-std::string NLM_Parser::nlm_ReadPubName(binary_stream& b_cache,const symbolic_information& it)
+std::string NLM_Parser::nlm_ReadPubName(binary_stream& b_cache,const symbolic_information& it) const
 {
     unsigned char length;
     b_cache.seek(it.nameoff,binary_stream::Seek_Set);
@@ -635,12 +636,11 @@ std::string NLM_Parser::nlm_ReadPubName(binary_stream& b_cache,const symbolic_in
     return buff;
 }
 
-bool NLM_Parser::FindPubName(std::string& buff,__filesize_t pa)
+bool NLM_Parser::FindPubName(std::string& buff,__filesize_t pa) const
 {
   symbolic_information key;
   std::set<symbolic_information>::const_iterator ret;
   key.pa = pa;
-  if(PubNames.empty()) nlm_ReadPubNameList(*nlm_cache);
   ret = PubNames.find(key);
   if(ret!=PubNames.end()) {
     buff=nlm_ReadPubName(*nlm_cache,*ret);

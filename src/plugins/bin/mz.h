@@ -16,6 +16,7 @@
 **/
 #ifndef __MZ_INC
 #define __MZ_INC
+#include <set>
 
 #include "config.h"
 #include "plugins/binary_parser.h"
@@ -42,6 +43,17 @@ namespace	usr {
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
 #endif
+    struct MZ_Reloc {
+	MZ_Reloc(const char& c):__codelen(c) {}
+
+	__filesize_t	laddr;
+
+	bool operator<(const MZ_Reloc& rhs) const { return laddr<rhs.laddr; }
+	bool operator==(const MZ_Reloc& rhs) const { return laddr >= laddr && rhs.laddr < rhs.laddr + __codelen; }
+	private:
+	    const char&	__codelen;
+    };
+
     class MZ_Parser : public Binary_Parser {
 	public:
 	    MZ_Parser(binary_stream& h,CodeGuider&,udn&);
@@ -63,19 +75,16 @@ namespace	usr {
 	    binary_stream&		main_handle() const { return _main_handle; }
 	    virtual __filesize_t	headshift() const { return _headshift; }
 	    udn&			_udn() const { return __udn; }
+	    char			__codelen;
 	private:
-	    const char*			QueryAddInfo( unsigned char *memmap );
-	    const char*			QueryAddInfo();
+	    std::string			QueryAddInfo( unsigned char *memmap ) const;
+	    std::string			QueryAddInfo() const;
 	    void			BuildMZChain();
 	    bool			isMZReferenced(__filesize_t shift,char len);
 
-	    static tCompare		compare_ptr(const any_t*e1,const any_t*e2);
-	    static tCompare		compare_mz(const any_t*e1,const any_t*e2);
-
 	    MZHEADER		mz;
 	    unsigned long	HeadSize;
-	    long*		CurrMZChain;
-	    unsigned long	CurrMZCount;
+	    std::set<MZ_Reloc> CurrMZChain;
 	    __filesize_t	_headshift;
 	    binary_stream&	_main_handle;
 	    CodeGuider&		_code_guider;

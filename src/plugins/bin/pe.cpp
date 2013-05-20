@@ -55,6 +55,65 @@ namespace	usr {
 	bool operator<(const RELOC_PE& rhs) const { return laddr<rhs.laddr; }
     };
 
+    struct PE32X_HEADER {
+	uint64_t	peImageBase;
+	uint32_t	peObjectAlign;
+	uint32_t	peFileAlign;
+	uint16_t	peOSMajor;
+	uint16_t	peOSMinor;
+	uint16_t	peUserMajor;
+	uint16_t	peUserMinor;
+	uint16_t	peSubSystMajor;
+	uint16_t	peSubSystMinor;
+	uint32_t	peReserv9;
+	uint32_t	peImageSize;
+	uint32_t	peHeaderSize;
+	uint32_t	peFileChecksum;
+	uint16_t	peSubSystem;
+	uint16_t	peDLLFlags;
+	uint64_t	peStackReserveSize;
+	uint64_t	peStackCommitSize;
+	uint64_t	peHeapReserveSize;
+	uint64_t	peHeapCommitSize;
+	uint32_t	peReserv10;
+	uint32_t	peDirSize;
+    };
+
+    class PE_Reader : public Opaque {
+	public:
+	    PE_Reader(binary_stream& h):handle(h) {}
+	    virtual ~PE_Reader() {}
+
+	    void init() { pe32x=read_pe32x_header(); }
+
+	    PE32X_HEADER&	header() { return pe32x; }
+	    virtual size_t	header_size() const = 0;
+	protected:
+	    virtual PE32X_HEADER	read_pe32x_header() const = 0;
+	    PE32X_HEADER	pe32x;
+	    binary_stream&	handle;
+    };
+
+    class PE32_Reader : public PE_Reader {
+	public:
+	    PE32_Reader(binary_stream& h):PE_Reader(h) {}
+	    virtual ~PE32_Reader() {}
+
+	    virtual size_t	header_size() const;
+	protected:
+	    virtual PE32X_HEADER	read_pe32x_header() const;
+    };
+
+    class PE64_Reader : public PE_Reader {
+	public:
+	    PE64_Reader(binary_stream& h):PE_Reader(h) {}
+	    virtual ~PE64_Reader() {}
+
+	    virtual size_t	header_size() const;
+	protected:
+	    virtual PE32X_HEADER	read_pe32x_header() const;
+    };
+
     class PE_Parser : public MZ_Parser {
 	public:
 	    PE_Parser(binary_stream&,CodeGuider&,udn&);
@@ -79,21 +138,23 @@ namespace	usr {
 	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
 							__filesize_t& start,__filesize_t& end,int& _class,int& bitness);
 	private:
-	    std::string			pe_ReadPubName(binary_stream&b_cache,const symbolic_information& it);
-	    bool			BuildReferStrPE(std::string& str,const RELOC_PE& rpe,int flags);
-	    std::set<RELOC_PE>::const_iterator	__found_RPE(__filesize_t laddr);
+	    __filesize_t		_va2pa(__filesize_t va) const;
+	    __filesize_t		_pa2va(__filesize_t pa) const;
+	    std::string			pe_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
+	    bool			BuildReferStrPE(std::string& str,const RELOC_PE& rpe,int flags) const;
+	    std::set<RELOC_PE>::const_iterator	__found_RPE(__filesize_t laddr) const;
 	    void			BuildPERefChain();
-	    std::vector<std::string>	PEReadRVAs();
-	    __filesize_t		CalcEntryPE(unsigned ordinal,bool dispmsg);
-	    unsigned			PEExportNumItems(binary_stream& handle);
-	    std::vector<std::string>	PEExportReadItems(binary_stream& handle,size_t nnames);
-	    unsigned			__peReadASCIIZName(binary_stream& handle,__filesize_t offset,std::string& buff);
+	    std::vector<std::string>	PEReadRVAs() const;
+	    __filesize_t		CalcEntryPE(unsigned ordinal,bool dispmsg) const;
+	    unsigned			PEExportNumItems(binary_stream& handle) const;
+	    std::vector<std::string>	PEExportReadItems(binary_stream& handle,size_t nnames) const;
+	    unsigned			__peReadASCIIZName(binary_stream& handle,__filesize_t offset,std::string& buff) const;
 	    __filesize_t		RVA2Phys(__filesize_t rva) const;
-	    std::string			writeExportVA(__filesize_t va,binary_stream&handle);
-	    std::vector<std::string>	__ReadImpContPE(binary_stream& handle,size_t nnames);
-	    unsigned			GetImpCountPE(binary_stream& handle);
-	    std::vector<std::string>	__ReadImportPE(binary_stream& handle,__filesize_t phys,size_t nnames);
-	    unsigned			GetImportCountPE(binary_stream& handle,__filesize_t phys);
+	    std::string			writeExportVA(__filesize_t va,binary_stream&handle) const;
+	    std::vector<std::string>	__ReadImpContPE(binary_stream& handle,size_t nnames) const;
+	    unsigned			GetImpCountPE(binary_stream& handle) const;
+	    std::vector<std::string>	__ReadImportPE(binary_stream& handle,__filesize_t phys,size_t nnames) const;
+	    unsigned			GetImportCountPE(binary_stream& handle,__filesize_t phys) const;
 	    std::vector<PE_OBJECT>	__ReadObjectsPE(binary_stream& handle,size_t n) const;
 	    void			ObjPaintPE(TWindow& win,const std::vector<PE_OBJECT>& names,unsigned start) const;
 	    void			PaintNewHeaderPE(TWindow& win,const std::vector<std::string>& ptr,unsigned tpage) const;
@@ -101,13 +162,13 @@ namespace	usr {
 	    void			PaintNewHeaderPE_1(TWindow& w,__filesize_t&) const;
 	    const char*			PECPUType() const;
 	    __filesize_t		CalcPEObjectEntry(__fileoff_t offset) const;
-	    bool			FindPubName(std::string& buff,__filesize_t pa);
+	    bool			FindPubName(std::string& buff,__filesize_t pa) const;
 	    __fileoff_t			CalcOverlayOffset(__filesize_t) const;
 	    void			pe_ReadPubNameList(binary_stream& handle);
-	    unsigned			fioReadWord(binary_stream& handle,__filesize_t offset,binary_stream::e_seek origin);
-	    __filesize_t		fioReadDWord(binary_stream& handle,__filesize_t offset,binary_stream::e_seek origin);
-	    __filesize_t		fioReadDWord2Phys(binary_stream& handle,__filesize_t offset,binary_stream::e_seek origin);
-	    void			ShowModContextPE(const std::string& title);
+	    unsigned			fioReadWord(binary_stream& handle,__filesize_t offset,binary_stream::e_seek origin) const;
+	    __filesize_t		fioReadDWord(binary_stream& handle,__filesize_t offset,binary_stream::e_seek origin) const;
+	    __filesize_t		fioReadDWord2Phys(binary_stream& handle,__filesize_t offset,binary_stream::e_seek origin) const;
+	    void			ShowModContextPE(const std::string& title) const;
 
 	    binary_stream*	pe_cache1;
 	    binary_stream*	pe_cache2;
@@ -120,39 +181,29 @@ namespace	usr {
 	    ExportTablePE	et;
 	    PERVA*		peDir;
 	    std::set<symbolic_information>	PubNames;
+	    PE_HEADER		pe;
+	    PE_Reader*		reader;
 
 	    __fileoff_t		overlayPE;
 
-	    bool is_64bit;
+	    bool		is_64bit;
+	    PE_ADDR*		peVA;
 	    binary_stream*	pe_cache;
 
 	    static void			(PE_Parser::*pephead[])(TWindow&,__filesize_t&) const;
     };
 static const char* txt[]={ "PEHelp", "Import", "Export","", "","","", "PEHead", "Dir   ", "Object" };
 const char* PE_Parser::prompt(unsigned idx) const { return txt[idx]; }
-
-#define ARRAY_SIZE(x)       (sizeof(x)/sizeof(x[0]))
-
-
 static __filesize_t	entryPE;
-typedef union {
-  PE32HEADER   pe32;
-  PE32P_HEADER pe32p;
-}PE32X_HEADER;
 
-static PE32X_HEADER pe32;
-static PEHEADER pe;
-static PE_ADDR* peVA;
-
-#define PE32_HDR(e,FIELD) (is_64bit?(((PE32P_HEADER *)&e.pe32p)->FIELD):(((PE32HEADER *)&e.pe32)->FIELD))
-#define PE32_HDR_SIZE() (is_64bit?sizeof(PE32P_HEADER):sizeof(PE32HEADER))
-#define PE_HDR_SIZE() (sizeof(PEHEADER) + PE32_HDR_SIZE())
+template<class T>
+inline size_t array_size(const T& x) { return sizeof(T)/sizeof(x[0]); }
 
 __filesize_t PE_Parser::CalcPEObjectEntry(__fileoff_t offset) const
 {
  __filesize_t intp;
- intp = offset / PE32_HDR(pe32,peFileAlign);
- if(offset % PE32_HDR(pe32,peFileAlign)) offset = ( offset / intp ) * intp;
+ intp = offset / reader->header().peFileAlign;
+ if(offset % reader->header().peFileAlign) offset = ( offset / intp ) * intp;
  return offset;
 }
 
@@ -184,19 +235,19 @@ __filesize_t PE_Parser::RVA2Phys(__filesize_t rva) const
  return ret;
 }
 
-__filesize_t PE_Parser::fioReadDWord(binary_stream& handle,__filesize_t offset,binary_stream::e_seek origin)
+__filesize_t PE_Parser::fioReadDWord(binary_stream& handle,__filesize_t offset,binary_stream::e_seek origin) const
 {
  handle.seek(offset,origin);
  return handle.read(type_dword);
 }
 
-unsigned PE_Parser::fioReadWord(binary_stream& handle,__filesize_t offset,binary_stream::e_seek origin)
+unsigned PE_Parser::fioReadWord(binary_stream& handle,__filesize_t offset,binary_stream::e_seek origin) const
 {
  handle.seek(offset,origin);
  return handle.read(type_word);
 }
 
-__filesize_t PE_Parser::fioReadDWord2Phys(binary_stream& handle,__filesize_t offset,binary_stream::e_seek origin)
+__filesize_t PE_Parser::fioReadDWord2Phys(binary_stream& handle,__filesize_t offset,binary_stream::e_seek origin) const
 {
  unsigned long dword;
  dword = fioReadDWord(handle,offset,origin);
@@ -305,14 +356,14 @@ void PE_Parser::PaintNewHeaderPE_1(TWindow& w,__filesize_t& entry_PE) const
     fmt = "\nImage base                   = %08lXH\n"
 	  "Object aligning                = %08lXH";
   w.printf(fmt
-	   ,PE32_HDR(pe32,peImageBase)
-	   ,PE32_HDR(pe32,peObjectAlign));
+	   ,reader->header().peImageBase
+	   ,reader->header().peObjectAlign);
 }
 
 void PE_Parser::PaintNewHeaderPE_2(TWindow& w,__filesize_t& entry_PE) const
 {
   const char *fmt;
-  static const char * subSystem[] =
+  static const char* subSystem[] =
   {
     "Unknown",
     "Native",
@@ -350,18 +401,19 @@ void PE_Parser::PaintNewHeaderPE_2(TWindow& w,__filesize_t& entry_PE) const
 	   ,pe.peSizeOfText
 	   ,pe.peSizeOfData
 	   ,pe.peSizeOfBSS
-	   ,PE32_HDR(pe32,peFileAlign)
-	   ,PE32_HDR(pe32,peOSMajor),PE32_HDR(pe32,peOSMinor),PE32_HDR(pe32,peUserMajor),PE32_HDR(pe32,peUserMinor),PE32_HDR(pe32,peSubSystMajor),PE32_HDR(pe32,peSubSystMinor)
-	   ,PE32_HDR(pe32,peImageSize)
-	   ,PE32_HDR(pe32,peHeaderSize)
-	   ,PE32_HDR(pe32,peFileChecksum)
-	   ,PE32_HDR(pe32,peSubSystem) < ARRAY_SIZE(subSystem) ? subSystem[PE32_HDR(pe32,peSubSystem)] : "Unknown"
-	   ,PE32_HDR(pe32,peDLLFlags)
-	   ,Gebool(PE32_HDR(pe32,peDLLFlags) & 0x0001)
-	   ,Gebool(PE32_HDR(pe32,peDLLFlags) & 0x0002)
-	   ,Gebool(PE32_HDR(pe32,peDLLFlags) & 0x0004)
-	   ,Gebool(PE32_HDR(pe32,peDLLFlags) & 0x0008)
-	   ,PE32_HDR(pe32,peDirSize));
+	   ,reader->header().peFileAlign
+	   ,reader->header().peOSMajor,reader->header().peOSMinor,reader->header().peUserMajor
+	   ,reader->header().peUserMinor,reader->header().peSubSystMajor,reader->header().peSubSystMinor
+	   ,reader->header().peImageSize
+	   ,reader->header().peHeaderSize
+	   ,reader->header().peFileChecksum
+	   ,reader->header().peSubSystem < array_size(subSystem) ? subSystem[reader->header().peSubSystem] : "Unknown"
+	   ,reader->header().peDLLFlags
+	   ,Gebool(reader->header().peDLLFlags & 0x0001)
+	   ,Gebool(reader->header().peDLLFlags & 0x0002)
+	   ,Gebool(reader->header().peDLLFlags & 0x0004)
+	   ,Gebool(reader->header().peDLLFlags & 0x0008)
+	   ,reader->header().peDirSize);
    if(is_64bit)
     fmt=
 	   "Stack reserve size             = %llu bytes\n"
@@ -375,10 +427,10 @@ void PE_Parser::PaintNewHeaderPE_2(TWindow& w,__filesize_t& entry_PE) const
 	   "Heap reserve size              = %lu bytes\n"
 	   "Heap commit size               = %lu bytes";
    w.printf(fmt
-	   ,PE32_HDR(pe32,peStackReserveSize)
-	   ,PE32_HDR(pe32,peStackCommitSize)
-	   ,PE32_HDR(pe32,peHeapReserveSize)
-	   ,PE32_HDR(pe32,peHeapCommitSize));
+	   ,reader->header().peStackReserveSize
+	   ,reader->header().peStackCommitSize
+	   ,reader->header().peHeapReserveSize
+	   ,reader->header().peHeapCommitSize);
   if ((entry_PE=CalcOverlayOffset(MZ_Parser::is_new_exe(beye_context().sc_bm_file()))) != -1) {
     w.set_color(dialog_cset.entry);
     w.printf("\nOverlay                        = %08lXH", entry_PE); w.clreol();
@@ -504,7 +556,7 @@ __fileoff_t PE_Parser::CalcOverlayOffset(__filesize_t ___headshift) const
 	    int i;
 	    for (i = 0; i < pe.peObjects; i++) {
 		PE_OBJECT& o = objs[i];
-		__fileoff_t end = o.oPhysicalOffset + ((o.oPhysicalSize + (PE32_HDR(pe32,peFileAlign) - 1)) & ~(PE32_HDR(pe32,peFileAlign) - 1));
+		__fileoff_t end = o.oPhysicalOffset + ((o.oPhysicalSize + (reader->header().peFileAlign - 1)) & ~(reader->header().peFileAlign - 1));
 		if (overlay_PE < end) overlay_PE = end;
 	    }
 	}
@@ -529,7 +581,7 @@ __filesize_t PE_Parser::action_F10()
     return fpos;
 }
 
-unsigned PE_Parser::GetImportCountPE(binary_stream& handle,__filesize_t phys)
+unsigned PE_Parser::GetImportCountPE(binary_stream& handle,__filesize_t phys) const
 {
   unsigned count;
   __filesize_t fpos = handle.tell();
@@ -548,7 +600,7 @@ unsigned PE_Parser::GetImportCountPE(binary_stream& handle,__filesize_t phys)
 }
 
 /* returns really readed number of characters */
-unsigned PE_Parser::__peReadASCIIZName(binary_stream& handle,__filesize_t offset,std::string& buff)
+unsigned PE_Parser::__peReadASCIIZName(binary_stream& handle,__filesize_t offset,std::string& buff) const
 {
   unsigned j;
   char ch;
@@ -566,7 +618,7 @@ unsigned PE_Parser::__peReadASCIIZName(binary_stream& handle,__filesize_t offset
   return j;
 }
 
-std::vector<std::string> PE_Parser::__ReadImportPE(binary_stream& handle,__filesize_t phys,size_t nnames)
+std::vector<std::string> PE_Parser::__ReadImportPE(binary_stream& handle,__filesize_t phys,size_t nnames) const
 {
     std::vector<std::string> rc;
     size_t i;
@@ -589,7 +641,7 @@ std::vector<std::string> PE_Parser::__ReadImportPE(binary_stream& handle,__files
     return rc;
 }
 
-unsigned PE_Parser::GetImpCountPE(binary_stream& handle)
+unsigned PE_Parser::GetImpCountPE(binary_stream& handle) const
 {
  unsigned count;
  uint64_t Hint;
@@ -607,7 +659,7 @@ unsigned PE_Parser::GetImpCountPE(binary_stream& handle)
  return count;
 }
 
-std::vector<std::string> PE_Parser:: __ReadImpContPE(binary_stream& handle,size_t nnames)
+std::vector<std::string> PE_Parser:: __ReadImpContPE(binary_stream& handle,size_t nnames) const
 {
     std::vector<std::string> rc;
     size_t i;
@@ -616,7 +668,7 @@ std::vector<std::string> PE_Parser:: __ReadImpContPE(binary_stream& handle,size_
     int cond;
     __filesize_t rphys;
     handle.seek(addr_shift_pe,binary_stream::Seek_Set);
-    VA = pa2va(addr_shift_pe);
+    VA = _pa2va(addr_shift_pe);
     for(i = 0;i < nnames;i++) {
 	char stmp[300];
 	bool is_eof;
@@ -648,7 +700,7 @@ std::vector<std::string> PE_Parser:: __ReadImpContPE(binary_stream& handle,size_
     return rc;
 }
 
-void PE_Parser::ShowModContextPE(const std::string& title) {
+void PE_Parser::ShowModContextPE(const std::string& title) const {
     ssize_t nnames = GetImpCountPE(main_handle());
     int flags = LB_SORTABLE;
     TWindow* w = PleaseWaitWnd();
@@ -695,7 +747,7 @@ __filesize_t PE_Parser::action_F2()
     return fret;
 }
 
-std::string PE_Parser::writeExportVA(__filesize_t va, binary_stream& handle)
+std::string PE_Parser::writeExportVA(__filesize_t va, binary_stream& handle) const
 {
     std::string rc;
     // check for forwarded export
@@ -704,13 +756,13 @@ std::string PE_Parser::writeExportVA(__filesize_t va, binary_stream& handle)
     // normal export
     else {
 	char buf[4096];
-	sprintf(buf, ".%08lX", (unsigned long)(va + PE32_HDR(pe32,peImageBase)));
+	sprintf(buf, ".%08lX", (unsigned long)(va + reader->header().peImageBase));
 	rc=buf;
     }
     return rc;
 }
 
-std::vector<std::string> PE_Parser::PEExportReadItems(binary_stream& handle,size_t nnames)
+std::vector<std::string> PE_Parser::PEExportReadItems(binary_stream& handle,size_t nnames) const
 {
     std::vector<std::string> rc;
     __filesize_t nameaddr,expaddr,nameptr;
@@ -757,7 +809,7 @@ std::vector<std::string> PE_Parser::PEExportReadItems(binary_stream& handle,size
     return rc;
 }
 
-unsigned PE_Parser::PEExportNumItems(binary_stream& handle)
+unsigned PE_Parser::PEExportNumItems(binary_stream& handle) const
 {
   __filesize_t addr;
   if(!peDir[PE_EXPORT].rva) return 0;
@@ -767,7 +819,7 @@ unsigned PE_Parser::PEExportNumItems(binary_stream& handle)
   return (unsigned)(et.etNumEATEntries);
 }
 
-__filesize_t  PE_Parser::CalcEntryPE(unsigned ordinal,bool dispmsg)
+__filesize_t  PE_Parser::CalcEntryPE(unsigned ordinal,bool dispmsg) const
 {
  __filesize_t fret,rva;
  unsigned ord;
@@ -836,7 +888,7 @@ exit:
     return fpos;
 }
 
-std::vector<std::string> PE_Parser::PEReadRVAs()
+std::vector<std::string> PE_Parser::PEReadRVAs() const
 {
     std::vector<std::string> rc;
     unsigned i;
@@ -859,11 +911,11 @@ std::vector<std::string> PE_Parser::PEReadRVAs()
 	"Reser~ved            "
     };
 
-    for (i=0; i<PE32_HDR(pe32,peDirSize); i++) {
+    for (i=0; i<reader->header().peDirSize; i++) {
 	char foo[80];
 
 	sprintf(foo, "%s  %08lX  %8lu",
-	    i<ARRAY_SIZE(rvaNames) ? rvaNames[i] : "Unknown             ",
+	    i<array_size(rvaNames) ? rvaNames[i] : "Unknown             ",
 	    (unsigned long)peDir[i].rva,
 	    (unsigned long)peDir[i].size);
 	rc.push_back(foo);
@@ -985,15 +1037,14 @@ void PE_Parser::BuildPERefChain()
   delete w;
 }
 
-std::set<RELOC_PE>::const_iterator PE_Parser::__found_RPE(__filesize_t laddr)
+std::set<RELOC_PE>::const_iterator PE_Parser::__found_RPE(__filesize_t laddr) const
 {
   RELOC_PE key;
-  if(CurrPEChain.empty()) BuildPERefChain();
   key.laddr = laddr;
   return CurrPEChain.find(key);
 }
 
-bool PE_Parser::BuildReferStrPE(std::string& str,const RELOC_PE& rpe,int flags)
+bool PE_Parser::BuildReferStrPE(std::string& str,const RELOC_PE& rpe,int flags) const
 {
    binary_stream& handle=*pe_cache,&handle2=*pe_cache4,&handle3=*pe_cache3;
    __filesize_t phys,rva;
@@ -1074,7 +1125,7 @@ bool PE_Parser::BuildReferStrPE(std::string& str,const RELOC_PE& rpe,int flags)
      const char *pe_how;
      handle3.seek(rpe.laddr,binary_stream::Seek_Set);
      value = handle.read(type_dword);
-     delta = PE32_HDR(pe32,peImageBase);
+     delta = reader->header().peImageBase;
      point_to = 0;
      switch(rpe.import.type)
      {
@@ -1090,13 +1141,13 @@ bool PE_Parser::BuildReferStrPE(std::string& str,const RELOC_PE& rpe,int flags)
 		  pe_how = "((low16)";
 		  break;
 	  case 3: /** HIGHLOW */
-		  point_to = va2pa(value);
+		  point_to = _va2pa(value);
 		  pe_how = "((off32)";
 		  break;
 	  case 4: /** HIGHADJUST */
 		  handle.seek(value,binary_stream::Seek_Set);
 		  value = handle.read(type_dword);
-		  point_to = va2pa(value);
+		  point_to = _va2pa(value);
 		  pe_how = "((full32)";
 		  break;
 	  case 5: /** MIPS JUMP ADDR */
@@ -1133,8 +1184,9 @@ bool PE_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift
     uint32_t id;
     main_handle().seek(ulShift,binary_stream::Seek_Set);
     id = main_handle().read(type_dword);
-    b_cache->seek(RVA2Phys(id - PE32_HDR(pe32,peImageBase)),
+    b_cache->seek(RVA2Phys(id - reader->header().peImageBase),
 	    binary_stream::Seek_Set);
+    if(CurrPEChain.empty()) BuildPERefChain();
     rpe = __found_RPE(b_cache->read(type_dword));
     if(rpe==CurrPEChain.end()) rpe = __found_RPE(ulShift);
     if(rpe!=CurrPEChain.end()) retrf = BuildReferStrPE(str,*rpe,flags);
@@ -1164,38 +1216,37 @@ PE_Parser::PE_Parser(binary_stream& h,CodeGuider& __code_guider,udn& u)
    int i;
 
     main_handle().seek(headshift(),binary_stream::Seek_Set);
-    main_handle().read(&pe,sizeof(PEHEADER));
+    main_handle().read(&pe,sizeof(PE_HEADER));
     is_64bit = pe.peMagic==0x20B?1:0;
-    main_handle().read(&pe32,PE32_HDR_SIZE());
+    if(is_64bit) reader = new(zeromem) PE64_Reader(h);
+    else	 reader = new(zeromem) PE32_Reader(h);
+    reader->init();
 
-   if(!(peDir = new PERVA[PE32_HDR(pe32,peDirSize)]))
-   {
-     MemOutBox("PE initialization");
-     exit(EXIT_FAILURE);
-   }
-   main_handle().read(peDir, sizeof(PERVA)*PE32_HDR(pe32,peDirSize));
+    if(!(peDir = new PERVA[reader->header().peDirSize])) {
+	MemOutBox("PE initialization");
+	exit(EXIT_FAILURE);
+    }
+    main_handle().read(peDir, sizeof(PERVA)*reader->header().peDirSize);
 
-   if(!(peVA = new PE_ADDR[pe.peObjects]))
-   {
-     MemOutBox("PE initialization");
-     exit(EXIT_FAILURE);
-   }
-   main_handle().seek(0x18 + pe.peNTHdrSize + headshift(),binary_stream::Seek_Set);
-   for(i = 0;i < pe.peObjects;i++)
-   {
-     main_handle().seek(12,binary_stream::Seek_Set);
-     peVA[i].rva = main_handle().read(type_dword);
-     main_handle().seek(4,binary_stream::Seek_Set);
-     peVA[i].phys = main_handle().read(type_dword);
-     main_handle().seek(16L,binary_stream::Seek_Cur);
-   }
+    if(!(peVA = new PE_ADDR[pe.peObjects])) {
+	MemOutBox("PE initialization");
+	exit(EXIT_FAILURE);
+    }
+    main_handle().seek(0x18 + pe.peNTHdrSize + headshift(),binary_stream::Seek_Set);
+    for(i = 0;i < pe.peObjects;i++) {
+	main_handle().seek(12,binary_stream::Seek_Set);
+	peVA[i].rva = main_handle().read(type_dword);
+	main_handle().seek(4,binary_stream::Seek_Set);
+	peVA[i].phys = main_handle().read(type_dword);
+	main_handle().seek(16L,binary_stream::Seek_Cur);
+    }
 
-   binary_stream& __main_handle = main_handle();
-   pe_cache = __main_handle.dup();
-   pe_cache1 = __main_handle.dup();
-   pe_cache2 = __main_handle.dup();
-   pe_cache3 = __main_handle.dup();
-   pe_cache4 = __main_handle.dup();
+    binary_stream& __main_handle = main_handle();
+    pe_cache = __main_handle.dup();
+    pe_cache1 = __main_handle.dup();
+    pe_cache2 = __main_handle.dup();
+    pe_cache3 = __main_handle.dup();
+    pe_cache4 = __main_handle.dup();
 }
 
 PE_Parser::~PE_Parser()
@@ -1232,7 +1283,7 @@ bool PE_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
     it must be seriously optimized for speed. */
  bool bret = true;
  uint32_t res;
- if(cfpos >= headshift() && cfpos < headshift() + PE_HDR_SIZE() + PE32_HDR(pe32,peDirSize)*sizeof(PERVA))
+ if(cfpos >= headshift() && cfpos < headshift() + reader->header_size() + reader->header().peDirSize*sizeof(PERVA))
  {
     addr="PEH :";
     addr+=Get4Digit(cfpos - headshift());
@@ -1254,12 +1305,12 @@ bool PE_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
   return bret;
 }
 
-__filesize_t PE_Parser::va2pa(__filesize_t va)
+__filesize_t PE_Parser::_va2pa(__filesize_t va) const
 {
-  return va >= PE32_HDR(pe32,peImageBase) ? RVA2Phys(va-PE32_HDR(pe32,peImageBase)) : 0L;
+  return va >= reader->header().peImageBase ? RVA2Phys(va-reader->header().peImageBase) : 0L;
 }
 
-__filesize_t PE_Parser::pa2va(__filesize_t pa)
+__filesize_t PE_Parser::_pa2va(__filesize_t pa) const
 {
   int i;
   __filesize_t ret_addr;
@@ -1274,26 +1325,28 @@ __filesize_t PE_Parser::pa2va(__filesize_t pa)
     obj_pa = CalcPEObjectEntry(po.oPhysicalOffset);
     if(pa >= obj_pa && pa < obj_pa + po.oPhysicalSize)
     {
-      ret_addr = po.oRVA + (pa - obj_pa) + PE32_HDR(pe32,peImageBase);
+      ret_addr = po.oRVA + (pa - obj_pa) + reader->header().peImageBase;
       break;
     }
   }
   return ret_addr;
 }
 
-std::string PE_Parser::pe_ReadPubName(binary_stream& b_cache,const symbolic_information& it)
+__filesize_t PE_Parser::va2pa(__filesize_t va) { return _va2pa(va); }
+__filesize_t PE_Parser::pa2va(__filesize_t pa) { return _pa2va(pa); }
+
+std::string PE_Parser::pe_ReadPubName(binary_stream& b_cache,const symbolic_information& it) const
 {
     std::string stmp;
     __peReadASCIIZName(b_cache,it.nameoff,stmp);
     return stmp;
 }
 
-bool PE_Parser::FindPubName(std::string& buff,__filesize_t pa)
+bool PE_Parser::FindPubName(std::string& buff,__filesize_t pa) const
 {
     symbolic_information key;
     std::set<symbolic_information>::const_iterator it;
     key.pa = pa;
-    if(PubNames.empty()) pe_ReadPubNameList(*pe_cache4);
     it = PubNames.find(key);
     if(it!=PubNames.end()) {
 	buff=pe_ReadPubName(*pe_cache4,*it);
@@ -1425,4 +1478,59 @@ extern const Binary_Parser_Info pe_info = {
     probe,
     query_interface
 };
+
+PE32X_HEADER PE32_Reader::read_pe32x_header() const {
+    PE32X_HEADER rc;
+    handle.read(type_dword); // skip peBaseOfData
+    rc.peImageBase=handle.read(type_dword);
+    rc.peObjectAlign=handle.read(type_dword);
+    rc.peFileAlign=handle.read(type_dword);
+    rc.peOSMajor=handle.read(type_word);
+    rc.peOSMinor=handle.read(type_word);
+    rc.peUserMajor=handle.read(type_word);
+    rc.peUserMinor=handle.read(type_word);
+    rc.peSubSystMajor=handle.read(type_word);
+    rc.peSubSystMinor=handle.read(type_word);
+    rc.peReserv9=handle.read(type_dword);
+    rc.peImageSize=handle.read(type_dword);
+    rc.peHeaderSize=handle.read(type_dword);
+    rc.peFileChecksum=handle.read(type_dword);
+    rc.peSubSystem=handle.read(type_word);
+    rc.peDLLFlags=handle.read(type_word);
+    rc.peStackReserveSize=handle.read(type_dword);
+    rc.peStackCommitSize=handle.read(type_dword);
+    rc.peHeapReserveSize=handle.read(type_dword);
+    rc.peHeapCommitSize=handle.read(type_dword);
+    rc.peReserv10=handle.read(type_dword);
+    rc.peDirSize=handle.read(type_dword);
+    return rc;
+}
+size_t PE32_Reader::header_size() const { return sizeof(PE32_HEADER); }
+
+PE32X_HEADER PE64_Reader::read_pe32x_header() const {
+    PE32X_HEADER rc;
+    rc.peImageBase=handle.read(type_qword);
+    rc.peObjectAlign=handle.read(type_dword);
+    rc.peFileAlign=handle.read(type_dword);
+    rc.peOSMajor=handle.read(type_word);
+    rc.peOSMinor=handle.read(type_word);
+    rc.peUserMajor=handle.read(type_word);
+    rc.peUserMinor=handle.read(type_word);
+    rc.peSubSystMajor=handle.read(type_word);
+    rc.peSubSystMinor=handle.read(type_word);
+    rc.peReserv9=handle.read(type_dword);
+    rc.peImageSize=handle.read(type_dword);
+    rc.peHeaderSize=handle.read(type_dword);
+    rc.peFileChecksum=handle.read(type_dword);
+    rc.peSubSystem=handle.read(type_word);
+    rc.peDLLFlags=handle.read(type_word);
+    rc.peStackReserveSize=handle.read(type_qword);
+    rc.peStackCommitSize=handle.read(type_qword);
+    rc.peHeapReserveSize=handle.read(type_qword);
+    rc.peHeapCommitSize=handle.read(type_qword);
+    rc.peReserv10=handle.read(type_dword);
+    rc.peDirSize=handle.read(type_dword);
+    return rc;
+}
+size_t PE64_Reader::header_size() const { return sizeof(PE32P_HEADER); }
 } // namespace	usr

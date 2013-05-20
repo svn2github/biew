@@ -39,13 +39,13 @@ static char tmp_buff[0x1000];
 static char o_buff[0x4000];
 static char i_cache[0x1000];
 static char o_cache[0x1000];
-static binary_stream* bOutput;
+static std::ofstream ofs;
 
 static char* archiver;
 
 #define BBIO_CACHE_SIZE 0x1000
-#define COMPNAME  "temp_fil.tmp"
-#define TEMPFNAME "temp_hlp.tmp"
+static const char* COMPNAME="temp_fil.tmp";
+static const char* TEMPFNAME="temp_hlp.tmp";
 
 int comp_string()
 {
@@ -167,7 +167,7 @@ bool __FASTCALL__ MyCallOut(IniInfo* ini,any_t* data)
 	beye_help_item bhi;
 	binary_stream* bIn;
 	int handle;
-	fpos = bOutput->tell();
+	fpos = ofs.tellp();
 	printf("Processing: %s\n",ini->value);
 	litem = strtoul(ini->item,NULL,10);
 	sprintf(bhi.item_id,"%08lX",litem);
@@ -202,21 +202,26 @@ bool __FASTCALL__ MyCallOut(IniInfo* ini,any_t* data)
 	}
 	litem = ::lseek(handle,0L,SEEK_END);
 	::close(handle);
+	__filesize_t flength,fpos2;
+	fpos2=ofs.tellp();
+	ofs.seekp(0L,std::ios_base::end);
+	flength=ofs.tellp();
+	ofs.seekp(fpos2,std::ios_base::beg);
 	sprintf(bhi.item_decomp_size,"%08lX",litem);
-	sprintf(bhi.item_off,"%08lX",bOutput->flength());
-	bOutput->seek(items_freq*sizeof(beye_help_item)+strlen(id_string)+1+HLP_SLONG_LEN,binary_stream::Seek_Set);
-	bOutput->write(&bhi,sizeof(beye_help_item));
-	bOutput->seek(fpos,binary_stream::Seek_Set);
+	sprintf(bhi.item_off,"%08lX",flength);
+	ofs.seekp(items_freq*sizeof(beye_help_item)+strlen(id_string)+1+HLP_SLONG_LEN,std::ios_base::beg);
+	ofs.write((const char*)&bhi,sizeof(beye_help_item));
+	ofs.seekp(fpos,std::ios_base::beg);
 	litem = bIn->flength();
 	do
 	{
 	   copysize = std::min((unsigned long)0x1000,litem);
 	   bIn->read(tmp_buff,copysize);
-	   bOutput->write(tmp_buff,copysize);
+	   ofs.write(tmp_buff,copysize);
 	   litem -= copysize;
 	} while(litem);
 	delete bIn;
-	bOutput->flush();
+	ofs.flush();
 	items_freq++;
      }
   }
@@ -251,28 +256,18 @@ int main( int argc, char *argv[] )
 	, outfname);
   memset(&bhi,0,sizeof(beye_help_item));
   if(binary_stream::exists(outfname)) if(binary_stream::unlink(outfname)) { fprintf(stderr,"Can not delete %s\n",argv[2]); return -1; }
-  bOutput = new BBio_File(0x4000,BBio_File::Opt_Db);
-  bool rc;
-  rc = bOutput->create(outfname);
-  if(rc == false)
-    rc = bOutput->open(outfname,binary_stream::FO_READWRITE | binary_stream::SO_COMPAT);
-    if(rc == false)
-      rc = bOutput->open(outfname,binary_stream::FO_READONLY | binary_stream::SO_DENYNONE);
-      if(rc == false)
-	rc = bOutput->open(outfname,binary_stream::FO_READONLY | binary_stream::SO_COMPAT);
-	if(rc == false)
-	{
-	  fprintf(stderr,"Can not work with %s",outfname);
-	  return -1;
-	}
-  bOutput->set_optimization(BBio_File::Opt_Random);
-  bOutput->write(id_string,strlen(id_string)+1);
+  ofs.open(outfname,std::ios_base::binary);
+    if(!ofs.is_open()) {
+	fprintf(stderr,"Can not work with %s",outfname);
+	return -1;
+    }
+  ofs.write(id_string,strlen(id_string)+1);
   sprintf(sout,"%08lX",items_freq);
-  bOutput->write(sout,HLP_SLONG_LEN);
-  for(i = 0;i < items_freq;i++) bOutput->write(&bhi,sizeof(beye_help_item));
+  ofs.write((const char*)sout,HLP_SLONG_LEN);
+  for(i = 0;i < items_freq;i++) ofs.write((const char*)&bhi,sizeof(beye_help_item));
   items_freq = 0;
   Ini_Parser::scan(argv[2],MyCallOut,NULL);
-  delete bOutput;
+  ofs.close();
   binary_stream::unlink(TEMPFNAME);
   binary_stream::unlink(COMPNAME);
   printf("Help file looks - ok\n");

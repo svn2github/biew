@@ -299,15 +299,15 @@ typedef struct tagLXResource
 	    virtual __filesize_t	CalcPageEntry(unsigned long pageidx) const;
 	    const char*			lxeGetMapAttr(unsigned long attr) const;
 	    void			ShowFwdModOrdLX(const LX_ENTRY& lxent) const;
-	    unsigned			LXNRNamesNumItems(binary_stream&handle);
-	    std::vector<std::string>	LXNRNamesReadItems(binary_stream&handle,size_t nnames);
-	    unsigned			LXRNamesNumItems(binary_stream&handle);
-	    std::vector<std::string>	LXRNamesReadItems(binary_stream&handle,size_t nnames);
+	    unsigned			LXNRNamesNumItems(binary_stream&handle) const;
+	    std::vector<std::string>	LXNRNamesReadItems(binary_stream&handle,size_t nnames) const;
+	    unsigned			LXRNamesNumItems(binary_stream&handle) const;
+	    std::vector<std::string>	LXRNamesReadItems(binary_stream&handle,size_t nnames) const;
 	protected:
-	    static union LX_LE lxe;
+	    union LX_LE lxe;
 	private:
 	    std::vector<std::string>	__ReadResourceGroupLX(binary_stream& handle,size_t nitems,long* addr);
-	    std::vector<std::string>	__ReadMapTblLX(binary_stream& handle,size_t n);
+	    std::vector<std::string>	__ReadMapTblLX(binary_stream& handle,size_t n) const;
 	    void			PaintEntriesLX(TWindow& win,const std::vector<LX_ENTRY>& names,unsigned start) const;
 	    void			entrypaintLX(TWindow& w,const LX_ENTRY& nam) const;
 	    const char*			entryTypeLX(unsigned char type) const;
@@ -317,13 +317,13 @@ typedef struct tagLXResource
 	    void			ReadLXLEImpMod(__filesize_t offtable,unsigned num,char *str) const;
 	    __filesize_t		__calcPageEntry(LX_MAP_TABLE *mt) const;
 	    void			lxReadPageDesc(binary_stream&handle,LX_MAP_TABLE *mt,unsigned long pageidx) const;
-	    std::vector<LX_ENTRY>	__ReadEntriesLX(binary_stream& handle);
-	    std::vector<LX_OBJECT>	__ReadObjectsLX(binary_stream& handle,size_t n);
+	    std::vector<LX_ENTRY>	__ReadEntriesLX(binary_stream& handle) const;
+	    std::vector<LX_OBJECT>	__ReadObjectsLX(binary_stream& handle,size_t n) const;
 	    void			ObjPaintLX(TWindow& win,const std::vector<LX_OBJECT>& names,unsigned start) const;
 	    void			objpaintLX(TWindow& w,const LX_OBJECT& nam) const;
-	    std::vector<std::string>	__ReadModRefNamesLX(binary_stream&handle,size_t nnames);
-	    std::vector<std::string>	LXImpNamesReadItems(binary_stream&handle,size_t nnames);
-	    unsigned			LXImpNamesNumItems(binary_stream&handle);
+	    std::vector<std::string>	__ReadModRefNamesLX(binary_stream&handle,size_t nnames) const;
+	    std::vector<std::string>	LXImpNamesReadItems(binary_stream&handle,size_t nnames) const;
+	    unsigned			LXImpNamesNumItems(binary_stream&handle) const;
 	    void			PaintNewHeaderLX(TWindow& win,const std::vector<std::string>& obj,unsigned tpage) const;
 	    void			PaintNewHeaderLX_3(TWindow& w) const;
 	    void			PaintNewHeaderLX_2(TWindow& w) const;
@@ -358,7 +358,7 @@ typedef struct tagLXResource
 	    __filesize_t		CalcEntryBungleLE(unsigned ordinal,bool dispmsg) const;
 	    __filesize_t		CalcEntryLE(const LX_ENTRY& lxent) const;
 	    __filesize_t		__calcPageEntryLE(LE_PAGE *mt,unsigned long idx) const;
-	    std::vector<std::string>	__ReadMapTblLE(binary_stream&handle,size_t n);
+	    std::vector<std::string>	__ReadMapTblLE(binary_stream&handle,size_t n) const;
     };
 } // namespace	usr
 #endif

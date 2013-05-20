@@ -68,19 +68,21 @@ namespace	usr {
 	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
 							__filesize_t& start,__filesize_t& end,int& _class,int& bitness);
 	private:
-	    __filesize_t		BuildReferStrCoff386(const DisMode&parent,std::string& str,const RELOC_COFF386& rne,int flags);
-	    bool			coffSymTabReadItemsIdx(binary_stream&handle,unsigned long idx,std::string& name,unsigned& secnum,__filesize_t& offset);
+	    unsigned			_get_object_attribute(__filesize_t pa,std::string& name,
+							__filesize_t& start,__filesize_t& end,int& _class,int& bitness) const;
+	    __filesize_t		BuildReferStrCoff386(const DisMode&parent,std::string& str,const RELOC_COFF386& rne,int flags) const;
+	    bool			coffSymTabReadItemsIdx(binary_stream&handle,unsigned long idx,std::string& name,unsigned& secnum,__filesize_t& offset) const;
 	    void			BuildRelocCoff386();
-	    __filesize_t		CalcEntryCoff(unsigned long idx,bool display_msg);
-	    std::vector<std::string>	coffSymTabReadItems(binary_stream&handle,size_t nnames);
+	    __filesize_t		CalcEntryCoff(unsigned long idx,bool display_msg) const;
+	    std::vector<std::string>	coffSymTabReadItems(binary_stream&handle,size_t nnames) const;
 	    const char*			coffEncodeClass(unsigned _class) const;
 	    const char*			coffEncodeType(unsigned type) const;
 	    const char*			coff386_encode_hdr(unsigned info) const;
-	    std::vector<SCNHDR>		__coffReadObjects(binary_stream& handle,size_t n);
+	    std::vector<SCNHDR>		__coffReadObjects(binary_stream& handle,size_t n) const;
 	    void			paint_pages(TWindow& win,const std::vector<SCNHDR>& names,unsigned start) const;
-	    std::string			coffReadLongName(binary_stream&handle,__filesize_t offset);
-	    bool			FindPubName(std::string& buff,__filesize_t pa);
-	    std::string			coff_ReadPubName(binary_stream&b_cache,const symbolic_information& it);
+	    std::string			coffReadLongName(binary_stream&handle,__filesize_t offset) const;
+	    bool			FindPubName(std::string& buff,__filesize_t pa) const;
+	    std::string			coff_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
 	    void			coff_ReadPubNameList(binary_stream& handle);
 
 	    inline uint16_t		COFF_WORD(const uint8_t* cval) const { return (uint16_t)(*(const uint16_t *)(const uint8_t *)cval); }
@@ -103,7 +105,7 @@ namespace	usr {
 static const char* txt[]={ "CofHlp", "", "", "", "", "", "SymTab", "", "", "Objects" };
 const char* Coff_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-bool Coff_Parser::FindPubName(std::string& buff,__filesize_t pa)
+bool Coff_Parser::FindPubName(std::string& buff,__filesize_t pa) const
 {
   symbolic_information key;
   std::set<symbolic_information>::const_iterator ret;
@@ -116,7 +118,7 @@ bool Coff_Parser::FindPubName(std::string& buff,__filesize_t pa)
   return _udn.find(pa,buff);
 }
 
-std::string Coff_Parser::coffReadLongName(binary_stream& handle,__filesize_t offset)
+std::string Coff_Parser::coffReadLongName(binary_stream& handle,__filesize_t offset) const
 {
     std::string rc;
   unsigned i;
@@ -199,7 +201,7 @@ void Coff_Parser::paint_pages(TWindow& win,const std::vector<SCNHDR>& objs,unsig
     win.refresh_full();
 }
 
-std::vector<SCNHDR> Coff_Parser::__coffReadObjects(binary_stream& handle,size_t n)
+std::vector<SCNHDR> Coff_Parser::__coffReadObjects(binary_stream& handle,size_t n) const
 {
     std::vector<SCNHDR> rc;
     size_t i;
@@ -364,7 +366,7 @@ const char* Coff_Parser::coffEncodeClass(unsigned _class) const
   return ret;
 }
 
-std::vector<std::string> Coff_Parser::coffSymTabReadItems(binary_stream& handle,size_t nnames)
+std::vector<std::string> Coff_Parser::coffSymTabReadItems(binary_stream& handle,size_t nnames) const
 {
     std::vector<std::string> rc;
     unsigned i;
@@ -394,7 +396,7 @@ std::vector<std::string> Coff_Parser::coffSymTabReadItems(binary_stream& handle,
     return rc;
 }
 
-__filesize_t Coff_Parser::CalcEntryCoff(unsigned long idx,bool display_msg)
+__filesize_t Coff_Parser::CalcEntryCoff(unsigned long idx,bool display_msg) const
 {
   struct external_syment cse;
   uint_fast16_t sec_num;
@@ -473,7 +475,7 @@ void Coff_Parser::BuildRelocCoff386()
 bool Coff_Parser::coffSymTabReadItemsIdx(binary_stream& handle,unsigned long idx,
 					std::string& name,
 					unsigned& secnum,
-					__filesize_t& offset)
+					__filesize_t& offset) const
 {
     struct external_syment cse;
     if(idx >= COFF_DWORD(coff386hdr.f_nsyms)) return false;
@@ -488,7 +490,7 @@ bool Coff_Parser::coffSymTabReadItemsIdx(binary_stream& handle,unsigned long idx
     return true;
 }
 
-__filesize_t Coff_Parser::BuildReferStrCoff386(const DisMode& parent,std::string& str,const RELOC_COFF386& rne,int flags)
+__filesize_t Coff_Parser::BuildReferStrCoff386(const DisMode& parent,std::string& str,const RELOC_COFF386& rne,int flags) const
 {
   __filesize_t offset,s,e;
   bool retval;
@@ -536,7 +538,7 @@ __filesize_t Coff_Parser::BuildReferStrCoff386(const DisMode& parent,std::string
   }
   if(rne.type == RELOC_REL32 && (flags & APREF_TRY_LABEL) != APREF_TRY_LABEL)
   {
-     get_object_attribute(rne.offset,secname,s,e,c,b);
+     _get_object_attribute(rne.offset,secname,s,e,c,b);
      str+="-";
      str+=secname;
   }
@@ -636,7 +638,7 @@ __filesize_t Coff_Parser::action_F1()
   return beye_context().tell();
 }
 
-std::string Coff_Parser::coff_ReadPubName(binary_stream& b_cache,const symbolic_information& it)
+std::string Coff_Parser::coff_ReadPubName(binary_stream& b_cache,const symbolic_information& it) const
 {
     if(!it.addinfo)
       return coffReadLongName(b_cache,it.nameoff);
@@ -704,8 +706,8 @@ __filesize_t Coff_Parser::get_public_symbol(std::string& str,unsigned& func_clas
     return fpos;
 }
 
-unsigned Coff_Parser::get_object_attribute(__filesize_t pa,std::string& name,
-			    __filesize_t& start,__filesize_t& end,int& _class,int& bitness)
+unsigned Coff_Parser::_get_object_attribute(__filesize_t pa,std::string& name,
+			    __filesize_t& start,__filesize_t& end,int& _class,int& bitness) const
 {
   unsigned ret;
   uint_fast16_t i;
@@ -736,6 +738,11 @@ unsigned Coff_Parser::get_object_attribute(__filesize_t pa,std::string& name,
     start = COFF_DWORD(coff386so[i].s_scnptr) + COFF_DWORD(coff386so[i].s_size);
   }
   return ret;
+}
+
+unsigned Coff_Parser::get_object_attribute(__filesize_t pa,std::string& name,
+			    __filesize_t& start,__filesize_t& end,int& _class,int& bitness) {
+    return _get_object_attribute(pa,name,start,end,_class,bitness);
 }
 
 int Coff_Parser::query_platform() const { return DISASM_CPU_IX86; }

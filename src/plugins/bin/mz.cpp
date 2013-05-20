@@ -48,100 +48,78 @@ __filesize_t MZ_Parser::pa2va(__filesize_t pa)
   return pa >= HeadSize ? pa - HeadSize : 0L;
 }
 
-const char* MZ_Parser::QueryAddInfo( unsigned char *memmap )
+std::string MZ_Parser::QueryAddInfo( unsigned char *memmap ) const
 {
-  static char rbuff[41];
-  unsigned long idl;
-  unsigned short idw,idw0;
-  idl = ((unsigned long *)memmap)[0];
-  idw0 = ((unsigned short *)memmap)[0];
-  idw = ((unsigned short *)memmap)[2];
-  if(memcmp(memmap,"RJSX",4) == 0) { ArjARC: return "ARJ self-extracting archive"; }
-  else
-    if(memcmp(memmap,"LZ09",4) == 0) return "LZEXE 0.90 compressed executable";
-    else
-      if(memcmp(memmap,"LZ91",4) == 0) return "LZEXE 0.91 compressed executable";
-      else
-	if(memmap[2] == 0xFB)
-	{
-	   char hi,low;
-	   hi = (memmap[3] >> 4) & 0x0F;
-	   low = memmap[3] & 0x0F;
-	   sprintf(rbuff,"Borland TLINK version: %u.%u",(unsigned)hi,(unsigned)low);
-	   return rbuff;
-	}
-	else
-	  if(memcmp(&memmap[2],"PKLITE",6) == 0)
-	  {
-	     char hi, low;
-	     low = memmap[0];
-	     hi =  memmap[1] & 0x0F;
-	     sprintf(rbuff,"PKLITE v%u.%u compressed executable",(unsigned)hi,(unsigned)low);
-	     return rbuff;
-	  }
-	  else
-	    if(memcmp(&memmap[9],"LHarc's SFX",11) == 0) return "LHarc 1.x self-extracting archive";
-	    else
-	      if(memcmp(&memmap[8],"LHa's SFX",9) == 0) return "LHa 2.x self-extracting archive";
-	      else
-		if(idl == 0x018A0001L && idw == 0x1565) return "TopSpeed 3.0 CRUNCH compressed file";
-		else
-		  if(idl == 0x00020001L && idw == 0x0700) return "PKARCK 3.5 self-extracting-archive";
-		  else
-		    if(idw0 == 0x000F && memmap[2] == 0xA7) return "BSA (Soviet archiver) selft-extarcting";
-		    else
-		      if(memcmp(&memmap[4],"SFX by LARC",11) == 0) return "LARC self-extracting archive";
-		      else
-			if(memcmp(&memmap[8],"LH's SFX",8) == 0) return "LH self-extracting archive";
-			else
-			{
-			  unsigned i;
-			  for(i = 0;i < 1000-6;i++)
-			  {
-			    if(memmap[i] == 'a' && memcmp(&memmap[i+1],"RJsfX",5) == 0)
-			    {
-			       goto ArjARC;
-			    }
-			  }
-			}
- return 0;
+    char rbuff[41];
+    unsigned long idl;
+    unsigned short idw,idw0;
+    idl = ((unsigned long *)memmap)[0];
+    idw0 = ((unsigned short *)memmap)[0];
+    idw = ((unsigned short *)memmap)[2];
+    if(memcmp(memmap,"RJSX",4) == 0) { ArjARC: return "ARJ self-extracting archive"; }
+    else if(memcmp(memmap,"LZ09",4) == 0) return "LZEXE 0.90 compressed executable";
+    else if(memcmp(memmap,"LZ91",4) == 0) return "LZEXE 0.91 compressed executable";
+    else if(memmap[2] == 0xFB) {
+	char hi,low;
+	hi = (memmap[3] >> 4) & 0x0F;
+	low = memmap[3] & 0x0F;
+	sprintf(rbuff,"Borland TLINK version: %u.%u",(unsigned)hi,(unsigned)low);
+	return rbuff;
+    } else if(memcmp(&memmap[2],"PKLITE",6) == 0) {
+	char hi, low;
+	low = memmap[0];
+	hi =  memmap[1] & 0x0F;
+	sprintf(rbuff,"PKLITE v%u.%u compressed executable",(unsigned)hi,(unsigned)low);
+	return rbuff;
+    } else if(memcmp(&memmap[9],"LHarc's SFX",11) == 0) return "LHarc 1.x self-extracting archive";
+    else if(memcmp(&memmap[8],"LHa's SFX",9) == 0) return "LHa 2.x self-extracting archive";
+    else if(idl == 0x018A0001L && idw == 0x1565) return "TopSpeed 3.0 CRUNCH compressed file";
+    else if(idl == 0x00020001L && idw == 0x0700) return "PKARCK 3.5 self-extracting-archive";
+    else if(idw0 == 0x000F && memmap[2] == 0xA7) return "BSA (Soviet archiver) selft-extarcting";
+    else if(memcmp(&memmap[4],"SFX by LARC",11) == 0) return "LARC self-extracting archive";
+    else if(memcmp(&memmap[8],"LH's SFX",8) == 0) return "LH self-extracting archive";
+    else {
+	unsigned i;
+	for(i = 0;i < 1000-6;i++)
+	    if(memmap[i] == 'a' && memcmp(&memmap[i+1],"RJsfX",5) == 0) goto ArjARC;
+    }
+    return "";
 }
 
-const char* MZ_Parser::QueryAddInfo()
+std::string MZ_Parser::QueryAddInfo() const
 {
-   unsigned char *memmap;
-   memmap = new unsigned char[1000];
-   if(memmap)
-   {
-     const char *ret;
-     __filesize_t fpos;
-     fpos = _main_handle.tell();
-     _main_handle.seek(0x1C,binary_stream::Seek_Set);
-     _main_handle.read(memmap,1000);
-     _main_handle.seek(fpos,binary_stream::Seek_Set);
-     ret = QueryAddInfo(memmap);
-     delete memmap;
-     return ret;
-   }
-   return NULL;
+    unsigned char *memmap;
+    memmap = new unsigned char[1000];
+    if(memmap) {
+	std::string ret;
+	__filesize_t fpos;
+	fpos = _main_handle.tell();
+	_main_handle.seek(0x1C,binary_stream::Seek_Set);
+	_main_handle.read(memmap,1000);
+	_main_handle.seek(fpos,binary_stream::Seek_Set);
+	ret = QueryAddInfo(memmap);
+	delete memmap;
+	return ret;
+    }
+    return "";
 }
 
 __filesize_t MZ_Parser::show_header()
 {
- unsigned keycode;
- TWindow * hwnd;
- __filesize_t newcpos,fpos;
- unsigned long FPageCnt;
- const char * addinfo;
- fpos = beye_context().tell();
- keycode = 16;
- if(is_new_exe(_main_handle)) keycode++;
- addinfo = QueryAddInfo();
- if(addinfo) keycode++;
- hwnd = CrtDlgWndnls(" Old Exe Header ",43,keycode-1);
- FPageCnt =  ((long)mz.mzPageCount - 1)*512;
- hwnd->goto_xy(1,1);
- hwnd->printf(
+    unsigned keycode;
+    TWindow * hwnd;
+    __filesize_t newcpos,fpos;
+    unsigned long FPageCnt;
+    std::string addinfo;
+    fpos = beye_context().tell();
+    keycode = 16;
+    if(is_new_exe(_main_handle)) keycode++;
+    addinfo = QueryAddInfo();
+    if(!addinfo.empty()) keycode++;
+    hwnd = CrtDlgWndnls(" Old Exe Header ",43,keycode-1);
+    FPageCnt =  ((long)mz.mzPageCount - 1)*512;
+    hwnd->goto_xy(1,1);
+    hwnd->printf(
 	  "Signature            = 'MZ'\n"
 	  "Part Last Page       = %hu [ bytes ]\n"
 	  "Page count           = %hu [ pages ]\n"
@@ -165,127 +143,95 @@ __filesize_t MZ_Parser::show_header()
 	  ,mz.mzRelocationCS,mz.mzExeIP
 	  ,mz.mzTableOffset
 	  ,mz.mzOverlayNumber);
- newcpos = HeadSize;
- newcpos += (((unsigned long)mz.mzRelocationCS) << 4) + (unsigned long)mz.mzExeIP;
- hwnd->set_color(dialog_cset.entry);
- hwnd->printf(">Entry Point         = %08lXH",newcpos); hwnd->clreol();
- hwnd->set_color(dialog_cset.addinfo);
- hwnd->printf("\nModule Length        = %lu [ bytes ]",(FPageCnt - HeadSize) + mz.mzPartLastPage);
- hwnd->clreol();
- hwnd->set_color(dialog_cset.main);
- hwnd->printf("\nImage offset         = %08lXH",(long)HeadSize);
- if(_headshift) {
-   hwnd->set_color(dialog_cset.altinfo);
-   hwnd->printf("\nNew EXE header shift = %08lXH",(long)_headshift);
-   hwnd->clreol();
- }
- if(addinfo) {
-   hwnd->set_color(dialog_cset.extrainfo);
-   hwnd->printf("\n%s",addinfo);
-   hwnd->clreol();
- }
- while(1) {
-   keycode = GetEvent(drawEmptyPrompt,NULL,hwnd);
-   if(keycode == KE_F(5) || keycode == KE_ENTER) { fpos = newcpos; break; }
-   else
-     if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
- }
- delete hwnd;
- return fpos;
-}
-
-tCompare MZ_Parser::compare_ptr(const any_t*e1,const any_t*e2)
-{
-  unsigned long v1,v2;
-  v1 = *((const unsigned long  *)e1);
-  v2 = *((const unsigned long  *)e2);
-  return __CmpLong__(v1,v2);
+    newcpos = HeadSize;
+    newcpos += (((unsigned long)mz.mzRelocationCS) << 4) + (unsigned long)mz.mzExeIP;
+    hwnd->set_color(dialog_cset.entry);
+    hwnd->printf(">Entry Point         = %08lXH",newcpos); hwnd->clreol();
+    hwnd->set_color(dialog_cset.addinfo);
+    hwnd->printf("\nModule Length        = %lu [ bytes ]",(FPageCnt - HeadSize) + mz.mzPartLastPage);
+    hwnd->clreol();
+    hwnd->set_color(dialog_cset.main);
+    hwnd->printf("\nImage offset         = %08lXH",(long)HeadSize);
+    if(_headshift) {
+	hwnd->set_color(dialog_cset.altinfo);
+	hwnd->printf("\nNew EXE header shift = %08lXH",(long)_headshift);
+	hwnd->clreol();
+    }
+    if(!addinfo.empty()) {
+	hwnd->set_color(dialog_cset.extrainfo);
+	hwnd->printf("\n%s",addinfo.c_str());
+	hwnd->clreol();
+    }
+    while(1) {
+	keycode = GetEvent(drawEmptyPrompt,NULL,hwnd);
+	if(keycode == KE_F(5) || keycode == KE_ENTER) { fpos = newcpos; break; }
+	else if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
+    }
+    delete hwnd;
+    return fpos;
 }
 
 void MZ_Parser::BuildMZChain()
 {
-  unsigned i;
-  __filesize_t fpos;
-  TWindow * w;
-  w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
-  w->goto_xy(1,1);
-  w->puts(BUILD_REFS);
-  CurrMZCount = 0;
-  fpos = _main_handle.tell();
-  for(i = 0;i < mz.mzRelocationCount;i++)
-  {
-    unsigned off,seg,j;
-    __filesize_t ptr;
-    any_t* tptr;
-    if(!CurrMZChain) tptr = mp_malloc(sizeof(any_t*));
-    else             tptr = mp_realloc(CurrMZChain,(CurrMZCount + 1)*sizeof(any_t*));
-    if(!tptr) break;
-    CurrMZChain = (long*)tptr;
-    j = mz.mzTableOffset + i*4;
-    _main_handle.seek(j,binary_stream::Seek_Set);
-    off = _main_handle.read(type_word);
-    seg = _main_handle.read(type_word);
-    ptr = (((long)seg) << 4) + off + (((long)mz.mzHeaderSize) << 4);
-    CurrMZChain[CurrMZCount++] = ptr;
-  }
-  HQSort(CurrMZChain,CurrMZCount,sizeof(any_t*),compare_ptr);
-  _main_handle.seek(fpos,binary_stream::Seek_Set);
-  delete w;
-}
-
-static char __codelen;
-tCompare MZ_Parser::compare_mz(const any_t*e1,const any_t*e2)
-{
-  long l1,l2;
-  tCompare ret;
-  l1 = *(const long  *)e1;
-  l2 = *(const long  *)e2;
-  if(l1 >= l2 && l1 < l2 + __codelen) ret = 0;
-  else
-    if(l1 < l2) ret = -1;
-    else        ret = 1;
-  return ret;
+    unsigned i;
+    __filesize_t fpos;
+    TWindow* w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
+    w->goto_xy(1,1);
+    w->puts(BUILD_REFS);
+    fpos = _main_handle.tell();
+    for(i = 0;i < mz.mzRelocationCount;i++) {
+	MZ_Reloc value(__codelen);
+	unsigned off,seg,j;
+	__filesize_t ptr;
+	j = mz.mzTableOffset + i*4;
+	_main_handle.seek(j,binary_stream::Seek_Set);
+	off = _main_handle.read(type_word);
+	seg = _main_handle.read(type_word);
+	ptr = (((long)seg) << 4) + off + (((long)mz.mzHeaderSize) << 4);
+	value.laddr = ptr;
+	CurrMZChain.insert(value);
+    }
+    _main_handle.seek(fpos,binary_stream::Seek_Set);
+    delete w;
 }
 
 bool MZ_Parser::isMZReferenced(__filesize_t shift,char len)
 {
-  if(mz.mzRelocationCount)
-  {
-     __filesize_t mz_size;
-     mz_size = (long)(mz.mzPageCount)*512 + mz.mzPartLastPage;
-     if(shift <= mz_size && shift >= ((unsigned long)mz.mzHeaderSize) << 4)
-     {
-       if(!CurrMZChain) BuildMZChain();
-       __codelen = len;
-       return HLFind(&shift,CurrMZChain,CurrMZCount,sizeof(long),compare_mz) != 0;
-     }
-  }
-  return false;
+    if(mz.mzRelocationCount) {
+	__filesize_t mz_size;
+	mz_size = (long)(mz.mzPageCount)*512 + mz.mzPartLastPage;
+	if(shift <= mz_size && shift >= ((unsigned long)mz.mzHeaderSize) << 4) {
+	    MZ_Reloc key(__codelen);
+	    key.laddr = shift;
+	    __codelen = len;
+	    return CurrMZChain.find(key) != CurrMZChain.end();
+	}
+    }
+    return false;
 }
 
 bool MZ_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
 {
-  std::string stmp;
-  bool ret = false;
-  if(flags & APREF_TRY_PIC) return false;
-  if(isMZReferenced(ulShift,codelen))
-  {
-     unsigned wrd;
-     _main_handle.seek(ulShift,binary_stream::Seek_Set);
-     wrd = _main_handle.read(type_word);
-     str+=Get4Digit(wrd);
-     str+="+PID";
-     ret = true;
-  }
-  if(!DumpMode && !EditMode && (flags & APREF_TRY_LABEL) && codelen == 4)
-  {
-    r_sh += (((__filesize_t)mz.mzHeaderSize) << 4);
-    if(__udn.find(r_sh,stmp)==true) str+=stmp;
-    else str+=Get8Digit(r_sh);
-    _code_guider.add_go_address(parent,str,r_sh);
-    ret = true;
-  }
-  return ret;
+    std::string stmp;
+    bool ret = false;
+    if(flags & APREF_TRY_PIC) return false;
+    if(CurrMZChain.empty()) BuildMZChain();
+    if(isMZReferenced(ulShift,codelen)) {
+	unsigned wrd;
+	_main_handle.seek(ulShift,binary_stream::Seek_Set);
+	wrd = _main_handle.read(type_word);
+	str+=Get4Digit(wrd);
+	str+="+PID";
+	ret = true;
+    }
+    if(!DumpMode && !EditMode && (flags & APREF_TRY_LABEL) && codelen == 4) {
+	r_sh += (((__filesize_t)mz.mzHeaderSize) << 4);
+	if(__udn.find(r_sh,stmp)==true) str+=stmp;
+	else str+=Get8Digit(r_sh);
+	_code_guider.add_go_address(parent,str,r_sh);
+	ret = true;
+    }
+    return ret;
 }
 
 /* Special case: this module must not use init and destroy */

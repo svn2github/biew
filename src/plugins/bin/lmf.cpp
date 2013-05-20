@@ -73,7 +73,7 @@ namespace	usr {
 	    virtual __filesize_t	pa2va(__filesize_t pa);
 	private:
 	    void			failed_lmf() const;
-	    std::vector<std::string>	lmf_ReadSecHdr(binary_stream& handle,size_t nnames);
+	    std::vector<std::string>	lmf_ReadSecHdr(binary_stream& handle,size_t nnames) const;
 
 	    lmf_headers_list*	hl;
 	    lmf_xdef		xdef;
@@ -347,7 +347,7 @@ __filesize_t LMF_Parser::pa2va(__filesize_t pa)
 	return addr;
 }
 
-std::vector<std::string> LMF_Parser::lmf_ReadSecHdr(binary_stream& handle,size_t nnames)
+std::vector<std::string> LMF_Parser::lmf_ReadSecHdr(binary_stream& handle,size_t nnames) const
 {
     std::vector<std::string> rc;
 	unsigned i;

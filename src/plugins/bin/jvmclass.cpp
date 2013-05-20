@@ -109,21 +109,21 @@ typedef struct ClassFile_s
 	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
 							__filesize_t& start,__filesize_t& end,int& _class,int& bitness);
 	private:
-	    std::string			jvm_ReadPubName(binary_stream&b_cache,const symbolic_information& it);
+	    std::string			jvm_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
 	    void			decode_acc_flags(unsigned flags,char *str) const;
-	    std::vector<std::string>	jvm_read_pool(binary_stream&handle,size_t nnames);
-	    std::vector<std::string>	jvm_read_fields(binary_stream&handle,size_t nnames);
-	    std::vector<std::string>	jvm_read_methods(binary_stream&handle,size_t nnames);
-	    std::vector<std::string>	jvm_read_attributes(binary_stream&handle,size_t nnames);
-	    std::vector<std::string>	jvm_read_interfaces(binary_stream&handle,size_t nnames);
+	    std::vector<std::string>	jvm_read_pool(binary_stream&handle,size_t nnames) const;
+	    std::vector<std::string>	jvm_read_fields(binary_stream&handle,size_t nnames) const;
+	    std::vector<std::string>	jvm_read_methods(binary_stream&handle,size_t nnames) const;
+	    std::vector<std::string>	jvm_read_attributes(binary_stream&handle,size_t nnames) const;
+	    std::vector<std::string>	jvm_read_interfaces(binary_stream&handle,size_t nnames) const;
 	    void			skip_fields(unsigned nitems,int attr);
-	    void			skip_attributes(binary_stream&handle,unsigned nitems);
-	    std::string			get_class_name(binary_stream&handle,unsigned idx);
-	    std::string			get_name(binary_stream&handle);
-	    std::string			get_utf8(binary_stream&handle,unsigned nidx);
-	    void			skip_constant_pool(binary_stream&handle,unsigned nitems);
-	    unsigned			skip_constant(binary_stream&handle,unsigned char id);
-	    __filesize_t		__ShowAttributes(const std::string& title);
+	    void			skip_attributes(binary_stream&handle,unsigned nitems) const;
+	    std::string			get_class_name(binary_stream&handle,unsigned idx) const;
+	    std::string			get_name(binary_stream&handle) const;
+	    std::string			get_utf8(binary_stream&handle,unsigned nidx) const;
+	    void			skip_constant_pool(binary_stream&handle,unsigned nitems) const;
+	    unsigned			skip_constant(binary_stream&handle,unsigned char id) const;
+	    __filesize_t		__ShowAttributes(const std::string& title) const;
 	    void			jvm_ReadPubNameList(binary_stream& handle);
 
 #if __BYTE_ORDER == __BIG_ENDIAN
@@ -151,7 +151,7 @@ typedef struct ClassFile_s
 static const char* txt[]={ "", "Import", "Code  ", "Data  ", "", "", "", "Pool  ", "", "Attrib" };
 const char* JVM_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-unsigned JVM_Parser::skip_constant(binary_stream& handle,unsigned char id)
+unsigned JVM_Parser::skip_constant(binary_stream& handle,unsigned char id) const
 {
     unsigned add;
     unsigned short sval;
@@ -178,7 +178,7 @@ unsigned JVM_Parser::skip_constant(binary_stream& handle,unsigned char id)
     return add;
 }
 
-void JVM_Parser::skip_constant_pool(binary_stream& handle,unsigned nitems)
+void JVM_Parser::skip_constant_pool(binary_stream& handle,unsigned nitems) const
 {
     unsigned i;
     for(i=0;i<nitems;i++)
@@ -189,7 +189,7 @@ void JVM_Parser::skip_constant_pool(binary_stream& handle,unsigned nitems)
     }
 }
 
-std::string JVM_Parser::get_utf8(binary_stream& handle,unsigned nidx)
+std::string JVM_Parser::get_utf8(binary_stream& handle,unsigned nidx) const
 {
     unsigned char id;
     handle.seek(jvm_header.constants_offset,binary_stream::Seek_Set);
@@ -207,7 +207,7 @@ std::string JVM_Parser::get_utf8(binary_stream& handle,unsigned nidx)
     return "";
 }
 
-std::string JVM_Parser::get_name(binary_stream& handle)
+std::string JVM_Parser::get_name(binary_stream& handle) const
 {
     unsigned short nidx;
     nidx=handle.read(type_word);
@@ -215,7 +215,7 @@ std::string JVM_Parser::get_name(binary_stream& handle)
     return get_utf8(handle,nidx);
 }
 
-std::string JVM_Parser::get_class_name(binary_stream& handle,unsigned idx)
+std::string JVM_Parser::get_class_name(binary_stream& handle,unsigned idx) const
 {
     if(idx && idx<(unsigned)jvm_header.constant_pool_count-1)
     {
@@ -228,7 +228,7 @@ std::string JVM_Parser::get_class_name(binary_stream& handle,unsigned idx)
     return "";
 }
 
-void JVM_Parser::skip_attributes(binary_stream& handle,unsigned nitems)
+void JVM_Parser::skip_attributes(binary_stream& handle,unsigned nitems) const
 {
     unsigned i;
     for(i=0;i<nitems;i++)
@@ -263,7 +263,7 @@ void JVM_Parser::skip_fields(unsigned nitems,int attr)
     }
 }
 
-std::vector<std::string> JVM_Parser::jvm_read_interfaces(binary_stream& handle,size_t nnames)
+std::vector<std::string> JVM_Parser::jvm_read_interfaces(binary_stream& handle,size_t nnames) const
 {
     std::vector<std::string> rc;
     unsigned i;
@@ -297,7 +297,7 @@ exit:
     return fpos;
 }
 
-std::vector<std::string> JVM_Parser::jvm_read_attributes(binary_stream& handle,size_t nnames)
+std::vector<std::string> JVM_Parser::jvm_read_attributes(binary_stream& handle,size_t nnames) const
 {
     std::vector<std::string> rc;
     unsigned i;
@@ -319,7 +319,7 @@ std::vector<std::string> JVM_Parser::jvm_read_attributes(binary_stream& handle,s
     return rc;
 }
 
-__filesize_t  JVM_Parser::__ShowAttributes(const std::string& title)
+__filesize_t  JVM_Parser::__ShowAttributes(const std::string& title) const
 {
     __filesize_t fpos = beye_context().tell();
     int ret;
@@ -354,7 +354,7 @@ __filesize_t JVM_Parser::action_F10()
     return __ShowAttributes(" length   attributes ");
 }
 
-std::vector<std::string> JVM_Parser::jvm_read_methods(binary_stream& handle,size_t nnames)
+std::vector<std::string> JVM_Parser::jvm_read_methods(binary_stream& handle,size_t nnames) const
 {
     std::vector<std::string> rc;
     unsigned i;
@@ -426,7 +426,7 @@ exit:
     return fpos;
 }
 
-std::vector<std::string> JVM_Parser::jvm_read_fields(binary_stream& handle,size_t nnames)
+std::vector<std::string> JVM_Parser::jvm_read_fields(binary_stream& handle,size_t nnames) const
 {
     std::vector<std::string> rc;
     unsigned i;
@@ -498,7 +498,7 @@ exit:
     return fpos;
 }
 
-std::vector<std::string> JVM_Parser::jvm_read_pool(binary_stream& handle,size_t nnames)
+std::vector<std::string> JVM_Parser::jvm_read_pool(binary_stream& handle,size_t nnames) const
 {
     std::vector<std::string> rc;
     __filesize_t fpos;
@@ -756,7 +756,7 @@ bool JVM_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
   return bret;
 }
 
-std::string JVM_Parser::jvm_ReadPubName(binary_stream& b_cache,const symbolic_information& it)
+std::string JVM_Parser::jvm_ReadPubName(binary_stream& b_cache,const symbolic_information& it) const
 {
     std::string buff;
     b_cache.seek(it.nameoff,binary_stream::Seek_Set);

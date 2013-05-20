@@ -378,14 +378,6 @@ enum {
 };
 /** relocation info handling macros */
 
-inline size_t ELF32_R_SYM(size_t i)		{ return i>>8; }
-inline size_t ELF32_R_TYPE(size_t i)		{ return i&0xff; }
-inline size_t ELF32_R_INFO(size_t s,size_t t)	{ return (s<<8)+(t&0xff); }
-
-inline size_t ELF64_R_SYM(size_t i)		{ return i>>32; }
-inline size_t ELF64_R_TYPE(size_t i)		{ return i&0xffffffff; }
-//inline size_t ELF64_R_INFO(size_t s,size_t t)	{ return ((bfd_vma)(s)<<32)+(bfd_vma)(t); }
-
 /** Legal values for d_tag (dynamic entry type).  */
 enum {
     DT_NULL	=0,		/**< Marks end of dynamic section */
@@ -1496,10 +1488,13 @@ enum {
 	    binary_stream&	fs;
     };
 
-    class Elf {
+    class Elf_Reader {
 	public:
-	    Elf() {}
-	    virtual ~Elf() {}
+	    Elf_Reader() {}
+	    virtual ~Elf_Reader() {}
+
+	    virtual size_t R_SYM(size_t i) const = 0;
+	    virtual size_t R_TYPE(size_t i) const = 0;
 
 	    virtual const Elf_Ehdr&		ehdr() const = 0;
 	    virtual size_t			ehdr_size() const = 0;
@@ -1516,12 +1511,15 @@ enum {
 	    virtual Elf_Sym			read_sym(binary_stream& fs,__filesize_t off) const = 0;
 	    virtual size_t			sym_size() const = 0;
     };
-    class Elf32 : public Elf {
+    class Elf32_Reader : public Elf_Reader {
 	public:
-	    Elf32(binary_stream& fs):elf(fs) {
+	    Elf32_Reader(binary_stream& fs):elf(fs) {
 		_ehdr = elf.read_ehdr();
 	    }
-	    virtual ~Elf32() {}
+	    virtual ~Elf32_Reader() {}
+
+	    virtual size_t R_SYM(size_t i) const { return i>>8; }
+	    virtual size_t R_TYPE(size_t i) const { return i&0xff; }
 
 	    virtual const Elf_Ehdr&		ehdr() const { return _ehdr; }
 	    virtual size_t			ehdr_size() const { return sizeof(Elf386_External_Ehdr); }
@@ -1553,12 +1551,15 @@ enum {
 	    Elf_xx<uint32_t> elf;
 	    Elf_Ehdr _ehdr;
     };
-    class Elf64 : public Elf {
+    class Elf64_Reader : public Elf_Reader {
 	public:
-	    Elf64(binary_stream& fs):elf(fs) {
+	    Elf64_Reader(binary_stream& fs):elf(fs) {
 		_ehdr = elf.read_ehdr();
 	    }
-	    virtual ~Elf64() {}
+	    virtual ~Elf64_Reader() {}
+
+	    virtual size_t R_SYM(size_t i) const { return i>>32; }
+	    virtual size_t R_TYPE(size_t i) const { return i&0xffffffff; }
 
 	    virtual const Elf_Ehdr&		ehdr() const { return _ehdr; }
 	    virtual size_t			ehdr_size() const { return sizeof(Elf64_External_Ehdr); }

@@ -27,6 +27,9 @@ using namespace	usr;
 		NIFTY-Serve	PAF01022
 		CompuServe	74050,1022
 **************************************************************/
+#include <iostream>
+#include <fstream>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -63,15 +66,15 @@ int main(int argc, char *argv[])
 	System msystem();
 	s = argv[3];
 	if(binary_stream::exists(s)) if(binary_stream::unlink(s)) { Err: printf("Problem with %s\n",s); return EXIT_FAILURE; }
-	outfile = new binary_stream;
-	if(outfile->create(s) == false) goto Err;
+	ofs.open(s,std::ios_base::binary);
+	if(!ofs.is_open()) goto Err;
 	if (toupper(*argv[1]) == 'E') retcode = Encode();
 #if 0
 	else                          retcode = Decode(infile,NULL,0L,infile->flength());
 #endif
 	if(!retcode) fprintf(stderr,"Error allocating memory during operation\n");
 	delete infile;
-	delete outfile;
+	ofs.close();
 	return EXIT_SUCCESS;
 }
 

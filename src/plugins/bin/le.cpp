@@ -38,7 +38,7 @@ namespace	usr {
 static const char* txt[]={ "LEHelp", "Import", "ResNam", "NRsNam", "ImpNam", "Entry ", "", "LEHead", "MapTbl", "Object" };
 const char* LE_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-std::vector<std::string> LE_Parser::__ReadMapTblLE(binary_stream& handle,size_t n)
+std::vector<std::string> LE_Parser::__ReadMapTblLE(binary_stream& handle,size_t n) const
 {
     std::vector<std::string> rc;
     size_t i;

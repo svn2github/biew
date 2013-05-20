@@ -49,9 +49,9 @@ namespace	usr {
 	    virtual int			query_platform() const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
 	private:
-	    std::vector<PLRunTimeParms>	__PLReadRunTime(binary_stream& handle,size_t nnames);
+	    std::vector<PLRunTimeParms>	__PLReadRunTime(binary_stream& handle,size_t nnames) const;
 	    void			PLRunTimePaint(TWindow& win,const std::vector<PLRunTimeParms>& names,unsigned start) const;
-	    std::vector<PLSegInfo>	__PLReadSegInfo(binary_stream& handle,size_t nnames);
+	    std::vector<PLSegInfo>	__PLReadSegInfo(binary_stream& handle,size_t nnames) const;
 	    void			PLSegPaint(TWindow& win,const std::vector<PLSegInfo>& names,unsigned start) const;
 
 	    binary_stream&		main_handle;
@@ -153,7 +153,7 @@ void PharLap_Parser::PLSegPaint(TWindow& win,const std::vector<PLSegInfo>& names
     win.refresh_full();
 }
 
-std::vector<PLSegInfo> PharLap_Parser::__PLReadSegInfo(binary_stream& handle,size_t nnames)
+std::vector<PLSegInfo> PharLap_Parser::__PLReadSegInfo(binary_stream& handle,size_t nnames) const
 {
     std::vector<PLSegInfo> rc;
     unsigned i;
@@ -223,7 +223,7 @@ void PharLap_Parser::PLRunTimePaint(TWindow& win,const std::vector<PLRunTimeParm
     win.refresh_full();
 }
 
-std::vector<PLRunTimeParms> PharLap_Parser::__PLReadRunTime(binary_stream& handle,size_t nnames)
+std::vector<PLRunTimeParms> PharLap_Parser::__PLReadRunTime(binary_stream& handle,size_t nnames) const
 {
     std::vector<PLRunTimeParms> rc;
     unsigned i;
