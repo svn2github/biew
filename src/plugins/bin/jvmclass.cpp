@@ -835,7 +835,6 @@ void JVM_Parser::jvm_ReadPubNameList(binary_stream& handle)
     }
     if(handle.eof()) break;
  }
-// if(PubNames->nItems) la_Sort(PubNames,fmtComparePubNames);
 }
 
 __filesize_t JVM_Parser::get_public_symbol(std::string& str,unsigned& func_class,

@@ -126,28 +126,22 @@ void hlpCompile(const char *srcfile)
   fclose(out);
 }
 
-bool __FASTCALL__ MyCallBack(IniInfo *ini,any_t* data)
+bool __FASTCALL__ MyCallBack(const IniInfo& ini,any_t* data)
 {
   UNUSED(data);
-  if(strcmp(ini->section,"ITEMS") == 0)
-  {
-     if(strcmp(ini->subsection,"") == 0)
-     {
+  if(strcmp(ini.section,"ITEMS") == 0) {
+     if(strcmp(ini.subsection,"") == 0) {
        items_freq++;
      }
   }
-  if(strcmp(ini->section,"OPTION") == 0)
-  {
-     if(strcmp(ini->subsection,"") == 0)
-     {
-       if(strcmp(ini->item,"output") == 0)
-       {
-	 strncpy(outfname,ini->value,sizeof(outfname));
+  if(strcmp(ini.section,"OPTION") == 0) {
+     if(strcmp(ini.subsection,"") == 0) {
+       if(strcmp(ini.item,"output") == 0) {
+	 strncpy(outfname,ini.value,sizeof(outfname));
 	 outfname[sizeof(outfname)-1] = 0;
        }
-       if(strcmp(ini->item,"id") == 0)
-       {
-	 strncpy(id_string,ini->value,sizeof(id_string));
+       if(strcmp(ini.item,"id") == 0) {
+	 strncpy(id_string,ini.value,sizeof(id_string));
 	 id_string[sizeof(id_string)-1] = 0;
        }
      }
@@ -155,12 +149,12 @@ bool __FASTCALL__ MyCallBack(IniInfo *ini,any_t* data)
   return false;
 }
 
-bool __FASTCALL__ MyCallOut(IniInfo* ini,any_t* data)
+bool __FASTCALL__ MyCallOut(const IniInfo& ini,any_t* data)
 {
   UNUSED(data);
-  if(strcmp(ini->section,"ITEMS") == 0)
+  if(strcmp(ini.section,"ITEMS") == 0)
   {
-     if(strcmp(ini->subsection,"") == 0)
+     if(strcmp(ini.subsection,"") == 0)
      {
 	unsigned long litem,fpos;
 	unsigned copysize;
@@ -168,10 +162,10 @@ bool __FASTCALL__ MyCallOut(IniInfo* ini,any_t* data)
 	binary_stream* bIn;
 	int handle;
 	fpos = ofs.tellp();
-	printf("Processing: %s\n",ini->value);
-	litem = strtoul(ini->item,NULL,10);
+	printf("Processing: %s\n",ini.value);
+	litem = strtoul(ini.item,NULL,10);
 	sprintf(bhi.item_id,"%08lX",litem);
-	hlpCompile(ini->value);
+	hlpCompile(ini.value);
 	strcpy(tmp_buff,archiver);
 	strcat(tmp_buff," e ");
 	strcat(tmp_buff,COMPNAME);
@@ -197,7 +191,7 @@ bool __FASTCALL__ MyCallOut(IniInfo* ini,any_t* data)
 	handle = ::open(COMPNAME,binary_stream::FO_READONLY | binary_stream::SO_DENYNONE);
 	if(handle == -1)
 	{
-	      fprintf(stderr,"Can not open %s",ini->value);
+	      fprintf(stderr,"Can not open %s",ini.value);
 	      exit(EXIT_FAILURE);
 	}
 	litem = ::lseek(handle,0L,SEEK_END);

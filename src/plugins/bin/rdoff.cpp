@@ -629,7 +629,6 @@ void RDOff_Parser::rdoff_ReadPubNameList(binary_stream& handle)
       if(main_handle.eof()) break;
     }
  }
-// if(PubNames->nItems) la_Sort(PubNames,fmtComparePubNames);
 }
 
 void  RDOff_Parser::ReadImpNameList(binary_stream& handle)

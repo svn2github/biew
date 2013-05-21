@@ -667,7 +667,6 @@ void NLM_Parser::nlm_ReadPubNameList(binary_stream& handle)
    PubNames.insert(nlm_pn);
    if(handle.eof()) break;
  }
-// if(PubNames->nItems) la_Sort(PubNames,fmtComparePubNames);
 }
 
 __filesize_t NLM_Parser::get_public_symbol(std::string& str,unsigned& func_class,

@@ -41,68 +41,55 @@ using namespace	usr;
 #include "plugin.h"
 
 namespace	usr {
-enum {
-    TEXT_TAB     =8,
-    MOD_PLAIN    =0,
-    MOD_BINARY   =1,
-    MOD_MAXMODE  =1
-};
+    enum {
+	TEXT_TAB     =8,
+	MOD_PLAIN    =0,
+	MOD_BINARY   =1,
+	MOD_MAXMODE  =1
+    };
 
-typedef struct tagTSTR
-{
-  unsigned long st;
-  unsigned long end;
-}TSTR;
+    struct TSTR {
+	unsigned long st;
+	unsigned long end;
+    };
 
-typedef struct tag_shash_s
-{
-    unsigned start;
-    unsigned total;
-}shash_t;
+    struct shash_t {
+	unsigned start;
+	unsigned total;
+    };
 
-typedef struct tag_acontext_hl_s
-{
-    Color color;
-    long  start_off;
-    long  end_off;
-}acontext_hl_t;
+    struct acontext_hl_t {
+	Color color;
+	long  start_off;
+	long  end_off;
+    };
 
-typedef struct tag_context_hl_s
-{
-    Color color;
-    char  *start_seq;
-    char  *end_seq;
-}context_hl_t;
+    struct context_hl_t {
+	Color		color;
+	const char*	start_seq;
+	const char*	end_seq;
+    };
 
-typedef struct tag_keyword_hl_s
-{
-    Color color;
-    char  *keyword;
-    unsigned len; /* for accelerating */
-}keyword_hl_t;
+    struct keyword_hl_t {
+	Color		color;
+	const char*	keyword;
+	unsigned	len; /* for accelerating */
+    };
 
-static struct tag_syntax_hl_s
-{
-   char *name;
-   context_hl_t *context;
-   keyword_hl_t *keyword;
-   shash_t       kwd_hash[256];
-   ColorAttr     op_hash[256];
-   unsigned context_num,keyword_num;
-   unsigned maxkwd_len;
-}syntax_hl;
+    struct syntax_hl_t {
+	const char*	name;
+	std::vector<context_hl_t> context;
+	std::vector<keyword_hl_t> keyword;
+	shash_t		kwd_hash[256];
+	ColorAttr	op_hash[256];
+	unsigned	maxkwd_len;
+    };
 
 extern const REGISTRY_NLS RussianNLS;
-static const REGISTRY_NLS *nls_set[] =
-{
+static const REGISTRY_NLS *nls_set[] = {
   &RussianNLS
 };
-
 static const unsigned	MAX_STRLEN=1000; /**< defines maximal length of string */
-static unsigned char	word_set[UCHAR_MAX+1];
-static unsigned char	wset[UCHAR_MAX+1];
-static char*		escape;
-static char		detected_syntax_name[FILENAME_MAX+1];
 
     class TextMode : public Plugin {
 	public:
@@ -149,16 +136,16 @@ static char		detected_syntax_name[FILENAME_MAX+1];
 	    bool			test_leading_escape(__fileoff_t cpos) const;
 	    bool			is_legal_word_char(unsigned char ch) const { return (bool)word_set[(unsigned char)ch]; }
 	    void			drawBound(TWindow& w,int x,int y,char ch) const;
-	    static bool __FASTCALL__	txtFiUserFunc1(IniInfo * info,any_t* data);
-	    static bool __FASTCALL__	txtFiUserFunc2(IniInfo * info,any_t* data);
+	    static bool __FASTCALL__	txtFiUserFunc1(const IniInfo& info,any_t* data);
+	    static bool __FASTCALL__	txtFiUserFunc2(const IniInfo& info,any_t* data);
+	    static bool			cmp_ctx(const context_hl_t& e1,const context_hl_t& e2);
+	    static bool			cmp_kwd(const keyword_hl_t& e1,const keyword_hl_t& e2);
 
-	    acontext_hl_t*		acontext; /* means active context*/
-	    unsigned long		acontext_num;
+	    std::vector<acontext_hl_t>	acontext; /* means active context*/
 
 	    int				HiLight;
-
 	    unsigned			bin_mode; /**< points to currently selected mode text mode */
-	    binary_stream*			txtHandle; /**< Own handle of BBIO stream. (For speed). */
+	    binary_stream*		txtHandle; /**< Own handle of BBIO stream. (For speed). */
 
 	    TSTR			*tlines,*ptlines;
 	    unsigned int		maxstrlen; /**< contains maximal length of string which can be displayed without wrapping */
@@ -174,18 +161,24 @@ static char		detected_syntax_name[FILENAME_MAX+1];
 	    binary_stream&		main_handle;
 	    const Bin_Format&		bin_format;
 	    udn&			_udn;
+
+	    syntax_hl_t		syntax_hl;
+	    unsigned char	word_set[UCHAR_MAX+1];
+	    unsigned char	wset[UCHAR_MAX+1];
+	    std::string		escape;
+	    std::string		detected_syntax_name;
     };
 
 bool TextMode::test_leading_escape(__fileoff_t cpos) const {
     char tmps[MAX_STRLEN];
     __fileoff_t epos = main_handle.tell(),spos;
-    unsigned escl = ::strlen(escape);
+    unsigned escl = escape.length();
     spos=(cpos-1)-escl;
     if(escl && spos>=0) {
 	main_handle.seek(spos,binary_stream::Seek_Set);
 	main_handle.read(tmps,escl);
 	main_handle.seek(epos,binary_stream::Seek_Set);
-	return ::memcmp(tmps,escape,escl)==0;
+	return ::memcmp(tmps,escape.c_str(),escl)==0;
     }
     return 0;
 }
@@ -219,7 +212,7 @@ ColorAttr TextMode::hl_find_kwd(const char *str,Color col,unsigned *st_len) cons
 void TextMode::markup_ctx()
 {
     long fptr,fpos,flen;
-    unsigned i,len;
+    size_t i,sz,len;
     int found;
     char tmps[MAX_STRLEN],ktmps[MAX_STRLEN],ch,chn;
     const char *sseq,*eseq;
@@ -228,13 +221,14 @@ void TextMode::markup_ctx()
     flen=main_handle.flength();
     fpos=main_handle.tell();
     main_handle.seek(0,binary_stream::Seek_Set);
-    acontext_num=0;
+    acontext.clear();
     for(fptr=0;fptr<flen;fptr++) {
 	tmps[0]=0;
 	ch=main_handle.read(type_byte);
 	found=0;
 	if(ch=='\r') ch='\n';
-	for(i=0;i<syntax_hl.context_num;i++) {
+	sz=syntax_hl.context.size();
+	for(i=0;i<sz;i++) {
 	    unsigned ss_idx;
 	    ss_idx=0;
 	    sseq=syntax_hl.context[i].start_seq;
@@ -260,7 +254,7 @@ void TextMode::markup_ctx()
 		}
 		else found=1;
 		/*avoid markup escape sequences */
-		if(found && escape) found = !test_leading_escape(cpos);
+		if(found && !escape.empty()) found = !test_leading_escape(cpos);
 		if(found) {
 		    /* avoid context markup if it's equal one of keywords */
 		    unsigned st_len;
@@ -276,11 +270,10 @@ void TextMode::markup_ctx()
 		    if(st_len) found=0;
 		}
 		if(found) {
-		    if(!acontext) acontext=new acontext_hl_t;
-		    else	  acontext=(acontext_hl_t*)mp_realloc(acontext,sizeof(acontext_hl_t)*(acontext_num+1));
-		    acontext[acontext_num].color=(Color)LOGFB_TO_PHYS(syntax_hl.context[i].color,BACK_COLOR(text_cset.normal));
-		    acontext[acontext_num].start_off=fptr-ss_idx;
-		    acontext[acontext_num].end_off=flen;
+		    acontext_hl_t entry;
+		    entry.color=(Color)LOGFB_TO_PHYS(syntax_hl.context[i].color,BACK_COLOR(text_cset.normal));
+		    entry.start_off=fptr-ss_idx;
+		    entry.end_off=flen;
 		    fptr+=len;
 		    main_handle.seek(fptr,binary_stream::Seek_Set);
 		    /* try find end */
@@ -297,17 +290,17 @@ void TextMode::markup_ctx()
 				if(::memcmp(tmps,&eseq[1],len-1)==0) found=1;
 			    }
 			    else found=1;
-			    if(found && escape) found=!test_leading_escape(ecpos);
+			    if(found && !escape.empty()) found=!test_leading_escape(ecpos);
 			    if(found) {
 				fptr+=len;
 				main_handle.seek(fptr,binary_stream::Seek_Set);
-				acontext[acontext_num].end_off=fptr;
+				entry.end_off=fptr;
 				break;
 			    }
 			    else main_handle.seek(ecpos,binary_stream::Seek_Set);
 			}
 		    }
-		    acontext_num++;
+		    acontext.push_back(entry);
 		    fptr--;
 		}
 		else main_handle.seek(cpos,binary_stream::Seek_Set);
@@ -353,68 +346,68 @@ static void unfmt_str(unsigned char *str)
    *dest=0;
 }
 
-bool __FASTCALL__ TextMode::txtFiUserFunc1(IniInfo * info,any_t* data)
+bool __FASTCALL__ TextMode::txtFiUserFunc1(const IniInfo& info,any_t* data)
 {
-    TextMode* mode = reinterpret_cast<TextMode*>(data);
-  const char* p=NULL;
-  if(strcmp(info->section,"Extensions")==0) {
+    TextMode& mode = *reinterpret_cast<TextMode*>(data);
+    const char* p=NULL;
+    if(strcmp(info.section,"Extensions")==0) {
 	p = strrchr(beye_context().ArgVector1.c_str(),'.');
 	if(p) {
 	    p++;
-	    if(strcmp(p,info->item)==0) {
-		strcpy(detected_syntax_name,info->value);
+	    if(strcmp(p,info.item)==0) {
+		mode.detected_syntax_name=info.value;
 		return true;
 	    }
 	}
-  }
-  if(strcmp(info->section,"Names")==0) {
+    }
+    if(strcmp(info.section,"Names")==0) {
 	const char *pp;
 	p = strrchr(beye_context().ArgVector1.c_str(),'/');
 	pp = strrchr(beye_context().ArgVector1.c_str(),'\\');
 	p=std::max(p,pp);
 	if(p) p++;
 	else  p=beye_context().ArgVector1.c_str();
-	if(memcmp(p,info->item,strlen(info->item))==0) {
-	    strcpy(detected_syntax_name,info->value);
+	if(memcmp(p,info.item,strlen(info.item))==0) {
+	    mode.detected_syntax_name=info.value;
 	    return true;
 	}
-  }
-  if(strcmp(info->section,"Context")==0) {
+    }
+    if(strcmp(info.section,"Context")==0) {
 	long off,fpos;
 	unsigned i,ilen;
 	int found,softmode;
-	off = atol(info->item);
+	off = atol(info.item);
 	char stmp[4096];
-	strncpy(stmp,info->value,sizeof(stmp));
+	strncpy(stmp,info.value,sizeof(stmp));
 	char* value=strstr(stmp,"-->");
 	if(!value) { beye_context().ErrMessageBox("Missing separator in main context definition",""); return true; }
 	*value=0;
 	softmode=0;
-	if(strcmp(info->subsection,"Soft")==0) softmode=1;
+	if(strcmp(info.subsection,"Soft")==0) softmode=1;
 	unfmt_str((unsigned char*)stmp);
 	ilen=strlen(stmp);
-	fpos=mode->main_handle.tell();
-	mode->main_handle.seek(off,binary_stream::Seek_Set);
+	fpos=mode.main_handle.tell();
+	mode.main_handle.seek(off,binary_stream::Seek_Set);
 	found=1;
 	for(i=0;i<ilen;i++) {
 	    unsigned char ch;
-	    ch=mode->main_handle.read(type_byte);
+	    ch=mode.main_handle.read(type_byte);
 	    if(softmode) while(isspace(ch)) {
-		ch=mode->main_handle.read(type_byte);
-		if(mode->main_handle.eof()) { found = 0; break; }
+		ch=mode.main_handle.read(type_byte);
+		if(mode.main_handle.eof()) { found = 0; break; }
 	    }
 	    if(ch != stmp[i]) {
 		found=0;
 		break;
 	    }
 	}
-	mode->main_handle.seek(fpos,binary_stream::Seek_Set);
+	mode.main_handle.seek(fpos,binary_stream::Seek_Set);
 	if(found) {
-	    strcpy(detected_syntax_name,value+3);
+	    mode.detected_syntax_name=value+3;
 	    return true;
 	}
-  }
-  return false;
+    }
+    return false;
 }
 
 static Color  __FASTCALL__ getCtxColorByName(const char *subsection,const char *item,Color cdef,bool *err)
@@ -464,103 +457,86 @@ static Color  __FASTCALL__ getOpColorByName(const char *item,Color cdef,bool *er
 }
 
 static const char *last_syntax_err="";
-bool __FASTCALL__ TextMode::txtFiUserFunc2(IniInfo * info,any_t* data)
+bool __FASTCALL__ TextMode::txtFiUserFunc2(const IniInfo& info,any_t* data)
 {
-    TextMode* mode = reinterpret_cast<TextMode*>(data);
+    TextMode& mode = *reinterpret_cast<TextMode*>(data);
     UNUSED(mode);
     char *p;
     bool err;
     Color cdef=FORE_COLOR(text_cset.normal);
     err=false;
-    if(::strcmp(info->section,"General")==0) {
-	if(::strcmp(info->item,"Name")==0) {
-	    syntax_hl.name=new char [strlen(info->value)+1];
-	    ::strcpy(syntax_hl.name,info->value);
+    if(::strcmp(info.section,"General")==0) {
+	if(::strcmp(info.item,"Name")==0) {
+	    mode.syntax_hl.name=::strdup(info.value);
 	}
-	if(strcmp(info->item,"Escape")==0) {
-	    escape=new char [strlen(info->value)+1];
-	    ::strcpy(escape,info->value);
-	}
-	if(strcmp(info->item,"WSet")==0) {
+	if(strcmp(info.item,"Escape")==0) mode.escape=info.value;
+	if(strcmp(info.item,"WSet")==0) {
 	    unsigned i,len,rlen;
-	    len=::strlen(info->value);
-	    for(i=0;i<len;i++) word_set[(unsigned char)info->value[i]]=1;
+	    len=::strlen(info.value);
+	    for(i=0;i<len;i++) mode.word_set[(unsigned char)info.value[i]]=1;
 	    rlen=std::min(unsigned(UCHAR_MAX),len);
-	    ::memcpy(wset,info->value,rlen);
-	    wset[rlen]=0;
+	    ::memcpy(mode.wset,info.value,rlen);
+	    mode.wset[rlen]=0;
 	}
     }
-    if(::strcmp(info->section,"Context")==0) {
+    if(::strcmp(info.section,"Context")==0) {
+	context_hl_t entry;
 	Color col;
-	col = getCtxColorByName(info->subsection,info->item,cdef,&err);
+	col = getCtxColorByName(info.subsection,info.item,cdef,&err);
 	if(!err) {
-	    if(!syntax_hl.context) syntax_hl.context=new context_hl_t;
-	    else syntax_hl.context=(context_hl_t*)realloc(syntax_hl.context,sizeof(context_hl_t)*(syntax_hl.context_num+1));
-	    syntax_hl.context[syntax_hl.context_num].color=col;
-	    p=::strstr((char*)info->value,"...");
+	    entry.color=col;
+	    p=::strstr((char*)info.value,"...");
 	    if(!p) { last_syntax_err="Missing separator in context definition"; return true; }
 	     *p=0;
 	    p+=3;
-	    unfmt_str((unsigned char*)info->value);
+	    unfmt_str((unsigned char*)info.value);
 	    unfmt_str((unsigned char*)p);
-	    syntax_hl.context[syntax_hl.context_num].start_seq=new char [strlen(info->value)+1];
-	    ::strcpy(syntax_hl.context[syntax_hl.context_num].start_seq,info->value);
-	    syntax_hl.context[syntax_hl.context_num].end_seq=new char [strlen(p)+1];
-	    ::strcpy(syntax_hl.context[syntax_hl.context_num].end_seq,p);
-	    syntax_hl.context_num++;
+	    entry.start_seq=::strdup(info.value);
+	    entry.end_seq=::strdup(p);
+	    mode.syntax_hl.context.push_back(entry);
 	} else last_syntax_err=beye_context().last_skin_error.c_str();
     }
-    if(::strcmp(info->section,"Keywords")==0) {
+    if(::strcmp(info.section,"Keywords")==0) {
+	keyword_hl_t entry;
 	Color col;
-	col = getKwdColorByName(info->item,cdef,&err);
+	col = getKwdColorByName(info.item,cdef,&err);
 	if(!err) {
-	    if(!syntax_hl.keyword) syntax_hl.keyword=new keyword_hl_t;
-	    else syntax_hl.keyword=(keyword_hl_t*)realloc(syntax_hl.keyword,sizeof(keyword_hl_t)*(syntax_hl.keyword_num+1));
-	    syntax_hl.keyword[syntax_hl.keyword_num].color=col;
-	    unfmt_str((unsigned char*)info->value);
-	    syntax_hl.keyword[syntax_hl.keyword_num].len=strlen(info->value);
-	    syntax_hl.keyword[syntax_hl.keyword_num].keyword=new char [syntax_hl.keyword[syntax_hl.keyword_num].len+1];
-	    ::strcpy(syntax_hl.keyword[syntax_hl.keyword_num].keyword,info->value);
-	    if(syntax_hl.keyword[syntax_hl.keyword_num].len > syntax_hl.maxkwd_len)
-		syntax_hl.maxkwd_len=syntax_hl.keyword[syntax_hl.keyword_num].len;
-	    syntax_hl.keyword_num++;
+	    entry.color=col;
+	    unfmt_str((unsigned char*)info.value);
+	    entry.len=strlen(info.value);
+	    entry.keyword=::strdup(info.value);
+	    if(entry.len > mode.syntax_hl.maxkwd_len)
+		mode.syntax_hl.maxkwd_len=entry.len;
+	    mode.syntax_hl.keyword.push_back(entry);
 	}
 	else last_syntax_err=beye_context().last_skin_error.c_str();
     }
-    if(::strcmp(info->section,"Operators")==0) {
+    if(::strcmp(info.section,"Operators")==0) {
 	Color col;
-	col = getOpColorByName(info->item,cdef,&err);
+	col = getOpColorByName(info.item,cdef,&err);
 	if(!err) {
-	    unfmt_str((unsigned char*)info->value);
-	    if(::strlen(info->value)>1) { last_syntax_err="Too long operator has been found"; return true; }
-	    syntax_hl.op_hash[(unsigned char)info->value[0]]=LOGFB_TO_PHYS(col,BACK_COLOR(text_cset.normal));
+	    unfmt_str((unsigned char*)info.value);
+	    if(::strlen(info.value)>1) { last_syntax_err="Too long operator has been found"; return true; }
+	    mode.syntax_hl.op_hash[(unsigned char)info.value[0]]=LOGFB_TO_PHYS(col,BACK_COLOR(text_cset.normal));
 	} else last_syntax_err=beye_context().last_skin_error.c_str();
     }
     return err?true:false;
 }
 
-static tCompare __FASTCALL__ cmp_ctx(const any_t* e1,const any_t* e2)
+bool TextMode::cmp_ctx(const context_hl_t& e1,const context_hl_t& e2)
 {
-    const char *k1,*k2;
-    int sl1,sl2,res;
-    k1=(*(const context_hl_t  *)e1).start_seq;
-    k2=(*(const context_hl_t  *)e2).start_seq;
-    sl1=::strlen((*(const context_hl_t  *)e1).start_seq);
-    sl2=::strlen((*(const context_hl_t  *)e2).start_seq);
-    res=::memcmp(k1,k2,std::min(sl1,sl2));
-    return res==0?__CmpLong__(sl2,sl1):res;
+    std::string k1,k2;
+    k1=e1.start_seq;
+    k2=e2.start_seq;
+    return k1 < k2;
 }
 
-static tCompare __FASTCALL__ cmp_kwd(const any_t* e1,const any_t* e2)
+bool TextMode::cmp_kwd(const keyword_hl_t& e1,const keyword_hl_t& e2)
 {
-    const char *k1,*k2;
-    int sl1,sl2,res;
-    k1=(*(const keyword_hl_t  *)e1).keyword;
-    k2=(*(const keyword_hl_t  *)e2).keyword;
-    sl1=::strlen((*(const keyword_hl_t  *)e1).keyword);
-    sl2=::strlen((*(const keyword_hl_t  *)e2).keyword);
-    res=::memcmp(k1,k2,std::min(sl1,sl2));
-    return res==0?__CmpLong__(sl2,sl1):res;
+    std::string k1,k2;
+    k1=e1.keyword;
+    k2=e2.keyword;
+    return k1 < k2;
 }
 
 void TextMode::read_syntaxes()
@@ -575,23 +551,24 @@ void TextMode::read_syntaxes()
 	    p=::strrchr(tmp,'/');
 	    pp=::strrchr(tmp,'\\');
 	    p=std::max(p,pp);
-	    if(p) { p++; ::strcpy(p,detected_syntax_name); }
-	    ::strcpy(detected_syntax_name,tmp);
+	    if(p) { p++; ::strcpy(p,detected_syntax_name.c_str()); }
+	    detected_syntax_name=tmp;
 	    if(binary_stream::exists(detected_syntax_name)) {
-		unsigned i,total;
+		size_t i,sz,total;
 		int phash;
 		::memset(word_set,0,sizeof(word_set));
 		Ini_Parser::scan(detected_syntax_name,&TextMode::txtFiUserFunc2,this);
 		if(last_syntax_err[0]) beye_context().ErrMessageBox(last_syntax_err,"");
 		/* put longest strings on top */
-		HQSort(syntax_hl.context,syntax_hl.context_num,sizeof(context_hl_t),cmp_ctx);
-		HQSort(syntax_hl.keyword,syntax_hl.keyword_num,sizeof(keyword_hl_t),cmp_kwd);
+		std::sort(syntax_hl.context.begin(),syntax_hl.context.end(),cmp_ctx);
+		std::sort(syntax_hl.keyword.begin(),syntax_hl.keyword.end(),cmp_kwd);
 		/* Fill keyword's hash */
 		phash=-1;
 		total=0;
 		for(i=0;i<sizeof(syntax_hl.kwd_hash)/sizeof(syntax_hl.kwd_hash[0]);i++)
 		    syntax_hl.kwd_hash[i].start=syntax_hl.kwd_hash[i].total=UINT_MAX;
-		for(i=0;i<syntax_hl.keyword_num;i++) {
+		sz=syntax_hl.keyword.size();
+		for(i=0;i<sz;i++) {
 		    if(syntax_hl.keyword[i].keyword[0]!=phash) {
 			if(phash!=-1) syntax_hl.kwd_hash[phash].total=total;
 			phash=(unsigned char)(syntax_hl.keyword[i].keyword[0]);
@@ -601,7 +578,7 @@ void TextMode::read_syntaxes()
 		    total++;
 		}
 		if(phash!=-1) syntax_hl.kwd_hash[phash].total=total;
-		if(syntax_hl.context_num) markup_ctx();
+		if(!syntax_hl.context.empty()) markup_ctx();
 	    }
 	}
     }
@@ -609,13 +586,12 @@ void TextMode::read_syntaxes()
 
 ColorAttr TextMode::hl_get_ctx(long off,int *is_valid, long *end_ctx) const
 {
-    unsigned long ii;
+    size_t ii,sz;
     *is_valid=0;
     *end_ctx=main_handle.flength();
-    for(ii=0;ii<acontext_num;ii++)
-    {
-	if(acontext[ii].start_off <= off && off < acontext[ii].end_off)
-	{
+    sz=acontext.size();
+    for(ii=0;ii<sz;ii++) {
+	if(acontext[ii].start_off <= off && off < acontext[ii].end_off) {
 	    *is_valid=1;
 	    *end_ctx=acontext[ii].end_off;
 	    return acontext[ii].color;
@@ -970,34 +946,21 @@ TextMode::TextMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeG
     }
     binary_stream& bh = main_handle;
     txtHandle = bh.dup();
-    ::memset(&syntax_hl,0,sizeof(syntax_hl));
+//    ::memset(&syntax_hl,0,sizeof(syntax_hl));
     /* Fill operator's hash */
     ::memset(syntax_hl.op_hash,text_cset.normal,sizeof(syntax_hl.op_hash));
     if(detect()) read_syntaxes();
 }
 
 TextMode::~TextMode() {
-    unsigned i;
     delete buff;
     delete tlines;
     delete ptlines;
     binary_stream& bh = main_handle;
     if(txtHandle != &bh) delete txtHandle;
     if(syntax_hl.name) delete syntax_hl.name;
-    if(escape) delete escape;
-    escape=NULL;
-    if(syntax_hl.context) {
-	for(i=0;i<syntax_hl.context_num;i++) { delete syntax_hl.context[i].start_seq; delete syntax_hl.context[i].end_seq; }
-	delete syntax_hl.context;
-    }
-    if(syntax_hl.keyword) {
-	for(i=0;i<syntax_hl.keyword_num;i++) { delete syntax_hl.keyword[i].keyword; }
-        delete syntax_hl.keyword;
-    }
-    delete acontext;
-    acontext=NULL;
-    acontext_num=0;
-    ::memset(&syntax_hl,0,sizeof(syntax_hl));
+    syntax_hl.context.clear();
+    syntax_hl.keyword.clear();
 }
 
 static const char* txt[] = { "", "CodPag", "TxMode", "NLSSet", "", "", "", "TxType", "HiLght", "UsrNam" };

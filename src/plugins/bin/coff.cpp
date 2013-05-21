@@ -684,7 +684,6 @@ void Coff_Parser::coff_ReadPubNameList(binary_stream& handle)
    }
    if(handle.eof()) break;
  }
-// la_Sort(PubNames,fmtComparePubNames);
 }
 
 __filesize_t Coff_Parser::get_public_symbol(std::string& str,unsigned& func_class,

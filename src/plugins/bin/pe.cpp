@@ -1367,7 +1367,6 @@ void PE_Parser::pe_ReadPubNameList(binary_stream& handle)
     pn.attr = SC_GLOBAL;
     PubNames.insert(pn);
   }
-//  la_Sort(PubNames,fmtComparePubNames);
 }
 
 __filesize_t PE_Parser::get_public_symbol(std::string& str,unsigned& func_class,__filesize_t pa,bool as_prev)

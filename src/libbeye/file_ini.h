@@ -107,7 +107,7 @@ namespace	usr {
 		     * @param info            pointers to current record from inni file
 		     * @param data            pointers to user's data
 		    **/
-    typedef bool      (__FASTCALL__ *ini_user_func)(IniInfo * info,any_t* data);
+    typedef bool      (__FASTCALL__ *ini_user_func)(const IniInfo& info,any_t* data);
 
     class Ini_Parser : public Opaque {
 	public:
@@ -218,7 +218,7 @@ namespace	usr {
 	    void		file_scaning();
 	    bool		__addCache(const std::string& section,const std::string& subsection,
 					    const std::string& item,const std::string& value);
-	    static bool	__FASTCALL__ __buildCache(IniInfo *ini,any_t* data);
+	    static bool	__FASTCALL__ __buildCache(const IniInfo& ini,any_t* data);
 	    int			out_sect(std::fstream& fs,const std::string& section,unsigned nled);
 	    int			out_subsect(std::fstream& fs,const std::string& subsection,unsigned nled);
 	    void		out_item(std::fstream& fs,unsigned nled,const std::string& _item,const std::string& value);

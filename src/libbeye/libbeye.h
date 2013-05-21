@@ -137,33 +137,6 @@ namespace	usr {
 
 #define TESTFLAG(x,y) (((x) & (y)) == (y)) /**< Test y bits in x */
 
-    typedef int tCompare; /**< This is the data type used to represent comparition results */
-
-		   /** Pointer to a user supplied function that compares array elements.
-		     * @return                tCompare value indicated relationship between elements of array:
-					      if e1 < e2, return < 0
-					      if e1 > e2, return > 0
-					      if e1 == e2, return = 0
-		     * @param e1,e2           pointers to array elements
-		    **/
-    typedef tCompare (__FASTCALL__ *func_compare)(const any_t*e1,const any_t*e2);
-
-		   /** Implements quick sort algorithm.
-		     * @return                none
-		     * @param base            specifies array being sorted
-		     * @param num             specifies number of elements in array
-		     * @param width           specifies with (in bytes) of one element of array
-		     * @param fcompare        specifies pointer to user defined function
-		     * @warning               After function call the original array
-		     *                        is overwritten with sorted array in
-		     *                        ascending order.
-		     * @note                  Using own code for qsort and bsearch
-		     *                        functions is guarantee of stable work
-		     * @see                   HLFind HLFindNearest
-		    **/
-    void  __FASTCALL__ HQSort(any_t*base, unsigned long num, unsigned width,
-				 func_compare fcompare);
-
 		   /** Tests wether character is a separator
 		     * @return                true if given character is separator
 		     * @param ch              character to be tested

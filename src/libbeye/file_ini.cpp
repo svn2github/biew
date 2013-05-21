@@ -633,7 +633,7 @@ bool Ini_Parser::string_parser(const std::string& curr_str)
        else info.subsection = "";
        info.item = item.c_str();
        info.value = val.c_str();
-       if(user_proc) retval = (*user_proc)(&info,user_data);
+       if(user_proc) retval = (*user_proc)(info,user_data);
       }
       else Ini_Parser::error_cl(__INI_BADCHAR);
       return retval;
@@ -702,10 +702,10 @@ bool Ini_Profile::__addCache(const std::string& section,const std::string& subse
     return false;
 }
 
-bool Ini_Profile::__buildCache(IniInfo *ini,any_t* data)
+bool Ini_Profile::__buildCache(const IniInfo& ini,any_t* data)
 {
     Ini_Profile* self = reinterpret_cast<Ini_Profile*>(data);
-    return self->__addCache(ini->section,ini->subsection,ini->item,ini->value);
+    return self->__addCache(ini.section,ini.subsection,ini.item,ini.value);
 }
 
 int Ini_Profile::out_sect(std::fstream& fs,const std::string& section,unsigned nled)
@@ -758,7 +758,6 @@ void Ini_Profile::close()
 std::string Ini_Profile::read(const std::string& section,const std::string& subsection,
 				const std::string& _item,const std::string& def_value) const
 {
-    unsigned ret;
     std::string value=def_value;
     if(handler->opened()) {
 	std::map<std::string,std::map<std::string,std::map<std::string,std::string> > >::const_iterator inner = cache.find(section);
