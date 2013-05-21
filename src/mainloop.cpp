@@ -66,14 +66,11 @@ void __FASTCALL__ HiLightSearch(TWindow& out,__filesize_t cfp,tRelCoord minx,tRe
  it.attrs = attrs;
  width = (flags & HLS_USE_DOUBLE_WIDTH) == HLS_USE_DOUBLE_WIDTH ? maxx*2 : maxx-minx;
  attr = browser_cset.highline;
- if((flags & HLS_USE_BUFFER_AS_VIDEO) == HLS_USE_BUFFER_AS_VIDEO)
- {
+ if((flags & HLS_USE_BUFFER_AS_VIDEO) == HLS_USE_BUFFER_AS_VIDEO) {
    memcpy(chars,buff->buff.chars,width);
    memcpy(oem_pg,buff->buff.oem_pg,width);
    memset(attrs,attr,width);
- }
- else
- {
+ } else {
    memcpy(chars,buff->text,width);
    memset(oem_pg,0,width);
    memset(attrs,attr,width);
@@ -85,8 +82,7 @@ void __FASTCALL__ HiLightSearch(TWindow& out,__filesize_t cfp,tRelCoord minx,tRe
  if((flags & HLS_USE_DOUBLE_WIDTH) == HLS_USE_DOUBLE_WIDTH) __len *= 2;
  if(__len > width - x) __len = width - x;
  if(x < 0) { __len += x; x = 0; }
- if(__len && x + __len <= width)
- {
+ if(__len && x + __len <= width) {
    unsigned char end,st;
    st = x;
    end = (__len + x);
