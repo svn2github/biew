@@ -608,23 +608,17 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
       case KE_F(10):
       case KE_ESCAPE: goto exit;
       case KE_ENTER:
-		    {
-		      if(prev_func_pa)
-		      {
+		      if(prev_func_pa) {
 			ret_addr = prev_func_pa;
 		      }
 		      else beye_context().ErrMessageBox(NOT_ENTRY,"");
-		    }
 		    goto exit;
       case KE_F(5):
       case KE_CTL_ENTER:
-		    {
-		      if(next_func_pa)
-		      {
+		      if(next_func_pa) {
 			ret_addr = next_func_pa;
 		      }
 		      else beye_context().ErrMessageBox(NOT_ENTRY,"");
-		    }
 		    goto exit;
       default: break;
     }

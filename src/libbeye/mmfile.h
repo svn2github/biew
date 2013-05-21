@@ -16,7 +16,7 @@ namespace	usr {
 
 	    virtual bool		open(const std::string& fname,unsigned openmode);
 	    virtual bool		close();
-	    virtual bool		eof() const;
+	    virtual bool		eof();
 	    virtual bool		flush();
 	    virtual uint8_t		read(const data_type_qualifier__byte_t&);
 	    virtual uint16_t		read(const data_type_qualifier__word_t&);
@@ -24,7 +24,7 @@ namespace	usr {
 	    virtual uint64_t		read(const data_type_qualifier_qword_t&);
 	    virtual bool		read(any_t* buffer,unsigned cbBuffer);
 	    virtual bool		seek(__fileoff_t offset,e_seek origin);
-	    virtual __filesize_t	tell() const;
+	    virtual __filesize_t	tell();
 	    virtual bool		write(uint8_t bVal);
 	    virtual bool		write(uint16_t wVal);
 	    virtual bool		write(uint32_t dwVal);

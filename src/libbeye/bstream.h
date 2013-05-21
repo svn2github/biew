@@ -1,6 +1,7 @@
 #ifndef __BSTREAM_HPP_INCLUDED
 #define __BSTREAM_HPP_INCLUDED 1
 #include "libbeye/libbeye.h"
+#include <fstream>
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -60,12 +61,12 @@ namespace	usr {
 		   /** Determines whether a opened stream has reached the End of File.
 		     * @return                true if EOF has reached
 		    **/
-	    virtual bool		eof() const;
+	    bool		eof() const { return fs.eof(); }
 
 		   /** Returns the length (in bytes) of file associated with opened stream.
 		     * @return                file length
 		    **/
-	    virtual __filesize_t	flength() const;
+	    __filesize_t	flength() const { return fsize; }
 
 		   /** Flushes buffer onto disk.
 		     * @return                true if operation was succesfully performed
@@ -121,7 +122,7 @@ namespace	usr {
 		   /** Returns logical file position of opened stream.
 		     * @return                offset from begin of file
 		    **/
-	    virtual __filesize_t	tell() const;
+	    virtual __filesize_t	tell();
 
 		   /** Writes one byte to stream.
 		     * @return                true if operation was succesfully performed
@@ -167,7 +168,7 @@ namespace	usr {
 		   /** Returns name of file associated with opened stream.
 		     * @return                name of file
 		    **/
-	    virtual std::string		filename() const;
+	    std::string		filename() const { return fname; }
 
 		   /** Changes size of opened file.
 		     * @return                true if operation was succesfully performed
@@ -185,12 +186,8 @@ namespace	usr {
 		     *                        characteristics.
 		    **/
 	    virtual bool		dup(binary_stream&) const;
-	    virtual binary_stream*		dup();
+	    virtual binary_stream*	dup();
 
-		   /** Returns low-level OS handle of opened stream.
-		     * @return                OS handle of opened stream
-		    **/
-	    virtual int			handle() const;
 		   /** Rereads opened file from disk.
 		     * @return                true if operation was succesfully performed
 		    **/
@@ -199,7 +196,9 @@ namespace	usr {
 	    virtual unsigned		get_optimization() const;
 	    virtual unsigned		set_optimization(unsigned flags);
 
-	    virtual int			truncate(__filesize_t newsize);
+	    std::fstream&	handle() { return fs; }
+
+//	    virtual int			truncate(__filesize_t newsize);
 /* Static member for standalone usage */
 
 /** Structure for storing and setting file time information */
@@ -214,13 +213,17 @@ namespace	usr {
 	    static bool			get_ftime(const std::string& name,ftime& data);
 	    static bool			set_ftime(const std::string& name,const ftime& data);
 	protected:
+		   /** Returns low-level OS handle of opened stream.
+		     * @return                OS handle of opened stream
+		    **/
 	    bool			is_writeable(unsigned _openmode) const { return ((_openmode & O_RDWR) || (_openmode & O_WRONLY)); }
+	    void			flength(__filesize_t newsize) { fsize=newsize; }
 	private:
 	    void			update_length();
-	    __filesize_t		_tell() const;
-	    int				_handle;
-	    std::string			fname;
 	    __filesize_t		fsize;
+	    std::ios_base::openmode	mode;
+	    std::string			fname;
+	    std::fstream		fs;
     };
 } // namespace	usr
 

@@ -54,88 +54,15 @@ namespace	usr {
 	    BBio_File(unsigned buffSize,unsigned optimization);
 	    virtual ~BBio_File();
 	    virtual bool		open(const std::string& fname,unsigned openmode);
-	    virtual bool		chsize(__filesize_t newsize);
-	    virtual bool		close();
-	    virtual bool		eof() const;
-	    virtual __filesize_t	flength() const;
-	    virtual bool		flush();
-	    virtual uint8_t		read(const data_type_qualifier__byte_t&);
-	    virtual uint16_t		read(const data_type_qualifier__word_t&);
-	    virtual uint32_t		read(const data_type_qualifier_dword_t&);
-	    virtual uint64_t		read(const data_type_qualifier_qword_t&);
-	    virtual bool		read(any_t* buffer,unsigned cbBuffer);
-	    virtual bool		reread();
-	    virtual bool		seek(__fileoff_t offset,e_seek origin);
 	    virtual unsigned		get_optimization() const;
 	    virtual unsigned		set_optimization(unsigned flags);
-	    virtual __filesize_t	tell() const;
-	    virtual bool		write(uint8_t bVal);
-	    virtual bool		write(uint16_t wVal);
-	    virtual bool		write(uint32_t dwVal);
-	    virtual bool		write(uint64_t dwVal);
-	    virtual bool		write(const any_t* buffer,unsigned cbBuffer);
 	    virtual bool		dup(BBio_File&) const;
 	    virtual binary_stream*	dup();
     private:
-	    /** Virtual file buffer structure */
-	    class binary_cache {
-		public:
-		    binary_cache(BBio_File& _parent,unsigned size);
-		    virtual ~binary_cache();
-
-		    unsigned 		buffsize() const { return bufsize; }
-		    __filesize_t	fstart() const { return f_start; }
-		    binary_cache&	operator=(const binary_cache& it);
-		    bool		is_out_of_buffer(__filesize_t pos) const { return pos < f_start || pos >= f_start + bufsize; }
-		    bool		is_out_of_contents(__filesize_t pos) const { return pos < f_start || pos >= f_start + buflen; }
-		    bool		fill(__fileoff_t pos);
-		    bool		flush();
-		    bool		seek(__fileoff_t pos,e_seek origin);
-		    unsigned char	read();
-		    bool		write(unsigned char ch);
-		    bool		read(char* buff,unsigned cbBuff);
-		    bool		write(const char* buff,unsigned cbBuff);
-		    void		chsize(__filesize_t newsize);
-
-		    unsigned		buflen;  /**< length data, actually contains in buffer */
-		    bool		updated; /**< true if buffer contains data, that not pesent in file */
-		private:
-		    __filesize_t	f_start; /**< logical position of mirror the buffer onto file */
-		    unsigned		bufsize; /**< real size of buffer */
-		    LocalPtr<char>	buffer;  /**< NULL - is illegal case */
-		    BBio_File&	parent;
-	    };
-
-	    bool is_writeable(unsigned _openmode) const { return (_openmode & O_RDWR) || (_openmode & O_WRONLY); }
-	    bool chk_eof(__fileoff_t& pos) { is_eof = false;
-		/* Accessing memory after mmf[flength-1] causes GPF in MMF mode */
-		/* so we must add special checks for it but no for read-write mode */
-		/* Special case: flength() == 0. When file is being created pos == flength().*/
-		    if(flength() && !is_writeable(openmode) && pos >= (__fileoff_t)flength()) {
-			pos = flength()-1;
-			is_eof = true;
-			return false;
-		    }
-		return true;
-	    }
-
-	    bool seek_fptr(__fileoff_t& pos,int origin) {
-		switch((int)origin) {
-		    case Seek_Set: break;
-		    case Seek_Cur: pos += filepos; break;
-		    default:       pos += flength();
-		}
-		return chk_eof(pos);
-	    }
-
 	    Opaque		opaque;
-	    __filesize_t	filepos;   /**< current logical position in file */
-	    unsigned		openmode;  /**< mode,that OsOpen this file */
+	    unsigned		buffsize;
+	    char*		buffer;
 	    int			optimize;  /**< seek optimization */
-	    binary_cache	vfb;       /**< buffered file */
-	    bool		is_eof;    /**< Indicates EOF for buffering streams */
-	    bool		founderr;
-	    __filesize_t	_flength;
     };
     inline BBio_File::opt operator~(BBio_File::opt a) { return static_cast<BBio_File::opt>(~static_cast<unsigned>(a)); }
     inline BBio_File::opt operator|(BBio_File::opt a, BBio_File::opt b) { return static_cast<BBio_File::opt>(static_cast<unsigned>(a)|static_cast<unsigned>(b)); }
