@@ -59,12 +59,12 @@ bool MMFile::seek(__fileoff_t pos,e_seek orig)
     return seek_fptr(pos,orig);
 }
 
-__filesize_t MMFile::tell()
+__filesize_t MMFile::tell() const
 {
     return filepos;
 }
 
-bool MMFile::eof() { return chk_eof(); }
+bool MMFile::eof() const { return chk_eof(); }
 
 uint8_t MMFile::read(const data_type_qualifier__byte_t&)
 {
@@ -115,7 +115,7 @@ bool MMFile::reread()
     return flush();
 }
 
-#ifdef HAVE_MMAP_PORED_HERE
+#ifdef HAVE_MMAP
 #include <sys/mman.h>
 int MMFile::mk_prot(int mode)
 {
@@ -145,7 +145,7 @@ bool MMFile::open(const std::string& _fname,unsigned _openmode)
 {
     mode=_openmode;
     if(!is_writeable(mode)) {
-	if(fstream::open(_fname,_openmode)==true) {
+	if(binary_stream::open(_fname,_openmode)==true) {
 	    /* Attempt open as MMF */
 	    if(flength() <= __filesize_t(std::numeric_limits<long>::max())) {
 		addr = ::mmap(NULL,flength(),mk_prot(_openmode),mk_flags(_openmode),handle(),0L);
@@ -162,7 +162,7 @@ bool MMFile::close()
     if(is_writeable(mode)) flush();
     if(primary) {
 	::munmap(addr,flength());
-	return fstream::close();
+	return binary_stream::close();
     }
     return true;
 }
@@ -179,23 +179,23 @@ bool MMFile::chsize(__filesize_t newsize)
     bool can_continue = false;
     if(newsize < oldsize) { /* truncate */
 	if((new_addr = ::mremap(addr,oldsize,newsize,MREMAP_MAYMOVE)) != (any_t*)-1) can_continue = true;
-	if(can_continue) can_continue = fstream::chsize(newsize);
+	if(can_continue) can_continue = binary_stream::chsize(newsize);
     } else { /* expand */
-	can_continue=fstream::chsize(newsize);
+	can_continue=binary_stream::chsize(newsize);
 	if(can_continue) can_continue = ((new_addr = ::mremap(addr,oldsize,newsize,MREMAP_MAYMOVE)) != (any_t*)-1);
     }
     if(can_continue) {
 	addr = new_addr;
 	return true;
     } else /* Attempt to unroll transaction back */
-	fstream::chsize(oldsize);
+	binary_stream::chsize(oldsize);
     return false;
 }
 const bool MMFile::has_mmio=true;
 #else // HAVE_MMAP
 int MMFile::mk_prot(int mode) { UNUSED(mode); return 0; }
 int MMFile::mk_flags(int mode) { UNUSED(mode); return 0; }
-bool MMFile::open(const std::string& _fname,unsigned _openmode) { UNUSED(_fname); UNUSED(_openmode); return false; }
+bool MMFile::open(const std::string& _fname,unsigned _openmode,unsigned cache_size) { UNUSED(_fname); UNUSED(_openmode); UNUSED(cache_size); return false; }
 bool MMFile::close() { return false; }
 bool MMFile::flush() { return false; }
 bool MMFile::chsize(__filesize_t newsize) { UNUSED(newsize); return false; }
