@@ -187,10 +187,6 @@ namespace	usr {
 	    virtual bool		dup(binary_stream&) const;
 	    virtual binary_stream*		dup();
 
-		   /** Returns low-level OS handle of opened stream.
-		     * @return                OS handle of opened stream
-		    **/
-	    virtual int			handle() const;
 		   /** Rereads opened file from disk.
 		     * @return                true if operation was succesfully performed
 		    **/
@@ -215,6 +211,10 @@ namespace	usr {
 	    static bool			set_ftime(const std::string& name,const ftime& data);
 	protected:
 	    bool			is_writeable(unsigned _openmode) const { return ((_openmode & O_RDWR) || (_openmode & O_WRONLY)); }
+		   /** Returns low-level OS handle of opened stream.
+		     * @return                OS handle of opened stream
+		    **/
+	    virtual int			handle() const;
 	private:
 	    void			update_length();
 	    __filesize_t		_tell() const;

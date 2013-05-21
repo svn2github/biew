@@ -1504,8 +1504,8 @@ ELF_Parser::ELF_Parser(binary_stream& h,CodeGuider& _code_guider,udn& u)
     uint8_t buf[16];
     main_handle.seek(0,binary_stream::Seek_Set);
     main_handle.read(buf,16);
-   is_msbf = (buf[EI_DATA] == ELFDATA2MSB);
-   is_64bit = (buf[EI_CLASS] == ELFCLASS64);
+    is_msbf = (buf[EI_DATA] == ELFDATA2MSB);
+    is_64bit = (buf[EI_CLASS] == ELFCLASS64);
     if(is_64bit)
 	elf_reader = new(zeromem) Elf64_Reader(main_handle);
     else

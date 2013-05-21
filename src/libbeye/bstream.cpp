@@ -21,9 +21,11 @@ binary_stream::~binary_stream() { if(!fname.empty()) close(); }
 
 bool binary_stream::open(const std::string& _fname,unsigned _openmode)
 {
+    int h;
     if(!fname.empty()) return false; // prevent open without close
-    _handle = ::open(_fname.c_str(),_openmode);
-    if(_handle==-1) return false;
+    h = ::open(_fname.c_str(),_openmode);
+    if(h==-1) return false;
+    _handle = h ^ reinterpret_cast<long>(this);
     fname=_fname;
     update_length();
     return true;
@@ -36,13 +38,15 @@ bool binary_stream::create(const std::string& name)
 
 bool binary_stream::close()
 {
-    if(_handle > 2) ::close(_handle);
+    int h = _handle ^ reinterpret_cast<long>(this);
+    if(h > 2) ::close(h);
     fname.clear();
     return true;
 }
 
 bool binary_stream::seek(__fileoff_t offset,e_seek origin) {
-    return ::lseek(_handle,offset,origin)>0;
+    int h = _handle ^ reinterpret_cast<long>(this);
+    return ::lseek(h,offset,origin)>0;
 }
 
 __filesize_t binary_stream::tell() const
@@ -52,46 +56,53 @@ __filesize_t binary_stream::tell() const
 
 __filesize_t binary_stream::_tell() const
 {
-    return ::lseek(_handle,0L,SEEK_CUR);
+    int h = _handle ^ reinterpret_cast<long>(this);
+    return ::lseek(h,0L,SEEK_CUR);
 }
 
 uint8_t binary_stream::read(const data_type_qualifier__byte_t&)
 {
     uint8_t ret;
-    if(::read(_handle,&ret,sizeof(uint8_t))!=sizeof(uint8_t)) ret=-1;
+    int h = _handle ^ reinterpret_cast<long>(this);
+    if(::read(h,&ret,sizeof(uint8_t))!=sizeof(uint8_t)) ret=-1;
     return ret;
 }
 
 uint16_t binary_stream::read(const data_type_qualifier__word_t&)
 {
     uint16_t ret;
-    if(::read(_handle,&ret,sizeof(uint16_t))!=sizeof(uint16_t)) ret=-1;
+    int h = _handle ^ reinterpret_cast<long>(this);
+    if(::read(h,&ret,sizeof(uint16_t))!=sizeof(uint16_t)) ret=-1;
     return ret;
 }
 
 uint32_t binary_stream::read(const data_type_qualifier_dword_t&)
 {
     uint32_t ret;
-    if(::read(_handle,&ret,sizeof(uint32_t))!=sizeof(uint32_t)) ret=-1;
+    int h = _handle ^ reinterpret_cast<long>(this);
+    if(::read(h,&ret,sizeof(uint32_t))!=sizeof(uint32_t)) ret=-1;
     return ret;
 }
 
 uint64_t binary_stream::read(const data_type_qualifier_qword_t&)
 {
     uint64_t ret;
-    if(::read(_handle,&ret,sizeof(uint64_t))!=sizeof(uint64_t)) ret=-1;
+    int h = _handle ^ reinterpret_cast<long>(this);
+    if(::read(h,&ret,sizeof(uint64_t))!=sizeof(uint64_t)) ret=-1;
     return ret;
 }
 
 bool binary_stream::read(any_t* _buffer,unsigned cbBuffer)
 {
-     return ::read(_handle,_buffer,cbBuffer)==cbBuffer;
+    int h = _handle ^ reinterpret_cast<long>(this);
+    return ::read(h,_buffer,cbBuffer)==cbBuffer;
 }
 
 bool binary_stream::write(uint8_t bVal)
 {
     bool rc;
-    rc=::write(_handle,&bVal,sizeof(uint8_t))==sizeof(uint8_t);
+    int h = _handle ^ reinterpret_cast<long>(this);
+    rc=::write(h,&bVal,sizeof(uint8_t))==sizeof(uint8_t);
     update_length();
     return rc;
 }
@@ -99,7 +110,8 @@ bool binary_stream::write(uint8_t bVal)
 bool binary_stream::write(uint16_t wVal)
 {
     bool rc;
-    rc=::write(_handle,&wVal,sizeof(uint16_t))==sizeof(uint16_t);
+    int h = _handle ^ reinterpret_cast<long>(this);
+    rc=::write(h,&wVal,sizeof(uint16_t))==sizeof(uint16_t);
     update_length();
     return rc;
 }
@@ -107,7 +119,8 @@ bool binary_stream::write(uint16_t wVal)
 bool binary_stream::write(uint32_t dwVal)
 {
     bool rc;
-    rc=::write(_handle,&dwVal,sizeof(uint32_t))==sizeof(uint32_t);
+    int h = _handle ^ reinterpret_cast<long>(this);
+    rc=::write(h,&dwVal,sizeof(uint32_t))==sizeof(uint32_t);
     update_length();
     return rc;
 }
@@ -115,7 +128,8 @@ bool binary_stream::write(uint32_t dwVal)
 bool binary_stream::write(uint64_t qwVal)
 {
     bool rc;
-    rc=::write(_handle,&qwVal,sizeof(uint64_t))==sizeof(uint64_t);
+    int h = _handle ^ reinterpret_cast<long>(this);
+    rc=::write(h,&qwVal,sizeof(uint64_t))==sizeof(uint64_t);
     update_length();
     return rc;
 }
@@ -123,7 +137,8 @@ bool binary_stream::write(uint64_t qwVal)
 bool binary_stream::write(const any_t* _buffer,unsigned cbBuffer)
 {
     bool rc;
-    rc=::write(_handle,_buffer,cbBuffer)==cbBuffer;
+    int h = _handle ^ reinterpret_cast<long>(this);
+    rc=::write(h,_buffer,cbBuffer)==cbBuffer;
     update_length();
     return rc;
 }
@@ -144,10 +159,11 @@ bool binary_stream::chsize(__filesize_t newsize)
     char * buf;
     unsigned  bufsize, numtowrite;
     bool ret;
+    int h = _handle ^ reinterpret_cast<long>(this);
 
     length = flength();
     if(length >= newsize) { /* truncate size */
-	::lseek(_handle,newsize, SEEK_SET);
+	::lseek(h,newsize, SEEK_SET);
 	length = newsize;
 	ret = truncate(length) == 0;
     } else {
@@ -157,10 +173,10 @@ bool binary_stream::chsize(__filesize_t newsize)
 	if((buf = new char [bufsize]) != NULL) {
 	    ret = true;
 	    ::memset(buf, 0, bufsize);   /* write zeros to pad file */
-	    ::lseek(_handle,0L,SEEK_END);
+	    ::lseek(h,0L,SEEK_END);
 	    do {
 		numtowrite = (unsigned)std::min(__filesize_t(bufsize),fillsize);
-		if(!::write(_handle,buf, numtowrite)) { ret = false; break; }
+		if(!::write(h,buf, numtowrite)) { ret = false; break; }
 		fillsize-=numtowrite;
 	    } while(fillsize);
 	    delete buf;
@@ -182,10 +198,12 @@ std::string binary_stream::filename() const
 
 bool binary_stream::dup(binary_stream& it) const
 {
+    int h;
     if(fname.empty()) return false;
-    if((it._handle=::dup(_handle))==-1) {
+    if((h=::dup(_handle))==-1) {
 	return false;
     }
+    it._handle = h ^ reinterpret_cast<long>(&it);
     it.fname=fname;
     it.fsize=fsize;
     return true;
@@ -206,16 +224,18 @@ bool binary_stream::eof() const
 int binary_stream::truncate(__filesize_t newsize)
 {
     int rc;
-    rc=ftruncate(_handle,newsize);
+    int h = _handle ^ reinterpret_cast<long>(this);
+    rc=ftruncate(h,newsize);
     update_length();
     return rc;
 }
 
 void binary_stream::update_length() {
+    int h = _handle ^ reinterpret_cast<long>(this);
     __filesize_t curr_pos=_tell();
-    ::lseek(_handle,0L,SEEK_END);
+    ::lseek(h,0L,SEEK_END);
     fsize=_tell();
-    ::lseek(_handle,curr_pos,SEEK_SET);
+    ::lseek(h,curr_pos,SEEK_SET);
 }
 
 bool binary_stream::reread() { return true; }

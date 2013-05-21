@@ -726,7 +726,7 @@ void BeyeContext::BMClose()
 {
     beye_priv& priv = static_cast<beye_priv&>(opaque);
   if(priv.bm_file_handle != NULL) delete priv.bm_file_handle;
-  if(priv.sc_bm_file_handle != NULL) delete priv.sc_bm_file_handle;
+  if(priv.sc_bm_file_handle != NULL && priv.sc_bm_file_handle!=priv.bm_file_handle) delete priv.sc_bm_file_handle;
 }
 
 __filesize_t BeyeContext::flength() const {
