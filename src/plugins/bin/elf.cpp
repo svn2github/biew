@@ -1271,7 +1271,7 @@ void ELF_Parser::displayELFdyninfo(__filesize_t f_off,unsigned nitems) const
     char stmp[80];
     stroff = 0;
     stroff = va2pa(findPHDynEntry(DT_STRTAB,f_off,nitems));
-    if(!stroff) { beye_context().NotifyBox(" String information not found!",NULL); return; }
+    if(!stroff) { beye_context().NotifyBox(" String information not found!",""); return; }
     main_handle.seek(f_off,binary_stream::Seek_Set);
     strcpy(stmp,S_INTERPRETER);
     curroff = findPHEntry(PT_INTERP, i);
@@ -1543,6 +1543,7 @@ ELF_Parser::~ELF_Parser()
    if(namecache != &main_handle) delete namecache;
    if(elfcache != &main_handle) delete elfcache;
    delete elf_reader;
+   delete elf_arch;
 }
 
 int ELF_Parser::query_bitness(__filesize_t off) const
