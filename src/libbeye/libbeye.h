@@ -104,9 +104,9 @@ namespace	usr {
 
 /** Internal structure of video buffer */
     struct tvioBuff {
-	t_vchar *   chars;       /**< Pointer to video character array */
-	t_vchar *   oem_pg;      /**< Pointer to OEM pseudographics. It needed for *nix terminals */
-	ColorAttr * attrs;       /**< Pointer to color attributes array */
+	t_vchar*   chars;       /**< Pointer to video character array */
+	t_vchar*   oem_pg;      /**< Pointer to OEM pseudographics. It needed for *nix terminals */
+	ColorAttr* attrs;       /**< Pointer to color attributes array */
     };
 
     class Opaque {
