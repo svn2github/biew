@@ -1391,103 +1391,6 @@ enum {
     inline uint32_t ELF_DWORD(const uint32_t* cval,bool is_msbf) { return FMT_DWORD(*cval,is_msbf); }
     inline uint64_t ELF_QWORD(const uint64_t* cval,bool is_msbf) { return FMT_QWORD(*cval,is_msbf); }
 
-    template<typename foff_t>
-    class Elf_xx {
-	public:
-	    Elf_xx(binary_stream& _fs)
-		:fs(_fs) {
-		uint8_t buf[16];
-		fs.seek(0,binary_stream::Seek_Set);
-		fs.read(buf,16);
-		is_msbf = (buf[EI_DATA] == ELFDATA2MSB);
-		is_64bit = (buf[EI_CLASS] == ELFCLASS64);
-	    }
-	    virtual ~Elf_xx() {}
-
-	    Elf_Ehdr		read_ehdr() const {
-		Elf_Ehdr rc;
-		uint16_t tmp16;
-		uint32_t tmp32;
-		foff_t   tmp;
-		fs.seek(0,binary_stream::Seek_Set);
-		fs.read(&rc.e_ident,16);
-		fs.read(&tmp16,2); rc.e_type=ELF_WORD(&tmp16,is_msbf);
-		fs.read(&tmp16,2); rc.e_machine=ELF_WORD(&tmp16,is_msbf);
-		fs.read(&tmp32,4); rc.e_version=ELF_DWORD(&tmp32,is_msbf);
-		fs.read(&tmp,sizeof(foff_t)); rc.e_entry=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		fs.read(&tmp,sizeof(foff_t)); rc.e_phoff=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		fs.read(&tmp,sizeof(foff_t)); rc.e_shoff=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		fs.read(&tmp32,4); rc.e_flags=ELF_DWORD(&tmp32,is_msbf);
-		fs.read(&tmp16,2); rc.e_ehsize=ELF_WORD(&tmp16,is_msbf);
-		fs.read(&tmp16,2); rc.e_phentsize=ELF_WORD(&tmp16,is_msbf);
-		fs.read(&tmp16,2); rc.e_phnum=ELF_WORD(&tmp16,is_msbf);
-		fs.read(&tmp16,2); rc.e_shentsize=ELF_WORD(&tmp16,is_msbf);
-		fs.read(&tmp16,2); rc.e_shnum=ELF_WORD(&tmp16,is_msbf);
-		fs.read(&tmp16,2); rc.e_shstrndx=ELF_WORD(&tmp16,is_msbf);
-		return rc;
-	    }
-	    Elf_Shdr		read_shdr(binary_stream& _fs,__filesize_t off) const {
-		Elf_Shdr rc;
-		uint32_t tmp32;
-		foff_t   tmp;
-		_fs.seek(off,binary_stream::Seek_Set);
-		_fs.read(&tmp32,4); rc.sh_name=ELF_DWORD(&tmp32,is_msbf);
-		_fs.read(&tmp32,4); rc.sh_type=ELF_DWORD(&tmp32,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.sh_flags=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.sh_addr=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.sh_offset=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.sh_size=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		_fs.read(&tmp32,4); rc.sh_link=ELF_DWORD(&tmp32,is_msbf);
-		_fs.read(&tmp32,4); rc.sh_info=ELF_DWORD(&tmp32,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.sh_addralign=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.sh_entsize=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		return rc;
-	    }
-	    Elf_Phdr		read_phdr(binary_stream& _fs,__filesize_t off) const {
-		Elf_Phdr rc;
-		uint32_t tmp32;
-		foff_t   tmp;
-		_fs.seek(off,binary_stream::Seek_Set);
-		_fs.read(&tmp32,4); rc.p_type=ELF_DWORD(&tmp32,is_msbf);
-		_fs.read(&tmp32,4); rc.p_flags=ELF_DWORD(&tmp32,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.p_offset=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.p_vaddr=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.p_paddr=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.p_filesz=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.p_memsz=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.p_align=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		return rc;
-	    }
-	    Elf_Dyn		read_dyn(binary_stream& _fs,__filesize_t off) const {
-		Elf_Dyn rc;
-		foff_t   tmp;
-		_fs.seek(off,binary_stream::Seek_Set);
-		_fs.read(&tmp,sizeof(foff_t)); rc.d_tag=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.d_un.d_val=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		return rc;
-	    }
-	    Elf_Rel		read_rel(binary_stream& _fs,__filesize_t off) const {
-		Elf_Rel rc;
-		foff_t   tmp;
-		_fs.seek(off,binary_stream::Seek_Set);
-		_fs.read(&tmp,sizeof(foff_t)); rc.r_offset=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.r_info=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		return rc;
-	    }
-	    Elf_Rela		read_rela(binary_stream& _fs,__filesize_t off) const {
-		Elf_Rela rc;
-		foff_t   tmp;
-		_fs.seek(off,binary_stream::Seek_Set);
-		_fs.read(&tmp,sizeof(foff_t)); rc.r_offset=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.r_info=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		_fs.read(&tmp,sizeof(foff_t)); rc.r_addend=is_64bit?ELF_QWORD((uint64_t*)&tmp,is_msbf):ELF_DWORD((uint32_t*)&tmp,is_msbf);
-		return rc;
-	    }
-	    bool		is_msbf,is_64bit;
-	private:
-	    binary_stream&	fs;
-    };
-
     class Elf_Reader {
 	public:
 	    Elf_Reader() {}
@@ -1510,11 +1413,32 @@ enum {
 	    virtual size_t			rela_size() const = 0;
 	    virtual Elf_Sym			read_sym(binary_stream& fs,__filesize_t off) const = 0;
 	    virtual size_t			sym_size() const = 0;
+	protected:
+	    bool		is_msbf;
     };
     class Elf32_Reader : public Elf_Reader {
 	public:
-	    Elf32_Reader(binary_stream& fs):elf(fs) {
-		_ehdr = elf.read_ehdr();
+	    Elf32_Reader(binary_stream& fs) {
+		uint16_t tmp16;
+		uint32_t tmp32;
+		uint32_t tmp;
+		fs.seek(0,binary_stream::Seek_Set);
+		fs.read(_ehdr.e_ident,16);
+		is_msbf = (_ehdr.e_ident[EI_DATA] == ELFDATA2MSB);
+
+		tmp16=fs.read(type_word); _ehdr.e_type=ELF_WORD(&tmp16,is_msbf);
+		tmp16=fs.read(type_word); _ehdr.e_machine=ELF_WORD(&tmp16,is_msbf);
+		tmp32=fs.read(type_dword); _ehdr.e_version=ELF_DWORD(&tmp32,is_msbf);
+		tmp=fs.read(type_dword); _ehdr.e_entry=ELF_DWORD(&tmp,is_msbf);
+		tmp=fs.read(type_dword); _ehdr.e_phoff=ELF_DWORD(&tmp,is_msbf);
+		tmp=fs.read(type_dword); _ehdr.e_shoff=ELF_DWORD(&tmp,is_msbf);
+		tmp32=fs.read(type_dword); _ehdr.e_flags=ELF_DWORD(&tmp32,is_msbf);
+		tmp16=fs.read(type_word); _ehdr.e_ehsize=ELF_WORD(&tmp16,is_msbf);
+		tmp16=fs.read(type_word); _ehdr.e_phentsize=ELF_WORD(&tmp16,is_msbf);
+		tmp16=fs.read(type_word); _ehdr.e_phnum=ELF_WORD(&tmp16,is_msbf);
+		tmp16=fs.read(type_word); _ehdr.e_shentsize=ELF_WORD(&tmp16,is_msbf);
+		tmp16=fs.read(type_word); _ehdr.e_shnum=ELF_WORD(&tmp16,is_msbf);
+		tmp16=fs.read(type_word); _ehdr.e_shstrndx=ELF_WORD(&tmp16,is_msbf);
 	    }
 	    virtual ~Elf32_Reader() {}
 
@@ -1523,38 +1447,106 @@ enum {
 
 	    virtual const Elf_Ehdr&		ehdr() const { return _ehdr; }
 	    virtual size_t			ehdr_size() const { return sizeof(Elf386_External_Ehdr); }
-	    virtual Elf_Shdr			read_shdr(binary_stream& fs,__filesize_t off) const { return elf.read_shdr(fs,off); }
+	    virtual Elf_Shdr			read_shdr(binary_stream& fs,__filesize_t off) const {
+		Elf_Shdr rc;
+		uint32_t tmp32;
+		uint32_t tmp;
+		fs.seek(off,binary_stream::Seek_Set);
+		tmp32=fs.read(type_dword); rc.sh_name=ELF_DWORD(&tmp32,is_msbf);
+		tmp32=fs.read(type_dword); rc.sh_type=ELF_DWORD(&tmp32,is_msbf);
+		tmp=fs.read(type_dword); rc.sh_flags=ELF_DWORD(&tmp,is_msbf);
+		tmp=fs.read(type_dword); rc.sh_addr=ELF_DWORD(&tmp,is_msbf);
+		tmp=fs.read(type_dword); rc.sh_offset=ELF_DWORD(&tmp,is_msbf);
+		tmp=fs.read(type_dword); rc.sh_size=ELF_DWORD(&tmp,is_msbf);
+		tmp32=fs.read(type_dword); rc.sh_link=ELF_DWORD(&tmp32,is_msbf);
+		tmp32=fs.read(type_dword); rc.sh_info=ELF_DWORD(&tmp32,is_msbf);
+		tmp=fs.read(type_dword); rc.sh_addralign=ELF_DWORD(&tmp,is_msbf);
+		tmp=fs.read(type_dword); rc.sh_entsize=ELF_DWORD(&tmp,is_msbf);
+		return rc;
+	    }
 	    virtual size_t			shdr_size() const { return sizeof(Elf386_External_Shdr); }
-	    virtual Elf_Phdr			read_phdr(binary_stream& fs,__filesize_t off) const { return elf.read_phdr(fs,off); }
+	    virtual Elf_Phdr			read_phdr(binary_stream& fs,__filesize_t off) const {
+		Elf_Phdr rc;
+		uint32_t tmp,tmp32;
+		fs.seek(off,binary_stream::Seek_Set);
+		tmp32=fs.read(type_dword); rc.p_type=ELF_DWORD(&tmp32,is_msbf);
+		tmp32=fs.read(type_dword); rc.p_flags=ELF_DWORD(&tmp32,is_msbf);
+		tmp=fs.read(type_dword); rc.p_offset=ELF_DWORD(&tmp,is_msbf);
+		tmp=fs.read(type_dword); rc.p_vaddr=ELF_DWORD(&tmp,is_msbf);
+		tmp=fs.read(type_dword); rc.p_paddr=ELF_DWORD(&tmp,is_msbf);
+		tmp=fs.read(type_dword); rc.p_filesz=ELF_DWORD(&tmp,is_msbf);
+		tmp=fs.read(type_dword); rc.p_memsz=ELF_DWORD(&tmp,is_msbf);
+		tmp=fs.read(type_dword); rc.p_align=ELF_DWORD(&tmp,is_msbf);
+		return rc;
+	    }
 	    virtual size_t			phdr_size() const { return sizeof(Elf386_External_Phdr); }
-	    virtual Elf_Dyn			read_dyn(binary_stream& fs,__filesize_t off) const { return elf.read_dyn(fs,off); }
+	    virtual Elf_Dyn			read_dyn(binary_stream& fs,__filesize_t off) const {
+		Elf_Dyn rc;
+		uint32_t tmp;
+		fs.seek(off,binary_stream::Seek_Set);
+		tmp=fs.read(type_dword); rc.d_tag=ELF_DWORD(&tmp,is_msbf);
+		tmp=fs.read(type_dword); rc.d_un.d_val=ELF_DWORD(&tmp,is_msbf);
+		return rc;
+	    }
 	    virtual size_t			dyn_size() const { return sizeof(Elf386_External_Dyn); }
-	    virtual Elf_Rel			read_rel(binary_stream& fs,__filesize_t off) const { return elf.read_rel(fs,off); }
+	    virtual Elf_Rel			read_rel(binary_stream& fs,__filesize_t off) const {
+		Elf_Rel rc;
+		uint32_t tmp;
+		fs.seek(off,binary_stream::Seek_Set);
+		tmp=fs.read(type_dword); rc.r_offset=ELF_DWORD(&tmp,is_msbf);
+		tmp=fs.read(type_dword); rc.r_info=ELF_DWORD(&tmp,is_msbf);
+		return rc;
+	    }
 	    virtual size_t			rel_size() const { return sizeof(Elf386_External_Rel); }
-	    virtual Elf_Rela			read_rela(binary_stream& fs,__filesize_t off) const { return elf.read_rela(fs,off); }
+	    virtual Elf_Rela			read_rela(binary_stream& fs,__filesize_t off) const {
+		Elf_Rela rc;
+		uint32_t tmp;
+		fs.seek(off,binary_stream::Seek_Set);
+		tmp=fs.read(type_dword); rc.r_offset=ELF_DWORD(&tmp,is_msbf);
+		tmp=fs.read(type_dword); rc.r_info=ELF_DWORD(&tmp,is_msbf);
+		tmp=fs.read(type_dword); rc.r_addend=ELF_DWORD(&tmp,is_msbf);
+		return rc;
+	    }
 	    virtual size_t			rela_size() const { return sizeof(Elf386_External_Rela); }
 	    virtual Elf_Sym			read_sym(binary_stream& fs,__filesize_t off) const {
 		Elf_Sym rc;
 		uint32_t tmp32;
 		uint16_t tmp16;
 		fs.seek(off,binary_stream::Seek_Set);
-		tmp32=fs.read(type_dword); rc.st_name=ELF_DWORD(&tmp32,elf.is_msbf);
-		tmp32=fs.read(type_dword); rc.st_value=ELF_DWORD(&tmp32,elf.is_msbf);
-		tmp32=fs.read(type_dword); rc.st_size=ELF_DWORD(&tmp32,elf.is_msbf);
+		tmp32=fs.read(type_dword); rc.st_name=ELF_DWORD(&tmp32,is_msbf);
+		tmp32=fs.read(type_dword); rc.st_value=ELF_DWORD(&tmp32,is_msbf);
+		tmp32=fs.read(type_dword); rc.st_size=ELF_DWORD(&tmp32,is_msbf);
 		rc.st_info=fs.read(type_byte);
 		rc.st_other=fs.read(type_byte);
-		tmp16=fs.read(type_word); rc.st_shndx=ELF_WORD(&tmp16,elf.is_msbf);
+		tmp16=fs.read(type_word); rc.st_shndx=ELF_WORD(&tmp16,is_msbf);
 		return rc;
 	    }
 	    virtual size_t			sym_size() const { return sizeof(Elf386_External_Sym); }
 	private:
-	    Elf_xx<uint32_t> elf;
 	    Elf_Ehdr _ehdr;
     };
     class Elf64_Reader : public Elf_Reader {
 	public:
-	    Elf64_Reader(binary_stream& fs):elf(fs) {
-		_ehdr = elf.read_ehdr();
+	    Elf64_Reader(binary_stream& fs) {
+		uint16_t tmp16;
+		uint32_t tmp32;
+		uint64_t tmp;
+		fs.seek(0,binary_stream::Seek_Set);
+		fs.read(_ehdr.e_ident,16);
+		is_msbf = (_ehdr.e_ident[EI_DATA] == ELFDATA2MSB);
+		tmp16=fs.read(type_word); _ehdr.e_type=ELF_WORD(&tmp16,is_msbf);
+		tmp16=fs.read(type_word); _ehdr.e_machine=ELF_WORD(&tmp16,is_msbf);
+		tmp32=fs.read(type_dword); _ehdr.e_version=ELF_DWORD(&tmp32,is_msbf);
+		tmp=fs.read(type_qword); _ehdr.e_entry=ELF_QWORD(&tmp,is_msbf);
+		tmp=fs.read(type_qword); _ehdr.e_phoff=ELF_QWORD(&tmp,is_msbf);
+		tmp=fs.read(type_qword); _ehdr.e_shoff=ELF_QWORD(&tmp,is_msbf);
+		tmp32=fs.read(type_dword); _ehdr.e_flags=ELF_DWORD(&tmp32,is_msbf);
+		tmp16=fs.read(type_word); _ehdr.e_ehsize=ELF_WORD(&tmp16,is_msbf);
+		tmp16=fs.read(type_word); _ehdr.e_phentsize=ELF_WORD(&tmp16,is_msbf);
+		tmp16=fs.read(type_word); _ehdr.e_phnum=ELF_WORD(&tmp16,is_msbf);
+		tmp16=fs.read(type_word); _ehdr.e_shentsize=ELF_WORD(&tmp16,is_msbf);
+		tmp16=fs.read(type_word); _ehdr.e_shnum=ELF_WORD(&tmp16,is_msbf);
+		tmp16=fs.read(type_word); _ehdr.e_shstrndx=ELF_WORD(&tmp16,is_msbf);
 	    }
 	    virtual ~Elf64_Reader() {}
 
@@ -1563,15 +1555,67 @@ enum {
 
 	    virtual const Elf_Ehdr&		ehdr() const { return _ehdr; }
 	    virtual size_t			ehdr_size() const { return sizeof(Elf64_External_Ehdr); }
-	    virtual Elf_Shdr			read_shdr(binary_stream& fs,__filesize_t off) const { return elf.read_shdr(fs,off); }
+	    virtual Elf_Shdr			read_shdr(binary_stream& fs,__filesize_t off) const {
+		Elf_Shdr rc;
+		uint32_t tmp32;
+		uint64_t tmp;
+		fs.seek(off,binary_stream::Seek_Set);
+		tmp32=fs.read(type_dword); rc.sh_name=ELF_DWORD(&tmp32,is_msbf);
+		tmp32=fs.read(type_dword); rc.sh_type=ELF_DWORD(&tmp32,is_msbf);
+		tmp=fs.read(type_qword); rc.sh_flags=ELF_QWORD(&tmp,is_msbf);
+		tmp=fs.read(type_qword); rc.sh_addr=ELF_QWORD(&tmp,is_msbf);
+		tmp=fs.read(type_qword); rc.sh_offset=ELF_QWORD(&tmp,is_msbf);
+		tmp=fs.read(type_qword); rc.sh_size=ELF_QWORD(&tmp,is_msbf);
+		tmp32=fs.read(type_dword); rc.sh_link=ELF_DWORD(&tmp32,is_msbf);
+		tmp32=fs.read(type_dword); rc.sh_info=ELF_DWORD(&tmp32,is_msbf);
+		tmp=fs.read(type_qword); rc.sh_addralign=ELF_QWORD(&tmp,is_msbf);
+		tmp=fs.read(type_qword); rc.sh_entsize=ELF_QWORD(&tmp,is_msbf);
+		return rc;
+	    }
 	    virtual size_t			shdr_size() const { return sizeof(Elf64_External_Shdr); }
-	    virtual Elf_Phdr			read_phdr(binary_stream& fs,__filesize_t off) const { return elf.read_phdr(fs,off); }
+	    virtual Elf_Phdr			read_phdr(binary_stream& fs,__filesize_t off) const {
+		Elf_Phdr rc;
+		uint32_t tmp32;
+		uint64_t tmp;
+		fs.seek(off,binary_stream::Seek_Set);
+		tmp32=fs.read(type_dword); rc.p_type=ELF_DWORD(&tmp32,is_msbf);
+		tmp32=fs.read(type_dword); rc.p_flags=ELF_DWORD(&tmp32,is_msbf);
+		tmp=fs.read(type_qword); rc.p_offset=ELF_QWORD(&tmp,is_msbf);
+		tmp=fs.read(type_qword); rc.p_vaddr=ELF_QWORD(&tmp,is_msbf);
+		tmp=fs.read(type_qword); rc.p_paddr=ELF_QWORD(&tmp,is_msbf);
+		tmp=fs.read(type_qword); rc.p_filesz=ELF_QWORD(&tmp,is_msbf);
+		tmp=fs.read(type_qword); rc.p_memsz=ELF_QWORD(&tmp,is_msbf);
+		tmp=fs.read(type_qword); rc.p_align=ELF_QWORD(&tmp,is_msbf);
+		return rc;
+	    }
 	    virtual size_t			phdr_size() const { return sizeof(Elf64_External_Phdr); }
-	    virtual Elf_Dyn			read_dyn(binary_stream& fs,__filesize_t off) const { return elf.read_dyn(fs,off); }
+	    virtual Elf_Dyn			read_dyn(binary_stream& fs,__filesize_t off) const {
+		Elf_Dyn rc;
+		uint64_t tmp;
+		fs.seek(off,binary_stream::Seek_Set);
+		tmp=fs.read(type_qword); rc.d_tag=ELF_QWORD(&tmp,is_msbf);
+		tmp=fs.read(type_qword); rc.d_un.d_val=ELF_QWORD(&tmp,is_msbf);
+		return rc;
+	    }
 	    virtual size_t			dyn_size() const { return sizeof(Elf64_External_Dyn); }
-	    virtual Elf_Rel			read_rel(binary_stream& fs,__filesize_t off) const { return elf.read_rel(fs,off); }
+	    virtual Elf_Rel			read_rel(binary_stream& fs,__filesize_t off) const {
+		Elf_Rel rc;
+		uint64_t tmp;
+		fs.seek(off,binary_stream::Seek_Set);
+		tmp=fs.read(type_qword); rc.r_offset=ELF_QWORD((uint64_t*)&tmp,is_msbf);
+		tmp=fs.read(type_qword); rc.r_info=ELF_QWORD((uint64_t*)&tmp,is_msbf);
+		return rc;
+	    }
 	    virtual size_t			rel_size() const { return sizeof(Elf64_External_Rel); }
-	    virtual Elf_Rela			read_rela(binary_stream& fs,__filesize_t off) const { return elf.read_rela(fs,off); }
+	    virtual Elf_Rela			read_rela(binary_stream& fs,__filesize_t off) const {
+		Elf_Rela rc;
+		uint64_t tmp;
+		fs.seek(off,binary_stream::Seek_Set);
+		tmp=fs.read(type_qword); rc.r_offset=ELF_QWORD(&tmp,is_msbf);
+		tmp=fs.read(type_qword); rc.r_info=ELF_QWORD(&tmp,is_msbf);
+		tmp=fs.read(type_qword); rc.r_addend=ELF_QWORD(&tmp,is_msbf);
+		return rc;
+	    }
 	    virtual size_t			rela_size() const { return sizeof(Elf64_External_Rela); }
 	    virtual Elf_Sym			read_sym(binary_stream& fs,__filesize_t off) const {
 		Elf_Sym rc;
@@ -1579,17 +1623,16 @@ enum {
 		uint16_t tmp16;
 		uint64_t tmp64;
 		fs.seek(off,binary_stream::Seek_Set);
-		tmp32=fs.read(type_dword); rc.st_name=ELF_DWORD(&tmp32,elf.is_msbf);
+		tmp32=fs.read(type_dword); rc.st_name=ELF_DWORD(&tmp32,is_msbf);
 		rc.st_info=fs.read(type_byte);
 		rc.st_other=fs.read(type_byte);
-		tmp16=fs.read(type_word); rc.st_shndx=ELF_WORD(&tmp16,elf.is_msbf);
-		tmp64=fs.read(type_qword); rc.st_value=ELF_QWORD(&tmp64,elf.is_msbf);
-		tmp64=fs.read(type_qword); rc.st_size=ELF_QWORD(&tmp64,elf.is_msbf);
+		tmp16=fs.read(type_word); rc.st_shndx=ELF_WORD(&tmp16,is_msbf);
+		tmp64=fs.read(type_qword); rc.st_value=ELF_QWORD(&tmp64,is_msbf);
+		tmp64=fs.read(type_qword); rc.st_size=ELF_QWORD(&tmp64,is_msbf);
 		return rc;
 	    }
 	    virtual size_t			sym_size() const { return sizeof(Elf64_External_Sym); }
 	private:
-	    Elf_xx<uint64_t> elf;
 	    Elf_Ehdr _ehdr;
     };
 } // namespace	usr
