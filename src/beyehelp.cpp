@@ -316,13 +316,15 @@ std::vector<std::string> Beye_Help::point_strings(char* data,size_t data_size) c
     std::vector<std::string> rc;
     size_t i;
     char ch,ch1;
+    char* p = data;
     for(i = 0;i < data_size;i++) {
 	ch = data[i];
 	if(ch == '\n' || ch == '\r') {
 	    data[i] = 0;
 	    ch1 = data[i+1];
 	    if((ch1 == '\n' || ch1 == '\r') && ch != ch1) ++i;
-	    rc.push_back(&data[i+1]);
+	    rc.push_back(p);
+	    p=&data[i+1];
 	}
     }
     return rc;
@@ -341,11 +343,6 @@ void __FASTCALL__ hlpDisplay( unsigned long item_id )
     data_size = bhelp.get_item_size(item_id);
     if(!data_size) goto hlp_bye;
     data = new char [data_size+1];
-    if(!data) {
-	MemOutBox("Loading help");
-	if(data) delete data;
-	goto hlp_bye;
-    }
     data[data_size] = 0;
     if(bhelp.load_item(item_id,data)) {
 	const std::vector<std::string> strs = bhelp.point_strings(data,data_size);

@@ -31,8 +31,6 @@ namespace	usr {
     bool        __FASTCALL__ IsKbdTerminate();
     void         __FASTCALL__ CleanKbdTermSig();
 
-    typedef void (__FASTCALL__ * pagefunc)(TWindow *win,const any_t**__obj,unsigned i__obj,unsigned total_obj);
-
     TWindow *    __FASTCALL__ CrtDlgWndnls(const std::string&,tAbsCoord,tAbsCoord);
     TWindow *    __FASTCALL__ CrtHlpWndnls(const std::string&,tAbsCoord,tAbsCoord);
     TWindow *    __FASTCALL__ CreateEditor(tAbsCoord X1,tAbsCoord Y1,tAbsCoord X2,tAbsCoord Y2,TWindow::twc_flag flags);

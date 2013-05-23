@@ -184,8 +184,5 @@ namespace	usr {
 		     * @see                   szTrimLeadingSpace szTrimTrailingSpace
 		    **/
     char *__FASTCALL__ szKillSpaceAround(char *str,char *point_to);
-
-/** Frees pointer and nullifies it */
-#define PFREE(ptr)      { mp_free(ptr); ptr = 0; }
 } // namespace	usr
 #endif

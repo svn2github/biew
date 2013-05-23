@@ -33,13 +33,7 @@ namespace	usr {
 bool DumpMode = false;
 bool EditMode = false;
 
-int __FASTCALL__ Gebool(bool _bool) { return _bool ? TWC_CHECK_CHAR : TWC_DEF_FILLER; }
-
-void FFreeArr(any_t** arr,unsigned n)
-{
-  unsigned i;
-  for(i = 0;i < n;i++) delete arr[i];
-}
+char __FASTCALL__ Gebool(bool _bool) { return _bool ? TWC_CHECK_CHAR : TWC_DEF_FILLER; }
 
 unsigned __FASTCALL__ Summ(unsigned char *str,unsigned size)
 {

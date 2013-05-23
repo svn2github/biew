@@ -190,9 +190,9 @@ int Calculator_Addon::evaluate(char *line, intmax_t *val,int *result_base)
       token = new char[EVAL_STACK_SIZE];
       if((!op_stack) || (!arg_stack) || (!token))
       {
-	if(op_stack) PFREE(op_stack);
-	if(arg_stack) PFREE(arg_stack);
-	if(token) PFREE(token);
+	if(op_stack) delete op_stack;
+	if(arg_stack) delete arg_stack;
+	if(token) delete token;
 	return E_MEM;
       }
       strupr(line);
@@ -335,9 +335,9 @@ int Calculator_Addon::evaluate(char *line, intmax_t *val,int *result_base)
 	 goto exit;
       }
   exit:
-  PFREE(op_stack);
-  PFREE(arg_stack);
-  PFREE(token);
+  delete op_stack;
+  delete arg_stack;
+  delete token;
   return retval;
 }
 

@@ -41,7 +41,7 @@ namespace	usr {
 	
 	    virtual void	run();
 	private:
-	    char**		cpuPointStrings(char  *data,unsigned long data_size,unsigned long *nstr);
+	    std::vector<std::string>	cpuPointStrings(char* data,size_t data_size) const;
     };
 
 static TWindow*	pwnd;
@@ -55,51 +55,40 @@ static void paint_prcnt(int n_prcnt)
   ShowPercentInWnd(pwnd,n_prcnt);
 }
 
-char** __FASTCALL__ CPUPerformance_Addon::cpuPointStrings(char  *data,unsigned long data_size,unsigned long *nstr)
+std::vector<std::string> CPUPerformance_Addon::cpuPointStrings(char* data,size_t data_size) const
 {
-  char **str_ptr,**new_ptr;
-  unsigned long i;
-  char ch,ch1;
-  *nstr = 0;
-  if((str_ptr = new char*[2]) != NULL)
-  {
-     str_ptr[(*nstr)++] = &data[0];
-     for(i = 0;i < data_size;i++)
-     {
-       ch = data[i];
-       if(ch == '\n' || ch == '\r')
-       {
-	 data[i] = 0;
-	 if(!(new_ptr = (char**)mp_realloc(str_ptr,((unsigned)(*nstr)+1)*sizeof(char *)))) goto mem_off;
-	 str_ptr = new_ptr;
-	 ch1 = data[i+1];
-	 if((ch1 == '\n' || ch1 == '\r') && ch != ch1) ++i;
-	 str_ptr[(*nstr)++] = &data[i+1];
-       }
-       if(*nstr > UINT_MAX-2) { mem_off: mp_free(str_ptr); return NULL; }
-     }
-  }
-  return str_ptr;
+    std::vector<std::string> rc;
+    size_t i;
+    char ch,ch1;
+    char *p = data;
+    for(i = 0;i < data_size;i++) {
+	ch = data[i];
+	if(ch == '\n' || ch == '\r') {
+	    data[i] = 0;
+	    ch1 = data[i+1];
+	    if((ch1 == '\n' || ch1 == '\r') && ch != ch1) ++i;
+	    rc.push_back(p);
+	    p=&data[i+1];
+	}
+    }
+    return rc;
 }
 
 void CPUPerformance_Addon::run()
 {
-   char *cpu_info;
-   char **str_ptr;
-   unsigned long data_size;
-   unsigned long nstr;
-   cpu_info = new char [4096];
-   if(!cpu_info) { mem_out: MemOutBox("Show CPU information"); return; }
-   pwnd = PercentWnd("Analyze:","");
-   Processor cpu;
-   cpu.cpu_info(cpu_info,4096,paint_prcnt);
-   delete pwnd;
-   data_size = strchr(cpu_info, 0) - cpu_info;
-   if(!(str_ptr = cpuPointStrings(cpu_info,data_size,&nstr)))
-      { PFREE(cpu_info); goto mem_out; }
-   ListBox(const_cast<const char**>(str_ptr),(unsigned)nstr - 1," CPU information ",0);
-   PFREE(str_ptr);
-   PFREE(cpu_info);
+    char* cpu_info;
+    std::vector<std::string> strs;
+    unsigned long data_size;
+
+    cpu_info = new char [4096];
+    pwnd = PercentWnd("Analyze:","");
+    Processor cpu;
+    cpu.cpu_info(cpu_info,4096,paint_prcnt);
+    delete pwnd;
+    data_size = strlen(cpu_info);
+    strs = cpuPointStrings(cpu_info,data_size);
+    ListBox(strs," CPU information ",0);
+    delete cpu_info;
 }
 
 static Addon* query_interface() { return new(zeromem) CPUPerformance_Addon(); }

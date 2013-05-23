@@ -33,11 +33,7 @@ namespace	usr {
 
     extern __filesize_t lastbyte;
 
-    int   __FASTCALL__ Gebool(bool _bool);
-    any_t**            FAllocPtrPtr(unsigned num);
-    any_t*             FAllocPtr(unsigned size);
-    void               FFreeArr(any_t**arr,unsigned n);
-    void               CriticalExit(int code);
+    char  __FASTCALL__ Gebool(bool _bool); // returns character representation of bool
 
     bool               FileUtils();
 
@@ -52,6 +48,7 @@ namespace	usr {
     char * __FASTCALL__ GetBinary(char val);
 
     void     __FASTCALL__ CompressHex(unsigned char * dest,const char * src,unsigned sizedest,bool usespace);
+    int      __FASTCALL__ ExpandHex(char * dest,const unsigned char * src,int size,char hard);
     unsigned __FASTCALL__ Summ(unsigned char *array,unsigned size);
 
     void   ExtHelp();
@@ -82,7 +79,5 @@ namespace	usr {
 
     void __FASTCALL__ HiLightSearch(TWindow& out,__filesize_t cfp,tRelCoord minx,
 			  tRelCoord maxx,tRelCoord y,const char* buff,unsigned flags);
-
-    int      __FASTCALL__ ExpandHex(char * dest,const unsigned char * src,int size,char hard);
 } // namespace	usr
 #endif
