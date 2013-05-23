@@ -237,7 +237,6 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
     static __filesize_t amocpos = 0L;
     char outstr[__TVIO_MAXSCREENWIDTH];
     char savstring[20];
-    HLInfo hli;
     ColorAttr cattr;
     flen = main_handle.flength();
     cfpos = TopCFPos = main_handle.tell();
@@ -329,10 +328,7 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 				i + 1,
 				&outstr[len_64],
 				disPanelMode < Panel_Full ? len - (len_64+1) : len - 1);
-		    if(isHOnLine(cfpos,dret.codelen)) {
-			hli.text = &outstr[len_64];
-			HiLightSearch(main_wnd,cfpos,len_64,dret.codelen,i,&hli,HLS_USE_DOUBLE_WIDTH);
-		    }
+		    if(isHOnLine(cfpos,dret.codelen)) HiLightSearch(main_wnd,cfpos,len_64,dret.codelen,i,&outstr[len_64],HLS_USE_DOUBLE_WIDTH);
 		}
 		main_wnd.set_color(browser_cset.main);
 		main_wnd.direct_write(len,i + 1," ",1);  len++;

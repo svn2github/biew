@@ -77,18 +77,11 @@ namespace	usr {
     int  __FASTCALL__ isHOnLine(__filesize_t cp,int width);
     enum {
 	HLS_NORMAL               =0x0000,
-	HLS_USE_DOUBLE_WIDTH     =0x0001,
-	HLS_USE_BUFFER_AS_VIDEO  =0x0002
+	HLS_USE_DOUBLE_WIDTH     =0x0001
     };
 
-typedef union tag_HLInfo
-{
-  const char     *text;
-  tvioBuff        buff;
-}HLInfo;
-
     void __FASTCALL__ HiLightSearch(TWindow& out,__filesize_t cfp,tRelCoord minx,
-			  tRelCoord maxx,tRelCoord y,HLInfo *buff,unsigned flags);
+			  tRelCoord maxx,tRelCoord y,const char* buff,unsigned flags);
 
     int      __FASTCALL__ ExpandHex(char * dest,const unsigned char * src,int size,char hard);
 } // namespace	usr

@@ -1618,6 +1618,46 @@ int TWindow::direct_write(tRelCoord x, tRelCoord y,const any_t*str,unsigned len)
     return rlen;
 }
 
+int TWindow::direct_write(tRelCoord x, tRelCoord y,const any_t*str,const ColorAttr* attrs,unsigned len)
+{
+    unsigned i,rlen,ioff;
+    const char *__nls = NULL,*__oem = NULL;
+    char nlsBuff[__TVIO_MAXSCREENWIDTH];
+    char oemBuff[__TVIO_MAXSCREENWIDTH];
+    if(!((flags & Flag_Has_Frame) == Flag_Has_Frame)) {
+	x--;  y--;
+    }
+    if(!is_valid_xy(x,y)) return 0;
+    rlen = wwidth;
+    if((flags & Flag_Has_Frame) == Flag_Has_Frame) rlen-=1;
+    rlen -= x;
+    rlen = std::min(rlen,len);
+    if((flags & Flag_NLS) == Flag_NLS) {
+	::memcpy(nlsBuff,str,rlen);
+	::memcpy(oemBuff,str,rlen);
+	for(i = 0;i < rlen;i++) if(!NLS_IS_OEMPG(oemBuff[i])) oemBuff[i] = 0;
+	msystem->nls_oem2osdep((unsigned char *)nlsBuff,rlen);
+	__nls = nlsBuff;
+	__oem = oemBuff;
+    }
+    else __nls = (const char*)str;
+    ioff = x+y*wwidth;
+    ::memcpy(&body.chars[ioff],__nls,rlen);
+    if(__oem) ::memcpy(&body.oem_pg[ioff],__oem,rlen);
+    else      ::memset(&body.oem_pg[ioff],0,rlen);
+    for(i=0;i<rlen;i++) {
+	Color fore,back;
+	fore = FORE_COLOR(attrs[i]);
+	back = BACK_COLOR(attrs[i]);
+	adjustColor(&fore,&back);
+	body.attrs[ioff+i] = LOGFB_TO_PHYS(fore,back);
+    }
+//    text.system=attrs[len-1];
+    check_win();
+    updatescreenpiece(x,x+rlen,y+1);
+    return rlen;
+}
+
 void TWindow::write(tRelCoord x,tRelCoord y,const tvioBuff *buff,unsigned len)
 {
     const any_t*pbuff;

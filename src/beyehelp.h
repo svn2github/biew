@@ -17,6 +17,8 @@
 #ifndef __BEYEHELP__H
 #define __BEYEHELP__H
 #include <fstream>
+#include <vector>
+#include <string>
 
 #include "libbeye/twindow.h"
 
@@ -72,18 +74,16 @@ namespace	usr {
 
 		       /** Returns array of char pointers.
 			  Title always is data[0] */
-	    virtual char **		point_strings(char* data,unsigned long data_size,
-							unsigned long *nstr) const;
+	    virtual std::vector<std::string> point_strings(char* data,size_t data_size) const;
 		       /** Filles buffer as video memory from string */
-	    virtual unsigned		fill_buffer(tvioBuff * dest,unsigned int cw_dest,
-						    const std::string& str,unsigned int cb_str,
-						    unsigned int shift,unsigned *n_tabs,
-						    bool is_hl) const;
+	    virtual unsigned		fill_buffer(TWindow& win,tRelCoord x,tRelCoord y,
+						    const std::string& str,
+						    bool is_hl=false,bool dry_run=false) const;
 		       /** Paints line of help */
-	    virtual void		paint_line(TWindow *win,unsigned y,const std::string& str, bool is_hl) const;
-	    virtual int			ListBox(const char** names,unsigned nlist,const std::string& title) const;
+	    virtual void		paint_line(TWindow& win,unsigned y,const std::string& str, bool is_hl) const;
+	    virtual int			ListBox(const std::vector<std::string>& names,const std::string& title) const;
 	private:
-	    void			paint(TWindow *win,const char * * names,unsigned nlist,unsigned start,unsigned height,unsigned width) const;
+	    void			paint(TWindow& win,const std::vector<std::string>& names,unsigned start,unsigned height,unsigned width) const;
 	    bool			find_item(unsigned long item_id);
 
 	    std::fstream		fs;

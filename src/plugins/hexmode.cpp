@@ -220,11 +220,8 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 		main_handle.read((any_t*)&outstr[width - scrHWidth],rwidth*__inc);
 		xmin = beye_context().tconsole().vio_width()-scrHWidth;
 		main_wnd.direct_write(1,i + 1,outstr,xmin);
-		if(isHOnLine(sindex,scrHWidth)) {
-		    HLInfo hli;
-		    hli.text = &outstr[xmin];
-		    HiLightSearch(main_wnd,sindex,xmin,width,i,&hli,HLS_NORMAL);
-		} else  main_wnd.direct_write(xmin + 1,i + 1,&outstr[xmin],width - xmin);
+		if(isHOnLine(sindex,scrHWidth)) HiLightSearch(main_wnd,sindex,xmin,width,i,&outstr[xmin],HLS_NORMAL);
+		else  main_wnd.direct_write(xmin + 1,i + 1,&outstr[xmin],width - xmin);
 	    } else main_wnd.direct_write(1,i + 1,outstr,width);
 	}
 	lastbyte = lindex + __inc;

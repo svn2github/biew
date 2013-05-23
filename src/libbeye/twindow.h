@@ -731,19 +731,6 @@ namespace	usr {
 		    **/
 	    virtual int			puts(const std::string& str);
 
-		   /** Writes buffer directly to the active window at specified location.
-		     * @param x,y         specify location of output
-		     * @param buff        specifies buffer to be written
-		     * @param len         specifies length of buffer
-		     * @return            number of really written characters
-		     * @note              Function writes all characters as is,
-		     *                    without checking for carriage return and
-		     *                    linefeed.
-		     *                    If written text is large than window, then
-		     *                    it will be clipped.
-		    **/
-	    virtual int			direct_write(tRelCoord x,tRelCoord y,const any_t*buff,unsigned len);
-
 		   /** Provides formatted output directly to the active window at current cursor position.
 		     * @param fmt         specifies formatted string
 		     * @return            number of really written characters
@@ -759,32 +746,19 @@ namespace	usr {
 		    **/
 	    virtual int			printf(const std::string& fmt,...);
 
-		   /** Accesses to the active window directly, writing a single line.
-		     * @param win         handle of window
+		   /** Writes buffer directly to the active window at specified location.
 		     * @param x,y         specify location of output
-		     * @param buff        pointer to virtual video buffer to be written
-		     * @param len         specifies length of virtual video buffer
-		     * @return            none
-		     * @note              Function writes specified number of
-		     *                    characters and attributes to window,
-		     *                    beginning at specified location.
-		     *                    If written output is large than window,
-		     *                    then it will be clipped.
+		     * @param buff        specifies buffer to be written
+		     * @param len         specifies length of buffer
+		     * @return            number of really written characters
+		     * @note              Function writes all characters as is,
+		     *                    without checking for carriage return and
+		     *                    linefeed.
+		     *                    If written text is large than window, then
+		     *                    it will be clipped.
 		    **/
-	    virtual void		write(tRelCoord x,tRelCoord y,const tvioBuff *buff,unsigned len);
-
-		   /** Accesses to the active window directly, reading a single line.
-		     * @param win         handle of window
-		     * @param x,y         specify location of input
-		     * @param buff        pointer to location at which readed material will be stored.
-		     * @param len         specifies length of location
-		     * @return            none
-		     * @note              Function reads specified number of
-		     *                    characters and attributes from window,
-		     *                    beginning at specified location.
-		    **/
-	    virtual void		read(tRelCoord x,tRelCoord y,tvioBuff *buff,unsigned len) const;
-
+	    virtual int			direct_write(tRelCoord x,tRelCoord y,const any_t*buff,unsigned len);
+	    virtual int			direct_write(tRelCoord x,tRelCoord y,const any_t* chars,const ColorAttr* attrs,unsigned len);
 /* Static members */
 		   /** Returns the window currently being under focus.
 		     * @return             handle of window currently being used
@@ -851,6 +825,31 @@ namespace	usr {
 	    static const unsigned char DN3D_FRAME[];      /**< Emulates 3D-frame that similar pressed button */
 	    static TConsole*	tconsole;
 	    static System*	msystem;
+	protected:
+		   /** Accesses to the active window directly, reading a single line.
+		     * @param win         handle of window
+		     * @param x,y         specify location of input
+		     * @param buff        pointer to location at which readed material will be stored.
+		     * @param len         specifies length of location
+		     * @return            none
+		     * @note              Function reads specified number of
+		     *                    characters and attributes from window,
+		     *                    beginning at specified location.
+		    **/
+	    virtual void		read(tRelCoord x,tRelCoord y,tvioBuff *buff,unsigned len) const;
+		   /** Accesses to the active window directly, writing a single line.
+		     * @param win         handle of window
+		     * @param x,y         specify location of output
+		     * @param buff        pointer to virtual video buffer to be written
+		     * @param len         specifies length of virtual video buffer
+		     * @return            none
+		     * @note              Function writes specified number of
+		     *                    characters and attributes to window,
+		     *                    beginning at specified location.
+		     *                    If written output is large than window,
+		     *                    then it will be clipped.
+		    **/
+	    virtual void		write(tRelCoord x,tRelCoord y,const tvioBuff *buff,unsigned len);
 	private:
 	    void		create(tAbsCoord x1_, tAbsCoord y1_, tAbsCoord width, tAbsCoord height, unsigned flags);
 	    void		makewin(tAbsCoord x1, tAbsCoord y1, tAbsCoord width, tAbsCoord height);

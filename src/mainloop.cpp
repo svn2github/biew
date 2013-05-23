@@ -52,44 +52,31 @@ int __FASTCALL__ isHOnLine(__filesize_t cp,int width)
 	  || (FoundTextSt <= cp && FoundTextEnd >= cp + width);
 }
 
-void __FASTCALL__ HiLightSearch(TWindow& out,__filesize_t cfp,tRelCoord minx,tRelCoord maxx,tRelCoord y,HLInfo *buff,unsigned flags)
+void __FASTCALL__ HiLightSearch(TWindow& out,__filesize_t cfp,tRelCoord minx,tRelCoord maxx,tRelCoord y,const char* buff,unsigned flags)
 {
- tvioBuff it;
- unsigned __len,width;
- int x;
- char attr;
- t_vchar chars[__TVIO_MAXSCREENWIDTH];
- t_vchar oem_pg[__TVIO_MAXSCREENWIDTH];
- ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
- it.chars = chars;
- it.oem_pg = oem_pg;
- it.attrs = attrs;
- width = (flags & HLS_USE_DOUBLE_WIDTH) == HLS_USE_DOUBLE_WIDTH ? maxx*2 : maxx-minx;
- attr = browser_cset.highline;
- if((flags & HLS_USE_BUFFER_AS_VIDEO) == HLS_USE_BUFFER_AS_VIDEO) {
-   memcpy(chars,buff->buff.chars,width);
-   memcpy(oem_pg,buff->buff.oem_pg,width);
-   memset(attrs,attr,width);
- } else {
-   memcpy(chars,buff->text,width);
-   memset(oem_pg,0,width);
-   memset(attrs,attr,width);
-   beye_context().system().nls_prepare_oem_for_vio(&it,width);
- }
- x = (int)(FoundTextSt - cfp);
- if((flags & HLS_USE_DOUBLE_WIDTH) == HLS_USE_DOUBLE_WIDTH) x *= 2;
- __len = (unsigned)(FoundTextEnd - FoundTextSt);
- if((flags & HLS_USE_DOUBLE_WIDTH) == HLS_USE_DOUBLE_WIDTH) __len *= 2;
- if(__len > width - x) __len = width - x;
- if(x < 0) { __len += x; x = 0; }
- if(__len && x + __len <= width) {
-   unsigned char end,st;
-   st = x;
-   end = (__len + x);
-   attr = browser_cset.hlight;
-   memset(&attrs[st],attr,end-st);
- }
- out.write(minx + 1,y + 1,&it,width);
+    unsigned __len,width;
+    int x;
+    char attr;
+    char chars[__TVIO_MAXSCREENWIDTH];
+    ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
+    width = (flags & HLS_USE_DOUBLE_WIDTH) == HLS_USE_DOUBLE_WIDTH ? maxx*2 : maxx-minx;
+    attr = browser_cset.highline;
+    ::memcpy(chars,buff,width);
+    ::memset(attrs,attr,width);
+    x = (int)(FoundTextSt - cfp);
+    if((flags & HLS_USE_DOUBLE_WIDTH) == HLS_USE_DOUBLE_WIDTH) x *= 2;
+    __len = (unsigned)(FoundTextEnd - FoundTextSt);
+    if((flags & HLS_USE_DOUBLE_WIDTH) == HLS_USE_DOUBLE_WIDTH) __len *= 2;
+    if(__len > width - x) __len = width - x;
+    if(x < 0) { __len += x; x = 0; }
+    if(__len && x + __len <= width) {
+	unsigned char end,st;
+	st = x;
+	end = (__len + x);
+	attr = browser_cset.hlight;
+	memset(&attrs[st],attr,end-st);
+    }
+    out.direct_write(minx+1,y+1,chars,attrs,width);
 }
 
 void BeyeContext::draw_title() const

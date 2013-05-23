@@ -6123,100 +6123,69 @@ bool ix86_Disassembler::action_F1()
 
 void ix86_Disassembler::show_short_help() const
 {
- char *msgAsmText,*title;
- char **strs;
- unsigned size,i,evt;
- unsigned long nstrs;
- TWindow * hwnd;
- Beye_Help bhelp;
- if(!bhelp.open(true)) return;
- size = (unsigned)bhelp.get_item_size(x86_Bitness == DAB_USE64 ? 20002:20001);
- if(!size) goto ix86hlp_bye;
- msgAsmText = new char [size+1];
- if(!msgAsmText)
- {
-   mem_off:
-   MemOutBox(" Help Display ");
-   goto ix86hlp_bye;
- }
- if(!bhelp.load_item(x86_Bitness == DAB_USE64 ? 20002:20001,msgAsmText))
- {
-   delete msgAsmText;
-   goto ix86hlp_bye;
- }
- msgAsmText[size] = 0;
- if(!(strs = bhelp.point_strings(msgAsmText,size,&nstrs))) goto mem_off;
- title = msgAsmText;
- hwnd = CrtHlpWndnls(title,73,22);
- for(i = 0;i < nstrs;i++)
- {
-   unsigned rlen;
-   tvioBuff it;
-   t_vchar chars[__TVIO_MAXSCREENWIDTH];
-   t_vchar oem_pg[__TVIO_MAXSCREENWIDTH];
-   ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
-   it.chars = chars;
-   it.oem_pg = oem_pg;
-   it.attrs = attrs;
-   rlen = strlen(strs[i]);
-   rlen = bhelp.fill_buffer(&it,__TVIO_MAXSCREENWIDTH,strs[i],rlen,0,NULL,0);
-   hwnd->write(2,i+2,&it,rlen);
- }
- delete msgAsmText;
- hwnd->goto_xy(5,3);
- if(x86_Bitness == DAB_USE64 || color_mode==1)
- {
-   hwnd->goto_xy(5,3);
-   i=0;
-//   for(i = 0;i < 10;i++)
-   {
-     hwnd->set_color(disasm_cset.engine[0].engine);
-     hwnd->puts((x86_Bitness == DAB_USE64)?CPU64Names[0]:altPipesNames[0]);
-     hwnd->clreol();
-   }
-   hwnd->goto_xy(5,4);
-//   for(i = 0;i < 10;i++)
-   {
-     hwnd->set_color(disasm_cset.engine[1].engine);
-     hwnd->puts((x86_Bitness == DAB_USE64)?CPU64Names[1]:altPipesNames[1]);
-     hwnd->clreol();
-   }
-   hwnd->goto_xy(5,5);
-//   for(i = 0;i < 10;i++)
-   {
-     hwnd->set_color(disasm_cset.engine[2].engine);
-     hwnd->puts((x86_Bitness == DAB_USE64)?CPU64Names[2]:altPipesNames[2]);
-     hwnd->clreol();
-   }
- }
- else
- {
- for(i = 0;i < 10;i++)
- {
-   hwnd->set_color(disasm_cset.cpu_cset[0].clone[i]);
-   hwnd->puts(CPUNames[i]);
- }
- hwnd->goto_xy(5,4);
- for(i = 0;i < 10;i++)
- {
-   hwnd->set_color(disasm_cset.cpu_cset[1].clone[i]);
-   hwnd->puts(FPUNames[i]);
- }
- hwnd->goto_xy(5,5);
- for(i = 0;i < 10;i++)
- {
-   hwnd->set_color(disasm_cset.cpu_cset[2].clone[i]);
-   hwnd->puts(MMXNames[i]);
- }
- }
- do
- {
-   evt = GetEvent(drawEmptyPrompt,NULL,hwnd);
- }
- while(!(evt == KE_ESCAPE || evt == KE_F(10)));
- delete hwnd;
- ix86hlp_bye:
- bhelp.close();
+    char *msgAsmText,*title;
+    std::vector<std::string> strs;
+    unsigned size,evt;
+    size_t i,sz;
+    TWindow* hwnd;
+    Beye_Help bhelp;
+
+    if(!bhelp.open(true)) return;
+    size = (unsigned)bhelp.get_item_size(x86_Bitness == DAB_USE64 ? 20002:20001);
+    if(!size) goto ix86hlp_bye;
+    msgAsmText = new char [size+1];
+    if(!msgAsmText) {
+mem_off:
+	MemOutBox(" Help Display ");
+	goto ix86hlp_bye;
+    }
+    if(!bhelp.load_item(x86_Bitness == DAB_USE64 ? 20002:20001,msgAsmText)) {
+	delete msgAsmText;
+	goto ix86hlp_bye;
+    }
+    msgAsmText[size] = 0;
+    strs = bhelp.point_strings(msgAsmText,size);
+    title = msgAsmText;
+    hwnd = CrtHlpWndnls(title,73,22);
+    sz=strs.size();
+    for(i = 0;i < sz;i++) bhelp.fill_buffer(*hwnd,1,i+1,strs[i]);
+    delete msgAsmText;
+    hwnd->goto_xy(5,3);
+    if(x86_Bitness == DAB_USE64 || color_mode==1) {
+	hwnd->goto_xy(5,3);
+	hwnd->set_color(disasm_cset.engine[0].engine);
+	hwnd->puts((x86_Bitness == DAB_USE64)?CPU64Names[0]:altPipesNames[0]);
+	hwnd->clreol();
+	hwnd->goto_xy(5,4);
+	hwnd->set_color(disasm_cset.engine[1].engine);
+	hwnd->puts((x86_Bitness == DAB_USE64)?CPU64Names[1]:altPipesNames[1]);
+	hwnd->clreol();
+	hwnd->goto_xy(5,5);
+	hwnd->set_color(disasm_cset.engine[2].engine);
+	hwnd->puts((x86_Bitness == DAB_USE64)?CPU64Names[2]:altPipesNames[2]);
+	hwnd->clreol();
+    } else {
+	for(i = 0;i < 10;i++) {
+	    hwnd->set_color(disasm_cset.cpu_cset[0].clone[i]);
+	    hwnd->puts(CPUNames[i]);
+	}
+	hwnd->goto_xy(5,4);
+	for(i = 0;i < 10;i++) {
+	    hwnd->set_color(disasm_cset.cpu_cset[1].clone[i]);
+	    hwnd->puts(FPUNames[i]);
+	}
+	hwnd->goto_xy(5,5);
+	for(i = 0;i < 10;i++) {
+	    hwnd->set_color(disasm_cset.cpu_cset[2].clone[i]);
+	    hwnd->puts(MMXNames[i]);
+	}
+    }
+    do {
+	evt = GetEvent(drawEmptyPrompt,NULL,hwnd);
+    }while(!(evt == KE_ESCAPE || evt == KE_F(10)));
+    delete hwnd;
+ix86hlp_bye:
+    bhelp.close();
 }
 
 static const char *use_names[] =

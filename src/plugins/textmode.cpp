@@ -121,8 +121,8 @@ static const unsigned	MAX_STRLEN=1000; /**< defines maximal length of string */
 	    virtual void		save_ini(Ini_Profile& );
 	    virtual unsigned		convert_cp(char *str,unsigned len, bool use_fs_nls);
 	private:
-	    unsigned			tab2space(tvioBuff* dest,unsigned int alen,char* str,unsigned int len,unsigned int shift,unsigned* n_tabs,long lstart) const;
-	    void			paint_search(HLInfo* cptr,unsigned int shift,int i,int size,int _bin_mode) const;
+	    unsigned			tab2space(char* chars,ColorAttr* attrs,unsigned alen,const char* str,unsigned int len,unsigned int shift,unsigned* n_tabs,long lstart) const;
+	    void			paint_search(const char* cptr,unsigned int shift,int i,int size,int _bin_mode) const;
 	    void			prepare_lines(int keycode);
 	    void			fill_curr_page(__filesize_t lval,__filesize_t flen) const;
 	    void			fill_prev_page(__filesize_t lval) const;
@@ -776,7 +776,7 @@ void TextMode::prepare_lines(int keycode)
     PrevPageSize = ptlines[h].end - ptlines[0].st + cp_symb_len;
 }
 
-unsigned TextMode::tab2space(tvioBuff * dest,unsigned int alen,char * str,unsigned int len,unsigned int shift,unsigned *n_tabs,long lstart) const
+unsigned TextMode::tab2space(char *chars,ColorAttr* attrs,unsigned alen,const char* str,unsigned int len,unsigned int shift,unsigned *n_tabs,long lstart) const
 {
     long end_ctx;
     unsigned char ch,defcol;
@@ -792,7 +792,7 @@ unsigned TextMode::tab2space(tvioBuff * dest,unsigned int alen,char * str,unsign
     for(i = 0,freq = 0,k = 0;i < len;i++,freq++) {
 	defcol = text_cset.normal;
 	ch = str[i];
-	if(dest && HiLight) {
+	if(chars && HiLight) {
 	    if(end_ctx) {
 		if((lstart+(long)i)>=end_ctx) goto rescan;
 	    } else {
@@ -845,10 +845,9 @@ unsigned TextMode::tab2space(tvioBuff * dest,unsigned int alen,char * str,unsign
 			size = TEXT_TAB - (freq%TEXT_TAB);
 			for(j = 0;j < size;j++,freq++) {
 			    if(k < alen && freq >= shift) {
-				if(dest) {
-				    dest->chars[k] = ' ';
-				    dest->oem_pg[k] = 0;
-				    dest->attrs[k] = defcol;
+				if(chars) {
+				    chars[k] = ' ';
+				    attrs[k] = defcol;
 				}
 				k++;
 			    }
@@ -879,11 +878,10 @@ unsigned TextMode::tab2space(tvioBuff * dest,unsigned int alen,char * str,unsign
 	} else {
 	    DefChar:
 	    if(k < alen && freq >= shift) {
-		if(dest) {
-		    if(!(in_ctx||in_kwd) && HiLight) defcol=syntax_hl.op_hash[ch];
-		    dest->chars[k] = ch;
-		    dest->oem_pg[k] = 0;
-		    dest->attrs[k] = defcol;
+		if(!(in_ctx||in_kwd) && HiLight) defcol=syntax_hl.op_hash[ch];
+		if(chars) {
+		    chars[k] = ch;
+		    attrs[k] = defcol;
 		}
 		k++;
 	    }
@@ -893,7 +891,7 @@ unsigned TextMode::tab2space(tvioBuff * dest,unsigned int alen,char * str,unsign
     return k;
 }
 
-void TextMode::paint_search(HLInfo * cptr,unsigned int shift,int i,int size,int _bin_mode) const
+void TextMode::paint_search(const char* cptr,unsigned int shift,int i,int size,int _bin_mode) const
 {
     int sh,she;
     __fileoff_t save,savee;
@@ -905,14 +903,14 @@ void TextMode::paint_search(HLInfo * cptr,unsigned int shift,int i,int size,int 
 	sh = loc_st - shift;
 	she = loc_end - shift;
     } else {
-	sh = tab2space(NULL,UINT_MAX,buff,loc_st/cp_symb_len,shift,NULL,0L)*cp_symb_len;
-	she= tab2space(NULL,UINT_MAX,buff,loc_end/cp_symb_len,shift,NULL,0L)*cp_symb_len;
+	sh = tab2space(NULL,NULL,UINT_MAX,buff,loc_st/cp_symb_len,shift,NULL,0L)*cp_symb_len;
+	she= tab2space(NULL,NULL,UINT_MAX,buff,loc_end/cp_symb_len,shift,NULL,0L)*cp_symb_len;
     }
     save = FoundTextSt;
     savee= FoundTextEnd;
     FoundTextSt = tlines[i].st + shift + sh/cp_symb_len;
     FoundTextEnd = tlines[i].st + shift + she/cp_symb_len;
-    HiLightSearch(main_wnd,tlines[i].st + shift,0,size,i,cptr,_bin_mode == MOD_BINARY ? HLS_NORMAL : HLS_USE_BUFFER_AS_VIDEO);
+    HiLightSearch(main_wnd,tlines[i].st + shift,0,size,i,cptr,HLS_NORMAL);
     FoundTextSt = save;
     FoundTextEnd = savee;
 }
@@ -981,14 +979,9 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
     __filesize_t cpos;
     unsigned cp_symb_len,len,tmp,textmaxlen;
     tAbsCoord height = main_wnd.client_height();
-    HLInfo hli;
-    tvioBuff it;
-    t_vchar chars[__TVIO_MAXSCREENWIDTH];
-    t_vchar oem_pg[__TVIO_MAXSCREENWIDTH];
+    char chars[__TVIO_MAXSCREENWIDTH];
     ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
-    it.chars = chars;
-    it.oem_pg = oem_pg;
-    it.attrs = attrs;
+
     cp_symb_len = activeNLS->get_symbol_size();
     strmaxlen = 0;
     if(shift%cp_symb_len) {
@@ -1017,11 +1010,11 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 		    main_handle.read((any_t*)buff,len);
 		    len = convert_cp(buff,len,false);
 		    for(b_lim=len,b_ptr = 0;b_ptr < len;b_ptr+=2,b_lim-=2) {
-			shift = tab2space(NULL,UINT_MAX,&buff[b_ptr],b_lim,0,&n_tabs,0L);
+			shift = tab2space(NULL,NULL,UINT_MAX,&buff[b_ptr],b_lim,0,&n_tabs,0L);
 			if(shift) shift-=cp_symb_len;
 			if(shift < (unsigned)(beye_context().tconsole().vio_width()/2)) break;
 		    }
-		    shift = tab2space(NULL,UINT_MAX,buff,b_ptr,0,NULL,0L);
+		    shift = tab2space(NULL,NULL,UINT_MAX,buff,b_ptr,0,NULL,0L);
 		} else if(!isHOnLine((tlines[i].st+shift)*cp_symb_len,std::min(len,beye_context().tconsole().vio_width()))) {
 		    shift = ((unsigned)(FoundTextSt - tlines[i].st)-beye_context().tconsole().vio_width()/2)/cp_symb_len;
 		    if((int)shift < 0) shift = 0;
@@ -1043,19 +1036,17 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 	    main_handle.read((any_t*)buff,size);
 	    rsize = size = convert_cp(buff,size,false);
 	    if(bin_mode != MOD_BINARY) {
-		rsize = size = tab2space(&it,__TVIO_MAXSCREENWIDTH,buff,size,shift,NULL,tlines[i].st);
+		rsize = size = tab2space(chars,attrs,__TVIO_MAXSCREENWIDTH,buff,size,shift,NULL,tlines[i].st);
 		tmp = size + shift;
 		if(strmaxlen < tmp) strmaxlen = tmp;
 		if(textmaxlen < tmp) textmaxlen = tmp;
 	    }
 	    if(size > beye_context().tconsole().vio_width()) size = beye_context().tconsole().vio_width();
 	    if(i == (unsigned)hilightline) {
-		if(bin_mode == MOD_BINARY) hli.text = buff;
-		else                       hli.buff = it;
-		paint_search(&hli,shift,i,size,bin_mode == MOD_BINARY);
+		paint_search(bin_mode==MOD_BINARY?buff:chars,shift,i,size,bin_mode==MOD_BINARY);
 	    } else {
 		if(bin_mode == MOD_BINARY) main_wnd.direct_write(1,i+1,buff,size);
-		else                       main_wnd.write(1,i + 1,&it,size);
+		else                       main_wnd.direct_write(1,i+1,chars,attrs,size);
 	    }
 	    if(rsize < beye_context().tconsole().vio_width()) {
 		main_wnd.goto_xy(1 + rsize,i + 1);

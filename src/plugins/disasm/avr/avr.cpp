@@ -453,73 +453,48 @@ bool AVR_Disassembler::action_F1()
 
 void AVR_Disassembler::show_short_help() const
 {
-  char *msgAsmText,*title;
-  char **strs;
-  unsigned size,i,evt;
-  unsigned long nstrs;
-  TWindow * hwnd;
-  Beye_Help bhelp;
+    char *msgAsmText,*title;
+    std::vector<std::string> strs;
+    unsigned size,evt;
+    size_t i,sz;
+    TWindow* hwnd;
+    Beye_Help bhelp;
 
-  if(!bhelp.open(true)) return;
+    if(!bhelp.open(true)) return;
 
-  size = (unsigned)bhelp.get_item_size(20021);
-  if (!size) goto avrhlp_bye;
+    size = (unsigned)bhelp.get_item_size(20021);
+    if (!size) goto avrhlp_bye;
 
-  msgAsmText = new char [size+1];
-  if (!msgAsmText)
-  {
-mem_off:
-    MemOutBox(" Help display ");
-    goto avrhlp_bye;
-  }
+    msgAsmText = new char [size+1];
+    if (!msgAsmText) {
+	MemOutBox(" Help display ");
+	goto avrhlp_bye;
+    }
 
-  if (!bhelp.load_item(20021, msgAsmText))
-  {
+    if (!bhelp.load_item(20021, msgAsmText)) {
+	delete msgAsmText;
+	goto avrhlp_bye;
+    }
+    msgAsmText[size] = '\0';
+
+    strs = bhelp.point_strings(msgAsmText, size);
+    title = msgAsmText;
+
+    hwnd = CrtHlpWndnls(title, 73, 16);
+    sz=strs.size();
+    for (i = 0; i < sz; i++) bhelp.fill_buffer(*hwnd,1,i+1,strs[i]);
     delete msgAsmText;
-    goto avrhlp_bye;
-  }
-  msgAsmText[size] = '\0';
-
-  if (!(strs = bhelp.point_strings(msgAsmText, size, &nstrs))) goto mem_off;
-  title = msgAsmText;
-
-  hwnd = CrtHlpWndnls(title, 73, 16);
-  for (i = 0; i < nstrs; i++)
-  {
-    unsigned rlen;
-    tvioBuff it;
-    t_vchar chars[__TVIO_MAXSCREENWIDTH];
-    t_vchar oem_pg[__TVIO_MAXSCREENWIDTH];
-    ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
-
-    it.chars = chars;
-    it.oem_pg = oem_pg;
-    it.attrs = attrs;
-
-    rlen = strlen(strs[i]);
-    rlen = bhelp.fill_buffer(&it, __TVIO_MAXSCREENWIDTH, strs[i], rlen, 0, NULL, 0);
-
-    hwnd->write(2, i + 2, &it, rlen);
-  }
-
-  delete msgAsmText;
-  hwnd->goto_xy(5, 3);
-  for (i = 0; i < 10; i++)
-  {
-    hwnd->set_color(disasm_cset.cpu_cset[0].clone[i]);
-    hwnd->puts(AVRCoreNames[i]);
-  }
-
-  do
-  {
-    evt = GetEvent(drawEmptyPrompt,NULL,hwnd);
-  }
-  while (!(evt == KE_ESCAPE || evt == KE_F(10)));
-
-  delete hwnd;
-
+    hwnd->goto_xy(5, 3);
+    for (i = 0; i < 10; i++) {
+	hwnd->set_color(disasm_cset.cpu_cset[0].clone[i]);
+	hwnd->puts(AVRCoreNames[i]);
+    }
+    do {
+	evt = GetEvent(drawEmptyPrompt,NULL,hwnd);
+    }while (!(evt == KE_ESCAPE || evt == KE_F(10)));
+    delete hwnd;
 avrhlp_bye:
-  bhelp.close();
+    bhelp.close();
 }
 
 int AVR_Disassembler::max_insn_len() const

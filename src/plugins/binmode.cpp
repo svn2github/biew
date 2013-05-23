@@ -143,17 +143,13 @@ unsigned BinMode::paint( unsigned keycode,unsigned tshift )
     int len;
     unsigned BWidth,_b_width,count;
     size_t j;
-    HLInfo hli;
-    tvioBuff it;
     char buffer[__TVIO_MAXSCREENWIDTH*2];
-    t_vchar chars[__TVIO_MAXSCREENWIDTH];
-    t_vchar oem_pg[__TVIO_MAXSCREENWIDTH];
-    ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
+    char _chars[__TVIO_MAXSCREENWIDTH];
+    ColorAttr _attrs[__TVIO_MAXSCREENWIDTH];
+    char* chars=_chars;
+    ColorAttr* attrs=_attrs;
     tAbsCoord width,height;
 
-    it.chars=chars;
-    it.oem_pg=oem_pg;
-    it.attrs=attrs;
     cfp  = main_handle.tell();
     width = main_wnd.client_width();
     BWidth = main_wnd.client_width()-virtWidthCorr;
@@ -181,25 +177,22 @@ unsigned BinMode::paint( unsigned keycode,unsigned tshift )
 		    chars[i]=buffer[ii++];
 		    attrs[i]=buffer[ii++];
 		}
-		::memset(oem_pg,0,beye_context().tconsole().vio_width());
 		if(bin_mode==MOD_REVERSE) {
-		    t_vchar *t;
-		    t=it.chars;
-		    it.chars=it.attrs;
-		    it.attrs=(ColorAttr*)t;
+		    any_t* t;
+		    t=chars;
+		    chars=(char*)attrs;
+		    attrs=(ColorAttr*)t;
 		}
 		count=len/2;
-		::memset(&it.chars[count],TWC_DEF_FILLER,beye_context().tconsole().vio_width()-count);
-		::memset(&it.attrs[count],browser_cset.main,beye_context().tconsole().vio_width()-count);
+		::memset(&chars[count],TWC_DEF_FILLER,beye_context().tconsole().vio_width()-count);
+		::memset(&attrs[count],browser_cset.main,beye_context().tconsole().vio_width()-count);
 	    } else ::memset(&buffer[len],TWC_DEF_FILLER,beye_context().tconsole().vio_width()-len);
-	    if(isHOnLine(_index,width)) {
-		hli.text = buffer;
-		HiLightSearch(main_wnd,_index,0,BWidth,j,&hli,HLS_NORMAL);
-	    } else {
+	    if(isHOnLine(_index,width)) HiLightSearch(main_wnd,_index,0,BWidth,j,buffer,HLS_NORMAL);
+	    else {
 		if(bin_mode==MOD_PLAIN)
-		    main_wnd.direct_write(1,j + 1,buffer,width);
+		    main_wnd.direct_write(1,j+1,buffer,width);
 		else
-		    main_wnd.write(1,j + 1,&it,width);
+		    main_wnd.direct_write(1,j+1,chars,attrs,width);
 	    }
 	}
 	main_wnd.refresh();
