@@ -175,10 +175,9 @@ void __FASTCALL__ editSaveContest()
 
 bool __FASTCALL__ edit_defaction(int _lastbyte)
 {
- bool redraw;
-  redraw = false;
-   switch(_lastbyte)
-   {
+    bool redraw;
+    redraw = false;
+    switch(_lastbyte) {
      case KE_UPARROW  : edit_y--; break;
      case KE_DOWNARROW: edit_y++; break;
      case KE_ENTER:
@@ -188,8 +187,8 @@ bool __FASTCALL__ edit_defaction(int _lastbyte)
 		      Get2DigitDlg(INIT_MASK,INPUT_MASK,&edit_XX);
 		      break;
      default: redraw = true; break;
-   }
- return redraw;
+    }
+    return redraw;
 }
 
 bool __FASTCALL__ editDefAction(int _lastbyte)
