@@ -175,36 +175,35 @@ bool __FASTCALL__ edit_defaction(int _lastbyte)
     bool redraw;
     redraw = false;
     switch(_lastbyte) {
-     case KE_UPARROW  : edit_y--; break;
-     case KE_DOWNARROW: edit_y++; break;
-     case KE_ENTER:
-     case KE_LEFTARROW:
-     case KE_RIGHTARROW: break;
-     case KE_F(3)     :
+	case KE_UPARROW  : edit_y--; break;
+	case KE_DOWNARROW: edit_y++; break;
+	case KE_ENTER:
+	case KE_LEFTARROW:
+	case KE_RIGHTARROW: break;
+	case KE_F(3)     :
 		      Get2DigitDlg(INIT_MASK,INPUT_MASK,&edit_XX);
 		      break;
-     default: redraw = true; break;
+	default: redraw = true; break;
     }
     return redraw;
 }
 
 bool __FASTCALL__ editDefAction(int _lastbyte)
 {
- bool redraw = true;
- int eidx;
- eidx = edit_y*EditorMem.width+edit_x;
-   switch(_lastbyte)
-   {
-     case KE_F(4)     : EditorMem.buff[eidx] = ~EditorMem.buff[eidx]; break;
-     case KE_F(5)     : EditorMem.buff[eidx] |= edit_XX; break;
-     case KE_F(6)     : EditorMem.buff[eidx] &= edit_XX; break;
-     case KE_F(7)     : EditorMem.buff[eidx] ^= edit_XX; break;
-     case KE_F(8)     : EditorMem.buff[eidx]  = edit_XX; break;
-     case KE_F(9)     : EditorMem.buff[eidx] = EditorMem.save[eidx]; break;
-     default        : redraw = edit_defaction(_lastbyte); edit_x--; break;
-   }
-   edit_x++;
-   return redraw;
+    bool redraw = true;
+    int eidx;
+    eidx = edit_y*EditorMem.width+edit_x;
+    switch(_lastbyte) {
+	case KE_F(4): EditorMem.buff[eidx] = ~EditorMem.buff[eidx]; break;
+	case KE_F(5): EditorMem.buff[eidx] |= edit_XX; break;
+	case KE_F(6): EditorMem.buff[eidx] &= edit_XX; break;
+	case KE_F(7): EditorMem.buff[eidx] ^= edit_XX; break;
+	case KE_F(8): EditorMem.buff[eidx]  = edit_XX; break;
+	case KE_F(9): EditorMem.buff[eidx] = EditorMem.save[eidx]; break;
+	default     : redraw = edit_defaction(_lastbyte); edit_x--; break;
+    }
+    edit_x++;
+    return redraw;
 }
 
 int __FASTCALL__ FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*save_func)(Opaque& _this,unsigned char *,unsigned))
