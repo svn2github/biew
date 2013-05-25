@@ -100,13 +100,10 @@ bool __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size
  flen = beye_context().flength();
  edit_cp = cfp = beye_context().tell();
  EditorMem.width = width;
- if(buff)
- {
+ if(buff) {
     EditorMem.size = size;
     memcpy(EditorMem.buff,buff,size);
- }
- else
- {
+ } else {
     EditorMem.size = (unsigned)((__filesize_t)msize > (flen-cfp) ? (flen-cfp) : msize);
     beye_context().bm_file().seek(cfp,binary_stream::Seek_Set);
     beye_context().bm_file().read(EditorMem.buff,EditorMem.size);
