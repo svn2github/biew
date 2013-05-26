@@ -485,76 +485,70 @@ void	BeyeContext::create_windows() {
 
 int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::string>& envm)
 {
- bool skin_err;
- int retval;
+    bool skin_err;
+    int retval;
 #ifndef NDEBUG
 #ifdef RLIMIT_CORE
-  {
     /* on many systems default coresize is 0.
        Enable any coresize here. */
     struct rlimit rl;
     getrlimit(RLIMIT_CORE,&rl);
     rl.rlim_cur = rl.rlim_max;
     setrlimit(RLIMIT_CORE,&rl);
-  }
 #endif
 #endif
-  BeyeCtx=new(zeromem) BeyeContext(argv,envm);
+    BeyeCtx=new(zeromem) BeyeContext(argv,envm);
 /*
     flg=MPA_FLG_RANDOMIZER;
     flg=MPA_FLG_BOUNDS_CHECK;
     flg=MPA_FLG_BEFORE_CHECK;
     flg=MPA_FLG_BACKTRACE;
 */
- Ini_Profile& ini=BeyeCtx->load_ini_info();
- skin_err = csetReadIniFile(BeyeCtx->skin_name.c_str());
- initBConsole(BeyeCtx->vioIniFlags,BeyeCtx->twinIniFlags);
- if(argv.size() < 2) goto show_usage;
- BeyeCtx->parse_cmdline(argv);
- if(BeyeCtx->list_file().empty())
- {
-   /** print usage message */
-    size_t i;
-    show_usage:
-    BeyeCtx->show_usage();
-    std::cerr<<BEYE_VER_MSG<<std::endl;
-    std::cerr<<" Usage: beye [OPTIONS] file...<<"<<std::endl<<std::endl;
-    for(i = 0;i < sizeof(beyeArg)/sizeof(struct tagbeyeArg);i++) {
-	std::cerr<<beyeArg[i].key<<" "<<beyeArg[i].prompt<<std::endl;
+    Ini_Profile& ini=BeyeCtx->load_ini_info();
+    skin_err = csetReadIniFile(BeyeCtx->skin_name.c_str());
+    initBConsole(BeyeCtx->vioIniFlags,BeyeCtx->twinIniFlags);
+    if(argv.size() < 2) goto show_usage;
+    BeyeCtx->parse_cmdline(argv);
+    if(BeyeCtx->list_file().empty()) {
+	/** print usage message */
+	size_t i;
+show_usage:
+	BeyeCtx->show_usage();
+	std::cerr<<BEYE_VER_MSG<<std::endl;
+	std::cerr<<" Usage: beye [OPTIONS] file...<<"<<std::endl<<std::endl;
+	for(i = 0;i < sizeof(beyeArg)/sizeof(struct tagbeyeArg);i++)
+	    std::cerr<<beyeArg[i].key<<" "<<beyeArg[i].prompt<<std::endl;
+	std::cerr<<std::endl;
+	return EXIT_FAILURE;
     }
-    std::cerr<<std::endl;
-    return EXIT_FAILURE;
- }
- BeyeCtx->create_windows();
- atexit(MyAtExit);
- retval = EXIT_SUCCESS;
- if(skin_err)
- {
-   char sout[256];
-   sprintf(sout,"Error in skin file detected: '%s'",BeyeCtx->last_skin_error.c_str());
-   BeyeCtx->ErrMessageBox(sout,"");
- }
- /* We must do it before opening a file because of some RTL has bug
-    when are trying to open already open file with no sharing access */
- ftim_ok = binary_stream::get_ftime(BeyeCtx->ArgVector1,ftim);
- if(!BeyeCtx->LoadInfo())
- {
-   delete &ini;
-   retval = EXIT_FAILURE;
-   goto Bye;
- }
- BeyeCtx->detect_format(BeyeCtx->sc_bm_file());
- BeyeCtx->init_modes(ini);
- delete &ini;
- BeyeCtx->PaintTitle();
- if(!BeyeCtx->is_valid_ini_args() || BeyeCtx->LastOffset > BeyeCtx->flength()) BeyeCtx->LastOffset = 0;
- BeyeCtx->main_wnd().show();
- BeyeCtx->main_loop();
- BeyeCtx->LastOffset = BeyeCtx->tell();
- BeyeCtx->save_ini_info();
- if(BeyeCtx->iniPreserveTime && ftim_ok) binary_stream::set_ftime(BeyeCtx->ArgVector1,ftim);
- Bye:
- return retval;
+    BeyeCtx->create_windows();
+    atexit(MyAtExit);
+    retval = EXIT_SUCCESS;
+    if(skin_err) {
+	char sout[256];
+	sprintf(sout,"Error in skin file detected: '%s'",BeyeCtx->last_skin_error.c_str());
+	BeyeCtx->ErrMessageBox(sout,"");
+    }
+    /* We must do it before opening a file because of some RTL has bug
+	when are trying to open already open file with no sharing access */
+    ftim_ok = binary_stream::get_ftime(BeyeCtx->ArgVector1,ftim);
+    if(!BeyeCtx->LoadInfo()) {
+	delete &ini;
+	retval = EXIT_FAILURE;
+	goto Bye;
+    }
+    BeyeCtx->detect_format(BeyeCtx->sc_bm_file());
+    BeyeCtx->init_modes(ini);
+    delete &ini;
+    BeyeCtx->PaintTitle();
+    if(!BeyeCtx->is_valid_ini_args() || BeyeCtx->LastOffset > BeyeCtx->flength()) BeyeCtx->LastOffset = 0;
+    BeyeCtx->main_wnd().show();
+    BeyeCtx->main_loop();
+    BeyeCtx->LastOffset = BeyeCtx->tell();
+    BeyeCtx->save_ini_info();
+    if(BeyeCtx->iniPreserveTime && ftim_ok) binary_stream::set_ftime(BeyeCtx->ArgVector1,ftim);
+Bye:
+    return retval;
 }
 
 bool BeyeContext::new_source()
