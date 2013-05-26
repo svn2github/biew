@@ -146,21 +146,16 @@ ARM_Disassembler::ARM_Disassembler(const Bin_Format& b,binary_stream& h,DisMode&
 	    ,armBitness(DAB_USE32)
 	    ,armBigEndian(1)
 {
-  outstr = new char[1000];
-  if(!outstr)
-  {
-    MemOutBox("Data disassembler initialization");
-    exit(EXIT_FAILURE);
-  }
-  arm16Init();
-  arm32Init();
+    outstr = new char[1000];
+    arm16Init();
+    arm32Init();
 }
 
 ARM_Disassembler::~ARM_Disassembler()
 {
-   arm32Term();
-   arm16Term();
-   delete outstr;
+    arm32Term();
+    arm16Term();
+    delete outstr;
 }
 
 void ARM_Disassembler::read_ini( Ini_Profile& ini )

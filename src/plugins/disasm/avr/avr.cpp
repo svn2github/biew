@@ -20,6 +20,7 @@ using namespace	usr;
  * @note        ported from GNU binutils -- most stuff made by Denis Chertykov
 **/
 #include <algorithm>
+#include <stdexcept>
 
 #include <string.h>
 #include <limits.h>
@@ -95,11 +96,7 @@ const avr_opcodes_s AVR_Disassembler::avr_opcodes[] =
 
 void AVR_Disassembler::avr_assert( int expression )
 {
-  if (!expression)
-  {
-    MemOutBox("AVR disassembler fault");
-    exit(EXIT_FAILURE);
-  }
+    if (!expression) throw std::runtime_error("AVR disassembler fault");
 }
 
 static unsigned int avr_getl16( MBuffer addr )
@@ -538,13 +535,6 @@ AVR_Disassembler::AVR_Disassembler(const Bin_Format& b,binary_stream& h, DisMode
   nopcodes = sizeof (avr_opcodes) / sizeof (struct avr_opcodes_s);
   avr_bin_masks = new unsigned[nopcodes];
   outstr = new char [1000];
-
-  if (!outstr || !avr_bin_masks)
-  {
-    MemOutBox("AVR disassembler initialization");
-    exit(EXIT_FAILURE);
-  }
-
 
   for (opcode = avr_opcodes, maskptr = avr_bin_masks;
 	   opcode->name;

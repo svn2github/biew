@@ -153,15 +153,7 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x,tAbsCoord y,const tvioBuff *buff,un
 /* I've found bugs in OS/2 on large arrays */
 /* But Max Alekseyev <relf@os2.ru> swears that this block is working with Watcom */
   uint16_t *resbuff, small_buffer[__TVIO_MAXSCREENWIDTH];
-  if(len > tvioWidth)
-  {
-    if(!(resbuff = new uint16_t[len]))
-    {
-	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
-	std::cerr<<"Exiting..."<<std::endl;
-        exit(EXIT_FAILURE);
-    }
-  }
+  if(len > tvioWidth) resbuff = new uint16_t[len];
   else resbuff = small_buffer;
   __INTERLEAVE_BUFFERS(len, resbuff, buff->chars, buff->attrs);
   VioWrtCellStr((any_t*)resbuff,len<<1,y,x,0);
@@ -189,15 +181,7 @@ void __FASTCALL__ __vioReadBuff(tAbsCoord x,tAbsCoord y,tvioBuff *buff,unsigned 
 /* But Max Alekseyev <relf@os2.ru> swears that this block is working with Watcom */
   size_t i,rsize;
   uint16_t *resbuff, small_buffer[__TVIO_MAXSCREENWIDTH];
-  if(len > tvioWidth)
-  {
-    if(!(resbuff = new uint16_t[len]))
-    {
-	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
-	std::cerr<<"Exiting..."<<std::endl;
-	exit(EXIT_FAILURE);
-    }
-  }
+  if(len > tvioWidth) resbuff = new uint16_t[len];
   else resbuff = small_buffer;
   rsize = len << 1;
   VioReadCellStr((any_t*)resbuff,(USHORT *)&rsize,y,x,0);

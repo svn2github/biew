@@ -584,10 +584,7 @@ Coff_Parser::Coff_Parser(binary_stream& h,CodeGuider& _code_guider,udn& u)
     main_handle.read(&coff386hdr,sizeof(struct external_filehdr));
     if(COFF_WORD(coff386hdr.f_opthdr)) main_handle.read(&coff386ahdr,sizeof(AOUTHDR));
     nsections = COFF_WORD(coff386hdr.f_nscns);
-    if(!(coff386so = new SCNHDR[nsections])) {
-	MemOutBox("Coff386 initialization");
-	exit(EXIT_FAILURE);
-    }
+    coff386so = new SCNHDR[nsections];
     coff_cache = main_handle.dup();
     if(COFF_WORD(coff386hdr.f_opthdr)) s_off += COFF_WORD(coff386hdr.f_opthdr);
     coff_cache->seek(s_off,binary_stream::Seek_Set);

@@ -29,6 +29,7 @@ using namespace	usr;
     $Id: os_dep.c,v 1.10 2009/09/03 16:57:40 nickols_k Exp $
 */
 #include <iostream>
+#include <stdexcept>
 
 #ifndef lint
 static const char rcs_id[] = "$Id: os_dep.c,v 1.10 2009/09/03 16:57:40 nickols_k Exp $";
@@ -155,11 +156,11 @@ void __FASTCALL__ __OsYield()
 
 static void cleanup(int sig)
 {
+    char tmp[256];
     __term_keyboard();
     __term_vio();
     __term_sys();
-    std::cerr<<"Terminated by signal "<<sig<<std::endl;
-    _exit(EXIT_FAILURE);
+    throw std::runtime_error(std::string("Terminated by signal ")+ltoa(sig,tmp,10));
 }
 
 /* static struct sigaction sa; */
@@ -173,12 +174,7 @@ void __FASTCALL__ __init_sys()
 	for (i = 0; termtab[i].name != NULL && strcasecmp(t, (const char*)termtab[i].name); i++);
     terminal = &termtab[i];
 
-    if (terminal->type == TERM_UNKNOWN) {
-	std::cerr<<"Sorry, I can't handle terminal type '"<<t<<"'."<<std::endl;
-	std::cerr<<"If you are sure it is vt100 compatible, try setting TERM to vt100:"<<std::endl<<std::endl;
-	std::cerr<<"$ TERM=vt100 beye filename"<<std::endl;
-	exit(2);
-    }
+    if (terminal->type == TERM_UNKNOWN) throw std::runtime_error(std::string("Sorry, I can't handle terminal type '")+t);
 
     if (i == 5) output_7 = 1;	/* beterm is (B)roken (E)vil (TERM)inal */
 

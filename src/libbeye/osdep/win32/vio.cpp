@@ -223,15 +223,7 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x,tAbsCoord y,const tvioBuff *buff,un
     COORD pos,size;
     SMALL_RECT sr;
     CHAR_INFO *obuff, small_buffer[__TVIO_MAXSCREENWIDTH];
-    if(len > tvioWidth)
-    {
-      if(!(obuff = new CHAR_INFO[len]))
-      {
-	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
-	std::cerr<<"Exiting..."<<std::endl;
-	exit(EXIT_FAILURE);
-      }
-    }
+    if(len > tvioWidth) obuff = new CHAR_INFO[len];
     else obuff = small_buffer;
     for(i = 0;i < len;i++)
     {
@@ -281,15 +273,7 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x,tAbsCoord y,const tvioBuff *buff,un
     unsigned long w, ii;
     COORD cc;
     unsigned short *attr, *attr2, small_buffer[__TVIO_MAXSCREENWIDTH];
-    if(len > tvioWidth)
-    {
-      if(!(attr = new unsigned short[len]))
-      {
-	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
-	std::cerr<<"Exiting..."<<std::endl;
-	exit(EXIT_FAILURE);
-      }
-    }
+    if(len > tvioWidth) attr = new unsigned short[len];
     else attr = small_buffer;
     cc.X = x;
     cc.Y = y;
@@ -323,15 +307,7 @@ void __FASTCALL__ __vioReadBuff(tAbsCoord x,tAbsCoord y,tvioBuff *buff,unsigned 
     COORD pos,size;
     SMALL_RECT sr;
     CHAR_INFO *obuff, small_buffer[__TVIO_MAXSCREENWIDTH];
-    if(len > tvioWidth)
-    {
-      if(!(obuff = new CHAR_INFO[len]))
-      {
-	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
-	std::cerr<<"Exiting..."<<std::endl;
-	exit(EXIT_FAILURE);
-      }
-    }
+    if(len > tvioWidth) obuff = new CHAR_INFO[len];
     else obuff = small_buffer;
     pos.X = pos.Y = 0;
     size.X = std::min(len,tvioWidth);
@@ -381,15 +357,7 @@ void __FASTCALL__ __vioReadBuff(tAbsCoord x,tAbsCoord y,tvioBuff *buff,unsigned 
     unsigned long r, ii;
     COORD cc;
     unsigned short *attr, *attr2, small_buffer[__TVIO_MAXSCREENWIDTH];
-    if(len > tvioWidth)
-    {
-      if(!(attr = new unsigned short[len]))
-      {
-	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
-	std::cerr<<"Exiting..."<<std::endl;
-	exit(EXIT_FAILURE);
-      }
-    }
+    if(len > tvioWidth) attr = new unsigned short[len];
     else attr = small_buffer;
     cc.X = x;
     cc.Y = y;

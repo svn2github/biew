@@ -20,6 +20,7 @@ using namespace	usr;
  * @note        Big thanks to Mike Gorchak for tvision source codes.
 **/
 #include <iostream>
+#include <stdexcept>
 
 #include <Ph.h>
 #include <stdio.h>
@@ -377,29 +378,13 @@ void __FASTCALL__ __init_vio(const char *user_cp,unsigned long flags)
 		tvioHeight=0;
 	}
 
-	if(!isatty(fileno(stdout)))
-	{
-		std::cerr<<"Do not redirect output!"<<std::endl;
-		exit(-1);
-	}
+	if(!isatty(fileno(stdout))) throw std::runtime_error("Do not redirect output!");
 	tty_name=ttyname(fileno(stdout));
-	if(!tty_name)
-	{
-		std::cerr<<"Can't get the name of the current terminal!"<<std::endl;
-		exit(-1);
-	}
+	if(!tty_name) throw std::runtime_error("Can't get the name of the current terminal!");
 	tty_file=fopen(tty_name,"w+b");
-	if(!tty_file)
-	{
-		std::cerr<<"Can't open the "<<tty_name<<" terminal!"<<std::endl;
-		exit(-1);
-	}
+	if(!tty_file) throw std::runtime_error(std::string("Can't open the ")+tty_name+" terminal!");
 	tty_fd=fileno(tty_file);
-	if(!newterm(terminal,tty_file,stdin))
-	{
-		std::cerr<<"Not connected to a terminal "<<terminal<<"!"<<std::endl;
-		exit(-1);
-	}
+	if(!newterm(terminal,tty_file,stdin)) throw std::runtime_error(std::string("Not connected to a terminal ")+terminal+"!");
 
 	initscr();
 	stdscr->_flags|=_ISPAD;
@@ -421,12 +406,8 @@ void __FASTCALL__ __init_vio(const char *user_cp,unsigned long flags)
 	saveX=firstX;
 	saveY=firstY;
 	violen=tvioWidth*tvioHeight;
-	if((viomem=malloc(violen*3))==NULL)
-	{
-		std::cerr<<"Can't allocate memory for output: "<<strerror(errno)<<std::endl;
-		std::cerr<<"Exiting..."<<std::endl;
-		exit(errno);
-	}
+	viomem=new unsigned char[violen*3];
+
 	memset(viomem,0,violen*3);
 
 	SetGTables();

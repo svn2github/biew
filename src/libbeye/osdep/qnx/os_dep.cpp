@@ -22,6 +22,7 @@ using namespace	usr;
  * @since       11.2007
  * @note        Added __get_home_dir() and some optimizations
 **/
+#include <stdexcept>
 #include <iostream>
 
 #include <stdio.h>
@@ -118,11 +119,11 @@ void __FASTCALL__ __OsSetCBreak(bool state)
 
 static void cleanup(int sig)
 {
-	__term_keyboard();
-	__term_vio();
-	__term_sys();
-	std::cerr<<"Terminated by signal" <<sig<<std::endl;
-	_exit(1);
+    char tmp[256];
+    __term_keyboard();
+    __term_vio();
+    __term_sys();
+    throw std::runtime_error(std::string("Terminated by signal")+ltoa(sig,tmp,10));
 }
 
 /* static struct sigaction sa; */
@@ -131,11 +132,8 @@ void __FASTCALL__ __init_sys()
 {
 	int i=0;
 	struct sched_param sp;
-	if(term_load()<0)
-	{
-		perror("Init terminal: ");
-		exit(-1);
-	}
+	if(term_load()<0) throw std::runtime_error("Can't init terminal");
+
 	umask(0077);
 	signal(SIGTERM,cleanup);
 	signal(SIGINT,cleanup);
@@ -143,22 +141,11 @@ void __FASTCALL__ __init_sys()
 	signal(SIGILL,cleanup);
 	sp.sched_priority=PRIO_USER_DFLT;
 	sched_setscheduler(0,SCHED_OTHER,&sp);
-	if(proxy==0)
-		proxy=qnx_proxy_attach(0,NULL,0,-1);
-		if(proxy==-1)
-		{
-			perror("proxy attach");
-			exit(1);
-		}
+	if(proxy==0) proxy=qnx_proxy_attach(0,NULL,0,-1);
+	if(proxy==-1) throw std::runtime_error("Can't attach proxy");
 	evp.sigev_signo=-(proxy);
-	if(t==0)
-		t=timer_create(CLOCK_REALTIME,&evp);
-		if(t==-1)
-		{
-			perror("timer create");
-			exit(1);
-		}
-
+	if(t==0) t=timer_create(CLOCK_REALTIME,&evp);
+	if(t==-1) throw std::runtime_error("Can't create timer");
 	_ini_name[0] = '\0';
 	_rc_dir_name[0] = '\0';
 	_home_dir_name[0] = '\0';
@@ -166,8 +153,7 @@ void __FASTCALL__ __init_sys()
 
 void __FASTCALL__ __term_sys()
 {
-	if(t!=-1)
-		timer_delete(t);
+	if(t!=-1) timer_delete(t);
 	qnx_proxy_detach(proxy);
 }
 

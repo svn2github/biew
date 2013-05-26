@@ -1636,17 +1636,12 @@ PPC_Disassembler::PPC_Disassembler(const Bin_Format& b,binary_stream& h,DisMode&
 		,ppcBigEndian(1)
 		,ppcDialect(0)
 {
-  outstr = new char [1000];
-  if(!outstr)
-  {
-    MemOutBox("Data disassembler initialization");
-    exit(EXIT_FAILURE);
-  }
+    outstr = new char [1000];
 }
 
 PPC_Disassembler::~PPC_Disassembler()
 {
-   delete outstr;
+    delete outstr;
 }
 
 void PPC_Disassembler::read_ini( Ini_Profile& ini )

@@ -6274,14 +6274,6 @@ ix86_Disassembler::ix86_Disassembler(const Bin_Format& b,binary_stream& h,DisMod
   ix86_appbuffer = new char [MAX_DISASM_OUTPUT];
   ix86_apistr = new char [MAX_DISASM_OUTPUT];
   ix86_modrm_ret = new char [MAX_DISASM_OUTPUT];
-  if((!ix86_voidstr) || (!ix86_da_out) || !(ix86_Katmai_buff) ||
-     (!ix86_appstr) || (!ix86_dtile) || (!ix86_appbuffer) ||
-     (!ix86_apistr) || (!ix86_modrm_ret)
-     )
-  {
-    MemOutBox("ix86 disassembler initialization");
-    exit(EXIT_FAILURE);
-  }
 #ifdef HAVE_POPEN
   //Assembler initialization
   //Look for an available assembler

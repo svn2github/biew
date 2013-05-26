@@ -676,17 +676,12 @@ Java_Disassembler::Java_Disassembler(const Bin_Format& b,binary_stream& h,DisMod
 		,main_handle(h)
 		,bin_format(b)
 {
-  outstr = new char [1000];
-  if(!outstr)
-  {
-    MemOutBox("Data disassembler initialization");
-    exit(EXIT_FAILURE);
-  }
+    outstr = new char [1000];
 }
 
 Java_Disassembler::~Java_Disassembler()
 {
-   delete outstr;
+    delete outstr;
 }
 
 void Java_Disassembler::read_ini( Ini_Profile& ini ) { UNUSED(ini); }

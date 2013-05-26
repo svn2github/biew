@@ -26,6 +26,7 @@ using namespace	usr;
 */
 #include <algorithm>
 #include <iostream>
+#include <stdexcept>
 
 #ifndef lint
 static const char rcs_id[] = "$Id: keyboard.c,v 1.14 2009/09/24 09:12:13 nickols_k Exp $";
@@ -597,11 +598,9 @@ void __FASTCALL__ __init_keyboard(const char *user_cp)
 
 #define _MODE_ O_NONBLOCK | O_ASYNC
 
-    if (fcntl(in_fd, F_SETFL, fcntl(in_fd, F_GETFL) | _MODE_) < 0)
-    {
-	std::cerr<<"Can't set "<<std::hex<<(_MODE_)<<" for "<<in_fd<<": "<<strerror(errno)<<std::endl;
-	std::cerr<<"Exiting..."<<std::endl;
-	exit(EXIT_FAILURE);
+    if (fcntl(in_fd, F_SETFL, fcntl(in_fd, F_GETFL) | _MODE_) < 0) {
+	char tmp[256];
+	throw std::runtime_error(std::string("Can't set ")+ltoa(_MODE_,tmp,16)+" for "+ltoa(in_fd,tmp,10)+": "+strerror(errno));
     }
 
     tcgetattr(in_fd, &tattr);

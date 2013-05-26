@@ -23,6 +23,7 @@ using namespace	usr;
 #include <algorithm>
 #include <iostream>
 #include <fstream>
+#include <stdexcept>
 
 #include "libbeye/kbd_code.h"
 #include "libbeye/osdep/tconsole.h"
@@ -80,9 +81,8 @@ void __FASTCALL__ initBConsole( unsigned long vio_flg,unsigned long twin_flg )
     }
     done:
     twDestroy();
-    std::cerr<<"Size of video buffer must be larger than 79x2"<<std::endl;
     std::cerr<<"Current size of video buffer is: w="<<beye_context().tconsole().vio_width()<<" h="<<beye_context().tconsole().vio_height()<<std::endl;
-    exit(EXIT_FAILURE);
+    throw std::runtime_error("Size of video buffer must be larger than 79x2");
   }
 }
 

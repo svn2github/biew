@@ -157,17 +157,12 @@ Data_Disassembler::Data_Disassembler(const Bin_Format& b,binary_stream& h,DisMod
 		,bin_format(b)
 		,nulWidth(1)
 {
-  outstr = new char [1000];
-  if(!outstr)
-  {
-    MemOutBox("Data disassembler initialization");
-    exit(EXIT_FAILURE);
-  }
+    outstr = new char [1000];
 }
 
 Data_Disassembler::~Data_Disassembler()
 {
-   delete outstr;
+    delete outstr;
 }
 
 void Data_Disassembler::read_ini( Ini_Profile& ini )

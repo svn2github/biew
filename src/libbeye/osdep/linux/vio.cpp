@@ -211,11 +211,6 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x, tAbsCoord y, const tvioBuff *buff,
 /*    if (!len) return; */
 
     pb = len > VMAX_X ? new unsigned char [LEN(len)] : cache_pb;
-    if (pb == NULL) {
-	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
-	std::cerr<<"Exiting..."<<std::endl;
-	exit(errno);
-    }
 
     addr = _addr(x, y);
 
@@ -377,11 +372,7 @@ void __FASTCALL__ __init_vio(const char *user_cp,unsigned long flags)
 
     vtmp = new char [VTMP_LEN];
     viomem = new unsigned char[(violen << 1) + violen];
-    if (vtmp == NULL || viomem == NULL) {
-	std::cerr<<"Can't allocate memory for output: "<<strerror(errno)<<std::endl;
-	std::cerr<<"Exiting..."<<std::endl;
-	exit(errno);
-    }
+
     memset(viomem, 0, (violen << 1) + violen);
     memset(vtmp, 0, VTMP_LEN);
 

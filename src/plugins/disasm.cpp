@@ -82,10 +82,7 @@ DisMode::DisMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGui
     PrevStrLenAddr = new unsigned long [beye_context().tconsole().vio_height()];
     dis_comments   = new char [Comm_Size];
     second_handle = main_handle.dup();
-    if((!CurrStrLenBuff) || (!PrevStrLenAddr) || (!dis_comments)) {
-	MemOutBox("Disassembler initialization");
-	::exit(EXIT_FAILURE);
-    }
+
     def_platform = DISASM_DATA;
     def_platform = bin_format.query_platform();
     sz=list.size();
@@ -796,10 +793,6 @@ void DisMode::accept_actions()
     disCodeBuffer = new char [disMaxCodeLen];
     if(disCodeBufPredict) delete disCodeBufPredict;
     disCodeBufPredict = new char [disMaxCodeLen*PREDICT_DEPTH];
-    if(!(disCodeBuffer && disCodeBufPredict)) {
-	MemOutBox("Disassembler initialization");
-	::exit(EXIT_FAILURE);
-    }
 }
 
 /** Common disassembler utility */

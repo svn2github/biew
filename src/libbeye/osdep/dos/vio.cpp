@@ -201,15 +201,7 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x,tAbsCoord y,const tvioBuff *buff,un
   else
   {
     uint16_t *resbuff, small_buffer[__TVIO_MAXSCREENWIDTH];
-    if(len > tvioWidth)
-    {
-      if(!(resbuff = new uint16_t[len]))
-      {
-	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
-	std::cerr<<"Exiting..."<<std::endl;
-	exit(EXIT_FAILURE);
-      }
-    }
+    if(len > tvioWidth) resbuff = new uint16_t[len];
     else resbuff = small_buffer;
     __INTERLEAVE_BUFFERS(len, resbuff, buff->chars, buff->attrs);
     movedata(h__my_ds,(unsigned)resbuff,
@@ -257,15 +249,7 @@ void __FASTCALL__ __vioReadBuff(tAbsCoord x,tAbsCoord y,tvioBuff *buff,unsigned 
   else
   {
     uint16_t *resbuff, small_buffer[__TVIO_MAXSCREENWIDTH];
-    if(len > tvioWidth)
-    {
-      if(!(resbuff = new uint16_t[len]))
-      {
-	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
-	std::cerr<<"Exiting..."<<std::endl;
-	exit(EXIT_FAILURE);
-      }
-    }
+    if(len > tvioWidth) resbuff = new uint16_t[len];
     else resbuff = small_buffer;
     movedata(h__conv_sel,calc_vioaddr(x,y),
 	     h__my_ds,(unsigned)resbuff,

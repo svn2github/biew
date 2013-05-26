@@ -938,10 +938,6 @@ TextMode::TextMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeG
     buff = new char [MAX_STRLEN];
     tlines = new TSTR[__TVIO_MAXSCREENWIDTH];
     ptlines = new TSTR[__TVIO_MAXSCREENWIDTH];
-    if((!buff) || (!tlines) || !(ptlines)) {
-	MemOutBox("Text mode initialization");
-	::exit(EXIT_FAILURE);
-    }
     binary_stream& bh = main_handle;
     txtHandle = bh.dup();
 //    ::memset(&syntax_hl,0,sizeof(syntax_hl));

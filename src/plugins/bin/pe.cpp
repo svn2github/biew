@@ -1220,16 +1220,11 @@ PE_Parser::PE_Parser(binary_stream& h,CodeGuider& __code_guider,udn& u)
     else	 reader = new(zeromem) PE32_Reader(h);
     reader->init();
 
-    if(!(peDir = new PERVA[reader->header().peDirSize])) {
-	MemOutBox("PE initialization");
-	exit(EXIT_FAILURE);
-    }
+    peDir = new PERVA[reader->header().peDirSize];
     main_handle().read(peDir, sizeof(PERVA)*reader->header().peDirSize);
 
-    if(!(peVA = new PE_ADDR[pe.peObjects])) {
-	MemOutBox("PE initialization");
-	exit(EXIT_FAILURE);
-    }
+    peVA = new PE_ADDR[pe.peObjects];
+
     main_handle().seek(0x18 + pe.peNTHdrSize + headshift(),binary_stream::Seek_Set);
     for(i = 0;i < pe.peObjects;i++) {
 	main_handle().seek(12,binary_stream::Seek_Set);

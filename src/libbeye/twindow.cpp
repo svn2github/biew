@@ -20,6 +20,7 @@ using namespace	usr;
  * @bug         Limitation of printf using
  * @todo        Accelerate windows interaction algorithm
 **/
+#include <stdexcept>
 #include <algorithm>
 #include <iostream>
 
@@ -42,7 +43,6 @@ System*  TWindow::msystem = NULL;
 TWindow* TWindow::head = NULL;
 TWindow* TWindow::cursorwin = NULL;
 static unsigned long twin_flags = 0L;
-static void  __FASTCALL__ winerr(const std::string& str) { std::cerr<<std::endl<<std::endl<<"Internal twin library error: "<<str<<std::endl; _exit(EXIT_FAILURE); }
 
 TWindow::e_cursor TWindow::c_type = Cursor_Unknown;
 void TWindow::set_cursor_type(TWindow::e_cursor type)
@@ -72,7 +72,7 @@ TConsole& __FASTCALL__ twInit(System& sys,const std::string& user_cp, unsigned l
     char outs[256];
     twDestroy();
     sprintf(outs,"Size of video buffer is too large: %u (max = %u)",TWindow::tconsole->vio_width(),__TVIO_MAXSCREENWIDTH);
-    winerr(outs);
+    throw std::runtime_error(std::string("Internal twin library error: ")+outs);
   }
   TWindow::set_cursor_type(TWindow::Cursor_Off);
   return *TWindow::tconsole;

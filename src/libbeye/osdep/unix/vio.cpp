@@ -191,11 +191,6 @@ void __FASTCALL__ __vioWriteBuff(tAbsCoord x, tAbsCoord y, const tvioBuff *buff,
     unsigned char *dpb,*pb = len > VMAX_X ? new char [LEN(len)] : cache_pb;
     unsigned slen;
 
-    if (pb == NULL) {
-	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
-	std::cerr<<"Exiting..."<<std::endl;
-	exit(errno);
-    }
     dpb=pb;
 
     memset(pb, 0, LEN(len));
@@ -290,11 +285,7 @@ void __FASTCALL__ __init_vio(const char *user_cp,unsigned long flags)
     if (!output_7) output_7 = TESTFLAG(console_flags, __TVIO_FLG_USE_7BIT);
     do_nls = 1;
 
-    if ((vtmp = new char [VTMP_LEN]) == NULL) {
-	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
-	std::cerr<<"Exiting..."<<std::endl;
-	exit(errno);
-    }
+    vtmp = new char [VTMP_LEN];
     memset(vtmp, 0, VTMP_LEN);
 
     out_fd = open(ttyname(STDOUT_FILENO), O_WRONLY);
@@ -312,11 +303,7 @@ void __FASTCALL__ __init_vio(const char *user_cp,unsigned long flags)
     saveY = firstY;
     violen = tvioWidth * tvioHeight;
 
-    if ((viomem = new unsigned char[(violen << 1) + violen]) == NULL) {
-	std::cerr<<"Memory allocation failed: "<<strerror(errno)<<std::endl;
-	std::cerr<<"Exiting..."<<std::endl;
-	exit(errno);
-    }
+    viomem = new unsigned char[(violen << 1) + violen];
     memset(viomem, 0, (violen << 1) + violen);
 
     if (terminal->type != TERM_XTERM || transparent)

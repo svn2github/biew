@@ -1,7 +1,7 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
 using namespace	usr;
-
+#include <stdexcept>
 #include <algorithm>
 #include <iostream>
 
@@ -575,11 +575,21 @@ extern "C" void	SECURE_NAME3(_mp_free)(any_t* ptr) {
     mp_free(ptr);
 }
 
-any_t* operator new(size_t size) throw(std::bad_alloc) { return SECURE_NAME0(_mp_malloc)(size); }
+any_t* operator new(size_t size) throw(std::bad_alloc) {
+    any_t* rc;
+    rc=SECURE_NAME0(_mp_malloc)(size);
+    if(!rc) throw std::runtime_error("Memory allocation falied");
+    return rc;
+}
 any_t* operator new(size_t size,const zeromemory_t&) { return SECURE_NAME1(_mp_mallocz)(size); }
 any_t* operator new(size_t size,const alignedmemory_t&,size_t boundary) { return SECURE_NAME2(_mp_memalign)(boundary,size); }
 any_t* operator new(size_t size,const std::nothrow_t&) { return mp_malloc(size); }
-any_t* operator new[](size_t size) throw(std::bad_alloc) { return SECURE_NAME0(_mp_malloc)(size); }
+any_t* operator new[](size_t size) throw(std::bad_alloc) {
+    any_t* rc;
+    rc=SECURE_NAME0(_mp_malloc)(size);
+    if(!rc) throw std::runtime_error("Memory allocation falied");
+    return rc;
+}
 any_t* operator new[](size_t size,const zeromemory_t&) { return SECURE_NAME1(_mp_mallocz)(size); }
 any_t* operator new[](size_t size,const alignedmemory_t&,size_t boundary) { return SECURE_NAME2(_mp_memalign)(boundary,size); }
 any_t* operator new[](size_t size,const std::nothrow_t&) { return mp_malloc(size); }

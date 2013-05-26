@@ -24,6 +24,7 @@ using namespace	usr;
 #include <string>
 #include <vector>
 #include <map>
+#include <stdexcept>
 
 #include <string.h>
 #include <stdio.h>
@@ -460,7 +461,7 @@ void	BeyeContext::create_windows() {
     beye_priv& priv = static_cast<beye_priv&>(opaque);
     priv.ErrorWnd = new(zeromem) TWindow(1,1,51,17,TWindow::Flag_None | TWindow::Flag_NLS);
     if(priv.ErrorWnd) priv.ErrorWnd->set_title(" Error ",TWindow::TMode_Center,error_cset.border);
-    else { std::cerr<<"fatal error: can't create window"<<std::endl; ::exit(EXIT_FAILURE); }
+    else throw std::runtime_error("fatal error: can't create window");
     priv.ErrorWnd->into_center();
     priv.ErrorWnd->set_color(error_cset.main);
     priv.ErrorWnd->set_frame(TWindow::DOUBLE_FRAME,error_cset.border);
@@ -596,7 +597,7 @@ bool BeyeContext::new_source()
 	    priv.activeMode=priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn);
 	    ret = true;
 	} else {
-	    if(BMOpen(ArgVector1) != true) ::exit(EXIT_FAILURE);
+	    if(BMOpen(ArgVector1) != true) throw std::runtime_error("Can't open :"+ArgVector1);
 	    delete priv._bin_format;
 	    delete priv.activeMode;
 	    make_shortname();

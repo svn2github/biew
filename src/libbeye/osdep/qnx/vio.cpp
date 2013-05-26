@@ -148,12 +148,8 @@ void __FASTCALL__ __init_vio(const char *user_cp,unsigned long flags)
 	saveX=firstX;
 	saveY=firstY;
 	violen=tvioWidth*tvioHeight;
-	if((viomem=malloc(violen*3))==NULL)
-	{
-		std::cerr<<"Can't allocate memory for output: "<<strerror(errno)<<std::endl;
-		std::cerr<<"Exiting..."<<std::endl;
-		exit(errno);
-	}
+	viomem=new unsigned char[violen*3];
+
 	memset(viomem,0,violen*3);
 	dev_info(fileno(stdin),&di);
 	if(strcmp(di.driver_type,"console")==0) console=1;

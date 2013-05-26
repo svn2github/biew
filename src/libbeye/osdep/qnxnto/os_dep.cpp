@@ -24,6 +24,7 @@ using namespace	usr;
  * @note        Added __get_home_dir() and some optimizations
 **/
 #include <iostream>
+#include <stdexcept>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -122,11 +123,11 @@ void __FASTCALL__ __OsSetCBreak(bool state)
 
 static void cleanup(int sig)
 {
-	__term_keyboard();
-	__term_vio();
-	__term_sys();
-	std::cerr<<"Terminated by signal "<<sig<<std::endl;
-	_exit(1);
+    char tmp[256];
+    __term_keyboard();
+    __term_vio();
+    __term_sys();
+    throw std::runtime_error(std::string("Terminated by signal ")+ltoa(sig,tmp,10));
 }
 
 /* static struct sigaction sa; */
@@ -141,25 +142,15 @@ void __FASTCALL__ __init_sys()
 
 	if(chid==0)
 		chid=ChannelCreate(0);
-		if(chid==-1)
-		{
-			perror("channel create");
-			exit(1);
-		}
+		if(chid==-1) throw std::rutime_error("Can't create channel");
 
 	evp.sigev_notify=SIGEV_PULSE;
 	evp.sigev_coid=ConnectAttach(ND_LOCAL_NODE,0,chid,_NTO_SIDE_CHANNEL,0);
 	evp.sigev_priority=getprio(0);
 	evp.sigev_code=BEYE_PULSE_CODE;
 
-	if(t==0)
-		timer_create(CLOCK_REALTIME,&evp,&t);
-		if(t==-1)
-		{
-			perror("timer create");
-			exit(1);
-		}
-
+	if(t==0) timer_create(CLOCK_REALTIME,&evp,&t);
+	if(t==-1) throw std::runtime_error("Can't create timer");
 	_ini_name[0] = '\0';
 	_rc_dir_name[0] = '\0';
 	_home_dir_name[0] = '\0';
@@ -167,8 +158,7 @@ void __FASTCALL__ __init_sys()
 
 void __FASTCALL__ __term_sys()
 {
-	if(t!=-1)
-		timer_delete(t);
+	if(t!=-1) timer_delete(t);
 	ConnectDetach(evp.sigev_coid);
 	ChannelDestroy(chid);
 }

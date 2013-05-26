@@ -1419,10 +1419,6 @@ void ELF_Parser::__elfReadSegments(std::map<__filesize_t,VA_map>& to, bool is_vi
    if(IsSectionsPresent) /* Section headers are present */
    {
      va_map_count = elf_reader->ehdr().e_shnum;
-//     if(!(*to = la_Build(0,sizeof(struct VA_map),MemOutBox)))
-//     {
-//       exit(EXIT_FAILURE);
-//     }
      main_handle.seek(elf_reader->ehdr().e_shoff,binary_stream::Seek_Set);
      for(i = 0;i < va_map_count;i++)
      {
@@ -1449,9 +1445,6 @@ void ELF_Parser::__elfReadSegments(std::map<__filesize_t,VA_map>& to, bool is_vi
 	 if(!test) {
 	  if(is_virt) to.insert(std::make_pair(vamap.va,vamap));
 	  else        to.insert(std::make_pair(vamap.foff,vamap));
-//	   if(!la_AddData(*to,&vamap,MemOutBox)) exit(EXIT_FAILURE);
-	   /** We must sort va_map after adding of each element because ELF section
-	       header has unsorted and nested elements */
 //	   la_Sort(*to,is_virt ? vamap_comp_virt : vamap_comp_phys);
 	 }
        }
@@ -1460,10 +1453,6 @@ void ELF_Parser::__elfReadSegments(std::map<__filesize_t,VA_map>& to, bool is_vi
    else /* Try to build program headers map */
     if((va_map_count = elf_reader->ehdr().e_phnum) != 0) /* Program headers are present */
     {
-//      if(!(*to = la_Build(va_map_count,sizeof(struct VA_map),MemOutBox)))
-//      {
-//	exit(EXIT_FAILURE);
-//      }
       main_handle.seek(elf_reader->ehdr().e_phoff,binary_stream::Seek_Set);
       for(i = 0;i < va_map_count;i++)
       {
@@ -1479,10 +1468,6 @@ void ELF_Parser::__elfReadSegments(std::map<__filesize_t,VA_map>& to, bool is_vi
 	if(!test) {
 	  if(is_virt) to.insert(std::make_pair(vamap.va,vamap));
 	  else        to.insert(std::make_pair(vamap.foff,vamap));
-//	  if(!la_AddData(*to,&vamap,MemOutBox))
-//	  {
-//	    exit(EXIT_FAILURE);
-//	  }
 	  /** We must sort va_map after adding of each element because ELF program
 	      header has unsorted and has nested elements */
 //	  la_Sort(*to,is_virt ? vamap_comp_virt : vamap_comp_phys);
