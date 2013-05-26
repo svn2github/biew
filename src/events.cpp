@@ -120,7 +120,7 @@ static int  __FASTCALL__ __GetEvent( void (*prompt)() ,TWindow *win)
 		    unsigned wdh,hght;
 		    if(win)
 		    {
-		      win->get_pos(&X1,&Y1,&X2,&Y2);
+		      win->get_pos(X1,Y1,X2,Y2);
 		      X1--; Y1--; X2--; Y2--;
 		    }
 		    else

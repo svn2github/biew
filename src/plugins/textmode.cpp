@@ -1041,8 +1041,8 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 	    if(i == (unsigned)hilightline) {
 		paint_search(bin_mode==MOD_BINARY?buff:chars,shift,i,size,bin_mode==MOD_BINARY);
 	    } else {
-		if(bin_mode == MOD_BINARY) main_wnd.direct_write(1,i+1,buff,size);
-		else                       main_wnd.direct_write(1,i+1,chars,attrs,size);
+		if(bin_mode == MOD_BINARY) main_wnd.write(1,i+1,(const uint8_t*)buff,size);
+		else                       main_wnd.write(1,i+1,(const uint8_t*)chars,attrs,size);
 	    }
 	    if(rsize < beye_context().tconsole().vio_width()) {
 		main_wnd.goto_xy(1 + rsize,i + 1);

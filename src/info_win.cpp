@@ -436,9 +436,9 @@ const cvbyte buttons[] = {
 
 void About()
 {
- TWindow * hwnd;
+ TWindow* hwnd;
  unsigned i,j,len;
- char str[2];
+ uint8_t str[2];
  const unsigned char core[8] = { TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, 0x00 };
  hwnd = new(zeromem) TWindow(0,0,75,15,TWindow::Flag_Has_Frame | TWindow::Flag_NLS);
  hwnd->into_center();
@@ -493,7 +493,7 @@ void About()
    hwnd->goto_xy(32,i+8); hwnd->puts(BeyeScreenPicture[i]);
  }
  hwnd->text_bkgnd(Black);   hwnd->text_color(LightCyan);
- for(i = 0;i < 10;i++) hwnd->direct_write(stars[i].x,stars[i].y,&stars[i].image,1);
+ for(i = 0;i < 10;i++) hwnd->write(stars[i].x,stars[i].y,(const uint8_t*)&stars[i].image,1);
  hwnd->text_color(LightGray);
  for(i = 0;i < 7;i++)
  {
@@ -506,7 +506,7 @@ void About()
    hwnd->text_color(buttons[i].color);
    str[0] = buttons[i].image;
    str[1] = 0;
-   hwnd->direct_write(buttons[i].x,buttons[i].y,str,1);
+   hwnd->write(buttons[i].x,buttons[i].y,str,1);
  }
  hwnd->set_color(LightCyan,Black);
  for(i = 0;i < 4;i++)

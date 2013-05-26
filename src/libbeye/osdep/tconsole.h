@@ -104,7 +104,7 @@ namespace	usr {
 		     *                        directly.
 		     * @see                   __tvioWriteBuff
 		    **/
-	    void		vio_read_buff(tAbsCoord x,tAbsCoord y,tvioBuff *buff,unsigned len) const;
+	    tvideo_buffer		vio_read_buff(tAbsCoord x,tAbsCoord y,size_t len) const;
 
 		   /** Writes buffer to console (or terminal) video memory at given offset.
 		     * @return                none
@@ -113,7 +113,7 @@ namespace	usr {
 		     * @param len             indicates length of buffer
 		     * @see                   __tvioReadBuff
 		    **/
-	    void		vio_write_buff(tAbsCoord x,tAbsCoord y,const tvioBuff *buff,unsigned len) const;
+	    void		vio_write_buff(tAbsCoord x,tAbsCoord y,const tvideo_buffer& buff) const;
 
 	    tAbsCoord		vio_width() const;     /**< Contains actual width of console (or terminal) */
 	    tAbsCoord		vio_height() const;    /**< Contains actual height of console (or terminal) */

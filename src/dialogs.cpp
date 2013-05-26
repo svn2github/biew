@@ -43,7 +43,7 @@ bool __FASTCALL__ Get2DigitDlg(const std::string& title,const std::string& text,
  int retval;
  char str[3] = "";
  hwnd = CrtDlgWndnls(title,24,1);
- hwnd->get_pos(&x1,&y1,&x2,&y2);
+ hwnd->get_pos(x1,y1,x2,y2);
  hwnd->goto_xy(1,1); hwnd->puts(text);
  X1 = x1;
  Y1 = y1;
@@ -93,7 +93,7 @@ bool __FASTCALL__ Get8DigitDlg(const std::string& title,const std::string& text,
  decleg[12] = '\0';
  len += attr & SIGN ? 1 : 0;
  hwnd = CrtDlgWndnls(title,34,1);
- hwnd->get_pos(&x1,&y1,&x2,&y2);
+ hwnd->get_pos(x1,y1,x2,y2);
  hwnd->goto_xy(1,1); hwnd->puts(text);
  X1 = x1;
  Y1 = y1;
@@ -143,7 +143,7 @@ bool        __FASTCALL__ Get16DigitDlg(const std::string& title,const std::strin
  decleg[12] = '\0';
  len += attr & SIGN ? 1 : 0;
  hwnd = CrtDlgWndnls(title,44,1);
- hwnd->get_pos(&x1,&y1,&x2,&y2);
+ hwnd->get_pos(x1,y1,x2,y2);
  hwnd->goto_xy(1,1); hwnd->puts(text);
  X1 = x1;
  Y1 = y1;
@@ -220,7 +220,7 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
  unsigned attr;
  hwnd = CrtDlgWndnls(" Jump within file ",beye_context().is_file64()?34:26,6);
  memcpy(declegals,legalchars,12);
- hwnd->get_pos(&x1,&y1,&x2,&y2);
+ hwnd->get_pos(x1,y1,x2,y2);
  hwnd->goto_xy(2,1); hwnd->puts("Enter offset :");
  hwnd->set_color(dialog_cset.group.active);
  hwnd->goto_xy(2,2); hwnd->puts(" ( ) - From top of file ");
@@ -304,7 +304,7 @@ bool __FASTCALL__ GetStringDlg(char * buff,const std::string& title,const std::s
   char estr[81];
   wdlg = CrtDlgWndnls(title,78,2);
   if(!subtitle.empty()) wdlg->set_footer(subtitle,TWindow::TMode_Right,dialog_cset.footer);
-  wdlg->get_pos(&x1,&y1,&x2,&y2);
+  wdlg->get_pos(x1,y1,x2,y2);
   X1 = x1;
   Y1 = y1;
   X2 = x2;
@@ -444,7 +444,7 @@ bool __FASTCALL__ GetFStoreDlg(const std::string& title,char* fname,unsigned lon
  else                          fs_txt = fs3_txt;
  wdlg->set_footer(" [Enter] - Run ",TWindow::TMode_Center,dialog_cset.footer);
 
- wdlg->get_pos(&x1,&y1,&x2,&y2);
+ wdlg->get_pos(x1,y1,x2,y2);
  X1 = x1;
  Y1 = y1;
 
@@ -561,7 +561,7 @@ bool __FASTCALL__ GetInsDelBlkDlg(const std::string& title,__filesize_t * start,
  unsigned mlen[2] = { 19, 19 };
  char *wbuff[2];
 
- wdlg->get_pos(&x1,&y1,&x2,&y2);
+ wdlg->get_pos(x1,y1,x2,y2);
  X1 = x1;
  Y1 = y1;
 

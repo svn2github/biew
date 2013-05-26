@@ -155,13 +155,13 @@ int __FASTCALL__ eeditstring(TWindow* w,char *s,const char *legal, unsigned *max
   w->freeze();
   if(!(attr & __ESS_NOREDRAW))
   {
-    if(!undo) w->direct_write(1,y,s,len);
+    if(!undo) w->write(1,y,(const uint8_t*)s,len);
     else
     {
       for(i = 0;i < len;i++)
       {
 	w->set_color(s[i] == undo[i] ? browser_cset.edit.main : browser_cset.edit.change);
-	w->direct_write(i+1,y,&s[i],1);
+	w->write(i+1,y,(const uint8_t*)&s[i],1);
       }
     }
     if(!(attr & __ESS_HARDEDIT))
@@ -401,7 +401,7 @@ bool __FASTCALL__ ShowPercentInWnd(TWindow *pw,unsigned percents)
     memset(outb,TWC_FL_BLK,cells);
     if(remaind) outb[cells++] = TWC_LF_HBLK;
     if(cells < sizeof(outb)) memset(&outb[cells],TWC_DEF_FILLER,sizeof(outb)-cells);
-    pw->direct_write(2,3,outb,sizeof(outb));
+    pw->write(2,3,(const uint8_t*)outb,sizeof(outb));
   }
   time(&curtime);
   if(prev_time != curtime || is_first)
@@ -533,7 +533,7 @@ static void  __FASTCALL__ PaintLine(TWindow& w,unsigned i,const std::string& nam
 					bool useAcc,bool is_hl)
 {
   size_t namelen;
-  char buffer[__TVIO_MAXSCREENWIDTH + 1];
+  uint8_t buffer[__TVIO_MAXSCREENWIDTH + 1];
   memset(buffer,TWC_DEF_FILLER,sizeof(buffer));
   buffer[__TVIO_MAXSCREENWIDTH] = 0; /* [dBorca] play it safe for strchr below */
   namelen = name.length();
@@ -562,19 +562,19 @@ static void  __FASTCALL__ PaintLine(TWindow& w,unsigned i,const std::string& nam
   else if(!name.empty()) memcpy(buffer,name.c_str(),std::min(namelen,size_t(width)));
   if(useAcc)
   {
-    const char *st,*ends,*ptr;
+    const uint8_t *st,*ends,*ptr;
     char ch;
     w.goto_xy(3,i+1);
     st = buffer;
     ends = buffer+width;
     while(1)
     {
-      ptr = strchr(st,'~');
+      ptr = (const uint8_t*)strchr((char*)st,'~');
       if(ptr)
       {
 	unsigned outlen;
 	outlen = ptr-st;
-	w.direct_write(w.where_x(),w.where_y(),st,outlen);
+	w.write(w.where_x(),w.where_y(),st,outlen);
 	w.goto_xy(w.where_x()+outlen,w.where_y());
 	st = ptr;
 	ch = *(++st);
@@ -590,12 +590,12 @@ static void  __FASTCALL__ PaintLine(TWindow& w,unsigned i,const std::string& nam
       }
       else
       {
-	w.direct_write(w.where_x(),w.where_y(),st,(unsigned)(ends-st));
+	w.write(w.where_x(),w.where_y(),st,(unsigned)(ends-st));
 	break;
       }
     }
   }
-  else  w.direct_write(3,i+1,buffer,width);
+  else  w.write(3,i+1,buffer,width);
 }
 
 static void  __FASTCALL__ Paint(TWindow& win,const std::vector<std::string>& names,

@@ -459,7 +459,7 @@ namespace	usr {
 		     * @param x1_,y1_,x2_,y2_ pointers to coordinates where will be saved window position.
 		     * @return             none
 		    **/
-	    virtual void		get_pos(tAbsCoord *x1_,tAbsCoord *y1_,tAbsCoord *x2_,tAbsCoord *y2_);
+	    virtual void		get_pos(tAbsCoord& x1_,tAbsCoord& y1_,tAbsCoord& x2_,tAbsCoord& y2_);
 
 		   /** Returns width of window.
 		     * @param win          handle of window.
@@ -498,7 +498,7 @@ namespace	usr {
 		     * @param xs,ys        specify the screen coordinates.
 		     * @return             none
 		    **/
-	    virtual void		cvt_win_coords(tRelCoord x, tRelCoord y,tAbsCoord *xs,tAbsCoord *ys) const;
+	    virtual void		cvt_win_coords(tRelCoord x, tRelCoord y,tAbsCoord& xs,tAbsCoord& ys) const;
 
 		   /** Converts screen-relative coordinates to relative window coordinates
 		     * @param win          handle of window
@@ -506,7 +506,7 @@ namespace	usr {
 		     * @param xr,yr        specify pointers to the relative coordinates.
 		     * @return             true if successful, false otherwise.
 		    **/
-	    virtual bool		cvt_screen_coords(tAbsCoord x, tAbsCoord y,tRelCoord *xr,tRelCoord *yr) const;
+	    virtual bool		cvt_screen_coords(tAbsCoord x, tAbsCoord y,tRelCoord& xr,tRelCoord& yr) const;
 
 		   /** Clears the current window window with given filler.
 		     * @param filler       character for filling the window
@@ -546,7 +546,7 @@ namespace	usr {
 		     * @param fore,back    specify pointers to memory where will be saved logical background and foreground of the text.
 		     * @return             none
 		    **/
-	    virtual void		get_color(Color *fore, Color *back ) const;
+	    virtual void		get_color(Color& fore, Color& back) const;
 
 		   /** Returns physical color attributes of the text.
 		     * @return             physical attributes of the text
@@ -581,7 +581,7 @@ namespace	usr {
 		     * @param fore,back    pointers to memory area where will be stored logical colors of frame.
 		     * @return             none
 		    **/
-	    virtual void		get_frame(unsigned char *frame,Color* fore,Color* back) const;
+	    virtual void		get_frame(unsigned char *frame,Color& fore,Color& back) const;
 
 		   /** Returns frame and frame attributes of given window.
 		     * @param win          handle of window.
@@ -589,7 +589,7 @@ namespace	usr {
 		     * @param attr         pointer to memory area where will be stored physical color attributes of frame.
 		     * @return             none
 		    **/
-	    virtual void		get_frame(unsigned char *frame,ColorAttr* attr) const;
+	    virtual void		get_frame(unsigned char *frame,ColorAttr& attr) const;
 
 		   /** Returns title and title attributes of given window.
 		     * @param win          handle of window.
@@ -598,7 +598,7 @@ namespace	usr {
 		     * @param fore,back    pointers to memory area where will be stored logical colors of title.
 		     * @return             alignment mode of title
 		    **/
-	    virtual title_mode		get_title(char* title,unsigned cb_title,Color* fore,Color* back) const;
+	    virtual title_mode		get_title(char* title,unsigned cb_title,Color& fore,Color& back) const;
 
 		   /** Returns title and title attributes of given window.
 		     * @param win          handle of window.
@@ -607,7 +607,7 @@ namespace	usr {
 		     * @param attr         pointers to memory area where will be stored physical color attributes of title.
 		     * @return             alignment mode of title
 		    **/
-	    virtual title_mode		get_title(char* title,unsigned cb_title,ColorAttr* attr) const;
+	    virtual title_mode		get_title(char* title,unsigned cb_title,ColorAttr& attr) const;
 
 		   /** Returns footer and footer attributes of given window.
 		     * @param win          handle of window.
@@ -616,7 +616,7 @@ namespace	usr {
 		     * @param fore,back    pointers to memory area where will be stored logical colors of footer.
 		     * @return             alignment mode of footer
 		    **/
-	    virtual title_mode		get_footer(char* footer,unsigned cb_footer,Color* fore,Color* back) const;
+	    virtual title_mode		get_footer(char* footer,unsigned cb_footer,Color& fore,Color& back) const;
 
 		   /** Returns footer and footer attributes of given window.
 		     * @param win          handle of window.
@@ -625,7 +625,7 @@ namespace	usr {
 		     * @param fore,back    pointers to memory area where will be stored physical color attributes of footer.
 		     * @return             alignment mode of footer
 		    **/
-	    virtual title_mode		get_footer(char* footer,unsigned cb_footer,ColorAttr* attr) const;
+	    virtual title_mode		get_footer(char* footer,unsigned cb_footer,ColorAttr& attr) const;
 
 		   /** Changes frame around given window with specified logical color attributes.
 		     * @param win          handle of window
@@ -757,8 +757,8 @@ namespace	usr {
 		     *                    If written text is large than window, then
 		     *                    it will be clipped.
 		    **/
-	    virtual int			direct_write(tRelCoord x,tRelCoord y,const any_t*buff,unsigned len);
-	    virtual int			direct_write(tRelCoord x,tRelCoord y,const any_t* chars,const ColorAttr* attrs,unsigned len);
+	    virtual int			write(tRelCoord x,tRelCoord y,const uint8_t* buff,unsigned len);
+	    virtual int			write(tRelCoord x,tRelCoord y,const uint8_t* chars,const ColorAttr* attrs,unsigned len);
 /* Static members */
 		   /** Returns the window currently being under focus.
 		     * @return             handle of window currently being used
@@ -826,6 +826,20 @@ namespace	usr {
 	    static TConsole*	tconsole;
 	    static System*	msystem;
 	protected:
+		   /** Writes buffer directly to the active window at specified location.
+		     * @param x,y         specify location of output
+		     * @param buff        specifies buffer to be written
+		     * @param len         specifies length of buffer
+		     * @return            number of really written characters
+		     * @note              Function writes all characters as is,
+		     *                    without checking for carriage return and
+		     *                    linefeed.
+		     *                    If written text is large than window, then
+		     *                    it will be clipped.
+		    **/
+	    virtual int			direct_write(tRelCoord x,tRelCoord y,const any_t* buff,unsigned len);
+	    virtual int			direct_write(tRelCoord x,tRelCoord y,const any_t* chars,const ColorAttr* attrs,unsigned len);
+	private:
 		   /** Accesses to the active window directly, reading a single line.
 		     * @param win         handle of window
 		     * @param x,y         specify location of input
@@ -836,7 +850,7 @@ namespace	usr {
 		     *                    characters and attributes from window,
 		     *                    beginning at specified location.
 		    **/
-	    virtual void		read(tRelCoord x,tRelCoord y,tvioBuff *buff,unsigned len) const;
+	    virtual tvideo_buffer	read(tRelCoord x,tRelCoord y,size_t len) const;
 		   /** Accesses to the active window directly, writing a single line.
 		     * @param win         handle of window
 		     * @param x,y         specify location of output
@@ -849,8 +863,8 @@ namespace	usr {
 		     *                    If written output is large than window,
 		     *                    then it will be clipped.
 		    **/
-	    virtual void		write(tRelCoord x,tRelCoord y,const tvioBuff *buff,unsigned len);
-	private:
+	    virtual void		write(tRelCoord x,tRelCoord y,const tvideo_buffer& buff);
+
 	    void		create(tAbsCoord x1_, tAbsCoord y1_, tAbsCoord width, tAbsCoord height, unsigned flags);
 	    void		makewin(tAbsCoord x1, tAbsCoord y1, tAbsCoord width, tAbsCoord height);
 	    void		__unlistwin();
@@ -868,8 +882,8 @@ namespace	usr {
 	    void		paint_internal();
 	    void		make_frame();
 	    void		__draw_frame(tRelCoord xs, tRelCoord ys, tRelCoord xe, tRelCoord ye,const any_t*_frame, DefColor color);
-	    void		updatescreencharfrombuff(tRelCoord x,tRelCoord y,const tvioBuff *buff,tvioBuff *accel) const;
-	    void		updatewinmemcharfromscreen(tRelCoord x,tRelCoord y,const tvioBuff *accel);
+	    void		updatescreencharfrombuff(tRelCoord x,tRelCoord y,const tvioBuff& buff,tvioBuff *accel) const;
+	    void		updatewinmemcharfromscreen(tRelCoord x,tRelCoord y,const tvioBuff& accel);
 	    void		screen2win();
 	    void		updatescreenpiece(tRelCoord stx,tRelCoord endx,tRelCoord y);
 	    void		updatewinmem();
@@ -887,14 +901,14 @@ namespace	usr {
 						x < wwidth && y < wheight); }
 	    inline bool		is_valid_x(tAbsCoord x) const { return ((flags & Flag_Has_Frame) == Flag_Has_Frame ? x && x < wwidth-1: x < wwidth); }
 	    inline bool		is_valid_y(tAbsCoord y) const { return ((flags & Flag_Has_Frame) == Flag_Has_Frame ? y && y < wheight-1:y < wheight); }
-	    inline void		updatescreenchar(tRelCoord x,tRelCoord y,tvioBuff* accel) const { updatescreencharfrombuff(x-1,y-1,&body,accel); }
-	    inline void		restorescreenchar(tRelCoord x,tRelCoord y,tvioBuff* accel) const { updatescreencharfrombuff(x-1,y-1,&saved,accel); }
+	    inline void		updatescreenchar(tRelCoord x,tRelCoord y,tvioBuff* accel) const { updatescreencharfrombuff(x-1,y-1,body,accel); }
+	    inline void		restorescreenchar(tRelCoord x,tRelCoord y,tvioBuff* accel) const { updatescreencharfrombuff(x-1,y-1,saved,accel); }
 
 	    static TWindow*	__findcursorablewin();
 	    static TWindow*	__at_point(TWindow* iter,tAbsCoord x,tAbsCoord y);
 	    static tRelCoord	calc_title_off(title_mode mode,unsigned w,unsigned slen);
-	    static void		adjustColor(Color *fore,Color *back);
-	    static void		__set_color(DefColor *to,Color fore,Color back);
+	    static void		adjustColor(Color& fore,Color& back);
+	    static DefColor	__set_color(Color fore,Color back);
 
 	    char		Frame[8];   /**< Buffer, contaning frame component */
 					    /* Frame encoding:   1---2---3 */

@@ -52,20 +52,20 @@ void ASCII_Addon::run()
     unsigned char str[35];
     hwnd->freeze();
     strcpy((char *)str,"°³0 1 2 3 4 5 6 7 8 9 A B C D E F");
-    hwnd->direct_write(1,1,str,34);
+    hwnd->write(1,1,str,34);
     str[0] = TWC_SH;
     str[1] = 0;
-    for(i = 0;i < 34;i++)  hwnd->direct_write(i+1,2,str,1);
+    for(i = 0;i < 34;i++)  hwnd->write(i+1,2,str,1);
     str[1] = TWC_SV;
     str[2] = 0;
-    for(i = 0;i < 16;i++) { str[0] = i < 0x0A ? i + '0' : i - 0x0A + 'A'; hwnd->direct_write(1,i+3,str,2); }
+    for(i = 0;i < 16;i++) { str[0] = i < 0x0A ? i + '0' : i - 0x0A + 'A'; hwnd->write(1,i+3,str,2); }
     str[0] = TWC_SV_SH;
     str[1] = 0;
-    hwnd->direct_write(2,2,str,1);
+    hwnd->write(2,2,str,1);
     hwnd->freeze();
     for(i = 0;i < 16;i++) {
 	for(j = 0;j < 16;j++) { str[j*2] = i*16 + j; str[j*2 + 1] = ' '; }
-	hwnd->direct_write(3,i+3,str,31);
+	hwnd->write(3,i+3,str,31);
     }
     hwnd->refresh();
     do {

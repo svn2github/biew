@@ -222,7 +222,7 @@ int __FASTCALL__ FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*sav
 	    unsigned eidx;
 	    eidx = i*EditorMem.width+j;
 	    ewnd->set_color(EditorMem.buff[eidx] == EditorMem.save[eidx] ? browser_cset.edit.main : browser_cset.edit.change);
-	    ewnd->direct_write(j + 1,i + 1,&EditorMem.buff[eidx],1);
+	    ewnd->write(j + 1,i + 1,&EditorMem.buff[eidx],1);
 	}
 	if((unsigned)EditorMem.alen[i] + 1 < EditorMem.width) {
 	    ewnd->goto_xy(EditorMem.alen[i] + 1,i + 1);
@@ -241,7 +241,7 @@ int __FASTCALL__ FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*sav
 	for(i = 0;i < height;i++) {
 	    mlen = EditorMem.alen[i];
 	    len = ExpandHex(work,&EditorMem.buff[i*EditorMem.width],mlen,2);
-	    hexwnd->direct_write(11,i + 1,work,len);
+	    hexwnd->write(11,i + 1,(const uint8_t*)work,len);
 	    if((unsigned)EditorMem.alen[i] + 1 < EditorMem.width) {
 		hexwnd->goto_xy(11+len,i + 1);
 		hexwnd->clreol();
@@ -273,7 +273,7 @@ int __FASTCALL__ FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*sav
 		char work[__TVIO_MAXSCREENWIDTH];
 		int len;
 		len = ExpandHex(work,&EditorMem.buff[edit_y*EditorMem.width],mlen,2);
-		hexwnd->direct_write(11,edit_y + 1,work,len);
+		hexwnd->write(11,edit_y + 1,(const uint8_t*)work,len);
 	    }
 	}
 	beye_context().paint_Etitle(edit_y*EditorMem.width + edit_x,0);

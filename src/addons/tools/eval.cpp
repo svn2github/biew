@@ -545,7 +545,7 @@ void Calculator_Addon::run()
   TWindow * wdlg,*ewnd;
   char estr[81];
   wdlg = CrtDlgWndnls(" Calculator ",78,7);
-  wdlg->get_pos(&x1_,&y1_,&x2_,&y2_);
+  wdlg->get_pos(x1_,y1_,x2_,y2_);
   X1 = x1_;
   Y1 = y1_;
   X2 = x2_;

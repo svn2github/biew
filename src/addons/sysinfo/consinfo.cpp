@@ -63,33 +63,33 @@ void ConsoleInfo_Addon::run()
 	   ,bctx.tconsole().vio_height()
 	   ,bctx.tconsole().vio_num_colors()
 	   ,bctx.scheme_name.c_str());
-  hwnd->direct_write(1,3,str,len);
+  hwnd->write(1,3,str,len);
   str[0] = TWC_SH;
-  for(i = 0;i < 63;i++)  hwnd->direct_write(i+1,4,str,1);
+  for(i = 0;i < 63;i++)  hwnd->write(i+1,4,str,1);
   str[1] = TWC_SV;
-  for(i = 0;i < 16;i++) { str[0] = i < 0x0A ? i + '0' : i - 0x0A + 'A'; hwnd->direct_write(1,i+5,str,2); }
+  for(i = 0;i < 16;i++) { str[0] = i < 0x0A ? i + '0' : i - 0x0A + 'A'; hwnd->write(1,i+5,str,2); }
   str[0] = TWC_SH_SV;
-  hwnd->direct_write(2,4,str,1);
+  hwnd->write(2,4,str,1);
   for(i = 0;i < 16;i++)
   {
     for(j = 0;j < 16;j++)
     {
        hwnd->set_color(Color(i),Color(j));
        str[0] = ' '; str[1] = '*'; str[2] = ' ';
-       hwnd->direct_write(j*3+3,i+5,str,3);
+       hwnd->write(j*3+3,i+5,str,3);
     }
   }
   hwnd->set_color(dialog_cset.main);
   str[0] = TWC_SH;
-  for(i = 0;i < 63;i++) hwnd->direct_write(i+1,21,str,1);
+  for(i = 0;i < 63;i++) hwnd->write(i+1,21,str,1);
   str[0] = TWC_SH_Su;
-  hwnd->direct_write(2,21,str,1);
+  hwnd->write(2,21,str,1);
   str[0] = TWC_SV;
-  for(i = 0;i < 16;i++) hwnd->direct_write(51,i+5,str,1);
+  for(i = 0;i < 16;i++) hwnd->write(51,i+5,str,1);
   str[0] = TWC_SH_SV;
-  hwnd->direct_write(51,4,str,1);
+  hwnd->write(51,4,str,1);
   str[0] = TWC_SH_Su;
-  hwnd->direct_write(51,21,str,1);
+  hwnd->write(51,21,str,1);
   for(i = 0;i < 16;i++) { hwnd->goto_xy(52,i+5); hwnd->puts(named_color_def[i].name); }
   hwnd->refresh();
   do

@@ -482,7 +482,7 @@ bool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
   int ch,i;
   hwnd = CrtDlgWndnls(FIND_STR,78,7);
   hwnd->set_footer(" [Enter] - Start ",TWindow::TMode_Center,dialog_cset.footer);
-  hwnd->get_pos(&x1,&y1,&x2,&y2);
+  hwnd->get_pos(x1,y1,x2,y2);
   X1 = x1+2;
   Y1 = y1+2;
   X2 = X1+75;

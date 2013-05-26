@@ -57,7 +57,7 @@ void __FASTCALL__ HiLightSearch(TWindow& out,__filesize_t cfp,tRelCoord minx,tRe
     unsigned __len,width;
     int x;
     char attr;
-    char chars[__TVIO_MAXSCREENWIDTH];
+    uint8_t chars[__TVIO_MAXSCREENWIDTH];
     ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
     width = (flags & HLS_USE_DOUBLE_WIDTH) == HLS_USE_DOUBLE_WIDTH ? maxx*2 : maxx-minx;
     attr = browser_cset.highline;
@@ -76,7 +76,7 @@ void __FASTCALL__ HiLightSearch(TWindow& out,__filesize_t cfp,tRelCoord minx,tRe
 	attr = browser_cset.hlight;
 	memset(&attrs[st],attr,end-st);
     }
-    out.direct_write(minx+1,y+1,chars,attrs,width);
+    out.write(minx+1,y+1,chars,attrs,width);
 }
 
 void BeyeContext::draw_title() const

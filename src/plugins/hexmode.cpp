@@ -162,7 +162,7 @@ static const hexView hexViewer[] =
 unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 {
     int i,I,Limit,dir;
-    char outstr[__TVIO_MAXSCREENWIDTH+1];
+    uint8_t outstr[__TVIO_MAXSCREENWIDTH+1];
     unsigned char HWidth;
     unsigned scrHWidth;
     __filesize_t sindex,cpos,flen,lindex,SIndex;
@@ -219,10 +219,10 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 		main_handle.seek(sindex,binary_stream::Seek_Set);
 		main_handle.read((any_t*)&outstr[width - scrHWidth],rwidth*__inc);
 		xmin = beye_context().tconsole().vio_width()-scrHWidth;
-		main_wnd.direct_write(1,i + 1,outstr,xmin);
-		if(isHOnLine(sindex,scrHWidth)) HiLightSearch(main_wnd,sindex,xmin,width,i,&outstr[xmin],HLS_NORMAL);
-		else  main_wnd.direct_write(xmin + 1,i + 1,&outstr[xmin],width - xmin);
-	    } else main_wnd.direct_write(1,i + 1,outstr,width);
+		main_wnd.write(1,i + 1,outstr,xmin);
+		if(isHOnLine(sindex,scrHWidth)) HiLightSearch(main_wnd,sindex,xmin,width,i,(const char*)&outstr[xmin],HLS_NORMAL);
+		else  main_wnd.write(xmin + 1,i + 1,&outstr[xmin],width - xmin);
+	    } else main_wnd.write(1,i + 1,outstr,width);
 	}
 	lastbyte = lindex + __inc;
 	main_wnd.refresh();
@@ -372,7 +372,7 @@ int HexMode::full_hex_edit(TWindow* txtwnd,TWindow* hexwnd) const
     txtwnd->set_color(browser_cset.main);
     txtwnd->freeze();
     for(i = 0;i < height;i++) {
-	txtwnd->direct_write(width - EditorMem.width + 1,i + 1,&EditorMem.buff[i*EditorMem.width],EditorMem.alen[i]);
+	txtwnd->write(width - EditorMem.width + 1,i + 1,&EditorMem.buff[i*EditorMem.width],EditorMem.alen[i]);
 	if((unsigned)EditorMem.alen[i] + 1 < EditorMem.width) {
 	    txtwnd->goto_xy(width - EditorMem.width + EditorMem.alen[i] + 2,i + 1); txtwnd->clreol();
         }
@@ -387,7 +387,7 @@ int HexMode::full_hex_edit(TWindow* txtwnd,TWindow* hexwnd) const
 	mlen = ExpandHex(owork,&EditorMem.save[eidx],EditorMem.alen[i],1);
 	for(j = 0;j < mlen;j++) {
 	    hexwnd->set_color(work[j] == owork[j] ? browser_cset.edit.main : browser_cset.edit.change);
-	    hexwnd->direct_write(j + 1,i + 1,&work[j],1);
+	    hexwnd->write(j + 1,i + 1,(const uint8_t*)&work[j],1);
 	}
 	if(mlen + 1 < EditorMem.width) {
 	    hexwnd->goto_xy(mlen + 1,i + 1);
@@ -420,7 +420,7 @@ int HexMode::full_hex_edit(TWindow* txtwnd,TWindow* hexwnd) const
 	    default     : redraw = editDefAction(_lastbyte); break;
 	}
 	CheckBounds();
-	if(redraw) txtwnd->direct_write(width - EditorMem.width + 1,edit_y + 1,&EditorMem.buff[eidx],mlen/3);
+	if(redraw) txtwnd->write(width - EditorMem.width + 1,edit_y + 1,&EditorMem.buff[eidx],mlen/3);
 	beye_context().paint_Etitle(eidx + edit_x,0);
     }
     bye:

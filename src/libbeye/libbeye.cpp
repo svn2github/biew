@@ -358,4 +358,146 @@ Opaque::Opaque() {
 }
 
 Opaque::~Opaque() {}
+
+void tvideo_buffer::_construct() {
+    chars = new t_vchar[len];
+    oempg = new t_vchar[len];
+    attrs = new ColorAttr[len];
+}
+
+tvideo_buffer::tvideo_buffer(size_t n)
+	    :len(n)
+{
+    _construct();
+}
+
+tvideo_buffer::tvideo_buffer(const t_vchar* _chars,const t_vchar* _oempg,const ColorAttr* _attrs,size_t n)
+	    :len(n) {
+    _construct();
+    ::memcpy(chars,_chars,len);
+    ::memcpy(oempg,_oempg,len);
+    ::memcpy(attrs,_attrs,len);
+}
+
+tvideo_buffer::tvideo_buffer(t_vchar c,t_vchar o,ColorAttr a,size_t n)
+	    :len(n) {
+    _construct();
+    fill(c,o,a);
+}
+
+tvideo_buffer::~tvideo_buffer() {
+    if(chars) delete chars;
+    if(oempg) delete oempg;
+    if(attrs) delete attrs;
+}
+
+tvideo_buffer& tvideo_buffer::operator=(const tvideo_buffer& it) {
+    if(chars) delete chars;
+    if(oempg) delete oempg;
+    if(attrs) delete attrs;
+    len = it.len;
+    chars = new t_vchar[len];
+    oempg = new t_vchar[len];
+    attrs = new ColorAttr[len];
+    ::memcpy(chars,it.chars,len);
+    ::memcpy(oempg,it.oempg,len);
+    ::memcpy(attrs,it.attrs,len);
+    return *this;
+}
+
+tvideo_buffer tvideo_buffer::operator[](size_t idx) const {
+    size_t sz=len-idx;
+    tvideo_buffer rc(sz);
+    rc.assign(&chars[idx],&oempg[idx],&attrs[idx],sz);
+    return rc;
+}
+
+void tvideo_buffer::resize(size_t newlen) {
+    if(len!=newlen) {
+	if(newlen) {
+	    t_vchar*  c = new t_vchar[newlen];
+	    t_vchar*  o = new t_vchar[newlen];
+	    ColorAttr*a = new ColorAttr[newlen];
+	    ::memcpy(c,chars,newlen);
+	    ::memcpy(o,oempg,newlen);
+	    ::memcpy(a,attrs,newlen);
+	    delete chars;
+	    delete oempg;
+	    delete attrs;
+	    chars = c;
+	    oempg = o;
+	    attrs = a;
+	}
+	else {
+	    if(chars) { delete chars; chars=NULL; }
+	    if(oempg) { delete oempg; oempg=NULL; }
+	    if(attrs) { delete attrs; attrs=NULL; }
+	}
+	len=newlen;
+    }
+}
+
+
+void tvideo_buffer::fill(t_vchar c,t_vchar o,ColorAttr a) {
+    ::memset(chars,c,len);
+    ::memset(oempg,o,len);
+    ::memset(attrs,a,len);
+}
+
+void tvideo_buffer::fill_at(size_t idx,t_vchar c,t_vchar o,ColorAttr a,size_t sz) {
+    if(idx+sz < len) {
+	::memset(&chars[idx],c,sz);
+	::memset(&oempg[idx],o,sz);
+	::memset(&attrs[idx],a,sz);
+    }
+}
+
+void tvideo_buffer::assign(const t_vchar* _chars,const t_vchar* _oempg,const ColorAttr* _attrs,size_t newlen) {
+    size_t rlen = std::min(newlen,len);
+    ::memcpy(chars,_chars,rlen);
+    ::memcpy(oempg,_oempg,rlen);
+    ::memcpy(attrs,_attrs,rlen);
+}
+
+void tvideo_buffer::assign(const tvideo_buffer& from,size_t rlen) {
+    rlen = std::min(rlen,len);
+    ::memcpy(chars,from.chars,rlen);
+    ::memcpy(oempg,from.oempg,rlen);
+    ::memcpy(attrs,from.attrs,rlen);
+}
+
+void tvideo_buffer::assign_at(size_t idx,const tvideo_buffer& from) {
+    size_t sz=from.length();
+    if(sz+idx<len) {
+	::memcpy(&chars[idx],from.chars,sz);
+	::memcpy(&oempg[idx],from.oempg,sz);
+	::memcpy(&attrs[idx],from.attrs,sz);
+    }
+}
+
+void tvideo_buffer::assign_at(size_t idx,const tvideo_buffer& from,size_t rlen) {
+    size_t sz=rlen;
+    if(sz+idx<len) {
+	::memcpy(&chars[idx],from.chars,sz);
+	::memcpy(&oempg[idx],from.oempg,sz);
+	::memcpy(&attrs[idx],from.attrs,sz);
+    }
+}
+
+void tvideo_buffer::assign_at(size_t idx,const t_vchar* _chars,const t_vchar* _oempg,const ColorAttr* _attrs,size_t newlen) {
+    if(idx+newlen < len) {
+	::memcpy(&chars[idx],_chars,newlen);
+	::memcpy(&oempg[idx],_oempg,newlen);
+	::memcpy(&attrs[idx],_attrs,newlen);
+    }
+}
+
+void tvideo_buffer::assign_at(size_t idx,t_vchar c,t_vchar o,ColorAttr a) {
+    if(idx<len) {
+	chars[idx]=c;
+	oempg[idx]=o;
+	attrs[idx]=a;
+    }
+}
+
 } // namespace	usr

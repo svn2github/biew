@@ -113,7 +113,7 @@ void DigitalConverter_Addon::DCStaticPaint(TWindow * wdlg,char * wbuff,intmax_t 
  int rlen;
  tAbsCoord x1,y1,x2,y2;
  unsigned i,w;
-    wdlg->get_pos(&x1,&y1,&x2,&y2);
+    wdlg->get_pos(x1,y1,x2,y2);
     w=x2-x1;
     rlen = Dig2Str(digit,wbuff,0);
     wdlg->goto_xy(3,4); wdlg->puts(wbuff); for(i = rlen;i < mlen[0];i++)  wdlg->putch('±'); wdlg->puts("   [Hex]");
@@ -152,7 +152,7 @@ void DigitalConverter_Addon::run()
  legal[2] = &decleg[2];
  legal[3] = decleg;
  legal[4] = bleg;
- wdlg->get_pos(&x1,&y1,&x2,&y2);
+ wdlg->get_pos(x1,y1,x2,y2);
  w=x2-x1;
  X1 = x1;
  Y1 = y1;

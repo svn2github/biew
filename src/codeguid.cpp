@@ -118,7 +118,7 @@ void CodeGuider::reset_go_address( int keycode )
 		char dig;
 		GoAddr[i].second=GoAddr[i].second-1;
 		dig = gidGetAddressKey(i);
-		main_wnd.direct_write(main_wnd.client_width()-1,GoAddr[i].second+2,&dig,1);
+		main_wnd.write(main_wnd.client_width()-1,GoAddr[i].second+2,(const uint8_t*)&dig,1);
 	    }
 	}
     } else if(keycode == KE_UPARROW) {
@@ -153,7 +153,7 @@ void CodeGuider::add_go_address(const DisMode& parent,std::string& str,__filesiz
 	for(i = 1;i < sz;i++) {
 	    char dig;
 	    dig = gidGetAddressKey(i);
-	    main_wnd.direct_write(width-1,GoAddr[i].second+1,&dig,1);
+	    main_wnd.write(width-1,GoAddr[i].second+1,(const uint8_t*)&dig,1);
 	}
     } else {
 	GoAddr.push_back(std::make_pair(addr,parent.get_curr_line_num()));

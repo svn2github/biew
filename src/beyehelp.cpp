@@ -55,7 +55,7 @@ enum {
 
 unsigned Beye_Help::fill_buffer(TWindow& win,tRelCoord x,tRelCoord y,const std::string& str,bool is_hl,bool dry_run) const
 {
-    char chars[__TVIO_MAXSCREENWIDTH];
+    uint8_t chars[__TVIO_MAXSCREENWIDTH];
     ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
     unsigned alen=__TVIO_MAXSCREENWIDTH,len=str.length();
     char ch;
@@ -116,7 +116,7 @@ unsigned Beye_Help::fill_buffer(TWindow& win,tRelCoord x,tRelCoord y,const std::
 	}
     }
 End:
-    if(!dry_run) win.direct_write(x,y,chars,attrs,k);
+    if(!dry_run) win.write(x,y,chars,attrs,k);
     return k;
 }
 

@@ -135,6 +135,39 @@ namespace	usr {
 	    Opaque	opaque2;
     };
 
+    class tvideo_buffer : public Opaque {
+	public:
+	    tvideo_buffer(size_t n);
+	    tvideo_buffer(const t_vchar* chars,const t_vchar* oempg,const ColorAttr* attrs,size_t n);
+	    tvideo_buffer(t_vchar chars,t_vchar oempg,ColorAttr attrs,size_t n);
+	    virtual ~tvideo_buffer();
+
+	    virtual void	resize(size_t newlen);
+	    tvideo_buffer&	operator=(const tvideo_buffer& it);
+	    tvideo_buffer	operator[](size_t idx) const;
+
+	    virtual void	fill(t_vchar chars,t_vchar oempg,ColorAttr attrs);
+	    virtual void	fill_at(size_t idx,t_vchar chars,t_vchar oempg,ColorAttr attrs,size_t sz);
+	    virtual void	assign(const t_vchar* chars,const t_vchar* oempg,const ColorAttr* attrs,size_t len);
+	    virtual void	assign(const tvideo_buffer& from,size_t len);
+	    virtual void	assign_at(size_t idx,const tvideo_buffer&);
+	    virtual void	assign_at(size_t idx,const tvideo_buffer&,size_t rlen);
+	    virtual void	assign_at(size_t idx,const t_vchar* chars,const t_vchar* oempg,const ColorAttr* attrs,size_t len);
+	    virtual void	assign_at(size_t idx,t_vchar chars,t_vchar oempg,ColorAttr attrs);
+
+	    size_t		length() const { return len; }
+	    const t_vchar*	get_chars() const { return chars; }
+	    const t_vchar*	get_oempg() const { return oempg; }
+	    const ColorAttr*	get_attrs() const { return attrs; }
+	private:
+	    void		_construct();
+
+	    size_t	len;
+	    t_vchar*	chars; /**< Pointer to video character array */
+	    t_vchar*	oempg; /**< Pointer to OEM pseudographics. It needed for *nix terminals */
+	    ColorAttr*	attrs; /**< Pointer to color attributes array */
+    };
+
 #define TESTFLAG(x,y) (((x) & (y)) == (y)) /**< Test y bits in x */
 
 		   /** Tests wether character is a separator

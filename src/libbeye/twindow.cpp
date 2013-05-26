@@ -134,43 +134,41 @@ uint8_t TWindow::color_map[16] =
   0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
 };
 
-void TWindow::adjustColor(Color *fore,Color *back)
+void TWindow::adjustColor(Color& fore,Color& back)
 {
-  if(tconsole->vio_num_colors() < 16 || (twin_flags & TWIF_FORCEMONO))
-  {
-    unsigned char br_fore, br_back;
-    br_fore = brightness[(*fore) & 0x0F];
-    br_back = brightness[(*back) & 0x0F];
-    if(br_fore >= br_back)
-    {
-      *fore = LightGray;
-      *back = Black;
+    if(tconsole->vio_num_colors() < 16 || (twin_flags & TWIF_FORCEMONO)) {
+	unsigned char br_fore, br_back;
+	br_fore = brightness[fore & 0x0F];
+	br_back = brightness[back & 0x0F];
+	if(br_fore >= br_back) {
+	    fore = LightGray;
+	    back = Black;
+	} else {
+	    fore = Black;
+	    back = LightGray;
+	}
     }
-    else
-    {
-      *fore = Black;
-      *back = LightGray;
-    }
-  }
-  (*fore) = Color(color_map[(*fore) & 0x0F]);
-  (*back) = Color(color_map[(*back) & 0x0F]);
+    fore = Color(color_map[fore & 0x0F]);
+    back = Color(color_map[back & 0x0F]);
 }
 
-void TWindow::__set_color(DefColor *to,Color fore,Color back)
+DefColor TWindow::__set_color(Color fore,Color back)
 {
-  to->user = LOGFB_TO_PHYS(fore,back);
-  adjustColor(&fore,&back);
-  to->system = LOGFB_TO_PHYS(fore,back);
+    DefColor rc;
+    rc.user = LOGFB_TO_PHYS(fore,back);
+    adjustColor(fore,back);
+    rc.system = LOGFB_TO_PHYS(fore,back);
+    return rc;
 }
 
 void __FASTCALL__ TWindow::remap_color(Color color,unsigned char value)
 {
-  color_map[color & 0x0F] = value & 0x0F;
+    color_map[color & 0x0F] = value & 0x0F;
 }
 
 unsigned char TWindow::get_mapped_color(Color color)
 {
-  return color_map[color & 0x0F];
+    return color_map[color & 0x0F];
 }
 
 const unsigned char TWindow::SINGLE_FRAME[8] = { TWC_Sd_Sr, TWC_SH, TWC_Sl_Sd, TWC_SV, TWC_SV, TWC_Su_Sr, TWC_SH, TWC_Sl_Su };
@@ -283,10 +281,10 @@ void TWindow::create(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _he
     ::memset(body.oem_pg,0,wsize);
     ::memset(body.attrs,text.system,wsize);
     check_win();
-    __set_color(&text,LightGray,Black);
-    __set_color(&frame,LightGray,Black);
-    __set_color(&title,LightGray,Black);
-    __set_color(&footer,LightGray,Black);
+    text=__set_color(LightGray,Black);
+    frame=__set_color(LightGray,Black);
+    title=__set_color(LightGray,Black);
+    footer=__set_color(LightGray,Black);
     cur_x = cur_y = 0;
     set_focus();
     paint_internal();
@@ -332,7 +330,7 @@ ColorAttr TWindow::set_color(Color fore,Color back)
 {
     ColorAttr ret;
     ret = text.user;
-    __set_color(&text,fore,back);
+    text=__set_color(fore,back);
     return ret;
 }
 
@@ -340,10 +338,10 @@ ColorAttr TWindow::set_color(ColorAttr ca) {  return set_color(FORE_COLOR(ca),BA
 
 ColorAttr TWindow::get_color() const { return text.user; }
 
-void TWindow::get_color(Color *fore,Color *back) const
+void TWindow::get_color(Color& fore,Color& back) const
 {
     ColorAttr ca = get_color();
-    PHYS_TO_LOGFB(ca,*fore,*back);
+    PHYS_TO_LOGFB(ca,fore,back);
 }
 
 Color TWindow::text_color(Color col)
@@ -372,7 +370,7 @@ void TWindow::set_frame(const unsigned char *_frame,Color fore,Color back)
 {
     flags |= Flag_Has_Frame;
     ::memcpy(Frame,_frame,8);
-    __set_color(&frame,fore,back);
+    frame=__set_color(fore,back);
     paint_internal();
 }
 
@@ -381,20 +379,20 @@ void TWindow::set_frame(const unsigned char *_frame,ColorAttr attr)
     set_frame(_frame,FORE_COLOR(attr),BACK_COLOR(attr));
 }
 
-void TWindow::get_frame(unsigned char *_frame,ColorAttr* attr) const
+void TWindow::get_frame(unsigned char *_frame,ColorAttr& attr) const
 {
     if((flags & Flag_Has_Frame) == Flag_Has_Frame) {
 	::memcpy(_frame,Frame,8);
-	*attr = frame.user;
+	attr = frame.user;
     }
 }
 
-void TWindow::get_frame(unsigned char *_frame,Color* fore,Color* back) const
+void TWindow::get_frame(unsigned char *_frame,Color& fore,Color& back) const
 {
     ColorAttr attr = 0;
-    get_frame(_frame,&attr);
-    *fore = FORE_COLOR(attr);
-    *back = BACK_COLOR(attr);
+    get_frame(_frame,attr);
+    fore = FORE_COLOR(attr);
+    back = BACK_COLOR(attr);
 }
 
 void TWindow::set_title(const std::string& _title,title_mode mode,Color fore,Color back)
@@ -407,7 +405,7 @@ void TWindow::set_title(const std::string& _title,title_mode mode,Color fore,Col
     if((flags & Flag_NLS) == Flag_NLS)
 	 msystem->nls_oem2osdep((unsigned char *)Title,slen);
     TitleMode = mode;
-    __set_color(&title,fore,back);
+    title=__set_color(fore,back);
     paint_internal();
 }
 
@@ -416,25 +414,25 @@ void TWindow::set_title(const std::string& _title,title_mode mode,ColorAttr attr
     set_title(_title,mode,FORE_COLOR(attr),BACK_COLOR(attr));
 }
 
-TWindow::title_mode TWindow::get_title(char *_title,unsigned cb_title,ColorAttr* attr) const
+TWindow::title_mode TWindow::get_title(char *_title,unsigned cb_title,ColorAttr& attr) const
 {
     title_mode ret = TMode_Left;
     if((flags & Flag_Has_Frame) == Flag_Has_Frame && Title) {
 	::strncpy(_title,Title,cb_title);
 	_title[cb_title-1] = '\0';
-	*attr = title.user;
+	attr = title.user;
 	ret = TitleMode;
     }
     return ret;
 }
 
-TWindow::title_mode TWindow::get_title(char *_title,unsigned cb_title,Color* fore,Color* back) const
+TWindow::title_mode TWindow::get_title(char *_title,unsigned cb_title,Color& fore,Color& back) const
 {
     ColorAttr attr;
     title_mode ret;
-    ret = get_title(_title,cb_title,&attr);
-    *fore = FORE_COLOR(attr);
-    *back = BACK_COLOR(attr);
+    ret = get_title(_title,cb_title,attr);
+    fore = FORE_COLOR(attr);
+    back = BACK_COLOR(attr);
     return ret;
 }
 
@@ -448,7 +446,7 @@ void TWindow::set_footer(const std::string& _footer,title_mode mode,Color fore,C
     if((flags & Flag_NLS) == Flag_NLS)
 	msystem->nls_oem2osdep((unsigned char *)Footer,slen);
     FooterMode = mode;
-    __set_color(&footer,fore,back);
+    footer=__set_color(fore,back);
     paint_internal();
 }
 
@@ -457,26 +455,26 @@ void TWindow::set_footer(const std::string& _footer,title_mode mode,ColorAttr at
     set_footer(_footer,mode,FORE_COLOR(attr),BACK_COLOR(attr));
 }
 
-TWindow::title_mode TWindow::get_footer(char *_footer,unsigned cb_footer,ColorAttr* attr) const
+TWindow::title_mode TWindow::get_footer(char *_footer,unsigned cb_footer,ColorAttr& attr) const
 {
     title_mode ret = title_mode(0);
     if((flags & Flag_Has_Frame) == Flag_Has_Frame && Footer) {
 	::strncpy(_footer,Footer,cb_footer);
 	_footer[cb_footer-1] = '\0';
-	*attr = footer.user;
+	attr = footer.user;
 	ret = FooterMode;
     }
     return ret;
 }
 
 
-TWindow::title_mode TWindow::get_footer(char *_footer,unsigned cb_footer,Color* fore,Color* back) const
+TWindow::title_mode TWindow::get_footer(char *_footer,unsigned cb_footer,Color& fore,Color& back) const
 {
     ColorAttr attr;
     title_mode ret;
-    ret = get_footer(_footer,cb_footer,&attr);
-    *fore = FORE_COLOR(attr);
-    *back = BACK_COLOR(attr);
+    ret = get_footer(_footer,cb_footer,attr);
+    fore = FORE_COLOR(attr);
+    back = BACK_COLOR(attr);
     return ret;
 }
 
@@ -529,19 +527,19 @@ TWindow* TWindow::at_pos(tAbsCoord x,tAbsCoord y)
     return ret;
 }
 
-void TWindow::cvt_win_coords(tRelCoord x, tRelCoord y,tAbsCoord *xa,tAbsCoord *ya) const
+void TWindow::cvt_win_coords(tRelCoord x, tRelCoord y,tAbsCoord& xa,tAbsCoord& ya) const
 {
     if(flags & Flag_Has_Frame) { x++; y++; }
-    *xa = X1+x;
-    *ya = Y1+y;
+    xa = X1+x;
+    ya = Y1+y;
 }
 
-bool TWindow::cvt_screen_coords(tAbsCoord x, tAbsCoord y,tRelCoord *xr,tRelCoord *yr) const
+bool TWindow::cvt_screen_coords(tAbsCoord x, tAbsCoord y,tRelCoord& xr,tRelCoord& yr) const
 {
-    *xr = x - X1;
-    *yr = y - Y1;
-    if(flags & Flag_Has_Frame) { (*xr)--; (*yr)--; }
-    return is_valid_xy(*xr,*yr) ? true : false;
+    xr = x - X1;
+    yr = y - Y1;
+    if(flags & Flag_Has_Frame) { xr--; yr--; }
+    return is_valid_xy(xr,yr) ? true : false;
 }
 
 bool TWindow::is_piece_visible(tRelCoord x, tRelCoord y) const
@@ -654,7 +652,7 @@ void TWindow::makewin(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _h
 
 void TWindow::updatescreencharfrombuff(tRelCoord x,
 					tRelCoord y,
-					const tvioBuff *buff,
+					const tvioBuff& buff,
 					tvioBuff *accel) const
 {
     tvioBuff it;
@@ -670,9 +668,9 @@ void TWindow::updatescreencharfrombuff(tRelCoord x,
 	    tx = X1 - top->X1 + x;
 	    ty = Y1 - top->Y1 + y;
 	    tidx = tx + ty*top->wwidth;
-	    top->saved.chars[tidx] = buff->chars[idx];
-	    top->saved.oem_pg[tidx] = buff->oem_pg[idx];
-	    top->saved.attrs[tidx] = buff->attrs[idx];
+	    top->saved.chars[tidx] = buff.chars[idx];
+	    top->saved.oem_pg[tidx] = buff.oem_pg[idx];
+	    top->saved.attrs[tidx] = buff.attrs[idx];
 	    if(accel) {
 		TWindow *vis=NULL;
 		tAbsCoord xx,yy;
@@ -691,9 +689,9 @@ void TWindow::updatescreencharfrombuff(tRelCoord x,
 	    bool ms_vis;
 	    bool is_hidden = false;
 	    if(accel) {
-		accel->chars[aidx] = buff->chars[idx];
-		accel->oem_pg[aidx] = buff->oem_pg[idx];
-		accel->attrs[aidx] = buff->attrs[idx];
+		accel->chars[aidx] = buff.chars[idx];
+		accel->oem_pg[aidx] = buff.oem_pg[idx];
+		accel->attrs[aidx] = buff.attrs[idx];
 	    } else if((iflags & IFLG_ENABLED) == IFLG_ENABLED) {
 		tAbsCoord outx,outy;
 		ms_vis = tconsole->mouse_get_state();
@@ -708,10 +706,10 @@ void TWindow::updatescreencharfrombuff(tRelCoord x,
 			    tconsole->mouse_set_state(false);
 			}
 		    }
-		    it.chars = &buff->chars[idx];
-		    it.oem_pg = &buff->oem_pg[idx];
-		    it.attrs = &buff->attrs[idx];
-		    tconsole->vio_write_buff(outx,outy,&it,1);
+		    it.chars = &buff.chars[idx];
+		    it.oem_pg = &buff.oem_pg[idx];
+		    it.attrs = &buff.attrs[idx];
+		    tconsole->vio_write_buff(outx,outy,tvideo_buffer(it.chars,it.oem_pg,it.attrs,1));
 		    if(is_hidden) tconsole->mouse_set_state(true);
 		}
 		check_win();
@@ -727,10 +725,9 @@ void TWindow::updatescreencharfrombuff(tRelCoord x,
  *  screen2win: quick implementation of copying screen to window memory
  *  snapshot:   snap shot of screen to win body
  */
-void TWindow::updatewinmemcharfromscreen(tRelCoord x,tRelCoord y,const tvioBuff *accel)
+void TWindow::updatewinmemcharfromscreen(tRelCoord x,tRelCoord y,const tvioBuff& accel)
 {
     unsigned idx,aidx;
-    tvioBuff it;
     if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
 	TWindow * top;
 	idx = y*wwidth+x;
@@ -750,41 +747,15 @@ void TWindow::updatewinmemcharfromscreen(tRelCoord x,tRelCoord y,const tvioBuff 
 	    top->saved.attrs[tidx] = body.attrs[idx];
 	    top->check_win();
 	} else {
-	    bool ms_vis;
-	    bool is_hidden = false;
-	    if(accel) {
-		saved.chars[idx] = accel->chars[aidx];
-		saved.oem_pg[idx] = accel->oem_pg[aidx];
-		saved.attrs[idx] = accel->attrs[aidx];
-	    } else {
-		tAbsCoord inx,iny;
-		inx = (unsigned)X1+x;
-		iny = (unsigned)Y1+y;
-		if(inx+2 <= tconsole->vio_width() && iny <= tconsole->vio_height()) {
-		    ms_vis = tconsole->mouse_get_state();
-		    if(ms_vis) {
-			tAbsCoord mx,my;
-			tconsole->mouse_get_pos(mx,my);
-			if(mx == inx && my == iny) {
-			    is_hidden = true;
-			    tconsole->mouse_set_state(false);
-			}
-		    }
-		    it.chars = &saved.chars[idx];
-		    it.oem_pg = &saved.oem_pg[idx];
-		    it.attrs = &saved.attrs[idx];
-		    tconsole->vio_read_buff(inx,iny,&it,2);
-		    if(is_hidden) tconsole->mouse_set_state(true);
-		}
-		check_win();
-	    }
+	    saved.chars[idx] = accel.chars[aidx];
+	    saved.oem_pg[idx] = accel.oem_pg[aidx];
+	    saved.attrs[idx] = accel.attrs[aidx];
 	}
     }
 }
 
 void TWindow::screen2win()
 {
-    tvioBuff it;
     unsigned i,lwidth,idx;
     tAbsCoord inx;
     bool ms_vis;
@@ -803,17 +774,20 @@ void TWindow::screen2win()
 	    }
 	}
 	if(wwidth == tconsole->vio_width() && !X1) {
-	    tconsole->vio_read_buff(0, Y1, &saved, wwidth*wheight);
+	    tvideo_buffer tmp=tconsole->vio_read_buff(0, Y1, wwidth*wheight);
+	    ::memcpy(saved.chars,tmp.get_chars(),tmp.length());
+	    ::memcpy(saved.oem_pg,tmp.get_oempg(),tmp.length());
+	    ::memcpy(saved.attrs,tmp.get_attrs(),tmp.length());
 	} else {
 	    for(i = 0;i < wheight;i++) {
 		tAbsCoord iny;
 		iny = Y1+i;
 		if(iny <= tconsole->vio_height()) {
 		    idx = i*wwidth;
-		    it.chars = &saved.chars[idx];
-		    it.oem_pg = &saved.oem_pg[idx];
-		    it.attrs = &saved.attrs[idx];
-		    tconsole->vio_read_buff(inx,iny,&it,lwidth);
+		    tvideo_buffer tmp=tconsole->vio_read_buff(inx,iny,lwidth);
+		    ::memcpy(&saved.chars[idx],tmp.get_chars(),tmp.length());
+		    ::memcpy(&saved.oem_pg[idx],tmp.get_oempg(),tmp.length());
+		    ::memcpy(&saved.attrs[idx],tmp.get_attrs(),tmp.length());
 		} else break;
 	    }
 	}
@@ -824,7 +798,6 @@ void TWindow::screen2win()
 
 void TWindow::snapshot() /**< for snapshot */
 {
-    tvioBuff it;
     unsigned i,lwidth,idx;
     tAbsCoord inx;
     bool ms_vis;
@@ -847,10 +820,10 @@ void TWindow::snapshot() /**< for snapshot */
 	    iny = Y1+i;
 	    if(iny <= tconsole->vio_height()) {
 		idx = i*wwidth;
-		it.chars = &body.chars[idx];
-		it.oem_pg = &body.oem_pg[idx];
-		it.attrs = &body.attrs[idx];
-		tconsole->vio_read_buff(inx,iny,&it,lwidth);
+		tvideo_buffer tmp=tconsole->vio_read_buff(inx,iny,lwidth);
+		::memcpy(&body.chars[idx],tmp.get_chars(),tmp.length());
+		::memcpy(&body.oem_pg[idx],tmp.get_oempg(),tmp.length());
+		::memcpy(&body.attrs[idx],tmp.get_attrs(),tmp.length());
 	    }
 	    else break;
 	}
@@ -892,7 +865,7 @@ void TWindow::savedwin2screen()
 	is_top = __topmost();
 	if(is_top && wwidth == tconsole->vio_width() && !X1) {
 	    /* Special case of redrawing window interior at one call */
-	    tconsole->vio_write_buff(0, Y1, &saved, wwidth*wheight);
+	    tconsole->vio_write_buff(0, Y1, tvideo_buffer(saved.chars,saved.oem_pg,saved.attrs,wwidth*wheight));
 	} else {
 	    for(i = 0;i < wheight;i++) {
 		tAbsCoord outx,outy;
@@ -908,7 +881,7 @@ void TWindow::savedwin2screen()
 		outy = Y1+i;
 		nwidth = wwidth;
 		if(outx + nwidth > tconsole->vio_width()) nwidth = tconsole->vio_width() > outx ? tconsole->vio_width() - outx : 0;
-		if(outy <= tconsole->vio_height() && nwidth) tconsole->vio_write_buff(outx,outy,&accel,nwidth);
+		if(outy <= tconsole->vio_height() && nwidth) tconsole->vio_write_buff(outx,outy,tvideo_buffer(accel.chars,accel.oem_pg,accel.attrs,nwidth));
 	    }
 	}
 	if(is_hidden) tconsole->mouse_set_state(true);
@@ -949,7 +922,7 @@ void TWindow::updatescreen(bool full_area)
 	is_top = __topmost();
 	if(is_top && full_area && wwidth == tconsole->vio_width() && !X1 && (iflags & IFLG_ENABLED) == IFLG_ENABLED) {
 	    /* Special case of redrawing window interior at one call */
-	    tconsole->vio_write_buff(0, Y1, &body, wwidth*wheight);
+	    tconsole->vio_write_buff(0, Y1, tvideo_buffer(body.chars,body.oem_pg,body.attrs,wwidth*wheight));
 	} else {
 	    xs = ys = 0;
 	    xe = wwidth;
@@ -973,7 +946,7 @@ void TWindow::updatescreen(bool full_area)
 			it.chars = is_top ? &body.chars[tidx] : &accel.chars[aoff];
 			it.oem_pg = is_top ? &body.oem_pg[tidx] : &accel.oem_pg[aoff];
 			it.attrs = is_top ? &body.attrs[tidx] : &accel.attrs[aoff];
-			tconsole->vio_write_buff(cx,outy,&it,rw);
+			tconsole->vio_write_buff(cx,outy,tvideo_buffer(it.chars,it.oem_pg,it.attrs,rw));
 		    }
 		}
 	    }
@@ -1023,7 +996,7 @@ void TWindow::updatescreenpiece(tRelCoord stx,tRelCoord endx,tRelCoord y)
 		it.chars = is_top ? &body.chars[tidx] : &accel.chars[_stx];
 		it.oem_pg = is_top ? &body.oem_pg[tidx] : &accel.oem_pg[_stx];
 		it.attrs = is_top ? &body.attrs[tidx] : &accel.attrs[_stx];
-		tconsole->vio_write_buff(outx,line,&it,rw);
+		tconsole->vio_write_buff(outx,line,tvideo_buffer(it.chars,it.oem_pg,it.attrs,rw));
 	    }
 	}
 	if(is_hidden) tconsole->mouse_set_state(true);
@@ -1055,7 +1028,10 @@ void TWindow::updatewinmem()
 	is_top = __topmost();
 	if(is_top && wwidth == tconsole->vio_width() && !X1) {
 	    /* Special case of redrawing window interior at one call */
-	    tconsole->vio_read_buff(0, Y1, &saved, wwidth*wheight);
+	    tvideo_buffer tmp=tconsole->vio_read_buff(0, Y1, wwidth*wheight);
+	    ::memcpy(saved.chars,tmp.get_chars(),tmp.length());
+	    ::memcpy(saved.oem_pg,tmp.get_oempg(),tmp.length());
+	    ::memcpy(saved.attrs,tmp.get_attrs(),tmp.length());
 	} else {
 	    for(i = 0;i < wheight;i++) {
 		tAbsCoord inx,iny;
@@ -1071,11 +1047,14 @@ void TWindow::updatewinmem()
 			accel.attrs = &saved.attrs[tidx];
 			accel.oem_pg = &saved.oem_pg[tidx];
 		    }
-		    tconsole->vio_read_buff(inx,iny,&accel,lwidth);
+		    tvideo_buffer tmp=tconsole->vio_read_buff(inx,iny,lwidth);
+		    ::memcpy(accel.chars,tmp.get_chars(),tmp.length());
+		    ::memcpy(accel.oem_pg,tmp.get_oempg(),tmp.length());
+		    ::memcpy(accel.attrs,tmp.get_attrs(),tmp.length());
 		}
 		if(!is_top)
 		    for(j = 0;j < wwidth;j++)
-			updatewinmemcharfromscreen(j,i,&accel);
+			updatewinmemcharfromscreen(j,i,accel);
 	    }
 	}
 	if(is_hidden) tconsole->mouse_set_state(true);
@@ -1214,7 +1193,7 @@ void TWindow::draw_frame(tRelCoord x1, tRelCoord y1, tRelCoord x2, tRelCoord y2,
     sx = cur_x;
     sy = cur_y;
     if(::memcmp(_frame,UP3D_FRAME,8) == 0 ||
-	::memcmp(_frame,DN3D_FRAME,8) == 0) __set_color(&dcol,fore,back);
+	::memcmp(_frame,DN3D_FRAME,8) == 0) dcol=__set_color(fore,back);
     else dcol = text;
     if((flags & Flag_Has_Frame) == Flag_Has_Frame) {
 	x1++; y1++; x2++; y2++;
@@ -1281,15 +1260,15 @@ void TWindow::hide()
     iflags &= ~IFLG_VISIBLE;
 }
 
-void TWindow::get_pos(tAbsCoord *x1,tAbsCoord *y1,tAbsCoord *x2,tAbsCoord *y2)
+void TWindow::get_pos(tAbsCoord& x1,tAbsCoord& y1,tAbsCoord& x2,tAbsCoord& y2)
 {
-    *x1 = X1+1;
-    *y1 = Y1+1;
-    *x2 = X2;
-    *y2 = Y2;
+    x1 = X1+1;
+    y1 = Y1+1;
+    x2 = X2;
+    y2 = Y2;
     if((flags & Flag_Has_Frame) == Flag_Has_Frame) {
-	(*x2)--;
-	(*y2)--;
+	x2--;
+	y2--;
     }
 }
 
@@ -1587,35 +1566,12 @@ int TWindow::printf(const std::string& fmt,...)
 
 int TWindow::direct_write(tRelCoord x, tRelCoord y,const any_t*str,unsigned len)
 {
-    unsigned i,rlen,ioff;
-    const char *__nls = NULL,*__oem = NULL;
-    char nlsBuff[__TVIO_MAXSCREENWIDTH];
-    char oemBuff[__TVIO_MAXSCREENWIDTH];
-    if(!((flags & Flag_Has_Frame) == Flag_Has_Frame)) {
-	x--;  y--;
-    }
-    if(!is_valid_xy(x,y)) return 0;
-    rlen = wwidth;
-    if((flags & Flag_Has_Frame) == Flag_Has_Frame) rlen-=1;
-    rlen -= x;
-    rlen = std::min(rlen,len);
-    if((flags & Flag_NLS) == Flag_NLS) {
-	::memcpy(nlsBuff,str,rlen);
-	::memcpy(oemBuff,str,rlen);
-	for(i = 0;i < rlen;i++) if(!NLS_IS_OEMPG(oemBuff[i])) oemBuff[i] = 0;
-	msystem->nls_oem2osdep((unsigned char *)nlsBuff,rlen);
-	__nls = nlsBuff;
-	__oem = oemBuff;
-    }
-    else __nls = (const char*)str;
-    ioff = x+y*wwidth;
-    ::memcpy(&body.chars[ioff],__nls,rlen);
-    if(__oem) ::memcpy(&body.oem_pg[ioff],__oem,rlen);
-    else      ::memset(&body.oem_pg[ioff],0,rlen);
-    ::memset(&body.attrs[ioff],text.system,rlen);
-    check_win();
-    updatescreenpiece(x,x+rlen,y+1);
-    return rlen;
+    int rc;
+    ColorAttr* buff=new ColorAttr[len];
+    ::memset(buff,text.system,len);
+    rc=direct_write(x,y,str,buff,len);
+    delete buff;
+    return rc;
 }
 
 int TWindow::direct_write(tRelCoord x, tRelCoord y,const any_t*str,const ColorAttr* attrs,unsigned len)
@@ -1624,6 +1580,7 @@ int TWindow::direct_write(tRelCoord x, tRelCoord y,const any_t*str,const ColorAt
     const char *__nls = NULL,*__oem = NULL;
     char nlsBuff[__TVIO_MAXSCREENWIDTH];
     char oemBuff[__TVIO_MAXSCREENWIDTH];
+    ColorAttr __attr[__TVIO_MAXSCREENWIDTH];
     if(!((flags & Flag_Has_Frame) == Flag_Has_Frame)) {
 	x--;  y--;
     }
@@ -1637,50 +1594,107 @@ int TWindow::direct_write(tRelCoord x, tRelCoord y,const any_t*str,const ColorAt
 	::memcpy(oemBuff,str,rlen);
 	for(i = 0;i < rlen;i++) if(!NLS_IS_OEMPG(oemBuff[i])) oemBuff[i] = 0;
 	msystem->nls_oem2osdep((unsigned char *)nlsBuff,rlen);
-	__nls = nlsBuff;
-	__oem = oemBuff;
     }
-    else __nls = (const char*)str;
+    else {
+	::memcpy(nlsBuff,str,rlen);
+	::memset(oemBuff,0,rlen);
+    }
+    __nls = nlsBuff;
+    __oem = oemBuff;
     ioff = x+y*wwidth;
-    ::memcpy(&body.chars[ioff],__nls,rlen);
-    if(__oem) ::memcpy(&body.oem_pg[ioff],__oem,rlen);
-    else      ::memset(&body.oem_pg[ioff],0,rlen);
     for(i=0;i<rlen;i++) {
 	Color fore,back;
 	fore = FORE_COLOR(attrs[i]);
 	back = BACK_COLOR(attrs[i]);
-	adjustColor(&fore,&back);
-	body.attrs[ioff+i] = LOGFB_TO_PHYS(fore,back);
+	adjustColor(fore,back);
+	__attr[i] = LOGFB_TO_PHYS(fore,back);
     }
+    ::memcpy(&body.chars[ioff],__nls,rlen);
+    ::memcpy(&body.oem_pg[ioff],__oem,rlen);
+    ::memcpy(&body.attrs[ioff],__attr,rlen);
 //    text.system=attrs[len-1];
     check_win();
     updatescreenpiece(x,x+rlen,y+1);
     return rlen;
 }
 
-void TWindow::write(tRelCoord x,tRelCoord y,const tvioBuff *buff,unsigned len)
+int TWindow::write(tRelCoord x, tRelCoord y,const uint8_t* str,unsigned len)
+{
+    int rc;
+    ColorAttr* buff=new ColorAttr[len];
+    ::memset(buff,text.system,len);
+    rc=write(x,y,str,buff,len);
+    delete buff;
+    return rc;
+}
+
+int TWindow::write(tRelCoord x, tRelCoord y,const uint8_t* str,const ColorAttr* attrs,unsigned len)
+{
+    unsigned i,rlen,ioff;
+    const char *__nls = NULL,*__oem = NULL;
+    char nlsBuff[__TVIO_MAXSCREENWIDTH];
+    char oemBuff[__TVIO_MAXSCREENWIDTH];
+    ColorAttr __attr[__TVIO_MAXSCREENWIDTH];
+    if(!((flags & Flag_Has_Frame) == Flag_Has_Frame)) {
+	x--;  y--;
+    }
+    if(!is_valid_xy(x,y)) return 0;
+    rlen = wwidth;
+    if((flags & Flag_Has_Frame) == Flag_Has_Frame) rlen-=1;
+    rlen -= x;
+    rlen = std::min(rlen,len);
+    if((flags & Flag_NLS) == Flag_NLS) {
+	::memcpy(nlsBuff,str,rlen);
+	::memcpy(oemBuff,str,rlen);
+	for(i = 0;i < rlen;i++) if(!NLS_IS_OEMPG(oemBuff[i])) oemBuff[i] = 0;
+	msystem->nls_oem2osdep((unsigned char *)nlsBuff,rlen);
+    }
+    else {
+	::memcpy(nlsBuff,str,rlen);
+	::memset(oemBuff,0,rlen);
+    }
+    __nls = nlsBuff;
+    __oem = oemBuff;
+    ioff = x+y*wwidth;
+    for(i=0;i<rlen;i++) {
+	Color fore,back;
+	fore = FORE_COLOR(attrs[i]);
+	back = BACK_COLOR(attrs[i]);
+	adjustColor(fore,back);
+	__attr[i] = LOGFB_TO_PHYS(fore,back);
+    }
+    ::memcpy(&body.chars[ioff],__nls,rlen);
+    ::memcpy(&body.oem_pg[ioff],__oem,rlen);
+    ::memcpy(&body.attrs[ioff],__attr,rlen);
+//    text.system=attrs[len-1];
+    check_win();
+    updatescreenpiece(x,x+rlen,y+1);
+    return rlen;
+}
+
+void TWindow::write(tRelCoord x,tRelCoord y,const tvideo_buffer& buff)
 {
     const any_t*pbuff;
     unsigned rlen,i,loop_len;
     char nbuff[__TVIO_MAXSCREENWIDTH];
-    rlen = (unsigned)x+len > wwidth ? wwidth-(unsigned)x+1 : len;
+    rlen = (unsigned)x+buff.length() > wwidth ? wwidth-(unsigned)x+1 : buff.length();
     if((unsigned)y <= wheight) {
-	pbuff = buff->attrs;
+	pbuff = buff.get_attrs();
 	if((twin_flags & TWIF_FORCEMONO) && tconsole->vio_num_colors() >= 16) {
-	    ::memcpy(nbuff,buff->attrs,rlen);
+	    ::memcpy(nbuff,buff.get_attrs(),rlen);
 	    loop_len = rlen;
 	    for(i = 1;i < loop_len;i++) {
 		Color fore,back;
 		fore = FORE_COLOR(nbuff[i]);
 		back = BACK_COLOR(nbuff[i]);
-		adjustColor(&fore,&back);
+		adjustColor(fore,back);
 		nbuff[i] = LOGFB_TO_PHYS(fore,back);
 	    }
 	    pbuff = nbuff;
 	}
 	i = (x-1)+(y-1)*wwidth;
-	::memcpy(&body.chars[i],buff->chars,rlen);
-	::memcpy(&body.oem_pg[i],buff->oem_pg,rlen);
+	::memcpy(&body.chars[i],buff.get_chars(),rlen);
+	::memcpy(&body.oem_pg[i],buff.get_oempg(),rlen);
 	::memcpy(&body.attrs[i],pbuff,rlen);
 	check_win();
 	updatescreenpiece(x-1,x-1+rlen,y);
@@ -1688,18 +1702,18 @@ void TWindow::write(tRelCoord x,tRelCoord y,const tvioBuff *buff,unsigned len)
     }
 }
 
-void TWindow::read(tRelCoord x,tRelCoord y,tvioBuff *buff,unsigned len) const
+tvideo_buffer TWindow::read(tRelCoord x,tRelCoord y,size_t len) const
 {
     unsigned rlen,idx;
     rlen = (unsigned)x+len > wwidth ? wwidth-(unsigned)x+1 : len;
+    tvideo_buffer rc(rlen);
     if((unsigned)y <= wheight) {
 	idx = (x-1)+(y-1)*wwidth;
-	::memcpy(buff->chars,&body.chars[idx],rlen);
-	::memcpy(buff->oem_pg,&body.oem_pg[idx],rlen);
-	::memcpy(buff->attrs,&body.attrs[idx],rlen);
+	rc.assign(&body.chars[idx],&body.oem_pg[idx],&body.attrs[idx],rlen);
 	check_win();
 	paint_cursor();
     }
+    return rc;
 }
 
 void TWindow::freeze() { iflags &= ~IFLG_ENABLED; }
@@ -1747,19 +1761,12 @@ void TWindow::scroll_up(tRelCoord ypos, unsigned npos)
 {
     size_t i;
     tRelCoord _wwidth;
-    tvioBuff accel;
-    t_vchar chars[__TVIO_MAXSCREENWIDTH];
-    t_vchar oem_pg[__TVIO_MAXSCREENWIDTH];
-    ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
     if(!npos || !is_valid_y(ypos)) return;
-    accel.chars = chars;
-    accel.oem_pg = oem_pg;
-    accel.attrs = attrs;
     _wwidth = wwidth;
     if((flags & Flag_Has_Frame) == Flag_Has_Frame) _wwidth-=2;
     for(i = npos-1;i < ypos;i++) {
-	read(1,i+2,&accel,_wwidth);
-	write(1,i+1,&accel,_wwidth);
+	tvideo_buffer accel=read(1,i+2,_wwidth);
+	write(1,i+1,accel);
     }
 }
 
@@ -1767,14 +1774,7 @@ void TWindow::scroll_down(tRelCoord ypos, unsigned npos)
 {
     size_t i,lim;
     tRelCoord _wwidth,_wheight;
-    tvioBuff accel;
-    t_vchar chars[__TVIO_MAXSCREENWIDTH];
-    t_vchar oem_pg[__TVIO_MAXSCREENWIDTH];
-    ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
     if(!npos || !is_valid_y(ypos)) return;
-    accel.chars = chars;
-    accel.oem_pg = oem_pg;
-    accel.attrs = attrs;
     lim = ypos > npos ? ypos - npos + 1 : 1;
     _wwidth = wwidth;
     _wheight = wheight;
@@ -1783,8 +1783,8 @@ void TWindow::scroll_down(tRelCoord ypos, unsigned npos)
 	_wheight-=2;
     }
     for(i = _wheight;i > lim;i--) {
-	read(1,i-npos,&accel,_wwidth);
-	write(1,i,&accel,_wwidth);
+	tvideo_buffer accel=read(1,i-npos,_wwidth);
+	write(1,i,accel);
     }
 }
 
@@ -1793,14 +1793,7 @@ void TWindow::scroll_left(tRelCoord xpos, unsigned npos)
     /** @todo Not tested!!! */
     size_t i,j,lim;
     tRelCoord _wheight;
-    tvioBuff accel;
-    t_vchar chars[__TVIO_MAXSCREENWIDTH];
-    t_vchar oem_pg[__TVIO_MAXSCREENWIDTH];
-    ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
     if(!npos || !is_valid_x(xpos)) return;
-    accel.chars = chars;
-    accel.oem_pg = oem_pg;
-    accel.attrs = attrs;
     lim = xpos > npos ? xpos - npos : 0;
     _wheight = wheight;
     if((flags & Flag_Has_Frame) == Flag_Has_Frame) {
@@ -1809,8 +1802,8 @@ void TWindow::scroll_left(tRelCoord xpos, unsigned npos)
     for(i = lim;i < xpos;i++) {
 	/** @todo Optimize this block */
 	for(j = 0;j < _wheight;j++) {
-	    read(i+2,j,&accel,1);
-	    write(i+1,j,&accel,1);
+	    tvideo_buffer accel=read(i+2,j,1);
+	    write(i+1,j,accel);
 	}
     }
 }
@@ -1820,14 +1813,7 @@ void TWindow::scroll_right(tRelCoord xpos, unsigned npos)
      /** @todo Not tested!!! */
     size_t i,j,lim;
     tRelCoord _wwidth,_wheight;
-    tvioBuff accel;
-    t_vchar chars[__TVIO_MAXSCREENWIDTH];
-    t_vchar oem_pg[__TVIO_MAXSCREENWIDTH];
-    ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
     if(!npos || !is_valid_x(xpos)) return;
-    accel.chars = chars;
-    accel.oem_pg = oem_pg;
-    accel.attrs = attrs;
     lim = xpos > npos ? xpos - npos + 1 : 1;
     _wwidth = wwidth;
     _wheight = wheight;
@@ -1838,8 +1824,8 @@ void TWindow::scroll_right(tRelCoord xpos, unsigned npos)
     for(i = _wwidth;i > lim;i--) {
 	/** @todo Optimize this block */
 	for(j = 0;j < _wheight;j++) {
-	    read(i-npos,j,&accel,1);
-	    write(i,j,&accel,1);
+	    tvideo_buffer accel=read(i-npos,j,1);
+	    write(i,j,accel);
 	}
     }
 }

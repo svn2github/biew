@@ -581,17 +581,39 @@ any_t* operator new(size_t size) throw(std::bad_alloc) {
     if(!rc) throw std::runtime_error("Memory allocation falied");
     return rc;
 }
-any_t* operator new(size_t size,const zeromemory_t&) { return SECURE_NAME1(_mp_mallocz)(size); }
-any_t* operator new(size_t size,const alignedmemory_t&,size_t boundary) { return SECURE_NAME2(_mp_memalign)(boundary,size); }
+any_t* operator new(size_t size,const zeromemory_t&) {
+    any_t* rc;
+    rc=SECURE_NAME1(_mp_mallocz)(size);
+    if(!rc) throw std::runtime_error("Memory allocation falied");
+    return rc;
+}
+any_t* operator new(size_t size,const alignedmemory_t&,size_t boundary) {
+    any_t* rc;
+    rc=SECURE_NAME2(_mp_memalign)(boundary,size);
+    if(!rc) throw std::runtime_error("Memory allocation falied");
+    return rc;
+}
 any_t* operator new(size_t size,const std::nothrow_t&) { return mp_malloc(size); }
+
 any_t* operator new[](size_t size) throw(std::bad_alloc) {
     any_t* rc;
     rc=SECURE_NAME0(_mp_malloc)(size);
     if(!rc) throw std::runtime_error("Memory allocation falied");
     return rc;
 }
-any_t* operator new[](size_t size,const zeromemory_t&) { return SECURE_NAME1(_mp_mallocz)(size); }
-any_t* operator new[](size_t size,const alignedmemory_t&,size_t boundary) { return SECURE_NAME2(_mp_memalign)(boundary,size); }
+any_t* operator new[](size_t size,const zeromemory_t&) {
+    any_t* rc;
+    rc=SECURE_NAME1(_mp_mallocz)(size);
+    if(!rc) throw std::runtime_error("Memory allocation falied");
+    return rc;
+}
+any_t* operator new[](size_t size,const alignedmemory_t&,size_t boundary) {
+    any_t* rc;
+    rc=SECURE_NAME2(_mp_memalign)(boundary,size);
+    if(!rc) throw std::runtime_error("Memory allocation falied");
+    return rc;
+}
 any_t* operator new[](size_t size,const std::nothrow_t&) { return mp_malloc(size); }
+
 void   operator delete(any_t* p) throw() { SECURE_NAME3(_mp_free)(p); }
 void   operator delete[](any_t* p) throw() { SECURE_NAME3(_mp_free)(p); }

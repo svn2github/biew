@@ -177,7 +177,7 @@ void Setup::run()
   strcpy(estr[1],beyeGetColorSetName().c_str());
   strcpy(estr[2],beyeGetSyntaxName().c_str());
   wdlg = CrtDlgWndnls(" Setup ",78,13);
-  wdlg->get_pos(&x1,&y1,&x2,&y2);
+  wdlg->get_pos(x1,y1,x2,y2);
   X1 = x1;
   Y1 = y1;
   X2 = x2;
