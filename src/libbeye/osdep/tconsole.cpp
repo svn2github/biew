@@ -28,8 +28,32 @@ int TConsole::vio_get_cursor_type() const { return __vioGetCursorType(); }
 void TConsole::vio_set_cursor_type( int c_type ) const { __vioSetCursorType(c_type); }
 void TConsole::vio_get_cursor_pos(tAbsCoord& x,tAbsCoord& y) const { __vioGetCursorPos(&x,&y); }
 void TConsole::vio_set_cursor_pos(tAbsCoord x,tAbsCoord y) const { __vioSetCursorPos(x,y); }
-void TConsole::vio_read_buff(tAbsCoord x,tAbsCoord y,tvioBuff *buff,unsigned len) const { __vioReadBuff(x,y,buff,len); }
-void TConsole::vio_write_buff(tAbsCoord x,tAbsCoord y,const tvioBuff *buff,unsigned len) const { __vioWriteBuff(x,y,buff,len); }
+void TConsole::vio_read_buff(tAbsCoord x,tAbsCoord y,tvioBuff* buff,unsigned len) const {
+    tvioBuff tmp;
+    tmp.chars = new t_vchar[len];
+    tmp.oem_pg= new t_vchar[len];
+    tmp.attrs = new ColorAttr[len];
+    __vioReadBuff(x,y,&tmp,len);
+    ::memcpy(buff->chars,tmp.chars,len);
+    ::memcpy(buff->oem_pg,tmp.oem_pg,len);
+    ::memcpy(buff->attrs,tmp.attrs,len);
+    delete tmp.chars;
+    delete tmp.oem_pg;
+    delete tmp.attrs;
+}
+void TConsole::vio_write_buff(tAbsCoord x,tAbsCoord y,const tvioBuff *buff,unsigned len) const {
+    tvioBuff tmp;
+    tmp.chars = new t_vchar[len];
+    tmp.oem_pg= new t_vchar[len];
+    tmp.attrs = new ColorAttr[len];
+    ::memcpy(tmp.chars,buff->chars,len);
+    ::memcpy(tmp.oem_pg,buff->oem_pg,len);
+    ::memcpy(tmp.attrs,buff->attrs,len);
+    __vioWriteBuff(x,y,&tmp,len);
+    delete tmp.chars;
+    delete tmp.oem_pg;
+    delete tmp.attrs;
+}
 
 tAbsCoord TConsole::vio_width() const { return tvioWidth; }
 tAbsCoord TConsole::vio_height() const { return tvioHeight; }
