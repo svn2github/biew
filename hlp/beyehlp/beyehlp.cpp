@@ -18,6 +18,7 @@ using namespace	usr;
  * @note        Development, fixes and improvements
 **/
 #include <algorithm>
+#include <stdexcept>
 
 #include <errno.h>
 #include <stdio.h>
@@ -89,17 +90,11 @@ void hlpCompile(const char *srcfile)
 {
   FILE *in,*out;
   in = fopen(srcfile,"rt");
-  if(!in)
-  {
-    fprintf(stderr,"Can not open: %s\n",srcfile);
-    exit(EXIT_FAILURE);
-  }
+  if(!in) throw std::runtime_error(std::string("Can not open:")+srcfile);
   out = fopen(COMPNAME,"wb");
-  if(!out)
-  {
+  if(!out) {
     fclose(in);
-    fprintf(stderr,"Can not open/create: %s\n",COMPNAME);
-    exit(EXIT_FAILURE);
+    throw std::runtime_error(std::string("Can not open/create:")+COMPNAME);
   }
   setvbuf(in,i_cache,_IOFBF,sizeof(i_cache));
   setvbuf(out,o_cache,_IOFBF,sizeof(o_cache));
@@ -108,18 +103,16 @@ void hlpCompile(const char *srcfile)
      if(!fgets(tmp_buff,sizeof(tmp_buff),in))
      {
        if(feof(in)) break;
-       fprintf(stderr,"Can not read from: %s\n",srcfile);
        fclose(in);
        fclose(out);
-       exit(EXIT_FAILURE);
+       throw std::runtime_error(std::string("Can not read from: ")+srcfile);
      }
      comp_string();
      if(fputs(o_buff,out) == EOF)
      {
-       fprintf(stderr,"Can not write to: %s\n",COMPNAME);
        fclose(in);
        fclose(out);
-       exit(EXIT_FAILURE);
+       throw std::runtime_error(std::string("Can not write to: ")+COMPNAME);
      }
   }
   fclose(in);
@@ -171,29 +164,17 @@ bool __FASTCALL__ MyCallOut(const IniInfo& ini,any_t* data)
 	strcat(tmp_buff,COMPNAME);
 	strcat(tmp_buff," ");
 	strcat(tmp_buff,TEMPFNAME);
-	if(system(tmp_buff))
-	{
-	  fprintf(stderr,"Error %s ocurred while processing: %s",strerror(errno),tmp_buff);
-	  exit(EXIT_FAILURE);
-	}
+	if(system(tmp_buff)) throw std::runtime_error(std::string("Error ")+strerror(errno)+" ocurred while processing: "+tmp_buff);
 	bIn = new binary_stream;
 	bool rc;
 	rc = bIn->open(TEMPFNAME,binary_stream::FO_READONLY | binary_stream::SO_DENYNONE);
-	 if(rc == false)
-	 rc = bIn->open(TEMPFNAME,binary_stream::FO_READONLY | binary_stream::SO_COMPAT);
-	  if(rc == false)
-	  {
-	      fprintf(stderr,"Can not open %s",TEMPFNAME);
-	      exit(EXIT_FAILURE);
-	  }
+	if(rc == false)
+	rc = bIn->open(TEMPFNAME,binary_stream::FO_READONLY | binary_stream::SO_COMPAT);
+	if(rc == false) throw std::runtime_error(std::string("Can not open ")+TEMPFNAME);
 	litem = bIn->flength();
 	sprintf(bhi.item_length,"%08lX",litem);
 	handle = ::open(COMPNAME,binary_stream::FO_READONLY | binary_stream::SO_DENYNONE);
-	if(handle == -1)
-	{
-	      fprintf(stderr,"Can not open %s",ini.value);
-	      exit(EXIT_FAILURE);
-	}
+	if(handle == -1) throw std::runtime_error(std::string("Can not open ")+ini.value);
 	litem = ::lseek(handle,0L,SEEK_END);
 	::close(handle);
 	__filesize_t flength,fpos2;
