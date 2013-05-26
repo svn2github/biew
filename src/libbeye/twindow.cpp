@@ -1674,28 +1674,13 @@ int TWindow::write(tRelCoord x, tRelCoord y,const uint8_t* str,const ColorAttr* 
 
 void TWindow::write(tRelCoord x,tRelCoord y,const tvideo_buffer& buff)
 {
-    const any_t*pbuff;
-    unsigned rlen,i,loop_len;
-    char nbuff[__TVIO_MAXSCREENWIDTH];
+    unsigned rlen,i;
     rlen = (unsigned)x+buff.length() > wwidth ? wwidth-(unsigned)x+1 : buff.length();
     if((unsigned)y <= wheight) {
-	pbuff = buff.get_attrs();
-	if((twin_flags & TWIF_FORCEMONO) && tconsole->vio_num_colors() >= 16) {
-	    ::memcpy(nbuff,buff.get_attrs(),rlen);
-	    loop_len = rlen;
-	    for(i = 1;i < loop_len;i++) {
-		Color fore,back;
-		fore = FORE_COLOR(nbuff[i]);
-		back = BACK_COLOR(nbuff[i]);
-		adjustColor(fore,back);
-		nbuff[i] = LOGFB_TO_PHYS(fore,back);
-	    }
-	    pbuff = nbuff;
-	}
 	i = (x-1)+(y-1)*wwidth;
 	::memcpy(&body.chars[i],buff.get_chars(),rlen);
 	::memcpy(&body.oem_pg[i],buff.get_oempg(),rlen);
-	::memcpy(&body.attrs[i],pbuff,rlen);
+	::memcpy(&body.attrs[i],buff.get_attrs(),rlen);
 	check_win();
 	updatescreenpiece(x-1,x-1+rlen,y);
 	paint_cursor();
