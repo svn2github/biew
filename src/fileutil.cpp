@@ -432,7 +432,7 @@ bool FStore::run()
 		}
 #endif
 		if(flags & FSDLG_STRUCTS) printObject(fout,obj);
-		psym.pa = 0;
+		psym.pa = Plugin::Bad_Address;
 		if(flags & FSDLG_STRUCTS) {
 		    psym = bctx.bin_format().get_public_symbol(ff_startpos,true);
 		    if(psym.pa!=Plugin::Bad_Address) {
@@ -442,7 +442,6 @@ bool FStore::run()
 			}
 		    }
 		    psym = bctx.bin_format().get_public_symbol(ff_startpos,false);
-		    if(psym.pa==Plugin::Bad_Address) psym.pa=0;
 		}
 		prcnt_counter = oprcnt_counter = 0;
 		awsize = endpos - ff_startpos;
@@ -462,13 +461,12 @@ bool FStore::run()
 			    dret.codelen = std::min(__filesize_t(UCHAR_MAX),obj.end - ff_startpos);
 			    /** some functions can placed in virtual area of objects
 				mean at end of true data, but before next object */
-			    while(psym.pa && psym.pa >= obj.start && psym.pa < obj.end && psym.pa > ff_startpos) {
+			    while(psym.pa!=Plugin::Bad_Address && psym.pa >= obj.start && psym.pa < obj.end && psym.pa > ff_startpos) {
 				diff = psym.pa - ff_startpos;
 				if(diff) fout<<"resb "<<std::dec<<diff<<"H"<<std::endl;
 				fout<<GET_FUNC_CLASS(psym._class)<<" "<<psym.name<<": ;at offset - "<<std::hex<<psym.pa<<"H"<<std::endl;
 				ff_startpos = psym.pa;
 				psym = bctx.bin_format().get_public_symbol(ff_startpos,false);
-				if(psym.pa==Plugin::Bad_Address) psym.pa=0;
 				if(psym.pa==ff_startpos) {
 				    fout<<"...Probably internal error of beye..."<<std::endl;
 				    break;
@@ -479,14 +477,13 @@ bool FStore::run()
 			    ff_startpos = obj.end;
 			    goto next_obj;
 			}
-			if(psym.pa) {
+			if(psym.pa!=Plugin::Bad_Address) {
 			    int not_silly;
 			    not_silly = 0;
 			    while(ff_startpos == psym.pa) {
 				/* print out here all public labels */
 				fout<<GET_FUNC_CLASS(psym._class)<<" "<<psym.name<<std::endl;
 				psym = bctx.bin_format().get_public_symbol(ff_startpos,false);
-				if(psym.pa==Plugin::Bad_Address) psym.pa=0;
 				not_silly++;
 				if(not_silly > 100) {
 				    fout<<"; [snipped out] ..."<<std::endl;
@@ -538,7 +535,7 @@ bool FStore::run()
 			dret.pro_clone = 0;
 			dismode->dis_severity = DisMode::CommSev_None;
 		    }
-		    stop = psym.pa ? std::min(psym.pa,obj.end) : obj.end;
+		    stop = psym.pa!=Plugin::Bad_Address ? std::min(psym.pa,obj.end) : obj.end;
 		    if(flags & FSDLG_STRUCTS) {
 			if(stop && stop > ff_startpos && ff_startpos + dret.codelen > stop) {
 			    unsigned lim,ii;

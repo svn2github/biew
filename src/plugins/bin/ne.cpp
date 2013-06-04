@@ -1028,7 +1028,8 @@ bool NE_Parser::BuildReferStrNE(const DisMode& parent,std::string& str,const REL
 	if(rne.idx == 0x00FF && rne.AddrType != 2) {
 	    __filesize_t ea;
 	    ea = CalcEntryNE(rne.ordinal,false);
-	    if(FindPubName(buff,ea)) str+=buff;
+	    Symbol_Info rc = FindPubName(ea);
+	    if(rc.pa!=Plugin::Bad_Address) str+=rc.name;
 	    else {
 		retrf = ea?true:false;
 		sprintf(stmp,"(*this).@%hu",rne.ordinal);
@@ -1038,7 +1039,8 @@ bool NE_Parser::BuildReferStrNE(const DisMode& parent,std::string& str,const REL
 	} else {
 	    __filesize_t ep;
 	    ep = CalcEntryPointNE(rne.idx,rne.ordinal);
-	    if(FindPubName(buff,ep)) str+=buff;
+	    Symbol_Info rc = FindPubName(ep);
+	    if(rc.pa!=Plugin::Bad_Address) str+=rc.name;
 	    else {
 		if(need_virt) sprintf(stmp,".%08lX",(unsigned long)pa2va(ep));
 		else sprintf(stmp,"(*this).seg<#%hu>:%sH",rne.idx,Get4Digit(rne.ordinal));
@@ -1101,8 +1103,9 @@ Direct:
 TryLabel:
 		if(flags & Bin_Format::Try_Label) {
 		    if(PubNames.empty()) ne_ReadPubNameList(*ne_cache2);
-		    if(FindPubName(buff,r_sh)) {
-			str+=buff;
+		    Symbol_Info rc = FindPubName(r_sh);
+		    if(rc.pa!=Plugin::Bad_Address) {
+			str+=rc.name;
 			if(!DumpMode && !EditMode) code_guider().add_go_address(parent,str,r_sh);
 			return true;
 		    }
@@ -1165,17 +1168,19 @@ std::string NE_Parser::ne_ReadPubName(binary_stream& b_cache,const symbolic_info
     return stmp;
 }
 
-bool NE_Parser::FindPubName(std::string& buff,__filesize_t pa) const
+Symbol_Info NE_Parser::FindPubName(__filesize_t pa) const
 {
+    Symbol_Info rc;
     symbolic_information key;
     std::set<symbolic_information>::const_iterator it;
     key.pa = pa;
     it = PubNames.find(key);
     if(it!=PubNames.end()) {
-	buff=ne_ReadPubName(*ne_cache2,*it);
-	return true;
+	rc.pa=pa;
+	rc.name=ne_ReadPubName(*ne_cache2,*it);
+	return rc;
     }
-    return _udn().find(pa,buff);
+    return _udn().find(pa);
 }
 
 void NE_Parser::ne_ReadPubNameList(binary_stream& handle)

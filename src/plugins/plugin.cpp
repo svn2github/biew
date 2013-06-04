@@ -137,4 +137,10 @@ Symbol_Info Bin_Format::get_public_symbol(__filesize_t pa,bool as_prev) const
 
 Object_Info Bin_Format::get_object_attribute(__filesize_t pa) const { return detectedFormat->get_object_attribute(pa); }
 
+Symbol_Info::Symbol_Info()
+	:_class(Local)
+	,pa(Plugin::Bad_Address)
+{
+}
+
 } // namespace	usr

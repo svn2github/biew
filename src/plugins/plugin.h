@@ -200,6 +200,7 @@ namespace	usr {
     inline Bin_Format::bind_type operator^=(Bin_Format::bind_type& a, Bin_Format::bind_type b) { return (a=static_cast<Bin_Format::bind_type>(static_cast<unsigned>(a)^static_cast<unsigned>(b))); }
 
     struct Symbol_Info {
+	Symbol_Info();
 	/** Public symbols classes */
 	enum symbol_class {
 	    Local=0, /**< means: present as entry but not exported */

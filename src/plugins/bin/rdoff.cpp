@@ -72,7 +72,7 @@ namespace	usr {
 	    bool			rdoffBuildReferStr(const DisMode&parent,std::string& str,const RDOFF_RELOC& reloc,__filesize_t ulShift,Bin_Format::bind_type flags);
 	    void			BuildRelocRDOFF();
 	    bool			rdoff_skiprec(unsigned char type) const;
-	    bool			FindPubName(std::string& buff,__filesize_t pa) const;
+	    Symbol_Info			FindPubName(__filesize_t pa) const;
 	    void			ReadImpNameList(binary_stream& handle);
 	    __filesize_t		rdoff_FindExport(const std::string& name) const;
 
@@ -475,10 +475,8 @@ bool RDOff_Parser::rdoffBuildReferStr(const DisMode& parent,std::string& str,con
        if(base_seg_off < FILESIZE_MAX)
        {
 	 base_seg_off += field_val;
-	 if(FindPubName(buff,base_seg_off))
-	 {
-	   str+=buff;
-	 }
+	 Symbol_Info rc = FindPubName(base_seg_off);
+	 if(rc.pa!=Plugin::Bad_Address) str+=rc.name;
 	 else goto unnamed;
        }
        else
@@ -513,7 +511,6 @@ bool RDOff_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulSh
   RDOFF_RELOC key;
   std::set<RDOFF_RELOC>::const_iterator rrdoff;
   bool ret;
-  std::string buff;
   if(flags & Bin_Format::Try_Pic) return false;
   if(rdoffReloc.empty()) BuildRelocRDOFF();
   if(rdoffImpNames.empty()) ReadImpNameList(main_handle);
@@ -525,12 +522,12 @@ bool RDOff_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulSh
   if(PubNames.empty()) rdoff_ReadPubNameList(main_handle);
   if(!ret && (flags & Bin_Format::Try_Label))
   {
-     if(FindPubName(buff,r_sh))
-     {
-       str+=buff;
+    Symbol_Info rc = FindPubName(r_sh);
+    if(rc.pa!=Plugin::Bad_Address) {
+       str+=rc.name;
        if(!DumpMode && !EditMode) code_guider.add_go_address(parent,str,r_sh);
        ret = true;
-     }
+    }
   }
   return ret;
 }
@@ -573,18 +570,20 @@ std::string RDOff_Parser::rdoff_ReadPubName(binary_stream& b_cache,const symboli
     return rc;
 }
 
-bool RDOff_Parser::FindPubName(std::string& buff,__filesize_t pa) const
+Symbol_Info RDOff_Parser::FindPubName(__filesize_t pa) const
 {
-  binary_stream& b_cache = main_handle;
-  symbolic_information key;
-  std::set<symbolic_information>::const_iterator ret;
-  key.pa = pa;
-  ret = PubNames.find(key);
-  if(ret!=PubNames.end()) {
-    buff=rdoff_ReadPubName(b_cache,*ret);
-    return true;
-  }
-  return _udn.find(pa,buff);
+    Symbol_Info rc;
+    binary_stream& b_cache = main_handle;
+    symbolic_information key;
+    std::set<symbolic_information>::const_iterator it;
+    key.pa = pa;
+    it = PubNames.find(key);
+    if(it!=PubNames.end()) {
+	rc.pa=pa;
+	rc.name=rdoff_ReadPubName(b_cache,*it);
+	return rc;
+    }
+    return _udn.find(pa);
 }
 
 void RDOff_Parser::rdoff_ReadPubNameList(binary_stream& handle)

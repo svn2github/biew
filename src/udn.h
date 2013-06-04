@@ -21,6 +21,7 @@ using namespace	usr;
 
 namespace	usr {
     class Ini_Profile;
+    struct Symbol_Info;
 
     struct udn_record {
 	char		name[256];
@@ -39,7 +40,7 @@ namespace	usr {
 
 	    /** Reads user defined name at given offset!
 	    **/
-	    virtual bool		find(__filesize_t pa,std::string& buff) const;
+	    virtual Symbol_Info		find(__filesize_t pa) const;
 
 	    /** Display select box to select user defined name and returns its offset.
 	    **/

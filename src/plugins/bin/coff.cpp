@@ -77,7 +77,7 @@ namespace	usr {
 	    std::vector<SCNHDR>		__coffReadObjects(binary_stream& handle,size_t n) const;
 	    void			paint_pages(TWindow& win,const std::vector<SCNHDR>& names,unsigned start) const;
 	    std::string			coffReadLongName(binary_stream&handle,__filesize_t offset) const;
-	    bool			FindPubName(std::string& buff,__filesize_t pa) const;
+	    Symbol_Info			FindPubName(__filesize_t pa) const;
 	    std::string			coff_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
 	    void			coff_ReadPubNameList(binary_stream& handle);
 
@@ -101,17 +101,19 @@ namespace	usr {
 static const char* txt[]={ "CofHlp", "", "", "", "", "", "SymTab", "", "", "Objects" };
 const char* Coff_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-bool Coff_Parser::FindPubName(std::string& buff,__filesize_t pa) const
+Symbol_Info Coff_Parser::FindPubName(__filesize_t pa) const
 {
-  symbolic_information key;
-  std::set<symbolic_information>::const_iterator ret;
-  key.pa = pa;
-  ret = PubNames.find(key);
-  if(ret!=PubNames.end()) {
-    buff=coff_ReadPubName(*coff_cache,*ret);
-    return true;
-  }
-  return _udn.find(pa,buff);
+    Symbol_Info rc;
+    symbolic_information key;
+    std::set<symbolic_information>::const_iterator it;
+    key.pa = pa;
+    it = PubNames.find(key);
+    if(it!=PubNames.end()) {
+	rc.pa=pa;
+	rc.name=coff_ReadPubName(*coff_cache,*it);
+	return rc;
+    }
+    return _udn.find(pa);
 }
 
 std::string Coff_Parser::coffReadLongName(binary_stream& handle,__filesize_t offset) const
@@ -503,8 +505,9 @@ __filesize_t Coff_Parser::BuildReferStrCoff386(const DisMode& parent,std::string
 	    try resolve some relocations (like .text+1234) with names from
 	    public name list
 	*/
-	    if(FindPubName(pubname,COFF_DWORD(coff386so[secnum-1].s_scnptr) + val)) {
-		str+=pubname;
+	    Symbol_Info rc=FindPubName(COFF_DWORD(coff386so[secnum-1].s_scnptr) + val);
+	    if(rc.pa!=Plugin::Bad_Address) {
+		str+=rc.name;
 		val_assigned = true;
 	    } else goto def_val;
 	} else {
@@ -531,30 +534,29 @@ def_val:
 
 bool Coff_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
-  std::set<RELOC_COFF386>::const_iterator rcoff386;
-  RELOC_COFF386 key;
-  bool ret;
-  std::string buff;
-  ret = false;
-  if(flags & Bin_Format::Try_Pic) return ret;
-  if(PubNames.empty()) coff_ReadPubNameList(main_handle);
-  if((COFF_WORD(coff386hdr.f_flags) & F_RELFLG) == F_RELFLG) goto try_pub;
-  if(RelocCoff386.empty()) BuildRelocCoff386();
-  key.offset = ulShift;
-  __codelen = codelen;
-  rcoff386 = RelocCoff386.find(key);
-  if(rcoff386!=RelocCoff386.end()) ret = BuildReferStrCoff386(parent,str,(*rcoff386),flags);
-  try_pub:
-  if(!ret && (flags & Bin_Format::Try_Label))
-  {
-     if(FindPubName(buff,r_sh))
-     {
-       str+=buff;
-       if(!DumpMode && !EditMode) code_guider.add_go_address(parent,str,r_sh);
-       ret = true;
-     }
-  }
-  return ret;
+    std::set<RELOC_COFF386>::const_iterator rcoff386;
+    RELOC_COFF386 key;
+    bool ret;
+    std::string buff;
+    ret = false;
+    if(flags & Bin_Format::Try_Pic) return ret;
+    if(PubNames.empty()) coff_ReadPubNameList(main_handle);
+    if((COFF_WORD(coff386hdr.f_flags) & F_RELFLG) == F_RELFLG) goto try_pub;
+    if(RelocCoff386.empty()) BuildRelocCoff386();
+    key.offset = ulShift;
+    __codelen = codelen;
+    rcoff386 = RelocCoff386.find(key);
+    if(rcoff386!=RelocCoff386.end()) ret = BuildReferStrCoff386(parent,str,(*rcoff386),flags);
+try_pub:
+    if(!ret && (flags & Bin_Format::Try_Label)) {
+	Symbol_Info rc = FindPubName(r_sh);
+	if(rc.pa!=Plugin::Bad_Address) {
+	    str+=rc.name;
+	    if(!DumpMode && !EditMode) code_guider.add_go_address(parent,str,r_sh);
+	    ret = true;
+	}
+    }
+    return ret;
 }
 
 Coff_Parser::Coff_Parser(binary_stream& h,CodeGuider& _code_guider,udn& u)

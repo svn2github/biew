@@ -126,7 +126,9 @@ exit:
     return ret==-1?false:true;
 }
 
-bool udn::find(__filesize_t pa,std::string& buff) const {
+Symbol_Info udn::find(__filesize_t pa) const {
+    Symbol_Info rc;
+    rc._class = Symbol_Info::Global;
     std::set<udn_record>::const_iterator it;
     udn_record key;
     if(!udn_list.empty()) {
@@ -134,11 +136,11 @@ bool udn::find(__filesize_t pa,std::string& buff) const {
 	key.offset = pa;
 	it=udn_list.find(key);
 	if(it!=udn_list.end()) {
-	    buff=(*it).name;
-	    return true;
+	    rc.pa=pa;
+	    rc.name=(*it).name;
 	}
     }
-    return false;
+    return rc;
 }
 
 bool udn::__save_list() {

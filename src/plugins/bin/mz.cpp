@@ -204,7 +204,6 @@ bool MZ_Parser::isMZReferenced(__filesize_t shift,char len)
 
 bool MZ_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
-    std::string stmp;
     bool ret = false;
     if(flags & Bin_Format::Try_Pic) return false;
     if(CurrMZChain.empty()) BuildMZChain();
@@ -218,7 +217,8 @@ bool MZ_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift
     }
     if(!DumpMode && !EditMode && (flags & Bin_Format::Try_Label) && codelen == 4) {
 	r_sh += (((__filesize_t)mz.mzHeaderSize) << 4);
-	if(__udn.find(r_sh,stmp)==true) str+=stmp;
+	Symbol_Info rc = __udn.find(r_sh);
+	if(rc.pa!=Plugin::Bad_Address) str+=rc.name;
 	else str+=Get8Digit(r_sh);
 	_code_guider.add_go_address(parent,str,r_sh);
 	ret = true;

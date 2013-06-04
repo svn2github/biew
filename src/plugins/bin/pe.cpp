@@ -157,7 +157,7 @@ namespace	usr {
 	    void			PaintNewHeaderPE_1(TWindow& w,__filesize_t&) const;
 	    std::string			PECPUType() const;
 	    __filesize_t		CalcPEObjectEntry(__fileoff_t offset) const;
-	    bool			FindPubName(std::string& buff,__filesize_t pa) const;
+	    Symbol_Info			FindPubName(__filesize_t pa) const;
 	    __fileoff_t			CalcOverlayOffset(__filesize_t) const;
 	    void			pe_ReadPubNameList(binary_stream& handle);
 	    unsigned			fioReadWord(binary_stream& handle,__filesize_t offset,binary_stream::e_seek origin) const;
@@ -1169,7 +1169,6 @@ bool PE_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift
   std::set<RELOC_PE>::const_iterator rpe;
   bool retrf;
   binary_stream* b_cache;
-  std::string buff;
   UNUSED(codelen);
   b_cache = pe_cache3;
   retrf = false;
@@ -1189,9 +1188,10 @@ bool PE_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift
   if(!retrf && (flags & Bin_Format::Try_Label))
   {
      if(PubNames.empty()) pe_ReadPubNameList(main_handle());
-     if(FindPubName(buff,r_sh))
+     Symbol_Info rc = FindPubName(r_sh);
+     if(rc.pa!=Plugin::Bad_Address)
      {
-       str+=buff;
+       str+=rc.name;
        if(!DumpMode && !EditMode) code_guider().add_go_address(parent,str,r_sh);
        retrf = true;
      }
@@ -1327,17 +1327,19 @@ std::string PE_Parser::pe_ReadPubName(binary_stream& b_cache,const symbolic_info
     return stmp;
 }
 
-bool PE_Parser::FindPubName(std::string& buff,__filesize_t pa) const
+Symbol_Info PE_Parser::FindPubName(__filesize_t pa) const
 {
+    Symbol_Info rc;
     symbolic_information key;
     std::set<symbolic_information>::const_iterator it;
     key.pa = pa;
     it = PubNames.find(key);
     if(it!=PubNames.end()) {
-	buff=pe_ReadPubName(*pe_cache4,*it);
-	return true;
+	rc.pa=pa;
+	rc.name=pe_ReadPubName(*pe_cache4,*it);
+	return rc;
     }
-    return _udn().find(pa,buff);
+    return _udn().find(pa);
 }
 
 void PE_Parser::pe_ReadPubNameList(binary_stream& handle)

@@ -103,7 +103,7 @@ namespace	usr {
 	protected:
 	    Elf_Reader&			reader() const { return _reader; }
 	    ELF_Parser&			parent() const { return _parent; }
-	    bool			read_reloc_name(binary_stream& handle,const Elf_Reloc& erl,std::string& buff) const;
+	    std::string			read_reloc_name(binary_stream& handle,const Elf_Reloc& erl) const;
 	    inline uint16_t		bioRead12(binary_stream& handle2) const { return handle2.read(type_word)&0x0FFFUL; };
 	    inline uint32_t		bioRead19(binary_stream& handle2) const { return handle2.read(type_dword)&0x0007FFFFUL; };
 	    inline uint32_t		bioRead22(binary_stream& handle2) const { return handle2.read(type_dword)&0x003FFFFFUL; };
@@ -181,7 +181,7 @@ namespace	usr {
 	    bool			is_sections_present() const { return IsSectionsPresent; }
 	    unsigned long		sym_ent_size() const { return __elfSymEntSize; }
 	    __filesize_t		findPHEntry(unsigned long type,unsigned& nitems) const;
-	    bool			FindPubName(std::string& buff,__filesize_t pa) const;
+	    Symbol_Info			FindPubName(__filesize_t pa) const;
 	private:
 	    std::string			elf_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
 	    void			__elfReadSegments(std::map<__filesize_t,VA_map>& to,bool is_virt) const;
@@ -1383,17 +1383,15 @@ bool ELF_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
   if(!ret)
   {
     buff="FFFFFFFF";
-    if(flags & Bin_Format::Try_Label)
-    {
-       if(FindPubName(buff,r_sh))
-       {
-	 if(buff.length())
-	 {
-	   str+=buff;
-	   if(!DumpMode && !EditMode) code_guider.add_go_address(parent,str,r_sh);
-	   ret = true;
-	 }
-       }
+    if(flags & Bin_Format::Try_Label) {
+	Symbol_Info rc = FindPubName(r_sh);
+	if(rc.pa!=Plugin::Bad_Address) {
+	    if(buff.length()) {
+		str+=rc.name;
+		if(!DumpMode && !EditMode) code_guider.add_go_address(parent,str,r_sh);
+		ret = true;
+	    }
+	}
     }
   }
   return ret;
@@ -1557,17 +1555,19 @@ bool ELF_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
     return bret;
 }
 
-bool ELF_Parser::FindPubName(std::string& buff,__filesize_t pa) const
+Symbol_Info ELF_Parser::FindPubName(__filesize_t pa) const
 {
-  symbolic_information key;
-  std::set<symbolic_information>::const_iterator ret;
-  key.pa = pa;
-  ret = PubNames.find(key);
-  if(ret!=PubNames.end()) {
-    buff=elf_arch->read_nametableex(*namecache,(*ret).nameoff,(*ret).addinfo);
-    return true;
-  }
-  return _udn.find(pa,buff);
+    Symbol_Info rc;
+    symbolic_information key;
+    std::set<symbolic_information>::const_iterator it;
+    key.pa = pa;
+    it = PubNames.find(key);
+    if(it!=PubNames.end()) {
+	rc.pa=pa;
+	rc.name=elf_arch->read_nametableex(*namecache,(*it).nameoff,(*it).addinfo);
+	return rc;
+    }
+    return _udn.find(pa);
 }
 
 void ELF_Parser::elf_ReadPubNameList(binary_stream& handle)
@@ -1880,7 +1880,6 @@ bool Elf_Arm::build_refer_str(binary_stream& handle,std::string& str,
   UNUSED(codelen);
   UNUSED(defval);
   r_type = reader().R_TYPE(erl.info);
-  buff[0] = 0;
   switch(r_type)
   {
     default:
@@ -1894,9 +1893,8 @@ bool Elf_Arm::build_refer_str(binary_stream& handle,std::string& str,
     case R_ARM_ABS12:
     case R_ARM_ABS16:
     case R_ARM_ABS32:  /* symbol + addendum */
-		   ret = read_reloc_name(handle,erl, buff);
-		   if(!buff.empty() && ret)
-		   {
+		   buff = read_reloc_name(handle,erl);
+		   if(!buff.empty()) {
 		     str+=buff;
 		     use_addend = true;
 		   }
@@ -1905,9 +1903,8 @@ bool Elf_Arm::build_refer_str(binary_stream& handle,std::string& str,
     case R_ARM_THM_PC8:
     case R_ARM_THM_PC12:
     case R_ARM_PC24: /* symbol + addendum - this */
-		   ret = read_reloc_name(handle,erl, buff);
-		   if(!buff.empty() && ret)
-		   {
+		   buff = read_reloc_name(handle,erl);
+		   if(!buff.empty()) {
 		     str+=buff;
 		     /* strcat(str,"-.here"); <- it's commented for readability */
 		     use_addend = true;
@@ -1921,13 +1918,12 @@ bool Elf_Arm::build_refer_str(binary_stream& handle,std::string& str,
 		   break;
     case R_ARM_GLOB_DAT:  /* symbol */
     case R_ARM_JUMP_SLOT:  /* symbol */
-		   ret = read_reloc_name(handle,erl, buff);
-		   if(!buff.empty() && ret) str+=buff;
+		   buff = read_reloc_name(handle,erl);
+		   if(!buff.empty()) str+=buff;
 		   break;
     case R_ARM_GOTOFF32: /* symbol + addendum - GOT */
-		   ret = read_reloc_name(handle,erl, buff);
-		   if(!buff.empty() && ret)
-		   {
+		   buff = read_reloc_name(handle,erl);
+		   if(!buff.empty()) {
 		     str+=buff;
 		     str+="-GOT";
 		     use_addend = true;
@@ -1956,7 +1952,6 @@ bool Elf_i386::build_refer_str(binary_stream& handle,std::string& str,
   UNUSED(codelen);
   UNUSED(defval);
   r_type = reader().R_TYPE(erl.info);
-  buff[0] = 0;
   switch(r_type)
   {
     default:
@@ -1968,9 +1963,8 @@ bool Elf_i386::build_refer_str(binary_stream& handle,std::string& str,
     case R_386_GNU_8:
     case R_386_GNU_16:
     case R_386_32:  /* symbol + addendum */
-		   ret = read_reloc_name(handle,erl, buff);
-		   if(!buff.empty() && ret)
-		   {
+		   buff = read_reloc_name(handle,erl);
+		   if(!buff.empty()) {
 		     str+=buff;
 		     use_addend = true;
 		   }
@@ -1979,9 +1973,8 @@ bool Elf_i386::build_refer_str(binary_stream& handle,std::string& str,
     case R_386_GNU_PC8:
     case R_386_GNU_PC16:
     case R_386_PC32: /* symbol + addendum - this */
-		   ret = read_reloc_name(handle,erl, buff);
-		   if(!buff.empty() && ret)
-		   {
+		   buff = read_reloc_name(handle,erl);
+		   if(!buff.empty()) {
 		     str+=buff;
 		     /* strcat(str,"-.here"); <- it's commented for readability */
 		     use_addend = true;
@@ -2000,13 +1993,12 @@ bool Elf_i386::build_refer_str(binary_stream& handle,std::string& str,
 		   break;
     case R_386_GLOB_DAT:  /* symbol */
     case R_386_JMP_SLOT:  /* symbol */
-		   ret = read_reloc_name(handle,erl, buff);
-		   if(!buff.empty() && ret) str+=buff;
+		   buff = read_reloc_name(handle,erl);
+		   if(!buff.empty()) str+=buff;
 		   break;
     case R_386_GOTOFF: /* symbol + addendum - GOT */
-		   ret = read_reloc_name(handle,erl, buff);
-		   if(!buff.empty() && ret)
-		   {
+		   buff = read_reloc_name(handle,erl);
+		   if(!buff.empty()) {
 		     str+=buff;
 		     str+="-GOT";
 		     use_addend = true;
@@ -2039,7 +2031,6 @@ bool Elf_x86_64::build_refer_str(binary_stream& handle,std::string& str,
   UNUSED(codelen);
   UNUSED(defval);
   r_type = reader().R_TYPE(erl.info);
-  buff[0] = 0;
   switch(r_type)
   {
     default:
@@ -2052,9 +2043,8 @@ bool Elf_x86_64::build_refer_str(binary_stream& handle,std::string& str,
     case R_X86_64_16:
     case R_X86_64_32:
     case R_X86_64_64:  /* symbol + addendum */
-		   ret = read_reloc_name(handle,erl, buff);
-		   if(!buff.empty() && ret)
-		   {
+		   buff = read_reloc_name(handle,erl);
+		   if(!buff.empty()) {
 		     str+=buff;
 		     use_addend = true;
 		   }
@@ -2064,9 +2054,8 @@ bool Elf_x86_64::build_refer_str(binary_stream& handle,std::string& str,
     case R_X86_64_PC16:
     case R_X86_64_PC32:
     case R_X86_64_PC64: /* symbol + addendum - this */
-		   ret = read_reloc_name(handle,erl, buff);
-		   if(!buff.empty() && ret)
-		   {
+		   buff = read_reloc_name(handle,erl);
+		   if(!buff.empty()) {
 		     str+=buff;
 		     /* strcat(str,"-.here"); <- it's commented for readability */
 		     use_addend = true;
@@ -2097,13 +2086,12 @@ bool Elf_x86_64::build_refer_str(binary_stream& handle,std::string& str,
 		   break;
     case R_X86_64_GLOB_DAT:  /* symbol */
     case R_X86_64_JUMP_SLOT:  /* symbol */
-		   ret = read_reloc_name(handle,erl, buff);
-		   if(!buff.empty() && ret) str+=buff;
+		   buff = read_reloc_name(handle,erl);
+		   if(!buff.empty()) str+=buff;
 		   break;
     case R_X86_64_GOTOFF64: /* symbol + addendum - GOT */
-		   ret = read_reloc_name(handle,erl, buff);
-		   if(!buff.empty() && ret)
-		   {
+		   buff = read_reloc_name(handle,erl);
+		   if(!buff.empty()) {
 		     str+=buff;
 		     str+="-GOT";
 		     use_addend = true;
@@ -2136,7 +2124,6 @@ bool Elf_Ppc::build_refer_str(binary_stream& handle,std::string& str,
   UNUSED(codelen);
   UNUSED(defval);
   r_type = reader().R_TYPE(erl.info);
-  buff[0] = 0;
   switch(r_type)
   {
     default:
@@ -2157,9 +2144,8 @@ bool Elf_Ppc::build_refer_str(binary_stream& handle,std::string& str,
     case R_PPC_UADDR32:
     case R_PPC64_ADDR64:
     case R_PPC64_UADDR64: /* symbol + addendum */
-		   ret = read_reloc_name(handle,erl, buff);
-		   if(!buff.empty() && ret)
-		   {
+		   buff = read_reloc_name(handle,erl);
+		   if(!buff.empty()) {
 		     str+=buff;
 		     use_addend = true;
 		   }
@@ -2175,9 +2161,8 @@ bool Elf_Ppc::build_refer_str(binary_stream& handle,std::string& str,
     case R_PPC_REL24:
     case R_PPC_REL32:
     case R_PPC64_REL64: /* symbol + addendum - this */
-		   ret = read_reloc_name(handle,erl, buff);
-		   if(!buff.empty() && ret)
-		   {
+		   buff = read_reloc_name(handle,erl);
+		   if(!buff.empty()) {
 		     str+=buff;
 		     /* strcat(str,"-.here"); <- it's commented for readability */
 		     use_addend = true;
@@ -2206,8 +2191,8 @@ bool Elf_Ppc::build_refer_str(binary_stream& handle,std::string& str,
 		   break;
     case R_PPC_GLOB_DAT:  /* symbol */
     case R_PPC_JMP_SLOT:  /* symbol */
-		   ret = read_reloc_name(handle,erl, buff);
-		   if(buff[0] && ret) str+=buff;
+		   buff = read_reloc_name(handle,erl);
+		   if(!buff.empty()) str+=buff;
 		   break;
   }
   if(erl.addend && use_addend && ret &&
@@ -2219,13 +2204,14 @@ bool Elf_Ppc::build_refer_str(binary_stream& handle,std::string& str,
   return retval;
 }
 
-bool Elf_Arch::read_reloc_name(binary_stream& handle,const Elf_Reloc& erl, std::string& buff) const
+std::string Elf_Arch::read_reloc_name(binary_stream& handle,const Elf_Reloc& erl) const
 {
+    std::string buff;
     Elf_Shdr shdr;
     Elf_Sym sym;
     __filesize_t fp;
-    bool ret = true;
     fp = handle.tell();
+    bool ret = true;
     if(parent().is_sections_present()) {/* Section headers are present */
 	shdr=reader().read_shdr(handle,reader().ehdr().e_shoff+erl.sh_idx*reader().ehdr().e_shentsize);
 	handle.seek(shdr.sh_offset,binary_stream::Seek_Set);
@@ -2255,15 +2241,17 @@ bool Elf_Arch::read_reloc_name(binary_stream& handle,const Elf_Reloc& erl, std::
 		if(ELF_ST_TYPE(sym.st_info) == STT_SECTION &&
 		    sym.st_shndx &&
 		    parent().ELF_IS_SECTION_PHYSICAL(sym.st_shndx)) {
-		    shdr=reader().read_shdr(handle,reader().ehdr().e_shoff+sym.st_shndx*reader().ehdr().e_shentsize);
-		    if(!parent().FindPubName(buff, shdr.sh_offset+erl.addend)) buff=read_nametable(handle,shdr.sh_name);
+			shdr=reader().read_shdr(handle,reader().ehdr().e_shoff+sym.st_shndx*reader().ehdr().e_shentsize);
+			Symbol_Info rc = parent().FindPubName(shdr.sh_offset+erl.addend);
+			if(rc.pa==Plugin::Bad_Address) rc.name=read_nametable(handle,shdr.sh_name);
+			buff=rc.name;
 		}
 	    }
 	    if(buff.empty()) buff="?noname";
 	}
     }
     handle.seek(fp,binary_stream::Seek_Set);
-    return ret;
+    return buff;
 }
 
 std::string Elf_Arch::read_nametable(binary_stream& b_cache,__filesize_t off) const

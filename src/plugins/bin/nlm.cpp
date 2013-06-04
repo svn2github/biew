@@ -78,7 +78,7 @@ namespace	usr {
 	    std::vector<std::string> NLMNamesReadItems(binary_stream& handle,size_t nnames) const;
 	    __filesize_t	CalcEntryNLM(unsigned ord,bool dispmsg) const;
 	    std::vector<std::string>	__ReadExtRefNamesNLM(binary_stream& handle,size_t n) const;
-	    bool		FindPubName(std::string& buff,__filesize_t pa) const;
+	    Symbol_Info		FindPubName(__filesize_t pa) const;
 
 	    Nlm_Internal_Fixed_Header nlm;
 	    std::set<symbolic_information>	PubNames;
@@ -508,7 +508,6 @@ bool NLM_Parser::BuildReferStrNLM(std::string& str,const RELOC_NLM& rne,Bin_Form
 {
   __filesize_t val;
   bool retrf;
-  std::string name;
   binary_stream* b_cache;
   unsigned char len;
   b_cache = nlm_cache;
@@ -527,18 +526,14 @@ bool NLM_Parser::BuildReferStrNLM(std::string& str,const RELOC_NLM& rne,Bin_Form
   {
     main_handle.seek(rne.offset,binary_stream::Seek_Set);
     val = main_handle.read(type_dword);
-    if(FindPubName(name,val))
-    {
-      str+=name;
-    }
-    else
-     if(!(flags & Bin_Format::Save_Virt))
-     {
+    Symbol_Info rc = FindPubName(val);
+    if(rc.pa!=Plugin::Bad_Address) str+=rc.name;
+    else if(!(flags & Bin_Format::Save_Virt)) {
        str+="(*this)+";
        str+=Get8Digit(val);
        retrf = true;
-     }
-     else retrf = false;
+    }
+    else retrf = false;
   }
   return retrf;
 }
@@ -548,7 +543,6 @@ bool NLM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
   RELOC_NLM key;
   std::set<RELOC_NLM>::const_iterator rnlm;
   bool retrf;
-  std::string buff;
   if(flags & Bin_Format::Try_Pic) return false;
   if(!nlm.nlm_numberOfExternalReferences || nlm.nlm_externalReferencesOffset >= main_handle.flength()) retrf = false;
   else
@@ -562,9 +556,9 @@ bool NLM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
   if(!retrf && (flags & Bin_Format::Try_Label))
   {
      if(PubNames.empty()) nlm_ReadPubNameList(main_handle);
-     if(FindPubName(buff,r_sh))
-     {
-       str+=buff;
+     Symbol_Info rc = FindPubName(r_sh);
+     if(rc.pa!=Plugin::Bad_Address) {
+       str+=rc.name;
        if(!DumpMode && !EditMode) code_guider.add_go_address(parent,str,r_sh);
        retrf = true;
      }
@@ -633,17 +627,19 @@ std::string NLM_Parser::nlm_ReadPubName(binary_stream& b_cache,const symbolic_in
     return buff;
 }
 
-bool NLM_Parser::FindPubName(std::string& buff,__filesize_t pa) const
+Symbol_Info NLM_Parser::FindPubName(__filesize_t pa) const
 {
-  symbolic_information key;
-  std::set<symbolic_information>::const_iterator ret;
-  key.pa = pa;
-  ret = PubNames.find(key);
-  if(ret!=PubNames.end()) {
-    buff=nlm_ReadPubName(*nlm_cache,*ret);
-    return true;
-  }
-  return _udn.find(pa,buff);
+    Symbol_Info rc;
+    symbolic_information key;
+    std::set<symbolic_information>::const_iterator it;
+    key.pa = pa;
+    it = PubNames.find(key);
+    if(it!=PubNames.end()) {
+	rc.pa=pa;
+	rc.name=nlm_ReadPubName(*nlm_cache,*it);
+	return rc;
+    }
+    return _udn.find(pa);
 }
 
 void NLM_Parser::nlm_ReadPubNameList(binary_stream& handle)

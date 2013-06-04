@@ -177,7 +177,7 @@ namespace	usr {
 	    void			PaintNewHeaderNE_1(TWindow& w) const;
 	    std::string			__getNEType(unsigned type) const;
 	    std::string			rd_ImpName(unsigned idx,bool useasoff) const;
-	    bool			FindPubName(std::string& buff,__filesize_t pa) const;
+	    Symbol_Info			FindPubName(__filesize_t pa) const;
 	    __filesize_t		CalcEntryPointNE(unsigned segnum,unsigned offset) const;
 	    void			ne_ReadPubNameList(binary_stream& handle);
 	    bool			ReadPubNames(binary_stream& handle,__filesize_t offset);

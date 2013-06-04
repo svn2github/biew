@@ -122,7 +122,7 @@ namespace	usr {
     Symbol_Info rc;
     __filesize_t cur_addr;
     typename T::const_iterator i,idx;
-    rc.pa=0L;
+    rc.pa=Plugin::Bad_Address;
     if(names.empty()) return rc;
     index = idx = names.end();
     i = find_nearest(names,key);
@@ -137,8 +137,8 @@ namespace	usr {
 	}
 	idx = i;
 	if(idx!=names.end()) rc.pa = cur_addr;
-	else rc.pa = 0L;
-	if(rc.pa && rc.pa == key.pa) {
+	else rc.pa = Plugin::Bad_Address;
+	if(rc.pa!=Plugin::Bad_Address && rc.pa == key.pa) {
 	    if((*idx).pa <= (*multiref_i).pa) { i = idx; goto get_next; }
 	    else multiref_i = idx;
 	}
@@ -147,7 +147,7 @@ namespace	usr {
     if(idx!=names.end()) {
 	rc.pa = (*idx).pa;
 	rc._class = Symbol_Info::symbol_class((*idx).attr);
-	if(idx==names.begin() && key.pa < rc.pa && as_prev) rc.pa = 0;
+	if(idx==names.begin() && key.pa < rc.pa && as_prev) rc.pa = Plugin::Bad_Address;
 	else index = idx;
     }
     return rc;
