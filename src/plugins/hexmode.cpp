@@ -41,40 +41,74 @@ using namespace	usr;
 namespace	usr {
     class hexView : public Opaque {
 	public:
-	    virtual char*		get(binary_stream& main_handle,__filesize_t) const = 0;
+	    hexView(binary_stream& h);
+	    virtual ~hexView();
+
+	    virtual char*		get(__filesize_t) const = 0;
 	    virtual unsigned char	width(const TWindow&,bool is_file64) const = 0;
+	    virtual unsigned		size() const = 0;
+	    virtual unsigned		hardlen() const = 0;
+	protected:
+	    binary_stream&	handle() const { return _handle; }
+	private:
+	    binary_stream&	_handle;
     };
 
     class bitView : public hexView {
 	public:
-	    virtual char*		get(binary_stream& main_handle,__filesize_t) const;
+	    bitView(binary_stream& h);
+	    virtual ~bitView();
+
+	    virtual char*		get(__filesize_t) const;
 	    virtual unsigned char	width(const TWindow&,bool is_file64) const;
+	    virtual unsigned		size() const;
+	    virtual unsigned		hardlen() const;
+
+	    static hexView*		query_interface(binary_stream&);
     };
 
     class byteView : public hexView {
 	public:
-	    virtual char*		get(binary_stream& main_handle,__filesize_t) const;
+	    byteView(binary_stream& h);
+	    virtual ~byteView();
+
+	    virtual char*		get(__filesize_t) const;
 	    virtual unsigned char	width(const TWindow&,bool is_file64) const;
+	    virtual unsigned		size() const;
+	    virtual unsigned		hardlen() const;
+
+	    static hexView*		query_interface(binary_stream&);
     };
 
     class wordView : public hexView {
 	public:
-	    virtual char*		get(binary_stream& main_handle,__filesize_t) const;
+	    wordView(binary_stream& h);
+	    virtual ~wordView();
+
+	    virtual char*		get(__filesize_t) const;
 	    virtual unsigned char	width(const TWindow&,bool is_file64) const;
+	    virtual unsigned		size() const;
+	    virtual unsigned		hardlen() const;
+
+	    static hexView*		query_interface(binary_stream&);
     };
 
     class dwordView : public hexView {
 	public:
-	    virtual char*		get(binary_stream& main_handle,__filesize_t) const;
+	    dwordView(binary_stream& h);
+	    virtual ~dwordView();
+
+	    virtual char*		get(__filesize_t) const;
 	    virtual unsigned char	width(const TWindow&,bool is_file64) const;
+	    virtual unsigned		size() const;
+	    virtual unsigned		hardlen() const;
+
+	    static hexView*		query_interface(binary_stream&);
     };
 
-
-    struct hexViewer {
+    struct xView_Info {
 	const char*		name;
-	hexView&		method;
-	unsigned char	size;
-	unsigned char	hardlen;
+	hexView*		(*query_interface)(binary_stream& h);
     };
 
     class HexMode : public Plugin {
@@ -117,66 +151,97 @@ namespace	usr {
 	    const Bin_Format&	bin_format;
 	    udn&		_udn;
 	    bool		is_file64;
-
-	    static class bitView bitView;
-	    static class byteView byteView;
-	    static class wordView wordView;
-	    static class dwordView dwordView;
-	    static const struct hexViewer hexViewer[];
+	    hexView*		hex_viewer;
     };
 
-class bitView   HexMode::bitView;
-class byteView  HexMode::byteView;
-class wordView  HexMode::wordView;
-class dwordView HexMode::dwordView;
-const struct hexViewer HexMode::hexViewer[] = {
-  { "B~it",         HexMode::bitView,   1, 8 },
-  { "~Byte",        HexMode::byteView,  1, 2 },
-  { "~Word",        HexMode::wordView,  2, 4 },
-  { "~Double word", HexMode::dwordView, 4, 8 }
+static const struct xView_Info xView_Info[] = {
+  { "B~it",         bitView::query_interface   },
+  { "~Byte",        byteView::query_interface  },
+  { "~Word",        wordView::query_interface  },
+  { "~Double word", dwordView::query_interface }
 };
 
 unsigned	hexAddressResolv;
 static unsigned hendian;
 
-char* bitView::get(binary_stream& main_handle,__filesize_t val) const {
+hexView::hexView(binary_stream& h)
+	:_handle(h)
+{
+}
+
+hexView::~hexView() {}
+
+bitView::bitView(binary_stream& h)
+	:hexView(h)
+{
+}
+bitView::~bitView() {}
+char* bitView::get(__filesize_t val) const {
     char id;
-    main_handle.seek(val,binary_stream::Seek_Set);
-    id=main_handle.read(type_byte);
+    handle().seek(val,binary_stream::Seek_Set);
+    id=handle().read(type_byte);
     return GetBinary(id);
 }
+unsigned bitView::size() const { return 1; }
+unsigned bitView::hardlen() const { return 8; }
 
-char* byteView::get(binary_stream& main_handle,__filesize_t val) const {
+byteView::byteView(binary_stream& h)
+	:hexView(h)
+{
+}
+byteView::~byteView() {}
+char* byteView::get(__filesize_t val) const {
     char id;
-    main_handle.seek(val,binary_stream::Seek_Set);
-    id=main_handle.read(type_byte);
+    handle().seek(val,binary_stream::Seek_Set);
+    id=handle().read(type_byte);
     return Get2Digit(id);
 }
+unsigned byteView::size() const { return 1; }
+unsigned byteView::hardlen() const { return 2; }
 
-char* wordView::get(binary_stream& main_handle,__filesize_t val) const {
+wordView::wordView(binary_stream& h)
+	:hexView(h)
+{
+}
+wordView::~wordView() {}
+char* wordView::get(__filesize_t val) const {
     unsigned short v;
-    main_handle.seek(val,binary_stream::Seek_Set);
-    v = main_handle.read(type_word);
+    handle().seek(val,binary_stream::Seek_Set);
+    v = handle().read(type_word);
     if(hendian==1) v=le2me_16(v);
     else
     if(hendian==2) v=be2me_16(v);
     return Get4Digit(v);
 }
+unsigned wordView::size() const { return 2; }
+unsigned wordView::hardlen() const { return 4; }
 
-char* dwordView::get(binary_stream& main_handle,__filesize_t val) const {
+dwordView::dwordView(binary_stream& h)
+	:hexView(h)
+{
+}
+dwordView::~dwordView() {}
+char* dwordView::get(__filesize_t val) const {
     unsigned long v;
-    main_handle.seek(val,binary_stream::Seek_Set);
-    v = main_handle.read(type_dword);
+    handle().seek(val,binary_stream::Seek_Set);
+    v = handle().read(type_dword);
     if(hendian==1) v=le2me_32(v);
     else
     if(hendian==2) v=be2me_32(v);
     return Get8Digit(v);
 }
+unsigned dwordView::size() const { return 4; }
+unsigned dwordView::hardlen() const { return 8; }
 
 unsigned char bitView::width(const TWindow& main_wnd,bool is_file64) const { return main_wnd.width()-(is_file64?18:10)/(8+1+1); }
 unsigned char byteView::width(const TWindow& main_wnd,bool is_file64) const { return main_wnd.width()-(is_file64?18:10)/(12+1+4)*4; } /* always round on four-column boundary */
 unsigned char wordView::width(const TWindow& main_wnd,bool is_file64) const { return main_wnd.width()-(is_file64?18:10)/(4+1+2); }
 unsigned char dwordView::width(const TWindow& main_wnd,bool is_file64) const { return main_wnd.width()-(is_file64?18:10)/(8+1+4); }
+
+hexView* bitView::query_interface(binary_stream& h) { return new(zeromem) bitView(h); }
+hexView* byteView::query_interface(binary_stream& h) { return new(zeromem) byteView(h); }
+hexView* wordView::query_interface(binary_stream& h) { return new(zeromem) wordView(h); }
+hexView* dwordView::query_interface(binary_stream& h) { return new(zeromem) dwordView(h); }
 
 HexMode::HexMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& _code_guider,udn& u)
 	:Plugin(b,h,_main_wnd,_code_guider,u)
@@ -188,8 +253,11 @@ HexMode::HexMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGui
 	,bin_format(b)
 	,_udn(u)
 	,is_file64(beye_context().is_file64())
-{}
-HexMode::~HexMode() {}
+	,hex_viewer(xView_Info[hmode].query_interface(h))
+{
+}
+
+HexMode::~HexMode() { delete hex_viewer; }
 
 HexMode::e_flag HexMode::flags() const { return None; }
 
@@ -197,9 +265,6 @@ static const char* txt[] = { "", "HexMod", "Endian", "", "", "AResol", "<<<   ",
 const char* HexMode::prompt(unsigned idx) const {
     return (idx < 10) ? txt[idx] : "";
 }
-
-typedef char *( __FASTCALL__ *hexFunc)(binary_stream& main_handle,__filesize_t);
-typedef unsigned char ( __FASTCALL__ *sizeFunc) (const TWindow&);
 
 unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 {
@@ -215,11 +280,11 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 	tAbsCoord height = main_wnd.client_height();
 	tAbsCoord width = main_wnd.client_width();
 	main_wnd.freeze();
-	HWidth = hexViewer[hmode].method.width(main_wnd,is_file64)-virtWidthCorr;
+	HWidth = hex_viewer->width(main_wnd,is_file64)-virtWidthCorr;
 	if(!(hmocpos == cpos + HWidth || hmocpos == cpos - HWidth)) keycode = KE_SUPERKEY;
 	hmocpos = cpos;
-	__inc = hexViewer[hmode].size;
-	dlen = hexViewer[hmode].hardlen;
+	__inc = hex_viewer->size();
+	dlen = hex_viewer->hardlen();
 	flen = main_handle.flength();
 	scrHWidth = HWidth*__inc;
 	if(flen < HWidth) HWidth = flen;
@@ -254,7 +319,7 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 		len = is_file64?18:10;
 		::memcpy(outstr,code_guider.encode_address(sindex,hexAddressResolv).c_str(),len);
 		for(j = 0,freq = 0,lindex = sindex;j < rwidth;j++,lindex += __inc,freq++) {
-		    ::memcpy(&outstr[len],hexViewer[hmode].method.get(main_handle,lindex),dlen);
+		    ::memcpy(&outstr[len],hex_viewer->get(lindex),dlen);
 		    len += dlen + 1;
 		    if(hmode == 1) if(freq == 3) { freq = -1; len++; }
 		}
@@ -277,10 +342,10 @@ void HexMode::help() const
    hlpDisplay(1002);
 }
 
-unsigned long HexMode::prev_page_size() const { return (hexViewer[hmode].method.width(main_wnd,is_file64)-virtWidthCorr)*hexViewer[hmode].size*main_wnd.client_height(); }
-unsigned long HexMode::curr_page_size() const { return (hexViewer[hmode].method.width(main_wnd,is_file64)-virtWidthCorr)*hexViewer[hmode].size*main_wnd.client_height(); }
-unsigned long HexMode::prev_line_width() const { return (hexViewer[hmode].method.width(main_wnd,is_file64)-virtWidthCorr)*hexViewer[hmode].size; }
-unsigned long HexMode::curr_line_width() const { return (hexViewer[hmode].method.width(main_wnd,is_file64)-virtWidthCorr)*hexViewer[hmode].size; }
+unsigned long HexMode::prev_page_size() const { return (hex_viewer->width(main_wnd,is_file64)-virtWidthCorr)*hex_viewer->size()*main_wnd.client_height(); }
+unsigned long HexMode::curr_page_size() const { return (hex_viewer->width(main_wnd,is_file64)-virtWidthCorr)*hex_viewer->size()*main_wnd.client_height(); }
+unsigned long HexMode::prev_line_width() const { return (hex_viewer->width(main_wnd,is_file64)-virtWidthCorr)*hex_viewer->size(); }
+unsigned long HexMode::curr_line_width() const { return (hex_viewer->width(main_wnd,is_file64)-virtWidthCorr)*hex_viewer->size(); }
 
 const char* HexMode::misckey_name() const { return hmode == 1 ? "Modify" : "      "; }
 void HexMode::misckey_action () /* EditHex */
@@ -292,14 +357,14 @@ void HexMode::misckey_action () /* EditHex */
     tAbsCoord width = main_wnd.client_width();
     if(hmode != 1) return;
     if(!main_handle.flength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
-    bound = (width-(hexViewer[hmode].method.width(main_wnd,is_file64)-virtWidthCorr))-is_file64?18:10;
+    bound = (width-(hex_viewer->width(main_wnd,is_file64)-virtWidthCorr))-is_file64?18:10;
     ewnd[0] = new(zeromem) TWindow((is_file64?18:10)+1,2,bound,main_wnd.height()-2,TWindow::Flag_Has_Cursor);
     ewnd[0]->set_color(browser_cset.edit.main); ewnd[0]->clear();
     ewnd[1] = new(zeromem) TWindow(bound+(is_file64?18:10)+1,2,width-bound+2,main_wnd.height()-2,TWindow::Flag_Has_Cursor);
     ewnd[1]->set_color(browser_cset.edit.main); ewnd[1]->clear();
     drawEditPrompt();
     has_show[0] = has_show[1] = false;
-    if(editInitBuffs(hexViewer[hmode].method.width(main_wnd,is_file64)-virtWidthCorr,NULL,0)) {
+    if(editInitBuffs(hex_viewer->width(main_wnd,is_file64)-virtWidthCorr,NULL,0)) {
 	edit_x = edit_y = 0;
 	while(1) {
 	    int _lastbyte;
@@ -324,19 +389,21 @@ void HexMode::misckey_action () /* EditHex */
 
 void HexMode::check_width_corr()
 {
-    if(virtWidthCorr>(unsigned)hexViewer[hmode].method.width(main_wnd,is_file64)-1) virtWidthCorr=hexViewer[hmode].method.width(main_wnd,is_file64)-1;
+    if(virtWidthCorr>(unsigned)hex_viewer->width(main_wnd,is_file64)-1) virtWidthCorr=hex_viewer->width(main_wnd,is_file64)-1;
 }
 
 bool HexMode::action_F2() /* hexSelectMode */
 {
-    const char *names[sizeof(hexViewer)/sizeof(hexView)];
+    const char *names[sizeof(xView_Info)/sizeof(struct xView_Info)];
     size_t i,nModes;
     int retval;
-    nModes = sizeof(hexViewer)/sizeof(hexView);
-    for(i = 0;i < nModes;i++) names[i] = hexViewer[i].name;
+    nModes = sizeof(xView_Info)/sizeof(struct xView_Info);
+    for(i = 0;i < nModes;i++) names[i] = xView_Info[i].name;
     retval = ListBox(names,nModes," Select hexadecimal mode: ",LB_SELECTIVE|LB_USEACC,hmode);
     if(retval != -1) {
 	hmode = retval;
+	delete hex_viewer;
+	hex_viewer = xView_Info[hmode].query_interface(main_handle);
 	check_width_corr();
 	return true;
     }
@@ -385,7 +452,7 @@ bool HexMode::action_F6() { return hexAddressResolution(hexAddressResolv); }
 
 bool HexMode::action_F7() /* hexDecVirtWidth */
 {
-    if(virtWidthCorr < (unsigned)hexViewer[hmode].method.width(main_wnd,is_file64)-1) { virtWidthCorr++; return true; }
+    if(virtWidthCorr < (unsigned)hex_viewer->width(main_wnd,is_file64)-1) { virtWidthCorr++; return true; }
     return false;
 }
 
@@ -515,7 +582,7 @@ void HexMode::save_ini(Ini_Profile&  ini)
 }
 
 unsigned HexMode::get_symbol_size() const { return 1; }
-unsigned HexMode::get_max_line_length() const { return hexViewer[hmode].method.width(main_wnd,is_file64); }
+unsigned HexMode::get_max_line_length() const { return hex_viewer->width(main_wnd,is_file64); }
 
 static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& u) { return new(zeromem) HexMode(b,h,main_wnd,code_guider,u); }
 
