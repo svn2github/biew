@@ -385,9 +385,9 @@ fi
 if linux ; then
 app_cflags=""
 fi
-CFLAGS="$CFLAGS $app_cflags"
-LDFLAGS="$LDFLAGS $app_ldflags"
-LIBS="$LIBS $app_libs"
+add_cflags $app_cflags
+add_ldflags $app_ldflags
+add_extralibs $app_libs
 print_config HAVE_ config.h config.mak terminal_out
 
 check_func2 execinfo.h backtrace

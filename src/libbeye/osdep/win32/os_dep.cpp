@@ -32,11 +32,6 @@ using namespace	usr;
 #include <stdlib.h>
 #include <process.h>
 
-#if __SIZEOF_POINTER__ > 4
-/* Note: Vista-64 requires porting for MMF file handling */
-#define __DISABLE_MMF 1
-#endif
-
 OSVERSIONINFO win32_verinfo;
 
 static char rbuff[FILENAME_MAX+1];
@@ -75,19 +70,12 @@ void __FASTCALL__ __OsSetCBreak( bool state )
 
 extern HANDLE hIn;
 extern bool hInputTrigger;
-#if !(defined( __DISABLE_MMF ) || defined( __DISABLE_LOWLEVEL_MMF))
-extern LONG CALLBACK PageFaultHandler(LPEXCEPTION_POINTERS);
-LPTOP_LEVEL_EXCEPTION_FILTER PrevPageFaultHandler;
-#endif
 
 void __FASTCALL__ __init_sys()
 {
   win32_verinfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
   GetVersionEx(&win32_verinfo);
   SetConsoleCtrlHandler(MyHandler,TRUE);
-#if !(defined( __DISABLE_MMF ) || defined( __DISABLE_LOWLEVEL_MMF))
-  PrevPageFaultHandler = SetUnhandledExceptionFilter(PageFaultHandler);
-#endif
 
   rbuff[0] = '\0';
   rbuff2[0] = '\0';
@@ -96,9 +84,6 @@ void __FASTCALL__ __init_sys()
 
 void __FASTCALL__ __term_sys()
 {
-#if !(defined( __DISABLE_MMF ) || defined( __DISABLE_LOWLEVEL_MMF))
-  SetUnhandledExceptionFilter(PrevPageFaultHandler);
-#endif
   SetConsoleCtrlHandler(MyHandler,FALSE);
 }
 

@@ -27,7 +27,9 @@
 #ifndef __ELF_INC
 #define __ELF_INC
 #include "config.h"
+#ifdef HAVE_ENDIAN_H
 #include <endian.h>
+#endif
 #include "libbeye/bswap.h"
 #include "libbeye/bstream.h"
 

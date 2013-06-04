@@ -161,7 +161,7 @@ DefColor TWindow::__set_color(Color fore,Color back)
     return rc;
 }
 
-void __FASTCALL__ TWindow::remap_color(Color color,unsigned char value)
+void TWindow::remap_color(Color color,unsigned char value)
 {
     color_map[color & 0x0F] = value & 0x0F;
 }

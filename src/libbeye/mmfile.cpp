@@ -195,7 +195,7 @@ const bool MMFile::has_mmio=true;
 #else // HAVE_MMAP
 int MMFile::mk_prot(int mode) { UNUSED(mode); return 0; }
 int MMFile::mk_flags(int mode) { UNUSED(mode); return 0; }
-bool MMFile::open(const std::string& _fname,unsigned _openmode,unsigned cache_size) { UNUSED(_fname); UNUSED(_openmode); UNUSED(cache_size); return false; }
+bool MMFile::open(const std::string& _fname,unsigned _openmode) { UNUSED(_fname); UNUSED(_openmode); return false; }
 bool MMFile::close() { return false; }
 bool MMFile::flush() { return false; }
 bool MMFile::chsize(__filesize_t newsize) { UNUSED(newsize); return false; }

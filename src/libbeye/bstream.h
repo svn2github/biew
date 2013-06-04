@@ -203,7 +203,7 @@ namespace	usr {
 		unsigned long acctime; /**< contains last access time */
 		unsigned long modtime; /**< constains modification time */
 	    };
-	    static int			truncate(const std::string& fname,__filesize_t newsize);
+
 	    static int			exists(const std::string& fname);
 	    static int			rename(const std::string& oldname,const std::string& newname);
 	    static int			unlink(const std::string& name);

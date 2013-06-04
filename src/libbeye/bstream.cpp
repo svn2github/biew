@@ -225,7 +225,7 @@ int binary_stream::truncate(__filesize_t newsize)
 {
     int rc;
     int h = _handle ^ reinterpret_cast<long>(this);
-    rc=ftruncate(h,newsize);
+    rc=::ftruncate(h,newsize);
     update_length();
     return rc;
 }
@@ -244,8 +244,6 @@ unsigned binary_stream::set_optimization(unsigned flags) { UNUSED(flags); return
 unsigned binary_stream::get_optimization() const { return 0; }
 
 /*  static */
-
-int binary_stream::truncate(const std::string& name,__filesize_t newsize) { return ::truncate(name.c_str(),newsize); }
 int binary_stream::exists(const std::string& name) { return ::access(name.c_str(),F_OK) == 0; }
 int binary_stream::unlink(const std::string& name) {  return ::unlink(name.c_str()); }
 int binary_stream::rename(const std::string& oldname,const std::string& newname) {  return ::rename(oldname.c_str(),newname.c_str()); }

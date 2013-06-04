@@ -978,9 +978,6 @@ cc_check() {
   ( check_cmd $cc $CFLAGS $inc_extra $ld_static $ld_extra "$TMPC" -o "$TMPO" "$@" ) >> "$TMPLOG" 2>&1
   TMP="$?"
   echo >> "$TMPLOG"
-  echo "ldd $TMPO" >> "$TMPLOG"
-  ( ldd "$TMPO" ) >> "$TMPLOG" 2>&1
-  echo >> "$TMPLOG"
   return "$TMP"
 }
 
@@ -990,9 +987,6 @@ cxx_check() {
   echo >> "$TMPLOG"
   ( check_cmd $cxx $CXXFLAGS $inc_extra $ld_static $ld_extra "$TMPC" -o "$TMPO" "$@" ) >> "$TMPLOG" 2>&1
   TMP="$?"
-  echo >> "$TMPLOG"
-  echo "ldd $TMPO" >> "$TMPLOG"
-  ( ldd "$TMPO" ) >> "$TMPLOG" 2>&1
   echo >> "$TMPLOG"
   return "$TMP"
 }

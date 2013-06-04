@@ -42,49 +42,15 @@ static bool __c__break = false;
 
 HEV beyeSem;
 
-#if !(defined( __DISABLE_MMF ) || defined( __DISABLE_LOWLEVEL_MMF))
-extern ULONG __FASTCALL__ PageFaultHandler(PEXCEPTIONREPORTRECORD p1,
-					   PEXCEPTIONREGISTRATIONRECORD p2,
-					   PCONTEXTRECORD p3,
-					   PVOID pv);
-
-static ULONG APIENTRY MyExceptionHandler(PEXCEPTIONREPORTRECORD p1,
-					 PEXCEPTIONREGISTRATIONRECORD p2,
-					 PCONTEXTRECORD p3,
-					 PVOID pv)
-{
-  switch(p1->ExceptionNum)
-  {
-    case XCPT_ACCESS_VIOLATION: return PageFaultHandler(p1,p2,p3,pv);
-    case XCPT_SIGNAL_INTR:
-    case XCPT_SIGNAL_BREAK:
-			     if(__c__break) exit(EXIT_FAILURE);
-			     else __c__break = true;
-			     return XCPT_CONTINUE_EXECUTION;
-    default: break;
-  }
-  return XCPT_CONTINUE_SEARCH;
-}
-
-static EXCEPTIONREGISTRATIONRECORD RegRec = { NULL, MyExceptionHandler };
-#endif
-
 void __FASTCALL__ __init_sys()
 {
   APIRET rc;
-#if !(defined( __DISABLE_MMF ) || defined( __DISABLE_LOWLEVEL_MMF))
-  DosSetExceptionHandler(&RegRec); /* <- we must call it before creating any global objects */
-#endif
   rc = DosCreateEventSem(NULL,&beyeSem,DC_SEM_SHARED,FALSE);
   if(rc)
   {
     fprintf(stderr,"Can not create semaphore: error = %lu\n",rc);
     exit(EXIT_FAILURE);
   }
-#if !(defined( __DISABLE_MMF ) || defined( __DISABLE_LOWLEVEL_MMF))
-  DosAcknowledgeSignalException(XCPT_SIGNAL_INTR);
-  DosAcknowledgeSignalException(XCPT_SIGNAL_BREAK);
-#endif
 
   rbuff[0] = '\0';
   rbuff2[0] = '\0';
@@ -94,9 +60,6 @@ void __FASTCALL__ __init_sys()
 void __FASTCALL__ __term_sys()
 {
   DosCloseEventSem(beyeSem);
-#if !(defined( __DISABLE_MMF ) || defined( __DISABLE_LOWLEVEL_MMF))
-  DosUnsetExceptionHandler(&RegRec); /* <- we must call it after destroying any global objects */
-#endif
 }
 
 bool __FASTCALL__ __OsGetCBreak()
