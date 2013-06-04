@@ -25,7 +25,6 @@ using namespace	usr;
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "reg_form.h"
 #include "tstrings.h"
 #include "codeguid.h"
 #include "colorset.h"
@@ -57,9 +56,9 @@ namespace	usr {
 	    virtual __filesize_t	action_F10();
 
 	    virtual __filesize_t	show_header() const;
-	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
+	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift);
 	    virtual int			query_platform() const;
-	    virtual int			query_bitness(__filesize_t) const;
+	    virtual Bin_Format::bitness	query_bitness(__filesize_t) const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
@@ -519,25 +518,25 @@ def_val:
 	if(secnum) retval = (COFF_DWORD(coff386so[secnum-1].s_scnptr)+val)?true:false;
 	else       retval = false;
     }
-    if(rne.type == RELOC_REL32 && (flags & APREF_TRY_LABEL) != APREF_TRY_LABEL) {
+    if(rne.type == RELOC_REL32 && (flags & Bin_Format::Try_Label) != Bin_Format::Try_Label) {
 	Object_Info rc = _get_object_attribute(rne.offset);
 	str+="-";
 	str+=rc.name;
     }
     e = CalcEntryCoff(rne.nameoff,false);
-    if(!DumpMode && !EditMode && e && (flags & APREF_TRY_LABEL) == APREF_TRY_LABEL)
+    if(!DumpMode && !EditMode && e && (flags & Bin_Format::Try_Label) == Bin_Format::Try_Label)
 						code_guider.add_go_address(parent,str,e);
     return retval;
 }
 
-bool Coff_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+bool Coff_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
   std::set<RELOC_COFF386>::const_iterator rcoff386;
   RELOC_COFF386 key;
   bool ret;
   std::string buff;
   ret = false;
-  if(flags & APREF_TRY_PIC) return ret;
+  if(flags & Bin_Format::Try_Pic) return ret;
   if(PubNames.empty()) coff_ReadPubNameList(main_handle);
   if((COFF_WORD(coff386hdr.f_flags) & F_RELFLG) == F_RELFLG) goto try_pub;
   if(RelocCoff386.empty()) BuildRelocCoff386();
@@ -546,7 +545,7 @@ bool Coff_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShi
   rcoff386 = RelocCoff386.find(key);
   if(rcoff386!=RelocCoff386.end()) ret = BuildReferStrCoff386(parent,str,(*rcoff386),flags);
   try_pub:
-  if(!ret && (flags & APREF_TRY_LABEL))
+  if(!ret && (flags & Bin_Format::Try_Label))
   {
      if(FindPubName(buff,r_sh))
      {
@@ -584,10 +583,10 @@ Coff_Parser::~Coff_Parser()
   if(coff_cache != &main_handle) delete coff_cache;
 }
 
-int Coff_Parser::query_bitness(__filesize_t off) const
+Bin_Format::bitness Coff_Parser::query_bitness(__filesize_t off) const
 {
   UNUSED(off);
-  return DAB_USE32;
+  return Bin_Format::Use32;
 }
 
 bool Coff_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
@@ -662,7 +661,7 @@ void Coff_Parser::coff_ReadPubNameList(binary_stream& handle)
        pn.addinfo = E_SYMNMLEN;
      }
      pn.pa = COFF_DWORD(coff386so[sec_num-1].s_scnptr)+COFF_DWORD(cse.e_value);
-     pn.attr = cse.e_sclass[0] == C_EXT ? SC_GLOBAL : SC_LOCAL;
+     pn.attr = cse.e_sclass[0] == C_EXT ? Symbol_Info::Local : Symbol_Info::Global;
      PubNames.insert(pn);
    }
    if(handle.eof()) break;
@@ -689,8 +688,8 @@ Object_Info Coff_Parser::_get_object_attribute(__filesize_t pa) const
     uint_fast16_t i;
     rc.start = 0;
     rc.end = main_handle.flength();
-    rc._class = OC_NOOBJECT;
-    rc.bitness = DAB_USE32;
+    rc._class = Object_Info::NoObject;
+    rc.bitness = Bin_Format::Use32;
     rc.number = 0;
     for(i = 0;i < nsections;i++) {
 	if(pa >= rc.start && pa < COFF_DWORD(coff386so[i].s_scnptr)) {
@@ -703,7 +702,7 @@ Object_Info Coff_Parser::_get_object_attribute(__filesize_t pa) const
 	    rc.number = i+1;
 	    rc.start = COFF_DWORD(coff386so[i].s_scnptr);
 	    rc.end = rc.start + COFF_DWORD(coff386so[i].s_size);
-	    rc._class = (COFF_DWORD(coff386so[i].s_flags) & STYP_TEXT) == STYP_TEXT ? OC_CODE : OC_DATA;
+	    rc._class = (COFF_DWORD(coff386so[i].s_flags) & STYP_TEXT) == STYP_TEXT ? Object_Info::Code : Object_Info::Data;
 	    rc.name.assign((const char *)coff386so[i].s_name,sizeof(coff386so[i].s_name));
 	    break;
 	}

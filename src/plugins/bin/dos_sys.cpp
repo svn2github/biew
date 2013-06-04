@@ -24,7 +24,6 @@ using namespace	usr;
 #include "bconsole.h"
 #include "beyehelp.h"
 #include "colorset.h"
-#include "reg_form.h"
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/dos_sys.h"

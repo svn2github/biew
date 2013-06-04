@@ -30,7 +30,6 @@ using namespace	usr;
 #include "beyehelp.h"
 #include "plugins/disasm.h"
 #include "beyeutil.h"
-#include "reg_form.h"
 #include "bconsole.h"
 #include "codeguid.h"
 #include "libbeye/file_ini.h"
@@ -63,7 +62,7 @@ namespace	usr {
 	    virtual ColorAttr	get_insn_color(unsigned long clone);
 	    virtual ColorAttr	get_opcode_color(unsigned long clone);
 
-	    virtual int		get_bitness() const;
+	    virtual Bin_Format::bitness	get_bitness() const;
 	    virtual char	clone_short_name(unsigned long clone);
 	private:
 	    static void		avr_assert( int expression );
@@ -515,7 +514,7 @@ ColorAttr AVR_Disassembler::get_insn_color( unsigned long clone )
   return disasm_cset.cpu_cset[0].clone[clone & 0xff];
 }
 
-int AVR_Disassembler::get_bitness() const { return DAB_USE16; }
+Bin_Format::bitness AVR_Disassembler::get_bitness() const { return Bin_Format::Use16; }
 
 char AVR_Disassembler::clone_short_name( unsigned long clone )
 {

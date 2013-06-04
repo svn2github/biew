@@ -66,7 +66,6 @@ using namespace	usr;
 #include "beyehelp.h"
 #include "tstrings.h"
 #include "bconsole.h"
-#include "reg_form.h"
 #include "libbeye/file_ini.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/bstream.h"
@@ -166,10 +165,10 @@ namespace	usr {
 	    virtual __filesize_t	action_F10();
 
 	    virtual __filesize_t	show_header() const;
-	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
+	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift);
 	    virtual int			query_platform() const;
-	    virtual int			query_bitness(__filesize_t) const;
-	    virtual int			query_endian(__filesize_t) const;
+	    virtual Bin_Format::bitness	query_bitness(__filesize_t) const;
+	    virtual Bin_Format::endian	query_endian(__filesize_t) const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
@@ -1328,7 +1327,7 @@ __filesize_t ELF_Parser::action_F2()
     return fpos;
 }
 
-bool ELF_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+bool ELF_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
   std::string buff;
   bool ret = false;
@@ -1345,7 +1344,7 @@ bool ELF_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
 	defval=main_handle.read(type_qword);
 	break;
   }
-  if(flags & APREF_TRY_PIC)
+  if(flags & Bin_Format::Try_Pic)
   {
        __filesize_t off_in_got = defval;
        __filesize_t dynptr, dyn_ent, got_off;
@@ -1359,7 +1358,7 @@ bool ELF_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
 	 if(dyn_ent)
 	 {
 	   got_off = va2pa(dyn_ent);
-	   return bind(parent,str, got_off + off_in_got, flags & ~APREF_TRY_PIC, codelen, r_sh);
+	   return bind(parent,str, got_off + off_in_got, flags & ~Bin_Format::Try_Pic, codelen, r_sh);
 	 }
        }
        return false;
@@ -1384,7 +1383,7 @@ bool ELF_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
   if(!ret)
   {
     buff="FFFFFFFF";
-    if(flags & APREF_TRY_LABEL)
+    if(flags & Bin_Format::Try_Label)
     {
        if(FindPubName(buff,r_sh))
        {
@@ -1529,10 +1528,10 @@ ELF_Parser::~ELF_Parser()
    delete elf_arch;
 }
 
-int ELF_Parser::query_bitness(__filesize_t off) const
+Bin_Format::bitness ELF_Parser::query_bitness(__filesize_t off) const
 {
   UNUSED(off);
-  return is_64bit?DAB_USE64:DAB_USE32;
+  return is_64bit?Bin_Format::Use64:Bin_Format::Use32;
 }
 
 __filesize_t ELF_Parser::action_F1()
@@ -1650,7 +1649,7 @@ Object_Info ELF_Parser::get_object_attribute(__filesize_t pa)
     unsigned i=0;
     rc.start = 0;
     rc.end = main_handle.flength();
-    rc._class = OC_NOOBJECT;
+    rc._class = Object_Info::NoObject;
     rc.bitness = query_bitness(pa);
     rc.number = 0;
     for(std::map<__filesize_t,VA_map>::const_iterator it = va_map_phys.begin();it !=va_map_phys.end();it++) {
@@ -1665,9 +1664,9 @@ Object_Info ELF_Parser::get_object_attribute(__filesize_t pa)
 	    rc.start = (*it).first;
 	    rc.end = rc.start + (*it).second.size;
 	    if((*it).second.flags) {
-		if((*it).second.flags & PF_X) rc._class = OC_CODE;
-		else                          rc._class = OC_DATA;
-	    } else  rc._class = OC_NOOBJECT;
+		if((*it).second.flags & PF_X) rc._class = Object_Info::Code;
+		else                          rc._class = Object_Info::Data;
+	    } else  rc._class = Object_Info::NoObject;
 	    rc.name=elf_arch->read_nametable(*namecache,(*it).second.nameoff);
 	    rc.number = i+1;
 	    break;
@@ -1684,9 +1683,9 @@ int ELF_Parser::query_platform() const {
     return id;
 }
 
-int ELF_Parser::query_endian(__filesize_t off) const {
+Bin_Format::endian ELF_Parser::query_endian(__filesize_t off) const {
  UNUSED(off);
- return is_msbf?DAE_BIG:DAE_LITTLE;
+ return is_msbf?Bin_Format::Big:Bin_Format::Little;
 }
 
 static bool probe(binary_stream& main_handle) {
@@ -1937,7 +1936,7 @@ bool Elf_Arm::build_refer_str(binary_stream& handle,std::string& str,
 		   break;
   }
   if(erl.addend && use_addend && ret &&
-     !(flags & APREF_TRY_LABEL)) /* <- it for readability */
+     !(flags & Bin_Format::Try_Label)) /* <- it for readability */
   {
     str+="+";
     str+=Get8Digit(erl.addend);
@@ -2020,7 +2019,7 @@ bool Elf_i386::build_refer_str(binary_stream& handle,std::string& str,
 		   break;
   }
   if(erl.addend && use_addend && ret &&
-     !(flags & APREF_TRY_LABEL)) /* <- it for readability */
+     !(flags & Bin_Format::Try_Label)) /* <- it for readability */
   {
     str+="+";
     str+=Get8Digit(erl.addend);
@@ -2117,7 +2116,7 @@ bool Elf_x86_64::build_refer_str(binary_stream& handle,std::string& str,
 		   break;
   }
   if(erl.addend && use_addend && ret &&
-     !(flags & APREF_TRY_LABEL)) /* <- it for readability */
+     !(flags & Bin_Format::Try_Label)) /* <- it for readability */
   {
     str+="+";
     str+=Get8Digit(erl.addend);
@@ -2212,7 +2211,7 @@ bool Elf_Ppc::build_refer_str(binary_stream& handle,std::string& str,
 		   break;
   }
   if(erl.addend && use_addend && ret &&
-     !(flags & APREF_TRY_LABEL)) /* <- it for readability */
+     !(flags & Bin_Format::Try_Label)) /* <- it for readability */
   {
     str+="+";
     str+=Get8Digit(erl.addend);

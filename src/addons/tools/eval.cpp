@@ -54,7 +54,6 @@ using namespace	usr;
 #include "addons/addon.h"
 
 #include "colorset.h"
-#include "reg_form.h"
 #include "beyeutil.h"
 #include "bconsole.h"
 #include "libbeye/libbeye.h"

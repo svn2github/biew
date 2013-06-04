@@ -29,7 +29,6 @@ using namespace	usr;
 #include "plugins/disasm/ix86/ix86.h"
 #include "beyeutil.h"
 #include "codeguid.h"
-#include "reg_form.h"
 
 namespace	usr {
 #define MODRM_REG(X) (((X)&0x38)>>3)
@@ -47,13 +46,13 @@ inline void ix86_setModifier(char* str,const char* modf) { disSetModifier(str,mo
 #define HAS_REX (DisP.pfx&PFX_REX)
 #define USE_WIDE_DATA (DisP.mode&MOD_WIDE_DATA)
 #define USE_WIDE_ADDR (DisP.mode&MOD_WIDE_ADDR)
-#define HAS_67_IN64 ((x86_Bitness == DAB_USE64)&&(DisP.pfx&PFX_67))
+#define HAS_67_IN64 ((x86_Bitness == Bin_Format::Use64)&&(DisP.pfx&PFX_67))
 
 unsigned ix86_Disassembler::ix86_calcModifier(ix86Param& DisP,unsigned w) const {
   unsigned sizptr;
      if(!w) sizptr = BYTE_PTR;
      else
-     if(x86_Bitness == DAB_USE64)
+     if(x86_Bitness == Bin_Format::Use64)
 	sizptr = REX_w(DisP.REX)?QWORD_PTR:USE_WIDE_DATA?DWORD_PTR:WORD_PTR;
      else
 	sizptr = USE_WIDE_DATA ? DWORD_PTR : WORD_PTR;
@@ -62,19 +61,19 @@ unsigned ix86_Disassembler::ix86_calcModifier(ix86Param& DisP,unsigned w) const 
 
 const char * ix86_Disassembler::k64_getREG(ix86Param& DisP,unsigned char reg,bool w,bool rex, bool use_qregs) const
 {
- if(x86_Bitness!=DAB_USE64) use_qregs=false;
+ if(x86_Bitness!=Bin_Format::Use64) use_qregs=false;
  if((DisP.mode&MOD_SSE)) {
     const char **k64_xmm_regs;
     unsigned ridx;
     if((DisP.pfx&PFX_VEX) && (DisP.VEX_vlp&0x04))	k64_xmm_regs=k64_YMMXRegs; /* 256-bit vectors */
     else						k64_xmm_regs=k64_XMMXRegs; /* 128-bit vectors */
-    ridx = x86_Bitness==DAB_USE64?REX_reg(rex,reg):(reg&0x07);
+    ridx = x86_Bitness==Bin_Format::Use64?REX_reg(rex,reg):(reg&0x07);
     return  k64_xmm_regs[ridx];
  }
  else
    if((DisP.mode&MOD_MMX))  return ix86_MMXRegs[reg];
    else
-     if(!w) return (x86_Bitness==DAB_USE64&&HAS_REX)?k64_ByteRegs[REX_reg(rex,reg)]:i8086_ByteRegs[reg];
+     if(!w) return (x86_Bitness==Bin_Format::Use64&&HAS_REX)?k64_ByteRegs[REX_reg(rex,reg)]:i8086_ByteRegs[reg];
      else
       return use_qregs?k64_QWordRegs[REX_reg(rex,reg)]:USE_WIDE_DATA?k64_DWordRegs[REX_reg(rex,reg)]:k64_WordRegs[REX_reg(rex,reg)];
 }
@@ -83,7 +82,7 @@ const char* ix86_Disassembler::get_VEX_reg(ix86Param& DisP) const
 {
     unsigned rg,brex,wrex;
     const char *rval=NULL;
-    rg = (x86_Bitness == DAB_USE64)?((DisP.VEX_vlp>>3)&0x0F)^0x0F:((DisP.VEX_vlp>>3)&0x07)^0x07;
+    rg = (x86_Bitness == Bin_Format::Use64)?((DisP.VEX_vlp>>3)&0x0F)^0x0F:((DisP.VEX_vlp>>3)&0x07)^0x07;
     wrex = REX_W(K64_REX);
     brex = (rg>>3)&0x01;
     if(DisP.insn_flags&INSN_VEX_V) rval=k64_getREG(DisP,rg,1,brex,wrex);
@@ -98,7 +97,7 @@ char*  ix86_Disassembler::GetDigitsApp(unsigned char loc_off,
   if(!((DisP.flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) {
     std::string stmp = ix86_appbuffer;
     parent.append_digits(main_handle,stmp,DisP.CodeAddress + loc_off,
-		    APREF_USE_TYPE,codelen,&DisP.RealCmd[loc_off],type);
+		    Bin_Format::Use_Type,codelen,&DisP.RealCmd[loc_off],type);
     strcpy(ix86_appbuffer,stmp.c_str());
   }
   return ix86_appbuffer;
@@ -212,7 +211,7 @@ char * ix86_Disassembler::ix86_GetDigitTile(ix86Param& DisP,char wrd,char sgn,un
   DisMode::e_disarg type;
   int do_64;
   do_64 = 0;
-  if(x86_Bitness == DAB_USE64 && wrd == -1) do_64 = 1; /* special case for */
+  if(x86_Bitness == Bin_Format::Use64 && wrd == -1) do_64 = 1; /* special case for */
   cl = do_64 ? 8 : wrd ? ( USE_WIDE_DATA ? 4 : 2 ) : 1;
   if(!((DisP.flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
   {
@@ -224,7 +223,7 @@ char * ix86_Disassembler::ix86_GetDigitTile(ix86Param& DisP,char wrd,char sgn,un
     std::string stmp;
     parent.append_digits(main_handle,stmp,
 		    DisP.CodeAddress + loc_off,
-		    APREF_USE_TYPE,cl,&DisP.RealCmd[loc_off],type);
+		    Bin_Format::Use_Type,cl,&DisP.RealCmd[loc_off],type);
     strcpy(ix86_dtile,stmp.c_str());
   }
   DisP.codelen += cl;
@@ -267,7 +266,7 @@ void ix86_Disassembler::arg_offset(char * str,ix86Param& DisP) const
 In 64-bit mode, the operand size defaults to 64 bits. The processor sign-extends
 the 8-bit or 32-bit displacement value to 64 bits before adding it to the RIP.
 */
-  if(x86_Bitness == DAB_USE64) {
+  if(x86_Bitness == Bin_Format::Use64) {
     DisP.codelen += 8;
     modifier=DISADR_NEAR64;
   }
@@ -306,7 +305,7 @@ void  ix86_Disassembler::getSIBRegs(ix86Param& DisP,char * base,char * scale,cha
   else scale[0] = 0;
   if(ind == 4)
   {
-	if(x86_Bitness == DAB_USE64 && REX_X(K64_REX))
+	if(x86_Bitness == Bin_Format::Use64 && REX_X(K64_REX))
 	    /*	AMD 24594.pdf rev 3.02 aug 2002:
 		REX adds fourth bit (X) which is decoded
 		that allows to use R12 as index.
@@ -318,7 +317,7 @@ void  ix86_Disassembler::getSIBRegs(ix86Param& DisP,char * base,char * scale,cha
   else
   {
      do_r12:
-     if(x86_Bitness == DAB_USE64)
+     if(x86_Bitness == Bin_Format::Use64)
      {
 	 wrex = HAS_67_IN64?0:1;
 	 brex = REX_X(K64_REX);
@@ -330,7 +329,7 @@ void  ix86_Disassembler::getSIBRegs(ix86Param& DisP,char * base,char * scale,cha
   if(bas == 5 && *mod == 0) { base[0] = 0; *mod = 2; }
   else
   {
-     if(x86_Bitness == DAB_USE64)
+     if(x86_Bitness == Bin_Format::Use64)
      {
 	 wrex = HAS_67_IN64?0:1;
 	 brex = REX_B(K64_REX);
@@ -619,9 +618,9 @@ char * ix86_Disassembler::ix86_getModRM(bool w,unsigned char mod,unsigned char r
 	if(mod!=3)	strcpy(ix86_modrm_ret,"[");
 	else		ix86_modrm_ret[0]=0;
     }
-    if((x86_Bitness == DAB_USE16 || x86_Bitness == DAB_USE32) && !USE_WIDE_ADDR) rval = ix86_getModRM16(w,mod,rm,DisP);
+    if((x86_Bitness == Bin_Format::Use16 || x86_Bitness == Bin_Format::Use32) && !USE_WIDE_ADDR) rval = ix86_getModRM16(w,mod,rm,DisP);
     else
-    if(x86_Bitness == DAB_USE64 && USE_WIDE_ADDR) rval = ix86_getModRM64(w,mod,rm,DisP);
+    if(x86_Bitness == Bin_Format::Use64 && USE_WIDE_ADDR) rval = ix86_getModRM64(w,mod,rm,DisP);
     else rval = ix86_getModRM32(w,mod,rm,DisP);
     if(!((DisP.flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) {
 	if(mod!=3)	strcat(ix86_modrm_ret,"]");
@@ -707,7 +706,7 @@ void ix86_Disassembler::arg_cpu_modREGrm(char * str,ix86Param& DisP) const
   unsigned long mode = DisP.mode;
   brex = REX_B(K64_REX);
   wrex = REX_W(K64_REX);
-  if(x86_Bitness>DAB_USE16) DisP.mode|=MOD_WIDE_DATA;
+  if(x86_Bitness>Bin_Format::Use16) DisP.mode|=MOD_WIDE_DATA;
   strcat(str,k64_getREG(DisP,reg,true,brex,wrex));
   DisP.mode=mode;
   DisP.codelen++;
@@ -755,7 +754,7 @@ void ix86_Disassembler::arg_cpu_modsegrm(char * str,ix86Param& DisP) const
   DisP.codelen = 2;
   tileptr = ix86_getModRM(true,mod,reg,DisP);
   if(sreg > 3)
-    if(((DisP.pro_clone & IX86_CPUMASK) < 3) && (x86_Bitness != DAB_USE64))
+    if(((DisP.pro_clone & IX86_CPUMASK) < 3) && (x86_Bitness != Bin_Format::Use64))
       DisP.pro_clone = IX86_CPU386;
   DisP.mode = mode;
   strcat(str,direct ? sregptr : tileptr);
@@ -794,7 +793,7 @@ void ix86_Disassembler::arg_r0mem(char *str,ix86Param& DisP) const
   unsigned char d = DisP.RealCmd[0] & 0x02;
   const char *mem,*reg;
   bool wrex = REX_W(K64_REX);
-  if(x86_Bitness == DAB_USE64 && !HAS_67_IN64)
+  if(x86_Bitness == Bin_Format::Use64 && !HAS_67_IN64)
   /* Opcodes A0 through A3 are address sized. In 64-bit mode, memory offset default to 64-bit. */
   {
     mem = Get16SquareDig(1,DisP,false,true);
@@ -808,7 +807,7 @@ void ix86_Disassembler::arg_r0mem(char *str,ix86Param& DisP) const
   strcat(ix86_appstr,mem);
   strcat(ix86_appstr,"]");
   reg = k64_getREG(DisP,0,DisP.RealCmd[0] & 0x01,0,wrex);
-  if(x86_Bitness == DAB_USE64 && !HAS_67_IN64) DisP.codelen = 9;
+  if(x86_Bitness == Bin_Format::Use64 && !HAS_67_IN64) DisP.codelen = 9;
   else  DisP.codelen = USE_WIDE_ADDR ? 5 : 3;
   strcat(str,d ? ix86_appstr : reg);
   ix86_CStile(DisP,str,d ? reg : ix86_appstr);
@@ -826,7 +825,7 @@ void ix86_Disassembler::arg_insnreg_imm(char * str,ix86Param& DisP) const
 {
   char w = (DisP.insn_flags&INSN_OP_BYTE)?0:1;
   arg_insnreg(str,DisP);
-  if(x86_Bitness == DAB_USE64 && REX_W(K64_REX) && w) w = -1; /* special case for do64 */
+  if(x86_Bitness == Bin_Format::Use64 && REX_W(K64_REX) && w) w = -1; /* special case for do64 */
   ix86_CStile(DisP,str,ix86_GetDigitTile(DisP,w,0,1));
 }
 
@@ -838,7 +837,7 @@ void ix86_Disassembler::arg_imm(char *str,ix86Param& DisP) const
     wrd = 0;
     sgn = 1;
   }
-  if(x86_Bitness == DAB_USE64 && REX_W(K64_REX)) wrd=-1;
+  if(x86_Bitness == Bin_Format::Use64 && REX_W(K64_REX)) wrd=-1;
   strcat(str,ix86_GetDigitTile(DisP,wrd,sgn,1));
 }
 
@@ -847,7 +846,7 @@ void ix86_Disassembler::arg_imm8(char *str,ix86Param& DisP) const
   if(!((DisP.flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) {
     std::string stmp = str;
     parent.append_digits(main_handle,stmp,DisP.CodeAddress + DisP.codelen,
-		 APREF_USE_TYPE,1,&DisP.RealCmd[DisP.codelen],DisMode::Arg_Byte);
+		 Bin_Format::Use_Type,1,&DisP.RealCmd[DisP.codelen],DisMode::Arg_Byte);
     strcpy(str,stmp.c_str());
   }
   DisP.codelen++;
@@ -858,7 +857,7 @@ void ix86_Disassembler::arg_imm16(char *str,ix86Param& DisP) const
   if(!((DisP.flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) {
     std::string stmp = str;
     parent.append_digits(main_handle,stmp,DisP.CodeAddress + DisP.codelen,
-		 APREF_USE_TYPE,2,&DisP.RealCmd[DisP.codelen],DisMode::Arg_Word | DisMode::Arg_Imm);
+		 Bin_Format::Use_Type,2,&DisP.RealCmd[DisP.codelen],DisMode::Arg_Word | DisMode::Arg_Imm);
     strcpy(str,stmp.c_str());
   }
   DisP.codelen+=2;
@@ -1005,7 +1004,7 @@ void ix86_Disassembler::ix86_ArgGrp2(char *str,ix86Param& DisP) const
    else
    {
      wrd = cop == 0x06 || cop == 0x07 ? 0 : wrd; /** push / pop; */
-     if(x86_Bitness == DAB_USE64) sizptr = HAS_REX?REX_w(K64_REX)?QWORD_PTR:DWORD_PTR:QWORD_PTR;
+     if(x86_Bitness == Bin_Format::Use64) sizptr = HAS_REX?REX_w(K64_REX)?QWORD_PTR:DWORD_PTR:QWORD_PTR;
      else
      if(!wrd) sizptr = USE_WIDE_DATA?DWORD_PTR:WORD_PTR;
      else     sizptr = USE_WIDE_DATA?PWORD_PTR:DWORD_PTR;
@@ -1044,7 +1043,7 @@ const ix86_ExOpcodes* ix86_Disassembler::ix86_prepare_flags(const ix86_ExOpcodes
  int in_chain=1;
  while(in_chain)
  {
-    if(x86_Bitness == DAB_USE64)
+    if(x86_Bitness == Bin_Format::Use64)
     {
 	if(extable[*code].flags64&TAB_NAME_IS_TABLE)
 		extable=(ix86_ExOpcodes*)(extable[*code].name64);
@@ -1061,7 +1060,7 @@ const ix86_ExOpcodes* ix86_Disassembler::ix86_prepare_flags(const ix86_ExOpcodes
 	(*codelen)++;
     }
     else {
-	if(x86_Bitness == DAB_USE64) {
+	if(x86_Bitness == Bin_Format::Use64) {
 		DisP.pro_clone = extable[*code].flags64&(~INSN_FLAGS_MASK);
 		DisP.insn_flags = extable[*code].flags64;
 	}
@@ -1086,12 +1085,12 @@ void  ix86_Disassembler::ix86_ExOpCodes(char *str,ix86Param& DisP) const
  code = DisP.RealCmd[0];
  up = 0;
  extable=ix86_prepare_flags(extable,DisP,&code,&up);
- if(x86_Bitness == DAB_USE64)
+ if(x86_Bitness == Bin_Format::Use64)
     strcpy(str,extable[code].name64?extable[code].name64:"???");
  else
  strcpy(str,extable[code].name?extable[code].name:"???");
  ix86_method mtd;
- if(x86_Bitness == DAB_USE64)
+ if(x86_Bitness == Bin_Format::Use64)
  {
    if(extable[code].method64)
    {
@@ -1107,7 +1106,7 @@ void  ix86_Disassembler::ix86_ExOpCodes(char *str,ix86Param& DisP) const
    TabSpace(str,TAB_POS);
    (this->*mtd)(str,DisP);
  }
- if(x86_Bitness == DAB_USE64) DisP.pro_clone = extable[code].flags64&K64_CPUMASK;
+ if(x86_Bitness == Bin_Format::Use64) DisP.pro_clone = extable[code].flags64&K64_CPUMASK;
  else
  if((DisP.pro_clone&IX86_CPUMASK) < (extable[code].pro_clone&IX86_CPUMASK))
  {
@@ -1127,7 +1126,7 @@ void  ix86_Disassembler::ix86_ArgExGr0(char *str,ix86Param& DisP) const
     DisP.codelen++;
     ix86_setModifier(str,ix86_sizes[WORD_PTR]);
     strcat(str,ix86_getModRM(true,mod,reg,DisP));
-    if((x86_Bitness != DAB_USE64) && (cop < 4)) DisP.pro_clone |= INSN_CPL0;
+    if((x86_Bitness != Bin_Format::Use64) && (cop < 4)) DisP.pro_clone |= INSN_CPL0;
 }
 
 const char* ix86_Disassembler::ix86_vmxname[]={"???","???","???","???","???","???","vmclear","???",};
@@ -1150,7 +1149,7 @@ void   ix86_Disassembler::ix86_0FVMX(char *str,ix86Param& DisP) const
     unsigned char rm = MODRM_RM(DisP.RealCmd[1]);
     unsigned char cop = MODRM_COP(DisP.RealCmd[1]);
     unsigned char mod = MODRM_MOD(DisP.RealCmd[1]);
-    if(x86_Bitness == DAB_USE64 && REX_W(K64_REX) && cop==1)
+    if(x86_Bitness == Bin_Format::Use64 && REX_W(K64_REX) && cop==1)
 	strcpy(str,"cmpxchg16b");
     else
     strcpy(str,ix86_0Fvmxname[cop]);
@@ -1187,7 +1186,7 @@ void  ix86_Disassembler::ix86_ArgExGr1(char *str,ix86Param& DisP) const
     unsigned char mod = MODRM_MOD(DisP.RealCmd[1]);
     unsigned char buf,ptr;
     bool word;
-    if(x86_Bitness == DAB_USE64)
+    if(x86_Bitness == Bin_Format::Use64)
     {
       if(DisP.RealCmd[1] == 0xF8)
       {
@@ -1354,7 +1353,7 @@ void  ix86_Disassembler::ix86_ArgExGr1(char *str,ix86Param& DisP) const
     if(cop == 7)
     {
 	word = false;
-	if(x86_Bitness != DAB_USE64) DisP.pro_clone = IX86_CPU486;
+	if(x86_Bitness != Bin_Format::Use64) DisP.pro_clone = IX86_CPU486;
 	buf = 1;
 	ptr = DUMMY_PTR;
     }
@@ -1376,7 +1375,7 @@ void  ix86_Disassembler::ix86_ArgMovXRY(char *str,ix86Param& DisP) const
     bool brex,wrex;
     brex = REX_B(K64_REX);
     wrex = REX_W(K64_REX);
-    if(x86_Bitness == DAB_USE64) wrex = 1;
+    if(x86_Bitness == Bin_Format::Use64) wrex = 1;
     DisP.codelen++;
     DisP.mode|=MOD_WIDE_DATA;
     /* according on intel 30083401.pdf p# 1.4.3 to access cr8-tr15 is used REX.r */
@@ -1579,7 +1578,7 @@ void ix86_Disassembler::ix86_ArgKatmaiGrp1(char *str,ix86Param& DisP) const
    {
      TabSpace(str,TAB_POS);
      arg_cpu_mod_rm(str,DisP);
-	if(x86_Bitness != DAB_USE64) {
+	if(x86_Bitness != Bin_Format::Use64) {
 	    DisP.pro_clone &= ~IX86_CPUMASK;
 	    DisP.pro_clone |= IX86_P8|INSN_SSE;
 	}
@@ -1590,7 +1589,7 @@ void ix86_Disassembler::ix86_ArgKatmaiGrp1(char *str,ix86Param& DisP) const
    }
    else DisP.codelen++;
    if((cop==5 || cop==6) && mod==3)
-	if(x86_Bitness != DAB_USE64) {
+	if(x86_Bitness != Bin_Format::Use64) {
 	    DisP.pro_clone &= ~IX86_CPUMASK;
 	    DisP.pro_clone |= IX86_P4|INSN_MMX;
 	}
@@ -1824,7 +1823,7 @@ void ix86_Disassembler::ix86_3DNowOpCodes( char *str,ix86Param& DisP) const
  strcpy(str,ix86_3DNowtable[code].name);
  TabSpace(str,TAB_POS);
  strcat(str,ix86_Katmai_buff);
- if(x86_Bitness == DAB_USE64) DisP.pro_clone = K64_ATHLON|INSN_MMX;
+ if(x86_Bitness == Bin_Format::Use64) DisP.pro_clone = K64_ATHLON|INSN_MMX;
  else DisP.pro_clone = ix86_3DNowtable[code].pro_clone;
 }
 

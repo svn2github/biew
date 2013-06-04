@@ -32,7 +32,6 @@ using namespace	usr;
 #include "plugins/bin/nlm.h"
 #include "codeguid.h"
 #include "bconsole.h"
-#include "reg_form.h"
 #include "tstrings.h"
 #include "beyehelp.h"
 #include "libbeye/libbeye.h"
@@ -61,9 +60,9 @@ namespace	usr {
 	    virtual __filesize_t	action_F8();
 
 	    virtual __filesize_t	show_header() const;
-	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
+	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift);
 	    virtual int			query_platform() const;
-	    virtual int			query_bitness(__filesize_t) const;
+	    virtual Bin_Format::bitness	query_bitness(__filesize_t) const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
@@ -73,7 +72,7 @@ namespace	usr {
 	    std::string		nlm_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
 	    void		nlm_ReadPubNameList(binary_stream& handle);
 	    int			NLMbitness(__filesize_t off) const;
-	    bool		BuildReferStrNLM(std::string& str,const RELOC_NLM& rne,int flags);
+	    bool		BuildReferStrNLM(std::string& str,const RELOC_NLM& rne,Bin_Format::bind_type flags);
 	    void		BuildRelocNlm();
 	    std::vector<std::string> __ReadModRefNamesNLM(binary_stream& handle,size_t nnames) const;
 	    std::vector<std::string> NLMNamesReadItems(binary_stream& handle,size_t nnames) const;
@@ -505,7 +504,7 @@ void NLM_Parser::BuildRelocNlm()
   delete w;
 }
 
-bool NLM_Parser::BuildReferStrNLM(std::string& str,const RELOC_NLM& rne,int flags)
+bool NLM_Parser::BuildReferStrNLM(std::string& str,const RELOC_NLM& rne,Bin_Format::bind_type flags)
 {
   __filesize_t val;
   bool retrf;
@@ -533,7 +532,7 @@ bool NLM_Parser::BuildReferStrNLM(std::string& str,const RELOC_NLM& rne,int flag
       str+=name;
     }
     else
-     if(!(flags & APREF_SAVE_VIRT))
+     if(!(flags & Bin_Format::Save_Virt))
      {
        str+="(*this)+";
        str+=Get8Digit(val);
@@ -544,13 +543,13 @@ bool NLM_Parser::BuildReferStrNLM(std::string& str,const RELOC_NLM& rne,int flag
   return retrf;
 }
 
-bool NLM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+bool NLM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
   RELOC_NLM key;
   std::set<RELOC_NLM>::const_iterator rnlm;
   bool retrf;
   std::string buff;
-  if(flags & APREF_TRY_PIC) return false;
+  if(flags & Bin_Format::Try_Pic) return false;
   if(!nlm.nlm_numberOfExternalReferences || nlm.nlm_externalReferencesOffset >= main_handle.flength()) retrf = false;
   else
   {
@@ -560,7 +559,7 @@ bool NLM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
     rnlm = RelocNlm.find(key);
     retrf = (rnlm!=RelocNlm.end()) ? BuildReferStrNLM(str,*rnlm,flags) : false;
   }
-  if(!retrf && (flags & APREF_TRY_LABEL))
+  if(!retrf && (flags & Bin_Format::Try_Label))
   {
      if(PubNames.empty()) nlm_ReadPubNameList(main_handle);
      if(FindPubName(buff,r_sh))
@@ -590,10 +589,10 @@ NLM_Parser::~NLM_Parser()
     if(nlm_cache != &main_handle) delete nlm_cache;
 }
 
-int NLM_Parser::query_bitness(__filesize_t off) const
+Bin_Format::bitness NLM_Parser::query_bitness(__filesize_t off) const
 {
     UNUSED(off);
-    return DAB_USE32;
+    return Bin_Format::Use32;
 }
 
 bool NLM_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
@@ -661,7 +660,7 @@ void NLM_Parser::nlm_ReadPubNameList(binary_stream& handle)
    length         = handle.read(type_byte);
    handle.seek(length,binary_stream::Seek_Cur);
    nlm_pn.pa      = (handle.read(type_dword) & 0x00FFFFFFL) + nlm.nlm_codeImageOffset;
-   nlm_pn.attr    = SC_GLOBAL;
+   nlm_pn.attr    = Symbol_Info::Global;
    PubNames.insert(nlm_pn);
    if(handle.eof()) break;
  }
@@ -686,7 +685,7 @@ Object_Info NLM_Parser::get_object_attribute(__filesize_t pa)
     Object_Info rc;
     rc.start = 0;
     rc.end = main_handle.flength();
-    rc._class = OC_NOOBJECT;
+    rc._class = Object_Info::NoObject;
     rc.bitness = query_bitness(pa);
     rc.number = 0;
     if(pa < nlm.nlm_codeImageOffset) {
@@ -694,16 +693,16 @@ Object_Info NLM_Parser::get_object_attribute(__filesize_t pa)
 	rc.number = 0;
     } else if(pa >= nlm.nlm_codeImageOffset && pa < nlm.nlm_codeImageOffset + nlm.nlm_codeImageSize) {
 	rc.start = nlm.nlm_codeImageOffset;
-	rc._class = OC_CODE;
+	rc._class = Object_Info::Code;
 	rc.end = nlm.nlm_codeImageOffset + nlm.nlm_codeImageSize;
 	rc.number = 1;
     } else if(pa >= nlm.nlm_dataImageOffset && pa < nlm.nlm_dataImageOffset + nlm.nlm_dataImageSize) {
-	rc._class = OC_DATA;
+	rc._class = Object_Info::Data;
 	rc.start = nlm.nlm_dataImageOffset;
 	rc.end = rc.start + nlm.nlm_dataImageSize;
 	rc.number = 2;
     } else {
-	rc._class = OC_NOOBJECT;
+	rc._class = Object_Info::NoObject;
 	rc.start = nlm.nlm_dataImageOffset + nlm.nlm_dataImageSize;
 	rc.number = 3;
     }

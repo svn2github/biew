@@ -30,7 +30,6 @@ using namespace	usr;
 
 #include "beye.h"
 #include "udn.h"
-#include "reg_form.h"
 #include "beyeutil.h"
 #include "bconsole.h"
 #include "tstrings.h"

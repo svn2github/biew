@@ -7,6 +7,7 @@ namespace	usr {
     class udn;
     struct Symbol_Info;
     struct Object_Info;
+    class Bin_Format;
 
     class Binary_Parser : public Opaque {
 	public:
@@ -36,7 +37,7 @@ namespace	usr {
 			   * @param r_shift      used only if APPREF_TRY_LABEL mode is set, contains real value of field, that required binding
 			   * @return             true if reference was appended
 			*/
-	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift) { UNUSED(_parent); UNUSED(str); UNUSED(shift); UNUSED(flg); UNUSED(codelen); UNUSED(r_shift); return false; }
+	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift) { UNUSED(_parent); UNUSED(str); UNUSED(shift); UNUSED(flg); UNUSED(codelen); UNUSED(r_shift); return false; }
 
 			 /** Returns CPU platform, that required by format.
 			   * @note           Full list of platform please see in
@@ -45,12 +46,8 @@ namespace	usr {
 			   *                 undefined.
 			  **/
 	    virtual int			query_platform() const = 0;
-
-			 /** Returns DAB_XXX. Quick version for disassembler */
-	    virtual int			query_bitness(__filesize_t) const { return DAB_USE16; }
-
-			 /** Returns DAE_XXX. */
-	    virtual int			query_endian(__filesize_t) const { return DAE_LITTLE; }
+	    virtual Bin_Format::bitness	query_bitness(__filesize_t) const { return Bin_Format::Use16; }
+	    virtual Bin_Format::endian	query_endian(__filesize_t) const { return Bin_Format::Little; }
 
 			 /** For displaying offset within struct in left address column.
 			   * @return         false if string is not modified.
@@ -149,7 +146,7 @@ namespace	usr {
     }
     if(idx!=names.end()) {
 	rc.pa = (*idx).pa;
-	rc._class = (*idx).attr;
+	rc._class = Symbol_Info::symbol_class((*idx).attr);
 	if(idx==names.begin() && key.pa < rc.pa && as_prev) rc.pa = 0;
 	else index = idx;
     }

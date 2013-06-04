@@ -27,7 +27,6 @@ using namespace	usr;
 #include "udn.h"
 #include "colorset.h"
 #include "codeguid.h"
-#include "reg_form.h"
 #include "tstrings.h"
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"
@@ -203,11 +202,11 @@ bool MZ_Parser::isMZReferenced(__filesize_t shift,char len)
     return false;
 }
 
-bool MZ_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+bool MZ_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
     std::string stmp;
     bool ret = false;
-    if(flags & APREF_TRY_PIC) return false;
+    if(flags & Bin_Format::Try_Pic) return false;
     if(CurrMZChain.empty()) BuildMZChain();
     if(isMZReferenced(ulShift,codelen)) {
 	unsigned wrd;
@@ -217,7 +216,7 @@ bool MZ_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift
 	str+="+PID";
 	ret = true;
     }
-    if(!DumpMode && !EditMode && (flags & APREF_TRY_LABEL) && codelen == 4) {
+    if(!DumpMode && !EditMode && (flags & Bin_Format::Try_Label) && codelen == 4) {
 	r_sh += (((__filesize_t)mz.mzHeaderSize) << 4);
 	if(__udn.find(r_sh,stmp)==true) str+=stmp;
 	else str+=Get8Digit(r_sh);

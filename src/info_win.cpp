@@ -26,7 +26,6 @@ using namespace	usr;
 #include "beye.h"
 #include "colorset.h"
 #include "tstrings.h"
-#include "reg_form.h"
 #include "bconsole.h"
 #include "beyeutil.h"
 #include "beyehelp.h"
@@ -556,16 +555,16 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
 	obj.name.clear();
 	obj.start = 0;
 	obj.end = beye_context().flength();
-	obj._class = OC_CODE;
-	obj.bitness = DAB_USE16;
+	obj._class = Object_Info::Code;
+	obj.bitness = Bin_Format::Use16;
     }
     delete wait_wnd;
     switch(obj.bitness) {
-	case DAB_USE16: btn = "USE16"; break;
-	case DAB_USE32: btn = "USE32"; break;
-	case DAB_USE64: btn = "USE64"; break;
-	case DAB_USE128:btn = "USE128"; break;
-	case DAB_USE256:btn = "USE256"; break;
+	case Bin_Format::Use16: btn = "USE16"; break;
+	case Bin_Format::Use32: btn = "USE32"; break;
+	case Bin_Format::Use64: btn = "USE64"; break;
+	case Bin_Format::Use128:btn = "USE128"; break;
+	case Bin_Format::Use256:btn = "USE256"; break;
 	default: btn = "";
     }
     hwnd->printf(
@@ -580,7 +579,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
 	   ,prev.name.c_str()
 	   ,next.name.c_str()
 	   ,obj.number
-	   ,obj._class == OC_CODE ? "CODE" : obj._class == OC_DATA ? "DATA" : "no obj."
+	   ,obj._class == Object_Info::Code ? "CODE" : obj._class == Object_Info::Data ? "DATA" : "no obj."
 	   ,btn
 	   ,obj.start
 	   ,obj.end

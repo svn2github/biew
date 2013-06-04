@@ -38,7 +38,6 @@ using namespace	usr;
 #include "plugins/disasm.h"
 #include "beyeutil.h"
 #include "bconsole.h"
-#include "reg_form.h"
 #include "libbeye/bbio.h"
 #include "libbeye/bswap.h"
 #include "libbeye/twindow.h"
@@ -237,7 +236,7 @@ FileUtilities*	InsDelBlock::query_interface(BeyeContext& b) { return new(zeromem
 	private:
 	    void		printObject(std::ofstream& fout,const Object_Info& obj) const;
 	    void		printHdr(std::ofstream& fout,const Bin_Format& fmt) const;
-	    std::string		GET_FUNC_CLASS(unsigned x) const { return x == SC_LOCAL ? "private" : "public"; }
+	    std::string		GET_FUNC_CLASS(Symbol_Info::symbol_class x) const { return x == Symbol_Info::Local ? "private" : "public"; }
 	    void		make_addr_column(std::string& buff,__filesize_t offset) const;
 	    unsigned		printHelpComment(char *buff,MBuffer codebuff,DisasmRet *dret,DisMode::e_severity dis_severity,const char* dis_comments) const;
     };
@@ -251,19 +250,19 @@ void FStore::printObject(std::ofstream& fout,const Object_Info& obj) const
     std::string name;
     char onumname[30];
     switch(obj.bitness) {
-	case DAB_USE16: btn = "USE16"; break;
-	case DAB_USE32: btn = "USE32"; break;
-	case DAB_USE64: btn = "USE64"; break;
-	case DAB_USE128:btn = "USE128"; break;
-	case DAB_USE256:btn = "USE256"; break;
+	case Bin_Format::Use16: btn = "USE16"; break;
+	case Bin_Format::Use32: btn = "USE32"; break;
+	case Bin_Format::Use64: btn = "USE64"; break;
+	case Bin_Format::Use128:btn = "USE128"; break;
+	case Bin_Format::Use256:btn = "USE256"; break;
 	default: btn = "";
     }
 
-    name = !obj.name.empty() ? obj.name : obj._class == OC_DATA ? "DUMP_DATA" :
-			obj._class == OC_CODE ? "DUMP_TEXT" :
+    name = !obj.name.empty() ? obj.name : obj._class == Object_Info::Data ? "DUMP_DATA" :
+			obj._class == Object_Info::Code ? "DUMP_TEXT" :
 			"Unknown";
     if(obj.name.empty()) { sprintf(onumname,"%s%u",name.c_str(),obj.number); name = onumname; }
-    fout<<std::endl<<"SEGMENT "<<name<<" BYTE PUBLIC "<<btn<<" '"<<(obj._class == OC_DATA ? "DATA" : obj._class == OC_CODE ? "CODE" : "NoObject")<<"'"<<std::endl;
+    fout<<std::endl<<"SEGMENT "<<name<<" BYTE PUBLIC "<<btn<<" '"<<(obj._class == Object_Info::Data ? "DATA" : obj._class == Object_Info::Code ? "CODE" : "NoObject")<<"'"<<std::endl;
     fout<<"; size: "<<std::dec<<(obj.end-obj.start)<<" bytes"<<std::endl<<std::endl;
 }
 
@@ -428,7 +427,7 @@ bool FStore::run()
 		    obj.start = 0;
 		    obj.end = bctx.flength();
 		    obj.name[0] = 0;
-		    obj._class = OC_CODE;
+		    obj._class = Object_Info::Code;
 		    obj.bitness = bctx.bin_format().query_bitness(ff_startpos);
 		}
 #endif
@@ -457,7 +456,7 @@ bool FStore::run()
 			    obj = bctx.bin_format().get_object_attribute(ff_startpos);
 			    printObject(fout,obj);
 			}
-			if(obj._class == OC_NOOBJECT) {
+			if(obj._class == Object_Info::NoObject) {
 			    __filesize_t diff;
 			    fout<<"; L"<<std::hex<<std::setfill('0')<<std::setw(16)<<obj.start<<"H-L"<<std::hex<<std::setfill('0')<<std::setw(16)<<obj.end<<"H - no object"<<std::endl;
 			    dret.codelen = std::min(__filesize_t(UCHAR_MAX),obj.end - ff_startpos);
@@ -499,7 +498,7 @@ bool FStore::run()
 		    memset(codebuff,0,MaxInsnLen);
 		    bctx.bm_file().seek(ff_startpos,binary_stream::Seek_Set);
 		    bctx.bm_file().read((any_t*)codebuff,MaxInsnLen);
-		    if(obj._class == OC_CODE) dret = dismode->disassembler(ff_startpos,codebuff,__DISF_NORMAL);
+		    if(obj._class == Object_Info::Code) dret = dismode->disassembler(ff_startpos,codebuff,__DISF_NORMAL);
 		    else { /** Data object */
 			unsigned dis_data_len,ifreq,data_len;
 			char coll_str[__TVIO_MAXSCREENWIDTH];
@@ -512,11 +511,11 @@ bool FStore::run()
 			}
 			coll_str[cstr_idx] = 0;
 			switch(obj.bitness) {
-			    case DAB_USE16: dis_data_len = 2; break;
-			    case DAB_USE32: dis_data_len = 4; break;
-			    case DAB_USE64: dis_data_len = 8; break;
-			    case DAB_USE128: dis_data_len = 16; break;
-			    case DAB_USE256: dis_data_len = 32; break;
+			    case Bin_Format::Use16: dis_data_len = 2; break;
+			    case Bin_Format::Use32: dis_data_len = 4; break;
+			    case Bin_Format::Use64: dis_data_len = 8; break;
+			    case Bin_Format::Use128: dis_data_len = 16; break;
+			    case Bin_Format::Use256: dis_data_len = 32; break;
 			    default:         dis_data_len = 1; break;
 			}
 			data_len = 0;

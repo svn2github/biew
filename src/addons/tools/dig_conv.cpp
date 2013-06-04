@@ -25,7 +25,6 @@ using namespace	usr;
 #include "bconsole.h"
 #include "beyeutil.h"
 #include "colorset.h"
-#include "reg_form.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"

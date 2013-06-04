@@ -23,7 +23,6 @@ using namespace	usr;
 #include "bconsole.h"
 #include "beyehelp.h"
 #include "colorset.h"
-#include "reg_form.h"
 #include "libbeye/bswap.h"
 #include "libbeye/kbd_code.h"
 #include "plugins/disasm.h"

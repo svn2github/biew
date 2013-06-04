@@ -22,7 +22,6 @@ using namespace	usr;
 #include <stdio.h>
 
 #include "libbeye/bswap.h"
-#include "reg_form.h"
 #include "plugins/disasm.h"
 #include "beyehelp.h"
 #include "beyeutil.h"
@@ -150,7 +149,7 @@ const char* ARM_Disassembler::arm_reg_name[] =
 	if(prev) strcat(dret->str,",");\
 	strcat(dret->str,"#");\
 	std::string stmp = dret->str; \
-	parent.append_digits(main_handle,stmp,ulShift,APREF_USE_TYPE,2,&val,DisMode::Arg_Word);\
+	parent.append_digits(main_handle,stmp,ulShift,Bin_Format::Use_Type,2,&val,DisMode::Arg_Word);\
 	strcpy(dret->str,stmp.c_str()); \
 	if(smul) strcat(dret->str,smul);\
 	prev=1;\
@@ -296,7 +295,7 @@ void ARM_Disassembler::arm16Disassembler(DisasmRet *dret,__filesize_t ulShift,
 	strcpy(dret->str,"???");
 	TabSpace(dret->str,TAB_POS);
 	std::string stmp = dret->str;
-	parent.append_digits(main_handle,stmp,ulShift,APREF_USE_TYPE,2,&opcode,DisMode::Arg_Word);
+	parent.append_digits(main_handle,stmp,ulShift,Bin_Format::Use_Type,2,&opcode,DisMode::Arg_Word);
 	strcpy(dret->str,stmp.c_str());
     }
 }

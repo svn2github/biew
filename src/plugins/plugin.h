@@ -4,7 +4,6 @@
 
 #include "libbeye/libbeye.h"
 #include "beyeutil.h"
-#include "reg_form.h"
 
 namespace	usr {
     class TWindow;
@@ -13,21 +12,8 @@ namespace	usr {
     class DisMode;
     class Bin_Format;
     class udn;
-
-    struct Symbol_Info {
-	std::string	name;	// name of public symbol
-	unsigned	_class;	// class of symbol (See SC_* conatnts)
-	__filesize_t	pa;	// physical address of public symbol (Bad_Address if no symbol)
-    };
-
-    struct Object_Info {
-	unsigned	number;	// logical number of object (0 if it's no object).
-	std::string	name;	// object name
-	__filesize_t	start;	// file offset of object's start
-	__filesize_t	end;	// file offset of object's end
-	int		_class;	// _class of object (See OC_* constants).
-	int		bitness;// bitness of object (See DAB_* constants).
-    };
+    struct Symbol_Info;
+    struct Object_Info;
 
     class Plugin : public Opaque {
 	public:
@@ -113,6 +99,30 @@ namespace	usr {
     struct Binary_Parser_Info;
     class Bin_Format : public Opaque {
 	public:
+	    enum bind_type {
+		Normal	=0x0000, /**< Append references in short form if it really present in binary */
+		Use_Type=0x0001, /**< Append references in detail form if it really present in binary */
+		Try_Label=0x0002, /**< Append references in short form even if it not present in binary (smart method) */
+		Save_Virt=0x0004, /**< Notifies plugin about preserving of virtual address, if binding is local */
+		Try_Pic	=0x0008  /**< Append references in short form assuming that shift is offset in .GOT table where references are binded */
+	    };
+
+	    /** List of DisAssembler Bitness */
+	    enum bitness {
+		Use16	=0,
+		Use32	=1,
+		Use64	=2,
+		Use128	=3,
+		Use256	=4,
+		Auto	=0xFFFFU /**< never must return! Only for selection */
+	    };
+
+	    /** List of DisAssembler Endian */
+	    enum endian {
+		Little	=0,
+		Big	=1
+	    };
+
 	    Bin_Format(CodeGuider& parent,udn& _udn);
 	    virtual ~Bin_Format();
 
@@ -133,15 +143,11 @@ namespace	usr {
 	    virtual __filesize_t	action_F10() const;
 
 	    virtual __filesize_t	show_header() const;
-	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift) const;
+	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,bind_type flg,int codelen,__filesize_t r_shift) const;
 
 	    virtual int			query_platform() const;
-
-			 /** Returns DAB_XXX. Quick version for disassembler */
-	    virtual int			query_bitness(__filesize_t off) const;
-
-			 /** Returns DAE_XXX. */
-	    virtual int			query_endian(__filesize_t off) const;
+	    virtual bitness		query_bitness(__filesize_t off) const;
+	    virtual endian		query_endian(__filesize_t off) const;
 
 			 /** For displaying offset within struct in left address column.
 			   * @return         false if string is not modified.
@@ -184,6 +190,39 @@ namespace	usr {
 	    Binary_Parser*		detectedFormat;
 	    CodeGuider&			parent;
 	    udn&			_udn;
+    };
+    inline Bin_Format::bind_type operator~(Bin_Format::bind_type a) { return static_cast<Bin_Format::bind_type>(~static_cast<unsigned>(a)); }
+    inline Bin_Format::bind_type operator|(Bin_Format::bind_type a, Bin_Format::bind_type b) { return static_cast<Bin_Format::bind_type>(static_cast<unsigned>(a)|static_cast<unsigned>(b)); }
+    inline Bin_Format::bind_type operator&(Bin_Format::bind_type a, Bin_Format::bind_type b) { return static_cast<Bin_Format::bind_type>(static_cast<unsigned>(a)&static_cast<unsigned>(b)); }
+    inline Bin_Format::bind_type operator^(Bin_Format::bind_type a, Bin_Format::bind_type b) { return static_cast<Bin_Format::bind_type>(static_cast<unsigned>(a)^static_cast<unsigned>(b)); }
+    inline Bin_Format::bind_type operator|=(Bin_Format::bind_type& a, Bin_Format::bind_type b) { return (a=static_cast<Bin_Format::bind_type>(static_cast<unsigned>(a)|static_cast<unsigned>(b))); }
+    inline Bin_Format::bind_type operator&=(Bin_Format::bind_type& a, Bin_Format::bind_type b) { return (a=static_cast<Bin_Format::bind_type>(static_cast<unsigned>(a)&static_cast<unsigned>(b))); }
+    inline Bin_Format::bind_type operator^=(Bin_Format::bind_type& a, Bin_Format::bind_type b) { return (a=static_cast<Bin_Format::bind_type>(static_cast<unsigned>(a)^static_cast<unsigned>(b))); }
+
+    struct Symbol_Info {
+	/** Public symbols classes */
+	enum symbol_class {
+	    Local=0, /**< means: present as entry but not exported */
+	    Global=1  /**< means: exported entry point */
+	};
+	std::string	name;	// name of public symbol
+	symbol_class	_class;	// class of symbol
+	__filesize_t	pa;	// physical address of public symbol (Bad_Address if no symbol)
+    };
+
+    struct Object_Info {
+	/** object classes */
+	enum obj_class {
+	    Code=0, /**< for code objects */
+	    Data=1, /**< for any data objects */
+	    NoObject=-1 /**< for non objects (means: relocs, resources, tables ...) */
+	};
+	unsigned	number;	// logical number of object (0 if it's no object).
+	std::string	name;	// object name
+	__filesize_t	start;	// file offset of object's start
+	__filesize_t	end;	// file offset of object's end
+	obj_class	_class;	// _class of object
+	Bin_Format::bitness	bitness;// bitness of object.
     };
 } //namespace	usr
 #endif

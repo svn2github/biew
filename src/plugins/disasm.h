@@ -153,7 +153,7 @@ typedef unsigned char * MBuffer;
 	    virtual bool		append_faddr(binary_stream& handle,std::string& str,__fileoff_t ulShift,__fileoff_t distin,__filesize_t r_sh,e_disaddr type,unsigned seg,char codelen);
 /** Appends symbolic information instead digits to instruction string
     @param str       string to be appended
-    @param flags     same as described in reg_form.h (APREF_* family)
+    @param flags     same as described in Bin_Format
     @param ulShift   indicates offset to field for binding
     @param codelen   contains length of field for binding
     @param defval    contains default value if not binding
@@ -177,7 +177,7 @@ typedef unsigned char * MBuffer;
     disAppendDigits(outstr, 0x5680, 1, 2, 0x1234, DISARG_WORD);
     strcat(outstr,"]");
 **/
-	    virtual bool		append_digits(binary_stream& handle,std::string& str,__filesize_t ulShift,int flags,char codelen,any_t*defval,e_disarg type);
+	    virtual bool		append_digits(binary_stream& handle,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flags,char codelen,any_t*defval,e_disarg type);
 
 	    virtual e_panel		panel_mode() const { return disPanelMode; }
 	    virtual bool		prepare_mode() const { return DisasmPrepareMode; }
@@ -306,7 +306,7 @@ typedef unsigned char * MBuffer;
 	    virtual ColorAttr	get_alt_insn_color(unsigned long clone) { return get_insn_color(clone); } /**< returns color of instruction */
 	    virtual ColorAttr	get_alt_opcode_color(unsigned long clone) { return get_opcode_color(clone); } /**< returns color of instruction */
 
-	    virtual int		get_bitness() const = 0;  /**< returns currently used bitness */
+	    virtual Bin_Format::bitness	get_bitness() const = 0;  /**< returns currently used bitness */
 	    virtual char	clone_short_name(unsigned long clone) = 0; /**< returns short clone name of instruction */
 	    virtual void	read_ini(Ini_Profile&) {}  /**< reads settings of plugin from .ini file */
 	    virtual void	save_ini(Ini_Profile&) {}  /**< stores settings of plugin into .ini file */

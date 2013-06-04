@@ -22,12 +22,10 @@ using namespace	usr;
 #include <stdio.h>
 
 #include "beye.h"
-#include "reg_form.h"
 #include "plugins/disasm.h"
 #include "bconsole.h"
 #include "beyehelp.h"
 #include "beyeutil.h"
-#include "reg_form.h"
 #include "libbeye/file_ini.h"
 
 namespace	usr {
@@ -45,7 +43,7 @@ namespace	usr {
 	    virtual int		max_insn_len() const;
 	    virtual ColorAttr	get_insn_color(unsigned long clone);
 
-	    virtual int		get_bitness() const;
+	    virtual Bin_Format::bitness	get_bitness() const;
 	    virtual char	clone_short_name(unsigned long clone);
 	    virtual void	read_ini(Ini_Profile&);
 	    virtual void	save_ini(Ini_Profile&);
@@ -116,7 +114,7 @@ DisasmRet Data_Disassembler::disassembler(__filesize_t ulShift,
     ret.codelen = cl;
     strcpy(outstr,preface);
     std::string stmp = outstr;
-    parent.append_digits(main_handle,stmp,ulShift,APREF_USE_TYPE,cl,buffer,type);
+    parent.append_digits(main_handle,stmp,ulShift,Bin_Format::Use_Type,cl,buffer,type);
     strcpy(outstr,stmp.c_str());
   }
   else
@@ -144,7 +142,7 @@ ColorAttr Data_Disassembler::get_insn_color( unsigned long clone )
   UNUSED(clone);
   return disasm_cset.cpu_cset[0].clone[0];
 }
-int Data_Disassembler::get_bitness() const { return DAB_USE16; }
+Bin_Format::bitness Data_Disassembler::get_bitness() const { return Bin_Format::Use16; }
 char Data_Disassembler::clone_short_name( unsigned long clone )
 {
   UNUSED(clone);

@@ -124,9 +124,9 @@ namespace	usr {
 	    virtual __filesize_t	action_F8();
 	    virtual __filesize_t	action_F10();
 
-	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
+	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift);
 	    virtual int			query_platform() const;
-	    virtual int			query_bitness(__filesize_t) const;
+	    virtual Bin_Format::bitness	query_bitness(__filesize_t) const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;

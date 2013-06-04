@@ -28,7 +28,6 @@ using namespace	usr;
 
 #include "bconsole.h"
 #include "beyeutil.h"
-#include "reg_form.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/sysdep/processor.h"

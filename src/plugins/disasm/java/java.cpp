@@ -23,12 +23,10 @@ using namespace	usr;
 #include <stdio.h>
 
 #include "beye.h"
-#include "reg_form.h"
 #include "plugins/disasm.h"
 #include "bconsole.h"
 #include "beyehelp.h"
 #include "beyeutil.h"
-#include "reg_form.h"
 #include "libbeye/bswap.h"
 #include "libbeye/file_ini.h"
 
@@ -68,7 +66,7 @@ namespace	usr {
 	    virtual int		max_insn_len() const;
 	    virtual ColorAttr	get_insn_color(unsigned long clone);
 
-	    virtual int		get_bitness() const;
+	    virtual Bin_Format::bitness	get_bitness() const;
 	    virtual char	clone_short_name(unsigned long clone);
 	    virtual void	read_ini(Ini_Profile&);
 	    virtual void	save_ini(Ini_Profile&);
@@ -585,7 +583,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		    if(jflags & JVM_OBJREFMASK) {
 		    std::string stmp = outstr;
 		    parent.append_digits(main_handle,stmp,ulShift+idx,
-			APREF_USE_TYPE,2,&sval,DisMode::Arg_Word);
+			Bin_Format::Use_Type,2,&sval,DisMode::Arg_Word);
 		    strcpy(outstr,stmp.c_str());
 		    } else strcat(outstr,Get4Digit(sval));
 		    break;
@@ -611,7 +609,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 			sval=JVM_WORD((uint16_t*)(&buffer[idx]),1);
 			std::string stmp = outstr;
 			parent.append_digits(main_handle,stmp,ulShift,
-				    APREF_USE_TYPE,2,&sval,DisMode::Arg_Word);
+				    Bin_Format::Use_Type,2,&sval,DisMode::Arg_Word);
 			strcpy(outstr,stmp.c_str());
 			strcat(outstr,",");
 			if((jflags & JVM_CONST1)==JVM_CONST1) strcat(outstr,Get2Digit(buffer[idx+2]));
@@ -625,7 +623,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		    if(jflags & JVM_OBJREFMASK) {
 		    std::string stmp = outstr;
 		    parent.append_digits(main_handle,stmp,ulShift+idx,
-			APREF_USE_TYPE,4,&lval,DisMode::Arg_DWord);
+			Bin_Format::Use_Type,4,&lval,DisMode::Arg_DWord);
 		    strcpy(outstr,stmp.c_str());
 		    } else strcat(outstr,Get8Digit(lval));
 		    break;
@@ -633,7 +631,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		case 8:
 		    std::string stmp = outstr;
 		    parent.append_digits(main_handle,stmp,ulShift+idx,
-			APREF_USE_TYPE,8,&buffer[idx],DisMode::Arg_QWord);
+			Bin_Format::Use_Type,8,&buffer[idx],DisMode::Arg_QWord);
 		    strcpy(outstr,stmp.c_str());
 		    break;
 	    }
@@ -660,7 +658,7 @@ ColorAttr Java_Disassembler::get_insn_color( unsigned long clone )
   UNUSED(clone);
   return disasm_cset.cpu_cset[0].clone[0];
 }
-int Java_Disassembler::get_bitness() const { return DAB_USE16; }
+Bin_Format::bitness Java_Disassembler::get_bitness() const { return Bin_Format::Use16; }
 char Java_Disassembler::clone_short_name( unsigned long clone )
 {
   UNUSED(clone);

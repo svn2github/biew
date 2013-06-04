@@ -28,7 +28,6 @@ using namespace	usr;
 #include "beyeutil.h"
 #include "beyehelp.h"
 #include "udn.h"
-#include "reg_form.h"
 #include "editor.h"
 #include "tstrings.h"
 #include "libbeye/file_ini.h"

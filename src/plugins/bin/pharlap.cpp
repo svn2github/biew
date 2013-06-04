@@ -26,7 +26,6 @@ using namespace	usr;
 #include "udn.h"
 #include "beyehelp.h"
 #include "tstrings.h"
-#include "reg_form.h"
 #include "plugins/bin/pharlap.h"
 #include "plugins/disasm.h"
 #include "libbeye/kbd_code.h"

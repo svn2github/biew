@@ -21,7 +21,6 @@ using namespace	usr;
 
 #include "plugins/disasm.h"
 #include "plugins/bin/rdoff2.h"
-#include "reg_form.h"
 #include "udn.h"
 #include "bconsole.h"
 #include "beyehelp.h"

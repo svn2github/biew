@@ -314,7 +314,7 @@ enum {
 	    virtual ColorAttr	get_alt_insn_color(unsigned long clone);
 	    virtual ColorAttr	get_alt_opcode_color(unsigned long clone);
 
-	    virtual int		get_bitness() const;
+	    virtual Bin_Format::bitness	get_bitness() const;
 	    virtual char	clone_short_name(unsigned long clone);
 	    virtual void	read_ini(Ini_Profile&);
 	    virtual void	save_ini(Ini_Profile&);
@@ -465,7 +465,7 @@ enum {
 	    binary_stream&		main_handle;
 	    const Bin_Format&		bin_format;
 
-	    unsigned			x86_Bitness;
+	    Bin_Format::bitness		x86_Bitness;
 	    char*			ix86_voidstr;
 	    char*			ix86_da_out;
 	    char*			ix86_Katmai_buff;
@@ -517,7 +517,7 @@ enum {
 	    static const char*		ix86_3dPrefetchGrp[];
 	    static const char*		ix86_KatmaiGr2Names[];
 
-	    static unsigned		BITNESS;
+	    static Bin_Format::bitness	BITNESS;
 	    static char			ix86_segpref[4];
 	    static const unsigned char	leave_insns[];
 

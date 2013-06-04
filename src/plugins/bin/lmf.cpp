@@ -25,7 +25,6 @@ using namespace	usr;
 #include <string.h>
 #include <stdio.h>
 
-#include "reg_form.h"
 #include "udn.h"
 #include "beyehelp.h"
 #include "bconsole.h"
@@ -67,7 +66,7 @@ namespace	usr {
 
 	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
-	    virtual int			query_bitness(__filesize_t) const;
+	    virtual Bin_Format::bitness	query_bitness(__filesize_t) const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
@@ -210,11 +209,11 @@ int LMF_Parser::query_platform() const
 	return DISASM_CPU_IX86;
 }
 
-int LMF_Parser::query_bitness(__filesize_t pa) const
+Bin_Format::bitness LMF_Parser::query_bitness(__filesize_t pa) const
 {
 	UNUSED(pa);
-	if(xdef.def.cflags&_PCF_32BIT) return DAB_USE32;
-	else return DAB_USE16;
+	if(xdef.def.cflags&_PCF_32BIT) return Bin_Format::Use32;
+	else return Bin_Format::Use16;
 }
 
 bool LMF_Parser::address_resolving(std::string& addr,__filesize_t cfpos)

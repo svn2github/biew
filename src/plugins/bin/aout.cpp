@@ -25,7 +25,6 @@ using namespace	usr;
 #include "udn.h"
 #include "beyehelp.h"
 #include "bconsole.h"
-#include "reg_form.h"
 #include "plugins/disasm.h"
 #define ARCH_SIZE 32
 #include "plugins/bin/aout64.h"
@@ -45,8 +44,8 @@ namespace	usr {
 
 	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
-	    virtual int			query_bitness(__filesize_t) const;
-	    virtual int			query_endian(__filesize_t) const;
+	    virtual Bin_Format::bitness	query_bitness(__filesize_t) const;
+	    virtual Bin_Format::endian	query_endian(__filesize_t) const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
 	    static bool			check_fmt(uint32_t id);
 	private:
@@ -180,16 +179,16 @@ AOut_Parser::AOut_Parser(binary_stream& h,CodeGuider&c,udn& u)
 }
 AOut_Parser::~AOut_Parser() {}
 
-int AOut_Parser::query_bitness(__filesize_t off) const
+Bin_Format::bitness AOut_Parser::query_bitness(__filesize_t off) const
 {
    UNUSED(off);
-   return is_64bit?DAB_USE64:DAB_USE32;
+   return is_64bit?Bin_Format::Use64:Bin_Format::Use32;
 }
 
-int AOut_Parser::query_endian(__filesize_t off) const
+Bin_Format::endian AOut_Parser::query_endian(__filesize_t off) const
 {
    UNUSED(off);
-   return is_msbf?DAE_BIG:DAE_LITTLE;
+   return is_msbf?Bin_Format::Big:Bin_Format::Little;
 }
 
 bool AOut_Parser::address_resolving(std::string& addr,__filesize_t fpos)

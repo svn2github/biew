@@ -23,7 +23,6 @@ using namespace	usr;
 #include "libbeye/bswap.h"
 
 #include "beye.h"
-#include "reg_form.h"
 #include "plugins/disasm.h"
 #include "bconsole.h"
 #include "beyehelp.h"
@@ -38,13 +37,13 @@ DisasmRet ARM_Disassembler::disassembler(__filesize_t ulShift,
 					unsigned flags)
 {
   DisasmRet ret;
-  armBigEndian = bin_format.query_endian(ulShift)==DAE_BIG?1:0;
+  armBigEndian = bin_format.query_endian(ulShift)==Bin_Format::Big?1:0;
   if(flags == __DISF_NORMAL)
   {
     memset(&ret,0,sizeof(ret));
     ret.str = outstr;
-    ret.codelen = armBitness==DAB_USE32?4:2;
-    if(armBitness==DAB_USE32)
+    ret.codelen = armBitness==Bin_Format::Use32?4:2;
+    if(armBitness==Bin_Format::Use32)
     {
 	uint32_t opcode32;
 	opcode32=armBigEndian?be2me_32(*((uint32_t *)buffer)):le2me_32(*((uint32_t *)buffer));
@@ -60,7 +59,7 @@ DisasmRet ARM_Disassembler::disassembler(__filesize_t ulShift,
   else
   {
     if(flags & __DISF_GETTYPE) ret.pro_clone = __INSNT_ORDINAL;
-    else ret.codelen = armBitness==DAB_USE32?4:2;
+    else ret.codelen = armBitness==Bin_Format::Use32?4:2;
   }
   return ret;
 }
@@ -131,7 +130,7 @@ ColorAttr ARM_Disassembler::get_insn_color( unsigned long clone )
 }
 ColorAttr ARM_Disassembler::get_opcode_color( unsigned long clone ) { return get_insn_color(clone); }
 
-int ARM_Disassembler::get_bitness() const { return armBitness; }
+Bin_Format::bitness ARM_Disassembler::get_bitness() const { return armBitness; }
 char ARM_Disassembler::clone_short_name( unsigned long clone )
 {
   UNUSED(clone);
@@ -143,7 +142,7 @@ ARM_Disassembler::ARM_Disassembler(const Bin_Format& b,binary_stream& h,DisMode&
 	    ,parent(_parent)
 	    ,main_handle(h)
 	    ,bin_format(b)
-	    ,armBitness(DAB_USE32)
+	    ,armBitness(Bin_Format::Use32)
 	    ,armBigEndian(1)
 {
     outstr = new char[1000];
@@ -164,8 +163,8 @@ void ARM_Disassembler::read_ini( Ini_Profile& ini )
   if(beye_context().is_valid_ini_args())
   {
     tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode3","1");
-    armBitness = (int)strtoul(tmps.c_str(),NULL,10);
-    if(armBitness > 1 && armBitness != DAB_AUTO) armBitness = 0;
+    armBitness = Bin_Format::bitness((int)strtoul(tmps.c_str(),NULL,10));
+    if(armBitness > Bin_Format::Use32 && armBitness != Bin_Format::Auto) armBitness = Bin_Format::Use16;
     tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode4","1");
     armBigEndian = (int)strtoul(tmps.c_str(),NULL,10);
     if(armBigEndian > 1) armBigEndian = 0;
@@ -195,7 +194,7 @@ bool ARM_Disassembler::action_F3()
   i = ListBox(arm_bitness_names,nModes," Select bitness mode: ",LB_SELECTIVE|LB_USEACC,armBitness);
   if(i != -1)
   {
-    armBitness = ((i==0)?DAB_USE16:DAB_USE32);
+    armBitness = ((i==0)?Bin_Format::Use16:Bin_Format::Use32);
     return true;
   }
   return false;

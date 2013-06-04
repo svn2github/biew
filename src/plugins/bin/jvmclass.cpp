@@ -31,7 +31,6 @@ using namespace	usr;
 #include "udn.h"
 #include "colorset.h"
 #include "codeguid.h"
-#include "reg_form.h"
 #include "tstrings.h"
 #include "plugins/disasm.h"
 #include "libbeye/kbd_code.h"
@@ -98,9 +97,9 @@ typedef struct ClassFile_s
 	    virtual __filesize_t	action_F10();
 
 	    virtual __filesize_t	show_header() const;
-	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
+	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift);
 	    virtual int			query_platform() const;
-	    virtual int			query_bitness(__filesize_t) const;
+	    virtual Bin_Format::bitness	query_bitness(__filesize_t) const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
@@ -787,7 +786,7 @@ void JVM_Parser::jvm_ReadPubNameList(binary_stream& handle)
 	jlen=handle.read(type_dword);
 	jlen=JVM_DWORD(&jlen,1);
 	jvm_pn.pa = handle.tell();
-	jvm_pn.attr    = flg & 0x0008 ? SC_LOCAL : SC_GLOBAL;
+	jvm_pn.attr    = flg & 0x0008 ? Symbol_Info::Local : Symbol_Info::Global;
 	PubNames.insert(jvm_pn);
 	handle.seek(jlen,binary_stream::Seek_Cur);
 	if(handle.eof()) break;
@@ -795,7 +794,7 @@ void JVM_Parser::jvm_ReadPubNameList(binary_stream& handle)
     if(!acount)
     {
 	jvm_pn.pa      = handle.tell();
-	jvm_pn.attr    = flg & 0x0008 ? SC_LOCAL : SC_GLOBAL;
+	jvm_pn.attr    = flg & 0x0008 ? Symbol_Info::Local : Symbol_Info::Global;
 	PubNames.insert(jvm_pn);
     }
     if(handle.eof()) break;
@@ -820,7 +819,7 @@ void JVM_Parser::jvm_ReadPubNameList(binary_stream& handle)
 	jlen=handle.read(type_dword);
 	jlen=JVM_DWORD(&jlen,1);
 	jvm_pn.pa = handle.tell();
-	jvm_pn.attr    = flg & 0x0008 ? SC_LOCAL : SC_GLOBAL;
+	jvm_pn.attr    = flg & 0x0008 ? Symbol_Info::Local : Symbol_Info::Global;
 	PubNames.insert(jvm_pn);
 	handle.seek(jlen,binary_stream::Seek_Cur);
 	if(handle.eof()) break;
@@ -828,7 +827,7 @@ void JVM_Parser::jvm_ReadPubNameList(binary_stream& handle)
     if(!acount)
     {
 	jvm_pn.pa      = handle.tell();
-	jvm_pn.attr    = flg & 0x0008 ? SC_LOCAL : SC_GLOBAL;
+	jvm_pn.attr    = flg & 0x0008 ? Symbol_Info::Local : Symbol_Info::Global;
 	PubNames.insert(jvm_pn);
     }
     if(handle.eof()) break;
@@ -855,29 +854,29 @@ Object_Info JVM_Parser::get_object_attribute(__filesize_t pa)
     Object_Info rc;
     rc.start = 0;
     rc.end = main_handle.flength();
-    rc._class = OC_NOOBJECT;
-    rc.bitness = DAB_USE16;
+    rc._class = Object_Info::NoObject;
+    rc.bitness = Bin_Format::Use16;
     rc.number=0;
     if(pa < jvm_header.data_offset) {
 	rc.end =jvm_header.data_offset;
 	rc.number = 0;
     } else if(pa >= jvm_header.data_offset && pa < jvm_header.methods_offset) {
-	rc._class = OC_DATA;
+	rc._class = Object_Info::Data;
 	rc.start = jvm_header.data_offset;
 	rc.end = jvm_header.methods_offset;
 	rc.number = 1;
     } else if(pa >= jvm_header.methods_offset && pa < jvm_header.code_offset) {
-	rc._class = OC_NOOBJECT;
+	rc._class = Object_Info::NoObject;
 	rc.start = jvm_header.methods_offset;
 	rc.end = jvm_header.code_offset;
 	rc.number = 2;
     } else if(pa >= jvm_header.code_offset && pa < jvm_header.attributes_offset) {
-	rc._class = OC_CODE;
+	rc._class = Object_Info::Code;
 	rc.start = jvm_header.code_offset;
 	rc.end = jvm_header.attributes_offset;
 	rc.number = 3;
     } else if(pa >= jvm_header.attributes_offset && pa < jvm_header.attrcode_offset) {
-	rc._class = OC_NOOBJECT;
+	rc._class = Object_Info::NoObject;
 	rc.start = jvm_header.attributes_offset;
 	rc.end = jvm_header.attrcode_offset;
 	rc.number = 4;
@@ -893,7 +892,7 @@ Object_Info JVM_Parser::get_object_attribute(__filesize_t pa)
 	len=main_handle.read(type_dword);
 	len=JVM_DWORD(&len,1);
 	main_handle.seek(fpos,binary_stream::Seek_Set);
-	rc._class = OC_CODE;
+	rc._class = Object_Info::Code;
 	rc.start = jvm_header.attributes_offset+6;
 	rc.end = rc.start+len;
 	rc.number = 5;
@@ -901,18 +900,18 @@ Object_Info JVM_Parser::get_object_attribute(__filesize_t pa)
     return rc;
 }
 
-int JVM_Parser::query_bitness(__filesize_t off) const
+Bin_Format::bitness JVM_Parser::query_bitness(__filesize_t off) const
 {
     UNUSED(off);
-    return DAB_USE16;
+    return Bin_Format::Use16;
 }
 
-bool JVM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+bool JVM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
     bool retrf = true;
     UNUSED(parent);
     UNUSED(r_sh);
-    if((flags & APREF_TRY_LABEL)!=APREF_TRY_LABEL) {
+    if((flags & Bin_Format::Try_Label)!=Bin_Format::Try_Label) {
 	__filesize_t fpos;
 	uint32_t lidx,lval,lval2;
 	unsigned short sval,sval2;

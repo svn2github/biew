@@ -29,7 +29,6 @@ using namespace	usr;
 #include "beyeutil.h"
 #include "beyehelp.h"
 #include "udn.h"
-#include "reg_form.h"
 #include "codeguid.h"
 #include "editor.h"
 #include "tstrings.h"

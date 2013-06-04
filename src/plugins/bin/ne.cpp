@@ -33,7 +33,6 @@ using namespace	usr;
 #include "beyehelp.h"
 #include "tstrings.h"
 #include "bconsole.h"
-#include "reg_form.h"
 #include "codeguid.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
@@ -1006,7 +1005,7 @@ bool NE_Parser::BuildReferStrNE(const DisMode& parent,std::string& str,const REL
     reflen = 0;
     pref = "";
     retrf = false;
-    need_virt = (flags & APREF_SAVE_VIRT);
+    need_virt = (flags & Bin_Format::Save_Virt);
     if(PubNames.empty()) ne_ReadPubNameList(*ne_cache2);
     switch(rne.AddrType) {
 	case 0: reflen = 1; pref = "(b) "; break;
@@ -1017,7 +1016,7 @@ bool NE_Parser::BuildReferStrNE(const DisMode& parent,std::string& str,const REL
 	case 13: reflen = 4; pref = "off32 "; break;
 	default: break;
     }
-    if(flags & APREF_USE_TYPE) str+=pref;
+    if(flags & Bin_Format::Use_Type) str+=pref;
     if((rne.Type & 3) == 1 || (rne.Type & 3) == 2) { /** imported type */
 	retrf = true;
 	buff=rd_ImpName(rne.idx,0);
@@ -1035,7 +1034,7 @@ bool NE_Parser::BuildReferStrNE(const DisMode& parent,std::string& str,const REL
 		sprintf(stmp,"(*this).@%hu",rne.ordinal);
 		str+=stmp;
 	    }
-	    if(!DumpMode && !EditMode && !(flags & APREF_USE_TYPE)) code_guider().add_go_address(parent,str,ea);
+	    if(!DumpMode && !EditMode && !(flags & Bin_Format::Use_Type)) code_guider().add_go_address(parent,str,ea);
 	} else {
 	    __filesize_t ep;
 	    ep = CalcEntryPointNE(rne.idx,rne.ordinal);
@@ -1046,7 +1045,7 @@ bool NE_Parser::BuildReferStrNE(const DisMode& parent,std::string& str,const REL
 		str+=stmp;
 		retrf = ep?true:false;
 	    }
-	    if(!DumpMode && !EditMode && !(flags & APREF_USE_TYPE)) code_guider().add_go_address(parent,str,ep);
+	    if(!DumpMode && !EditMode && !(flags & Bin_Format::Use_Type)) code_guider().add_go_address(parent,str,ep);
 	}
     } else str+="?OSFIXUP?";
     if((rne.Type & 4) == 4) {
@@ -1062,12 +1061,12 @@ bool NE_Parser::BuildReferStrNE(const DisMode& parent,std::string& str,const REL
     return retrf;
 }
 
-bool NE_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+bool NE_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
     unsigned i;
     __filesize_t segpos,slength;
     std::string buff;
-    if(flags & APREF_TRY_PIC) return false;
+    if(flags & Bin_Format::Try_Pic) return false;
     if(ulShift >= CurrSegmentStart && ulShift <= CurrSegmentStart + CurrSegmentLength) {
 	i = CurrChainSegment - 1;
 	if(CurrSegmentHasReloc) goto Direct;
@@ -1100,7 +1099,7 @@ Direct:
 		return BuildReferStrNE(parent,str,rne,flags,ulShift);
 	    } else {
 TryLabel:
-		if(flags & APREF_TRY_LABEL) {
+		if(flags & Bin_Format::Try_Label) {
 		    if(PubNames.empty()) ne_ReadPubNameList(*ne_cache2);
 		    if(FindPubName(buff,r_sh)) {
 			str+=buff;
@@ -1140,7 +1139,7 @@ bool NE_Parser::ReadPubNames(binary_stream& handle,__filesize_t offset)
      {
        pnam.pa = CalcEntryNE(ord,false);
        pnam.nameoff = noff;
-       pnam.attr = SC_GLOBAL;
+       pnam.attr = Symbol_Info::Global;
      }
      else
      {
@@ -1266,8 +1265,8 @@ Object_Info NE_Parser::__get_object_attribute(__filesize_t pa) const
     Object_Info rc;
     rc.start = 0;
     rc.end = main_handle().flength();
-    rc._class = OC_NOOBJECT;
-    rc.bitness = DAB_USE16;
+    rc._class = Object_Info::NoObject;
+    rc.bitness = Bin_Format::Use16;
     rc.name.clear();
     rc.number = 0;
     main_handle().seek((__fileoff_t)headshift() + ne.neOffsetSegmentTable,binary_stream::Seek_Set);
@@ -1287,8 +1286,8 @@ Object_Info NE_Parser::__get_object_attribute(__filesize_t pa) const
 	if(pa >= currseg_st && pa < currseg_st + nesd_c.sdLength) {
 	    rc.start = currseg_st;
 	    rc.end = rc.start + nesd_c.sdLength;
-	    rc._class = nesd_c.sdFlags & 0x01 ? OC_DATA : OC_CODE;
-	    rc.bitness = nesd_c.sdFlags & 0x2000 ? DAB_USE32 : DAB_USE16;
+	    rc._class = nesd_c.sdFlags & 0x01 ? Object_Info::Data : Object_Info::Code;
+	    rc.bitness = nesd_c.sdFlags & 0x2000 ? Bin_Format::Use32 : Bin_Format::Use16;
 	    rc.number = i+1;
 	    found = true;
 	    break;
@@ -1307,10 +1306,10 @@ Object_Info NE_Parser::get_object_attribute(__filesize_t pa) {
     return __get_object_attribute(pa);
 }
 
-int NE_Parser::query_bitness(__filesize_t pa) const
+Bin_Format::bitness NE_Parser::query_bitness(__filesize_t pa) const
 {
     static __filesize_t st = 0,end = 0;
-    static int bitness;
+    static Bin_Format::bitness bitness;
     if(!(pa >= st && pa < end)) {
 	Object_Info rc = __get_object_attribute(pa);
 	bitness = rc.bitness;

@@ -35,7 +35,6 @@ using namespace	usr;
 #include "plugins/disasm.h"
 #include "plugins/disasm/ix86/ix86.h"
 #include "beyeutil.h"
-#include "reg_form.h"
 #include "bconsole.h"
 #include "codeguid.h"
 #include "libbeye/file_ini.h"
@@ -5316,7 +5315,7 @@ const char* ix86_Disassembler::ix86_3dPrefetchGrp[] = { "prefetch", "prefetchw",
 
 const char* ix86_Disassembler::ix86_KatmaiGr2Names[] = { "prefetchnta", "prefetcht0", "prefetcht1", "prefetcht2", "???", "???", "???", "???" };
 
-unsigned ix86_Disassembler::BITNESS = DAB_AUTO;
+Bin_Format::bitness ix86_Disassembler::BITNESS = Bin_Format::Auto;
 
 char ix86_Disassembler::ix86_segpref[4] = "";
 
@@ -5336,7 +5335,7 @@ bool ix86_Disassembler::is_listed(unsigned char insn,const unsigned char *list,s
 */
 MBuffer ix86_Disassembler::parse_REX_type(MBuffer insn,char *up,ix86Param& DisP) const
 {
-    if(x86_Bitness == DAB_USE64 && !(DisP.pfx&PFX_REX)) {
+    if(x86_Bitness == Bin_Format::Use64 && !(DisP.pfx&PFX_REX)) {
 	DisP.pfx|=PFX_REX;
 	DisP.REX = insn[0];
     }
@@ -5354,7 +5353,7 @@ void ix86_Disassembler::ix86_gettype(DisasmRet *dret,ix86Param& _DisP) const
  has_vex = has_lock = has_rep = has_seg = 0;
  up = ua = ud = 0;
  RepeateByPrefix:
- if(x86_Bitness == DAB_USE64)
+ if(x86_Bitness == Bin_Format::Use64)
  {
    if(ua+has_seg+has_rep+has_lock+has_vex>4) goto get_type;
    if(ud>6) goto get_type;
@@ -5380,7 +5379,7 @@ void ix86_Disassembler::ix86_gettype(DisasmRet *dret,ix86Param& _DisP) const
    case 0x4D:
    case 0x4E:
    case 0x4F:
-		if(x86_Bitness == DAB_USE64) {
+		if(x86_Bitness == Bin_Format::Use64) {
 		    insn=parse_REX_type(insn,&up,_DisP);
 		    goto RepeateByPrefix;
 		}
@@ -5396,7 +5395,7 @@ void ix86_Disassembler::ix86_gettype(DisasmRet *dret,ix86Param& _DisP) const
 	      goto MakePref;
    case 0x64:
    case 0x65:
-		if(x86_Bitness != DAB_USE64) goto do_seg;
+		if(x86_Bitness != Bin_Format::Use64) goto do_seg;
 		goto MakePref;
    case 0x66:
 		_DisP.pfx|=PFX_66;
@@ -5413,11 +5412,11 @@ void ix86_Disassembler::ix86_gettype(DisasmRet *dret,ix86Param& _DisP) const
 	      goto MakePref;
    case 0x8F:
    case 0xC4:
-	      if(x86_Bitness == DAB_USE64) has_vex++;
+	      if(x86_Bitness == Bin_Format::Use64) has_vex++;
 	      else if((insn[1]&0xC0)==0xC0) has_vex++;
 	      insn=&insn[2];
    case 0xC5:
-	      if(x86_Bitness == DAB_USE64) has_vex++;
+	      if(x86_Bitness == Bin_Format::Use64) has_vex++;
 	      else if((insn[1]&0xC0)==0xC0) has_vex++;
 	      insn=&insn[1];
 	      goto MakePref;
@@ -5447,13 +5446,13 @@ void ix86_Disassembler::ix86_gettype(DisasmRet *dret,ix86Param& _DisP) const
     else
     if(_DisP.pfx&PFX_66)       SSE2_ext=ix86_660F_PentiumTable;
     if(!(
-		x86_Bitness==DAB_USE64?
+		x86_Bitness==Bin_Format::Use64?
 		SSE2_ext[insn[1]].name64:
 		SSE2_ext[insn[1]].name
 		))  return;
   }
  get_type:
-  if(x86_Bitness == DAB_USE64)
+  if(x86_Bitness == Bin_Format::Use64)
   {
     _DisP.mode|= MOD_WIDE_ADDR;
     if(_DisP.pfx&PFX_REX && ((_DisP.REX & 0x0F)>>3) != 0) _DisP.mode|=MOD_WIDE_DATA;
@@ -5475,7 +5474,7 @@ void ix86_Disassembler::ix86_gettype(DisasmRet *dret,ix86Param& _DisP) const
      return; /* Return here immediatly, because we have 'goto' operator. */
    }
      else
-     if(insn[0] == 0xFF && (insn[1]==0x15 || insn[1] == 0x25) && x86_Bitness == DAB_USE64)
+     if(insn[0] == 0xFF && (insn[1]==0x15 || insn[1] == 0x25) && x86_Bitness == Bin_Format::Use64)
      {
 	dret->pro_clone = __INSNT_JMPRIP;
 	dret->codelen = 4;
@@ -5548,7 +5547,7 @@ void ix86_Disassembler::ix86_gettype(DisasmRet *dret,ix86Param& _DisP) const
 
 unsigned char ix86_Disassembler::parse_REX(unsigned char code,ix86Param& DisP) const
 {
-    if(x86_Bitness == DAB_USE64 && !(DisP.pfx&PFX_REX))
+    if(x86_Bitness == Bin_Format::Use64 && !(DisP.pfx&PFX_REX))
     {
 	DisP.pfx|=PFX_REX;
 	DisP.REX = code;
@@ -5616,7 +5615,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
 
  memset(&DisP,0,sizeof(DisP));
  memset(&Ret,0,sizeof(Ret));
- if(x86_Bitness == DAB_USE64) DisP.pro_clone=K64_ATHLON;
+ if(x86_Bitness == Bin_Format::Use64) DisP.pro_clone=K64_ATHLON;
  else DisP.pro_clone = IX86_CPU086;
  DisP.codelen = 1;
  DisP.DisasmPrefAddr = ulShift;
@@ -5640,10 +5639,10 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
  up = ua = ud = 0;
  ix86_da_out[0] = 0;
 
- if(BITNESS == DAB_AUTO) x86_Bitness = bin_format.query_bitness(ulShift);
+ if(BITNESS == Bin_Format::Auto) x86_Bitness = bin_format.query_bitness(ulShift);
  else x86_Bitness = BITNESS;
 
- if(x86_Bitness > DAB_USE16)
+ if(x86_Bitness > Bin_Format::Use16)
  {
     DisP.mode|=MOD_WIDE_DATA;
     DisP.mode|=MOD_WIDE_ADDR;
@@ -5653,7 +5652,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
  Ret.str[0] = 0;
  RepeateByPrefix:
  code = DisP.RealCmd[0];
- if(x86_Bitness == DAB_USE64)
+ if(x86_Bitness == Bin_Format::Use64)
  {
    if(ua+has_seg+has_rep+has_lock+has_vex+has_xop>4) goto bad_prefixes;
    /* it enables largest NOP generated by gcc:
@@ -5688,7 +5687,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
    case 0x4C:
    case 0x4D:
    case 0x4E:
-   case 0x4F: if(x86_Bitness == DAB_USE64 && !(DisP.pfx&PFX_REX))
+   case 0x4F: if(x86_Bitness == Bin_Format::Use64 && !(DisP.pfx&PFX_REX))
 	      {
 		has_rex=1;
 		code=parse_REX(code,DisP);
@@ -5750,7 +5749,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
 		DisP.mode ^= MOD_WIDE_ADDR;
 		goto MakePref;
    case 0x8F:
-		if(x86_Bitness == DAB_USE64) has_xop++;
+		if(x86_Bitness == Bin_Format::Use64) has_xop++;
 		else if((DisP.RealCmd[1]&0xC0)==0xC0) has_xop++;
 		if(has_xop) {
 		    parse_XOP_8F(DisP);
@@ -5761,7 +5760,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
 		}
 		break;
    case 0xC4:
-		if(x86_Bitness == DAB_USE64) has_vex++;
+		if(x86_Bitness == Bin_Format::Use64) has_vex++;
 		else if((DisP.RealCmd[1]&0xC0)==0xC0) has_vex++;
 		if(has_vex) {
 		    parse_VEX_C4(DisP);
@@ -5772,7 +5771,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
 		}
 		break;
    case 0xC5:
-		if(x86_Bitness == DAB_USE64) has_vex++;
+		if(x86_Bitness == Bin_Format::Use64) has_vex++;
 		else if((DisP.RealCmd[1]&0xC0)==0xC0) has_vex++;
 		if(has_vex) {
 		    parse_VEX_C5(DisP);
@@ -5798,9 +5797,9 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
 		DisP.pfx|=PFX_F3_REP;
 		if(DisP.RealCmd[1] == 0x90) {
 		/* this is pause insns */
-		    strcpy(Ret.str,x86_Bitness == DAB_USE64?"pause":"pause");
+		    strcpy(Ret.str,x86_Bitness == Bin_Format::Use64?"pause":"pause");
 		    DisP.codelen++;
-		    DisP.pro_clone = DAB_USE64?K64_ATHLON:IX86_P4;
+		    DisP.pro_clone = Bin_Format::Use64?K64_ATHLON:IX86_P4;
 		    goto ExitDisAsm;
 		}
 		if(has_rep + has_lock) break;
@@ -5817,7 +5816,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
  }
  end_of_prefixes:
  /* Let it be overwritten later */
- if(x86_Bitness == DAB_USE64) DisP.insn_flags = ix86_table[code].flags64;
+ if(x86_Bitness == Bin_Format::Use64) DisP.insn_flags = ix86_table[code].flags64;
  else
  DisP.insn_flags = ix86_table[code].pro_clone;
  if((DisP.pfx&PFX_VEX) && DisP.VEX_m>0 && DisP.VEX_m<4 && !(DisP.pfx&PFX_XOP)) goto fake_0F_opcode;
@@ -5852,7 +5851,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
     if(DisP.pfx&PFX_VEX)	ecode=DisP.RealCmd[0];
     else			ecode=DisP.RealCmd[1];
 
-    nam=((x86_Bitness==DAB_USE64)?SSE2_ext[ecode].name64:SSE2_ext[ecode].name);
+    nam=((x86_Bitness==Bin_Format::Use64)?SSE2_ext[ecode].name64:SSE2_ext[ecode].name);
     if(nam) {
 	if(DisP.pfx&PFX_66&&
 	    (SSE2_ext==ix86_660F_PentiumTable||
@@ -5869,9 +5868,9 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
 	    DisP.RealCmd = &DisP.RealCmd[1];
 	    up++;
 	}
-	if(x86_Bitness == DAB_USE64)	DisP.insn_flags = SSE2_ext[ecode].flags64;
+	if(x86_Bitness == Bin_Format::Use64)	DisP.insn_flags = SSE2_ext[ecode].flags64;
 	else				DisP.insn_flags = SSE2_ext[ecode].pro_clone;
-	mthd=((x86_Bitness==DAB_USE64)?SSE2_ext[ecode].method64:SSE2_ext[ecode].method);
+	mthd=((x86_Bitness==Bin_Format::Use64)?SSE2_ext[ecode].method64:SSE2_ext[ecode].method);
 	if(mthd) {
 		TabSpace(Ret.str,TAB_POS);
 		(this->*mthd)(Ret.str,DisP);
@@ -5900,7 +5899,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
     }
  }
  else {
- if(x86_Bitness == DAB_USE64)
+ if(x86_Bitness == Bin_Format::Use64)
  {
    if(REX_W(DisP.REX)) DisP.mode|=MOD_WIDE_DATA; /* 66h prefix is ignored if REX prefix is present*/
    if(ix86_table[code].flags64 & K64_DEF32)
@@ -5917,7 +5916,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
  }
  else
    strcpy(Ret.str,(DisP.mode&MOD_WIDE_DATA) ? ix86_table[code].name32 : ix86_table[code].name16);
- if(x86_Bitness == DAB_USE64)
+ if(x86_Bitness == Bin_Format::Use64)
  {
    if(ix86_table[code].method64)
    {
@@ -5950,7 +5949,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
    /** popax, popfx case */
      case 0x61:
      case 0x9D:
-		if(!ud && !ua && x86_Bitness < DAB_USE64) Ret.str[4] = 0;
+		if(!ud && !ua && x86_Bitness < Bin_Format::Use64) Ret.str[4] = 0;
 		break;
    /** callx case */
      case 0xE8:
@@ -5960,7 +5959,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
    /** pushax, pushfx case */
      case 0x60:
      case 0x9C:
-		if(!ud && !ua && x86_Bitness < DAB_USE64) Ret.str[5] = 0;
+		if(!ud && !ua && x86_Bitness < Bin_Format::Use64) Ret.str[5] = 0;
 		break;
      default:   break;
  }
@@ -5978,8 +5977,8 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
  if(ix86_da_out[0]) TabSpace(ix86_da_out,TAB_POS);
  strncat(ix86_da_out,Ret.str,MAX_DISASM_OUTPUT);
  Ret.str = ix86_da_out;
- if(x86_Bitness < DAB_USE64)
- if((DisP.pfx&PFX_66) || (DisP.pfx&PFX_67) || x86_Bitness == DAB_USE32)
+ if(x86_Bitness < Bin_Format::Use64)
+ if((DisP.pfx&PFX_66) || (DisP.pfx&PFX_67) || x86_Bitness == Bin_Format::Use32)
  {
     if((DisP.pro_clone & IX86_CPUMASK) < IX86_CPU386)
     {
@@ -6093,7 +6092,7 @@ ColorAttr ix86_Disassembler::get_alt_opcode_color(unsigned long clone)
 ColorAttr ix86_Disassembler::get_insn_color(unsigned long clone)
 {
     color_mode=0;
-     if(x86_Bitness == DAB_USE64) return get_alt_insn_color(clone);
+     if(x86_Bitness == Bin_Format::Use64) return get_alt_insn_color(clone);
      else
      if((clone&INSN_MMX)|(clone&INSN_SSE)) return disasm_cset.cpu_cset[2].clone[clone & IX86_CPUMASK];
      else
@@ -6131,7 +6130,7 @@ void ix86_Disassembler::show_short_help() const
     Beye_Help bhelp;
 
     if(!bhelp.open(true)) return;
-    size = (unsigned)bhelp.get_item_size(x86_Bitness == DAB_USE64 ? 20002:20001);
+    size = (unsigned)bhelp.get_item_size(x86_Bitness == Bin_Format::Use64 ? 20002:20001);
     if(!size) goto ix86hlp_bye;
     msgAsmText = new char [size+1];
     if(!msgAsmText) {
@@ -6139,7 +6138,7 @@ mem_off:
 	MemOutBox(" Help Display ");
 	goto ix86hlp_bye;
     }
-    if(!bhelp.load_item(x86_Bitness == DAB_USE64 ? 20002:20001,msgAsmText)) {
+    if(!bhelp.load_item(x86_Bitness == Bin_Format::Use64 ? 20002:20001,msgAsmText)) {
 	delete msgAsmText;
 	goto ix86hlp_bye;
     }
@@ -6151,18 +6150,18 @@ mem_off:
     for(i = 0;i < sz;i++) bhelp.fill_buffer(*hwnd,1,i+1,strs[i]);
     delete msgAsmText;
     hwnd->goto_xy(5,3);
-    if(x86_Bitness == DAB_USE64 || color_mode==1) {
+    if(x86_Bitness == Bin_Format::Use64 || color_mode==1) {
 	hwnd->goto_xy(5,3);
 	hwnd->set_color(disasm_cset.engine[0].engine);
-	hwnd->puts((x86_Bitness == DAB_USE64)?CPU64Names[0]:altPipesNames[0]);
+	hwnd->puts((x86_Bitness == Bin_Format::Use64)?CPU64Names[0]:altPipesNames[0]);
 	hwnd->clreol();
 	hwnd->goto_xy(5,4);
 	hwnd->set_color(disasm_cset.engine[1].engine);
-	hwnd->puts((x86_Bitness == DAB_USE64)?CPU64Names[1]:altPipesNames[1]);
+	hwnd->puts((x86_Bitness == Bin_Format::Use64)?CPU64Names[1]:altPipesNames[1]);
 	hwnd->clreol();
 	hwnd->goto_xy(5,5);
 	hwnd->set_color(disasm_cset.engine[2].engine);
-	hwnd->puts((x86_Bitness == DAB_USE64)?CPU64Names[2]:altPipesNames[2]);
+	hwnd->puts((x86_Bitness == Bin_Format::Use64)?CPU64Names[2]:altPipesNames[2]);
 	hwnd->clreol();
     } else {
 	for(i = 0;i < 10;i++) {
@@ -6201,21 +6200,21 @@ bool ix86_Disassembler::action_F3()
   unsigned nModes;
   int i;
   nModes = sizeof(use_names)/sizeof(char *);
-  if(BITNESS == DAB_AUTO) BITNESS = 3;
+  if(BITNESS == Bin_Format::Auto) BITNESS = Bin_Format::Use128;
   i = ListBox(use_names,nModes," Select bitness mode: ",LB_SELECTIVE|LB_USEACC,BITNESS);
   if(i != -1)
   {
-    if(i == 3) i = DAB_AUTO;
-    BITNESS = x86_Bitness = i;
+    if(i == 3) i = Bin_Format::Auto;
+    BITNESS = x86_Bitness = Bin_Format::bitness(i);
     return true;
   }
-  else if(BITNESS == 3) BITNESS = x86_Bitness = DAB_AUTO;
+  else if(BITNESS == 3) BITNESS = x86_Bitness = Bin_Format::Auto;
   return false;
 }
 
 int ix86_Disassembler::max_insn_len() const { return MAX_IX86_INSN_LEN; }
-int ix86_Disassembler::get_bitness() const { return BITNESS; }
-char ix86_Disassembler::clone_short_name(unsigned long clone) { if(x86_Bitness == DAB_USE64) return 'a'; else return ix86CloneSNames[((clone&IX86_CLONEMASK)>>8)&0x07]; }
+Bin_Format::bitness ix86_Disassembler::get_bitness() const { return BITNESS; }
+char ix86_Disassembler::clone_short_name(unsigned long clone) { if(x86_Bitness == Bin_Format::Use64) return 'a'; else return ix86CloneSNames[((clone&IX86_CLONEMASK)>>8)&0x07]; }
 
 /*
   x86 disassemblers
@@ -6263,7 +6262,7 @@ ix86_Disassembler::ix86_Disassembler(const Bin_Format& b,binary_stream& h,DisMod
 		    ,parent(_parent)
 		    ,main_handle(h)
 		    ,bin_format(b)
-		    ,x86_Bitness(DAB_AUTO)
+		    ,x86_Bitness(Bin_Format::Auto)
 		    ,active_assembler(-1)
 {
   ix86_voidstr = new char [MAX_DISASM_OUTPUT];
@@ -6316,8 +6315,8 @@ void ix86_Disassembler::read_ini( Ini_Profile& ini )
   if(beye_context().is_valid_ini_args())
   {
     tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode3","1");
-    BITNESS = (unsigned)strtoul(tmps.c_str(),NULL,10);
-    if(BITNESS > 2 && BITNESS != DAB_AUTO) BITNESS = 0;
+    BITNESS = Bin_Format::bitness((unsigned)strtoul(tmps.c_str(),NULL,10));
+    if(BITNESS > 2 && BITNESS != Bin_Format::Auto) BITNESS = Bin_Format::Use16;
     x86_Bitness = BITNESS;
   }
 }
@@ -6371,8 +6370,8 @@ AsmRet ix86_Disassembler::assembler(const char *code)
   sprintf(commandbuffer, "%stmp0", home.c_str());
   asmf.open(commandbuffer,std::ios_base::out);
   if (!asmf.is_open()) goto tmperror;
-  if (get_bitness() == DAB_USE16)	asmf<<"BITS 16";
-  else if (get_bitness() == DAB_USE64)	asmf<<"BITS 64";
+  if (get_bitness() == Bin_Format::Use16)	asmf<<"BITS 16";
+  else if (get_bitness() == Bin_Format::Use64)	asmf<<"BITS 64";
   else					asmf<<"BITS 32";
   asmf<<std::endl;
   asmf<<code;

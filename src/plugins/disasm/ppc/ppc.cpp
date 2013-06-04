@@ -24,7 +24,6 @@ using namespace	usr;
 #include "ppc.h"
 
 #include "beye.h"
-#include "reg_form.h"
 #include "plugins/disasm.h"
 #include "bconsole.h"
 #include "beyehelp.h"
@@ -52,7 +51,7 @@ namespace	usr {
 	    virtual int		max_insn_len() const;
 	    virtual ColorAttr	get_insn_color(unsigned long clone);
 
-	    virtual int		get_bitness() const;
+	    virtual Bin_Format::bitness	get_bitness() const;
 	    virtual char	clone_short_name(unsigned long clone);
 	    virtual void	read_ini(Ini_Profile&);
 	    virtual void	save_ini(Ini_Profile&);
@@ -66,7 +65,7 @@ namespace	usr {
 	    binary_stream&	main_handle;
 	    const Bin_Format&	bin_format;
 	    char*		outstr;
-	    int			ppcBitness;
+	    Bin_Format::bitness	ppcBitness;
 	    int			ppcBigEndian;
 	    int			ppcDialect;
 
@@ -153,7 +152,7 @@ void PPC_Disassembler::ppc_Encode_args(char *ostr,uint32_t opcode,
 	    else {
 		do_digs:
 		std::string stmp = ostr;
-		parent.append_digits(main_handle,stmp,dig_off,APREF_USE_TYPE,dig_sz,&opcode,dig_flg);
+		parent.append_digits(main_handle,stmp,dig_off,Bin_Format::Use_Type,dig_sz,&opcode,dig_flg);
 		strcpy(ostr,stmp.c_str());
 	    }
 	}
@@ -1448,7 +1447,7 @@ DisasmRet PPC_Disassembler::disassembler(__filesize_t ulShift,
     uint32_t opcode;
     memset(&dret,0,sizeof(DisasmRet));
     ppcBitness = bin_format.query_bitness(ulShift);
-    ppcBigEndian = bin_format.query_endian(ulShift)==DAE_BIG?1:0;
+    ppcBigEndian = bin_format.query_endian(ulShift)==Bin_Format::Big?1:0;
     opcode=ppcBigEndian?be2me_32(*((uint32_t *)buffer)):le2me_32(*((uint32_t *)buffer));
     n = sizeof(ppc_table)/sizeof(ppc_opcode);
     done=0;
@@ -1482,7 +1481,7 @@ DisasmRet PPC_Disassembler::disassembler(__filesize_t ulShift,
 		strcpy(dret.str,"db");
 		TabSpace(dret.str,TAB_POS);
 		std::string stmp = dret.str;
-		parent.append_digits(main_handle,stmp,ulShift,APREF_USE_TYPE,4,&opcode,DisMode::Arg_DWord);
+		parent.append_digits(main_handle,stmp,ulShift,Bin_Format::Use_Type,4,&opcode,DisMode::Arg_DWord);
 		strcpy(dret.str,stmp.c_str());
 	}
 	dret.pro_clone=0;
@@ -1560,7 +1559,7 @@ ColorAttr PPC_Disassembler::get_insn_color( unsigned long clone )
 	return disasm_cset.engine[0].engine;
 }
 
-int PPC_Disassembler::get_bitness() const { return ppcBitness; }
+Bin_Format::bitness PPC_Disassembler::get_bitness() const { return ppcBitness; }
 char PPC_Disassembler::clone_short_name( unsigned long clone )
 {
   UNUSED(clone);
@@ -1581,7 +1580,7 @@ bool PPC_Disassembler::action_F3()
   i = ListBox(ppc_bitness_names,nModes," Select bitness mode: ",LB_SELECTIVE|LB_USEACC,ppcBitness);
   if(i != -1)
   {
-    ppcBitness = ((i==0)?DAB_USE32:DAB_USE64);
+    ppcBitness = ((i==0)?Bin_Format::Use32:Bin_Format::Use64);
     return true;
   }
   return false;
@@ -1632,7 +1631,7 @@ PPC_Disassembler::PPC_Disassembler(const Bin_Format& b,binary_stream& h,DisMode&
 		,parent(_parent)
 		,main_handle(h)
 		,bin_format(b)
-		,ppcBitness(DAB_USE32)
+		,ppcBitness(Bin_Format::Use32)
 		,ppcBigEndian(1)
 		,ppcDialect(0)
 {
@@ -1650,8 +1649,8 @@ void PPC_Disassembler::read_ini( Ini_Profile& ini )
   if(beye_context().is_valid_ini_args())
   {
     tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode3","1");
-    ppcBitness = (int)strtoul(tmps.c_str(),NULL,10);
-    if(ppcBitness > 1 && ppcBitness != DAB_AUTO) ppcBitness = 0;
+    ppcBitness = Bin_Format::bitness((int)strtoul(tmps.c_str(),NULL,10));
+    if(ppcBitness > 1 && ppcBitness != Bin_Format::Auto) ppcBitness = Bin_Format::Use16;
     tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode4","1");
     ppcBigEndian = (int)strtoul(tmps.c_str(),NULL,10);
     if(ppcBigEndian > 1) ppcBigEndian = 0;

@@ -49,7 +49,7 @@ namespace	usr {
 	    virtual ColorAttr	get_insn_color(unsigned long clone);
 	    virtual ColorAttr	get_opcode_color(unsigned long clone);
 
-	    virtual int		get_bitness() const;
+	    virtual Bin_Format::bitness	get_bitness() const;
 	    virtual char	clone_short_name(unsigned long clone);
 	    virtual void	read_ini(Ini_Profile&);
 	    virtual void	save_ini(Ini_Profile&);
@@ -70,8 +70,8 @@ namespace	usr {
 	    binary_stream&	main_handle;
 	    const Bin_Format&	bin_format;
 	    char*		outstr;
-	    int			armBitness;
-	    int			armBigEndian;
+	    Bin_Format::bitness	armBitness;
+	    bool		armBigEndian;
 
 	    static arm_opcode16	opcode_table[];
 	    static const char*	arm_reg_name[];

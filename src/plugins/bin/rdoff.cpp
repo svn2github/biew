@@ -24,7 +24,6 @@ using namespace	usr;
 #include <stdio.h>
 #include <string.h>
 
-#include "reg_form.h"
 #include "colorset.h"
 #include "udn.h"
 #include "codeguid.h"
@@ -59,9 +58,9 @@ namespace	usr {
 	    virtual __filesize_t	action_F5();
 
 	    virtual __filesize_t	show_header() const;
-	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
+	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift);
 	    virtual int			query_platform() const;
-	    virtual int			query_bitness(__filesize_t) const;
+	    virtual Bin_Format::bitness	query_bitness(__filesize_t) const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
@@ -70,7 +69,7 @@ namespace	usr {
 	private:
 	    std::string			rdoff_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
 	    void			rdoff_ReadPubNameList(binary_stream& handle);
-	    bool			rdoffBuildReferStr(const DisMode&parent,std::string& str,const RDOFF_RELOC& reloc,__filesize_t ulShift,int flags);
+	    bool			rdoffBuildReferStr(const DisMode&parent,std::string& str,const RDOFF_RELOC& reloc,__filesize_t ulShift,Bin_Format::bind_type flags);
 	    void			BuildRelocRDOFF();
 	    bool			rdoff_skiprec(unsigned char type) const;
 	    bool			FindPubName(std::string& buff,__filesize_t pa) const;
@@ -398,7 +397,7 @@ void  RDOff_Parser::BuildRelocRDOFF()
 //  la_Sort(rdoffReloc,rdoff_compare_reloc);
 }
 
-bool RDOff_Parser::rdoffBuildReferStr(const DisMode& parent,std::string& str,const RDOFF_RELOC& reloc,__filesize_t ulShift,int flags)
+bool RDOff_Parser::rdoffBuildReferStr(const DisMode& parent,std::string& str,const RDOFF_RELOC& reloc,__filesize_t ulShift,Bin_Format::bind_type flags)
 {
    char name[400],ch;
    std::string buff;
@@ -407,7 +406,7 @@ bool RDOff_Parser::rdoffBuildReferStr(const DisMode& parent,std::string& str,con
    bool retrf;
    unsigned i;
    if(PubNames.empty()) rdoff_ReadPubNameList(main_handle);
-   if(flags & APREF_USE_TYPE)
+   if(flags & Bin_Format::Use_Type)
    {
      switch(reloc.reflen)
      {
@@ -487,7 +486,7 @@ bool RDOff_Parser::rdoffBuildReferStr(const DisMode& parent,std::string& str,con
 	 unnamed:
 	 str+=ptr_type;
 	 str+=Get8Digit(field_val);
-	 if(!EditMode && !DumpMode && (flags & APREF_TRY_LABEL))
+	 if(!EditMode && !DumpMode && (flags & Bin_Format::Try_Label))
 	   code_guider.add_go_address(parent,str,reloc.segto ? ds_start + field_val : cs_start + field_val);
 	 retrf = true;
        }
@@ -498,7 +497,7 @@ bool RDOff_Parser::rdoffBuildReferStr(const DisMode& parent,std::string& str,con
        __fileoff_t fv;
        seg_off = ulShift < ds_start ? cs_start : ulShift < ds_start+ds_len ? ds_start : FILESIZE_MAX;
        fv = field_val;
-       if(!(ulShift + fv + reloc.reflen == seg_off && (flags & APREF_TRY_LABEL)))
+       if(!(ulShift + fv + reloc.reflen == seg_off && (flags & Bin_Format::Try_Label)))
        {
         str+="(";
 	str+=Get8SignDig(field_val);
@@ -509,13 +508,13 @@ bool RDOff_Parser::rdoffBuildReferStr(const DisMode& parent,std::string& str,con
    return retrf;
 }
 
-bool RDOff_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+bool RDOff_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
   RDOFF_RELOC key;
   std::set<RDOFF_RELOC>::const_iterator rrdoff;
   bool ret;
   std::string buff;
-  if(flags & APREF_TRY_PIC) return false;
+  if(flags & Bin_Format::Try_Pic) return false;
   if(rdoffReloc.empty()) BuildRelocRDOFF();
   if(rdoffImpNames.empty()) ReadImpNameList(main_handle);
   if(PubNames.empty()) rdoff_ReadPubNameList(main_handle);
@@ -524,7 +523,7 @@ bool RDOff_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulSh
   rrdoff = rdoffReloc.find(key);
   ret = (rrdoff!=rdoffReloc.end())? rdoffBuildReferStr(parent,str,*rrdoff,ulShift,flags) : false;
   if(PubNames.empty()) rdoff_ReadPubNameList(main_handle);
-  if(!ret && (flags & APREF_TRY_LABEL))
+  if(!ret && (flags & Bin_Format::Try_Label))
   {
      if(FindPubName(buff,r_sh))
      {
@@ -617,7 +616,7 @@ void RDOff_Parser::rdoff_ReadPubNameList(binary_stream& handle)
       abs_off = segno == 0 ? cs_start : segno == 1 ? ds_start : FILESIZE_MAX;
       if(abs_off < FILESIZE_MAX) abs_off += segoff;
       rdf_pn.pa = abs_off;
-      rdf_pn.attr = SC_GLOBAL;
+      rdf_pn.attr = Symbol_Info::Global;
       PubNames.insert(rdf_pn);
       if(is_eof) break;
     }
@@ -665,10 +664,10 @@ void  RDOff_Parser::ReadImpNameList(binary_stream& handle)
 }
 
 /** bitness not declared, but we assign 32-bit as default */
-int RDOff_Parser::query_bitness(__filesize_t pa) const
+Bin_Format::bitness RDOff_Parser::query_bitness(__filesize_t pa) const
 {
   UNUSED(pa);
-  return DAB_USE32;
+  return Bin_Format::Use32;
 }
 
 Symbol_Info RDOff_Parser::get_public_symbol(__filesize_t pa,bool as_prev)
@@ -691,7 +690,7 @@ Object_Info RDOff_Parser::get_object_attribute(__filesize_t pa)
     Object_Info rc;
     rc.start = 0;
     rc.end = main_handle.flength();
-    rc._class = OC_NOOBJECT;
+    rc._class = Object_Info::NoObject;
     rc.bitness = query_bitness(pa);
     rc.name.clear();
     rc.number = 0;
@@ -700,22 +699,22 @@ Object_Info RDOff_Parser::get_object_attribute(__filesize_t pa)
 	rc.number = 0;
     } else if(pa >= cs_start && pa < ds_start - 4) {
 	rc.start = cs_start;
-	rc._class = OC_CODE;
+	rc._class = Object_Info::Code;
 	rc.end = ds_start-4;
 	rc.number = 1;
     } else if(pa >= ds_start - 4 && pa < ds_start) {
 	rc.start = ds_start-4;
 	rc.end = ds_start;
-	rc._class = OC_NOOBJECT;
+	rc._class = Object_Info::NoObject;
 	rc.number = 2;
     } else if(pa >= ds_start && pa < ds_start + ds_len) {
-	rc._class = OC_DATA;
+	rc._class = Object_Info::Data;
 	rc.start = ds_start;
 	rc.end = ds_start + ds_len;
 	rc.number = 3;
     } else {
 	rc.start = ds_start+ds_len;
-	rc._class = OC_NOOBJECT;
+	rc._class = Object_Info::NoObject;
 	rc.number = 4;
     }
      return rc;

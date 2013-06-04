@@ -20,7 +20,6 @@ using namespace	usr;
 **/
 #include <stddef.h>
 
-#include "reg_form.h"
 #include "plugins/disasm.h"
 #include "plugins/binary_parser.h"
 

@@ -30,7 +30,6 @@ using namespace	usr;
 #include "beyehelp.h"
 #include "tstrings.h"
 #include "bconsole.h"
-#include "reg_form.h"
 #include "libbeye/kbd_code.h"
 #include "plugins/binary_parser.h"
 #include "beye.h"
@@ -1042,16 +1041,16 @@ __filesize_t LX_Parser::pa2va(__filesize_t pa) const
     return va;
 }
 
-int LX_Parser::query_bitness(__filesize_t pa) const
+Bin_Format::bitness LX_Parser::query_bitness(__filesize_t pa) const
 {
  /* First we must determine page for given physical address */
   binary_stream& handle = *lx_cache;
   unsigned long i,pidx,pagentry;
-  int ret;
+  Bin_Format::bitness ret;
   LX_OBJECT lo;
   LX_MAP_TABLE mt;
   pagentry = pidx = 0;
-  ret = DAB_USE16;
+  ret = Bin_Format::Use16;
   for(i = 0;i < lxe.lx.lxPageCount;i++)
   {
     lxReadPageDesc(handle,&mt,i+1);
@@ -1071,7 +1070,7 @@ int LX_Parser::query_bitness(__filesize_t pa) const
       handle.read((any_t*)&lo,sizeof(LX_OBJECT));
       if(lo.o32_pagemap <= pidx && pidx < lo.o32_pagemap + lo.o32_mapsize)
       {
-	ret = (lo.o32_flags & 0x00002000L) == 0x00002000L ? DAB_USE32 : DAB_USE16;
+	ret = (lo.o32_flags & 0x00002000L) == 0x00002000L ? Bin_Format::Use32 : Bin_Format::Use16;
 	break;
       }
     }

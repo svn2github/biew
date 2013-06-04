@@ -30,7 +30,6 @@ using namespace	usr;
 #include "beyehelp.h"
 #include "beyeutil.h"
 #include "bconsole.h"
-#include "reg_form.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/bbio.h"
 #include "plugins/plugin.h"
@@ -65,6 +64,9 @@ enum {
     __LF_NOLEFT    =0x0002, /**< Indicates that search engine should ignore left whitespace */
     __LF_NORIGHT   =0x0004, /**< Indicates that search engine should ignore right whitespace */
     __LF_HIDEPRCNT =0x8000  /**< Indicates that search engine must not display percents >*/
+};
+enum {
+    __MAX_SYMBOL_SIZE=4
 };
 		   /** Performs single search (without templates) within file.
 		     * @return                address of found sequence

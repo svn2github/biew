@@ -22,7 +22,6 @@ using namespace	usr;
 #include <string.h>
 
 #include "beyeutil.h"
-#include "reg_form.h"
 #include "plugins/disasm/ix86/ix86.h"
 
 namespace	usr {
@@ -291,7 +290,7 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param& DisP) const
 		if(code1 == 0xF6 || code1 == 0xF7) strcpy(str,D9Fx[code1 & 0x0F]);
 		else    FPUcmdst0(str,D9Fx[code1 & 0x0F]);
 		if(code1 == 0xF5 || code1 == 0xFB || code1 == 0xFE || code1 == 0xFF)
-		if(x86_Bitness != DAB_USE64)
+		if(x86_Bitness != Bin_Format::Use64)
 			DisP.pro_clone &= ~IX86_CPUMASK;
 			DisP.pro_clone |= IX86_CPU386|INSN_FPU;
 	      }
@@ -307,14 +306,14 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param& DisP) const
    case 0xDA :
 	    if(code1 == 0xE9)
 	    {
-		if(x86_Bitness != DAB_USE64) DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
+		if(x86_Bitness != Bin_Format::Use64) DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 	      DisP.pro_clone |= IX86_CPU386|INSN_FPU;
 	      strcpy(str,SC("fucompp","st(1)"));
 	    }
 	    else
 	      if((code1 & 0xC0) == 0xC0)
 	      {
-		if(x86_Bitness != DAB_USE64) DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
+		if(x86_Bitness != Bin_Format::Use64) DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 		DisP.pro_clone |= IX86_CPU686|INSN_FPU;
 		FPUst0sti(str,FCMOVc[(code1 >> 3) & 0x07],code1);
 	      }
@@ -325,7 +324,7 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param& DisP) const
 	   switch(code1)
 	   {
 	     case 0xFC:
-		if(x86_Bitness != DAB_USE64)
+		if(x86_Bitness != Bin_Format::Use64)
 		{
 			strcpy(str,SC("frint2","st(0)"));
 			DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP|IX86_CLONEMASK);
@@ -340,7 +339,7 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param& DisP) const
 	       {
 		  unsigned char _index = code1 & 0x07;
 		  strcpy(str,DBEx[_index]);
-		  if(x86_Bitness != DAB_USE64)
+		  if(x86_Bitness != Bin_Format::Use64)
 		  if(_index == 4) {
 		    DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 		    DisP.pro_clone |= IX86_CPU286|INSN_FPU;
@@ -354,7 +353,7 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param& DisP) const
 	       if((code1 & 0xC0) == 0xC0)
 	       {
 		  XC0:
-		  if(x86_Bitness != DAB_USE64)
+		  if(x86_Bitness != Bin_Format::Use64)
 		  DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 		  DisP.pro_clone |= IX86_CPU386|INSN_FPU;
 		  FPUst0sti(str,FCMOVnc[(code1 >> 3) & 0x07],code1);
@@ -364,7 +363,7 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param& DisP) const
 		 mtd=DBrm[rm].f;
 		 (this->*mtd)(str,DBrm[rm].c,DisP);
 		 if(rm==1
-		  && x86_Bitness != DAB_USE64
+		  && x86_Bitness != Bin_Format::Use64
 		 ) {
 		    DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 		    DisP.pro_clone |= IX86_P5|INSN_FPU;
@@ -384,7 +383,7 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param& DisP) const
 	    switch(code1)
 	    {
 	      case 0xFC:
-		if(x86_Bitness != DAB_USE64)
+		if(x86_Bitness != Bin_Format::Use64)
 		{
 			strcpy(str,SC("frichop","st(0)"));
 			DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP|IX86_CLONEMASK);
@@ -399,7 +398,7 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param& DisP) const
 		else
 		  if((code1 & 0xF0) == 0xE0)
 		  {
-		    if(x86_Bitness != DAB_USE64)
+		    if(x86_Bitness != Bin_Format::Use64)
 		    DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 		    DisP.pro_clone |= IX86_CPU386|INSN_FPU;
 		    FPUcmdsti_2(str,"fucom","fucomp",code1);
@@ -409,7 +408,7 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param& DisP) const
 		    mtd=DDrm[rm].f;
 		    (this->*mtd)(str,DDrm[rm].c,DisP);
 		    if(rm==1
-		  && x86_Bitness != DAB_USE64
+		  && x86_Bitness != Bin_Format::Use64
 		    ) {
 			DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 			DisP.pro_clone |= IX86_P5|INSN_FPU;
@@ -433,17 +432,17 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param& DisP) const
 	     case 0xE0:  strcpy(str,SC("fstsw","ax"));
 			 break;
 	     case 0xE1:  strcpy(str,SC("fnstdw","ax"));
-			 if(x86_Bitness != DAB_USE64)
+			 if(x86_Bitness != Bin_Format::Use64)
 			 DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 			 DisP.pro_clone |= IX86_CPU386|INSN_FPU;
 			 break;
 	     case 0xE2:  strcpy(str,SC("fnstsg","ax"));
-			 if(x86_Bitness != DAB_USE64)
+			 if(x86_Bitness != Bin_Format::Use64)
 			 DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 			 DisP.pro_clone |= IX86_CPU386|INSN_FPU;
 			 break;
 	     case 0xFC:
-			 if(x86_Bitness != DAB_USE64)
+			 if(x86_Bitness != Bin_Format::Use64)
 			 {
 			 strcpy(str,SC("frinear","st(0)"));
 			 DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP|IX86_CLONEMASK);
@@ -455,7 +454,7 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param& DisP) const
 	      {
 		if((code1 & 0xE0) == 0xE0)
 		{
-		  if(x86_Bitness != DAB_USE64)
+		  if(x86_Bitness != Bin_Format::Use64)
 		  DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 		  DisP.pro_clone |= IX86_CPU686|INSN_FPU;
 		  FPUst0sti(str,FxCOMIP[(code1 >> 3) & 0x07],code1);
@@ -463,7 +462,7 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param& DisP) const
 		else
 		if((code1 & 0xC0) == 0xC0)
 		{
-		 if(x86_Bitness != DAB_USE64)
+		 if(x86_Bitness != Bin_Format::Use64)
 		  DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 		  DisP.pro_clone |= IX86_CPU386|INSN_FPU;
 		  FPUcmdsti_2(str,"ffreep","f???",code1);
@@ -473,7 +472,7 @@ void ix86_Disassembler::ix86_FPUCmd(char * str,ix86Param& DisP) const
 		   mtd=DFrm[rm].f;
 		   (this->*mtd)(str,DFrm[rm].c,DisP);
 		   if(rm==1
-		  && x86_Bitness != DAB_USE64
+		  && x86_Bitness != Bin_Format::Use64
 		   ) {
 		    DisP.pro_clone &= ~(IX86_CPUMASK|INSN_REGGROUP);
 		    DisP.pro_clone |= IX86_P5|INSN_FPU;

@@ -38,7 +38,6 @@ using namespace	usr;
 #include "plugins/hexmode.h"
 #include "plugins/disasm.h"
 #include "beyeutil.h"
-#include "reg_form.h"
 #include "bconsole.h"
 #include "editor.h"
 #include "codeguid.h"
@@ -820,7 +819,7 @@ void  __FASTCALL__ disSetModifier(char *str,const char *modf)
   if(i+mlen > len) { str[i+mlen] = TWC_DEF_FILLER; str[i+mlen+1] = 0; }
 }
 
-bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t ulShift,int flg,char codelen,any_t*defval,e_disarg type)
+bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flg,char codelen,any_t*defval,e_disarg type)
 {
  bool app;
  char comments[Comm_Size];
@@ -844,7 +843,7 @@ bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t 
      }
   }
 #endif
-  if(hexAddressResolv) flg |= APREF_SAVE_VIRT;
+  if(hexAddressResolv) flg |= Bin_Format::Save_Virt;
   app = disNeedRef >= Ref_All ? bin_format.bind(*this,str,ulShift,flg,codelen,0L) : false;
   if(app != true)
   {
@@ -1059,7 +1058,7 @@ bool DisMode::append_faddr(binary_stream& handle,std::string& str,__fileoff_t ul
  size_t modif_to;
  DisasmRet dret;
  bool appended = false;
- int flg;
+ Bin_Format::bind_type flg;
  fpos = handle.tell();
  memset(&dret,0,sizeof(DisasmRet));
  /* Prepare insn type */
@@ -1091,8 +1090,8 @@ bool DisMode::append_faddr(binary_stream& handle,std::string& str,__fileoff_t ul
  if(disNeedRef > Ref_None)
  {
    if(dret.pro_clone == __INSNT_JMPPIC || dret.pro_clone == __INSNT_JMPRIP) goto try_pic; /* skip defaults for PIC */
-   flg = APREF_TRY_LABEL;
-   if(hexAddressResolv) flg |= APREF_SAVE_VIRT;
+   flg = Bin_Format::Try_Label;
+   if(hexAddressResolv) flg |= Bin_Format::Save_Virt;
    appended=bin_format.bind(*this,str,ulShift,flg,codelen,r_sh);
    if(!appended)
    {
@@ -1103,7 +1102,7 @@ bool DisMode::append_faddr(binary_stream& handle,std::string& str,__fileoff_t ul
       */
        if(dret.pro_clone == __INSNT_JMPVVT) /* jmp (mod r/m) */
        {
-	    if(bin_format.bind(*this,str,r_sh+dret.field,APREF_TRY_LABEL,dret.codelen,r_sh))
+	    if(bin_format.bind(*this,str,r_sh+dret.field,Bin_Format::Try_Label,dret.codelen,r_sh))
 	    {
 	      appended = true;
 	      modif_to = str.find(' ');
@@ -1120,7 +1119,7 @@ bool DisMode::append_faddr(binary_stream& handle,std::string& str,__fileoff_t ul
        {
 	    try_pic:
 	    if(dret.pro_clone == __INSNT_JMPRIP) goto try_rip;
-	    if(bin_format.bind(*this,str,r_sh+dret.field,APREF_TRY_PIC,dret.codelen,r_sh))
+	    if(bin_format.bind(*this,str,r_sh+dret.field,Bin_Format::Try_Pic,dret.codelen,r_sh))
 	    {
 	      appended = true; /* terminate appending any info anyway */
 	      if(!DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
@@ -1143,7 +1142,7 @@ bool DisMode::append_faddr(binary_stream& handle,std::string& str,__fileoff_t ul
 		    r_sh+dret.field)+dret.codelen;
 	__tmp = bin_format.va2pa(_defval);
 	pa = (__tmp!=Plugin::Bad_Address) ? __tmp : _defval;
-	app=bin_format.bind(*this,str,pa,APREF_TRY_LABEL,dret.codelen,0L);
+	app=bin_format.bind(*this,str,pa,Bin_Format::Try_Label,dret.codelen,0L);
 	if(app)
 	{
 	  appended = true; /* terminate appending any info anyway */

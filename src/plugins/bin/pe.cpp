@@ -38,7 +38,6 @@ using namespace	usr;
 #include "beyehelp.h"
 #include "tstrings.h"
 #include "bconsole.h"
-#include "reg_form.h"
 #include "libbeye/kbd_code.h"
 #include "mz.h"
 #include "beye.h"
@@ -127,9 +126,9 @@ namespace	usr {
 	    virtual __filesize_t	action_F9();
 	    virtual __filesize_t	action_F10();
 
-	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,int flg,int codelen,__filesize_t r_shift);
+	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift);
 	    virtual int			query_platform() const;
-	    virtual int			query_bitness(__filesize_t) const;
+	    virtual Bin_Format::bitness	query_bitness(__filesize_t) const;
 	    virtual bool		address_resolving(std::string&,__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
@@ -1056,7 +1055,7 @@ bool PE_Parser::BuildReferStrPE(std::string& str,const RELOC_PE& rpe,int flags) 
    if(rpe.modidx != std::numeric_limits<uint64_t>::max())
    {
      char *is_ext;
-     if(flags & APREF_USE_TYPE) str+=" off32";
+     if(flags & Bin_Format::Use_Type) str+=" off32";
      handle2.seek(RVA2Phys(rva),binary_stream::Seek_Set);
      handle2.read(buff,400);
      buff[399] = 0;
@@ -1151,13 +1150,13 @@ bool PE_Parser::BuildReferStrPE(std::string& str,const RELOC_PE& rpe,int flags) 
 		  break;
      }
      delta = point_to ? point_to : value-delta;
-     if(!(flags & APREF_SAVE_VIRT))
+     if(!(flags & Bin_Format::Save_Virt))
      {
        str+="*this.";
-       if(flags & APREF_USE_TYPE) str+=pe_how;
+       if(flags & Bin_Format::Use_Type) str+=pe_how;
        /** if out of physical image */
        str+=Get8Digit(delta);
-       if(flags & APREF_USE_TYPE) str+=")";
+       if(flags & Bin_Format::Use_Type) str+=")";
        retrf=true;
      }
      else str+=Get8Digit(value);
@@ -1165,7 +1164,7 @@ bool PE_Parser::BuildReferStrPE(std::string& str,const RELOC_PE& rpe,int flags) 
    return retrf;
 }
 
-bool PE_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
+bool PE_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
   std::set<RELOC_PE>::const_iterator rpe;
   bool retrf;
@@ -1174,7 +1173,7 @@ bool PE_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift
   UNUSED(codelen);
   b_cache = pe_cache3;
   retrf = false;
-  if(flags & APREF_TRY_PIC) return false;
+  if(flags & Bin_Format::Try_Pic) return false;
   if(peDir[PE_IMPORT].rva || peDir[PE_FIXUP].rva)
   {
     uint32_t id;
@@ -1187,7 +1186,7 @@ bool PE_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift
     if(rpe==CurrPEChain.end()) rpe = __found_RPE(ulShift);
     if(rpe!=CurrPEChain.end()) retrf = BuildReferStrPE(str,*rpe,flags);
   }
-  if(!retrf && (flags & APREF_TRY_LABEL))
+  if(!retrf && (flags & Bin_Format::Try_Label))
   {
      if(PubNames.empty()) pe_ReadPubNameList(main_handle());
      if(FindPubName(buff,r_sh))
@@ -1252,14 +1251,14 @@ PE_Parser::~PE_Parser()
   if(pe_cache4 != &__main_handle) delete pe_cache4;
 }
 
-int PE_Parser::query_bitness(__filesize_t off) const
+Bin_Format::bitness PE_Parser::query_bitness(__filesize_t off) const
 {
    if(off >= headshift())
    {
-     return (pe.peFlags & 0x0040) ? DAB_USE16 :
-	    (pe.peFlags & 0x0100) ? DAB_USE32 : DAB_USE64;
+     return (pe.peFlags & 0x0040) ? Bin_Format::Use16 :
+	    (pe.peFlags & 0x0100) ? Bin_Format::Use32 : Bin_Format::Use64;
    }
-   else return DAB_USE16;
+   else return Bin_Format::Use16;
 }
 
 __filesize_t PE_Parser::action_F1()
@@ -1357,7 +1356,7 @@ void PE_Parser::pe_ReadPubNameList(binary_stream& handle)
     entry_pa = CalcEntryPE((unsigned)ord,false);
     pn.pa = entry_pa;
     pn.nameoff = nameaddr;
-    pn.attr = SC_GLOBAL;
+    pn.attr = Symbol_Info::Global;
     PubNames.insert(pn);
   }
 }
@@ -1382,7 +1381,7 @@ Object_Info PE_Parser::get_object_attribute(__filesize_t pa)
     unsigned i,nitems;
     rc.start = 0;
     rc.end = main_handle().flength();
-    rc._class = OC_NOOBJECT;
+    rc._class = Object_Info::NoObject;
     rc.bitness = query_bitness(pa);
     rc.number = 0;
     nitems = pe.peObjects;
@@ -1400,7 +1399,7 @@ Object_Info PE_Parser::get_object_attribute(__filesize_t pa)
 	if(pa >= po.oPhysicalOffset && pa < po.oPhysicalOffset + po.oPhysicalSize) {
 	    rc.start = po.oPhysicalOffset;
 	    rc.end = rc.start + po.oPhysicalSize;
-	    rc._class = po.oFlags & 0x00000020L ? OC_CODE : OC_DATA;
+	    rc._class = po.oFlags & 0x00000020L ? Object_Info::Code : Object_Info::Data;
 	    rc.name=(char*)po.oName;
 	    rc.number = i+1;
 	    break;

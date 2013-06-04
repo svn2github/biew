@@ -29,7 +29,6 @@ using namespace	usr;
 #include "beyehelp.h"
 #include "tstrings.h"
 #include "bconsole.h"
-#include "reg_form.h"
 #include "libbeye/kbd_code.h"
 #include "plugins/binary_parser.h"
 #include "beye.h"
