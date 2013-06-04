@@ -394,12 +394,12 @@ void HexMode::check_width_corr()
 
 bool HexMode::action_F2() /* hexSelectMode */
 {
-    const char *names[sizeof(xView_Info)/sizeof(struct xView_Info)];
+    std::vector<std::string> names;
     size_t i,nModes;
     int retval;
     nModes = sizeof(xView_Info)/sizeof(struct xView_Info);
-    for(i = 0;i < nModes;i++) names[i] = xView_Info[i].name;
-    retval = ListBox(names,nModes," Select hexadecimal mode: ",LB_SELECTIVE|LB_USEACC,hmode);
+    for(i = 0;i < nModes;i++) names.push_back(xView_Info[i].name);
+    retval = ListBox(names," Select hexadecimal mode: ",LB_SELECTIVE|LB_USEACC,hmode);
     if(retval != -1) {
 	hmode = retval;
 	delete hex_viewer;
@@ -563,6 +563,8 @@ void HexMode::read_ini(Ini_Profile& ini)
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","LastSubMode","2");
 	hmode = (unsigned)::strtoul(tmps.c_str(),NULL,10);
 	if(hmode > 3) hmode = 1;
+	delete hex_viewer;
+	hex_viewer = xView_Info[hmode].query_interface(main_handle);
 	hexAddressResolv=ReadIniAResolv(ini);
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","VirtWidthCorr","0");
 	virtWidthCorr = (unsigned)::strtoul(tmps.c_str(),NULL,10);

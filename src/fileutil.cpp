@@ -48,181 +48,233 @@ using namespace	usr;
 
 namespace	usr {
 extern const Plugin_Info disMode;
-static bool ChSize()
+
+    class FileUtilities : public Opaque {
+	public:
+	    FileUtilities(BeyeContext&);
+	    virtual ~FileUtilities();
+
+	    virtual bool	run() = 0;
+	protected:
+	    __filesize_t	ff_startpos,ff_len;
+	    BeyeContext&	bctx;
+    };
+
+    class ChSize : public FileUtilities {
+	public:
+	    ChSize(BeyeContext&);
+	    virtual ~ChSize();
+
+	    virtual bool	run();
+
+	    static FileUtilities*	query_interface(BeyeContext&);
+    };
+
+FileUtilities::FileUtilities(BeyeContext& b):bctx(b) {}
+FileUtilities::~FileUtilities() {}
+
+ChSize::ChSize(BeyeContext& b):FileUtilities(b) {}
+ChSize::~ChSize() {}
+bool ChSize::run()
 {
- __fileoff_t psize,tile = 0;
- if(Get16DigitDlg(" Change size of file ","Num. of bytes (+-dec):",3,(unsigned long long*)&tile))
- {
-  if(tile != 0)
-  {
-    psize = beye_context().flength();
-    psize += tile;
-    if(psize > 0)
-    {
-       bool ret;
-       int my_errno = 0;
-       std::string fname = beye_context().bm_file().filename();
-       binary_stream* bHandle;
-       bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
-       if(bHandle == NULL) {
-	 err:
-	 beye_context().errnoMessageBox(RESIZE_FAIL,"",my_errno);
-	 return false;
-       }
-       ret = bHandle->chsize(psize);
-       my_errno = errno;
-       delete bHandle;
-       if(ret == false) goto err;
-       beye_context().bm_file().reread();
-       return ret;
+    __fileoff_t psize,tile = 0;
+    if(Get16DigitDlg(" Change size of file ","Num. of bytes (+-dec):",3,(unsigned long long*)&tile)) {
+	if(tile == 0) { bctx.ErrMessageBox("Invalid new length",""); return false; }
+	psize = bctx.flength();
+	psize += tile;
+	if(psize > 0) {
+	    bool ret;
+	    int my_errno = 0;
+	    std::string fname = bctx.bm_file().filename();
+	    binary_stream* bHandle;
+	    bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
+	    if(bHandle == NULL) {
+err:
+		bctx.errnoMessageBox(RESIZE_FAIL,"",my_errno);
+		return false;
+	    }
+	    ret = bHandle->chsize(psize);
+	    my_errno = errno;
+	    delete bHandle;
+	    if(ret == false) goto err;
+	    bctx.bm_file().reread();
+	    return ret;
+	}
     }
-    else beye_context().ErrMessageBox("Invalid new length","");
-  }
- }
- return false;
+    return false;
 }
+FileUtilities*	ChSize::query_interface(BeyeContext& b) { return new(zeromem) ChSize(b); }
 
-static bool  __FASTCALL__ InsBlock(binary_stream* bHandle,__filesize_t start,__fileoff_t psize)
-{
-   char *buffer;
-   __filesize_t tile,oflen,flen,crpos,cwpos;
-   unsigned numtowrite;
-   oflen = bHandle->flength();
-   flen = oflen + psize;
-   tile = oflen - start;
-   buffer = new char [51200U];
-   if(!buffer) return 0;
-   if(!bHandle->chsize(oflen+psize))
-   {
-     beye_context().ErrMessageBox(EXPAND_FAIL,"");
-     delete buffer;
-     return false;
-   }
-   crpos = oflen-std::min(tile,__filesize_t(51200U));
-   cwpos = flen-std::min(tile,__filesize_t(51200U));
-   numtowrite = (unsigned)std::min(tile,__filesize_t(51200U));
-   while(tile)
-   {
-     bHandle->seek(crpos,binary_stream::Seek_Set);
-     bHandle->read(buffer,numtowrite);
-     bHandle->seek(cwpos,binary_stream::Seek_Set);
-     bHandle->write(buffer,numtowrite);
-     tile -= numtowrite;
-     numtowrite = (unsigned)std::min(tile,__filesize_t(51200U));
-     crpos -= numtowrite;
-     cwpos -= numtowrite;
-   }
-   tile = oflen - start;
-   cwpos = start;
-   memset(buffer,0,51200U);
-   while(psize)
-   {
-     numtowrite = (unsigned)std::min(psize,__fileoff_t(51200U));
-     bHandle->seek(cwpos,binary_stream::Seek_Set);
-     bHandle->write(buffer,numtowrite);
-     psize -= numtowrite;
-     cwpos += numtowrite;
-   }
-   delete buffer;
-   return true;
-}
+    class InsDelBlock : public FileUtilities {
+	public:
+	    InsDelBlock(BeyeContext&);
+	    virtual ~InsDelBlock();
 
-static bool  __FASTCALL__ DelBlock(binary_stream* bHandle,__filesize_t start,__fileoff_t psize)
-{
-   char *buffer;
-   __filesize_t tile,oflen,crpos,cwpos;
-   unsigned numtowrite;
-   oflen = bHandle->flength();
-   tile = oflen - start;
-   buffer = new char [51200U];
-   if(!buffer) return false;
-   crpos = start-psize; /** psize is negative value */
-   cwpos = start;
-   while(tile)
-   {
-     numtowrite = (unsigned)std::min(tile,__filesize_t(51200U));
-     bHandle->seek(crpos,binary_stream::Seek_Set);
-     bHandle->read(buffer,numtowrite);
-     bHandle->seek(cwpos,binary_stream::Seek_Set);
-     bHandle->write(buffer,numtowrite);
-     tile -= numtowrite;
-     crpos += numtowrite;
-     cwpos += numtowrite;
-   }
-   delete buffer;
-   if(!bHandle->chsize(oflen+psize))
-   {
-     beye_context().ErrMessageBox(TRUNC_FAIL,"");
-     delete buffer;
-   }
-   return true;
-}
+	    virtual bool	run();
 
-static bool InsDelBlock()
+	    static FileUtilities*	query_interface(BeyeContext&);
+	private:
+	    bool		InsBlock(binary_stream* bHandle,__filesize_t start,__fileoff_t psize) const;
+	    bool		DelBlock(binary_stream* bHandle,__filesize_t start,__fileoff_t psize) const;
+    };
+
+InsDelBlock::InsDelBlock(BeyeContext& b):FileUtilities(b) {}
+InsDelBlock::~InsDelBlock() {}
+
+bool InsDelBlock::InsBlock(binary_stream* bHandle,__filesize_t start,__fileoff_t psize) const
 {
- __filesize_t start;
- static __fileoff_t psize;
- bool ret = false;
- start = beye_context().tell();
- if(GetInsDelBlkDlg(" Insert or delete block to/from file ",&start,&psize))
- {
-    __filesize_t fpos;
-    binary_stream* bHandle;
-    std::string fname;
-    fpos = beye_context().tell();
-    if(start > beye_context().flength()) { beye_context().ErrMessageBox("Start is outside of file",""); return 0; }
-    if(!psize) return 0;
-    if(psize < 0) if(start+labs(psize) > beye_context().flength()) { beye_context().ErrMessageBox("Use change size operation instead of block deletion",""); return 0; }
-    fname = beye_context().bm_file().filename();
-    bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
-    if(bHandle == NULL) {
-      beye_context().errnoMessageBox(OPEN_FAIL,"",errno);
-    } else {
-      if(psize < 0) ret = DelBlock(bHandle,start,psize);
-      else          ret = InsBlock(bHandle,start,psize);
-      delete bHandle;
-      beye_context().bm_file().reread();
+    char *buffer;
+    __filesize_t tile,oflen,flen,crpos,cwpos;
+    unsigned numtowrite;
+    oflen = bHandle->flength();
+    flen = oflen + psize;
+    tile = oflen - start;
+    buffer = new char [51200U];
+    if(!buffer) return 0;
+    if(!bHandle->chsize(oflen+psize)) {
+	bctx.ErrMessageBox(EXPAND_FAIL,"");
+	delete buffer;
+	return false;
     }
-    beye_context().bm_file().seek(fpos,binary_stream::Seek_Set);
- }
- return ret;
+    crpos = oflen-std::min(tile,__filesize_t(51200U));
+    cwpos = flen-std::min(tile,__filesize_t(51200U));
+    numtowrite = (unsigned)std::min(tile,__filesize_t(51200U));
+    while(tile) {
+	bHandle->seek(crpos,binary_stream::Seek_Set);
+	bHandle->read(buffer,numtowrite);
+	bHandle->seek(cwpos,binary_stream::Seek_Set);
+	bHandle->write(buffer,numtowrite);
+	tile -= numtowrite;
+	numtowrite = (unsigned)std::min(tile,__filesize_t(51200U));
+	crpos -= numtowrite;
+	cwpos -= numtowrite;
+    }
+    tile = oflen - start;
+    cwpos = start;
+    memset(buffer,0,51200U);
+    while(psize) {
+	numtowrite = (unsigned)std::min(psize,__fileoff_t(51200U));
+	bHandle->seek(cwpos,binary_stream::Seek_Set);
+	bHandle->write(buffer,numtowrite);
+	psize -= numtowrite;
+	cwpos += numtowrite;
+    }
+    delete buffer;
+    return true;
 }
 
-static std::string ff_fname="beye.$$$";
-static std::string xlat_fname;
-static __filesize_t ff_startpos = 0L,ff_len = 0L;
-
-static void  __FASTCALL__ printObject(std::ofstream& fout,unsigned obj_num,const std::string& oname,int oclass,int obitness,__filesize_t size)
+bool InsDelBlock::DelBlock(binary_stream* bHandle,__filesize_t start,__fileoff_t psize) const
 {
-  const char *btn;
-  std::string name;
-  char onumname[30];
-  switch(obitness)
-  {
-    case DAB_USE16: btn = "USE16"; break;
-    case DAB_USE32: btn = "USE32"; break;
-    case DAB_USE64: btn = "USE64"; break;
-    case DAB_USE128:btn = "USE128"; break;
-    case DAB_USE256:btn = "USE256"; break;
-    default: btn = "";
-  }
-
-  name = oname[0] ? oname : oclass == OC_DATA ? "DUMP_DATA" :
-			    oclass == OC_CODE ? "DUMP_TEXT" :
-			    "Unknown";
-  if(!oname[0]) { sprintf(onumname,"%s%u",name.c_str(),obj_num); name = onumname; }
-  fout<<std::endl<<"SEGMENT "<<name<<" BYTE PUBLIC "<<btn<<" '"<<(oclass == OC_DATA ? "DATA" : oclass == OC_CODE ? "CODE" : "NoObject")<<"'"<<std::endl;
-  fout<<"; size: "<<std::dec<<size<<" bytes"<<std::endl<<std::endl;
+    char *buffer;
+    __filesize_t tile,oflen,crpos,cwpos;
+    unsigned numtowrite;
+    oflen = bHandle->flength();
+    tile = oflen - start;
+    buffer = new char [51200U];
+    if(!buffer) return false;
+    crpos = start-psize; /** psize is negative value */
+    cwpos = start;
+    while(tile) {
+	numtowrite = (unsigned)std::min(tile,__filesize_t(51200U));
+	bHandle->seek(crpos,binary_stream::Seek_Set);
+	bHandle->read(buffer,numtowrite);
+	bHandle->seek(cwpos,binary_stream::Seek_Set);
+	bHandle->write(buffer,numtowrite);
+	tile -= numtowrite;
+	crpos += numtowrite;
+	cwpos += numtowrite;
+    }
+    delete buffer;
+    if(!bHandle->chsize(oflen+psize)) {
+	bctx.ErrMessageBox(TRUNC_FAIL,"");
+	delete buffer;
+    }
+    return true;
 }
 
-static void  __FASTCALL__ printHdr(std::ofstream& fout,const Bin_Format& fmt)
+bool InsDelBlock::run()
+{
+    __filesize_t start;
+    static __fileoff_t psize;
+    bool ret = false;
+    start = bctx.tell();
+    if(GetInsDelBlkDlg(" Insert or delete block to/from file ",&start,&psize)) {
+	__filesize_t fpos;
+	binary_stream* bHandle;
+	std::string fname;
+	fpos = bctx.tell();
+	if(start > bctx.flength()) { bctx.ErrMessageBox("Start is outside of file",""); return 0; }
+	if(!psize) return 0;
+	if(psize < 0) if(start+labs(psize) > bctx.flength()) { bctx.ErrMessageBox("Use change size operation instead of block deletion",""); return 0; }
+	fname = bctx.bm_file().filename();
+	bHandle = BeyeContext::beyeOpenRW(fname,BBIO_SMALL_CACHE_SIZE);
+	if(bHandle == NULL) bctx.errnoMessageBox(OPEN_FAIL,"",errno);
+	else {
+	    if(psize < 0) ret = DelBlock(bHandle,start,psize);
+	    else          ret = InsBlock(bHandle,start,psize);
+	    delete bHandle;
+	    bctx.bm_file().reread();
+	}
+	bctx.bm_file().seek(fpos,binary_stream::Seek_Set);
+    }
+    return ret;
+}
+FileUtilities*	InsDelBlock::query_interface(BeyeContext& b) { return new(zeromem) InsDelBlock(b); }
+
+
+    class FStore : public FileUtilities {
+	public:
+	    FStore(BeyeContext&);
+	    virtual ~FStore();
+
+	    virtual bool	run();
+
+	    static FileUtilities*	query_interface(BeyeContext&);
+	protected:
+	    virtual void		__make_dump_name(const std::string& end);
+
+	    std::string		ff_fname;
+	private:
+	    void		printObject(std::ofstream& fout,unsigned obj_num,const std::string& oname,int oclass,int obitness,__filesize_t size) const;
+	    void		printHdr(std::ofstream& fout,const Bin_Format& fmt) const;
+	    std::string		GET_FUNC_CLASS(unsigned x) const { return x == SC_LOCAL ? "private" : "public"; }
+	    void		make_addr_column(std::string& buff,__filesize_t offset) const;
+	    unsigned		printHelpComment(char *buff,MBuffer codebuff,DisasmRet *dret,DisMode::e_severity dis_severity,const char* dis_comments) const;
+    };
+
+FStore::FStore(BeyeContext& b):FileUtilities(b),ff_fname("beye.$$$") {}
+FStore::~FStore() {}
+
+void FStore::printObject(std::ofstream& fout,unsigned obj_num,const std::string& oname,int oclass,int obitness,__filesize_t size) const
+{
+    const char *btn;
+    std::string name;
+    char onumname[30];
+    switch(obitness) {
+	case DAB_USE16: btn = "USE16"; break;
+	case DAB_USE32: btn = "USE32"; break;
+	case DAB_USE64: btn = "USE64"; break;
+	case DAB_USE128:btn = "USE128"; break;
+	case DAB_USE256:btn = "USE256"; break;
+	default: btn = "";
+    }
+
+    name = oname[0] ? oname : oclass == OC_DATA ? "DUMP_DATA" :
+			oclass == OC_CODE ? "DUMP_TEXT" :
+			"Unknown";
+    if(!oname[0]) { sprintf(onumname,"%s%u",name.c_str(),obj_num); name = onumname; }
+    fout<<std::endl<<"SEGMENT "<<name<<" BYTE PUBLIC "<<btn<<" '"<<(oclass == OC_DATA ? "DATA" : oclass == OC_CODE ? "CODE" : "NoObject")<<"'"<<std::endl;
+    fout<<"; size: "<<std::dec<<size<<" bytes"<<std::endl<<std::endl;
+}
+
+void FStore::printHdr(std::ofstream& fout,const Bin_Format& fmt) const
 {
     const char *cptr,*cptr1,*cptr2;
     time_t tim;
     cptr = cptr1 = ";"; cptr2 = "";
     time(&tim);
     fout<<cptr1<<std::endl;
-    fout<<cptr<<"Disassembler dump of \'"<<beye_context().bm_file().filename()<<"\'"<<std::endl;
+    fout<<cptr<<"Disassembler dump of \'"<<bctx.bm_file().filename()<<"\'"<<std::endl;
     fout<<cptr<<"Range : "<<std::hex<<ff_startpos<<"H-"<<std::hex<<(ff_startpos+ff_len)<<"H"<<std::endl;
     fout<<cptr<<"Written by "<<BEYE_VER_MSG<<std::endl;
     fout<<cptr<<"Dumped : "<<ctime(&tim)<<std::endl;
@@ -230,7 +282,7 @@ static void  __FASTCALL__ printHdr(std::ofstream& fout,const Bin_Format& fmt)
     fout<<cptr2<<std::endl<<std::endl;
 }
 
-static unsigned  __FASTCALL__ printHelpComment(char *buff,MBuffer codebuff,DisasmRet *dret,DisMode::e_severity dis_severity,const char* dis_comments)
+unsigned FStore::printHelpComment(char *buff,MBuffer codebuff,DisasmRet *dret,DisMode::e_severity dis_severity,const char* dis_comments) const
 {
     unsigned len,j;
     if(dis_severity > DisMode::CommSev_None) {
@@ -246,33 +298,28 @@ static unsigned  __FASTCALL__ printHelpComment(char *buff,MBuffer codebuff,Disas
     return len;
 }
 
-inline const char* GET_FUNC_CLASS(unsigned x) { return x == SC_LOCAL ? "private" : "public"; }
-
-static void  __FASTCALL__ make_addr_column(std::string& buff,__filesize_t offset)
+void FStore::make_addr_column(std::string& buff,__filesize_t offset) const
 {
-   if(hexAddressResolv)
-   {
-     buff.clear();
-     beye_context().bin_format().address_resolving(buff,offset);
-   }
-   else {
-    buff="L";
-    buff+=Get8Digit(offset);
-   }
-   buff+=":";
+    if(hexAddressResolv) {
+	buff.clear();
+	bctx.bin_format().address_resolving(buff,offset);
+    } else {
+	buff="L";
+	buff+=Get8Digit(offset);
+    }
+    buff+=":";
 }
 
-static void __make_dump_name(const char *end)
+void FStore::__make_dump_name(const std::string& end)
 {
- /* construct name */
- ff_fname=beye_context().bm_file().filename();
- ff_fname=ff_fname.substr(0,ff_fname.rfind('.'));
- ff_fname+=end;
+    /* construct name */
+    ff_fname=bctx.bm_file().filename();
+    ff_fname=ff_fname.substr(0,ff_fname.rfind('.'));
+    ff_fname+=end;
 }
 
-static bool FStore()
+bool FStore::run()
 {
-    BeyeContext& bctx = beye_context();
     unsigned long flags;
     char *tmp_buff;
     __filesize_t endpos,cpos;
@@ -283,19 +330,19 @@ static bool FStore()
     }
     flags = FSDLG_USEMODES | FSDLG_BINMODE | FSDLG_COMMENT;
     DumpMode = true;
-    ff_startpos = beye_context().tell();
-    if(!ff_len) ff_len = beye_context().flength() - ff_startpos;
+    ff_startpos = bctx.tell();
+    if(!ff_len) ff_len = bctx.flength() - ff_startpos;
     __make_dump_name(".$$$");
     char ffname[4096];
     strcpy(ffname,ff_fname.c_str());
     if(GetFStoreDlg(" Save information to file ",ffname,&flags,&ff_startpos,&ff_len,FILE_PRMT)) {
 	ff_fname=ffname;
 	endpos = ff_startpos + ff_len;
-	endpos = endpos > beye_context().flength() ? beye_context().flength() : endpos;
+	endpos = endpos > bctx.flength() ? bctx.flength() : endpos;
 	if(endpos > ff_startpos) {
 	    TWindow *progress_wnd;
 	    unsigned prcnt_counter,oprcnt_counter;
-	    cpos = beye_context().tell();
+	    cpos = bctx.tell();
 	    progress_wnd = PercentWnd("Saving ..."," Save block to file ");
 	    if(!(flags & FSDLG_ASMMODE)) { /** Write in binary mode */
 		std::ofstream fs;
@@ -304,7 +351,7 @@ static bool FStore()
 		wsize = endpos - ff_startpos;
 		fs.open(ff_fname.c_str(),std::ios_base::out|std::ios_base::binary);
 		if(!fs.good())  {
-		    beye_context().errnoMessageBox("Can't use file","",errno);
+		    bctx.errnoMessageBox("Can't use file","",errno);
 		    goto Exit;
 		}
 		crpos = ff_startpos;
@@ -315,15 +362,15 @@ static bool FStore()
 		while(wsize) {
 		    unsigned real_size;
 		    rem = (unsigned)std::min(wsize,__filesize_t(4096));
-		    beye_context().bm_file().seek(crpos,binary_stream::Seek_Set);
-		    if(!beye_context().bm_file().read(tmp_buff,rem)) {
-			beye_context().errnoMessageBox(READ_FAIL,"",errno);
+		    bctx.bm_file().seek(crpos,binary_stream::Seek_Set);
+		    if(!bctx.bm_file().read(tmp_buff,rem)) {
+			bctx.errnoMessageBox(READ_FAIL,"",errno);
 			goto Exit;
 		    }
 		    real_size = (bctx.active_mode().flags()&Plugin::Has_ConvertCP) ? bctx.active_mode().convert_cp((char *)tmp_buff,rem,true) : rem;
 		    fs.write(tmp_buff,real_size);
 		    if(!fs.good()) {
-			beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
+			bctx.errnoMessageBox(WRITE_FAIL,"",errno);
 			goto Exit;
 		    }
 		    wsize -= rem;
@@ -367,7 +414,7 @@ static bool FStore()
 		file_cache = new char [BBIO_SMALL_CACHE_SIZE];
 		fout.open(ff_fname.c_str(),std::ios_base::out);
 		if(!fout.is_open()) {
-		    beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
+		    bctx.errnoMessageBox(WRITE_FAIL,"",errno);
 		    delete codebuff;
 		    goto Exit;
 		}
@@ -386,7 +433,7 @@ static bool FStore()
 		    defobj:
 		    obj_num = 0;
 		    obj_start = 0;
-		    obj_end = beye_context().flength();
+		    obj_end = bctx.flength();
 		    obj_name[0] = 0;
 		    obj_class = OC_CODE;
 		    obj_bitness = bctx.bin_format().query_bitness(ff_startpos);
@@ -467,8 +514,8 @@ static bool FStore()
 			}
 		    }
 		    memset(codebuff,0,MaxInsnLen);
-		    beye_context().bm_file().seek(ff_startpos,binary_stream::Seek_Set);
-		    beye_context().bm_file().read((any_t*)codebuff,MaxInsnLen);
+		    bctx.bm_file().seek(ff_startpos,binary_stream::Seek_Set);
+		    bctx.bm_file().read((any_t*)codebuff,MaxInsnLen);
 		    if(obj_class == OC_CODE) dret = dismode->disassembler(ff_startpos,codebuff,__DISF_NORMAL);
 		    else { /** Data object */
 			unsigned dis_data_len,ifreq,data_len;
@@ -546,7 +593,7 @@ static bool FStore()
 		    }
 		    fout<<(tmp_buff2 ? tmp_buff2 : tmp_buff)<<std::endl;
 		    if(!fout.good()) {
-			beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
+			bctx.errnoMessageBox(WRITE_FAIL,"",errno);
 			goto dis_exit;
 		    }
 		    if(flags & FSDLG_STRUCTS) {
@@ -554,7 +601,7 @@ static bool FStore()
 			    dret.codelen = stop - ff_startpos;
 		    }
 		    if(!dret.codelen) {
-			beye_context().ErrMessageBox("Internal fatal error"," Put structures ");
+			bctx.ErrMessageBox("Internal fatal error"," Put structures ");
 			goto dis_exit;
 		    }
 		    ff_startpos += dret.codelen;
@@ -576,496 +623,532 @@ static bool FStore()
 	    } /** END: Write in disassembler mode */
 	    Exit:
 	    delete progress_wnd;
-	    beye_context().bm_file().seek(cpos,binary_stream::Seek_Set);
-	} else  beye_context().ErrMessageBox("Start position > end position!","");
+	    bctx.bm_file().seek(cpos,binary_stream::Seek_Set);
+	} else  bctx.ErrMessageBox("Start position > end position!","");
     }
     delete tmp_buff;
     DumpMode = false;
     return false;
 }
+FileUtilities*	FStore::query_interface(BeyeContext& b) { return new(zeromem) FStore(b); }
 
-static bool FRestore()
+    class FRestore : public FStore {
+	public:
+	    FRestore(BeyeContext&);
+	    virtual ~FRestore();
+
+	    virtual bool	run();
+
+	    static FileUtilities*	query_interface(BeyeContext&);
+    };
+
+FRestore::FRestore(BeyeContext& b):FStore(b) {}
+FRestore::~FRestore() {}
+
+bool FRestore::run()
 {
- __filesize_t endpos,cpos;
- unsigned long flags;
- bool ret;
- ret = false;
- flags = FSDLG_NOMODES;
- __make_dump_name(".$$$");
- char ffname[4096];
- strcpy(ffname,ff_fname.c_str());
- if(GetFStoreDlg(" Restore information from file ",ffname,&flags,&ff_startpos,&ff_len,FILE_PRMT))
- {
-   ff_fname=ffname;
-   __filesize_t flen,lval;
-   binary_stream* h = new(zeromem) binary_stream;
-   std::string fname;
-   endpos = ff_startpos + ff_len;
-   if(!h->open(ff_fname,binary_stream::FO_READONLY | binary_stream::SO_DENYNONE)) {
-	if(!h->open(ff_fname,binary_stream::FO_READONLY | binary_stream::SO_COMPAT)) {
-	    goto err;
+    __filesize_t endpos,cpos;
+    unsigned long flags;
+    bool ret = false;
+    flags = FSDLG_NOMODES;
+    __make_dump_name(".$$$");
+    char ffname[4096];
+    strcpy(ffname,ff_fname.c_str());
+    if(GetFStoreDlg(" Restore information from file ",ffname,&flags,&ff_startpos,&ff_len,FILE_PRMT)) {
+	ff_fname=ffname;
+	__filesize_t flen,lval;
+	binary_stream* h = new(zeromem) binary_stream;
+	std::string fname;
+	endpos = ff_startpos + ff_len;
+	if(!h->open(ff_fname,binary_stream::FO_READONLY | binary_stream::SO_DENYNONE)) {
+	    if(!h->open(ff_fname,binary_stream::FO_READONLY | binary_stream::SO_COMPAT)) {
+		goto err;
+	    }
 	}
-    }
-   flen = h->flength();
-   delete h;
-   lval = endpos - ff_startpos;
-   endpos = lval > flen ? flen + ff_startpos : endpos;
-   endpos = endpos > beye_context().flength() ? beye_context().flength() : endpos;
-   if(endpos > ff_startpos)
-   {
-     __filesize_t wsize,cwpos;
-     unsigned remaind;
-     any_t*tmp_buff;
-     h = new(zeromem) binary_stream;
-     if(!h->open(ff_fname,binary_stream::FO_READONLY | binary_stream::SO_DENYNONE)) {
-        if(!h->open(ff_fname,binary_stream::FO_READONLY | binary_stream::SO_COMPAT)) {
-	    err:
+	flen = h->flength();
+	delete h;
+	lval = endpos - ff_startpos;
+	endpos = lval > flen ? flen + ff_startpos : endpos;
+	endpos = endpos > bctx.flength() ? bctx.flength() : endpos;
+	if(endpos > ff_startpos) {
+	    __filesize_t wsize,cwpos;
+	    unsigned remaind;
+	    any_t*tmp_buff;
+	    h = new(zeromem) binary_stream;
+	    if(!h->open(ff_fname,binary_stream::FO_READONLY | binary_stream::SO_DENYNONE)) {
+		if(!h->open(ff_fname,binary_stream::FO_READONLY | binary_stream::SO_COMPAT)) {
+err:
+		    delete h;
+		    bctx.errnoMessageBox(OPEN_FAIL,"",errno);
+		    return false;
+		}
+	    }
+	    cpos = bctx.tell();
+	    wsize = endpos - ff_startpos;
+	    cwpos = ff_startpos;
+	    h->seek(0L,binary_stream::Seek_Set);
+	    tmp_buff = new char [4096];
+	    fname = bctx.bm_file().filename();
+	    std::fstream fs;
+	    fs.open(fname.c_str(),std::ios_base::in|std::ios_base::out|std::ios_base::binary);
+	    if(fs.is_open()) {
+		while(wsize) {
+		    remaind = (unsigned)std::min(wsize,__filesize_t(4096));
+		    if(!h->read(tmp_buff,remaind)) {
+			bctx.errnoMessageBox(READ_FAIL,"",errno);
+			delete h;
+			ret = false;
+			goto bye;
+		    }
+		    fs.seekp(cwpos,std::ios_base::beg);
+		    fs.write((const char*)tmp_buff,remaind);
+		    if(!fs.good()) {
+			bctx.errnoMessageBox(WRITE_FAIL,"",errno);
+			ret = false;
+			goto bye;
+		    }
+		    wsize -= remaind;
+		    cwpos += remaind;
+		}
+bye:
+		fs.close();
+		bctx.bm_file().reread();
+	    } else bctx.errnoMessageBox(OPEN_FAIL,"",errno);
+	    delete tmp_buff;
 	    delete h;
-	    beye_context().errnoMessageBox(OPEN_FAIL,"",errno);
-	    return false;
-        }
-     }
-     cpos = beye_context().tell();
-     wsize = endpos - ff_startpos;
-     cwpos = ff_startpos;
-     h->seek(0L,binary_stream::Seek_Set);
-     tmp_buff = new char [4096];
-     if(!tmp_buff)
-     {
-       MemOutBox("temporary buffer initialization");
-       return false;
-     }
-     fname = beye_context().bm_file().filename();
-     std::fstream fs;
-     fs.open(fname.c_str(),std::ios_base::in|std::ios_base::out|std::ios_base::binary);
-     if(fs.is_open()) {
-       while(wsize) {
-	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
-	 if(!h->read(tmp_buff,remaind)) {
-	   beye_context().errnoMessageBox(READ_FAIL,"",errno);
-	   delete h;
-	   ret = false;
-	   goto bye;
-	 }
-	 fs.seekp(cwpos,std::ios_base::beg);
-	 fs.write((const char*)tmp_buff,remaind);
-	 if(!fs.good()) {
-	   beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
-	   ret = false;
-	   goto bye;
-	 }
-	 wsize -= remaind;
-	 cwpos += remaind;
-       }
-       bye:
-       fs.close();
-       beye_context().bm_file().reread();
-     }
-     else beye_context().errnoMessageBox(OPEN_FAIL,"",errno);
-     delete tmp_buff;
-     delete h;
-     beye_context().bm_file().seek(cpos,binary_stream::Seek_Set);
-     ret = true;
-   }
-   else beye_context().ErrMessageBox("Start position > end position!","");
- }
- return ret;
+	    bctx.bm_file().seek(cpos,binary_stream::Seek_Set);
+	    ret = true;
+	} else bctx.ErrMessageBox("Start position > end position!","");
+    }
+    return ret;
+}
+FileUtilities*	FRestore::query_interface(BeyeContext& b) { return new(zeromem) FRestore(b); }
+
+    class CryptBlock : public FileUtilities {
+	public:
+	    CryptBlock(BeyeContext&);
+	    virtual ~CryptBlock();
+
+	    virtual bool	run();
+
+	    static FileUtilities*	query_interface(BeyeContext&);
+	private:
+	    void		CryptFunc(char* buff,unsigned len,std::string& pass) const;
+    };
+
+CryptBlock::CryptBlock(BeyeContext& b):FileUtilities(b) {}
+CryptBlock::~CryptBlock() {}
+
+void CryptBlock::CryptFunc(char* buff,unsigned len,std::string& pass) const
+{
+    char ch,cxor;
+    unsigned i,j;
+    unsigned bigkey_idx;
+    unsigned passlen;
+    char big_key[UCHAR_MAX];
+    cxor = 0;
+    passlen = pass.length();
+    ::memset(big_key,0,sizeof(big_key));
+    for(j = 0;j < passlen;j++) cxor += pass[j]+j;
+    cxor ^= passlen + len;
+    for(j = i = 0;i < UCHAR_MAX;i++,j++) {
+	if(j > passlen) j = 0;
+	bigkey_idx = (pass[j] + i) * cxor;
+	if(bigkey_idx > UCHAR_MAX) bigkey_idx = (bigkey_idx & 0xFF) ^ ((bigkey_idx >> 8) & 0xFF);
+	big_key[i] = bigkey_idx;
+    }
+    for(bigkey_idx = j = i = 0;i < len;i++,bigkey_idx++,j++) {
+	unsigned short _xor;
+	if(bigkey_idx > UCHAR_MAX) {
+	    /** rotate of big key */
+	    ch = big_key[0];
+	    ::memmove(big_key,&big_key[1],UCHAR_MAX-1);
+	    big_key[UCHAR_MAX-1] = ch;
+	    bigkey_idx = 0;
+	}
+	if(j > passlen) j = 0;
+	_xor = (big_key[bigkey_idx] + i)*cxor;
+	if(_xor > UCHAR_MAX) _xor = (_xor & 0xFF) ^ ((_xor >> 8) & 0xFF);
+	buff[i] = buff[i] ^ _xor;
+    }
+    /** rotate of pass */
+    ch = pass[0];
+    pass = pass.substr(1);
+    pass[passlen-1] = ch;
 }
 
-static void  __FASTCALL__ CryptFunc(char * buff,unsigned len,char *pass)
+bool CryptBlock::run()
 {
-  char ch,cxor;
-  unsigned i,j;
-  unsigned bigkey_idx;
-  unsigned passlen;
-  char big_key[UCHAR_MAX];
-  cxor = 0;
-  passlen = strlen(pass);
-  memset(big_key,0,sizeof(big_key));
-  for(j = 0;j < passlen;j++) cxor += pass[j]+j;
-  cxor ^= passlen + len;
-  for(j = i = 0;i < UCHAR_MAX;i++,j++)
-  {
-    if(j > passlen) j = 0;
-    bigkey_idx = (pass[j] + i) * cxor;
-    if(bigkey_idx > UCHAR_MAX) bigkey_idx = (bigkey_idx & 0xFF) ^ ((bigkey_idx >> 8) & 0xFF);
-    big_key[i] = bigkey_idx;
-  }
-  for(bigkey_idx = j = i = 0;i < len;i++,bigkey_idx++,j++)
-  {
-   unsigned short _xor;
-   if(bigkey_idx > UCHAR_MAX)
-   {
-     /** rotate of big key */
-     ch = big_key[0];
-     memmove(big_key,&big_key[1],UCHAR_MAX-1);
-     big_key[UCHAR_MAX-1] = ch;
-     bigkey_idx = 0;
-   }
-   if(j > passlen) j = 0;
-   _xor = (big_key[bigkey_idx] + i)*cxor;
-   if(_xor > UCHAR_MAX) _xor = (_xor & 0xFF) ^ ((_xor >> 8) & 0xFF);
-   buff[i] = buff[i] ^ _xor;
-  }
-  /** rotate of pass */
-  ch = pass[0];
-  memmove(pass,&pass[1],passlen-1);
-  pass[passlen-1] = ch;
+    __filesize_t endpos,cpos;
+    unsigned long flags;
+    char pass[81];
+    bool ret;
+    ret = false;
+    ff_startpos = bctx.tell();
+    if(!ff_len) ff_len = bctx.flength() - ff_startpos;
+    pass[0] = 0;
+    flags = FSDLG_NOMODES;
+    if(GetFStoreDlg(" (De)Crypt block of file ",pass,&flags,&ff_startpos,&ff_len,"Input password (WARNING! password will be displayed):")) {
+	std::string passwd = pass;
+	__filesize_t flen,lval;
+	endpos = ff_startpos + ff_len;
+	flen = bctx.flength();
+	lval = endpos - ff_startpos;
+	endpos = lval > flen ? flen + ff_startpos : endpos;
+	endpos = endpos > bctx.flength() ? bctx.flength() : endpos;
+	if(!passwd[0]) { bctx.ErrMessageBox("Password can't be empty",""); return false; }
+	if(endpos > ff_startpos) {
+	    __filesize_t wsize,cwpos;
+	    unsigned remaind;
+	    std::string fname;
+	    any_t*tmp_buff;
+	    cpos = bctx.tell();
+	    wsize = endpos - ff_startpos;
+	    cwpos = ff_startpos;
+	    tmp_buff = new char [4096];
+	    fname = bctx.bm_file().filename();
+	    std::fstream fs;
+	    fs.open(fname.c_str(),std::ios_base::in|std::ios_base::out|std::ios_base::binary);
+	    if(fs.is_open()) {
+		fs.seekg(ff_startpos,std::ios_base::beg);
+		while(wsize) {
+		    remaind = (unsigned)std::min(wsize,__filesize_t(4096));
+		    fs.read((char*)tmp_buff,remaind);
+		    if(!fs.good()) {
+			bctx.errnoMessageBox(READ_FAIL,"",errno);
+			ret = false;
+			goto bye;
+		    }
+		    CryptFunc((char*)tmp_buff,remaind,passwd);
+		    fs.seekp(cwpos,std::ios_base::beg);
+		    fs.write((const char*)tmp_buff,remaind);
+		    if(!fs.good()) {
+			bctx.errnoMessageBox(WRITE_FAIL,"",errno);
+			ret = false;
+			goto bye;
+		    }
+		    wsize -= remaind;
+		    cwpos += remaind;
+		}
+bye:
+		fs.close();
+		bctx.bm_file().reread();
+	    }
+	    delete tmp_buff;
+	    bctx.bm_file().seek(cpos,binary_stream::Seek_Set);
+	    ret = true;
+	} else bctx.ErrMessageBox("Start position > end position!","");
+    }
+    return ret;
 }
+FileUtilities*	CryptBlock::query_interface(BeyeContext& b) { return new(zeromem) CryptBlock(b); }
 
-static bool CryptBlock()
-{
- __filesize_t endpos,cpos;
- unsigned long flags;
- char pass[81];
- bool ret;
- ret = false;
- ff_startpos = beye_context().tell();
- if(!ff_len) ff_len = beye_context().flength() - ff_startpos;
- pass[0] = 0;
- flags = FSDLG_NOMODES;
- if(GetFStoreDlg(" (De)Crypt block of file ",pass,&flags,&ff_startpos,&ff_len,"Input password (WARNING! password will be displayed):"))
- {
-   __filesize_t flen,lval;
-   endpos = ff_startpos + ff_len;
-   flen = beye_context().flength();
-   lval = endpos - ff_startpos;
-   endpos = lval > flen ? flen + ff_startpos : endpos;
-   endpos = endpos > beye_context().flength() ? beye_context().flength() : endpos;
-   if(!pass[0]) { beye_context().ErrMessageBox("Password can't be empty",""); return false; }
-   if(endpos > ff_startpos)
-   {
-     __filesize_t wsize,cwpos;
-     unsigned remaind;
-     std::string fname;
-     any_t*tmp_buff;
-     cpos = beye_context().tell();
-     wsize = endpos - ff_startpos;
-     cwpos = ff_startpos;
-     tmp_buff = new char [4096];
-     if(!tmp_buff)
-     {
-       MemOutBox("temporary buffer initialization");
-       return false;
-     }
-     fname = beye_context().bm_file().filename();
-     std::fstream fs;
-     fs.open(fname.c_str(),std::ios_base::in|std::ios_base::out|std::ios_base::binary);
-     if(fs.is_open()) {
-       fs.seekg(ff_startpos,std::ios_base::beg);
-       while(wsize)
-       {
-	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
-	 fs.read((char*)tmp_buff,remaind);
-	 if(!fs.good()) {
-	   beye_context().errnoMessageBox(READ_FAIL,"",errno);
-	   ret = false;
-	   goto bye;
-	 }
-	 CryptFunc((char*)tmp_buff,remaind,pass);
-	 fs.seekp(cwpos,std::ios_base::beg);
-	 fs.write((const char*)tmp_buff,remaind);
-	 if(!fs.good()) {
-	   beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
-	   ret = false;
-	   goto bye;
-	 }
-	 wsize -= remaind;
-	 cwpos += remaind;
-       }
-       bye:
-       fs.close();
-       beye_context().bm_file().reread();
-     }
-     delete tmp_buff;
-     beye_context().bm_file().seek(cpos,binary_stream::Seek_Set);
-     ret = true;
-   }
-   else beye_context().ErrMessageBox("Start position > end position!","");
- }
- return ret;
-}
+    class EndianifyBlock : public FileUtilities {
+	public:
+	    EndianifyBlock(BeyeContext&);
+	    virtual ~EndianifyBlock();
 
-static void  __FASTCALL__ EndianifyBlock(char * buff,unsigned len, int type)
+	    virtual bool	run();
+
+	    static FileUtilities*	query_interface(BeyeContext&);
+	private:
+	    void		EndianifyFunc(char* buff,unsigned len, int type) const;
+    };
+
+EndianifyBlock::EndianifyBlock(BeyeContext& b):FileUtilities(b) {}
+EndianifyBlock::~EndianifyBlock() {}
+
+void EndianifyBlock::EndianifyFunc(char* buff,unsigned len, int type) const
 {
-  unsigned i, step;
-  if(!type) return; /* for now */
-  switch(type)
-  {
-    default:
-    case 3: step = 8;
+    unsigned i, step;
+    if(!type) return; /* for now */
+    switch(type) {
+	default:
+	case 3: step = 8;
 	    break;
-    case 2: step = 4;
+	case 2: step = 4;
 	    break;
-    case 1:
+	case 1:
 	    step = 2;
 	    break;
-  }
-  len /= step;
-  len *= step;
-  for(i = 0;i < len;i+=step, buff+=step)
-  {
-    switch(type)
-    {
-      default:
-      case 3: *((uint64_t *)buff) = bswap_64(*((uint64_t *)buff));
-	      break;
-      case 2: *((uint32_t *)buff) = bswap_32(*((uint32_t *)buff));
-	      break;
-      case 1:
-	      *((uint16_t *)buff) = bswap_16(*((uint16_t *)buff));
-	      break;
     }
-  }
+    len /= step;
+    len *= step;
+    for(i = 0;i < len;i+=step, buff+=step) {
+	switch(type) {
+	    default:
+	    case 3:
+		*((uint64_t *)buff) = bswap_64(*((uint64_t *)buff));
+		break;
+	    case 2:
+		*((uint32_t *)buff) = bswap_32(*((uint32_t *)buff));
+		break;
+	    case 1:
+		*((uint16_t *)buff) = bswap_16(*((uint16_t *)buff));
+		break;
+	}
+    }
 }
 
-static bool ReverseBlock()
+bool EndianifyBlock::run()
 {
- __filesize_t endpos,cpos;
- unsigned long flags;
- bool ret;
- ret = false;
- ff_startpos = beye_context().tell();
- if(!ff_len) ff_len = beye_context().flength() - ff_startpos;
- flags = FSDLG_USEBITNS;
- if(GetFStoreDlg(" Endianify block of file ",NULL,&flags,&ff_startpos,&ff_len,NULL))
- {
-   __filesize_t flen,lval;
-   endpos = ff_startpos + ff_len;
-   flen = beye_context().flength();
-   lval = endpos - ff_startpos;
-   endpos = lval > flen ? flen + ff_startpos : endpos;
-   endpos = endpos > beye_context().flength() ? beye_context().flength() : endpos;
-   if(endpos > ff_startpos)
-   {
-     __filesize_t wsize,cwpos;
-     unsigned remaind;
-     std::string fname;
-     std::fstream fs;
-     any_t*tmp_buff;
-     cpos = beye_context().tell();
-     wsize = endpos - ff_startpos;
-     cwpos = ff_startpos;
-     tmp_buff = new char [4096];
-     if(!tmp_buff)
-     {
-       MemOutBox("temporary buffer initialization");
-       return false;
-     }
-     fname = beye_context().bm_file().filename();
-     fs.open(fname.c_str(),std::ios_base::in|std::ios_base::out|std::ios_base::binary);
-     if(fs.is_open()) {
-       fs.seekg(ff_startpos,std::ios_base::beg);
-       while(wsize)
-       {
-	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
-	 fs.read((char*)tmp_buff,remaind);
-	 if(!fs.good()) {
-	   beye_context().errnoMessageBox(READ_FAIL,"",errno);
-	   ret = false;
-	   goto bye;
-	 }
-	 EndianifyBlock((char*)tmp_buff,remaind, flags & FSDLG_BTNSMASK);
-	 fs.seekp(cwpos,std::ios_base::beg);
-	 fs.write((const char*)tmp_buff,remaind);
-	 if(!fs.good()) {
-	   beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
-	   ret = false;
-	   goto bye;
-	 }
-	 wsize -= remaind;
-	 cwpos += remaind;
-       }
-       bye:
-       fs.close();
-       beye_context().bm_file().reread();
-     }
-     delete tmp_buff;
-     beye_context().bm_file().seek(cpos,binary_stream::Seek_Set);
-     ret = true;
-   }
-   else beye_context().ErrMessageBox("Start position > end position!","");
- }
- return ret;
+    __filesize_t endpos,cpos;
+    unsigned long flags;
+    bool ret;
+    ret = false;
+    ff_startpos = bctx.tell();
+    if(!ff_len) ff_len = bctx.flength() - ff_startpos;
+    flags = FSDLG_USEBITNS;
+    if(GetFStoreDlg(" Endianify block of file ",NULL,&flags,&ff_startpos,&ff_len,NULL)) {
+	__filesize_t flen,lval;
+	endpos = ff_startpos + ff_len;
+	flen = bctx.flength();
+	lval = endpos - ff_startpos;
+	endpos = lval > flen ? flen + ff_startpos : endpos;
+	endpos = endpos > bctx.flength() ? bctx.flength() : endpos;
+	if(endpos > ff_startpos) {
+	    __filesize_t wsize,cwpos;
+	    unsigned remaind;
+	    std::string fname;
+	    std::fstream fs;
+	    any_t*tmp_buff;
+	    cpos = bctx.tell();
+	    wsize = endpos - ff_startpos;
+	    cwpos = ff_startpos;
+	    tmp_buff = new char [4096];
+	    fname = bctx.bm_file().filename();
+	    fs.open(fname.c_str(),std::ios_base::in|std::ios_base::out|std::ios_base::binary);
+	    if(fs.is_open()) {
+		fs.seekg(ff_startpos,std::ios_base::beg);
+		while(wsize) {
+		    remaind = (unsigned)std::min(wsize,__filesize_t(4096));
+		    fs.read((char*)tmp_buff,remaind);
+		    if(!fs.good()) {
+			bctx.errnoMessageBox(READ_FAIL,"",errno);
+			ret = false;
+			goto bye;
+		    }
+		    EndianifyFunc((char*)tmp_buff,remaind, flags & FSDLG_BTNSMASK);
+		    fs.seekp(cwpos,std::ios_base::beg);
+		    fs.write((const char*)tmp_buff,remaind);
+		    if(!fs.good()) {
+			bctx.errnoMessageBox(WRITE_FAIL,"",errno);
+			ret = false;
+			goto bye;
+		    }
+		    wsize -= remaind;
+		    cwpos += remaind;
+		}
+bye:
+		fs.close();
+		bctx.bm_file().reread();
+	    }
+	    delete tmp_buff;
+	    bctx.bm_file().seek(cpos,binary_stream::Seek_Set);
+	    ret = true;
+	} else bctx.ErrMessageBox("Start position > end position!","");
+    }
+    return ret;
+}
+FileUtilities*	EndianifyBlock::query_interface(BeyeContext& b) { return new(zeromem) EndianifyBlock(b); }
+
+    class XLatBlock : public FileUtilities {
+	public:
+	    XLatBlock(BeyeContext&);
+	    virtual ~XLatBlock();
+
+	    virtual bool	run();
+
+	    static FileUtilities*	query_interface(BeyeContext&);
+	private:
+	    void		XLatFunc(char* buff,unsigned len, const unsigned char *xlt) const;
+	    std::string		xlat_fname;
+    };
+
+XLatBlock::XLatBlock(BeyeContext& b):FileUtilities(b) {}
+XLatBlock::~XLatBlock() {}
+
+void XLatBlock::XLatFunc(char* buff,unsigned len, const unsigned char *xlt) const
+{
+    unsigned i;
+    for(i = 0;i < len;i++) buff[i] = xlt[(int)buff[i]];
 }
 
-static void  __FASTCALL__ TranslateBlock(char * buff,unsigned len, const unsigned char *xlt)
+bool XLatBlock::run()
 {
-  unsigned i;
-  for(i = 0;i < len;i++) buff[i] = xlt[(int)buff[i]];
+    unsigned char xlt[256];
+    __filesize_t endpos,cpos;
+    unsigned long flags;
+    bool ret;
+    ret = false;
+    ff_startpos = bctx.tell();
+    if(!ff_len) ff_len = bctx.flength() - ff_startpos;
+    flags = FSDLG_NOMODES;
+    if(xlat_fname.empty()) xlat_fname=bctx.system().get_rc_dir("beye")+"xlt";
+    char ffname[4096];
+    strcpy(ffname,xlat_fname.c_str());
+    if(GetFStoreDlg(" Table Look-up Translation ",ffname,&flags,&ff_startpos,&ff_len,XLAT_PRMT)) {
+	xlat_fname=ffname;
+	__filesize_t flen,lval;
+	endpos = ff_startpos + ff_len;
+	flen = bctx.flength();
+	lval = endpos - ff_startpos;
+	endpos = lval > flen ? flen + ff_startpos : endpos;
+	endpos = endpos > bctx.flength() ? bctx.flength() : endpos;
+	if(endpos > ff_startpos) {
+	    __filesize_t wsize,cwpos;
+	    unsigned remaind;
+	    std::string fname;
+	    any_t*tmp_buff;
+	    cpos = bctx.tell();
+	    wsize = endpos - ff_startpos;
+	    cwpos = ff_startpos;
+	    /* Parse xlat file */
+	    binary_stream* xHandle;
+	    xHandle = BeyeContext::beyeOpenRO(xlat_fname,BBIO_SMALL_CACHE_SIZE);
+	    if(xHandle == NULL) {
+		bctx.ErrMessageBox("Can't open xlat file", "");
+		return false;
+	    }
+	    if(xHandle->flength() != 320) {
+		bctx.ErrMessageBox("Size of xlat file is not 320 bytes", "");
+		delete xHandle;
+		return false;
+	    }
+	    xHandle->read(xlt, 16);
+	    if(memcmp(xlt, "Beye Xlat Table.", 16) != 0) {
+		bctx.ErrMessageBox("It seems that xlat file is corrupt", "");
+		delete xHandle;
+		return false;
+	    }
+	    xHandle->seek(0x40, binary_stream::Seek_Set);
+	    xHandle->read(xlt, 256);
+	    delete xHandle;
+	    tmp_buff = new char [4096];
+	    std::fstream fs;
+	    fname = bctx.bm_file().filename();
+	    fs.open(fname.c_str(),std::ios_base::binary);
+	    if(fs.is_open()) {
+		fs.seekg(ff_startpos,std::ios_base::beg);
+		while(wsize) {
+		    remaind = (unsigned)std::min(wsize,__filesize_t(4096));
+		    fs.read((char*)tmp_buff,remaind);
+		    if(!fs.good()) {
+			bctx.errnoMessageBox(READ_FAIL,"",errno);
+			ret = false;
+			goto bye;
+		    }
+		    XLatFunc((char*)tmp_buff,remaind, xlt);
+		    fs.seekp(cwpos,std::ios_base::beg);
+		    fs.write((const char*)tmp_buff,remaind);
+		    if(!fs.good()) {
+			bctx.errnoMessageBox(WRITE_FAIL,"",errno);
+			ret = false;
+			goto bye;
+		    }
+		    wsize -= remaind;
+		    cwpos += remaind;
+		}
+bye:
+		fs.close();
+		bctx.bm_file().reread();
+	    }
+	    delete tmp_buff;
+	    bctx.bm_file().seek(cpos,binary_stream::Seek_Set);
+	    ret = true;
+	} else bctx.ErrMessageBox("Start position > end position!","");
+    }
+    return ret;
 }
+FileUtilities*	XLatBlock::query_interface(BeyeContext& b) { return new(zeromem) XLatBlock(b); }
 
-static bool XLatBlock()
-{
- unsigned char xlt[256];
- __filesize_t endpos,cpos;
- unsigned long flags;
- bool ret;
- ret = false;
- ff_startpos = beye_context().tell();
- if(!ff_len) ff_len = beye_context().flength() - ff_startpos;
- flags = FSDLG_NOMODES;
- if(xlat_fname.empty()) xlat_fname=beye_context().system().get_rc_dir("beye")+"xlt";
- char ffname[4096];
- strcpy(ffname,xlat_fname.c_str());
- if(GetFStoreDlg(" Table Look-up Translation ",ffname,&flags,&ff_startpos,&ff_len,XLAT_PRMT))
- {
-   xlat_fname=ffname;
-   __filesize_t flen,lval;
-   endpos = ff_startpos + ff_len;
-   flen = beye_context().flength();
-   lval = endpos - ff_startpos;
-   endpos = lval > flen ? flen + ff_startpos : endpos;
-   endpos = endpos > beye_context().flength() ? beye_context().flength() : endpos;
-   if(endpos > ff_startpos)
-   {
-     __filesize_t wsize,cwpos;
-     unsigned remaind;
-     std::string fname;
-     any_t*tmp_buff;
-     cpos = beye_context().tell();
-     wsize = endpos - ff_startpos;
-     cwpos = ff_startpos;
-     /* Parse xlat file */
-     binary_stream* xHandle;
-     xHandle = BeyeContext::beyeOpenRO(xlat_fname,BBIO_SMALL_CACHE_SIZE);
-     if(xHandle == NULL) {
-       beye_context().ErrMessageBox("Can't open xlat file", "");
-       return false;
-     }
-     if(xHandle->flength() != 320)
-     {
-       beye_context().ErrMessageBox("Size of xlat file is not 320 bytes", "");
-       delete xHandle;
-       return false;
-     }
-     xHandle->read(xlt, 16);
-     if(memcmp(xlt, "Beye Xlat Table.", 16) != 0)
-     {
-       beye_context().ErrMessageBox("It seems that xlat file is corrupt", "");
-       delete xHandle;
-       return false;
-     }
-     xHandle->seek(0x40, binary_stream::Seek_Set);
-     xHandle->read(xlt, 256);
-     delete xHandle;
-     tmp_buff = new char [4096];
-     if(!tmp_buff)
-     {
-       MemOutBox("temporary buffer initialization");
-       return false;
-     }
-     std::fstream fs;
-     fname = beye_context().bm_file().filename();
-     fs.open(fname.c_str(),std::ios_base::binary);
-     if(fs.is_open()) {
-       fs.seekg(ff_startpos,std::ios_base::beg);
-       while(wsize) {
-	 remaind = (unsigned)std::min(wsize,__filesize_t(4096));
-	 fs.read((char*)tmp_buff,remaind);
-	 if(!fs.good()) {
-	   beye_context().errnoMessageBox(READ_FAIL,"",errno);
-	   ret = false;
-	   goto bye;
-	 }
-	 TranslateBlock((char*)tmp_buff,remaind, xlt);
-	 fs.seekp(cwpos,std::ios_base::beg);
-	 fs.write((const char*)tmp_buff,remaind);
-	 if(!fs.good()) {
-	   beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
-	   ret = false;
-	   goto bye;
-	 }
-	 wsize -= remaind;
-	 cwpos += remaind;
-       }
-       bye:
-       fs.close();
-       beye_context().bm_file().reread();
-     }
-     delete tmp_buff;
-     beye_context().bm_file().seek(cpos,binary_stream::Seek_Set);
-     ret = true;
-   }
-   else beye_context().ErrMessageBox("Start position > end position!","");
- }
- return ret;
-}
+    class FileInfo : public FileUtilities {
+	public:
+	    FileInfo(BeyeContext&);
+	    virtual ~FileInfo();
 
-static bool FileInfo()
+	    virtual bool	run();
+
+	    static FileUtilities*	query_interface(BeyeContext&);
+    };
+
+FileInfo::FileInfo(BeyeContext& b):FileUtilities(b) {}
+FileInfo::~FileInfo() {}
+
+bool FileInfo::run()
 {
-  TWindow* wnd;
-  struct stat statbuf;
-  unsigned evt;
-  char attr[14];
-  char stimes[3][80];
-  memset(&statbuf,0,sizeof(struct stat));
-  stat(beye_context().bm_file().filename().c_str(),&statbuf);
-  memset(attr,'-',sizeof(attr));
-  attr[sizeof(attr)-1] = 0;
+    TWindow* wnd;
+    struct stat statbuf;
+    unsigned evt;
+    char attr[14];
+    char stimes[3][80];
+    ::memset(&statbuf,0,sizeof(struct stat));
+    ::stat(bctx.bm_file().filename().c_str(),&statbuf);
+    ::memset(attr,'-',sizeof(attr));
+    attr[sizeof(attr)-1] = 0;
 #ifdef S_IXOTH /** Execute by other */
-  if((statbuf.st_mode & S_IXOTH) == S_IXOTH) attr[12] = 'X';
+    if((statbuf.st_mode & S_IXOTH) == S_IXOTH) attr[12] = 'X';
 #endif
 #ifdef S_IWOTH /** Write by other */
-  if((statbuf.st_mode & S_IWOTH) == S_IWOTH) attr[11] = 'W';
+    if((statbuf.st_mode & S_IWOTH) == S_IWOTH) attr[11] = 'W';
 #endif
 #ifdef S_IROTH /** Read by other */
-  if((statbuf.st_mode & S_IROTH) == S_IROTH) attr[10] = 'R';
+    if((statbuf.st_mode & S_IROTH) == S_IROTH) attr[10] = 'R';
 #endif
 #ifdef S_IXGRP /** Execute by group */
-  if((statbuf.st_mode & S_IXGRP) == S_IXGRP) attr[9] = 'X';
+    if((statbuf.st_mode & S_IXGRP) == S_IXGRP) attr[9] = 'X';
 #endif
 #ifdef S_IWGRP /** Write by group */
-  if((statbuf.st_mode & S_IWGRP) == S_IWGRP) attr[8] = 'W';
+    if((statbuf.st_mode & S_IWGRP) == S_IWGRP) attr[8] = 'W';
 #endif
 #ifdef S_IRGRP /** Read by group */
-  if((statbuf.st_mode & S_IRGRP) == S_IRGRP) attr[7] = 'R';
+    if((statbuf.st_mode & S_IRGRP) == S_IRGRP) attr[7] = 'R';
 #endif
 #ifdef S_IEXEC /** Execute by owner */
-  if((statbuf.st_mode & S_IEXEC) == S_IEXEC) attr[6] = 'X';
+    if((statbuf.st_mode & S_IEXEC) == S_IEXEC) attr[6] = 'X';
 #endif
 #ifdef S_IWRITE /** Write by owner */
-  if((statbuf.st_mode & S_IWRITE) == S_IWRITE) attr[5] = 'W';
+    if((statbuf.st_mode & S_IWRITE) == S_IWRITE) attr[5] = 'W';
 #endif
 #ifdef S_IREAD /** Read by owner */
-  if((statbuf.st_mode & S_IREAD) == S_IREAD) attr[4] = 'R';
+    if((statbuf.st_mode & S_IREAD) == S_IREAD) attr[4] = 'R';
 #endif
 #ifdef S_ISVTX /** Save swapped text after use (obsolete) */
-  if((statbuf.st_mode & S_ISVTX) == S_ISVTX) attr[3] = 'V';
+    if((statbuf.st_mode & S_ISVTX) == S_ISVTX) attr[3] = 'V';
 #endif
 #ifdef S_ISGID /** Set GID on execution */
-  if((statbuf.st_mode & S_ISGID) == S_ISGID) attr[2] = 'G';
+    if((statbuf.st_mode & S_ISGID) == S_ISGID) attr[2] = 'G';
 #endif
 #ifdef S_ISUID /** Set UID on execution */
-  if((statbuf.st_mode & S_ISUID) == S_ISUID) attr[1] = 'U';
+    if((statbuf.st_mode & S_ISUID) == S_ISUID) attr[1] = 'U';
 #endif
 #ifdef S_ISFIFO /** it FIFO */
-  if(S_ISFIFO(statbuf.st_mode)) attr[0] = 'F';
+    if(S_ISFIFO(statbuf.st_mode)) attr[0] = 'F';
 #endif
 #ifdef S_IFCHR /** it character device */
-  if((statbuf.st_mode & S_IFCHR) == S_IFCHR) attr[0] = 'C';
+    if((statbuf.st_mode & S_IFCHR) == S_IFCHR) attr[0] = 'C';
 #endif
 #ifdef S_IFDIR /** it directory */
-  if((statbuf.st_mode & S_IFDIR) == S_IFDIR) attr[0] = 'D';
+    if((statbuf.st_mode & S_IFDIR) == S_IFDIR) attr[0] = 'D';
 #endif
 #ifdef S_IFBLK /** it block device */
-  if((statbuf.st_mode & S_IFBLK) == S_IFBLK) attr[0] = 'B';
+    if((statbuf.st_mode & S_IFBLK) == S_IFBLK) attr[0] = 'B';
 #endif
 #ifdef S_IFREG /** it regular file (not dir or node) */
-  if((statbuf.st_mode & S_IFREG) == S_IFREG) attr[0] = 'f';
+    if((statbuf.st_mode & S_IFREG) == S_IFREG) attr[0] = 'f';
 #endif
 #ifdef S_IFLNK /** it symbolic link */
-  if((statbuf.st_mode & S_IFLNK) == S_IFLNK) attr[0] = 'L';
+    if((statbuf.st_mode & S_IFLNK) == S_IFLNK) attr[0] = 'L';
 #endif
 #ifdef S_IFSOCK /** it socket */
-  if((statbuf.st_mode & S_IFSOCK) == S_IFSOCK) attr[0] = 'S';
+    if((statbuf.st_mode & S_IFSOCK) == S_IFSOCK) attr[0] = 'S';
 #endif
-  wnd = CrtDlgWndnls(" File information: ",beye_context().tconsole().vio_width()-5,13);
-  wnd->goto_xy(1,1);
-  strcpy(stimes[0],ctime(&statbuf.st_ctime));
-  strcpy(stimes[1],ctime(&statbuf.st_mtime));
-  strcpy(stimes[2],ctime(&statbuf.st_atime));
-  wnd->printf(
+    wnd = CrtDlgWndnls(" File information: ",bctx.tconsole().vio_width()-5,13);
+    wnd->goto_xy(1,1);
+    ::strcpy(stimes[0],ctime(&statbuf.st_ctime));
+    ::strcpy(stimes[1],ctime(&statbuf.st_mtime));
+    ::strcpy(stimes[2],ctime(&statbuf.st_atime));
+    wnd->printf(
 	   "Name                          = %s\n"
 	   "Type                          = %s\n"
 	   "Length                        = %llu bytes\n"
@@ -1079,9 +1162,9 @@ static bool FileInfo()
 	   "Number of hard links to file  = %u\n"
 	   "User ID of the file owner     = %u\n"
 	   "Group ID of the file owner    = %u"
-	   ,beye_context().short_name()
-	   ,beye_context().bin_format().name()
-	   ,beye_context().flength()
+	   ,bctx.short_name()
+	   ,bctx.bin_format().name()
+	   ,bctx.flength()
 	   ,attr
 	   ,stimes[0]
 	   ,stimes[1]
@@ -1091,59 +1174,49 @@ static bool FileInfo()
 	   ,(unsigned)statbuf.st_nlink
 	   ,(unsigned)statbuf.st_uid
 	   ,(unsigned)statbuf.st_gid);
-  do
-  {
-    evt = GetEvent(drawEmptyPrompt,NULL,wnd);
-  }
-  while(!(evt == KE_ESCAPE || evt == KE_F(10)));
-  delete wnd;
-  return false;
+    do {
+	evt = GetEvent(drawEmptyPrompt,NULL,wnd);
+    }while(!(evt == KE_ESCAPE || evt == KE_F(10)));
+    delete wnd;
+    return false;
 }
+FileUtilities*	FileInfo::query_interface(BeyeContext& b) { return new(zeromem) FileInfo(b); }
 
-static const char* fu_names[] =
-{
-  "~File information...",
-  "C~hange size of file",
-  "~Save block as...",
-  "~Restore block from...",
-  "~Insert/delete block...",
-  "~Crypt/decrypt block...",
-  "~Endianify block...",
-  "~Xlat block..."
-};
+    struct file_utilities {
+	const char*	name;
+	FileUtilities*	(*query_interface)(BeyeContext&);
+    };
 
-typedef bool (*FileFunc)();
-
-static FileFunc fu_funcs[] =
-{
-  FileInfo,
-  ChSize,
-  FStore,
-  FRestore,
-  InsDelBlock,
-  CryptBlock,
-  ReverseBlock,
-  XLatBlock
+static const file_utilities utilities[] = {
+  { "~File information...", FileInfo::query_interface },
+  { "C~hange size of file", ChSize::query_interface },
+  { "~Save block as...", FStore::query_interface },
+  { "~Restore block from...", FRestore::query_interface },
+  { "~Insert/delete block...", InsDelBlock::query_interface },
+  { "~Crypt/decrypt block...", CryptBlock::query_interface },
+  { "~Endianify block...", EndianifyBlock::query_interface },
+  { "~Xlat block...", XLatBlock::query_interface }
 };
 
 bool FileUtils()
 {
-  size_t nUtils;
-  int retval;
-  bool ret;
-  static unsigned def_sel = 0;
-  nUtils = sizeof(fu_names)/sizeof(char *);
-  retval = ListBox(fu_names,nUtils," File utilities: ",LB_SELECTIVE|LB_USEACC,def_sel);
-  if(retval != -1)
-  {
-     TWindow * w;
-     w = PleaseWaitWnd();
-     ret = (*fu_funcs[retval])();
-     delete w;
-     def_sel = retval;
-     return ret;
-  }
-  return false;
+    size_t nUtils = sizeof(utilities)/sizeof(file_utilities);
+    std::vector<std::string> names;
+    int retval;
+    bool ret;
+    static unsigned def_sel = 0;
+    for(unsigned i=0;i<nUtils;i++) names.push_back(utilities[i].name);
+    retval = ListBox(names," File utilities: ",LB_SELECTIVE|LB_USEACC,def_sel);
+    if(retval != -1) {
+	TWindow* w = PleaseWaitWnd();
+	FileUtilities* util = utilities[retval].query_interface(beye_context());
+	ret = util->run();
+	delete util;
+	delete w;
+	def_sel = retval;
+	return ret;
+    }
+    return false;
 }
 } // namespace	usr
 
