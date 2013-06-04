@@ -1157,7 +1157,7 @@ void ELF_Parser::buildElf386RelChain()
   TWindow *w;
   binary_stream& handle = *elfcache;
   __filesize_t fp;
-//  if(!(CurrElfChain = la_Build(0,sizeof(Elf_Reloc),MemOutBox))) return;
+
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
   w->goto_xy(1,1);
   w->puts(BUILD_REFS);
@@ -1615,7 +1615,6 @@ void ELF_Parser::elf_ReadPubNameList(binary_stream& handle)
 	epn.addinfo = __elfSymShTbl;
 	epn.attr = sym.st_info;
 	PubNames.insert(epn);
-//	if(!la_AddData(PubNames,&epn,MemOutBox)) break;
       }
     }
   }

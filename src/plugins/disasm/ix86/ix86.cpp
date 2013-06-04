@@ -6133,11 +6133,6 @@ void ix86_Disassembler::show_short_help() const
     size = (unsigned)bhelp.get_item_size(x86_Bitness == Bin_Format::Use64 ? 20002:20001);
     if(!size) goto ix86hlp_bye;
     msgAsmText = new char [size+1];
-    if(!msgAsmText) {
-mem_off:
-	MemOutBox(" Help Display ");
-	goto ix86hlp_bye;
-    }
     if(!bhelp.load_item(x86_Bitness == Bin_Format::Use64 ? 20002:20001,msgAsmText)) {
 	delete msgAsmText;
 	goto ix86hlp_bye;

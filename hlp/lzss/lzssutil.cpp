@@ -252,7 +252,7 @@ static int Encode()
 #endif
 
 /** Just the reverse of Encode(). */
-static int Decode(any_t* buff,const uint8_t* instream,unsigned long length)
+static bool Decode(any_t* buff,const uint8_t* instream,unsigned long length)
 {
     unsigned long in_idx=0;
 	int  i, j, k, r, c,reach_eof;
@@ -268,14 +268,6 @@ static int Decode(any_t* buff,const uint8_t* instream,unsigned long length)
 	lson = new int[N+1];
 	rson = new int [N+257];
 	dad  = new int [N+1];
-	if(!text_buf || !lson || !rson || !dad)
-	{
-	  if(text_buf) delete text_buf;
-	  if(lson) delete lson;
-	  if(rson) delete rson;
-	  if(dad)  delete dad;
-	  return 0;
-	}
 #ifdef INTERACTIVE
 	{
 	  ppercent = -1;
@@ -342,5 +334,5 @@ static int Decode(any_t* buff,const uint8_t* instream,unsigned long length)
 	delete lson;
 	delete rson;
 	delete dad;
-	return 1;
+	return true;
 }

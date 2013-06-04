@@ -1513,10 +1513,6 @@ void PPC_Disassembler::show_short_help() const
     size = (unsigned)bhelp.get_item_size(20051);
     if(!size) goto ppchlp_bye;
     msgAsmText = new char [size+1];
-    if(!msgAsmText) {
-	MemOutBox(" Help Display ");
-	goto ppchlp_bye;
-    }
     if(!bhelp.load_item(20051,msgAsmText)) {
 	delete msgAsmText;
 	goto ppchlp_bye;

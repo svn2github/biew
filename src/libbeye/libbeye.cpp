@@ -156,7 +156,7 @@ char *ulltoa (unsigned long long int value, char *string, int radix)
 }
 #endif
 namespace	usr {
-bool __FASTCALL__ isseparate(int ch) { return (isspace(ch) || ispunct(ch)); }
+bool isseparate(int ch) { return (isspace(ch) || ispunct(ch)); }
 
 int __FASTCALL__ szTrimTrailingSpace(char *str)
 {

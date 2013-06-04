@@ -868,7 +868,6 @@ void NE_Parser::BuildNERefChain(__filesize_t segoff,__filesize_t slength)
   unsigned nchains,i;
   __filesize_t reloc_off;
   TWindow * w;
-//  if(!(CurrNEChain = la_Build(0,sizeof(NERefChain),MemOutBox))) return;
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
   w->goto_xy(1,1);
   w->printf(" Building reference chains for segment #%u",CurrChainSegment);

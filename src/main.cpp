@@ -561,12 +561,7 @@ bool BeyeContext::new_source()
     char ** nlsListFile;
     size_t sz=priv.ListFile.size();
     nlsListFile = new char*[sz];
-    if(nlsListFile) {
-	for(j = 0;j < sz;j++) {
-	    nlsListFile[j] = new char [priv.ListFile[j].length()+1];
-	    if(!nlsListFile[j]) break;
-	}
-    } else { MemOutBox("Initializing List of File\n"); return 0; }
+    for(j = 0;j < sz;j++) nlsListFile[j] = new char [priv.ListFile[j].length()+1];
     for(freq = 0;freq < j;freq++) {
 	unsigned ls;
 	ls = priv.ListFile[freq].length();

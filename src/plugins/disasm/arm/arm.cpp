@@ -82,10 +82,6 @@ void ARM_Disassembler::show_short_help() const
     size = (unsigned)bhelp.get_item_size(20041);
     if(!size) goto armhlp_bye;
     msgAsmText = new char [size+1];
-    if(!msgAsmText) {
-	MemOutBox(" Help Display ");
-	goto armhlp_bye;
-    }
     if(!bhelp.load_item(20041,msgAsmText)) {
 	delete msgAsmText;
 	goto armhlp_bye;

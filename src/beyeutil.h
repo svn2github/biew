@@ -33,7 +33,7 @@ namespace	usr {
 
     extern __filesize_t lastbyte;
 
-    char  __FASTCALL__ Gebool(bool _bool); // returns character representation of bool
+    char  __FASTCALL__ Gebool(bool _bool) __CONST_FUNC__; // returns character representation of bool
 
     bool               FileUtils();
 
@@ -49,7 +49,7 @@ namespace	usr {
 
     void     __FASTCALL__ CompressHex(unsigned char * dest,const char * src,unsigned sizedest,bool usespace);
     int      __FASTCALL__ ExpandHex(char * dest,const unsigned char * src,int size,char hard);
-    unsigned __FASTCALL__ Summ(unsigned char *array,unsigned size);
+    unsigned __FASTCALL__ Summ(unsigned char *array,unsigned size) __PURE_FUNC__;
 
     void   ExtHelp();
     void   drawEditPrompt();

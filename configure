@@ -590,16 +590,16 @@ cat >> config.h << EOF
 
 #if defined ( USE_CONSTFUNC )
 /* Example: sin(), cos() */
-# define __CONSTFUNC__ __attribute__ ((const))
+# define __CONST_FUNC__ __attribute__ ((const))
 #else
-# define __CONSTFUNC__
+# define __CONST_FUNC__
 #endif
 
 #if defined ( USE_PUREFUNC )
 /* Example: strlen(), memcmp() */
-# define __PUREFUNC__ __attribute__ ((pure))
+# define __PURE_FUNC__ __attribute__ ((pure))
 #else
-# define __PUREFUNC__
+# define __PURE_FUNC__
 #endif
 
 typedef void any_t;

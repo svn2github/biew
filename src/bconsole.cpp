@@ -20,6 +20,7 @@ using namespace	usr;
  * @date        02.11.2007
  * @note        Added "ungotstring" function to enable inline assemblers
 **/
+#include <stack>
 #include <algorithm>
 #include <iostream>
 #include <fstream>
@@ -51,8 +52,7 @@ enum {
     FORMFEED=12
 };
 
-static int KB_Buff[64];
-static unsigned char KB_freq = 0;
+static std::stack<int> KB_Buff;
 
 void __FASTCALL__ initBConsole( unsigned long vio_flg,unsigned long twin_flg )
 {
@@ -96,23 +96,20 @@ void __FASTCALL__ termBConsole()
 */
 static int  __FASTCALL__ getkey(int hard, void (*func)())
 {
- return KB_freq ? KB_Buff[--KB_freq] :
-		  GetEvent( func ? func : hard ? hard > 1 ?
+    int rc;
+    if(!KB_Buff.empty()) { rc=KB_Buff.top(); KB_Buff.pop(); }
+    else rc=GetEvent( func ? func : hard ? hard > 1 ?
 			    drawAsmEdPrompt : drawEditPrompt : drawEmptyPrompt,
 			    func ? NULL : hard ? hard > 1 ?
 			    EditAsmActionFromMenu: NULL: NULL,
 			    NULL);
+    return rc;
 }
 
 static bool  __FASTCALL__ ungotkey(int keycode)
 {
-  bool ret = false;
-  if(KB_freq < sizeof(KB_Buff)/sizeof(int))
-  {
-    KB_Buff[KB_freq++] = keycode;
-    ret = true;
-  }
-  return ret;
+    KB_Buff.push(keycode);
+    return true;
 }
 
 bool __FASTCALL__ ungotstring(char *string)
@@ -130,9 +127,9 @@ int __FASTCALL__ xeditstring(TWindow* w,char *s,const char *legal,unsigned maxle
   return eeditstring(w,s,legal,&maxlength,1,NULL,__ESS_ENABLEINSERT,NULL,func);
 }
 
-inline bool isSpace(int val) { return ((val+1)%3 ? 0 : 1); }
-inline bool isFirstD(int pos) { return isSpace(pos-1); }
-inline bool isSecondD(int pos) { return isSpace(pos+1); }
+inline bool __CONST_FUNC__ isSpace(int val) { return ((val+1)%3 ? 0 : 1); }
+inline bool __CONST_FUNC__ isFirstD(int pos) { return isSpace(pos-1); }
+inline bool __CONST_FUNC__ isSecondD(int pos) { return isSpace(pos+1); }
 
 static bool insert = true;
 
@@ -312,11 +309,6 @@ TWindow *__FASTCALL__ PleaseWaitWnd()
    w = CrtDlgWndnls(SYSTEM_BUSY,14,1);
    w->goto_xy(1,1); w->puts(PLEASE_WAIT);
    return w;
-}
-
-void __FASTCALL__ MemOutBox(const std::string& user_msg)
-{
-  beye_context().ErrMessageBox(user_msg," Not enough memory! ");
 }
 
 struct percent_data
@@ -675,10 +667,6 @@ int __FASTCALL__ ListBox(std::vector<std::string>& names,const std::string& titl
     i = 0;
     if((assel & LB_USEACC) == LB_USEACC) {
 	acctable = new char [names.size()];
-	if(!acctable) {
-	    MemOutBox("Displaying list");
-	     return -1;
-	}
 	memset(acctable,0,nlist*sizeof(char));
 
 	for(i = 0;i < nlist;i++) {

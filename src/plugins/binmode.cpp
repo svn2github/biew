@@ -249,20 +249,15 @@ void BinMode::misckey_action() /* EditBin */
 	unsigned long flen,cfp;
 	unsigned i,size,msize = main_wnd.width()*main_wnd.height();
 	unsigned char *buff = new unsigned char [msize*2];
-	if(buff) {
-	    flen = main_handle.flength();
-	    cfp = main_handle.tell();
-	    size = (unsigned)((unsigned long)msize > (flen-cfp) ? (flen-cfp) : msize);
-	    main_handle.seek(cfp,binary_stream::Seek_Set);
-	    main_handle.read(buff,size*2);
-	    main_handle.seek(cfp,binary_stream::Seek_Set);
-	    for(i=0;i<size;i++) buff[i]=bin_mode==MOD_BINARY?buff[i*2]:buff[i*2+1];
-	    inited=editInitBuffs(main_wnd.width()-virtWidthCorr,buff,size);
-	    delete buff;
-	} else {
-	    MemOutBox("Editor initialization");
-	    inited=false;
-	}
+	flen = main_handle.flength();
+	cfp = main_handle.tell();
+	size = (unsigned)((unsigned long)msize > (flen-cfp) ? (flen-cfp) : msize);
+	main_handle.seek(cfp,binary_stream::Seek_Set);
+	main_handle.read(buff,size*2);
+	main_handle.seek(cfp,binary_stream::Seek_Set);
+	for(i=0;i<size;i++) buff[i]=bin_mode==MOD_BINARY?buff[i*2]:buff[i*2+1];
+	inited=editInitBuffs(main_wnd.width()-virtWidthCorr,buff,size);
+	delete buff;
     }
     if(inited) {
 	FullEdit(ewin,NULL,*this,bin_mode==MOD_PLAIN?NULL:save_video);

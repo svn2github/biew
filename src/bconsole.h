@@ -72,7 +72,6 @@ enum {
 					void (*func)());
     int          __FASTCALL__ xeditstring(TWindow* w,char *s,const char *legal,
 					unsigned maxlength, void(*func)());
-    void         __FASTCALL__ MemOutBox(const std::string& user_msg);
     TWindow *    __FASTCALL__ PleaseWaitWnd();
 
     bool        __FASTCALL__ Get2DigitDlg(const std::string& title,const std::string& text,unsigned char *xx);

@@ -168,7 +168,7 @@ namespace	usr {
 	    ColorAttr*	attrs; /**< Pointer to color attributes array */
     };
 
-#define TESTFLAG(x,y) (((x) & (y)) == (y)) /**< Test y bits in x */
+    inline bool __CONST_FUNC__ TESTFLAG(long x, long y) { return (x&y)==y; } /**< Test y bits in x */
 
 		   /** Tests wether character is a separator
 		     * @return                true if given character is separator
@@ -176,7 +176,7 @@ namespace	usr {
 		     * @note                  returns true if character is space
 		     *                        or punctuator
 		    **/
-    bool  __FASTCALL__ isseparate(int ch);
+    bool  __FASTCALL__ isseparate(int ch) __PURE_FUNC__;
 
 /** ASCIIZ string extended support */
 

@@ -302,8 +302,8 @@ bool Beye_Help::load_item(unsigned long item_id, any_t* buffer)
 	    uint8_t* inbuff = new uint8_t[hlp_size];
 	    fs.seekg(hlp_off,std::ios_base::beg);
 	    fs.read((char*)inbuff,hlp_size);
-	    if(!Decode(buffer,inbuff,hlp_size)) MemOutBox("Help uncompression");
-	    else ret = true;
+	    Decode(buffer,inbuff,hlp_size);
+	    ret = true;
 	    delete inbuff;
 	}
 	else beye_context().ErrMessageBox("Load: Item not found","");

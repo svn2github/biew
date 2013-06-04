@@ -87,14 +87,7 @@ bool __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size
  EditorMem.buff = new unsigned char [msize];
  EditorMem.save = new unsigned char [msize];
  EditorMem.alen = new unsigned char [beye_context().tconsole().vio_height()];
- if((!EditorMem.buff) || (!EditorMem.save) || (!EditorMem.alen))
- {
-   if(EditorMem.buff) delete EditorMem.buff;
-   if(EditorMem.save) delete EditorMem.save;
-   if(EditorMem.alen) delete EditorMem.alen;
-   MemOutBox("Editor initialization");
-   return false;
- }
+
  memset(EditorMem.buff,TWC_DEF_FILLER,msize);
  memset(EditorMem.save,TWC_DEF_FILLER,msize);
  flen = beye_context().flength();

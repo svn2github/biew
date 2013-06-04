@@ -143,7 +143,7 @@ namespace	usr {
 	    __filesize_t		CalcEntryPE(unsigned ordinal,bool dispmsg) const;
 	    unsigned			PEExportNumItems(binary_stream& handle) const;
 	    std::vector<std::string>	PEExportReadItems(binary_stream& handle,size_t nnames) const;
-	    unsigned			__peReadASCIIZName(binary_stream& handle,__filesize_t offset,std::string& buff) const;
+	    std::string			__peReadASCIIZName(binary_stream& handle,__filesize_t offset) const;
 	    __filesize_t		RVA2Phys(__filesize_t rva) const;
 	    std::string			writeExportVA(__filesize_t va,binary_stream&handle) const;
 	    std::vector<std::string>	__ReadImpContPE(binary_stream& handle,size_t nnames) const;
@@ -595,22 +595,22 @@ unsigned PE_Parser::GetImportCountPE(binary_stream& handle,__filesize_t phys) co
 }
 
 /* returns really readed number of characters */
-unsigned PE_Parser::__peReadASCIIZName(binary_stream& handle,__filesize_t offset,std::string& buff) const
+std::string PE_Parser::__peReadASCIIZName(binary_stream& handle,__filesize_t offset) const
 {
-  unsigned j;
-  char ch;
-  __filesize_t fpos;
-  fpos = handle.tell();
-  j = 0;
-  handle.seek(offset,binary_stream::Seek_Set);
-  while(1)
-  {
-    ch = handle.read(type_byte);
-    if(!ch || handle.eof()) break;
-    buff[j++] = ch;
-  }
-  handle.seek(fpos,binary_stream::Seek_Set);
-  return j;
+    std::string rc;
+    unsigned j;
+    char ch;
+    __filesize_t fpos;
+    fpos = handle.tell();
+    j = 0;
+    handle.seek(offset,binary_stream::Seek_Set);
+    while(1) {
+	ch = handle.read(type_byte);
+	if(!ch || handle.eof()) break;
+	rc[j++] = ch;
+    }
+    handle.seek(fpos,binary_stream::Seek_Set);
+    return rc;
 }
 
 std::vector<std::string> PE_Parser::__ReadImportPE(binary_stream& handle,__filesize_t phys,size_t nnames) const
@@ -626,7 +626,7 @@ std::vector<std::string> PE_Parser::__ReadImportPE(binary_stream& handle,__files
 	rva = fioReadDWord(handle,12L,binary_stream::Seek_Cur);
 	handle.seek(4L,binary_stream::Seek_Cur);
 	addr = RVA2Phys(rva);
-	__peReadASCIIZName(handle,addr,tmp);
+	tmp=__peReadASCIIZName(handle,addr);
 	if(IsKbdTerminate()) break;
 	is_eof = handle.eof();
 	rc.push_back(is_eof ? CORRUPT_BIN_MSG : tmp);
@@ -679,7 +679,7 @@ std::vector<std::string> PE_Parser:: __ReadImpContPE(binary_stream& handle,size_
 		rc.push_back(CORRUPT_BIN_MSG);
 	    else {
 		std::string tmp;
-		__peReadASCIIZName(handle,rphys+2,tmp);
+		tmp=__peReadASCIIZName(handle,rphys+2);
 		strcat(stmp,tmp.c_str());
 	    }
 	} else {
@@ -747,7 +747,7 @@ std::string PE_Parser::writeExportVA(__filesize_t va, binary_stream& handle) con
     std::string rc;
     // check for forwarded export
     if (va>=peDir[PE_EXPORT].rva && va<peDir[PE_EXPORT].rva+peDir[PE_EXPORT].size)
-	__peReadASCIIZName(handle, RVA2Phys(va), rc);
+	rc=__peReadASCIIZName(handle, RVA2Phys(va));
     // normal export
     else {
 	char buf[4096];
@@ -775,7 +775,7 @@ std::vector<std::string> PE_Parser::PEExportReadItems(binary_stream& handle,size
 	std::string stmp;
 	bool is_eof;
 	nameaddr = fioReadDWord2Phys(handle,nameptr + 4*i,binary_stream::Seek_Set);
-	__peReadASCIIZName(handle,nameaddr, stmp);
+	stmp=__peReadASCIIZName(handle,nameaddr);
 	if(IsKbdTerminate()) break;
 	ord = fioReadWord(handle,expaddr + i*2,binary_stream::Seek_Set);
 	is_eof = handle.eof();
@@ -849,7 +849,7 @@ __filesize_t PE_Parser::action_F3()
 	    char sftime[80];
 	    struct tm * tm;
 	    time_t tval;
-	    __peReadASCIIZName(main_handle(),RVA2Phys(et.etNameRVA),exp_buf);
+	    exp_buf=__peReadASCIIZName(main_handle(),RVA2Phys(et.etNameRVA));
 	    if(exp_buf.length() > 50) exp_buf=exp_buf.substr(50)+"...";
 	    tval = et.etDateTime;
 	    tm = localtime(&tval);
@@ -947,7 +947,7 @@ void PE_Parser::BuildPERefChain()
   ImportDirPE ipe;
   unsigned nnames;
   TWindow *w;
-//  if(!(CurrPEChain = la_Build(0,sizeof(RELOC_PE),MemOutBox))) return;
+
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
   if(PubNames.empty()) pe_ReadPubNameList(main_handle());
   w->goto_xy(1,1);
@@ -1322,9 +1322,7 @@ __filesize_t PE_Parser::pa2va(__filesize_t pa) const
 
 std::string PE_Parser::pe_ReadPubName(binary_stream& b_cache,const symbolic_information& it) const
 {
-    std::string stmp;
-    __peReadASCIIZName(b_cache,it.nameoff,stmp);
-    return stmp;
+    return __peReadASCIIZName(b_cache,it.nameoff);
 }
 
 Symbol_Info PE_Parser::FindPubName(__filesize_t pa) const

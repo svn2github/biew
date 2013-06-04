@@ -362,7 +362,6 @@ __filesize_t RDOff_Parser::show_header() const
 void  RDOff_Parser::BuildRelocRDOFF()
 {
   unsigned char rec;
-//  if(!(rdoffReloc = la_Build(0,sizeof(RDOFF_RELOC),MemOutBox))) return;
   main_handle.seek(10,binary_stream::Seek_Set);
   while(main_handle.tell() < rdoff_hdrlen + 5)
   {

@@ -52,7 +52,7 @@ char * __FASTCALL__ GetBinary(char val)
   return bstr;
 }
 
-inline void GET2DIGIT(char* str,const char* legs,unsigned char val)
+inline void __PURE_FUNC__ GET2DIGIT(char* str,const char* legs,unsigned char val)
 {
   char *s = (char *)str;
   s[0] = legs[(((unsigned char)val) >> 4) & 0x0F];
@@ -181,7 +181,7 @@ char * __FASTCALL__ Get16SignDig(int64_t val)
   return rstr;
 }
 
-static char  __FASTCALL__ GetHexAnalog(char val)
+static char  __FASTCALL__ __PURE_FUNC__ GetHexAnalog(char val)
 {
   return val >= '0' && val <= '9' ? val-'0' : ((toupper(val)-'A'+10)) & 0x0F;
 }

@@ -463,7 +463,6 @@ void NLM_Parser::BuildRelocNlm()
   unsigned char len;
   TWindow * w;
   RELOC_NLM rel;
-//  if(!(RelocNlm = la_Build(0,sizeof(RELOC_NLM),MemOutBox))) return;
   w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
   if(PubNames.empty()) nlm_ReadPubNameList(main_handle);
   w->goto_xy(1,1);

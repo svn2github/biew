@@ -725,10 +725,6 @@ __filesize_t DisMode::search_engine(TWindow *pwnd, __filesize_t start,
     retval = FILESIZE_MAX;
     disSearchBuff  = new char [1002+Comm_Size];
     DumpMode = true;
-    if(!disSearchBuff) {
-	MemOutBox("Disassembler search initialization");
-	goto bye;
-    }
     cfpos = start;
     tsize = flen;
     pmult = 100;

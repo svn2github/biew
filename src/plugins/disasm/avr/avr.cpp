@@ -462,11 +462,6 @@ void AVR_Disassembler::show_short_help() const
     if (!size) goto avrhlp_bye;
 
     msgAsmText = new char [size+1];
-    if (!msgAsmText) {
-	MemOutBox(" Help display ");
-	goto avrhlp_bye;
-    }
-
     if (!bhelp.load_item(20021, msgAsmText)) {
 	delete msgAsmText;
 	goto avrhlp_bye;

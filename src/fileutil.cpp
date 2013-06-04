@@ -323,10 +323,6 @@ bool FStore::run()
     char *tmp_buff;
     __filesize_t endpos,cpos;
     tmp_buff = new char [0x1000];
-    if(!tmp_buff) {
-	 MemOutBox("temporary buffer initialization");
-	 return false;
-    }
     flags = FSDLG_USEMODES | FSDLG_BINMODE | FSDLG_COMMENT;
     DumpMode = true;
     ff_startpos = bctx.tell();
@@ -402,10 +398,6 @@ bool FStore::run()
 		    dismode = static_cast<DisMode*>(&bctx.active_mode());
 		MaxInsnLen = dismode->get_max_symbol_size();
 		codebuff = new unsigned char [MaxInsnLen];
-		if(!codebuff) {
-		    MemOutBox("Disasm initialization");
-		    goto dis_exit;
-		}
 		tmp_buff2 = new char [0x1000];
 		file_cache = new char [BBIO_SMALL_CACHE_SIZE];
 		fout.open(ff_fname.c_str(),std::ios_base::out);
