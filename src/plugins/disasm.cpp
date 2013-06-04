@@ -872,8 +872,8 @@ bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t 
       }
       if(_defval)         /* Do not perform operation on NULL */
       {
-      __filesize_t pa,psym,__tmp;
-      unsigned _class;
+      __filesize_t pa,__tmp;
+      Symbol_Info psym;
       if(type & Arg_Rip) {
 	__tmp=bin_format.pa2va(ulShift);
 	_defval += ((__tmp!=Plugin::Bad_Address) ? __tmp : ulShift)+fld_len;
@@ -887,11 +887,10 @@ bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t 
 	if(dis_severity < CommSev_Func)
 	{
 	  strcpy(comments,".*");
-	  std::string stmp;
-	  psym = bin_format.get_public_symbol(stmp,_class,pa,false);
-	  strcat(comments,stmp.c_str());
-	  if(psym!=Plugin::Bad_Address) {
-	    if(psym != pa) comments[0] = 0;
+	  psym = bin_format.get_public_symbol(pa,false);
+	  strcat(comments,psym.name.c_str());
+	  if(psym.pa!=Plugin::Bad_Address) {
+	    if(psym.pa != pa) comments[0] = 0;
 	    else
 	    {
 		dis_severity = CommSev_Func;

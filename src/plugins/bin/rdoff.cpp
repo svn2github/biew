@@ -65,10 +65,8 @@ namespace	usr {
 	    virtual bool		address_resolving(std::string&,__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
-	    virtual __filesize_t	get_public_symbol(std::string& str,unsigned& _class,
-							    __filesize_t pa,bool as_prev);
-	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
-							__filesize_t& start,__filesize_t& end,int& _class,int& bitness);
+	    virtual Symbol_Info		get_public_symbol(__filesize_t pa,bool as_prev);
+	    virtual Object_Info		get_object_attribute(__filesize_t pa);
 	private:
 	    std::string			rdoff_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
 	    void			rdoff_ReadPubNameList(binary_stream& handle);
@@ -673,71 +671,54 @@ int RDOff_Parser::query_bitness(__filesize_t pa) const
   return DAB_USE32;
 }
 
-__filesize_t RDOff_Parser::get_public_symbol(std::string& str,unsigned& func_class,
-			   __filesize_t pa,bool as_prev)
+Symbol_Info RDOff_Parser::get_public_symbol(__filesize_t pa,bool as_prev)
 {
     binary_stream& b_cache = main_handle;
-    __filesize_t fpos;
+    Symbol_Info rc;
     if(PubNames.empty()) rdoff_ReadPubNameList(b_cache);
     std::set<symbolic_information>::const_iterator idx;
     symbolic_information key;
     key.pa=pa;
-    fpos=find_symbolic_information(PubNames,func_class,key,as_prev,idx);
+    rc.pa=find_symbolic_information(PubNames,rc._class,key,as_prev,idx);
     if(idx!=PubNames.end()) {
-	str=rdoff_ReadPubName(b_cache,*idx);
+	rc.name=rdoff_ReadPubName(b_cache,*idx);
     }
-    return fpos;
+    return rc;
 }
 
-unsigned RDOff_Parser::get_object_attribute(__filesize_t pa,std::string& name,
-			 __filesize_t& start,__filesize_t& end,int& _class,int& bitness)
+Object_Info RDOff_Parser::get_object_attribute(__filesize_t pa)
 {
-  unsigned ret;
-  start = 0;
-  end = main_handle.flength();
-  _class = OC_NOOBJECT;
-  bitness = query_bitness(pa);
-  name.clear();
-  if(pa < cs_start)
-  {
-    end = cs_start;
-    ret = 0;
-  }
-  else
-    if(pa >= cs_start && pa < ds_start - 4)
-    {
-      start = cs_start;
-      _class = OC_CODE;
-      end = ds_start-4;
-      ret = 1;
+    Object_Info rc;
+    rc.start = 0;
+    rc.end = main_handle.flength();
+    rc._class = OC_NOOBJECT;
+    rc.bitness = query_bitness(pa);
+    rc.name.clear();
+    rc.number = 0;
+    if(pa < cs_start) {
+	rc.end = cs_start;
+	rc.number = 0;
+    } else if(pa >= cs_start && pa < ds_start - 4) {
+	rc.start = cs_start;
+	rc._class = OC_CODE;
+	rc.end = ds_start-4;
+	rc.number = 1;
+    } else if(pa >= ds_start - 4 && pa < ds_start) {
+	rc.start = ds_start-4;
+	rc.end = ds_start;
+	rc._class = OC_NOOBJECT;
+	rc.number = 2;
+    } else if(pa >= ds_start && pa < ds_start + ds_len) {
+	rc._class = OC_DATA;
+	rc.start = ds_start;
+	rc.end = ds_start + ds_len;
+	rc.number = 3;
+    } else {
+	rc.start = ds_start+ds_len;
+	rc._class = OC_NOOBJECT;
+	rc.number = 4;
     }
-    else
-    {
-      if(pa >= ds_start - 4 && pa < ds_start)
-      {
-	start = ds_start-4;
-	end = ds_start;
-	_class = OC_NOOBJECT;
-	ret = 2;
-      }
-      else
-      {
-	if(pa >= ds_start && pa < ds_start + ds_len)
-	{
-	  _class = OC_DATA;
-	  start = ds_start;
-	  end = ds_start + ds_len;
-	  ret = 3;
-	}
-	else
-	{
-	  start = ds_start+ds_len;
-	  _class = OC_NOOBJECT;
-	  ret = 4;
-	}
-      }
-    }
-  return ret;
+     return rc;
 }
 
 __filesize_t RDOff_Parser::va2pa(__filesize_t va) const { return va + cs_start; }

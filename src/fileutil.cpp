@@ -235,7 +235,7 @@ FileUtilities*	InsDelBlock::query_interface(BeyeContext& b) { return new(zeromem
 
 	    std::string		ff_fname;
 	private:
-	    void		printObject(std::ofstream& fout,unsigned obj_num,const std::string& oname,int oclass,int obitness,__filesize_t size) const;
+	    void		printObject(std::ofstream& fout,const Object_Info& obj) const;
 	    void		printHdr(std::ofstream& fout,const Bin_Format& fmt) const;
 	    std::string		GET_FUNC_CLASS(unsigned x) const { return x == SC_LOCAL ? "private" : "public"; }
 	    void		make_addr_column(std::string& buff,__filesize_t offset) const;
@@ -245,12 +245,12 @@ FileUtilities*	InsDelBlock::query_interface(BeyeContext& b) { return new(zeromem
 FStore::FStore(BeyeContext& b):FileUtilities(b),ff_fname("beye.$$$") {}
 FStore::~FStore() {}
 
-void FStore::printObject(std::ofstream& fout,unsigned obj_num,const std::string& oname,int oclass,int obitness,__filesize_t size) const
+void FStore::printObject(std::ofstream& fout,const Object_Info& obj) const
 {
     const char *btn;
     std::string name;
     char onumname[30];
-    switch(obitness) {
+    switch(obj.bitness) {
 	case DAB_USE16: btn = "USE16"; break;
 	case DAB_USE32: btn = "USE32"; break;
 	case DAB_USE64: btn = "USE64"; break;
@@ -259,12 +259,12 @@ void FStore::printObject(std::ofstream& fout,unsigned obj_num,const std::string&
 	default: btn = "";
     }
 
-    name = oname[0] ? oname : oclass == OC_DATA ? "DUMP_DATA" :
-			oclass == OC_CODE ? "DUMP_TEXT" :
+    name = !obj.name.empty() ? obj.name : obj._class == OC_DATA ? "DUMP_DATA" :
+			obj._class == OC_CODE ? "DUMP_TEXT" :
 			"Unknown";
-    if(!oname[0]) { sprintf(onumname,"%s%u",name.c_str(),obj_num); name = onumname; }
-    fout<<std::endl<<"SEGMENT "<<name<<" BYTE PUBLIC "<<btn<<" '"<<(oclass == OC_DATA ? "DATA" : oclass == OC_CODE ? "CODE" : "NoObject")<<"'"<<std::endl;
-    fout<<"; size: "<<std::dec<<size<<" bytes"<<std::endl<<std::endl;
+    if(obj.name.empty()) { sprintf(onumname,"%s%u",name.c_str(),obj.number); name = onumname; }
+    fout<<std::endl<<"SEGMENT "<<name<<" BYTE PUBLIC "<<btn<<" '"<<(obj._class == OC_DATA ? "DATA" : obj._class == OC_CODE ? "CODE" : "NoObject")<<"'"<<std::endl;
+    fout<<"; size: "<<std::dec<<(obj.end-obj.start)<<" bytes"<<std::endl<<std::endl;
 }
 
 void FStore::printHdr(std::ofstream& fout,const Bin_Format& fmt) const
@@ -388,15 +388,12 @@ bool FStore::run()
 		char *file_cache = NULL,*tmp_buff2 = NULL;
 		unsigned MaxInsnLen;
 		char data_dis[300];
-		std::string obj_name,func_name;
-		__filesize_t func_pa,stop;
-		unsigned func_class;
+		__filesize_t stop;
+		Symbol_Info psym;
 		__filesize_t awsize,pwsize;
 		bool has_string;
 
-		__filesize_t obj_start,obj_end;
-		int obj_class,obj_bitness;
-		unsigned obj_num;
+		Object_Info obj;
 
 		extern const Plugin_Info disMode;
 		DisMode* dismode;
@@ -422,38 +419,31 @@ bool FStore::run()
 		if(flags & FSDLG_COMMENT) {
 		    printHdr(fout,bctx.bin_format());
 		}
-		if(flags & FSDLG_STRUCTS) {
-		    obj_num = bctx.bin_format().get_object_attribute(ff_startpos,obj_name,
-						obj_start,
-						obj_end,obj_class,obj_bitness);
-		}
+		if(flags & FSDLG_STRUCTS) obj = bctx.bin_format().get_object_attribute(ff_startpos);
 #if 0
-		    if(!obj_num) goto defobj;
-		} else {
+		if(!obj.number) goto defobj;
+		else {
 		    defobj:
-		    obj_num = 0;
-		    obj_start = 0;
-		    obj_end = bctx.flength();
-		    obj_name[0] = 0;
-		    obj_class = OC_CODE;
-		    obj_bitness = bctx.bin_format().query_bitness(ff_startpos);
+		    obj.number = 0;
+		    obj.start = 0;
+		    obj.end = bctx.flength();
+		    obj.name[0] = 0;
+		    obj._class = OC_CODE;
+		    obj.bitness = bctx.bin_format().query_bitness(ff_startpos);
 		}
 #endif
-		if(flags & FSDLG_STRUCTS) printObject(fout,obj_num,obj_name,obj_class,obj_bitness,obj_end - obj_start);
-		func_pa = 0;
+		if(flags & FSDLG_STRUCTS) printObject(fout,obj);
+		psym.pa = 0;
 		if(flags & FSDLG_STRUCTS) {
-		    func_pa = bctx.bin_format().get_public_symbol(func_name,
-						func_class,ff_startpos,true);
-		    if(func_pa!=Plugin::Bad_Address) {
-			fout<<GET_FUNC_CLASS(func_class)<<" "<<func_name<<":"<<std::endl;
-			if(func_pa < ff_startpos && flags & FSDLG_COMMENT) {
+		    psym = bctx.bin_format().get_public_symbol(ff_startpos,true);
+		    if(psym.pa!=Plugin::Bad_Address) {
+			fout<<GET_FUNC_CLASS(psym._class)<<" "<<psym.name<<":"<<std::endl;
+			if(psym.pa < ff_startpos && flags & FSDLG_COMMENT) {
 				fout<<"; ..."<<std::endl;
 			}
 		    }
-		    func_name.clear();
-		    func_pa = bctx.bin_format().get_public_symbol(func_name,
-						func_class,ff_startpos,false);
-		    if(func_pa==Plugin::Bad_Address) func_pa=0;
+		    psym = bctx.bin_format().get_public_symbol(ff_startpos,false);
+		    if(psym.pa==Plugin::Bad_Address) psym.pa=0;
 		}
 		prcnt_counter = oprcnt_counter = 0;
 		awsize = endpos - ff_startpos;
@@ -463,48 +453,41 @@ bool FStore::run()
 		    DisasmRet dret;
 		    int len;
 		    if(flags & FSDLG_STRUCTS) {
-			if(ff_startpos >= obj_end) {
-			    obj_num = bctx.bin_format().get_object_attribute(ff_startpos,obj_name,
-						obj_start,
-						obj_end,obj_class,
-						obj_bitness);
-			    printObject(fout,obj_num,obj_name,obj_class,obj_bitness,obj_end - obj_start);
+			if(ff_startpos >= obj.end) {
+			    obj = bctx.bin_format().get_object_attribute(ff_startpos);
+			    printObject(fout,obj);
 			}
-			if(obj_class == OC_NOOBJECT) {
+			if(obj._class == OC_NOOBJECT) {
 			    __filesize_t diff;
-			    fout<<"; L"<<std::hex<<std::setfill('0')<<std::setw(16)<<obj_start<<"H-L"<<std::hex<<std::setfill('0')<<std::setw(16)<<obj_end<<"H - no object"<<std::endl;
-			    dret.codelen = std::min(__filesize_t(UCHAR_MAX),obj_end - ff_startpos);
+			    fout<<"; L"<<std::hex<<std::setfill('0')<<std::setw(16)<<obj.start<<"H-L"<<std::hex<<std::setfill('0')<<std::setw(16)<<obj.end<<"H - no object"<<std::endl;
+			    dret.codelen = std::min(__filesize_t(UCHAR_MAX),obj.end - ff_startpos);
 			    /** some functions can placed in virtual area of objects
 				mean at end of true data, but before next object */
-			    while(func_pa && func_pa >= obj_start && func_pa < obj_end && func_pa > ff_startpos) {
-				diff = func_pa - ff_startpos;
+			    while(psym.pa && psym.pa >= obj.start && psym.pa < obj.end && psym.pa > ff_startpos) {
+				diff = psym.pa - ff_startpos;
 				if(diff) fout<<"resb "<<std::dec<<diff<<"H"<<std::endl;
-				fout<<GET_FUNC_CLASS(func_class)<<" "<<func_name<<": ;at offset - "<<std::hex<<func_pa<<"H"<<std::endl;
-				ff_startpos = func_pa;
-				func_name.clear();
-				func_pa = bctx.bin_format().get_public_symbol(func_name,
-						func_class,ff_startpos,false);
-				if(func_pa==Plugin::Bad_Address) func_pa=0;
-				if(func_pa == ff_startpos) {
+				fout<<GET_FUNC_CLASS(psym._class)<<" "<<psym.name<<": ;at offset - "<<std::hex<<psym.pa<<"H"<<std::endl;
+				ff_startpos = psym.pa;
+				psym = bctx.bin_format().get_public_symbol(ff_startpos,false);
+				if(psym.pa==Plugin::Bad_Address) psym.pa=0;
+				if(psym.pa==ff_startpos) {
 				    fout<<"...Probably internal error of beye..."<<std::endl;
 				    break;
 				}
 			    }
-			    diff = obj_end - ff_startpos;
+			    diff = obj.end - ff_startpos;
 			    if(diff) fout<<"resb "<<std::hex<<diff<<"H"<<std::endl;
-			    ff_startpos = obj_end;
+			    ff_startpos = obj.end;
 			    goto next_obj;
 			}
-			if(func_pa) {
+			if(psym.pa) {
 			    int not_silly;
 			    not_silly = 0;
-			    while(ff_startpos == func_pa) {
+			    while(ff_startpos == psym.pa) {
 				/* print out here all public labels */
-				fout<<GET_FUNC_CLASS(func_class)<<" "<<func_name<<std::endl;
-				func_name.clear();
-				func_pa = bctx.bin_format().get_public_symbol(func_name,
-						func_class,ff_startpos,false);
-				if(func_pa==Plugin::Bad_Address) func_pa=0;
+				fout<<GET_FUNC_CLASS(psym._class)<<" "<<psym.name<<std::endl;
+				psym = bctx.bin_format().get_public_symbol(ff_startpos,false);
+				if(psym.pa==Plugin::Bad_Address) psym.pa=0;
 				not_silly++;
 				if(not_silly > 100) {
 				    fout<<"; [snipped out] ..."<<std::endl;
@@ -516,7 +499,7 @@ bool FStore::run()
 		    memset(codebuff,0,MaxInsnLen);
 		    bctx.bm_file().seek(ff_startpos,binary_stream::Seek_Set);
 		    bctx.bm_file().read((any_t*)codebuff,MaxInsnLen);
-		    if(obj_class == OC_CODE) dret = dismode->disassembler(ff_startpos,codebuff,__DISF_NORMAL);
+		    if(obj._class == OC_CODE) dret = dismode->disassembler(ff_startpos,codebuff,__DISF_NORMAL);
 		    else { /** Data object */
 			unsigned dis_data_len,ifreq,data_len;
 			char coll_str[__TVIO_MAXSCREENWIDTH];
@@ -528,7 +511,7 @@ bool FStore::run()
 			    } else break;
 			}
 			coll_str[cstr_idx] = 0;
-			switch(obj_bitness) {
+			switch(obj.bitness) {
 			    case DAB_USE16: dis_data_len = 2; break;
 			    case DAB_USE32: dis_data_len = 4; break;
 			    case DAB_USE64: dis_data_len = 8; break;
@@ -556,7 +539,7 @@ bool FStore::run()
 			dret.pro_clone = 0;
 			dismode->dis_severity = DisMode::CommSev_None;
 		    }
-		    stop = func_pa ? std::min(func_pa,obj_end) : obj_end;
+		    stop = psym.pa ? std::min(psym.pa,obj.end) : obj.end;
 		    if(flags & FSDLG_STRUCTS) {
 			if(stop && stop > ff_startpos && ff_startpos + dret.codelen > stop) {
 			    unsigned lim,ii;
@@ -673,7 +656,7 @@ bool FRestore::run()
 	if(endpos > ff_startpos) {
 	    __filesize_t wsize,cwpos;
 	    unsigned remaind;
-	    any_t*tmp_buff;
+	    char* tmp_buff;
 	    h = new(zeromem) binary_stream;
 	    if(!h->open(ff_fname,binary_stream::FO_READONLY | binary_stream::SO_DENYNONE)) {
 		if(!h->open(ff_fname,binary_stream::FO_READONLY | binary_stream::SO_COMPAT)) {
@@ -694,14 +677,14 @@ err:
 	    if(fs.is_open()) {
 		while(wsize) {
 		    remaind = (unsigned)std::min(wsize,__filesize_t(4096));
-		    if(!h->read(tmp_buff,remaind)) {
+		    if(!h->read((any_t*)tmp_buff,remaind)) {
 			bctx.errnoMessageBox(READ_FAIL,"",errno);
 			delete h;
 			ret = false;
 			goto bye;
 		    }
 		    fs.seekp(cwpos,std::ios_base::beg);
-		    fs.write((const char*)tmp_buff,remaind);
+		    fs.write(tmp_buff,remaind);
 		    if(!fs.good()) {
 			bctx.errnoMessageBox(WRITE_FAIL,"",errno);
 			ret = false;
@@ -801,7 +784,7 @@ bool CryptBlock::run()
 	    __filesize_t wsize,cwpos;
 	    unsigned remaind;
 	    std::string fname;
-	    any_t*tmp_buff;
+	    char* tmp_buff;
 	    cpos = bctx.tell();
 	    wsize = endpos - ff_startpos;
 	    cwpos = ff_startpos;
@@ -813,15 +796,15 @@ bool CryptBlock::run()
 		fs.seekg(ff_startpos,std::ios_base::beg);
 		while(wsize) {
 		    remaind = (unsigned)std::min(wsize,__filesize_t(4096));
-		    fs.read((char*)tmp_buff,remaind);
+		    fs.read(tmp_buff,remaind);
 		    if(!fs.good()) {
 			bctx.errnoMessageBox(READ_FAIL,"",errno);
 			ret = false;
 			goto bye;
 		    }
-		    CryptFunc((char*)tmp_buff,remaind,passwd);
+		    CryptFunc(tmp_buff,remaind,passwd);
 		    fs.seekp(cwpos,std::ios_base::beg);
-		    fs.write((const char*)tmp_buff,remaind);
+		    fs.write(tmp_buff,remaind);
 		    if(!fs.good()) {
 			bctx.errnoMessageBox(WRITE_FAIL,"",errno);
 			ret = false;
@@ -911,7 +894,7 @@ bool EndianifyBlock::run()
 	    unsigned remaind;
 	    std::string fname;
 	    std::fstream fs;
-	    any_t*tmp_buff;
+	    char* tmp_buff;
 	    cpos = bctx.tell();
 	    wsize = endpos - ff_startpos;
 	    cwpos = ff_startpos;
@@ -922,15 +905,15 @@ bool EndianifyBlock::run()
 		fs.seekg(ff_startpos,std::ios_base::beg);
 		while(wsize) {
 		    remaind = (unsigned)std::min(wsize,__filesize_t(4096));
-		    fs.read((char*)tmp_buff,remaind);
+		    fs.read(tmp_buff,remaind);
 		    if(!fs.good()) {
 			bctx.errnoMessageBox(READ_FAIL,"",errno);
 			ret = false;
 			goto bye;
 		    }
-		    EndianifyFunc((char*)tmp_buff,remaind, flags & FSDLG_BTNSMASK);
+		    EndianifyFunc(tmp_buff,remaind, flags & FSDLG_BTNSMASK);
 		    fs.seekp(cwpos,std::ios_base::beg);
-		    fs.write((const char*)tmp_buff,remaind);
+		    fs.write(tmp_buff,remaind);
 		    if(!fs.good()) {
 			bctx.errnoMessageBox(WRITE_FAIL,"",errno);
 			ret = false;
@@ -999,7 +982,7 @@ bool XLatBlock::run()
 	    __filesize_t wsize,cwpos;
 	    unsigned remaind;
 	    std::string fname;
-	    any_t*tmp_buff;
+	    char* tmp_buff;
 	    cpos = bctx.tell();
 	    wsize = endpos - ff_startpos;
 	    cwpos = ff_startpos;
@@ -1032,15 +1015,15 @@ bool XLatBlock::run()
 		fs.seekg(ff_startpos,std::ios_base::beg);
 		while(wsize) {
 		    remaind = (unsigned)std::min(wsize,__filesize_t(4096));
-		    fs.read((char*)tmp_buff,remaind);
+		    fs.read(tmp_buff,remaind);
 		    if(!fs.good()) {
 			bctx.errnoMessageBox(READ_FAIL,"",errno);
 			ret = false;
 			goto bye;
 		    }
-		    XLatFunc((char*)tmp_buff,remaind, xlt);
+		    XLatFunc(tmp_buff,remaind, xlt);
 		    fs.seekp(cwpos,std::ios_base::beg);
-		    fs.write((const char*)tmp_buff,remaind);
+		    fs.write(tmp_buff,remaind);
 		    if(!fs.good()) {
 			bctx.errnoMessageBox(WRITE_FAIL,"",errno);
 			ret = false;

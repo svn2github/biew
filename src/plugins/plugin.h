@@ -13,6 +13,22 @@ namespace	usr {
     class DisMode;
     class Bin_Format;
     class udn;
+
+    struct Symbol_Info {
+	std::string	name;	// name of public symbol
+	unsigned	_class;	// class of symbol (See SC_* conatnts)
+	__filesize_t	pa;	// physical address of public symbol (Bad_Address if no symbol)
+    };
+
+    struct Object_Info {
+	unsigned	number;	// logical number of object (0 if it's no object).
+	std::string	name;	// object name
+	__filesize_t	start;	// file offset of object's start
+	__filesize_t	end;	// file offset of object's end
+	int		_class;	// _class of object (See OC_* constants).
+	int		bitness;// bitness of object (See DAB_* constants).
+    };
+
     class Plugin : public Opaque {
 	public:
 	    static const __filesize_t Bad_Address = __filesize_t(-1);
@@ -147,29 +163,13 @@ namespace	usr {
 	    /*-- Below placed functions for 'put structures' method of save as dialog --*/
 
 			 /** Fills the string with public symbol
-			   * @param str       pointer to the string to be filled
-			   * @param cb_str    indicates maximal length of string
-			   * @param _class    pointer to the memory where can be stored class of symbol (See SC_* conatnts)
 			   * @param pa        indicates physical offset within file
 			   * @param as_prev   indicates direction of symbol searching from given physical offset
-			   * @return          Bad_Address - if no symbol name available
-			   *                  in given direction (as_prev)
-			   *                  physical address of public symbol
-			   *                  which is found in given direction
 			  **/
-	    virtual __filesize_t	get_public_symbol(std::string& str,unsigned& _class,__filesize_t pa,bool as_prev) const;
+	    virtual Symbol_Info		get_public_symbol(__filesize_t pa,bool as_prev) const;
 
 			 /** Determines attributes of object at given physical file address.
 			   * @param pa        indicates physical file offset of object
-			   * @param name      pointer to the string which is to be filled with object name
-			   * @param cb_name   indicates maximal length of string
-			   * @param start     pointer to the memory where must be stored start of given object, as file offset.
-			   * @param end       pointer to the memory where must be stored end of given object, as file offset.
-			   * @param _class    pointer to the memory where must be stored _class of object (See OC_* constants).
-			   * @param bitness   pointer to the memory where must be stored bitness of object (See DAB_* constants).
-			   * @return          logical number of object or Bad_Address if at given offset is no object.
-			   * @note            all arguments exclude name of object
-			   *                  must be filled.
 			   * @remark          For example: if exe-format - new
 			   *                  exe i.e. contains MZ and NEW
 			   *                  header and given file offset
@@ -177,7 +177,7 @@ namespace	usr {
 			   *                  = 0, end = begin of first data or
 			   *                  code object).
 			  **/
-	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& _name,__filesize_t& start,__filesize_t& end,int& _class,int& bitness) const;
+	    virtual Object_Info		get_object_attribute(__filesize_t pa) const;
 	private:
 	    std::vector<const Binary_Parser_Info*>	formats;
 	    size_t			active_format;

@@ -133,10 +133,8 @@ namespace	usr {
 	    virtual bool		address_resolving(std::string&,__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
-	    virtual __filesize_t	get_public_symbol(std::string& str,unsigned& _class,
-							    __filesize_t pa,bool as_prev);
-	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
-							__filesize_t& start,__filesize_t& end,int& _class,int& bitness);
+	    virtual Symbol_Info		get_public_symbol(__filesize_t pa,bool as_prev);
+	    virtual Object_Info		get_object_attribute(__filesize_t pa);
 	private:
 	    std::string			pe_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
 	    bool			BuildReferStrPE(std::string& str,const RELOC_PE& rpe,int flags) const;
@@ -1364,56 +1362,52 @@ void PE_Parser::pe_ReadPubNameList(binary_stream& handle)
   }
 }
 
-__filesize_t PE_Parser::get_public_symbol(std::string& str,unsigned& func_class,__filesize_t pa,bool as_prev)
+Symbol_Info PE_Parser::get_public_symbol(__filesize_t pa,bool as_prev)
 {
-    __filesize_t fpos;
+    Symbol_Info rc;
     if(PubNames.empty()) pe_ReadPubNameList(*pe_cache);
     std::set<symbolic_information>::const_iterator idx;
     symbolic_information key;
     key.pa=pa;
-    fpos=find_symbolic_information(PubNames,func_class,key,as_prev,idx);
+    rc.pa=find_symbolic_information(PubNames,rc._class,key,as_prev,idx);
     if(idx!=PubNames.end()) {
-	str=pe_ReadPubName(*pe_cache,*idx);
+	rc.name=pe_ReadPubName(*pe_cache,*idx);
     }
-    return fpos;
+    return rc;
 }
 
-unsigned PE_Parser::get_object_attribute(__filesize_t pa,std::string& name,
-		      __filesize_t& start,__filesize_t& end,int& _class,int& bitness)
+Object_Info PE_Parser::get_object_attribute(__filesize_t pa)
 {
-  unsigned i,nitems,ret;
-  start = 0;
-  end = main_handle().flength();
-  _class = OC_NOOBJECT;
-  bitness = query_bitness(pa);
-  name[0] = 0;
-  nitems = pe.peObjects;
-  ret = 0;
-  main_handle().seek(0x18 + pe.peNTHdrSize + headshift(),binary_stream::Seek_Set);
-  for(i = 0;i < nitems;i++)
-  {
-    PE_OBJECT po;
-    if(IsKbdTerminate() || main_handle().eof()) break;
-    main_handle().read(&po,sizeof(PE_OBJECT));
-    if(pa >= start && pa < po.oPhysicalOffset)
-    {
-      /** means between two objects */
-      end = po.oPhysicalOffset;
-      ret = 0;
-      break;
+    Object_Info rc;
+    unsigned i,nitems;
+    rc.start = 0;
+    rc.end = main_handle().flength();
+    rc._class = OC_NOOBJECT;
+    rc.bitness = query_bitness(pa);
+    rc.number = 0;
+    nitems = pe.peObjects;
+    main_handle().seek(0x18 + pe.peNTHdrSize + headshift(),binary_stream::Seek_Set);
+    for(i = 0;i < nitems;i++) {
+	PE_OBJECT po;
+	if(IsKbdTerminate() || main_handle().eof()) break;
+	main_handle().read(&po,sizeof(PE_OBJECT));
+	if(pa >= rc.start && pa < po.oPhysicalOffset) {
+	    /** means between two objects */
+	    rc.end = po.oPhysicalOffset;
+	    rc.number = 0;
+	    break;
+	}
+	if(pa >= po.oPhysicalOffset && pa < po.oPhysicalOffset + po.oPhysicalSize) {
+	    rc.start = po.oPhysicalOffset;
+	    rc.end = rc.start + po.oPhysicalSize;
+	    rc._class = po.oFlags & 0x00000020L ? OC_CODE : OC_DATA;
+	    rc.name=(char*)po.oName;
+	    rc.number = i+1;
+	    break;
+	}
+	rc.start = po.oPhysicalOffset + po.oPhysicalSize;
     }
-    if(pa >= po.oPhysicalOffset && pa < po.oPhysicalOffset + po.oPhysicalSize)
-    {
-      start = po.oPhysicalOffset;
-      end = start + po.oPhysicalSize;
-      _class = po.oFlags & 0x00000020L ? OC_CODE : OC_DATA;
-      name=(char*)po.oName;
-      ret = i+1;
-      break;
-    }
-    start = po.oPhysicalOffset + po.oPhysicalSize;
-  }
-  return ret;
+    return rc;
 }
 
 int PE_Parser::query_platform() const {

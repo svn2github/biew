@@ -61,7 +61,6 @@ static void  __FASTCALL__ drawControlKeys(TWindow& w,int flg)
 
 void BeyeContext::draw_multi_prompt(const char * const norm[], const char *const shift[], const char * const alt[], const char * const ctrl[]) const
 {
-  TWindow *_using;
   int flg = beye_context().tconsole().kbd_get_shifts();
   int i;
   const char * cptr;
@@ -402,14 +401,14 @@ typedef struct tagvbyte
 {
   char x;
   char y;
-  char image;
+  uint8_t image;
 }vbyte;
 
 typedef struct tagcvbyte
 {
   char x;
   char y;
-  char image;
+  uint8_t image;
   Color color;
 }cvbyte;
 
@@ -535,52 +534,41 @@ void About()
 
 __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
 {
-  TWindow *hwnd,*wait_wnd;
-  char vaddr[64];
-  std::string prev_func,next_func,oname;
-  const char *btn;
-  int obj_class,obj_bitness;
-  unsigned obj_num,func_class;
-  __filesize_t obj_start,obj_end;
-  __filesize_t cfpos,ret_addr,va,prev_func_pa,next_func_pa;
-  hwnd = CrtDlgWndnls(" Current position information ",78,5);
-  hwnd->set_footer("[Enter] - Prev. entry [Ctrl-Enter | F5] - Next entry]",TWindow::TMode_Right,dialog_cset.selfooter);
-  hwnd->goto_xy(1,1);
-  wait_wnd = PleaseWaitWnd();
-  cfpos = beye_context().tell();
-  va = beye_context().bin_format().pa2va(ctrl_pos);
-  if(va==Plugin::Bad_Address) va = ctrl_pos;
-  vaddr[0] = '\0';
-  sprintf(&vaddr[strlen(vaddr)],"%016llXH",va);
-  prev_func_pa = next_func_pa = 0;
-  prev_func_pa = beye_context().bin_format().get_public_symbol(prev_func,
-					      func_class,ctrl_pos,true);
-  next_func_pa = beye_context().bin_format().get_public_symbol(next_func,
-					      func_class,ctrl_pos,false);
-  obj_num = beye_context().bin_format().get_object_attribute(ctrl_pos,oname,
-					  obj_start,obj_end,obj_class,
-					  obj_bitness);
-  oname[sizeof(oname)-1] = 0;
-  if(!obj_num)
-  {
-    obj_num = 0;
-    oname[0] = 0;
-    obj_start = 0;
-    obj_end = beye_context().flength();
-    obj_class = OC_CODE;
-    obj_bitness = DAB_USE16;
-  }
-  delete wait_wnd;
-  switch(obj_bitness)
-  {
-    case DAB_USE16: btn = "USE16"; break;
-    case DAB_USE32: btn = "USE32"; break;
-    case DAB_USE64: btn = "USE64"; break;
-    case DAB_USE128:btn = "USE128"; break;
-    case DAB_USE256:btn = "USE256"; break;
-    default: btn = "";
-  }
-  hwnd->printf(
+    TWindow* hwnd,*wait_wnd;
+    char vaddr[64];
+    Symbol_Info prev,next;
+    Object_Info obj;
+    const char *btn;
+    __filesize_t cfpos,ret_addr,va;
+    hwnd = CrtDlgWndnls(" Current position information ",78,5);
+    hwnd->set_footer("[Enter] - Prev. entry [Ctrl-Enter | F5] - Next entry]",TWindow::TMode_Right,dialog_cset.selfooter);
+    hwnd->goto_xy(1,1);
+    wait_wnd = PleaseWaitWnd();
+    cfpos = beye_context().tell();
+    va = beye_context().bin_format().pa2va(ctrl_pos);
+    if(va==Plugin::Bad_Address) va = ctrl_pos;
+    vaddr[0] = '\0';
+    sprintf(&vaddr[strlen(vaddr)],"%016llXH",va);
+    prev = beye_context().bin_format().get_public_symbol(ctrl_pos,true);
+    next = beye_context().bin_format().get_public_symbol(ctrl_pos,false);
+    obj  = beye_context().bin_format().get_object_attribute(ctrl_pos);
+    if(!obj.number) {
+	obj.name.clear();
+	obj.start = 0;
+	obj.end = beye_context().flength();
+	obj._class = OC_CODE;
+	obj.bitness = DAB_USE16;
+    }
+    delete wait_wnd;
+    switch(obj.bitness) {
+	case DAB_USE16: btn = "USE16"; break;
+	case DAB_USE32: btn = "USE32"; break;
+	case DAB_USE64: btn = "USE64"; break;
+	case DAB_USE128:btn = "USE128"; break;
+	case DAB_USE256:btn = "USE256"; break;
+	default: btn = "";
+    }
+    hwnd->printf(
 	   "File  offset : %016llXH\n"
 	   "Virt. address: %s\n"
 	   "%s entry  : %s\n"
@@ -588,44 +576,38 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
 	   "Curr. object : #%u %s %s %016llXH=%016llXH %s"
 	   ,ctrl_pos
 	   ,vaddr
-	   ,prev_func_pa == ctrl_pos ? "Curr." : "Prev."
-	   ,prev_func.c_str()
-	   ,next_func.c_str()
-	   ,obj_num
-	   ,obj_class == OC_CODE ? "CODE" : obj_class == OC_DATA ? "DATA" : "no obj."
+	   ,prev.pa == ctrl_pos ? "Curr." : "Prev."
+	   ,prev.name.c_str()
+	   ,next.name.c_str()
+	   ,obj.number
+	   ,obj._class == OC_CODE ? "CODE" : obj._class == OC_DATA ? "DATA" : "no obj."
 	   ,btn
-	   ,obj_start
-	   ,obj_end
-	   ,oname.c_str()
+	   ,obj.start
+	   ,obj.end
+	   ,obj.name.c_str()
 	   );
-  ret_addr = ctrl_pos;
-  while(1)
-  {
-    int ch;
-    ch = GetEvent(drawEmptyPrompt,NULL,hwnd);
-    switch(ch)
-    {
-      case KE_F(10):
-      case KE_ESCAPE: goto exit;
-      case KE_ENTER:
-		      if(prev_func_pa) {
-			ret_addr = prev_func_pa;
-		      }
+    ret_addr = ctrl_pos;
+    while(1) {
+	int ch;
+	ch = GetEvent(drawEmptyPrompt,NULL,hwnd);
+	switch(ch) {
+	    case KE_F(10):
+	    case KE_ESCAPE: goto exit;
+	    case KE_ENTER:
+		      if(prev.pa) ret_addr = prev.pa;
 		      else beye_context().ErrMessageBox(NOT_ENTRY,"");
 		    goto exit;
-      case KE_F(5):
-      case KE_CTL_ENTER:
-		      if(next_func_pa) {
-			ret_addr = next_func_pa;
-		      }
+	    case KE_F(5):
+	    case KE_CTL_ENTER:
+		      if(next.pa) ret_addr = next.pa;
 		      else beye_context().ErrMessageBox(NOT_ENTRY,"");
 		    goto exit;
-      default: break;
+	    default: break;
+	}
     }
-  }
-  exit:
-  beye_context().bm_file().seek(cfpos,binary_stream::Seek_Set);
-  delete hwnd;
-  return ret_addr;
+exit:
+    beye_context().bm_file().seek(cfpos,binary_stream::Seek_Set);
+    delete hwnd;
+    return ret_addr;
 }
 } // namespace	usr

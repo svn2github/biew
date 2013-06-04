@@ -364,7 +364,6 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 {
   DisasmRet ret;
   unsigned mult,idx,tail,npadds=0;
-  __filesize_t prev_pa,next_pa;
   unsigned long jflags;
   memset(&ret,0,sizeof(ret));
   ret.str = outstr;
@@ -443,16 +442,14 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
   }
   if(jflags & JVM_LOOKUPSWITCH || jflags & JVM_TABLESWITCH)
   {
-    std::string prev_func;
-    unsigned func_class;
+    Symbol_Info prev,next;
     vartail_flags=jflags;
     /* Sorry! We really need to know method offset to compute padding bytes */
-    prev_pa = bin_format.get_public_symbol(prev_func,func_class,ulShift,true);
-    prev_func.clear();
-    next_pa = bin_format.get_public_symbol(prev_func,func_class,ulShift,false);
-    if(next_pa==Plugin::Bad_Address) next_pa=main_handle.flength();
-    if(prev_pa==Plugin::Bad_Address) prev_pa=0;
-    if(!(prev_pa%4)) npadds = (ulShift+1-prev_pa)%4; /* align only if method is aligned */
+    prev = bin_format.get_public_symbol(ulShift,true);
+    next = bin_format.get_public_symbol(ulShift,false);
+    if(next.pa==Plugin::Bad_Address) next.pa=main_handle.flength();
+    if(prev.pa==Plugin::Bad_Address) prev.pa=0;
+    if(!(prev.pa%4)) npadds = (ulShift+1-prev.pa)%4; /* align only if method is aligned */
     else npadds=0;
     vartail_base=ulShift;
     if(jflags & JVM_LOOKUPSWITCH)
@@ -460,7 +457,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 	tail=8+npadds;
 	vartail=JVM_DWORD((uint32_t*)(&buffer[idx+1+npadds+4]),1)*8;
 	vartail_start=tail+ulShift;
-	if(prev_pa && vartail_start+vartail<=next_pa);
+	if(prev.pa && vartail_start+vartail<=next.pa);
 	else vartail=0;
     }
     else
@@ -472,7 +469,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 	vartail=(hi-lo+1)*4;
 	vartail_start=tail+ulShift;
 	vartail_idx=lo;
-	if(hi>lo && prev_pa && vartail_start+vartail<=next_pa);
+	if(hi>lo && prev.pa && vartail_start+vartail<=next.pa);
 	else vartail=0;
     }
   }

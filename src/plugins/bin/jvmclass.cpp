@@ -104,10 +104,8 @@ typedef struct ClassFile_s
 	    virtual bool		address_resolving(std::string&,__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
-	    virtual __filesize_t	get_public_symbol(std::string& str,unsigned& _class,
-							    __filesize_t pa,bool as_prev);
-	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
-							__filesize_t& start,__filesize_t& end,int& _class,int& bitness);
+	    virtual Symbol_Info		get_public_symbol(__filesize_t pa,bool as_prev);
+	    virtual Object_Info		get_object_attribute(__filesize_t pa);
 	private:
 	    std::string			jvm_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
 	    void			decode_acc_flags(unsigned flags,char *str) const;
@@ -837,87 +835,70 @@ void JVM_Parser::jvm_ReadPubNameList(binary_stream& handle)
  }
 }
 
-__filesize_t JVM_Parser::get_public_symbol(std::string& str,unsigned& func_class,
-			   __filesize_t pa,bool as_prev)
+Symbol_Info JVM_Parser::get_public_symbol(__filesize_t pa,bool as_prev)
 {
+    Symbol_Info rc;
     binary_stream& b_cache = main_handle;
-    __filesize_t fpos;
     if(PubNames.empty()) jvm_ReadPubNameList(b_cache);
     std::set<symbolic_information>::const_iterator idx;
     symbolic_information key;
     key.pa=pa;
-    fpos=find_symbolic_information(PubNames,func_class,key,as_prev,idx);
+    rc.pa=find_symbolic_information(PubNames,rc._class,key,as_prev,idx);
     if(idx!=PubNames.end()) {
-	str=jvm_ReadPubName(b_cache,*idx);
+	rc.name=jvm_ReadPubName(b_cache,*idx);
     }
-    return fpos;
+    return rc;
 }
 
-unsigned JVM_Parser::get_object_attribute(__filesize_t pa,std::string& name,
-		      __filesize_t& start,__filesize_t& end,int& _class,int& bitness)
+Object_Info JVM_Parser::get_object_attribute(__filesize_t pa)
 {
-  unsigned ret;
-  start = 0;
-  end = main_handle.flength();
-  _class = OC_NOOBJECT;
-  bitness = DAB_USE16;
-  name[0] = 0;
-  if(pa < jvm_header.data_offset)
-  {
-    end =jvm_header.data_offset;
-    ret = 0;
-  }
-  else
-    if(pa >= jvm_header.data_offset && pa < jvm_header.methods_offset)
-    {
-      _class = OC_DATA;
-      start = jvm_header.data_offset;
-      end = jvm_header.methods_offset;
-      ret = 1;
+    Object_Info rc;
+    rc.start = 0;
+    rc.end = main_handle.flength();
+    rc._class = OC_NOOBJECT;
+    rc.bitness = DAB_USE16;
+    rc.number=0;
+    if(pa < jvm_header.data_offset) {
+	rc.end =jvm_header.data_offset;
+	rc.number = 0;
+    } else if(pa >= jvm_header.data_offset && pa < jvm_header.methods_offset) {
+	rc._class = OC_DATA;
+	rc.start = jvm_header.data_offset;
+	rc.end = jvm_header.methods_offset;
+	rc.number = 1;
+    } else if(pa >= jvm_header.methods_offset && pa < jvm_header.code_offset) {
+	rc._class = OC_NOOBJECT;
+	rc.start = jvm_header.methods_offset;
+	rc.end = jvm_header.code_offset;
+	rc.number = 2;
+    } else if(pa >= jvm_header.code_offset && pa < jvm_header.attributes_offset) {
+	rc._class = OC_CODE;
+	rc.start = jvm_header.code_offset;
+	rc.end = jvm_header.attributes_offset;
+	rc.number = 3;
+    } else if(pa >= jvm_header.attributes_offset && pa < jvm_header.attrcode_offset) {
+	rc._class = OC_NOOBJECT;
+	rc.start = jvm_header.attributes_offset;
+	rc.end = jvm_header.attrcode_offset;
+	rc.number = 4;
+    } else {
+	__filesize_t fpos;
+	uint32_t len;
+	fpos=main_handle.tell();
+	main_handle.seek(jvm_header.attributes_offset,binary_stream::Seek_Set);
+	std::string stmp;
+	stmp=get_name(main_handle);
+	rc.name=stmp;
+	main_handle.seek(fpos+2,binary_stream::Seek_Set);
+	len=main_handle.read(type_dword);
+	len=JVM_DWORD(&len,1);
+	main_handle.seek(fpos,binary_stream::Seek_Set);
+	rc._class = OC_CODE;
+	rc.start = jvm_header.attributes_offset+6;
+	rc.end = rc.start+len;
+	rc.number = 5;
     }
-    else
-    if(pa >= jvm_header.methods_offset && pa < jvm_header.code_offset)
-    {
-      _class = OC_NOOBJECT;
-      start = jvm_header.methods_offset;
-      end = jvm_header.code_offset;
-      ret = 2;
-    }
-    else
-    if(pa >= jvm_header.code_offset && pa < jvm_header.attributes_offset)
-    {
-      _class = OC_CODE;
-      start = jvm_header.code_offset;
-      end = jvm_header.attributes_offset;
-      ret = 3;
-    }
-    else
-    if(pa >= jvm_header.attributes_offset && pa < jvm_header.attrcode_offset)
-    {
-      _class = OC_NOOBJECT;
-      start = jvm_header.attributes_offset;
-      end = jvm_header.attrcode_offset;
-      ret = 4;
-    }
-    else
-    {
-      __filesize_t fpos;
-      uint32_t len;
-      fpos=main_handle.tell();
-      main_handle.seek(jvm_header.attributes_offset,binary_stream::Seek_Set);
-      std::string stmp;
-      stmp=get_name(main_handle);
-      name=stmp;
-      main_handle.seek(fpos+2,binary_stream::Seek_Set);
-      len=main_handle.read(type_dword);
-      len=JVM_DWORD(&len,1);
-      main_handle.seek(fpos,binary_stream::Seek_Set);
-      _class = OC_CODE;
-      start = jvm_header.attributes_offset+6;
-      end = start+len;
-      ret = 5;
-    }
-  return ret;
+    return rc;
 }
 
 int JVM_Parser::query_bitness(__filesize_t off) const

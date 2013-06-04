@@ -173,10 +173,8 @@ namespace	usr {
 	    virtual bool		address_resolving(std::string&,__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
-	    virtual __filesize_t	get_public_symbol(std::string& str,unsigned& _class,
-							    __filesize_t pa,bool as_prev);
-	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
-							__filesize_t& start,__filesize_t& end,int& _class,int& bitness);
+	    virtual Symbol_Info		get_public_symbol(__filesize_t pa,bool as_prev);
+	    virtual Object_Info		get_object_attribute(__filesize_t pa);
 	protected:
 	    friend class Elf_Arch;
 	    __filesize_t		get_active_shtbl() const { return active_shtbl; }
@@ -1632,55 +1630,52 @@ std::string ELF_Parser::elf_ReadPubName(binary_stream& b_cache,const symbolic_in
    return elf_arch->read_nametableex(*namecache,it.nameoff,it.addinfo);
 }
 
-__filesize_t ELF_Parser::get_public_symbol(std::string& str,unsigned& func_class,
-			   __filesize_t pa,bool as_prev)
+Symbol_Info ELF_Parser::get_public_symbol(__filesize_t pa,bool as_prev)
 {
-    __filesize_t fpos;
+    Symbol_Info rc;
     if(PubNames.empty()) elf_ReadPubNameList(*elfcache);
     std::set<symbolic_information>::const_iterator idx;
     symbolic_information key;
     key.pa=pa;
-    fpos=find_symbolic_information(PubNames,func_class,key,as_prev,idx);
+    rc.pa=find_symbolic_information(PubNames,rc._class,key,as_prev,idx);
     if(idx!=PubNames.end()) {
-	str=elf_ReadPubName(*elfcache,*idx);
+	rc.name=elf_ReadPubName(*elfcache,*idx);
     }
-    return fpos;
+    return rc;
 }
 
-unsigned ELF_Parser::get_object_attribute(__filesize_t pa,std::string& name,
-		       __filesize_t& start,__filesize_t& end,int& _class,int& bitness)
+Object_Info ELF_Parser::get_object_attribute(__filesize_t pa)
 {
-  unsigned i,ret;
-  start = 0;
-  end = main_handle.flength();
-  _class = OC_NOOBJECT;
-  bitness = query_bitness(pa);
-  name[0] = 0;
-  ret = 0;
-  for(std::map<__filesize_t,VA_map>::const_iterator it = va_map_phys.begin();it !=va_map_phys.end();it++) {
-    if(!((*it).first && (*it).second.size)) continue;
-    if(pa >= start && pa < (*it).first) {
-      /** means between two objects */
-      end = (*it).first;
-      ret = 0;
-      break;
+    Object_Info rc;
+    unsigned i=0;
+    rc.start = 0;
+    rc.end = main_handle.flength();
+    rc._class = OC_NOOBJECT;
+    rc.bitness = query_bitness(pa);
+    rc.number = 0;
+    for(std::map<__filesize_t,VA_map>::const_iterator it = va_map_phys.begin();it !=va_map_phys.end();it++) {
+	if(!((*it).first && (*it).second.size)) continue;
+	if(pa >= rc.start && pa < (*it).first) {
+	    /** means between two objects */
+	    rc.end = (*it).first;
+	    rc.number = 0;
+	    break;
+	}
+	if(pa >= (*it).first && pa < (*it).first + (*it).second.size) {
+	    rc.start = (*it).first;
+	    rc.end = rc.start + (*it).second.size;
+	    if((*it).second.flags) {
+		if((*it).second.flags & PF_X) rc._class = OC_CODE;
+		else                          rc._class = OC_DATA;
+	    } else  rc._class = OC_NOOBJECT;
+	    rc.name=elf_arch->read_nametable(*namecache,(*it).second.nameoff);
+	    rc.number = i+1;
+	    break;
+	}
+	rc.start = (*it).first + (*it).second.size;
+	i++;
     }
-    if(pa >= (*it).first && pa < (*it).first + (*it).second.size) {
-      start = (*it).first;
-      end = start + (*it).second.size;
-      if((*it).second.flags)
-      {
-	if((*it).second.flags & PF_X) _class = OC_CODE;
-	else                          _class = OC_DATA;
-      }
-      else  _class = OC_NOOBJECT;
-      name=elf_arch->read_nametable(*namecache,(*it).second.nameoff);
-      ret = i+1;
-      break;
-    }
-    start = (*it).first + (*it).second.size;
-  }
-  return ret;
+    return rc;
 }
 
 int ELF_Parser::query_platform() const {

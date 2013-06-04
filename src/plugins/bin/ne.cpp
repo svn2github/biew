@@ -1244,86 +1244,80 @@ __filesize_t NE_Parser::pa2va(__filesize_t pa) const
   return 0L;
 }
 
-__filesize_t NE_Parser::get_public_symbol(std::string& str,unsigned& func_class,
-			  __filesize_t pa,bool as_prev)
+Symbol_Info NE_Parser::get_public_symbol(__filesize_t pa,bool as_prev)
 {
-    __filesize_t fpos;
+    Symbol_Info rc;
     if(PubNames.empty()) ne_ReadPubNameList(*ne_cache);
     std::set<symbolic_information>::const_iterator idx;
     symbolic_information key;
     key.pa=pa;
-    fpos=find_symbolic_information(PubNames,func_class,key,as_prev,idx);
+    rc.pa=find_symbolic_information(PubNames,rc._class,key,as_prev,idx);
     if(idx!=PubNames.end()) {
-	str=ne_ReadPubName(*ne_cache,*idx);
+	rc.name=ne_ReadPubName(*ne_cache,*idx);
     }
-    return fpos;
+    return rc;
 }
 
-unsigned NE_Parser::__get_object_attribute(__filesize_t pa,std::string& name,
-		      __filesize_t& start,__filesize_t& end,int& _class,int& bitness) const
+Object_Info NE_Parser::__get_object_attribute(__filesize_t pa) const
 {
-  __filesize_t currseg_st;
-  unsigned i,segcount = ne.neSegmentTableCount,ret;
-  bool found;
-  start = 0;
-  end = main_handle().flength();
-  _class = OC_NOOBJECT;
-  bitness = DAB_USE16;
-  name.clear();
-  ret = 0;
-  main_handle().seek((__fileoff_t)headshift() + ne.neOffsetSegmentTable,binary_stream::Seek_Set);
-  found = false;
-  for(i = 0;i < segcount;i++)
-  {
-    SEGDEF nesd_c;
-    if(!ReadSegDefNE(&nesd_c,i+1)) return 0L;
-    currseg_st = (((__filesize_t)nesd_c.sdOffset)<<ne.neLogicalSectorShiftCount);
-    if(!currseg_st) { start = end; continue; } /** BSS segment */
-    if(pa < currseg_st)
-    {
-      start = end;
-      end = currseg_st;
-      found = true;
-      ret = i;
-      break;
+    __filesize_t currseg_st;
+    unsigned i,segcount = ne.neSegmentTableCount;
+    bool found;
+    Object_Info rc;
+    rc.start = 0;
+    rc.end = main_handle().flength();
+    rc._class = OC_NOOBJECT;
+    rc.bitness = DAB_USE16;
+    rc.name.clear();
+    rc.number = 0;
+    main_handle().seek((__fileoff_t)headshift() + ne.neOffsetSegmentTable,binary_stream::Seek_Set);
+    found = false;
+    for(i = 0;i < segcount;i++) {
+	SEGDEF nesd_c;
+	if(!ReadSegDefNE(&nesd_c,i+1)) { rc.number=0; return rc; }
+	currseg_st = (((__filesize_t)nesd_c.sdOffset)<<ne.neLogicalSectorShiftCount);
+	if(!currseg_st) { rc.start = rc.end; continue; } /** BSS segment */
+	if(pa < currseg_st) {
+	    rc.start = rc.end;
+	    rc.end = currseg_st;
+	    found = true;
+	    rc.number = i;
+	    break;
+	}
+	if(pa >= currseg_st && pa < currseg_st + nesd_c.sdLength) {
+	    rc.start = currseg_st;
+	    rc.end = rc.start + nesd_c.sdLength;
+	    rc._class = nesd_c.sdFlags & 0x01 ? OC_DATA : OC_CODE;
+	    rc.bitness = nesd_c.sdFlags & 0x2000 ? DAB_USE32 : DAB_USE16;
+	    rc.number = i+1;
+	    found = true;
+	    break;
+	}
+	rc.start = currseg_st;
+	rc.end = currseg_st + nesd_c.sdLength;
     }
-    if(pa >= currseg_st && pa < currseg_st + nesd_c.sdLength)
-    {
-      start = currseg_st;
-      end = start + nesd_c.sdLength;
-      _class = nesd_c.sdFlags & 0x01 ? OC_DATA : OC_CODE;
-      bitness = nesd_c.sdFlags & 0x2000 ? DAB_USE32 : DAB_USE16;
-      ret = i+1;
-      found = true;
-      break;
+    if(!found) {
+	rc.start = rc.end;
+	rc.end = main_handle().flength();
     }
-    start = currseg_st;
-    end = currseg_st + nesd_c.sdLength;
-  }
-  if(!found)
-  {
-    start = end;
-    end = main_handle().flength();
-  }
-  return ret;
+    return rc;
 }
 
-unsigned NE_Parser::get_object_attribute(__filesize_t pa,std::string& name,
-		      __filesize_t& start,__filesize_t& end,int& _class,int& bitness) {
-    return __get_object_attribute(pa,name,start,end,_class,bitness);
+Object_Info NE_Parser::get_object_attribute(__filesize_t pa) {
+    return __get_object_attribute(pa);
 }
 
 int NE_Parser::query_bitness(__filesize_t pa) const
 {
-  static __filesize_t st = 0,end = 0;
-  std::string name;
-  int _class;
-  static int bitness;
-  if(!(pa >= st && pa < end))
-  {
-    __get_object_attribute(pa,name,st,end,_class,bitness);
-  }
-  return bitness;
+    static __filesize_t st = 0,end = 0;
+    static int bitness;
+    if(!(pa >= st && pa < end)) {
+	Object_Info rc = __get_object_attribute(pa);
+	bitness = rc.bitness;
+	st=rc.start;
+	end=rc.end;
+    }
+    return bitness;
 }
 
 bool NE_Parser::address_resolving(std::string& addr,__filesize_t cfpos)

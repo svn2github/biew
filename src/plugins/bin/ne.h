@@ -130,10 +130,8 @@ namespace	usr {
 	    virtual bool		address_resolving(std::string&,__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
-	    virtual __filesize_t	get_public_symbol(std::string& str,unsigned& _class,
-							    __filesize_t pa,bool as_prev);
-	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
-							__filesize_t& start,__filesize_t& end,int& _class,int& bitness);
+	    virtual Symbol_Info		get_public_symbol(__filesize_t pa,bool as_prev);
+	    virtual Object_Info		get_object_attribute(__filesize_t pa);
 	protected:
 	    friend class LX_Parser;
 	    friend class LE_Parser;
@@ -183,7 +181,7 @@ namespace	usr {
 	    __filesize_t		CalcEntryPointNE(unsigned segnum,unsigned offset) const;
 	    void			ne_ReadPubNameList(binary_stream& handle);
 	    bool			ReadPubNames(binary_stream& handle,__filesize_t offset);
-	    unsigned			__get_object_attribute(__filesize_t pa,std::string& name,__filesize_t& start,__filesize_t& end,int& _class,int& bitness) const;
+	    Object_Info			__get_object_attribute(__filesize_t pa) const;
 
 	    NEHEADER ne;
 	    std::set<symbolic_information> PubNames;

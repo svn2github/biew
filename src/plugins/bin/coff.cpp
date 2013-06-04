@@ -63,13 +63,10 @@ namespace	usr {
 	    virtual bool		address_resolving(std::string&,__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
-	    virtual __filesize_t	get_public_symbol(std::string& str,unsigned& _class,
-							    __filesize_t pa,bool as_prev);
-	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
-							__filesize_t& start,__filesize_t& end,int& _class,int& bitness);
+	    virtual Symbol_Info		get_public_symbol(__filesize_t pa,bool as_prev);
+	    virtual Object_Info		get_object_attribute(__filesize_t pa);
 	private:
-	    unsigned			_get_object_attribute(__filesize_t pa,std::string& name,
-							__filesize_t& start,__filesize_t& end,int& _class,int& bitness) const;
+	    Object_Info			_get_object_attribute(__filesize_t pa) const;
 	    __filesize_t		BuildReferStrCoff386(const DisMode&parent,std::string& str,const RELOC_COFF386& rne,int flags) const;
 	    bool			coffSymTabReadItemsIdx(binary_stream&handle,unsigned long idx,std::string& name,unsigned& secnum,__filesize_t& offset) const;
 	    void			BuildRelocCoff386();
@@ -488,60 +485,49 @@ bool Coff_Parser::coffSymTabReadItemsIdx(binary_stream& handle,unsigned long idx
 
 __filesize_t Coff_Parser::BuildReferStrCoff386(const DisMode& parent,std::string& str,const RELOC_COFF386& rne,int flags) const
 {
-  __filesize_t offset,s,e;
-  bool retval;
-  unsigned long val;
-  unsigned secnum=0;
-  bool is_idx,val_assigned;
-  int c,b;
-  std::string secname;
-  std::string name,pubname;
-  retval = true;
-  main_handle.seek(rne.offset,binary_stream::Seek_Set);
-  val = main_handle.read(type_dword);
+    __filesize_t offset,e;
+    bool retval;
+    unsigned long val;
+    unsigned secnum=0;
+    bool is_idx,val_assigned;
+    std::string secname;
+    std::string name,pubname;
+    retval = true;
+    main_handle.seek(rne.offset,binary_stream::Seek_Set);
+    val = main_handle.read(type_dword);
   /* rne->nameoff it's only pointer to name descriptor */
-  is_idx = coffSymTabReadItemsIdx(*coff_cache,rne.nameoff,name,secnum,offset);
-  val_assigned = false;
-  if(is_idx)
-  {
-    if(!offset && secnum)
-    {
-      /*
-	 try resolve some relocations (like .text+1234) with names from
-	 public name list
-      */
-      if(FindPubName(pubname,COFF_DWORD(coff386so[secnum-1].s_scnptr) + val))
-      {
-	str+=pubname;
-	val_assigned = true;
-      }
-      else goto def_val;
+    is_idx = coffSymTabReadItemsIdx(*coff_cache,rne.nameoff,name,secnum,offset);
+    val_assigned = false;
+    if(is_idx) {
+	if(!offset && secnum) {
+	/*
+	    try resolve some relocations (like .text+1234) with names from
+	    public name list
+	*/
+	    if(FindPubName(pubname,COFF_DWORD(coff386so[secnum-1].s_scnptr) + val)) {
+		str+=pubname;
+		val_assigned = true;
+	    } else goto def_val;
+	} else {
+def_val:
+	    str+=name;
+	}
+    } else str+=".?bad?";
+    if(val && !val_assigned) {
+	str+="+";
+	str+=Get8Digit(val);
+	if(secnum) retval = (COFF_DWORD(coff386so[secnum-1].s_scnptr)+val)?true:false;
+	else       retval = false;
     }
-    else
-    {
-      def_val:
-      str+=name;
+    if(rne.type == RELOC_REL32 && (flags & APREF_TRY_LABEL) != APREF_TRY_LABEL) {
+	Object_Info rc = _get_object_attribute(rne.offset);
+	str+="-";
+	str+=rc.name;
     }
-  }
-  else
-    str+=".?bad?";
-  if(val && !val_assigned)
-  {
-     str+="+";
-     str+=Get8Digit(val);
-     if(secnum) retval = (COFF_DWORD(coff386so[secnum-1].s_scnptr)+val)?true:false;
-     else       retval = false;
-  }
-  if(rne.type == RELOC_REL32 && (flags & APREF_TRY_LABEL) != APREF_TRY_LABEL)
-  {
-     _get_object_attribute(rne.offset,secname,s,e,c,b);
-     str+="-";
-     str+=secname;
-  }
-  e = CalcEntryCoff(rne.nameoff,false);
-  if(!DumpMode && !EditMode && e && (flags & APREF_TRY_LABEL) == APREF_TRY_LABEL)
+    e = CalcEntryCoff(rne.nameoff,false);
+    if(!DumpMode && !EditMode && e && (flags & APREF_TRY_LABEL) == APREF_TRY_LABEL)
 						code_guider.add_go_address(parent,str,e);
-  return retval;
+    return retval;
 }
 
 bool Coff_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,int flags,int codelen,__filesize_t r_sh)
@@ -683,58 +669,51 @@ void Coff_Parser::coff_ReadPubNameList(binary_stream& handle)
  }
 }
 
-__filesize_t Coff_Parser::get_public_symbol(std::string& str,unsigned& func_class,
-			  __filesize_t pa,bool as_prev)
+Symbol_Info Coff_Parser::get_public_symbol(__filesize_t pa,bool as_prev)
 {
-    __filesize_t fpos;
+    Symbol_Info rc;
     if(PubNames.empty()) coff_ReadPubNameList(*coff_cache);
     std::set<symbolic_information>::const_iterator idx;
     symbolic_information key;
     key.pa=pa;
-    fpos=find_symbolic_information(PubNames,func_class,key,as_prev,idx);
+    rc.pa=find_symbolic_information(PubNames,rc._class,key,as_prev,idx);
     if(idx!=PubNames.end()) {
-	str=coff_ReadPubName(*coff_cache,*idx);
+	rc.name=coff_ReadPubName(*coff_cache,*idx);
     }
-    return fpos;
+    return rc;
 }
 
-unsigned Coff_Parser::_get_object_attribute(__filesize_t pa,std::string& name,
-			    __filesize_t& start,__filesize_t& end,int& _class,int& bitness) const
+Object_Info Coff_Parser::_get_object_attribute(__filesize_t pa) const
 {
-  unsigned ret;
-  uint_fast16_t i;
-  start = 0;
-  end = main_handle.flength();
-  _class = OC_NOOBJECT;
-  bitness = DAB_USE32;
-  name[0] = 0;
-  ret = 0;
-  for(i = 0;i < nsections;i++)
-  {
-    if(pa >= start && pa < COFF_DWORD(coff386so[i].s_scnptr))
-    {
-      /** means between two objects */
-      end = COFF_DWORD(coff386so[i].s_scnptr);
-      ret = 0;
-      break;
+    Object_Info rc;
+    uint_fast16_t i;
+    rc.start = 0;
+    rc.end = main_handle.flength();
+    rc._class = OC_NOOBJECT;
+    rc.bitness = DAB_USE32;
+    rc.number = 0;
+    for(i = 0;i < nsections;i++) {
+	if(pa >= rc.start && pa < COFF_DWORD(coff386so[i].s_scnptr)) {
+	    /** means between two objects */
+	    rc.end = COFF_DWORD(coff386so[i].s_scnptr);
+	    rc.number = 0;
+	    break;
+	}
+	if(pa >= COFF_DWORD(coff386so[i].s_scnptr) && pa < COFF_DWORD(coff386so[i].s_scnptr) + COFF_DWORD(coff386so[i].s_size)) {
+	    rc.number = i+1;
+	    rc.start = COFF_DWORD(coff386so[i].s_scnptr);
+	    rc.end = rc.start + COFF_DWORD(coff386so[i].s_size);
+	    rc._class = (COFF_DWORD(coff386so[i].s_flags) & STYP_TEXT) == STYP_TEXT ? OC_CODE : OC_DATA;
+	    rc.name.assign((const char *)coff386so[i].s_name,sizeof(coff386so[i].s_name));
+	    break;
+	}
+	rc.start = COFF_DWORD(coff386so[i].s_scnptr) + COFF_DWORD(coff386so[i].s_size);
     }
-    if(pa >= COFF_DWORD(coff386so[i].s_scnptr) && pa < COFF_DWORD(coff386so[i].s_scnptr) + COFF_DWORD(coff386so[i].s_size))
-    {
-      start = COFF_DWORD(coff386so[i].s_scnptr);
-      end = start + COFF_DWORD(coff386so[i].s_size);
-      _class = (COFF_DWORD(coff386so[i].s_flags) & STYP_TEXT) == STYP_TEXT ? OC_CODE : OC_DATA;
-      name.assign((const char *)coff386so[i].s_name,sizeof(coff386so[i].s_name));
-      ret = i+1;
-      break;
-    }
-    start = COFF_DWORD(coff386so[i].s_scnptr) + COFF_DWORD(coff386so[i].s_size);
-  }
-  return ret;
+    return rc;
 }
 
-unsigned Coff_Parser::get_object_attribute(__filesize_t pa,std::string& name,
-			    __filesize_t& start,__filesize_t& end,int& _class,int& bitness) {
-    return _get_object_attribute(pa,name,start,end,_class,bitness);
+Object_Info Coff_Parser::get_object_attribute(__filesize_t pa) {
+    return _get_object_attribute(pa);
 }
 
 int Coff_Parser::query_platform() const { return DISASM_CPU_IX86; }

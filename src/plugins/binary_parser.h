@@ -5,6 +5,9 @@ namespace	usr {
     class binary_stream;
     class CodeGuider;
     class udn;
+    struct Symbol_Info;
+    struct Object_Info;
+
     class Binary_Parser : public Opaque {
 	public:
 	    Binary_Parser(binary_stream&,CodeGuider&,udn&) {}
@@ -67,30 +70,13 @@ namespace	usr {
 	    virtual __filesize_t	pa2va(__filesize_t) const { return Plugin::Bad_Address; }
 
 			 /** Fills the string with public symbol
-			   * @param str       pointer to the string to be filled
-			   * @param cb_str    indicates maximal length of string
-			   * @param _class    pointer to the memory where can be stored class of symbol (See SC_* conatnts)
 			   * @param pa        indicates physical offset within file
 			   * @param as_prev   indicates direction of symbol searching from given physical offset
-			   * @return          Bad_Address - if no symbol name available
-			   *                  in given direction (as_prev)
-			   *                  physical address of public symbol
-			   *                  which is found in given direction
 			  **/
-	    virtual __filesize_t	get_public_symbol(std::string& str,unsigned& _class,
-							    __filesize_t pa,bool as_prev) { UNUSED(str); UNUSED(_class); UNUSED(pa); UNUSED(as_prev); return Plugin::Bad_Address; }
+	    virtual Symbol_Info		get_public_symbol(__filesize_t pa,bool as_prev) { Symbol_Info rc; rc.pa=Plugin::Bad_Address; UNUSED(pa); UNUSED(as_prev); return rc; }
 
 			 /** Determines attributes of object at given physical file address.
 			   * @param pa        indicates physical file offset of object
-			   * @param name      pointer to the string which is to be filled with object name
-			   * @param cb_name   indicates maximal length of string
-			   * @param start     pointer to the memory where must be stored start of given object, as file offset.
-			   * @param end       pointer to the memory where must be stored end of given object, as file offset.
-			   * @param _class    pointer to the memory where must be stored _class of object (See OC_* constants).
-			   * @param bitness   pointer to the memory where must be stored bitness of object (See DAB_* constants).
-			   * @return          logical number of object or 0 if at given offset is no object.
-			   * @note            all arguments exclude name of object
-			   *                  must be filled.
 			   * @remark          For example: if exe-format - new
 			   *                  exe i.e. contains MZ and NEW
 			   *                  header and given file offset
@@ -98,8 +84,7 @@ namespace	usr {
 			   *                  = 0, end = begin of first data or
 			   *                  code object).
 			  **/
-	    virtual unsigned		get_object_attribute(__filesize_t pa,std::string& name,
-							__filesize_t& start,__filesize_t& end,int& _class,int& bitness) { UNUSED(pa); UNUSED(name); UNUSED(start); UNUSED(end); UNUSED(_class); UNUSED(bitness); return 0; }
+	    virtual Object_Info		get_object_attribute(__filesize_t pa) { Object_Info rc; rc.number=0; UNUSED(pa);  return rc; }
     };
 
     struct Binary_Parser_Info {
