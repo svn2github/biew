@@ -81,25 +81,25 @@ const char * __osModType[] =
   "PROT. MODE VIRTUAL DEVICE DRIVER"
 };
 
-const char* LX_Parser::GetOrderingLX(unsigned char type) const
+std::string LX_Parser::GetOrderingLX(unsigned char type) const
 {
  if(type < 2) return LXordering[type];
  else         return "";
 }
 
-const char* LX_Parser::GetCPUTypeLX(int num) const
+std::string LX_Parser::GetCPUTypeLX(int num) const
 {
  if(num > 5) num = 0;
  return LXcputype[num];
 }
 
-const char* LX_Parser::GetOSTypeLX(int num) const
+std::string LX_Parser::GetOSTypeLX(int num) const
 {
   if(num > 4) num = 0;
   return LXostype[num];
 }
 
-const char* LX_Parser::__getOSModType(char type) const
+std::string LX_Parser::__getOSModType(char type) const
 {
   return __osModType[type & 0x07];
 }
@@ -130,11 +130,11 @@ void LX_Parser::PaintNewHeaderLX_1(TWindow& w) const
 	   "ESP objects number               = %08lXH\n"
 	   "ESP                              = %08lXH"
 	   ,lxe.lx.lxSignature[0],lxe.lx.lxSignature[1]
-	   ,(int)lxe.lx.lxByteOrdering,GetOrderingLX(lxe.lx.lxByteOrdering)
-	   ,(int)lxe.lx.lxWordOrdering,GetOrderingLX(lxe.lx.lxWordOrdering)
+	   ,(int)lxe.lx.lxByteOrdering,GetOrderingLX(lxe.lx.lxByteOrdering).c_str()
+	   ,(int)lxe.lx.lxWordOrdering,GetOrderingLX(lxe.lx.lxWordOrdering).c_str()
 	   ,lxe.lx.lxFormatLevel
-	   ,GetOSTypeLX(lxe.lx.lxOSType)
-	   ,GetCPUTypeLX(lxe.lx.lxCPUType)
+	   ,GetOSTypeLX(lxe.lx.lxOSType).c_str()
+	   ,GetCPUTypeLX(lxe.lx.lxCPUType).c_str()
 	   ,(unsigned short)(lxe.lx.lxModuleVersion >> 16),(unsigned)(unsigned short)(lxe.lx.lxModuleVersion)
 	   ,lxe.lx.lxModuleFlags
 	   ,NE_Parser::__nedata[lxe.lx.lxModuleFlags & 0x0000003]
@@ -143,7 +143,7 @@ void LX_Parser::PaintNewHeaderLX_1(TWindow& w) const
 	   ,Gebool((lxe.lx.lxModuleFlags & 0x00000020L) == 0x00000020L)
 	   ,NE_Parser::GetPMWinAPI((unsigned)(lxe.lx.lxModuleFlags)).c_str()
 	   ,Gebool((lxe.lx.lxModuleFlags & 0x00002000L) == 0x00002000L)
-	   ,__getOSModType(((lxe.lx.lxModuleFlags & 0x00038000L) >> 15) & 0x07)
+	   ,__getOSModType(((lxe.lx.lxModuleFlags & 0x00038000L) >> 15) & 0x07).c_str()
 	   ,Gebool((lxe.lx.lxModuleFlags & 0x00080000L) == 0x00080000L)
 	   ,Gebool((lxe.lx.lxModuleFlags & 0x40000000L) == 0x40000000L)
 	   ,lxe.lx.lxPageCount
@@ -669,7 +669,7 @@ const char * mapattr[] =
 "Iterated Data Page Type II"
 };
 
-const char* LX_Parser::lxeGetMapAttr(unsigned long attr) const
+std::string LX_Parser::lxeGetMapAttr(unsigned long attr) const
 {
   if (attr > 5) return "Unknown";
   else  return mapattr[attr];
@@ -685,7 +685,7 @@ const char *__e32type[] =
   "TypeInfo"
 };
 
-const char* LX_Parser::entryTypeLX(unsigned char type) const
+std::string LX_Parser::entryTypeLX(unsigned char type) const
 {
    if(type < 6) return __e32type[type];
    else         return "Unknown";
@@ -702,7 +702,7 @@ void LX_Parser::entrypaintLX(TWindow& w,const LX_ENTRY& nam) const
 	    "Entry type: %s\n"
 	    "Object number : %hd\n"
 	    "Flags: %02XH\n"
-	    ,entryTypeLX(nam.b32_type)
+	    ,entryTypeLX(nam.b32_type).c_str()
 	    ,nam.b32_obj
 	    ,(int)nam.entry.e32_flags);
 	if(nam.b32_type != 4) {
@@ -768,10 +768,10 @@ std::vector<std::string> LX_Parser::__ReadMapTblLX(binary_stream& handle,size_t 
 	if(IsKbdTerminate() || handle.eof()) break;
 	lxReadPageDesc(handle,&mt,i+1);
 	sprintf(stmp,"Off=%08lXH Siz=%04hXH Flg:%04hXH=%s",
-		 (unsigned long)mt.o32_pagedataoffset,
-		 mt.o32_pagesize,
-		 mt.o32_pageflags,
-		 (const char *)lxeGetMapAttr(mt.o32_pageflags));
+		(unsigned long)mt.o32_pagedataoffset,
+		mt.o32_pagesize,
+		mt.o32_pageflags,
+		lxeGetMapAttr(mt.o32_pageflags).c_str());
 	rc.push_back(stmp);
     }
     return rc;

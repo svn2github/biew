@@ -1251,7 +1251,7 @@ Symbol_Info NE_Parser::get_public_symbol(__filesize_t pa,bool as_prev)
     std::set<symbolic_information>::const_iterator idx;
     symbolic_information key;
     key.pa=pa;
-    rc.pa=find_symbolic_information(PubNames,rc._class,key,as_prev,idx);
+    rc=find_symbolic_information(PubNames,key,as_prev,idx);
     if(idx!=PubNames.end()) {
 	rc.name=ne_ReadPubName(*ne_cache,*idx);
     }

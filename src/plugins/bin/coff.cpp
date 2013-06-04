@@ -72,9 +72,9 @@ namespace	usr {
 	    void			BuildRelocCoff386();
 	    __filesize_t		CalcEntryCoff(unsigned long idx,bool display_msg) const;
 	    std::vector<std::string>	coffSymTabReadItems(binary_stream&handle,size_t nnames) const;
-	    const char*			coffEncodeClass(unsigned _class) const;
-	    const char*			coffEncodeType(unsigned type) const;
-	    const char*			coff386_encode_hdr(unsigned info) const;
+	    std::string			coffEncodeClass(unsigned _class) const;
+	    std::string			coffEncodeType(unsigned type) const;
+	    std::string			coff386_encode_hdr(unsigned info) const;
 	    std::vector<SCNHDR>		__coffReadObjects(binary_stream& handle,size_t n) const;
 	    void			paint_pages(TWindow& win,const std::vector<SCNHDR>& names,unsigned start) const;
 	    std::string			coffReadLongName(binary_stream&handle,__filesize_t offset) const;
@@ -228,7 +228,7 @@ __filesize_t Coff_Parser::action_F10()
     return fpos;
 }
 
-const char* Coff_Parser::coff386_encode_hdr(unsigned info) const
+std::string Coff_Parser::coff386_encode_hdr(unsigned info) const
 {
    switch(info)
    {
@@ -293,9 +293,9 @@ __filesize_t Coff_Parser::show_header() const
   return fpos;
 }
 
-const char* Coff_Parser::coffEncodeType(unsigned type) const
+std::string Coff_Parser::coffEncodeType(unsigned type) const
 {
-  const char *ret;
+  std::string ret;
   switch(type)
   {
     case T_NULL: ret = "T_NULL"; break;
@@ -320,9 +320,9 @@ const char* Coff_Parser::coffEncodeType(unsigned type) const
   return ret;
 }
 
-const char* Coff_Parser::coffEncodeClass(unsigned _class) const
+std::string Coff_Parser::coffEncodeClass(unsigned _class) const
 {
-  const char *ret;
+  std::string ret;
   switch(_class)
   {
     case C_EFCN: ret = "C_EFCN"; break;
@@ -381,8 +381,8 @@ std::vector<std::string> Coff_Parser::coffSymTabReadItems(binary_stream& handle,
 	sprintf(&sbuf,"(%04hX.%08lX) %s.%s"
 	   ,COFF_WORD(cse.e_scnum)
 	   ,(unsigned long)COFF_DWORD(cse.e_value)
-	   ,coffEncodeClass(cse.e_sclass[0])
-	   ,coffEncodeType(COFF_WORD(cse.e_type)));
+	   ,coffEncodeClass(cse.e_sclass[0]).c_str()
+	   ,coffEncodeType(COFF_WORD(cse.e_type)).c_str());
 	stmp+=sbuf;
 	rc.push_back(stmp);
     }
@@ -676,7 +676,7 @@ Symbol_Info Coff_Parser::get_public_symbol(__filesize_t pa,bool as_prev)
     std::set<symbolic_information>::const_iterator idx;
     symbolic_information key;
     key.pa=pa;
-    rc.pa=find_symbolic_information(PubNames,rc._class,key,as_prev,idx);
+    rc=find_symbolic_information(PubNames,key,as_prev,idx);
     if(idx!=PubNames.end()) {
 	rc.name=coff_ReadPubName(*coff_cache,*idx);
     }

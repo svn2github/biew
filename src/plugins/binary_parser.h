@@ -120,13 +120,13 @@ namespace	usr {
     }
 
     template<class T,class K>
-    inline __filesize_t find_symbolic_information(const T& names,unsigned& func_class,K& key,bool as_prev,
-						typename T::const_iterator& index)
+    inline Symbol_Info find_symbolic_information(const T& names,K& key,bool as_prev,typename T::const_iterator& index)
 {
-    __filesize_t ret_addr,cur_addr;
+    Symbol_Info rc;
+    __filesize_t cur_addr;
     typename T::const_iterator i,idx;
-    if(names.empty()) return 0;
-    ret_addr = 0L;
+    rc.pa=0L;
+    if(names.empty()) return rc;
     index = idx = names.end();
     i = find_nearest(names,key);
     if(as_prev) idx = i;
@@ -139,21 +139,21 @@ namespace	usr {
 	    if((cur_addr == key.pa && (*i).pa > (*multiref_i).pa) || (i == names.end())) break;
 	}
 	idx = i;
-	if(idx!=names.end()) ret_addr = cur_addr;
-	else ret_addr = 0L;
-	if(ret_addr && ret_addr == key.pa) {
+	if(idx!=names.end()) rc.pa = cur_addr;
+	else rc.pa = 0L;
+	if(rc.pa && rc.pa == key.pa) {
 	    if((*idx).pa <= (*multiref_i).pa) { i = idx; goto get_next; }
 	    else multiref_i = idx;
 	}
 	else multiref_i = names.begin();
     }
     if(idx!=names.end()) {
-	ret_addr = (*idx).pa;
-	func_class = (*idx).attr;
-	if(idx==names.begin() && key.pa < ret_addr && as_prev) ret_addr = 0;
+	rc.pa = (*idx).pa;
+	rc._class = (*idx).attr;
+	if(idx==names.begin() && key.pa < rc.pa && as_prev) rc.pa = 0;
 	else index = idx;
     }
-    return ret_addr;
+    return rc;
 }
 
 } // namespace	usr

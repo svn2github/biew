@@ -48,7 +48,7 @@ std::vector<std::string> LE_Parser::__ReadMapTblLE(binary_stream& handle,size_t 
 	char stmp[80];
 	if(IsKbdTerminate() || handle.eof()) break;
 	handle.read(&lep,sizeof(LE_PAGE));
-	sprintf(stmp,"#=%08lXH Flags: %04hX = %s",(long)lep.number,lep.flags,lxeGetMapAttr(lep.flags));
+	sprintf(stmp,"#=%08lXH Flags: %04hX = %s",(long)lep.number,lep.flags,lxeGetMapAttr(lep.flags).c_str());
 	rc.push_back(stmp);
     }
     return rc;

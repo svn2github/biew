@@ -156,7 +156,7 @@ namespace	usr {
 	    void			PaintNewHeaderPE(TWindow& win,const std::vector<std::string>& ptr,unsigned tpage) const;
 	    void			PaintNewHeaderPE_2(TWindow& w,__filesize_t&) const;
 	    void			PaintNewHeaderPE_1(TWindow& w,__filesize_t&) const;
-	    const char*			PECPUType() const;
+	    std::string			PECPUType() const;
 	    __filesize_t		CalcPEObjectEntry(__fileoff_t offset) const;
 	    bool			FindPubName(std::string& buff,__filesize_t pa) const;
 	    __fileoff_t			CalcOverlayOffset(__filesize_t) const;
@@ -250,7 +250,7 @@ __filesize_t PE_Parser::fioReadDWord2Phys(binary_stream& handle,__filesize_t off
  return RVA2Phys(dword);
 }
 
-const char* PE_Parser::PECPUType() const
+std::string PE_Parser::PECPUType() const
 {
     static const struct {
        int code;
@@ -325,7 +325,7 @@ void PE_Parser::PaintNewHeaderPE_1(TWindow& w,__filesize_t& entry_PE) const
 	   "    [%c] Library image\n"
 	   "Linker version                 = %u.%02u\n"
 	   ,pe.peSignature[0],pe.peSignature[1],pe.peMagic
-	   ,PECPUType()
+	   ,PECPUType().c_str()
 	   ,pe.peObjects
 	   ,ctime(&tval)
 	   ,pe.peNTHdrSize
@@ -1369,7 +1369,7 @@ Symbol_Info PE_Parser::get_public_symbol(__filesize_t pa,bool as_prev)
     std::set<symbolic_information>::const_iterator idx;
     symbolic_information key;
     key.pa=pa;
-    rc.pa=find_symbolic_information(PubNames,rc._class,key,as_prev,idx);
+    rc=find_symbolic_information(PubNames,key,as_prev,idx);
     if(idx!=PubNames.end()) {
 	rc.name=pe_ReadPubName(*pe_cache,*idx);
     }

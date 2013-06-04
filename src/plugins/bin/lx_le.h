@@ -297,7 +297,7 @@ typedef struct tagLXResource
 	    binary_stream*		lx_cache;
 	    virtual __filesize_t	CalcEntryPoint(unsigned long objnum,__filesize_t _offset) const;
 	    virtual __filesize_t	CalcPageEntry(unsigned long pageidx) const;
-	    const char*			lxeGetMapAttr(unsigned long attr) const;
+	    std::string			lxeGetMapAttr(unsigned long attr) const;
 	    void			ShowFwdModOrdLX(const LX_ENTRY& lxent) const;
 	    unsigned			LXNRNamesNumItems(binary_stream&handle) const;
 	    std::vector<std::string>	LXNRNamesReadItems(binary_stream&handle,size_t nnames) const;
@@ -310,7 +310,7 @@ typedef struct tagLXResource
 	    std::vector<std::string>	__ReadMapTblLX(binary_stream& handle,size_t n) const;
 	    void			PaintEntriesLX(TWindow& win,const std::vector<LX_ENTRY>& names,unsigned start) const;
 	    void			entrypaintLX(TWindow& w,const LX_ENTRY& nam) const;
-	    const char*			entryTypeLX(unsigned char type) const;
+	    std::string			entryTypeLX(unsigned char type) const;
 	    __filesize_t		CalcEntryBungleLX(unsigned ordinal,bool dispmsg) const;
 	    __filesize_t		CalcEntryLX(const LX_ENTRY& lxent) const;
 	    void			ReadLXLEImpName(__filesize_t offtable,unsigned num,char *str) const;
@@ -328,10 +328,10 @@ typedef struct tagLXResource
 	    void			PaintNewHeaderLX_3(TWindow& w) const;
 	    void			PaintNewHeaderLX_2(TWindow& w) const;
 	    void			PaintNewHeaderLX_1(TWindow& w) const;
-	    const char*			__getOSModType(char type) const;
-	    const char*			GetOSTypeLX(int num) const;
-	    const char*			GetCPUTypeLX(int num) const;
-	    const char*			GetOrderingLX(unsigned char type) const;
+	    std::string			__getOSModType(char type) const;
+	    std::string			GetOSTypeLX(int num) const;
+	    std::string			GetCPUTypeLX(int num) const;
+	    std::string			GetOrderingLX(unsigned char type) const;
 
 	    static void			(LX_Parser::*lxphead[])(TWindow&) const;
 
