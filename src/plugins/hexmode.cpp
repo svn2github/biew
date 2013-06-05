@@ -378,7 +378,7 @@ void HexMode::misckey_action () /* EditHex */
 	}
 	ewnd[active]->set_focus();
 	if(!active) _lastbyte = full_hex_edit(*editor,&main_wnd,ewnd[0]);
-	else        _lastbyte = editor->FullEdit(ewnd[1],&main_wnd,*this,NULL);
+	else        _lastbyte = editor->FullEdit(ewnd[1],&main_wnd);
 	has_show[active] = true;
 	if(_lastbyte == KE_TAB) active = active ? 0 : 1;
 	else break;
@@ -527,8 +527,8 @@ int HexMode::full_hex_edit(Editor& editor,TWindow* txtwnd,TWindow* hexwnd) const
 	editor.goto_xy(edit_x,editor.where_y());
 	CompressHex(&emem.buff[eidx],work,mlen/3,true);
 	switch(_lastbyte) {
-	    case KE_F(1)   : ExtHelp(); continue;
-	    case KE_F(2)   : editor.save_contest();
+	    case KE_F(1)   : editor.show_help(); continue;
+	    case KE_F(2)   : editor.save_context();
 	    case KE_F(10)  :
 	    case KE_ESCAPE :
 	    case KE_TAB : goto bye;

@@ -35,7 +35,7 @@ using namespace	usr;
 #include "libbeye/bstream.h"
 
 namespace	usr {
-void ExtHelp()
+void Editor::show_help() const
 {
     Beye_Help bhelp;
     if(bhelp.open(true)) {
@@ -158,7 +158,7 @@ void Editor::CheckXYBounds()
    CheckYBounds();
 }
 
-void Editor::save_contest()
+void Editor::save_context()
 {
   std::ofstream fs;
   std::string fname;
@@ -212,7 +212,7 @@ bool Editor::default_hex_action(int _lastbyte)
     return redraw;
 }
 
-int Editor::FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*save_func)(Opaque& _this,unsigned char *,unsigned))
+int Editor::FullEdit(TWindow* ewnd,TWindow* hexwnd)
 {
     size_t i,j;
     unsigned mlen;
@@ -266,8 +266,8 @@ int Editor::FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*save_fun
 	_lastbyte = eeditstring(ewnd,(char *)&EditorMem.buff[eidx],NULL,&mlen,(unsigned)(edit_y + 1),
 				(unsigned *)&edit_x,flags,(char *)&EditorMem.save[eidx], NULL);
 	switch(_lastbyte) {
-	    case KE_F(1)   : ExtHelp(); continue;
-	    case KE_F(2)   : save_func?save_func(_this,EditorMem.buff,EditorMem.size):save_contest();
+	    case KE_F(1)   : show_help(); continue;
+	    case KE_F(2)   : save_context();
 	    case KE_F(10)  :
 	    case KE_ESCAPE : goto bye;
 	    case KE_TAB : if(ewnd) goto bye;

@@ -622,7 +622,7 @@ int DisMode::full_asm_edit(Editor& editor,TWindow * ewnd)
 		    }
 		    break;
 		}
-	    case KE_F(1)    : ExtHelp(); continue;
+	    case KE_F(1)    : editor.show_help(); continue;
 	    case KE_CTL_F(1): activeDisasm->action_F1(); continue;
 	    case KE_CTL_F(2): beye_context().select_sysinfo(); continue;
 	    case KE_CTL_F(3): beye_context().select_tool(); continue;

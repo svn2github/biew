@@ -35,7 +35,7 @@ namespace	usr {
 	    Editor(unsigned width,const unsigned char *buff,unsigned size);
 	    virtual ~Editor();
 
-	    virtual int		FullEdit(TWindow * ewnd,TWindow* hexwnd,Opaque& _this,void (*save)(Opaque& _this,unsigned char *,unsigned));
+	    virtual int		FullEdit(TWindow* ewnd,TWindow* hexwnd);
 	    virtual bool	default_action(int _lastbyte);
 	    virtual bool	default_hex_action(int _lastbyte);
 	    virtual void	goto_xy(unsigned x,unsigned y);
@@ -47,8 +47,9 @@ namespace	usr {
 	    virtual void	CheckBounds();
 	    virtual void	CheckYBounds();
 	    virtual void	CheckXYBounds();
-	    virtual void	save_contest();
+	    virtual void	save_context();
 	    virtual void	paint_title(int shift,bool use_shift) const;
+	    virtual void	show_help() const;
 	private:
 	    void		init(unsigned width,const unsigned char *buff,unsigned size);
 	

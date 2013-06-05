@@ -51,7 +51,6 @@ namespace	usr {
     int      __FASTCALL__ ExpandHex(char * dest,const unsigned char * src,int size,char hard);
     unsigned __FASTCALL__ Summ(unsigned char *array,unsigned size) __PURE_FUNC__;
 
-    void   ExtHelp();
     void   drawEditPrompt();
     void   drawEmptyPrompt();
     void   drawEmptyListPrompt();

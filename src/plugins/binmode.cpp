@@ -42,6 +42,7 @@ namespace	usr {
 	MOD_REVERSE=2,
 	MOD_MAXMODE=2
     };
+    class Bin_Editor;
     class BinMode : public Plugin {
 	public:
 	    BinMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn&);
@@ -68,8 +69,10 @@ namespace	usr {
 	    virtual void		help() const;
 	    virtual void		read_ini(Ini_Profile& );
 	    virtual void		save_ini(Ini_Profile& );
+	protected:
+	    friend class Bin_Editor;
+	    void			save_video(unsigned char *buff,unsigned size);
 	private:
-	    static void		save_video(Opaque& _this,unsigned char *buff,unsigned size);
 
 	    unsigned		virtWidthCorr;
 	    unsigned		bin_mode; /**< points to currently selected mode text mode */
@@ -78,6 +81,38 @@ namespace	usr {
 	    const Bin_Format&	bin_format;
 	    udn&		_udn;
     };
+
+    class Bin_Editor : public Editor {
+	public:
+	    Bin_Editor(BinMode& parent,unsigned bin_mode,unsigned width);
+	    Bin_Editor(BinMode& parent,unsigned bin_mode,unsigned width,const unsigned char *buff,unsigned size);
+	    virtual ~Bin_Editor();
+
+	    virtual void	save_contest();
+	private:
+	    BinMode&	parent;
+	    unsigned	bin_mode;
+    };
+
+Bin_Editor::Bin_Editor(BinMode& _parent,unsigned bmode,unsigned width)
+	    :Editor(width)
+	    ,parent(_parent)
+	    ,bin_mode(bmode)
+{
+}
+Bin_Editor::Bin_Editor(BinMode& _parent,unsigned bmode,unsigned width,const unsigned char *buff,unsigned size)
+	    :Editor(width,buff,size)
+	    ,parent(_parent)
+	    ,bin_mode(bmode)
+{
+}
+Bin_Editor::~Bin_Editor() {}
+
+void Bin_Editor::save_contest() {
+    editor_mem emem = get_mem();
+    if(bin_mode==MOD_PLAIN) Editor::save_context();
+    else parent.save_video(emem.buff,emem.size);
+}
 
 BinMode::BinMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn& u)
 	:Plugin(b,h,_main_wnd,code_guider,u)
@@ -214,9 +249,8 @@ unsigned long BinMode::curr_line_width() const{ return (main_wnd.client_width()-
 
 const char*   BinMode::misckey_name() const { return "Modify"; }
 
-void BinMode::save_video(Opaque& _this,unsigned char *buff,unsigned size)
+void BinMode::save_video(unsigned char *buff,unsigned size)
 {
-    BinMode& it = static_cast<BinMode&>(_this);
     std::ofstream fs;
     std::string fname;
     unsigned i;
@@ -228,7 +262,7 @@ void BinMode::save_video(Opaque& _this,unsigned char *buff,unsigned size)
 	return;
     }
     fs.seekp(beye_context().tell(),std::ios_base::beg);
-    if(it.bin_mode==MOD_REVERSE) fs.seekp(1,std::ios_base::cur);
+    if(bin_mode==MOD_REVERSE) fs.seekp(1,std::ios_base::cur);
     for(i=0;i<size;i++) {
 	fs.put((uint8_t)buff[i]);
 	if(!fs.good()) goto err;
@@ -240,14 +274,14 @@ void BinMode::save_video(Opaque& _this,unsigned char *buff,unsigned size)
 
 void BinMode::misckey_action() /* EditBin */
 {
-    Editor* editor;
+    Bin_Editor* editor;
     TWindow *ewin;
     if(!main_handle.flength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
     ewin = new(zeromem) TWindow(1,2,main_wnd.width()-virtWidthCorr,main_wnd.height()-2,TWindow::Flag_Has_Cursor);
     ewin->set_color(browser_cset.edit.main); ewin->clear();
     drawEditPrompt();
     ewin->set_focus();
-    if(bin_mode==MOD_PLAIN) editor=new(zeromem) Editor(main_wnd.width()-virtWidthCorr);
+    if(bin_mode==MOD_PLAIN) editor=new(zeromem) Bin_Editor(*this,bin_mode,main_wnd.width()-virtWidthCorr);
     else {
 	unsigned long flen,cfp;
 	unsigned i,size,msize = main_wnd.width()*main_wnd.height();
@@ -259,11 +293,11 @@ void BinMode::misckey_action() /* EditBin */
 	main_handle.read(buff,size*2);
 	main_handle.seek(cfp,binary_stream::Seek_Set);
 	for(i=0;i<size;i++) buff[i]=bin_mode==MOD_BINARY?buff[i*2]:buff[i*2+1];
-	editor=new(zeromem) Editor(main_wnd.width()-virtWidthCorr,buff,size);
+	editor=new(zeromem) Bin_Editor(*this,bin_mode,main_wnd.width()-virtWidthCorr,buff,size);
 	delete buff;
     }
     editor->goto_xy(0,0);
-    editor->FullEdit(ewin,NULL,*this,bin_mode==MOD_PLAIN?NULL:save_video);
+    editor->FullEdit(ewin,NULL);
     delete editor;
     delete ewin;
     beye_context().PaintTitle();
