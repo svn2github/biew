@@ -129,8 +129,12 @@ bool oldPharLap_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 
 __filesize_t oldPharLap_Parser::action_F1()
 {
-  hlpDisplay(10008);
-  return beye_context().tell();
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(10008);
+	bhelp.close();
+    }
+    return beye_context().tell();
 }
 
 int oldPharLap_Parser::query_platform() const { return DISASM_CPU_IX86; }

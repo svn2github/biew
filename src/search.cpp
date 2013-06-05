@@ -536,7 +536,13 @@ bool __FASTCALL__ SearchDialog(int _flags, char * searchbuff,
        case KE_F(4)     : *sf_flags ^= SF_REVERSE;
 			  update = 0;
 			  break;
-       case KE_F(1)     : hlpDisplay(7);
+       case KE_F(1)     : {
+				Beye_Help bhelp;
+				if(bhelp.open(true)) {
+				    bhelp.run(7);
+				    bhelp.close();
+				}
+			  }
 			  update = 0;
 			  break;
        case KE_F(5)     : *sf_flags ^= SF_ASHEX;

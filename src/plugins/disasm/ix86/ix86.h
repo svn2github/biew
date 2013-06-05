@@ -329,7 +329,7 @@ enum {
 	    unsigned char		parse_REX(unsigned char code,ix86Param& DisP) const;
 	    void			ix86_gettype(DisasmRet *dret,ix86Param& _DisP) const;
 	    MBuffer			parse_REX_type(MBuffer insn,char *up,ix86Param& DisP) const;
-	    bool			is_listed(unsigned char insn,const unsigned char *list,size_t listsize) const;
+	    bool			is_listed(unsigned char insn,const unsigned char *list,size_t listsize) const __PURE_FUNC__;
 	    void			ix86_InOut(char *str,ix86Param& DisP) const;
 	/* ix86_fpu.cpp */
 	    void 			ix86_FPUCmd(char *str,ix86Param& DisP) const;
@@ -455,11 +455,11 @@ enum {
 	    inline char*		Get4DigitApp(unsigned char loc_off,ix86Param& DisP) const { return GetDigitsApp(loc_off,DisP,2,DisMode::Arg_Word); }
 	    inline char*		Get2SignDigApp(unsigned char loc_off,ix86Param& DisP) const { return GetDigitsApp(loc_off,DisP,1,DisMode::Arg_Char); }
 	    inline char*		Get2DigitApp(unsigned char loc_off,ix86Param& DisP) const { return GetDigitsApp(loc_off,DisP,1,DisMode::Arg_Byte); }
-	    const char*			get_VEX_reg(ix86Param& DisP) const;
-	    const char*			k64_getREG(ix86Param& DisP,unsigned char reg,bool w,bool rex,bool use_qregs) const;
-	    unsigned			ix86_calcModifier(ix86Param& DisP,unsigned w) const;
-	    const char*			getSREG(unsigned sreg) const { return ix86_SegRegs[sreg]; }
-	    void			ix86_Null(char *str,ix86Param& param) const;
+	    const char*			get_VEX_reg(ix86Param& DisP) const __PURE_FUNC__;
+	    const char*			k64_getREG(ix86Param& DisP,unsigned char reg,bool w,bool rex,bool use_qregs) const __PURE_FUNC__;
+	    unsigned			ix86_calcModifier(ix86Param& DisP,unsigned w) const __PURE_FUNC__;
+	    const char*			getSREG(unsigned sreg) const __CONST_FUNC__ { return ix86_SegRegs[sreg]; }
+	    void			ix86_Null(char *str,ix86Param& param) const __CONST_FUNC__;
 	/* data */
 	    DisMode&			parent;
 	    binary_stream&		main_handle;

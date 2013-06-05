@@ -98,7 +98,7 @@ void AVR_Disassembler::avr_assert( int expression )
     if (!expression) throw std::runtime_error("AVR disassembler fault");
 }
 
-static unsigned int avr_getl16( MBuffer addr )
+static unsigned __CONST_FUNC__ avr_getl16( MBuffer addr )
 {
   return (addr[1] << 8) | addr[0];
 }
@@ -443,8 +443,12 @@ static const char * AVRCoreNames[] =
 
 bool AVR_Disassembler::action_F1()
 {
-  hlpDisplay(20020);
-  return false;
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(20020);
+	bhelp.close();
+    }
+    return false;
 }
 
 void AVR_Disassembler::show_short_help() const

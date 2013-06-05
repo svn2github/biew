@@ -239,7 +239,13 @@ void Setup::run()
 		    if(active>3) active=0;
 		    ewnd[active]->set_focus();
 		    continue;
-     case KE_F(1):  hlpDisplay(5);
+     case KE_F(1):  {
+			Beye_Help bhelp;
+			if(bhelp.open(true)) {
+			    bhelp.run(5);
+			    bhelp.close();
+			}
+		    }
 		    break;
      case KE_F(2):  beye_context().vioIniFlags ^= __TVIO_FLG_DIRECT_CONSOLE_ACCESS;
 		    break;

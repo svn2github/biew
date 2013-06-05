@@ -643,13 +643,21 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 
 void Java_Disassembler::show_short_help() const
 {
-  hlpDisplay(20030);
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(20030);
+	bhelp.close();
+    }
 }
 
 bool Java_Disassembler::action_F1()
 {
-  hlpDisplay(20031);
-  return false;
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(20031);
+	bhelp.close();
+    }
+    return false;
 }
 
 int Java_Disassembler::max_insn_len() const { return 13; }

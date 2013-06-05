@@ -131,7 +131,7 @@ static const unsigned	MAX_STRLEN=1000; /**< defines maximal length of string */
 	    void			read_syntaxes();
 	    void			markup_ctx();
 	    bool			test_leading_escape(__fileoff_t cpos) const;
-	    bool			is_legal_word_char(unsigned char ch) const { return (bool)word_set[(unsigned char)ch]; }
+	    bool			is_legal_word_char(unsigned char ch) const __PURE_FUNC__ { return (bool)word_set[(unsigned char)ch]; }
 	    void			drawBound(TWindow& w,int x,int y,char ch) const;
 	    static bool __FASTCALL__	txtFiUserFunc1(const IniInfo& info,any_t* data);
 	    static bool __FASTCALL__	txtFiUserFunc2(const IniInfo& info,any_t* data);
@@ -1065,7 +1065,11 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 
 void TextMode::help() const
 {
-   hlpDisplay(1001);
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(1001);
+	bhelp.close();
+    }
 }
 
 unsigned long TextMode::prev_page_size() const { return PrevPageSize; }

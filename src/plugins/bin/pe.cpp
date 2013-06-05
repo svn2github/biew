@@ -155,7 +155,7 @@ namespace	usr {
 	    void			PaintNewHeaderPE(TWindow& win,const std::vector<std::string>& ptr,unsigned tpage) const;
 	    void			PaintNewHeaderPE_2(TWindow& w,__filesize_t&) const;
 	    void			PaintNewHeaderPE_1(TWindow& w,__filesize_t&) const;
-	    std::string			PECPUType() const;
+	    std::string			PECPUType() const __CONST_FUNC__;
 	    __filesize_t		CalcPEObjectEntry(__fileoff_t offset) const;
 	    Symbol_Info			FindPubName(__filesize_t pa) const;
 	    __fileoff_t			CalcOverlayOffset(__filesize_t) const;
@@ -1271,8 +1271,12 @@ Bin_Format::bitness PE_Parser::query_bitness(__filesize_t off) const
 
 __filesize_t PE_Parser::action_F1()
 {
-  hlpDisplay(10009);
-  return beye_context().tell();
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(10009);
+	bhelp.close();
+    }
+    return beye_context().tell();
 }
 
 bool PE_Parser::address_resolving(std::string& addr,__filesize_t cfpos)

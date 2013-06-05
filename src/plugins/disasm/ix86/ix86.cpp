@@ -6116,8 +6116,12 @@ const char* ix86_Disassembler::prompt(unsigned idx) const {
 
 bool ix86_Disassembler::action_F1()
 {
-  hlpDisplay(20000);
-  return false;
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(20000);
+	bhelp.close();
+    }
+    return false;
 }
 
 void ix86_Disassembler::show_short_help() const

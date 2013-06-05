@@ -139,7 +139,7 @@ namespace	usr {
 	    static unsigned		GetNamCountNE(binary_stream&handle,__filesize_t offset);
 	    static std::vector<std::string> RNamesReadItems(binary_stream& handle,size_t nnames,__filesize_t offset);
 
-	    static std::string		GetPMWinAPI(unsigned flag);
+	    static std::string		GetPMWinAPI(unsigned flag) __CONST_FUNC__;
 	    static const char*		__nedata[];
 	private:
 	    std::string			ne_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
@@ -175,7 +175,7 @@ namespace	usr {
 	    void			PaintNewHeaderNE(TWindow& win,const std::vector<std::string>& ptr,unsigned npage) const;
 	    void			PaintNewHeaderNE_2(TWindow& w) const;
 	    void			PaintNewHeaderNE_1(TWindow& w) const;
-	    std::string			__getNEType(unsigned type) const;
+	    std::string			__getNEType(unsigned type) const __CONST_FUNC__;
 	    std::string			rd_ImpName(unsigned idx,bool useasoff) const;
 	    Symbol_Info			FindPubName(__filesize_t pa) const;
 	    __filesize_t		CalcEntryPointNE(unsigned segnum,unsigned offset) const;

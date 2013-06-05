@@ -39,7 +39,7 @@ namespace	usr {
 	    AOut_Parser(binary_stream&,CodeGuider&,udn&);
 	    virtual ~AOut_Parser();
 
-	    virtual const char*		prompt(unsigned idx) const;
+	    virtual const char*		prompt(unsigned idx) const __CONST_FUNC__;
 	    virtual __filesize_t	action_F1();
 
 	    virtual __filesize_t	show_header() const;
@@ -50,20 +50,20 @@ namespace	usr {
 	    static bool			check_fmt(uint32_t id);
 	private:
 	    bool			probe_fmt(uint32_t id);
-	    const char*			aout_encode_machine(uint32_t info,unsigned *id) const;
-	    const char*			aout_encode_hdr(uint32_t info) const;
+	    const char*			aout_encode_machine(uint32_t info,unsigned *id) const __PURE_FUNC__;
+	    const char*			aout_encode_hdr(uint32_t info) const __CONST_FUNC__;
 #if __BYTE_ORDER == __BIG_ENDIAN
-	    inline uint16_t FMT_WORD(uint16_t cval,bool is_big) const { return !is_big ? bswap_16(cval) : cval; }
-	    inline uint32_t FMT_DWORD(uint32_t cval,bool is_big) const { return !is_big ? bswap_32(cval) :cval; }
-	    inline uint64_t FMT_QWORD(uint64_t cval,bool is_big) const { return !is_big ? bswap_64(cval) :cval; }
+	    inline uint16_t FMT_WORD(uint16_t cval,bool is_big) const { return !is_big ? bswap_16(cval) : cval; } __CONST_FUNC__
+	    inline uint32_t FMT_DWORD(uint32_t cval,bool is_big) const { return !is_big ? bswap_32(cval) :cval; } __CONST_FUNC__
+	    inline uint64_t FMT_QWORD(uint64_t cval,bool is_big) const { return !is_big ? bswap_64(cval) :cval; } __CONST_FUNC__
 #else
-	    inline uint16_t FMT_WORD(uint16_t cval,bool is_big) const { return is_big ? bswap_16(cval) : cval; }
-	    inline uint32_t FMT_DWORD(uint32_t cval,bool is_big) const { return is_big ? bswap_32(cval) :cval; }
-	    inline uint64_t FMT_QWORD(uint64_t cval,bool is_big) const { return is_big ? bswap_64(cval) :cval; }
+	    inline uint16_t FMT_WORD(uint16_t cval,bool is_big) const { return is_big ? bswap_16(cval) : cval; } __CONST_FUNC__
+	    inline uint32_t FMT_DWORD(uint32_t cval,bool is_big) const { return is_big ? bswap_32(cval) :cval; } __CONST_FUNC__
+	    inline uint64_t FMT_QWORD(uint64_t cval,bool is_big) const { return is_big ? bswap_64(cval) :cval; } __CONST_FUNC__
 #endif
-	    inline uint16_t		AOUT_HALF(const uint16_t* cval) const { return FMT_WORD(*cval,is_msbf); }
-	    inline uint32_t		AOUT_WORD(const uint32_t* cval) const { return FMT_DWORD(*cval,is_msbf); }
-	    inline uint64_t		AOUT_QWORD(const uint64_t* cval) const { return FMT_QWORD(*cval,is_msbf); }
+	    inline uint16_t		AOUT_HALF(const uint16_t* cval) const __PURE_FUNC__ { return FMT_WORD(*cval,is_msbf); }
+	    inline uint32_t		AOUT_WORD(const uint32_t* cval) const __PURE_FUNC__ { return FMT_DWORD(*cval,is_msbf); }
+	    inline uint64_t		AOUT_QWORD(const uint64_t* cval) const __PURE_FUNC__ { return FMT_QWORD(*cval,is_msbf); }
 
 	    bool is_msbf; /* is most significand byte first */
 	    bool is_64bit;
@@ -213,17 +213,21 @@ bool AOut_Parser::address_resolving(std::string& addr,__filesize_t fpos)
 
 __filesize_t AOut_Parser::action_F1()
 {
-  hlpDisplay(10000);
-  return beye_context().tell();
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(10000);
+	bhelp.close();
+    }
+    return beye_context().tell();
 }
 
 int AOut_Parser::query_platform() const {
- unsigned id;
- struct external_exec aout;
+    unsigned id;
+    struct external_exec aout;
     main_handle.seek(0,binary_stream::Seek_Set);
     main_handle.read(&aout,sizeof(struct external_exec));
- aout_encode_machine(*((uint32_t *)aout.e_info),&id);
- return id;
+    aout_encode_machine(*((uint32_t *)aout.e_info),&id);
+    return id;
 }
 
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) AOut_Parser(h,_parent,u); }

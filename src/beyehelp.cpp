@@ -330,28 +330,24 @@ std::vector<std::string> Beye_Help::point_strings(char* data,size_t data_size) c
     return rc;
 }
 
-Beye_Help::Beye_Help() {}
-Beye_Help::~Beye_Help() {}
-
-void __FASTCALL__ hlpDisplay( unsigned long item_id )
+void Beye_Help::run( unsigned long item_id )
 {
     char* data = 0;
     char* title;
     unsigned long data_size;
-    Beye_Help bhelp;
-    if(!bhelp.open(true)) return;
-    data_size = bhelp.get_item_size(item_id);
-    if(!data_size) goto hlp_bye;
+    data_size = get_item_size(item_id);
+    if(!data_size) return;
     data = new char [data_size+1];
     data[data_size] = 0;
-    if(bhelp.load_item(item_id,data)) {
-	const std::vector<std::string> strs = bhelp.point_strings(data,data_size);
+    if(load_item(item_id,data)) {
+	const std::vector<std::string> strs = point_strings(data,data_size);
 	title = data;
-	bhelp.ListBox(strs,title);
+	ListBox(strs,title);
     }
     delete data;
-hlp_bye:
-    bhelp.close();
 }
+
+Beye_Help::Beye_Help() {}
+Beye_Help::~Beye_Help() {}
 } // namespace	usr
 

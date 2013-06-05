@@ -195,8 +195,12 @@ bool Arch_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 
 __filesize_t Arch_Parser::action_F1()
 {
-  hlpDisplay(10001);
-  return beye_context().tell();
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(10001);
+	bhelp.close();
+    }
+    return beye_context().tell();
 }
 
 int Arch_Parser::query_platform() const { return DISASM_DEFAULT; }

@@ -47,7 +47,7 @@ namespace	usr {
 
 	private:
 	    int			mp_decode_mp3_header(unsigned char *hbuf,int *fmt,int *brate,int *samplerate,int *channels) const;
-	    int			mp_mp3_get_lsf(unsigned char *hbuf) const;
+	    int			mp_mp3_get_lsf(unsigned char *hbuf) const __PURE_FUNC__;
 	    int			Xing_test(char *hdr,int *scale,int *lsf,int *srate,long *nframes,long *nbytes) const;
 	    void		find_next_mp3_hdr(unsigned char *hdr) const;
 	    int			read_id3v2_tags() const;

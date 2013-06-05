@@ -71,9 +71,9 @@ namespace	usr {
 	    void			BuildRelocCoff386();
 	    __filesize_t		CalcEntryCoff(unsigned long idx,bool display_msg) const;
 	    std::vector<std::string>	coffSymTabReadItems(binary_stream&handle,size_t nnames) const;
-	    std::string			coffEncodeClass(unsigned _class) const;
-	    std::string			coffEncodeType(unsigned type) const;
-	    std::string			coff386_encode_hdr(unsigned info) const;
+	    std::string			coffEncodeClass(unsigned _class) const __CONST_FUNC__;
+	    std::string			coffEncodeType(unsigned type) const __CONST_FUNC__;
+	    std::string			coff386_encode_hdr(unsigned info) const __CONST_FUNC__;
 	    std::vector<SCNHDR>		__coffReadObjects(binary_stream& handle,size_t n) const;
 	    void			paint_pages(TWindow& win,const std::vector<SCNHDR>& names,unsigned start) const;
 	    std::string			coffReadLongName(binary_stream&handle,__filesize_t offset) const;
@@ -81,8 +81,8 @@ namespace	usr {
 	    std::string			coff_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
 	    void			coff_ReadPubNameList(binary_stream& handle);
 
-	    inline uint16_t		COFF_WORD(const uint8_t* cval) const { return (uint16_t)(*(const uint16_t *)(const uint8_t *)cval); }
-	    inline uint32_t		COFF_DWORD(const uint8_t* cval) const { return (uint32_t)(*(const uint32_t *)(const uint8_t *)cval); }
+	    inline uint16_t		COFF_WORD(const uint8_t* cval) const __PURE_FUNC__ { return (uint16_t)(*(const uint16_t *)(const uint8_t *)cval); }
+	    inline uint32_t		COFF_DWORD(const uint8_t* cval) const __PURE_FUNC__ { return (uint32_t)(*(const uint32_t *)(const uint8_t *)cval); }
 
 	    struct external_filehdr	coff386hdr;
 	    AOUTHDR		coff386ahdr;
@@ -618,8 +618,12 @@ bool Coff_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 
 __filesize_t Coff_Parser::action_F1()
 {
-  hlpDisplay(10002);
-  return beye_context().tell();
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(10002);
+	bhelp.close();
+    }
+    return beye_context().tell();
 }
 
 std::string Coff_Parser::coff_ReadPubName(binary_stream& b_cache,const symbolic_information& it) const

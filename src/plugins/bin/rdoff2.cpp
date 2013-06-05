@@ -88,8 +88,12 @@ __filesize_t RDOff2_Parser::show_header() const
 
 __filesize_t RDOff2_Parser::action_F1()
 {
-  hlpDisplay(10012);
-  return beye_context().tell();
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(10012);
+	bhelp.close();
+    }
+    return beye_context().tell();
 }
 
 

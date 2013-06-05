@@ -301,8 +301,12 @@ LE_Parser::~LE_Parser()
 
 __filesize_t LE_Parser::action_F1()
 {
-  hlpDisplay(10004);
-  return beye_context().tell();
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(10004);
+	bhelp.close();
+    }
+    return beye_context().tell();
 }
 
 bool LE_Parser::address_resolving(std::string& addr,__filesize_t cfpos)

@@ -434,101 +434,94 @@ const cvbyte buttons[] = {
 
 void About()
 {
- TWindow* hwnd;
- unsigned i,j,len;
- uint8_t str[2];
- const unsigned char core[8] = { TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, 0x00 };
- hwnd = new(zeromem) TWindow(0,0,75,15,TWindow::Flag_Has_Frame | TWindow::Flag_NLS);
- hwnd->into_center();
- hwnd->set_color(LightCyan,Black);
- hwnd->clear();
- hwnd->set_frame(TWindow::DOUBLE_FRAME,White,Black);
- hwnd->set_title(BEYE_VER_MSG,TWindow::TMode_Center,White,Black);
- hwnd->show();
+    TWindow* hwnd;
+    unsigned i,j,len;
+    uint8_t str[2];
+    const unsigned char core[8] = { TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, TWC_LT_SHADE, 0x00 };
+    hwnd = new(zeromem) TWindow(0,0,75,15,TWindow::Flag_Has_Frame | TWindow::Flag_NLS);
+    hwnd->into_center();
+    hwnd->set_color(LightCyan,Black);
+    hwnd->clear();
+    hwnd->set_frame(TWindow::DOUBLE_FRAME,White,Black);
+    hwnd->set_title(BEYE_VER_MSG,TWindow::TMode_Center,White,Black);
+    hwnd->show();
 
- hwnd->freeze();
- hwnd->goto_xy(1,1); hwnd->puts(msgAboutText);
- hwnd->text_color(White);
- for(i = 0;i < 13;i++)  { hwnd->goto_xy(47,i + 1); hwnd->putch(TWC_SV); }
- for(i = 0;i < 47;i++) { hwnd->goto_xy(i + 1,6); hwnd->putch(TWC_SH);  }
- hwnd->goto_xy(47,6); hwnd->putch(TWC_SV_Sl);
- for(i = 0;i < 5;i++)
- {
-   len=strlen(BeyeLogo[i]);
-   for(j=0;j<len;j++) {
-    hwnd->text_color(BeyeLogo[i][j]=='0'?Green:LightGreen);
-    hwnd->goto_xy(49+j,i + 1);
-    hwnd->putch(BeyeLogo[i][j]);
-   }
- }
- hwnd->text_color(LightGreen); hwnd->text_bkgnd(Green);
- for(i = 0;i < 7;i++)
- {
-   hwnd->goto_xy(1,i+7); hwnd->puts(MBoardPicture[i]);
- }
- hwnd->draw_frame(3,8,13,12,TWindow::UP3D_FRAME,White,LightGray);
- hwnd->draw_frame(4,9,12,11,TWindow::DN3D_FRAME,Black,LightGray);
- hwnd->goto_xy(5,10);
- hwnd->puts((const char*)core);
- hwnd->text_color(Brown); hwnd->text_bkgnd(Black);
- for(i = 0;i < 7;i++)
- {
-   hwnd->goto_xy(17,i+7); hwnd->puts(ConnectorPicture[i]);
- }
- hwnd->text_color(Gray); hwnd->text_bkgnd(Black);
- for(i = 0;i < 7;i++)
- {
-   hwnd->goto_xy(22,i+7); hwnd->puts(BitStreamPicture[i]);
- }
- hwnd->text_color(LightGray); hwnd->text_bkgnd(Black);
- for(i = 0;i < 7;i++)
- {
-   hwnd->goto_xy(31,i+7); hwnd->puts(BeyePicture[i]);
- }
- hwnd->text_color(LightCyan); hwnd->text_bkgnd(Blue);
- for(i = 0;i < 5;i++)
- {
-   hwnd->goto_xy(32,i+8); hwnd->puts(BeyeScreenPicture[i]);
- }
- hwnd->text_bkgnd(Black);   hwnd->text_color(LightCyan);
- for(i = 0;i < 10;i++) hwnd->write(stars[i].x,stars[i].y,(const uint8_t*)&stars[i].image,1);
- hwnd->text_color(LightGray);
- for(i = 0;i < 7;i++)
- {
-   hwnd->goto_xy(52,i + 6);
-   hwnd->puts(CompPicture[i]);
- }
- hwnd->text_bkgnd(LightGray);
- for(i = 0;i < 5;i++)
- {
-   hwnd->text_color(buttons[i].color);
-   str[0] = buttons[i].image;
-   str[1] = 0;
-   hwnd->write(buttons[i].x,buttons[i].y,str,1);
- }
- hwnd->set_color(LightCyan,Black);
- for(i = 0;i < 4;i++)
- {
-   hwnd->goto_xy(54,i + 7);
-   hwnd->puts(CompScreenPicture[i]);
- }
- hwnd->refresh();
- while(1)
- {
-   int ch;
-   ch = GetEvent(drawHelpPrompt,HelpActionFromMenu,hwnd);
-   switch(ch)
-   {
-      case KE_ESCAPE:
-      case KE_F(10):  goto bye_help;
-      case KE_F(1):   hlpDisplay(1); break;
-      case KE_F(2):   hlpDisplay(3); break;
-      case KE_F(3):   hlpDisplay(4); break;
-      default:        break;
-   }
- }
- bye_help:
- delete hwnd;
+    hwnd->freeze();
+    hwnd->goto_xy(1,1); hwnd->puts(msgAboutText);
+    hwnd->text_color(White);
+    for(i = 0;i < 13;i++)  { hwnd->goto_xy(47,i + 1); hwnd->putch(TWC_SV); }
+    for(i = 0;i < 47;i++) { hwnd->goto_xy(i + 1,6); hwnd->putch(TWC_SH);  }
+    hwnd->goto_xy(47,6); hwnd->putch(TWC_SV_Sl);
+    for(i = 0;i < 5;i++) {
+	len=strlen(BeyeLogo[i]);
+	for(j=0;j<len;j++) {
+	    hwnd->text_color(BeyeLogo[i][j]=='0'?Green:LightGreen);
+	    hwnd->goto_xy(49+j,i + 1);
+	    hwnd->putch(BeyeLogo[i][j]);
+	}
+    }
+    hwnd->text_color(LightGreen); hwnd->text_bkgnd(Green);
+    for(i = 0;i < 7;i++) {
+	hwnd->goto_xy(1,i+7); hwnd->puts(MBoardPicture[i]);
+    }
+    hwnd->draw_frame(3,8,13,12,TWindow::UP3D_FRAME,White,LightGray);
+    hwnd->draw_frame(4,9,12,11,TWindow::DN3D_FRAME,Black,LightGray);
+    hwnd->goto_xy(5,10);
+    hwnd->puts((const char*)core);
+    hwnd->text_color(Brown); hwnd->text_bkgnd(Black);
+    for(i = 0;i < 7;i++) {
+	hwnd->goto_xy(17,i+7); hwnd->puts(ConnectorPicture[i]);
+    }
+    hwnd->text_color(Gray); hwnd->text_bkgnd(Black);
+    for(i = 0;i < 7;i++) {
+	hwnd->goto_xy(22,i+7); hwnd->puts(BitStreamPicture[i]);
+    }
+    hwnd->text_color(LightGray); hwnd->text_bkgnd(Black);
+    for(i = 0;i < 7;i++) {
+	hwnd->goto_xy(31,i+7); hwnd->puts(BeyePicture[i]);
+    }
+    hwnd->text_color(LightCyan); hwnd->text_bkgnd(Blue);
+    for(i = 0;i < 5;i++) {
+	hwnd->goto_xy(32,i+8); hwnd->puts(BeyeScreenPicture[i]);
+    }
+    hwnd->text_bkgnd(Black);   hwnd->text_color(LightCyan);
+    for(i = 0;i < 10;i++) hwnd->write(stars[i].x,stars[i].y,(const uint8_t*)&stars[i].image,1);
+    hwnd->text_color(LightGray);
+    for(i = 0;i < 7;i++) {
+	hwnd->goto_xy(52,i + 6);
+	hwnd->puts(CompPicture[i]);
+    }
+    hwnd->text_bkgnd(LightGray);
+    for(i = 0;i < 5;i++) {
+	hwnd->text_color(buttons[i].color);
+	str[0] = buttons[i].image;
+	str[1] = 0;
+	hwnd->write(buttons[i].x,buttons[i].y,str,1);
+    }
+    hwnd->set_color(LightCyan,Black);
+    for(i = 0;i < 4;i++) {
+	hwnd->goto_xy(54,i + 7);
+	hwnd->puts(CompScreenPicture[i]);
+    }
+    hwnd->refresh();
+    Beye_Help bhelp;
+    while(1) {
+	unsigned id;
+	int ch;
+	ch = GetEvent(drawHelpPrompt,HelpActionFromMenu,hwnd);
+	id=0;
+	switch(ch) {
+	    case KE_ESCAPE:
+	    case KE_F(10):  goto bye_help;
+	    case KE_F(1):   id=1; break;
+	    case KE_F(2):   id=3; break;
+	    case KE_F(3):   id=4; break;
+	    default: break;
+	}
+	if(id) if(bhelp.open(true)) { bhelp.run(id); bhelp.close(); }
+    }
+bye_help:
+    delete hwnd;
 }
 
 __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)

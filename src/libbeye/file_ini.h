@@ -61,9 +61,9 @@ namespace	usr {
 	    virtual size_t	next_legal_length(const std::string& legal_symbols) const;
 	    virtual std::string	next_legal_word(const std::string& legal_symbols);
 	    virtual char	next_char() { return src[iptr++]; }
-	    virtual char	curr_char() const { return src[iptr]; }
+	    virtual char	curr_char() const __PURE_FUNC__ { return src[iptr]; }
 	    virtual std::string	tail();
-	    virtual const char*	data() const { return &src.c_str()[iptr]; }
+	    virtual const char*	data() const __PURE_FUNC__ { return &src.c_str()[iptr]; }
 	private:
 	    std::string src;
 	    size_t iptr;

@@ -1496,8 +1496,12 @@ DisasmRet PPC_Disassembler::disassembler(__filesize_t ulShift,
 
 bool PPC_Disassembler::action_F1()
 {
-  hlpDisplay(20050);
-  return false;
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(20050);
+	bhelp.close();
+    }
+    return false;
 }
 
 void PPC_Disassembler::show_short_help() const

@@ -982,8 +982,12 @@ LX_Parser::~LX_Parser()
 
 __filesize_t LX_Parser::action_F1()
 {
-  hlpDisplay(10005);
-  return beye_context().tell();
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(10005);
+	bhelp.close();
+    }
+    return beye_context().tell();
 }
 
 __filesize_t LX_Parser::va2pa(__filesize_t va) const

@@ -133,7 +133,11 @@ DisasmRet Data_Disassembler::disassembler(__filesize_t ulShift,
 
 void Data_Disassembler::show_short_help() const
 {
-  hlpDisplay(20010);
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(20010);
+	bhelp.close();
+    }
 }
 
 int Data_Disassembler::max_insn_len() const { return 8; }

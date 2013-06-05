@@ -71,10 +71,10 @@ namespace	usr {
 
 	    static __filesize_t		is_new_exe(binary_stream& main_handle);
 	protected:
-	    CodeGuider&			code_guider() const { return _code_guider; }
-	    binary_stream&		main_handle() const { return _main_handle; }
-	    virtual __filesize_t	headshift() const { return _headshift; }
-	    udn&			_udn() const { return __udn; }
+	    CodeGuider&			code_guider() const __PURE_FUNC__ { return _code_guider; }
+	    binary_stream&		main_handle() const __PURE_FUNC__ { return _main_handle; }
+	    virtual __filesize_t	headshift() const __PURE_FUNC__ { return _headshift; }
+	    udn&			_udn() const __PURE_FUNC__ { return __udn; }
 	    char			__codelen;
 	private:
 	    std::string			QueryAddInfo( unsigned char *memmap ) const;

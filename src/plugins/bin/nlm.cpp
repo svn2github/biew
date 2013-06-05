@@ -71,7 +71,6 @@ namespace	usr {
 	private:
 	    std::string		nlm_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
 	    void		nlm_ReadPubNameList(binary_stream& handle);
-	    int			NLMbitness(__filesize_t off) const;
 	    bool		BuildReferStrNLM(std::string& str,const RELOC_NLM& rne,Bin_Format::bind_type flags);
 	    void		BuildRelocNlm();
 	    std::vector<std::string> __ReadModRefNamesNLM(binary_stream& handle,size_t nnames) const;
@@ -616,8 +615,12 @@ bool NLM_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 
 __filesize_t NLM_Parser::action_F1()
 {
-  hlpDisplay(10007);
-  return beye_context().tell();
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(10007);
+	bhelp.close();
+    }
+    return beye_context().tell();
 }
 
 std::string NLM_Parser::nlm_ReadPubName(binary_stream& b_cache,const symbolic_information& it) const

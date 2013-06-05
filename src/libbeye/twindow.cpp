@@ -1683,7 +1683,6 @@ void TWindow::write(tRelCoord x,tRelCoord y,const tvideo_buffer& buff)
 	::memcpy(&body.attrs[i],buff.get_attrs(),rlen);
 	check_win();
 	updatescreenpiece(x-1,x-1+rlen,y);
-	paint_cursor();
     }
 }
 
@@ -1696,7 +1695,6 @@ tvideo_buffer TWindow::read(tRelCoord x,tRelCoord y,size_t len) const
 	idx = (x-1)+(y-1)*wwidth;
 	rc.assign(&body.chars[idx],&body.oem_pg[idx],&body.attrs[idx],rlen);
 	check_win();
-	paint_cursor();
     }
     return rc;
 }

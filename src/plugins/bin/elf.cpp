@@ -101,8 +101,8 @@ namespace	usr {
 	    virtual std::string		read_nametable(binary_stream& cache,__filesize_t off) const;
 	    virtual std::string		read_nametableex(binary_stream& cache,__filesize_t off,__filesize_t shtbl) const;
 	protected:
-	    Elf_Reader&			reader() const { return _reader; }
-	    ELF_Parser&			parent() const { return _parent; }
+	    Elf_Reader&			reader() const __PURE_FUNC__ { return _reader; }
+	    ELF_Parser&			parent() const __PURE_FUNC__ { return _parent; }
 	    std::string			read_reloc_name(binary_stream& handle,const Elf_Reloc& erl) const;
 	    inline uint16_t		bioRead12(binary_stream& handle2) const { return handle2.read(type_word)&0x0FFFUL; };
 	    inline uint32_t		bioRead19(binary_stream& handle2) const { return handle2.read(type_dword)&0x0007FFFFUL; };
@@ -176,10 +176,10 @@ namespace	usr {
 	    virtual Object_Info		get_object_attribute(__filesize_t pa);
 	protected:
 	    friend class Elf_Arch;
-	    __filesize_t		get_active_shtbl() const { return active_shtbl; }
+	    __filesize_t		get_active_shtbl() const __PURE_FUNC__ { return active_shtbl; }
 	    void			set_active_shtbl(__filesize_t t) { active_shtbl=t; }
-	    bool			is_sections_present() const { return IsSectionsPresent; }
-	    unsigned long		sym_ent_size() const { return __elfSymEntSize; }
+	    bool			is_sections_present() const __PURE_FUNC__ { return IsSectionsPresent; }
+	    unsigned long		sym_ent_size() const __PURE_FUNC__ { return __elfSymEntSize; }
 	    __filesize_t		findPHEntry(unsigned long type,unsigned& nitems) const;
 	    Symbol_Info			FindPubName(__filesize_t pa) const;
 	private:
@@ -196,20 +196,20 @@ namespace	usr {
 	    __filesize_t		__calcSymEntry(binary_stream&handle,__filesize_t num,bool display_msg) const;
 	    std::vector<std::string>	__elfReadDynTab(binary_stream&handle,size_t ntbl,__filesize_t entsize) const;
 	    std::vector<std::string>	__elfReadSymTab(binary_stream&handle,size_t nsym) const;
-	    bool			ELF_IS_SECTION_PHYSICAL(unsigned sec_num) const;
-	    std::string			elf_SymTabShNdx(unsigned idx) const;
-	    std::string			elf_SymTabBind(char type) const;
-	    std::string			elf_SymTabType(char type) const;
+	    bool			ELF_IS_SECTION_PHYSICAL(unsigned sec_num) const __CONST_FUNC__;
+	    std::string			elf_SymTabShNdx(unsigned idx) const __CONST_FUNC__;
+	    std::string			elf_SymTabBind(char type) const __CONST_FUNC__;
+	    std::string			elf_SymTabType(char type) const __CONST_FUNC__;
 	    std::vector<std::string>	__elfReadSecHdr(binary_stream&handle,size_t nnames) const;
-	    std::string			elf_encode_sh_type(long sh_type) const;
+	    std::string			elf_encode_sh_type(long sh_type) const __CONST_FUNC__;
 	    std::vector<std::string>	__elfReadPrgHdr(binary_stream&handle,size_t nnames) const;
-	    std::string			elf_encode_p_type(long p_type) const;
-	    std::string			elf_osabi(unsigned char id) const;
-	    std::string			elf_version(unsigned long id) const;
-	    std::string			elf_machine(unsigned id,unsigned& disasm) const;
-	    std::string			elf_otype(unsigned id) const;
-	    std::string			elf_data(unsigned char id) const;
-	    std::string			elf_class(unsigned char id) const;
+	    std::string			elf_encode_p_type(long p_type) const __CONST_FUNC__;
+	    std::string			elf_osabi(unsigned char id) const __CONST_FUNC__;
+	    std::string			elf_version(unsigned long id) const __CONST_FUNC__;
+	    std::string			elf_machine(unsigned id,unsigned& disasm) const __CONST_FUNC__;
+	    std::string			elf_otype(unsigned id) const __CONST_FUNC__;
+	    std::string			elf_data(unsigned char id) const __CONST_FUNC__;
+	    std::string			elf_class(unsigned char id) const __CONST_FUNC__;
 	    __filesize_t		findSHEntry(binary_stream&b_cache,unsigned long type,unsigned long& nitems,__filesize_t& link,unsigned long& ent_size) const;
 	    __filesize_t		findPHPubSyms(unsigned long& number,unsigned long& ent_size,__filesize_t& act_shtbl) const;
 	    __filesize_t		findPHDynEntry(unsigned long type,__filesize_t dynptr,unsigned long nitems) const;
@@ -1539,8 +1539,12 @@ Bin_Format::bitness ELF_Parser::query_bitness(__filesize_t off) const
 
 __filesize_t ELF_Parser::action_F1()
 {
-  hlpDisplay(10003);
-  return beye_context().tell();
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(10003);
+	bhelp.close();
+    }
+    return beye_context().tell();
 }
 
 bool ELF_Parser::address_resolving(std::string& addr,__filesize_t cfpos)

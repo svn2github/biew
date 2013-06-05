@@ -91,8 +91,12 @@ const char* RDOff_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
 __filesize_t RDOff_Parser::action_F1()
 {
-  hlpDisplay(10011);
-  return beye_context().tell();
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(10011);
+	bhelp.close();
+    }
+    return beye_context().tell();
 }
 
 /** return 0 if error */

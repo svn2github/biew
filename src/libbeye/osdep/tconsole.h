@@ -115,9 +115,9 @@ namespace	usr {
 		    **/
 	    void		vio_write_buff(tAbsCoord x,tAbsCoord y,const tvideo_buffer& buff) const;
 
-	    tAbsCoord		vio_width() const;     /**< Contains actual width of console (or terminal) */
-	    tAbsCoord		vio_height() const;    /**< Contains actual height of console (or terminal) */
-	    unsigned		vio_num_colors() const;/**< Contains number of actual colors that used by console (or terminal) */
+	    tAbsCoord		vio_width() const __PURE_FUNC__;     /**< Contains actual width of console (or terminal) */
+	    tAbsCoord		vio_height() const __PURE_FUNC__;    /**< Contains actual height of console (or terminal) */
+	    unsigned		vio_num_colors() const __PURE_FUNC__;/**< Contains number of actual colors that used by console (or terminal) */
 
 		   /** Sets color to be transparented
 		     * @return                none

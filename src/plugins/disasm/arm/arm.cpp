@@ -66,8 +66,12 @@ DisasmRet ARM_Disassembler::disassembler(__filesize_t ulShift,
 
 bool ARM_Disassembler::action_F1()
 {
-  hlpDisplay(20040);
-  return false;
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(20040);
+	bhelp.close();
+    }
+    return false;
 }
 
 void ARM_Disassembler::show_short_help() const

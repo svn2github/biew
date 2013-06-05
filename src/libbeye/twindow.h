@@ -443,7 +443,7 @@ namespace	usr {
 		     * @note               If no user data previously stored
 		     *                     in window then NULL is returned.
 		    **/
-	    virtual any_t*		get_user_data() const;
+	    virtual any_t*		get_user_data() const __PURE_FUNC__;
 
 		   /** Saves pointer to the user data in window.
 		     * @param win          handle of window.
@@ -465,32 +465,32 @@ namespace	usr {
 		     * @param win          handle of window.
 		     * @return             width of window
 		    **/
-	    virtual unsigned		width() const;
+	    virtual unsigned		width() const __PURE_FUNC__;
 
 		   /** Returns width of height.
 		     * @param win          handle of window.
 		     * @return             height of window
 		    **/
-	    virtual unsigned		height() const;
+	    virtual unsigned		height() const __PURE_FUNC__;
 
 		   /** Returns width of window which is available for output.
 		     * @param win          handle of window.
 		     * @return             width of window which is available for output
 		    **/
-	    virtual unsigned		client_width() const;
+	    virtual unsigned		client_width() const __PURE_FUNC__;
 
 		   /** Returns height of window which is available for output.
 		     * @param win          handle of window.
 		     * @return             height of window which is available for output
 		    **/
-	    virtual unsigned		client_height() const;
+	    virtual unsigned		client_height() const __PURE_FUNC__;
 
 		   /** Checks visibility of window piece.
 		     * @param x,y          specify coordinates of the location.
 		     * @return             true if specified window is visible
 		     *                     in specified location (Is not obscured).
 		    **/
-	    virtual bool		is_piece_visible(tRelCoord x, tRelCoord y) const;
+	    virtual bool		is_piece_visible(tRelCoord x, tRelCoord y) const __PURE_FUNC__;
 
 		   /** Converts window-relative coordinates to screen coordinates
 		     * @param win          handle of window
@@ -498,7 +498,7 @@ namespace	usr {
 		     * @param xs,ys        specify the screen coordinates.
 		     * @return             none
 		    **/
-	    virtual void		cvt_win_coords(tRelCoord x, tRelCoord y,tAbsCoord& xs,tAbsCoord& ys) const;
+	    virtual void		cvt_win_coords(tRelCoord x, tRelCoord y,tAbsCoord& xs,tAbsCoord& ys) const __PURE_FUNC__;
 
 		   /** Converts screen-relative coordinates to relative window coordinates
 		     * @param win          handle of window
@@ -506,7 +506,7 @@ namespace	usr {
 		     * @param xr,yr        specify pointers to the relative coordinates.
 		     * @return             true if successful, false otherwise.
 		    **/
-	    virtual bool		cvt_screen_coords(tAbsCoord x, tAbsCoord y,tRelCoord& xr,tRelCoord& yr) const;
+	    virtual bool		cvt_screen_coords(tAbsCoord x, tAbsCoord y,tRelCoord& xr,tRelCoord& yr) const __PURE_FUNC__;
 
 		   /** Clears the current window window with given filler.
 		     * @param filler       character for filling the window
@@ -546,12 +546,12 @@ namespace	usr {
 		     * @param fore,back    specify pointers to memory where will be saved logical background and foreground of the text.
 		     * @return             none
 		    **/
-	    virtual void		get_color(Color& fore, Color& back) const;
+	    virtual void		get_color(Color& fore, Color& back) const __PURE_FUNC__;
 
 		   /** Returns physical color attributes of the text.
 		     * @return             physical attributes of the text
 		    **/
-	    virtual ColorAttr		get_color() const;
+	    virtual ColorAttr		get_color() const __PURE_FUNC__;
 
 		   /** Sets logical foreground color of the text.
 		     * @param col          specifies color to be set.
@@ -693,14 +693,14 @@ namespace	usr {
 		     * @note              If X or Y are outside the window frame,
 		     *                    they will be clipped.
 		    **/
-	    virtual tRelCoord		where_x() const;
+	    virtual tRelCoord		where_x() const __PURE_FUNC__;
 
 		   /** Returns the y coordinate of the current cursor position, within currently used window.
 		     * @return            none
 		     * @note              If X or Y are outside the window frame,
 		     *                    they will be clipped.
 		    **/
-	    virtual tRelCoord		where_y() const;
+	    virtual tRelCoord		where_y() const __PURE_FUNC__;
 
 		   /** Outputs the character to the active window at current cursor position.
 		     * @param ch          character to be written
@@ -712,7 +712,7 @@ namespace	usr {
 		     * @return            character read
 		     * @note              there is no error return value.
 		    **/
-	    virtual char		getch() const;
+	    virtual char		getch() const __PURE_FUNC__;
 
 		   /** Writes the null-terminated string to the active window at current cursor position.
 		     * @param str         null-terminated string to be written
@@ -764,7 +764,7 @@ namespace	usr {
 		     * @return             handle of window currently being used
 		     * @note               If no window has focus then return NULL
 		    **/
-	    static TWindow*		get_focus();
+	    static TWindow*		get_focus() __PURE_FUNC__;
 		   /** Returns handle of the window currently displayed at the screen position x and y.
 		     * @param x,y          specify coordinates of the location.
 		     * @return             Handle for the window displayed at the
@@ -772,7 +772,7 @@ namespace	usr {
 		     *                     displayed. If no window is displayed
 		     *                     at the this position, NULL is returned.
 		    **/
-	    static TWindow*		at_pos(tAbsCoord x, tAbsCoord y);
+	    static TWindow*		at_pos(tAbsCoord x, tAbsCoord y) __PURE_FUNC__;
 
 		enum e_cursor {
 		    Cursor_Unknown	=-1, /**< Defines that cursor in invisible state */
@@ -815,7 +815,7 @@ namespace	usr {
 		     * @param value       specifies new physical value of logical color
 		     * @return            physical value of logical color
 		    **/
-	    static unsigned char	get_mapped_color(Color color);
+	    static unsigned char	get_mapped_color(Color color) __PURE_FUNC__;
 
 	    static const unsigned char SINGLE_FRAME[];    /**< Flat single-line frame */
 	    static const unsigned char DOUBLE_FRAME[];    /**< Flat double-line frame */
@@ -850,7 +850,7 @@ namespace	usr {
 		     *                    characters and attributes from window,
 		     *                    beginning at specified location.
 		    **/
-	    virtual tvideo_buffer	read(tRelCoord x,tRelCoord y,size_t len) const;
+	    virtual tvideo_buffer	read(tRelCoord x,tRelCoord y,size_t len) const __PURE_FUNC__;
 		   /** Accesses to the active window directly, writing a single line.
 		     * @param win         handle of window
 		     * @param x,y         specify location of output
@@ -869,12 +869,12 @@ namespace	usr {
 	    void		makewin(tAbsCoord x1, tAbsCoord y1, tAbsCoord width, tAbsCoord height);
 	    void		__unlistwin();
 	    TWindow*		__prevwin();
-	    bool		test_win() const;
-	    void		check_win() const;
+	    bool		test_win() const __PURE_FUNC__;
+	    void		check_win() const __PURE_FUNC__;
 	    void		savedwin2screen();
 	    void		updatescreen(bool full_area);
-	    TWindow*		__find_over(tAbsCoord x,tAbsCoord y) const;
-	    bool		is_overlapped() const;
+	    TWindow*		__find_over(tAbsCoord x,tAbsCoord y) const __PURE_FUNC__;
+	    bool		is_overlapped() const __PURE_FUNC__;
 	    void		paint_cursor() const;
 	    void		set_xy(tRelCoord x,tRelCoord y);
 	    void		igoto_xy(tRelCoord x,tRelCoord y);
@@ -890,12 +890,12 @@ namespace	usr {
 	    void		__athead();
 	    void		into_center(tAbsCoord w,tAbsCoord h);
 
-	    static inline bool NLS_IS_OEMPG(unsigned char ch) { return ch >= 0xB0 && ch <= 0xDF; }
-	    inline char		do_oem_pg(char ch) const { return ((flags & Flag_NLS) == Flag_NLS ? NLS_IS_OEMPG(ch) ? ch : 0 : 0); }
+	    static inline bool NLS_IS_OEMPG(unsigned char ch) __CONST_FUNC__ { return ch >= 0xB0 && ch <= 0xDF; }
+	    inline char		do_oem_pg(char ch) const __CONST_FUNC__ { return ((flags & Flag_NLS) == Flag_NLS ? NLS_IS_OEMPG(ch) ? ch : 0 : 0); }
 	    inline void		wputc(char ch,char color,bool update) { wputc_oem(ch,0,color,update); }
 	    inline void		__atwin(TWindow* prev) { if(!prev) __athead(); else { next = prev->next; prev->next = this; }}
-	    inline bool		__topmost() const { return !is_overlapped(); }
-	    inline bool		is_valid_xy(tAbsCoord x,tAbsCoord y) const {
+	    inline bool		__topmost() const __PURE_FUNC__ { return !is_overlapped(); }
+	    inline bool		is_valid_xy(tAbsCoord x,tAbsCoord y) const __CONST_FUNC__ {
 					return ((flags & Flag_Has_Frame) == Flag_Has_Frame ?
 						x && x < wwidth-1 && y && y < wheight-1 :
 						x < wwidth && y < wheight); }
@@ -904,9 +904,9 @@ namespace	usr {
 	    inline void		updatescreenchar(tRelCoord x,tRelCoord y,tvioBuff* accel) const { updatescreencharfrombuff(x-1,y-1,body,accel); }
 	    inline void		restorescreenchar(tRelCoord x,tRelCoord y,tvioBuff* accel) const { updatescreencharfrombuff(x-1,y-1,saved,accel); }
 
-	    static TWindow*	__findcursorablewin();
-	    static TWindow*	__at_point(TWindow* iter,tAbsCoord x,tAbsCoord y);
-	    static tRelCoord	calc_title_off(title_mode mode,unsigned w,unsigned slen);
+	    static TWindow*	__findcursorablewin() __PURE_FUNC__;
+	    static TWindow*	__at_point(TWindow* iter,tAbsCoord x,tAbsCoord y) __PURE_FUNC__;
+	    static tRelCoord	calc_title_off(title_mode mode,unsigned w,unsigned slen) __CONST_FUNC__;
 	    static void		adjustColor(Color& fore,Color& back);
 	    static DefColor	__set_color(Color fore,Color back);
 

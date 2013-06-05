@@ -37,16 +37,16 @@ namespace	usr {
 	
 	    virtual void	run();
 	private:
-	    int			GetFullBin(uintmax_t value,char* buff);
-	    int			Dig2Str(uintmax_t value,char * buff,int action);
-	    uintmax_t		Str2Dig(char * buff,int action);
-	    void		DCStaticPaint(TWindow * wdlg,char * wbuff,intmax_t digit,unsigned *mlen);
+	    int			GetFullBin(uintmax_t value,char* buff) const;
+	    int			Dig2Str(uintmax_t value,char * buff,int action) const;
+	    uintmax_t		Str2Dig(const char * buff,int action) const;
+	    void		DCStaticPaint(TWindow * wdlg,char * wbuff,intmax_t digit,unsigned *mlen) const;
     };
 
 DigitalConverter_Addon::DigitalConverter_Addon() {}
 DigitalConverter_Addon::~DigitalConverter_Addon() {}
 
-int DigitalConverter_Addon::GetFullBin(uintmax_t value,char * buff)
+int DigitalConverter_Addon::GetFullBin(uintmax_t value,char * buff) const
 {
  char byte,*b;
  bool started = false;
@@ -86,7 +86,7 @@ int DigitalConverter_Addon::GetFullBin(uintmax_t value,char * buff)
  return strlen(buff);
 }
 
-int DigitalConverter_Addon::Dig2Str(uintmax_t value,char * buff,int action)
+int DigitalConverter_Addon::Dig2Str(uintmax_t value,char * buff,int action) const
 {
  if(action == 0) return strlen(ulltoa(value,buff,16));
  if(action == 1) return strlen(lltoa(value,buff,8));
@@ -97,7 +97,7 @@ int DigitalConverter_Addon::Dig2Str(uintmax_t value,char * buff,int action)
  return 0;
 }
 
-uintmax_t DigitalConverter_Addon::Str2Dig(char * buff,int action)
+uintmax_t DigitalConverter_Addon::Str2Dig(const char * buff,int action) const
 {
  if(action == 0) return strtoull(buff,NULL,16);
  if(action == 1) return strtoull(buff,NULL,8);
@@ -107,7 +107,7 @@ uintmax_t DigitalConverter_Addon::Str2Dig(char * buff,int action)
  return 0;
 }
 
-void DigitalConverter_Addon::DCStaticPaint(TWindow * wdlg,char * wbuff,intmax_t digit,unsigned *mlen)
+void DigitalConverter_Addon::DCStaticPaint(TWindow * wdlg,char * wbuff,intmax_t digit,unsigned *mlen) const
 {
  int rlen;
  tAbsCoord x1,y1,x2,y2;

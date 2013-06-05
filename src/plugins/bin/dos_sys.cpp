@@ -129,8 +129,12 @@ bool DosSys_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 
 __filesize_t DosSys_Parser::action_F1()
 {
-  hlpDisplay(10014);
-  return beye_context().tell();
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(10014);
+	bhelp.close();
+    }
+    return beye_context().tell();
 }
 
 __filesize_t DosSys_Parser::va2pa(__filesize_t va) const { return va; }

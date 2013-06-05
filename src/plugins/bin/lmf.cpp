@@ -109,9 +109,9 @@ void LMF_Parser::failed_lmf() const
 	/* lmf corruption message */
 }
 
-inline size_t DEFSIZE() { return sizeof(lmf_definition); }
-inline size_t DATSIZE() { return sizeof(lmf_data); }
-inline size_t HDRSIZE() { return sizeof(lmf_header); }
+inline size_t __CONST_FUNC__ DEFSIZE() { return sizeof(lmf_definition); }
+inline size_t __CONST_FUNC__ DATSIZE() { return sizeof(lmf_data); }
+inline size_t __CONST_FUNC__ HDRSIZE() { return sizeof(lmf_header); }
 
 LMF_Parser::LMF_Parser(binary_stream& _h,CodeGuider& code_guider,udn& u)
 	    :Binary_Parser(_h,code_guider,u)
@@ -536,8 +536,12 @@ __filesize_t LMF_Parser::show_header() const
 
 __filesize_t LMF_Parser::action_F1()
 {
-  hlpDisplay(10015);
-  return beye_context().tell();
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(10015);
+	bhelp.close();
+    }
+    return beye_context().tell();
 }
 
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) LMF_Parser(h,_parent,u); }

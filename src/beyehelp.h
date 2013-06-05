@@ -66,6 +66,7 @@ namespace	usr {
 	    virtual ~Beye_Help();
 
 	    virtual bool	open(bool interactive);
+	    virtual void	run(unsigned long item_id);
 	    virtual void	close();
 		       /** Return uncompressed size of help item
 			  0 - if error occured */
@@ -89,8 +90,6 @@ namespace	usr {
 	    std::fstream		fs;
 	    beye_help_item		bhi;
     };
-		       /** Fully-functionallity utility for displaying help */
-    void            __FASTCALL__ hlpDisplay(unsigned long id);
 } // namespace	usr
 
 #endif

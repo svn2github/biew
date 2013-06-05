@@ -200,7 +200,11 @@ unsigned BinMode::paint( unsigned keycode,unsigned tshift )
 
 void BinMode::help() const
 {
-   hlpDisplay(1000);
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(1000);
+	bhelp.close();
+    }
 }
 
 unsigned long BinMode::prev_page_size() const { return (main_wnd.client_width()-virtWidthCorr)*main_wnd.client_height()*(bin_mode==MOD_PLAIN?1:2); }

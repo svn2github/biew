@@ -79,7 +79,7 @@ typedef struct __attribute__((__packed__))
 	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 
-	    static const char*		wtag_find_name(unsigned short wtag);
+	    static const char*		wtag_find_name(unsigned short wtag) __CONST_FUNC__;
 	private:
 	    __filesize_t		wav_find_chunk(__filesize_t off,unsigned long id) const;
 

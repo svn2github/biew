@@ -46,9 +46,9 @@ namespace	usr {
 	    virtual char*		get(__filesize_t) const = 0;
 	    virtual unsigned char	width(const TWindow&,bool is_file64) const = 0;
 	    virtual unsigned		size() const = 0;
-	    virtual unsigned		hardlen() const = 0;
+	    virtual unsigned		hexlen() const = 0;
 	protected:
-	    binary_stream&	handle() const { return _handle; }
+	    binary_stream&	handle() const { return _handle; } __PURE_FUNC__;
 	private:
 	    binary_stream&	_handle;
     };
@@ -59,9 +59,9 @@ namespace	usr {
 	    virtual ~bitView();
 
 	    virtual char*		get(__filesize_t) const;
-	    virtual unsigned char	width(const TWindow&,bool is_file64) const;
-	    virtual unsigned		size() const;
-	    virtual unsigned		hardlen() const;
+	    virtual unsigned char	width(const TWindow&,bool is_file64) const __PURE_FUNC__;
+	    virtual unsigned		size() const __CONST_FUNC__;
+	    virtual unsigned		hexlen() const __CONST_FUNC__;
 
 	    static hexView*		query_interface(binary_stream&);
     };
@@ -72,9 +72,9 @@ namespace	usr {
 	    virtual ~byteView();
 
 	    virtual char*		get(__filesize_t) const;
-	    virtual unsigned char	width(const TWindow&,bool is_file64) const;
-	    virtual unsigned		size() const;
-	    virtual unsigned		hardlen() const;
+	    virtual unsigned char	width(const TWindow&,bool is_file64) const __PURE_FUNC__;
+	    virtual unsigned		size() const __CONST_FUNC__;
+	    virtual unsigned		hexlen() const __CONST_FUNC__;
 
 	    static hexView*		query_interface(binary_stream&);
     };
@@ -85,9 +85,9 @@ namespace	usr {
 	    virtual ~wordView();
 
 	    virtual char*		get(__filesize_t) const;
-	    virtual unsigned char	width(const TWindow&,bool is_file64) const;
-	    virtual unsigned		size() const;
-	    virtual unsigned		hardlen() const;
+	    virtual unsigned char	width(const TWindow&,bool is_file64) const __PURE_FUNC__;
+	    virtual unsigned		size() const __CONST_FUNC__;
+	    virtual unsigned		hexlen() const __CONST_FUNC__;
 
 	    static hexView*		query_interface(binary_stream&);
     };
@@ -98,9 +98,9 @@ namespace	usr {
 	    virtual ~dwordView();
 
 	    virtual char*		get(__filesize_t) const;
-	    virtual unsigned char	width(const TWindow&,bool is_file64) const;
-	    virtual unsigned		size() const;
-	    virtual unsigned		hardlen() const;
+	    virtual unsigned char	width(const TWindow&,bool is_file64) const __PURE_FUNC__;
+	    virtual unsigned		size() const __CONST_FUNC__;
+	    virtual unsigned		hexlen() const __CONST_FUNC__;
 
 	    static hexView*		query_interface(binary_stream&);
     };
@@ -182,7 +182,7 @@ char* bitView::get(__filesize_t val) const {
     return GetBinary(id);
 }
 unsigned bitView::size() const { return 1; }
-unsigned bitView::hardlen() const { return 8; }
+unsigned bitView::hexlen() const { return 8; }
 
 byteView::byteView(binary_stream& h)
 	:hexView(h)
@@ -196,7 +196,7 @@ char* byteView::get(__filesize_t val) const {
     return Get2Digit(id);
 }
 unsigned byteView::size() const { return 1; }
-unsigned byteView::hardlen() const { return 2; }
+unsigned byteView::hexlen() const { return 2; }
 
 wordView::wordView(binary_stream& h)
 	:hexView(h)
@@ -213,7 +213,7 @@ char* wordView::get(__filesize_t val) const {
     return Get4Digit(v);
 }
 unsigned wordView::size() const { return 2; }
-unsigned wordView::hardlen() const { return 4; }
+unsigned wordView::hexlen() const { return 4; }
 
 dwordView::dwordView(binary_stream& h)
 	:hexView(h)
@@ -230,7 +230,7 @@ char* dwordView::get(__filesize_t val) const {
     return Get8Digit(v);
 }
 unsigned dwordView::size() const { return 4; }
-unsigned dwordView::hardlen() const { return 8; }
+unsigned dwordView::hexlen() const { return 8; }
 
 unsigned char bitView::width(const TWindow& main_wnd,bool is_file64) const { return main_wnd.width()-(is_file64?18:10)/(8+1+1); }
 unsigned char byteView::width(const TWindow& main_wnd,bool is_file64) const { return main_wnd.width()-(is_file64?18:10)/(12+1+4)*4; } /* always round on four-column boundary */
@@ -273,7 +273,7 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
     unsigned scrHWidth;
     __filesize_t sindex,cpos,flen,lindex,SIndex;
     static __filesize_t hmocpos = 0L;
-    int __inc,dlen;
+    int __inc,hexlen;
     cpos = main_handle.tell();
     if(hmocpos != cpos || keycode == KE_SUPERKEY || keycode == KE_JUSTFIND) {
 	tAbsCoord height = main_wnd.client_height();
@@ -283,7 +283,7 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 	if(!(hmocpos == cpos + HWidth || hmocpos == cpos - HWidth)) keycode = KE_SUPERKEY;
 	hmocpos = cpos;
 	__inc = hex_viewer->size();
-	dlen = hex_viewer->hardlen();
+	hexlen = hex_viewer->hexlen();
 	flen = main_handle.flength();
 	scrHWidth = HWidth*__inc;
 	if(flen < HWidth) HWidth = flen;
@@ -318,8 +318,8 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 		len = is_file64?18:10;
 		::memcpy(outstr,code_guider.encode_address(sindex,hexAddressResolv).c_str(),len);
 		for(j = 0,freq = 0,lindex = sindex;j < rwidth;j++,lindex += __inc,freq++) {
-		    ::memcpy(&outstr[len],hex_viewer->get(lindex),dlen);
-		    len += dlen + 1;
+		    ::memcpy(&outstr[len],hex_viewer->get(lindex),hexlen);
+		    len += hexlen + 1;
 		    if(hmode == 1) if(freq == 3) { freq = -1; len++; }
 		}
 		main_handle.seek(sindex,binary_stream::Seek_Set);
@@ -338,7 +338,11 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 
 void HexMode::help() const
 {
-   hlpDisplay(1002);
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(1002);
+	bhelp.close();
+    }
 }
 
 unsigned long HexMode::prev_page_size() const { return (hex_viewer->width(main_wnd,is_file64)-virtWidthCorr)*hex_viewer->size()*main_wnd.client_height(); }

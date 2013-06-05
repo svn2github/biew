@@ -266,8 +266,12 @@ bool MZ_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 
 __filesize_t MZ_Parser::action_F1()
 {
-  hlpDisplay(10013);
-  return beye_context().tell();
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(10013);
+	bhelp.close();
+    }
+    return beye_context().tell();
 }
 
 __filesize_t MZ_Parser::is_new_exe(binary_stream& main_handle)

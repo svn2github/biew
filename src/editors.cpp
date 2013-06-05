@@ -43,7 +43,11 @@ unsigned char edit_XX = 0;
 
 void ExtHelp()
 {
-    hlpDisplay(2);
+    Beye_Help bhelp;
+    if(bhelp.open(true)) {
+	bhelp.run(2);
+	bhelp.close();
+    }
 }
 
 void BeyeContext::paint_Etitle( int shift,bool use_shift ) const
