@@ -18,8 +18,18 @@ binary_packet::binary_packet(const binary_packet& from)
 	    ,len(from.len)
 {
     if(from.len) {
-	buffer=new char[from.length()];
-	::memcpy(buffer,from.data(),len);
+	buffer=new char[from.len];
+	::memcpy(buffer,from.buffer,len);
+    }
+}
+
+binary_packet::binary_packet(const any_t* src,size_t size)
+	    :buffer(NULL)
+	    ,len(size)
+{
+    if(size) {
+	buffer=new char[size];
+	::memcpy(buffer,src,len);
     }
 }
 
@@ -47,17 +57,51 @@ binary_packet&	binary_packet::append(const any_t* _data,size_t sz) {
 
 binary_packet&	binary_packet::append(const binary_packet& it) { return append(it.buffer,it.len); }
 
-void binary_packet::clear() {
-    resize(0);
+binary_packet	binary_packet::operator+(const binary_packet& rhs) const {
+    binary_packet rc(len+rhs.len);
+    ::memcpy(rc.buffer,buffer,len);
+    ::memcpy(&((char*)rc.buffer)[len],rhs.buffer,rhs.len);
+    return rc;
 }
-void binary_packet::resize(size_t newsz) {
+
+binary_packet& binary_packet::clear() {
+    return resize(0);
+}
+binary_packet& binary_packet::resize(size_t newsz) {
     len=newsz;
     if(newsz) buffer=mp_realloc(buffer,newsz);
     else { delete (char*)buffer; buffer=NULL; }
+    return *this;
 }
 
 char& binary_packet::operator[](size_t idx) { return at(idx); }
 const char& binary_packet::operator[](size_t idx) const { return at(idx); }
+
+
+bool binary_packet::operator==(const binary_packet& from) const {
+    if(len==from.len) return ::memcmp(buffer,from.buffer,len)==0;
+    return false;
+}
+bool binary_packet::operator!=(const binary_packet& from) const {
+    if(len==from.len) return ::memcmp(buffer,from.buffer,len)!=0;
+    return true;
+}
+bool binary_packet::operator<(const binary_packet& from) const {
+    if(len==from.len) return ::memcmp(buffer,from.buffer,len)<0;
+    return len<from.len;
+}
+bool binary_packet::operator<=(const binary_packet& from) const {
+    if(len==from.len) return ::memcmp(buffer,from.buffer,len)<=0;
+    return len<from.len;
+}
+bool binary_packet::operator>(const binary_packet& from) const {
+    if(len==from.len) return ::memcmp(buffer,from.buffer,len)>0;
+    return len>from.len;
+}
+bool binary_packet::operator>=(const binary_packet& from) const {
+    if(len==from.len) return ::memcmp(buffer,from.buffer,len)>=0;
+    return len>from.len;
+}
 
 char&		binary_packet::front() { return ((char*)buffer)[0]; }
 const char&	binary_packet::front() const { return ((const char*)buffer)[0]; }
