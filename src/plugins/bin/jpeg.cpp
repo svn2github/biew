@@ -52,7 +52,15 @@ Jpeg_Parser::Jpeg_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
 	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
 	    ,_udn(u)
-{}
+{
+    unsigned long val;
+    unsigned char id[4];
+    main_handle.seek(0,binary_stream::Seek_Set);
+    val = main_handle.read(type_dword);
+    main_handle.seek(6,binary_stream::Seek_Set);
+    main_handle.read(id,4);
+    if(!(val==0xE0FFD8FF && memcmp(id,"JFIF",4)==0)) throw bad_format_exception();
+}
 Jpeg_Parser::~Jpeg_Parser() {}
 int Jpeg_Parser::query_platform() const { return DISASM_DEFAULT; }
 
@@ -62,21 +70,9 @@ __filesize_t Jpeg_Parser::show_header() const
     return beye_context().tell();
 }
 
-static bool probe(binary_stream& main_handle) {
-    unsigned long val;
-    unsigned char id[4];
-    main_handle.seek(0,binary_stream::Seek_Set);
-    val = main_handle.read(type_dword);
-    main_handle.seek(6,binary_stream::Seek_Set);
-    main_handle.read(id,4);
-    if(val==0xE0FFD8FF && memcmp(id,"JFIF",4)==0) return true;
-    return false;
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) Jpeg_Parser(h,_parent,u); }
 extern const Binary_Parser_Info jpeg_info = {
     "JPEG file format",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

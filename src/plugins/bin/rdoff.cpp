@@ -537,6 +537,12 @@ RDOff_Parser::RDOff_Parser(binary_stream& h,CodeGuider& _code_guider,udn& u)
 	    ,code_guider(_code_guider)
 	    ,_udn(u)
 {
+    char rbuff[6];
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(rbuff,sizeof(rbuff));
+    if(!(memcmp(rbuff,"RDOFF1",sizeof(rbuff)) == 0 ||
+	memcmp(rbuff,"RDOFF\x1",sizeof(rbuff)) == 0)) throw bad_format_exception();
+
     unsigned long cs_len;
     main_handle.seek(6,binary_stream::Seek_Set);
     rdoff_hdrlen = main_handle.read(type_dword);
@@ -744,18 +750,9 @@ bool RDOff_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 
 int RDOff_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static bool probe(binary_stream& main_handle) {
-    char rbuff[6];
-    main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(rbuff,sizeof(rbuff));
-    return  memcmp(rbuff,"RDOFF1",sizeof(rbuff)) == 0 ||
-	    memcmp(rbuff,"RDOFF\x1",sizeof(rbuff)) == 0;
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) RDOff_Parser(h,_parent,u); }
 extern const Binary_Parser_Info rdoff_info = {
     "RDOFF (Relocatable Dynamic Object File Format)",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

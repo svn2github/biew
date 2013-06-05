@@ -572,6 +572,11 @@ NLM_Parser::NLM_Parser(binary_stream& h,CodeGuider& _code_guider,udn& u)
 	    ,code_guider(_code_guider)
 	    ,_udn(u)
 {
+    char ctrl[NLM_SIGNATURE_SIZE];
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(ctrl,NLM_SIGNATURE_SIZE);
+    if(memcmp(ctrl,NLM_SIGNATURE,NLM_SIGNATURE_SIZE) != 0) throw bad_format_exception();
+
     main_handle.seek(0,binary_stream::Seek_Set);
     main_handle.read(&nlm,sizeof(Nlm_Internal_Fixed_Header));
     nlm_cache = main_handle.dup();
@@ -717,17 +722,9 @@ __filesize_t NLM_Parser::pa2va(__filesize_t pa) const
 
 int NLM_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static bool probe(binary_stream& main_handle) {
-  char ctrl[NLM_SIGNATURE_SIZE];
-    main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(ctrl,NLM_SIGNATURE_SIZE);
-  return memcmp(ctrl,NLM_SIGNATURE,NLM_SIGNATURE_SIZE) == 0;
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) NLM_Parser(h,_parent,u); }
 extern const Binary_Parser_Info nlm_info = {
     "nlm-i386 (Novell Loadable Module)",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

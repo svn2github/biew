@@ -90,7 +90,15 @@ SisX_Parser::SisX_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
 	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
 	    ,_udn(u)
-{}
+{
+    unsigned char sign[4];
+    unsigned long id;
+    main_handle.seek(0,binary_stream::Seek_Set);
+    id=main_handle.read(type_dword);
+    main_handle.seek(16L,binary_stream::Seek_Set);
+    main_handle.read(sign,sizeof(sign));
+    if(!((id&0x10000000UL)==0x10000000UL && memcmp(sign,"EPOC",4)==0)) throw bad_format_exception();
+}
 SisX_Parser::~SisX_Parser() {}
 int  SisX_Parser::query_platform() const {
  unsigned id;
@@ -183,21 +191,9 @@ __filesize_t SisX_Parser::show_header() const
  return fpos;
 }
 
-static bool probe(binary_stream& main_handle) {
-    unsigned char sign[4];
-    unsigned long id;
-    main_handle.seek(0,binary_stream::Seek_Set);
-    id=main_handle.read(type_dword);
-    main_handle.seek(16L,binary_stream::Seek_Set);
-    main_handle.read(sign,sizeof(sign));
-    if((id&0x10000000UL)==0x10000000UL && memcmp(sign,"EPOC",4)==0) return true;
-    return false;
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) SisX_Parser(h,_parent,u); }
 extern const Binary_Parser_Info sisx_info = {
     "SisX(EPOC) Symbian OS executable file",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

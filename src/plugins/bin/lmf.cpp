@@ -118,10 +118,38 @@ LMF_Parser::LMF_Parser(binary_stream& _h,CodeGuider& code_guider,udn& u)
 	    ,main_handle(_h)
 	    ,_udn(u)
 {
-    uint32_t i;
+    lmf_xdef _xdef;
     int32_t j,p=0;
+    uint32_t i;
 /*	lmf_data d;*/
     lmf_header h;
+    main_handle.seek(0,binary_stream::Seek_Set);
+    if(!main_handle.read(&h,sizeof h)) throw bad_format_exception();
+	/* Test a first heder */
+    if(h.rec_type!=_LMF_DEFINITION_REC||h.zero1!=0||/*h.spare!=0||*/
+		h.data_nbytes<DEFSIZE()+2*sizeof(long)||
+		(h.data_nbytes-DEFSIZE())%4!=0) throw bad_format_exception();
+    i=j=(h.data_nbytes-DEFSIZE())/4;
+    main_handle.seek(6,binary_stream::Seek_Set);
+    if(!main_handle.read(&_xdef,std::min(sizeof(lmf_xdef),size_t(h.data_nbytes)))) throw bad_format_exception();
+	/* Test a definition record */
+    if(_xdef.def.version_no!=400||_xdef.def.code_index>i||_xdef.def.stack_index>i||
+		_xdef.def.heap_index>i||_xdef.def.argv_index>i||_xdef.def.zero2!=0)
+		throw bad_format_exception();
+    if(_xdef.def.cpu%100!=86||(_xdef.def.fpu!=0&&_xdef.def.fpu%100!=87))
+		throw bad_format_exception();
+    if(_xdef.def.cflags&_PCF_FLAT&&_xdef.def.flat_offset==0) throw bad_format_exception();
+    if(_xdef.def.stack_nbytes==0) throw bad_format_exception();
+    for(i=0;i<4;i++) if(_xdef.def.zero1[i]!=0) throw bad_format_exception();
+    while(1) {
+	/* Test other headers */
+	p+=HDRSIZE()+h.data_nbytes;
+	main_handle.seek(p,binary_stream::Seek_Set);
+	if(!main_handle.read(&h,sizeof h)) throw bad_format_exception();
+	if(h.rec_type==_LMF_DEFINITION_REC||h.data_nbytes==0||h.zero1!=0/*||h.spare!=0*/) throw bad_format_exception();
+	if(h.rec_type==_LMF_EOF_REC) break;
+    }
+
     main_handle.seek(0,binary_stream::Seek_Set);
     main_handle.read(&h,sizeof h);
 	/* Test a first heder */
@@ -512,47 +540,9 @@ __filesize_t LMF_Parser::action_F1()
   return beye_context().tell();
 }
 
-static bool probe(binary_stream& main_handle)
-{
-    lmf_xdef xdef;
-    int32_t j,p=0;
-    uint32_t i;
-/*	lmf_data d;*/
-    lmf_header h;
-    main_handle.seek(0,binary_stream::Seek_Set);
-    if(!main_handle.read(&h,sizeof h)) return false;
-	/* Test a first heder */
-    if(h.rec_type!=_LMF_DEFINITION_REC||h.zero1!=0||/*h.spare!=0||*/
-		h.data_nbytes<DEFSIZE()+2*sizeof(long)||
-		(h.data_nbytes-DEFSIZE())%4!=0) return false;
-    i=j=(h.data_nbytes-DEFSIZE())/4;
-    main_handle.seek(6,binary_stream::Seek_Set);
-    if(!main_handle.read(&xdef,std::min(sizeof(lmf_xdef),size_t(h.data_nbytes)))) return false;
-	/* Test a definition record */
-    if(xdef.def.version_no!=400||xdef.def.code_index>i||xdef.def.stack_index>i||
-		xdef.def.heap_index>i||xdef.def.argv_index>i||xdef.def.zero2!=0)
-		return false;
-    if(xdef.def.cpu%100!=86||(xdef.def.fpu!=0&&xdef.def.fpu%100!=87))
-		return false;
-    if(xdef.def.cflags&_PCF_FLAT&&xdef.def.flat_offset==0) return false;
-    if(xdef.def.stack_nbytes==0) return false;
-    for(i=0;i<4;i++) if(xdef.def.zero1[i]!=0) return false;
-    while(1) {
-	/* Test other headers */
-	p+=HDRSIZE()+h.data_nbytes;
-	main_handle.seek(p,binary_stream::Seek_Set);
-	if(!main_handle.read(&h,sizeof h)) return false;
-	if(h.rec_type==_LMF_DEFINITION_REC||h.data_nbytes==0||h.zero1!=0/*||h.spare!=0*/) return false;
-	if(h.rec_type==_LMF_EOF_REC) break;
-    }
-    return true;
-}
-
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) LMF_Parser(h,_parent,u); }
 extern const Binary_Parser_Info lmf_info = {
     "lmf (QNX4 executable file)",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

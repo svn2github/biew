@@ -102,6 +102,11 @@ oldPharLap_Parser::oldPharLap_Parser(binary_stream& h,CodeGuider& code_guider,ud
 		,main_handle(h)
 		,_udn(u)
 {
+    char sign[2];
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(sign,2);
+    if(!(sign[0] == 'M' && sign[1] == 'P')) throw bad_format_exception();
+
     main_handle.seek(0,binary_stream::Seek_Set);
     main_handle.read(&oph,sizeof(oph));
 }
@@ -130,18 +135,9 @@ __filesize_t oldPharLap_Parser::action_F1()
 
 int oldPharLap_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static bool probe(binary_stream& main_handle) {
-   char sign[2];
-    main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(sign,2);
-   if(sign[0] == 'M' && sign[1] == 'P') return true;
-   return false;
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) oldPharLap_Parser(h,_parent,u); }
 extern const Binary_Parser_Info oldpharlap_info = {
     "PharLap",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

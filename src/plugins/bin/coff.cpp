@@ -566,7 +566,11 @@ Coff_Parser::Coff_Parser(binary_stream& h,CodeGuider& _code_guider,udn& u)
 	    ,_udn(u)
 {
     __filesize_t s_off = sizeof(coff386hdr);
-    uint_fast16_t i;
+    uint_fast16_t i,id;
+    main_handle.seek(0,binary_stream::Seek_Set);
+    id = main_handle.read(type_word);
+    if((I386BADMAG(id))) throw bad_format_exception();
+
     main_handle.seek(0,binary_stream::Seek_Set);
     main_handle.read(&coff386hdr,sizeof(struct external_filehdr));
     if(COFF_WORD(coff386hdr.f_opthdr)) main_handle.read(&coff386ahdr,sizeof(AOUTHDR));
@@ -719,17 +723,9 @@ Object_Info Coff_Parser::get_object_attribute(__filesize_t pa) {
 
 int Coff_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static bool probe(binary_stream& main_handle) {
-    uint_fast16_t id;
-    main_handle.seek(0,binary_stream::Seek_Set);
-    id = main_handle.read(type_word);
-    return !(I386BADMAG(id));
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) Coff_Parser(h,_parent,u); }
 extern const Binary_Parser_Info coff_info = {
     "coff-i386 (Common Object File Format)",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

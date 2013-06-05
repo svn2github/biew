@@ -1193,6 +1193,14 @@ NE_Parser::NE_Parser(binary_stream& h,CodeGuider& __code_guider,udn& u)
 	,CurrChainSegment(0xFFFF)
 	,CurrSegmentHasReloc(-1)
 {
+    char id[2];
+    if(headshift()) {
+	h.seek(headshift(),binary_stream::Seek_Set);
+	h.read(id,sizeof(id));
+	if(!(id[0] == 'N' && id[1] == 'E')) throw bad_format_exception();
+    }
+    else throw bad_format_exception();
+
     h.seek(headshift(),binary_stream::Seek_Set);
     h.read(&ne,sizeof(NEHEADER));
     ne_cache3 = h.dup();
@@ -1360,21 +1368,9 @@ bool NE_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 
 int NE_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static bool probe(binary_stream& main_handle) {
-    char id[2];
-    __filesize_t headshift = MZ_Parser::is_new_exe(main_handle);
-    if(headshift) {
-	main_handle.seek(headshift,binary_stream::Seek_Set);
-	main_handle.read(id,sizeof(id));
-	if(id[0] == 'N' && id[1] == 'E') return true;
-    }
-    return false;
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) NE_Parser(h,_parent,u); }
 extern const Binary_Parser_Info ne_info = {
     "NE (New Exe)",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

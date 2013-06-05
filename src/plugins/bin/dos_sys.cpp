@@ -114,7 +114,7 @@ DosSys_Parser::DosSys_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
     if(id[0] == 0xFF && id[1] == 0xFF && id[2] == 0xFF && id[3] == 0xFF) {
 	main_handle.seek(4,binary_stream::Seek_Set);
 	main_handle.read((any_t*)&drv,sizeof(DOSDRIVER));
-    }
+    } else throw bad_format_exception();
 }
 DosSys_Parser::~DosSys_Parser() {}
 int DosSys_Parser::query_platform() const { return DISASM_CPU_IX86; }
@@ -136,19 +136,9 @@ __filesize_t DosSys_Parser::action_F1()
 __filesize_t DosSys_Parser::va2pa(__filesize_t va) const { return va; }
 __filesize_t DosSys_Parser::pa2va(__filesize_t pa) const { return pa; }
 
-static bool probe(binary_stream& main_handle) {
-  unsigned char id[4];
-  bool ret = false;
-    main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(id,sizeof(id));
-  if(id[0] == 0xFF && id[1] == 0xFF && id[2] == 0xFF && id[3] == 0xFF) ret = true;
-  return ret;
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) DosSys_Parser(h,_parent,u); }
 extern const Binary_Parser_Info dossys_info = {
     "DOS-driver",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

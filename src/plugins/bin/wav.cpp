@@ -183,7 +183,15 @@ Wave_Parser::Wave_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
 	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
 	    ,_udn(u)
-{}
+{
+    unsigned long id,id0;
+    main_handle.seek(0,binary_stream::Seek_Set);
+    id0 = main_handle.read(type_dword);
+    main_handle.seek(8,binary_stream::Seek_Set);
+    id = main_handle.read(type_dword);
+    if(!(id0==mmioFOURCC('R','I','F','F') &&
+	id==mmioFOURCC('W','A','V','E'))) throw bad_format_exception();
+}
 Wave_Parser::~Wave_Parser() {}
 int  Wave_Parser::query_platform() const { return DISASM_DEFAULT; }
 
@@ -248,22 +256,9 @@ __filesize_t Wave_Parser::show_header() const
  return fpos;
 }
 
-static bool probe(binary_stream& main_handle) {
-    unsigned long id,id0;
-    main_handle.seek(0,binary_stream::Seek_Set);
-    id0 = main_handle.read(type_dword);
-    main_handle.seek(8,binary_stream::Seek_Set);
-    id = main_handle.read(type_dword);
-    if(	id0==mmioFOURCC('R','I','F','F') &&
-	id==mmioFOURCC('W','A','V','E'))
-	return true;
-    return false;
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) Wave_Parser(h,_parent,u); }
 extern const Binary_Parser_Info wav_info = {
     "RIFF WAVE format",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

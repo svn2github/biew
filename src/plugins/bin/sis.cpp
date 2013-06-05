@@ -79,7 +79,17 @@ Sis_Parser::Sis_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
 	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
 	    ,_udn(u)
-{}
+{
+    unsigned long id1,id2,id3;
+    main_handle.seek(0,binary_stream::Seek_Set);
+    id1=main_handle.read(type_dword);
+    id2=main_handle.read(type_dword);
+    id3=main_handle.read(type_dword);
+    if(!((id2==0x10003A12 || id2==0x1000006D) && id3==0x10000419)) {
+    /* try s60 3rd */
+	if(id1!=0x10201A7A) throw bad_format_exception();
+    }
+}
 Sis_Parser::~Sis_Parser() {}
 int  Sis_Parser::query_platform() const { return DISASM_CPU_ARM; }
 
@@ -155,22 +165,9 @@ __filesize_t Sis_Parser::show_header() const
  return fpos;
 }
 
-static bool probe(binary_stream& main_handle) {
-    unsigned long id1,id2,id3;
-    main_handle.seek(0,binary_stream::Seek_Set);
-    id1=main_handle.read(type_dword);
-    id2=main_handle.read(type_dword);
-    id3=main_handle.read(type_dword);
-    if((id2==0x10003A12 || id2==0x1000006D) && id3==0x10000419) return true;
-    /* try s60 3rd */
-    if(id1==0x10201A7A) return true;
-    return false;
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) Sis_Parser(h,_parent,u); }
 extern const Binary_Parser_Info sis_info = {
     "Sis(EPOC) Symbian OS installable file",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

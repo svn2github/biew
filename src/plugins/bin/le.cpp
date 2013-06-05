@@ -285,6 +285,12 @@ exit:
 LE_Parser::LE_Parser(binary_stream& h,CodeGuider& __code_guider,udn& u)
 	:LX_Parser(h,__code_guider,u)
 {
+    if(headshift()) {
+	char id[2];
+	main_handle().seek(headshift(),binary_stream::Seek_Set);
+	main_handle().read(id,sizeof(id));
+	if(!(id[0] == 'L' && id[1] == 'E')) throw bad_format_exception();
+    } else throw bad_format_exception();
     main_handle().seek(headshift(),binary_stream::Seek_Set);
     main_handle().read(&lxe.le,sizeof(LEHEADER));
 }
@@ -329,22 +335,9 @@ bool LE_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 
 int LE_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static bool probe(binary_stream& main_handle) {
-   char id[2];
-   __filesize_t headshift = MZ_Parser::is_new_exe(main_handle);
-   if(headshift)
-   {
-     main_handle.seek(headshift,binary_stream::Seek_Set);
-     main_handle.read(id,sizeof(id));
-     if(id[0] == 'L' && id[1] == 'E') return true;
-   }
-   return false;
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) LE_Parser(h,_parent,u); }
 extern const Binary_Parser_Info le_info = {
     "LE (Linear Executable)",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

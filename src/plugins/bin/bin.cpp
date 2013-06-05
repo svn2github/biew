@@ -41,11 +41,9 @@ Bin_Parser::Bin_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
 Bin_Parser::~Bin_Parser() {}
 int  Bin_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-static bool probe(binary_stream&) { return true; }
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) Bin_Parser(h,_parent,u); }
 extern const Binary_Parser_Info bin_info = {
     "Binary file",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

@@ -58,20 +58,16 @@ RM_Parser::RM_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
 	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
 	    ,_udn(u)
-{}
+{
+    main_handle.seek(0,binary_stream::Seek_Set);
+    if(main_handle.read(type_dword)!=MKTAG('.', 'R', 'M', 'F')) throw bad_format_exception();
+}
 RM_Parser::~RM_Parser() {}
 int  RM_Parser::query_platform() const { return DISASM_DEFAULT; }
-
-static bool probe(binary_stream& main_handle) {
-    main_handle.seek(0,binary_stream::Seek_Set);
-    if(main_handle.read(type_dword)==MKTAG('.', 'R', 'M', 'F')) return true;
-    return false;
-}
 
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) RM_Parser(h,_parent,u); }
 extern const Binary_Parser_Info rm_info = {
     "Real Media file format",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

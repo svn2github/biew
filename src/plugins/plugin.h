@@ -1,6 +1,7 @@
 #ifndef __PLUGIN_HPP_INCLUDED
 #define __PLUGIN_HPP_INCLUDED 1
 #include <vector>
+#include <exception>
 
 #include "libbeye/libbeye.h"
 #include "beyeutil.h"
@@ -14,6 +15,14 @@ namespace	usr {
     class udn;
     struct Symbol_Info;
     struct Object_Info;
+
+    class bad_format_exception : public std::exception {
+	public:
+	    bad_format_exception() throw();
+	    virtual ~bad_format_exception() throw();
+
+	    virtual const char*	what() const throw();
+    };
 
     class Plugin : public Opaque {
 	public:

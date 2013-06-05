@@ -596,6 +596,12 @@ JVM_Parser::JVM_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
 {
     __filesize_t fpos;
     unsigned short sval;
+    unsigned char id[4];
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(id,sizeof(id));
+    /* Cafe babe !!! */
+    if(!(id[0]==0xCA && id[1]==0xFE && id[2]==0xBA && id[3]==0xBE && main_handle.flength()>=16)) throw bad_format_exception();
+
     jvm_header.magic=0xCAFEBABE;
     jvm_header.attrcode_offset=-1;
     jvm_header.code_offset=-1;
@@ -992,18 +998,9 @@ bool JVM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
     return retrf;
 }
 
-static bool probe(binary_stream& main_handle) {
-  unsigned char id[4];
-    main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(id,sizeof(id));
-  /* Cafe babe !!! */
-  return id[0]==0xCA && id[1]==0xFE && id[2]==0xBA && id[3]==0xBE && main_handle.flength()>=16;
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) JVM_Parser(h,_parent,u); }
 extern const Binary_Parser_Info jvm_info = {
     "Java's ClassFile",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

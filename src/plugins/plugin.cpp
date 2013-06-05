@@ -7,6 +7,11 @@
 #include "plugins/binary_parser.h"
 
 namespace	usr {
+
+bad_format_exception::bad_format_exception() throw() {}
+bad_format_exception::~bad_format_exception() throw() {}
+const char* bad_format_exception::what() const throw() { return "unknown format of file"; }
+
 extern const Binary_Parser_Info bin_info;
 extern const Binary_Parser_Info rm_info;
 extern const Binary_Parser_Info mov_info;
@@ -78,10 +83,13 @@ void Bin_Format::detect_format(binary_stream& handle)
     if(!handle.flength()) return;
     size_t i,sz=formats.size();
     for(i = 0;i < sz;i++) {
-	if(formats[i]->probe(handle)) {
+	try {
 	    detectedFormat = formats[i]->query_interface(handle,parent,_udn);
 	    active_format = i;
 	    break;
+	} catch (const bad_format_exception& ) {
+	    delete detectedFormat;
+	    continue;
 	}
     }
 }

@@ -120,7 +120,14 @@ AVI_Parser::AVI_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
 	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
 	    ,_udn(u)
-{}
+{
+    unsigned long id;
+    main_handle.seek(8,binary_stream::Seek_Set);
+    id = main_handle.read(type_dword);
+    main_handle.seek(0,binary_stream::Seek_Set);
+    if(!(main_handle.read(type_dword)==mmioFOURCC('R','I','F','F') &&
+	(id==mmioFOURCC('A','V','I',' ') || id==mmioFOURCC('O','N','2',' ')))) throw bad_format_exception();
+}
 AVI_Parser::~AVI_Parser() {}
 int AVI_Parser::query_platform() const { return DISASM_DEFAULT; }
 
@@ -344,21 +351,9 @@ __filesize_t AVI_Parser::action_F3()
  return fpos;
 }
 
-static bool probe(binary_stream& main_handle) {
-    unsigned long id;
-    main_handle.seek(8,binary_stream::Seek_Set);
-    id = main_handle.read(type_dword);
-    main_handle.seek(0,binary_stream::Seek_Set);
-    if(main_handle.read(type_dword)==mmioFOURCC('R','I','F','F') &&
-	(id==mmioFOURCC('A','V','I',' ') || id==mmioFOURCC('O','N','2',' ')))
-	return true;
-    return false;
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) AVI_Parser(h,_parent,u); }
 extern const Binary_Parser_Info avi_info = {
     "Audio Video Interleaved format",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

@@ -1208,7 +1208,15 @@ PE_Parser::PE_Parser(binary_stream& h,CodeGuider& __code_guider,udn& u)
 	,overlayPE(-1L)
 	,pe_cache(&h)
 {
-   int i;
+    char id[2];
+    if(headshift()) {
+	main_handle().seek(headshift(),binary_stream::Seek_Set);
+	main_handle().read(id,sizeof(id));
+	if(!(id[0] == 'P' && id[1] == 'E')) throw bad_format_exception();
+    }
+    else throw bad_format_exception();
+
+    int i;
 
     main_handle().seek(headshift(),binary_stream::Seek_Set);
     main_handle().read(&pe,sizeof(PE_HEADER));
@@ -1440,22 +1448,9 @@ int PE_Parser::query_platform() const {
     return id;
 }
 
-static bool probe(binary_stream& main_handle) {
-   char id[2];
-   __filesize_t headshift = MZ_Parser::is_new_exe(main_handle);
-   if(headshift)
-   {
-     main_handle.seek(headshift,binary_stream::Seek_Set);
-     main_handle.read(id,sizeof(id));
-     if(id[0] == 'P' && id[1] == 'E') return true;
-   }
-   return false;
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) PE_Parser(h,_parent,u); }
 extern const Binary_Parser_Info pe_info = {
     "PE (Portable Executable)",	/**< plugin name */
-    probe,
     query_interface
 };
 

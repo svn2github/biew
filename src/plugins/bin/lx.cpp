@@ -964,6 +964,11 @@ exit:
 LX_Parser::LX_Parser(binary_stream& h,CodeGuider& __code_guider,udn& u)
 	:MZ_Parser(h,__code_guider,u)
 {
+    char id[4];
+    main_handle().seek(headshift(),binary_stream::Seek_Set);
+    main_handle().read(id,sizeof(id));
+    if(!(id[0] == 'L' && id[1] == 'X' && id[2] == 0 && id[3] == 0)) throw bad_format_exception();
+
     main_handle().seek(headshift(),binary_stream::Seek_Set);
     main_handle().read(&lxe.lx,sizeof(LXHEADER));
     lx_cache = main_handle().dup();
@@ -1106,20 +1111,9 @@ bool LX_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 
 int LX_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static bool probe(binary_stream& main_handle)
-{
-    char id[4];
-    __filesize_t headshift = MZ_Parser::is_new_exe(main_handle);
-    main_handle.seek(headshift,binary_stream::Seek_Set);
-    main_handle.read(id,sizeof(id));
-    if(id[0] == 'L' && id[1] == 'X' && id[2] == 0 && id[3] == 0) return true;
-    return false;
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) LX_Parser(h,_parent,u); }
 extern const Binary_Parser_Info lx_info = {
     "LX (Linear eXecutable)",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

@@ -175,6 +175,7 @@ Arch_Parser::Arch_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
 {
     main_handle.seek(0,binary_stream::Seek_Set);
     main_handle.read(&arch,sizeof(arch));
+    if(strncmp((const char*)arch.ar_magic,"!<arch>\012",8) != 0) throw bad_format_exception();
 }
 Arch_Parser::~Arch_Parser(){}
 
@@ -198,19 +199,11 @@ __filesize_t Arch_Parser::action_F1()
   return beye_context().tell();
 }
 
-static bool probe(binary_stream& main_handle) {
-  char str[16];
-    main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(str,sizeof(str));
-  return strncmp(str,"!<arch>\012",8) == 0;
-}
-
 int Arch_Parser::query_platform() const { return DISASM_DEFAULT; }
 
 static Binary_Parser* query_interface(binary_stream& main_handle,CodeGuider& _parent,udn& u) { return new(zeromem) Arch_Parser(main_handle,_parent,u); }
 extern const Binary_Parser_Info arch_info = {
     "arch (Archive)",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

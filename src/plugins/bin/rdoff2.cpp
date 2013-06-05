@@ -97,23 +97,20 @@ RDOff2_Parser::RDOff2_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
 	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
 	    ,_udn(u)
-{}
+{
+    char rbuff[6];
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(rbuff,sizeof(rbuff));
+    if(!(memcmp(rbuff,"RDOFF2",sizeof(rbuff)) == 0 ||
+	 memcmp(rbuff,"RDOFF\x2",sizeof(rbuff)) == 0)) throw bad_format_exception();
+}
 RDOff2_Parser::~RDOff2_Parser() {}
 
 int RDOff2_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static bool probe(binary_stream& main_handle) {
-    char rbuff[6];
-    main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(rbuff,sizeof(rbuff));
-  return memcmp(rbuff,"RDOFF2",sizeof(rbuff)) == 0 ||
-	 memcmp(rbuff,"RDOFF\x2",sizeof(rbuff)) == 0;
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) RDOff2_Parser(h,_parent,u); }
 extern const Binary_Parser_Info rdoff2_info = {
     "RDOFF v2 (Relocatable Dynamic Object File Format)",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

@@ -242,7 +242,7 @@ MZ_Parser::MZ_Parser(binary_stream& h,CodeGuider& __code_guider,udn& u)
 	_main_handle.read((any_t*)&mz,sizeof(MZHEADER));
 	HeadSize = ((unsigned long)mz.mzHeaderSize) << 4;
 	_headshift = is_new_exe(h);
-    }
+    } else throw bad_format_exception();
 }
 MZ_Parser::~MZ_Parser() {}
 int MZ_Parser::query_platform() const { return DISASM_CPU_IX86; }
@@ -282,19 +282,9 @@ __filesize_t MZ_Parser::is_new_exe(binary_stream& main_handle)
     return (__filesize_t)ret;
 }
 
-static bool probe(binary_stream& _main_handle) {
-    unsigned char id[2];
-    _main_handle.seek(0,binary_stream::Seek_Set);
-    _main_handle.read(id,sizeof(id));
-    if((id[0] == 'M' && id[1] == 'Z') ||
-	(id[0] == 'Z' && id[1] == 'M')) return true;
-    return false;
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) MZ_Parser(h,_parent,u); }
 extern const Binary_Parser_Info mz_info = {
     "MZ (Old DOS-exe)",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

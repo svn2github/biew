@@ -1482,6 +1482,11 @@ ELF_Parser::ELF_Parser(binary_stream& h,CodeGuider& _code_guider,udn& u)
 {
     __filesize_t fs;
     uint8_t buf[16];
+    char id[4];
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(id,sizeof id);
+    if(!IS_ELF(id)) throw bad_format_exception();
+
     main_handle.seek(0,binary_stream::Seek_Set);
     main_handle.read(buf,16);
     is_msbf = (buf[EI_DATA] == ELFDATA2MSB);
@@ -1687,18 +1692,9 @@ Bin_Format::endian ELF_Parser::query_endian(__filesize_t off) const {
  return is_msbf?Bin_Format::Big:Bin_Format::Little;
 }
 
-static bool probe(binary_stream& main_handle) {
-    char id[4];
-    main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(id,sizeof id);
-    return IS_ELF(id);
-//  [0] == EI_MAG0 && id[1] == EI_MAG1 && id[2] == 'L' && id[3] == 'F';
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) ELF_Parser(h,_parent,u); }
 extern const Binary_Parser_Info elf_info = {
     "ELF (Executable and Linking Format)",	/**< plugin name */
-    probe,
     query_interface
 };
 

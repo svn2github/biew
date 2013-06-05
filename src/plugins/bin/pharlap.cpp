@@ -259,6 +259,11 @@ PharLap_Parser::PharLap_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
 	    ,_udn(u)
 	    ,pl_cache(&h)
 {
+    char sign[2];
+    main_handle.seek(0,binary_stream::Seek_Set);
+    main_handle.read(sign,2);
+    if(!(sign[0] == 'P' && (sign[1] == '2' || sign[1] == '3'))) throw bad_format_exception();
+
     main_handle.seek(0,binary_stream::Seek_Set);
     main_handle.read(&nph,sizeof(nph));
     pl_cache = main_handle.dup();
@@ -291,18 +296,9 @@ __filesize_t PharLap_Parser::action_F1()
 
 int PharLap_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static bool probe(binary_stream& main_handle) {
-   char sign[2];
-    main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(sign,2);
-   if(sign[0] == 'P' && (sign[1] == '2' || sign[1] == '3')) return true;
-   return false;
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) PharLap_Parser(h,_parent,u); }
 extern const Binary_Parser_Info pharlap_info = {
     "PharLap",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

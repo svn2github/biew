@@ -173,6 +173,12 @@ AOut_Parser::AOut_Parser(binary_stream& h,CodeGuider&c,udn& u)
     uint32_t id;
     main_handle.seek(0,binary_stream::Seek_Set);
     id = main_handle.read(type_dword);
+    if(!AOut_Parser::check_fmt(id)) {
+	id=be2me_32(id);
+	if(!AOut_Parser::check_fmt(id)) throw bad_format_exception();
+    }
+    main_handle.seek(0,binary_stream::Seek_Set);
+    id = main_handle.read(type_dword);
     if(probe_fmt(id)) return;
     id=be2me_32(id);
     if(probe_fmt(id)) is_msbf=1;
@@ -220,20 +226,9 @@ int AOut_Parser::query_platform() const {
  return id;
 }
 
-static bool probe(binary_stream& main_handle) {
-  uint32_t id;
-  main_handle.seek(0,binary_stream::Seek_Set);
-  id = main_handle.read(type_dword);
-  if(AOut_Parser::check_fmt(id)) return 1;
-  id=be2me_32(id);
-  if(AOut_Parser::check_fmt(id)) return 1;
-  return 0;
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) AOut_Parser(h,_parent,u); }
 extern const Binary_Parser_Info aout_info = {
     "a.out (Assembler and link Output)",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

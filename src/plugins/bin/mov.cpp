@@ -43,7 +43,7 @@ namespace	usr {
 	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 
-	    static __filesize_t		mov_find_chunk(binary_stream& main_handle,__filesize_t off,unsigned long id);
+	    __filesize_t		mov_find_chunk(__filesize_t off,unsigned long id);
 	private:
 	    binary_stream&	main_handle;
 	    udn&		_udn;
@@ -51,7 +51,7 @@ namespace	usr {
 static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
 const char* MOV_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-__filesize_t MOV_Parser::mov_find_chunk(binary_stream& main_handle,__filesize_t off,unsigned long id)
+__filesize_t MOV_Parser::mov_find_chunk(__filesize_t off,unsigned long id)
 {
     unsigned long ids,size;
     main_handle.seek(off,binary_stream::Seek_Set);
@@ -71,7 +71,12 @@ MOV_Parser::MOV_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
 	    :Binary_Parser(h,code_guider,u)
 	    ,main_handle(h)
 	    ,_udn(u)
-{}
+{
+    __filesize_t moov,mdat;
+    moov=mov_find_chunk(0,MOV_FOURCC('m','o','o','v'));
+    mdat=mov_find_chunk(0,MOV_FOURCC('m','d','a','t'));
+    if(!(moov != __filesize_t(-1) && mdat != __filesize_t(-1))) throw bad_format_exception();
+}
 MOV_Parser::~MOV_Parser() {}
 int MOV_Parser::query_platform() const { return DISASM_DEFAULT; }
 
@@ -81,18 +86,9 @@ __filesize_t MOV_Parser::show_header() const
     return beye_context().tell();
 }
 
-static bool probe(binary_stream& main_handle) {
-    __filesize_t moov,mdat;
-    moov=MOV_Parser::mov_find_chunk(main_handle,0,MOV_FOURCC('m','o','o','v'));
-    mdat=MOV_Parser::mov_find_chunk(main_handle,0,MOV_FOURCC('m','d','a','t'));
-    if(moov != -1 && mdat != -1) return true;
-    return false;
-}
-
 static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) MOV_Parser(h,_parent,u); }
 extern const Binary_Parser_Info mov_info = {
     "MOV file format",	/**< plugin name */
-    probe,
     query_interface
 };
 } // namespace	usr

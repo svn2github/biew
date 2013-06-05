@@ -86,7 +86,6 @@ namespace	usr {
 
     struct Binary_Parser_Info {
 	const char*	name;
-	bool		(*probe)(binary_stream& handle); /**< Checks format */
 	Binary_Parser* (*query_interface)(binary_stream&,CodeGuider&,udn&);
     };
 

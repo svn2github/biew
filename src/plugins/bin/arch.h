@@ -42,26 +42,26 @@ namespace	usr {
 
 #define ARMAP_TIME_OFFSET       60
 
-typedef struct tag_ar_hdr {
-  int8_t  ar_magic[8];          /**< !<arch>012 */
-  int8_t  ar_name[16];		/**< name of this member */
-  int8_t  ar_date[12];		/**< file mtime */
-  uint8_t ar_uid[6];		/**< owner uid; printed as decimal */
-  uint8_t ar_gid[6];		/**< owner gid; printed as decimal */
-  uint8_t ar_mode[8];		/**< file mode, printed as octal   */
-  uint8_t ar_size[10];		/**< file size, printed as decimal */
-  uint8_t ar_fmag[2];		/**< should contain ARFMAG */
-}ar_hdr;
+struct ar_hdr {
+    int8_t  ar_magic[8];	/**< !<arch>012 */
+    int8_t  ar_name[16];	/**< name of this member */
+    int8_t  ar_date[12];	/**< file mtime */
+    uint8_t ar_uid[6];		/**< owner uid; printed as decimal */
+    uint8_t ar_gid[6];		/**< owner gid; printed as decimal */
+    uint8_t ar_mode[8];		/**< file mode, printed as octal   */
+    uint8_t ar_size[10];	/**< file size, printed as decimal */
+    uint8_t ar_fmag[2];		/**< should contain ARFMAG */
+};
 
-typedef struct tag_ar_sub_hdr {
-  int8_t  ar_name[16];		/**< name of this member */
-  int8_t  ar_date[12];		/**< file mtime */
-  uint8_t ar_uid[6];		/**< owner uid; printed as decimal */
-  uint8_t ar_gid[6];		/**< owner gid; printed as decimal */
-  uint8_t ar_mode[8];		/**< file mode, printed as octal   */
-  uint8_t ar_size[10];		/**< file size, printed as decimal */
-  uint8_t ar_fmag[2];		/**< should contain ARFMAG */
-}ar_sub_hdr;
+struct ar_sub_hdr {
+    int8_t  ar_name[16];	/**< name of this member */
+    int8_t  ar_date[12];	/**< file mtime */
+    uint8_t ar_uid[6];		/**< owner uid; printed as decimal */
+    uint8_t ar_gid[6];		/**< owner gid; printed as decimal */
+    uint8_t ar_mode[8];		/**< file mode, printed as octal   */
+    uint8_t ar_size[10];	/**< file size, printed as decimal */
+    uint8_t ar_fmag[2];		/**< should contain ARFMAG */
+};
 
 #ifdef __HAVE_PRAGMA_PACK__
 #pragma pack()
