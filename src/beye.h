@@ -126,7 +126,7 @@ namespace	usr {
 	    int			queryKey(const std::string& arg);
 	    void		message_box(const std::string& text,const std::string& title,
 					    ColorAttr base,ColorAttr frame) const;
-	    void		draw_title() const;
+	    void		draw_title(__filesize_t lastbyte) const;
 
 	    Opaque&		opaque;
     };

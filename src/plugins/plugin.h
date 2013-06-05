@@ -24,6 +24,11 @@ namespace	usr {
 	    virtual const char*	what() const throw();
     };
 
+    struct plugin_position {
+	__filesize_t	lastbyte;
+	int		textshift;
+    };
+
     class Plugin : public Opaque {
 	public:
 	    static const __filesize_t Bad_Address = __filesize_t(-1);
@@ -56,9 +61,9 @@ namespace	usr {
 			/** Paints the file on the screen.
 			  * @param keycode   indicates keyboard code which caused repainting
 			  * @param textshift indicates shift of text. Useful only for text mode.
-			  * return           new shift of text
+			  * return           end position of plugin
 			**/
-	    virtual unsigned		paint(unsigned keycode,unsigned textshift) = 0;
+	    virtual plugin_position	paint(unsigned keycode,unsigned textshift) = 0;
 
 	    virtual unsigned		get_symbol_size() const = 0;	/**< Returns symbol size in bytes for selected NLS codepage */
 	    virtual unsigned		get_max_symbol_size() const { return get_symbol_size(); }

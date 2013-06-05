@@ -34,15 +34,6 @@ using namespace	usr;
 #include "plugins/plugin.h"
 
 namespace	usr {
-__filesize_t lastbyte;
-static __filesize_t OldCurrFilePos; /** means previous File position */
-unsigned long CurrStrLen = 0;
-unsigned long PrevStrLen = 2;
-unsigned long CurrPageSize = 0;
-unsigned long PrevPageSize = 0;
-
-int textshift = 0;
-
 int __FASTCALL__ isHOnLine(__filesize_t cp,int width)
 {
   if(FoundTextSt == FoundTextEnd) return 0;
@@ -78,7 +69,7 @@ void __FASTCALL__ HiLightSearch(TWindow& out,__filesize_t cfp,tRelCoord minx,tRe
     out.write(minx+1,y+1,chars,attrs,width);
 }
 
-void BeyeContext::draw_title() const
+void BeyeContext::draw_title(__filesize_t lastbyte) const
 {
   unsigned percent;
   __filesize_t flen;
@@ -94,14 +85,17 @@ const char legalchars[] = "+-0123456789ABCDEFabcdef";
 
 void BeyeContext::main_loop()
 {
+    __filesize_t OldCurrFilePos; /** means previous File position */
     int ch;
     __filesize_t savep = 0,cfp,nfp,flen;
     unsigned long lwidth;
+    plugin_position rc;
     bm_file().seek(LastOffset,binary_stream::Seek_Set);
     drawPrompt();
-    textshift = active_mode().paint(KE_SUPERKEY,textshift);
+    rc.textshift=0;
+    rc = active_mode().paint(KE_SUPERKEY,rc.textshift);
     bm_file().seek(LastOffset,binary_stream::Seek_Set);
-    draw_title();
+    draw_title(rc.lastbyte);
     while(1) {
 	unsigned che;
 	ch = GetEvent(drawPrompt,MainActionFromMenu,NULL);
@@ -226,8 +220,8 @@ void BeyeContext::main_loop()
 		    PaintTitle();
 		}
 		break;
-	    case KE_HOME: textshift = 0; break;
-	    case KE_END:  textshift = active_mode().get_max_line_length() - tconsole().vio_width()/2; break;
+	    case KE_HOME: rc.textshift = 0; break;
+	    case KE_END:  rc.textshift = active_mode().get_max_line_length() - tconsole().vio_width()/2; break;
 	    case KE_UPARROW:
 		nfp = cfp - active_mode().prev_line_width();
 		break;
@@ -236,25 +230,25 @@ void BeyeContext::main_loop()
 		break;
 	    case KE_RIGHTARROW:
 		if((active_mode().flags() & Plugin::Text) == Plugin::Text)
-		    textshift+=active_mode().get_symbol_size();
+		    rc.textshift+=active_mode().get_symbol_size();
 		else nfp = cfp + active_mode().get_symbol_size();
 		break;
 	    case KE_LEFTARROW:
 		if((active_mode().flags() & Plugin::Text) == Plugin::Text)
-		    textshift-=active_mode().get_symbol_size();
+		    rc.textshift-=active_mode().get_symbol_size();
 		else nfp = cfp - active_mode().get_symbol_size();
-		if(textshift < 0) textshift = 0;
+		if(rc.textshift < 0) rc.textshift = 0;
 		break;
 	    case KE_CTL_RIGHTARROW:
 		if((active_mode().flags() & Plugin::Text) == Plugin::Text)
-		    textshift+=8*active_mode().get_symbol_size();
+		    rc.textshift+=8*active_mode().get_symbol_size();
 		else nfp = cfp + 8*active_mode().get_symbol_size();
 		break;
 	    case KE_CTL_LEFTARROW:
 		if((active_mode().flags() & Plugin::Text) == Plugin::Text)
-		    textshift-=8*active_mode().get_symbol_size();
+		    rc.textshift-=8*active_mode().get_symbol_size();
 		else nfp = cfp - 8*active_mode().get_symbol_size();
-		if(textshift < 0) textshift = 0;
+		if(rc.textshift < 0) rc.textshift = 0;
 		break;
 	    case KE_PGUP:
 		nfp = cfp - active_mode().prev_page_size();
@@ -295,9 +289,9 @@ void BeyeContext::main_loop()
 	bm_file().seek(nfp,binary_stream::Seek_Set);
 	DRAW:
 	if((active_mode().flags() & Plugin::Text) != Plugin::Text) savep = tell();
-	textshift = active_mode().paint(ch,textshift);
+	rc = active_mode().paint(ch,rc.textshift);
 	if((active_mode().flags() & Plugin::Text) != Plugin::Text) bm_file().seek(savep,binary_stream::Seek_Set);
-	draw_title();
+	draw_title(rc.lastbyte);
     }
 }
 } // namespace	usr

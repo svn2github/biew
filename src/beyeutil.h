@@ -31,8 +31,6 @@ namespace	usr {
     extern bool DumpMode;
     extern bool EditMode;
 
-    extern __filesize_t lastbyte;
-
     char  __FASTCALL__ Gebool(bool _bool) __CONST_FUNC__; // returns character representation of bool
 
     bool               FileUtils();

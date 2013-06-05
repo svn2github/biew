@@ -125,7 +125,7 @@ namespace	usr {
 
 	    virtual bool		detect();
 	    virtual e_flag		flags() const;
-	    virtual unsigned		paint(unsigned keycode,unsigned textshift);
+	    virtual plugin_position	paint(unsigned keycode,unsigned textshift);
 
 	    virtual unsigned		get_symbol_size() const;
 	    virtual unsigned		get_max_line_length() const; /**< Returns max symbol size in bytes for selected NLS codepage */
@@ -265,7 +265,7 @@ const char* HexMode::prompt(unsigned idx) const {
     return (idx < 10) ? txt[idx] : "";
 }
 
-unsigned HexMode::paint( unsigned keycode,unsigned textshift )
+plugin_position HexMode::paint( unsigned keycode,unsigned textshift )
 {
     int i,I,Limit,dir;
     uint8_t outstr[__TVIO_MAXSCREENWIDTH+1];
@@ -274,6 +274,8 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
     __filesize_t sindex,cpos,flen,lindex,SIndex;
     static __filesize_t hmocpos = 0L;
     int __inc,hexlen;
+    plugin_position rc;
+
     cpos = main_handle.tell();
     if(hmocpos != cpos || keycode == KE_SUPERKEY || keycode == KE_JUSTFIND) {
 	tAbsCoord height = main_wnd.client_height();
@@ -330,10 +332,11 @@ unsigned HexMode::paint( unsigned keycode,unsigned textshift )
 		else  main_wnd.write(xmin + 1,i + 1,&outstr[xmin],width - xmin);
 	    } else main_wnd.write(1,i + 1,outstr,width);
 	}
-	lastbyte = lindex + __inc;
+	rc.lastbyte = lindex + __inc;
 	main_wnd.refresh();
     }
-    return textshift;
+    rc.textshift = textshift;
+    return rc;
 }
 
 void HexMode::help() const

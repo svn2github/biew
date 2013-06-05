@@ -103,7 +103,7 @@ static const unsigned	MAX_STRLEN=1000; /**< defines maximal length of string */
 
 	    virtual bool		detect();
 	    virtual e_flag		flags() const;
-	    virtual unsigned		paint(unsigned keycode,unsigned textshift);
+	    virtual plugin_position	paint(unsigned keycode,unsigned textshift);
 
 	    virtual unsigned		get_symbol_size() const;
 	    virtual unsigned		get_max_line_length() const;
@@ -964,7 +964,7 @@ unsigned TextMode::convert_cp(char *_buff,unsigned size,bool use_fs_nls)
     return activeNLS->convert_buffer(_buff,size,use_fs_nls);
 }
 
-unsigned TextMode::paint( unsigned keycode, unsigned shift )
+plugin_position TextMode::paint( unsigned keycode, unsigned shift )
 {
     int hilightline;
     size_t i;
@@ -974,6 +974,7 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
     tAbsCoord height = main_wnd.client_height();
     char chars[__TVIO_MAXSCREENWIDTH];
     ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
+    plugin_position rc;
 
     cp_symb_len = activeNLS->get_symbol_size();
     strmaxlen = 0;
@@ -1050,17 +1051,18 @@ unsigned TextMode::paint( unsigned keycode, unsigned shift )
 	    main_wnd.clreol();
 	}
 	if(shift) drawBound(main_wnd,1,i + 1,TWC_LT_ARROW);
-	lastbyte = tlines[i].st;
-	lastbyte += bin_mode == MOD_BINARY ? shift + size : rshift + len;
+	rc.lastbyte = tlines[i].st;
+	rc.lastbyte += bin_mode == MOD_BINARY ? shift + size : rshift + len;
     }
     main_wnd.refresh();
     tmp = textmaxlen - main_wnd.width() + 2;
     if(shift > tmp) shift = tmp;
     if(!tlines[1].st) tlines[1].st = tlines[0].end;
     CurrStrLen = tlines[0].end - tlines[0].st;
-    CurrPageSize = lastbyte - tlines[0].st;
+    CurrPageSize = rc.lastbyte - tlines[0].st;
     main_handle.seek(cpos,binary_stream::Seek_Set);
-    return shift;
+    rc.textshift=shift;
+    return rc;
 }
 
 void TextMode::help() const

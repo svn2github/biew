@@ -56,7 +56,7 @@ namespace	usr {
 
 	    virtual bool		detect();
 	    virtual e_flag		flags() const;
-	    virtual unsigned		paint(unsigned keycode,unsigned textshift);
+	    virtual plugin_position	paint(unsigned keycode,unsigned textshift);
 
 	    virtual unsigned		get_symbol_size() const;
 	    virtual unsigned		get_max_line_length() const;
@@ -168,7 +168,7 @@ bool BinMode::detect() { return true; }
 
 BinMode::e_flag BinMode::flags() const { return None; }
 
-unsigned BinMode::paint( unsigned keycode,unsigned tshift )
+plugin_position BinMode::paint( unsigned keycode,unsigned tshift )
 {
     static __filesize_t bmocpos = 0L;
     __filesize_t _index;
@@ -182,6 +182,7 @@ unsigned BinMode::paint( unsigned keycode,unsigned tshift )
     uint8_t* chars=_chars;
     ColorAttr* attrs=_attrs;
     tAbsCoord width,height;
+    plugin_position rc;
 
     cfp  = main_handle.tell();
     width = main_wnd.client_width();
@@ -200,7 +201,7 @@ unsigned BinMode::paint( unsigned keycode,unsigned tshift )
 	    _index = cfp + j*count;
 	    len = _index < limit ? (int)count : _index < flen ? (int)(flen - _index) : 0;
 	    if(len) {
-		lastbyte = _index + len;
+		rc.lastbyte = _index + len;
 		main_handle.seek(_index,binary_stream::Seek_Set);
 		main_handle.read((any_t*)buffer,len);
 	    }
@@ -230,7 +231,8 @@ unsigned BinMode::paint( unsigned keycode,unsigned tshift )
 	}
 	main_wnd.refresh();
     }
-    return tshift;
+    rc.textshift = tshift;
+    return rc;
 }
 
 void BinMode::help() const

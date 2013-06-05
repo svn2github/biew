@@ -224,7 +224,7 @@ void DisMode::prepare_asm_lines(int keycode,__filesize_t cfpos)
     }
 }
 
-unsigned DisMode::paint( unsigned keycode, unsigned textshift )
+plugin_position DisMode::paint( unsigned keycode, unsigned textshift )
 {
     int i,I,Limit,dir,orig_commpos,orig_commoff;
     size_t j,len,len_64;
@@ -233,6 +233,7 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
     uint8_t outstr[__TVIO_MAXSCREENWIDTH];
     uint8_t savstring[20];
     ColorAttr cattr;
+    plugin_position rc;
     flen = main_handle.flength();
     cfpos = TopCFPos = main_handle.tell();
     if(keycode == KE_UPARROW) {
@@ -384,11 +385,12 @@ unsigned DisMode::paint( unsigned keycode, unsigned textshift )
 	}
 	main_wnd.refresh();
 	main_wnd.set_color(browser_cset.main);
-	lastbyte = TopCFPos + Summ(CurrStrLenBuff,height);
-	CurrPageSize = lastbyte-TopCFPos;
+	rc.lastbyte = TopCFPos + Summ(CurrStrLenBuff,height);
+	CurrPageSize = rc.lastbyte-TopCFPos;
     }
     bye:
-    return textshift;
+    rc.textshift=textshift;
+    return rc;
 }
 
 bool DisMode::action_F1() { return activeDisasm->action_F1(); }

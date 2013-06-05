@@ -109,7 +109,7 @@ typedef unsigned char * MBuffer;
 
 	    virtual bool		detect();
 	    virtual e_flag		flags() const;
-	    virtual unsigned		paint(unsigned keycode,unsigned textshift);
+	    virtual plugin_position	paint(unsigned keycode,unsigned textshift);
 
 	    virtual unsigned		get_symbol_size() const;
 	    virtual unsigned		get_max_symbol_size() const;
