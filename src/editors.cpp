@@ -79,10 +79,10 @@ void Editor::init(unsigned width,const unsigned char *buff,unsigned size)
 {
     __filesize_t flen,cfp,ssize;
     unsigned i,msize;
-    msize = beye_context().tconsole().vio_width()*beye_context().tconsole().vio_height();
+    msize = ewnd.width()*ewnd.height();
     EditorMem.buff = new unsigned char [msize];
     EditorMem.save = new unsigned char [msize];
-    EditorMem.alen = new unsigned char [beye_context().tconsole().vio_height()];
+    EditorMem.alen = new unsigned char [ewnd.height()];
 
     memset(EditorMem.buff,TWC_DEF_FILLER,msize);
     memset(EditorMem.save,TWC_DEF_FILLER,msize);
@@ -101,19 +101,21 @@ void Editor::init(unsigned width,const unsigned char *buff,unsigned size)
     memcpy(EditorMem.save,EditorMem.buff,EditorMem.size);
     /** initialize EditorMem.alen */
     ssize = flen-cfp;
-    for(i = 0;i < beye_context().tconsole().vio_height();i++) {
+    for(i = 0;i < ewnd.height();i++) {
 	EditorMem.alen[i] = ssize >= width ? width : ssize;
 	ssize -= std::min(ssize,__filesize_t(width));
     }
 }
 
-Editor::Editor(unsigned width)
+Editor::Editor(TWindow& w,unsigned width)
 	:edit_cp(0)
 	,edit_XX(0)
+	,ewnd(w)
 { init(width,NULL,0); }
-Editor::Editor(unsigned width,const unsigned char *buff,unsigned size)
+Editor::Editor(TWindow& w,unsigned width,const unsigned char *buff,unsigned size)
 	:edit_cp(0)
 	,edit_XX(0)
+	,ewnd(w)
 { init(width,buff,size); }
 
 Editor::~Editor() {
@@ -176,7 +178,7 @@ void Editor::save_context()
   beye_context().bm_file().reread();
 }
 
-bool Editor::default_action(int _lastbyte)
+bool Editor::default_navigation(int _lastbyte)
 {
     bool redraw;
     redraw = false;
@@ -194,7 +196,7 @@ bool Editor::default_action(int _lastbyte)
     return redraw;
 }
 
-bool Editor::default_hex_action(int _lastbyte)
+bool Editor::default_action(int _lastbyte)
 {
     bool redraw = true;
     int eidx;
@@ -206,13 +208,13 @@ bool Editor::default_hex_action(int _lastbyte)
 	case KE_F(7): EditorMem.buff[eidx] ^= edit_XX; break;
 	case KE_F(8): EditorMem.buff[eidx]  = edit_XX; break;
 	case KE_F(9): EditorMem.buff[eidx] = EditorMem.save[eidx]; break;
-	default     : redraw = default_action(_lastbyte); edit_x--; break;
+	default     : redraw = default_navigation(_lastbyte); edit_x--; break;
     }
     edit_x++;
     return redraw;
 }
 
-int Editor::FullEdit(TWindow* ewnd,TWindow* hexwnd)
+int Editor::run(TWindow* hexwnd)
 {
     size_t i,j;
     unsigned mlen;
@@ -221,18 +223,18 @@ int Editor::FullEdit(TWindow* ewnd,TWindow* hexwnd)
     tAbsCoord height = beye_context().main_wnd().client_height();
     bool redraw;
     char attr = __ESS_HARDEDIT | __ESS_WANTRETURN;
-    ewnd->set_color(browser_cset.edit.main);
+    ewnd.set_color(browser_cset.edit.main);
     beye_context().tconsole().mouse_set_state(false);
     for(i = 0;i < height;i++) {
 	for(j = 0;j < EditorMem.alen[i];j++) {
 	    unsigned eidx;
 	    eidx = i*EditorMem.width+j;
-	    ewnd->set_color(EditorMem.buff[eidx] == EditorMem.save[eidx] ? browser_cset.edit.main : browser_cset.edit.change);
-	    ewnd->write(j + 1,i + 1,&EditorMem.buff[eidx],1);
+	    ewnd.set_color(EditorMem.buff[eidx] == EditorMem.save[eidx] ? browser_cset.edit.main : browser_cset.edit.change);
+	    ewnd.write(j + 1,i + 1,&EditorMem.buff[eidx],1);
 	}
 	if((unsigned)EditorMem.alen[i] + 1 < EditorMem.width) {
-	    ewnd->goto_xy(EditorMem.alen[i] + 1,i + 1);
-	    ewnd->clreol();
+	    ewnd.goto_xy(EditorMem.alen[i] + 1,i + 1);
+	    ewnd.clreol();
 	}
     }
     beye_context().tconsole().mouse_set_state(true);
@@ -255,23 +257,23 @@ int Editor::FullEdit(TWindow* ewnd,TWindow* hexwnd)
 	}
 	hexwnd->refresh();
     }
-    ewnd->show();
-    ewnd->set_focus();
+    ewnd.show();
+    ewnd.set_focus();
     while(1) {
 	unsigned eidx;
 	eidx = edit_y*EditorMem.width;
 	mlen = EditorMem.alen[edit_y];
 	flags = attr;
 	if(!redraw) flags |= __ESS_NOREDRAW;
-	_lastbyte = eeditstring(ewnd,(char *)&EditorMem.buff[eidx],NULL,&mlen,(unsigned)(edit_y + 1),
+	_lastbyte = eeditstring(&ewnd,(char *)&EditorMem.buff[eidx],NULL,&mlen,(unsigned)(edit_y + 1),
 				(unsigned *)&edit_x,flags,(char *)&EditorMem.save[eidx], NULL);
 	switch(_lastbyte) {
 	    case KE_F(1)   : show_help(); continue;
 	    case KE_F(2)   : save_context();
 	    case KE_F(10)  :
-	    case KE_ESCAPE : goto bye;
-	    case KE_TAB : if(ewnd) goto bye;
-	    default     : redraw = default_hex_action(_lastbyte); break;
+	    case KE_ESCAPE :
+	    case KE_TAB : goto bye;
+	    default     : redraw = default_action(_lastbyte); break;
 	}
 	CheckBounds();
 	if(redraw) {

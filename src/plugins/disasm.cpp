@@ -411,7 +411,7 @@ void DisMode::misckey_action() /* disEdit */
     ewnd = new(zeromem) TWindow(len_64+1,2,disMaxCodeLen*2+1,main_wnd.height()-2,TWindow::Flag_Has_Cursor);
     ewnd->set_color(browser_cset.edit.main); ewnd->clear();
     EditMode = EditMode ? false : true;
-    Editor* editor = new(zeromem) Editor(disMaxCodeLen);
+    Editor* editor = new(zeromem) Editor(main_wnd,disMaxCodeLen);
     editor->goto_xy(0,0);
     full_asm_edit(*editor,ewnd);
     delete editor;
@@ -504,7 +504,7 @@ bool DisMode::def_asm_action(Editor& editor,int _lastbyte,int start) const
 	case KE_F(7)   : emem.buff[_index] ^= edit_XX; break;
 	case KE_F(8)   : emem.buff[_index]  = edit_XX; break;
 	case KE_F(9)   : emem.buff[_index] = emem.save[_index]; break;
-	default        : redraw = editor.default_action(_lastbyte); dox = false; break;
+	default        : redraw = editor.default_navigation(_lastbyte); dox = false; break;
     }
     if(dox) { xx++; editor.goto_xy(xx*2,editor.where_y()); }
     return redraw;

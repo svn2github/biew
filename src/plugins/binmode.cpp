@@ -84,8 +84,8 @@ namespace	usr {
 
     class Bin_Editor : public Editor {
 	public:
-	    Bin_Editor(BinMode& parent,unsigned bin_mode,unsigned width);
-	    Bin_Editor(BinMode& parent,unsigned bin_mode,unsigned width,const unsigned char *buff,unsigned size);
+	    Bin_Editor(TWindow&,BinMode& parent,unsigned bin_mode,unsigned width);
+	    Bin_Editor(TWindow&,BinMode& parent,unsigned bin_mode,unsigned width,const unsigned char *buff,unsigned size);
 	    virtual ~Bin_Editor();
 
 	    virtual void	save_contest();
@@ -94,14 +94,14 @@ namespace	usr {
 	    unsigned	bin_mode;
     };
 
-Bin_Editor::Bin_Editor(BinMode& _parent,unsigned bmode,unsigned width)
-	    :Editor(width)
+Bin_Editor::Bin_Editor(TWindow& w,BinMode& _parent,unsigned bmode,unsigned width)
+	    :Editor(w,width)
 	    ,parent(_parent)
 	    ,bin_mode(bmode)
 {
 }
-Bin_Editor::Bin_Editor(BinMode& _parent,unsigned bmode,unsigned width,const unsigned char *buff,unsigned size)
-	    :Editor(width,buff,size)
+Bin_Editor::Bin_Editor(TWindow& w,BinMode& _parent,unsigned bmode,unsigned width,const unsigned char *buff,unsigned size)
+	    :Editor(w,width,buff,size)
 	    ,parent(_parent)
 	    ,bin_mode(bmode)
 {
@@ -277,11 +277,11 @@ void BinMode::misckey_action() /* EditBin */
     Bin_Editor* editor;
     TWindow *ewin;
     if(!main_handle.flength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
-    ewin = new(zeromem) TWindow(1,2,main_wnd.width()-virtWidthCorr,main_wnd.height()-2,TWindow::Flag_Has_Cursor);
+    ewin = new(zeromem) TWindow(1,2,main_wnd.width()-virtWidthCorr,main_wnd.height(),TWindow::Flag_Has_Cursor);
     ewin->set_color(browser_cset.edit.main); ewin->clear();
     drawEditPrompt();
     ewin->set_focus();
-    if(bin_mode==MOD_PLAIN) editor=new(zeromem) Bin_Editor(*this,bin_mode,main_wnd.width()-virtWidthCorr);
+    if(bin_mode==MOD_PLAIN) editor=new(zeromem) Bin_Editor(*ewin,*this,bin_mode,main_wnd.width()-virtWidthCorr);
     else {
 	unsigned long flen,cfp;
 	unsigned i,size,msize = main_wnd.width()*main_wnd.height();
@@ -293,11 +293,11 @@ void BinMode::misckey_action() /* EditBin */
 	main_handle.read(buff,size*2);
 	main_handle.seek(cfp,binary_stream::Seek_Set);
 	for(i=0;i<size;i++) buff[i]=bin_mode==MOD_BINARY?buff[i*2]:buff[i*2+1];
-	editor=new(zeromem) Bin_Editor(*this,bin_mode,main_wnd.width()-virtWidthCorr,buff,size);
+	editor=new(zeromem) Bin_Editor(*ewin,*this,bin_mode,main_wnd.width()-virtWidthCorr,buff,size);
 	delete buff;
     }
     editor->goto_xy(0,0);
-    editor->FullEdit(ewin,NULL);
+    editor->run();
     delete editor;
     delete ewin;
     beye_context().PaintTitle();

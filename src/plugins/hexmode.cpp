@@ -367,7 +367,7 @@ void HexMode::misckey_action () /* EditHex */
     ewnd[1]->set_color(browser_cset.edit.main); ewnd[1]->clear();
     drawEditPrompt();
     has_show[0] = has_show[1] = false;
-    Editor* editor = new(zeromem) Editor(hex_viewer->width(main_wnd,is_file64)-virtWidthCorr);
+    Editor* editor = new(zeromem) Editor(*ewnd[1],hex_viewer->width(main_wnd,is_file64)-virtWidthCorr);
     editor->goto_xy(0,0);
     while(1) {
 	int _lastbyte;
@@ -378,7 +378,7 @@ void HexMode::misckey_action () /* EditHex */
 	}
 	ewnd[active]->set_focus();
 	if(!active) _lastbyte = full_hex_edit(*editor,&main_wnd,ewnd[0]);
-	else        _lastbyte = editor->FullEdit(ewnd[1],&main_wnd);
+	else        _lastbyte = editor->run(&main_wnd);
 	has_show[active] = true;
 	if(_lastbyte == KE_TAB) active = active ? 0 : 1;
 	else break;
@@ -532,7 +532,7 @@ int HexMode::full_hex_edit(Editor& editor,TWindow* txtwnd,TWindow* hexwnd) const
 	    case KE_F(10)  :
 	    case KE_ESCAPE :
 	    case KE_TAB : goto bye;
-	    default     : redraw = editor.default_hex_action(_lastbyte); break;
+	    default     : redraw = editor.default_action(_lastbyte); break;
 	}
 	editor.CheckBounds();
 	if(redraw) txtwnd->write(width - emem.width + 1,editor.where_y() + 1,&emem.buff[eidx],mlen/3);

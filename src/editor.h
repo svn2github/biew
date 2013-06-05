@@ -31,13 +31,13 @@ namespace	usr {
 
     class Editor : public Opaque {
 	public:
-	    Editor(unsigned width);
-	    Editor(unsigned width,const unsigned char *buff,unsigned size);
+	    Editor(TWindow& enwd,unsigned width);
+	    Editor(TWindow& enwd,unsigned width,const unsigned char *buff,unsigned size);
 	    virtual ~Editor();
 
-	    virtual int		FullEdit(TWindow* ewnd,TWindow* hexwnd);
+	    virtual int		run(TWindow* hexwnd=NULL);
+	    virtual bool	default_navigation(int _lastbyte);
 	    virtual bool	default_action(int _lastbyte);
-	    virtual bool	default_hex_action(int _lastbyte);
 	    virtual void	goto_xy(unsigned x,unsigned y);
 	    virtual unsigned	where_x() const;
 	    virtual unsigned	where_y() const;
@@ -57,6 +57,7 @@ namespace	usr {
 	    int			edit_x,edit_y;
 	    __fileoff_t		edit_cp;
 	    uint8_t		edit_XX;
+	    TWindow&		ewnd;
     };
 
 } // namespace	usr
