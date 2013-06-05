@@ -291,8 +291,10 @@ unsigned long Beye_Help::get_item_size(unsigned long item_id)
     return ret;
 }
 
-bool Beye_Help::load_item(unsigned long item_id, any_t* buffer)
+binary_packet Beye_Help::load_item(unsigned long item_id)
 {
+    size_t isize=get_item_size(item_id);
+    binary_packet rc(isize+1);
     unsigned long hlp_off,hlp_size;
     bool ret = false;
     if(fs.is_open()) {
@@ -302,22 +304,24 @@ bool Beye_Help::load_item(unsigned long item_id, any_t* buffer)
 	    uint8_t* inbuff = new uint8_t[hlp_size];
 	    fs.seekg(hlp_off,std::ios_base::beg);
 	    fs.read((char*)inbuff,hlp_size);
-	    Decode(buffer,inbuff,hlp_size);
+	    Decode(rc.data(),inbuff,hlp_size);
+	    rc[isize]='\0';
 	    ret = true;
 	    delete inbuff;
 	}
 	else beye_context().ErrMessageBox("Load: Item not found","");
     }
-    return ret;
+    if(!ret) rc.clear();
+    return rc;
 }
 
-std::vector<std::string> Beye_Help::point_strings(char* data,size_t data_size) const
+std::vector<std::string> Beye_Help::point_strings(binary_packet& data) const
 {
     std::vector<std::string> rc;
-    size_t i;
+    size_t i,sz=data.length()-1;
     char ch,ch1;
-    char* p = data;
-    for(i = 0;i < data_size;i++) {
+    char* p = data.cdata();
+    for(i = 0;i < sz;i++) {
 	ch = data[i];
 	if(ch == '\n' || ch == '\r') {
 	    data[i] = 0;
@@ -332,19 +336,13 @@ std::vector<std::string> Beye_Help::point_strings(char* data,size_t data_size) c
 
 void Beye_Help::run( unsigned long item_id )
 {
-    char* data = 0;
     char* title;
-    unsigned long data_size;
-    data_size = get_item_size(item_id);
-    if(!data_size) return;
-    data = new char [data_size+1];
-    data[data_size] = 0;
-    if(load_item(item_id,data)) {
-	const std::vector<std::string> strs = point_strings(data,data_size);
-	title = data;
+    binary_packet data=load_item(item_id);
+    if(!data.empty()) {
+	const std::vector<std::string> strs = point_strings(data);
+	title = data.cdata();
 	ListBox(strs,title);
     }
-    delete data;
 }
 
 Beye_Help::Beye_Help() {}

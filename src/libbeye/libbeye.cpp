@@ -499,5 +499,4 @@ void tvideo_buffer::assign_at(size_t idx,t_vchar c,t_vchar o,ColorAttr a) {
 	attrs[idx]=a;
     }
 }
-
 } // namespace	usr

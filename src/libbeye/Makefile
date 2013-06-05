@@ -10,6 +10,7 @@ SUBDIRS = osdep sysdep
 LIBNAME = $(LIBPREFIX)beye.a
 
 SRCS= bbio.cpp \
+      binary_packet.cpp \
       bstream.cpp \
       file_ini.cpp \
       libbeye.cpp \

@@ -1506,28 +1506,23 @@ bool PPC_Disassembler::action_F1()
 
 void PPC_Disassembler::show_short_help() const
 {
-    char *msgAsmText,*title;
+    const char *title;
     std::vector<std::string> strs;
-    unsigned size,evt;
+    unsigned evt;
     size_t i,sz;
     TWindow* hwnd;
     Beye_Help bhelp;
 
     if(!bhelp.open(true)) return;
-    size = (unsigned)bhelp.get_item_size(20051);
-    if(!size) goto ppchlp_bye;
-    msgAsmText = new char [size+1];
-    if(!bhelp.load_item(20051,msgAsmText)) {
-	delete msgAsmText;
-	goto ppchlp_bye;
-    }
-    msgAsmText[size] = 0;
-    strs = bhelp.point_strings(msgAsmText,size);
-    title = msgAsmText;
+    binary_packet msgAsmText = bhelp.load_item(20041);
+    if(!msgAsmText.empty()) goto ppchlp_bye;
+    strs = bhelp.point_strings(msgAsmText);
+    title = msgAsmText.cdata();
+
     hwnd = CrtHlpWndnls(title,73,16);
     sz=strs.size();
     for(i = 0;i < sz;i++) bhelp.fill_buffer(*hwnd,1,i+1,strs[i]);
-    delete msgAsmText;
+
     hwnd->goto_xy(2,3);
     hwnd->goto_xy(2,3);
     hwnd->set_color(disasm_cset.engine[0].engine);

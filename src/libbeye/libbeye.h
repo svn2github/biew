@@ -83,6 +83,7 @@ namespace	usr {
     enum data_type_qualifier_dword_t{ type_dword=0 };
     enum data_type_qualifier_qword_t{ type_qword=0 };
 
+
     /* KEYBOARD handling */
     enum {
 	KBD_NONSTOP_ON_MOUSE_PRESS=0x00000001L /**< Defines that \e kbdGetKey must receive mouse events as frequently as it possible. Otherwise each press on mouse button will send only one event. */

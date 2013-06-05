@@ -20,6 +20,7 @@
 #include <vector>
 #include <string>
 
+#include "libbeye/binary_packet.h"
 #include "libbeye/twindow.h"
 
 namespace	usr {
@@ -71,11 +72,11 @@ namespace	usr {
 		       /** Return uncompressed size of help item
 			  0 - if error occured */
 	    virtual unsigned long	get_item_size(unsigned long item_id);
-	    virtual bool		load_item(unsigned long item_id, any_t* buffer);
+	    virtual binary_packet	load_item(unsigned long item_id);
 
 		       /** Returns array of char pointers.
 			  Title always is data[0] */
-	    virtual std::vector<std::string> point_strings(char* data,size_t data_size) const;
+	    virtual std::vector<std::string> point_strings(binary_packet& data) const;
 		       /** Filles buffer as video memory from string */
 	    virtual unsigned		fill_buffer(TWindow& win,tRelCoord x,tRelCoord y,
 						    const std::string& str,

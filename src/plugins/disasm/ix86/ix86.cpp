@@ -5350,7 +5350,8 @@ void ix86_Disassembler::ix86_gettype(DisasmRet *dret,ix86Param& _DisP) const
  bool has_vex;
  insn = &_DisP.RealCmd[0];
  dret->pro_clone = __INSNT_ORDINAL;
- has_vex = has_lock = has_rep = has_seg = 0;
+ has_vex = false;
+ has_lock = has_rep = has_seg = 0;
  up = ua = ud = 0;
  RepeateByPrefix:
  if(x86_Bitness == Bin_Format::Use64)
@@ -5635,7 +5636,8 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
  }
 
  ix86_segpref[0] = 0;
- has_xop = has_rex = has_vex = has_lock = has_rep = has_seg = 0;
+ has_xop = has_rex = has_vex = false;
+ has_lock = has_rep = has_seg = 0;
  up = ua = ud = 0;
  ix86_da_out[0] = 0;
 
@@ -6126,28 +6128,23 @@ bool ix86_Disassembler::action_F1()
 
 void ix86_Disassembler::show_short_help() const
 {
-    char *msgAsmText,*title;
+    const char *title;
     std::vector<std::string> strs;
-    unsigned size,evt;
+    unsigned evt;
     size_t i,sz;
     TWindow* hwnd;
     Beye_Help bhelp;
 
     if(!bhelp.open(true)) return;
-    size = (unsigned)bhelp.get_item_size(x86_Bitness == Bin_Format::Use64 ? 20002:20001);
-    if(!size) goto ix86hlp_bye;
-    msgAsmText = new char [size+1];
-    if(!bhelp.load_item(x86_Bitness == Bin_Format::Use64 ? 20002:20001,msgAsmText)) {
-	delete msgAsmText;
-	goto ix86hlp_bye;
-    }
-    msgAsmText[size] = 0;
-    strs = bhelp.point_strings(msgAsmText,size);
-    title = msgAsmText;
+    binary_packet msgAsmText = bhelp.load_item(20041);
+    if(!msgAsmText.empty()) goto ix86hlp_bye;
+    strs = bhelp.point_strings(msgAsmText);
+    title = msgAsmText.cdata();
+
     hwnd = CrtHlpWndnls(title,73,22);
     sz=strs.size();
     for(i = 0;i < sz;i++) bhelp.fill_buffer(*hwnd,1,i+1,strs[i]);
-    delete msgAsmText;
+
     hwnd->goto_xy(5,3);
     if(x86_Bitness == Bin_Format::Use64 || color_mode==1) {
 	hwnd->goto_xy(5,3);
