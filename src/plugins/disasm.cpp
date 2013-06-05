@@ -408,12 +408,12 @@ void DisMode::misckey_action() /* disEdit */
     TWindow * ewnd;
     len_64=HA_LEN();
     if(!main_handle.flength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
-    ewnd = new(zeromem) TWindow(len_64+1,2,disMaxCodeLen*2+1,main_wnd.height()-2,TWindow::Flag_Has_Cursor);
+    ewnd = new(zeromem) TWindow(len_64+1,2,disMaxCodeLen*2+1,main_wnd.height(),TWindow::Flag_Has_Cursor);
     ewnd->set_color(browser_cset.edit.main); ewnd->clear();
     EditMode = EditMode ? false : true;
-    Editor* editor = new(zeromem) Editor(main_wnd,disMaxCodeLen);
+    Editor* editor = new(zeromem) Editor(*ewnd,disMaxCodeLen);
     editor->goto_xy(0,0);
-    full_asm_edit(*editor,ewnd);
+    full_asm_edit(*editor,*ewnd);
     delete editor;
     EditMode = EditMode ? false : true;
     delete ewnd;
@@ -511,13 +511,13 @@ bool DisMode::def_asm_action(Editor& editor,int _lastbyte,int start) const
 }
 
 
-void DisMode::disasm_screen(Editor& editor,TWindow* ewnd,__filesize_t cp,__filesize_t flen,int st,int stop,int start)
+void DisMode::disasm_screen(Editor& editor,TWindow& ewnd,__filesize_t cp,__filesize_t flen,int st,int stop,int start)
 {
     int i,j,len,lim,len_64;
     uint8_t outstr[__TVIO_MAXSCREENWIDTH+1],outstr1[__TVIO_MAXSCREENWIDTH+1];
     tAbsCoord width = main_wnd.client_width();
     DisasmRet dret;
-    ewnd->freeze();
+    ewnd.freeze();
     editor_mem& emem = editor.get_mem();
     for(i = st;i < stop;i++) {
 	if(start + cp < flen) {
@@ -531,11 +531,11 @@ void DisMode::disasm_screen(Editor& editor,TWindow* ewnd,__filesize_t cp,__files
 	    ::memset(outstr1,TWC_DEF_FILLER,width);
 	    len = 0; for(j = 0;j < emem.alen[i];j++) { ::memcpy(&outstr1[len],Get2Digit(emem.save[start + j]),2); len += 2; }
 	    len = 0; for(j = 0;j < emem.alen[i];j++) { ::memcpy(&outstr[len],Get2Digit(emem.buff[start + j]),2); len += 2; }
-	    ewnd->set_focus();
+	    ewnd.set_focus();
 	    len = disMaxCodeLen*2;
 	    for(j = 0;j < len;j++) {
-		ewnd->set_color(outstr[j] == outstr1[j] ? browser_cset.edit.main : browser_cset.edit.change);
-		ewnd->write(j + 1,i + 1,&outstr[j],1);
+		ewnd.set_color(outstr[j] == outstr1[j] ? browser_cset.edit.main : browser_cset.edit.change);
+		ewnd.write(j + 1,i + 1,&outstr[j],1);
 	    }
 	    len = ::strlen(dret.str);
 	    ::memset(outstr,TWC_DEF_FILLER,width);
@@ -547,16 +547,16 @@ void DisMode::disasm_screen(Editor& editor,TWindow* ewnd,__filesize_t cp,__files
 	} else {
 	    main_wnd.goto_xy(1,i + 1);
 	    main_wnd.clreol();
-	    ewnd->set_focus();
-	    ewnd->goto_xy(1,i + 1);
-	    ewnd->clreol();
+	    ewnd.set_focus();
+	    ewnd.goto_xy(1,i + 1);
+	    ewnd.clreol();
 	    emem.alen[i] = 0;
 	}
     }
-    ewnd->refresh();
+    ewnd.refresh();
 }
 
-int DisMode::full_asm_edit(Editor& editor,TWindow * ewnd)
+int DisMode::full_asm_edit(Editor& editor,TWindow& ewnd)
 {
     int j,_lastbyte,start;
     unsigned rlen,len,flg;
@@ -581,17 +581,17 @@ int DisMode::full_asm_edit(Editor& editor,TWindow * ewnd)
     disasm_screen(editor,ewnd,edit_cp,flen,0,height,start);
     editor.paint_title(0,true);
     start = 0;
-    ewnd->show();
+    ewnd.show();
     TWindow::set_cursor_type(TWindow::Cursor_Normal);
     while(1) {
-	ewnd->set_focus();
+	ewnd.set_focus();
 
 	len = 0; for(j = 0;j < emem.alen[editor.where_y()];j++) { ::memcpy(&owork[len],Get2Digit(emem.save[start + j]),2); len += 2; }
 	len = 0; for(j = 0;j < emem.alen[editor.where_y()];j++) { ::memcpy(&outstr[len],Get2Digit(emem.buff[start + j]),2); len += 2; }
 	flg = __ESS_FILLER_7BIT | __ESS_WANTRETURN | __ESS_HARDEDIT;
 	if(!redraw) flg |= __ESS_NOREDRAW;
 	unsigned edit_x = editor.where_x();
-	_lastbyte = eeditstring(ewnd,outstr,&legalchars[2],&len,(unsigned)(editor.where_y() + 1),(unsigned *)&edit_x,flg,owork,NULL);
+	_lastbyte = eeditstring(&ewnd,outstr,&legalchars[2],&len,(unsigned)(editor.where_y() + 1),(unsigned *)&edit_x,flg,owork,NULL);
 	editor.goto_xy(edit_x,editor.where_y());
 	CompressHex(&emem.buff[start],outstr,emem.alen[editor.where_y()],false);
 	switch(_lastbyte) {
