@@ -240,15 +240,14 @@ void BinMode::save_video(Opaque& _this,unsigned char *buff,unsigned size)
 
 void BinMode::misckey_action() /* EditBin */
 {
+    Editor* editor;
     TWindow *ewin;
-    bool inited;
     if(!main_handle.flength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
     ewin = new(zeromem) TWindow(1,2,main_wnd.width()-virtWidthCorr,main_wnd.height()-2,TWindow::Flag_Has_Cursor);
     ewin->set_color(browser_cset.edit.main); ewin->clear();
     drawEditPrompt();
     ewin->set_focus();
-    edit_x = edit_y = 0;
-    if(bin_mode==MOD_PLAIN) inited=editInitBuffs(main_wnd.width()-virtWidthCorr,NULL,0);
+    if(bin_mode==MOD_PLAIN) editor=new(zeromem) Editor(main_wnd.width()-virtWidthCorr);
     else {
 	unsigned long flen,cfp;
 	unsigned i,size,msize = main_wnd.width()*main_wnd.height();
@@ -260,13 +259,12 @@ void BinMode::misckey_action() /* EditBin */
 	main_handle.read(buff,size*2);
 	main_handle.seek(cfp,binary_stream::Seek_Set);
 	for(i=0;i<size;i++) buff[i]=bin_mode==MOD_BINARY?buff[i*2]:buff[i*2+1];
-	inited=editInitBuffs(main_wnd.width()-virtWidthCorr,buff,size);
+	editor=new(zeromem) Editor(main_wnd.width()-virtWidthCorr,buff,size);
 	delete buff;
     }
-    if(inited) {
-	FullEdit(ewin,NULL,*this,bin_mode==MOD_PLAIN?NULL:save_video);
-	editDestroyBuffs();
-    }
+    editor->goto_xy(0,0);
+    editor->FullEdit(ewin,NULL,*this,bin_mode==MOD_PLAIN?NULL:save_video);
+    delete editor;
     delete ewin;
     beye_context().PaintTitle();
 }

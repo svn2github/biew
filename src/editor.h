@@ -21,7 +21,7 @@
 
 namespace	usr {
     class TWindow;
-    struct tag_emem {
+    struct editor_mem {
 	unsigned char *buff;
 	unsigned char *save;
 	unsigned char *alen;
@@ -29,21 +29,34 @@ namespace	usr {
 	unsigned       width;
     };
 
-    extern struct tag_emem EditorMem;
+    class Editor : public Opaque {
+	public:
+	    Editor(unsigned width);
+	    Editor(unsigned width,const unsigned char *buff,unsigned size);
+	    virtual ~Editor();
 
-    extern int edit_x,edit_y;
-    extern unsigned char edit_XX;
-    extern __fileoff_t edit_cp;
+	    virtual int		FullEdit(TWindow * ewnd,TWindow* hexwnd,Opaque& _this,void (*save)(Opaque& _this,unsigned char *,unsigned));
+	    virtual bool	default_action(int _lastbyte);
+	    virtual bool	default_hex_action(int _lastbyte);
+	    virtual void	goto_xy(unsigned x,unsigned y);
+	    virtual unsigned	where_x() const;
+	    virtual unsigned	where_y() const;
+	    virtual const editor_mem&	get_mem() const;
+	    virtual editor_mem&	get_mem();
+	    virtual uint8_t	get_template() const;
+	    virtual void	CheckBounds();
+	    virtual void	CheckYBounds();
+	    virtual void	CheckXYBounds();
+	    virtual void	save_contest();
+	    virtual void	paint_title(int shift,bool use_shift) const;
+	private:
+	    void		init(unsigned width,const unsigned char *buff,unsigned size);
+	
+	    editor_mem		EditorMem;
+	    int			edit_x,edit_y;
+	    __fileoff_t		edit_cp;
+	    uint8_t		edit_XX;
+    };
 
-    void   __FASTCALL__ PaintETitle( int shift,bool use_shift );
-    void   __FASTCALL__ CheckBounds();
-    void   __FASTCALL__ CheckYBounds();
-    void   __FASTCALL__ CheckXYBounds();
-    bool  __FASTCALL__ edit_defaction(int _lastbyte);
-    void   __FASTCALL__ editSaveContest();
-    bool  __FASTCALL__ editDefAction(int _lastbyte);
-    int    __FASTCALL__ FullEdit(TWindow * ewnd,TWindow* hexwnd,Opaque& _this,void (*save)(Opaque& _this,unsigned char *,unsigned));
-    bool  __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size);
-    void   __FASTCALL__ editDestroyBuffs();
 } // namespace	usr
 #endif

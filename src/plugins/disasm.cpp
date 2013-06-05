@@ -410,12 +410,11 @@ void DisMode::misckey_action() /* disEdit */
     if(!main_handle.flength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
     ewnd = new(zeromem) TWindow(len_64+1,2,disMaxCodeLen*2+1,main_wnd.height()-2,TWindow::Flag_Has_Cursor);
     ewnd->set_color(browser_cset.edit.main); ewnd->clear();
-    edit_x = edit_y = 0;
     EditMode = EditMode ? false : true;
-    if(editInitBuffs(disMaxCodeLen,NULL,0)) {
-	full_asm_edit(ewnd);
-	editDestroyBuffs();
-    }
+    Editor* editor = new(zeromem) Editor(disMaxCodeLen);
+    editor->goto_xy(0,0);
+    full_asm_edit(*editor,ewnd);
+    delete editor;
     EditMode = EditMode ? false : true;
     delete ewnd;
     beye_context().PaintTitle();
@@ -487,48 +486,51 @@ bool DisMode::action_F10() { return _udn.names(); }
 
 bool DisMode::detect() { return true; }
 
-bool DisMode::def_asm_action(int _lastbyte,int start) const
+bool DisMode::def_asm_action(Editor& editor,int _lastbyte,int start) const
 {
     int _index;
     bool redraw,dox;
     char xx;
     redraw = true;
-    xx = edit_x / 2;
+    xx = editor.where_x() / 2;
     dox = true;
     _index = start + xx;
+    editor_mem& emem = editor.get_mem();
+    uint8_t edit_XX = editor.get_template();
     switch(_lastbyte) {
-	case KE_F(4)   : EditorMem.buff[_index] = ~EditorMem.buff[_index]; break;
-	case KE_F(5)   : EditorMem.buff[_index] |= edit_XX; break;
-	case KE_F(6)   : EditorMem.buff[_index] &= edit_XX; break;
-	case KE_F(7)   : EditorMem.buff[_index] ^= edit_XX; break;
-	case KE_F(8)   : EditorMem.buff[_index]  = edit_XX; break;
-	case KE_F(9)   : EditorMem.buff[_index] = EditorMem.save[_index]; break;
-	default        : redraw = edit_defaction(_lastbyte); dox = false; break;
+	case KE_F(4)   : emem.buff[_index] = ~emem.buff[_index]; break;
+	case KE_F(5)   : emem.buff[_index] |= edit_XX; break;
+	case KE_F(6)   : emem.buff[_index] &= edit_XX; break;
+	case KE_F(7)   : emem.buff[_index] ^= edit_XX; break;
+	case KE_F(8)   : emem.buff[_index]  = edit_XX; break;
+	case KE_F(9)   : emem.buff[_index] = emem.save[_index]; break;
+	default        : redraw = editor.default_action(_lastbyte); dox = false; break;
     }
-    if(dox) { xx++; edit_x = xx*2; }
+    if(dox) { xx++; editor.goto_xy(xx*2,editor.where_y()); }
     return redraw;
 }
 
 
-void DisMode::disasm_screen(TWindow* ewnd,__filesize_t cp,__filesize_t flen,int st,int stop,int start)
+void DisMode::disasm_screen(Editor& editor,TWindow* ewnd,__filesize_t cp,__filesize_t flen,int st,int stop,int start)
 {
     int i,j,len,lim,len_64;
     uint8_t outstr[__TVIO_MAXSCREENWIDTH+1],outstr1[__TVIO_MAXSCREENWIDTH+1];
     tAbsCoord width = main_wnd.client_width();
     DisasmRet dret;
     ewnd->freeze();
+    editor_mem& emem = editor.get_mem();
     for(i = st;i < stop;i++) {
 	if(start + cp < flen) {
 	    len_64=HA_LEN();
 	    ::memcpy(outstr,code_guider.encode_address(cp + start,hexAddressResolv).c_str(),len_64);
 	    main_wnd.set_color(browser_cset.main);
 	    main_wnd.write(1,i + 1,outstr,len_64-1);
-	    dret = disassembler(cp + start,&EditorMem.buff[start],__DISF_NORMAL);
-	    EditorMem.alen[i] = dret.codelen;
+	    dret = disassembler(cp + start,&emem.buff[start],__DISF_NORMAL);
+	    emem.alen[i] = dret.codelen;
 	    ::memset(outstr,TWC_DEF_FILLER,width);
 	    ::memset(outstr1,TWC_DEF_FILLER,width);
-	    len = 0; for(j = 0;j < EditorMem.alen[i];j++) { ::memcpy(&outstr1[len],Get2Digit(EditorMem.save[start + j]),2); len += 2; }
-	    len = 0; for(j = 0;j < EditorMem.alen[i];j++) { ::memcpy(&outstr[len],Get2Digit(EditorMem.buff[start + j]),2); len += 2; }
+	    len = 0; for(j = 0;j < emem.alen[i];j++) { ::memcpy(&outstr1[len],Get2Digit(emem.save[start + j]),2); len += 2; }
+	    len = 0; for(j = 0;j < emem.alen[i];j++) { ::memcpy(&outstr[len],Get2Digit(emem.buff[start + j]),2); len += 2; }
 	    ewnd->set_focus();
 	    len = disMaxCodeLen*2;
 	    for(j = 0;j < len;j++) {
@@ -541,24 +543,25 @@ void DisMode::disasm_screen(TWindow* ewnd,__filesize_t cp,__filesize_t flen,int 
 	    main_wnd.set_color(browser_cset.main);
 	    lim = disMaxCodeLen*2+len_64+1;
 	    main_wnd.write(lim+1,i + 1,outstr,width-lim);
-	    start += EditorMem.alen[i];
+	    start += emem.alen[i];
 	} else {
 	    main_wnd.goto_xy(1,i + 1);
 	    main_wnd.clreol();
 	    ewnd->set_focus();
 	    ewnd->goto_xy(1,i + 1);
 	    ewnd->clreol();
-	    EditorMem.alen[i] = 0;
+	    emem.alen[i] = 0;
 	}
     }
     ewnd->refresh();
 }
 
-int DisMode::full_asm_edit(TWindow * ewnd)
+int DisMode::full_asm_edit(Editor& editor,TWindow * ewnd)
 {
     int j,_lastbyte,start;
     unsigned rlen,len,flg;
     __filesize_t flen;
+    __filesize_t edit_cp;
     unsigned max_buff_size = disMaxCodeLen*main_wnd.height();
     tAbsCoord height = main_wnd.client_height();
     bool redraw = false;
@@ -570,24 +573,27 @@ int DisMode::full_asm_edit(TWindow * ewnd)
 
     rlen = (__filesize_t)edit_cp + max_buff_size < flen ? max_buff_size : (unsigned)(flen - edit_cp);
     main_handle.seek(edit_cp,binary_stream::Seek_Set);
-    main_handle.read((any_t*)EditorMem.buff,rlen);
-    ::memcpy(EditorMem.save,EditorMem.buff,max_buff_size);
-    ::memset(EditorMem.alen,TWC_DEF_FILLER,height);
+    editor_mem& emem = editor.get_mem();
+    main_handle.read((any_t*)emem.buff,rlen);
+    ::memcpy(emem.save,emem.buff,max_buff_size);
+    ::memset(emem.alen,TWC_DEF_FILLER,height);
 
-    disasm_screen(ewnd,edit_cp,flen,0,height,start);
-    beye_context().paint_Etitle(0,true);
+    disasm_screen(editor,ewnd,edit_cp,flen,0,height,start);
+    editor.paint_title(0,true);
     start = 0;
     ewnd->show();
     TWindow::set_cursor_type(TWindow::Cursor_Normal);
     while(1) {
 	ewnd->set_focus();
 
-	len = 0; for(j = 0;j < EditorMem.alen[edit_y];j++) { ::memcpy(&owork[len],Get2Digit(EditorMem.save[start + j]),2); len += 2; }
-	len = 0; for(j = 0;j < EditorMem.alen[edit_y];j++) { ::memcpy(&outstr[len],Get2Digit(EditorMem.buff[start + j]),2); len += 2; }
+	len = 0; for(j = 0;j < emem.alen[editor.where_y()];j++) { ::memcpy(&owork[len],Get2Digit(emem.save[start + j]),2); len += 2; }
+	len = 0; for(j = 0;j < emem.alen[editor.where_y()];j++) { ::memcpy(&outstr[len],Get2Digit(emem.buff[start + j]),2); len += 2; }
 	flg = __ESS_FILLER_7BIT | __ESS_WANTRETURN | __ESS_HARDEDIT;
 	if(!redraw) flg |= __ESS_NOREDRAW;
-	_lastbyte = eeditstring(ewnd,outstr,&legalchars[2],&len,(unsigned)(edit_y + 1),(unsigned *)&edit_x,flg,owork,NULL);
-	CompressHex(&EditorMem.buff[start],outstr,EditorMem.alen[edit_y],false);
+	unsigned edit_x = editor.where_x();
+	_lastbyte = eeditstring(ewnd,outstr,&legalchars[2],&len,(unsigned)(editor.where_y() + 1),(unsigned *)&edit_x,flg,owork,NULL);
+	editor.goto_xy(edit_x,editor.where_y());
+	CompressHex(&emem.buff[start],outstr,emem.alen[editor.where_y()],false);
 	switch(_lastbyte) {
 	    case KE_CTL_F(4):
 		{
@@ -628,7 +634,7 @@ int DisMode::full_asm_edit(TWindow * ewnd)
 		    fs.open(fname.c_str(),std::ios_base::binary);
 		    if(fs.is_open()) {
 			fs.seekp(edit_cp,std::ios_base::beg);
-			if(!fs.write((const char*)EditorMem.buff,rlen))
+			if(!fs.write((const char*)emem.buff,rlen))
 			    beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
 			fs.close();
 			main_handle.reread();
@@ -636,19 +642,19 @@ int DisMode::full_asm_edit(TWindow * ewnd)
 		}
 	    case KE_F(10):
 	    case KE_ESCAPE: goto bye;
-	    default: redraw = def_asm_action(_lastbyte,start); break;
+	    default: redraw = def_asm_action(editor,_lastbyte,start); break;
 	}
-	CheckYBounds();
-	start = edit_y ? Summ(EditorMem.alen,edit_y) : 0;
+	editor.CheckYBounds();
+	start = editor.where_y() ? Summ(emem.alen,editor.where_y()) : 0;
 	if(redraw) {
 	    DisasmRet dret;
-	    dret = disassembler(edit_cp + start,&EditorMem.buff[start],__DISF_NORMAL);
-	    EditorMem.alen[edit_y] = dret.codelen;
-	    disasm_screen(ewnd,edit_cp,flen,0,height,0);
+	    dret = disassembler(edit_cp + start,&emem.buff[start],__DISF_NORMAL);
+	    emem.alen[editor.where_y()] = dret.codelen;
+	    disasm_screen(editor,ewnd,edit_cp,flen,0,height,0);
 	}
-	beye_context().paint_Etitle(start + edit_x/2,true);
-	CheckXYBounds();
-	start = edit_y ? Summ(EditorMem.alen,edit_y) : 0;
+	editor.paint_title(start + edit_x/2,true);
+	editor.CheckXYBounds();
+	start = editor.where_y() ? Summ(emem.alen,editor.where_y()) : 0;
     }
     bye:
     TWindow::set_cursor_type(TWindow::Cursor_Off);
@@ -774,7 +780,6 @@ __filesize_t DisMode::search_engine(TWindow *pwnd, __filesize_t start,
 	}
     }
     delete disSearchBuff;
-    bye:
     main_handle.seek(sfpos, binary_stream::Seek_Set);
     DumpMode = false;
     return retval;

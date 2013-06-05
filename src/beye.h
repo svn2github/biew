@@ -25,6 +25,7 @@ namespace	usr {
     class System;
     class TConsole;
     class TWindow;
+    class Editor;
     class udn;
     class BeyeContext : public Opaque {
 	public:
@@ -97,7 +98,6 @@ namespace	usr {
 	    void		ErrMessageBox(const std::string& text,const std::string& title) const;
 	    void		WarnMessageBox(const std::string& text,const std::string& title) const;
 	    void		errnoMessageBox(const std::string& text,const std::string& title,int __errno__) const;
-	    void		paint_Etitle(int shift,bool use_shift) const;
 	    void		draw_multi_prompt(const char * const norm[], const char *const shift[], const char * const alt[], const char * const ctrl[]) const;
 
 	    std::string ArgVector1;
@@ -117,6 +117,7 @@ namespace	usr {
 	    bool iniUseExtProgs;
 	    __filesize_t LastOffset;
 	protected:
+	    friend class Editor;
 	    TWindow&		error_wnd() const;
 	    TWindow&		title_wnd() const;
 	    TWindow&		prompt_wnd() const;

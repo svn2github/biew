@@ -35,12 +35,6 @@ using namespace	usr;
 #include "libbeye/bstream.h"
 
 namespace	usr {
-__fileoff_t edit_cp = 0;
-struct tag_emem EditorMem;
-
-int edit_x,edit_y;
-unsigned char edit_XX = 0;
-
 void ExtHelp()
 {
     Beye_Help bhelp;
@@ -50,81 +44,96 @@ void ExtHelp()
     }
 }
 
-void BeyeContext::paint_Etitle( int shift,bool use_shift ) const
+void Editor::paint_title( int shift,bool use_shift ) const
 {
-  unsigned eidx;
-  char byte,obyte;
-  title_wnd().freeze();
-  title_wnd().goto_xy(1,1);
-  title_wnd().clreol();
-  title_wnd().printf("%08lX: ",edit_cp + shift);
-  eidx = use_shift ? (unsigned)shift : edit_y*EditorMem.width+edit_x;
-  byte  = EditorMem.buff[eidx];
-  obyte = EditorMem.save[eidx];
-  if(byte != obyte) title_wnd().set_color(title_cset.change);
-  title_wnd().printf("%c %02XH %sH %sB "
+    unsigned eidx;
+    char byte,obyte;
+    TWindow& twnd = beye_context().title_wnd();
+    twnd.freeze();
+    twnd.goto_xy(1,1);
+    twnd.clreol();
+    twnd.printf("%08lX: ",edit_cp + shift);
+    eidx = use_shift ? (unsigned)shift : edit_y*EditorMem.width+edit_x;
+    byte  = EditorMem.buff[eidx];
+    obyte = EditorMem.save[eidx];
+    if(byte != obyte) twnd.set_color(title_cset.change);
+    twnd.printf("%c %02XH %sH %sB "
 	   ,byte ? byte : ' '
 	   ,byte & 0x00FF
 	   ,Get2SignDig(byte)
 	   ,GetBinary(byte));
-  title_wnd().set_color(title_cset.main);
-  if(byte != obyte)
-  {
-    title_wnd().printf("ORIGINAL: %c %02XH %sH %sB "
+    twnd.set_color(title_cset.main);
+    if(byte != obyte) {
+	twnd.printf("ORIGINAL: %c %02XH %sH %sB "
 	     ,obyte ? obyte : ' '
 	     ,obyte & 0x00FF
 	     ,Get2SignDig(obyte)
 	     ,GetBinary(obyte));
-  }
-  else
-    title_wnd().printf("                                ");
-  title_wnd().printf("MASK: %sH"
+    } else twnd.printf("                                ");
+    twnd.printf("MASK: %sH"
 	   ,Get2Digit(edit_XX));
-  title_wnd().refresh();
+    twnd.refresh();
 }
 
-bool __FASTCALL__ editInitBuffs(unsigned width,unsigned char *buff,unsigned size)
+void Editor::init(unsigned width,const unsigned char *buff,unsigned size)
 {
- __filesize_t flen,cfp,ssize;
- unsigned i,msize;
- msize = beye_context().tconsole().vio_width()*beye_context().tconsole().vio_height();
- EditorMem.buff = new unsigned char [msize];
- EditorMem.save = new unsigned char [msize];
- EditorMem.alen = new unsigned char [beye_context().tconsole().vio_height()];
+    __filesize_t flen,cfp,ssize;
+    unsigned i,msize;
+    msize = beye_context().tconsole().vio_width()*beye_context().tconsole().vio_height();
+    EditorMem.buff = new unsigned char [msize];
+    EditorMem.save = new unsigned char [msize];
+    EditorMem.alen = new unsigned char [beye_context().tconsole().vio_height()];
 
- memset(EditorMem.buff,TWC_DEF_FILLER,msize);
- memset(EditorMem.save,TWC_DEF_FILLER,msize);
- flen = beye_context().flength();
- edit_cp = cfp = beye_context().tell();
- EditorMem.width = width;
- if(buff) {
-    EditorMem.size = size;
-    memcpy(EditorMem.buff,buff,size);
- } else {
-    EditorMem.size = (unsigned)((__filesize_t)msize > (flen-cfp) ? (flen-cfp) : msize);
-    beye_context().bm_file().seek(cfp,binary_stream::Seek_Set);
-    beye_context().bm_file().read(EditorMem.buff,EditorMem.size);
-    beye_context().bm_file().seek(cfp,binary_stream::Seek_Set);
- }
- memcpy(EditorMem.save,EditorMem.buff,EditorMem.size);
- /** initialize EditorMem.alen */
- ssize = flen-cfp;
- for(i = 0;i < beye_context().tconsole().vio_height();i++)
- {
-    EditorMem.alen[i] = ssize >= width ? width : ssize;
-    ssize -= std::min(ssize,__filesize_t(width));
- }
- return true;
+    memset(EditorMem.buff,TWC_DEF_FILLER,msize);
+    memset(EditorMem.save,TWC_DEF_FILLER,msize);
+    flen = beye_context().flength();
+    edit_cp = cfp = beye_context().tell();
+    EditorMem.width = width;
+    if(buff) {
+	EditorMem.size = size;
+	memcpy(EditorMem.buff,buff,size);
+    } else {
+	EditorMem.size = (unsigned)((__filesize_t)msize > (flen-cfp) ? (flen-cfp) : msize);
+	beye_context().bm_file().seek(cfp,binary_stream::Seek_Set);
+	beye_context().bm_file().read(EditorMem.buff,EditorMem.size);
+	beye_context().bm_file().seek(cfp,binary_stream::Seek_Set);
+    }
+    memcpy(EditorMem.save,EditorMem.buff,EditorMem.size);
+    /** initialize EditorMem.alen */
+    ssize = flen-cfp;
+    for(i = 0;i < beye_context().tconsole().vio_height();i++) {
+	EditorMem.alen[i] = ssize >= width ? width : ssize;
+	ssize -= std::min(ssize,__filesize_t(width));
+    }
 }
 
-void __FASTCALL__ editDestroyBuffs()
-{
-  delete EditorMem.buff;
-  delete EditorMem.save;
-  delete EditorMem.alen;
+Editor::Editor(unsigned width)
+	:edit_cp(0)
+	,edit_XX(0)
+{ init(width,NULL,0); }
+Editor::Editor(unsigned width,const unsigned char *buff,unsigned size)
+	:edit_cp(0)
+	,edit_XX(0)
+{ init(width,buff,size); }
+
+Editor::~Editor() {
+    delete EditorMem.buff;
+    delete EditorMem.save;
+    delete EditorMem.alen;
 }
 
-void __FASTCALL__ CheckBounds()
+void Editor::goto_xy(unsigned x,unsigned y) {
+    edit_x=x;
+    edit_y=y;
+}
+
+unsigned Editor::where_x() const { return edit_x; }
+unsigned Editor::where_y() const { return edit_y; }
+const editor_mem& Editor::get_mem() const { return EditorMem; }
+editor_mem& Editor::get_mem() { return EditorMem; }
+uint8_t Editor::get_template() const { return edit_XX; }
+
+void Editor::CheckBounds()
 {
   tAbsCoord height = beye_context().main_wnd().client_height();
   if(edit_y < 0) edit_y = 0;
@@ -133,7 +142,7 @@ void __FASTCALL__ CheckBounds()
   if(edit_x >= EditorMem.alen[edit_y]) edit_x = EditorMem.alen[edit_y] - 1;
 }
 
-void __FASTCALL__ CheckYBounds()
+void Editor::CheckYBounds()
 {
   tAbsCoord height = beye_context().main_wnd().client_height();
   if(edit_y < 0) edit_y = 0;
@@ -141,7 +150,7 @@ void __FASTCALL__ CheckYBounds()
   while(!EditorMem.alen[edit_y]) edit_y--;
 }
 
-void __FASTCALL__ CheckXYBounds()
+void Editor::CheckXYBounds()
 {
    CheckYBounds();
    if(edit_x < 0) edit_x = EditorMem.alen[--edit_y]*2;
@@ -149,7 +158,7 @@ void __FASTCALL__ CheckXYBounds()
    CheckYBounds();
 }
 
-void __FASTCALL__ editSaveContest()
+void Editor::save_contest()
 {
   std::ofstream fs;
   std::string fname;
@@ -167,7 +176,7 @@ void __FASTCALL__ editSaveContest()
   beye_context().bm_file().reread();
 }
 
-bool __FASTCALL__ edit_defaction(int _lastbyte)
+bool Editor::default_action(int _lastbyte)
 {
     bool redraw;
     redraw = false;
@@ -185,7 +194,7 @@ bool __FASTCALL__ edit_defaction(int _lastbyte)
     return redraw;
 }
 
-bool __FASTCALL__ editDefAction(int _lastbyte)
+bool Editor::default_hex_action(int _lastbyte)
 {
     bool redraw = true;
     int eidx;
@@ -197,13 +206,13 @@ bool __FASTCALL__ editDefAction(int _lastbyte)
 	case KE_F(7): EditorMem.buff[eidx] ^= edit_XX; break;
 	case KE_F(8): EditorMem.buff[eidx]  = edit_XX; break;
 	case KE_F(9): EditorMem.buff[eidx] = EditorMem.save[eidx]; break;
-	default     : redraw = edit_defaction(_lastbyte); edit_x--; break;
+	default     : redraw = default_action(_lastbyte); edit_x--; break;
     }
     edit_x++;
     return redraw;
 }
 
-int __FASTCALL__ FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*save_func)(Opaque& _this,unsigned char *,unsigned))
+int Editor::FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*save_func)(Opaque& _this,unsigned char *,unsigned))
 {
     size_t i,j;
     unsigned mlen;
@@ -227,7 +236,7 @@ int __FASTCALL__ FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*sav
 	}
     }
     beye_context().tconsole().mouse_set_state(true);
-    beye_context().paint_Etitle(edit_y*EditorMem.width + edit_x,0);
+    paint_title(edit_y*EditorMem.width + edit_x,0);
     TWindow::set_cursor_type(TWindow::Cursor_Normal);
     redraw = true;
     if(hexwnd) {
@@ -258,11 +267,11 @@ int __FASTCALL__ FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*sav
 				(unsigned *)&edit_x,flags,(char *)&EditorMem.save[eidx], NULL);
 	switch(_lastbyte) {
 	    case KE_F(1)   : ExtHelp(); continue;
-	    case KE_F(2)   : save_func?save_func(_this,EditorMem.buff,EditorMem.size):editSaveContest();
+	    case KE_F(2)   : save_func?save_func(_this,EditorMem.buff,EditorMem.size):save_contest();
 	    case KE_F(10)  :
 	    case KE_ESCAPE : goto bye;
 	    case KE_TAB : if(ewnd) goto bye;
-	    default     : redraw = editDefAction(_lastbyte); break;
+	    default     : redraw = default_hex_action(_lastbyte); break;
 	}
 	CheckBounds();
 	if(redraw) {
@@ -273,7 +282,7 @@ int __FASTCALL__ FullEdit(TWindow* ewnd,TWindow* hexwnd,Opaque& _this,void (*sav
 		hexwnd->write(11,edit_y + 1,(const uint8_t*)work,len);
 	    }
 	}
-	beye_context().paint_Etitle(edit_y*EditorMem.width + edit_x,0);
+	paint_title(edit_y*EditorMem.width + edit_x,0);
     }
 bye:
     TWindow::set_cursor_type(TWindow::Cursor_Off);

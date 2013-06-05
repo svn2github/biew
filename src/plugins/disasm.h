@@ -40,6 +40,7 @@ typedef struct tagDisasmRet
 typedef unsigned char * MBuffer;
     struct Disassembler_Info;
     class Disassembler;
+    class Editor;
     class DisMode : public Plugin {
 	public:
 	    /* New features: commentaries */
@@ -190,9 +191,9 @@ typedef unsigned char * MBuffer;
 	    void			accept_actions();
 	    void			fill_prev_asm_page(__filesize_t bound,unsigned predist);
 	    void			prepare_asm_lines(int keycode,__filesize_t cfpos);
-	    bool			def_asm_action(int _lastbyte,int start) const;
-	    void			disasm_screen(TWindow* ewnd,__filesize_t cp,__filesize_t flen,int st,int stop,int start);
-	    int				full_asm_edit(TWindow * ewnd);
+	    bool			def_asm_action(Editor&,int _lastbyte,int start) const;
+	    void			disasm_screen(Editor&,TWindow* ewnd,__filesize_t cp,__filesize_t flen,int st,int stop,int start);
+	    int				full_asm_edit(Editor&,TWindow * ewnd);
 
 	    unsigned			DefDisasmSel;
 	    Disassembler*		activeDisasm;
