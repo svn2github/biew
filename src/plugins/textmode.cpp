@@ -90,7 +90,7 @@ static const unsigned	MAX_STRLEN=1000; /**< defines maximal length of string */
 
     class TextMode : public Plugin {
 	public:
-	    TextMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn&);
+	    TextMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn&,Search&);
 	    virtual ~TextMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -158,6 +158,7 @@ static const unsigned	MAX_STRLEN=1000; /**< defines maximal length of string */
 	    binary_stream&		main_handle;
 	    const Bin_Format&		bin_format;
 	    udn&			_udn;
+	    Search&			search;
 
 	    syntax_hl_t		syntax_hl;
 	    unsigned char	word_set[UCHAR_MAX+1];
@@ -894,8 +895,8 @@ void TextMode::paint_search(const char* cptr,unsigned int shift,int i,int size,i
     __fileoff_t save,savee;
     unsigned cp_symb_len,loc_st,loc_end;
     cp_symb_len = activeNLS->get_symbol_size();
-    loc_st = FoundTextSt > tlines[i].st ? (unsigned)(FoundTextSt - tlines[i].st) : 0;
-    loc_end = (unsigned)(FoundTextEnd - tlines[i].st);
+    loc_st = search.found_start() > tlines[i].st ? (unsigned)(search.found_start() - tlines[i].st) : 0;
+    loc_end = (unsigned)(search.found_end() - tlines[i].st);
     if(_bin_mode) {
 	sh = loc_st - shift;
 	she = loc_end - shift;
@@ -903,13 +904,13 @@ void TextMode::paint_search(const char* cptr,unsigned int shift,int i,int size,i
 	sh = tab2space(NULL,NULL,UINT_MAX,buff,loc_st/cp_symb_len,shift,NULL,0L)*cp_symb_len;
 	she= tab2space(NULL,NULL,UINT_MAX,buff,loc_end/cp_symb_len,shift,NULL,0L)*cp_symb_len;
     }
-    save = FoundTextSt;
-    savee= FoundTextEnd;
-    FoundTextSt = tlines[i].st + shift + sh/cp_symb_len;
-    FoundTextEnd = tlines[i].st + shift + she/cp_symb_len;
-    HiLightSearch(main_wnd,tlines[i].st + shift,0,size,i,cptr,HLS_NORMAL);
-    FoundTextSt = save;
-    FoundTextEnd = savee;
+    save = search.found_start();
+    savee= search.found_end();
+    search.found_start() = tlines[i].st + shift + sh/cp_symb_len;
+    search.found_end() = tlines[i].st + shift + she/cp_symb_len;
+    search.hilight(main_wnd,tlines[i].st + shift,0,size,i,cptr,Search::HL_Normal);
+    search.found_start() = save;
+    search.found_end() = savee;
 }
 
 void TextMode::drawBound(TWindow& w,int x,int y,char ch) const
@@ -920,8 +921,8 @@ void TextMode::drawBound(TWindow& w,int x,int y,char ch) const
   w.set_color(browser_cset.main);
 }
 
-TextMode::TextMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn& u)
-	:Plugin(b,h,_main_wnd,code_guider,u)
+TextMode::TextMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn& u,Search& s)
+	:Plugin(b,h,_main_wnd,code_guider,u,s)
 	,HiLight(1)
 	,bin_mode(MOD_PLAIN)
 	,txtHandle(&h)
@@ -931,6 +932,7 @@ TextMode::TextMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeG
 	,main_handle(h)
 	,bin_format(b)
 	,_udn(u)
+	,search(s)
 {
     buff = new char [MAX_STRLEN];
     tlines = new TSTR[__TVIO_MAXSCREENWIDTH];
@@ -994,12 +996,12 @@ plugin_position TextMode::paint( unsigned keycode, unsigned shift )
     for(i = 0;i < height;i++) {
 	len = (unsigned)(tlines[i].end - tlines[i].st);
 	if(len > strmaxlen) strmaxlen = len;
-	if(isHOnLine(tlines[i].st,len)) {
+	if(search.is_inline(tlines[i].st,len)) {
 	    hilightline = i;
 	    if(keycode == KE_JUSTFIND) {
 		if(bin_mode != MOD_BINARY) {
 		    unsigned n_tabs,b_ptr,b_lim;
-		    len = std::min(MAX_STRLEN,FoundTextSt > tlines[i].st ? (int)(FoundTextSt-tlines[i].st):unsigned(0));
+		    len = std::min(MAX_STRLEN,search.found_start() > tlines[i].st ? (int)(search.found_start()-tlines[i].st):unsigned(0));
 		    main_handle.seek(tlines[i].st,binary_stream::Seek_Set);
 		    main_handle.read((any_t*)buff,len);
 		    len = convert_cp(buff,len,false);
@@ -1009,8 +1011,8 @@ plugin_position TextMode::paint( unsigned keycode, unsigned shift )
 			if(shift < (unsigned)(main_wnd.width()/2)) break;
 		    }
 		    shift = tab2space(NULL,NULL,UINT_MAX,buff,b_ptr,0,NULL,0L);
-		} else if(!isHOnLine((tlines[i].st+shift)*cp_symb_len,std::min(len,main_wnd.width()))) {
-		    shift = ((unsigned)(FoundTextSt - tlines[i].st)-main_wnd.width()/2)/cp_symb_len;
+		} else if(!search.is_inline((tlines[i].st+shift)*cp_symb_len,std::min(len,main_wnd.width()))) {
+		    shift = ((unsigned)(search.found_start() - tlines[i].st)-main_wnd.width()/2)/cp_symb_len;
 		    if((int)shift < 0) shift = 0;
 		    if(shift%cp_symb_len) shift+=shift%cp_symb_len;
 		}
@@ -1022,7 +1024,7 @@ plugin_position TextMode::paint( unsigned keycode, unsigned shift )
     main_wnd.freeze();
     for(i = 0;i < height;i++) {
 	len = (int)(tlines[i].end - tlines[i].st);
-	if(isHOnLine(tlines[i].st,len)) hilightline = i;
+	if(search.is_inline(tlines[i].st,len)) hilightline = i;
 	rshift = bin_mode != MOD_BINARY ? 0 : shift;
 	rsize = size = len - rshift;
 	if(len > rshift) {
@@ -1215,7 +1217,7 @@ unsigned TextMode::get_symbol_size() const { return activeNLS->get_symbol_size()
 unsigned TextMode::get_max_line_length() const { return strmaxlen; }
 TextMode::e_flag TextMode::flags() const { return Text|Has_ConvertCP; }
 
-static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& u) { return new(zeromem) TextMode(b,h,main_wnd,code_guider,u); }
+static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& u,Search& s) { return new(zeromem) TextMode(b,h,main_wnd,code_guider,u,s); }
 
 extern const Plugin_Info textMode = {
     "~Text mode",	/**< plugin name */

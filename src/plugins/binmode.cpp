@@ -27,6 +27,7 @@ using namespace	usr;
 #include "bconsole.h"
 #include "beyeutil.h"
 #include "beyehelp.h"
+#include "search.h"
 #include "udn.h"
 #include "editor.h"
 #include "tstrings.h"
@@ -45,7 +46,7 @@ namespace	usr {
     class Bin_Editor;
     class BinMode : public Plugin {
 	public:
-	    BinMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn&);
+	    BinMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn&,Search&);
 	    virtual ~BinMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -80,6 +81,7 @@ namespace	usr {
 	    binary_stream&	main_handle;
 	    const Bin_Format&	bin_format;
 	    udn&		_udn;
+	    Search&		search;
     };
 
     class Bin_Editor : public Editor {
@@ -114,14 +116,15 @@ void Bin_Editor::save_contest() {
     else parent.save_video(emem.buff,emem.size);
 }
 
-BinMode::BinMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn& u)
-	:Plugin(b,h,_main_wnd,code_guider,u)
+BinMode::BinMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn& u,Search& s)
+	:Plugin(b,h,_main_wnd,code_guider,u,s)
 	,virtWidthCorr(0)
 	,bin_mode(MOD_PLAIN)
 	,main_wnd(_main_wnd)
 	,main_handle(h)
 	,bin_format(b)
 	,_udn(u)
+	,search(s)
 {}
 BinMode::~BinMode() {}
 
@@ -221,7 +224,7 @@ plugin_position BinMode::paint( unsigned keycode,unsigned tshift )
 		::memset(&chars[count],TWC_DEF_FILLER,main_wnd.width()-count);
 		::memset(&attrs[count],browser_cset.main,main_wnd.width()-count);
 	    } else ::memset(&buffer[len],TWC_DEF_FILLER,main_wnd.width()-len);
-	    if(isHOnLine(_index,width)) HiLightSearch(main_wnd,_index,0,BWidth,j,(const char*)buffer,HLS_NORMAL);
+	    if(search.is_inline(_index,width)) search.hilight(main_wnd,_index,0,BWidth,j,(const char*)buffer,Search::HL_Normal);
 	    else {
 		if(bin_mode==MOD_PLAIN)
 		    main_wnd.write(1,j+1,buffer,width);
@@ -333,7 +336,7 @@ void BinMode::save_ini(Ini_Profile& ini)
 unsigned BinMode::get_symbol_size() const { return bin_mode==MOD_PLAIN?1:2; }
 unsigned BinMode::get_max_line_length() const { return main_wnd.client_width(); }
 
-static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& u) { return new(zeromem) BinMode(b,h,main_wnd,code_guider,u); }
+static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& u,Search& s) { return new(zeromem) BinMode(b,h,main_wnd,code_guider,u,s); }
 
 extern const Plugin_Info binMode = {
     "~Binary mode",	/**< plugin name */

@@ -23,13 +23,13 @@ binary_packet::binary_packet(const binary_packet& from)
     }
 }
 
-binary_packet::binary_packet(const any_t* src,size_t size)
+binary_packet::binary_packet(const any_t* src,size_t sz)
 	    :buffer(NULL)
-	    ,len(size)
+	    ,len(sz)
 {
-    if(size) {
-	buffer=new char[size];
-	::memcpy(buffer,src,len);
+    if(sz) {
+	buffer=new char[sz];
+	::memcpy(buffer,src,sz);
     }
 }
 
@@ -110,12 +110,19 @@ const char&	binary_packet::back() const { return ((const char*)buffer)[len-1]; }
 
 char& binary_packet::at(size_t idx) {
     if(idx<len) return ((char*)buffer)[idx];
-    throw std::out_of_range("binary_packet");
+    throw std::out_of_range("binary_packet.at");
 }
 
 const char& binary_packet::at(size_t idx) const {
     if(idx<len) return ((const char*)buffer)[idx];
-    throw std::out_of_range("binary_packet");
+    throw std::out_of_range("binary_packet.at const");
+}
+
+binary_packet binary_packet::subpacket(size_t start,size_t length) const {
+    if(start+length>len) throw std::out_of_range("binary_packet.subpacket");
+    binary_packet rc(length);
+    ::memcpy(rc.buffer,&((char*)buffer)[start],length);
+    return rc;
 }
 
 binary_packet::~binary_packet() { if(buffer) delete (char*)buffer; }

@@ -34,41 +34,6 @@ using namespace	usr;
 #include "plugins/plugin.h"
 
 namespace	usr {
-int __FASTCALL__ isHOnLine(__filesize_t cp,int width)
-{
-  if(FoundTextSt == FoundTextEnd) return 0;
-  return (FoundTextSt >= cp && FoundTextSt < cp + width)
-	  || (FoundTextEnd > cp && FoundTextEnd < cp + width)
-	  || (FoundTextSt <= cp && FoundTextEnd >= cp + width);
-}
-
-void __FASTCALL__ HiLightSearch(TWindow& out,__filesize_t cfp,tRelCoord minx,tRelCoord maxx,tRelCoord y,const char* buff,unsigned flags)
-{
-    unsigned __len,width;
-    int x;
-    char attr;
-    uint8_t chars[__TVIO_MAXSCREENWIDTH];
-    ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
-    width = (flags & HLS_USE_DOUBLE_WIDTH) == HLS_USE_DOUBLE_WIDTH ? maxx*2 : maxx-minx;
-    attr = browser_cset.highline;
-    ::memcpy(chars,buff,width);
-    ::memset(attrs,attr,width);
-    x = (int)(FoundTextSt - cfp);
-    if((flags & HLS_USE_DOUBLE_WIDTH) == HLS_USE_DOUBLE_WIDTH) x *= 2;
-    __len = (unsigned)(FoundTextEnd - FoundTextSt);
-    if((flags & HLS_USE_DOUBLE_WIDTH) == HLS_USE_DOUBLE_WIDTH) __len *= 2;
-    if(__len > width - x) __len = width - x;
-    if(x < 0) { __len += x; x = 0; }
-    if(__len && x + __len <= width) {
-	unsigned char end,st;
-	st = x;
-	end = (__len + x);
-	attr = browser_cset.hlight;
-	memset(&attrs[st],attr,end-st);
-    }
-    out.write(minx+1,y+1,chars,attrs,width);
-}
-
 void BeyeContext::draw_title(__filesize_t lastbyte) const
 {
   unsigned percent;
@@ -90,6 +55,7 @@ void BeyeContext::main_loop()
     __filesize_t savep = 0,cfp,nfp,flen;
     unsigned long lwidth;
     plugin_position rc;
+    Search& s = search();
     bm_file().seek(LastOffset,binary_stream::Seek_Set);
     drawPrompt();
     rc.textshift=0;
@@ -148,7 +114,7 @@ void BeyeContext::main_loop()
 	    case KE_F(3):
 		if(new_source()) {
 		    ch = KE_SUPERKEY;
-		    FoundTextSt = FoundTextEnd; ch = KE_SUPERKEY;
+		    s.found_start() = s.found_end(); ch = KE_SUPERKEY;
 		    PaintTitle();
 		}
 		break;
@@ -198,12 +164,12 @@ void BeyeContext::main_loop()
 	    case KE_SHIFT_F(5): nfp = WhereAMI(nfp); break;
 	    case KE_F(6):
 		bm_file().reread();
-		FoundTextSt = FoundTextEnd; ch = KE_SUPERKEY;
+		s.found_start() = s.found_end(); ch = KE_SUPERKEY;
 		PaintTitle();
 		break;
 	    case KE_SHIFT_F(6): select_sysinfo(); break;
-	    case KE_F(7): nfp = search(false); ch = KE_JUSTFIND; break;
-	    case KE_SHIFT_F(7): nfp = search(true); ch = KE_JUSTFIND; break;
+	    case KE_F(7): nfp = s.search(false); ch = KE_JUSTFIND; break;
+	    case KE_SHIFT_F(7): nfp = s.search(true); ch = KE_JUSTFIND; break;
 	    case KE_F(8):
 		    nfp = bin_format().show_header();
 		    break;
@@ -216,7 +182,7 @@ void BeyeContext::main_loop()
 		    break;
 	    case KE_SHIFT_F(10):
 		if(FileUtils()) {
-		    FoundTextSt = FoundTextEnd; ch = KE_SUPERKEY;
+		    s.found_start() = s.found_end(); ch = KE_SUPERKEY;
 		    PaintTitle();
 		}
 		break;

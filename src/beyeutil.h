@@ -67,14 +67,5 @@ namespace	usr {
     __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos);
 
     void  ShowSysInfo();
-
-    int  __FASTCALL__ isHOnLine(__filesize_t cp,int width);
-    enum {
-	HLS_NORMAL               =0x0000,
-	HLS_USE_DOUBLE_WIDTH     =0x0001
-    };
-
-    void __FASTCALL__ HiLightSearch(TWindow& out,__filesize_t cfp,tRelCoord minx,
-			  tRelCoord maxx,tRelCoord y,const char* buff,unsigned flags);
 } // namespace	usr
 #endif

@@ -154,7 +154,7 @@ void Beye_Help::paint(TWindow& win,const std::vector<std::string>& names,unsigne
 }
 
 typedef char* lpstr;
-int Beye_Help::ListBox(const std::vector<std::string>& names,const std::string& title) const
+int Beye_Help::ListBox(const std::vector<std::string>& names,const std::string& title)
 {
     unsigned i,j,height,mwidth = title.length();
     size_t nlist=names.size();
@@ -180,30 +180,26 @@ int Beye_Help::ListBox(const std::vector<std::string>& names,const std::string& 
 	switch(ch) {
 	    case KE_F(7): /** perform binary search in help */
 	    case KE_SHIFT_F(7): {
-		static char searchtxt[21] = "";
-		static unsigned char searchlen = 0;
-		static unsigned sflg = SF_NONE;
-
 		if (!(ch==KE_SHIFT_F(7) && searchlen) &&
-		   !SearchDialog(SD_SIMPLE,searchtxt,&searchlen,&sflg))
+		   !search.dialog(Search::Simple,searchtxt,&searchlen,sflg))
 		   break;
 
 		int direct,ii;
 		bool found;
 		int endsearch,startsearch,cache[UCHAR_MAX];
 		searchtxt[searchlen] = 0;
-		endsearch = sflg & SF_REVERSE ? -1 : (int)nlist;
-		direct = sflg & SF_REVERSE ? -1 : 1;
+		endsearch = sflg & Search::Reverse ? -1 : (int)nlist;
+		direct = sflg & Search::Reverse ? -1 : 1;
 		startsearch = scursor != -1 ?
 				scursor :
 				start;
 		if(startsearch > (int)(nlist-1)) startsearch = nlist-1;
 		if(startsearch < 0) startsearch = 0;
 		if(scursor != -1) {
-		    sflg & SF_REVERSE ? startsearch-- : startsearch++;
+		    sflg & Search::Reverse ? startsearch-- : startsearch++;
 		}
 		found = false;
-		fillBoyerMooreCache(cache,searchtxt,searchlen, sflg & SF_CASESENS);
+		search.fillBoyerMooreCache(cache,searchtxt,searchlen, sflg & Search::Case_Sens);
 		for(ii = startsearch;ii != endsearch;ii+=direct) {
 		    if(_lb_searchtext(names[ii].c_str(),searchtxt,searchlen,cache,sflg)) {
 			start = scursor = ii;
@@ -318,7 +314,7 @@ binary_packet Beye_Help::load_item(unsigned long item_id)
 std::vector<std::string> Beye_Help::point_strings(binary_packet& data) const
 {
     std::vector<std::string> rc;
-    size_t i,sz=data.length()-1;
+    size_t i,sz=data.size()-1;
     char ch,ch1;
     char* p = data.cdata();
     for(i = 0;i < sz;i++) {
@@ -345,7 +341,10 @@ void Beye_Help::run( unsigned long item_id )
     }
 }
 
-Beye_Help::Beye_Help() {}
-Beye_Help::~Beye_Help() {}
+Beye_Help::Beye_Help()
+	:search(*new(zeromem) Search(beye_context())) 
+	,sflg(Search::None)
+{}
+Beye_Help::~Beye_Help() { delete &search; }
 } // namespace	usr
 

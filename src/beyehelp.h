@@ -20,6 +20,7 @@
 #include <vector>
 #include <string>
 
+#include "search.h"
 #include "libbeye/binary_packet.h"
 #include "libbeye/twindow.h"
 
@@ -61,6 +62,7 @@ namespace	usr {
 	HLPC_LINK_OFF		=0x16
     };
 
+    class Search;
     class Beye_Help : public Opaque {
 	public:
 	    Beye_Help();
@@ -83,13 +85,18 @@ namespace	usr {
 						    bool is_hl=false,bool dry_run=false) const;
 		       /** Paints line of help */
 	    virtual void		paint_line(TWindow& win,unsigned y,const std::string& str, bool is_hl) const;
-	    virtual int			ListBox(const std::vector<std::string>& names,const std::string& title) const;
+	    virtual int			ListBox(const std::vector<std::string>& names,const std::string& title);
 	private:
 	    void			paint(TWindow& win,const std::vector<std::string>& names,unsigned start,unsigned height,unsigned width) const;
 	    bool			find_item(unsigned long item_id);
 
 	    std::fstream		fs;
 	    beye_help_item		bhi;
+	    Search&			search;
+
+	    char			searchtxt[21];
+	    unsigned char		searchlen;
+	    Search::search_flags	sflg;
     };
 } // namespace	usr
 

@@ -196,4 +196,22 @@ void __FASTCALL__ CompressHex(unsigned char * dest,const char * src,unsigned siz
       if(usespace) i++;
   }
 }
+
+int __FASTCALL__ ExpandHex(char * dest,const unsigned char * src,int size,char hard)
+{
+  int i,k;
+    dest[0] = '\0';
+    k = 0;
+    for(i = 0;i < size;i++)
+    {
+	char * cptr;
+	cptr = Get2Digit(src[i]);
+	strcat(dest,cptr); k += 2;
+	if(hard == 1) { strcat(dest,!((i + 1)%4) ? ( !((i+1)%16) ? " " : "-" ) : " "); k++; }
+	else
+	  if(hard == 2) { strcat(dest,!((i + 1)%4) ? "  " : " ");  k += !((i + 1)%4) ? 2 : 1; }
+	  else { strcat(dest," "); k++; }
+    }
+  return k;
+}
 } // namespace	usr

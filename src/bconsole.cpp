@@ -624,9 +624,9 @@ static void  __FASTCALL__ Paint(TWindow& win,const std::vector<std::string>& nam
 
 static char byNam;
 
-bool __FASTCALL__ _lb_searchtext(const char *str,const char *tmpl,unsigned searchlen,const int *cache, unsigned flg)
+bool __FASTCALL__ _lb_searchtext(const char *str,const char *tmpl,unsigned searchlen,const int *cache, Search::search_flags flg)
 {
-  return strFind(str, strlen(str), tmpl, searchlen, cache, flg) ? true : false;
+  return beye_context().search().strFind(str, strlen(str), tmpl, searchlen, cache, flg) ? true : false;
 }
 
 static bool list_compare(const std::string& s1,const std::string& s2)
@@ -775,17 +775,17 @@ restart:
 	    case KE_SHIFT_F(7): {
 		static char searchtxt[21] = "";
 		static unsigned char searchlen = 0;
-		static unsigned sflg = SF_NONE;
+		static Search::search_flags sflg = Search::None;
 
 		if (!(ch==KE_SHIFT_F(7) && searchlen) &&
-		    !SearchDialog(SD_SIMPLE,searchtxt,&searchlen,&sflg)) break;
+		    !beye_context().search().dialog(Search::Simple,searchtxt,&searchlen,sflg)) break;
 
 		int direct, cache[UCHAR_MAX+1];
 		bool found;
 		int ii,endsearch,startsearch;
 		searchtxt[searchlen] = 0;
-		endsearch = sflg & SF_REVERSE ? -1 : (int)nlist;
-		direct = sflg & SF_REVERSE ? -1 : 1;
+		endsearch = sflg & Search::Reverse ? -1 : (int)nlist;
+		direct = sflg & Search::Reverse ? -1 : 1;
 		startsearch = (assel & LB_SELECTIVE) == LB_SELECTIVE ?
 				cursor + start :
 				scursor != -1 ?
@@ -793,9 +793,9 @@ restart:
 				start;
 		if(startsearch > (int)(nlist-1)) startsearch = nlist-1;
 		if(startsearch < 0) startsearch = 0;
-		if((assel & LB_SELECTIVE) == LB_SELECTIVE || scursor != -1) sflg & SF_REVERSE ? startsearch-- : startsearch++;
+		if((assel & LB_SELECTIVE) == LB_SELECTIVE || scursor != -1) sflg & Search::Reverse ? startsearch-- : startsearch++;
 		found = false;
-		fillBoyerMooreCache(cache, searchtxt, searchlen, sflg & SF_CASESENS);
+		beye_context().search().fillBoyerMooreCache(cache, searchtxt, searchlen, sflg & Search::Case_Sens);
 		for(ii = startsearch;ii != endsearch;ii+=direct) {
 		    if(!names[ii].empty()) {
 			if(_lb_searchtext(names[ii].c_str(),searchtxt,searchlen,cache,sflg)) {

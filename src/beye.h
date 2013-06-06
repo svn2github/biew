@@ -18,6 +18,7 @@ namespace	usr {
     class sysinfo;
     class Plugin;
     struct Plugin_Info;
+    class Search;
     class CodeGuider;
     class Bin_Format;
     class binary_stream;
@@ -61,19 +62,12 @@ namespace	usr {
 	    System&		system() const;
 	    void		show_usage() const;
 	    void		main_loop();
-		   /** Main search routine
-		     * @param is_continue  indicates initialization of search
-					   If set then search should be continued
-					   search dialog will displayed otherwise
-		     * @return             new offset on successful search and
-					   current offset otherwise
-		    **/
-	    __filesize_t	search( bool is_continue );
 
 	    void		select_tool() const;
 	    void		select_sysinfo() const;
 
 	    CodeGuider&		codeguider() const;
+	    Search&		search() const;
 	    TWindow&		main_wnd() const;
 
 	    void		PaintTitle() const;

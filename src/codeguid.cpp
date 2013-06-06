@@ -34,7 +34,9 @@ using namespace	usr;
 #include "plugins/disasm.h"
 
 namespace	usr {
-CodeGuider::CodeGuider() {
+CodeGuider::CodeGuider(BeyeContext& b)
+	    :bctx(b)
+{
     strcpy(codeguid_image,"=>[X]");
 }
 CodeGuider::~CodeGuider() {}
@@ -107,7 +109,7 @@ char* CodeGuider::gidBuildKeyStr()
 
 void CodeGuider::reset_go_address( int keycode )
 {
-    TWindow& main_wnd = beye_context().main_wnd();
+    TWindow& main_wnd = bctx.main_wnd();
     Alarm = 0;
     if(keycode == KE_DOWNARROW) {
 	size_t i,sz=GoAddr.size();
@@ -132,9 +134,9 @@ void CodeGuider::reset_go_address( int keycode )
 
 void CodeGuider::add_go_address(const DisMode& parent,std::string& str,__filesize_t addr)
 {
-    TWindow& main_wnd = beye_context().main_wnd();
+    TWindow& main_wnd = bctx.main_wnd();
     tAbsCoord width = main_wnd.client_width();
-    unsigned bytecodes=beye_context().active_mode().get_max_symbol_size()*2;
+    unsigned bytecodes=bctx.active_mode().get_max_symbol_size()*2;
     int len,where;
     if(parent.prepare_mode()) return;
     len = str.length();
@@ -165,7 +167,7 @@ void CodeGuider::add_go_address(const DisMode& parent,std::string& str,__filesiz
 
 void CodeGuider::add_back_address()
 {
-    BackAddr.push_back(beye_context().tell());
+    BackAddr.push_back(bctx.tell());
 }
 
 __filesize_t CodeGuider::get_go_address(unsigned keycode)
@@ -176,7 +178,7 @@ __filesize_t CodeGuider::get_go_address(unsigned keycode)
 	    ret = BackAddr.back();
 	    BackAddr.pop_back();
 	}
-	else ret=beye_context().tell();
+	else ret=bctx.tell();
     } else {
 	unsigned ptr;
 	keycode &= 0x00FF;
@@ -184,7 +186,7 @@ __filesize_t CodeGuider::get_go_address(unsigned keycode)
 	if(ptr < GoAddr.size()) {
 	    add_back_address();
 	    ret = GoAddr[ptr].first;
-	} else ret = beye_context().tell();
+	} else ret = bctx.tell();
     }
     return ret;
 }
@@ -192,8 +194,8 @@ __filesize_t CodeGuider::get_go_address(unsigned keycode)
 std::string CodeGuider::encode_address(__filesize_t cfpos,bool AddressDetail) const
 {
     static std::string addr;
-    addr=beye_context().is_file64()?Get16Digit(cfpos):Get8Digit(cfpos);
-    if(AddressDetail) beye_context().bin_format().address_resolving(addr,cfpos);
+    addr=bctx.is_file64()?Get16Digit(cfpos):Get8Digit(cfpos);
+    if(AddressDetail) bctx.bin_format().address_resolving(addr,cfpos);
     addr+=": ";
     return addr;
 }

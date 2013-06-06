@@ -56,8 +56,8 @@ namespace	usr {
     extern const Disassembler_Info ppc_disassembler_info;
     extern const Disassembler_Info java_disassembler_info;
 
-DisMode::DisMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& _code_guider,udn& u)
-	:Plugin(b,h,_main_wnd,_code_guider,u)
+DisMode::DisMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& _code_guider,udn& u,Search& s)
+	:Plugin(b,h,_main_wnd,_code_guider,u,s)
 	,DefDisasmSel(__DEFAULT_DISASM)
 	,HiLight(1)
 	,code_guider(_code_guider)
@@ -67,6 +67,7 @@ DisMode::DisMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGui
 	,second_handle(&h)
 	,bin_format(b)
 	,_udn(u)
+	,search(s)
 {
     size_t i,sz;
     unsigned def_platform;
@@ -324,7 +325,7 @@ plugin_position DisMode::paint( unsigned keycode, unsigned textshift )
 				i + 1,
 				&outstr[len_64],
 				disPanelMode < Panel_Full ? len - (len_64+1) : len - 1);
-		    if(isHOnLine(cfpos,dret.codelen)) HiLightSearch(main_wnd,cfpos,len_64,dret.codelen,i,(const char*)&outstr[len_64],HLS_USE_DOUBLE_WIDTH);
+		    if(search.is_inline(cfpos,dret.codelen)) search.hilight(main_wnd,cfpos,len_64,dret.codelen,i,(const char*)&outstr[len_64],Search::HL_Use_Double_Width);
 		}
 		main_wnd.set_color(browser_cset.main);
 		main_wnd.write(len,i + 1,(const uint8_t*)" ",1);  len++;
@@ -720,7 +721,7 @@ unsigned DisMode::get_symbol_size() const { return 1; }
 unsigned DisMode::get_max_symbol_size() const { return activeDisasm->max_insn_len(); }
 
 __filesize_t DisMode::search_engine(TWindow *pwnd, __filesize_t start,
-					__filesize_t *slen, unsigned flg,
+					__filesize_t *slen, Search::search_flags flg,
 					bool is_continue, bool *is_found)
 {
     DisasmRet dret;
@@ -742,15 +743,15 @@ __filesize_t DisMode::search_engine(TWindow *pwnd, __filesize_t start,
     prepare_asm_lines(KE_SUPERKEY, cfpos);
     lw = prev_line_width();
     if(cfpos && cfpos >= lw) cfpos -= lw;
-    if(!(is_continue && (flg & SF_REVERSE))) cfpos += curr_line_width();
+    if(!(is_continue && (flg & Search::Reverse))) cfpos += curr_line_width();
     /* end of attempt */
-    fillBoyerMooreCache(cache, (char*)search_buff, search_len, flg & SF_CASESENS);
+    search.fillBoyerMooreCache(cache, (char*)search.buff(), search.length(), flg & Search::Case_Sens);
     while(1) {
 	proc = (unsigned)((cfpos*pmult)/tsize);
 	if(proc != pproc) {
 	    if(!ShowPercentInWnd(pwnd,pproc=proc))  break;
 	}
-	if(flg & SF_REVERSE) {
+	if(flg & Search::Reverse) {
 	    prepare_asm_lines(KE_UPARROW, cfpos);
 	    lw = prev_line_width();
 	    if(cfpos && lw && cfpos >= lw) {
@@ -774,7 +775,7 @@ __filesize_t DisMode::search_engine(TWindow *pwnd, __filesize_t start,
 	}
 	::strcpy(disSearchBuff, dret.str);
 	::strcat(disSearchBuff, dis_comments);
-	if(strFind(disSearchBuff, strlen(disSearchBuff), search_buff, search_len, cache, flg)) {
+	if(search.strFind(disSearchBuff, strlen(disSearchBuff), search.buff(), search.length(), cache, flg)) {
 	    *is_found = true;
 	    retval = dfpos;
 	    *slen = dret.codelen;
@@ -1183,10 +1184,8 @@ bool DisMode::append_faddr(binary_stream& handle,std::string& str,__fileoff_t ul
        char lbuf[20];
        cptr = DumpMode ? "L" : "file:";
        str+=cptr;
-	if(beye_context().is_file64())
-	    sprintf(lbuf,"%016llX",r_sh);
-	else
-	    sprintf(lbuf,"%08lX",(unsigned long)r_sh);
+	if(beye_context().is_file64()) sprintf(lbuf,"%016llX",r_sh);
+	else sprintf(lbuf,"%08lX",(unsigned long)r_sh);
        str+=lbuf;
        appended = true;
      }
@@ -1237,7 +1236,7 @@ bool hexAddressResolution(unsigned& har);
 bool DisMode::action_F6() { return hexAddressResolution(hexAddressResolv); }
 unsigned DisMode::get_max_line_length() const { return get_max_symbol_size(); }
 
-static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& u) { return new(zeromem) DisMode(b,h,main_wnd,code_guider,u); }
+static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& u,Search& s) { return new(zeromem) DisMode(b,h,main_wnd,code_guider,u,s); }
 
 extern const Plugin_Info disMode = {
     "~Disassembler",	/**< plugin name */

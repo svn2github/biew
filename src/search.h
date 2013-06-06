@@ -18,26 +18,39 @@
 #define __SEARCH__H
 
 namespace	usr {
-enum {
-    SD_SIMPLE       =0x0000,   /**< indicates simple search dialog to be displayed */
-    SD_ALLFEATURES  =0x0001    /**< indicates fully featured search dialog to be displayed */
-};
-enum {
-    SF_NONE         =0x0000,   /**< indicates no flags */
-    SF_CASESENS     =0x0001,   /**< indicates case sensitivity search engine */
-    SF_WORDONLY     =0x0002,   /**< indicates word only to be found */
-    SF_REVERSE      =0x0004,   /**< indicates reverse search */
-    SF_WILDCARDS    =0x0008,   /**< indicates wildcard can be used */
-    SF_PLUGINS      =0x0010,   /**< indicates using plugin's output */
-    SF_ASHEX        =0x0020    /**< indicates hex mode of input sequence */
-};
-enum {
-    MAX_SEARCH_SIZE=76
-};
-    bool        __FASTCALL__ SearchDialog(int dlg_flags,
-					      char *searchbuff,
-					      unsigned char *searchlen,
-					      unsigned *search_flags);
+    enum {
+	MAX_SEARCH_SIZE=76
+    };
+
+    typedef unsigned tRelCoord;
+    class TWindow;
+    class BeyeContext;
+    class Search : public Opaque {
+	public:
+	    enum dialog_flags {
+		Simple=0x0000,   /**< indicates simple search dialog to be displayed */
+		All_Features=0x0001    /**< indicates fully featured search dialog to be displayed */
+	    };
+	    enum search_flags {
+		None		=0x0000,   /**< indicates no flags */
+		Case_Sens	=0x0001,   /**< indicates case sensitivity search engine */
+		Word_Only	=0x0002,   /**< indicates word only to be found */
+		Reverse		=0x0004,   /**< indicates reverse search */
+		Wild_Cards	=0x0008,   /**< indicates wildcard can be used */
+		Plugins		=0x0010,   /**< indicates using plugin's output */
+		As_Hex		=0x0020    /**< indicates hex mode of input sequence */
+	    };
+	    enum hl_search {
+		HL_Normal=0x0000,
+		HL_Use_Double_Width=0x0001
+	    };
+	    Search(BeyeContext&);
+	    virtual ~Search();
+
+	    virtual bool	dialog(dialog_flags dlg_flags,
+					char *searchbuff,
+					unsigned char* searchlen,
+					search_flags& search_flags);
 
 		   /** Performs seacrh of given sequence in the string
 		     * @param str          indicates string where search must be performed
@@ -50,9 +63,9 @@ enum {
 					   of searching sequence in the
 					   string or NULL if not found.
 		    **/
-    char *       __FASTCALL__ strFind(const char *str, unsigned str_len,
-					 const any_t* sbuff, unsigned sbuflen,
-					 const int *cache, unsigned flags);
+	    virtual char*	strFind(const char *str, unsigned str_len,
+					const any_t* sbuff, unsigned sbuflen,
+					const int *cache, search_flags flags);
 
 		   /** Fills cache for Boyer-Moore search
 		     * @param cache        indicates cache to be filled
@@ -62,16 +75,73 @@ enum {
 		     * @param case_sens    indicates case sensitivity of search
 		     * @return             none
 		    **/
-    void                __FASTCALL__ fillBoyerMooreCache(int *cache,
-					 const char *pattern,
-					 unsigned pattern_len,
-					 bool case_sens);
+	    virtual void 	fillBoyerMooreCache(int *cache,
+					const char *pattern,
+					unsigned pattern_len,
+					bool case_sens);
+		   /** Main search routine
+		     * @param is_continue  indicates initialization of search
+					   If set then search should be continued
+					   search dialog will displayed otherwise
+		     * @return             new offset on successful search and
+					   current offset otherwise
+		    **/
+	    virtual __filesize_t	search( bool is_continue );
 
-    extern unsigned char search_buff[MAX_SEARCH_SIZE];
-    extern unsigned char search_len;
-    extern unsigned beyeSearchFlg;
+	    virtual int			is_inline(__filesize_t cp,int width) const;
 
-    extern __filesize_t FoundTextSt; /**< Indicates start of found text */
-    extern __filesize_t FoundTextEnd;/**< Indicates end of found text */
+	    virtual void		hilight(TWindow& out,__filesize_t cfp,tRelCoord minx,
+						tRelCoord maxx,tRelCoord y,const char* buff,hl_search flags);
+
+	    virtual void		set_flags(search_flags);
+	    virtual search_flags	get_flags() const;
+	    virtual void		assign(const char* buffer,size_t sz);
+	    virtual const unsigned char*buff() const { return search_buff; }
+	    virtual unsigned char	length() const { return search_len; }
+
+	    virtual __filesize_t&	found_start() { return FoundTextSt; }
+	    virtual __filesize_t&	found_end() { return FoundTextEnd; }
+	    virtual const __filesize_t&	found_start() const { return FoundTextSt; }
+	    virtual const __filesize_t&	found_end() const { return FoundTextEnd; }
+	private:
+	    __filesize_t	___lfind(const char *sfrom,
+					    unsigned slen,
+					    unsigned flags,
+					    __filesize_t start,
+					    const int *scache,
+					    const char *pattern,
+					    unsigned pattern_size,
+					    search_flags beyeFlg);
+	    __filesize_t	___adv_find(const char *sfrom,
+					    unsigned sfromlen,
+					    __filesize_t start,
+					    __filesize_t *slen,
+					    const int *scache,
+					    const char *pattern,
+					    unsigned pattern_size,
+					    search_flags beyeFlg);
+	    __filesize_t	__adv_find(__filesize_t start,__filesize_t* slen);
+
+	    void		SearchPaint(TWindow& wdlg,dialog_flags flags,search_flags sf_flags);
+	    void		SearchUpdate(TWindow& wdlg,dialog_flags _flags,search_flags sf_flags);
+
+	    unsigned char	search_buff[MAX_SEARCH_SIZE];
+	    unsigned char	search_len;
+	    search_flags	beyeSearchFlg;
+
+	    __filesize_t	FoundTextSt; /**< Indicates start of found text */
+	    __filesize_t	FoundTextEnd;/**< Indicates end of found text */
+	    bool		__found;
+
+	    TWindow*		prcntswnd;
+	    BeyeContext&	bctx;
+    };
+    inline Search::search_flags operator~(Search::search_flags a) { return static_cast<Search::search_flags>(~static_cast<unsigned>(a)); }
+    inline Search::search_flags operator|(Search::search_flags a, Search::search_flags b) { return static_cast<Search::search_flags>(static_cast<unsigned>(a)|static_cast<unsigned>(b)); }
+    inline Search::search_flags operator&(Search::search_flags a, Search::search_flags b) { return static_cast<Search::search_flags>(static_cast<unsigned>(a)&static_cast<unsigned>(b)); }
+    inline Search::search_flags operator^(Search::search_flags a, Search::search_flags b) { return static_cast<Search::search_flags>(static_cast<unsigned>(a)^static_cast<unsigned>(b)); }
+    inline Search::search_flags operator|=(Search::search_flags& a, Search::search_flags b) { return (a=static_cast<Search::search_flags>(static_cast<unsigned>(a)|static_cast<unsigned>(b))); }
+    inline Search::search_flags operator&=(Search::search_flags& a, Search::search_flags b) { return (a=static_cast<Search::search_flags>(static_cast<unsigned>(a)&static_cast<unsigned>(b))); }
+    inline Search::search_flags operator^=(Search::search_flags& a, Search::search_flags b) { return (a=static_cast<Search::search_flags>(static_cast<unsigned>(a)^static_cast<unsigned>(b))); }
 } // namespace	usr
 #endif

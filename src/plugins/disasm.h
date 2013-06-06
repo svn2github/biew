@@ -19,6 +19,7 @@
 
 #include <vector>
 
+#include "search.h"
 #include "plugin.h"
 #include "colorset.h"
 #include "bconsole.h"
@@ -41,6 +42,7 @@ typedef unsigned char * MBuffer;
     struct Disassembler_Info;
     class Disassembler;
     class Editor;
+    class Search;
     class DisMode : public Plugin {
 	public:
 	    /* New features: commentaries */
@@ -92,7 +94,7 @@ typedef unsigned char * MBuffer;
 		Panel_Wide   =0        /**< full mode of panel: instruction only */
 	    };
 
-	    DisMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn&);
+	    DisMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn&,Search& s);
 	    virtual ~DisMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -123,7 +125,7 @@ typedef unsigned char * MBuffer;
 	    virtual void		help() const;
 	    virtual void		read_ini(Ini_Profile& );
 	    virtual void		save_ini(Ini_Profile& );
-	    virtual __filesize_t	search_engine(TWindow *pwnd, __filesize_t start, __filesize_t *slen, unsigned flg, bool is_continue, bool *is_found);
+	    virtual __filesize_t	search_engine(TWindow *pwnd, __filesize_t start, __filesize_t *slen,Search::search_flags flg, bool is_continue, bool *is_found);
 	    virtual DisasmRet		disassembler(__filesize_t ulShift,MBuffer buffer,unsigned flags);
 /** Appends symbolic information to address field of jump instructions
     @param str       string to be appended
@@ -218,6 +220,7 @@ typedef unsigned char * MBuffer;
 	    binary_stream*		second_handle;
 	    const Bin_Format&		bin_format;
 	    udn&			_udn;
+	    Search&			search;
     };
     inline DisMode::e_disarg operator~(DisMode::e_disarg a) { return static_cast<DisMode::e_disarg>(~static_cast<unsigned>(a)); }
     inline DisMode::e_disarg operator|(DisMode::e_disarg a, DisMode::e_disarg b) { return static_cast<DisMode::e_disarg>(static_cast<unsigned>(a)|static_cast<unsigned>(b)); }

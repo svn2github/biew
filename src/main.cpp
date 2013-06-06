@@ -63,7 +63,7 @@ using namespace	usr;
 namespace	usr {
 static const unsigned SHORT_PATH_LEN=__TVIO_MAXSCREENWIDTH-54;
     struct beye_priv : public Opaque {
-	beye_priv(const std::vector<std::string>& _argv, const std::map<std::string,std::string>& _envm);
+	beye_priv(BeyeContext& bctx,const std::vector<std::string>& _argv, const std::map<std::string,std::string>& _envm);
 	virtual ~beye_priv();
 	Plugin*			activeMode;
 	Bin_Format*		_bin_format;
@@ -79,6 +79,7 @@ static const unsigned SHORT_PATH_LEN=__TVIO_MAXSCREENWIDTH-54;
 	unsigned		defMainModeSel;
 	__filesize_t		new_file_size;
 	std::vector<const Plugin_Info*> modes;
+	Search*			search;
 	CodeGuider*		code_guider;
 	addendum*		addons;
 	class sysinfo*		sysinfo;
@@ -93,14 +94,15 @@ static const unsigned SHORT_PATH_LEN=__TVIO_MAXSCREENWIDTH-54;
 	class udn		udn;
     };
 
-beye_priv::beye_priv(const std::vector<std::string>& _argv, const std::map<std::string,std::string>& _envm)
+beye_priv::beye_priv(BeyeContext& bctx,const std::vector<std::string>& _argv, const std::map<std::string,std::string>& _envm)
 	:argv(_argv)
 	,envm(_envm)
 	,UseIniFile(true)
 	,beye_mode(UINT_MAX)
 	,defMainModeSel(1)
 	,new_file_size(FILESIZE_MAX)
-	,code_guider(new(zeromem) CodeGuider)
+	,search(new(zeromem) Search(bctx))
+	,code_guider(new(zeromem) CodeGuider(bctx))
 	,_system(new(zeromem) System) {
     addons = new(zeromem) addendum;
     sysinfo= new(zeromem) class sysinfo;
@@ -114,6 +116,7 @@ beye_priv::~beye_priv() {
     delete addons;
     delete _shortname;
     delete code_guider;
+    delete search;
 
     if(MainWnd) delete MainWnd;
     if(PromptWnd) delete PromptWnd;
@@ -155,7 +158,7 @@ bool BeyeContext::select_mode()
     if(retval != -1) {
 	priv.defMainModeSel = retval;
 	delete priv.activeMode;
-	priv.activeMode = priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn);
+	priv.activeMode = priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
 	return true;
     }
     return false;
@@ -164,7 +167,7 @@ bool BeyeContext::select_mode()
 void BeyeContext::init_modes( Ini_Profile& ini )
 {
     beye_priv& priv = static_cast<beye_priv&>(opaque);
-    if(!priv.activeMode) priv.activeMode = priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn);
+    if(!priv.activeMode) priv.activeMode = priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
     priv.activeMode->read_ini(ini);
 }
 
@@ -175,7 +178,7 @@ void BeyeContext::quick_select_mode()
     if(priv.defMainModeSel < nModes - 1) priv.defMainModeSel++;
     else                            priv.defMainModeSel = 0;
     delete priv.activeMode;
-    priv.activeMode = priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn);
+    priv.activeMode = priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
 }
 
 void BeyeContext::make_shortname()
@@ -201,7 +204,7 @@ void BeyeContext::auto_detect_mode()
     size_t i,n = priv.modes.size();
     Plugin* mode;
     for(i = 0;i < n;i++) {
-	mode = priv.modes[i]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn);
+	mode = priv.modes[i]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
 	if(mode->detect()) {
 	    priv.defMainModeSel = i;
 	    break;
@@ -209,7 +212,7 @@ void BeyeContext::auto_detect_mode()
 	delete mode; mode = NULL;
     }
     if(mode) delete mode;
-    priv.activeMode = priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn);
+    priv.activeMode = priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
     beye_context().bm_file().seek(0,binary_stream::Seek_Set);
 }
 
@@ -323,10 +326,13 @@ bool BeyeContext::is_valid_ini_args( ) const
 Ini_Profile& BeyeContext::load_ini_info()
 {
     beye_priv& priv = static_cast<beye_priv&>(opaque);
-  char buf[20];
-  std::string tmp,stmp;
-  Ini_Profile& ini = *new(zeromem) Ini_Profile;
-  const char* iname;
+    Search& s = *priv.search;
+    char buf[20];
+    std::string tmp,stmp;
+    Ini_Profile& ini = *new(zeromem) Ini_Profile;
+    const char* iname;
+    Search::search_flags beyeSearchFlg;
+
   iname = ::getenv("BEYE_INI");
   if(iname) priv.ini_name=iname;
   if(priv.ini_name.empty()) priv.ini_name = priv._system->get_ini_name("beye");
@@ -335,20 +341,20 @@ Ini_Profile& BeyeContext::load_ini_info()
   skin_name=read_profile_string(ini,"Beye","Setup","SkinName","");
   syntax_name=read_profile_string(ini,"Beye","Setup","SyntaxName","");
   stmp=read_profile_string(ini,"Beye","Search","String","");
-  strcpy((char*)search_buff,stmp.c_str());
-  search_len = stmp.length();
+  s.assign(stmp.c_str(),stmp.length());
   tmp=read_profile_string(ini,"Beye","Search","Case","off");
-  beyeSearchFlg = stricmp(tmp.c_str(),"on") == 0 ? SF_CASESENS : SF_NONE;
+  beyeSearchFlg=stricmp(tmp.c_str(),"on") == 0 ? Search::Case_Sens : Search::None;
   tmp=read_profile_string(ini,"Beye","Search","Word","off");
-  if(stricmp(tmp.c_str(),"on") == 0) beyeSearchFlg |= SF_WORDONLY;
+  if(stricmp(tmp.c_str(),"on") == 0) beyeSearchFlg |= Search::Word_Only;
   tmp=read_profile_string(ini,"Beye","Search","Backward","off");
-  if(stricmp(tmp.c_str(),"on") == 0) beyeSearchFlg |= SF_REVERSE;
+  if(stricmp(tmp.c_str(),"on") == 0) beyeSearchFlg |= Search::Reverse;
   tmp=read_profile_string(ini,"Beye","Search","Template","off");
-  if(stricmp(tmp.c_str(),"on") == 0) beyeSearchFlg |= SF_WILDCARDS;
+  if(stricmp(tmp.c_str(),"on") == 0) beyeSearchFlg |= Search::Wild_Cards;
   tmp=read_profile_string(ini,"Beye","Search","UsePlugin","off");
-  if(stricmp(tmp.c_str(),"on") == 0) beyeSearchFlg |= SF_PLUGINS;
+  if(stricmp(tmp.c_str(),"on") == 0) beyeSearchFlg |= Search::Plugins;
   tmp=read_profile_string(ini,"Beye","Search","AsHex","off");
-  if(stricmp(tmp.c_str(),"on") == 0) beyeSearchFlg |= SF_ASHEX;
+  if(stricmp(tmp.c_str(),"on") == 0) beyeSearchFlg |= Search::As_Hex;
+  s.set_flags(beyeSearchFlg);
   priv.LastOpenFileName=read_profile_string(ini,"Beye","Browser","LastOpen","");
   sprintf(buf,"%u",priv.LastMode); /* [dBorca] so that src and dst won't overlap for strncpy */
   tmp=read_profile_string(ini,"Beye","Browser","LastMode",buf);
@@ -381,8 +387,13 @@ Ini_Profile& BeyeContext::load_ini_info()
 void BeyeContext::save_ini_info() const
 {
     beye_priv& priv = static_cast<beye_priv&>(opaque);
-  char tmp[20];
-  search_buff[search_len] = 0;
+    Search& s = *priv.search;
+    unsigned beyeSearchFlg = s.get_flags();
+    char tmp[20];
+    unsigned char search_buff[MAX_SEARCH_SIZE];
+    unsigned char search_len = s.length();
+    ::memcpy(search_buff,s.buff(),search_len);
+    search_buff[search_len] = 0;
   Ini_Profile& ini = *new(zeromem) Ini_Profile;
   ini.open(priv.ini_name);
   write_profile_string(ini,"Beye","Setup","HelpName",help_name.c_str());
@@ -390,12 +401,12 @@ void BeyeContext::save_ini_info() const
   write_profile_string(ini,"Beye","Setup","SyntaxName",syntax_name.c_str());
   write_profile_string(ini,"Beye","Setup","Version",BEYE_VERSION);
   write_profile_string(ini,"Beye","Search","String",(char *)search_buff);
-  write_profile_string(ini,"Beye","Search","Case",beyeSearchFlg & SF_CASESENS ? "on" : "off");
-  write_profile_string(ini,"Beye","Search","Word",beyeSearchFlg & SF_WORDONLY ? "on" : "off");
-  write_profile_string(ini,"Beye","Search","Backward",beyeSearchFlg & SF_REVERSE ? "on" : "off");
-  write_profile_string(ini,"Beye","Search","Template",beyeSearchFlg & SF_WILDCARDS ? "on" : "off");
-  write_profile_string(ini,"Beye","Search","UsePlugin",beyeSearchFlg & SF_PLUGINS ? "on" : "off");
-  write_profile_string(ini,"Beye","Search","AsHex",beyeSearchFlg & SF_ASHEX ? "on" : "off");
+  write_profile_string(ini,"Beye","Search","Case",beyeSearchFlg & Search::Case_Sens ? "on" : "off");
+  write_profile_string(ini,"Beye","Search","Word",beyeSearchFlg & Search::Word_Only ? "on" : "off");
+  write_profile_string(ini,"Beye","Search","Backward",beyeSearchFlg & Search::Reverse ? "on" : "off");
+  write_profile_string(ini,"Beye","Search","Template",beyeSearchFlg & Search::Wild_Cards ? "on" : "off");
+  write_profile_string(ini,"Beye","Search","UsePlugin",beyeSearchFlg & Search::Plugins ? "on" : "off");
+  write_profile_string(ini,"Beye","Search","AsHex",beyeSearchFlg & Search::As_Hex ? "on" : "off");
   write_profile_string(ini,"Beye","Browser","LastOpen",ArgVector1.c_str());
   sprintf(tmp,"%u",priv.defMainModeSel);
   write_profile_string(ini,"Beye","Browser","LastMode",tmp);
@@ -583,7 +594,7 @@ bool BeyeContext::new_source()
 	    make_shortname();
 	    priv._bin_format = new(zeromem) Bin_Format(*priv.code_guider,priv.udn);
 	    priv._bin_format->detect_format(*priv.sc_bm_file_handle);
-	    priv.activeMode=priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn);
+	    priv.activeMode=priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
 	    ret = true;
 	} else {
 	    if(BMOpen(ArgVector1) != true) throw std::runtime_error("Can't open :"+ArgVector1);
@@ -592,7 +603,7 @@ bool BeyeContext::new_source()
 	    make_shortname();
 	    priv._bin_format = new(zeromem) Bin_Format(*priv.code_guider,priv.udn);
 	    priv._bin_format->detect_format(*priv.sc_bm_file_handle);
-	    priv.activeMode=priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn);
+	    priv.activeMode=priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
 	    ret = false;
 	}
     }
@@ -628,7 +639,7 @@ BeyeContext::BeyeContext(const std::vector<std::string>& _argv, const std::map<s
 	    ,iniPreserveTime(false)
 	    ,iniUseExtProgs(false)
 	    ,LastOffset(0L)
-	    ,opaque(*new(zeromem) beye_priv(_argv,_envm))
+	    ,opaque(*new(zeromem) beye_priv(*this,_argv,_envm))
 {
     beye_priv& priv = static_cast<beye_priv&>(opaque);
     priv.modes.push_back(&textMode);
@@ -756,6 +767,11 @@ TConsole& BeyeContext::tconsole() const {
 System& BeyeContext::system() const {
     beye_priv& priv = static_cast<beye_priv&>(opaque);
     return *priv._system;
+}
+
+Search& BeyeContext::search() const {
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    return *priv.search;
 }
 
 CodeGuider& BeyeContext::codeguider() const {

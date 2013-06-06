@@ -33,10 +33,12 @@ namespace	usr {
 	    virtual char&		back();
 	    virtual const char&		back() const;
 
+	    virtual binary_packet	subpacket(size_t start,size_t length) const;
+
 	    virtual bool		empty() const { return len==0; }
 	    virtual binary_packet&	clear();
 	    virtual binary_packet&	resize(size_t newsz);
-	    virtual size_t		length() const { return len; }
+	    virtual size_t		size() const { return len; }
 	    virtual any_t*		data() { return buffer; }
 	    virtual const any_t*	data() const { return buffer; }
 	    virtual char*		cdata() { return (char*)buffer; }

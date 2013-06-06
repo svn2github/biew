@@ -22,6 +22,7 @@
 #include <limits>
 #include <vector>
 
+#include "search.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/twindow.h"
 
@@ -132,8 +133,8 @@ enum {
     void         __FASTCALL__ PostEvent(int kbdcode);
 
     bool __FASTCALL__ _lb_searchtext(const char* str,const char *tmpl,
-					 unsigned searchlen,const int *cache,
-					 unsigned flg);
+					unsigned searchlen,const int *cache,
+					Search::search_flags flg);
     void __FASTCALL__ __drawSinglePrompt(const char *prmt[]);
 
     bool __FASTCALL__ ungotstring(char *string);

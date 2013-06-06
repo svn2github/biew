@@ -20,9 +20,10 @@
 
 namespace	usr {
     class DisMode;
+    class BeyeContext;
     class CodeGuider : public Opaque {
 	public:
-	    CodeGuider();
+	    CodeGuider(BeyeContext&);
 	    virtual ~CodeGuider();
 
 	    void		reset_go_address( int keycode );
@@ -40,6 +41,7 @@ namespace	usr {
 	    std::vector<__filesize_t> BackAddr;
 	    std::vector<std::pair<__filesize_t,unsigned> > GoAddr;
 	    unsigned char	Alarm;
+	    BeyeContext&	bctx;
     };
 } // namespace	usr
 #endif

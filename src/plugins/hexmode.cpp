@@ -28,6 +28,7 @@ using namespace	usr;
 #include "bconsole.h"
 #include "beyeutil.h"
 #include "beyehelp.h"
+#include "search.h"
 #include "udn.h"
 #include "codeguid.h"
 #include "editor.h"
@@ -112,7 +113,7 @@ namespace	usr {
 
     class HexMode : public Plugin {
 	public:
-	    HexMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn&);
+	    HexMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn&,Search&);
 	    virtual ~HexMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -151,6 +152,7 @@ namespace	usr {
 	    udn&		_udn;
 	    bool		is_file64;
 	    hexView*		hex_viewer;
+	    Search&		search;
     };
 
 static const struct xView_Info xView_Info[] = {
@@ -242,8 +244,8 @@ hexView* byteView::query_interface(binary_stream& h) { return new(zeromem) byteV
 hexView* wordView::query_interface(binary_stream& h) { return new(zeromem) wordView(h); }
 hexView* dwordView::query_interface(binary_stream& h) { return new(zeromem) dwordView(h); }
 
-HexMode::HexMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& _code_guider,udn& u)
-	:Plugin(b,h,_main_wnd,_code_guider,u)
+HexMode::HexMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& _code_guider,udn& u,Search& s)
+	:Plugin(b,h,_main_wnd,_code_guider,u,s)
 	,code_guider(_code_guider)
 	,virtWidthCorr(0)
 	,hmode(1)
@@ -253,6 +255,7 @@ HexMode::HexMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGui
 	,_udn(u)
 	,is_file64(beye_context().is_file64())
 	,hex_viewer(xView_Info[hmode].query_interface(h))
+	,search(s)
 {
 }
 
@@ -328,7 +331,7 @@ plugin_position HexMode::paint( unsigned keycode,unsigned textshift )
 		main_handle.read((any_t*)&outstr[width - scrHWidth],rwidth*__inc);
 		xmin = main_wnd.width()-scrHWidth;
 		main_wnd.write(1,i + 1,outstr,xmin);
-		if(isHOnLine(sindex,scrHWidth)) HiLightSearch(main_wnd,sindex,xmin,width,i,(const char*)&outstr[xmin],HLS_NORMAL);
+		if(search.is_inline(sindex,scrHWidth)) search.hilight(main_wnd,sindex,xmin,width,i,(const char*)&outstr[xmin],Search::HL_Normal);
 		else  main_wnd.write(xmin + 1,i + 1,&outstr[xmin],width - xmin);
 	    } else main_wnd.write(1,i + 1,outstr,width);
 	}
@@ -595,7 +598,7 @@ void HexMode::save_ini(Ini_Profile&  ini)
 unsigned HexMode::get_symbol_size() const { return 1; }
 unsigned HexMode::get_max_line_length() const { return hex_viewer->width(main_wnd,is_file64); }
 
-static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& u) { return new(zeromem) HexMode(b,h,main_wnd,code_guider,u); }
+static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& u,Search& s) { return new(zeromem) HexMode(b,h,main_wnd,code_guider,u,s); }
 
 extern const Plugin_Info hexMode = {
     "~Hexadecimal mode",	/**< plugin name */

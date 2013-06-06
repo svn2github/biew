@@ -8,6 +8,7 @@
 
 namespace	usr {
     class TWindow;
+    class Search;
     class CodeGuider;
     class Ini_Profile;
     class DisMode;
@@ -41,7 +42,7 @@ namespace	usr {
 		Has_ConvertCP	=0x0010
 	    };
 
-	    Plugin(const Bin_Format&,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& _udn) { UNUSED(h); UNUSED(main_wnd); UNUSED(code_guider); UNUSED(_udn); }
+	    Plugin(const Bin_Format&,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& _udn,Search& s) { UNUSED(h); UNUSED(main_wnd); UNUSED(code_guider); UNUSED(_udn); UNUSED(s); }
 	    virtual ~Plugin() {}
 
 	    virtual const char*		prompt(unsigned idx) const = 0;	/**< on Ctrl-Fx selection */
@@ -106,7 +107,7 @@ namespace	usr {
 
     struct Plugin_Info {
 	const char* name;
-	Plugin* (*query_interface)(const Bin_Format&,binary_stream&,TWindow&,CodeGuider&,udn&);
+	Plugin* (*query_interface)(const Bin_Format&,binary_stream&,TWindow&,CodeGuider&,udn&,Search&);
     };
 
     class Binary_Parser;
