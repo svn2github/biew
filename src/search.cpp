@@ -46,7 +46,7 @@ Search::Search(BeyeContext& b)
 Search::~Search() {}
 
 void Search::fillBoyerMooreCache(int *cache, const char *pattern,
-				unsigned pattern_len, bool case_sens)
+				unsigned pattern_len, bool case_sens) const
 {
     size_t iptr;
     ::memset(cache,0,(UCHAR_MAX+1)*sizeof(int));
@@ -88,7 +88,7 @@ enum {
 		     * @param beyeFlg         indicates global flags of Beye
 		     *                        search engine.
 		    **/
-__filesize_t Search::___lfind(const char *sfrom,
+__filesize_t Search::lfind(const char *sfrom,
 			    unsigned slen,
 			    unsigned flags,
 			    __filesize_t start,
@@ -173,13 +173,11 @@ __filesize_t Search::___lfind(const char *sfrom,
 		else __search_len = pattern_size;
 		if(!(beyeFlg & Case_Sens)) memupr((any_t*)fbuff,__search_len);
 		if(::memcmp(fbuff,cbuff,__search_len) == 0) cond = true;
+		else if(flags & __LF_NOSEEK) break;
 		else {
-		    if(flags & __LF_NOSEEK) break;
-		    else {
 			start = direct == 1 ? start-(pattern_size-1)*symb_size :
 				  start+(pattern_size-1)*symb_size;
 			continue;
-		    }
 		}
 	    } else {
 		findptr = start;
@@ -214,7 +212,7 @@ __filesize_t Search::___lfind(const char *sfrom,
     return retval;
 }
 
-__filesize_t Search::___adv_find(const char *sfrom,
+__filesize_t Search::adv_find(const char *sfrom,
 				unsigned sfromlen,
 				__filesize_t start,
 				__filesize_t *slen,
@@ -223,144 +221,127 @@ __filesize_t Search::___adv_find(const char *sfrom,
 				unsigned pattern_size,
 				search_flags beyeFlg)
 {
-  __filesize_t _found,found_st=FILESIZE_MAX,prev_found;
-  __filesize_t stable_found;
-  unsigned i, orig_i, last_search_len;
-  unsigned orig_slen, t_count, flags;
-  bool is_tmpl, has_question;
-  bool always_prcnt;
-  unsigned orig_direct;
-  char cbuff[MAX_SEARCH_SIZE];
-  char firstc;
-  is_tmpl = (beyeFlg & Wild_Cards) == Wild_Cards;
-  *slen = pattern_size;
-  if(!is_tmpl) return ___lfind(sfrom, sfromlen, sfrom ? __LF_HIDEPRCNT : __LF_NORMAL,start, scache, pattern, pattern_size, beyeFlg);
-  memcpy(cbuff, pattern, pattern_size);
-  orig_slen = pattern_size;
-  orig_direct = beyeFlg & Reverse;
-  _found = 0L;
-  restart:
-  always_prcnt = false;
-  i = 0;
-  prev_found = start;
-  flags = __LF_NORMAL;
-  has_question = false;
-  stable_found = FILESIZE_MAX;
-  while(1)
-  {
-    orig_i = i;
-    for(;i < pattern_size;i++)
-    {
-      if(cbuff[i] == '*' || cbuff[i] == '?')
-      {
-	flags |= __LF_NORIGHT;
-	break;
-      }
-    }
-    pattern_size = i-orig_i;
-    last_search_len = pattern_size;
-    if(pattern_size)
-    {
-      memcpy(cbuff,&pattern[orig_i],pattern_size);
-      if((flags & __LF_NOSEEK && !always_prcnt) || sfrom) flags |= __LF_HIDEPRCNT;
-      _found = ___lfind(sfrom, sfromlen, flags,start, NULL, cbuff, pattern_size, beyeFlg);
-    }
-    else
-    {
-      if(!orig_i && !(beyeFlg & Word_Only))
-      {
-	/* it means: first character is wildcard and it much better
-	   to restart search engine */
-	firstc = cbuff[0];
-	pattern_size = orig_slen;
-	if(orig_direct & Reverse) beyeFlg &= ~Reverse;
-	else                         beyeFlg |= Reverse;
-	memmove(cbuff, &pattern[1], --pattern_size);
-	found_st = ___adv_find(sfrom, sfromlen, start,slen, scache, cbuff, pattern_size, beyeFlg);
-	(*slen)++;
-	if(__found)
-	{
-	  switch(firstc)
-	  {
-	    case '?': if(found_st) found_st--; break;
-	    default:  (*slen)+= found_st; found_st = 0L; break;
-	  }
+    __filesize_t _found,found_st=FILESIZE_MAX,prev_found;
+    __filesize_t stable_found;
+    unsigned i, orig_i, last_search_len;
+    unsigned orig_slen, t_count, flags;
+    bool is_tmpl, has_question;
+    bool always_prcnt;
+    unsigned orig_direct;
+    char cbuff[MAX_SEARCH_SIZE];
+    char firstc;
+    is_tmpl = (beyeFlg & Wild_Cards) == Wild_Cards;
+    *slen = pattern_size;
+    if(!is_tmpl) return lfind(sfrom, sfromlen, sfrom ? __LF_HIDEPRCNT : __LF_NORMAL,start, scache, pattern, pattern_size, beyeFlg);
+    ::memcpy(cbuff, pattern, pattern_size);
+    orig_slen = pattern_size;
+    orig_direct = beyeFlg & Reverse;
+    _found = 0L;
+restart:
+    always_prcnt = false;
+    i = 0;
+    prev_found = start;
+    flags = __LF_NORMAL;
+    has_question = false;
+    stable_found = FILESIZE_MAX;
+    while(1) {
+	orig_i = i;
+	for(;i < pattern_size;i++) {
+	    if(cbuff[i] == '*' || cbuff[i] == '?') {
+		flags |= __LF_NORIGHT;
+		break;
+	    }
 	}
-	goto exit;
-      }
-      else
-      {
-	__found = true;
-	_found = prev_found;
-	always_prcnt = true;
-      }
-    }
-    flags = __LF_NORMAL; /* reseting flags immediately after search */
-    if(__found)
-    {
-       if(!orig_i) stable_found = _found;
-       t_count = 0;
-       if(found_st == FILESIZE_MAX) found_st = _found;
-       if(orig_i)
-	if(pattern[orig_i-1] == '?' &&
-	  prev_found+last_search_len+t_count != _found) /* special case for '?' */
-	     found_st = _found-orig_i;
-       still:
-       switch(cbuff[i])
-       {
-	 case '?': while(cbuff[i] == '?') { t_count++; i++; }
-		   flags = __LF_NOSEEK | __LF_NOLEFT;
-		   has_question = true;
-		   goto still;
-	 case '*': while(cbuff[i] == '*') i++;
-		   pattern_size = orig_slen-i;
-		   memmove(cbuff, &pattern[i], pattern_size);
-		   beyeFlg &= ~Reverse;
-		   found_st = ___adv_find(sfrom, sfromlen,_found+last_search_len,slen, scache, cbuff, pattern_size, beyeFlg);
-		   (*slen)++;
-		   goto exit;
-	 default: break;
-       }
-       start=_found+last_search_len+t_count;
-       beyeFlg &= ~Reverse; /* Anyway: we have found a first subsequence.
+	pattern_size = i-orig_i;
+	last_search_len = pattern_size;
+	if(pattern_size) {
+	    ::memcpy(cbuff,&pattern[orig_i],pattern_size);
+	    if((flags & __LF_NOSEEK && !always_prcnt) || sfrom) flags |= __LF_HIDEPRCNT;
+	    _found = lfind(sfrom, sfromlen, flags,start, NULL, cbuff, pattern_size, beyeFlg);
+	} else if(!orig_i && !(beyeFlg & Word_Only)) {
+	    /* it means: first character is wildcard and it much better
+		to restart search engine */
+	    firstc = cbuff[0];
+	    pattern_size = orig_slen;
+	    if(orig_direct & Reverse)
+		beyeFlg &= ~Reverse;
+	    else
+		beyeFlg |= Reverse;
+	    ::memmove(cbuff, &pattern[1], --pattern_size);
+	    found_st = adv_find(sfrom, sfromlen, start,slen, scache, cbuff, pattern_size, beyeFlg);
+	    (*slen)++;
+	    if(__found) {
+		switch(firstc) {
+		    case '?': if(found_st) found_st--; break;
+		    default:  (*slen)+= found_st; found_st = 0L; break;
+		}
+	    }
+	    goto exit;
+	} else {
+	    __found = true;
+	    _found = prev_found;
+	    always_prcnt = true;
+	}
+	flags = __LF_NORMAL; /* reseting flags immediately after search */
+	if(__found) {
+	    if(!orig_i) stable_found = _found;
+	    t_count = 0;
+	    if(found_st == FILESIZE_MAX) found_st = _found;
+	    if(orig_i)
+		if(pattern[orig_i-1] == '?' && prev_found+last_search_len+t_count != _found) /* special case for '?' */
+		    found_st = _found-orig_i;
+still:
+	    switch(cbuff[i]) {
+		case '?': while(cbuff[i] == '?') { t_count++; i++; }
+		    flags = __LF_NOSEEK | __LF_NOLEFT;
+		    has_question = true;
+		    goto still;
+		case '*': while(cbuff[i] == '*') i++;
+		    pattern_size = orig_slen-i;
+		    ::memmove(cbuff, &pattern[i], pattern_size);
+		    beyeFlg &= ~Reverse;
+		    found_st = adv_find(sfrom, sfromlen,_found+last_search_len,slen, scache, cbuff, pattern_size, beyeFlg);
+		    (*slen)++;
+		    goto exit;
+		default: break;
+	    }
+	    start=_found+last_search_len+t_count;
+	    beyeFlg &= ~Reverse; /* Anyway: we have found a first subsequence.
 				 For searching with _using template need
 				 only forward search technology. */
-       pattern_size = orig_slen;
+	    pattern_size = orig_slen;
+	} else if(!has_question || _found == FILESIZE_MAX) {
+	    found_st = FILESIZE_MAX;
+	    break;
+	} else { /* restarting search engine */
+	    if(found_st == FILESIZE_MAX) break;
+	    pattern_size = orig_slen;
+	    if(orig_direct & Reverse)
+		beyeFlg |= Reverse;
+	    else
+		beyeFlg &= Reverse;
+	    start = beyeFlg & Reverse ? stable_found-1 : stable_found+1;
+	    ::memcpy(cbuff,pattern,pattern_size);
+	    found_st = FILESIZE_MAX;
+	    goto restart;
+	}
+	if(i >= orig_slen) break;
     }
-    else
-    {
-      if(!has_question || _found == FILESIZE_MAX)
-      {
-	found_st = FILESIZE_MAX;
-	break;
-      }
-      else /* restarting search engine */
-      {
-	if(found_st == FILESIZE_MAX) break;
-	pattern_size = orig_slen;
-	if(orig_direct & Reverse) beyeFlg |= Reverse;
-	else                         beyeFlg &= Reverse;
-	start = beyeFlg & Reverse ? stable_found-1 : stable_found+1;
-	memcpy(cbuff,pattern,pattern_size);
-	found_st = FILESIZE_MAX;
-	goto restart;
-      }
-    }
-    if(i >= orig_slen) break;
-  }
-  if(found_st == FILESIZE_MAX) found_st = 0;
-  /* Special case if last character is wildcard */
-  if(cbuff[orig_slen-1] == '?') last_search_len++;
-  *slen = _found+last_search_len-found_st;
-  if(cbuff[orig_slen-1] == '*') (*slen) = FILESIZE_MAX - _found;
+    if(found_st == FILESIZE_MAX) found_st = 0;
+    /* Special case if last character is wildcard */
+    if(cbuff[orig_slen-1] == '?') last_search_len++;
+    *slen = _found+last_search_len-found_st;
+    if(cbuff[orig_slen-1] == '*') (*slen) = FILESIZE_MAX - _found;
 exit:
-  pattern_size = orig_slen;
-  if(orig_direct & Reverse) beyeFlg &= ~Reverse;
-  else                         beyeFlg |= Reverse;
-  return found_st;
+    pattern_size = orig_slen;
+    if(orig_direct & Reverse)
+	beyeFlg &= ~Reverse;
+    else
+	beyeFlg |= Reverse;
+    return found_st;
 }
 
-__filesize_t Search::__adv_find(__filesize_t start,__filesize_t* slen) { return ___adv_find(NULL, 0, start, slen, NULL, (const char*)search_buff, search_len, beyeSearchFlg); }
+__filesize_t Search::adv_find(__filesize_t start,__filesize_t* slen) { return adv_find(NULL, 0, start, slen, NULL, (const char*)search_buff, search_len, beyeSearchFlg); }
 
 char* Search::strFind(const char *str, unsigned str_len,
 			const any_t*sbuff, unsigned sbuflen,
@@ -368,11 +349,11 @@ char* Search::strFind(const char *str, unsigned str_len,
 {
     __filesize_t slen;
     unsigned long lretval;
-    lretval = ___adv_find(str, str_len, 0, &slen, cache, (const char*)sbuff, sbuflen, flg & (~Reverse));
+    lretval = adv_find(str, str_len, 0, &slen, cache, (const char*)sbuff, sbuflen, flg & (~Reverse));
     return (char *)(__found ? &str[lretval] : 0);
 }
 
-void Search::SearchPaint(TWindow& wdlg,dialog_flags flags,search_flags sf_flags)
+void Search::SearchPaint(TWindow& wdlg,dialog_flags flags,search_flags sf_flags) const
 {
     wdlg.set_color(dialog_cset.group.active);
     if(sf_flags & As_Hex) wdlg.set_color(dialog_cset.group.disabled);
@@ -389,7 +370,7 @@ void Search::SearchPaint(TWindow& wdlg,dialog_flags flags,search_flags sf_flags)
     wdlg.set_color(dialog_cset.main);
 }
 
-void Search::SearchUpdate(TWindow& wdlg,dialog_flags _flags,search_flags sf_flags)
+void Search::SearchUpdate(TWindow& wdlg,dialog_flags _flags,search_flags sf_flags) const
 {
     wdlg.set_color((sf_flags & As_Hex)?dialog_cset.group.disabled:dialog_cset.group.active);
     wdlg.goto_xy(2,4); wdlg.puts(msgFindOpt[0]);
@@ -404,18 +385,18 @@ void Search::SearchUpdate(TWindow& wdlg,dialog_flags _flags,search_flags sf_flag
     wdlg.set_color(dialog_cset.main);
 }
 
-static const char * searchtxt[] =
+static const char* searchtxt[] =
 {
-  "Help  ",
-  "CasSen",
-  "WrdOnl",
-  "ScanDr",
-  "Hex   ",
-  "Templt",
-  "Plugin",
-  "      ",
-  "      ",
-  "Escape"
+    "Help  ",
+    "CasSen",
+    "WrdOnl",
+    "ScanDr",
+    "Hex   ",
+    "Templt",
+    "Plugin",
+    "      ",
+    "      ",
+    "Escape"
 };
 
 static void drawSearchPrompt()
@@ -425,7 +406,7 @@ static void drawSearchPrompt()
 
 bool Search::dialog(dialog_flags _flags, char* searchbuff,
 			unsigned char* searchlen,
-			search_flags& sf_flags)
+			search_flags& sf_flags) const
 {
     TWindow* hwnd,* ewnd;
     tAbsCoord x1,y1,x2,y2;
@@ -560,7 +541,7 @@ __filesize_t Search::run( bool is_continue )
 	__found = false;
 	found = (beyeSearchFlg & Plugins) && (bctx.active_mode().flags() & Plugin::Has_SearchEngine) ?
 	bctx.active_mode().search_engine(prcntswnd,lmem,&slen,beyeSearchFlg,is_continue,&__found):
-	__adv_find(lmem,&slen);
+	adv_find(lmem,&slen);
 	delete prcntswnd;
 	if(__found) {
 	    FoundTextSt = found;
@@ -592,7 +573,7 @@ int Search::is_inline(__filesize_t cp,int width) const
 	  || (FoundTextSt <= cp && FoundTextEnd >= cp + width);
 }
 
-void Search::hilight(TWindow& out,__filesize_t cfp,tRelCoord minx,tRelCoord maxx,tRelCoord y,const char* data,hl_search flags)
+void Search::hilight(TWindow& out,__filesize_t cfp,tRelCoord minx,tRelCoord maxx,tRelCoord y,const char* data,hl_search flags) const
 {
     unsigned __len,width;
     int x;
@@ -636,6 +617,7 @@ void Search::read_ini(Ini_Profile& ini) {
     stmp=bctx.read_profile_string(ini,"Beye","Search","AsHex","off");
     if(stricmp(stmp.c_str(),"on") == 0) beyeSearchFlg |= Search::As_Hex;
 }
+
 void Search::save_ini(Ini_Profile& ini) {
     search_buff[search_len] = '\0';
     bctx.write_profile_string(ini,"Beye","Search","String",(char *)search_buff);

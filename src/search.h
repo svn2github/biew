@@ -51,7 +51,7 @@ namespace	usr {
 	    virtual bool	dialog(dialog_flags dlg_flags,
 					char *searchbuff,
 					unsigned char* searchlen,
-					search_flags& search_flags);
+					search_flags& search_flags) const;
 
 		   /** Performs seacrh of given sequence in the string
 		     * @param str          indicates string where search must be performed
@@ -79,7 +79,7 @@ namespace	usr {
 	    virtual void 	fillBoyerMooreCache(int *cache,
 					const char *pattern,
 					unsigned pattern_len,
-					bool case_sens);
+					bool case_sens) const;
 		   /** Main search routine
 		     * @param is_continue  indicates initialization of search
 					   If set then search should be continued
@@ -92,7 +92,7 @@ namespace	usr {
 	    virtual int			is_inline(__filesize_t cp,int width) const;
 
 	    virtual void		hilight(TWindow& out,__filesize_t cfp,tRelCoord minx,
-						tRelCoord maxx,tRelCoord y,const char* buff,hl_search flags);
+						tRelCoord maxx,tRelCoord y,const char* buff,hl_search flags) const;
 
 	    virtual void		set_flags(search_flags);
 	    virtual search_flags	get_flags() const;
@@ -107,26 +107,26 @@ namespace	usr {
 	    virtual void		read_ini(Ini_Profile&);	/**< reads beye.ini file if need */
 	    virtual void		save_ini(Ini_Profile&);	/**< writes to beye.ini if need */
 	private:
-	    __filesize_t	___lfind(const char *sfrom,
-					    unsigned slen,
-					    unsigned flags,
-					    __filesize_t start,
-					    const int *scache,
-					    const char *pattern,
-					    unsigned pattern_size,
-					    search_flags beyeFlg);
-	    __filesize_t	___adv_find(const char *sfrom,
-					    unsigned sfromlen,
-					    __filesize_t start,
-					    __filesize_t *slen,
-					    const int *scache,
-					    const char *pattern,
-					    unsigned pattern_size,
-					    search_flags beyeFlg);
-	    __filesize_t	__adv_find(__filesize_t start,__filesize_t* slen);
+	    __filesize_t	lfind(const char *sfrom,
+					unsigned slen,
+					unsigned flags,
+					__filesize_t start,
+					const int *scache,
+					const char *pattern,
+					unsigned pattern_size,
+					search_flags beyeFlg);
+	    __filesize_t	adv_find(const char *sfrom,
+					unsigned sfromlen,
+					__filesize_t start,
+					__filesize_t *slen,
+					const int *scache,
+					const char *pattern,
+					unsigned pattern_size,
+					search_flags beyeFlg);
+	    __filesize_t	adv_find(__filesize_t start,__filesize_t* slen);
 
-	    void		SearchPaint(TWindow& wdlg,dialog_flags flags,search_flags sf_flags);
-	    void		SearchUpdate(TWindow& wdlg,dialog_flags _flags,search_flags sf_flags);
+	    void		SearchPaint(TWindow& wdlg,dialog_flags flags,search_flags sf_flags) const;
+	    void		SearchUpdate(TWindow& wdlg,dialog_flags _flags,search_flags sf_flags) const;
 
 	    unsigned char	search_buff[MAX_SEARCH_SIZE];
 	    unsigned char	search_len;
