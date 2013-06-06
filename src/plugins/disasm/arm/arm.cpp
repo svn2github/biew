@@ -27,6 +27,7 @@ using namespace	usr;
 #include "bconsole.h"
 #include "beyehelp.h"
 #include "beyeutil.h"
+#include "listbox.h"
 #include "plugins/disasm/arm/arm.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/file_ini.h"
@@ -185,16 +186,16 @@ static const char *arm_bitness_names[] =
 
 bool ARM_Disassembler::action_F3()
 {
-  unsigned nModes;
-  int i;
-  nModes = sizeof(arm_bitness_names)/sizeof(char *);
-  i = ListBox(arm_bitness_names,nModes," Select bitness mode: ",LB_SELECTIVE|LB_USEACC,armBitness);
-  if(i != -1)
-  {
-    armBitness = ((i==0)?Bin_Format::Use16:Bin_Format::Use32);
-    return true;
-  }
-  return false;
+    unsigned nModes;
+    int i;
+    nModes = sizeof(arm_bitness_names)/sizeof(char *);
+    ListBox lb(bctx);
+    i = lb.run(arm_bitness_names,nModes," Select bitness mode: ",ListBox::Selective|ListBox::UseAcc,armBitness);
+    if(i != -1) {
+	armBitness = ((i==0)?Bin_Format::Use16:Bin_Format::Use32);
+	return true;
+    }
+    return false;
 }
 
 static const char *arm_endian_names[] =
@@ -205,16 +206,16 @@ static const char *arm_endian_names[] =
 
 bool ARM_Disassembler::action_F4()
 {
-  unsigned nModes;
-  int i;
-  nModes = sizeof(arm_endian_names)/sizeof(char *);
-  i = ListBox(arm_endian_names,nModes," Select endian mode: ",LB_SELECTIVE|LB_USEACC,armBigEndian);
-  if(i != -1)
-  {
-    armBigEndian = i;
-    return true;
-  }
-  return false;
+    unsigned nModes;
+    int i;
+    nModes = sizeof(arm_endian_names)/sizeof(char *);
+    ListBox lb(bctx);
+    i = lb.run(arm_endian_names,nModes," Select endian mode: ",ListBox::Selective|ListBox::UseAcc,armBigEndian);
+    if(i != -1) {
+	armBigEndian = i;
+	return true;
+    }
+    return false;
 }
 
 const char* ARM_Disassembler::prompt(unsigned idx) const {

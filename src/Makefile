@@ -51,6 +51,7 @@ SRCS = bconsole.cpp\
     events.cpp\
     fileutil.cpp\
     info_win.cpp\
+    listbox.cpp \
     main.cpp\
     mainloop.cpp\
     search.cpp\

@@ -34,6 +34,7 @@ using namespace	usr;
 #include "bconsole.h"
 #include "tstrings.h"
 #include "beyehelp.h"
+#include "listbox.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/bstream.h"
@@ -388,12 +389,13 @@ __filesize_t NLM_Parser::action_F5()
 {
     std::string title = EXT_REFER;
     ssize_t nnames = (unsigned)nlm.nlm_numberOfExternalReferences;
-    int flags = LB_SORTABLE;
+    ListBox::flags flags = ListBox::Sortable;
     TWindow* w = PleaseWaitWnd();
     std::vector<std::string> objs = __ReadExtRefNamesNLM(main_handle,nnames);
     delete w;
+    ListBox lb(bctx);
     if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
-    ListBox(objs,title,flags,-1);
+    lb.run(objs,title,flags,-1);
 exit:
     return bctx.tell();
 }
@@ -423,12 +425,13 @@ __filesize_t NLM_Parser::action_F2()
 {
     std::string title = MOD_REFER;
     ssize_t nnames = (unsigned)nlm.nlm_numberOfModuleDependencies;
-    int flags = LB_SORTABLE;
+    ListBox::flags flags = ListBox::Sortable;
     TWindow* w = PleaseWaitWnd();
     std::vector<std::string> objs = __ReadModRefNamesNLM(main_handle,nnames);
     delete w;
+    ListBox lb(bctx);
     if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
-    ListBox(objs,title,flags,-1);
+    lb.run(objs,title,flags,-1);
 exit:
     return bctx.tell();
 }
@@ -439,14 +442,15 @@ __filesize_t NLM_Parser::action_F3()
     int ret;
     std::string title = EXP_TABLE;
     ssize_t nnames = (unsigned)nlm.nlm_numberOfPublics;
-    int flags = LB_SELECTIVE;
+    ListBox::flags flags = ListBox::Selective;
     TWindow* w;
     ret = -1;
     w = PleaseWaitWnd();
     std::vector<std::string> objs = NLMNamesReadItems(main_handle,nnames);
     delete w;
+    ListBox lb(bctx);
     if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
-    ret = ListBox(objs,title,flags,-1);
+    ret = lb.run(objs,title,flags,-1);
 exit:
     if(ret != -1) fpos = CalcEntryNLM(ret,true);
     return fpos;

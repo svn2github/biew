@@ -28,6 +28,7 @@ using namespace	usr;
 #include "udn.h"
 #include "beyehelp.h"
 #include "bconsole.h"
+#include "listbox.h"
 #include "tstrings.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/lmf.h"
@@ -438,14 +439,15 @@ __filesize_t LMF_Parser::action_F9()
     int ret;
     std::string title = " Num Type              Seg Virtual addresses   ";
     ssize_t nnames = reclast+1;
-    int flags = LB_SELECTIVE;
+    ListBox::flags flags = ListBox::Selective;
     TWindow* w;
     ret = -1;
     w = PleaseWaitWnd();
     std::vector<std::string> objs = lmf_ReadSecHdr(main_handle,nnames);
     delete w;
+    ListBox lb(bctx);
     if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
-    ret = ListBox(objs,title,flags,-1);
+    ret = lb.run(objs,title,flags,-1);
 exit:
     if(ret!=-1) fpos=hl[ret].file_pos;
     return fpos;

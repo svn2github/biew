@@ -66,6 +66,7 @@ using namespace	usr;
 #include "beyehelp.h"
 #include "tstrings.h"
 #include "bconsole.h"
+#include "listbox.h"
 #include "libbeye/file_ini.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/bstream.h"
@@ -899,19 +900,19 @@ __filesize_t ELF_Parser::action_F10()
     int ret;
     std::string title = " type            fileoffs virtaddr physaddr filesize memsize  flg align   ";
     ssize_t nnames = elf_reader->ehdr().e_phnum;
-    int flags = LB_SELECTIVE;
+    ListBox::flags flags = ListBox::Selective;
     TWindow* w;
     ret = -1;
     w = PleaseWaitWnd();
     std::vector<std::string> objs = __elfReadPrgHdr(main_handle,nnames);
     delete w;
+    ListBox lb(bctx);
     if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
-    ret = ListBox(objs,title,flags,-1);
+    ret = lb.run(objs,title,flags,-1);
 exit:
     if(ret != -1) {
 	Elf_Phdr it;
 	it=elf_reader->read_phdr(main_handle,elf_reader->ehdr().e_phoff+elf_reader->phdr_size()*ret);
-	main_handle.read(&it,sizeof(it));
 	fpos = it.p_offset;
     }
     return fpos;
@@ -923,14 +924,15 @@ __filesize_t ELF_Parser::action_F9()
     int ret;
     std::string title = " name             type   flg virtaddr fileoffs   size   link info algn esiz";
     ssize_t nnames = IsSectionsPresent ? elf_reader->ehdr().e_shnum : 0;
-    int flags = LB_SELECTIVE;
+    ListBox::flags flags = ListBox::Selective;
     TWindow* w;
     ret = -1;
     w = PleaseWaitWnd();
     std::vector<std::string> objs = __elfReadSecHdr(main_handle,nnames);
     delete w;
+    ListBox lb(bctx);
     if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
-    ret = ListBox(objs,title,flags,-1);
+    ret = lb.run(objs,title,flags,-1);
 exit:
     if(ret != -1) {
 	Elf_Shdr it;
@@ -979,14 +981,15 @@ __filesize_t ELF_Parser::displayELFsymtab() const
     int ret;
     std::string title = " Name                                  Value    Size     Oth. Type   Bind   Sec# ";
     ssize_t nnames = __elfNumSymTab;
-    int flags = LB_SELECTIVE;
+    ListBox::flags flags = ListBox::Selective;
     TWindow* w;
     ret = -1;
     w = PleaseWaitWnd();
     std::vector<std::string> objs = __elfReadSymTab(main_handle,nnames);
     delete w;
+    ListBox lb(bctx);
     if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
-    ret = ListBox(objs,title,flags,-1);
+    ret = lb.run(objs,title,flags,-1);
 exit:
     if(ret != -1) {
 	__filesize_t ea;
@@ -1009,7 +1012,8 @@ __filesize_t ELF_Parser::displayELFdyntab(__filesize_t dynptr,
     std::vector<std::string> objs = __elfReadDynTab(handle,ndyn,entsize);
     if(!objs.empty()) {
 	int ret;
-	ret = ListBox(objs," Dynamic section ",LB_SELECTIVE | LB_SORTABLE,-1);
+	ListBox lb(bctx);
+	ret = lb.run(objs," Dynamic section ",ListBox::Selective | ListBox::Sortable,-1);
 	if(ret != -1) {
 	    const char *addr;
 	    addr = strstr(objs[ret].c_str(),"vma=");
@@ -1313,7 +1317,8 @@ void ELF_Parser::displayELFdyninfo(__filesize_t f_off,unsigned nitems) const
 	if(is_add) objs.push_back(stmp);
     }
 dyn_end:
-    ListBox(objs," Dynamic linking information ",LB_SORTABLE,-1);
+    ListBox lb(bctx);
+    lb.run(objs," Dynamic linking information ",ListBox::Sortable,-1);
 }
 
 __filesize_t ELF_Parser::action_F2()

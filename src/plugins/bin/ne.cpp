@@ -33,6 +33,7 @@ using namespace	usr;
 #include "beyehelp.h"
 #include "tstrings.h"
 #include "bconsole.h"
+#include "listbox.h"
 #include "codeguid.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
@@ -353,8 +354,9 @@ __filesize_t NE_Parser::action_F2()
     w = PleaseWaitWnd();
     std::vector<std::string> objs = __ReadModRefNamesNE(handle);
     delete w;
+    ListBox lb(bctx());
     while(1) {
-	ret = ListBox(objs,MOD_REFER,LB_SELECTIVE | LB_SORTABLE,-1);
+	ret = lb.run(objs,MOD_REFER,ListBox::Selective | ListBox::Sortable,-1);
 	if(ret != -1) ShowProcListNE(ret);
 	else break;
    }
@@ -424,7 +426,8 @@ void NE_Parser::ShowProcListNE( int modno ) const
     if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,MOD_REFER); return; }
     name=rd_ImpName(modno+1,false);
     sprintf(ptitle,"%s%s ",IMPPROC_TABLE,name.c_str());
-    ListBox(objs,ptitle,LB_SORTABLE,-1);
+    ListBox lb(bctx());
+    lb.run(objs,ptitle,ListBox::Sortable,-1);
 }
 
 std::vector<std::string> NE_Parser::RNamesReadItems(binary_stream& handle,size_t nnames,__filesize_t offset)
@@ -440,7 +443,7 @@ std::vector<std::string> NE_Parser::RNamesReadItems(binary_stream& handle,size_t
 	if(IsKbdTerminate() || handle.eof()) break;
 	handle.read(stmp,length);
 	Ordinal = handle.read(type_word);
-	sprintf(&stmp[length],"%c%-5u",LB_ORD_DELIMITER, Ordinal);
+	sprintf(&stmp[length],"%c%-5u",ListBox::Ord_Delimiter, Ordinal);
 	rc.push_back(stmp);
     }
     return rc;
@@ -796,8 +799,9 @@ __filesize_t NE_Parser::action_F7()
     if(!(nrgroup = GetResourceGroupCountNE(handle))) { bctx().NotifyBox(NOT_ENTRY," Resources "); return fpos; }
     if(!(raddr  = new long [nrgroup])) return fpos;
     std::vector<std::string> objs = __ReadResourceGroupNE(handle,nrgroup,raddr);
+    ListBox lb(bctx());
     if(!objs.empty()) {
-	int i = ListBox(objs," Resource groups : ",LB_SELECTIVE,-1);
+	int i = lb.run(objs," Resource groups : ",ListBox::Selective,-1);
 	if(i != -1) fpos = raddr[i];
     }
     delete raddr;
@@ -811,18 +815,19 @@ __filesize_t NE_Parser::action_F3()
     unsigned ordinal;
     std::string title = RES_NAMES;
     ssize_t nnames = NERNamesNumItems(main_handle());
-    int flags = LB_SELECTIVE | LB_SORTABLE;
+    ListBox::flags flags = ListBox::Selective | ListBox::Sortable;
     TWindow* w;
     ret = -1;
     w = PleaseWaitWnd();
     std::vector<std::string> objs = NERNamesReadItems(main_handle(),nnames);
     delete w;
+    ListBox lb(bctx());
     if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,title); goto exit; }
-    ret = ListBox(objs,title,flags,-1);
+    ret = lb.run(objs,title,flags,-1);
     if(ret != -1) {
 	const char* cptr;
 	char buff[40];
-	cptr = strrchr(objs[ret].c_str(),LB_ORD_DELIMITER);
+	cptr = strrchr(objs[ret].c_str(),ListBox::Ord_Delimiter);
 	cptr++;
 	strcpy(buff,cptr);
 	ordinal = atoi(buff);
@@ -839,18 +844,19 @@ __filesize_t NE_Parser::action_F4()
     unsigned ordinal;
     std::string title = NORES_NAMES;
     ssize_t nnames = NENRNamesNumItems(main_handle());
-    int flags = LB_SELECTIVE | LB_SORTABLE;
+    ListBox::flags flags = ListBox::Selective | ListBox::Sortable;
     TWindow* w;
     ret = -1;
     w = PleaseWaitWnd();
     std::vector<std::string> objs = NENRNamesReadItems(main_handle(),nnames);
     delete w;
+    ListBox lb(bctx());
     if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,title); goto exit; }
-    ret = ListBox(objs,title,flags,-1);
+    ret = lb.run(objs,title,flags,-1);
     if(ret != -1) {
 	const char* cptr;
 	char buff[40];
-	cptr = strrchr(objs[ret].c_str(),LB_ORD_DELIMITER);
+	cptr = strrchr(objs[ret].c_str(),ListBox::Ord_Delimiter);
 	cptr++;
 	strcpy(buff,cptr);
 	ordinal = atoi(buff);

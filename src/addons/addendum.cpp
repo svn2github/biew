@@ -23,6 +23,7 @@ using namespace	usr;
 #include "addendum.h"
 #include "bconsole.h"
 #include "beyeutil.h"
+#include "listbox.h"
 
 namespace	usr {
 extern const Addon_Info DigitalConvertor;
@@ -31,12 +32,13 @@ extern const Addon_Info Calculator;
 void addendum::select()
 {
     size_t i,nTools=list.size();
-    const char *toolName[nTools];
+    std::vector<std::string> names;
     int retval;
 
     nTools = list.size();
-    for(i = 0;i < nTools;i++) toolName[i] = list[i]->name;
-    retval = ListBox(toolName,nTools," Select tool: ",LB_SELECTIVE|LB_USEACC,defToolSel);
+    for(i = 0;i < nTools;i++) names.push_back(list[i]->name);
+    ListBox lb(bctx);
+    retval = lb.run(names," Select tool: ",ListBox::Selective|ListBox::UseAcc,defToolSel);
     if(retval != -1) {
 	const Addon_Info* addon_info = list[retval];
 	Addon* addon = addon_info->query_interface(bctx);

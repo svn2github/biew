@@ -25,6 +25,7 @@ using namespace	usr;
 #include "plugins/textmode.h"
 #include "bconsole.h"
 #include "beyeutil.h"
+#include "listbox.h"
 #include "libbeye/osdep/system.h"
 
 namespace	usr {
@@ -414,38 +415,37 @@ static unsigned __FASTCALL__ ru_get_symbol_size() { return cp_symb_len; }
 
 static bool __FASTCALL__ ru_select_table()
 {
-  unsigned nModes;
-  int i;
-  nModes = sizeof(ru_cp_names)/sizeof(char *);
-  i = ListBox(ru_cp_names,nModes," Select cyrillic code page: ",LB_SELECTIVE|LB_USEACC,cp_mode);
-  if(i != -1)
-  {
-    cp_mode = i;
-    if(cp_mode == TXT_UNICODE || cp_mode == TXT_BIG_UNICODE) cp_symb_len = 2;
-    else                                                     cp_symb_len = 1;
-    return true;
-  }
-  return false;
+    unsigned nModes;
+    int i;
+    nModes = sizeof(ru_cp_names)/sizeof(char *);
+    ListBox lb(beye_context());
+    i = lb.run(ru_cp_names,nModes," Select cyrillic code page: ",ListBox::Selective|ListBox::UseAcc,cp_mode);
+    if(i != -1) {
+	cp_mode = i;
+	if(cp_mode == TXT_UNICODE || cp_mode == TXT_BIG_UNICODE) cp_symb_len = 2;
+	else                                                     cp_symb_len = 1;
+	return true;
+    }
+    return false;
 }
 
 static void __FASTCALL__ ru_read_ini( Ini_Profile& ini )
 {
-  std::string tmps;
-  if(beye_context().is_valid_ini_args())
-  {
-    tmps=beye_context().read_profile_string(ini,"Beye","Browser","LastSubMode","0");
-    cp_mode = (unsigned)strtoul(tmps.c_str(),NULL,10);
-    if(cp_mode > TXT_MAXMODE) cp_mode = 0;
- }
- if(cp_mode == TXT_UNICODE || cp_mode == TXT_BIG_UNICODE) cp_symb_len = 2;
- else                                                     cp_symb_len = 1;
+    std::string tmps;
+    if(beye_context().is_valid_ini_args()) {
+	tmps=beye_context().read_profile_string(ini,"Beye","Browser","LastSubMode","0");
+	cp_mode = (unsigned)strtoul(tmps.c_str(),NULL,10);
+	if(cp_mode > TXT_MAXMODE) cp_mode = 0;
+    }
+    if(cp_mode == TXT_UNICODE || cp_mode == TXT_BIG_UNICODE) cp_symb_len = 2;
+    else                                                     cp_symb_len = 1;
 }
 
 static void __FASTCALL__ ru_save_ini( Ini_Profile& ini )
 {
-  char tmps[10];
-  sprintf(tmps,"%i",cp_mode);
-  beye_context().write_profile_string(ini,"Beye","Browser","LastSubMode",tmps);
+    char tmps[10];
+    sprintf(tmps,"%i",cp_mode);
+    beye_context().write_profile_string(ini,"Beye","Browser","LastSubMode",tmps);
 }
 
 extern const REGISTRY_NLS RussianNLS =

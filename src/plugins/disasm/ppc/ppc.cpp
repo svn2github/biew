@@ -28,10 +28,10 @@ using namespace	usr;
 #include "bconsole.h"
 #include "beyehelp.h"
 #include "beyeutil.h"
+#include "listbox.h"
 #include "plugins/disasm/ppc/ppc.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/file_ini.h"
-
 
 namespace	usr {
     class PPC_Disassembler : public Disassembler {
@@ -1570,16 +1570,16 @@ static const char *ppc_bitness_names[] =
 
 bool PPC_Disassembler::action_F3()
 {
-  unsigned nModes;
-  int i;
-  nModes = sizeof(ppc_bitness_names)/sizeof(char *);
-  i = ListBox(ppc_bitness_names,nModes," Select bitness mode: ",LB_SELECTIVE|LB_USEACC,ppcBitness);
-  if(i != -1)
-  {
-    ppcBitness = ((i==0)?Bin_Format::Use32:Bin_Format::Use64);
-    return true;
-  }
-  return false;
+    unsigned nModes;
+    int i;
+    nModes = sizeof(ppc_bitness_names)/sizeof(char *);
+    ListBox lb(bctx);
+    i = lb.run(ppc_bitness_names,nModes," Select bitness mode: ",ListBox::Selective|ListBox::UseAcc,ppcBitness);
+    if(i != -1) {
+	ppcBitness = ((i==0)?Bin_Format::Use32:Bin_Format::Use64);
+	return true;
+    }
+    return false;
 }
 
 static const char *ppc_endian_names[] =
@@ -1590,16 +1590,16 @@ static const char *ppc_endian_names[] =
 
 bool PPC_Disassembler::action_F4()
 {
-  unsigned nModes;
-  int i;
-  nModes = sizeof(ppc_endian_names)/sizeof(char *);
-  i = ListBox(ppc_endian_names,nModes," Select endian mode: ",LB_SELECTIVE|LB_USEACC,ppcBigEndian);
-  if(i != -1)
-  {
-    ppcBigEndian = i;
-    return true;
-  }
-  return false;
+    unsigned nModes;
+    int i;
+    nModes = sizeof(ppc_endian_names)/sizeof(char *);
+    ListBox lb(bctx);
+    i = lb.run(ppc_endian_names,nModes," Select endian mode: ",ListBox::Selective|ListBox::UseAcc,ppcBigEndian);
+    if(i != -1) {
+	ppcBigEndian = i;
+	return true;
+    }
+    return false;
 }
 
 static const char *ppc_dialect_names[] =
@@ -1610,16 +1610,16 @@ static const char *ppc_dialect_names[] =
 
 bool PPC_Disassembler::action_F5()
 {
-  unsigned nModes;
-  int i;
-  nModes = sizeof(ppc_dialect_names)/sizeof(char *);
-  i = ListBox(ppc_dialect_names,nModes," Select PPC dialect: ",LB_SELECTIVE|LB_USEACC,ppcDialect);
-  if(i != -1)
-  {
-    ppcDialect = i;
-    return true;
-  }
-  return false;
+    unsigned nModes;
+    int i;
+    nModes = sizeof(ppc_dialect_names)/sizeof(char *);
+    ListBox lb(bctx);
+    i = lb.run(ppc_dialect_names,nModes," Select PPC dialect: ",ListBox::Selective|ListBox::UseAcc,ppcDialect);
+    if(i != -1) {
+	ppcDialect = i;
+	return true;
+    }
+    return false;
 }
 
 PPC_Disassembler::PPC_Disassembler(BeyeContext& bc,const Bin_Format& b,binary_stream& h,DisMode& _parent )

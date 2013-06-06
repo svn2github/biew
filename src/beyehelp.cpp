@@ -330,6 +330,11 @@ std::vector<std::string> Beye_Help::point_strings(binary_packet& data) const
     return rc;
 }
 
+bool Beye_Help::_lb_searchtext(const char *str,const char *tmpl,unsigned searchlen,const int *cache, Search::search_flags flg)
+{
+    return search.strFind(str, strlen(str), tmpl, searchlen, cache, flg) ? true : false;
+}
+
 void Beye_Help::run( unsigned long item_id )
 {
     char* title;
@@ -343,7 +348,7 @@ void Beye_Help::run( unsigned long item_id )
 
 Beye_Help::Beye_Help(BeyeContext& bc)
 	:bctx(bc)
-	,search(*new(zeromem) Search(beye_context())) 
+	,search(*new(zeromem) Search(bc))
 	,sflg(Search::None)
 {}
 Beye_Help::~Beye_Help() { delete &search; }

@@ -39,6 +39,7 @@ using namespace	usr;
 #include "plugins/disasm.h"
 #include "beyeutil.h"
 #include "bconsole.h"
+#include "listbox.h"
 #include "editor.h"
 #include "codeguid.h"
 #include "search.h"
@@ -129,7 +130,8 @@ bool DisMode::action_F2() /* disSelect_Disasm */
     int retval;
 
     for(i = 0;i < nModes;i++) modeName[i] = list[i]->name;
-    retval = ListBox(modeName,nModes," Select disassembler: ",LB_SELECTIVE|LB_USEACC,DefDisasmSel);
+    ListBox lb(bctx);
+    retval = lb.run(modeName,nModes," Select disassembler: ",ListBox::Selective|ListBox::UseAcc,DefDisasmSel);
     if(retval != -1) {
 	delete activeDisasm;
 	activeDisasm = list[retval]->query_interface(bctx,bin_format,*second_handle,*this);
@@ -438,7 +440,8 @@ bool DisMode::action_F8() /* disReferenceResolving */
     int retval;
     bool ret;
     nModes = sizeof(refsdepth_names)/sizeof(char *);
-    retval = ListBox(refsdepth_names,nModes," Reference resolving depth: ",LB_SELECTIVE|LB_USEACC,disNeedRef);
+    ListBox lb(bctx);
+    retval = lb.run(refsdepth_names,nModes," Reference resolving depth: ",ListBox::Selective|ListBox::UseAcc,disNeedRef);
     if(retval != -1) {
 	disNeedRef = e_ref(retval);
 	ret = true;
@@ -458,7 +461,8 @@ bool DisMode::action_F7() /* disSelectPanelMode */
     unsigned nModes;
     int i;
     nModes = sizeof(panmod_names)/sizeof(char *);
-    i = ListBox(panmod_names,nModes," Select panel mode: ",LB_SELECTIVE|LB_USEACC,disPanelMode);
+    ListBox lb(bctx);
+    i = lb.run(panmod_names,nModes," Select panel mode: ",ListBox::Selective|ListBox::UseAcc,disPanelMode);
     if(i != -1) {
 	disPanelMode = e_panel(i);
 	return true;
@@ -478,7 +482,8 @@ bool DisMode::action_F9() /* disSelectHiLight */
     unsigned nModes;
     int i;
     nModes = sizeof(hilight_names)/sizeof(char *);
-    i = ListBox(hilight_names,nModes," Select highlight mode: ",LB_SELECTIVE|LB_USEACC,HiLight);
+    ListBox lb(bctx);
+    i = lb.run(hilight_names,nModes," Select highlight mode: ",ListBox::Selective|ListBox::UseAcc,HiLight);
     if(i != -1) {
 	HiLight = i;
 	return true;

@@ -28,6 +28,7 @@ using namespace	usr;
 #include "bconsole.h"
 #include "beyeutil.h"
 #include "beyehelp.h"
+#include "listbox.h"
 #include "search.h"
 #include "udn.h"
 #include "codeguid.h"
@@ -410,7 +411,8 @@ bool HexMode::action_F2() /* hexSelectMode */
     int retval;
     nModes = sizeof(xView_Info)/sizeof(struct xView_Info);
     for(i = 0;i < nModes;i++) names.push_back(xView_Info[i].name);
-    retval = ListBox(names," Select hexadecimal mode: ",LB_SELECTIVE|LB_USEACC,hmode);
+    ListBox lb(bctx);
+    retval = lb.run(names," Select hexadecimal mode: ",ListBox::Selective|ListBox::UseAcc,hmode);
     if(retval != -1) {
 	hmode = retval;
 	delete hex_viewer;
@@ -432,7 +434,8 @@ bool HexMode::action_F3 () /* hexSelectEndian */
     size_t nModes;
     int retval;
     nModes = sizeof(nendian)/sizeof(char *);
-    retval = ListBox(nendian,nModes," Select endian mode: ",LB_SELECTIVE|LB_USEACC,hendian);
+    ListBox lb(bctx);
+    retval = lb.run(nendian,nModes," Select endian mode: ",ListBox::Selective|ListBox::UseAcc,hendian);
     if(retval != -1) {
 	hendian = retval;
 	return true;
@@ -451,7 +454,8 @@ bool hexAddressResolution(unsigned& har)
     unsigned nModes;
     int i;
     nModes = sizeof(aresolv)/sizeof(char *);
-    i = ListBox(aresolv,nModes," Select address resolving: ",LB_SELECTIVE|LB_USEACC,(unsigned)har);
+    ListBox lb(beye_context());
+    i = lb.run(aresolv,nModes," Select address resolving: ",ListBox::Selective|ListBox::UseAcc,(unsigned)har);
     if(i != -1) {
 	har = i ? true : false;
 	return true;

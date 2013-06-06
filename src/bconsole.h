@@ -110,19 +110,6 @@ enum {
 				     const std::string& prompt);
     bool        __FASTCALL__ GetInsDelBlkDlg(const std::string& title,__filesize_t *start,
 					__fileoff_t *size);
-enum {
-    LB_SELECTIVE =0x01U,
-    LB_SORTABLE  =0x02U,
-    LB_USEACC    =0x04U,
-
-    LB_ORD_DELIMITER =0x7F
-};
-    int          __FASTCALL__ ListBox(const char** names,unsigned nlist,const std::string& title,
-				      int acc,unsigned defsel=std::numeric_limits<size_t>::max());
-
-    int          __FASTCALL__ ListBox(std::vector<std::string>& list,const std::string& title,
-				      int acc,unsigned defsel=std::numeric_limits<size_t>::max());
-
     TWindow *    __FASTCALL__ PercentWnd(const std::string& text,const std::string& title);
 
 			   /** return true - if can continue
@@ -132,9 +119,6 @@ enum {
     int          __FASTCALL__ GetEvent(void (*)(),int (*)(),TWindow *);
     void         __FASTCALL__ PostEvent(int kbdcode);
 
-    bool __FASTCALL__ _lb_searchtext(const char* str,const char *tmpl,
-					unsigned searchlen,const int *cache,
-					Search::search_flags flg);
     void __FASTCALL__ __drawSinglePrompt(const char *prmt[]);
 
     bool __FASTCALL__ ungotstring(char *string);

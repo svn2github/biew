@@ -38,6 +38,7 @@ using namespace	usr;
 #include "plugins/disasm.h"
 #include "beyeutil.h"
 #include "bconsole.h"
+#include "listbox.h"
 #include "libbeye/bbio.h"
 #include "libbeye/bswap.h"
 #include "libbeye/twindow.h"
@@ -1171,16 +1172,18 @@ static const file_utilities utilities[] = {
 
 bool FileUtils()
 {
+    BeyeContext& bctx = beye_context();
     size_t nUtils = sizeof(utilities)/sizeof(file_utilities);
     std::vector<std::string> names;
     int retval;
     bool ret;
     static unsigned def_sel = 0;
     for(unsigned i=0;i<nUtils;i++) names.push_back(utilities[i].name);
-    retval = ListBox(names," File utilities: ",LB_SELECTIVE|LB_USEACC,def_sel);
+    ListBox lb(bctx);
+    retval = lb.run(names," File utilities: ",ListBox::Selective|ListBox::UseAcc,def_sel);
     if(retval != -1) {
 	TWindow* w = PleaseWaitWnd();
-	FileUtilities* util = utilities[retval].query_interface(beye_context());
+	FileUtilities* util = utilities[retval].query_interface(bctx);
 	ret = util->run();
 	delete util;
 	delete w;

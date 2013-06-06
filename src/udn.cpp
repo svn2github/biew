@@ -32,6 +32,7 @@ using namespace	usr;
 #include "udn.h"
 #include "beyeutil.h"
 #include "bconsole.h"
+#include "listbox.h"
 #include "tstrings.h"
 #include "plugins/disasm.h"
 
@@ -88,12 +89,13 @@ bool udn::delete_item() {
     if(udn_list.empty()) { bctx.ErrMessageBox("UDN list is empty!",""); return false; }
     std::string title = " User-defined Names (aka bookmarks) ";
     ssize_t nnames = udn_list.size();
-    int flags = LB_SELECTIVE;
+    ListBox::flags flags = ListBox::Selective;
     TWindow* w = PleaseWaitWnd();
     std::vector<std::string> objs = read_items(nnames);
     delete w;
+    ListBox lb(bctx);
     if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
-    ret = ListBox(objs,title,flags,-1);
+    ret = lb.run(objs,title,flags,-1);
 exit:
     if(ret!=-1) {
 	int i=0;
@@ -110,12 +112,13 @@ bool udn::select(__filesize_t& off) {
     if(udn_list.empty()) { bctx.ErrMessageBox("UDN list is empty!",""); return false; }
     std::string title = " User-defined Names (aka bookmarks) ";
     ssize_t nnames = udn_list.size();
-    int flags = LB_SELECTIVE;
+    ListBox::flags flags = ListBox::Selective;
     TWindow* w = PleaseWaitWnd();
     std::vector<std::string> objs = read_items(nnames);
     delete w;
+    ListBox lb(bctx);
     if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
-    ret = ListBox(objs,title,flags,-1);
+    ret = lb.run(objs,title,flags,-1);
 exit:
     if(ret!=-1) {
 	int i=0;
@@ -251,21 +254,20 @@ udnFunc udn::funcs[] =
 };
 
 bool udn::names() {
-  unsigned nModes;
-  int i;
-  nModes = sizeof(udn_operations)/sizeof(char *);
-  i = 0;
-  i = ListBox(udn_operations,nModes," Select operation: ",LB_SELECTIVE|LB_USEACC,i);
-  if(i != -1)
-  {
-     int ret;
-     TWindow * w;
-     w = PleaseWaitWnd();
-     ret = (this->*funcs[i])();
-     delete w;
-     return ret;
-  }
-  return false;
+    unsigned nModes;
+    int i;
+    nModes = sizeof(udn_operations)/sizeof(char *);
+    i = 0;
+    ListBox lb(bctx);
+    i = lb.run(udn_operations,nModes," Select operation: ",ListBox::Selective|ListBox::UseAcc,i);
+    if(i != -1) {
+	int ret;
+	TWindow* w = PleaseWaitWnd();
+	ret = (this->*funcs[i])();
+	delete w;
+	return ret;
+    }
+    return false;
 }
 
 void udn::read_ini(Ini_Profile& ini) {

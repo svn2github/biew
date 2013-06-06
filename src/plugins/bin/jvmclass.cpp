@@ -31,6 +31,7 @@ using namespace	usr;
 #include "udn.h"
 #include "colorset.h"
 #include "codeguid.h"
+#include "listbox.h"
 #include "tstrings.h"
 #include "plugins/disasm.h"
 #include "libbeye/kbd_code.h"
@@ -285,12 +286,13 @@ __filesize_t JVM_Parser::action_F2()
     __filesize_t fpos = bctx.tell();
     std::string title = " interfaces ";
     ssize_t nnames = jvm_header.interfaces_count;
-    int flags = LB_SORTABLE;
+    ListBox::flags flags = ListBox::Sortable;
     TWindow* w = PleaseWaitWnd();
     std::vector<std::string> objs = jvm_read_interfaces(main_handle,nnames);
     delete w;
+    ListBox lb(bctx);
     if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
-    ListBox(objs,title,flags,-1);
+    lb.run(objs,title,flags,-1);
 exit:
     return fpos;
 }
@@ -322,14 +324,15 @@ __filesize_t  JVM_Parser::__ShowAttributes(const std::string& title) const
     __filesize_t fpos = bctx.tell();
     int ret;
     ssize_t nnames = jvm_header.attributes_count;
-    int flags = LB_SELECTIVE;
+    ListBox::flags flags = ListBox::Selective;
     TWindow* w;
     ret = -1;
     w = PleaseWaitWnd();
     std::vector<std::string> objs = jvm_read_attributes(main_handle,nnames);
     delete w;
+    ListBox lb(bctx);
     if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
-    ret = ListBox(objs,title,flags,-1);
+    ret = lb.run(objs,title,flags,-1);
 exit:
     if(ret!=-1) {
 	unsigned i;
@@ -384,14 +387,15 @@ __filesize_t JVM_Parser::action_F3()
     int ret;
     std::string title = " length   attributes ";
     ssize_t nnames = jvm_header.methods_count;
-    int flags = LB_SELECTIVE;
+    ListBox::flags flags = ListBox::Selective;
     TWindow* w;
     ret = -1;
     w = PleaseWaitWnd();
     std::vector<std::string> objs = jvm_read_methods(main_handle,nnames);
     delete w;
+    ListBox lb(bctx);
     if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
-    ret = ListBox(objs,title,flags,-1);
+    ret = lb.run(objs,title,flags,-1);
 exit:
     if(ret!=-1) {
 	std::string str;
@@ -456,14 +460,15 @@ __filesize_t JVM_Parser::action_F4()
     int ret;
     std::string title = " length   attributes ";
     ssize_t nnames = jvm_header.fields_count;
-    int flags = LB_SELECTIVE;
+    ListBox::flags flags = ListBox::Selective;
     TWindow* w;
     ret = -1;
     w = PleaseWaitWnd();
     std::vector<std::string> objs = jvm_read_fields(main_handle,nnames);
     delete w;
+    ListBox lb(bctx);
     if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
-    ret = ListBox(objs,title,flags,-1);
+    ret = lb.run(objs,title,flags,-1);
 exit:
     if(ret!=-1) {
 	std::string str;
@@ -580,12 +585,13 @@ __filesize_t JVM_Parser::action_F8()
     __filesize_t fpos = bctx.tell();
     std::string title = " Constant pool ";
     ssize_t nnames = jvm_header.constant_pool_count;
-    int flags = LB_SORTABLE;
+    ListBox::flags flags = ListBox::Sortable;
     TWindow* w = PleaseWaitWnd();
     std::vector<std::string> objs = jvm_read_pool(main_handle,nnames);
     delete w;
+    ListBox lb(bctx);
     if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
-    ListBox(objs,title,flags,-1);
+    lb.run(objs,title,flags,-1);
 exit:
     return fpos;
 }

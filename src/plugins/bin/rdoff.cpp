@@ -29,6 +29,7 @@ using namespace	usr;
 #include "codeguid.h"
 #include "beyehelp.h"
 #include "bconsole.h"
+#include "listbox.h"
 #include "tstrings.h"
 #include "plugins/disasm.h"
 #include "plugins/bin/rdoff.h"
@@ -185,7 +186,8 @@ __filesize_t RDOff_Parser::action_F3()
     }
     if(!rdoff_et.empty()) {
 	int ret;
-	ret = ListBox(rdoff_et,EXP_TABLE,LB_SELECTIVE,0);
+	ListBox lb(bctx);
+	ret = lb.run(rdoff_et,EXP_TABLE,ListBox::Selective,0);
 	if(ret != -1) {
 	    const char *rets;
 	    rets = strstr(rdoff_et[ret].c_str(),"offset=");
@@ -249,6 +251,7 @@ __filesize_t RDOff_Parser::action_F2()
     unsigned char rec;
     unsigned i;
     char str[129];
+    ListBox lb(bctx);
     std::vector<std::string> rdoff_mr;
     fpos = bctx.tell();
     main_handle.seek(10,binary_stream::Seek_Set);
@@ -272,7 +275,7 @@ __filesize_t RDOff_Parser::action_F2()
 	    if(main_handle.eof()) break;
 	}
     }
-    if(!rdoff_mr.empty()) ListBox(rdoff_mr,MOD_REFER,LB_SORTABLE,0);
+    if(!rdoff_mr.empty()) lb.run(rdoff_mr,MOD_REFER,ListBox::Sortable,0);
     else                  bctx.NotifyBox(NOT_ENTRY,MOD_REFER);
 exit:
     return fpos;
@@ -284,6 +287,7 @@ __filesize_t RDOff_Parser::action_F5()
     unsigned char rec;
     unsigned i;
     char str[33];
+    ListBox lb(bctx);
     std::vector<std::string> rdoff_it;
     fpos = bctx.tell();
     main_handle.seek(10,binary_stream::Seek_Set);
@@ -308,7 +312,7 @@ __filesize_t RDOff_Parser::action_F5()
 	    if(main_handle.eof()) break;
 	}
     }
-    if(!rdoff_it.empty()) ListBox(rdoff_it,IMPPROC_TABLE,LB_SORTABLE,0);
+    if(!rdoff_it.empty()) lb.run(rdoff_it,IMPPROC_TABLE,ListBox::Sortable,0);
     else                  bctx.NotifyBox(NOT_ENTRY,EXP_TABLE);
 exit:
     return fpos;

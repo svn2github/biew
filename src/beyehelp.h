@@ -87,6 +87,7 @@ namespace	usr {
 	    virtual void		paint_line(TWindow& win,unsigned y,const std::string& str, bool is_hl) const;
 	    virtual int			ListBox(const std::vector<std::string>& names,const std::string& title);
 	private:
+	    bool			_lb_searchtext(const char *str,const char *tmpl,unsigned searchlen,const int *cache, Search::search_flags flg);
 	    void			paint(TWindow& win,const std::vector<std::string>& names,unsigned start,unsigned height,unsigned width) const;
 	    bool			find_item(unsigned long item_id);
 

@@ -29,6 +29,7 @@ using namespace	usr;
 #include "codeguid.h"
 #include "colorset.h"
 #include "bconsole.h"
+#include "listbox.h"
 #include "udn.h"
 #include "beyehelp.h"
 #include "plugins/bin/coff.h"
@@ -421,14 +422,15 @@ __filesize_t Coff_Parser::action_F7()
     int ret;
     std::string title = "Symbol Table";
     ssize_t nnames = COFF_DWORD(coff386hdr.f_nsyms);
-    int flags = LB_SELECTIVE;
+    ListBox::flags flags = ListBox::Selective;
     TWindow* w;
+    ListBox lb(bctx);
     ret = -1;
     w = PleaseWaitWnd();
     std::vector<std::string> objs = coffSymTabReadItems(main_handle,nnames);
     delete w;
     if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
-    ret = ListBox(objs,title,flags,-1);
+    ret = lb.run(objs,title,flags,-1);
 exit:
     if(ret != -1) fpos = CalcEntryCoff(ret,true);
     return fpos;

@@ -48,7 +48,6 @@ ConsoleInfo_Addon::~ConsoleInfo_Addon() {}
 
 void ConsoleInfo_Addon::run()
 {
-  BeyeContext& bctx = beye_context();
   TWindow * hwnd = CrtDlgWndnls(" Console information ",63,std::min(tAbsCoord(21),bctx.tconsole().vio_height()-2));
   unsigned evt;
   int i,j,len;

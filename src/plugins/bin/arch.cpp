@@ -28,6 +28,7 @@ using namespace	usr;
 #include "udn.h"
 #include "beyehelp.h"
 #include "bconsole.h"
+#include "listbox.h"
 #include "tstrings.h"
 #include "plugins/bin/arch.h"
 #include "plugins/disasm.h"
@@ -154,7 +155,8 @@ __filesize_t Arch_Parser::action_F3()
     std::vector<std::string> objs = archReadModList(nnames,addr);
     if(!objs.empty()) {
 	int ret;
-	ret = ListBox(objs," Archive modules list ",LB_SELECTIVE,-1);
+	ListBox lb(bctx);
+	ret = lb.run(objs," Archive modules list ",ListBox::Selective,-1);
 	if(ret != -1) {
 	/**
 	    Some archives sometimes have big and sometimes little endian.

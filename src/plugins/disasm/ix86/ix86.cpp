@@ -37,6 +37,7 @@ using namespace	usr;
 #include "beyeutil.h"
 #include "bconsole.h"
 #include "codeguid.h"
+#include "listbox.h"
 #include "libbeye/file_ini.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/libbeye.h"
@@ -6193,19 +6194,18 @@ static const char *use_names[] =
 
 bool ix86_Disassembler::action_F3()
 {
-  unsigned nModes;
-  int i;
-  nModes = sizeof(use_names)/sizeof(char *);
-  if(BITNESS == Bin_Format::Auto) BITNESS = Bin_Format::Use128;
-  i = ListBox(use_names,nModes," Select bitness mode: ",LB_SELECTIVE|LB_USEACC,BITNESS);
-  if(i != -1)
-  {
-    if(i == 3) i = Bin_Format::Auto;
-    BITNESS = x86_Bitness = Bin_Format::bitness(i);
-    return true;
-  }
-  else if(BITNESS == 3) BITNESS = x86_Bitness = Bin_Format::Auto;
-  return false;
+    unsigned nModes;
+    int i;
+    nModes = sizeof(use_names)/sizeof(char *);
+    if(BITNESS == Bin_Format::Auto) BITNESS = Bin_Format::Use128;
+    ListBox lb(bctx);
+    i = lb.run(use_names,nModes," Select bitness mode: ",ListBox::Selective|ListBox::UseAcc,BITNESS);
+    if(i != -1) {
+	if(i == 3) i = Bin_Format::Auto;
+	BITNESS = x86_Bitness = Bin_Format::bitness(i);
+	return true;
+    } else if(BITNESS == 3) BITNESS = x86_Bitness = Bin_Format::Auto;
+    return false;
 }
 
 int ix86_Disassembler::max_insn_len() const { return MAX_IX86_INSN_LEN; }

@@ -25,6 +25,7 @@ using namespace	usr;
 #include "beye.h"
 #include "colorset.h"
 #include "bconsole.h"
+#include "listbox.h"
 #include "beyeutil.h"
 #include "beyehelp.h"
 #include "search.h"
@@ -147,7 +148,8 @@ bool BinMode::action_F2() /* select mode */
     unsigned nModes;
     int i;
     nModes = sizeof(mod_names)/sizeof(char *);
-    i = ListBox(mod_names,nModes," Select binary mode: ",LB_SELECTIVE|LB_USEACC,bin_mode);
+    ListBox lb(bctx);
+    i = lb.run(mod_names,nModes," Select binary mode: ",ListBox::Selective|ListBox::UseAcc,bin_mode);
     if(i != -1) {
 	bin_mode = i;
 	return true;

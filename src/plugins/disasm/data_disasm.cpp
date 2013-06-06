@@ -26,6 +26,7 @@ using namespace	usr;
 #include "bconsole.h"
 #include "beyehelp.h"
 #include "beyeutil.h"
+#include "listbox.h"
 #include "libbeye/file_ini.h"
 
 namespace	usr {
@@ -68,16 +69,16 @@ const char* Data_Disassembler::width_names[] =
 
 bool Data_Disassembler::action_F3()
 {
-  unsigned nModes;
-  int i;
-  nModes = sizeof(width_names)/sizeof(char *);
-  i = ListBox(width_names,nModes," Select bitness mode: ",LB_SELECTIVE|LB_USEACC,nulWidth);
-  if(i != -1)
-  {
-    nulWidth = i;
-    return true;
-  }
-  return false;
+    unsigned nModes;
+    int i;
+    nModes = sizeof(width_names)/sizeof(char *);
+    ListBox lb(bctx);
+    i = lb.run(width_names,nModes," Select bitness mode: ",ListBox::Selective|ListBox::UseAcc,nulWidth);
+    if(i != -1) {
+	nulWidth = i;
+	return true;
+    }
+    return false;
 }
 
 DisasmRet Data_Disassembler::disassembler(__filesize_t ulShift,

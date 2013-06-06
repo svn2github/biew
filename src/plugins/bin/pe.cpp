@@ -38,6 +38,7 @@ using namespace	usr;
 #include "beyehelp.h"
 #include "tstrings.h"
 #include "bconsole.h"
+#include "listbox.h"
 #include "libbeye/kbd_code.h"
 #include "mz.h"
 #include "beye.h"
@@ -697,12 +698,13 @@ std::vector<std::string> PE_Parser:: __ReadImpContPE(binary_stream& handle,size_
 
 void PE_Parser::ShowModContextPE(const std::string& title) const {
     ssize_t nnames = GetImpCountPE(main_handle());
-    int flags = LB_SORTABLE;
+    ListBox::flags flags = ListBox::Sortable;
     TWindow* w = PleaseWaitWnd();
     std::vector<std::string> objs = __ReadImpContPE(main_handle(),nnames);
     delete w;
+    ListBox lb(bctx());
     if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,title); goto exit; }
-    ListBox(objs,title,flags,-1);
+    lb.run(objs,title,flags,-1);
 exit:
     return;
 }
@@ -722,11 +724,12 @@ __filesize_t PE_Parser::action_F2()
     if(!objs.empty()) {
 	int i;
 	i = 0;
+	ListBox lb(bctx());
 	while(1) {
 	    ImportDirPE imp_pe;
 	    unsigned long magic;
 
-	    i = ListBox(objs,MOD_REFER,LB_SELECTIVE,i);
+	    i = lb.run(objs,MOD_REFER,ListBox::Selective,i);
 	    if(i == -1) break;
 	    sprintf(petitle,"%s%s ",IMPPROC_TABLE,objs[i].c_str());
 	    handle.seek(phys + i*sizeof(ImportDirPE),binary_stream::Seek_Set);
@@ -779,7 +782,7 @@ std::vector<std::string> PE_Parser::PEExportReadItems(binary_stream& handle,size
 	if(IsKbdTerminate()) break;
 	ord = fioReadWord(handle,expaddr + i*2,binary_stream::Seek_Set);
 	is_eof = handle.eof();
-	sprintf(buff,"%c%-9lu ", LB_ORD_DELIMITER, ord+(unsigned long)et.etOrdinalBase);
+	sprintf(buff,"%c%-9lu ", ListBox::Ord_Delimiter, ord+(unsigned long)et.etOrdinalBase);
 	std::string s;
 	s=writeExportVA(addr[ord], handle);
 	strcpy(&buff[11],s.c_str());
@@ -792,7 +795,7 @@ std::vector<std::string> PE_Parser::PEExportReadItems(binary_stream& handle,size
     for(i = 0;i < nnames;i++) {
 	if(addr[i]) {
 	    ord = i+et.etOrdinalBase;
-	    sprintf(buff," < by ordinal > %c%-9lu ",LB_ORD_DELIMITER, (unsigned long)ord);
+	    sprintf(buff," < by ordinal > %c%-9lu ",ListBox::Ord_Delimiter, (unsigned long)ord);
 	    std::string s;
 	    s=writeExportVA(addr[i], handle);
 	    strcpy(&buff[27],s.c_str());
@@ -862,18 +865,19 @@ __filesize_t PE_Parser::action_F3()
     }
     std::string title = exp_nam;
     ssize_t nnames = PEExportNumItems(main_handle());
-    int flags = LB_SELECTIVE | LB_SORTABLE;
+    ListBox::flags flags = ListBox::Selective | ListBox::Sortable;
     TWindow* w;
     ret = -1;
     w = PleaseWaitWnd();
     std::vector<std::string> objs = PEExportReadItems(main_handle(),nnames);
     delete w;
+    ListBox lb(bctx());
     if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,title); goto exit; }
-    ret = ListBox(objs,title,flags,-1);
+    ret = lb.run(objs,title,flags,-1);
     if(ret != -1) {
 	const char* cptr;
 	char buff[40];
-	cptr = strrchr(objs[ret].c_str(),LB_ORD_DELIMITER);
+	cptr = strrchr(objs[ret].c_str(),ListBox::Ord_Delimiter);
 	cptr++;
 	strcpy(buff,cptr);
 	ordinal = atoi(buff);
@@ -923,14 +927,15 @@ __filesize_t PE_Parser::action_F9()
     __filesize_t fpos = bctx().tell();
     int ret;
     std::string title = " Directory Entry       RVA           size ";
-    int flags = LB_SELECTIVE | LB_USEACC;
+    ListBox::flags flags = ListBox::Selective | ListBox::UseAcc;
     TWindow* w;
     ret = -1;
     w = PleaseWaitWnd();
     std::vector<std::string> objs = PEReadRVAs();
     delete w;
+    ListBox lb(bctx());
     if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,title); goto exit; }
-    ret = ListBox(objs,title,flags,-1);
+    ret = lb.run(objs,title,flags,-1);
 exit:
     if (ret!=-1 && peDir[ret].rva) fpos = RVA2Phys(peDir[ret].rva);
     return fpos;

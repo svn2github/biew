@@ -30,6 +30,7 @@ using namespace	usr;
 #include "beyehelp.h"
 #include "tstrings.h"
 #include "bconsole.h"
+#include "listbox.h"
 #include "libbeye/kbd_code.h"
 #include "plugins/binary_parser.h"
 #include "beye.h"
@@ -782,14 +783,15 @@ __filesize_t LX_Parser::action_F9()
     int ret;
     std::string title = " Map of pages ";
     ssize_t nnames = (unsigned)lxe.lx.lxPageCount;
-    int flags = LB_SELECTIVE;
+    ListBox::flags flags = ListBox::Selective;
     TWindow* w;
     ret = -1;
     w = PleaseWaitWnd();
     std::vector<std::string> objs = __ReadMapTblLX(main_handle(),nnames);
     delete w;
+    ListBox lb(bctx());
     if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,title); goto exit; }
-    ret = ListBox(objs,title,flags,-1);
+    ret = lb.run(objs,title,flags,-1);
 exit:
     if(ret != -1) fpos = CalcPageEntry(ret + 1);
     return fpos;
@@ -870,7 +872,8 @@ __filesize_t LX_Parser::action_F7()
     if(!nrgroup) { bctx().NotifyBox(NOT_ENTRY," Resources "); return fpos; }
     if(!(raddr  = new long [nrgroup])) return fpos;
     std::vector<std::string> objs = __ReadResourceGroupLX(handle,nrgroup,raddr);
-    if(!objs.empty()) ListBox(objs," Resource groups : ",LB_SORTABLE,-1);
+    ListBox lb(bctx());
+    if(!objs.empty()) lb.run(objs," Resource groups : ",ListBox::Sortable,-1);
     delete raddr;
     return fpos;
 }
@@ -879,13 +882,14 @@ __filesize_t LX_Parser::action_F2()
 {
     std::string title = MOD_REFER;
     ssize_t nnames = (unsigned)lxe.lx.lxImportModuleTableEntries;
-    int flags = LB_SELECTIVE;
+    ListBox::flags flags = ListBox::Selective;
     TWindow* w;
     w = PleaseWaitWnd();
     std::vector<std::string> objs = __ReadModRefNamesLX(main_handle(),nnames);
     delete w;
+    ListBox lb(bctx());
     if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,title); goto exit; }
-    ListBox(objs,title,flags,-1);
+    lb.run(objs,title,flags,-1);
 exit:
     return bctx().tell();
 }
@@ -897,18 +901,19 @@ __filesize_t LX_Parser::action_F3()
     unsigned ordinal;
     std::string title = RES_NAMES;
     ssize_t nnames = LXRNamesNumItems(main_handle());
-    int flags = LB_SELECTIVE | LB_SORTABLE;
+    ListBox::flags flags = ListBox::Selective | ListBox::Sortable;
     TWindow* w;
     ret = -1;
     w = PleaseWaitWnd();
     std::vector<std::string> objs = LXRNamesReadItems(main_handle(),nnames);
     delete w;
+    ListBox lb(bctx());
     if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,title); goto exit; }
-    ret = ListBox(objs,title,flags,-1);
+    ret = lb.run(objs,title,flags,-1);
     if(ret != -1) {
 	const char* cptr;
 	char buff[40];
-	cptr = strrchr(objs[ret].c_str(),LB_ORD_DELIMITER);
+	cptr = strrchr(objs[ret].c_str(),ListBox::Ord_Delimiter);
 	cptr++;
 	strcpy(buff,cptr);
 	ordinal = atoi(buff);
@@ -925,18 +930,19 @@ __filesize_t LX_Parser::action_F4()
     unsigned ordinal;
     std::string title = NORES_NAMES;
     ssize_t nnames = LXNRNamesNumItems(main_handle());
-    int flags = LB_SELECTIVE | LB_SORTABLE;
+    ListBox::flags flags = ListBox::Selective | ListBox::Sortable;
     TWindow* w;
     ret = -1;
     w = PleaseWaitWnd();
     std::vector<std::string> objs = LXNRNamesReadItems(main_handle(),nnames);
     delete w;
+    ListBox lb(bctx());
     if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,title); goto exit; }
-    ret = ListBox(objs,title,flags,-1);
+    ret = lb.run(objs,title,flags,-1);
     if(ret != -1) {
 	const char* cptr;
 	char buff[40];
-	cptr = strrchr(objs[ret].c_str(),LB_ORD_DELIMITER);
+	cptr = strrchr(objs[ret].c_str(),ListBox::Ord_Delimiter);
 	cptr++;
 	strcpy(buff,cptr);
 	ordinal = atoi(buff);
@@ -950,13 +956,14 @@ __filesize_t LX_Parser::action_F5()
 {
     std::string title = IMPPROC_TABLE;
     ssize_t nnames = LXImpNamesNumItems(main_handle());
-    int flags = LB_SORTABLE;
+    ListBox::flags flags = ListBox::Sortable;
     TWindow* w;
     w = PleaseWaitWnd();
     std::vector<std::string> objs = LXImpNamesReadItems(main_handle(),nnames);
     delete w;
+    ListBox lb(bctx());
     if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,title); goto exit; }
-    ListBox(objs,title,flags,-1);
+    lb.run(objs,title,flags,-1);
 exit:
     return bctx().tell();
 }

@@ -48,6 +48,7 @@ using namespace	usr;
 #include "editor.h"
 #include "tstrings.h"
 #include "beyeutil.h"
+#include "listbox.h"
 #include "search.h"
 #include "setup.h"
 #include "libbeye/bbio.h"
@@ -155,7 +156,8 @@ bool BeyeContext::select_mode()
     int retval;
 
     for(i = 0;i < nModes;i++) modeName[i] = priv.modes[i]->name;
-    retval = ListBox(modeName,nModes," Select translation mode: ",LB_SELECTIVE|LB_USEACC,priv.defMainModeSel);
+    ListBox lb(*this);
+    retval = lb.run(modeName,nModes," Select translation mode: ",ListBox::Selective|ListBox::UseAcc,priv.defMainModeSel);
     if(retval != -1) {
 	priv.defMainModeSel = retval;
 	delete priv.activeMode;
@@ -562,7 +564,8 @@ bool BeyeContext::new_source()
 	::memcpy(nlsListFile[freq],priv.ListFile[freq].c_str(),ls+1);
 	priv._system->nls_cmdline2oem((unsigned char *)nlsListFile[freq],ls);
     }
-    i = ListBox(const_cast<const char**>(nlsListFile),j," Select new file: ",LB_SELECTIVE|LB_USEACC,prev_file);
+    ListBox lb(*this);
+    i = lb.run(const_cast<const char**>(nlsListFile),j," Select new file: ",ListBox::Selective|ListBox::UseAcc,prev_file);
     ret = 0;
     for(freq = 0;freq < j;freq++) delete nlsListFile[freq];
     delete nlsListFile;

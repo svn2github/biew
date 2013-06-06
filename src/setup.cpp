@@ -26,6 +26,7 @@ using namespace	usr;
 #include "setup.h"
 #include "bconsole.h"
 #include "beyeutil.h"
+#include "listbox.h"
 #include "libbeye/mmfile.h"
 #include "libbeye/twindow.h"
 #include "libbeye/kbd_code.h"
@@ -100,21 +101,21 @@ const char* Setup::cp_list[] =
 
 bool Setup::select_codepage()
 {
-  unsigned nModes;
-  int i;
-  nModes = sizeof(cp_list)/sizeof(char *);
-  i = ListBox(cp_list,nModes," Select single-byte codepage: ",LB_SELECTIVE|LB_USEACC,default_cp);
-  if(i != -1)
-  {
-    unsigned len;
-    const char *p;
-    default_cp = i;
-    p = strchr(cp_list[i],' ');
-    len = p-cp_list[i];
-    bctx.codepage=std::string(cp_list[i]).substr(0,len);
-    return true;
-  }
-  return false;
+    unsigned nModes;
+    int i;
+    nModes = sizeof(cp_list)/sizeof(char *);
+    ListBox lb(bctx);
+    i = lb.run(cp_list,nModes," Select single-byte codepage: ",ListBox::Selective|ListBox::UseAcc,default_cp);
+    if(i != -1) {
+	unsigned len;
+	const char *p;
+	default_cp = i;
+	p = strchr(cp_list[i],' ');
+	len = p-cp_list[i];
+	bctx.codepage=std::string(cp_list[i]).substr(0,len);
+	return true;
+    }
+    return false;
 }
 
 void Setup::draw_prompt()

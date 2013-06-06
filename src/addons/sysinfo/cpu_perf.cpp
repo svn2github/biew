@@ -28,6 +28,7 @@ using namespace	usr;
 
 #include "bconsole.h"
 #include "beyeutil.h"
+#include "listbox.h"
 #include "libbeye/libbeye.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/sysdep/processor.h"
@@ -87,7 +88,8 @@ void CPUPerformance_Addon::run()
     delete pwnd;
     data_size = strlen(cpu_info);
     strs = cpuPointStrings(cpu_info,data_size);
-    ListBox(strs," CPU information ",0);
+    ListBox lb(bctx);
+    lb.run(strs," CPU information ",ListBox::Simple);
     delete cpu_info;
 }
 

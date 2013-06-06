@@ -28,6 +28,7 @@ using namespace	usr;
 #include "tstrings.h"
 #include "bconsole.h"
 #include "beyeutil.h"
+#include "listbox.h"
 #include "beyehelp.h"
 #include "libbeye/kbd_code.h"
 #include "libbeye/osdep/tconsole.h"
@@ -148,37 +149,36 @@ int MainActionFromMenu()
 {
     const char* prmt[10];
     size_t j;
-  unsigned nModes;
-  int i;
-  nModes = sizeof(amenu_names)/sizeof(char *);
-  i = ListBox(amenu_names,nModes," Select action: ",LB_SELECTIVE|LB_USEACC,0);
-  if(i != -1)
-  {
-    switch(i)
-    {
-	default:
-	case 0:
+    unsigned nModes;
+    int i;
+    nModes = sizeof(amenu_names)/sizeof(char *);
+    ListBox lb(beye_context());
+    i = lb.run(amenu_names,nModes," Select action: ",ListBox::Selective|ListBox::UseAcc,0);
+    if(i != -1) {
+	switch(i) {
+	    default:
+	    case 0:
 		fillFxText();
-		i = ListBox(FxText,10," Select base action: ",LB_SELECTIVE|LB_USEACC,0);
+		i = lb.run(FxText,10," Select base action: ",ListBox::Selective|ListBox::UseAcc,0);
 		if(i!=-1) return KE_F(i+1);
 		break;
-	case 1:
-		i = ListBox(ShiftFxText,10," Select alternative action: ",LB_SELECTIVE|LB_USEACC,0);
+	    case 1:
+		i = lb.run(ShiftFxText,10," Select alternative action: ",ListBox::Selective|ListBox::UseAcc,0);
 		if(i!=-1) return KE_SHIFT_F(i+1);
 		break;
-	case 2:
+	    case 2:
 		for(j=0;j<10;j++) prmt[j]=beye_context().bin_format().prompt(i);
-		i = ListBox(prmt,10," Select format-depended action: ",LB_SELECTIVE|LB_USEACC,0);
+		i = lb.run(prmt,10," Select format-depended action: ",ListBox::Selective|ListBox::UseAcc,0);
 		if(i!=-1) return KE_ALT_F(i+1);
 		break;
-	case 3:
+	    case 3:
 		for(j=0;j<10;j++) prmt[j]=beye_context().active_mode().prompt(i);
-		i = ListBox(prmt,10," Select mode-depended action: ",LB_SELECTIVE|LB_USEACC,0);
+		i = lb.run(prmt,10," Select mode-depended action: ",ListBox::Selective|ListBox::UseAcc,0);
 		if(i!=-1) return KE_CTL_F(i+1);
 		break;
+	}
     }
-  }
-  return 0;
+    return 0;
 }
 
 static const char * fetext[] =
@@ -258,25 +258,24 @@ void drawAsmEdPrompt()
 
 int EditAsmActionFromMenu()
 {
-  int i;
-  i = ListBox(amenu_names,2," Select asm editor's action: ",LB_SELECTIVE|LB_USEACC,0);
-  if(i != -1)
-  {
-    switch(i)
-    {
-	default:
-	case 0:
+    int i;
+    ListBox lb(beye_context());
+    i = lb.run(amenu_names,2," Select asm editor's action: ",ListBox::Selective|ListBox::UseAcc,0);
+    if(i != -1) {
+	switch(i) {
+	    default:
+	    case 0:
 		fillFxText();
-		i = ListBox(fetext,10," Select base action: ",LB_SELECTIVE|LB_USEACC,0);
+		i = lb.run(fetext,10," Select base action: ",ListBox::Selective|ListBox::UseAcc,0);
 		if(i!=-1) return KE_F(i+1);
 		break;
-	case 1:
-		i = ListBox(casmtext,10," Select alternative action: ",LB_SELECTIVE|LB_USEACC,0);
+	    case 1:
+		i = lb.run(casmtext,10," Select alternative action: ",ListBox::Selective|ListBox::UseAcc,0);
 		if(i!=-1) return KE_CTL_F(i+1);
 		break;
+	}
     }
-  }
-  return 0;
+    return 0;
 }
 
 static const char * ordlisttxt[] =
@@ -385,10 +384,11 @@ void drawHelpPrompt()
 
 int HelpActionFromMenu()
 {
-  int i;
-  i = ListBox(helptxt,10," Select help action: ",LB_SELECTIVE|LB_USEACC,0);
-  if(i != -1) return KE_F(i+1);
-  return 0;
+    int i;
+    ListBox lb(beye_context());
+    i = lb.run(helptxt,10," Select help action: ",ListBox::Selective|ListBox::UseAcc,0);
+    if(i != -1) return KE_F(i+1);
+    return 0;
 }
 
 void drawHelpListPrompt()
