@@ -46,18 +46,16 @@ std::string beyeGetHelpName()
     return bctx.help_name;
 }
 
-static std::string __FASTCALL__ beyeGetColorSetName()
+std::string Setup::beyeGetColorSetName() const
 {
-    BeyeContext& bctx = beye_context();
     if(!bctx.skin_name[0]) {
 	bctx.skin_name=std::string(bctx.system().get_rc_dir("beye"))+"skn/standard.skn"; /* [dBorca] in skn/ subdir */
     }
     return bctx.skin_name;
 }
 
-static std::string  __FASTCALL__ beyeGetSyntaxName()
+std::string Setup::beyeGetSyntaxName() const
 {
-    BeyeContext& bctx = beye_context();
     if(!bctx.syntax_name[0]) {
 	bctx.syntax_name=std::string(bctx.system().get_rc_dir("beye"))+"syntax/syntax.stx"; /* [dBorca] in syntax/ subdir */
     }

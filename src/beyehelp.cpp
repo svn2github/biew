@@ -40,8 +40,6 @@ using namespace	usr;
 #include "lzss/lzssutil.cpp"
 
 namespace	usr {
-static const unsigned TEXT_TAB=8;
-
 extern void drawHelpListPrompt();
 
 enum {

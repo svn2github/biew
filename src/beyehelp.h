@@ -99,6 +99,7 @@ namespace	usr {
 	    char			searchtxt[21];
 	    unsigned char		searchlen;
 	    Search::search_flags	sflg;
+	    static const unsigned	TEXT_TAB=8;
     };
 } // namespace	usr
 

@@ -80,9 +80,8 @@ namespace	usr {
 	    __filesize_t	vartail_base, vartail_start, vartail_flags, vartail_idx;
 
 	    static const java_codes_t java_codes[256];
+	    static const unsigned TAB_POS=10;
     };
-
-static const unsigned TAB_POS=10;
 
 const java_codes_t Java_Disassembler::java_codes[256]=
 {

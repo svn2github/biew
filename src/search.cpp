@@ -602,7 +602,7 @@ void Search::hilight(TWindow& out,__filesize_t cfp,tRelCoord minx,tRelCoord maxx
 
 void Search::read_ini(Ini_Profile& ini) {
     std::string stmp=bctx.read_profile_string(ini,"Beye","Search","String","");
-    ::strcpy((char*)search_buff,stmp.c_str());
+    ::strncpy((char*)search_buff,stmp.c_str(),std::min(stmp.length(),size_t(MAX_SEARCH_SIZE)));
     search_len = stmp.length();
     stmp=bctx.read_profile_string(ini,"Beye","Search","Case","off");
     beyeSearchFlg=stricmp(stmp.c_str(),"on") == 0 ? Search::Case_Sens : Search::None;

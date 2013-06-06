@@ -30,7 +30,7 @@ namespace	usr {
 	    void		add_go_address(const DisMode& parent,std::string& str,__filesize_t addr);
 	    void		add_back_address();
 	    __filesize_t	get_go_address(unsigned keycode);
-	    std::string		encode_address(__filesize_t cfpos,bool aresolv) const;
+	    std::string		encode_address(__filesize_t cfpos,bool aresolv);
 	    const char*		image() const { return codeguid_image; }
 	private:
 	    char*		gidBuildKeyStr();
@@ -42,6 +42,7 @@ namespace	usr {
 	    std::vector<std::pair<__filesize_t,unsigned> > GoAddr;
 	    unsigned char	Alarm;
 	    BeyeContext&	bctx;
+	    std::string		addr;
     };
 } // namespace	usr
 #endif

@@ -191,9 +191,8 @@ __filesize_t CodeGuider::get_go_address(unsigned keycode)
     return ret;
 }
 
-std::string CodeGuider::encode_address(__filesize_t cfpos,bool AddressDetail) const
+std::string CodeGuider::encode_address(__filesize_t cfpos,bool AddressDetail)
 {
-    static std::string addr;
     addr=bctx.is_file64()?Get16Digit(cfpos):Get8Digit(cfpos);
     if(AddressDetail) bctx.bin_format().address_resolving(addr,cfpos);
     addr+=": ";

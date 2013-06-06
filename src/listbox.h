@@ -42,7 +42,10 @@ namespace	usr {
 
 	    BeyeContext&	bctx;
 	    Search&		search;
-	    bool byNam;
+	    bool		byNam;
+	    char		searchtxt[76];
+	    unsigned char	searchlen;
+	    Search::search_flags sflg;
     };
     inline ListBox::flags operator~(ListBox::flags a) { return static_cast<ListBox::flags>(~static_cast<unsigned>(a)); }
     inline ListBox::flags operator|(ListBox::flags a, ListBox::flags b) { return static_cast<ListBox::flags>(static_cast<unsigned>(a)|static_cast<unsigned>(b)); }

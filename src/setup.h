@@ -27,6 +27,8 @@ namespace	usr {
 	private:
 	    bool		select_codepage();
 	    void		paint(TWindow& twin);
+	    std::string		beyeGetColorSetName() const;
+	    std::string		beyeGetSyntaxName() const;
 
 	    static void		draw_prompt();
 

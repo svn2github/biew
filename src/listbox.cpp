@@ -122,9 +122,9 @@ void ListBox::Paint(TWindow& win,const std::vector<std::string>& names,
     win.refresh();
 }
 
-bool ListBox::_lb_searchtext(const char *str,const char *tmpl,unsigned searchlen,const int *cache, Search::search_flags flg) const
+bool ListBox::_lb_searchtext(const char *str,const char *tmpl,unsigned slen,const int *cache, Search::search_flags flg) const
 {
-    return search.strFind(str, strlen(str), tmpl, searchlen, cache, flg) ? true : false;
+    return search.strFind(str, strlen(str), tmpl, slen, cache, flg) ? true : false;
 }
 
 template<class Base, class T>
@@ -282,10 +282,6 @@ restart:
 	    break;
 	    case KE_F(7): /** perform binary search in list */
 	    case KE_SHIFT_F(7): {
-		static char searchtxt[21] = "";
-		static unsigned char searchlen = 0;
-		static Search::search_flags sflg = Search::None;
-
 		if (!(ch==KE_SHIFT_F(7) && searchlen) &&
 		    !search.dialog(Search::Simple,searchtxt,&searchlen,sflg)) break;
 
@@ -375,6 +371,13 @@ int ListBox::run(const char** names,unsigned nlist,const std::string& title,flag
     return run(v,title,assel,defsel);
 }
 
-ListBox::ListBox(BeyeContext& bc):bctx(bc),search(*new(zeromem) Search(bc)) {}
+ListBox::ListBox(BeyeContext& bc)
+	:bctx(bc)
+	,search(*new(zeromem) Search(bc))
+	,searchlen(0)
+	,sflg(Search::None)
+{
+    searchtxt[0]='\0';
+}
 ListBox::~ListBox() { delete &search; }
 } // namespace	usr
