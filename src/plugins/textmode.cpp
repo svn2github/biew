@@ -906,11 +906,9 @@ void TextMode::paint_search(const char* cptr,unsigned int shift,int i,int size,i
     }
     save = search.found_start();
     savee= search.found_end();
-    search.found_start() = tlines[i].st + shift + sh/cp_symb_len;
-    search.found_end() = tlines[i].st + shift + she/cp_symb_len;
+    search.set_found(tlines[i].st + shift + sh/cp_symb_len,tlines[i].st + shift + she/cp_symb_len);
     search.hilight(main_wnd,tlines[i].st + shift,0,size,i,cptr,Search::HL_Normal);
-    search.found_start() = save;
-    search.found_end() = savee;
+    search.set_found(save,savee);
 }
 
 void TextMode::drawBound(TWindow& w,int x,int y,char ch) const

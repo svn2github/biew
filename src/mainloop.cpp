@@ -114,7 +114,7 @@ void BeyeContext::main_loop()
 	    case KE_F(3):
 		if(new_source()) {
 		    ch = KE_SUPERKEY;
-		    s.found_start() = s.found_end(); ch = KE_SUPERKEY;
+		    s.reset();
 		    PaintTitle();
 		}
 		break;
@@ -164,12 +164,13 @@ void BeyeContext::main_loop()
 	    case KE_SHIFT_F(5): nfp = WhereAMI(nfp); break;
 	    case KE_F(6):
 		bm_file().reread();
-		s.found_start() = s.found_end(); ch = KE_SUPERKEY;
+		s.reset();
+		ch = KE_SUPERKEY;
 		PaintTitle();
 		break;
 	    case KE_SHIFT_F(6): select_sysinfo(); break;
-	    case KE_F(7): nfp = s.search(false); ch = KE_JUSTFIND; break;
-	    case KE_SHIFT_F(7): nfp = s.search(true); ch = KE_JUSTFIND; break;
+	    case KE_F(7): nfp = s.run(false); ch = KE_JUSTFIND; break;
+	    case KE_SHIFT_F(7): nfp = s.run(true); ch = KE_JUSTFIND; break;
 	    case KE_F(8):
 		    nfp = bin_format().show_header();
 		    break;
@@ -182,7 +183,8 @@ void BeyeContext::main_loop()
 		    break;
 	    case KE_SHIFT_F(10):
 		if(FileUtils()) {
-		    s.found_start() = s.found_end(); ch = KE_SUPERKEY;
+		    s.reset();
+		    ch = KE_SUPERKEY;
 		    PaintTitle();
 		}
 		break;

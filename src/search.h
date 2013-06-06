@@ -25,6 +25,7 @@ namespace	usr {
     typedef unsigned tRelCoord;
     class TWindow;
     class BeyeContext;
+    class Ini_Profile;
     class Search : public Opaque {
 	public:
 	    enum dialog_flags {
@@ -86,7 +87,7 @@ namespace	usr {
 		     * @return             new offset on successful search and
 					   current offset otherwise
 		    **/
-	    virtual __filesize_t	search( bool is_continue );
+	    virtual __filesize_t	run( bool is_continue );
 
 	    virtual int			is_inline(__filesize_t cp,int width) const;
 
@@ -95,14 +96,16 @@ namespace	usr {
 
 	    virtual void		set_flags(search_flags);
 	    virtual search_flags	get_flags() const;
-	    virtual void		assign(const char* buffer,size_t sz);
 	    virtual const unsigned char*buff() const { return search_buff; }
 	    virtual unsigned char	length() const { return search_len; }
 
-	    virtual __filesize_t&	found_start() { return FoundTextSt; }
-	    virtual __filesize_t&	found_end() { return FoundTextEnd; }
-	    virtual const __filesize_t&	found_start() const { return FoundTextSt; }
-	    virtual const __filesize_t&	found_end() const { return FoundTextEnd; }
+	    virtual __filesize_t	found_start() const { return FoundTextSt; }
+	    virtual __filesize_t	found_end() const { return FoundTextEnd; }
+	    virtual void		set_found(__filesize_t start,__filesize_t end);
+	    virtual void		reset();
+
+	    virtual void		read_ini(Ini_Profile&);	/**< reads beye.ini file if need */
+	    virtual void		save_ini(Ini_Profile&);	/**< writes to beye.ini if need */
 	private:
 	    __filesize_t	___lfind(const char *sfrom,
 					    unsigned slen,

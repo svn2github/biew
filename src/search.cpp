@@ -539,7 +539,7 @@ bool Search::dialog(dialog_flags _flags, char* searchbuff,
     return ret;
 }
 
-__filesize_t Search::search( bool is_continue )
+__filesize_t Search::run( bool is_continue )
 {
     __filesize_t found;
     __filesize_t fmem,lmem,slen, flen;
@@ -575,12 +575,14 @@ __filesize_t Search::search( bool is_continue )
     return fmem;
 }
 
-void Search::assign(const char* data,size_t sz) {
-    ::memcpy(search_buff,data,std::min(sz,size_t(MAX_SEARCH_SIZE)));
-}
-
 void Search::set_flags(Search::search_flags f) { beyeSearchFlg = f; }
 Search::search_flags Search::get_flags() const { return beyeSearchFlg; }
+
+void Search::set_found(__filesize_t start,__filesize_t end) {
+    FoundTextSt = start;
+    FoundTextEnd = end;
+}
+void Search::reset() { FoundTextSt = FoundTextEnd; }
 
 int Search::is_inline(__filesize_t cp,int width) const
 {
@@ -615,6 +617,34 @@ void Search::hilight(TWindow& out,__filesize_t cfp,tRelCoord minx,tRelCoord maxx
 	memset(&attrs[st],attr,end-st);
     }
     out.write(minx+1,y+1,chars,attrs,width);
+}
+
+void Search::read_ini(Ini_Profile& ini) {
+    std::string stmp=bctx.read_profile_string(ini,"Beye","Search","String","");
+    ::strcpy((char*)search_buff,stmp.c_str());
+    search_len = stmp.length();
+    stmp=bctx.read_profile_string(ini,"Beye","Search","Case","off");
+    beyeSearchFlg=stricmp(stmp.c_str(),"on") == 0 ? Search::Case_Sens : Search::None;
+    stmp=bctx.read_profile_string(ini,"Beye","Search","Word","off");
+    if(stricmp(stmp.c_str(),"on") == 0) beyeSearchFlg |= Search::Word_Only;
+    stmp=bctx.read_profile_string(ini,"Beye","Search","Backward","off");
+    if(stricmp(stmp.c_str(),"on") == 0) beyeSearchFlg |= Search::Reverse;
+    stmp=bctx.read_profile_string(ini,"Beye","Search","Template","off");
+    if(stricmp(stmp.c_str(),"on") == 0) beyeSearchFlg |= Search::Wild_Cards;
+    stmp=bctx.read_profile_string(ini,"Beye","Search","UsePlugin","off");
+    if(stricmp(stmp.c_str(),"on") == 0) beyeSearchFlg |= Search::Plugins;
+    stmp=bctx.read_profile_string(ini,"Beye","Search","AsHex","off");
+    if(stricmp(stmp.c_str(),"on") == 0) beyeSearchFlg |= Search::As_Hex;
+}
+void Search::save_ini(Ini_Profile& ini) {
+    search_buff[search_len] = '\0';
+    bctx.write_profile_string(ini,"Beye","Search","String",(char *)search_buff);
+    bctx.write_profile_string(ini,"Beye","Search","Case",beyeSearchFlg & Search::Case_Sens ? "on" : "off");
+    bctx.write_profile_string(ini,"Beye","Search","Word",beyeSearchFlg & Search::Word_Only ? "on" : "off");
+    bctx.write_profile_string(ini,"Beye","Search","Backward",beyeSearchFlg & Search::Reverse ? "on" : "off");
+    bctx.write_profile_string(ini,"Beye","Search","Template",beyeSearchFlg & Search::Wild_Cards ? "on" : "off");
+    bctx.write_profile_string(ini,"Beye","Search","UsePlugin",beyeSearchFlg & Search::Plugins ? "on" : "off");
+    bctx.write_profile_string(ini,"Beye","Search","AsHex",beyeSearchFlg & Search::As_Hex ? "on" : "off");
 }
 
 } // namespace	usr
