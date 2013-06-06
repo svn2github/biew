@@ -47,7 +47,7 @@ namespace	usr {
     };
     class Coff_Parser : public Binary_Parser {
 	public:
-	    Coff_Parser(binary_stream&,CodeGuider&,udn&);
+	    Coff_Parser(BeyeContext& b,binary_stream&,CodeGuider&,udn&);
 	    virtual ~Coff_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -84,7 +84,7 @@ namespace	usr {
 	    inline uint16_t		COFF_WORD(const uint8_t* cval) const __PURE_FUNC__ { return (uint16_t)(*(const uint16_t *)(const uint8_t *)cval); }
 	    inline uint32_t		COFF_DWORD(const uint8_t* cval) const __PURE_FUNC__ { return (uint32_t)(*(const uint32_t *)(const uint8_t *)cval); }
 
-	    struct external_filehdr	coff386hdr;
+	    external_filehdr	coff386hdr;
 	    AOUTHDR		coff386ahdr;
 	    SCNHDR*		coff386so;
 	    uint_fast16_t	nsections;
@@ -94,6 +94,7 @@ namespace	usr {
 	    char		__codelen;
 	    std::set<RELOC_COFF386>	RelocCoff386;
 
+	    BeyeContext&	bctx;
 	    binary_stream&	main_handle;
 	    CodeGuider&		code_guider;
 	    udn&		_udn;
@@ -213,9 +214,9 @@ __filesize_t Coff_Parser::action_F10()
     binary_stream* handle;
     unsigned nnames;
     __filesize_t fpos,off;
-    fpos = beye_context().tell();
+    fpos = bctx.tell();
     nnames = COFF_WORD(coff386hdr.f_nscns);
-    if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
+    if(!nnames) { bctx.NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
     handle = coff_cache;
     off = sizeof(coff386hdr);
     if(COFF_WORD(coff386hdr.f_opthdr)) off += COFF_WORD(coff386hdr.f_opthdr);
@@ -246,7 +247,7 @@ __filesize_t Coff_Parser::show_header() const
   __filesize_t fpos,entry,v_entry;
   unsigned keycode;
   TWindow * w;
-  fpos = beye_context().tell();
+  fpos = bctx.tell();
   v_entry = entry = 0L;
   if(*(unsigned short *)coff386ahdr.magic == ZMAGIC)
   {
@@ -410,13 +411,13 @@ __filesize_t Coff_Parser::CalcEntryCoff(unsigned long idx,bool display_msg) cons
   }
   else
     if(display_msg)
-      beye_context().ErrMessageBox(NO_ENTRY,"");
+      bctx.ErrMessageBox(NO_ENTRY,"");
   return fpos;
 }
 
 __filesize_t Coff_Parser::action_F7()
 {
-    __filesize_t fpos = beye_context().tell();
+    __filesize_t fpos = bctx.tell();
     int ret;
     std::string title = "Symbol Table";
     ssize_t nnames = COFF_DWORD(coff386hdr.f_nsyms);
@@ -426,7 +427,7 @@ __filesize_t Coff_Parser::action_F7()
     w = PleaseWaitWnd();
     std::vector<std::string> objs = coffSymTabReadItems(main_handle,nnames);
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
     ret = ListBox(objs,title,flags,-1);
 exit:
     if(ret != -1) fpos = CalcEntryCoff(ret,true);
@@ -559,8 +560,9 @@ try_pub:
     return ret;
 }
 
-Coff_Parser::Coff_Parser(binary_stream& h,CodeGuider& _code_guider,udn& u)
-	    :Binary_Parser(h,_code_guider,u)
+Coff_Parser::Coff_Parser(BeyeContext& b,binary_stream& h,CodeGuider& _code_guider,udn& u)
+	    :Binary_Parser(b,h,_code_guider,u)
+	    ,bctx(b)
 	    ,main_handle(h)
 	    ,code_guider(_code_guider)
 	    ,_udn(u)
@@ -618,12 +620,12 @@ bool Coff_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 
 __filesize_t Coff_Parser::action_F1()
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(10002);
 	bhelp.close();
     }
-    return beye_context().tell();
+    return bctx.tell();
 }
 
 std::string Coff_Parser::coff_ReadPubName(binary_stream& b_cache,const symbolic_information& it) const
@@ -727,7 +729,7 @@ Object_Info Coff_Parser::get_object_attribute(__filesize_t pa) {
 
 int Coff_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) Coff_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) Coff_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info coff_info = {
     "coff-i386 (Common Object File Format)",	/**< plugin name */
     query_interface

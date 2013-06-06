@@ -33,7 +33,7 @@ using namespace	usr;
 namespace	usr {
     class BMP_Parser : public Binary_Parser {
 	public:
-	    BMP_Parser(binary_stream& h,CodeGuider&,udn&);
+	    BMP_Parser(BeyeContext& b,binary_stream& h,CodeGuider&,udn&);
 	    virtual ~BMP_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -41,14 +41,16 @@ namespace	usr {
 	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 	private:
+	    BeyeContext&	bctx;
 	    binary_stream&	main_handle;
 	    udn&		_udn;
     };
 static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
 const char* BMP_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-BMP_Parser::BMP_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
-	    :Binary_Parser(h,code_guider,u)
+BMP_Parser::BMP_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(b,h,code_guider,u)
+	    ,bctx(b)
 	    ,main_handle(h)
 	    ,_udn(u)
 {
@@ -65,7 +67,7 @@ __filesize_t BMP_Parser::show_header() const
  TWindow * hwnd;
  BITMAPINFOHEADER bmph;
  __filesize_t fpos,fpos2;
- fpos = beye_context().tell();
+ fpos = bctx.tell();
  main_handle.seek(2,binary_stream::Seek_Set);
  /*filesize = */main_handle.read(type_dword);
  main_handle.seek(4,binary_stream::Seek_Cur);
@@ -98,7 +100,7 @@ __filesize_t BMP_Parser::show_header() const
  return fpos;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) BMP_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) BMP_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info bmp_info = {
     "BitMaP file format",	/**< plugin name */
     query_interface

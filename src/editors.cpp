@@ -37,7 +37,7 @@ using namespace	usr;
 namespace	usr {
 void Editor::show_help() const
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(2);
 	bhelp.close();
@@ -48,7 +48,7 @@ void Editor::paint_title( int shift,bool use_shift ) const
 {
     unsigned eidx;
     char byte,obyte;
-    TWindow& twnd = beye_context().title_wnd();
+    TWindow& twnd = bctx.title_wnd();
     twnd.freeze();
     twnd.goto_xy(1,1);
     twnd.clreol();
@@ -86,17 +86,17 @@ void Editor::init(unsigned width,const unsigned char *buff,unsigned size)
 
     memset(EditorMem.buff,TWC_DEF_FILLER,msize);
     memset(EditorMem.save,TWC_DEF_FILLER,msize);
-    flen = beye_context().flength();
-    edit_cp = cfp = beye_context().tell();
+    flen = bctx.flength();
+    edit_cp = cfp = bctx.tell();
     EditorMem.width = width;
     if(buff) {
 	EditorMem.size = size;
 	memcpy(EditorMem.buff,buff,size);
     } else {
 	EditorMem.size = (unsigned)((__filesize_t)msize > (flen-cfp) ? (flen-cfp) : msize);
-	beye_context().bm_file().seek(cfp,binary_stream::Seek_Set);
-	beye_context().bm_file().read(EditorMem.buff,EditorMem.size);
-	beye_context().bm_file().seek(cfp,binary_stream::Seek_Set);
+	bctx.bm_file().seek(cfp,binary_stream::Seek_Set);
+	bctx.bm_file().read(EditorMem.buff,EditorMem.size);
+	bctx.bm_file().seek(cfp,binary_stream::Seek_Set);
     }
     memcpy(EditorMem.save,EditorMem.buff,EditorMem.size);
     /** initialize EditorMem.alen */
@@ -107,13 +107,15 @@ void Editor::init(unsigned width,const unsigned char *buff,unsigned size)
     }
 }
 
-Editor::Editor(TWindow& w,unsigned width)
-	:edit_cp(0)
+Editor::Editor(BeyeContext& bc,TWindow& w,unsigned width)
+	:bctx(bc)
+	,edit_cp(0)
 	,edit_XX(0)
 	,ewnd(w)
 { init(width,NULL,0); }
-Editor::Editor(TWindow& w,unsigned width,const unsigned char *buff,unsigned size)
-	:edit_cp(0)
+Editor::Editor(BeyeContext& bc,TWindow& w,unsigned width,const unsigned char *buff,unsigned size)
+	:bctx(bc)
+	,edit_cp(0)
 	,edit_XX(0)
 	,ewnd(w)
 { init(width,buff,size); }
@@ -137,7 +139,7 @@ uint8_t Editor::get_template() const { return edit_XX; }
 
 void Editor::CheckBounds()
 {
-  tAbsCoord height = beye_context().main_wnd().client_height();
+  tAbsCoord height = bctx.main_wnd().client_height();
   if(edit_y < 0) edit_y = 0;
   if((unsigned)edit_y > height - 1) edit_y = height - 1;
   if(!EditorMem.alen[edit_y]) edit_y--;
@@ -146,7 +148,7 @@ void Editor::CheckBounds()
 
 void Editor::CheckYBounds()
 {
-  tAbsCoord height = beye_context().main_wnd().client_height();
+  tAbsCoord height = bctx.main_wnd().client_height();
   if(edit_y < 0) edit_y = 0;
   if((unsigned)edit_y > height - 1) edit_y = height - 1;
   while(!EditorMem.alen[edit_y]) edit_y--;
@@ -164,18 +166,18 @@ void Editor::save_context()
 {
   std::ofstream fs;
   std::string fname;
-  fname = beye_context().bm_file().filename();
+  fname = bctx.bm_file().filename();
   fs.open(fname.c_str(),std::ios_base::binary);
   if(!fs.is_open()) {
       err:
-      beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
+      bctx.errnoMessageBox(WRITE_FAIL,"",errno);
       return;
   }
   fs.seekp(edit_cp,std::ios_base::beg);
   fs.write((const char*)EditorMem.buff,EditorMem.size);
   if(!fs.good()) goto err;
   fs.close();
-  beye_context().bm_file().reread();
+  bctx.bm_file().reread();
 }
 
 bool Editor::default_navigation(int _lastbyte)
@@ -220,11 +222,11 @@ int Editor::run(TWindow* hexwnd)
     unsigned mlen;
     unsigned int _lastbyte;
     unsigned flags;
-    tAbsCoord height = beye_context().main_wnd().client_height();
+    tAbsCoord height = bctx.main_wnd().client_height();
     bool redraw;
     char attr = __ESS_HARDEDIT | __ESS_WANTRETURN;
     ewnd.set_color(browser_cset.edit.main);
-    beye_context().tconsole().mouse_set_state(false);
+    bctx.tconsole().mouse_set_state(false);
     for(i = 0;i < height;i++) {
 	for(j = 0;j < EditorMem.alen[i];j++) {
 	    unsigned eidx;
@@ -237,7 +239,7 @@ int Editor::run(TWindow* hexwnd)
 	    ewnd.clreol();
 	}
     }
-    beye_context().tconsole().mouse_set_state(true);
+    bctx.tconsole().mouse_set_state(true);
     paint_title(edit_y*EditorMem.width + edit_x,0);
     TWindow::set_cursor_type(TWindow::Cursor_Normal);
     redraw = true;

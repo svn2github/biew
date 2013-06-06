@@ -36,7 +36,7 @@ using namespace	usr;
 namespace	usr {
     class PharLap_Parser : public Binary_Parser {
 	public:
-	    PharLap_Parser(binary_stream&,CodeGuider&,udn&);
+	    PharLap_Parser(BeyeContext& b,binary_stream&,CodeGuider&,udn&);
 	    virtual ~PharLap_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -53,6 +53,7 @@ namespace	usr {
 	    std::vector<PLSegInfo>	__PLReadSegInfo(binary_stream& handle,size_t nnames) const;
 	    void			PLSegPaint(TWindow& win,const std::vector<PLSegInfo>& names,unsigned start) const;
 
+	    BeyeContext&		bctx;
 	    binary_stream&		main_handle;
 	    udn&			_udn;
 	    binary_stream*		pl_cache;
@@ -67,7 +68,7 @@ __filesize_t PharLap_Parser::show_header() const
   TWindow *w;
   unsigned keycode;
   char sign[3];
-  fpos = beye_context().tell();
+  fpos = bctx.tell();
   strncpy(sign,(char *)nph.plSignature,2);
   sign[2] = 0;
   w = CrtDlgWndnls(" New PharLap executable ",59,23);
@@ -172,8 +173,8 @@ __filesize_t PharLap_Parser::action_F10()
     __filesize_t fpos;
     if(nph.plSegInfoOffset && nph.plSegInfoSize) nnames = (unsigned)(nph.plSegInfoSize / sizeof(PLSegInfo));
     else                                           nnames = 0;
-    fpos = beye_context().tell();
-    if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Segment Info table "); return fpos; }
+    fpos = bctx.tell();
+    if(!nnames) { bctx.NotifyBox(NOT_ENTRY," Segment Info table "); return fpos; }
     handle.seek(nph.plSegInfoOffset,binary_stream::Seek_Set);
     std::vector<PLSegInfo> objs = __PLReadSegInfo(handle,nnames);
     if(!objs.empty()) {
@@ -242,8 +243,8 @@ __filesize_t PharLap_Parser::action_F9()
     __filesize_t fpos;
     if(nph.plRunTimeParms && nph.plRunTimeSize) nnames = (unsigned)(nph.plRunTimeSize / sizeof(PLRunTimeParms));
     else                                          nnames = 0;
-    fpos = beye_context().tell();
-    if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Run-time parameters "); return fpos; }
+    fpos = bctx.tell();
+    if(!nnames) { bctx.NotifyBox(NOT_ENTRY," Run-time parameters "); return fpos; }
     handle.seek(nph.plRunTimeParms,binary_stream::Seek_Set);
     std::vector<PLRunTimeParms> objs = __PLReadRunTime(handle,nnames);
     if(!objs.empty()) {
@@ -253,8 +254,9 @@ __filesize_t PharLap_Parser::action_F9()
     return fpos;
 }
 
-PharLap_Parser::PharLap_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
-	    :Binary_Parser(h,code_guider,u)
+PharLap_Parser::PharLap_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(b,h,code_guider,u)
+	    ,bctx(b)
 	    ,main_handle(h)
 	    ,_udn(u)
 	    ,pl_cache(&h)
@@ -290,17 +292,17 @@ bool PharLap_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 
 __filesize_t PharLap_Parser::action_F1()
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(10010);
 	bhelp.close();
     }
-    return beye_context().tell();
+    return bctx.tell();
 }
 
 int PharLap_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) PharLap_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) PharLap_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info pharlap_info = {
     "PharLap",	/**< plugin name */
     query_interface

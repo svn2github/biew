@@ -11,7 +11,7 @@ namespace	usr {
 
     class Binary_Parser : public Opaque {
 	public:
-	    Binary_Parser(binary_stream&,CodeGuider&,udn&) {}
+	    Binary_Parser(BeyeContext&,binary_stream&,CodeGuider&,udn&) {}
 	    virtual ~Binary_Parser() {}
 
 	    virtual const char*		prompt(unsigned idx) const = 0;   /**< on ALT-Fx selection */
@@ -86,7 +86,7 @@ namespace	usr {
 
     struct Binary_Parser_Info {
 	const char*	name;
-	Binary_Parser* (*query_interface)(binary_stream&,CodeGuider&,udn&);
+	Binary_Parser* (*query_interface)(BeyeContext&,binary_stream&,CodeGuider&,udn&);
     };
 
 

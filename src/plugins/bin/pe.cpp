@@ -115,7 +115,7 @@ namespace	usr {
 
     class PE_Parser : public MZ_Parser {
 	public:
-	    PE_Parser(binary_stream&,CodeGuider&,udn&);
+	    PE_Parser(BeyeContext& b,binary_stream&,CodeGuider&,udn&);
 	    virtual ~PE_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -426,7 +426,7 @@ void PE_Parser::PaintNewHeaderPE_2(TWindow& w,__filesize_t& entry_PE) const
 	   ,reader->header().peStackCommitSize
 	   ,reader->header().peHeapReserveSize
 	   ,reader->header().peHeapCommitSize);
-  if ((entry_PE=CalcOverlayOffset(MZ_Parser::is_new_exe(beye_context().sc_bm_file()))) != -1) {
+  if ((entry_PE=CalcOverlayOffset(MZ_Parser::is_new_exe(bctx().sc_bm_file()))) != -1) {
     w.set_color(dialog_cset.entry);
     w.printf("\nOverlay                        = %08lXH", entry_PE); w.clreol();
     w.set_color(dialog_cset.main);
@@ -457,7 +457,7 @@ void PE_Parser::PaintNewHeaderPE(TWindow& win,const std::vector<std::string>& pt
 __filesize_t PE_Parser::action_F8()
 {
     __fileoff_t fpos;
-    fpos = beye_context().tell();
+    fpos = bctx().tell();
     std::vector<std::string> v;
     v.push_back("");
     v.push_back("");
@@ -564,9 +564,9 @@ __filesize_t PE_Parser::action_F10()
     __filesize_t fpos;
     binary_stream& handle = *pe_cache;
     unsigned nnames;
-    fpos = beye_context().tell();
+    fpos = bctx().tell();
     nnames = pe.peObjects;
-    if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
+    if(!nnames) { bctx().NotifyBox(NOT_ENTRY," Objects Table "); return fpos; }
     handle.seek(0x18 + pe.peNTHdrSize + headshift(),binary_stream::Seek_Set);
     std::vector<PE_OBJECT> objs = __ReadObjectsPE(handle,nnames);
     if(!objs.empty()) {
@@ -701,7 +701,7 @@ void PE_Parser::ShowModContextPE(const std::string& title) const {
     TWindow* w = PleaseWaitWnd();
     std::vector<std::string> objs = __ReadImpContPE(main_handle(),nnames);
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,title); goto exit; }
     ListBox(objs,title,flags,-1);
 exit:
     return;
@@ -713,8 +713,8 @@ __filesize_t PE_Parser::action_F2()
     char petitle[80];
     unsigned nnames;
     __filesize_t phys,fret;
-    fret = beye_context().tell();
-    if(!peDir[PE_IMPORT].rva) { not_found: beye_context().NotifyBox(NOT_ENTRY," Module References "); return fret; }
+    fret = bctx().tell();
+    if(!peDir[PE_IMPORT].rva) { not_found: bctx().NotifyBox(NOT_ENTRY," Module References "); return fret; }
     handle.seek(0L,binary_stream::Seek_Set);
     phys = RVA2Phys(peDir[PE_IMPORT].rva);
     if(!(nnames = GetImportCountPE(handle,phys))) goto not_found;
@@ -819,27 +819,27 @@ __filesize_t  PE_Parser::CalcEntryPE(unsigned ordinal,bool dispmsg) const
  __filesize_t fret,rva;
  unsigned ord;
  binary_stream& handle = *pe_cache1;
- fret = beye_context().tell();
+ fret = bctx().tell();
  {
    __filesize_t eret;
    rva = RVA2Phys(et.etAddressTableRVA);
    ord = (unsigned)ordinal - (unsigned)et.etOrdinalBase;
    eret = fioReadDWord2Phys(handle,rva + 4*ord,binary_stream::Seek_Set);
    if(eret && eret < main_handle().flength()) fret = eret;
-   else if(dispmsg) beye_context().ErrMessageBox(NO_ENTRY,BAD_ENTRY);
+   else if(dispmsg) bctx().ErrMessageBox(NO_ENTRY,BAD_ENTRY);
  }
  return fret;
 }
 
 __filesize_t PE_Parser::action_F3()
 {
-    __filesize_t fpos = beye_context().tell();
+    __filesize_t fpos = bctx().tell();
     int ret;
     unsigned ordinal;
     __filesize_t addr;
     char exp_nam[256];
     std::string exp_buf;
-    fpos = beye_context().tell();
+    fpos = bctx().tell();
     strcpy(exp_nam,EXP_TABLE);
     if(peDir[PE_EXPORT].rva) {
 	addr = RVA2Phys(peDir[PE_EXPORT].rva);
@@ -868,7 +868,7 @@ __filesize_t PE_Parser::action_F3()
     w = PleaseWaitWnd();
     std::vector<std::string> objs = PEExportReadItems(main_handle(),nnames);
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,title); goto exit; }
     ret = ListBox(objs,title,flags,-1);
     if(ret != -1) {
 	const char* cptr;
@@ -920,7 +920,7 @@ std::vector<std::string> PE_Parser::PEReadRVAs() const
 
 __filesize_t PE_Parser::action_F9()
 {
-    __filesize_t fpos = beye_context().tell();
+    __filesize_t fpos = bctx().tell();
     int ret;
     std::string title = " Directory Entry       RVA           size ";
     int flags = LB_SELECTIVE | LB_USEACC;
@@ -929,7 +929,7 @@ __filesize_t PE_Parser::action_F9()
     w = PleaseWaitWnd();
     std::vector<std::string> objs = PEReadRVAs();
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,title); goto exit; }
     ret = ListBox(objs,title,flags,-1);
 exit:
     if (ret!=-1 && peDir[ret].rva) fpos = RVA2Phys(peDir[ret].rva);
@@ -1199,8 +1199,8 @@ bool PE_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift
   return retrf;
 }
 
-PE_Parser::PE_Parser(binary_stream& h,CodeGuider& __code_guider,udn& u)
-	:MZ_Parser(h,__code_guider,u)
+PE_Parser::PE_Parser(BeyeContext& b,binary_stream& h,CodeGuider& __code_guider,udn& u)
+	:MZ_Parser(b,h,__code_guider,u)
 	,pe_cache1(&h)
 	,pe_cache2(&h)
 	,pe_cache3(&h)
@@ -1271,12 +1271,12 @@ Bin_Format::bitness PE_Parser::query_bitness(__filesize_t off) const
 
 __filesize_t PE_Parser::action_F1()
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx());
     if(bhelp.open(true)) {
 	bhelp.run(10009);
 	bhelp.close();
     }
-    return beye_context().tell();
+    return bctx().tell();
 }
 
 bool PE_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
@@ -1452,7 +1452,7 @@ int PE_Parser::query_platform() const {
     return id;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) PE_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) PE_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info pe_info = {
     "PE (Portable Executable)",	/**< plugin name */
     query_interface

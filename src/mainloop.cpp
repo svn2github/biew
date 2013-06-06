@@ -38,7 +38,7 @@ void BeyeContext::draw_title(__filesize_t lastbyte) const
 {
   unsigned percent;
   __filesize_t flen;
-  flen = beye_context().flength();
+  flen = flength();
   percent = flen ? (unsigned)(( lastbyte*100 )/flen) : 100;
   if(percent > 100) percent = 100;
   title_wnd().goto_xy(title_wnd().client_width()-4,1);
@@ -176,7 +176,7 @@ void BeyeContext::main_loop()
 		    break;
 	    case KE_SHIFT_F(8): select_tool(); break;
 	    case KE_F(9): {
-			class Setup* setup = new class Setup;
+			class Setup* setup = new class Setup(*this);
 			setup->run();
 			delete setup;
 		    }

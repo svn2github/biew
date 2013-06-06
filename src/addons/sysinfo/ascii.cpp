@@ -34,13 +34,15 @@ using namespace	usr;
 namespace	usr {
     class ASCII_Addon : public Addon {
 	public:
-	    ASCII_Addon();
+	    ASCII_Addon(BeyeContext& bc);
 	    virtual ~ASCII_Addon();
 	
 	    virtual void	run();
+	private:
+	    BeyeContext&	bctx;
     };
 
-ASCII_Addon::ASCII_Addon() {}
+ASCII_Addon::ASCII_Addon(BeyeContext& bc):Addon(bc),bctx(bc) {}
 ASCII_Addon::~ASCII_Addon() {}
 
 void ASCII_Addon::run()
@@ -73,7 +75,7 @@ void ASCII_Addon::run()
     delete hwnd;
 }
 
-static Addon* query_interface() { return new(zeromem) ASCII_Addon(); }
+static Addon* query_interface(BeyeContext& bc) { return new(zeromem) ASCII_Addon(bc); }
 extern const Addon_Info AsciiTable = {
     "~ASCII table",
     query_interface

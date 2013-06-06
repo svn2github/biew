@@ -43,7 +43,7 @@ bool udn::add_item() {
     udn_record item;
     std::set<udn_record>::const_iterator prev=udn_list.end();
     char ud_name[256],prompt[256];
-    off = beye_context().tell();
+    off = bctx.tell();
     sprintf(prompt," Name for %08X offset: ",off);
     ud_name[0]='\0';
     if(!udn_list.empty()) {
@@ -85,14 +85,14 @@ std::vector<std::string> udn::read_items(size_t nnames)
 
 bool udn::delete_item() {
     int ret=-1;
-    if(udn_list.empty()) { beye_context().ErrMessageBox("UDN list is empty!",""); return false; }
+    if(udn_list.empty()) { bctx.ErrMessageBox("UDN list is empty!",""); return false; }
     std::string title = " User-defined Names (aka bookmarks) ";
     ssize_t nnames = udn_list.size();
     int flags = LB_SELECTIVE;
     TWindow* w = PleaseWaitWnd();
     std::vector<std::string> objs = read_items(nnames);
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
     ret = ListBox(objs,title,flags,-1);
 exit:
     if(ret!=-1) {
@@ -107,14 +107,14 @@ exit:
 
 bool udn::select(__filesize_t& off) {
     int ret=-1;
-    if(udn_list.empty()) { beye_context().ErrMessageBox("UDN list is empty!",""); return false; }
+    if(udn_list.empty()) { bctx.ErrMessageBox("UDN list is empty!",""); return false; }
     std::string title = " User-defined Names (aka bookmarks) ";
     ssize_t nnames = udn_list.size();
     int flags = LB_SELECTIVE;
     TWindow* w = PleaseWaitWnd();
     std::vector<std::string> objs = read_items(nnames);
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
     ret = ListBox(objs,title,flags,-1);
 exit:
     if(ret!=-1) {
@@ -149,7 +149,7 @@ bool udn::__save_list() {
 	out.open(udn_fname.c_str(),std::ios_base::out);
 	if(out.is_open()) {
 	    out<<"; This is an automatically generated list of user-defined names"<<std::endl;
-	    out<<"; for: "<<beye_context().bm_file().filename()<<std::endl;
+	    out<<"; for: "<<bctx.bm_file().filename()<<std::endl;
 	    out<<"; by Beye-"<<BEYE_VERSION<<std::endl;
 	    for(std::set<udn_record>::const_iterator it=udn_list.begin();it!=udn_list.end();it++)
 		out<<std::hex<<std::setfill('0')<<std::setw(16)
@@ -161,7 +161,7 @@ bool udn::__save_list() {
 	else {
 	    char stmp[256];
 	    sprintf(stmp,"Can't open file: %s\n",strerror(errno));
-	    beye_context().ErrMessageBox(udn_fname,stmp);
+	    bctx.ErrMessageBox(udn_fname,stmp);
 	}
     }
     return false;
@@ -173,7 +173,7 @@ bool udn::save_list() {
     if(GetStringDlg(tmps," Please enter file name: "," [ENTER] - Proceed ",NAME_MSG)) {
 	udn_fname=tmps;
 	if(!udn_list.empty())	return __save_list();
-	else		beye_context().ErrMessageBox("UDN list is empty!","");
+	else		bctx.ErrMessageBox("UDN list is empty!","");
     }
     return false;
 }
@@ -196,7 +196,7 @@ bool udn::__load_list() {
 		if(!brk) {
 		    char stmp[256];
 		    sprintf(stmp,"Can't recognize line: %u",i);
-		    beye_context().ErrMessageBox(stmp,"");
+		    bctx.ErrMessageBox(stmp,"");
 		    return true;
 		}
 		*brk='\0';
@@ -216,7 +216,7 @@ bool udn::__load_list() {
 	else {
 	    char stmp[256];
 	    sprintf(stmp,"Can't open file: %s\n",strerror(errno));
-	    beye_context().ErrMessageBox(udn_fname,stmp);
+	    bctx.ErrMessageBox(udn_fname,stmp);
     }
     return false;
 }
@@ -227,7 +227,7 @@ bool udn::load_list() {
     {
 	udn_fname=tmps;
 	if(!udn_list.empty())	return __load_list();
-	else		beye_context().ErrMessageBox("UDN list is empty!","");
+	else		bctx.ErrMessageBox("UDN list is empty!","");
     }
     return false;
 }
@@ -269,23 +269,23 @@ bool udn::names() {
 }
 
 void udn::read_ini(Ini_Profile& ini) {
-    if(beye_context().is_valid_ini_args()) {
-	udn_fname=beye_context().read_profile_string(ini,"Beye","Browser","udn_list","");
+    if(bctx.is_valid_ini_args()) {
+	udn_fname=bctx.read_profile_string(ini,"Beye","Browser","udn_list","");
 	if(!udn_fname.empty()) __load_list();
     }
 }
 
-udn::udn() {}
+udn::udn(BeyeContext& bc):bctx(bc) {}
 udn::~udn() {}
 
 void udn::save_ini(Ini_Profile& ini) {
     if(!udn_list.empty()) {
 	if(udn_modified) {
-	    beye_context().WarnMessageBox("User-defined list of names was not saved",NULL);
+	    bctx.WarnMessageBox("User-defined list of names was not saved",NULL);
 	    save_list();
 	}
 	udn_list.clear();
     }
-    beye_context().write_profile_string(ini,"Beye","Browser","udn_list",udn_fname);
+    bctx.write_profile_string(ini,"Beye","Browser","udn_list",udn_fname);
 }
 } // namespace	usr

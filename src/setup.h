@@ -20,7 +20,7 @@
 namespace	usr {
     class Setup : public Opaque {
 	public:
-	    Setup();
+	    Setup(BeyeContext& bc);
 	    virtual ~Setup();
 
 	    virtual void	run();
@@ -30,6 +30,7 @@ namespace	usr {
 
 	    static void		draw_prompt();
 
+	    BeyeContext&	bctx;
 	    unsigned		default_cp;
 	    static const char*	setuptxt[];
 	    static const char*	cp_list[];

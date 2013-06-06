@@ -36,7 +36,7 @@ using namespace	usr;
 namespace	usr {
     class PPC_Disassembler : public Disassembler {
 	public:
-	    PPC_Disassembler(const Bin_Format& b,binary_stream& h,DisMode& parent);
+	    PPC_Disassembler(BeyeContext& bc,const Bin_Format& b,binary_stream& h,DisMode& parent);
 	    virtual ~PPC_Disassembler();
 	
 	    virtual const char*	prompt(unsigned idx) const;
@@ -61,6 +61,7 @@ namespace	usr {
 						unsigned long flags,
 						const ppc_arg *args) const;
 
+	    BeyeContext&	bctx;
 	    DisMode&		parent;
 	    binary_stream&	main_handle;
 	    const Bin_Format&	bin_format;
@@ -1496,7 +1497,7 @@ DisasmRet PPC_Disassembler::disassembler(__filesize_t ulShift,
 
 bool PPC_Disassembler::action_F1()
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(20050);
 	bhelp.close();
@@ -1511,7 +1512,7 @@ void PPC_Disassembler::show_short_help() const
     unsigned evt;
     size_t i,sz;
     TWindow* hwnd;
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
 
     if(!bhelp.open(true)) return;
     binary_packet msgAsmText = bhelp.load_item(20041);
@@ -1621,8 +1622,9 @@ bool PPC_Disassembler::action_F5()
   return false;
 }
 
-PPC_Disassembler::PPC_Disassembler(const Bin_Format& b,binary_stream& h,DisMode& _parent )
-		:Disassembler(b,h,_parent)
+PPC_Disassembler::PPC_Disassembler(BeyeContext& bc,const Bin_Format& b,binary_stream& h,DisMode& _parent )
+		:Disassembler(bc,b,h,_parent)
+		,bctx(bc)
 		,parent(_parent)
 		,main_handle(h)
 		,bin_format(b)
@@ -1641,15 +1643,15 @@ PPC_Disassembler::~PPC_Disassembler()
 void PPC_Disassembler::read_ini( Ini_Profile& ini )
 {
   std::string tmps;
-  if(beye_context().is_valid_ini_args())
+  if(bctx.is_valid_ini_args())
   {
-    tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode3","1");
+    tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode3","1");
     ppcBitness = Bin_Format::bitness((int)strtoul(tmps.c_str(),NULL,10));
     if(ppcBitness > 1 && ppcBitness != Bin_Format::Auto) ppcBitness = Bin_Format::Use16;
-    tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode4","1");
+    tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode4","1");
     ppcBigEndian = (int)strtoul(tmps.c_str(),NULL,10);
     if(ppcBigEndian > 1) ppcBigEndian = 0;
-    tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode5","0");
+    tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode5","0");
     ppcDialect = (int)strtoul(tmps.c_str(),NULL,10);
     if(ppcDialect > 1) ppcDialect = 0;
   }
@@ -1659,11 +1661,11 @@ void PPC_Disassembler::save_ini( Ini_Profile& ini )
 {
   char tmps[10];
   sprintf(tmps,"%i",ppcBitness);
-  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
+  bctx.write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
   sprintf(tmps,"%i",ppcBigEndian);
-  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode4",tmps);
+  bctx.write_profile_string(ini,"Beye","Browser","SubSubMode4",tmps);
   sprintf(tmps,"%i",ppcDialect);
-  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode5",tmps);
+  bctx.write_profile_string(ini,"Beye","Browser","SubSubMode5",tmps);
 }
 
 const char* PPC_Disassembler::prompt(unsigned idx) const {
@@ -1677,7 +1679,7 @@ const char* PPC_Disassembler::prompt(unsigned idx) const {
     return "";
 }
 
-static Disassembler* query_interface(const Bin_Format& b,binary_stream& h,DisMode& _parent) { return new(zeromem) PPC_Disassembler(b,h,_parent); }
+static Disassembler* query_interface(BeyeContext& bc,const Bin_Format& b,binary_stream& h,DisMode& _parent) { return new(zeromem) PPC_Disassembler(bc,b,h,_parent); }
 
 extern const Disassembler_Info ppc_disassembler_info = {
     DISASM_CPU_PPC,

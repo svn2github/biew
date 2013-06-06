@@ -32,7 +32,7 @@ using namespace	usr;
 namespace	usr {
     class DigitalConverter_Addon : public Addon {
 	public:
-	    DigitalConverter_Addon();
+	    DigitalConverter_Addon(BeyeContext& bc);
 	    virtual ~DigitalConverter_Addon();
 	
 	    virtual void	run();
@@ -41,9 +41,11 @@ namespace	usr {
 	    int			Dig2Str(uintmax_t value,char * buff,int action) const;
 	    uintmax_t		Str2Dig(const char * buff,int action) const;
 	    void		DCStaticPaint(TWindow * wdlg,char * wbuff,intmax_t digit,unsigned *mlen) const;
+
+	    BeyeContext&	bctx;
     };
 
-DigitalConverter_Addon::DigitalConverter_Addon() {}
+DigitalConverter_Addon::DigitalConverter_Addon(BeyeContext& bc):Addon(bc),bctx(bc) {}
 DigitalConverter_Addon::~DigitalConverter_Addon() {}
 
 int DigitalConverter_Addon::GetFullBin(uintmax_t value,char * buff) const
@@ -230,7 +232,7 @@ void DigitalConverter_Addon::run()
  for(i = 0;i < 5;i++) delete ewnd[i];
 }
 
-static Addon* query_interface() { return new(zeromem) DigitalConverter_Addon(); }
+static Addon* query_interface(BeyeContext& bc) { return new(zeromem) DigitalConverter_Addon(bc); }
 extern const Addon_Info DigitalConvertor = {
     "~Digital convertor",
     query_interface

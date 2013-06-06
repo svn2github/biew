@@ -73,7 +73,7 @@ namespace	usr {
 };
     class Calculator_Addon : public Addon {
 	public:
-	    Calculator_Addon();
+	    Calculator_Addon(BeyeContext& bc);
 	    virtual ~Calculator_Addon();
 	
 	    virtual void	run();
@@ -103,6 +103,7 @@ namespace	usr {
 
 	    static const struct Operator verbs[];
 
+	    BeyeContext&	bctx;
 	    char*		op_stack;	/** Operator stack       */
 	    intmax_t*		arg_stack;	/** Argument stack       */
 	    char*		token;		/** Token buffer         */
@@ -113,7 +114,7 @@ namespace	usr {
 						    1 = Awaiting Operator */
     };
 
-Calculator_Addon::Calculator_Addon():op_stack(NULL),token(NULL) {}
+Calculator_Addon::Calculator_Addon(BeyeContext& bc):Addon(bc),bctx(bc),op_stack(NULL),token(NULL) {}
 Calculator_Addon::~Calculator_Addon() {}
 
 const struct Operator Calculator_Addon::verbs[] = {
@@ -576,7 +577,7 @@ void Calculator_Addon::run()
        _ret = evaluate(estr,&val,&base);
        if(_ret != SUCCESS)
        {
-	 beye_context().ErrMessageBox(_ret == O_ERROR ? "Bad operand" :
+	 bctx.ErrMessageBox(_ret == O_ERROR ? "Bad operand" :
 		       _ret == R_ERROR ? "Runtime error" :
 		       _ret == E_MEM ? "Not enough memory!" :
 		       "Syntax error","");
@@ -597,7 +598,7 @@ void Calculator_Addon::run()
 	   case 2: strcat(sres,"b"); break;
 	   default: break;
 	 }
-	 beye_context().NotifyBox(sres," Result ");
+	 bctx.NotifyBox(sres," Result ");
        }
        continue;
      }
@@ -606,7 +607,7 @@ void Calculator_Addon::run()
   delete wdlg;
 }
 
-static Addon* query_interface() { return new(zeromem) Calculator_Addon(); }
+static Addon* query_interface(BeyeContext& bc) { return new(zeromem) Calculator_Addon(bc); }
 extern const Addon_Info Calculator = {
     "~String calculator",
     query_interface

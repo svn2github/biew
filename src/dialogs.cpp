@@ -257,7 +257,7 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
    {
       case KE_F(1):
 		    {
-			Beye_Help bhelp;
+			Beye_Help bhelp(beye_context());
 			if(bhelp.open(true)) {
 			    bhelp.run(6);
 			    bhelp.close();

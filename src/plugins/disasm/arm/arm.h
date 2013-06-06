@@ -34,7 +34,7 @@ namespace	usr {
 
     class ARM_Disassembler : public Disassembler {
 	public:
-	    ARM_Disassembler(const Bin_Format& b,binary_stream& h,DisMode& parent);
+	    ARM_Disassembler(BeyeContext&,const Bin_Format& b,binary_stream& h,DisMode& parent);
 	    virtual ~ARM_Disassembler();
 	
 	    virtual const char*	prompt(unsigned idx) const;
@@ -67,6 +67,7 @@ namespace	usr {
 						uint32_t opcode, unsigned flags) const;
 
 	    DisMode&		parent;
+	    BeyeContext&	bctx;
 	    binary_stream&	main_handle;
 	    const Bin_Format&	bin_format;
 	    char*		outstr;

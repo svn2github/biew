@@ -49,7 +49,7 @@ namespace	usr {
     };
     class NLM_Parser : public Binary_Parser {
 	public:
-	    NLM_Parser(binary_stream&,CodeGuider&,udn&);
+	    NLM_Parser(BeyeContext& b,binary_stream&,CodeGuider&,udn&);
 	    virtual ~NLM_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -85,6 +85,7 @@ namespace	usr {
 	    char		__codelen;
 	    std::set<RELOC_NLM>	RelocNlm;
 
+	    BeyeContext&	bctx;
 	    binary_stream&	main_handle;
 	    CodeGuider&		code_guider;
 	    udn&		_udn;
@@ -98,7 +99,7 @@ __filesize_t NLM_Parser::show_header() const
   char modName[NLM_MODULE_NAME_SIZE];
   TWindow * w;
   unsigned keycode;
-  fpos = beye_context().tell();
+  fpos = bctx.tell();
   w = CrtDlgWndnls(" NetWare Loadable Module ",59,23);
   w->goto_xy(1,1);
   strncpy(modName,(char *)&nlm.nlm_moduleName[1],(int)nlm.nlm_moduleName[0]);
@@ -182,7 +183,7 @@ __filesize_t NLM_Parser::action_F8()
   TWindow *w;
   unsigned keycode;
   sharedEntry = sharedExit = 0;
-  fpos = beye_context().tell();
+  fpos = bctx.tell();
   w = CrtDlgWndnls(" NetWare Loadable Module ",74,23);
   w->goto_xy(1,1);
   main_handle.seek(sizeof(Nlm_Internal_Fixed_Header),binary_stream::Seek_Set);
@@ -339,7 +340,7 @@ __filesize_t NLM_Parser::CalcEntryNLM(unsigned ord,bool dispmsg) const
  unsigned char length;
  unsigned i;
  __filesize_t ret,fpos,cpos;
- fpos = beye_context().tell();
+ fpos = bctx.tell();
  cpos = nlm.nlm_publicsOffset;
  for(i = 0;i < ord;i++)
  {
@@ -357,7 +358,7 @@ __filesize_t NLM_Parser::CalcEntryNLM(unsigned ord,bool dispmsg) const
  if(ret > main_handle.flength())
  {
     ret = fpos;
-    if(dispmsg) beye_context().ErrMessageBox(NO_ENTRY,"");
+    if(dispmsg) bctx.ErrMessageBox(NO_ENTRY,"");
  }
  return ret;
 }
@@ -391,10 +392,10 @@ __filesize_t NLM_Parser::action_F5()
     TWindow* w = PleaseWaitWnd();
     std::vector<std::string> objs = __ReadExtRefNamesNLM(main_handle,nnames);
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
     ListBox(objs,title,flags,-1);
 exit:
-    return beye_context().tell();
+    return bctx.tell();
 }
 
 std::vector<std::string> NLM_Parser::__ReadModRefNamesNLM(binary_stream& handle,size_t nnames) const
@@ -426,15 +427,15 @@ __filesize_t NLM_Parser::action_F2()
     TWindow* w = PleaseWaitWnd();
     std::vector<std::string> objs = __ReadModRefNamesNLM(main_handle,nnames);
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
     ListBox(objs,title,flags,-1);
 exit:
-    return beye_context().tell();
+    return bctx.tell();
 }
 
 __filesize_t NLM_Parser::action_F3()
 {
-    __filesize_t fpos = beye_context().tell();
+    __filesize_t fpos = bctx.tell();
     int ret;
     std::string title = EXP_TABLE;
     ssize_t nnames = (unsigned)nlm.nlm_numberOfPublics;
@@ -444,7 +445,7 @@ __filesize_t NLM_Parser::action_F3()
     w = PleaseWaitWnd();
     std::vector<std::string> objs = NLMNamesReadItems(main_handle,nnames);
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
     ret = ListBox(objs,title,flags,-1);
 exit:
     if(ret != -1) fpos = CalcEntryNLM(ret,true);
@@ -564,9 +565,10 @@ bool NLM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
   return retrf;
 }
 
-NLM_Parser::NLM_Parser(binary_stream& h,CodeGuider& _code_guider,udn& u)
-	    :Binary_Parser(h,_code_guider,u)
+NLM_Parser::NLM_Parser(BeyeContext& b,binary_stream& h,CodeGuider& _code_guider,udn& u)
+	    :Binary_Parser(b,h,_code_guider,u)
 	    ,nlm_cache(&h)
+	    ,bctx(b)
 	    ,main_handle(h)
 	    ,code_guider(_code_guider)
 	    ,_udn(u)
@@ -615,12 +617,12 @@ bool NLM_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 
 __filesize_t NLM_Parser::action_F1()
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(10007);
 	bhelp.close();
     }
-    return beye_context().tell();
+    return bctx.tell();
 }
 
 std::string NLM_Parser::nlm_ReadPubName(binary_stream& b_cache,const symbolic_information& it) const
@@ -725,7 +727,7 @@ __filesize_t NLM_Parser::pa2va(__filesize_t pa) const
 
 int NLM_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) NLM_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) NLM_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info nlm_info = {
     "nlm-i386 (Novell Loadable Module)",	/**< plugin name */
     query_interface

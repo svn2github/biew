@@ -297,7 +297,7 @@ enum {
     class DisMode;
     class ix86_Disassembler : public Disassembler {
 	public:
-	    ix86_Disassembler(const Bin_Format& b,binary_stream&,DisMode&);
+	    ix86_Disassembler(BeyeContext& bc,const Bin_Format& b,binary_stream&,DisMode&);
 	    virtual ~ix86_Disassembler();
 
 	    virtual const char*	prompt(unsigned idx) const;
@@ -461,6 +461,7 @@ enum {
 	    const char*			getSREG(unsigned sreg) const __CONST_FUNC__ { return ix86_SegRegs[sreg]; }
 	    void			ix86_Null(char *str,ix86Param& param) const __CONST_FUNC__;
 	/* data */
+	    BeyeContext&		bctx;
 	    DisMode&			parent;
 	    binary_stream&		main_handle;
 	    const Bin_Format&		bin_format;

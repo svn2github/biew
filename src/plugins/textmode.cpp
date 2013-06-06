@@ -90,7 +90,7 @@ static const unsigned	MAX_STRLEN=1000; /**< defines maximal length of string */
 
     class TextMode : public Plugin {
 	public:
-	    TextMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn&,Search&);
+	    TextMode(BeyeContext& bc,const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn&,Search&);
 	    virtual ~TextMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -137,6 +137,9 @@ static const unsigned	MAX_STRLEN=1000; /**< defines maximal length of string */
 	    static bool __FASTCALL__	txtFiUserFunc2(const IniInfo& info,any_t* data);
 	    static bool			cmp_ctx(const context_hl_t& e1,const context_hl_t& e2);
 	    static bool			cmp_kwd(const keyword_hl_t& e1,const keyword_hl_t& e2);
+	    Color			getCtxColorByName(const char *subsection,const char *item,Color cdef,bool& err) const;
+	    Color			getKwdColorByName(const char *item,Color cdef,bool& err) const;
+	    Color			getOpColorByName(const char *item,Color cdef,bool& err) const;
 
 	    std::vector<acontext_hl_t>	acontext; /* means active context*/
 
@@ -155,6 +158,7 @@ static const unsigned	MAX_STRLEN=1000; /**< defines maximal length of string */
 	    const REGISTRY_NLS*		activeNLS;
 	    unsigned			defNLSSet;
 	    TWindow&			main_wnd;
+	    BeyeContext&		bctx;
 	    binary_stream&		main_handle;
 	    const Bin_Format&		bin_format;
 	    udn&			_udn;
@@ -347,9 +351,10 @@ static void unfmt_str(unsigned char *str)
 bool __FASTCALL__ TextMode::txtFiUserFunc1(const IniInfo& info,any_t* data)
 {
     TextMode& mode = *reinterpret_cast<TextMode*>(data);
+    BeyeContext& bctx = mode.bctx;
     const char* p=NULL;
     if(strcmp(info.section,"Extensions")==0) {
-	p = strrchr(beye_context().ArgVector1.c_str(),'.');
+	p = strrchr(bctx.ArgVector1.c_str(),'.');
 	if(p) {
 	    p++;
 	    if(strcmp(p,info.item)==0) {
@@ -360,11 +365,11 @@ bool __FASTCALL__ TextMode::txtFiUserFunc1(const IniInfo& info,any_t* data)
     }
     if(strcmp(info.section,"Names")==0) {
 	const char *pp;
-	p = strrchr(beye_context().ArgVector1.c_str(),'/');
-	pp = strrchr(beye_context().ArgVector1.c_str(),'\\');
+	p = strrchr(bctx.ArgVector1.c_str(),'/');
+	pp = strrchr(bctx.ArgVector1.c_str(),'\\');
 	p=std::max(p,pp);
 	if(p) p++;
-	else  p=beye_context().ArgVector1.c_str();
+	else  p=bctx.ArgVector1.c_str();
 	if(memcmp(p,info.item,strlen(info.item))==0) {
 	    mode.detected_syntax_name=info.value;
 	    return true;
@@ -378,7 +383,7 @@ bool __FASTCALL__ TextMode::txtFiUserFunc1(const IniInfo& info,any_t* data)
 	char stmp[4096];
 	strncpy(stmp,info.value,sizeof(stmp));
 	char* value=strstr(stmp,"-->");
-	if(!value) { beye_context().ErrMessageBox("Missing separator in main context definition",""); return true; }
+	if(!value) { bctx.ErrMessageBox("Missing separator in main context definition",""); return true; }
 	*value=0;
 	softmode=0;
 	if(strcmp(info.subsection,"Soft")==0) softmode=1;
@@ -408,49 +413,49 @@ bool __FASTCALL__ TextMode::txtFiUserFunc1(const IniInfo& info,any_t* data)
     return false;
 }
 
-static Color  __FASTCALL__ getCtxColorByName(const char *subsection,const char *item,Color cdef,bool *err)
+Color TextMode::getCtxColorByName(const char *subsection,const char *item,Color cdef,bool& err) const
 {
     PrgWordCSet *cset;
-    *err=0;
+    err=false;
     cset=NULL;
     if(::strcmp(subsection,"Comments")==0) cset=&prog_cset.comments;
     else if(::strcmp(subsection,"Preproc")==0) cset=&prog_cset.preproc;
     else if(::strcmp(subsection,"Constants")==0) cset=&prog_cset.constants;
     else if(::strcmp(subsection,"Keywords")==0) cset=&prog_cset.keywords;
     else if(::strcmp(subsection,"Operators")==0) cset=&prog_cset.operators;
-    else beye_context().ErrMessageBox("Unknown context subsection definition",subsection);
+    else bctx.ErrMessageBox("Unknown context subsection definition",subsection);
     if(cset) {
 	if(::strcmp(item,"base")==0) return Color(cset->base);
 	if(::strcmp(item,"extended")==0) return Color(cset->extended);
 	if(::strcmp(item,"reserved")==0) return Color(cset->reserved);
 	if(::strcmp(item,"alt")==0) return Color(cset->alt);
-	beye_context().ErrMessageBox("Unknown context class definition",item);
+	bctx.ErrMessageBox("Unknown context class definition",item);
     }
-    *err=1;
+    err=true;
     return cdef;
 }
 
-static Color  __FASTCALL__ getKwdColorByName(const char *item,Color cdef,bool *err)
+Color TextMode::getKwdColorByName(const char *item,Color cdef,bool& err) const
 {
-    *err=0;
+    err=false;
     if(::strcmp(item,"base")==0) return Color(prog_cset.keywords.base);
     if(::strcmp(item,"extended")==0) return Color(prog_cset.keywords.extended);
     if(::strcmp(item,"reserved")==0) return Color(prog_cset.keywords.reserved);
     if(::strcmp(item,"alt")==0) return Color(prog_cset.keywords.alt);
-    beye_context().ErrMessageBox("Unknown keyword class definition",item);
-    *err=1;
+    bctx.ErrMessageBox("Unknown keyword class definition",item);
+    err=true;
     return cdef;
 }
 
-static Color  __FASTCALL__ getOpColorByName(const char *item,Color cdef,bool *err)
+Color TextMode::getOpColorByName(const char *item,Color cdef,bool& err) const
 {
-    *err=0;
+    err=false;
     if(::strcmp(item,"base")==0) return Color(prog_cset.operators.base);
     if(::strcmp(item,"extended")==0) return Color(prog_cset.operators.extended);
     if(::strcmp(item,"reserved")==0) return Color(prog_cset.operators.reserved);
     if(::strcmp(item,"alt")==0) return Color(prog_cset.operators.alt);
-    beye_context().ErrMessageBox("Unknown keyword class definition",item);
-    *err=1;
+    bctx.ErrMessageBox("Unknown keyword class definition",item);
+    err=true;
     return cdef;
 }
 
@@ -458,7 +463,7 @@ static const char *last_syntax_err="";
 bool __FASTCALL__ TextMode::txtFiUserFunc2(const IniInfo& info,any_t* data)
 {
     TextMode& mode = *reinterpret_cast<TextMode*>(data);
-    UNUSED(mode);
+    BeyeContext& bctx = mode.bctx;
     char *p;
     bool err;
     Color cdef=FORE_COLOR(text_cset.normal);
@@ -480,7 +485,7 @@ bool __FASTCALL__ TextMode::txtFiUserFunc2(const IniInfo& info,any_t* data)
     if(::strcmp(info.section,"Context")==0) {
 	context_hl_t entry;
 	Color col;
-	col = getCtxColorByName(info.subsection,info.item,cdef,&err);
+	col = mode.getCtxColorByName(info.subsection,info.item,cdef,err);
 	if(!err) {
 	    entry.color=col;
 	    p=::strstr((char*)info.value,"...");
@@ -492,12 +497,12 @@ bool __FASTCALL__ TextMode::txtFiUserFunc2(const IniInfo& info,any_t* data)
 	    entry.start_seq=::strdup(info.value);
 	    entry.end_seq=::strdup(p);
 	    mode.syntax_hl.context.push_back(entry);
-	} else last_syntax_err=beye_context().last_skin_error.c_str();
+	} else last_syntax_err=bctx.last_skin_error.c_str();
     }
     if(::strcmp(info.section,"Keywords")==0) {
 	keyword_hl_t entry;
 	Color col;
-	col = getKwdColorByName(info.item,cdef,&err);
+	col = mode.getKwdColorByName(info.item,cdef,err);
 	if(!err) {
 	    entry.color=col;
 	    unfmt_str((unsigned char*)info.value);
@@ -507,16 +512,16 @@ bool __FASTCALL__ TextMode::txtFiUserFunc2(const IniInfo& info,any_t* data)
 		mode.syntax_hl.maxkwd_len=entry.len;
 	    mode.syntax_hl.keyword.push_back(entry);
 	}
-	else last_syntax_err=beye_context().last_skin_error.c_str();
+	else last_syntax_err=bctx.last_skin_error.c_str();
     }
     if(::strcmp(info.section,"Operators")==0) {
 	Color col;
-	col = getOpColorByName(info.item,cdef,&err);
+	col = mode.getOpColorByName(info.item,cdef,err);
 	if(!err) {
 	    unfmt_str((unsigned char*)info.value);
 	    if(::strlen(info.value)>1) { last_syntax_err="Too long operator has been found"; return true; }
 	    mode.syntax_hl.op_hash[(unsigned char)info.value[0]]=LOGFB_TO_PHYS(col,BACK_COLOR(text_cset.normal));
-	} else last_syntax_err=beye_context().last_skin_error.c_str();
+	} else last_syntax_err=bctx.last_skin_error.c_str();
     }
     return err?true:false;
 }
@@ -539,13 +544,13 @@ bool TextMode::cmp_kwd(const keyword_hl_t& e1,const keyword_hl_t& e2)
 
 void TextMode::read_syntaxes()
 {
-    if(binary_stream::exists(beye_context().syntax_name)) {
-	Ini_Parser::scan(beye_context().syntax_name.c_str(),&TextMode::txtFiUserFunc1,this);
+    if(binary_stream::exists(bctx.syntax_name)) {
+	Ini_Parser::scan(bctx.syntax_name.c_str(),&TextMode::txtFiUserFunc1,this);
 	if(detected_syntax_name[0]) {
 	    char tmp[FILENAME_MAX+1];
 	    char *p;
 	    char *pp;
-	    ::strcpy(tmp,beye_context().syntax_name.c_str());
+	    ::strcpy(tmp,bctx.syntax_name.c_str());
 	    p=::strrchr(tmp,'/');
 	    pp=::strrchr(tmp,'\\');
 	    p=std::max(p,pp);
@@ -556,7 +561,7 @@ void TextMode::read_syntaxes()
 		int phash;
 		::memset(word_set,0,sizeof(word_set));
 		Ini_Parser::scan(detected_syntax_name,&TextMode::txtFiUserFunc2,this);
-		if(last_syntax_err[0]) beye_context().ErrMessageBox(last_syntax_err,"");
+		if(last_syntax_err[0]) bctx.ErrMessageBox(last_syntax_err,"");
 		/* put longest strings on top */
 		std::sort(syntax_hl.context.begin(),syntax_hl.context.end(),cmp_ctx);
 		std::sort(syntax_hl.keyword.begin(),syntax_hl.keyword.end(),cmp_kwd);
@@ -919,14 +924,15 @@ void TextMode::drawBound(TWindow& w,int x,int y,char ch) const
   w.set_color(browser_cset.main);
 }
 
-TextMode::TextMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn& u,Search& s)
-	:Plugin(b,h,_main_wnd,code_guider,u,s)
+TextMode::TextMode(BeyeContext& bc,const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn& u,Search& s)
+	:Plugin(bc,b,h,_main_wnd,code_guider,u,s)
 	,HiLight(1)
 	,bin_mode(MOD_PLAIN)
 	,txtHandle(&h)
 	,maxstrlen(MAX_STRLEN)
 	,activeNLS(&RussianNLS)
 	,main_wnd(_main_wnd)
+	,bctx(bc)
 	,main_handle(h)
 	,bin_format(b)
 	,_udn(u)
@@ -1067,7 +1073,7 @@ plugin_position TextMode::paint( unsigned keycode, unsigned shift )
 
 void TextMode::help() const
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(1001);
 	bhelp.close();
@@ -1166,7 +1172,6 @@ bool TextMode::detect()
 
 void TextMode::read_ini(Ini_Profile& ini)
 {
-    BeyeContext& bctx = beye_context();
     std::string tmps;
     if(bctx.is_valid_ini_args()) {
 	int w_m;
@@ -1190,7 +1195,6 @@ void TextMode::read_ini(Ini_Profile& ini)
 
 void TextMode::save_ini(Ini_Profile& ini)
 {
-    BeyeContext& bctx = beye_context();
     char tmps[10];
     ::sprintf(tmps,"%i",bin_mode);
     bctx.write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
@@ -1207,7 +1211,7 @@ bool TextMode::action_F8 () /* txtShowType */
     const char *type;
     if(syntax_hl.name) type=syntax_hl.name;
     else type="Unknown";
-    beye_context().TMessageBox(type," Detected text type: ");
+    bctx.TMessageBox(type," Detected text type: ");
     return false;
 }
 
@@ -1215,7 +1219,7 @@ unsigned TextMode::get_symbol_size() const { return activeNLS->get_symbol_size()
 unsigned TextMode::get_max_line_length() const { return strmaxlen; }
 TextMode::e_flag TextMode::flags() const { return Text|Has_ConvertCP; }
 
-static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& u,Search& s) { return new(zeromem) TextMode(b,h,main_wnd,code_guider,u,s); }
+static Plugin* query_interface(BeyeContext& bc,const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& u,Search& s) { return new(zeromem) TextMode(bc,b,h,main_wnd,code_guider,u,s); }
 
 extern const Plugin_Info textMode = {
     "~Text mode",	/**< plugin name */

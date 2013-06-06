@@ -48,7 +48,7 @@ namespace	usr {
 
     class RDOff_Parser : public Binary_Parser {
 	public:
-	    RDOff_Parser(binary_stream&,CodeGuider&,udn&);
+	    RDOff_Parser(BeyeContext& b,binary_stream&,CodeGuider&,udn&);
 	    virtual ~RDOff_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -82,6 +82,7 @@ namespace	usr {
 	    std::set<RDOFF_RELOC>	rdoffReloc;
 	    std::set<rdoff_ImpName>	rdoffImpNames;
 	    unsigned char		__codelen;
+	    BeyeContext&		bctx;
 	    binary_stream&		main_handle;
 	    CodeGuider&			code_guider;
 	    udn&			_udn;
@@ -91,12 +92,12 @@ const char* RDOff_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
 __filesize_t RDOff_Parser::action_F1()
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(10011);
 	bhelp.close();
     }
-    return beye_context().tell();
+    return bctx.tell();
 }
 
 /** return 0 if error */
@@ -138,7 +139,7 @@ bool  RDOff_Parser::rdoff_skiprec(unsigned char type) const
 	    main_handle.seek(4,binary_stream::Seek_Cur);
 	    break;
     default: /** unknown ??? */
-	    beye_context().ErrMessageBox("Broken RDOFF file","");
+	    bctx.ErrMessageBox("Broken RDOFF file","");
 	    ret = false;
 	    break;
   }
@@ -155,7 +156,7 @@ __filesize_t RDOff_Parser::action_F3()
     __filesize_t segoff;
     __filesize_t abs_off;
     std::vector<std::string> rdoff_et;
-    fpos = beye_context().tell();
+    fpos = bctx.tell();
     main_handle.seek(10,binary_stream::Seek_Set);
     while(main_handle.tell() < rdoff_hdrlen + 5) {
 	bool is_eof;
@@ -190,7 +191,7 @@ __filesize_t RDOff_Parser::action_F3()
 	    rets = strstr(rdoff_et[ret].c_str(),"offset=");
 	    if(rets) fpos = strtoul(&rets[7],NULL,16);
 	}
-    } else beye_context().NotifyBox(NOT_ENTRY,EXP_TABLE);
+    } else bctx.NotifyBox(NOT_ENTRY,EXP_TABLE);
 exit:
     return fpos;
 }
@@ -249,7 +250,7 @@ __filesize_t RDOff_Parser::action_F2()
     unsigned i;
     char str[129];
     std::vector<std::string> rdoff_mr;
-    fpos = beye_context().tell();
+    fpos = bctx.tell();
     main_handle.seek(10,binary_stream::Seek_Set);
     while(main_handle.tell() < rdoff_hdrlen + 5) {
 	bool is_eof;
@@ -272,7 +273,7 @@ __filesize_t RDOff_Parser::action_F2()
 	}
     }
     if(!rdoff_mr.empty()) ListBox(rdoff_mr,MOD_REFER,LB_SORTABLE,0);
-    else                  beye_context().NotifyBox(NOT_ENTRY,MOD_REFER);
+    else                  bctx.NotifyBox(NOT_ENTRY,MOD_REFER);
 exit:
     return fpos;
 }
@@ -284,7 +285,7 @@ __filesize_t RDOff_Parser::action_F5()
     unsigned i;
     char str[33];
     std::vector<std::string> rdoff_it;
-    fpos = beye_context().tell();
+    fpos = bctx.tell();
     main_handle.seek(10,binary_stream::Seek_Set);
     while(main_handle.tell() < rdoff_hdrlen + 5) {
 	bool is_eof;
@@ -308,7 +309,7 @@ __filesize_t RDOff_Parser::action_F5()
 	}
     }
     if(!rdoff_it.empty()) ListBox(rdoff_it,IMPPROC_TABLE,LB_SORTABLE,0);
-    else                  beye_context().NotifyBox(NOT_ENTRY,EXP_TABLE);
+    else                  bctx.NotifyBox(NOT_ENTRY,EXP_TABLE);
 exit:
     return fpos;
 }
@@ -319,7 +320,7 @@ __filesize_t RDOff_Parser::show_header() const
   __filesize_t fpos,entry;
   unsigned long hs_len,cs_len;
   TWindow *w;
-  fpos = beye_context().tell();
+  fpos = bctx.tell();
   main_handle.seek(5,binary_stream::Seek_Set);
   endian = main_handle.read(type_byte);
   hs_len = main_handle.read(type_dword);
@@ -535,8 +536,9 @@ bool RDOff_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulSh
   return ret;
 }
 
-RDOff_Parser::RDOff_Parser(binary_stream& h,CodeGuider& _code_guider,udn& u)
-	    :Binary_Parser(h,_code_guider,u)
+RDOff_Parser::RDOff_Parser(BeyeContext& b,binary_stream& h,CodeGuider& _code_guider,udn& u)
+	    :Binary_Parser(b,h,_code_guider,u)
+	    ,bctx(b)
 	    ,main_handle(h)
 	    ,code_guider(_code_guider)
 	    ,_udn(u)
@@ -754,7 +756,7 @@ bool RDOff_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 
 int RDOff_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) RDOff_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) RDOff_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info rdoff_info = {
     "RDOFF (Relocatable Dynamic Object File Format)",	/**< plugin name */
     query_interface

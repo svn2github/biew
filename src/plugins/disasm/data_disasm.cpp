@@ -31,7 +31,7 @@ using namespace	usr;
 namespace	usr {
     class Data_Disassembler : public Disassembler {
 	public:
-	    Data_Disassembler(const Bin_Format& b,binary_stream& h,DisMode& parent);
+	    Data_Disassembler(BeyeContext& bc,const Bin_Format& b,binary_stream& h,DisMode& parent);
 	    virtual ~Data_Disassembler();
 	
 	    virtual const char*	prompt(unsigned idx) const;
@@ -48,6 +48,7 @@ namespace	usr {
 	    virtual void	read_ini(Ini_Profile&);
 	    virtual void	save_ini(Ini_Profile&);
 	private:
+	    BeyeContext&	bctx;
 	    DisMode&		parent;
 	    binary_stream&	main_handle;
 	    const Bin_Format&	bin_format;
@@ -133,7 +134,7 @@ DisasmRet Data_Disassembler::disassembler(__filesize_t ulShift,
 
 void Data_Disassembler::show_short_help() const
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(20010);
 	bhelp.close();
@@ -152,8 +153,9 @@ char Data_Disassembler::clone_short_name( unsigned long clone )
   UNUSED(clone);
   return ' ';
 }
-Data_Disassembler::Data_Disassembler(const Bin_Format& b,binary_stream& h,DisMode& _parent )
-		:Disassembler(b,h,_parent)
+Data_Disassembler::Data_Disassembler(BeyeContext& bc,const Bin_Format& b,binary_stream& h,DisMode& _parent )
+		:Disassembler(bc,b,h,_parent)
+		,bctx(bc)
 		,parent(_parent)
 		,main_handle(h)
 		,bin_format(b)
@@ -170,9 +172,9 @@ Data_Disassembler::~Data_Disassembler()
 void Data_Disassembler::read_ini( Ini_Profile& ini )
 {
   std::string tmps;
-  if(beye_context().is_valid_ini_args())
+  if(bctx.is_valid_ini_args())
   {
-    tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode3","1");
+    tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode3","1");
     nulWidth = (int)strtoul(tmps.c_str(),NULL,10);
     if(nulWidth > 3) nulWidth = 0;
   }
@@ -182,7 +184,7 @@ void Data_Disassembler::save_ini( Ini_Profile& ini )
 {
   char tmps[10];
   sprintf(tmps,"%i",nulWidth);
-  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
+  bctx.write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
 }
 
 const char* Data_Disassembler::prompt(unsigned idx) const {
@@ -193,7 +195,7 @@ const char* Data_Disassembler::prompt(unsigned idx) const {
     return "";
 }
 
-static Disassembler* query_interface(const Bin_Format& b,binary_stream& h,DisMode& _parent) { return new(zeromem) Data_Disassembler(b,h,_parent); }
+static Disassembler* query_interface(BeyeContext& bc,const Bin_Format& b,binary_stream& h,DisMode& _parent) { return new(zeromem) Data_Disassembler(bc,b,h,_parent); }
 extern const Disassembler_Info data_disassembler_info = {
     DISASM_DATA,
     "~Data",	/**< plugin name */

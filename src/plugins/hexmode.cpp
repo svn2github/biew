@@ -113,7 +113,7 @@ namespace	usr {
 
     class HexMode : public Plugin {
 	public:
-	    HexMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn&,Search&);
+	    HexMode(BeyeContext& bc,const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn&,Search&);
 	    virtual ~HexMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -147,6 +147,7 @@ namespace	usr {
 	    unsigned		virtWidthCorr;
 	    unsigned		hmode;
 	    TWindow&		main_wnd;
+	    BeyeContext&	bctx;
 	    binary_stream&	main_handle;
 	    const Bin_Format&	bin_format;
 	    udn&		_udn;
@@ -244,16 +245,17 @@ hexView* byteView::query_interface(binary_stream& h) { return new(zeromem) byteV
 hexView* wordView::query_interface(binary_stream& h) { return new(zeromem) wordView(h); }
 hexView* dwordView::query_interface(binary_stream& h) { return new(zeromem) dwordView(h); }
 
-HexMode::HexMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& _code_guider,udn& u,Search& s)
-	:Plugin(b,h,_main_wnd,_code_guider,u,s)
+HexMode::HexMode(BeyeContext& bc,const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& _code_guider,udn& u,Search& s)
+	:Plugin(bc,b,h,_main_wnd,_code_guider,u,s)
 	,code_guider(_code_guider)
 	,virtWidthCorr(0)
 	,hmode(1)
 	,main_wnd(_main_wnd)
+	,bctx(bc)
 	,main_handle(h)
 	,bin_format(b)
 	,_udn(u)
-	,is_file64(beye_context().is_file64())
+	,is_file64(bc.is_file64())
 	,hex_viewer(xView_Info[hmode].query_interface(h))
 	,search(s)
 {
@@ -344,7 +346,7 @@ plugin_position HexMode::paint( unsigned keycode,unsigned textshift )
 
 void HexMode::help() const
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(1002);
 	bhelp.close();
@@ -365,7 +367,7 @@ void HexMode::misckey_action () /* EditHex */
     unsigned bound;
     tAbsCoord width = main_wnd.client_width();
     if(hmode != 1) return;
-    if(!main_handle.flength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
+    if(!main_handle.flength()) { bctx.ErrMessageBox(NOTHING_EDIT,""); return; }
     bound = (width-(hex_viewer->width(main_wnd,is_file64)-virtWidthCorr))-is_file64?18:10;
     ewnd[0] = new(zeromem) TWindow((is_file64?18:10)+1,2,bound,main_wnd.height()-2,TWindow::Flag_Has_Cursor);
     ewnd[0]->set_color(browser_cset.edit.main); ewnd[0]->clear();
@@ -373,7 +375,7 @@ void HexMode::misckey_action () /* EditHex */
     ewnd[1]->set_color(browser_cset.edit.main); ewnd[1]->clear();
     drawEditPrompt();
     has_show[0] = has_show[1] = false;
-    Editor* editor = new(zeromem) Editor(*ewnd[1],hex_viewer->width(main_wnd,is_file64)-virtWidthCorr);
+    Editor* editor = new(zeromem) Editor(bctx,*ewnd[1],hex_viewer->width(main_wnd,is_file64)-virtWidthCorr);
     editor->goto_xy(0,0);
     while(1) {
 	int _lastbyte;
@@ -393,7 +395,7 @@ void HexMode::misckey_action () /* EditHex */
 
     delete ewnd[0];
     delete ewnd[1];
-    beye_context().PaintTitle();
+    bctx.PaintTitle();
 }
 
 void HexMode::check_width_corr()
@@ -549,27 +551,26 @@ int HexMode::full_hex_edit(Editor& editor,TWindow* txtwnd,TWindow* hexwnd) const
     return _lastbyte;
 }
 
-unsigned __FASTCALL__ ReadIniAResolv( Ini_Profile& ini )
+unsigned __FASTCALL__ ReadIniAResolv(BeyeContext& bctx, Ini_Profile& ini )
 {
     std::string tmps;
-    tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode6","0");
+    tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode6","0");
     hexAddressResolv = (unsigned)::strtoul(tmps.c_str(),NULL,10);
     if(hexAddressResolv > 1) hexAddressResolv = 0;
     return hexAddressResolv;
 }
 
-void __FASTCALL__ WriteIniAResolv( Ini_Profile& ini, unsigned har, unsigned virt_width_corr)
+void __FASTCALL__ WriteIniAResolv(BeyeContext& bctx, Ini_Profile& ini, unsigned har, unsigned virt_width_corr)
 {
     char tmps[10];
     ::sprintf(tmps,"%i",har);
-    beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode6",tmps);
+    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode6",tmps);
     ::sprintf(tmps,"%u",virt_width_corr);
-    beye_context().write_profile_string(ini,"Beye","Browser","VirtWidthCorr",tmps);
+    bctx.write_profile_string(ini,"Beye","Browser","VirtWidthCorr",tmps);
 }
 
 void HexMode::read_ini(Ini_Profile& ini)
 {
-    BeyeContext& bctx = beye_context();
     std::string tmps;
     if(bctx.is_valid_ini_args()) {
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","LastSubMode","2");
@@ -577,7 +578,7 @@ void HexMode::read_ini(Ini_Profile& ini)
 	if(hmode > 3) hmode = 1;
 	delete hex_viewer;
 	hex_viewer = xView_Info[hmode].query_interface(main_handle);
-	hexAddressResolv=ReadIniAResolv(ini);
+	hexAddressResolv=ReadIniAResolv(bctx,ini);
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","VirtWidthCorr","0");
 	virtWidthCorr = (unsigned)::strtoul(tmps.c_str(),NULL,10);
 	check_width_corr();
@@ -586,11 +587,10 @@ void HexMode::read_ini(Ini_Profile& ini)
 
 void HexMode::save_ini(Ini_Profile&  ini)
 {
-    BeyeContext& bctx = beye_context();
     char tmps[10];
     ::sprintf(tmps,"%i",hmode);
     bctx.write_profile_string(ini,"Beye","Browser","LastSubMode",tmps);
-    WriteIniAResolv(ini,hexAddressResolv,virtWidthCorr);
+    WriteIniAResolv(bctx,ini,hexAddressResolv,virtWidthCorr);
     ::sprintf(tmps,"%u",virtWidthCorr);
     bctx.write_profile_string(ini,"Beye","Browser","VirtWidthCorr",tmps);
 }
@@ -598,7 +598,7 @@ void HexMode::save_ini(Ini_Profile&  ini)
 unsigned HexMode::get_symbol_size() const { return 1; }
 unsigned HexMode::get_max_line_length() const { return hex_viewer->width(main_wnd,is_file64); }
 
-static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& u,Search& s) { return new(zeromem) HexMode(b,h,main_wnd,code_guider,u,s); }
+static Plugin* query_interface(BeyeContext& bc,const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& u,Search& s) { return new(zeromem) HexMode(bc,b,h,main_wnd,code_guider,u,s); }
 
 extern const Plugin_Info hexMode = {
     "~Hexadecimal mode",	/**< plugin name */

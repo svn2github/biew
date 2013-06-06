@@ -39,7 +39,7 @@ using namespace	usr;
 namespace	usr {
     class Arch_Parser : public Binary_Parser {
 	public:
-	    Arch_Parser(binary_stream&,CodeGuider&,udn&);
+	    Arch_Parser(BeyeContext& b,binary_stream&,CodeGuider&,udn&);
 	    virtual ~Arch_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -53,6 +53,7 @@ namespace	usr {
 	    std::vector<std::string>	archReadModList(size_t nnames,__filesize_t* addr);
 
 	    ar_hdr		arch;
+	    BeyeContext&	bctx;
 	    binary_stream&	main_handle;
 	    udn&		_udn;
     };
@@ -67,7 +68,7 @@ __filesize_t Arch_Parser::show_header() const
   struct tm * tm;
   time_t ldat;
   char sout[50];
-  fpos = beye_context().tell();
+  fpos = bctx.tell();
   w = CrtDlgWndnls(" This is COFF or a.out archive ",54,6);
   w->goto_xy(1,1);
   strncpy(sout,(char *)arch.ar_name,16);
@@ -132,7 +133,7 @@ __filesize_t Arch_Parser::action_F3()
     unsigned long rnames,bnames;
     unsigned nnames;
     __filesize_t fpos,flen;
-    fpos = beye_context().tell();
+    fpos = bctx.tell();
     flen = main_handle.flength();
     main_handle.seek(sizeof(ar_hdr),binary_stream::Seek_Set);
     rnames = main_handle.read(type_dword);
@@ -141,7 +142,7 @@ __filesize_t Arch_Parser::action_F3()
       Some archives sometimes have big and sometimes little endian.
       Here is a horrible attempt to determine it.
    */
-    if(!(nnames = (unsigned)std::min(rnames,bnames))) { beye_context().NotifyBox(NOT_ENTRY,"Archive modules list"); return fpos; }
+    if(!(nnames = (unsigned)std::min(rnames,bnames))) { bctx.NotifyBox(NOT_ENTRY,"Archive modules list"); return fpos; }
    /**
       Some archives sometimes have length and sometimes number of entries
       Here is a horrible attempt to determine it.
@@ -168,8 +169,9 @@ __filesize_t Arch_Parser::action_F3()
     return fpos;
 }
 
-Arch_Parser::Arch_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
-	    :Binary_Parser(h,code_guider,u)
+Arch_Parser::Arch_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(b,h,code_guider,u)
+	    ,bctx(b)
 	    ,main_handle(h)
 	    ,_udn(u)
 {
@@ -195,17 +197,17 @@ bool Arch_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 
 __filesize_t Arch_Parser::action_F1()
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(10001);
 	bhelp.close();
     }
-    return beye_context().tell();
+    return bctx.tell();
 }
 
 int Arch_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-static Binary_Parser* query_interface(binary_stream& main_handle,CodeGuider& _parent,udn& u) { return new(zeromem) Arch_Parser(main_handle,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& main_handle,CodeGuider& _parent,udn& u) { return new(zeromem) Arch_Parser(b,main_handle,_parent,u); }
 extern const Binary_Parser_Info arch_info = {
     "arch (Archive)",	/**< plugin name */
     query_interface

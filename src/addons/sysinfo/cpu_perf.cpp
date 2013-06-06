@@ -35,17 +35,18 @@ using namespace	usr;
 namespace	usr {
     class CPUPerformance_Addon : public Addon {
 	public:
-	    CPUPerformance_Addon();
+	    CPUPerformance_Addon(BeyeContext& bc);
 	    virtual ~CPUPerformance_Addon();
 	
 	    virtual void	run();
 	private:
+	    BeyeContext&	bctx;
 	    std::vector<std::string>	cpuPointStrings(char* data,size_t data_size) const;
     };
 
 static TWindow*	pwnd;
 
-CPUPerformance_Addon::CPUPerformance_Addon() {}
+CPUPerformance_Addon::CPUPerformance_Addon(BeyeContext& bc):Addon(bc),bctx(bc) {}
 CPUPerformance_Addon::~CPUPerformance_Addon() {}
 
 static void paint_prcnt(int n_prcnt)
@@ -90,7 +91,7 @@ void CPUPerformance_Addon::run()
     delete cpu_info;
 }
 
-static Addon* query_interface() { return new(zeromem) CPUPerformance_Addon(); }
+static Addon* query_interface(BeyeContext& bc) { return new(zeromem) CPUPerformance_Addon(bc); }
 extern const Addon_Info CPUPerformance = {
     "CPU ~performance",
     query_interface

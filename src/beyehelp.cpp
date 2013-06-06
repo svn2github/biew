@@ -166,8 +166,8 @@ int Beye_Help::ListBox(const std::vector<std::string>& names,const std::string& 
 	if(j > mwidth) mwidth = j;
     }
     mwidth += 4;
-    if(mwidth > (unsigned)(beye_context().tconsole().vio_width()-2)) mwidth = beye_context().tconsole().vio_width()-2;
-    height = nlist < (unsigned)(beye_context().tconsole().vio_height() - 4) ? nlist : beye_context().tconsole().vio_height() - 4;
+    if(mwidth > (unsigned)(bctx.tconsole().vio_width()-2)) mwidth = bctx.tconsole().vio_width()-2;
+    height = nlist < (unsigned)(bctx.tconsole().vio_height() - 4) ? nlist : bctx.tconsole().vio_height() - 4;
     TWindow* wlist = CrtHlpWndnls(title,mwidth,height+1);
     ostart = start = cursor = ocursor = 0;
     paint(*wlist,names,start,height,mwidth);
@@ -210,7 +210,7 @@ int Beye_Help::ListBox(const std::vector<std::string>& names,const std::string& 
 		    }
 		}
 		if(!found) scursor = -1;
-		if(scursor == -1) beye_context().ErrMessageBox(STR_NOT_FOUND,SEARCH_MSG);
+		if(scursor == -1) bctx.ErrMessageBox(STR_NOT_FOUND,SEARCH_MSG);
 	    }
 	    break;
 	    case KE_DOWNARROW : start ++; break;
@@ -244,14 +244,14 @@ bool Beye_Help::open( bool interact )
     std::string help_name = beyeGetHelpName();
     fs.open(help_name.c_str(),std::ios_base::binary|std::ios_base::in);
     if(!fs.is_open()) {
-	if(interact) beye_context().errnoMessageBox("Can't open help file","",errno);
+	if(interact) bctx.errnoMessageBox("Can't open help file","",errno);
 	return false;
     }
     fs.seekg(0L,std::ios_base::beg);
     fs.read(hlp_id,sizeof(hlp_id));
     if(memcmp(hlp_id,BEYE_HELP_VER,strlen(BEYE_HELP_VER)) != 0) {
 	if(interact) {
-	    beye_context().ErrMessageBox("Incorrect help version","");
+	    bctx.ErrMessageBox("Incorrect help version","");
 	}
 	fs.close();
 	return false;
@@ -283,7 +283,7 @@ unsigned long Beye_Help::get_item_size(unsigned long item_id)
 {
     unsigned long ret = 0;
     if(find_item(item_id)) ret = strtoul(bhi.item_decomp_size,NULL,16);
-    else                   beye_context().ErrMessageBox("Find: Item not found","");
+    else                   bctx.ErrMessageBox("Find: Item not found","");
     return ret;
 }
 
@@ -305,7 +305,7 @@ binary_packet Beye_Help::load_item(unsigned long item_id)
 	    ret = true;
 	    delete inbuff;
 	}
-	else beye_context().ErrMessageBox("Load: Item not found","");
+	else bctx.ErrMessageBox("Load: Item not found","");
     }
     if(!ret) rc.clear();
     return rc;
@@ -341,8 +341,9 @@ void Beye_Help::run( unsigned long item_id )
     }
 }
 
-Beye_Help::Beye_Help()
-	:search(*new(zeromem) Search(beye_context())) 
+Beye_Help::Beye_Help(BeyeContext& bc)
+	:bctx(bc)
+	,search(*new(zeromem) Search(beye_context())) 
 	,sflg(Search::None)
 {}
 Beye_Help::~Beye_Help() { delete &search; }

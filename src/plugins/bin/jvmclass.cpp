@@ -86,7 +86,7 @@ typedef struct ClassFile_s
 
     class JVM_Parser : public Binary_Parser {
 	public:
-	    JVM_Parser(binary_stream&,CodeGuider&,udn&);
+	    JVM_Parser(BeyeContext& b,binary_stream&,CodeGuider&,udn&);
 	    virtual ~JVM_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -141,6 +141,7 @@ typedef struct ClassFile_s
 	    std::set<symbolic_information>	PubNames;
 
 	    ClassFile_t		jvm_header;
+	    BeyeContext&	bctx;
 	    binary_stream&	main_handle;
 	    udn&		_udn;
     };
@@ -281,14 +282,14 @@ std::vector<std::string> JVM_Parser::jvm_read_interfaces(binary_stream& handle,s
 
 __filesize_t JVM_Parser::action_F2()
 {
-    __filesize_t fpos = beye_context().tell();
+    __filesize_t fpos = bctx.tell();
     std::string title = " interfaces ";
     ssize_t nnames = jvm_header.interfaces_count;
     int flags = LB_SORTABLE;
     TWindow* w = PleaseWaitWnd();
     std::vector<std::string> objs = jvm_read_interfaces(main_handle,nnames);
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
     ListBox(objs,title,flags,-1);
 exit:
     return fpos;
@@ -318,7 +319,7 @@ std::vector<std::string> JVM_Parser::jvm_read_attributes(binary_stream& handle,s
 
 __filesize_t  JVM_Parser::__ShowAttributes(const std::string& title) const
 {
-    __filesize_t fpos = beye_context().tell();
+    __filesize_t fpos = bctx.tell();
     int ret;
     ssize_t nnames = jvm_header.attributes_count;
     int flags = LB_SELECTIVE;
@@ -327,7 +328,7 @@ __filesize_t  JVM_Parser::__ShowAttributes(const std::string& title) const
     w = PleaseWaitWnd();
     std::vector<std::string> objs = jvm_read_attributes(main_handle,nnames);
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
     ret = ListBox(objs,title,flags,-1);
 exit:
     if(ret!=-1) {
@@ -379,7 +380,7 @@ std::vector<std::string> JVM_Parser::jvm_read_methods(binary_stream& handle,size
 
 __filesize_t JVM_Parser::action_F3()
 {
-    __filesize_t fpos = beye_context().tell();
+    __filesize_t fpos = bctx.tell();
     int ret;
     std::string title = " length   attributes ";
     ssize_t nnames = jvm_header.methods_count;
@@ -389,7 +390,7 @@ __filesize_t JVM_Parser::action_F3()
     w = PleaseWaitWnd();
     std::vector<std::string> objs = jvm_read_methods(main_handle,nnames);
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
     ret = ListBox(objs,title,flags,-1);
 exit:
     if(ret!=-1) {
@@ -451,7 +452,7 @@ std::vector<std::string> JVM_Parser::jvm_read_fields(binary_stream& handle,size_
 
 __filesize_t JVM_Parser::action_F4()
 {
-    __filesize_t fpos = beye_context().tell();
+    __filesize_t fpos = bctx.tell();
     int ret;
     std::string title = " length   attributes ";
     ssize_t nnames = jvm_header.fields_count;
@@ -461,7 +462,7 @@ __filesize_t JVM_Parser::action_F4()
     w = PleaseWaitWnd();
     std::vector<std::string> objs = jvm_read_fields(main_handle,nnames);
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
     ret = ListBox(objs,title,flags,-1);
 exit:
     if(ret!=-1) {
@@ -576,21 +577,22 @@ std::vector<std::string> JVM_Parser::jvm_read_pool(binary_stream& handle,size_t 
 
 __filesize_t JVM_Parser::action_F8()
 {
-    __filesize_t fpos = beye_context().tell();
+    __filesize_t fpos = bctx.tell();
     std::string title = " Constant pool ";
     ssize_t nnames = jvm_header.constant_pool_count;
     int flags = LB_SORTABLE;
     TWindow* w = PleaseWaitWnd();
     std::vector<std::string> objs = jvm_read_pool(main_handle,nnames);
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
     ListBox(objs,title,flags,-1);
 exit:
     return fpos;
 }
 
-JVM_Parser::JVM_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
-	    :Binary_Parser(h,code_guider,u)
+JVM_Parser::JVM_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(b,h,code_guider,u)
+	    ,bctx(b)
 	    ,main_handle(h)
 	    ,_udn(u)
 {
@@ -673,7 +675,7 @@ __filesize_t JVM_Parser::show_header() const
     unsigned keycode;
     char sinfo[70];
     std::string sinfo2,sinfo3;
-    entry=beye_context().tell();
+    entry=bctx.tell();
     hwnd = CrtDlgWndnls(" ClassFile Header ",78,11);
     hwnd->goto_xy(1,1);
     decode_acc_flags(jvm_header.access_flags,sinfo);
@@ -998,7 +1000,7 @@ bool JVM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
     return retrf;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) JVM_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) JVM_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info jvm_info = {
     "Java's ClassFile",	/**< plugin name */
     query_interface

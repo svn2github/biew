@@ -54,7 +54,7 @@ namespace	usr {
 
     class Java_Disassembler : public Disassembler {
 	public:
-	    Java_Disassembler(const Bin_Format& b,binary_stream& h,DisMode& parent);
+	    Java_Disassembler(BeyeContext& bc,const Bin_Format& b,binary_stream& h,DisMode& parent);
 	    virtual ~Java_Disassembler();
 	
 	    virtual const char*	prompt(unsigned idx) const;
@@ -71,6 +71,7 @@ namespace	usr {
 	    virtual void	read_ini(Ini_Profile&);
 	    virtual void	save_ini(Ini_Profile&);
 	private:
+	    BeyeContext&	bctx;
 	    DisMode&		parent;
 	    binary_stream&	main_handle;
 	    const Bin_Format&	bin_format;
@@ -643,7 +644,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 
 void Java_Disassembler::show_short_help() const
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(20030);
 	bhelp.close();
@@ -652,7 +653,7 @@ void Java_Disassembler::show_short_help() const
 
 bool Java_Disassembler::action_F1()
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(20031);
 	bhelp.close();
@@ -673,8 +674,9 @@ char Java_Disassembler::clone_short_name( unsigned long clone )
   return ' ';
 }
 
-Java_Disassembler::Java_Disassembler(const Bin_Format& b,binary_stream& h,DisMode& _parent )
-		:Disassembler(b,h,_parent)
+Java_Disassembler::Java_Disassembler(BeyeContext& bc,const Bin_Format& b,binary_stream& h,DisMode& _parent )
+		:Disassembler(bc,b,h,_parent)
+		,bctx(bc)
 		,parent(_parent)
 		,main_handle(h)
 		,bin_format(b)
@@ -698,7 +700,7 @@ const char* Java_Disassembler::prompt(unsigned idx) const {
     return "";
 }
 
-static Disassembler* query_interface(const Bin_Format& b,binary_stream& h,DisMode& _parent) { return new(zeromem) Java_Disassembler(b,h,_parent); }
+static Disassembler* query_interface(BeyeContext& bc,const Bin_Format& b,binary_stream& h,DisMode& _parent) { return new(zeromem) Java_Disassembler(bc,b,h,_parent); }
 extern const Disassembler_Info java_disassembler_info = {
     DISASM_JAVA,
     "~Java",	/**< plugin name */

@@ -273,7 +273,7 @@ typedef struct tagLXResource
 #endif
     class LX_Parser : public MZ_Parser {
 	public:
-	    LX_Parser(binary_stream&,CodeGuider&,udn&);
+	    LX_Parser(BeyeContext& b,binary_stream&,CodeGuider&,udn&);
 	    virtual ~LX_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -340,7 +340,7 @@ typedef struct tagLXResource
 
     class LE_Parser : public LX_Parser {
 	public:
-	    LE_Parser(binary_stream& h,CodeGuider&,udn&);
+	    LE_Parser(BeyeContext& b,binary_stream& h,CodeGuider&,udn&);
 	    virtual ~LE_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;

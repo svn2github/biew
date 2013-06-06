@@ -34,7 +34,7 @@ using namespace	usr;
 namespace	usr {
     class ASF_Parser : public Binary_Parser {
 	public:
-	    ASF_Parser(binary_stream& h,CodeGuider&,udn&);
+	    ASF_Parser(BeyeContext& b,binary_stream& h,CodeGuider&,udn&);
 	    virtual ~ASF_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -42,6 +42,7 @@ namespace	usr {
 	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 	private:
+	    BeyeContext&	bctx;
 	    binary_stream&	main_handle;
 	    udn&		_udn;
     };
@@ -50,12 +51,13 @@ const char* ASF_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
 __filesize_t ASF_Parser::show_header() const
 {
-    beye_context().ErrMessageBox("Not implemented yet!","ASF format");
-    return beye_context().tell();
+    bctx.ErrMessageBox("Not implemented yet!","ASF format");
+    return bctx.tell();
 }
 
-ASF_Parser::ASF_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
-	    :Binary_Parser(h,code_guider,u)
+ASF_Parser::ASF_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(b,h,code_guider,u)
+	    ,bctx(b)
 	    ,main_handle(h)
 	    ,_udn(u)
 {
@@ -70,7 +72,7 @@ ASF_Parser::~ASF_Parser() {}
 
 int ASF_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) ASF_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) ASF_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info asf_info = {
     "Advanced stream file format v1",	/**< plugin name */
     query_interface

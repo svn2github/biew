@@ -21,7 +21,7 @@ struct hIniProfile;
 namespace	usr {
     extern unsigned		hexAddressResolv;
     bool __FASTCALL__		hexAddressResolution(unsigned& hexAddressResolv);
-    unsigned  __FASTCALL__	ReadIniAResolv( Ini_Profile& ini );
-    void  __FASTCALL__		WriteIniAResolv( Ini_Profile& ini,unsigned hexAddressResolv, unsigned virt_width_corr);
+    unsigned  __FASTCALL__	ReadIniAResolv(BeyeContext& bc, Ini_Profile& ini );
+    void  __FASTCALL__		WriteIniAResolv(BeyeContext& bc, Ini_Profile& ini,unsigned hexAddressResolv, unsigned virt_width_corr);
 } // namespace	usr
 #endif

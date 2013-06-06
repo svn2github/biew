@@ -6118,7 +6118,7 @@ const char* ix86_Disassembler::prompt(unsigned idx) const {
 
 bool ix86_Disassembler::action_F1()
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(20000);
 	bhelp.close();
@@ -6133,7 +6133,7 @@ void ix86_Disassembler::show_short_help() const
     unsigned evt;
     size_t i,sz;
     TWindow* hwnd;
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
 
     if(!bhelp.open(true)) return;
     binary_packet msgAsmText = bhelp.load_item(20041);
@@ -6253,8 +6253,9 @@ const assembler_t ix86_Disassembler::assemblers[] = {
 #define pclose(fp) fclose(fp)
 #endif
 
-ix86_Disassembler::ix86_Disassembler(const Bin_Format& b,binary_stream& h,DisMode& _parent )
-		    :Disassembler(b,h,_parent)
+ix86_Disassembler::ix86_Disassembler(BeyeContext& bc,const Bin_Format& b,binary_stream& h,DisMode& _parent )
+		    :Disassembler(bc,b,h,_parent)
+		    ,bctx(bc)
 		    ,parent(_parent)
 		    ,main_handle(h)
 		    ,bin_format(b)
@@ -6272,7 +6273,7 @@ ix86_Disassembler::ix86_Disassembler(const Bin_Format& b,binary_stream& h,DisMod
 #ifdef HAVE_POPEN
   //Assembler initialization
   //Look for an available assembler
-  if (active_assembler == -1 && beye_context().iniUseExtProgs==true) //Execute this only once
+  if (active_assembler == -1 && bctx.iniUseExtProgs==true) //Execute this only once
   {
     int i;
     for (i = 0; assemblers[i].detect_command; i++)
@@ -6308,9 +6309,9 @@ ix86_Disassembler::~ix86_Disassembler()
 void ix86_Disassembler::read_ini( Ini_Profile& ini )
 {
   std::string tmps;
-  if(beye_context().is_valid_ini_args())
+  if(bctx.is_valid_ini_args())
   {
-    tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode3","1");
+    tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode3","1");
     BITNESS = Bin_Format::bitness((unsigned)strtoul(tmps.c_str(),NULL,10));
     if(BITNESS > 2 && BITNESS != Bin_Format::Auto) BITNESS = Bin_Format::Use16;
     x86_Bitness = BITNESS;
@@ -6321,7 +6322,7 @@ void ix86_Disassembler::save_ini( Ini_Profile& ini )
 {
   char tmps[10];
   sprintf(tmps,"%u",BITNESS);
-  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
+  bctx.write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
 }
 
 const unsigned ix86_Disassembler::CODEBUFFER_LEN=64;
@@ -6352,7 +6353,7 @@ AsmRet ix86_Disassembler::assembler(const char *code)
   if (active_assembler<0) goto noassemblererror;
   if (!assemblers[active_assembler].run_command) goto noassemblererror;
 
-  home = beye_context().system().get_home_dir("beye");
+  home = bctx.system().get_home_dir("beye");
 
   //File cleanup
   sprintf(commandbuffer, "%stmp0", home.c_str());
@@ -6472,7 +6473,7 @@ done:
   return result;
 }
 
-static Disassembler* query_interface(const Bin_Format& b,binary_stream& h,DisMode& parent) { return new(zeromem) ix86_Disassembler(b,h,parent); }
+static Disassembler* query_interface(BeyeContext& bc,const Bin_Format& b,binary_stream& h,DisMode& parent) { return new(zeromem) ix86_Disassembler(bc,b,h,parent); }
 
 extern const Disassembler_Info ix86_disassembler_info = {
     DISASM_CPU_IX86,

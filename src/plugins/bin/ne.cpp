@@ -219,7 +219,7 @@ __filesize_t NE_Parser::action_F8()
     CS = (unsigned)((ne.neCSIPvalue) >> 16);  /** segment number */
     IP = (unsigned)(ne.neCSIPvalue & 0xFFFF); /** offset within segment */
     entryNE = CalcEntryPointNE(CS,IP);
-    pos = beye_context().tell();
+    pos = bctx().tell();
     std::vector<std::string> v;
     v.push_back("");
     v.push_back("");
@@ -347,9 +347,9 @@ __filesize_t NE_Parser::action_F2()
     unsigned nnames;
     __filesize_t fret;
     TWindow * w;
-    fret = beye_context().tell();
+    fret = bctx().tell();
     handle.seek(0L,binary_stream::Seek_Set);
-    if(!(nnames = ne.neModuleReferenceTableCount)) { beye_context().NotifyBox(NOT_ENTRY,MOD_REFER); return fret; }
+    if(!(nnames = ne.neModuleReferenceTableCount)) { bctx().NotifyBox(NOT_ENTRY,MOD_REFER); return fret; }
     w = PleaseWaitWnd();
     std::vector<std::string> objs = __ReadModRefNamesNE(handle);
     delete w;
@@ -421,7 +421,7 @@ void NE_Parser::ShowProcListNE( int modno ) const
     w = PleaseWaitWnd();
     std::vector<std::string> objs = __ReadProcListNE(handle,modno);
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,MOD_REFER); return; }
+    if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,MOD_REFER); return; }
     name=rd_ImpName(modno+1,false);
     sprintf(ptitle,"%s%s ",IMPPROC_TABLE,name.c_str());
     ListBox(objs,ptitle,LB_SORTABLE,-1);
@@ -577,14 +577,14 @@ __filesize_t  NE_Parser::CalcEntryNE(unsigned ord,bool dispmsg) const
   ENTRY entr;
   SEGDEF segd;
   int segnum;
-  if(!ReadEntryNE(&entr,ord)) { if(dispmsg) beye_context().ErrMessageBox(NOT_ENTRY,""); return 0L; }
+  if(!ReadEntryNE(&entr,ord)) { if(dispmsg) bctx().ErrMessageBox(NOT_ENTRY,""); return 0L; }
   if(entr.eFixed == 0xFE)
   {
     char outs[100];
     if(dispmsg)
     {
       sprintf(outs,"This entry is constant : %04hXH",entr.eSegOff);
-      beye_context().TMessageBox(outs,"Virtual entry");
+      bctx().TMessageBox(outs,"Virtual entry");
     }
     return 0L;
   }
@@ -593,7 +593,7 @@ __filesize_t  NE_Parser::CalcEntryNE(unsigned ord,bool dispmsg) const
   {
     return segd.sdOffset ? (((__filesize_t)segd.sdOffset)<<ne.neLogicalSectorShiftCount) + entr.eSegOff : 0L;
   }
-  else if(dispmsg) beye_context().ErrMessageBox(NO_ENTRY,BAD_ENTRY);
+  else if(dispmsg) bctx().ErrMessageBox(NO_ENTRY,BAD_ENTRY);
   return 0L;
 }
 
@@ -603,8 +603,8 @@ __filesize_t NE_Parser::action_F10()
     unsigned nnames;
     __filesize_t fpos;
     nnames = ne.neSegmentTableCount;
-    fpos = beye_context().tell();
-    if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Segment Definition "); return fpos; }
+    fpos = bctx().tell();
+    if(!nnames) { bctx().NotifyBox(NOT_ENTRY," Segment Definition "); return fpos; }
     handle.seek((__fileoff_t)headshift() + ne.neOffsetSegmentTable,binary_stream::Seek_Set);
     std::vector<SEGDEF> objs = __ReadSegTableNE(handle,nnames);
     if(!objs.empty()) {
@@ -663,8 +663,8 @@ __filesize_t NE_Parser::action_F6()
     unsigned nnames;
     __filesize_t fpos;
     nnames = GetEntryCountNE();
-    fpos = beye_context().tell();
-    if(!nnames) { beye_context().NotifyBox(NOT_ENTRY," Entries "); return fpos; }
+    fpos = bctx().tell();
+    if(!nnames) { bctx().NotifyBox(NOT_ENTRY," Entries "); return fpos; }
     handle.seek((__fileoff_t)headshift() + ne.neOffsetEntryTable,binary_stream::Seek_Set);
     std::vector<ENTRY> objs = __ReadEntryTableNE(handle);
     if(!objs.empty()) {
@@ -791,9 +791,9 @@ __filesize_t NE_Parser::action_F7()
     binary_stream& handle = *ne_cache;
     long * raddr;
     unsigned nrgroup;
-    fpos = beye_context().tell();
+    fpos = bctx().tell();
     handle.seek((__fileoff_t)headshift() + ne.neOffsetResourceTable,binary_stream::Seek_Set);
-    if(!(nrgroup = GetResourceGroupCountNE(handle))) { beye_context().NotifyBox(NOT_ENTRY," Resources "); return fpos; }
+    if(!(nrgroup = GetResourceGroupCountNE(handle))) { bctx().NotifyBox(NOT_ENTRY," Resources "); return fpos; }
     if(!(raddr  = new long [nrgroup])) return fpos;
     std::vector<std::string> objs = __ReadResourceGroupNE(handle,nrgroup,raddr);
     if(!objs.empty()) {
@@ -806,7 +806,7 @@ __filesize_t NE_Parser::action_F7()
 
 __filesize_t NE_Parser::action_F3()
 {
-    __filesize_t fpos = beye_context().tell();
+    __filesize_t fpos = bctx().tell();
     int ret;
     unsigned ordinal;
     std::string title = RES_NAMES;
@@ -817,7 +817,7 @@ __filesize_t NE_Parser::action_F3()
     w = PleaseWaitWnd();
     std::vector<std::string> objs = NERNamesReadItems(main_handle(),nnames);
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,title); goto exit; }
     ret = ListBox(objs,title,flags,-1);
     if(ret != -1) {
 	const char* cptr;
@@ -834,7 +834,7 @@ exit:
 
 __filesize_t NE_Parser::action_F4()
 {
-    __filesize_t fpos = beye_context().tell();
+    __filesize_t fpos = bctx().tell();
     int ret;
     unsigned ordinal;
     std::string title = NORES_NAMES;
@@ -845,7 +845,7 @@ __filesize_t NE_Parser::action_F4()
     w = PleaseWaitWnd();
     std::vector<std::string> objs = NENRNamesReadItems(main_handle(),nnames);
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,title); goto exit; }
     ret = ListBox(objs,title,flags,-1);
     if(ret != -1) {
 	const char* cptr;
@@ -1188,8 +1188,8 @@ void NE_Parser::ne_ReadPubNameList(binary_stream& handle)
     ReadPubNames(handle,ne.neOffsetNonResidentNameTable);
 }
 
-NE_Parser::NE_Parser(binary_stream& h,CodeGuider& __code_guider,udn& u)
-	:MZ_Parser(h,__code_guider,u)
+NE_Parser::NE_Parser(BeyeContext& b,binary_stream& h,CodeGuider& __code_guider,udn& u)
+	:MZ_Parser(b,h,__code_guider,u)
 	,CurrChainSegment(0xFFFF)
 	,CurrSegmentHasReloc(-1)
 {
@@ -1222,12 +1222,12 @@ NE_Parser::~NE_Parser()
 
 __filesize_t NE_Parser::action_F1()
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx());
     if(bhelp.open(true)) {
 	bhelp.run(10006);
 	bhelp.close();
     }
-    return beye_context().tell();
+    return bctx().tell();
 }
 
 __filesize_t NE_Parser::va2pa(__filesize_t va) const
@@ -1372,7 +1372,7 @@ bool NE_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 
 int NE_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) NE_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) NE_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info ne_info = {
     "NE (New Exe)",	/**< plugin name */
     query_interface

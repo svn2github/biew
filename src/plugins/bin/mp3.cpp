@@ -37,7 +37,7 @@ using namespace	usr;
 namespace	usr {
     class MP3_Parser : public Binary_Parser {
 	public:
-	    MP3_Parser(binary_stream&,CodeGuider&,udn&);
+	    MP3_Parser(BeyeContext& b,binary_stream&,CodeGuider&,udn&);
 	    virtual ~MP3_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -55,6 +55,7 @@ namespace	usr {
 	    int			read_id3v23_tags(unsigned flags,unsigned hsize) const;
 	    int			read_id3v22_tags(unsigned flags,unsigned hsize) const;
 
+	    BeyeContext&	bctx;
 	    binary_stream&	main_handle;
 	    udn&		_udn;
     };
@@ -390,7 +391,7 @@ __filesize_t MP3_Parser::show_header() const
  int scale,lsf,srate;
  long nframes,nbytes,ave_brate;
  int is_xing=0;
- fpos2 = fpos = beye_context().tell();
+ fpos2 = fpos = bctx.tell();
  main_handle.seek(0,binary_stream::Seek_Set);
  main_handle.read(hdr,4);
  if( hdr[0] == 'I' && hdr[1] == 'D' && hdr[2] == '3' && (hdr[3] >= 2))
@@ -436,8 +437,9 @@ __filesize_t MP3_Parser::show_header() const
  return fpos;
 }
 
-MP3_Parser::MP3_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
-	    :Binary_Parser(h,code_guider,u)
+MP3_Parser::MP3_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(b,h,code_guider,u)
+	    ,bctx(b)
 	    ,main_handle(h)
 	    ,_udn(u)
 {
@@ -471,7 +473,7 @@ MP3_Parser::MP3_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
 MP3_Parser::~MP3_Parser() {}
 int MP3_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) MP3_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) MP3_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info mp3_info = {
     "MP3 file format",	/**< plugin name */
     query_interface

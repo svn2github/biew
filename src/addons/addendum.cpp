@@ -39,15 +39,16 @@ void addendum::select()
     retval = ListBox(toolName,nTools," Select tool: ",LB_SELECTIVE|LB_USEACC,defToolSel);
     if(retval != -1) {
 	const Addon_Info* addon_info = list[retval];
-	Addon* addon = addon_info->query_interface();
+	Addon* addon = addon_info->query_interface(bctx);
 	addon->run();
 	delete addon;
 	defToolSel = retval;
     }
 }
 
-addendum::addendum()
-	:defToolSel(0)
+addendum::addendum(BeyeContext& bc)
+	:bctx(bc)
+	,defToolSel(0)
 {
     list.push_back(&DigitalConvertor);
     list.push_back(&Calculator);

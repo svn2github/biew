@@ -86,7 +86,7 @@ __filesize_t LE_Parser::CalcPageEntry(unsigned long pageidx) const
     }
   }
   if(found) return __calcPageEntryLE((LE_PAGE*)&mt,pageidx - 1);
-  else      return beye_context().tell();
+  else      return bctx().tell();
 }
 
 __filesize_t LE_Parser::CalcEntryPoint(unsigned long objnum,__filesize_t _offset) const
@@ -123,7 +123,7 @@ __filesize_t LE_Parser::CalcEntryPoint(unsigned long objnum,__filesize_t _offset
 	if(mt.number == pidx) { found = true; break; }
       }
       if(found) ret = __calcPageEntryLE((LE_PAGE*)&mt,pidx - 1) + _offset - start;
-      else      ret = beye_context().tell();
+      else      ret = bctx().tell();
       break;
     }
     if(is_eof) break;
@@ -135,7 +135,7 @@ __filesize_t LE_Parser::CalcEntryPoint(unsigned long objnum,__filesize_t _offset
 __filesize_t LE_Parser::CalcEntryLE(const LX_ENTRY& lxent) const
 {
     __filesize_t ret;
-    ret = beye_context().tell();
+    ret = bctx().tell();
     switch(lxent.b32_type) {
 	case 1: ret = CalcEntryPoint(lxent.b32_obj,lxent.entry.e32_variant.e32_offset.offset16);
 		      break;
@@ -160,7 +160,7 @@ __filesize_t LE_Parser::CalcEntryBungleLE(unsigned ordinal,bool dispmsg) const
   uint_fast16_t numobj = 0;
   LX_ENTRY lxent;
   __filesize_t ret;
-  ret = beye_context().tell();
+  ret = bctx().tell();
   handle = lx_cache;
   handle->seek(lxe.le.leEntryTableOffset + headshift(),binary_stream::Seek_Set);
   i = 0;
@@ -203,13 +203,13 @@ __filesize_t LE_Parser::CalcEntryBungleLE(unsigned ordinal,bool dispmsg) const
    if(found) break;
  }
  if(found) ret = CalcEntryLE(lxent);
- else      if(dispmsg) beye_context().ErrMessageBox(NOT_ENTRY,"");
+ else      if(dispmsg) bctx().ErrMessageBox(NOT_ENTRY,"");
  return ret;
 }
 
 __filesize_t LE_Parser::action_F10()
 {
-    __filesize_t fpos = beye_context().tell();
+    __filesize_t fpos = bctx().tell();
     int ret;
     std::string title = " Map of pages ";
     ssize_t nnames = (unsigned)lxe.le.lePageCount;
@@ -219,7 +219,7 @@ __filesize_t LE_Parser::action_F10()
     w = PleaseWaitWnd();
     std::vector<std::string> objs = __ReadMapTblLE(main_handle(),nnames);
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,title); goto exit; }
     ret = ListBox(objs,title,flags,-1);
 exit:
     if(ret != -1) fpos = CalcPageEntry(ret + 1);
@@ -228,7 +228,7 @@ exit:
 
 __filesize_t LE_Parser::action_F3()
 {
-    __filesize_t fpos = beye_context().tell();
+    __filesize_t fpos = bctx().tell();
     int ret;
     unsigned ordinal;
     std::string title = RES_NAMES;
@@ -239,7 +239,7 @@ __filesize_t LE_Parser::action_F3()
     w = PleaseWaitWnd();
     std::vector<std::string> objs = LXRNamesReadItems(main_handle(),nnames);
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,title); goto exit; }
     ret = ListBox(objs,title,flags,-1);
     if(ret != -1) {
 	const char* cptr;
@@ -256,7 +256,7 @@ exit:
 
 __filesize_t LE_Parser::action_F4()
 {
-    __filesize_t fpos = beye_context().tell();
+    __filesize_t fpos = bctx().tell();
     int ret;
     unsigned ordinal;
     std::string title = NORES_NAMES;
@@ -267,7 +267,7 @@ __filesize_t LE_Parser::action_F4()
     w = PleaseWaitWnd();
     std::vector<std::string> objs = LXNRNamesReadItems(main_handle(),nnames);
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,title); goto exit; }
     ret = ListBox(objs,title,flags,-1);
     if(ret != -1) {
 	const char* cptr;
@@ -282,8 +282,8 @@ exit:
     return fpos;
 }
 
-LE_Parser::LE_Parser(binary_stream& h,CodeGuider& __code_guider,udn& u)
-	:LX_Parser(h,__code_guider,u)
+LE_Parser::LE_Parser(BeyeContext& b,binary_stream& h,CodeGuider& __code_guider,udn& u)
+	:LX_Parser(b,h,__code_guider,u)
 {
     if(headshift()) {
 	char id[2];
@@ -301,12 +301,12 @@ LE_Parser::~LE_Parser()
 
 __filesize_t LE_Parser::action_F1()
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx());
     if(bhelp.open(true)) {
 	bhelp.run(10004);
 	bhelp.close();
     }
-    return beye_context().tell();
+    return bctx().tell();
 }
 
 bool LE_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
@@ -339,7 +339,7 @@ bool LE_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 
 int LE_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) LE_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) LE_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info le_info = {
     "LE (Linear Executable)",	/**< plugin name */
     query_interface

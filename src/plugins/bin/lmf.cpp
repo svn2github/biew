@@ -57,7 +57,7 @@ namespace	usr {
 
     class LMF_Parser : public Binary_Parser {
 	public:
-	    LMF_Parser(binary_stream&,CodeGuider&,udn&);
+	    LMF_Parser(BeyeContext& b,binary_stream&,CodeGuider&,udn&);
 	    virtual ~LMF_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -83,6 +83,7 @@ namespace	usr {
 	    uint32_t		reclast;
 	    uint32_t		segbase[MAXSEG];
 
+	    BeyeContext&	bctx;
 	    binary_stream&	main_handle;
 	    udn&		_udn;
 
@@ -113,8 +114,9 @@ inline size_t __CONST_FUNC__ DEFSIZE() { return sizeof(lmf_definition); }
 inline size_t __CONST_FUNC__ DATSIZE() { return sizeof(lmf_data); }
 inline size_t __CONST_FUNC__ HDRSIZE() { return sizeof(lmf_header); }
 
-LMF_Parser::LMF_Parser(binary_stream& _h,CodeGuider& code_guider,udn& u)
-	    :Binary_Parser(_h,code_guider,u)
+LMF_Parser::LMF_Parser(BeyeContext& b,binary_stream& _h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(b,_h,code_guider,u)
+	    ,bctx(b)
 	    ,main_handle(_h)
 	    ,_udn(u)
 {
@@ -432,7 +434,7 @@ std::vector<std::string> LMF_Parser::lmf_ReadSecHdr(binary_stream& handle,size_t
 
 __filesize_t LMF_Parser::action_F9()
 {
-    __filesize_t fpos=beye_context().tell();
+    __filesize_t fpos=bctx.tell();
     int ret;
     std::string title = " Num Type              Seg Virtual addresses   ";
     ssize_t nnames = reclast+1;
@@ -442,7 +444,7 @@ __filesize_t LMF_Parser::action_F9()
     w = PleaseWaitWnd();
     std::vector<std::string> objs = lmf_ReadSecHdr(main_handle,nnames);
     delete w;
-    if(objs.empty()) { beye_context().NotifyBox(NOT_ENTRY,title); goto exit; }
+    if(objs.empty()) { bctx.NotifyBox(NOT_ENTRY,title); goto exit; }
     ret = ListBox(objs,title,flags,-1);
 exit:
     if(ret!=-1) fpos=hl[ret].file_pos;
@@ -458,7 +460,7 @@ __filesize_t LMF_Parser::show_header() const
 	char tmp[30];
 	unsigned keycode;
 /*	unsigned long entrya;*/
-	fpos = beye_context().tell();
+	fpos = bctx.tell();
 	sprintf(hdr," QNX%d Load Module Format Header ",xdef.def.version_no/100);
 	sprintf(tmp,"%s%sPrivity=%d%s%s",
 		(xdef.def.cflags&_PCF_LONG_LIVED)?"Long lived, ":"",
@@ -536,15 +538,15 @@ __filesize_t LMF_Parser::show_header() const
 
 __filesize_t LMF_Parser::action_F1()
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(10015);
 	bhelp.close();
     }
-    return beye_context().tell();
+    return bctx.tell();
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) LMF_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) LMF_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info lmf_info = {
     "lmf (QNX4 executable file)",	/**< plugin name */
     query_interface

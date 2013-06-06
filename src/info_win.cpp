@@ -504,7 +504,7 @@ void About()
 	hwnd->puts(CompScreenPicture[i]);
     }
     hwnd->refresh();
-    Beye_Help bhelp;
+    Beye_Help bhelp(beye_context());
     while(1) {
 	unsigned id;
 	int ch;

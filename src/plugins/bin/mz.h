@@ -56,7 +56,7 @@ namespace	usr {
 
     class MZ_Parser : public Binary_Parser {
 	public:
-	    MZ_Parser(binary_stream& h,CodeGuider&,udn&);
+	    MZ_Parser(BeyeContext& b,binary_stream& h,CodeGuider&,udn&);
 	    virtual ~MZ_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -72,6 +72,7 @@ namespace	usr {
 	    static __filesize_t		is_new_exe(binary_stream& main_handle);
 	protected:
 	    CodeGuider&			code_guider() const __PURE_FUNC__ { return _code_guider; }
+	    BeyeContext&		bctx() const __PURE_FUNC__ { return _bctx; }
 	    binary_stream&		main_handle() const __PURE_FUNC__ { return _main_handle; }
 	    virtual __filesize_t	headshift() const __PURE_FUNC__ { return _headshift; }
 	    udn&			_udn() const __PURE_FUNC__ { return __udn; }
@@ -86,6 +87,7 @@ namespace	usr {
 	    unsigned long	HeadSize;
 	    std::set<MZ_Reloc> CurrMZChain;
 	    __filesize_t	_headshift;
+	    BeyeContext&	_bctx;
 	    binary_stream&	_main_handle;
 	    CodeGuider&		_code_guider;
 	    udn&		__udn;

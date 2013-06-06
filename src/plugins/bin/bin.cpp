@@ -26,7 +26,7 @@ using namespace	usr;
 namespace	usr {
     class Bin_Parser : public Binary_Parser {
 	public:
-	    Bin_Parser(binary_stream& h,CodeGuider&,udn&);
+	    Bin_Parser(BeyeContext& b,binary_stream& h,CodeGuider&,udn&);
 	    virtual ~Bin_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -36,12 +36,12 @@ namespace	usr {
 static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
 const char* Bin_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-Bin_Parser::Bin_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
-	    :Binary_Parser(h,code_guider,u) {}
+Bin_Parser::Bin_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(b,h,code_guider,u) {}
 Bin_Parser::~Bin_Parser() {}
 int  Bin_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) Bin_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) Bin_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info bin_info = {
     "Binary file",	/**< plugin name */
     query_interface

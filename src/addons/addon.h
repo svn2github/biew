@@ -4,9 +4,10 @@
 #include "libbeye/libbeye.h"
 
 namespace	usr {
+    class BeyeContext;
     class Addon : public Opaque {
 	public:
-	    Addon() {}
+	    Addon(BeyeContext&) {}
 	    virtual ~Addon() {}
 
 	    virtual void	run() = 0;
@@ -14,7 +15,7 @@ namespace	usr {
 
     struct Addon_Info {
 	const char* name;
-	Addon* (*query_interface)();
+	Addon* (*query_interface)(BeyeContext& bc);
     };
 
 } // namespace	usr

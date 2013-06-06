@@ -32,7 +32,7 @@ using namespace	usr;
 namespace	usr {
     class RDOff2_Parser : public Binary_Parser {
 	public:
-	    RDOff2_Parser(binary_stream&,CodeGuider&,udn&);
+	    RDOff2_Parser(BeyeContext& b,binary_stream&,CodeGuider&,udn&);
 	    virtual ~RDOff2_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -41,6 +41,7 @@ namespace	usr {
 	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 	private:
+	    BeyeContext&		bctx;
 	    binary_stream&		main_handle;
 	    udn&			_udn;
     };
@@ -53,7 +54,7 @@ __filesize_t RDOff2_Parser::show_header() const
   __filesize_t fpos;
   unsigned long hs_len,im_len;
   TWindow *w;
-  fpos = beye_context().tell();
+  fpos = bctx.tell();
   main_handle.seek(5,binary_stream::Seek_Set);
   endian = main_handle.read(type_byte);
   im_len = main_handle.read(type_dword);
@@ -88,17 +89,18 @@ __filesize_t RDOff2_Parser::show_header() const
 
 __filesize_t RDOff2_Parser::action_F1()
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(10012);
 	bhelp.close();
     }
-    return beye_context().tell();
+    return bctx.tell();
 }
 
 
-RDOff2_Parser::RDOff2_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
-	    :Binary_Parser(h,code_guider,u)
+RDOff2_Parser::RDOff2_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(b,h,code_guider,u)
+	    ,bctx(b)
 	    ,main_handle(h)
 	    ,_udn(u)
 {
@@ -112,7 +114,7 @@ RDOff2_Parser::~RDOff2_Parser() {}
 
 int RDOff2_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) RDOff2_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) RDOff2_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info rdoff2_info = {
     "RDOFF v2 (Relocatable Dynamic Object File Format)",	/**< plugin name */
     query_interface

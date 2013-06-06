@@ -59,20 +59,22 @@ namespace	usr {
 */
     class Mpeg_Parser : public Binary_Parser {
 	public:
-	    Mpeg_Parser(binary_stream&,CodeGuider&,udn& u);
+	    Mpeg_Parser(BeyeContext& b,binary_stream&,CodeGuider&,udn& u);
 	    virtual ~Mpeg_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
 	    virtual int			query_platform() const;
 	private:
+	    BeyeContext&	bctx;
 	    binary_stream&	main_handle;
 	    udn&		_udn;
     };
 static const char* txt[]={ "", "", "", "", "", "", "", "", "", "" };
 const char* Mpeg_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-Mpeg_Parser::Mpeg_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
-	    :Binary_Parser(h,code_guider,u)
+Mpeg_Parser::Mpeg_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(b,h,code_guider,u)
+	    ,bctx(b)
 	    ,main_handle(h)
 	    ,_udn(u)
 {
@@ -81,7 +83,7 @@ Mpeg_Parser::Mpeg_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
 Mpeg_Parser::~Mpeg_Parser() {}
 int Mpeg_Parser::query_platform() const { return DISASM_DEFAULT; }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) Mpeg_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) Mpeg_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info mpeg_info = {
     "MPEG-PES file format",	/**< plugin name */
     query_interface

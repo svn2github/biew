@@ -7,6 +7,7 @@
 #include "beyeutil.h"
 
 namespace	usr {
+    class BeyeContext;
     class TWindow;
     class Search;
     class CodeGuider;
@@ -42,7 +43,7 @@ namespace	usr {
 		Has_ConvertCP	=0x0010
 	    };
 
-	    Plugin(const Bin_Format&,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& _udn,Search& s) { UNUSED(h); UNUSED(main_wnd); UNUSED(code_guider); UNUSED(_udn); UNUSED(s); }
+	    Plugin(BeyeContext&,const Bin_Format&,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& _udn,Search& s) { UNUSED(h); UNUSED(main_wnd); UNUSED(code_guider); UNUSED(_udn); UNUSED(s); }
 	    virtual ~Plugin() {}
 
 	    virtual const char*		prompt(unsigned idx) const = 0;	/**< on Ctrl-Fx selection */
@@ -107,7 +108,7 @@ namespace	usr {
 
     struct Plugin_Info {
 	const char* name;
-	Plugin* (*query_interface)(const Bin_Format&,binary_stream&,TWindow&,CodeGuider&,udn&,Search&);
+	Plugin* (*query_interface)(BeyeContext&,const Bin_Format&,binary_stream&,TWindow&,CodeGuider&,udn&,Search&);
     };
 
     class Binary_Parser;
@@ -138,7 +139,7 @@ namespace	usr {
 		Big	=1
 	    };
 
-	    Bin_Format(CodeGuider& parent,udn& _udn);
+	    Bin_Format(BeyeContext&,CodeGuider& parent,udn& _udn);
 	    virtual ~Bin_Format();
 
 	    virtual void		detect_format(binary_stream& handle);
@@ -203,6 +204,7 @@ namespace	usr {
 	    std::vector<const Binary_Parser_Info*>	formats;
 	    size_t			active_format;
 	    Binary_Parser*		detectedFormat;
+	    BeyeContext&		bctx;
 	    CodeGuider&			parent;
 	    udn&			_udn;
     };

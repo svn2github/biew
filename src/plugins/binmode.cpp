@@ -46,7 +46,7 @@ namespace	usr {
     class Bin_Editor;
     class BinMode : public Plugin {
 	public:
-	    BinMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn&,Search&);
+	    BinMode(BeyeContext& bc,const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn&,Search&);
 	    virtual ~BinMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -78,6 +78,7 @@ namespace	usr {
 	    unsigned		virtWidthCorr;
 	    unsigned		bin_mode; /**< points to currently selected mode text mode */
 	    TWindow&		main_wnd;
+	    BeyeContext&	bctx;
 	    binary_stream&	main_handle;
 	    const Bin_Format&	bin_format;
 	    udn&		_udn;
@@ -86,8 +87,8 @@ namespace	usr {
 
     class Bin_Editor : public Editor {
 	public:
-	    Bin_Editor(TWindow&,BinMode& parent,unsigned bin_mode,unsigned width);
-	    Bin_Editor(TWindow&,BinMode& parent,unsigned bin_mode,unsigned width,const unsigned char *buff,unsigned size);
+	    Bin_Editor(BeyeContext& bc,TWindow&,BinMode& parent,unsigned bin_mode,unsigned width);
+	    Bin_Editor(BeyeContext& bc,TWindow&,BinMode& parent,unsigned bin_mode,unsigned width,const unsigned char *buff,unsigned size);
 	    virtual ~Bin_Editor();
 
 	    virtual void	save_contest();
@@ -96,14 +97,14 @@ namespace	usr {
 	    unsigned	bin_mode;
     };
 
-Bin_Editor::Bin_Editor(TWindow& w,BinMode& _parent,unsigned bmode,unsigned width)
-	    :Editor(w,width)
+Bin_Editor::Bin_Editor(BeyeContext& bc,TWindow& w,BinMode& _parent,unsigned bmode,unsigned width)
+	    :Editor(bc,w,width)
 	    ,parent(_parent)
 	    ,bin_mode(bmode)
 {
 }
-Bin_Editor::Bin_Editor(TWindow& w,BinMode& _parent,unsigned bmode,unsigned width,const unsigned char *buff,unsigned size)
-	    :Editor(w,width,buff,size)
+Bin_Editor::Bin_Editor(BeyeContext& bc,TWindow& w,BinMode& _parent,unsigned bmode,unsigned width,const unsigned char *buff,unsigned size)
+	    :Editor(bc,w,width,buff,size)
 	    ,parent(_parent)
 	    ,bin_mode(bmode)
 {
@@ -116,11 +117,12 @@ void Bin_Editor::save_contest() {
     else parent.save_video(emem.buff,emem.size);
 }
 
-BinMode::BinMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn& u,Search& s)
-	:Plugin(b,h,_main_wnd,code_guider,u,s)
+BinMode::BinMode(BeyeContext& bc,const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn& u,Search& s)
+	:Plugin(bc,b,h,_main_wnd,code_guider,u,s)
 	,virtWidthCorr(0)
 	,bin_mode(MOD_PLAIN)
 	,main_wnd(_main_wnd)
+	,bctx(bc)
 	,main_handle(h)
 	,bin_format(b)
 	,_udn(u)
@@ -240,7 +242,7 @@ plugin_position BinMode::paint( unsigned keycode,unsigned tshift )
 
 void BinMode::help() const
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(1000);
 	bhelp.close();
@@ -259,14 +261,14 @@ void BinMode::save_video(unsigned char *buff,unsigned size)
     std::ofstream fs;
     std::string fname;
     unsigned i;
-    fname = beye_context().bm_file().filename();
+    fname = bctx.bm_file().filename();
     fs.open(fname.c_str(),std::ios_base::binary);
     if(!fs.is_open()) {
 	err:
-	beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
+	bctx.errnoMessageBox(WRITE_FAIL,"",errno);
 	return;
     }
-    fs.seekp(beye_context().tell(),std::ios_base::beg);
+    fs.seekp(bctx.tell(),std::ios_base::beg);
     if(bin_mode==MOD_REVERSE) fs.seekp(1,std::ios_base::cur);
     for(i=0;i<size;i++) {
 	fs.put((uint8_t)buff[i]);
@@ -274,19 +276,19 @@ void BinMode::save_video(unsigned char *buff,unsigned size)
 	fs.seekp(1,std::ios_base::cur);
     }
     fs.close();
-    beye_context().bm_file().reread();
+    bctx.bm_file().reread();
 }
 
 void BinMode::misckey_action() /* EditBin */
 {
     Bin_Editor* editor;
     TWindow *ewin;
-    if(!main_handle.flength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
+    if(!main_handle.flength()) { bctx.ErrMessageBox(NOTHING_EDIT,""); return; }
     ewin = new(zeromem) TWindow(1,2,main_wnd.width()-virtWidthCorr,main_wnd.height(),TWindow::Flag_Has_Cursor);
     ewin->set_color(browser_cset.edit.main); ewin->clear();
     drawEditPrompt();
     ewin->set_focus();
-    if(bin_mode==MOD_PLAIN) editor=new(zeromem) Bin_Editor(*ewin,*this,bin_mode,main_wnd.width()-virtWidthCorr);
+    if(bin_mode==MOD_PLAIN) editor=new(zeromem) Bin_Editor(bctx,*ewin,*this,bin_mode,main_wnd.width()-virtWidthCorr);
     else {
 	unsigned long flen,cfp;
 	unsigned i,size,msize = main_wnd.width()*main_wnd.height();
@@ -298,19 +300,18 @@ void BinMode::misckey_action() /* EditBin */
 	main_handle.read(buff,size*2);
 	main_handle.seek(cfp,binary_stream::Seek_Set);
 	for(i=0;i<size;i++) buff[i]=bin_mode==MOD_BINARY?buff[i*2]:buff[i*2+1];
-	editor=new(zeromem) Bin_Editor(*ewin,*this,bin_mode,main_wnd.width()-virtWidthCorr,buff,size);
+	editor=new(zeromem) Bin_Editor(bctx,*ewin,*this,bin_mode,main_wnd.width()-virtWidthCorr,buff,size);
 	delete buff;
     }
     editor->goto_xy(0,0);
     editor->run();
     delete editor;
     delete ewin;
-    beye_context().PaintTitle();
+    bctx.PaintTitle();
 }
 
 void BinMode::read_ini(Ini_Profile& ini)
 {
-    BeyeContext& bctx = beye_context();
     std::string tmps;
     if(bctx.is_valid_ini_args()) {
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","LastSubMode","0");
@@ -324,7 +325,6 @@ void BinMode::read_ini(Ini_Profile& ini)
 
 void BinMode::save_ini(Ini_Profile& ini)
 {
-    BeyeContext& bctx = beye_context();
     char tmps[10];
     /** Nullify LastSubMode */
     ::sprintf(tmps,"%i",bin_mode);
@@ -336,7 +336,7 @@ void BinMode::save_ini(Ini_Profile& ini)
 unsigned BinMode::get_symbol_size() const { return bin_mode==MOD_PLAIN?1:2; }
 unsigned BinMode::get_max_line_length() const { return main_wnd.client_width(); }
 
-static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& u,Search& s) { return new(zeromem) BinMode(b,h,main_wnd,code_guider,u,s); }
+static Plugin* query_interface(BeyeContext& bc,const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& u,Search& s) { return new(zeromem) BinMode(bc,b,h,main_wnd,code_guider,u,s); }
 
 extern const Plugin_Info binMode = {
     "~Binary mode",	/**< plugin name */

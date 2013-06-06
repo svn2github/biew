@@ -35,13 +35,15 @@ using namespace	usr;
 namespace	usr {
     class ConsoleInfo_Addon : public Addon {
 	public:
-	    ConsoleInfo_Addon();
+	    ConsoleInfo_Addon(BeyeContext& bc);
 	    virtual ~ConsoleInfo_Addon();
 	
 	    virtual void	run();
+	private:
+	    BeyeContext&	bctx;
     };
 
-ConsoleInfo_Addon::ConsoleInfo_Addon() {}
+ConsoleInfo_Addon::ConsoleInfo_Addon(BeyeContext& bc):Addon(bc),bctx(bc) {}
 ConsoleInfo_Addon::~ConsoleInfo_Addon() {}
 
 void ConsoleInfo_Addon::run()
@@ -99,7 +101,7 @@ void ConsoleInfo_Addon::run()
   delete hwnd;
 }
 
-static Addon* query_interface() { return new(zeromem) ConsoleInfo_Addon(); }
+static Addon* query_interface(BeyeContext& bc) { return new(zeromem) ConsoleInfo_Addon(bc); }
 extern const Addon_Info ConsoleInfo = {
     "~Console information",
     query_interface

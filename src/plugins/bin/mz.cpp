@@ -103,7 +103,7 @@ __filesize_t MZ_Parser::show_header() const
     __filesize_t newcpos,fpos;
     unsigned long FPageCnt;
     std::string addinfo;
-    fpos = beye_context().tell();
+    fpos = _bctx.tell();
     keycode = 16;
     if(is_new_exe(_main_handle)) keycode++;
     addinfo = QueryAddInfo();
@@ -227,8 +227,9 @@ bool MZ_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift
 }
 
 /* Special case: this module must not use init and destroy */
-MZ_Parser::MZ_Parser(binary_stream& h,CodeGuider& __code_guider,udn& u)
-	    :Binary_Parser(h,__code_guider,u)
+MZ_Parser::MZ_Parser(BeyeContext& b,binary_stream& h,CodeGuider& __code_guider,udn& u)
+	    :Binary_Parser(b,h,__code_guider,u)
+	    ,_bctx(b)
 	    ,_main_handle(h)
 	    ,_code_guider(__code_guider)
 	    ,__udn(u)
@@ -266,12 +267,12 @@ bool MZ_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 
 __filesize_t MZ_Parser::action_F1()
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(_bctx);
     if(bhelp.open(true)) {
 	bhelp.run(10013);
 	bhelp.close();
     }
-    return beye_context().tell();
+    return _bctx.tell();
 }
 
 __filesize_t MZ_Parser::is_new_exe(binary_stream& main_handle)
@@ -286,7 +287,7 @@ __filesize_t MZ_Parser::is_new_exe(binary_stream& main_handle)
     return (__filesize_t)ret;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) MZ_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) MZ_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info mz_info = {
     "MZ (Old DOS-exe)",	/**< plugin name */
     query_interface

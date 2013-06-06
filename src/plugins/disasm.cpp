@@ -56,13 +56,14 @@ namespace	usr {
     extern const Disassembler_Info ppc_disassembler_info;
     extern const Disassembler_Info java_disassembler_info;
 
-DisMode::DisMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& _code_guider,udn& u,Search& s)
-	:Plugin(b,h,_main_wnd,_code_guider,u,s)
+DisMode::DisMode(BeyeContext& bc,const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& _code_guider,udn& u,Search& s)
+	:Plugin(bc,b,h,_main_wnd,_code_guider,u,s)
 	,DefDisasmSel(__DEFAULT_DISASM)
 	,HiLight(1)
 	,code_guider(_code_guider)
 	,DisasmPrepareMode(false)
 	,main_wnd(_main_wnd)
+	,bctx(bc)
 	,main_handle(h)
 	,second_handle(&h)
 	,bin_format(b)
@@ -87,13 +88,13 @@ DisMode::DisMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGui
     sz=list.size();
     for(i=0;i<sz;i++) {
 	if(list[i]->type == def_platform) {
-	    activeDisasm=list[i]->query_interface(bin_format,*second_handle,*this);
+	    activeDisasm=list[i]->query_interface(bctx,bin_format,*second_handle,*this);
 	    DefDisasmSel = i;
 	    break;
 	}
     }
     if(!activeDisasm) {
-	activeDisasm = list[0]->query_interface(bin_format,*second_handle,*this);
+	activeDisasm = list[0]->query_interface(bctx,bin_format,*second_handle,*this);
 	DefDisasmSel = 0;
     }
     accept_actions();
@@ -131,7 +132,7 @@ bool DisMode::action_F2() /* disSelect_Disasm */
     retval = ListBox(modeName,nModes," Select disassembler: ",LB_SELECTIVE|LB_USEACC,DefDisasmSel);
     if(retval != -1) {
 	delete activeDisasm;
-	activeDisasm = list[retval]->query_interface(bin_format,*second_handle,*this);
+	activeDisasm = list[retval]->query_interface(bctx,bin_format,*second_handle,*this);
 	DefDisasmSel = retval;
 	accept_actions();
 	return true;
@@ -410,17 +411,17 @@ void DisMode::misckey_action() /* disEdit */
     unsigned len_64;
     TWindow * ewnd;
     len_64=HA_LEN();
-    if(!main_handle.flength()) { beye_context().ErrMessageBox(NOTHING_EDIT,""); return; }
+    if(!main_handle.flength()) { bctx.ErrMessageBox(NOTHING_EDIT,""); return; }
     ewnd = new(zeromem) TWindow(len_64+1,2,disMaxCodeLen*2+1,main_wnd.height(),TWindow::Flag_Has_Cursor);
     ewnd->set_color(browser_cset.edit.main); ewnd->clear();
     EditMode = EditMode ? false : true;
-    Editor* editor = new(zeromem) Editor(*ewnd,disMaxCodeLen);
+    Editor* editor = new(zeromem) Editor(bctx,*ewnd,disMaxCodeLen);
     editor->goto_xy(0,0);
     full_asm_edit(*editor,*ewnd);
     delete editor;
     EditMode = EditMode ? false : true;
     delete ewnd;
-    beye_context().PaintTitle();
+    bctx.PaintTitle();
 }
 
 static const char *refsdepth_names[] =
@@ -611,7 +612,7 @@ int DisMode::full_asm_edit(Editor& editor,TWindow& ewnd)
 			    if (aret.insn[0]) {
 				message=(const char*)aret.insn;
 			    }
-			    beye_context().ErrMessageBox(message,"");
+			    bctx.ErrMessageBox(message,"");
 			    continue;
 			} else {
 			    int i;
@@ -627,8 +628,8 @@ int DisMode::full_asm_edit(Editor& editor,TWindow& ewnd)
 		}
 	    case KE_F(1)    : editor.show_help(); continue;
 	    case KE_CTL_F(1): activeDisasm->action_F1(); continue;
-	    case KE_CTL_F(2): beye_context().select_sysinfo(); continue;
-	    case KE_CTL_F(3): beye_context().select_tool(); continue;
+	    case KE_CTL_F(2): bctx.select_sysinfo(); continue;
+	    case KE_CTL_F(3): bctx.select_tool(); continue;
 	    case KE_F(2)    :
 		{
 		    std::ofstream fs;
@@ -638,10 +639,10 @@ int DisMode::full_asm_edit(Editor& editor,TWindow& ewnd)
 		    if(fs.is_open()) {
 			fs.seekp(edit_cp,std::ios_base::beg);
 			if(!fs.write((const char*)emem.buff,rlen))
-			    beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
+			    bctx.errnoMessageBox(WRITE_FAIL,"",errno);
 			fs.close();
 			main_handle.reread();
-		    } else beye_context().errnoMessageBox("Can't reopen","",errno);
+		    } else bctx.errnoMessageBox("Can't reopen","",errno);
 		}
 	    case KE_F(10):
 	    case KE_ESCAPE: goto bye;
@@ -671,13 +672,12 @@ void DisMode::help() const
 
 void DisMode::read_ini(Ini_Profile& ini)
 {
-    BeyeContext& bctx = beye_context();
     std::string tmps;
     if(bctx.is_valid_ini_args()) {
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","LastSubMode","0");
 	DefDisasmSel = (int)::strtoul(tmps.c_str(),NULL,10);
 	if(DefDisasmSel >= list.size()) DefDisasmSel = 0;
-	hexAddressResolv=ReadIniAResolv(ini);
+	hexAddressResolv=ReadIniAResolv(bctx,ini);
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode7","0");
 	disPanelMode = e_panel((int)::strtoul(tmps.c_str(),NULL,10));
 	if(disPanelMode > Panel_Full) disPanelMode = Panel_Wide;
@@ -688,7 +688,7 @@ void DisMode::read_ini(Ini_Profile& ini)
 	HiLight = (int)strtoul(tmps.c_str(),NULL,10);
 	if(HiLight > 2) HiLight = 2;
 	if(activeDisasm) delete activeDisasm;
-	activeDisasm = list[DefDisasmSel]->query_interface(bin_format,*second_handle,*this);
+	activeDisasm = list[DefDisasmSel]->query_interface(bctx,bin_format,*second_handle,*this);
 	accept_actions();
 	activeDisasm->read_ini(ini);
     }
@@ -696,11 +696,10 @@ void DisMode::read_ini(Ini_Profile& ini)
 
 void DisMode::save_ini(Ini_Profile& ini)
 {
-    BeyeContext& bctx = beye_context();
     char tmps[10];
     ::sprintf(tmps,"%i",DefDisasmSel);
     bctx.write_profile_string(ini,"Beye","Browser","LastSubMode",tmps);
-    WriteIniAResolv(ini,hexAddressResolv,1);
+    WriteIniAResolv(bctx,ini,hexAddressResolv,1);
     ::sprintf(tmps,"%i",disPanelMode);
     bctx.write_profile_string(ini,"Beye","Browser","SubSubMode7",tmps);
     ::sprintf(tmps,"%i",disNeedRef);
@@ -841,7 +840,7 @@ bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t 
        strncpy(sout,str.c_str(),sizeof(sout)-1);
        sout[sizeof(sout)-1] = 0;
        if(!strlen(sout)) strcpy(sout,"disAppendDigits");
-       beye_context().ErrMessageBox(sout," Internal disassembler error detected ");
+       bctx.ErrMessageBox(sout," Internal disassembler error detected ");
        displayed = true;
        COREDUMP();
      }
@@ -1085,7 +1084,7 @@ bool DisMode::append_faddr(binary_stream& handle,std::string& str,__fileoff_t ul
        strncpy(sout,str.c_str(),sizeof(sout)-1);
        sout[sizeof(sout)-1] = 0;
        if(!strlen(sout)) strcpy(sout,"disAppendFAddr");
-       beye_context().ErrMessageBox(sout," Internal disassembler error detected ");
+       bctx.ErrMessageBox(sout," Internal disassembler error detected ");
        displayed = true;
        COREDUMP();
      }
@@ -1184,7 +1183,7 @@ bool DisMode::append_faddr(binary_stream& handle,std::string& str,__fileoff_t ul
        char lbuf[20];
        cptr = DumpMode ? "L" : "file:";
        str+=cptr;
-	if(beye_context().is_file64()) sprintf(lbuf,"%016llX",r_sh);
+	if(bctx.is_file64()) sprintf(lbuf,"%016llX",r_sh);
 	else sprintf(lbuf,"%08lX",(unsigned long)r_sh);
        str+=lbuf;
        appended = true;
@@ -1236,7 +1235,7 @@ bool hexAddressResolution(unsigned& har);
 bool DisMode::action_F6() { return hexAddressResolution(hexAddressResolv); }
 unsigned DisMode::get_max_line_length() const { return get_max_symbol_size(); }
 
-static Plugin* query_interface(const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& u,Search& s) { return new(zeromem) DisMode(b,h,main_wnd,code_guider,u,s); }
+static Plugin* query_interface(BeyeContext& bc,const Bin_Format& b,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& u,Search& s) { return new(zeromem) DisMode(bc,b,h,main_wnd,code_guider,u,s); }
 
 extern const Plugin_Info disMode = {
     "~Disassembler",	/**< plugin name */

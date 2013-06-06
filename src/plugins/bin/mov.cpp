@@ -35,7 +35,7 @@ namespace	usr {
 #define MOV_FOURCC(a,b,c,d) ((a<<24)|(b<<16)|(c<<8)|(d))
     class MOV_Parser : public Binary_Parser {
 	public:
-	    MOV_Parser(binary_stream&,CodeGuider&,udn&);
+	    MOV_Parser(BeyeContext& b,binary_stream&,CodeGuider&,udn&);
 	    virtual ~MOV_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -45,6 +45,7 @@ namespace	usr {
 
 	    __filesize_t		mov_find_chunk(__filesize_t off,unsigned long id);
 	private:
+	    BeyeContext&	bctx;
 	    binary_stream&	main_handle;
 	    udn&		_udn;
     };
@@ -67,8 +68,9 @@ __filesize_t MOV_Parser::mov_find_chunk(__filesize_t off,unsigned long id)
 }
 
 
-MOV_Parser::MOV_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
-	    :Binary_Parser(h,code_guider,u)
+MOV_Parser::MOV_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(b,h,code_guider,u)
+	    ,bctx(b)
 	    ,main_handle(h)
 	    ,_udn(u)
 {
@@ -82,11 +84,11 @@ int MOV_Parser::query_platform() const { return DISASM_DEFAULT; }
 
 __filesize_t MOV_Parser::show_header() const
 {
-    beye_context().ErrMessageBox("Not implemented yet!","MOV format");
-    return beye_context().tell();
+    bctx.ErrMessageBox("Not implemented yet!","MOV format");
+    return bctx.tell();
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) MOV_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) MOV_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info mov_info = {
     "MOV file format",	/**< plugin name */
     query_interface

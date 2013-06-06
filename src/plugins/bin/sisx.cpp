@@ -70,7 +70,7 @@ struct E32ImageHeader {
 
     class SisX_Parser : public Binary_Parser {
 	public:
-	    SisX_Parser(binary_stream&,CodeGuider&,udn&);
+	    SisX_Parser(BeyeContext& b,binary_stream&,CodeGuider&,udn&);
 	    virtual ~SisX_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -80,14 +80,16 @@ struct E32ImageHeader {
 	private:
 	    __filesize_t		show_sis3_header();
 
+	    BeyeContext&		bctx;
 	    binary_stream&		main_handle;
 	    udn&			_udn;
     };
 static const char* txt[]={"","","","","","","","","",""};
 const char* SisX_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-SisX_Parser::SisX_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
-	    :Binary_Parser(h,code_guider,u)
+SisX_Parser::SisX_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(b,h,code_guider,u)
+	    ,bctx(b)
 	    ,main_handle(h)
 	    ,_udn(u)
 {
@@ -119,7 +121,7 @@ __filesize_t SisX_Parser::show_header() const
  char head[80];
  struct E32ImageHeader img;
  __filesize_t fpos,fpos2;
- fpos2=fpos = beye_context().tell();
+ fpos2=fpos = bctx.tell();
     main_handle.seek(0,binary_stream::Seek_Set);
     main_handle.read(&img,sizeof(img));
  switch(img.iUid1)
@@ -191,7 +193,7 @@ __filesize_t SisX_Parser::show_header() const
  return fpos;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) SisX_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) SisX_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info sisx_info = {
     "SisX(EPOC) Symbian OS executable file",	/**< plugin name */
     query_interface

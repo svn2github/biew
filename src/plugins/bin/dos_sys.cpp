@@ -34,7 +34,7 @@ using namespace	usr;
 namespace	usr {
     class DosSys_Parser : public Binary_Parser {
 	public:
-	    DosSys_Parser(binary_stream&,CodeGuider&,udn&);
+	    DosSys_Parser(BeyeContext& b,binary_stream&,CodeGuider&,udn&);
 	    virtual ~DosSys_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -47,6 +47,7 @@ namespace	usr {
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 	private:
 	    DOSDRIVER		drv;
+	    BeyeContext&	bctx;
 	    binary_stream&	main_handle;
 	    udn&		_udn;
     };
@@ -59,7 +60,7 @@ __filesize_t DosSys_Parser::show_header() const
  TWindow *hwnd;
  bool charun;
  __fileoff_t fpos;
- fpos = beye_context().tell();
+ fpos = bctx.tell();
  hwnd = CrtDlgWndnls(" DOS Device Driver Header ",57,13);
  charun = (drv.ddAttribute & 0x8000) == 0x8000;
  if(charun) hwnd->printf("Device Name               = %8s\n",drv.ddName);
@@ -103,8 +104,9 @@ __filesize_t DosSys_Parser::show_header() const
  return fpos;
 }
 
-DosSys_Parser::DosSys_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
-	    :Binary_Parser(h,code_guider,u)
+DosSys_Parser::DosSys_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(b,h,code_guider,u)
+	    ,bctx(b)
 	    ,main_handle(h)
 	    ,_udn(u)
 {
@@ -129,18 +131,18 @@ bool DosSys_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 
 __filesize_t DosSys_Parser::action_F1()
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(10014);
 	bhelp.close();
     }
-    return beye_context().tell();
+    return bctx.tell();
 }
 
 __filesize_t DosSys_Parser::va2pa(__filesize_t va) const { return va; }
 __filesize_t DosSys_Parser::pa2va(__filesize_t pa) const { return pa; }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) DosSys_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) DosSys_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info dossys_info = {
     "DOS-driver",	/**< plugin name */
     query_interface

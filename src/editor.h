@@ -31,8 +31,8 @@ namespace	usr {
 
     class Editor : public Opaque {
 	public:
-	    Editor(TWindow& enwd,unsigned width);
-	    Editor(TWindow& enwd,unsigned width,const unsigned char *buff,unsigned size);
+	    Editor(BeyeContext& bc,TWindow& enwd,unsigned width);
+	    Editor(BeyeContext& bc,TWindow& enwd,unsigned width,const unsigned char *buff,unsigned size);
 	    virtual ~Editor();
 
 	    virtual int		run(TWindow* hexwnd=NULL);
@@ -52,7 +52,8 @@ namespace	usr {
 	    virtual void	show_help() const;
 	private:
 	    void		init(unsigned width,const unsigned char *buff,unsigned size);
-	
+
+	    BeyeContext&	bctx;
 	    editor_mem		EditorMem;
 	    int			edit_x,edit_y;
 	    __fileoff_t		edit_cp;

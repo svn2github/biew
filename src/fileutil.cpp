@@ -393,7 +393,7 @@ bool FStore::run()
 		extern const Plugin_Info disMode;
 		DisMode* dismode;
 		if(bctx.mode_info()!=&disMode)
-		    dismode = static_cast<DisMode*>(disMode.query_interface(bctx.bin_format(),bctx.bm_file(),bctx.main_wnd(),bctx.codeguider(),bctx._udn(),bctx.search()));
+		    dismode = static_cast<DisMode*>(disMode.query_interface(bctx,bctx.bin_format(),bctx.bm_file(),bctx.main_wnd(),bctx.codeguider(),bctx._udn(),bctx.search()));
 		else
 		    dismode = static_cast<DisMode*>(&bctx.active_mode());
 		MaxInsnLen = dismode->get_max_symbol_size();

@@ -34,7 +34,7 @@ using namespace	usr;
 namespace	usr {
     class oldPharLap_Parser : public Binary_Parser {
 	public:
-	    oldPharLap_Parser(binary_stream&,CodeGuider&,udn&);
+	    oldPharLap_Parser(BeyeContext& b,binary_stream&,CodeGuider&,udn&);
 	    virtual ~oldPharLap_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -45,6 +45,7 @@ namespace	usr {
 	    virtual bool		address_resolving(std::string&,__filesize_t);
 	private:
 	    oldPharLap			oph;
+	    BeyeContext&		bctx;
 	    binary_stream&		main_handle;
 	    udn&			_udn;
     };
@@ -56,7 +57,7 @@ __filesize_t oldPharLap_Parser::show_header() const
   __filesize_t fpos,entrypoint;
   TWindow * w;
   unsigned keycode;
-  fpos = beye_context().tell();
+  fpos = bctx.tell();
   entrypoint = oph.plHeadSize*16 + oph.plEIP;
   w = CrtDlgWndnls(" Old PharLap executable ",54,11);
   w->goto_xy(1,1);
@@ -97,8 +98,9 @@ __filesize_t oldPharLap_Parser::show_header() const
   return fpos;
 }
 
-oldPharLap_Parser::oldPharLap_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
-		:Binary_Parser(h,code_guider,u)
+oldPharLap_Parser::oldPharLap_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider,udn& u)
+		:Binary_Parser(b,h,code_guider,u)
+		,bctx(b)
 		,main_handle(h)
 		,_udn(u)
 {
@@ -129,17 +131,17 @@ bool oldPharLap_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 
 __filesize_t oldPharLap_Parser::action_F1()
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(10008);
 	bhelp.close();
     }
-    return beye_context().tell();
+    return bctx.tell();
 }
 
 int oldPharLap_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) oldPharLap_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) oldPharLap_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info oldpharlap_info = {
     "PharLap",	/**< plugin name */
     query_interface

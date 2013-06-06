@@ -111,7 +111,7 @@ namespace	usr {
     class PE_Parser;
     class NE_Parser : public MZ_Parser {
 	public:
-	    NE_Parser(binary_stream&,CodeGuider&,udn&);
+	    NE_Parser(BeyeContext& b,binary_stream&,CodeGuider&,udn&);
 	    virtual ~NE_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;

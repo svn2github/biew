@@ -179,8 +179,9 @@ const char* Wave_Parser::wtag_find_name(unsigned short wtag)
     return "Unknown";
 }
 
-Wave_Parser::Wave_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
-	    :Binary_Parser(h,code_guider,u)
+Wave_Parser::Wave_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(b,h,code_guider,u)
+	    ,bctx(b)
 	    ,main_handle(h)
 	    ,_udn(u)
 {
@@ -224,9 +225,9 @@ __filesize_t Wave_Parser::show_header() const
  TWindow * hwnd;
  WAVEFORMATEX wavf;
  __filesize_t fpos,fpos2;
- fpos = beye_context().tell();
+ fpos = bctx.tell();
  fpos2 = wav_find_chunk(12,mmioFOURCC('f','m','t',' '));
- if((__fileoff_t)fpos2==-1) { beye_context().ErrMessageBox("Main WAV Header not found",""); return fpos; }
+ if((__fileoff_t)fpos2==-1) { bctx.ErrMessageBox("Main WAV Header not found",""); return fpos; }
  main_handle.seek(fpos2,binary_stream::Seek_Set);
  main_handle.read(type_dword); /* skip section size */
  main_handle.read(&wavf,sizeof(WAVEFORMATEX));
@@ -256,7 +257,7 @@ __filesize_t Wave_Parser::show_header() const
  return fpos;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) Wave_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) Wave_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info wav_info = {
     "RIFF WAVE format",	/**< plugin name */
     query_interface

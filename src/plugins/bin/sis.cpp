@@ -59,7 +59,7 @@ struct SisHeader {
 
     class Sis_Parser : public Binary_Parser {
 	public:
-	    Sis_Parser(binary_stream&,CodeGuider&,udn&);
+	    Sis_Parser(BeyeContext& b,binary_stream&,CodeGuider&,udn&);
 	    virtual ~Sis_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -69,14 +69,16 @@ struct SisHeader {
 	private:
 	    __filesize_t		show_sis3_header() const;
 
+	    BeyeContext&		bctx;
 	    binary_stream&		main_handle;
 	    udn&			_udn;
     };
 static const char* txt[]={"","","","","","","","","",""};
 const char* Sis_Parser::prompt(unsigned idx) const { return txt[idx]; }
 
-Sis_Parser::Sis_Parser(binary_stream& h,CodeGuider& code_guider,udn& u)
-	    :Binary_Parser(h,code_guider,u)
+Sis_Parser::Sis_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider,udn& u)
+	    :Binary_Parser(b,h,code_guider,u)
+	    ,bctx(b)
 	    ,main_handle(h)
 	    ,_udn(u)
 {
@@ -95,8 +97,8 @@ int  Sis_Parser::query_platform() const { return DISASM_CPU_ARM; }
 
 __filesize_t Sis_Parser::show_sis3_header() const
 {
-    beye_context().ErrMessageBox("Not implemented yet!","Sis v3 header");
-    return beye_context().tell();
+    bctx.ErrMessageBox("Not implemented yet!","Sis v3 header");
+    return bctx.tell();
 }
 
 __filesize_t Sis_Parser::show_header() const
@@ -106,7 +108,7 @@ __filesize_t Sis_Parser::show_header() const
  const char *TypeName;
  struct SisHeader sis;
  __filesize_t fpos,fpos2;
- fpos2=fpos = beye_context().tell();
+ fpos2=fpos = bctx.tell();
     main_handle.seek(0,binary_stream::Seek_Set);
     main_handle.read(&sis,sizeof(sis));
  if(sis.UID1==0x10201A7A) return show_sis3_header();
@@ -165,7 +167,7 @@ __filesize_t Sis_Parser::show_header() const
  return fpos;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) Sis_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) Sis_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info sis_info = {
     "Sis(EPOC) Symbian OS installable file",	/**< plugin name */
     query_interface

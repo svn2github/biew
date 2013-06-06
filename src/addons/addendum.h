@@ -5,15 +5,17 @@
 #include "libbeye/libbeye.h"
 
 namespace	usr {
+    class BeyeContext;
     struct Addon_Info;
     class addendum : public Opaque {
 	public:
-	    addendum();
+	    addendum(BeyeContext& bc);
 	    virtual ~addendum();
 	
 	    void	select();
 	private:
-	    size_t	defToolSel;
+	    BeyeContext&	bctx;
+	    size_t		defToolSel;
 	    std::vector<const Addon_Info*> list;
     };
 } // namespace	usr

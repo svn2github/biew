@@ -65,7 +65,7 @@ namespace	usr {
     class Search;
     class Beye_Help : public Opaque {
 	public:
-	    Beye_Help();
+	    Beye_Help(BeyeContext& bc);
 	    virtual ~Beye_Help();
 
 	    virtual bool	open(bool interactive);
@@ -90,6 +90,7 @@ namespace	usr {
 	    void			paint(TWindow& win,const std::vector<std::string>& names,unsigned start,unsigned height,unsigned width) const;
 	    bool			find_item(unsigned long item_id);
 
+	    BeyeContext&		bctx;
 	    std::fstream		fs;
 	    beye_help_item		bhi;
 	    Search&			search;

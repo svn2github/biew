@@ -34,13 +34,15 @@ using namespace	usr;
 namespace	usr {
     class InputView_Addon : public Addon {
 	public:
-	    InputView_Addon();
+	    InputView_Addon(BeyeContext& bc);
 	    virtual ~InputView_Addon();
 	
 	    virtual void	run();
+	private:
+	    BeyeContext&	bctx;
     };
 
-InputView_Addon::InputView_Addon() {}
+InputView_Addon::InputView_Addon(BeyeContext& bc):Addon(bc),bctx(bc) {}
 InputView_Addon::~InputView_Addon() {}
 
 void InputView_Addon::run()
@@ -55,10 +57,10 @@ void InputView_Addon::run()
   do_exit=0;
   do
   {
-    rval = beye_context().tconsole().input_raw_info(head,text);
+    rval = bctx.tconsole().input_raw_info(head,text);
     if(rval==-1)
     {
-	beye_context().ErrMessageBox("Not implemented yet!","");
+	bctx.ErrMessageBox("Not implemented yet!","");
 	break;
     }
     hwnd->goto_xy(1,1);
@@ -73,7 +75,7 @@ void InputView_Addon::run()
   delete hwnd;
 }
 
-static Addon* query_interface() { return new(zeromem) InputView_Addon(); }
+static Addon* query_interface(BeyeContext& bc) { return new(zeromem) InputView_Addon(bc); }
 extern const Addon_Info InputViewer = {
     "~Input viewer",
     query_interface

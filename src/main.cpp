@@ -103,9 +103,10 @@ beye_priv::beye_priv(BeyeContext& bctx,const std::vector<std::string>& _argv, co
 	,new_file_size(FILESIZE_MAX)
 	,search(new(zeromem) Search(bctx))
 	,code_guider(new(zeromem) CodeGuider(bctx))
-	,_system(new(zeromem) System) {
-    addons = new(zeromem) addendum;
-    sysinfo= new(zeromem) class sysinfo;
+	,_system(new(zeromem) System)
+	,udn(bctx) {
+    addons = new(zeromem) addendum(bctx);
+    sysinfo= new(zeromem) class sysinfo(bctx);
     _shortname = new char[SHORT_PATH_LEN + 1];
 }
 beye_priv::~beye_priv() {
@@ -158,7 +159,7 @@ bool BeyeContext::select_mode()
     if(retval != -1) {
 	priv.defMainModeSel = retval;
 	delete priv.activeMode;
-	priv.activeMode = priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
+	priv.activeMode = priv.modes[priv.defMainModeSel]->query_interface(*this,bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
 	return true;
     }
     return false;
@@ -167,7 +168,7 @@ bool BeyeContext::select_mode()
 void BeyeContext::init_modes( Ini_Profile& ini )
 {
     beye_priv& priv = static_cast<beye_priv&>(opaque);
-    if(!priv.activeMode) priv.activeMode = priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
+    if(!priv.activeMode) priv.activeMode = priv.modes[priv.defMainModeSel]->query_interface(*this,bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
     priv.activeMode->read_ini(ini);
 }
 
@@ -178,7 +179,7 @@ void BeyeContext::quick_select_mode()
     if(priv.defMainModeSel < nModes - 1) priv.defMainModeSel++;
     else                            priv.defMainModeSel = 0;
     delete priv.activeMode;
-    priv.activeMode = priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
+    priv.activeMode = priv.modes[priv.defMainModeSel]->query_interface(*this,bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
 }
 
 void BeyeContext::make_shortname()
@@ -204,7 +205,7 @@ void BeyeContext::auto_detect_mode()
     size_t i,n = priv.modes.size();
     Plugin* mode;
     for(i = 0;i < n;i++) {
-	mode = priv.modes[i]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
+	mode = priv.modes[i]->query_interface(*this,bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
 	if(mode->detect()) {
 	    priv.defMainModeSel = i;
 	    break;
@@ -212,8 +213,8 @@ void BeyeContext::auto_detect_mode()
 	delete mode; mode = NULL;
     }
     if(mode) delete mode;
-    priv.activeMode = priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
-    beye_context().bm_file().seek(0,binary_stream::Seek_Set);
+    priv.activeMode = priv.modes[priv.defMainModeSel]->query_interface(*this,bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
+    bm_file().seek(0,binary_stream::Seek_Set);
 }
 
 static const struct tagbeyeArg {
@@ -278,9 +279,9 @@ bool BeyeContext::LoadInfo( )
     make_shortname();
     if(priv.new_file_size != FILESIZE_MAX) {
 	binary_stream* h = new(zeromem) binary_stream;
-	if(binary_stream::exists(beye_context().ArgVector1) == false) h->create(beye_context().ArgVector1);
+	if(binary_stream::exists(ArgVector1) == false) h->create(ArgVector1);
 	else {
-	    if(!h->open(beye_context().ArgVector1,binary_stream::FO_READWRITE | binary_stream::SO_DENYNONE))
+	    if(!h->open(ArgVector1,binary_stream::FO_READWRITE | binary_stream::SO_DENYNONE))
 		h->open(ArgVector1,binary_stream::FO_READWRITE | binary_stream::SO_COMPAT);
 	}
 	h->chsize(priv.new_file_size);
@@ -375,7 +376,6 @@ void BeyeContext::save_ini_info() const
 {
     beye_priv& priv = static_cast<beye_priv&>(opaque);
     Search& s = *priv.search;
-    unsigned beyeSearchFlg = s.get_flags();
     char tmp[20];
     unsigned char search_buff[MAX_SEARCH_SIZE];
     unsigned char search_len = s.length();
@@ -464,7 +464,7 @@ void	BeyeContext::create_windows() {
     priv.PromptWnd->clear();
     priv.PromptWnd->show();
     if(BeyeCtx->ini_ver!=BEYE_VERSION) {
-	class Setup* setup = new class Setup;
+	class Setup* setup = new class Setup(*this);
 	setup->run();
 	delete setup;
     }
@@ -575,18 +575,18 @@ bool BeyeContext::new_source()
 	    delete priv._bin_format;
 	    delete priv.activeMode;
 	    make_shortname();
-	    priv._bin_format = new(zeromem) Bin_Format(*priv.code_guider,priv.udn);
+	    priv._bin_format = new(zeromem) Bin_Format(*this,*priv.code_guider,priv.udn);
 	    priv._bin_format->detect_format(*priv.sc_bm_file_handle);
-	    priv.activeMode=priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
+	    priv.activeMode=priv.modes[priv.defMainModeSel]->query_interface(*this,bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
 	    ret = true;
 	} else {
 	    if(BMOpen(ArgVector1) != true) throw std::runtime_error("Can't open :"+ArgVector1);
 	    delete priv._bin_format;
 	    delete priv.activeMode;
 	    make_shortname();
-	    priv._bin_format = new(zeromem) Bin_Format(*priv.code_guider,priv.udn);
+	    priv._bin_format = new(zeromem) Bin_Format(*this,*priv.code_guider,priv.udn);
 	    priv._bin_format->detect_format(*priv.sc_bm_file_handle);
-	    priv.activeMode=priv.modes[priv.defMainModeSel]->query_interface(bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
+	    priv.activeMode=priv.modes[priv.defMainModeSel]->query_interface(*this,bin_format(),*priv.bm_file_handle,*priv.MainWnd,*priv.code_guider,priv.udn,*priv.search);
 	    ret = false;
 	}
     }
@@ -630,7 +630,7 @@ BeyeContext::BeyeContext(const std::vector<std::string>& _argv, const std::map<s
     priv.modes.push_back(&hexMode);
     priv.modes.push_back(&disMode);
 
-    priv._bin_format = new(zeromem) Bin_Format(*priv.code_guider,priv.udn);
+    priv._bin_format = new(zeromem) Bin_Format(*this,*priv.code_guider,priv.udn);
 
     codepage="CP866";
     scheme_name="Built-in";
@@ -657,9 +657,10 @@ void BeyeContext::select_sysinfo() const {
 
 binary_stream* BeyeContext::beyeOpenRO(const std::string& fname,unsigned cache_size)
 {
+    BeyeContext& bctx = beye_context();
     binary_stream* fret;
     if(!binary_stream::exists(fname)) return NULL;
-    if(beye_context().fioUseMMF)fret= new(zeromem) MMFile;
+    if(bctx.fioUseMMF) fret= new(zeromem) MMFile;
 //    else			fret= new(zeromem) BBio_File(cache_size,BBio_File::Opt_Db);
     else			fret= new(zeromem) binary_stream;
     bool rc;
@@ -672,9 +673,10 @@ binary_stream* BeyeContext::beyeOpenRO(const std::string& fname,unsigned cache_s
 
 binary_stream* BeyeContext::beyeOpenRW(const std::string& fname,unsigned cache_size)
 {
+    BeyeContext& bctx = beye_context();
     binary_stream* fret;
     if(!binary_stream::exists(fname)) return NULL;
-    fret= beye_context().fioUseMMF? new(zeromem) MMFile :
+    fret= bctx.fioUseMMF? new(zeromem) MMFile :
 //				    new(zeromem) BBio_File(cache_size,BBio_File::Opt_Db);
 				    new(zeromem) binary_stream;
     bool rc;

@@ -36,7 +36,7 @@ using namespace	usr;
 namespace	usr {
     class AOut_Parser : public Binary_Parser {
 	public:
-	    AOut_Parser(binary_stream&,CodeGuider&,udn&);
+	    AOut_Parser(BeyeContext&,binary_stream&,CodeGuider&,udn&);
 	    virtual ~AOut_Parser();
 
 	    virtual const char*		prompt(unsigned idx) const __CONST_FUNC__;
@@ -67,6 +67,7 @@ namespace	usr {
 
 	    bool is_msbf; /* is most significand byte first */
 	    bool is_64bit;
+	    BeyeContext&		bctx;
 	    binary_stream&		main_handle;
 	    udn&			_udn;
     };
@@ -112,7 +113,7 @@ __filesize_t AOut_Parser::show_header() const
   __filesize_t fpos;
   unsigned keycode,dummy;
   TWindow *w;
-  fpos = beye_context().tell();
+  fpos = bctx.tell();
     main_handle.seek(0,binary_stream::Seek_Set);
     main_handle.read(&aout,sizeof(struct external_exec));
   uint32_t* p_info = (uint32_t*)&aout.e_info;
@@ -165,8 +166,9 @@ bool AOut_Parser::probe_fmt( uint32_t id )
   return a32 || a64 || N_MAGIC(id)==CMAGIC;
 }
 
-AOut_Parser::AOut_Parser(binary_stream& h,CodeGuider&c,udn& u)
-	    :Binary_Parser(h,c,u)
+AOut_Parser::AOut_Parser(BeyeContext& b,binary_stream& h,CodeGuider&c,udn& u)
+	    :Binary_Parser(b,h,c,u)
+	    ,bctx(b)
 	    ,main_handle(h)
 	    ,_udn(u)
 {
@@ -213,12 +215,12 @@ bool AOut_Parser::address_resolving(std::string& addr,__filesize_t fpos)
 
 __filesize_t AOut_Parser::action_F1()
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(10000);
 	bhelp.close();
     }
-    return beye_context().tell();
+    return bctx.tell();
 }
 
 int AOut_Parser::query_platform() const {
@@ -230,7 +232,7 @@ int AOut_Parser::query_platform() const {
     return id;
 }
 
-static Binary_Parser* query_interface(binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) AOut_Parser(h,_parent,u); }
+static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) AOut_Parser(b,h,_parent,u); }
 extern const Binary_Parser_Info aout_info = {
     "a.out (Assembler and link Output)",	/**< plugin name */
     query_interface

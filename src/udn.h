@@ -30,12 +30,13 @@ namespace	usr {
 	bool operator<(const udn_record& rhs) const { return offset<rhs.offset; }
     };
 
+    class BeyeContext;
     class udn;
     typedef bool (udn::*udnFunc)();
 
     class udn : public Opaque {
 	public:
-	    udn();
+	    udn(BeyeContext& bc);
 	    virtual ~udn();
 
 	    /** Reads user defined name at given offset!
@@ -67,6 +68,7 @@ namespace	usr {
 	    std::string			udn_fname;
 
 	    static udnFunc	funcs[];
+	    BeyeContext&	bctx;
     };
 } // namespace	usr
 #endif

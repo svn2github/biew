@@ -94,7 +94,7 @@ typedef unsigned char * MBuffer;
 		Panel_Wide   =0        /**< full mode of panel: instruction only */
 	    };
 
-	    DisMode(const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn&,Search& s);
+	    DisMode(BeyeContext& bc,const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& code_guider,udn&,Search& s);
 	    virtual ~DisMode();
 
 	    virtual const char*		prompt(unsigned idx) const;
@@ -216,6 +216,7 @@ typedef unsigned char * MBuffer;
 	    bool			DisasmPrepareMode;
 	    std::vector<const Disassembler_Info*> list;
 	    TWindow&			main_wnd;
+	    BeyeContext&		bctx;
 	    binary_stream&		main_handle;
 	    binary_stream*		second_handle;
 	    const Bin_Format&		bin_format;
@@ -291,7 +292,7 @@ typedef unsigned char * MBuffer;
     };
     class Disassembler : public Opaque {
 	public:
-	    Disassembler(const Bin_Format& b,binary_stream& h,DisMode& parent) { UNUSED(b); UNUSED(h); UNUSED(parent); }
+	    Disassembler(BeyeContext&,const Bin_Format& b,binary_stream& h,DisMode& parent) { UNUSED(b); UNUSED(h); UNUSED(parent); }
 	    virtual ~Disassembler() {}
 	
 	    virtual const char*	prompt(unsigned idx) const = 0;	/**< prompt on Ctrl-(F1,F3-F5) */
@@ -319,7 +320,7 @@ typedef unsigned char * MBuffer;
     struct Disassembler_Info {
 	unsigned	type;	/**< DISASM_XXX constant */
 	const char*	name;	/**< disassembler name */
-	Disassembler* (*query_interface)(const Bin_Format& b,binary_stream& h,DisMode& parent);
+	Disassembler* (*query_interface)(BeyeContext& bctx,const Bin_Format& b,binary_stream& h,DisMode& parent);
     };
 
 /** Common disassembler utility */

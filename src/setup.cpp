@@ -111,7 +111,7 @@ bool Setup::select_codepage()
     default_cp = i;
     p = strchr(cp_list[i],' ');
     len = p-cp_list[i];
-    beye_context().codepage=std::string(cp_list[i]).substr(0,len);
+    bctx.codepage=std::string(cp_list[i]).substr(0,len);
     return true;
   }
   return false;
@@ -127,13 +127,13 @@ void Setup::paint(TWindow& twin)
   twin.set_color(dialog_cset.group.active);
   twin.goto_xy(2,9);
   twin.printf(" [%c] - Direct console access "
-	   ,Gebool((beye_context().vioIniFlags & __TVIO_FLG_DIRECT_CONSOLE_ACCESS) == __TVIO_FLG_DIRECT_CONSOLE_ACCESS));
+	   ,Gebool((bctx.vioIniFlags & __TVIO_FLG_DIRECT_CONSOLE_ACCESS) == __TVIO_FLG_DIRECT_CONSOLE_ACCESS));
   twin.goto_xy(2,10);
   twin.printf(" [%c] - Mouse sensitivity     "
-	   ,Gebool((beye_context().kbdFlags & KBD_NONSTOP_ON_MOUSE_PRESS) == KBD_NONSTOP_ON_MOUSE_PRESS));
+	   ,Gebool((bctx.kbdFlags & KBD_NONSTOP_ON_MOUSE_PRESS) == KBD_NONSTOP_ON_MOUSE_PRESS));
   twin.goto_xy(2,11);
   twin.printf(" [%c] - Force mono            "
-	   ,Gebool((beye_context().twinIniFlags & TWIF_FORCEMONO) == TWIF_FORCEMONO));
+	   ,Gebool((bctx.twinIniFlags & TWIF_FORCEMONO) == TWIF_FORCEMONO));
   twin.goto_xy(2,12);
 #ifdef __QNX4__
   if(photon)
@@ -146,23 +146,23 @@ void Setup::paint(TWindow& twin)
   else
 #endif
   twin.printf(" [%c] - Force 7-bit output    "
-	   ,Gebool((beye_context().vioIniFlags & __TVIO_FLG_USE_7BIT) == __TVIO_FLG_USE_7BIT));
+	   ,Gebool((bctx.vioIniFlags & __TVIO_FLG_USE_7BIT) == __TVIO_FLG_USE_7BIT));
   twin.goto_xy(32,9);
   twin.printf(" [%c] - Apply plugin settings to all files     "
-	   ,Gebool(beye_context().iniSettingsAnywhere));
+	   ,Gebool(bctx.iniSettingsAnywhere));
   twin.goto_xy(32,10);
   if(!MMFile::has_mmio) twin.set_color(dialog_cset.group.disabled);
   twin.printf(" [%c] - Use MMF                                "
-	   ,Gebool(beye_context().fioUseMMF));
+	   ,Gebool(bctx.fioUseMMF));
   twin.set_color(dialog_cset.group.active);
   twin.goto_xy(32,11);
   twin.printf(" [%c] - Preserve timestamp                     "
-	   ,Gebool(beye_context().iniPreserveTime));
+	   ,Gebool(bctx.iniPreserveTime));
   twin.goto_xy(32,12);
   twin.printf(" [%c] - Enable usage of external programs      "
-	   ,Gebool(beye_context().iniUseExtProgs));
+	   ,Gebool(bctx.iniUseExtProgs));
   twin.set_color(dialog_cset.main);
-  twin.goto_xy(50,7); twin.puts(beye_context().codepage);
+  twin.goto_xy(50,7); twin.puts(bctx.codepage);
 }
 
 void Setup::run()
@@ -240,28 +240,28 @@ void Setup::run()
 		    ewnd[active]->set_focus();
 		    continue;
      case KE_F(1):  {
-			Beye_Help bhelp;
+			Beye_Help bhelp(bctx);
 			if(bhelp.open(true)) {
 			    bhelp.run(5);
 			    bhelp.close();
 			}
 		    }
 		    break;
-     case KE_F(2):  beye_context().vioIniFlags ^= __TVIO_FLG_DIRECT_CONSOLE_ACCESS;
+     case KE_F(2):  bctx.vioIniFlags ^= __TVIO_FLG_DIRECT_CONSOLE_ACCESS;
 		    break;
-     case KE_F(3):  beye_context().twinIniFlags ^= TWIF_FORCEMONO ;
+     case KE_F(3):  bctx.twinIniFlags ^= TWIF_FORCEMONO ;
 		    break;
-     case KE_F(4):  beye_context().kbdFlags ^= KBD_NONSTOP_ON_MOUSE_PRESS;
+     case KE_F(4):  bctx.kbdFlags ^= KBD_NONSTOP_ON_MOUSE_PRESS;
 		    break;
-     case KE_F(5):  beye_context().vioIniFlags ^= __TVIO_FLG_USE_7BIT;
+     case KE_F(5):  bctx.vioIniFlags ^= __TVIO_FLG_USE_7BIT;
 		    break;
-     case KE_F(6):  beye_context().iniSettingsAnywhere = beye_context().iniSettingsAnywhere ? false : true;
+     case KE_F(6):  bctx.iniSettingsAnywhere = bctx.iniSettingsAnywhere ? false : true;
 		    break;
-     case KE_F(7):  if(MMFile::has_mmio) beye_context().fioUseMMF = beye_context().fioUseMMF ? false : true;
+     case KE_F(7):  if(MMFile::has_mmio) bctx.fioUseMMF = bctx.fioUseMMF ? false : true;
 		    break;
-     case KE_F(8):  beye_context().iniPreserveTime = beye_context().iniPreserveTime ? false : true;
+     case KE_F(8):  bctx.iniPreserveTime = bctx.iniPreserveTime ? false : true;
 		    break;
-     case KE_F(9):  beye_context().iniUseExtProgs = beye_context().iniUseExtProgs ? false : true;
+     case KE_F(9):  bctx.iniUseExtProgs = bctx.iniUseExtProgs ? false : true;
 		    break;
      default: continue;
    }
@@ -270,9 +270,9 @@ void Setup::run()
   exit:
   if(ret)
   {
-    beye_context().help_name=estr[0];
-    beye_context().skin_name=estr[1];
-    beye_context().syntax_name=estr[2];
+    bctx.help_name=estr[0];
+    bctx.skin_name=estr[1];
+    bctx.syntax_name=estr[2];
   }
   delete ewnd[0];
   delete ewnd[1];
@@ -281,6 +281,6 @@ void Setup::run()
   delete wdlg;
 }
 
-Setup::Setup():default_cp(15) {}
+Setup::Setup(BeyeContext& bc):bctx(bc),default_cp(15) {}
 Setup::~Setup() {}
 } // namespace	usr

@@ -49,7 +49,7 @@ namespace	usr {
 
     class AVR_Disassembler : public Disassembler {
 	public:
-	    AVR_Disassembler(const Bin_Format& b,binary_stream& h,DisMode& parent);
+	    AVR_Disassembler(BeyeContext& bc,const Bin_Format& b,binary_stream& h,DisMode& parent);
 	    virtual ~AVR_Disassembler();
 	
 	    virtual const char*	prompt(unsigned idx) const;
@@ -75,6 +75,7 @@ namespace	usr {
 					    int regs );
 
 	    DisMode&		parent;
+	    BeyeContext&	bctx;
 	    binary_stream&	main_handle;
 	    const Bin_Format&	bin_format;
 
@@ -443,7 +444,7 @@ static const char * AVRCoreNames[] =
 
 bool AVR_Disassembler::action_F1()
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(20020);
 	bhelp.close();
@@ -458,7 +459,7 @@ void AVR_Disassembler::show_short_help() const
     unsigned evt;
     size_t i,sz;
     TWindow* hwnd;
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
 
     if(!bhelp.open(true)) return;
 
@@ -512,9 +513,10 @@ char AVR_Disassembler::clone_short_name( unsigned long clone )
   return ' ';
 }
 
-AVR_Disassembler::AVR_Disassembler(const Bin_Format& b,binary_stream& h, DisMode& _parent )
-		:Disassembler(b,h,_parent)
+AVR_Disassembler::AVR_Disassembler(BeyeContext& bc,const Bin_Format& b,binary_stream& h, DisMode& _parent )
+		:Disassembler(bc,b,h,_parent)
 		,parent(_parent)
+		,bctx(bc)
 		,main_handle(h)
 		,bin_format(b)
 {
@@ -560,7 +562,7 @@ const char* AVR_Disassembler::prompt(unsigned idx) const {
     return "";
 }
 
-static Disassembler* query_interface(const Bin_Format& b,binary_stream& h,DisMode& _parent) { return new(zeromem) AVR_Disassembler(b,h,_parent); }
+static Disassembler* query_interface(BeyeContext& bc,const Bin_Format& b,binary_stream& h,DisMode& _parent) { return new(zeromem) AVR_Disassembler(bc,b,h,_parent); }
 
 extern const Disassembler_Info avr_disassembler_info = {
     DISASM_CPU_AVR,

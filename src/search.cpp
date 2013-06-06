@@ -475,7 +475,7 @@ bool Search::dialog(dialog_flags _flags, char* searchbuff,
 				update = 0;
 				break;
 	    case KE_F(1)  : {
-				Beye_Help bhelp;
+				Beye_Help bhelp(bctx);
 				if(bhelp.open(true)) {
 				    bhelp.run(7);
 				    bhelp.close();

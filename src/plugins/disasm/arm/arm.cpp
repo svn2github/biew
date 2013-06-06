@@ -66,7 +66,7 @@ DisasmRet ARM_Disassembler::disassembler(__filesize_t ulShift,
 
 bool ARM_Disassembler::action_F1()
 {
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(bhelp.open(true)) {
 	bhelp.run(20040);
 	bhelp.close();
@@ -81,7 +81,7 @@ void ARM_Disassembler::show_short_help() const
     unsigned evt;
     size_t i,sz;
     TWindow* hwnd;
-    Beye_Help bhelp;
+    Beye_Help bhelp(bctx);
     if(!bhelp.open(true)) return;
 
     binary_packet msgAsmText = bhelp.load_item(20041);
@@ -133,9 +133,10 @@ char ARM_Disassembler::clone_short_name( unsigned long clone )
   return ' ';
 }
 
-ARM_Disassembler::ARM_Disassembler(const Bin_Format& b,binary_stream& h,DisMode& _parent )
-	    :Disassembler(b,h,_parent)
+ARM_Disassembler::ARM_Disassembler(BeyeContext& bc,const Bin_Format& b,binary_stream& h,DisMode& _parent )
+	    :Disassembler(bc,b,h,_parent)
 	    ,parent(_parent)
+	    ,bctx(bc)
 	    ,main_handle(h)
 	    ,bin_format(b)
 	    ,armBitness(Bin_Format::Use32)
@@ -156,12 +157,12 @@ ARM_Disassembler::~ARM_Disassembler()
 void ARM_Disassembler::read_ini( Ini_Profile& ini )
 {
   std::string tmps;
-  if(beye_context().is_valid_ini_args())
+  if(bctx.is_valid_ini_args())
   {
-    tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode3","1");
+    tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode3","1");
     armBitness = Bin_Format::bitness((int)strtoul(tmps.c_str(),NULL,10));
     if(armBitness > Bin_Format::Use32 && armBitness != Bin_Format::Auto) armBitness = Bin_Format::Use16;
-    tmps=beye_context().read_profile_string(ini,"Beye","Browser","SubSubMode4","1");
+    tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode4","1");
     armBigEndian = (int)strtoul(tmps.c_str(),NULL,10);
     if(armBigEndian > 1) armBigEndian = 0;
   }
@@ -171,9 +172,9 @@ void ARM_Disassembler::save_ini(Ini_Profile& ini)
 {
   char tmps[10];
   sprintf(tmps,"%i",armBitness);
-  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
+  bctx.write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
   sprintf(tmps,"%i",armBigEndian);
-  beye_context().write_profile_string(ini,"Beye","Browser","SubSubMode4",tmps);
+  bctx.write_profile_string(ini,"Beye","Browser","SubSubMode4",tmps);
 }
 
 static const char *arm_bitness_names[] =
@@ -226,7 +227,7 @@ const char* ARM_Disassembler::prompt(unsigned idx) const {
     return "";
 }
 
-static Disassembler* query_interface(const Bin_Format& b,binary_stream& h,DisMode& _parent) { return new(zeromem) ARM_Disassembler(b,h,_parent); }
+static Disassembler* query_interface(BeyeContext& bc,const Bin_Format& b,binary_stream& h,DisMode& _parent) { return new(zeromem) ARM_Disassembler(bc,b,h,_parent); }
 
 extern const Disassembler_Info arm_disassembler_info = {
     DISASM_CPU_ARM,
