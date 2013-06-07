@@ -1048,7 +1048,7 @@ bool NE_Parser::BuildReferStrNE(const DisMode& parent,std::string& str,const REL
 	    if(rc.pa!=Plugin::Bad_Address) str+=rc.name;
 	    else {
 		if(need_virt) sprintf(stmp,".%08lX",(unsigned long)pa2va(ep));
-		else sprintf(stmp,"(*this).seg<#%hu>:%sH",rne.idx,Get4Digit(rne.ordinal));
+		else sprintf(stmp,"(*this).seg<#%hu>:%sH",rne.idx,Get4Digit(rne.ordinal).c_str());
 		str+=stmp;
 		retrf = ep?true:false;
 	    }

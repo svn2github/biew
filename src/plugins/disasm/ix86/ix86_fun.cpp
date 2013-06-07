@@ -1020,7 +1020,7 @@ void ix86_Disassembler::ix86_InOut(char * str,ix86Param& DisP) const
   const char *arg,*reg1,*reg2,*regptr,*dig;
   char i;
   regptr = k64_getREG(DisP,0,DisP.RealCmd[0] & 0x01,0,0);
-  dig = Get2Digit(DisP.RealCmd[1]);
+  dig = Get2Digit(DisP.RealCmd[1]).c_str();
   i = DisP.RealCmd[0] & 0x08;
   if(!i) DisP.codelen++;
   arg = i ? "dx" : dig;
@@ -1501,7 +1501,7 @@ void  ix86_Disassembler::ix86_ArgxMMXGroup(char *str,const char *name,ix86Param&
   strcat(str,k64_getREG(DisP,MODRM_RM(DisP.RealCmd[1]),true,brex,wrex));
   if(as_xmmx) DisP.mode&=~MOD_SSE;
   else        DisP.mode&=~MOD_MMX;
-  ix86_CStile(DisP,str,Get2Digit(DisP.RealCmd[2]));
+  ix86_CStile(DisP,str,Get2Digit(DisP.RealCmd[2]).c_str());
   DisP.codelen++;
   DisP.mode=mode;
 }
@@ -1682,7 +1682,7 @@ void ix86_Disassembler::arg_simd_rm_imm8_imm8(char *str,ix86Param& DisP) const
 
 void ix86_Disassembler::ix86_ArgXMMCmp(char *str,ix86Param& DisP,const char **sfx,unsigned nsfx,unsigned namlen,unsigned precopy) const
 {
-   char *a;
+   const char *a;
    unsigned char suffix;
    char name[6], realname[10];
    unsigned long mode=DisP.mode;
@@ -1703,7 +1703,7 @@ void ix86_Disassembler::ix86_ArgXMMCmp(char *str,ix86Param& DisP,const char **sf
 	TabSpace(str, TAB_POS);
    }
    else {
-	a = Get2Digit(suffix);
+	a = Get2Digit(suffix).c_str();
    }
    strcat(str,ix86_Katmai_buff);
    if(a) ix86_CStile(DisP,str,a);
@@ -1733,7 +1733,7 @@ void ix86_Disassembler::arg_xop_cmp(char *str,ix86Param& DisP) const
 const char* ix86_Disassembler::ix86_clmul_sfx[] = { "lqlq", "hqlq", "lqh", "hqh" };
 void ix86_Disassembler::arg_simd_clmul(char *str,ix86Param& DisP) const
 {
-   char *a;
+   const char *a;
    unsigned char suffix;
    char name[10], realname[10];
    unsigned long mode=DisP.mode;
@@ -1759,7 +1759,7 @@ void ix86_Disassembler::arg_simd_clmul(char *str,ix86Param& DisP) const
 	TabSpace(str, TAB_POS);
    }
    else {
-	a = Get2Digit(suffix);
+	a = Get2Digit(suffix).c_str();
    }
    strcat(str,ix86_Katmai_buff);
    if(a) ix86_CStile(DisP,str,a);
@@ -1789,7 +1789,7 @@ void   ix86_Disassembler::arg_fma4_imm8(char *str,ix86Param& DisP) const {
     unsigned is4;
     arg_fma4(str,DisP);
     is4=DisP.RealCmd[DisP.codelen-1];
-    ix86_CStile(DisP,str,Get2Digit(is4&0x0F));
+    ix86_CStile(DisP,str,Get2Digit(is4&0x0F).c_str());
 }
 
 void ix86_Disassembler::arg_fma(char *str,ix86Param& DisP) const

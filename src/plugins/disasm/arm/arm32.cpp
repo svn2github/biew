@@ -403,7 +403,7 @@ const char* ARM_Disassembler::arm_wreg_name[] =
     if(p) {\
 	READ_IMM32(ch);\
 	if(prev) strcat(dret->str,","); prev=1;\
-	strcat(dret->str,Get2Digit(val&0xF));\
+	strcat(dret->str,Get2Digit(val&0xF).c_str());\
     }\
 }
 
@@ -470,9 +470,9 @@ void ARM_Disassembler::arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
 	if(prev) strcat(dret->str,",");
 	if(has_I == true && a_I) {
 	    strcat(dret->str,"#");
-	    strcat(dret->str,Get2Digit(val&0xFF));
+	    strcat(dret->str,Get2Digit(val&0xFF).c_str());
 	    strcat(dret->str,",");
-	    strcat(dret->str,Get2Digit((val>>8)&0xF));
+	    strcat(dret->str,Get2Digit((val>>8)&0xF).c_str());
 	}
 	else {
 	    idx=(val>>4)&0x07;
@@ -497,7 +497,7 @@ void ARM_Disassembler::arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
 		case 4:
 		case 2:
 		case 0:
-			strcat(dret->str,Get2Digit((val>>7)&0x1F));
+			strcat(dret->str,Get2Digit((val>>7)&0x1F).c_str());
 			break;
 		case 7:
 		case 5:
@@ -533,10 +533,10 @@ void ARM_Disassembler::arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
 	    strcat(dret->str,",");
 	    strcat(dret->str,pfx);
 	    strcat(dret->str," #");
-	    strcat(dret->str,Get2Digit((val>>7)&0x1F));
+	    strcat(dret->str,Get2Digit((val>>7)&0x1F).c_str());
 	}
 	else {
-	    strcat(dret->str,Get4SignDig(val&0xFFF));
+	    strcat(dret->str,Get4SignDig(val&0xFFF).c_str());
 	}
 	strcat(dret->str,"]");
     }
@@ -547,7 +547,7 @@ void ARM_Disassembler::arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
 	READ_IMM32('A');
 	if(prev) strcat(dret->str,has_U==true&&a_U?"+":"-");
 	if(has_N == true && a_N) {
-	    strcat(dret->str,Get2Digit(val&0xFF));
+	    strcat(dret->str,Get2Digit(val&0xFF).c_str());
 	}
 	else {
 	    strcat(dret->str,arm_reg_name[val&0xF]);

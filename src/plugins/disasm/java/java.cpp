@@ -407,7 +407,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		if(vartail_flags & JVM_TABLESWITCH)
 		{
 			strcpy(outstr,"case ");
-			strcat(outstr,Get8Digit((ulShift-vartail_start)/4+vartail_idx));
+			strcat(outstr,Get8Digit((ulShift-vartail_start)/4+vartail_idx).c_str());
 			strcat(outstr,":");
 			lval=JVM_DWORD((uint32_t*)buffer, 1);
 			newpos=vartail_base+lval;
@@ -417,13 +417,13 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 						newpos,DisMode::Near32,0,4);
 			    strcpy(outstr,stmp.c_str());
 			}else
-			    strcat(outstr,Get8Digit(newpos));
+			    strcat(outstr,Get8Digit(newpos).c_str());
 		}
 		else
 		{
 			strcpy(outstr,"case ");
 			cval=JVM_DWORD((uint32_t*)buffer, 1);
-			strcat(outstr,Get8Digit(cval));
+			strcat(outstr,Get8Digit(cval).c_str());
 			strcat(outstr,":");
 			lval=JVM_DWORD((uint32_t*)(&buffer[4]), 1);
 			newpos=vartail_base+lval;
@@ -433,7 +433,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 						newpos,DisMode::Near32,0,4);
 			    strcpy(outstr,stmp.c_str());
 			} else
-			    strcat(outstr,Get8Digit(newpos));
+			    strcat(outstr,Get8Digit(newpos).c_str());
 		}
 	}
      return ret;
@@ -499,7 +499,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		else
 		{
 			strcat(outstr,"L");
-			strcat(outstr,Get8Digit(npairs));
+			strcat(outstr,Get8Digit(npairs).c_str());
 			strcat(outstr,",default:");
 			newpos=ulShift+(__fileoff_t)defval;
 			if(defval) {
@@ -508,7 +508,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 						newpos,DisMode::Near32,0,4);
 			    strcpy(outstr,stmp.c_str());
 			} else
-				strcat(outstr,Get8Digit(newpos));
+				strcat(outstr,Get8Digit(newpos).c_str());
 		}
 	    }
 	    else
@@ -528,7 +528,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 						newpos,DisMode::Near32,0,4);
 			    strcpy(outstr,stmp.c_str());
 			} else
-				strcat(outstr,Get8Digit(newpos));
+				strcat(outstr,Get8Digit(newpos).c_str());
 		}
 	    }
 	    else
@@ -555,7 +555,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		    }
 		    if(p) strcat(outstr,p);
 		    else
-			strcat(outstr,Get2Digit(buffer[idx]));
+			strcat(outstr,Get2Digit(buffer[idx]).c_str());
 		    break;
 		}
 		case 2:
@@ -575,9 +575,9 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		    if((jflags & JVM_OBJREF1)==JVM_OBJREF1)
 		    {
 			strcat(outstr,"#");
-			strcat(outstr,Get2Digit(buffer[idx]));
+			strcat(outstr,Get2Digit(buffer[idx]).c_str());
 			strcat(outstr,",");
-			strcat(outstr,Get2Digit(buffer[idx+1]));
+			strcat(outstr,Get2Digit(buffer[idx+1]).c_str());
 		    }
 		    else
 		    if(jflags & JVM_OBJREFMASK) {
@@ -585,7 +585,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		    parent.append_digits(main_handle,stmp,ulShift+idx,
 			Bin_Format::Use_Type,2,&sval,DisMode::Arg_Word);
 		    strcpy(outstr,stmp.c_str());
-		    } else strcat(outstr,Get4Digit(sval));
+		    } else strcat(outstr,Get4Digit(sval).c_str());
 		    break;
 		}
 		default:
@@ -612,11 +612,11 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 				    Bin_Format::Use_Type,2,&sval,DisMode::Arg_Word);
 			strcpy(outstr,stmp.c_str());
 			strcat(outstr,",");
-			if((jflags & JVM_CONST1)==JVM_CONST1) strcat(outstr,Get2Digit(buffer[idx+2]));
+			if((jflags & JVM_CONST1)==JVM_CONST1) strcat(outstr,Get2Digit(buffer[idx+2]).c_str());
 			else
 			{
 			    sval=JVM_WORD((uint16_t*)(&buffer[idx+2]),1);
-			    strcat(outstr,Get4Digit(sval));
+			    strcat(outstr,Get4Digit(sval).c_str());
 			}
 		    }
 		    else
@@ -625,7 +625,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		    parent.append_digits(main_handle,stmp,ulShift+idx,
 			Bin_Format::Use_Type,4,&lval,DisMode::Arg_DWord);
 		    strcpy(outstr,stmp.c_str());
-		    } else strcat(outstr,Get8Digit(lval));
+		    } else strcat(outstr,Get8Digit(lval).c_str());
 		    break;
 		}
 		case 8:

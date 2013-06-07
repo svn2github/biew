@@ -57,9 +57,9 @@ inline void __PURE_FUNC__ GET2DIGIT(char* s,const char* legs,unsigned char val)
     s[1] = legs[((unsigned char)val) & 0x0F];
 }
 
-char * __FASTCALL__ Get2Digit(uint8_t val)
+std::string __FASTCALL__ Get2Digit(uint8_t val)
 {
-  static char str[3] = "  ";
+  char str[3] = "  ";
   const char *legs = &legalchars[2];
   GET2DIGIT(str,legs,val);
   return str;
@@ -75,9 +75,9 @@ std::string __FASTCALL__ Get2SignDig(int8_t val)
   return str;
 }
 
-char * __FASTCALL__ Get4Digit(uint16_t val)
+std::string __FASTCALL__ Get4Digit(uint16_t val)
 {
-  static char rstr[5] = "    ";
+  char rstr[5] = "    ";
   const char *legs = &legalchars[2];
   unsigned char v;
   v = val>>8;
@@ -86,9 +86,9 @@ char * __FASTCALL__ Get4Digit(uint16_t val)
   return rstr;
 }
 
-char * __FASTCALL__ Get4SignDig(int16_t val)
+std::string __FASTCALL__ Get4SignDig(int16_t val)
 {
-  static char rstr[6] = "     ";
+  char rstr[6] = "     ";
   const char *legs = &legalchars[2];
   unsigned char v;
   rstr[0] = val >= 0 ? '+' : '-';
@@ -99,9 +99,9 @@ char * __FASTCALL__ Get4SignDig(int16_t val)
   return rstr;
 }
 
-char * __FASTCALL__ Get8Digit(uint32_t val)
+std::string __FASTCALL__ Get8Digit(uint32_t val)
 {
-  static char rstr[9] = "        ";
+  char rstr[9] = "        ";
   const char *legs = &legalchars[2];
   unsigned char v;
   v = val>>24;
@@ -114,9 +114,9 @@ char * __FASTCALL__ Get8Digit(uint32_t val)
   return rstr;
 }
 
-char * __FASTCALL__ Get8SignDig(int32_t val)
+std::string __FASTCALL__ Get8SignDig(int32_t val)
 {
-  static char rstr[10] = "         ";
+  char rstr[10] = "         ";
   const char *legs = &legalchars[2];
   unsigned char v;
   rstr[0] = val >= 0 ? '+' : '-';
@@ -131,7 +131,7 @@ char * __FASTCALL__ Get8SignDig(int32_t val)
   return rstr;
 }
 
-char * __FASTCALL__ Get16Digit(uint64_t val)
+std::string __FASTCALL__ Get16Digit(uint64_t val)
 {
   static char rstr[17] = "                ";
   const char *legs = &legalchars[2];
@@ -154,7 +154,7 @@ char * __FASTCALL__ Get16Digit(uint64_t val)
   return rstr;
 }
 
-char * __FASTCALL__ Get16SignDig(int64_t val)
+std::string __FASTCALL__ Get16SignDig(int64_t val)
 {
   static char rstr[18] = "                 ";
   const char *legs = &legalchars[2];
@@ -197,13 +197,13 @@ void __FASTCALL__ CompressHex(unsigned char * dest,const char * src,unsigned siz
 
 int __FASTCALL__ ExpandHex(char * dest,const unsigned char * src,int size,char hard)
 {
-  int i,k;
+    int i,k;
     dest[0] = '\0';
     k = 0;
     for(i = 0;i < size;i++)
     {
-	char * cptr;
-	cptr = Get2Digit(src[i]);
+	const char * cptr;
+	cptr = Get2Digit(src[i]).c_str();
 	strcat(dest,cptr); k += 2;
 	if(hard == 1) { strcat(dest,!((i + 1)%4) ? ( !((i+1)%16) ? " " : "-" ) : " "); k++; }
 	else

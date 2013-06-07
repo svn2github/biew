@@ -319,7 +319,7 @@ plugin_position DisMode::paint( unsigned keycode, unsigned textshift )
 		    ColorAttr opc;
 		    med_off = disMaxCodeLen*2+1;
 		    full_off = med_off+len_64;
-		    for(j = 0;j < dret.codelen;j++,len+=2) ::memcpy(&outstr[len],Get2Digit(disCodeBuffer[j]),2);
+		    for(j = 0;j < dret.codelen;j++,len+=2) ::memcpy(&outstr[len],Get2Digit(disCodeBuffer[j]).c_str(),2);
 		    tmp_off = disPanelMode < Panel_Full ? full_off : med_off;
 		    if(len < tmp_off) len = tmp_off;
 		    opc =HiLight == 2 ? activeDisasm->get_alt_opcode_color(dret.pro_clone) :
@@ -539,8 +539,8 @@ void DisMode::disasm_screen(Editor& editor,TWindow& ewnd,__filesize_t cp,__files
 	    emem.alen[i] = dret.codelen;
 	    ::memset(outstr,TWC_DEF_FILLER,width);
 	    ::memset(outstr1,TWC_DEF_FILLER,width);
-	    len = 0; for(j = 0;j < emem.alen[i];j++) { ::memcpy(&outstr1[len],Get2Digit(emem.save[start + j]),2); len += 2; }
-	    len = 0; for(j = 0;j < emem.alen[i];j++) { ::memcpy(&outstr[len],Get2Digit(emem.buff[start + j]),2); len += 2; }
+	    len = 0; for(j = 0;j < emem.alen[i];j++) { ::memcpy(&outstr1[len],Get2Digit(emem.save[start + j]).c_str(),2); len += 2; }
+	    len = 0; for(j = 0;j < emem.alen[i];j++) { ::memcpy(&outstr[len],Get2Digit(emem.buff[start + j]).c_str(),2); len += 2; }
 	    ewnd.set_focus();
 	    len = disMaxCodeLen*2;
 	    for(j = 0;j < len;j++) {
@@ -596,8 +596,8 @@ int DisMode::full_asm_edit(Editor& editor,TWindow& ewnd)
     while(1) {
 	ewnd.set_focus();
 
-	len = 0; for(j = 0;j < emem.alen[editor.where_y()];j++) { ::memcpy(&owork[len],Get2Digit(emem.save[start + j]),2); len += 2; }
-	len = 0; for(j = 0;j < emem.alen[editor.where_y()];j++) { ::memcpy(&outstr[len],Get2Digit(emem.buff[start + j]),2); len += 2; }
+	len = 0; for(j = 0;j < emem.alen[editor.where_y()];j++) { ::memcpy(&owork[len],Get2Digit(emem.save[start + j]).c_str(),2); len += 2; }
+	len = 0; for(j = 0;j < emem.alen[editor.where_y()];j++) { ::memcpy(&outstr[len],Get2Digit(emem.buff[start + j]).c_str(),2); len += 2; }
 	flg = __ESS_FILLER_7BIT | __ESS_WANTRETURN | __ESS_HARDEDIT;
 	if(!redraw) flg |= __ESS_NOREDRAW;
 	unsigned edit_x = editor.where_x();
@@ -1082,10 +1082,10 @@ try_rip:
 	    }
 	    if(!type) pstr = Get2SignDig((char)distin).c_str();
 	    else if(type & Near16)
-		pstr = type & UseSeg ? Get4Digit((unsigned)distin) :
-				     Get4SignDig((unsigned)distin);
-	    else if(type & Near32)   pstr = Get8SignDig(distin);
-	    else if(type & Near64) pstr = Get16SignDig(distin);
+		pstr = type & UseSeg ? Get4Digit((unsigned)distin).c_str() :
+				     Get4SignDig((unsigned)distin).c_str();
+	    else if(type & Near32)   pstr = Get8SignDig(distin).c_str();
+	    else if(type & Near64) pstr = Get16SignDig(distin).c_str();
 	    rc+=pstr;
 	}
 	disNeedRef = needref;

@@ -71,7 +71,7 @@ void Editor::paint_title( int shift,bool use_shift ) const
 	     ,GetBinary(obyte).c_str());
     } else twnd.printf("                                ");
     twnd.printf("MASK: %sH"
-	   ,Get2Digit(edit_XX));
+	   ,Get2Digit(edit_XX).c_str());
     twnd.refresh();
 }
 

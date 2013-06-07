@@ -35,14 +35,14 @@ namespace	usr {
 
     bool               FileUtils();
 
-    char * __FASTCALL__ Get2Digit(uint8_t);
+    std::string __FASTCALL__ Get2Digit(uint8_t);
     std::string __FASTCALL__ Get2SignDig(int8_t);
-    char * __FASTCALL__ Get4Digit(uint16_t);
-    char * __FASTCALL__ Get4SignDig(int16_t);
-    char * __FASTCALL__ Get8Digit(uint32_t);
-    char * __FASTCALL__ Get8SignDig(int32_t);
-    char * __FASTCALL__ Get16Digit(uint64_t);
-    char * __FASTCALL__ Get16SignDig(int64_t);
+    std::string __FASTCALL__ Get4Digit(uint16_t);
+    std::string __FASTCALL__ Get4SignDig(int16_t);
+    std::string __FASTCALL__ Get8Digit(uint32_t);
+    std::string __FASTCALL__ Get8SignDig(int32_t);
+    std::string __FASTCALL__ Get16Digit(uint64_t);
+    std::string __FASTCALL__ Get16SignDig(int64_t);
     std::string __FASTCALL__ GetBinary(char val);
 
     void     __FASTCALL__ CompressHex(unsigned char * dest,const char * src,unsigned sizedest,bool usespace);

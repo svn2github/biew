@@ -291,7 +291,7 @@ unsigned FStore::printHelpComment(char *buff,MBuffer codebuff,DisasmRet *dret,Di
 	::strcat(buff," ; ");
     } else len = 0;
     for(j = 0;j < dret->codelen;j++) {
-	::memcpy((char *)&buff[len],(char *)Get2Digit(codebuff[j]),2);
+	::memcpy((char *)&buff[len],(char *)Get2Digit(codebuff[j]).c_str(),2);
 	len += 2;
     }
     buff[len] = 0;
@@ -303,7 +303,7 @@ void FStore::make_addr_column(std::string& buff,__filesize_t offset) const
     if(hexAddressResolv) buff=bctx.bin_format().address_resolving(offset);
     else {
 	buff="L";
-	buff+=Get8Digit(offset);
+	buff+=Get8Digit(offset).c_str();
     }
     buff+=":";
 }
@@ -536,7 +536,7 @@ bool FStore::run()
 			    strcat(tmp_buff," db ");
 			    lim = (unsigned)(stop-ff_startpos);
 			    if(lim > MaxInsnLen) lim = MaxInsnLen;
-			    for(ii = 0;ii < lim;ii++) sprintf(&tmp_buff[strlen(tmp_buff)],"%s ",Get2Digit(codebuff[ii]));
+			    for(ii = 0;ii < lim;ii++) sprintf(&tmp_buff[strlen(tmp_buff)],"%s ",Get2Digit(codebuff[ii]).c_str());
 			    dret.codelen = lim;
 			} else goto normline;
 		    } else {
