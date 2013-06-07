@@ -5,6 +5,7 @@
 
 #include "libbeye/libbeye.h"
 #include "beyeutil.h"
+#include "search.h"
 
 namespace	usr {
     class BeyeContext;
@@ -41,6 +42,11 @@ namespace	usr {
 		UseCodeGuide	=0x0004,
 		Has_SearchEngine=0x0008,
 		Has_ConvertCP	=0x0010
+	    };
+
+	    struct search_result {
+		__filesize_t	foff; // offset of found sequence
+		__filesize_t	slen; // length of found sequence
 	    };
 
 	    Plugin(BeyeContext&,const Bin_Format&,binary_stream& h,TWindow& main_wnd,CodeGuider& code_guider,udn& _udn,Search& s) { UNUSED(h); UNUSED(main_wnd); UNUSED(code_guider); UNUSED(_udn); UNUSED(s); }
@@ -94,9 +100,9 @@ namespace	usr {
 			  * @param is_continue indicates initialization of search
 			  *                  If set then search should be continued
 			  * @param is_found  on output must contain true if result is really found
-			  * @return          offset of found sequence or ULONG(LONG)_MAX if not found
+			  * @return          search_result
 			**/
-	    virtual __filesize_t	search_engine(TWindow *pwnd, __filesize_t start, __filesize_t *slen, unsigned flg, bool is_continue, bool *is_found) { UNUSED(pwnd); UNUSED(start); UNUSED(slen); UNUSED(flg); UNUSED(is_continue); UNUSED(is_found); return 0; }
+	    virtual search_result	search_engine(TWindow *pwnd, __filesize_t start, Search::search_flags flg, bool is_continue) { search_result rc = { 0, 0 }; UNUSED(pwnd); UNUSED(start);  UNUSED(flg); UNUSED(is_continue); return rc; }
     };
     inline Plugin::e_flag operator~(Plugin::e_flag a) { return static_cast<Plugin::e_flag>(~static_cast<unsigned>(a)); }
     inline Plugin::e_flag operator|(Plugin::e_flag a, Plugin::e_flag b) { return static_cast<Plugin::e_flag>(static_cast<unsigned>(a)|static_cast<unsigned>(b)); }

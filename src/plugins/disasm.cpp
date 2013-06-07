@@ -725,10 +725,10 @@ DisasmRet DisMode::disassembler(__filesize_t ulShift,MBuffer buffer,unsigned flg
 unsigned DisMode::get_symbol_size() const { return 1; }
 unsigned DisMode::get_max_symbol_size() const { return activeDisasm->max_insn_len(); }
 
-__filesize_t DisMode::search_engine(TWindow *pwnd, __filesize_t start,
-					__filesize_t *slen, Search::search_flags flg,
-					bool is_continue, bool *is_found)
+Plugin::search_result DisMode::search_engine(TWindow *pwnd, __filesize_t start,
+					Search::search_flags flg, bool is_continue)
 {
+    Plugin::search_result rc = { 0, 0 };
     DisasmRet dret;
     __filesize_t tsize, retval, flen, dfpos, cfpos, sfpos; /* If search have no result */
     char *disSearchBuff;
@@ -781,16 +781,15 @@ __filesize_t DisMode::search_engine(TWindow *pwnd, __filesize_t start,
 	::strcpy(disSearchBuff, dret.str);
 	::strcat(disSearchBuff, dis_comments.c_str());
 	if(search.strFind(disSearchBuff, strlen(disSearchBuff), search.buff(), search.length(), cache, flg)) {
-	    *is_found = true;
-	    retval = dfpos;
-	    *slen = dret.codelen;
+	    rc.foff = dfpos;
+	    rc.slen = dret.codelen;
 	    break;
 	}
     }
     delete disSearchBuff;
     main_handle.seek(sfpos, binary_stream::Seek_Set);
     DumpMode = false;
-    return retval;
+    return rc;
 }
 
 void DisMode::accept_actions()

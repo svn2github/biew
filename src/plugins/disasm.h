@@ -125,7 +125,7 @@ typedef unsigned char * MBuffer;
 	    virtual void		help() const;
 	    virtual void		read_ini(Ini_Profile& );
 	    virtual void		save_ini(Ini_Profile& );
-	    virtual __filesize_t	search_engine(TWindow *pwnd, __filesize_t start, __filesize_t *slen,Search::search_flags flg, bool is_continue, bool *is_found);
+	    virtual Plugin::search_result search_engine(TWindow *pwnd, __filesize_t start, Search::search_flags flg, bool is_continue);
 	    virtual DisasmRet		disassembler(__filesize_t ulShift,MBuffer buffer,unsigned flags);
 /** Appends symbolic information to address field of jump instructions
     @param str       string to be appended

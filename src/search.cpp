@@ -539,9 +539,12 @@ __filesize_t Search::run( bool is_continue )
 	    else if(lmem < flen) lmem+=cp_symb_size;
 	}
 	__found = false;
-	found = (beyeSearchFlg & Plugins) && (bctx.active_mode().flags() & Plugin::Has_SearchEngine) ?
-	bctx.active_mode().search_engine(prcntswnd,lmem,&slen,beyeSearchFlg,is_continue,&__found):
-	adv_find(lmem,&slen);
+	if((beyeSearchFlg & Plugins) && (bctx.active_mode().flags() & Plugin::Has_SearchEngine)) {
+	    Plugin::search_result rc = bctx.active_mode().search_engine(prcntswnd,lmem,beyeSearchFlg,is_continue);
+	    slen=rc.slen;
+	    found=rc.foff;
+	    if(rc.slen) __found=true;
+	} else found=adv_find(lmem,&slen);
 	delete prcntswnd;
 	if(__found) {
 	    FoundTextSt = found;
