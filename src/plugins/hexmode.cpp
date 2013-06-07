@@ -212,13 +212,12 @@ byteView::byteView(binary_stream& h)
 }
 byteView::~byteView() {}
 std::string byteView::get(__filesize_t val) const {
-    char id;
+    uint8_t id;
     handle().seek(val,binary_stream::Seek_Set);
     id=handle().read(type_byte);
-    std::string rc;
-    std::ostringstream oss(rc);
-    oss<<std::hex<<std::setfill('0')<<std::setw(2)<<id;
-    return rc;
+    std::ostringstream oss;
+    oss<<std::hex<<std::setfill('0')<<std::setw(2)<<(unsigned)id;
+    return oss.str();
 }
 unsigned byteView::size() const { return 1; }
 unsigned byteView::hexlen() const { return 2; }
@@ -235,10 +234,9 @@ std::string wordView::get(__filesize_t val) const {
     if(hendian==1) v=le2me_16(v);
     else
     if(hendian==2) v=be2me_16(v);
-    std::string rc;
-    std::ostringstream oss(rc);
+    std::ostringstream oss;
     oss<<std::hex<<std::setfill('0')<<std::setw(4)<<v;
-    return rc;
+    return oss.str();
 }
 unsigned wordView::size() const { return 2; }
 unsigned wordView::hexlen() const { return 4; }
@@ -255,10 +253,9 @@ std::string dwordView::get(__filesize_t val) const {
     if(hendian==1) v=le2me_32(v);
     else
     if(hendian==2) v=be2me_32(v);
-    std::string rc;
-    std::ostringstream oss(rc);
+    std::ostringstream oss;
     oss<<std::hex<<std::setfill('0')<<std::setw(8)<<v;
-    return rc;
+    return oss.str();
 }
 unsigned dwordView::size() const { return 4; }
 unsigned dwordView::hexlen() const { return 8; }
@@ -275,10 +272,9 @@ std::string qwordView::get(__filesize_t val) const {
     if(hendian==1) v=le2me_64(v);
     else
     if(hendian==2) v=be2me_64(v);
-    std::string rc;
-    std::ostringstream oss(rc);
+    std::ostringstream oss;
     oss<<std::hex<<std::setfill('0')<<std::setw(16)<<v;
-    return rc;
+    return oss.str();
 }
 unsigned qwordView::size() const { return 8; }
 unsigned qwordView::hexlen() const { return 16; }
@@ -616,11 +612,12 @@ unsigned __FASTCALL__ ReadIniAResolv(BeyeContext& bctx, Ini_Profile& ini )
 
 void __FASTCALL__ WriteIniAResolv(BeyeContext& bctx, Ini_Profile& ini, unsigned har, unsigned virt_width_corr)
 {
-    char tmps[10];
-    ::sprintf(tmps,"%i",har);
-    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode6",tmps);
-    ::sprintf(tmps,"%u",virt_width_corr);
-    bctx.write_profile_string(ini,"Beye","Browser","VirtWidthCorr",tmps);
+    std::ostringstream oss;
+    oss<<har;
+    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode6",oss.str());
+    oss.str("");
+    oss<<virt_width_corr;
+    bctx.write_profile_string(ini,"Beye","Browser","VirtWidthCorr",oss.str());
 }
 
 void HexMode::read_ini(Ini_Profile& ini)
@@ -641,12 +638,13 @@ void HexMode::read_ini(Ini_Profile& ini)
 
 void HexMode::save_ini(Ini_Profile&  ini)
 {
-    char tmps[10];
-    ::sprintf(tmps,"%i",hmode);
-    bctx.write_profile_string(ini,"Beye","Browser","LastSubMode",tmps);
     WriteIniAResolv(bctx,ini,hexAddressResolv,virtWidthCorr);
-    ::sprintf(tmps,"%u",virtWidthCorr);
-    bctx.write_profile_string(ini,"Beye","Browser","VirtWidthCorr",tmps);
+    std::ostringstream oss;
+    oss<<hmode;
+    bctx.write_profile_string(ini,"Beye","Browser","LastSubMode",oss.str());
+    oss.str("");
+    oss<<virtWidthCorr;
+    bctx.write_profile_string(ini,"Beye","Browser","VirtWidthCorr",oss.str());
 }
 
 unsigned HexMode::get_symbol_size() const { return 1; }
