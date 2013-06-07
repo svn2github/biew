@@ -187,7 +187,7 @@ typedef unsigned char * MBuffer;
 	    virtual int			get_curr_line_num() const { return DisasmCurrLine; }
 
 	    e_ref			disNeedRef;
-	    char*			dis_comments;
+	    std::string			dis_comments;
 	    e_severity			dis_severity;
 	private:
 	    void			accept_actions();

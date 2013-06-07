@@ -239,7 +239,7 @@ FileUtilities*	InsDelBlock::query_interface(BeyeContext& b) { return new(zeromem
 	    void		printHdr(std::ofstream& fout,const Bin_Format& fmt) const;
 	    std::string		GET_FUNC_CLASS(Symbol_Info::symbol_class x) const { return x == Symbol_Info::Local ? "private" : "public"; }
 	    void		make_addr_column(std::string& buff,__filesize_t offset) const;
-	    unsigned		printHelpComment(char *buff,MBuffer codebuff,DisasmRet *dret,DisMode::e_severity dis_severity,const char* dis_comments) const;
+	    unsigned		printHelpComment(char *buff,MBuffer codebuff,DisasmRet *dret,DisMode::e_severity dis_severity,const std::string& dis_comments) const;
     };
 
 FStore::FStore(BeyeContext& b):FileUtilities(b),ff_fname("beye.$$$") {}
@@ -282,12 +282,12 @@ void FStore::printHdr(std::ofstream& fout,const Bin_Format& fmt) const
     fout<<cptr2<<std::endl<<std::endl;
 }
 
-unsigned FStore::printHelpComment(char *buff,MBuffer codebuff,DisasmRet *dret,DisMode::e_severity dis_severity,const char* dis_comments) const
+unsigned FStore::printHelpComment(char *buff,MBuffer codebuff,DisasmRet *dret,DisMode::e_severity dis_severity,const std::string& dis_comments) const
 {
     unsigned len,j;
     if(dis_severity > DisMode::CommSev_None) {
-	len = 3+::strlen(dis_comments);
-	::strcat(buff,dis_comments);
+	len = 3+dis_comments.length();
+	::strcat(buff,dis_comments.c_str());
 	::strcat(buff," ; ");
     } else len = 0;
     for(j = 0;j < dret->codelen;j++) {

@@ -65,9 +65,9 @@ char * __FASTCALL__ Get2Digit(uint8_t val)
   return str;
 }
 
-char * __FASTCALL__ Get2SignDig(int8_t val)
+std::string __FASTCALL__ Get2SignDig(int8_t val)
 {
-  static char str[4] = "   ";
+  char str[4] = "   ";
   const char *legs = &legalchars[2];
   str[0] = val >= 0 ? '+' : '-';
   if(val < 0) val = abs(val);

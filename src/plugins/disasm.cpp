@@ -24,6 +24,8 @@ using namespace	usr;
  * @note        Reworked inline assemblers support
 **/
 #include <algorithm>
+#include <sstream>
+#include <iomanip>
 
 #include <string.h>
 #include <stdlib.h>
@@ -106,7 +108,6 @@ DisMode::~DisMode()
     delete activeDisasm;
     delete CurrStrLenBuff;
     delete PrevStrLenAddr;
-    delete dis_comments;
     delete disCodeBuffer;
     delete disCodeBufPredict;
     if(second_handle!=&main_handle) delete second_handle;
@@ -363,8 +364,8 @@ plugin_position DisMode::paint( unsigned keycode, unsigned textshift )
 		    main_wnd.goto_xy(len,i+1);
 		    main_wnd.puts(" ; "); len+=3;
 		    j = orig_commpos-len;
-		    j = std::min(j,strlen(dis_comments));
-		    main_wnd.write(len,i+1,(const uint8_t*)dis_comments,j);
+		    j = std::min(j,dis_comments.length());
+		    main_wnd.write(len,i+1,(const uint8_t*)dis_comments.c_str(),j);
 		    len += j;
 		    if(savstring[0]) {
 			main_wnd.goto_xy(len,i+1);
@@ -778,7 +779,7 @@ __filesize_t DisMode::search_engine(TWindow *pwnd, __filesize_t start,
 	    if(cfpos >= flen) break;
 	}
 	::strcpy(disSearchBuff, dret.str);
-	::strcat(disSearchBuff, dis_comments);
+	::strcat(disSearchBuff, dis_comments.c_str());
 	if(search.strFind(disSearchBuff, strlen(disSearchBuff), search.buff(), search.length(), cache, flg)) {
 	    *is_found = true;
 	    retval = dfpos;
@@ -830,9 +831,9 @@ void  __FASTCALL__ disSetModifier(char *str,const char *modf)
 bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flg,char codelen,any_t*defval,e_disarg type)
 {
     std::string rc;
-    char comments[Comm_Size];
-    const char* appstr;
+    std::ostringstream oss,coss;
     unsigned dig_type;
+    size_t fld_len=1;
     __filesize_t fpos;
     fpos = handle.tell();
 #ifndef NDEBUG
@@ -854,14 +855,12 @@ bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t 
     if(!rc.empty()) goto exit;
 
     dig_type = type & 0x00FFU;
-    comments[0] = 0;
     /* @todo Remove dependencies from 4-byte size of operand */
     /* Only if immediate operand */
     if(((type & Arg_Imm) || (type & Arg_Disp) ||
 	(type & Arg_IdxDisp) || (type & Arg_Rip)) &&
 	disNeedRef >= Ref_Predict) {  /* Only when reference prediction is on */
 	uint64_t _defval;
-	unsigned fld_len=1;
 	switch(dig_type) {
 	    default:
 	    case Arg_Byte: _defval = *(uint8_t *)defval;  fld_len=1; break;
@@ -886,160 +885,87 @@ bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t 
 		if(type & Arg_Rip) rc = bin_format.bind(*this,pa,flg,codelen,0L);
 		if(!rc.empty()) goto next_step;
 		if(dis_severity < CommSev_Func) {
-		    strcpy(comments,".*");
+		    coss<<".*";
 		    psym = bin_format.get_public_symbol(pa,false);
-		    strcat(comments,psym.name.c_str());
+		    coss<<psym.name;
 		    if(psym.pa!=Plugin::Bad_Address) {
-			if(psym.pa != pa) comments[0] = 0;
+			if(psym.pa != pa) coss.str("");
 			else {
 			    dis_severity = CommSev_Func;
-			    strcpy(dis_comments,comments);
+			    dis_comments=coss.str();
 			}
 		    }
 		}
 		/* 2. Try to determine immediate as offset to string constant */
-		comments[0] = 0;
+		coss.str("");
 		if(dis_severity < CommSev_StrPtr) {
 		    size_t _index;
 		    unsigned char rch;
 		    _index = 0;
-		    strcat(comments,"->\"");
-		    for(_index = 3;_index < sizeof(comments)-5;_index++) {
+		    coss<<"->\"";
+		    for(_index = 3;_index < Comm_Size-5;_index++) {
 			handle.seek(pa+_index-3,binary_stream::Seek_Set);
 			rch = handle.read(type_byte);
-			if(isprint(rch)) comments[_index] = rch;
+			if(isprint(rch)) coss<<rch;
 			else break;
 		    }
-		    if(!comments[3]) comments[0] = 0;
+		    if(coss.str().length()<4) coss.str("");
 		    else {
-			comments[_index++] = '"'; comments[_index] = 0;
+			coss<<'"';
 			dis_severity = CommSev_StrPtr;
-			strcpy(dis_comments,comments);
+			dis_comments=coss.str();
 		    }
 		}
 	    }
 	}
     }
 next_step:
-    comments[0] = 0;
+    coss.str("");
 //    std::ostringstream oss(appstr);
     if(rc.empty()) {
 	switch(dig_type) {
 	    case Arg_LLong:
-			 appstr = Get16SignDig(*(int64_t *)defval);
-			 if(type & Arg_Imm &&
-			    disNeedRef >= Ref_Predict &&
-			    dis_severity < CommSev_String &&
-			    isprint(((unsigned char *)defval)[0]) &&
-			    isprint(((unsigned char *)defval)[1]) &&
-			    isprint(((unsigned char *)defval)[2]) &&
-			    isprint(((unsigned char *)defval)[3]) &&
-			    isprint(((unsigned char *)defval)[4]) &&
-			    isprint(((unsigned char *)defval)[5]) &&
-			    isprint(((unsigned char *)defval)[6]) &&
-			    isprint(((unsigned char *)defval)[7]))
-			    sprintf(comments,"\"%c%c%c%c%c%c%c%c\""
-					    ,((unsigned char *)defval)[0]
-					    ,((unsigned char *)defval)[1]
-					    ,((unsigned char *)defval)[2]
-					    ,((unsigned char *)defval)[3]
-					    ,((unsigned char *)defval)[4]
-					    ,((unsigned char *)defval)[5]
-					    ,((unsigned char *)defval)[6]
-					    ,((unsigned char *)defval)[7]);
-			 break;
-	    case Arg_Long:  appstr = Get8SignDig(*(int32_t *)defval);
-			 if(type & Arg_Imm &&
-			    disNeedRef >= Ref_Predict &&
-			    dis_severity < CommSev_String &&
-			    isprint(((unsigned char *)defval)[0]) &&
-			    isprint(((unsigned char *)defval)[1]) &&
-			    isprint(((unsigned char *)defval)[2]) &&
-			    isprint(((unsigned char *)defval)[3]))
-			    sprintf(comments,"\"%c%c%c%c\""
-					    ,((unsigned char *)defval)[0]
-					    ,((unsigned char *)defval)[1]
-					    ,((unsigned char *)defval)[2]
-					    ,((unsigned char *)defval)[3]);
-			 break;
-	    case Arg_Short: appstr = Get4SignDig(*(int16_t *)defval);
-			 if(type & Arg_Imm &&
-			    disNeedRef >= Ref_Predict &&
-			    dis_severity < CommSev_String &&
-			    isprint(((unsigned char *)defval)[0]) &&
-			    isprint(((unsigned char *)defval)[1]))
-			    sprintf(comments,"\"%c%c\""
-					    ,((unsigned char *)defval)[0]
-					    ,((unsigned char *)defval)[1]);
-			 break;
-	    case Arg_Char:  appstr = Get2SignDig(*(char *)defval);
-			 if(type & Arg_Imm &&
-			    disNeedRef >= Ref_Predict &&
-			    dis_severity < CommSev_String &&
-			    isprint(*(unsigned char *)defval))
-			    sprintf(comments,"'%c'",*(unsigned char *)defval);
-			 break;
-	    case Arg_Byte:  appstr = Get2Digit(*(unsigned char *)defval);
-			 if(type & Arg_Imm &&
-			    disNeedRef >= Ref_Predict &&
-			    dis_severity < CommSev_String &&
-			    isprint(*(unsigned char *)defval))
-			    sprintf(comments,"'%c'",*(unsigned char *)defval);
-			 break;
-	    case Arg_Word:  appstr = Get4Digit(*(uint16_t *)defval);
-			 if(type & Arg_Imm &&
-			    disNeedRef >= Ref_Predict &&
-			    dis_severity < CommSev_String &&
-			    isprint(((unsigned char *)defval)[0]) &&
-			    isprint(((unsigned char *)defval)[1]))
-			    sprintf(comments,"\"%c%c\""
-					    ,((unsigned char *)defval)[0]
-					    ,((unsigned char *)defval)[1]);
-			 break;
+		    oss<<std::hex<<std::setfill('0')<<std::setw(16)<<(*(int64_t *)defval);
+		    break;
+	    case Arg_Long:
+		    oss<<std::hex<<std::setfill('0')<<std::setw(8)<<(*(int32_t *)defval);
+		    break;
+	    case Arg_Short:
+		    oss<<std::hex<<std::setfill('0')<<std::setw(4)<<(*(int16_t *)defval);
+		    break;
+	    case Arg_Char:
+		    oss<<Get2SignDig(*(char *)defval);
+		    break;
+	    case Arg_Byte:
+		    oss<<std::hex<<std::setfill('0')<<std::setw(2)<<(unsigned)(*(uint8_t *)defval);
+		    break;
+	    case Arg_Word:
+		    oss<<std::hex<<std::setfill('0')<<std::setw(4)<<(*(uint16_t *)defval);
+		    break;
 	    default:
-	    case Arg_DWord: appstr = Get8Digit(*(uint32_t *)defval);
-			 if(type & Arg_Imm &&
-			    disNeedRef >= Ref_Predict &&
-			    dis_severity < CommSev_String &&
-			    isprint(((unsigned char *)defval)[0]) &&
-			    isprint(((unsigned char *)defval)[1]) &&
-			    isprint(((unsigned char *)defval)[2]) &&
-			    isprint(((unsigned char *)defval)[3]))
-			    sprintf(comments,"\"%c%c%c%c\""
-					    ,((unsigned char *)defval)[0]
-					    ,((unsigned char *)defval)[1]
-					    ,((unsigned char *)defval)[2]
-					    ,((unsigned char *)defval)[3]);
-			 break;
+	    case Arg_DWord:
+		    oss<<std::hex<<std::setfill('0')<<std::setw(8)<<(*(uint32_t *)defval);
+		    break;
 	    case Arg_QWord:
-			 appstr = Get16Digit(*(uint64_t *)defval);
-			 if(type & Arg_Imm &&
-			    disNeedRef >= Ref_Predict &&
-			    dis_severity < CommSev_String &&
-			    isprint(((unsigned char *)defval)[0]) &&
-			    isprint(((unsigned char *)defval)[1]) &&
-			    isprint(((unsigned char *)defval)[2]) &&
-			    isprint(((unsigned char *)defval)[3]) &&
-			    isprint(((unsigned char *)defval)[4]) &&
-			    isprint(((unsigned char *)defval)[5]) &&
-			    isprint(((unsigned char *)defval)[6]) &&
-			    isprint(((unsigned char *)defval)[7]))
-			    sprintf(comments,"\"%c%c%c%c%c%c%c%c\""
-					    ,((unsigned char *)defval)[0]
-					    ,((unsigned char *)defval)[1]
-					    ,((unsigned char *)defval)[2]
-					    ,((unsigned char *)defval)[3]
-					    ,((unsigned char *)defval)[4]
-					    ,((unsigned char *)defval)[5]
-					    ,((unsigned char *)defval)[6]
-					    ,((unsigned char *)defval)[7]);
-			 break;
+		    oss<<std::hex<<std::setfill('0')<<std::setw(16)<<(*(uint64_t *)defval);
+		    break;
 	}
-	rc=appstr;
+	if(type & Arg_Imm &&
+	    disNeedRef >= Ref_Predict &&
+	    dis_severity < CommSev_String &&
+	    isprint(((unsigned char *)defval)[0])) {
+		coss<<'"';
+		for(size_t i=0;i<fld_len;i++) {
+		    if(isprint(((unsigned char *)defval)[i])) coss<<((unsigned char *)defval)[i];
+		    else break;
+		}
+		coss<<'"';
+	}
+	rc=oss.str();
     }
-    if(comments[0]) {
+    if(!coss.str().empty()) {
 	dis_severity = CommSev_String;
-	strcpy(dis_comments,comments);
+	dis_comments=coss.str();
     }
 exit:
     handle.seek(fpos,binary_stream::Seek_Set);
@@ -1154,7 +1080,7 @@ try_rip:
 		rc+=Get4Digit(seg);
 		rc+=":";
 	    }
-	    if(!type) pstr = Get2SignDig((char)distin);
+	    if(!type) pstr = Get2SignDig((char)distin).c_str();
 	    else if(type & Near16)
 		pstr = type & UseSeg ? Get4Digit((unsigned)distin) :
 				     Get4SignDig((unsigned)distin);
@@ -1174,7 +1100,7 @@ try_rip:
 	}
 	if(comms) {
 	    dis_severity = CommSev_InsnRef;
-	    strcpy(dis_comments,comms);
+	    dis_comments=comms;
 	}
     }
     if(appended && !DumpMode && !EditMode) add_go=true;
