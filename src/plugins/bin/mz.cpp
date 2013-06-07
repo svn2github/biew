@@ -202,28 +202,28 @@ bool MZ_Parser::isMZReferenced(__filesize_t shift,char len)
     return false;
 }
 
-bool MZ_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
+std::string MZ_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
+    std::string str;
     bool ret = false;
-    if(flags & Bin_Format::Try_Pic) return false;
+    if(flags & Bin_Format::Try_Pic) return "";
     if(CurrMZChain.empty()) BuildMZChain();
     if(isMZReferenced(ulShift,codelen)) {
 	unsigned wrd;
 	_main_handle.seek(ulShift,binary_stream::Seek_Set);
 	wrd = _main_handle.read(type_word);
-	str+=Get4Digit(wrd);
+	str=Get4Digit(wrd);
 	str+="+PID";
 	ret = true;
     }
     if(!DumpMode && !EditMode && (flags & Bin_Format::Try_Label) && codelen == 4) {
 	r_sh += (((__filesize_t)mz.mzHeaderSize) << 4);
 	Symbol_Info rc = __udn.find(r_sh);
-	if(rc.pa!=Plugin::Bad_Address) str+=rc.name;
-	else str+=Get8Digit(r_sh);
+	if(rc.pa!=Plugin::Bad_Address) str=rc.name;
+	else str=Get8Digit(r_sh);
 	_code_guider.add_go_address(parent,str,r_sh);
-	ret = true;
     }
-    return ret;
+    return str;
 }
 
 /* Special case: this module must not use init and destroy */
@@ -248,9 +248,9 @@ MZ_Parser::MZ_Parser(BeyeContext& b,binary_stream& h,CodeGuider& __code_guider,u
 MZ_Parser::~MZ_Parser() {}
 int MZ_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-bool MZ_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
+std::string MZ_Parser::address_resolving(__filesize_t cfpos)
 {
-    bool bret = true;
+    std::string addr;
     if(cfpos < sizeof(MZHEADER)+2) {
 	addr="MZH :";
 	addr+=Get4Digit(cfpos);
@@ -261,8 +261,7 @@ bool MZ_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 	addr = ".";
 	addr+=Get8Digit(MZ_Parser::pa2va(cfpos));
     }
-    else bret = false;
-    return bret;
+    return addr;
 }
 
 __filesize_t MZ_Parser::action_F1()

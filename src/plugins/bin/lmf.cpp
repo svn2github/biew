@@ -68,7 +68,7 @@ namespace	usr {
 	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
 	    virtual Bin_Format::bitness	query_bitness(__filesize_t) const;
-	    virtual bool		address_resolving(std::string&,__filesize_t);
+	    virtual std::string		address_resolving(__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 	private:
@@ -247,75 +247,62 @@ Bin_Format::bitness LMF_Parser::query_bitness(__filesize_t pa) const
 	else return Bin_Format::Use16;
 }
 
-bool LMF_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
+std::string LMF_Parser::address_resolving(__filesize_t cfpos)
 {
-	unsigned i;
- /* Since this function is used in references resolving of disassembler
-    it must be seriously optimized for speed. */
-	for(i=0;i<=reclast;i++)
-	{
-		if(hl[i].file_pos<=cfpos&&
-			cfpos<hl[i].file_pos+hl[i].header.data_nbytes+HDRSIZE())
-		{
-			if(cfpos<hl[i].file_pos+HDRSIZE()) {
-			    addr="H";
-			    addr+=Get2Digit(i);
-			    addr+=";";
-			    addr+=Get4Digit(cfpos-hl[i].file_pos);
+    std::string addr;
+    unsigned i;
+    /* Since this function is used in references resolving of disassembler
+	it must be seriously optimized for speed. */
+    for(i=0;i<=reclast;i++) {
+	if(hl[i].file_pos<=cfpos&& cfpos<hl[i].file_pos+hl[i].header.data_nbytes+HDRSIZE()) {
+	    if(cfpos<hl[i].file_pos+HDRSIZE()) {
+		addr="H";
+		addr+=Get2Digit(i);
+		addr+=";";
+		addr+=Get4Digit(cfpos-hl[i].file_pos);
+	    } else
+		switch(hl[i].header.rec_type) {
+		    case _LMF_DEFINITION_REC:
+			addr="Def:";
+			addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
+			break;
+		    case _LMF_COMMENT_REC:
+			if(cfpos<hl[i].file_pos+HDRSIZE()+DATSIZE()) {
+			    addr="Com:";
+			    addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
 			}
-			else
-				switch(hl[i].header.rec_type)
-				{
-				case _LMF_DEFINITION_REC:
-					addr="Def:";
-					addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
-					break;
-				case _LMF_COMMENT_REC:
-					if(cfpos<hl[i].file_pos+HDRSIZE()+DATSIZE())
-					    addr="Com:";
-					    addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
-					break;
-				case _LMF_DATA_REC:
-				case _LMF_FIXUP_SEG_REC:
-					if(cfpos<hl[i].file_pos+HDRSIZE()+DATSIZE()) {
-						addr=(hl[i].header.rec_type==_LMF_DATA_REC)?
-							"Dat:":"Fix:";
-						addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
-					}
-/*					else
-						if(((xdef.seg[hl[i].data.index]>>28)&0xf)==_LMF_CODE)
-							sprintf(addr,"C:%06X",(cfpos-hl[i].file_pos+
-								hl[i].data.offset-HDRSIZE()-
-								DATSIZE()));
-						else
-							sprintf(addr,"D:%06X",(cfpos-hl[i].file_pos+
-								hl[i].data.offset-HDRSIZE()-
-								DATSIZE()));*/
-					return false;
-					break;
-				case _LMF_FIXUP_80X87_REC:
-					addr="F87:";
-					addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
-					break;
-				case _LMF_EOF_REC:
-					addr="Eof:";
-					addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
-					break;
-				case _LMF_RESOURCE_REC:
-					addr="Res:";
-					addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
-					break;
-				case _LMF_ENDDATA_REC:
-					addr="EnD:";
-					addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
-					break;
-				default:
-					return false;
-				}
-			return true;
+			break;
+		    case _LMF_DATA_REC:
+		    case _LMF_FIXUP_SEG_REC:
+			if(cfpos<hl[i].file_pos+HDRSIZE()+DATSIZE()) {
+			    addr=(hl[i].header.rec_type==_LMF_DATA_REC)?"Dat:":"Fix:";
+			    addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
+			}
+			return "";
+			break;
+		    case _LMF_FIXUP_80X87_REC:
+			addr="F87:";
+			addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
+			break;
+		    case _LMF_EOF_REC:
+			addr="Eof:";
+			addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
+			break;
+		    case _LMF_RESOURCE_REC:
+			addr="Res:";
+			addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
+			break;
+		    case _LMF_ENDDATA_REC:
+			addr="EnD:";
+			addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
+			break;
+		    default:
+			return "";
 		}
+		return addr;
 	}
-	return false;
+    }
+    return "";
 }
 
 __filesize_t LMF_Parser::va2pa(__filesize_t va) const

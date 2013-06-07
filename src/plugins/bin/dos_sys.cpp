@@ -42,7 +42,7 @@ namespace	usr {
 
 	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
-	    virtual bool		address_resolving(std::string&,__filesize_t);
+	    virtual std::string		address_resolving(__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 	private:
@@ -121,12 +121,11 @@ DosSys_Parser::DosSys_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_gu
 DosSys_Parser::~DosSys_Parser() {}
 int DosSys_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
-bool DosSys_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
+std::string DosSys_Parser::address_resolving(__filesize_t cfpos)
 {
-  bool bret = true;
-  if(cfpos < sizeof(DOSDRIVER)+4) addr=std::string("SYSH:")+Get4Digit(cfpos);
-  else bret = false;
-  return bret;
+    std::string addr;
+    if(cfpos < sizeof(DOSDRIVER)+4) addr=std::string("SYSH:")+Get4Digit(cfpos);
+    return addr;
 }
 
 __filesize_t DosSys_Parser::action_F1()

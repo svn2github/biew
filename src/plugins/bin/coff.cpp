@@ -57,10 +57,10 @@ namespace	usr {
 	    virtual __filesize_t	action_F10();
 
 	    virtual __filesize_t	show_header() const;
-	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift);
+	    virtual std::string		bind(const DisMode& _parent,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift);
 	    virtual int			query_platform() const;
 	    virtual Bin_Format::bitness	query_bitness(__filesize_t) const;
-	    virtual bool		address_resolving(std::string&,__filesize_t);
+	    virtual std::string		address_resolving(__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 	    virtual Symbol_Info		get_public_symbol(__filesize_t pa,bool as_prev);
@@ -535,14 +535,14 @@ def_val:
     return retval;
 }
 
-bool Coff_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
+std::string Coff_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
     std::set<RELOC_COFF386>::const_iterator rcoff386;
     RELOC_COFF386 key;
-    bool ret;
-    std::string buff;
-    ret = false;
-    if(flags & Bin_Format::Try_Pic) return ret;
+    bool ret=false;
+    std::string str;
+
+    if(flags & Bin_Format::Try_Pic) return "";
     if(PubNames.empty()) coff_ReadPubNameList(main_handle);
     if((COFF_WORD(coff386hdr.f_flags) & F_RELFLG) == F_RELFLG) goto try_pub;
     if(RelocCoff386.empty()) BuildRelocCoff386();
@@ -554,12 +554,11 @@ try_pub:
     if(!ret && (flags & Bin_Format::Try_Label)) {
 	Symbol_Info rc = FindPubName(r_sh);
 	if(rc.pa!=Plugin::Bad_Address) {
-	    str+=rc.name;
+	    str=rc.name;
 	    if(!DumpMode && !EditMode) code_guider.add_go_address(parent,str,r_sh);
-	    ret = true;
 	}
     }
-    return ret;
+    return str;
 }
 
 Coff_Parser::Coff_Parser(BeyeContext& b,binary_stream& h,CodeGuider& _code_guider,udn& u)
@@ -599,25 +598,20 @@ Bin_Format::bitness Coff_Parser::query_bitness(__filesize_t off) const
   return Bin_Format::Use32;
 }
 
-bool Coff_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
+std::string Coff_Parser::address_resolving(__filesize_t cfpos)
 {
- /* Since this function is used in references resolving of disassembler
-    it must be seriously optimized for speed. */
-  bool bret = true;
-  uint32_t res;
-  if(cfpos < sizeof(struct external_filehdr))
-  {
-    addr="coffih:";
-    addr+=Get2Digit(cfpos);
-  }
-  else
-    if((res=pa2va(cfpos))!=0)
-    {
-      addr = ".";
-      addr+=Get8Digit(res);
+    std::string addr;
+    /* Since this function is used in references resolving of disassembler
+	it must be seriously optimized for speed. */
+    uint32_t res;
+    if(cfpos < sizeof(struct external_filehdr)) {
+	addr="coffih:";
+	addr+=Get2Digit(cfpos);
+    } else if((res=pa2va(cfpos))!=0) {
+	addr = ".";
+	addr+=Get8Digit(res);
     }
-    else bret = false;
-  return bret;
+    return addr;
 }
 
 __filesize_t Coff_Parser::action_F1()

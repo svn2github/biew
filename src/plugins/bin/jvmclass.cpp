@@ -98,10 +98,10 @@ typedef struct ClassFile_s
 	    virtual __filesize_t	action_F10();
 
 	    virtual __filesize_t	show_header() const;
-	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift);
+	    virtual std::string		bind(const DisMode& _parent,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift);
 	    virtual int			query_platform() const;
 	    virtual Bin_Format::bitness	query_bitness(__filesize_t) const;
-	    virtual bool		address_resolving(std::string&,__filesize_t);
+	    virtual std::string		address_resolving(__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 	    virtual Symbol_Info		get_public_symbol(__filesize_t pa,bool as_prev);
@@ -724,40 +724,27 @@ __filesize_t JVM_Parser::show_header() const
 __filesize_t JVM_Parser::va2pa(__filesize_t va) const { return  va + jvm_header.code_offset; }
 __filesize_t JVM_Parser::pa2va(__filesize_t pa) const { return pa >= jvm_header.code_offset ? pa - jvm_header.code_offset : 0L; }
 
-bool JVM_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
+std::string JVM_Parser::address_resolving(__filesize_t cfpos)
 {
-  bool bret = true;
-  if(cfpos >= jvm_header.methods_offset)
-  {
-    addr=".";
-    addr+=Get8Digit(pa2va(cfpos));
-  }
-  else
-/*
-  if(cfpos >= jvm_header.attributes_offset) sprintf(addr,"Attr:%s",Get4Digit(cfpos-jvm_header.attributes_offset));
-  else
-    if(cfpos >= jvm_header.methods_offset) sprintf(addr,"Code:%s",Get4Digit(cfpos-jvm_header.methods_offset));
-    else
-*/
-	if(cfpos >= jvm_header.fields_offset) {
-	    addr="Data:";
-	    addr+=Get4Digit(cfpos-jvm_header.fields_offset);
-	}
-	else
-	    if(cfpos >= jvm_header.interfaces_offset) {
-		addr="Imp :";
-		addr+=Get4Digit(cfpos-jvm_header.interfaces_offset);
-	    }
-	    else
-		if(cfpos >= jvm_header.constants_offset) {
-		    addr="Pool:";
-		    addr+=Get4Digit(cfpos-jvm_header.constants_offset);
-		}
-		else {
-		    addr="Hdr :";
-		    addr+=Get4Digit(cfpos);
-		}
-  return bret;
+    std::string addr;
+    bool bret = true;
+    if(cfpos >= jvm_header.methods_offset) {
+	addr=".";
+	addr+=Get8Digit(pa2va(cfpos));
+    } else if(cfpos >= jvm_header.fields_offset) {
+	addr="Data:";
+	addr+=Get4Digit(cfpos-jvm_header.fields_offset);
+    } else if(cfpos >= jvm_header.interfaces_offset) {
+	addr="Imp :";
+	addr+=Get4Digit(cfpos-jvm_header.interfaces_offset);
+    } else if(cfpos >= jvm_header.constants_offset) {
+	addr="Pool:";
+	addr+=Get4Digit(cfpos-jvm_header.constants_offset);
+    } else {
+	addr="Hdr :";
+	addr+=Get4Digit(cfpos);
+    }
+    return addr;
 }
 
 std::string JVM_Parser::jvm_ReadPubName(binary_stream& b_cache,const symbolic_information& it) const
@@ -920,9 +907,9 @@ Bin_Format::bitness JVM_Parser::query_bitness(__filesize_t off) const
     return Bin_Format::Use16;
 }
 
-bool JVM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
+std::string JVM_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
-    bool retrf = true;
+    std::string str;
     UNUSED(parent);
     UNUSED(r_sh);
     if((flags & Bin_Format::Try_Label)!=Bin_Format::Try_Label) {
@@ -938,13 +925,13 @@ bool JVM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
 	    case 1: lidx=jvm_cache->read(type_byte); break;
 	}
 	pool_cache->seek(jvm_header.constants_offset,binary_stream::Seek_Set);
-	if(lidx<1 || lidx>jvm_header.constant_pool_count) { retrf = false; goto bye; }
+	if(lidx<1 || lidx>jvm_header.constant_pool_count) goto bye;
 	skip_constant_pool(*pool_cache,lidx-1);
 	utag=pool_cache->read(type_byte);
 	switch(utag) {
 	    case CONSTANT_STRING:
 	    case CONSTANT_CLASS:
-			str+=get_name(*pool_cache);
+			str=get_name(*pool_cache);
 			break;
 	    case CONSTANT_FIELDREF:
 	    case CONSTANT_METHODREF:
@@ -955,7 +942,7 @@ bool JVM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
 			sval2=pool_cache->read(type_word);
 			sval2=JVM_WORD(&sval2,1);
 			pool_cache->seek(jvm_header.constants_offset,binary_stream::Seek_Set);
-			str+=get_class_name(*pool_cache,sval);
+			str=get_class_name(*pool_cache,sval);
 			str+=".";
 			pool_cache->seek(jvm_header.constants_offset,binary_stream::Seek_Set);
 			skip_constant_pool(*pool_cache,sval2-1);
@@ -966,7 +953,7 @@ bool JVM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
 	    case CONSTANT_FLOAT:
 			lval=pool_cache->read(type_dword);
 			lval=JVM_DWORD(&lval,1);
-			str+=(utag==CONSTANT_INTEGER)?"Integer":"Float";
+			str=(utag==CONSTANT_INTEGER)?"Integer":"Float";
 			str+=":";
 			str+=Get8Digit(lval);
 			break;
@@ -976,7 +963,7 @@ bool JVM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
 			lval=JVM_DWORD(&lval,1);
 			lval2=pool_cache->read(type_dword);
 			lval2=JVM_DWORD(&lval2,1);
-			str+=(utag==CONSTANT_INTEGER)?"Long":"Double";
+			str=(utag==CONSTANT_INTEGER)?"Long":"Double";
 			str+=":";
 			str+=Get8Digit(lval);
 			str+=Get8Digit(lval2);
@@ -984,7 +971,7 @@ bool JVM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
 	    case CONSTANT_NAME_AND_TYPE:
 	    name_type:
 			fpos=pool_cache->tell();
-			str+=get_name(*pool_cache);
+			str=get_name(*pool_cache);
 			pool_cache->seek(fpos+2,binary_stream::Seek_Set);
 			str+=" ";
 			str+=get_name(*pool_cache);
@@ -995,15 +982,13 @@ bool JVM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShif
 			char stmp[sval+1];
 			fpos=pool_cache->tell();
 			pool_cache->read(stmp,sval);
-			str+=stmp;
+			str=stmp;
 			break;
-	    default:	retrf = false;
-			break;
+	    default:	break;
 	}
     }
-    else retrf = false;
-    bye:
-    return retrf;
+bye:
+    return str;
 }
 
 static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) JVM_Parser(b,h,_parent,u); }

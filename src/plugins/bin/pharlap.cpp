@@ -46,7 +46,7 @@ namespace	usr {
 
 	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
-	    virtual bool		address_resolving(std::string&,__filesize_t);
+	    virtual std::string		address_resolving(__filesize_t);
 	private:
 	    std::vector<PLRunTimeParms>	__PLReadRunTime(binary_stream& handle,size_t nnames) const;
 	    void			PLRunTimePaint(TWindow& win,const std::vector<PLRunTimeParms>& names,unsigned start) const;
@@ -276,18 +276,16 @@ PharLap_Parser::~PharLap_Parser()
     if(pl_cache != &main_handle) delete pl_cache;
 }
 
-bool PharLap_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
+std::string PharLap_Parser::address_resolving(__filesize_t cfpos)
 {
- /* Since this function is used in references resolving of disassembler
-    it must be seriously optimized for speed. */
-  bool bret = true;
-  if(cfpos < sizeof(newPharLap))
-  {
-    addr="nplhdr:";
-    addr+=Get2Digit(cfpos);
-  }
-  else bret = false;
-  return bret;
+    std::string addr;
+    /* Since this function is used in references resolving of disassembler
+	it must be seriously optimized for speed. */
+    if(cfpos < sizeof(newPharLap)) {
+	addr="nplhdr:";
+	addr+=Get2Digit(cfpos);
+    }
+    return addr;
 }
 
 __filesize_t PharLap_Parser::action_F1()

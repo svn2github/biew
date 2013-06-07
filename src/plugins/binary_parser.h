@@ -37,7 +37,7 @@ namespace	usr {
 			   * @param r_shift      used only if APPREF_TRY_LABEL mode is set, contains real value of field, that required binding
 			   * @return             true if reference was appended
 			*/
-	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift) { UNUSED(_parent); UNUSED(str); UNUSED(shift); UNUSED(flg); UNUSED(codelen); UNUSED(r_shift); return false; }
+	    virtual std::string		bind(const DisMode& _parent,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift) { UNUSED(_parent); UNUSED(shift); UNUSED(flg); UNUSED(codelen); UNUSED(r_shift); return ""; }
 
 			 /** Returns CPU platform, that required by format.
 			   * @note           Full list of platform please see in
@@ -50,9 +50,9 @@ namespace	usr {
 	    virtual Bin_Format::endian	query_endian(__filesize_t) const { return Bin_Format::Little; }
 
 			 /** For displaying offset within struct in left address column.
-			   * @return         false if string is not modified.
+			   * @return         empty string on fail.
 			  **/
-	    virtual bool		address_resolving(std::string&,__filesize_t) { return false; }
+	    virtual std::string		address_resolving(__filesize_t) { return ""; }
 
 			 /** Converts virtual address to physical (means file offset).
 			   * @param va       indicates virtual address to be converted

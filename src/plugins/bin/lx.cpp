@@ -1094,11 +1094,11 @@ Bin_Format::bitness LX_Parser::query_bitness(__filesize_t pa) const
   return ret;
 }
 
-bool LX_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
+std::string LX_Parser::address_resolving(__filesize_t cfpos)
 {
- /* Since this function is used in references resolving of disassembler
-    it must be seriously optimized for speed. */
-    bool bret = true;
+    std::string addr;
+    /* Since this function is used in references resolving of disassembler
+	it must be seriously optimized for speed. */
     uint32_t res;
     if(cfpos >= headshift() && cfpos < headshift() + sizeof(LXHEADER)) {
 	addr="LXH :";
@@ -1116,8 +1116,7 @@ bool LX_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 	addr = ".";
 	addr+=Get8Digit(res);
     }
-    else bret = false;
-    return bret;
+    return addr;
 }
 
 int LX_Parser::query_platform() const { return DISASM_CPU_IX86; }

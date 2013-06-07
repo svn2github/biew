@@ -829,7 +829,7 @@ void  __FASTCALL__ disSetModifier(char *str,const char *modf)
 
 bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flg,char codelen,any_t*defval,e_disarg type)
 {
-    bool app;
+    std::string rc;
     char comments[Comm_Size];
     const char* appstr;
     unsigned dig_type;
@@ -850,8 +850,8 @@ bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t 
     }
 #endif
     if(hexAddressResolv) flg |= Bin_Format::Save_Virt;
-    app = disNeedRef >= Ref_All ? bin_format.bind(*this,str,ulShift,flg,codelen,0L) : false;
-    if(app == true) goto exit;
+    rc=bin_format.bind(*this,ulShift,flg,codelen,0L);
+    if(!rc.empty()) goto exit;
 
     dig_type = type & 0x00FFU;
     comments[0] = 0;
@@ -883,8 +883,8 @@ bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t 
 	    pa = bin_format.va2pa(_defval);
 	    if(pa!=Plugin::Bad_Address) {
 		/* 1. Try to determine immediate as offset to public symbol */
-		if(type & Arg_Rip) app = bin_format.bind(*this,str,pa,flg,codelen,0L);
-		if(app == true) goto next_step;
+		if(type & Arg_Rip) rc = bin_format.bind(*this,pa,flg,codelen,0L);
+		if(!rc.empty()) goto next_step;
 		if(dis_severity < CommSev_Func) {
 		    strcpy(comments,".*");
 		    psym = bin_format.get_public_symbol(pa,false);
@@ -923,7 +923,7 @@ bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t 
 next_step:
     comments[0] = 0;
 //    std::ostringstream oss(appstr);
-    if(app == false) {
+    if(rc.empty()) {
 	switch(dig_type) {
 	    case Arg_LLong:
 			 appstr = Get16SignDig(*(int64_t *)defval);
@@ -1035,7 +1035,7 @@ next_step:
 					    ,((unsigned char *)defval)[7]);
 			 break;
 	}
-	str+=appstr;
+	rc=appstr;
     }
     if(comments[0]) {
 	dis_severity = CommSev_String;
@@ -1043,16 +1043,18 @@ next_step:
     }
 exit:
     handle.seek(fpos,binary_stream::Seek_Set);
-    return app;
+    str+=rc;
+    return true;
 }
 
 bool DisMode::append_faddr(binary_stream& handle,std::string& str,__fileoff_t ulShift,__fileoff_t distin,__filesize_t r_sh,e_disaddr type,unsigned seg,char codelen)
 {
     e_ref needref;
     __filesize_t fpos;
-    size_t modif_to;
     DisasmRet dret;
-    bool appended = false;
+    std::string rc;
+    bool add_go=false;
+
     Bin_Format::bind_type flg;
     fpos = handle.tell();
     memset(&dret,0,sizeof(DisasmRet));
@@ -1083,33 +1085,26 @@ bool DisMode::append_faddr(binary_stream& handle,std::string& str,__fileoff_t ul
 	if(dret.pro_clone == __INSNT_JMPPIC || dret.pro_clone == __INSNT_JMPRIP) goto try_pic; /* skip defaults for PIC */
 	flg = Bin_Format::Try_Label;
 	if(hexAddressResolv) flg |= Bin_Format::Save_Virt;
-	appended=bin_format.bind(*this,str,ulShift,flg,codelen,r_sh);
-	if(!appended) {
+	rc=bin_format.bind(*this,ulShift,flg,codelen,r_sh);
+	if(rc.empty()) {
 	    /*
 		Forwarding references.
 		Dereferencing ret instruction.
 		Idea and PE implementation by "Kostya Nosov" <k-nosov@yandex.ru>
 	    */
 	    if(dret.pro_clone == __INSNT_JMPVVT) { /* jmp (mod r/m) */
-		if(bin_format.bind(*this,str,r_sh+dret.field,Bin_Format::Try_Label,dret.codelen,r_sh)) {
-		    appended = true;
-		    modif_to = str.find(' ');
-		    if(modif_to!=std::string::npos) {
-			while(str[modif_to] == ' ') modif_to++;
-			str[modif_to-1] = '*';
-		    }
-		    if(!DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
+		rc=bin_format.bind(*this,r_sh+dret.field,Bin_Format::Try_Label,dret.codelen,r_sh);
+		if(!rc.empty()) {
+		    rc='*'+rc;
+		    if(!DumpMode && !EditMode) add_go=true;
 		}
 	    } else if(dret.pro_clone == __INSNT_JMPPIC) { /* jmp [ebx+offset] */
 try_pic:
 		if(dret.pro_clone == __INSNT_JMPRIP) goto try_rip;
-		if(bin_format.bind(*this,str,r_sh+dret.field,Bin_Format::Try_Pic,dret.codelen,r_sh)) {
-		    appended = true; /* terminate appending any info anyway */
-		    if(!DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
-		}
+		rc=bin_format.bind(*this,r_sh+dret.field,Bin_Format::Try_Pic,dret.codelen,r_sh);
+		if(!rc.empty() && !DumpMode && !EditMode) add_go=true;
 	    } else if(dret.pro_clone == __INSNT_JMPRIP) { /* calln *(jmp [rip+offset]) */
 		__filesize_t _defval,_fpos,pa,__tmp;
-		unsigned long app;
 try_rip:
 		_fpos = main_handle.tell();
 		main_handle.seek(r_sh+dret.field,binary_stream::Seek_Set);
@@ -1122,15 +1117,10 @@ try_rip:
 		    r_sh+dret.field)+dret.codelen;
 		__tmp = bin_format.va2pa(_defval);
 		pa = (__tmp!=Plugin::Bad_Address) ? __tmp : _defval;
-		app=bin_format.bind(*this,str,pa,Bin_Format::Try_Label,dret.codelen,0L);
-		if(app) {
-		    appended = true; /* terminate appending any info anyway */
-		    modif_to = str.find(' ');
-		    if(modif_to!=std::string::npos) {
-			while(str[modif_to] == ' ') modif_to++;
-			str[modif_to-1] = '*';
-		    }
-		    if(!DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
+		rc=bin_format.bind(*this,pa,Bin_Format::Try_Label,dret.codelen,0L);
+		if(!rc.empty()) {
+		    rc='*'+rc;
+		    if(!DumpMode && !EditMode) add_go=true;
 		}
 	    }
 	}
@@ -1139,30 +1129,30 @@ try_rip:
       Idea and PE release of "Kostya Nosov" <k-nosov@yandex.ru>:
       make virtual address as argument of "jxxx" and "callx"
 */
-    if(appended) goto exit;
+    bool appended = false;
+    if(!rc.empty()) goto exit;
+
     if(hexAddressResolv) {
 	r_sh = r_sh ? r_sh : (__filesize_t)ulShift;
-	std::string stmp;
-	appended = bin_format.address_resolving(stmp,r_sh);
-	str+=stmp;
+	rc = bin_format.address_resolving(r_sh);
     }
-    if(!appended) {
+    if(rc.empty()) {
 	needref = disNeedRef;
 	disNeedRef = Ref_None;
 	if(r_sh <= main_handle.flength()) {
 	    const char * cptr;
 	    char lbuf[20];
 	    cptr = DumpMode ? "L" : "file:";
-	    str+=cptr;
+	    rc=cptr;
 	    if(bctx.is_file64()) sprintf(lbuf,"%016llX",r_sh);
 	    else sprintf(lbuf,"%08lX",(unsigned long)r_sh);
-	    str+=lbuf;
+	    rc+=lbuf;
 	    appended = true;
 	} else {
 	    const char * pstr = "";
 	    if(type & UseSeg) {
-		str+=Get4Digit(seg);
-		str+=":";
+		rc+=Get4Digit(seg);
+		rc+=":";
 	    }
 	    if(!type) pstr = Get2SignDig((char)distin);
 	    else if(type & Near16)
@@ -1170,7 +1160,7 @@ try_rip:
 				     Get4SignDig((unsigned)distin);
 	    else if(type & Near32)   pstr = Get8SignDig(distin);
 	    else if(type & Near64) pstr = Get16SignDig(distin);
-	    str+=pstr;
+	    rc+=pstr;
 	}
 	disNeedRef = needref;
     }
@@ -1187,9 +1177,12 @@ try_rip:
 	    strcpy(dis_comments,comms);
 	}
     }
-    if(appended && !DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
+    if(appended && !DumpMode && !EditMode) add_go=true;
 exit:
     handle.seek(fpos,binary_stream::Seek_Set);
+    if(rc[0]=='*') str=str.substr(0,str.length()-1); // decorations :(
+    str+=rc;
+    if(add_go) code_guider.add_go_address(*this,str,r_sh);
     return appended;
 }
 

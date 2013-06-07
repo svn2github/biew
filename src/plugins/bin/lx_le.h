@@ -290,7 +290,7 @@ typedef struct tagLXResource
 
 	    virtual int			query_platform() const;
 	    virtual Bin_Format::bitness	query_bitness(__filesize_t) const;
-	    virtual bool		address_resolving(std::string&,__filesize_t);
+	    virtual std::string		address_resolving(__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 	protected:
@@ -350,7 +350,7 @@ typedef struct tagLXResource
 	    virtual __filesize_t	action_F10();
 
 	    virtual int			query_platform() const;
-	    virtual bool		address_resolving(std::string&,__filesize_t);
+	    virtual std::string		address_resolving(__filesize_t);
 	protected:
 	    virtual __filesize_t	CalcEntryPoint(unsigned long objnum,__filesize_t _offset) const;
 	    virtual __filesize_t	CalcPageEntry(unsigned long pageidx) const;

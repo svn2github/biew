@@ -159,16 +159,16 @@ namespace	usr {
 	    virtual __filesize_t	action_F10() const;
 
 	    virtual __filesize_t	show_header() const;
-	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,bind_type flg,int codelen,__filesize_t r_shift) const;
+	    virtual std::string		bind(const DisMode& _parent,__filesize_t shift,bind_type flg,int codelen,__filesize_t r_shift) const;
 
 	    virtual int			query_platform() const;
 	    virtual bitness		query_bitness(__filesize_t off) const;
 	    virtual endian		query_endian(__filesize_t off) const;
 
 			 /** For displaying offset within struct in left address column.
-			   * @return         false if string is not modified.
+			   * @return         empty string on fail.
 			  **/
-	    virtual bool		address_resolving(std::string& str,__filesize_t off) const;
+	    virtual std::string		address_resolving(__filesize_t off) const;
 
 			 /** Converts virtual address to physical (means file offset).
 			   * @param va       indicates virtual address to be converted

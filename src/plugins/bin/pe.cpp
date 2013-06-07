@@ -127,10 +127,10 @@ namespace	usr {
 	    virtual __filesize_t	action_F9();
 	    virtual __filesize_t	action_F10();
 
-	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift);
+	    virtual std::string		bind(const DisMode& _parent,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift);
 	    virtual int			query_platform() const;
 	    virtual Bin_Format::bitness	query_bitness(__filesize_t) const;
-	    virtual bool		address_resolving(std::string&,__filesize_t);
+	    virtual std::string		address_resolving(__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 	    virtual Symbol_Info		get_public_symbol(__filesize_t pa,bool as_prev);
@@ -1169,39 +1169,36 @@ bool PE_Parser::BuildReferStrPE(std::string& str,const RELOC_PE& rpe,int flags) 
    return retrf;
 }
 
-bool PE_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
+std::string PE_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
-  std::set<RELOC_PE>::const_iterator rpe;
-  bool retrf;
-  binary_stream* b_cache;
-  UNUSED(codelen);
-  b_cache = pe_cache3;
-  retrf = false;
-  if(flags & Bin_Format::Try_Pic) return false;
-  if(peDir[PE_IMPORT].rva || peDir[PE_FIXUP].rva)
-  {
-    uint32_t id;
-    main_handle().seek(ulShift,binary_stream::Seek_Set);
-    id = main_handle().read(type_dword);
-    b_cache->seek(RVA2Phys(id - reader->header().peImageBase),
+    std::set<RELOC_PE>::const_iterator rpe;
+    std::string str;
+    binary_stream* b_cache;
+    UNUSED(codelen);
+    b_cache = pe_cache3;
+    bool retrf=false;
+
+    if(flags & Bin_Format::Try_Pic) return "";
+    if(peDir[PE_IMPORT].rva || peDir[PE_FIXUP].rva) {
+	uint32_t id;
+	main_handle().seek(ulShift,binary_stream::Seek_Set);
+	id = main_handle().read(type_dword);
+	b_cache->seek(RVA2Phys(id - reader->header().peImageBase),
 	    binary_stream::Seek_Set);
-    if(CurrPEChain.empty()) BuildPERefChain();
-    rpe = __found_RPE(b_cache->read(type_dword));
-    if(rpe==CurrPEChain.end()) rpe = __found_RPE(ulShift);
-    if(rpe!=CurrPEChain.end()) retrf = BuildReferStrPE(str,*rpe,flags);
-  }
-  if(!retrf && (flags & Bin_Format::Try_Label))
-  {
-     if(PubNames.empty()) pe_ReadPubNameList(main_handle());
-     Symbol_Info rc = FindPubName(r_sh);
-     if(rc.pa!=Plugin::Bad_Address)
-     {
-       str+=rc.name;
-       if(!DumpMode && !EditMode) code_guider().add_go_address(parent,str,r_sh);
-       retrf = true;
-     }
-  }
-  return retrf;
+	if(CurrPEChain.empty()) BuildPERefChain();
+	rpe = __found_RPE(b_cache->read(type_dword));
+	if(rpe==CurrPEChain.end()) rpe = __found_RPE(ulShift);
+	if(rpe!=CurrPEChain.end()) retrf = BuildReferStrPE(str,*rpe,flags);
+    }
+    if(!retrf && (flags & Bin_Format::Try_Label)) {
+	if(PubNames.empty()) pe_ReadPubNameList(main_handle());
+	Symbol_Info rc = FindPubName(r_sh);
+	if(rc.pa!=Plugin::Bad_Address) {
+	    str=rc.name;
+	    if(!DumpMode && !EditMode) code_guider().add_go_address(parent,str,r_sh);
+	}
+    }
+    return str;
 }
 
 PE_Parser::PE_Parser(BeyeContext& b,binary_stream& h,CodeGuider& __code_guider,udn& u)
@@ -1284,32 +1281,24 @@ __filesize_t PE_Parser::action_F1()
     return bctx().tell();
 }
 
-bool PE_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
+std::string PE_Parser::address_resolving(__filesize_t cfpos)
 {
- /* Since this function is used in references resolving of disassembler
-    it must be seriously optimized for speed. */
- bool bret = true;
- uint32_t res;
- if(cfpos >= headshift() && cfpos < headshift() + reader->header_size() + reader->header().peDirSize*sizeof(PERVA))
- {
-    addr="PEH :";
-    addr+=Get4Digit(cfpos - headshift());
- }
- else
- if(cfpos >= headshift() + pe.peNTHdrSize + 0x18 &&
-    cfpos <  headshift() + pe.peNTHdrSize + 0x18 + pe.peObjects*sizeof(PE_OBJECT))
- {
-    addr="PEOD:";
-    addr+=Get4Digit(cfpos - headshift() - pe.peNTHdrSize - 0x18);
- }
- else  /* Added by "Kostya Nosov" <k-nosov@yandex.ru> */
-   if((res=pa2va(cfpos))!=0)
-   {
-     addr = ".";
-     addr+=Get8Digit(res);
-   }
-   else bret = false;
-  return bret;
+    std::string addr;
+    /* Since this function is used in references resolving of disassembler
+	it must be seriously optimized for speed. */
+    uint32_t res;
+    if(cfpos >= headshift() && cfpos < headshift() + reader->header_size() + reader->header().peDirSize*sizeof(PERVA)) {
+	addr="PEH :";
+	addr+=Get4Digit(cfpos - headshift());
+    } else if(cfpos >= headshift() + pe.peNTHdrSize + 0x18 &&
+		cfpos <  headshift() + pe.peNTHdrSize + 0x18 + pe.peObjects*sizeof(PE_OBJECT)) {
+	addr="PEOD:";
+	addr+=Get4Digit(cfpos - headshift() - pe.peNTHdrSize - 0x18);
+    } else if((res=pa2va(cfpos))!=0) { /* Added by "Kostya Nosov" <k-nosov@yandex.ru> */
+	addr = ".";
+	addr+=Get8Digit(res);
+    }
+    return addr;
 }
 
 __filesize_t PE_Parser::va2pa(__filesize_t va) const

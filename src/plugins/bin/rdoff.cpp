@@ -59,10 +59,10 @@ namespace	usr {
 	    virtual __filesize_t	action_F5();
 
 	    virtual __filesize_t	show_header() const;
-	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift);
+	    virtual std::string		bind(const DisMode& _parent,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift);
 	    virtual int			query_platform() const;
 	    virtual Bin_Format::bitness	query_bitness(__filesize_t) const;
-	    virtual bool		address_resolving(std::string&,__filesize_t);
+	    virtual std::string		address_resolving(__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 	    virtual Symbol_Info		get_public_symbol(__filesize_t pa,bool as_prev);
@@ -514,30 +514,30 @@ bool RDOff_Parser::rdoffBuildReferStr(const DisMode& parent,std::string& str,con
    return retrf;
 }
 
-bool RDOff_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
+std::string RDOff_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
-  RDOFF_RELOC key;
-  std::set<RDOFF_RELOC>::const_iterator rrdoff;
-  bool ret;
-  if(flags & Bin_Format::Try_Pic) return false;
-  if(rdoffReloc.empty()) BuildRelocRDOFF();
-  if(rdoffImpNames.empty()) ReadImpNameList(main_handle);
-  if(PubNames.empty()) rdoff_ReadPubNameList(main_handle);
-  key.offset = ulShift;
-  __codelen = codelen;
-  rrdoff = rdoffReloc.find(key);
-  ret = (rrdoff!=rdoffReloc.end())? rdoffBuildReferStr(parent,str,*rrdoff,ulShift,flags) : false;
-  if(PubNames.empty()) rdoff_ReadPubNameList(main_handle);
-  if(!ret && (flags & Bin_Format::Try_Label))
-  {
-    Symbol_Info rc = FindPubName(r_sh);
-    if(rc.pa!=Plugin::Bad_Address) {
-       str+=rc.name;
-       if(!DumpMode && !EditMode) code_guider.add_go_address(parent,str,r_sh);
-       ret = true;
+    RDOFF_RELOC key;
+    std::set<RDOFF_RELOC>::const_iterator rrdoff;
+    bool ret;
+    std::string str;
+
+    if(flags & Bin_Format::Try_Pic) return "";
+    if(rdoffReloc.empty()) BuildRelocRDOFF();
+    if(rdoffImpNames.empty()) ReadImpNameList(main_handle);
+    if(PubNames.empty()) rdoff_ReadPubNameList(main_handle);
+    key.offset = ulShift;
+    __codelen = codelen;
+    rrdoff = rdoffReloc.find(key);
+    ret = (rrdoff!=rdoffReloc.end())? rdoffBuildReferStr(parent,str,*rrdoff,ulShift,flags) : false;
+    if(PubNames.empty()) rdoff_ReadPubNameList(main_handle);
+    if(!ret && (flags & Bin_Format::Try_Label)) {
+	Symbol_Info rc = FindPubName(r_sh);
+	if(rc.pa!=Plugin::Bad_Address) {
+	    str=rc.name;
+	    if(!DumpMode && !EditMode) code_guider.add_go_address(parent,str,r_sh);
+	}
     }
-  }
-  return ret;
+    return str;
 }
 
 RDOff_Parser::RDOff_Parser(BeyeContext& b,binary_stream& h,CodeGuider& _code_guider,udn& u)
@@ -737,25 +737,20 @@ Object_Info RDOff_Parser::get_object_attribute(__filesize_t pa)
 __filesize_t RDOff_Parser::va2pa(__filesize_t va) const { return va + cs_start; }
 __filesize_t RDOff_Parser::pa2va(__filesize_t pa) const { return pa > cs_start ? pa - cs_start : 0L; }
 
-bool RDOff_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
+std::string RDOff_Parser::address_resolving(__filesize_t cfpos)
 {
- /* Since this function is used in references resolving of disassembler
-    it must be seriously optimized for speed. */
- bool bret = true;
- uint32_t res;
- if(cfpos < cs_start)
- {
-    addr="RDFH:";
-    addr+=Get4Digit(cfpos);
- }
- else
-   if((res=pa2va(cfpos))!=0)
-   {
-     addr = ".";
-     addr+=Get8Digit(res);
-   }
-   else bret = false;
-  return bret;
+    std::string addr;
+    /* Since this function is used in references resolving of disassembler
+	it must be seriously optimized for speed. */
+    uint32_t res;
+    if(cfpos < cs_start) {
+	addr="RDFH:";
+	addr+=Get4Digit(cfpos);
+    } else if((res=pa2va(cfpos))!=0) {
+	addr = ".";
+	addr+=Get8Digit(res);
+    }
+    return addr;
 }
 
 int RDOff_Parser::query_platform() const { return DISASM_CPU_IX86; }

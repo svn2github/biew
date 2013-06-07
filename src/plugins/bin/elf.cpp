@@ -166,11 +166,11 @@ namespace	usr {
 	    virtual __filesize_t	action_F10();
 
 	    virtual __filesize_t	show_header() const;
-	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift);
+	    virtual std::string		bind(const DisMode& _parent,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift);
 	    virtual int			query_platform() const;
 	    virtual Bin_Format::bitness	query_bitness(__filesize_t) const;
 	    virtual Bin_Format::endian	query_endian(__filesize_t) const;
-	    virtual bool		address_resolving(std::string&,__filesize_t);
+	    virtual std::string		address_resolving(__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 	    virtual Symbol_Info		get_public_symbol(__filesize_t pa,bool as_prev);
@@ -1333,74 +1333,63 @@ __filesize_t ELF_Parser::action_F2()
     return fpos;
 }
 
-bool ELF_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
+std::string ELF_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
-  std::string buff;
-  bool ret = false;
-  std::set<Elf_Reloc>::const_iterator erl;
-  __filesize_t defval;
-  main_handle.seek(ulShift,binary_stream::Seek_Set);
-  switch(codelen) {
-    default:
-    case 1: defval = main_handle.read(type_byte); break;
-    case 2: defval = main_handle.read(type_word); break;
-    case 4: defval = main_handle.read(type_dword); break;
-    case 8:
-	main_handle.seek(ulShift, binary_stream::Seek_Set);
-	defval=main_handle.read(type_qword);
-	break;
-  }
-  if(flags & Bin_Format::Try_Pic)
-  {
-       __filesize_t off_in_got = defval;
-       __filesize_t dynptr, dyn_ent, got_off;
-       unsigned nitems;
+    std::string str;
+    bool ret = false;
+    std::set<Elf_Reloc>::const_iterator erl;
+    __filesize_t defval;
+    main_handle.seek(ulShift,binary_stream::Seek_Set);
+    switch(codelen) {
+	default:
+	case 1: defval = main_handle.read(type_byte); break;
+	case 2: defval = main_handle.read(type_word); break;
+	case 4: defval = main_handle.read(type_dword); break;
+	case 8:
+	    main_handle.seek(ulShift, binary_stream::Seek_Set);
+	    defval=main_handle.read(type_qword);
+	    break;
+    }
+    if(flags & Bin_Format::Try_Pic) {
+	__filesize_t off_in_got = defval;
+	__filesize_t dynptr, dyn_ent, got_off;
+	unsigned nitems;
 /** @todo: If "program header" will be lost and will be present "section
     header" only then we should handle such situation propertly too */
-       dynptr = findPHEntry(PT_DYNAMIC,nitems);
-       if(dynptr)
-       {
-	 dyn_ent = findPHDynEntry(DT_PLTGOT,dynptr,nitems);
-	 if(dyn_ent)
-	 {
-	   got_off = va2pa(dyn_ent);
-	   return bind(parent,str, got_off + off_in_got, flags & ~Bin_Format::Try_Pic, codelen, r_sh);
-	 }
-       }
-       return false;
-  }
-  if(PubNames.empty()) elf_ReadPubNameList(main_handle);
-  if((erl = __found_ElfRel(ulShift)) != CurrElfChain.end())
-  {
-    Elf_Reloc r = (*erl);
-    ret = elf_arch->build_refer_str(*elfcache,str,r,flags,codelen,defval);
-  }
-  if(!ret && elf_reader->ehdr().e_type>ET_REL && codelen>=4)
-  {
-    uint32_t id;
-    main_handle.seek(ulShift,binary_stream::Seek_Set);
-    id = main_handle.read(type_dword);
-    if((erl = __found_ElfRel(va2pa(id))) != CurrElfChain.end())
-    {
-      Elf_Reloc r = (*erl);
-      ret = elf_arch->build_refer_str(*elfcache,str,r,flags,codelen,defval);
+	dynptr = findPHEntry(PT_DYNAMIC,nitems);
+	if(dynptr) {
+	    dyn_ent = findPHDynEntry(DT_PLTGOT,dynptr,nitems);
+	    if(dyn_ent) {
+		got_off = va2pa(dyn_ent);
+		return bind(parent,got_off + off_in_got, flags & ~Bin_Format::Try_Pic, codelen, r_sh);
+	    }
+	}
+	return "";
     }
-  }
-  if(!ret)
-  {
-    buff="FFFFFFFF";
-    if(flags & Bin_Format::Try_Label) {
-	Symbol_Info rc = FindPubName(r_sh);
-	if(rc.pa!=Plugin::Bad_Address) {
-	    if(buff.length()) {
-		str+=rc.name;
+    if(PubNames.empty()) elf_ReadPubNameList(main_handle);
+    if((erl = __found_ElfRel(ulShift)) != CurrElfChain.end()) {
+	Elf_Reloc r = (*erl);
+	ret = elf_arch->build_refer_str(*elfcache,str,r,flags,codelen,defval);
+    }
+    if(!ret && elf_reader->ehdr().e_type>ET_REL && codelen>=4) {
+	uint32_t id;
+	main_handle.seek(ulShift,binary_stream::Seek_Set);
+	id = main_handle.read(type_dword);
+	if((erl = __found_ElfRel(va2pa(id))) != CurrElfChain.end()) {
+	    Elf_Reloc r = (*erl);
+	    ret = elf_arch->build_refer_str(*elfcache,str,r,flags,codelen,defval);
+	}
+    }
+    if(!ret) {
+	if(flags & Bin_Format::Try_Label) {
+	    Symbol_Info rc = FindPubName(r_sh);
+	    if(rc.pa!=Plugin::Bad_Address) {
+		str=rc.name;
 		if(!DumpMode && !EditMode) code_guider.add_go_address(parent,str,r_sh);
-		ret = true;
 	    }
 	}
     }
-  }
-  return ret;
+    return str;
 }
 
 void ELF_Parser::__elfReadSegments(std::map<__filesize_t,VA_map>& to, bool is_virt ) const
@@ -1554,11 +1543,11 @@ __filesize_t ELF_Parser::action_F1()
     return bctx.tell();
 }
 
-bool ELF_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
+std::string ELF_Parser::address_resolving(__filesize_t cfpos)
 {
- /* Since this function is used in references resolving of disassembler
-    it must be seriously optimized for speed. */
-    bool bret = true;
+    std::string addr;
+    /* Since this function is used in references resolving of disassembler
+	it must be seriously optimized for speed. */
     __filesize_t res;
     if(cfpos < elf_reader->ehdr_size()) {
 	addr="ELFhdr:";
@@ -1567,8 +1556,7 @@ bool ELF_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 	addr = ".";
 	addr+=Get8Digit(res);
     }
-    else bret = false;
-    return bret;
+    return addr;
 }
 
 Symbol_Info ELF_Parser::FindPubName(__filesize_t pa) const

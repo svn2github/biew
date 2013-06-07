@@ -61,10 +61,10 @@ namespace	usr {
 	    virtual __filesize_t	action_F8();
 
 	    virtual __filesize_t	show_header() const;
-	    virtual bool		bind(const DisMode& _parent,std::string& str,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift);
+	    virtual std::string		bind(const DisMode& _parent,__filesize_t shift,Bin_Format::bind_type flg,int codelen,__filesize_t r_shift);
 	    virtual int			query_platform() const;
 	    virtual Bin_Format::bitness	query_bitness(__filesize_t) const;
-	    virtual bool		address_resolving(std::string&,__filesize_t);
+	    virtual std::string		address_resolving(__filesize_t);
 	    virtual __filesize_t	va2pa(__filesize_t va) const;
 	    virtual __filesize_t	pa2va(__filesize_t pa) const;
 	    virtual Symbol_Info		get_public_symbol(__filesize_t pa,bool as_prev);
@@ -541,32 +541,30 @@ bool NLM_Parser::BuildReferStrNLM(std::string& str,const RELOC_NLM& rne,Bin_Form
   return retrf;
 }
 
-bool NLM_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
+std::string NLM_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
-  RELOC_NLM key;
-  std::set<RELOC_NLM>::const_iterator rnlm;
-  bool retrf;
-  if(flags & Bin_Format::Try_Pic) return false;
-  if(!nlm.nlm_numberOfExternalReferences || nlm.nlm_externalReferencesOffset >= main_handle.flength()) retrf = false;
-  else
-  {
-    if(RelocNlm.empty()) BuildRelocNlm();
-    key.offset = ulShift;
-    __codelen = codelen;
-    rnlm = RelocNlm.find(key);
-    retrf = (rnlm!=RelocNlm.end()) ? BuildReferStrNLM(str,*rnlm,flags) : false;
-  }
-  if(!retrf && (flags & Bin_Format::Try_Label))
-  {
-     if(PubNames.empty()) nlm_ReadPubNameList(main_handle);
-     Symbol_Info rc = FindPubName(r_sh);
-     if(rc.pa!=Plugin::Bad_Address) {
-       str+=rc.name;
-       if(!DumpMode && !EditMode) code_guider.add_go_address(parent,str,r_sh);
-       retrf = true;
-     }
-  }
-  return retrf;
+    std::string str;
+    RELOC_NLM key;
+    std::set<RELOC_NLM>::const_iterator rnlm;
+    bool retrf;
+    if(flags & Bin_Format::Try_Pic) return "";
+    if(!nlm.nlm_numberOfExternalReferences || nlm.nlm_externalReferencesOffset >= main_handle.flength()) retrf = false;
+    else {
+	if(RelocNlm.empty()) BuildRelocNlm();
+	key.offset = ulShift;
+	__codelen = codelen;
+	rnlm = RelocNlm.find(key);
+	retrf = (rnlm!=RelocNlm.end()) ? BuildReferStrNLM(str,*rnlm,flags) : false;
+    }
+    if(!retrf && (flags & Bin_Format::Try_Label)) {
+	if(PubNames.empty()) nlm_ReadPubNameList(main_handle);
+	Symbol_Info rc = FindPubName(r_sh);
+	if(rc.pa!=Plugin::Bad_Address) {
+	    str=rc.name;
+	    if(!DumpMode && !EditMode) code_guider.add_go_address(parent,str,r_sh);
+	}
+    }
+    return str;
 }
 
 NLM_Parser::NLM_Parser(BeyeContext& b,binary_stream& h,CodeGuider& _code_guider,udn& u)
@@ -598,25 +596,20 @@ Bin_Format::bitness NLM_Parser::query_bitness(__filesize_t off) const
     return Bin_Format::Use32;
 }
 
-bool NLM_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
+std::string NLM_Parser::address_resolving(__filesize_t cfpos)
 {
- /* Since this function is used in references resolving of disassembler
-    it must be seriously optimized for speed. */
-  bool bret = true;
-  uint32_t res;
-  if(cfpos < sizeof(Nlm_Internal_Fixed_Header))
-  {
-    addr="nlm32h:";
-    addr+=Get2Digit(cfpos);
-  }
-  else
-    if((res=pa2va(cfpos)) != 0)
-    {
-      addr = ".";
-      addr+=Get8Digit(res);
+    std::string addr;
+    /* Since this function is used in references resolving of disassembler
+	it must be seriously optimized for speed. */
+    uint32_t res;
+    if(cfpos < sizeof(Nlm_Internal_Fixed_Header)) {
+	addr="nlm32h:";
+	addr+=Get2Digit(cfpos);
+    } else if((res=pa2va(cfpos)) != 0) {
+	addr = ".";
+	addr+=Get8Digit(res);
     }
-    else bret = false;
-  return bret;
+    return addr;
 }
 
 __filesize_t NLM_Parser::action_F1()

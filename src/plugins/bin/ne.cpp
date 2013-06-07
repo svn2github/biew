@@ -1068,12 +1068,13 @@ bool NE_Parser::BuildReferStrNE(const DisMode& parent,std::string& str,const REL
     return retrf;
 }
 
-bool NE_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
+std::string NE_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
+    std::string str;
     unsigned i;
     __filesize_t segpos,slength;
     std::string buff;
-    if(flags & Bin_Format::Try_Pic) return false;
+    if(flags & Bin_Format::Try_Pic) return "";
     if(ulShift >= CurrSegmentStart && ulShift <= CurrSegmentStart + CurrSegmentLength) {
 	i = CurrChainSegment - 1;
 	if(CurrSegmentHasReloc) goto Direct;
@@ -1091,7 +1092,7 @@ bool NE_Parser::bind(const DisMode& parent,std::string& str,__filesize_t ulShift
 	    CurrSegmentStart = segpos;
 	    CurrSegmentLength = slength;
 	    CurrSegmentHasReloc = (sd.sdFlags >> 8) & 1;
-	    if(!CurrSegmentHasReloc) return false;
+	    if(!CurrSegmentHasReloc) return "";
 Direct:
 	    rne = __found_RNE(CurrSegmentStart,CurrSegmentLength,i + 1,(unsigned)(ulShift - CurrSegmentStart),codelen);
 	    if(rne.Type!=0xFF) {
@@ -1103,23 +1104,24 @@ Direct:
 		if(rne.AddrType == 5) {
 		    rne.idx    = __findSpecType(CurrSegmentStart,CurrSegmentLength,i + 1,ulShift,codelen,2,rne.idx);
 		}
-		return BuildReferStrNE(parent,str,rne,flags,ulShift);
+		BuildReferStrNE(parent,str,rne,flags,ulShift);
+		return str;
 	    } else {
 TryLabel:
 		if(flags & Bin_Format::Try_Label) {
 		    if(PubNames.empty()) ne_ReadPubNameList(*ne_cache2);
 		    Symbol_Info rc = FindPubName(r_sh);
 		    if(rc.pa!=Plugin::Bad_Address) {
-			str+=rc.name;
+			str=rc.name;
 			if(!DumpMode && !EditMode) code_guider().add_go_address(parent,str,r_sh);
-			return true;
+			return str;
 		    }
 		}
 	    }
-	    return false;
+	    return "";
 	}
     }
-    return false;
+    return "";
 }
 
 /** return false if unsuccess true otherwise */
@@ -1341,39 +1343,28 @@ Bin_Format::bitness NE_Parser::query_bitness(__filesize_t pa) const
     return bitness;
 }
 
-bool NE_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
+std::string NE_Parser::address_resolving(__filesize_t cfpos)
 {
- /* Since this function is used in references resolving of disassembler
-    it must be seriously optimized for speed. */
-  bool bret = true;
-  uint32_t res;
-  if(cfpos >= headshift() && cfpos < headshift() + sizeof(NEHEADER))
-  {
-     addr="NEH :";
-     addr+=Get4Digit(cfpos - headshift());
-  }
-  else
-  if(cfpos >= headshift() + ne.neOffsetSegmentTable &&
-     cfpos <  headshift() + ne.neOffsetSegmentTable + ne.neSegmentTableCount*sizeof(SEGDEF))
-  {
-    addr="NESD:";
-    addr+=Get4Digit(cfpos - headshift() - ne.neOffsetSegmentTable);
-  }
-  else
-  if(cfpos >= headshift() + ne.neOffsetEntryTable &&
-     cfpos <  headshift() + ne.neOffsetEntryTable + ne.neLengthEntryTable)
-  {
-    addr="NEET:";
-    addr+=Get4Digit(cfpos - headshift() - ne.neOffsetEntryTable);
-  }
-  else
-    if((res=pa2va(cfpos))!=0)
-    {
-      addr = ".";
-      addr+=Get8Digit(res);
+    std::string addr;
+    /* Since this function is used in references resolving of disassembler
+	it must be seriously optimized for speed. */
+    uint32_t res;
+    if(cfpos >= headshift() && cfpos < headshift() + sizeof(NEHEADER)) {
+	addr="NEH :";
+	addr+=Get4Digit(cfpos - headshift());
+    } else if(cfpos >= headshift() + ne.neOffsetSegmentTable &&
+	    cfpos <  headshift() + ne.neOffsetSegmentTable + ne.neSegmentTableCount*sizeof(SEGDEF)) {
+	addr="NESD:";
+	addr+=Get4Digit(cfpos - headshift() - ne.neOffsetSegmentTable);
+    } else if(cfpos >= headshift() + ne.neOffsetEntryTable &&
+	    cfpos <  headshift() + ne.neOffsetEntryTable + ne.neLengthEntryTable) {
+	addr="NEET:";
+	addr+=Get4Digit(cfpos - headshift() - ne.neOffsetEntryTable);
+    } else if((res=pa2va(cfpos))!=0) {
+	addr = ".";
+	addr+=Get8Digit(res);
     }
-    else bret = false;
-  return bret;
+    return addr;
 }
 
 int NE_Parser::query_platform() const { return DISASM_CPU_IX86; }

@@ -110,18 +110,18 @@ __filesize_t Bin_Format::action_F9()  const { return detectedFormat->action_F9()
 __filesize_t Bin_Format::action_F10() const { return detectedFormat->action_F10(); }
 
 __filesize_t Bin_Format::show_header() const { return detectedFormat->show_header(); }
-bool	Bin_Format::bind(const DisMode& _parent,std::string& str,__filesize_t shift,bind_type flg,int codelen,__filesize_t r_shift) const
+std::string	Bin_Format::bind(const DisMode& _parent,__filesize_t shift,bind_type flg,int codelen,__filesize_t r_shift) const
 {
-    return detectedFormat->bind(_parent,str,shift,flg,codelen,r_shift);
+    return detectedFormat->bind(_parent,shift,flg,codelen,r_shift);
 }
 
 int	Bin_Format::query_platform() const { return detectedFormat->query_platform(); }
 Bin_Format::bitness	Bin_Format::query_bitness(__filesize_t off) const { return detectedFormat->query_bitness(off); }
 Bin_Format::endian	Bin_Format::query_endian(__filesize_t off) const { return detectedFormat->query_endian(off); }
 
-bool	Bin_Format::address_resolving(std::string& str,__filesize_t off) const
+std::string Bin_Format::address_resolving(__filesize_t off) const
 {
-    return detectedFormat->address_resolving(str,off);
+    return detectedFormat->address_resolving(off);
 }
 
 __filesize_t Bin_Format::va2pa(__filesize_t va) const

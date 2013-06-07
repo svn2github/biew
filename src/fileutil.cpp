@@ -300,10 +300,8 @@ unsigned FStore::printHelpComment(char *buff,MBuffer codebuff,DisasmRet *dret,Di
 
 void FStore::make_addr_column(std::string& buff,__filesize_t offset) const
 {
-    if(hexAddressResolv) {
-	buff.clear();
-	bctx.bin_format().address_resolving(buff,offset);
-    } else {
+    if(hexAddressResolv) buff=bctx.bin_format().address_resolving(offset);
+    else {
 	buff="L";
 	buff+=Get8Digit(offset);
     }
