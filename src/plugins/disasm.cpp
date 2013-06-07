@@ -805,139 +805,127 @@ void DisMode::accept_actions()
 
 char * __FASTCALL__ TabSpace(char * str,unsigned nSpace)
 {
-  int i,mx;
-  unsigned len;
-  len = strlen(str);
-  mx = std::max(len,nSpace);
-  for(i = len;i < mx;i++) str[i] = TWC_DEF_FILLER;
-  if(len >= nSpace) str[i++] = TWC_DEF_FILLER;
-  str[i] = 0;
-  return str;
+    int i,mx;
+    unsigned len;
+    len = strlen(str);
+    mx = std::max(len,nSpace);
+    for(i = len;i < mx;i++) str[i] = TWC_DEF_FILLER;
+    if(len >= nSpace) str[i++] = TWC_DEF_FILLER;
+    str[i] = 0;
+    return str;
 }
 
 void  __FASTCALL__ disSetModifier(char *str,const char *modf)
 {
-  unsigned i,len,mlen;
-  i = 0;
-  len = strlen(str);
-  mlen = strlen(modf);
-  while(str[i] != TWC_DEF_FILLER) i++;
-  i++;
-  memcpy(&str[i],modf,mlen);
-  if(i+mlen > len) { str[i+mlen] = TWC_DEF_FILLER; str[i+mlen+1] = 0; }
+    unsigned i,len,mlen;
+    i = 0;
+    len = strlen(str);
+    mlen = strlen(modf);
+    while(str[i] != TWC_DEF_FILLER) i++;
+    i++;
+    memcpy(&str[i],modf,mlen);
+    if(i+mlen > len) { str[i+mlen] = TWC_DEF_FILLER; str[i+mlen+1] = 0; }
 }
 
 bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t ulShift,Bin_Format::bind_type flg,char codelen,any_t*defval,e_disarg type)
 {
- bool app;
- char comments[Comm_Size];
- const char *appstr;
- unsigned dig_type;
- __filesize_t fpos;
- fpos = handle.tell();
+    bool app;
+    char comments[Comm_Size];
+    const char* appstr;
+    unsigned dig_type;
+    __filesize_t fpos;
+    fpos = handle.tell();
 #ifndef NDEBUG
-  if(ulShift >= main_handle.flength()-codelen)
-  {
-     char sout[75];
-     static bool displayed = false;
-     if(!displayed)
-     {
-       strncpy(sout,str.c_str(),sizeof(sout)-1);
-       sout[sizeof(sout)-1] = 0;
-       if(!strlen(sout)) strcpy(sout,"disAppendDigits");
-       bctx.ErrMessageBox(sout," Internal disassembler error detected ");
-       displayed = true;
-       COREDUMP();
-     }
-  }
+    if(ulShift >= main_handle.flength()-codelen) {
+	char sout[75];
+	static bool displayed = false;
+	if(!displayed) {
+	    strncpy(sout,str.c_str(),sizeof(sout)-1);
+	    sout[sizeof(sout)-1] = 0;
+	    if(!strlen(sout)) strcpy(sout,"disAppendDigits");
+	    bctx.ErrMessageBox(sout," Internal disassembler error detected ");
+	    displayed = true;
+	    COREDUMP();
+        }
+    }
 #endif
-  if(hexAddressResolv) flg |= Bin_Format::Save_Virt;
-  app = disNeedRef >= Ref_All ? bin_format.bind(*this,str,ulShift,flg,codelen,0L) : false;
-  if(app != true)
-  {
+    if(hexAddressResolv) flg |= Bin_Format::Save_Virt;
+    app = disNeedRef >= Ref_All ? bin_format.bind(*this,str,ulShift,flg,codelen,0L) : false;
+    if(app == true) goto exit;
+
     dig_type = type & 0x00FFU;
     comments[0] = 0;
     /* @todo Remove dependencies from 4-byte size of operand */
-					 /* Only if immediate operand */
+    /* Only if immediate operand */
     if(((type & Arg_Imm) || (type & Arg_Disp) ||
 	(type & Arg_IdxDisp) || (type & Arg_Rip)) &&
-	disNeedRef >= Ref_Predict)    /* Only when reference prediction is on */
-    {
-      uint64_t _defval;
-      unsigned fld_len=1;
-      switch(dig_type)
-      {
-	default:
-	case Arg_Byte: _defval = *(uint8_t *)defval;  fld_len=1; break;
-	case Arg_Char: _defval = *(int8_t *)defval;   fld_len=1; break;
-	case Arg_Word: _defval = *(uint16_t *)defval; fld_len=2; break;
-	case Arg_Short:_defval = *(int16_t *)defval;  fld_len=2; break;
-	case Arg_DWord:_defval = *(uint32_t *)defval; fld_len=4; break;
-	case Arg_Long: _defval = *(int32_t *)defval;  fld_len=4; break;
-	case Arg_QWord:_defval = *(uint64_t *)defval; fld_len=8; break;
-	case Arg_LLong:_defval = *(int64_t *)defval;  fld_len=8; break;
-      }
-      if(_defval)         /* Do not perform operation on NULL */
-      {
-      __filesize_t pa,__tmp;
-      Symbol_Info psym;
-      if(type & Arg_Rip) {
-	__tmp=bin_format.pa2va(ulShift);
-	_defval += ((__tmp!=Plugin::Bad_Address) ? __tmp : ulShift)+fld_len;
-      }
-      pa = bin_format.va2pa(_defval);
-      if(pa!=Plugin::Bad_Address)
-      {
-	/* 1. Try to determine immediate as offset to public symbol */
-	if(type & Arg_Rip) app = bin_format.bind(*this,str,pa,flg,codelen,0L);
-	if(app == true) goto next_step;
-	if(dis_severity < CommSev_Func)
-	{
-	  strcpy(comments,".*");
-	  psym = bin_format.get_public_symbol(pa,false);
-	  strcat(comments,psym.name.c_str());
-	  if(psym.pa!=Plugin::Bad_Address) {
-	    if(psym.pa != pa) comments[0] = 0;
-	    else
-	    {
-		dis_severity = CommSev_Func;
-		strcpy(dis_comments,comments);
+	disNeedRef >= Ref_Predict) {  /* Only when reference prediction is on */
+	uint64_t _defval;
+	unsigned fld_len=1;
+	switch(dig_type) {
+	    default:
+	    case Arg_Byte: _defval = *(uint8_t *)defval;  fld_len=1; break;
+	    case Arg_Char: _defval = *(int8_t *)defval;   fld_len=1; break;
+	    case Arg_Word: _defval = *(uint16_t *)defval; fld_len=2; break;
+	    case Arg_Short:_defval = *(int16_t *)defval;  fld_len=2; break;
+	    case Arg_DWord:_defval = *(uint32_t *)defval; fld_len=4; break;
+	    case Arg_Long: _defval = *(int32_t *)defval;  fld_len=4; break;
+	    case Arg_QWord:_defval = *(uint64_t *)defval; fld_len=8; break;
+	    case Arg_LLong:_defval = *(int64_t *)defval;  fld_len=8; break;
+	}
+	if(_defval) { /* Do not perform operation on NULL */
+	    __filesize_t pa,__tmp;
+	    Symbol_Info psym;
+	    if(type & Arg_Rip) {
+		__tmp=bin_format.pa2va(ulShift);
+		_defval += ((__tmp!=Plugin::Bad_Address) ? __tmp : ulShift)+fld_len;
 	    }
-	  }
+	    pa = bin_format.va2pa(_defval);
+	    if(pa!=Plugin::Bad_Address) {
+		/* 1. Try to determine immediate as offset to public symbol */
+		if(type & Arg_Rip) app = bin_format.bind(*this,str,pa,flg,codelen,0L);
+		if(app == true) goto next_step;
+		if(dis_severity < CommSev_Func) {
+		    strcpy(comments,".*");
+		    psym = bin_format.get_public_symbol(pa,false);
+		    strcat(comments,psym.name.c_str());
+		    if(psym.pa!=Plugin::Bad_Address) {
+			if(psym.pa != pa) comments[0] = 0;
+			else {
+			    dis_severity = CommSev_Func;
+			    strcpy(dis_comments,comments);
+			}
+		    }
+		}
+		/* 2. Try to determine immediate as offset to string constant */
+		comments[0] = 0;
+		if(dis_severity < CommSev_StrPtr) {
+		    size_t _index;
+		    unsigned char rch;
+		    _index = 0;
+		    strcat(comments,"->\"");
+		    for(_index = 3;_index < sizeof(comments)-5;_index++) {
+			handle.seek(pa+_index-3,binary_stream::Seek_Set);
+			rch = handle.read(type_byte);
+			if(isprint(rch)) comments[_index] = rch;
+			else break;
+		    }
+		    if(!comments[3]) comments[0] = 0;
+		    else {
+			comments[_index++] = '"'; comments[_index] = 0;
+			dis_severity = CommSev_StrPtr;
+			strcpy(dis_comments,comments);
+		    }
+		}
+	    }
 	}
-	/* 2. Try to determine immediate as offset to string constant */
-	comments[0] = 0;
-	if(dis_severity < CommSev_StrPtr)
-	{
-	  size_t _index;
-	  unsigned char rch;
-	  _index = 0;
-	  strcat(comments,"->\"");
-	  for(_index = 3;_index < sizeof(comments)-5;_index++)
-	  {
-	    handle.seek(pa+_index-3,binary_stream::Seek_Set);
-	    rch = handle.read(type_byte);
-	    if(isprint(rch)) comments[_index] = rch;
-	    else break;
-	  }
-	  if(!comments[3]) comments[0] = 0;
-	  else
-	  {
-	    comments[_index++] = '"'; comments[_index] = 0;
-	    dis_severity = CommSev_StrPtr;
-	    strcpy(dis_comments,comments);
-	  }
-	}
-      }
-      }
     }
-    next_step:
+next_step:
     comments[0] = 0;
-    if(app == false)
-    {
-     switch(dig_type)
-     {
-      case Arg_LLong:
+//    std::ostringstream oss(appstr);
+    if(app == false) {
+	switch(dig_type) {
+	    case Arg_LLong:
 			 appstr = Get16SignDig(*(int64_t *)defval);
 			 if(type & Arg_Imm &&
 			    disNeedRef >= Ref_Predict &&
@@ -960,7 +948,7 @@ bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t 
 					    ,((unsigned char *)defval)[6]
 					    ,((unsigned char *)defval)[7]);
 			 break;
-      case Arg_Long:  appstr = Get8SignDig(*(int32_t *)defval);
+	    case Arg_Long:  appstr = Get8SignDig(*(int32_t *)defval);
 			 if(type & Arg_Imm &&
 			    disNeedRef >= Ref_Predict &&
 			    dis_severity < CommSev_String &&
@@ -974,7 +962,7 @@ bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t 
 					    ,((unsigned char *)defval)[2]
 					    ,((unsigned char *)defval)[3]);
 			 break;
-      case Arg_Short: appstr = Get4SignDig(*(int16_t *)defval);
+	    case Arg_Short: appstr = Get4SignDig(*(int16_t *)defval);
 			 if(type & Arg_Imm &&
 			    disNeedRef >= Ref_Predict &&
 			    dis_severity < CommSev_String &&
@@ -984,21 +972,21 @@ bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t 
 					    ,((unsigned char *)defval)[0]
 					    ,((unsigned char *)defval)[1]);
 			 break;
-      case Arg_Char:  appstr = Get2SignDig(*(char *)defval);
+	    case Arg_Char:  appstr = Get2SignDig(*(char *)defval);
 			 if(type & Arg_Imm &&
 			    disNeedRef >= Ref_Predict &&
 			    dis_severity < CommSev_String &&
 			    isprint(*(unsigned char *)defval))
 			    sprintf(comments,"'%c'",*(unsigned char *)defval);
 			 break;
-      case Arg_Byte:  appstr = Get2Digit(*(unsigned char *)defval);
+	    case Arg_Byte:  appstr = Get2Digit(*(unsigned char *)defval);
 			 if(type & Arg_Imm &&
 			    disNeedRef >= Ref_Predict &&
 			    dis_severity < CommSev_String &&
 			    isprint(*(unsigned char *)defval))
 			    sprintf(comments,"'%c'",*(unsigned char *)defval);
 			 break;
-      case Arg_Word:  appstr = Get4Digit(*(uint16_t *)defval);
+	    case Arg_Word:  appstr = Get4Digit(*(uint16_t *)defval);
 			 if(type & Arg_Imm &&
 			    disNeedRef >= Ref_Predict &&
 			    dis_severity < CommSev_String &&
@@ -1008,8 +996,8 @@ bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t 
 					    ,((unsigned char *)defval)[0]
 					    ,((unsigned char *)defval)[1]);
 			 break;
-      default:
-      case Arg_DWord: appstr = Get8Digit(*(uint32_t *)defval);
+	    default:
+	    case Arg_DWord: appstr = Get8Digit(*(uint32_t *)defval);
 			 if(type & Arg_Imm &&
 			    disNeedRef >= Ref_Predict &&
 			    dis_severity < CommSev_String &&
@@ -1023,7 +1011,7 @@ bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t 
 					    ,((unsigned char *)defval)[2]
 					    ,((unsigned char *)defval)[3]);
 			 break;
-      case Arg_QWord:
+	    case Arg_QWord:
 			 appstr = Get16Digit(*(uint64_t *)defval);
 			 if(type & Arg_Imm &&
 			    disNeedRef >= Ref_Predict &&
@@ -1046,194 +1034,163 @@ bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t 
 					    ,((unsigned char *)defval)[6]
 					    ,((unsigned char *)defval)[7]);
 			 break;
+	}
+	str+=appstr;
     }
-    str+=appstr;
-   }
-   if(comments[0])
-   {
-     dis_severity = CommSev_String;
-     strcpy(dis_comments,comments);
-   }
-  }
-  handle.seek(fpos,binary_stream::Seek_Set);
-  return app;
+    if(comments[0]) {
+	dis_severity = CommSev_String;
+	strcpy(dis_comments,comments);
+    }
+exit:
+    handle.seek(fpos,binary_stream::Seek_Set);
+    return app;
 }
 
 bool DisMode::append_faddr(binary_stream& handle,std::string& str,__fileoff_t ulShift,__fileoff_t distin,__filesize_t r_sh,e_disaddr type,unsigned seg,char codelen)
 {
- e_ref needref;
- __filesize_t fpos;
- size_t modif_to;
- DisasmRet dret;
- bool appended = false;
- Bin_Format::bind_type flg;
- fpos = handle.tell();
- memset(&dret,0,sizeof(DisasmRet));
- /* Prepare insn type */
- if(disNeedRef > Ref_None)
- {
-   /* Forward prediction: ulShift = offset of binded field but r_sh is
-      pointer where this field is referenced. */
-   memset(disCodeBufPredict,0,disMaxCodeLen*PREDICT_DEPTH);
-   handle.seek(r_sh, binary_stream::Seek_Set);
-   handle.read(disCodeBufPredict,disMaxCodeLen*PREDICT_DEPTH);
-   dret = disassembler(r_sh,(MBuffer)disCodeBufPredict,__DISF_GETTYPE);
- }
+    e_ref needref;
+    __filesize_t fpos;
+    size_t modif_to;
+    DisasmRet dret;
+    bool appended = false;
+    Bin_Format::bind_type flg;
+    fpos = handle.tell();
+    memset(&dret,0,sizeof(DisasmRet));
+    /* Prepare insn type */
+    if(disNeedRef > Ref_None) {
+    /* Forward prediction: ulShift = offset of binded field but r_sh is
+	pointer where this field is referenced. */
+	memset(disCodeBufPredict,0,disMaxCodeLen*PREDICT_DEPTH);
+	handle.seek(r_sh, binary_stream::Seek_Set);
+	handle.read(disCodeBufPredict,disMaxCodeLen*PREDICT_DEPTH);
+	dret = disassembler(r_sh,(MBuffer)disCodeBufPredict,__DISF_GETTYPE);
+    }
 #ifndef NDEBUG
-  if(ulShift >= (__fileoff_t)main_handle.flength()-codelen)
-  {
-     char sout[75];
-     static bool displayed = false;
-     if(!displayed)
-     {
-       strncpy(sout,str.c_str(),sizeof(sout)-1);
-       sout[sizeof(sout)-1] = 0;
-       if(!strlen(sout)) strcpy(sout,"disAppendFAddr");
-       bctx.ErrMessageBox(sout," Internal disassembler error detected ");
-       displayed = true;
-       COREDUMP();
-     }
-  }
+    if(ulShift >= (__fileoff_t)main_handle.flength()-codelen) {
+	char sout[75];
+	static bool displayed = false;
+	if(!displayed) {
+	    strncpy(sout,str.c_str(),sizeof(sout)-1);
+	    sout[sizeof(sout)-1] = 0;
+	    if(!strlen(sout)) strcpy(sout,"disAppendFAddr");
+	    bctx.ErrMessageBox(sout," Internal disassembler error detected ");
+	    displayed = true;
+	    COREDUMP();
+	}
+    }
 #endif
- if(disNeedRef > Ref_None)
- {
-   if(dret.pro_clone == __INSNT_JMPPIC || dret.pro_clone == __INSNT_JMPRIP) goto try_pic; /* skip defaults for PIC */
-   flg = Bin_Format::Try_Label;
-   if(hexAddressResolv) flg |= Bin_Format::Save_Virt;
-   appended=bin_format.bind(*this,str,ulShift,flg,codelen,r_sh);
-   if(!appended)
-   {
-      /*
-	 Forwarding references.
-	 Dereferencing ret instruction.
-	 Idea and PE implementation by "Kostya Nosov" <k-nosov@yandex.ru>
-      */
-       if(dret.pro_clone == __INSNT_JMPVVT) /* jmp (mod r/m) */
-       {
-	    if(bin_format.bind(*this,str,r_sh+dret.field,Bin_Format::Try_Label,dret.codelen,r_sh))
-	    {
-	      appended = true;
-	      modif_to = str.find(' ');
-	      if(modif_to!=std::string::npos)
-	      {
-		while(str[modif_to] == ' ') modif_to++;
-		str[modif_to-1] = '*';
-	      }
-	      if(!DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
-	    }
-       }
-       else
-       if(dret.pro_clone == __INSNT_JMPPIC) /* jmp [ebx+offset] */
-       {
-	    try_pic:
-	    if(dret.pro_clone == __INSNT_JMPRIP) goto try_rip;
-	    if(bin_format.bind(*this,str,r_sh+dret.field,Bin_Format::Try_Pic,dret.codelen,r_sh))
-	    {
-	      appended = true; /* terminate appending any info anyway */
-	      if(!DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
-	    }
-       }
-       else
-       if(dret.pro_clone == __INSNT_JMPRIP) /* calln *(jmp [rip+offset]) */
-       {
-	__filesize_t _defval,_fpos,pa,__tmp;
-	unsigned long app;
-		try_rip:
+    if(disNeedRef > Ref_None) {
+	if(dret.pro_clone == __INSNT_JMPPIC || dret.pro_clone == __INSNT_JMPRIP) goto try_pic; /* skip defaults for PIC */
+	flg = Bin_Format::Try_Label;
+	if(hexAddressResolv) flg |= Bin_Format::Save_Virt;
+	appended=bin_format.bind(*this,str,ulShift,flg,codelen,r_sh);
+	if(!appended) {
+	    /*
+		Forwarding references.
+		Dereferencing ret instruction.
+		Idea and PE implementation by "Kostya Nosov" <k-nosov@yandex.ru>
+	    */
+	    if(dret.pro_clone == __INSNT_JMPVVT) { /* jmp (mod r/m) */
+		if(bin_format.bind(*this,str,r_sh+dret.field,Bin_Format::Try_Label,dret.codelen,r_sh)) {
+		    appended = true;
+		    modif_to = str.find(' ');
+		    if(modif_to!=std::string::npos) {
+			while(str[modif_to] == ' ') modif_to++;
+			str[modif_to-1] = '*';
+		    }
+		    if(!DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
+		}
+	    } else if(dret.pro_clone == __INSNT_JMPPIC) { /* jmp [ebx+offset] */
+try_pic:
+		if(dret.pro_clone == __INSNT_JMPRIP) goto try_rip;
+		if(bin_format.bind(*this,str,r_sh+dret.field,Bin_Format::Try_Pic,dret.codelen,r_sh)) {
+		    appended = true; /* terminate appending any info anyway */
+		    if(!DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
+		}
+	    } else if(dret.pro_clone == __INSNT_JMPRIP) { /* calln *(jmp [rip+offset]) */
+		__filesize_t _defval,_fpos,pa,__tmp;
+		unsigned long app;
+try_rip:
 		_fpos = main_handle.tell();
 		main_handle.seek(r_sh+dret.field,binary_stream::Seek_Set);
 		_defval = dret.codelen==8 ? main_handle.read(type_qword):
-					    main_handle.read(type_dword);
+					main_handle.read(type_dword);
 		main_handle.seek(_fpos,binary_stream::Seek_Set);
-	__tmp=bin_format.pa2va(r_sh+dret.field);
-	_defval += (__tmp!=Plugin::Bad_Address ?
+		__tmp=bin_format.pa2va(r_sh+dret.field);
+		_defval += (__tmp!=Plugin::Bad_Address ?
 		    __tmp :
 		    r_sh+dret.field)+dret.codelen;
-	__tmp = bin_format.va2pa(_defval);
-	pa = (__tmp!=Plugin::Bad_Address) ? __tmp : _defval;
-	app=bin_format.bind(*this,str,pa,Bin_Format::Try_Label,dret.codelen,0L);
-	if(app)
-	{
-	  appended = true; /* terminate appending any info anyway */
-	  modif_to = str.find(' ');
-	  if(modif_to!=std::string::npos)
-	  {
-	    while(str[modif_to] == ' ') modif_to++;
-	    str[modif_to-1] = '*';
-	  }
-	  if(!DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
+		__tmp = bin_format.va2pa(_defval);
+		pa = (__tmp!=Plugin::Bad_Address) ? __tmp : _defval;
+		app=bin_format.bind(*this,str,pa,Bin_Format::Try_Label,dret.codelen,0L);
+		if(app) {
+		    appended = true; /* terminate appending any info anyway */
+		    modif_to = str.find(' ');
+		    if(modif_to!=std::string::npos) {
+			while(str[modif_to] == ' ') modif_to++;
+			str[modif_to-1] = '*';
+		    }
+		    if(!DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
+		}
+	    }
 	}
-       }
-   }
- }
-   /*
+    }
+/*
       Idea and PE release of "Kostya Nosov" <k-nosov@yandex.ru>:
       make virtual address as argument of "jxxx" and "callx"
-   */
- if(!appended)
- {
-   if(hexAddressResolv)
-   {
-     r_sh = r_sh ? r_sh : (__filesize_t)ulShift;
-     std::string stmp;
-     appended = bin_format.address_resolving(stmp,r_sh);
-     str+=stmp;
-   }
-   if(!appended)
-   {
-     needref = disNeedRef;
-     disNeedRef = Ref_None;
-     if(r_sh <= main_handle.flength())
-     {
-       const char * cptr;
-       char lbuf[20];
-       cptr = DumpMode ? "L" : "file:";
-       str+=cptr;
-	if(bctx.is_file64()) sprintf(lbuf,"%016llX",r_sh);
-	else sprintf(lbuf,"%08lX",(unsigned long)r_sh);
-       str+=lbuf;
-       appended = true;
-     }
-     else
-     {
-       const char * pstr = "";
-       if(type & UseSeg)
-       {
-	 str+=Get4Digit(seg);
-	 str+=":";
-       }
-       if(!type) pstr = Get2SignDig((char)distin);
-       else
-	 if(type & Near16)
-	      pstr = type & UseSeg ? Get4Digit((unsigned)distin) :
+*/
+    if(appended) goto exit;
+    if(hexAddressResolv) {
+	r_sh = r_sh ? r_sh : (__filesize_t)ulShift;
+	std::string stmp;
+	appended = bin_format.address_resolving(stmp,r_sh);
+	str+=stmp;
+    }
+    if(!appended) {
+	needref = disNeedRef;
+	disNeedRef = Ref_None;
+	if(r_sh <= main_handle.flength()) {
+	    const char * cptr;
+	    char lbuf[20];
+	    cptr = DumpMode ? "L" : "file:";
+	    str+=cptr;
+	    if(bctx.is_file64()) sprintf(lbuf,"%016llX",r_sh);
+	    else sprintf(lbuf,"%08lX",(unsigned long)r_sh);
+	    str+=lbuf;
+	    appended = true;
+	} else {
+	    const char * pstr = "";
+	    if(type & UseSeg) {
+		str+=Get4Digit(seg);
+		str+=":";
+	    }
+	    if(!type) pstr = Get2SignDig((char)distin);
+	    else if(type & Near16)
+		pstr = type & UseSeg ? Get4Digit((unsigned)distin) :
 				     Get4SignDig((unsigned)distin);
-	 else
-	  if(type & Near32)   pstr = Get8SignDig(distin);
-	  else
-	   if(type & Near64) pstr = Get16SignDig(distin);
-       str+=pstr;
-     }
-     disNeedRef = needref;
-   }
-   if(disNeedRef >= Ref_Predict && dis_severity < CommSev_InsnRef)
-   {
-     const char * comms;
-     comms = NULL;
-     switch(dret.pro_clone)
-     {
-	case __INSNT_RET:   comms = "RETURN"; break;
-	case __INSNT_LEAVE: comms = "LEAVE"; break;
-	default:            break;
-     }
-     if(comms)
-     {
-	dis_severity = CommSev_InsnRef;
-	strcpy(dis_comments,comms);
-     }
-   }
-   if(appended && !DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
- }
- handle.seek(fpos,binary_stream::Seek_Set);
- return appended;
+	    else if(type & Near32)   pstr = Get8SignDig(distin);
+	    else if(type & Near64) pstr = Get16SignDig(distin);
+	    str+=pstr;
+	}
+	disNeedRef = needref;
+    }
+    if(disNeedRef >= Ref_Predict && dis_severity < CommSev_InsnRef) {
+	const char * comms;
+	comms = NULL;
+	switch(dret.pro_clone) {
+	    case __INSNT_RET:   comms = "RETURN"; break;
+	    case __INSNT_LEAVE: comms = "LEAVE"; break;
+	    default:            break;
+	}
+	if(comms) {
+	    dis_severity = CommSev_InsnRef;
+	    strcpy(dis_comments,comms);
+	}
+    }
+    if(appended && !DumpMode && !EditMode) code_guider.add_go_address(*this,str,r_sh);
+exit:
+    handle.seek(fpos,binary_stream::Seek_Set);
+    return appended;
 }
 
 bool hexAddressResolution(unsigned& har);

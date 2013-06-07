@@ -50,41 +50,42 @@ DigitalConverter_Addon::~DigitalConverter_Addon() {}
 
 int DigitalConverter_Addon::GetFullBin(uintmax_t value,char * buff) const
 {
- char byte,*b;
+ char byte;
+ const char* b;
  bool started = false;
  buff[0] = 0;
  byte = (value >> 60) & 0x0F;
- if(byte) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
+ if(byte) { b = GetBinary(byte).c_str(); strcat(buff,&b[4]); started = true; }
  byte = (value >> 56) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
+ if(byte || started) { b = GetBinary(byte).c_str(); strcat(buff,&b[4]); started = true; }
  byte = (value >> 52) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
+ if(byte || started) { b = GetBinary(byte).c_str(); strcat(buff,&b[4]); started = true; }
  byte = (value >> 48) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
+ if(byte || started) { b = GetBinary(byte).c_str(); strcat(buff,&b[4]); started = true; }
  byte = (value >> 44) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
+ if(byte || started) { b = GetBinary(byte).c_str(); strcat(buff,&b[4]); started = true; }
  byte = (value >> 40) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
+ if(byte || started) { b = GetBinary(byte).c_str(); strcat(buff,&b[4]); started = true; }
  byte = (value >> 36) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
+ if(byte || started) { b = GetBinary(byte).c_str(); strcat(buff,&b[4]); started = true; }
  byte = (value >> 32) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
+ if(byte || started) { b = GetBinary(byte).c_str(); strcat(buff,&b[4]); started = true; }
  byte = (value >> 28) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
+ if(byte || started) { b = GetBinary(byte).c_str(); strcat(buff,&b[4]); started = true; }
  byte = (value >> 24) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
+ if(byte || started) { b = GetBinary(byte).c_str(); strcat(buff,&b[4]); started = true; }
  byte = (value >> 20) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
+ if(byte || started) { b = GetBinary(byte).c_str(); strcat(buff,&b[4]); started = true; }
  byte = (value >> 16) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
+ if(byte || started) { b = GetBinary(byte).c_str(); strcat(buff,&b[4]); started = true; }
  byte = (value >> 12) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
+ if(byte || started) { b = GetBinary(byte).c_str(); strcat(buff,&b[4]); started = true; }
  byte = (value >> 8) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); started = true; }
+ if(byte || started) { b = GetBinary(byte).c_str(); strcat(buff,&b[4]); started = true; }
  byte = (value >> 4) & 0x0F;
- if(byte || started) { b = GetBinary(byte); strcat(buff,&b[4]); }
+ if(byte || started) { b = GetBinary(byte).c_str(); strcat(buff,&b[4]); }
  byte = value & 0x0F;
- b = GetBinary(byte); strcat(buff,&b[4]);
+ b = GetBinary(byte).c_str(); strcat(buff,&b[4]);
  return strlen(buff);
 }
 

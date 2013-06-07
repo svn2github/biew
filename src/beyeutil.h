@@ -43,7 +43,7 @@ namespace	usr {
     char * __FASTCALL__ Get8SignDig(int32_t);
     char * __FASTCALL__ Get16Digit(uint64_t);
     char * __FASTCALL__ Get16SignDig(int64_t);
-    char * __FASTCALL__ GetBinary(char val);
+    std::string __FASTCALL__ GetBinary(char val);
 
     void     __FASTCALL__ CompressHex(unsigned char * dest,const char * src,unsigned sizedest,bool usespace);
     int      __FASTCALL__ ExpandHex(char * dest,const unsigned char * src,int size,char hard);

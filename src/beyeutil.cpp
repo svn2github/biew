@@ -43,20 +43,18 @@ unsigned __FASTCALL__ Summ(unsigned char *str,unsigned size)
   return res;
 }
 
-char * __FASTCALL__ GetBinary(char val)
+std::string __FASTCALL__ GetBinary(char val)
 {
-  static char bstr[9];
-  int i;
-  bstr[8] = 0;
-  for(i = 0;i < 8;i++) bstr[7-i] = ((val >> i) & 1) + '0';
-  return bstr;
+    char bstr[9];
+    bstr[8] = 0;
+    for(size_t i = 0;i < 8;i++) bstr[7-i] = ((val >> i) & 1) + '0';
+    return bstr;
 }
 
-inline void __PURE_FUNC__ GET2DIGIT(char* str,const char* legs,unsigned char val)
+inline void __PURE_FUNC__ GET2DIGIT(char* s,const char* legs,unsigned char val)
 {
-  char *s = (char *)str;
-  s[0] = legs[(((unsigned char)val) >> 4) & 0x0F];
-  s[1] = legs[((unsigned char)val) & 0x0F];
+    s[0] = legs[(((unsigned char)val) >> 4) & 0x0F];
+    s[1] = legs[((unsigned char)val) & 0x0F];
 }
 
 char * __FASTCALL__ Get2Digit(uint8_t val)

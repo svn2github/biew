@@ -61,14 +61,14 @@ void Editor::paint_title( int shift,bool use_shift ) const
 	   ,byte ? byte : ' '
 	   ,byte & 0x00FF
 	   ,Get2SignDig(byte)
-	   ,GetBinary(byte));
+	   ,GetBinary(byte).c_str());
     twnd.set_color(title_cset.main);
     if(byte != obyte) {
 	twnd.printf("ORIGINAL: %c %02XH %sH %sB "
 	     ,obyte ? obyte : ' '
 	     ,obyte & 0x00FF
 	     ,Get2SignDig(obyte)
-	     ,GetBinary(obyte));
+	     ,GetBinary(obyte).c_str());
     } else twnd.printf("                                ");
     twnd.printf("MASK: %sH"
 	   ,Get2Digit(edit_XX));
