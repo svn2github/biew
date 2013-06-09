@@ -21,6 +21,8 @@ using namespace	usr;
  * @date        12.09.2000
  * @note        Some useful patches
 **/
+#include <sstream>
+#include <iomanip>
 #include <limits>
 #include <set>
 
@@ -137,7 +139,7 @@ namespace	usr {
 	    virtual Object_Info		get_object_attribute(__filesize_t pa);
 	private:
 	    std::string			pe_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
-	    bool			BuildReferStrPE(std::string& str,const RELOC_PE& rpe,int flags) const;
+	    std::string			BuildReferStrPE(const RELOC_PE& rpe,int flags) const;
 	    std::set<RELOC_PE>::const_iterator	__found_RPE(__filesize_t laddr) const;
 	    void			BuildPERefChain();
 	    std::vector<std::string>	PEReadRVAs() const;
@@ -442,11 +444,11 @@ void (PE_Parser::*PE_Parser::pephead[])(TWindow&,__filesize_t&) const = /* [dBor
 
 void PE_Parser::PaintNewHeaderPE(TWindow& win,const std::vector<std::string>& ptr,unsigned tpage) const
 {
-    char text[80];
+    std::ostringstream oss;
     win.freeze();
     win.clear();
-    sprintf(text," Portable Executable Header [%d/%d] ",ptr.size() + 1,tpage);
-    win.set_title(text,TWindow::TMode_Center,dialog_cset.title);
+    oss<<" Portable Executable Header ["<<tpage<<"/"<<ptr.size() + 1<<"] ";
+    win.set_title(oss.str(),TWindow::TMode_Center,dialog_cset.title);
     win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
     if(tpage < 2) {
 	win.goto_xy(1,1);
@@ -468,11 +470,12 @@ __filesize_t PE_Parser::action_F8()
 
 void PE_Parser::ObjPaintPE(TWindow& win,const std::vector<PE_OBJECT>& names,unsigned start) const
 {
-    char buffer[81];
+    char buffer[9];
     win.freeze();
     win.clear();
-    sprintf(buffer," Object Table [ %u / %u ] ",start + 1,names.size());
-    win.set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+    std::ostringstream oss;
+    oss<<" Object Table [ "<<(start + 1)<<" / "<<names.size()<<" ] ";
+    win.set_title(oss.str(),TWindow::TMode_Center,dialog_cset.title);
     win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
     win.goto_xy(1,1);
     const PE_OBJECT& nam = names[start];
@@ -666,9 +669,11 @@ std::vector<std::string> PE_Parser:: __ReadImpContPE(binary_stream& handle,size_
     handle.seek(addr_shift_pe,binary_stream::Seek_Set);
     VA = pa2va(addr_shift_pe);
     for(i = 0;i < nnames;i++) {
-	char stmp[300];
+	std::string stmp;
 	bool is_eof;
-	sprintf(stmp,".%08X: ", VA);
+	std::ostringstream oss;
+	oss<<"."<<std::hex<<std::setfill('0')<<std::setw(8)<<VA<<": ";
+	stmp=oss.str();
 	VA += 4;
 	Hint = is_64bit?handle.read(type_qword):handle.read(type_dword);
 	cond=0;
@@ -678,16 +683,13 @@ std::vector<std::string> PE_Parser:: __ReadImpContPE(binary_stream& handle,size_
 	    rphys = RVA2Phys(is_64bit?(Hint&0x7FFFFFFFFFFFFFFFULL):(Hint&0x7FFFFFFFUL));
 	    if(rphys > main_handle().flength() || handle.eof())
 		rc.push_back(CORRUPT_BIN_MSG);
-	    else {
-		std::string tmp;
-		tmp=__peReadASCIIZName(handle,rphys+2);
-		strcat(stmp,tmp.c_str());
-	    }
+	    else stmp=__peReadASCIIZName(handle,rphys+2);
 	} else {
-	    char tmp[80];
-	    if(is_64bit) sprintf(tmp,"< By ordinal >   @%llu",Hint & 0x7FFFFFFFFFFFFFFFULL);
-	    else         sprintf(tmp,"< By ordinal >   @%lu" ,(uint32_t)(Hint & 0x7FFFFFFFUL));
-	    strcat(stmp,tmp);
+	    oss.str("");
+	    oss<<"< By ordinal >   @";
+	    if(is_64bit) oss <<(uint64_t)(Hint & 0x7FFFFFFFFFFFFFFFULL);
+	    else oss<<(uint32_t)(Hint & 0x7FFFFFFFUL);
+	    stmp=oss.str();
 	}
 	is_eof = handle.eof();
 	rc.push_back(is_eof ? CORRUPT_BIN_MSG : stmp);
@@ -712,7 +714,7 @@ exit:
 __filesize_t PE_Parser::action_F2()
 {
     binary_stream& handle = *pe_cache;
-    char petitle[80];
+    std::ostringstream oss;
     unsigned nnames;
     __filesize_t phys,fret;
     fret = bctx().tell();
@@ -731,7 +733,7 @@ __filesize_t PE_Parser::action_F2()
 
 	    i = lb.run(objs,MOD_REFER,ListBox::Selective,i);
 	    if(i == -1) break;
-	    sprintf(petitle,"%s%s ",IMPPROC_TABLE,objs[i].c_str());
+	    oss<<IMPPROC_TABLE<<objs[i]<<" ";
 	    handle.seek(phys + i*sizeof(ImportDirPE),binary_stream::Seek_Set);
 	    handle.read(&imp_pe,sizeof(ImportDirPE));
 	    if(handle.eof()) break;
@@ -739,7 +741,7 @@ __filesize_t PE_Parser::action_F2()
 		magic = imp_pe.idFlags;
 	    else magic = imp_pe.idLookupTableRVA;
 	    addr_shift_pe = magic ? RVA2Phys(magic) : magic;
-	    ShowModContextPE(petitle);
+	    ShowModContextPE(oss.str());
 	}
     }
     return fret;
@@ -753,9 +755,9 @@ std::string PE_Parser::writeExportVA(__filesize_t va, binary_stream& handle) con
 	rc=__peReadASCIIZName(handle, RVA2Phys(va));
     // normal export
     else {
-	char buf[4096];
-	sprintf(buf, ".%08lX", (unsigned long)(va + reader->header().peImageBase));
-	rc=buf;
+	std::ostringstream oss;
+	oss<<"."<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)(va + reader->header().peImageBase);
+	rc=oss.str();
     }
     return rc;
 }
@@ -766,7 +768,8 @@ std::vector<std::string> PE_Parser::PEExportReadItems(binary_stream& handle,size
     __filesize_t nameaddr,expaddr,nameptr;
     unsigned long *addr;
     unsigned i,ord;
-    char buff[80];
+    std::ostringstream oss;
+    std::string buff;
 
     nameptr = RVA2Phys(et.etNamePtrTableRVA);
     expaddr = RVA2Phys(et.etOrdinalTableRVA);
@@ -782,12 +785,12 @@ std::vector<std::string> PE_Parser::PEExportReadItems(binary_stream& handle,size
 	if(IsKbdTerminate()) break;
 	ord = fioReadWord(handle,expaddr + i*2,binary_stream::Seek_Set);
 	is_eof = handle.eof();
-	sprintf(buff,"%c%-9lu ", ListBox::Ord_Delimiter, ord+(unsigned long)et.etOrdinalBase);
-	std::string s;
-	s=writeExportVA(addr[ord], handle);
-	strcpy(&buff[11],s.c_str());
+	oss.str("");
+	oss<<(char)ListBox::Ord_Delimiter<<std::left<<std::setw(9)<<(unsigned long)(ord+(unsigned long)et.etOrdinalBase);
+	buff=oss.str();
+	buff+=writeExportVA(addr[ord], handle);
 	addr[ord] = 0;
-	stmp+=buff;
+	stmp=buff;
 	rc.push_back(is_eof ? CORRUPT_BIN_MSG : stmp);  // -XF removed PFree(stmp)
 	if(is_eof) break;
     }
@@ -795,10 +798,10 @@ std::vector<std::string> PE_Parser::PEExportReadItems(binary_stream& handle,size
     for(i = 0;i < nnames;i++) {
 	if(addr[i]) {
 	    ord = i+et.etOrdinalBase;
-	    sprintf(buff," < by ordinal > %c%-9lu ",ListBox::Ord_Delimiter, (unsigned long)ord);
-	    std::string s;
-	    s=writeExportVA(addr[i], handle);
-	    strcpy(&buff[27],s.c_str());
+	    oss.str("");
+	    oss<<" < by ordinal > "<<(char)ListBox::Ord_Delimiter<<std::left<<std::setw(9)<<(unsigned long)ord<<" ";
+	    buff=oss.str();
+	    buff+=writeExportVA(addr[i], handle);
 	    rc.push_back(buff);
 	}
     }
@@ -840,10 +843,11 @@ __filesize_t PE_Parser::action_F3()
     int ret;
     unsigned ordinal;
     __filesize_t addr;
-    char exp_nam[256];
+    std::string exp_nam;
     std::string exp_buf;
+    std::ostringstream oss;
     fpos = bctx().tell();
-    strcpy(exp_nam,EXP_TABLE);
+    exp_nam=EXP_TABLE;
     if(peDir[PE_EXPORT].rva) {
 	addr = RVA2Phys(peDir[PE_EXPORT].rva);
 	main_handle().seek(addr,binary_stream::Seek_Set);
@@ -857,10 +861,10 @@ __filesize_t PE_Parser::action_F3()
 	    tval = et.etDateTime;
 	    tm = localtime(&tval);
 	    strftime(sftime,sizeof(sftime),"%x",tm);
-	    sprintf(exp_nam," %s (ver=%hX.%hX %s) "
-		    ,exp_buf.c_str()
-		    ,et.etMajVer, et.etMinVer
-		    ,sftime);
+	    oss<<" "<<exp_buf<<" (ver="<<std::hex<<std::setfill('0')<<std::setw(4)<<et.etMajVer
+		<<"."<<std::hex<<std::setfill('0')<<std::setw(4)<<et.etMinVer
+		<<" "<<sftime<<") ";
+	    exp_nam+=oss.str();
 	}
     }
     std::string title = exp_nam;
@@ -910,14 +914,13 @@ std::vector<std::string> PE_Parser::PEReadRVAs() const
 	"Reser~ved            "
     };
 
+    std::ostringstream oss;
     for (i=0; i<reader->header().peDirSize; i++) {
-	char foo[80];
-
-	sprintf(foo, "%s  %08lX  %8lu",
-	    i<array_size(rvaNames) ? rvaNames[i] : "Unknown             ",
-	    (unsigned long)peDir[i].rva,
-	    (unsigned long)peDir[i].size);
-	rc.push_back(foo);
+	oss.str("");
+	oss<<(i<array_size(rvaNames) ? rvaNames[i] : "Unknown             ")<<"  "
+	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)peDir[i].rva<<"  "
+	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)peDir[i].size;
+	rc.push_back(oss.str());
     }
     return rc;
 }
@@ -1044,129 +1047,118 @@ std::set<RELOC_PE>::const_iterator PE_Parser::__found_RPE(__filesize_t laddr) co
   return CurrPEChain.find(key);
 }
 
-bool PE_Parser::BuildReferStrPE(std::string& str,const RELOC_PE& rpe,int flags) const
+std::string PE_Parser::BuildReferStrPE(const RELOC_PE& rpe,int flags) const
 {
-   binary_stream& handle=*pe_cache,&handle2=*pe_cache4,&handle3=*pe_cache3;
-   __filesize_t phys,rva;
-   bool retrf;
-   unsigned long magic;
-   uint64_t Hint;
-   ImportDirPE ipe;
-   char buff[400],stmp[4096];
-   phys = RVA2Phys(peDir[PE_IMPORT].rva);
-   handle.seek(phys + 20L*rpe.modidx,binary_stream::Seek_Set);
-   rva = fioReadDWord(handle,12L,binary_stream::Seek_Cur);
-   retrf = true;
-   if(rpe.modidx != std::numeric_limits<uint64_t>::max())
-   {
-     char *is_ext;
-     if(flags & Bin_Format::Use_Type) str+=" off32";
-     handle2.seek(RVA2Phys(rva),binary_stream::Seek_Set);
-     handle2.read(buff,400);
-     buff[399] = 0;
-     /*
-	Removing extension .dll from import name.
-	Modified by "Kostya Nosov" <k-nosov@yandex.ru>
-     */
-     is_ext = strrchr(buff,'.');
-     if(is_ext && !strcmp(is_ext,".dll"))
-     {
-	  *is_ext = 0;
-	  str+=" ";
-	  str+=buff;
-	  str+=".";
-     }
-     else {
-       sprintf(stmp," <%s>.",buff);
-       str+=stmp;
-     }
-     handle3.seek(phys + rpe.modidx*sizeof(ImportDirPE),binary_stream::Seek_Set);
-     handle3.read(&ipe,sizeof(ImportDirPE));
-     if(!(ipe.idMajVer == 0 && ipe.idMinVer == 0 && ipe.idDateTime != 0xFFFFFFFFUL))
+    std::string str;
+    binary_stream& handle=*pe_cache,&handle2=*pe_cache4,&handle3=*pe_cache3;
+    __filesize_t phys,rva;
+    unsigned long magic;
+    uint64_t Hint;
+    ImportDirPE ipe;
+    char buff[400];
+
+    phys = RVA2Phys(peDir[PE_IMPORT].rva);
+    handle.seek(phys + 20L*rpe.modidx,binary_stream::Seek_Set);
+    rva = fioReadDWord(handle,12L,binary_stream::Seek_Cur);
+    if(rpe.modidx != std::numeric_limits<uint64_t>::max()) {
+	char *is_ext;
+	if(flags & Bin_Format::Use_Type) str+=" off32";
+	handle2.seek(RVA2Phys(rva),binary_stream::Seek_Set);
+	handle2.read(buff,400);
+	buff[399] = 0;
+	/*
+	    Removing extension .dll from import name.
+	    Modified by "Kostya Nosov" <k-nosov@yandex.ru>
+	*/
+	is_ext = strrchr(buff,'.');
+	if(is_ext && !strcmp(is_ext,".dll")) {
+	    *is_ext = 0;
+	    str+=" ";
+	    str+=buff;
+	    str+=".";
+	} else {
+	    std::ostringstream oss;
+	    oss<<" <"<<buff<<">.";
+	    str+=oss.str();
+	}
+	handle3.seek(phys + rpe.modidx*sizeof(ImportDirPE),binary_stream::Seek_Set);
+	handle3.read(&ipe,sizeof(ImportDirPE));
+	if(!(ipe.idMajVer == 0 && ipe.idMinVer == 0 && ipe.idDateTime != 0xFFFFFFFFUL))
 				  magic = ipe.idFlags;
-     else                         magic = ipe.idLookupTableRVA;
-     if(magic == 0) magic = ipe.idLookupTableRVA; /* Added by "Kostya Nosov" <k-nosov@yandex.ru> */
-     magic = magic ? RVA2Phys(magic) : magic;
-     if(magic)
-     {
-       int cond;
-       handle.seek(magic + rpe.import.funcidx*sizeof(long),binary_stream::Seek_Set);
-       Hint = is_64bit?handle.read(type_qword):handle.read(type_dword);
-       cond=0;
-       if(is_64bit) { if(Hint & 0x8000000000000000ULL) cond=1; }
-       else         { if(Hint & 0x80000000UL) cond=1; }
-       if(cond)
-       {
-	 /* TODO: is really to have ORDINAL > 0x7fffffff ? */
-	 char dig[15];
-	 sprintf(dig,"@%lu",Hint & 0x7FFFFFFFUL);
-	 str+=dig;
-       }
-       else
-       {
-	 uint64_t hint_off;
-	 if(is_64bit) hint_off=Hint & 0x7FFFFFFFFFFFFFFFULL;
-	 else         hint_off=Hint & 0x7FFFFFFFUL;
-	 phys = RVA2Phys(hint_off);
-	 if(phys > main_handle().flength()) str+="???";
-	 else
-	 {
-	   handle2.seek(phys + 2,binary_stream::Seek_Set);
-	   handle2.read(buff,400);
-	   buff[399] = 0;
-	   str+=buff;
-	 }
-       }
-     }
-   }
-   else /** internal refs */
-   {
-     unsigned long delta,value,point_to;
-     const char *pe_how;
-     handle3.seek(rpe.laddr,binary_stream::Seek_Set);
-     value = handle.read(type_dword);
-     delta = reader->header().peImageBase;
-     point_to = 0;
-     switch(rpe.import.type)
-     {
-	  default:
-	  case 0: /** FULL, fixup is skipped */
-		  pe_how = "(";
-		  point_to = value;
-		  break;
-	  case 1: /** HIGH 16-bit */
-		  pe_how = "((high16)";
-		  break;
-	  case 2: /** LOW 16-bit */
-		  pe_how = "((low16)";
-		  break;
-	  case 3: /** HIGHLOW */
-		  point_to = va2pa(value);
-		  pe_how = "((off32)";
-		  break;
-	  case 4: /** HIGHADJUST */
-		  handle.seek(value,binary_stream::Seek_Set);
-		  value = handle.read(type_dword);
-		  point_to = va2pa(value);
-		  pe_how = "((full32)";
-		  break;
-	  case 5: /** MIPS JUMP ADDR */
-		  pe_how = "((mips)";
-		  break;
-     }
-     delta = point_to ? point_to : value-delta;
-     if(!(flags & Bin_Format::Save_Virt))
-     {
-       str+="*this.";
-       if(flags & Bin_Format::Use_Type) str+=pe_how;
-       /** if out of physical image */
-       str+=Get8Digit(delta);
-       if(flags & Bin_Format::Use_Type) str+=")";
-       retrf=true;
-     }
-     else str+=Get8Digit(value);
-   }
-   return retrf;
+	else                         magic = ipe.idLookupTableRVA;
+	if(magic == 0) magic = ipe.idLookupTableRVA; /* Added by "Kostya Nosov" <k-nosov@yandex.ru> */
+	magic = magic ? RVA2Phys(magic) : magic;
+	if(magic) {
+	    int cond;
+	    handle.seek(magic + rpe.import.funcidx*sizeof(long),binary_stream::Seek_Set);
+	    Hint = is_64bit?handle.read(type_qword):handle.read(type_dword);
+	    cond=0;
+	    if(is_64bit) { if(Hint & 0x8000000000000000ULL) cond=1; }
+	    else         { if(Hint & 0x80000000UL) cond=1; }
+	    if(cond) {
+		/* TODO: is really to have ORDINAL > 0x7fffffff ? */
+		std::ostringstream oss;
+		oss<<"@"<<(Hint & 0x7FFFFFFFUL);
+		str+=oss.str();
+	    } else {
+		uint64_t hint_off;
+		if(is_64bit) hint_off=Hint & 0x7FFFFFFFFFFFFFFFULL;
+		else         hint_off=Hint & 0x7FFFFFFFUL;
+		phys = RVA2Phys(hint_off);
+		if(phys > main_handle().flength()) str+="???";
+		else {
+		    handle2.seek(phys + 2,binary_stream::Seek_Set);
+		    handle2.read(buff,400);
+		    buff[399] = 0;
+		    str+=buff;
+		}
+	    }
+	}
+    } else { /** internal refs */
+	unsigned long delta,value,point_to;
+	const char *pe_how;
+	handle3.seek(rpe.laddr,binary_stream::Seek_Set);
+	value = handle.read(type_dword);
+	delta = reader->header().peImageBase;
+	point_to = 0;
+	switch(rpe.import.type) {
+	    default:
+	    case 0: /** FULL, fixup is skipped */
+		pe_how = "(";
+		point_to = value;
+		break;
+	    case 1: /** HIGH 16-bit */
+		pe_how = "((high16)";
+		break;
+	    case 2: /** LOW 16-bit */
+		pe_how = "((low16)";
+		break;
+	    case 3: /** HIGHLOW */
+		point_to = va2pa(value);
+		pe_how = "((off32)";
+		break;
+	    case 4: /** HIGHADJUST */
+		handle.seek(value,binary_stream::Seek_Set);
+		value = handle.read(type_dword);
+		point_to = va2pa(value);
+		pe_how = "((full32)";
+		break;
+	    case 5: /** MIPS JUMP ADDR */
+		pe_how = "((mips)";
+		break;
+	}
+	delta = point_to ? point_to : value-delta;
+	std::ostringstream oss;
+	if(!(flags & Bin_Format::Save_Virt)) {
+	    str+="*this.";
+	    if(flags & Bin_Format::Use_Type) str+=pe_how;
+	    /** if out of physical image */
+	    oss<<std::hex<<std::setfill('0')<<std::setw(8)<<delta;
+	    str+=oss.str();
+	    if(flags & Bin_Format::Use_Type) str+=")";
+	} else { oss<<std::hex<<std::setfill('0')<<std::setw(8)<<value; str+=oss.str(); }
+    }
+    return str;
 }
 
 std::string PE_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
@@ -1176,9 +1168,7 @@ std::string PE_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Forma
     binary_stream* b_cache;
     UNUSED(codelen);
     b_cache = pe_cache3;
-    bool retrf=false;
-
-    if(flags & Bin_Format::Try_Pic) return "";
+    if(flags & Bin_Format::Try_Pic) return str;
     if(peDir[PE_IMPORT].rva || peDir[PE_FIXUP].rva) {
 	uint32_t id;
 	main_handle().seek(ulShift,binary_stream::Seek_Set);
@@ -1188,15 +1178,15 @@ std::string PE_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Forma
 	if(CurrPEChain.empty()) BuildPERefChain();
 	rpe = __found_RPE(b_cache->read(type_dword));
 	if(rpe==CurrPEChain.end()) rpe = __found_RPE(ulShift);
-	if(rpe!=CurrPEChain.end()) retrf = BuildReferStrPE(str,*rpe,flags);
+	if(rpe!=CurrPEChain.end()) str = BuildReferStrPE(*rpe,flags);
     }
-    if(!retrf && (flags & Bin_Format::Try_Label)) {
+    if(str.empty() && (flags & Bin_Format::Try_Label)) {
 	if(PubNames.empty()) pe_ReadPubNameList(main_handle());
 	Symbol_Info rc = FindPubName(r_sh);
 	if(rc.pa!=Plugin::Bad_Address) {
 	    str=rc.name;
 	    if(!DumpMode && !EditMode) code_guider().add_go_address(parent,str,r_sh);
-	}
+        }
     }
     return str;
 }
@@ -1283,22 +1273,18 @@ __filesize_t PE_Parser::action_F1()
 
 std::string PE_Parser::address_resolving(__filesize_t cfpos)
 {
-    std::string addr;
-    /* Since this function is used in references resolving of disassembler
-	it must be seriously optimized for speed. */
+ /* Since this function is used in references resolving of disassembler
+    it must be seriously optimized for speed. */
     uint32_t res;
-    if(cfpos >= headshift() && cfpos < headshift() + reader->header_size() + reader->header().peDirSize*sizeof(PERVA)) {
-	addr="PEH :";
-	addr+=Get4Digit(cfpos - headshift());
-    } else if(cfpos >= headshift() + pe.peNTHdrSize + 0x18 &&
-		cfpos <  headshift() + pe.peNTHdrSize + 0x18 + pe.peObjects*sizeof(PE_OBJECT)) {
-	addr="PEOD:";
-	addr+=Get4Digit(cfpos - headshift() - pe.peNTHdrSize - 0x18);
-    } else if((res=pa2va(cfpos))!=0) { /* Added by "Kostya Nosov" <k-nosov@yandex.ru> */
-	addr = ".";
-	addr+=Get8Digit(res);
-    }
-    return addr;
+    std::ostringstream oss;
+    if(cfpos >= headshift() && cfpos < headshift() + reader->header_size() + reader->header().peDirSize*sizeof(PERVA))
+	oss<<"PEH :"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos - headshift());
+    else if(cfpos >= headshift() + pe.peNTHdrSize + 0x18 &&
+	cfpos <  headshift() + pe.peNTHdrSize + 0x18 + pe.peObjects*sizeof(PE_OBJECT))
+	oss<<"PEOD:"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos - headshift() - pe.peNTHdrSize - 0x18);
+    else if((res=pa2va(cfpos))!=0) /* Added by "Kostya Nosov" <k-nosov@yandex.ru> */
+	oss<<"."<<std::hex<<std::setfill('0')<<std::setw(8)<<res;
+    return oss.str();
 }
 
 __filesize_t PE_Parser::va2pa(__filesize_t va) const

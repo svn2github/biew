@@ -18,6 +18,9 @@ using namespace	usr;
  * @since       1995
  * @note        Development, fixes and improvements
 **/
+#include <sstream>
+#include <iomanip>
+
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
@@ -115,37 +118,35 @@ int  SisX_Parser::query_platform() const {
 
 __filesize_t SisX_Parser::show_header() const
 {
- unsigned keycode;
- TWindow * hwnd;
- const char *cpuname,*exetype;
- char head[80];
- struct E32ImageHeader img;
- __filesize_t fpos,fpos2;
- fpos2=fpos = bctx.tell();
+    unsigned keycode;
+    TWindow* hwnd;
+    const char *cpuname,*exetype;
+    struct E32ImageHeader img;
+    __filesize_t fpos,fpos2;
+    fpos2=fpos = bctx.tell();
     main_handle.seek(0,binary_stream::Seek_Set);
     main_handle.read(&img,sizeof(img));
- switch(img.iUid1)
- {
-    case 0x10000079: exetype="DLL"; break;
-    case 0x1000007A: exetype="EXE"; break;
-    default: exetype="UNK"; break;
- }
- switch(img.iCpuIdentifier)
- {
-    case 0x1000: cpuname="x86"; break;
-    case 0x2000: cpuname="ARMv4"; break;
-    case 0x2001: cpuname="ARMv5"; break;
-    case 0x2002: cpuname="ARMv6"; break;
-    case 0x2003: cpuname="ARMv7"; break;
-    case 0x2004: cpuname="ARMv8"; break;
-    case 0x2005: cpuname="ARMv9"; break;
-    case 0x4000: cpuname="MCore"; break;
-    default:     cpuname="unknown"; break;
- }
- sprintf(head," E32Image Header (%s) ",exetype);
- hwnd = CrtDlgWndnls(head,68,15);
- hwnd->goto_xy(1,1);
- hwnd->printf(
+    switch(img.iUid1) {
+	case 0x10000079: exetype="DLL"; break;
+	case 0x1000007A: exetype="EXE"; break;
+	default: exetype="UNK"; break;
+    }
+    switch(img.iCpuIdentifier) {
+	case 0x1000: cpuname="x86"; break;
+	case 0x2000: cpuname="ARMv4"; break;
+	case 0x2001: cpuname="ARMv5"; break;
+	case 0x2002: cpuname="ARMv6"; break;
+	case 0x2003: cpuname="ARMv7"; break;
+	case 0x2004: cpuname="ARMv8"; break;
+	case 0x2005: cpuname="ARMv9"; break;
+	case 0x4000: cpuname="MCore"; break;
+	default:     cpuname="unknown"; break;
+    }
+    std::ostringstream oss;
+    oss<<" E32Image Header ("<<exetype<<")";
+    hwnd = CrtDlgWndnls(oss.str(),68,15);
+    hwnd->goto_xy(1,1);
+    hwnd->printf(
 	  "Module/Tool Version  = 0x%08X/0x%08X\n"
 	  "Compression Type     = 0x%08X\n"
 	  "Flags                = 0x%08X (%s %s %s %s %s)\n"
@@ -182,15 +183,13 @@ __filesize_t SisX_Parser::show_header() const
 	  ,img.iProcessPriority
 	  ,img.iCpuIdentifier,cpuname
 	  );
- while(1)
- {
-   keycode = GetEvent(drawEmptyPrompt,NULL,hwnd);
-   if(keycode == KE_F(5) || keycode == KE_ENTER) { fpos = fpos2; break; }
-   else
-     if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
- }
- delete hwnd;
- return fpos;
+    while(1) {
+	keycode = GetEvent(drawEmptyPrompt,NULL,hwnd);
+	if(keycode == KE_F(5) || keycode == KE_ENTER) { fpos = fpos2; break; }
+	else if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
+    }
+    delete hwnd;
+    return fpos;
 }
 
 static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) SisX_Parser(b,h,_parent,u); }

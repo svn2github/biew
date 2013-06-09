@@ -143,7 +143,7 @@ namespace	usr {
 	    static const char*		__nedata[];
 	private:
 	    std::string			ne_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
-	    bool			BuildReferStrNE(const DisMode&parent,std::string& str,const RELOC_NE& rne,int flags,__filesize_t ulShift);
+	    std::string			BuildReferStrNE(const DisMode&parent,const RELOC_NE& rne,int flags,__filesize_t ulShift);
 	    std::string			rdImpNameNELX(unsigned idx,bool useasoff,__filesize_t OffTable) const;
 	    unsigned			__findSpecType(__filesize_t sstart,__filesize_t ssize,unsigned segnum,__filesize_t target,char codelen,char type,unsigned defval);
 	    RELOC_NE			__found_RNE_spec(__filesize_t segoff,__filesize_t slength,unsigned segnum,unsigned keyoff,char codelen,int type);

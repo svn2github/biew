@@ -19,6 +19,8 @@ using namespace	usr;
  * @note        Development, fixes and improvements
 **/
 #include <algorithm>
+#include <sstream>
+#include <iomanip>
 #include <set>
 
 #include <stddef.h>
@@ -303,7 +305,7 @@ std::vector<std::string> JVM_Parser::jvm_read_attributes(binary_stream& handle,s
     unsigned i;
     __filesize_t fpos;
     uint32_t len;
-    char sout[100];
+    std::ostringstream oss;
     std::string str;
     handle.seek(jvm_header.attributes_offset,binary_stream::Seek_Set);
     for(i=0;i<nnames;i++) {
@@ -312,8 +314,9 @@ std::vector<std::string> JVM_Parser::jvm_read_attributes(binary_stream& handle,s
 	handle.seek(fpos+2,binary_stream::Seek_Set);
 	len=handle.read(type_dword);
 	len=JVM_DWORD(&len,1);
-	sprintf(sout,"%08lXH %s",(long)len,str.c_str());
-	rc.push_back(sout);
+	oss.str("");
+	oss<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)len<<"H "<<str;
+	rc.push_back(oss.str());
 	handle.seek(len,binary_stream::Seek_Cur);
     }
     return rc;
@@ -361,7 +364,7 @@ std::vector<std::string> JVM_Parser::jvm_read_methods(binary_stream& handle,size
     unsigned i;
     __filesize_t fpos;
     unsigned short flg,sval,acount;
-    char sout[256];
+    std::ostringstream oss;
     std::string str,str2;
     handle.seek(jvm_header.methods_offset,binary_stream::Seek_Set);
     for(i=0;i<nnames;i++) {
@@ -375,8 +378,11 @@ std::vector<std::string> JVM_Parser::jvm_read_methods(binary_stream& handle,size
 	sval=handle.read(type_word);
 	acount=JVM_WORD(&sval,1);
 	skip_attributes(handle,acount);
-	sprintf(sout,"%04XH %04XH %s %s",acount,flg,str.c_str(),str2.c_str());
-	rc.push_back(sout);
+	oss.str("");
+	oss<<std::hex<<std::setfill('0')<<std::setw(4)<<acount<<"H "
+	    <<std::hex<<std::setfill('0')<<std::setw(4)<<flg<<" "
+	    <<str<<" "<<str2;
+	rc.push_back(oss.str());
     }
     return rc;
 }
@@ -434,7 +440,7 @@ std::vector<std::string> JVM_Parser::jvm_read_fields(binary_stream& handle,size_
     unsigned i;
     __filesize_t fpos;
     unsigned short flg,sval,acount;
-    char sout[256];
+    std::ostringstream oss;
     std::string str,str2;
     handle.seek(jvm_header.fields_offset,binary_stream::Seek_Set);
     for(i=0;i<nnames;i++) {
@@ -448,8 +454,11 @@ std::vector<std::string> JVM_Parser::jvm_read_fields(binary_stream& handle,size_
 	sval=handle.read(type_word);
 	acount=JVM_WORD(&sval,1);
 	skip_attributes(handle,acount);
-	sprintf(sout,"%04XH %04XH %s %s",acount,flg,str.c_str(),str2.c_str());
-	rc.push_back(sout);
+	oss.str("");
+	oss<<std::hex<<std::setfill('0')<<std::setw(4)<<acount<<"H "
+	    <<std::hex<<std::setfill('0')<<std::setw(4)<<flg<<" "
+	    <<str<<" "<<str2;
+	rc.push_back(oss.str());
     }
     return rc;
 }
@@ -509,19 +518,20 @@ std::vector<std::string> JVM_Parser::jvm_read_pool(binary_stream& handle,size_t 
     unsigned i;
     unsigned short flg,sval,slen;
     unsigned char utag;
-    char sout[256];
+    std::ostringstream oss;
     std::string str,str2;
     handle.seek(jvm_header.constants_offset,binary_stream::Seek_Set);
     for(i=0;i<nnames;i++) {
 	fpos=handle.tell();
 	utag=handle.read(type_byte);
+	oss.str("");
 	switch(utag) {
 	    case CONSTANT_STRING:
 	    case CONSTANT_CLASS:
 			fpos=handle.tell();
 			str=get_name(handle);
 			handle.seek(fpos+2,binary_stream::Seek_Set);
-			sprintf(sout,"%s: %s",utag==CONSTANT_CLASS?"Class":"String",str.c_str());
+			oss<<(utag==CONSTANT_CLASS?"Class":"String")<<": "<<str;
 			break;
 	    case CONSTANT_FIELDREF:
 	    case CONSTANT_METHODREF:
@@ -530,16 +540,16 @@ std::vector<std::string> JVM_Parser::jvm_read_pool(binary_stream& handle,size_t 
 			flg=JVM_WORD(&flg,1);
 			sval=handle.read(type_word);
 			sval=JVM_WORD(&sval,1);
-			sprintf(sout,"%s: class=#%04XH name_type_idx=#%04XH"
-			,utag==CONSTANT_FIELDREF?"FieldRef":utag==CONSTANT_METHODREF?"MethodRef":"InterfaceMethodRef"
-			,flg,sval);
+			oss<<(utag==CONSTANT_FIELDREF?"FieldRef":utag==CONSTANT_METHODREF?"MethodRef":"InterfaceMethodRef")
+			    <<": class=#"<<std::hex<<std::setfill('0')<<std::setw(4)<<flg
+			    <<"H name_type_idx="<<std::hex<<std::setfill('0')<<std::setw(4)<<sval;
 			break;
 	    case CONSTANT_INTEGER:
 	    case CONSTANT_FLOAT:
 			lval=handle.read(type_dword);
 			lval=JVM_DWORD(&lval,1);
-			sprintf(sout,"%s: %08lXH",utag==CONSTANT_INTEGER?"Integer":"Float"
-			,(long)lval);
+			oss<<(utag==CONSTANT_INTEGER?"Integer":"Float")
+			    <<std::hex<<std::setfill('0')<<std::setw(8)<<lval;
 			break;
 	    case CONSTANT_LONG:
 	    case CONSTANT_DOUBLE:
@@ -547,8 +557,9 @@ std::vector<std::string> JVM_Parser::jvm_read_pool(binary_stream& handle,size_t 
 			lval=JVM_DWORD(&lval,1);
 			lval2=handle.read(type_dword);
 			lval2=JVM_DWORD(&lval2,1);
-			sprintf(sout,"%s: hi=%08lXH lo=%08lXH",utag==CONSTANT_LONG?"Long":"Double"
-			,(long)lval,(long)lval2);
+			oss<<(utag==CONSTANT_LONG?"Long":"Double")
+			    <<" hi="<<std::hex<<std::setfill('0')<<std::setw(8)<<lval
+			    <<" lo="<<std::hex<<std::setfill('0')<<std::setw(8)<<lval2;
 			i++;
 			break;
 	    case CONSTANT_NAME_AND_TYPE:
@@ -557,7 +568,7 @@ std::vector<std::string> JVM_Parser::jvm_read_pool(binary_stream& handle,size_t 
 			handle.seek(fpos+2,binary_stream::Seek_Set);
 			str2=get_name(handle);
 			handle.seek(fpos+4,binary_stream::Seek_Set);
-			sprintf(sout,"Name&Type: %s %s",str.c_str(),str2.c_str());
+			oss<<"Name&Type: "<<str<<" "<<str2;
 			break;
 	    case CONSTANT_UTF8:
 			sval=handle.read(type_word);
@@ -568,14 +579,14 @@ std::vector<std::string> JVM_Parser::jvm_read_pool(binary_stream& handle,size_t 
 			handle.read(stmp,slen);
 			handle.seek(fpos+sval,binary_stream::Seek_Set);
 			stmp[slen]='\0';
-			sprintf(sout,"UTF8: %s",stmp);
+			oss<<"UTF8: "<<stmp;
 			break;
 	    default:
-			sprintf(sout,"Unknown: %u",utag);
+			oss<<"Unknown: "<<utag;
 			i=nnames;
 			break;
 	}
-	rc.push_back(sout);
+	rc.push_back(oss.str());
     }
     return rc;
 }
@@ -726,25 +737,13 @@ __filesize_t JVM_Parser::pa2va(__filesize_t pa) const { return pa >= jvm_header.
 
 std::string JVM_Parser::address_resolving(__filesize_t cfpos)
 {
-    std::string addr;
-    bool bret = true;
-    if(cfpos >= jvm_header.methods_offset) {
-	addr=".";
-	addr+=Get8Digit(pa2va(cfpos));
-    } else if(cfpos >= jvm_header.fields_offset) {
-	addr="Data:";
-	addr+=Get4Digit(cfpos-jvm_header.fields_offset);
-    } else if(cfpos >= jvm_header.interfaces_offset) {
-	addr="Imp :";
-	addr+=Get4Digit(cfpos-jvm_header.interfaces_offset);
-    } else if(cfpos >= jvm_header.constants_offset) {
-	addr="Pool:";
-	addr+=Get4Digit(cfpos-jvm_header.constants_offset);
-    } else {
-	addr="Hdr :";
-	addr+=Get4Digit(cfpos);
-    }
-    return addr;
+    std::ostringstream oss;
+    if(cfpos >= jvm_header.methods_offset) oss<<"."<<std::hex<<std::setfill('0')<<std::setw(8)<<pa2va(cfpos);
+    else if(cfpos >= jvm_header.fields_offset) oss<<"Data:"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos-jvm_header.fields_offset);
+    else if(cfpos >= jvm_header.interfaces_offset) oss<<"Imp :"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos-jvm_header.interfaces_offset);
+    else if(cfpos >= jvm_header.constants_offset) oss<<"Pool:"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos-jvm_header.constants_offset);
+    else oss<<"Hdr :"<<std::hex<<std::setfill('0')<<std::setw(4)<<cfpos;
+    return oss.str();
 }
 
 std::string JVM_Parser::jvm_ReadPubName(binary_stream& b_cache,const symbolic_information& it) const
@@ -912,6 +911,7 @@ std::string JVM_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Form
     std::string str;
     UNUSED(parent);
     UNUSED(r_sh);
+    std::ostringstream oss;
     if((flags & Bin_Format::Try_Label)!=Bin_Format::Try_Label) {
 	__filesize_t fpos;
 	uint32_t lidx,lval,lval2;
@@ -953,9 +953,8 @@ std::string JVM_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Form
 	    case CONSTANT_FLOAT:
 			lval=pool_cache->read(type_dword);
 			lval=JVM_DWORD(&lval,1);
-			str=(utag==CONSTANT_INTEGER)?"Integer":"Float";
-			str+=":";
-			str+=Get8Digit(lval);
+			oss<<((utag==CONSTANT_INTEGER)?"Integer":"Float")<<":"<<std::hex<<std::setfill('0')<<std::setw(8)<<lval;
+			str=oss.str();
 			break;
 	    case CONSTANT_LONG:
 	    case CONSTANT_DOUBLE:
@@ -963,10 +962,8 @@ std::string JVM_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Form
 			lval=JVM_DWORD(&lval,1);
 			lval2=pool_cache->read(type_dword);
 			lval2=JVM_DWORD(&lval2,1);
-			str=(utag==CONSTANT_INTEGER)?"Long":"Double";
-			str+=":";
-			str+=Get8Digit(lval);
-			str+=Get8Digit(lval2);
+			oss<<((utag==CONSTANT_INTEGER)?"Long":"Double")<<":"<<std::hex<<std::setfill('0')<<std::setw(8)<<lval<<std::hex<<std::setfill('0')<<std::setw(8)<<lval2;
+			str=oss.str();
 			break;
 	    case CONSTANT_NAME_AND_TYPE:
 	    name_type:

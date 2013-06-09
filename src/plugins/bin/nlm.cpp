@@ -19,6 +19,8 @@ using namespace	usr;
  * @note        Development, fixes and improvements
 **/
 #include <algorithm>
+#include <sstream>
+#include <iomanip>
 #include <set>
 
 #include <stdlib.h>
@@ -72,7 +74,7 @@ namespace	usr {
 	private:
 	    std::string		nlm_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
 	    void		nlm_ReadPubNameList(binary_stream& handle);
-	    bool		BuildReferStrNLM(std::string& str,const RELOC_NLM& rne,Bin_Format::bind_type flags);
+	    std::string		BuildReferStrNLM(const RELOC_NLM& rne,Bin_Format::bind_type flags);
 	    void		BuildRelocNlm();
 	    std::vector<std::string> __ReadModRefNamesNLM(binary_stream& handle,size_t nnames) const;
 	    std::vector<std::string> NLMNamesReadItems(binary_stream& handle,size_t nnames) const;
@@ -507,56 +509,50 @@ void NLM_Parser::BuildRelocNlm()
   delete w;
 }
 
-bool NLM_Parser::BuildReferStrNLM(std::string& str,const RELOC_NLM& rne,Bin_Format::bind_type flags)
+std::string NLM_Parser::BuildReferStrNLM(const RELOC_NLM& rne,Bin_Format::bind_type flags)
 {
-  __filesize_t val;
-  bool retrf;
-  binary_stream* b_cache;
-  unsigned char len;
-  b_cache = nlm_cache;
-  b_cache->seek(rne.nameoff,binary_stream::Seek_Set);
-  retrf = true;
-  if(PubNames.empty()) nlm_ReadPubNameList(*nlm_cache);
-  if(rne.nameoff != 0xFFFFFFFFUL)
-  {
-    len = b_cache->read(type_byte);
-    char stmp[len+1];
-    b_cache->read(stmp,len);
-    stmp[len] = 0;
-    str+=stmp;
-  }
-  else
-  {
-    main_handle.seek(rne.offset,binary_stream::Seek_Set);
-    val = main_handle.read(type_dword);
-    Symbol_Info rc = FindPubName(val);
-    if(rc.pa!=Plugin::Bad_Address) str+=rc.name;
-    else if(!(flags & Bin_Format::Save_Virt)) {
-       str+="(*this)+";
-       str+=Get8Digit(val);
-       retrf = true;
+    __filesize_t val;
+    std::string str;
+    binary_stream* b_cache;
+    unsigned char len;
+    b_cache = nlm_cache;
+    b_cache->seek(rne.nameoff,binary_stream::Seek_Set);
+    if(PubNames.empty()) nlm_ReadPubNameList(*nlm_cache);
+    if(rne.nameoff != 0xFFFFFFFFUL) {
+	len = b_cache->read(type_byte);
+	char stmp[len+1];
+	b_cache->read(stmp,len);
+	stmp[len] = 0;
+	str=stmp;
+    } else {
+	main_handle.seek(rne.offset,binary_stream::Seek_Set);
+	val = main_handle.read(type_dword);
+	Symbol_Info rc = FindPubName(val);
+	if(rc.pa!=Plugin::Bad_Address) str+=rc.name;
+	else if(!(flags & Bin_Format::Save_Virt)) {
+	    std::ostringstream oss;
+	    oss<<"(*this)+"<<std::hex<<std::setfill('0')<<std::setw(8)<<val;
+	    str=oss.str();
+	}
     }
-    else retrf = false;
-  }
-  return retrf;
+    return str;
 }
 
 std::string NLM_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
-    std::string str;
     RELOC_NLM key;
     std::set<RELOC_NLM>::const_iterator rnlm;
-    bool retrf;
+    std::string str;
     if(flags & Bin_Format::Try_Pic) return "";
-    if(!nlm.nlm_numberOfExternalReferences || nlm.nlm_externalReferencesOffset >= main_handle.flength()) retrf = false;
+    if(!nlm.nlm_numberOfExternalReferences || nlm.nlm_externalReferencesOffset >= main_handle.flength()) return "";
     else {
 	if(RelocNlm.empty()) BuildRelocNlm();
 	key.offset = ulShift;
 	__codelen = codelen;
 	rnlm = RelocNlm.find(key);
-	retrf = (rnlm!=RelocNlm.end()) ? BuildReferStrNLM(str,*rnlm,flags) : false;
+	str = (rnlm!=RelocNlm.end()) ? BuildReferStrNLM(*rnlm,flags) : "";
     }
-    if(!retrf && (flags & Bin_Format::Try_Label)) {
+    if(str.empty() && (flags & Bin_Format::Try_Label)) {
 	if(PubNames.empty()) nlm_ReadPubNameList(main_handle);
 	Symbol_Info rc = FindPubName(r_sh);
 	if(rc.pa!=Plugin::Bad_Address) {
@@ -598,18 +594,13 @@ Bin_Format::bitness NLM_Parser::query_bitness(__filesize_t off) const
 
 std::string NLM_Parser::address_resolving(__filesize_t cfpos)
 {
-    std::string addr;
+    std::ostringstream oss;
     /* Since this function is used in references resolving of disassembler
 	it must be seriously optimized for speed. */
     uint32_t res;
-    if(cfpos < sizeof(Nlm_Internal_Fixed_Header)) {
-	addr="nlm32h:";
-	addr+=Get2Digit(cfpos);
-    } else if((res=pa2va(cfpos)) != 0) {
-	addr = ".";
-	addr+=Get8Digit(res);
-    }
-    return addr;
+    if(cfpos < sizeof(Nlm_Internal_Fixed_Header)) oss<<"nlm32h:"<<std::hex<<std::setfill('0')<<std::setw(2)<<cfpos;
+    else if((res=pa2va(cfpos)) != 0) oss<<"."<<std::hex<<std::setfill('0')<<std::setw(8)<<res;
+    return oss.str();
 }
 
 __filesize_t NLM_Parser::action_F1()

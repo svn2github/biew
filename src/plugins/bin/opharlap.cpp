@@ -17,6 +17,9 @@ using namespace	usr;
  * @since       1999
  * @note        Development, fixes and improvements
 **/
+#include <sstream>
+#include <iomanip>
+
 #include <stdio.h>
 #include <string.h>
 
@@ -117,14 +120,11 @@ oldPharLap_Parser::~oldPharLap_Parser(){}
 
 std::string oldPharLap_Parser::address_resolving(__filesize_t cfpos)
 {
-    std::string addr;
+    std::ostringstream oss;
     /* Since this function is used in references resolving of disassembler
 	it must be seriously optimized for speed. */
-    if(cfpos < sizeof(oldPharLap)) {
-	addr="oplhdr:";
-	addr+=Get2Digit(cfpos);
-    }
-    return addr;
+    if(cfpos < sizeof(oldPharLap)) oss<<"oplhdr:"<<std::hex<<std::setfill('0')<<std::setw(2)<<cfpos;
+    return oss.str();
 }
 
 __filesize_t oldPharLap_Parser::action_F1()

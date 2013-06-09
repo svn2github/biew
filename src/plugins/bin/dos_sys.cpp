@@ -17,6 +17,9 @@ using namespace	usr;
  * @since       1995
  * @note        Development, fixes and improvements
 **/
+#include <sstream>
+#include <iomanip>
+
 #include <string.h>
 #include <stdio.h>
 #include <stddef.h>
@@ -123,9 +126,9 @@ int DosSys_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
 std::string DosSys_Parser::address_resolving(__filesize_t cfpos)
 {
-    std::string addr;
-    if(cfpos < sizeof(DOSDRIVER)+4) addr=std::string("SYSH:")+Get4Digit(cfpos);
-    return addr;
+    std::ostringstream oss;
+    if(cfpos < sizeof(DOSDRIVER)+4) oss<<"SYSH:"<<std::hex<<std::setfill('0')<<std::setw(4)<<cfpos;
+    return oss.str();
 }
 
 __filesize_t DosSys_Parser::action_F1()

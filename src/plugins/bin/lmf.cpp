@@ -20,6 +20,8 @@ using namespace	usr;
  * @todo        wc 10.6 debug information support!!! (see lmf.tgz)
 **/
 #include <algorithm>
+#include <sstream>
+#include <iomanip>
 
 #include <stddef.h>
 #include <string.h>
@@ -249,55 +251,52 @@ Bin_Format::bitness LMF_Parser::query_bitness(__filesize_t pa) const
 
 std::string LMF_Parser::address_resolving(__filesize_t cfpos)
 {
-    std::string addr;
     unsigned i;
-    /* Since this function is used in references resolving of disassembler
-	it must be seriously optimized for speed. */
+    std::string addr;
+    std::ostringstream oss;
+ /* Since this function is used in references resolving of disassembler
+    it must be seriously optimized for speed. */
     for(i=0;i<=reclast;i++) {
 	if(hl[i].file_pos<=cfpos&& cfpos<hl[i].file_pos+hl[i].header.data_nbytes+HDRSIZE()) {
 	    if(cfpos<hl[i].file_pos+HDRSIZE()) {
-		addr="H";
-		addr+=Get2Digit(i);
-		addr+=";";
-		addr+=Get4Digit(cfpos-hl[i].file_pos);
+		oss<<"H"<<std::hex<<std::setfill('0')<<std::setw(2)<<i<<";"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos-hl[i].file_pos);
+		addr=oss.str();
 	    } else
 		switch(hl[i].header.rec_type) {
 		    case _LMF_DEFINITION_REC:
-			addr="Def:";
-			addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
+			oss<<"Def:"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos-hl[i].file_pos-HDRSIZE());
+			addr=oss.str();
 			break;
 		    case _LMF_COMMENT_REC:
-			if(cfpos<hl[i].file_pos+HDRSIZE()+DATSIZE()) {
-			    addr="Com:";
-			    addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
-			}
+			if(cfpos<hl[i].file_pos+HDRSIZE()+DATSIZE())
+			    oss<<"Com:"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos-hl[i].file_pos-HDRSIZE());
+			    addr=oss.str();
 			break;
 		    case _LMF_DATA_REC:
 		    case _LMF_FIXUP_SEG_REC:
 			if(cfpos<hl[i].file_pos+HDRSIZE()+DATSIZE()) {
-			    addr=(hl[i].header.rec_type==_LMF_DATA_REC)?"Dat:":"Fix:";
-			    addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
+			    oss<<((hl[i].header.rec_type==_LMF_DATA_REC)?"Dat:":"Fix:")<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos-hl[i].file_pos-HDRSIZE());
+			    addr=oss.str();
 			}
 			return "";
 			break;
 		    case _LMF_FIXUP_80X87_REC:
-			addr="F87:";
-			addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
+			oss<<"F87:"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos-hl[i].file_pos-HDRSIZE());
+			addr=oss.str();
 			break;
 		    case _LMF_EOF_REC:
-			addr="Eof:";
-			addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
+			oss<<"Eof:"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos-hl[i].file_pos-HDRSIZE());
+			addr=oss.str();
 			break;
 		    case _LMF_RESOURCE_REC:
-			addr="Res:";
-			addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
+			oss<<"Res:"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos-hl[i].file_pos-HDRSIZE());
+			addr=oss.str();
 			break;
 		    case _LMF_ENDDATA_REC:
-			addr="EnD:";
-			addr+=Get4Digit(cfpos-hl[i].file_pos-HDRSIZE());
+			oss<<"EnD:"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos-hl[i].file_pos-HDRSIZE());
+			addr=oss.str();
 			break;
-		    default:
-			return "";
+		    default: return "";
 		}
 		return addr;
 	}
@@ -367,57 +366,35 @@ __filesize_t LMF_Parser::pa2va(__filesize_t pa) const
 std::vector<std::string> LMF_Parser::lmf_ReadSecHdr(binary_stream& handle,size_t nnames) const
 {
     std::vector<std::string> rc;
-	unsigned i;
-	char tmp[30];
-	char stmp[80];
-	UNUSED(handle);
-	UNUSED(nnames);
-	for(i=0;i<=reclast;i++) {
-		switch(hl[i].header.rec_type) {
-		case _LMF_DEFINITION_REC:
-			sprintf(tmp,"%s %s",
-				(xdef.def.cflags&_PCF_32BIT)?"32-bit":"16-bit",
-				(xdef.def.cflags&_PCF_FLAT)?"flat model":"");
-			sprintf(stmp," %2d %-17s<%2d> %s",i+1,
-				lmftypes[hl[i].header.rec_type],seg_num,tmp);
+    std::ostringstream oss;
+    unsigned i;
+    UNUSED(handle);
+    UNUSED(nnames);
+    for(i=0;i<=reclast;i++) {
+	switch(hl[i].header.rec_type) {
+	    case _LMF_DEFINITION_REC:
+		oss<<std::setw(2)<<(i+1)<<std::left<<std::setw(17)<<lmftypes[hl[i].header.rec_type]
+		    <<"<"<<seg_num<<"> "<<((xdef.def.cflags&_PCF_32BIT)?"32-bit":"16-bit")<<" "<<((xdef.def.cflags&_PCF_FLAT)?"flat model":"");
 			break;
-		case _LMF_DATA_REC:
-		case _LMF_FIXUP_SEG_REC:
-		case _LMF_FIXUP_LINEAR_REC:
-			sprintf(tmp,"%s (%s)",lmftypes[hl[i].header.rec_type],
-				((xdef.seg[hl[i].data.index]>>28)==_LMF_CODE)?
-					"code":"data");
-			if(xdef.def.cflags&_PCF_32BIT)
-				sprintf(stmp," %2d %-18s %2d %08lX to %08lX",
-					i+1,
-					tmp,
-					hl[i].data.index,
-					(unsigned long)hl[i].data.offset,
-					(unsigned long)hl[i].data.offset+
-						hl[i].header.data_nbytes-HDRSIZE()-DATSIZE());
-			else
-				sprintf(stmp," %2d %-18s %2d %04lX to %04lX        ",
-					i+1,
-					tmp,
-					hl[i].data.index,
-					(unsigned long)hl[i].data.offset,
-					(unsigned long)hl[i].data.offset+
-						hl[i].header.data_nbytes-HDRSIZE()-DATSIZE());
-			break;
-		case _LMF_RESOURCE_REC:
-			sprintf(tmp,"%s%s",lmftypes[hl[i].header.rec_type],
-				(hl[i].res.resource_type==0)?"(usage)":"");
-			sprintf(stmp," %2d %-18s",
-				i+1,tmp);
-			break;
-		default:
-			sprintf(stmp," %2d %-18s",i+1,
-				(hl[i].header.rec_type<10)?
-					lmftypes[hl[i].header.rec_type]:lmftypes[10]);
-		}
-		rc.push_back(stmp);
+	    case _LMF_DATA_REC:
+	    case _LMF_FIXUP_SEG_REC:
+	    case _LMF_FIXUP_LINEAR_REC:
+		oss<<std::setw(2)<<(i+1)<<std::left<<std::setw(18)<<lmftypes[hl[i].header.rec_type]<<" ("<<(((xdef.seg[hl[i].data.index]>>28)==_LMF_CODE)?"code":"data")<<")"
+		    <<std::setw(2)<<hl[i].data.index<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)hl[i].data.offset;
+		if(xdef.def.cflags&_PCF_32BIT)
+		    oss<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)hl[i].data.offset+hl[i].header.data_nbytes-HDRSIZE()-DATSIZE();
+		else
+		    oss<<std::hex<<std::setfill('0')<<std::setw(4)<<(unsigned long)hl[i].data.offset+hl[i].header.data_nbytes-HDRSIZE()-DATSIZE();
+		break;
+	    case _LMF_RESOURCE_REC:
+		oss<<std::setw(2)<<(i+1)<<" "<<std::left<<std::setw(18)<<lmftypes[hl[i].header.rec_type]<<((hl[i].res.resource_type==0)?"(usage)":"");
+		break;
+	    default:
+		oss<<std::setw(2)<<(i+1)<<" "<<std::left<<std::setw(18)<<((hl[i].header.rec_type<10)?lmftypes[hl[i].header.rec_type]:lmftypes[10]);
 	}
-	return rc;
+	rc.push_back(oss.str());
+    }
+    return rc;
 }
 
 __filesize_t LMF_Parser::action_F9()
@@ -444,24 +421,20 @@ __filesize_t LMF_Parser::show_header() const
 {
 	unsigned i,j,k;
 	__filesize_t fpos;
-	TWindow *w;
-	char hdr[81];
-	char tmp[30];
+	TWindow* w;
 	unsigned keycode;
+	std::ostringstream oss,oss2;
 /*	unsigned long entrya;*/
 	fpos = bctx.tell();
-	sprintf(hdr," QNX%d Load Module Format Header ",xdef.def.version_no/100);
-	sprintf(tmp,"%s%sPrivity=%d%s%s",
-		(xdef.def.cflags&_PCF_LONG_LIVED)?"Long lived, ":"",
-		(xdef.def.cflags&_PCF_32BIT)?"32-bit, ":"",
-		(xdef.def.cflags&_PCF_PRIVMASK)>>2,
-		(xdef.def.cflags&_PCF_FLAT)?", Flat model":"",
-		(xdef.def.cflags&_PCF_NOSHARE)?", NoShare":"");
-	if(strlen(tmp)>30) j=5;
+	oss2<<" QNX"<<(xdef.def.version_no/100)<<" Load Module Format Header ";
+	oss.str("");
+	oss<<((xdef.def.cflags&_PCF_LONG_LIVED)?"Long lived, ":"")<<((xdef.def.cflags&_PCF_32BIT)?"32-bit, ":"")
+	    <<"Privity="<<((xdef.def.cflags&_PCF_PRIVMASK)>>2)<<((xdef.def.cflags&_PCF_FLAT)?", Flat model":"")<<((xdef.def.cflags&_PCF_NOSHARE)?", NoShare":"");
+	if(oss.str().length()>30) j=5;
 	else j=1;
 	k=seg_num+j+1;
 	if(k<14) k=14;
-	w=CrtDlgWndnls(hdr,64,k);
+	w=CrtDlgWndnls(oss2.str(),64,k);
 	w->goto_xy(1,1);
 	w->printf(
 		"Version       = %d.%02d\n"
@@ -469,7 +442,7 @@ __filesize_t LMF_Parser::show_header() const
 		"(%s)\n"
 		"CPU/FPU       = %d/%d\n",
 		xdef.def.version_no/100,xdef.def.version_no%100,xdef.def.cflags,
-		tmp,xdef.def.cpu,xdef.def.fpu);
+		oss.str().c_str(),xdef.def.cpu,xdef.def.fpu);
 	w->printf(
 		"Code index    = %d\n"
 		"Stack index   = %d\n"

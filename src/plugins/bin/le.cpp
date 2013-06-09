@@ -18,6 +18,9 @@ using namespace	usr;
  * @since       1995
  * @note        Development, fixes and improvements
 **/
+#include <sstream>
+#include <iomanip>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -45,11 +48,12 @@ std::vector<std::string> LE_Parser::__ReadMapTblLE(binary_stream& handle,size_t 
     handle.seek(lxe.le.leObjectPageMapTableOffset + headshift(),binary_stream::Seek_Set);
     for(i = 0;i < n;i++) {
 	LE_PAGE lep;
-	char stmp[80];
+	std::ostringstream oss;
 	if(IsKbdTerminate() || handle.eof()) break;
 	handle.read(&lep,sizeof(LE_PAGE));
-	sprintf(stmp,"#=%08lXH Flags: %04hX = %s",(long)lep.number,lep.flags,lxeGetMapAttr(lep.flags).c_str());
-	rc.push_back(stmp);
+	oss<<"#="<<std::hex<<std::setfill('0')<<std::setw(8)<<(long)lep.number<<"H Flags: "<<std::hex<<std::setfill('0')<<std::setw(4)<<lep.flags
+	    <<"h = "<<lxeGetMapAttr(lep.flags);
+	rc.push_back(oss.str());
     }
     return rc;
 }
@@ -315,22 +319,17 @@ __filesize_t LE_Parser::action_F1()
 
 std::string LE_Parser::address_resolving(__filesize_t cfpos)
 {
-    std::string addr;
-    /* Since this function is used in references resolving of disassembler
+    std::ostringstream oss;
+     /* Since this function is used in references resolving of disassembler
 	it must be seriously optimized for speed. */
-    if(cfpos >= headshift() && cfpos < headshift() + sizeof(LEHEADER)) {
-	addr="LEH :";
-	addr+=Get4Digit(cfpos - headshift());
-    } else if(cfpos >= headshift() + lxe.le.leObjectTableOffset &&
-	    cfpos <  headshift() + lxe.le.leObjectTableOffset + sizeof(LX_OBJECT)*lxe.le.leObjectCount) {
-	addr="LEOD:";
-	addr+=Get4Digit(cfpos - headshift() - lxe.le.leObjectTableOffset);
-    } else if(cfpos >= headshift() + lxe.le.leObjectPageMapTableOffset &&
-	    cfpos <  headshift() + lxe.le.leObjectPageMapTableOffset + sizeof(LE_PAGE)*lxe.le.lePageCount) {
-	addr="LEPD:";
-	addr+=Get4Digit(cfpos - headshift() - lxe.le.leObjectPageMapTableOffset);
-    }
-    return addr;
+    if(cfpos >= headshift() && cfpos < headshift() + sizeof(LEHEADER)) oss<<"LEH :"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos - headshift());
+    else if(cfpos >= headshift() + lxe.le.leObjectTableOffset &&
+	    cfpos <  headshift() + lxe.le.leObjectTableOffset + sizeof(LX_OBJECT)*lxe.le.leObjectCount)
+		oss<<"LEOD:"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos - headshift() - lxe.le.leObjectTableOffset);
+    else if(cfpos >= headshift() + lxe.le.leObjectPageMapTableOffset &&
+		cfpos <  headshift() + lxe.le.leObjectPageMapTableOffset + sizeof(LE_PAGE)*lxe.le.lePageCount)
+	oss<<"LEPD:"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos - headshift() - lxe.le.leObjectPageMapTableOffset);
+    return oss.str();
 }
 
 int LE_Parser::query_platform() const { return DISASM_CPU_IX86; }

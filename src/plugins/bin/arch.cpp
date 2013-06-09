@@ -18,6 +18,8 @@ using namespace	usr;
  * @note        Development, fixes and improvements
 **/
 #include <algorithm>
+#include <sstream>
+#include <iomanip>
 
 #include <string.h>
 #include <stdlib.h>
@@ -49,7 +51,7 @@ namespace	usr {
 
 	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
-	    virtual std::string		address_resolving(__filesize_t);
+	    virtual std::string		address_resolving(std::string&,__filesize_t);
 	private:
 	    std::vector<std::string>	archReadModList(size_t nnames,__filesize_t* addr);
 
@@ -183,16 +185,13 @@ Arch_Parser::Arch_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider
 }
 Arch_Parser::~Arch_Parser(){}
 
-std::string Arch_Parser::address_resolving(__filesize_t cfpos)
+std::string Arch_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
 {
-    std::string addr;
+    std::ostringstream oss;
     /* Since this function is used in references resolving of disassembler
 	it must be seriously optimized for speed. */
-    if(cfpos < sizeof(ar_hdr)) {
-	addr="arch.h:";
-	addr+=Get2Digit(cfpos);
-    }
-    return addr;
+    if(cfpos < sizeof(ar_hdr)) oss<<"arch.h:"<<std::hex<<std::setfill('0')<<std::setw(2)<<cfpos;
+    return oss.str();
 }
 
 __filesize_t Arch_Parser::action_F1()

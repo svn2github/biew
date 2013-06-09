@@ -17,6 +17,9 @@ using namespace	usr;
  * @since       1999
  * @note        Development, fixes and improvements
 **/
+#include <sstream>
+#include <iomanip>
+
 #include <stdio.h>
 #include <string.h>
 
@@ -50,7 +53,7 @@ namespace	usr {
 	    static bool			check_fmt(uint32_t id);
 	private:
 	    bool			probe_fmt(uint32_t id);
-	    const char*			aout_encode_machine(uint32_t info,unsigned *id) const __PURE_FUNC__;
+	    const char*			aout_encode_machine(uint32_t info,unsigned& id) const __PURE_FUNC__;
 	    const char*			aout_encode_hdr(uint32_t info) const __CONST_FUNC__;
 #if __BYTE_ORDER == __BIG_ENDIAN
 	    inline uint16_t FMT_WORD(uint16_t cval,bool is_big) const { return !is_big ? bswap_16(cval) : cval; } __CONST_FUNC__
@@ -91,18 +94,18 @@ const char* AOut_Parser::aout_encode_hdr(uint32_t info) const
    }
 }
 
-const char* AOut_Parser::aout_encode_machine(uint32_t info,unsigned* id) const
+const char* AOut_Parser::aout_encode_machine(uint32_t info,unsigned& id) const
 {
-   *id=DISASM_DATA;
+   id=DISASM_DATA;
    switch(N_MACHTYPE(AOUT_WORD(&info)))
    {
-     case 0: *id=DISASM_CPU_SPARC; return "Old Sun-2";
-     case 1: *id=DISASM_CPU_PPC; return "M-68010";
-     case 2: *id=DISASM_CPU_PPC; return "M-68020";
-     case 3: *id=DISASM_CPU_SPARC; return "Sparc";
-     case 100: *id=DISASM_CPU_IX86; return "i386";
-     case 151: *id=DISASM_CPU_MIPS; return "MIPS1(R3000)";
-     case 152: *id=DISASM_CPU_MIPS; return "MIPS2(R6000)";
+     case 0: id=DISASM_CPU_SPARC; return "Old Sun-2";
+     case 1: id=DISASM_CPU_PPC; return "M-68010";
+     case 2: id=DISASM_CPU_PPC; return "M-68020";
+     case 3: id=DISASM_CPU_SPARC; return "Sparc";
+     case 100: id=DISASM_CPU_IX86; return "i386";
+     case 151: id=DISASM_CPU_MIPS; return "MIPS1(R3000)";
+     case 152: id=DISASM_CPU_MIPS; return "MIPS2(R6000)";
      default:  return "Unknown CPU";
    }
 }
@@ -124,7 +127,7 @@ __filesize_t AOut_Parser::show_header() const
 	   "Length of data section      = %08lXH\n"
 	   "Length of bss area          = %08lXH\n"
 	   "Length of symbol table      = %08lXH\n"
-	   ,N_FLAGS(*p_info),aout_encode_machine(*p_info,&dummy),is_msbf?"big-endian":"little-endian"
+	   ,N_FLAGS(*p_info),aout_encode_machine(*p_info,dummy),is_msbf?"big-endian":"little-endian"
 	   ,AOUT_WORD((uint32_t *)&aout.e_text)
 	   ,AOUT_WORD((uint32_t *)&aout.e_data)
 	   ,AOUT_WORD((uint32_t *)&aout.e_bss)
@@ -201,14 +204,11 @@ Bin_Format::endian AOut_Parser::query_endian(__filesize_t off) const
 
 std::string AOut_Parser::address_resolving(__filesize_t fpos)
 {
-    std::string addr;
-    /* Since this function is used in references resolving of disassembler
-	it must be seriously optimized for speed. */
-    if(fpos < sizeof(struct external_exec)) {
-	addr="a.outh:";
-	addr+=Get2Digit(fpos);
-    }
-    return addr;
+    std::ostringstream oss;
+ /* Since this function is used in references resolving of disassembler
+    it must be seriously optimized for speed. */
+    if(fpos < sizeof(struct external_exec)) oss<<"a.outh:"<<std::hex<<std::setfill('0')<<std::setw(2)<<fpos;
+    return oss.str();
 }
 
 __filesize_t AOut_Parser::action_F1()
@@ -226,7 +226,7 @@ int AOut_Parser::query_platform() const {
     struct external_exec aout;
     main_handle.seek(0,binary_stream::Seek_Set);
     main_handle.read(&aout,sizeof(struct external_exec));
-    aout_encode_machine(*((uint32_t *)aout.e_info),&id);
+    aout_encode_machine(*((uint32_t *)aout.e_info),id);
     return id;
 }
 

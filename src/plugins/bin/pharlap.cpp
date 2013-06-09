@@ -17,6 +17,9 @@ using namespace	usr;
  * @since       1999
  * @note        Development, fixes and improvements
 **/
+#include <sstream>
+#include <iomanip>
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -133,12 +136,12 @@ __filesize_t PharLap_Parser::show_header() const
 
 void PharLap_Parser::PLSegPaint(TWindow& win,const std::vector<PLSegInfo>& names,unsigned start) const
 {
-    char buffer[81];
     const PLSegInfo& nam = names[start];
     win.freeze();
     win.clear();
-    sprintf(buffer," Segment Table [ %u / %u ] ",start + 1,names.size());
-    win.set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+    std::ostringstream oss;
+    oss<<" Segment Table [ "<<(start + 1)<<" / "<<names.size()<<" ] ";
+    win.set_title(oss.str(),TWindow::TMode_Center,dialog_cset.title);
     win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
     win.goto_xy(1,1);
     win.printf(
@@ -186,13 +189,13 @@ __filesize_t PharLap_Parser::action_F10()
 
 void PharLap_Parser::PLRunTimePaint(TWindow& win,const std::vector<PLRunTimeParms>& names,unsigned start) const
 {
-    char buffer[81];
+    std::ostringstream oss;
     char sign[3];
     const PLRunTimeParms& nam = names[start];
     win.freeze();
     win.clear();
-    sprintf(buffer," Run-time Parameters Table [ %u / %u ] ",start + 1,names.size());
-    win.set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+    oss<<" Run-time Parameters Table [ "<<(start + 1)<<" / "<<names.size()<<" ] ";
+    win.set_title(oss.str(),TWindow::TMode_Center,dialog_cset.title);
     win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
     strncpy(sign,(const char *)nam.rtSignature,2);
     sign[2] = 0;
@@ -278,14 +281,11 @@ PharLap_Parser::~PharLap_Parser()
 
 std::string PharLap_Parser::address_resolving(__filesize_t cfpos)
 {
-    std::string addr;
+    std::ostringstream oss;
     /* Since this function is used in references resolving of disassembler
 	it must be seriously optimized for speed. */
-    if(cfpos < sizeof(newPharLap)) {
-	addr="nplhdr:";
-	addr+=Get2Digit(cfpos);
-    }
-    return addr;
+    if(cfpos < sizeof(newPharLap)) oss<<"nplhdr:"<<std::hex<<std::setfill('0')<<std::setw(2)<<cfpos;
+    return oss.str();
 }
 
 __filesize_t PharLap_Parser::action_F1()

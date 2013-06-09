@@ -17,6 +17,9 @@ using namespace	usr;
  * @since       1995
  * @note        Development, fixes and improvements
 **/
+#include <sstream>
+#include <iomanip>
+
 #include <limits.h>
 #include <string.h>
 #include <stdio.h>
@@ -42,12 +45,12 @@ __filesize_t MZ_Parser::pa2va(__filesize_t pa) const { return pa >= HeadSize ? p
 
 std::string MZ_Parser::QueryAddInfo( unsigned char *memmap ) const
 {
-    char rbuff[41];
     unsigned long idl;
     unsigned short idw,idw0;
     idl = ((unsigned long *)memmap)[0];
     idw0 = ((unsigned short *)memmap)[0];
     idw = ((unsigned short *)memmap)[2];
+    std::ostringstream oss;
     if(memcmp(memmap,"RJSX",4) == 0) { ArjARC: return "ARJ self-extracting archive"; }
     else if(memcmp(memmap,"LZ09",4) == 0) return "LZEXE 0.90 compressed executable";
     else if(memcmp(memmap,"LZ91",4) == 0) return "LZEXE 0.91 compressed executable";
@@ -55,14 +58,14 @@ std::string MZ_Parser::QueryAddInfo( unsigned char *memmap ) const
 	char hi,low;
 	hi = (memmap[3] >> 4) & 0x0F;
 	low = memmap[3] & 0x0F;
-	sprintf(rbuff,"Borland TLINK version: %u.%u",(unsigned)hi,(unsigned)low);
-	return rbuff;
+	oss<<"Borland TLINK version: "<<(unsigned)hi<<"."<<(unsigned)low;
+	return oss.str();
     } else if(memcmp(&memmap[2],"PKLITE",6) == 0) {
 	char hi, low;
 	low = memmap[0];
 	hi =  memmap[1] & 0x0F;
-	sprintf(rbuff,"PKLITE v%u.%u compressed executable",(unsigned)hi,(unsigned)low);
-	return rbuff;
+	oss<<"PKLITE v"<<(unsigned)hi<<"."<<(unsigned)low<<" compressed executable";
+	return oss.str();
     } else if(memcmp(&memmap[9],"LHarc's SFX",11) == 0) return "LHarc 1.x self-extracting archive";
     else if(memcmp(&memmap[8],"LHa's SFX",9) == 0) return "LHa 2.x self-extracting archive";
     else if(idl == 0x018A0001L && idw == 0x1565) return "TopSpeed 3.0 CRUNCH compressed file";
@@ -205,22 +208,22 @@ bool MZ_Parser::isMZReferenced(__filesize_t shift,char len)
 std::string MZ_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
     std::string str;
-    bool ret = false;
+    std::ostringstream oss;
     if(flags & Bin_Format::Try_Pic) return "";
     if(CurrMZChain.empty()) BuildMZChain();
     if(isMZReferenced(ulShift,codelen)) {
 	unsigned wrd;
 	_main_handle.seek(ulShift,binary_stream::Seek_Set);
 	wrd = _main_handle.read(type_word);
-	str=Get4Digit(wrd);
-	str+="+PID";
-	ret = true;
+	oss<<std::hex<<std::setfill('0')<<std::setw(4)<<wrd<<"+PID";
+	str=oss.str();
     }
     if(!DumpMode && !EditMode && (flags & Bin_Format::Try_Label) && codelen == 4) {
 	r_sh += (((__filesize_t)mz.mzHeaderSize) << 4);
 	Symbol_Info rc = __udn.find(r_sh);
-	if(rc.pa!=Plugin::Bad_Address) str=rc.name;
-	else str=Get8Digit(r_sh);
+	if(rc.pa!=Plugin::Bad_Address) oss<<rc.name;
+	else oss<<std::hex<<std::setfill('0')<<std::setw(8)<<r_sh;
+	str=oss.str();
 	_code_guider.add_go_address(parent,str,r_sh);
     }
     return str;
@@ -250,18 +253,11 @@ int MZ_Parser::query_platform() const { return DISASM_CPU_IX86; }
 
 std::string MZ_Parser::address_resolving(__filesize_t cfpos)
 {
-    std::string addr;
-    if(cfpos < sizeof(MZHEADER)+2) {
-	addr="MZH :";
-	addr+=Get4Digit(cfpos);
-    } else if(cfpos >= sizeof(MZHEADER)+2 && cfpos < sizeof(MZHEADER)+2+(mz.mzRelocationCount<<2)) {
-	addr="MZRl:";
-	addr+=Get4Digit(cfpos - sizeof(MZHEADER));
-    } else if(cfpos >= HeadSize) {
-	addr = ".";
-	addr+=Get8Digit(MZ_Parser::pa2va(cfpos));
-    }
-    return addr;
+    std::ostringstream oss;
+    if(cfpos < sizeof(MZHEADER)+2) oss<<"MZH :"<<std::hex<<std::setfill('0')<<std::setw(4)<<cfpos;
+    else if(cfpos >= sizeof(MZHEADER)+2 && cfpos < sizeof(MZHEADER)+2+(mz.mzRelocationCount<<2)) oss<<"MZRl:"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos - sizeof(MZHEADER));
+    else if(cfpos >= HeadSize) oss<<"."<<std::hex<<std::setfill('0')<<std::setw(8)<<pa2va(cfpos);
+    return oss.str();
 }
 
 __filesize_t MZ_Parser::action_F1()

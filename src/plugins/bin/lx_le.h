@@ -313,8 +313,8 @@ typedef struct tagLXResource
 	    std::string			entryTypeLX(unsigned char type) const __CONST_FUNC__;
 	    __filesize_t		CalcEntryBungleLX(unsigned ordinal,bool dispmsg) const;
 	    __filesize_t		CalcEntryLX(const LX_ENTRY& lxent) const;
-	    void			ReadLXLEImpName(__filesize_t offtable,unsigned num,char *str) const;
-	    void			ReadLXLEImpMod(__filesize_t offtable,unsigned num,char *str) const;
+	    std::string			ReadLXLEImpName(__filesize_t offtable,unsigned num) const;
+	    std::string			ReadLXLEImpMod(__filesize_t offtable,unsigned num) const;
 	    __filesize_t		__calcPageEntry(LX_MAP_TABLE *mt) const;
 	    void			lxReadPageDesc(binary_stream&handle,LX_MAP_TABLE *mt,unsigned long pageidx) const;
 	    std::vector<LX_ENTRY>	__ReadEntriesLX(binary_stream& handle) const;

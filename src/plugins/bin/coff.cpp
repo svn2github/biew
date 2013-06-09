@@ -18,6 +18,8 @@ using namespace	usr;
  * @note        Development, fixes and improvements
 **/
 #include <algorithm>
+#include <sstream>
+#include <iomanip>
 #include <set>
 
 #include <limits.h>
@@ -67,7 +69,7 @@ namespace	usr {
 	    virtual Object_Info		get_object_attribute(__filesize_t pa);
 	private:
 	    Object_Info			_get_object_attribute(__filesize_t pa) const;
-	    __filesize_t		BuildReferStrCoff386(const DisMode&parent,std::string& str,const RELOC_COFF386& rne,int flags) const;
+	    std::string			BuildReferStrCoff386(const DisMode&parent,const RELOC_COFF386& rne,int flags) const;
 	    bool			coffSymTabReadItemsIdx(binary_stream&handle,unsigned long idx,std::string& name,unsigned& secnum,__filesize_t& offset) const;
 	    void			BuildRelocCoff386();
 	    __filesize_t		CalcEntryCoff(unsigned long idx,bool display_msg) const;
@@ -159,11 +161,11 @@ __filesize_t Coff_Parser::pa2va(__filesize_t pa) const
 
 void Coff_Parser::paint_pages(TWindow& win,const std::vector<SCNHDR>& objs,unsigned start) const
 {
-    char buffer[81];
     win.freeze();
     win.clear();
-    sprintf(buffer," Object Table [ %u / %u ] ",start + 1,objs.size());
-    win.set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+    std::ostringstream oss;
+    oss<<" Object Table [ "<<(start+1)<<" / "<<objs.size()<<" ] ";
+    win.set_title(oss.str(),TWindow::TMode_Center,dialog_cset.title);
     win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
     win.goto_xy(1,1);
     win.printf(
@@ -380,13 +382,10 @@ std::vector<std::string> Coff_Parser::coffSymTabReadItems(binary_stream& handle,
 	length = stmp.length();
 	if(length > 38) stmp.replace(38,std::string::npos,">>>");
 //   else  {  memset(&stmp[length],' ',38-length);  stmp[38] = 0; }
-	char sbuf;
-	sprintf(&sbuf,"(%04hX.%08lX) %s.%s"
-	   ,COFF_WORD(cse.e_scnum)
-	   ,(unsigned long)COFF_DWORD(cse.e_value)
-	   ,coffEncodeClass(cse.e_sclass[0]).c_str()
-	   ,coffEncodeType(COFF_WORD(cse.e_type)).c_str());
-	stmp+=sbuf;
+	std::ostringstream oss;
+	oss<<"("<<std::hex<<std::setfill('0')<<std::setw(4)<<COFF_WORD(cse.e_scnum)<<"."<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)COFF_DWORD(cse.e_value)
+	    <<" "<<coffEncodeClass(cse.e_sclass[0])<<"."<<coffEncodeType(COFF_WORD(cse.e_type));
+	stmp+=oss.str();
 	rc.push_back(stmp);
     }
     return rc;
@@ -487,16 +486,16 @@ bool Coff_Parser::coffSymTabReadItemsIdx(binary_stream& handle,unsigned long idx
     return true;
 }
 
-__filesize_t Coff_Parser::BuildReferStrCoff386(const DisMode& parent,std::string& str,const RELOC_COFF386& rne,int flags) const
+std::string Coff_Parser::BuildReferStrCoff386(const DisMode& parent,const RELOC_COFF386& rne,int flags) const
 {
+    std::string str;
     __filesize_t offset,e;
-    bool retval;
     unsigned long val;
     unsigned secnum=0;
     bool is_idx,val_assigned;
     std::string secname;
     std::string name,pubname;
-    retval = true;
+    std::ostringstream oss;
     main_handle.seek(rne.offset,binary_stream::Seek_Set);
     val = main_handle.read(type_dword);
   /* rne->nameoff it's only pointer to name descriptor */
@@ -519,10 +518,8 @@ def_val:
 	}
     } else str+=".?bad?";
     if(val && !val_assigned) {
-	str+="+";
-	str+=Get8Digit(val);
-	if(secnum) retval = (COFF_DWORD(coff386so[secnum-1].s_scnptr)+val)?true:false;
-	else       retval = false;
+	oss<<"+"<<std::hex<<std::setfill('0')<<std::setw(8)<<val;
+	if(secnum) if(COFF_DWORD(coff386so[secnum-1].s_scnptr)+val) str+=oss.str();
     }
     if(rne.type == RELOC_REL32 && (flags & Bin_Format::Try_Label) != Bin_Format::Try_Label) {
 	Object_Info rc = _get_object_attribute(rne.offset);
@@ -532,26 +529,24 @@ def_val:
     e = CalcEntryCoff(rne.nameoff,false);
     if(!DumpMode && !EditMode && e && (flags & Bin_Format::Try_Label) == Bin_Format::Try_Label)
 						code_guider.add_go_address(parent,str,e);
-    return retval;
+    return str;
 }
 
 std::string Coff_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
+    std::string str;
     std::set<RELOC_COFF386>::const_iterator rcoff386;
     RELOC_COFF386 key;
-    bool ret=false;
-    std::string str;
-
-    if(flags & Bin_Format::Try_Pic) return "";
+    if(flags & Bin_Format::Try_Pic) return str;
     if(PubNames.empty()) coff_ReadPubNameList(main_handle);
     if((COFF_WORD(coff386hdr.f_flags) & F_RELFLG) == F_RELFLG) goto try_pub;
     if(RelocCoff386.empty()) BuildRelocCoff386();
     key.offset = ulShift;
     __codelen = codelen;
     rcoff386 = RelocCoff386.find(key);
-    if(rcoff386!=RelocCoff386.end()) ret = BuildReferStrCoff386(parent,str,(*rcoff386),flags);
+    if(rcoff386!=RelocCoff386.end()) str = BuildReferStrCoff386(parent,(*rcoff386),flags);
 try_pub:
-    if(!ret && (flags & Bin_Format::Try_Label)) {
+    if(str.empty() && (flags & Bin_Format::Try_Label)) {
 	Symbol_Info rc = FindPubName(r_sh);
 	if(rc.pa!=Plugin::Bad_Address) {
 	    str=rc.name;
@@ -588,30 +583,25 @@ Coff_Parser::Coff_Parser(BeyeContext& b,binary_stream& h,CodeGuider& _code_guide
 
 Coff_Parser::~Coff_Parser()
 {
-  delete coff386so;
-  if(coff_cache != &main_handle) delete coff_cache;
+    delete coff386so;
+    if(coff_cache != &main_handle) delete coff_cache;
 }
 
 Bin_Format::bitness Coff_Parser::query_bitness(__filesize_t off) const
 {
-  UNUSED(off);
-  return Bin_Format::Use32;
+    UNUSED(off);
+    return Bin_Format::Use32;
 }
 
 std::string Coff_Parser::address_resolving(__filesize_t cfpos)
 {
-    std::string addr;
-    /* Since this function is used in references resolving of disassembler
-	it must be seriously optimized for speed. */
+ /* Since this function is used in references resolving of disassembler
+    it must be seriously optimized for speed. */
     uint32_t res;
-    if(cfpos < sizeof(struct external_filehdr)) {
-	addr="coffih:";
-	addr+=Get2Digit(cfpos);
-    } else if((res=pa2va(cfpos))!=0) {
-	addr = ".";
-	addr+=Get8Digit(res);
-    }
-    return addr;
+    std::ostringstream oss;
+    if(cfpos < sizeof(struct external_filehdr)) oss<<"coffih:"<<std::hex<<std::setfill('0')<<std::setw(8)<<cfpos;
+    else if((res=pa2va(cfpos))!=0) oss<<"."<<std::hex<<std::setfill('0')<<std::setw(8)<<res;
+    return oss.str();
 }
 
 __filesize_t Coff_Parser::action_F1()

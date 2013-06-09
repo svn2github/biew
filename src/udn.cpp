@@ -19,6 +19,7 @@ using namespace	usr;
 **/
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <iomanip>
 #include <set>
 
@@ -43,9 +44,10 @@ bool udn::add_item() {
     __filesize_t off;
     udn_record item;
     std::set<udn_record>::const_iterator prev=udn_list.end();
-    char ud_name[256],prompt[256];
+    char ud_name[256];
     off = bctx.tell();
-    sprintf(prompt," Name for %08X offset: ",off);
+    std::ostringstream oss;
+    oss<<" Name for "<<std::hex<<std::setfill('0')<<std::setw(8)<<off<<" offset: ";
     ud_name[0]='\0';
     if(!udn_list.empty()) {
 	item.name[255]='\0';
@@ -53,7 +55,7 @@ bool udn::add_item() {
 	prev = udn_list.find(item);
 	if(prev!=udn_list.end()) strcpy(ud_name,(*prev).name);
     }
-    if(GetStringDlg(ud_name,prompt," [ENTER] - Proceed ",NAME_MSG))
+    if(GetStringDlg(ud_name,oss.str()," [ENTER] - Proceed ",NAME_MSG))
     {
 	if(prev!=udn_list.end()) udn_list.erase(prev);
 	if(!udn_list.empty()) {
@@ -203,7 +205,8 @@ bool udn::__load_list() {
 		    return true;
 		}
 		*brk='\0';
-		sscanf(buff,"%016llX",&item.offset);
+		std::istringstream iss(buff);
+		iss>>std::hex>>item.offset;
 		strncpy(item.name,brk+1,sizeof(item.name));
 		item.name[sizeof(item.name)-1]='\0';
 		blen = strlen(item.name);

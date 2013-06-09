@@ -17,6 +17,8 @@ using namespace	usr;
  * @since       1999
  * @note        Development, fixes and improvements
 **/
+#include <sstream>
+#include <iomanip>
 #include <set>
 
 #include <stdlib.h>
@@ -70,7 +72,7 @@ namespace	usr {
 	private:
 	    std::string			rdoff_ReadPubName(binary_stream&b_cache,const symbolic_information& it) const;
 	    void			rdoff_ReadPubNameList(binary_stream& handle);
-	    bool			rdoffBuildReferStr(const DisMode&parent,std::string& str,const RDOFF_RELOC& reloc,__filesize_t ulShift,Bin_Format::bind_type flags);
+	    std::string			rdoffBuildReferStr(const DisMode&parent,const RDOFF_RELOC& reloc,__filesize_t ulShift,Bin_Format::bind_type flags);
 	    void			BuildRelocRDOFF();
 	    bool			rdoff_skiprec(unsigned char type) const;
 	    Symbol_Info			FindPubName(__filesize_t pa) const;
@@ -152,13 +154,14 @@ __filesize_t RDOff_Parser::action_F3()
     __filesize_t fpos;
     unsigned char rec;
     unsigned i;
-    char str[33],sout[256];
+    char str[33];
     unsigned char segno;
     __filesize_t segoff;
     __filesize_t abs_off;
     std::vector<std::string> rdoff_et;
     fpos = bctx.tell();
     main_handle.seek(10,binary_stream::Seek_Set);
+    std::ostringstream oss;
     while(main_handle.tell() < rdoff_hdrlen + 5) {
 	bool is_eof;
 	rec = main_handle.read(type_byte);
@@ -176,8 +179,9 @@ __filesize_t RDOff_Parser::action_F3()
 	    str[i] = 0;
 	    abs_off = segno == 0 ? cs_start : segno == 1 ? ds_start : FILESIZE_MAX;
 	    if(abs_off < FILESIZE_MAX) abs_off += segoff;
-	    sprintf(sout,"%-50s offset=%08lXH",str,(unsigned long)abs_off);
-	    rdoff_et.push_back(sout);
+	    oss.str("");
+	    oss<<std::left<<std::setw(50)<<str<<" offset="<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)abs_off;
+	    rdoff_et.push_back(oss.str());
 	    if(is_eof) break;
 	} else {
 	    if(!rdoff_skiprec(rec)) goto exit;
@@ -405,120 +409,105 @@ void  RDOff_Parser::BuildRelocRDOFF()
 //  la_Sort(rdoffReloc,rdoff_compare_reloc);
 }
 
-bool RDOff_Parser::rdoffBuildReferStr(const DisMode& parent,std::string& str,const RDOFF_RELOC& reloc,__filesize_t ulShift,Bin_Format::bind_type flags)
+std::string RDOff_Parser::rdoffBuildReferStr(const DisMode& parent,const RDOFF_RELOC& reloc,__filesize_t ulShift,Bin_Format::bind_type flags)
 {
-   char name[400],ch;
-   std::string buff;
-   const char *ptr_type;
-   __filesize_t field_val,foff,base_seg_off;
-   bool retrf;
-   unsigned i;
-   if(PubNames.empty()) rdoff_ReadPubNameList(main_handle);
-   if(flags & Bin_Format::Use_Type)
-   {
-     switch(reloc.reflen)
-     {
-       case 1: ptr_type = "(b) "; break;
-       case 2: ptr_type = "off16 "; break;
-       default:
-       case 4: ptr_type = "off32 "; break;
-     }
-     str+=ptr_type;
-   }
-   base_seg_off = FILESIZE_MAX;
-   switch(reloc.segto)
-   {
-     case 0:  ptr_type = "cs:";
-	      base_seg_off = cs_start;
-	      break;
-     case 1:  ptr_type = "ds:";
-	      base_seg_off = ds_start;
-	      break;
-     case 2:  ptr_type = "bss:";
-	      break;
-     default:
-	      {
-		 struct rdoff_ImpName key;
-		 std::set<rdoff_ImpName>::const_iterator ret;
-		 key.lsegno = reloc.segto;
-		 ret = rdoffImpNames.find(key);
-		 if(ret!=rdoffImpNames.end())
-		 {
-		   main_handle.seek((*ret).nameoff,binary_stream::Seek_Set);
-		   name[0] = 0;
-		   for(i = 0;i < sizeof(name);i++)
-		   {
-		     ch = main_handle.read(type_byte);
-		     name[i] = ch;
-		     if(!ch || main_handle.eof()) break;
-		   }
-		   name[i] = 0;
-		   ptr_type = name;
-		 }
-		 else
-		 {
-		   ptr_type = "???";
-		 }
-	      }
-   }
-   retrf = true;
-   if(reloc.segto >= 3) str+=ptr_type; /** case extern symbol */
-   if(reloc.segto < 3 || reloc.is_rel)
-   {
-     foff = main_handle.tell();
-     main_handle.seek(reloc.offset,binary_stream::Seek_Set);
-     switch(reloc.reflen)
-     {
-       default:
-       case 4: field_val = main_handle.read(type_dword);
-	       break;
-       case 2: field_val = main_handle.read(type_word);
-	       break;
-       case 1: field_val = main_handle.read(type_byte);
-	       break;
-     }
-     main_handle.seek(foff,binary_stream::Seek_Set);
-     if(reloc.segto < 3)
-     {
-       if(base_seg_off < FILESIZE_MAX)
-       {
-	 base_seg_off += field_val;
-	 Symbol_Info rc = FindPubName(base_seg_off);
-	 if(rc.pa!=Plugin::Bad_Address) str+=rc.name;
-	 else goto unnamed;
-       }
-       else
-       {
-	 unnamed:
-	 str+=ptr_type;
-	 str+=Get8Digit(field_val);
-	 if(!EditMode && !DumpMode && (flags & Bin_Format::Try_Label))
-	   code_guider.add_go_address(parent,str,reloc.segto ? ds_start + field_val : cs_start + field_val);
-	 retrf = true;
-       }
-     }
-     if(reloc.is_rel)
-     {
-       __filesize_t seg_off;
-       __fileoff_t fv;
-       seg_off = ulShift < ds_start ? cs_start : ulShift < ds_start+ds_len ? ds_start : FILESIZE_MAX;
-       fv = field_val;
-       if(!(ulShift + fv + reloc.reflen == seg_off && (flags & Bin_Format::Try_Label)))
-       {
-        str+="(";
-	str+=Get8SignDig(field_val);
-	str+=")";
-       }
-     }
-   }
-   return retrf;
+    std::ostringstream oss;
+    std::string str;
+    char name[400],ch;
+    std::string buff;
+    const char *ptr_type;
+    __filesize_t field_val,foff,base_seg_off;
+    unsigned i;
+    if(PubNames.empty()) rdoff_ReadPubNameList(main_handle);
+    if(flags & Bin_Format::Use_Type) {
+	switch(reloc.reflen) {
+	    case 1: ptr_type = "(b) "; break;
+	    case 2: ptr_type = "off16 "; break;
+	    default:
+	    case 4: ptr_type = "off32 "; break;
+        }
+        str+=ptr_type;
+    }
+    base_seg_off = FILESIZE_MAX;
+    switch(reloc.segto) {
+	case 0:  ptr_type = "cs:";
+	    base_seg_off = cs_start;
+	    break;
+	case 1:
+	    ptr_type = "ds:";
+	    base_seg_off = ds_start;
+	    break;
+	case 2:
+	    ptr_type = "bss:";
+	    break;
+	default:
+	    {
+		struct rdoff_ImpName key;
+		std::set<rdoff_ImpName>::const_iterator ret;
+		key.lsegno = reloc.segto;
+		ret = rdoffImpNames.find(key);
+		if(ret!=rdoffImpNames.end()) {
+		    main_handle.seek((*ret).nameoff,binary_stream::Seek_Set);
+		    name[0] = 0;
+		    for(i = 0;i < sizeof(name);i++) {
+			ch = main_handle.read(type_byte);
+			name[i] = ch;
+			if(!ch || main_handle.eof()) break;
+		    }
+		    name[i] = 0;
+		    ptr_type = name;
+		} else {
+		    ptr_type = "???";
+		}
+	    }
+    }
+    if(reloc.segto >= 3) str+=ptr_type; /** case extern symbol */
+    else if(reloc.segto < 3 || reloc.is_rel) {
+	foff = main_handle.tell();
+	main_handle.seek(reloc.offset,binary_stream::Seek_Set);
+	switch(reloc.reflen) {
+	    default:
+	    case 4: field_val = main_handle.read(type_dword);
+		    break;
+	    case 2: field_val = main_handle.read(type_word);
+		    break;
+	    case 1: field_val = main_handle.read(type_byte);
+		    break;
+	}
+	main_handle.seek(foff,binary_stream::Seek_Set);
+	if(reloc.segto < 3) {
+	    if(base_seg_off < FILESIZE_MAX) {
+		base_seg_off += field_val;
+		Symbol_Info rc = FindPubName(base_seg_off);
+		if(rc.pa!=Plugin::Bad_Address) str+=rc.name;
+		else goto unnamed;
+	    } else {
+unnamed:
+		oss.str("");
+		oss<<ptr_type<<std::hex<<std::setfill('0')<<std::setw(8)<<field_val;
+		str+=oss.str();
+		if(!EditMode && !DumpMode && (flags & Bin_Format::Try_Label))
+		    code_guider.add_go_address(parent,str,reloc.segto ? ds_start + field_val : cs_start + field_val);
+	    }
+	}
+	if(reloc.is_rel) {
+	    __filesize_t seg_off;
+	    __fileoff_t fv;
+	    seg_off = ulShift < ds_start ? cs_start : ulShift < ds_start+ds_len ? ds_start : FILESIZE_MAX;
+	    fv = field_val;
+	    if(!(ulShift + fv + reloc.reflen == seg_off && (flags & Bin_Format::Try_Label))) {
+		oss<<"("<<std::hex<<std::setfill('0')<<std::setw(8)<<fv<<")";
+		str+=oss.str();
+	    }
+	}
+    }
+    return str;
 }
 
 std::string RDOff_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
     RDOFF_RELOC key;
     std::set<RDOFF_RELOC>::const_iterator rrdoff;
-    bool ret;
     std::string str;
 
     if(flags & Bin_Format::Try_Pic) return "";
@@ -528,9 +517,9 @@ std::string RDOff_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Fo
     key.offset = ulShift;
     __codelen = codelen;
     rrdoff = rdoffReloc.find(key);
-    ret = (rrdoff!=rdoffReloc.end())? rdoffBuildReferStr(parent,str,*rrdoff,ulShift,flags) : false;
+    str = (rrdoff!=rdoffReloc.end())? rdoffBuildReferStr(parent,*rrdoff,ulShift,flags) : "";
     if(PubNames.empty()) rdoff_ReadPubNameList(main_handle);
-    if(!ret && (flags & Bin_Format::Try_Label)) {
+    if(str.empty() && (flags & Bin_Format::Try_Label)) {
 	Symbol_Info rc = FindPubName(r_sh);
 	if(rc.pa!=Plugin::Bad_Address) {
 	    str=rc.name;
@@ -739,18 +728,13 @@ __filesize_t RDOff_Parser::pa2va(__filesize_t pa) const { return pa > cs_start ?
 
 std::string RDOff_Parser::address_resolving(__filesize_t cfpos)
 {
-    std::string addr;
+    std::ostringstream oss;
     /* Since this function is used in references resolving of disassembler
 	it must be seriously optimized for speed. */
     uint32_t res;
-    if(cfpos < cs_start) {
-	addr="RDFH:";
-	addr+=Get4Digit(cfpos);
-    } else if((res=pa2va(cfpos))!=0) {
-	addr = ".";
-	addr+=Get8Digit(res);
-    }
-    return addr;
+    if(cfpos < cs_start) oss<<"RDFH:"<<std::hex<<std::setfill('0')<<std::setw(4)<<cfpos;
+    else if((res=pa2va(cfpos))!=0) oss<<"."<<std::hex<<std::setfill('0')<<std::setw(8)<<res;
+    return oss.str();
 }
 
 int RDOff_Parser::query_platform() const { return DISASM_CPU_IX86; }

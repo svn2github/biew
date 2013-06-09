@@ -49,6 +49,8 @@ using namespace	usr;
     http://www.muppetlabs.com/~breadbox/software/
 */
 #include <algorithm>
+#include <sstream>
+#include <iomanip>
 #include <vector>
 #include <string>
 #include <set>
@@ -583,13 +585,11 @@ __filesize_t ELF_Parser::show_header() const
 {
   __filesize_t fpos;
   TWindow *w;
-  char hdr[81];
   unsigned keycode,dummy;
   __filesize_t entrya;
   fpos = bctx.tell();
   entrya = va2pa(elf_reader->ehdr().e_entry);
-  sprintf(hdr," ELF (Executable and Linking Format) ");
-  w = CrtDlgWndnls(hdr,74,18);
+  w = CrtDlgWndnls(" ELF (Executable and Linking Format) ",74,18);
   w->goto_xy(1,1);
   w->printf(
 	   "Signature                         = %02X %02X %02X %02XH (%c%c%c%c)\n"
@@ -681,28 +681,27 @@ std::vector<std::string> ELF_Parser::__elfReadPrgHdr(binary_stream& handle,size_
 {
     std::vector<std::string> rc;
     size_t i;
+    std::ostringstream oss;
     handle.seek(elf_reader->ehdr().e_phoff,binary_stream::Seek_Set);
     for(i = 0;i < nnames;i++) {
 	__filesize_t fp;
-	char stmp[80];
 	Elf_Phdr phdr;
 	if(IsKbdTerminate() || handle.eof()) break;
 	fp = handle.tell();
 	phdr=elf_reader->read_phdr(handle,fp);
 	handle.seek(fp+elf_reader->ehdr().e_phentsize,binary_stream::Seek_Set);
-	sprintf(stmp,"%-15s %08lX %08lX %08lX %08lX %08lX %c%c%c %08lX",
-		elf_encode_p_type(phdr.p_type).c_str(),
-		(unsigned long)phdr.p_offset,
-		(unsigned long)phdr.p_vaddr,
-		(unsigned long)phdr.p_paddr,
-		(unsigned long)phdr.p_filesz,
-		(unsigned long)phdr.p_memsz,
-		(phdr.p_flags & PF_X) == PF_X ? 'X' : ' ',
-		(phdr.p_flags & PF_W) == PF_W ? 'W' : ' ',
-		(phdr.p_flags & PF_R) == PF_R ? 'R' : ' ',
-		(unsigned long)phdr.p_align
-	);
-	rc.push_back(stmp);
+	oss.str("");
+	oss<<std::left<<std::setw(15)<<std::setfill(' ')<<elf_encode_p_type(phdr.p_type)<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)phdr.p_offset<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)phdr.p_vaddr<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)phdr.p_paddr<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)phdr.p_filesz<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)phdr.p_memsz<<" "
+	    <<((phdr.p_flags & PF_X) == PF_X ? 'X' : ' ')<<" "
+	    <<((phdr.p_flags & PF_W) == PF_W ? 'W' : ' ')<<" "
+	    <<((phdr.p_flags & PF_R) == PF_R ? 'R' : ' ')<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)phdr.p_align;
+	rc.push_back(oss.str());
     }
     return rc;
 }
@@ -738,33 +737,32 @@ std::string ELF_Parser::elf_encode_sh_type(long sh_type) const
 std::vector<std::string> ELF_Parser::__elfReadSecHdr(binary_stream& handle,size_t nnames) const
 {
     std::vector<std::string> rc;
+    std::ostringstream oss;
     size_t i;
     handle.seek(elf_reader->ehdr().e_shoff,binary_stream::Seek_Set);
     for(i = 0;i < nnames;i++) {
 	 Elf_Shdr shdr;
 	 std::string tmp;
 	__filesize_t fp;
-	char stmp[80];
 	if(IsKbdTerminate() || handle.eof()) break;
 	fp = handle.tell();
 	shdr=elf_reader->read_shdr(handle,fp);
 	tmp=elf_arch->read_nametable(*namecache,shdr.sh_name);
 	handle.seek(fp+elf_reader->ehdr().e_shentsize,binary_stream::Seek_Set);
-	sprintf(stmp,"%-16s %-6s %c%c%c %08lX %08lX %08lX %04hX %04hX %04hX %04hX",
-		tmp.c_str(),
-		elf_encode_sh_type(shdr.sh_type).c_str(),
-		(shdr.sh_flags & SHF_WRITE) == SHF_WRITE ? 'W' : ' ',
-		(shdr.sh_flags & SHF_ALLOC) == SHF_ALLOC ? 'A' : ' ',
-		(shdr.sh_flags & SHF_EXECINSTR) == SHF_EXECINSTR ? 'X' : ' ',
-		(unsigned long)shdr.sh_addr,
-		(unsigned long)shdr.sh_offset,
-		(unsigned long)shdr.sh_size,
-		(uint16_t)shdr.sh_link,
-		(uint16_t)shdr.sh_info,
-		(uint16_t)shdr.sh_addralign,
-		(uint16_t)shdr.sh_entsize
-	);
-	rc.push_back(stmp);
+	oss.str("");
+	oss <<std::left<<std::setw(16)<<std::setfill(' ')<<tmp<<" "
+	    <<std::left<<std::setw(16)<<std::setfill(' ')<<elf_encode_sh_type(shdr.sh_type)<<" "
+	    <<((shdr.sh_flags & SHF_WRITE) == SHF_WRITE ? 'W' : ' ')<<" "
+	    <<((shdr.sh_flags & SHF_ALLOC) == SHF_ALLOC ? 'A' : ' ')<<" "
+	    <<((shdr.sh_flags & SHF_EXECINSTR) == SHF_EXECINSTR ? 'X' : ' ')<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)shdr.sh_addr<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)shdr.sh_offset<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)shdr.sh_size<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(4)<<(uint16_t)shdr.sh_link<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(4)<<(uint16_t)shdr.sh_info<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(4)<<(uint16_t)shdr.sh_addralign<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(4)<<(uint16_t)shdr.sh_entsize;
+	rc.push_back(oss.str());
     }
     return rc;
 }
@@ -801,17 +799,18 @@ std::string ELF_Parser::elf_SymTabBind(char type) const
 
 std::string ELF_Parser::elf_SymTabShNdx(unsigned idx) const
 {
-  char ret[10];
-  switch(idx)
-  {
-    case SHN_UNDEF:  return "Undef ";
-    case SHN_LOPROC: return "LoProc";
-    case SHN_HIPROC: return "HiProc";
-    case SHN_ABS:    return "Abs.  ";
-    case SHN_COMMON: return "Common";
-    case SHN_HIRESERVE: return "HiRes.";
-    default: sprintf(ret,"%04XH ",idx); return ret;
-  }
+    std::ostringstream oss;
+    switch(idx) {
+	case SHN_UNDEF:  return "Undef ";
+	case SHN_LOPROC: return "LoProc";
+	case SHN_HIPROC: return "HiProc";
+	case SHN_ABS:    return "Abs.  ";
+	case SHN_COMMON: return "Common";
+	case SHN_HIRESERVE: return "HiRes.";
+	default:
+		oss<<std::hex<<std::setfill('0')<<std::setw(4)<<idx<<"H";
+		return oss.str();
+    }
 }
 
 bool ELF_Parser::ELF_IS_SECTION_PHYSICAL(unsigned sec_num) const
@@ -826,37 +825,29 @@ std::vector<std::string> ELF_Parser::__elfReadSymTab(binary_stream& handle,size_
     size_t i;
     std::vector<std::string> rc;
     std::string text;
+    std::ostringstream oss;
     handle.seek(__elfSymPtr,binary_stream::Seek_Set);
     for(i = 0;i < nsym;i++) {
 	__filesize_t fp;
-	char stmp[80];
 	Elf_Sym sym;
 	if(IsKbdTerminate() || handle.eof()) break;
 	fp = handle.tell();
 	sym=elf_reader->read_sym(handle,fp);
 	handle.seek(fp+__elfSymEntSize,binary_stream::Seek_Set);
 	text=elf_arch->read_nametableex(*namecache,sym.st_name,active_shtbl); // !!! HACK
+	oss.str("");
 	if(is_64bit)
-	    sprintf(stmp,"%-29s %016llX %08lX %04hX %s %s %s"
-	       ,text.c_str()
-	       ,(unsigned long long)sym.st_value
-	       ,(unsigned)sym.st_size
-	       ,sym.st_other
-	       ,elf_SymTabType(sym.st_info).c_str()
-	       ,elf_SymTabBind(sym.st_info).c_str()
-	       ,elf_SymTabShNdx(sym.st_shndx).c_str()
-	    );
+	    oss<<std::left<<std::setw(29)<<text<<" "
+		<<std::hex<<std::setfill('0')<<std::setw(16)<<(unsigned long long)sym.st_value<<" ";
 	else
-	    sprintf(stmp,"%-37s %08lX %08lX %04hX %s %s %s"
-	       ,text.c_str()
-	       ,(unsigned)sym.st_value
-	       ,(unsigned)sym.st_size
-	       ,sym.st_other
-	       ,elf_SymTabType(sym.st_info).c_str()
-	       ,elf_SymTabBind(sym.st_info).c_str()
-	       ,elf_SymTabShNdx(sym.st_shndx).c_str()
-	    );
-	rc.push_back(stmp);
+	    oss<<std::left<<std::setw(37)<<text<<" "
+		<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)sym.st_value<<" ";
+	oss<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned)sym.st_size<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(4)<<sym.st_other<<" "
+	    <<elf_SymTabType(sym.st_info)<<" "
+	    <<elf_SymTabBind(sym.st_info)<<" "
+	    <<elf_SymTabShNdx(sym.st_shndx);
+	rc.push_back(oss.str());
     }
     return rc;
 }
@@ -867,6 +858,7 @@ std::vector<std::string> ELF_Parser::__elfReadDynTab(binary_stream& handle,size_
     std::vector<std::string> rc;
     std::string sout;
     unsigned len,rborder;
+    std::ostringstream oss;
     for(i = 0;i < ntbl;i++) {
 	__filesize_t fp;
 	std::string stmp;
@@ -884,10 +876,13 @@ std::vector<std::string> ELF_Parser::__elfReadDynTab(binary_stream& handle,size_
 	stmp=sout;
 	if(len > rborder-4) stmp+="...";
 //   if(rlen < rborder) { memset(&stmp[rlen],' ',rborder-rlen); stmp[rborder] = 0; }
-	char sbuf[256];
-	if(is_64bit) sprintf(sbuf," vma=%016llXH",(unsigned long long)pdyn.d_un.d_val);
-	else sprintf(sbuf," vma=%08lXH",(unsigned long)pdyn.d_un.d_val);
-	stmp+=sbuf;
+	oss.str("");
+	oss<<" vma=";
+	if(is_64bit)
+	    oss<<std::hex<<std::setfill('0')<<std::setw(16)<<(unsigned long long)pdyn.d_un.d_val<<"H";
+	else
+	    oss<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)pdyn.d_un.d_val<<"H";
+	stmp+=oss.str();
 	rc.push_back(stmp);
 	handle.seek(fp,binary_stream::Seek_Set);
     }
@@ -1336,9 +1331,9 @@ __filesize_t ELF_Parser::action_F2()
 std::string ELF_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
     std::string str;
-    bool ret = false;
     std::set<Elf_Reloc>::const_iterator erl;
     __filesize_t defval;
+    bool ret=false;
     main_handle.seek(ulShift,binary_stream::Seek_Set);
     switch(codelen) {
 	default:
@@ -1545,18 +1540,13 @@ __filesize_t ELF_Parser::action_F1()
 
 std::string ELF_Parser::address_resolving(__filesize_t cfpos)
 {
-    std::string addr;
-    /* Since this function is used in references resolving of disassembler
-	it must be seriously optimized for speed. */
+ /* Since this function is used in references resolving of disassembler
+    it must be seriously optimized for speed. */
+    std::ostringstream oss;
     __filesize_t res;
-    if(cfpos < elf_reader->ehdr_size()) {
-	addr="ELFhdr:";
-	addr+=Get2Digit(cfpos);
-    } else if((res=pa2va(cfpos))!=0) {
-	addr = ".";
-	addr+=Get8Digit(res);
-    }
-    return addr;
+    if(cfpos < elf_reader->ehdr_size()) oss<<"ELFhdr:"<<std::hex<<std::setfill('0')<<std::setw(2)<<cfpos;
+    else if((res=pa2va(cfpos))!=0) oss<<"."<<std::hex<<std::setfill('0')<<std::setw(8)<<res;
+    return oss.str();
 }
 
 Symbol_Info ELF_Parser::FindPubName(__filesize_t pa) const
@@ -1871,6 +1861,7 @@ bool Elf_Arm::build_refer_str(binary_stream& handle,std::string& str,
   uint32_t r_type;
   bool ret=false, use_addend = false;
   std::string buff;
+  std::ostringstream oss;
   UNUSED(codelen);
   UNUSED(defval);
   r_type = reader().R_TYPE(erl.info);
@@ -1906,8 +1897,8 @@ bool Elf_Arm::build_refer_str(binary_stream& handle,std::string& str,
 		   else retval = false;
 		   break;
     case R_ARM_PLT32: /* PLT[offset] + addendum - this */
-		   str+="PLT-";
-		   str+=Get8Digit(erl.offset);
+		    oss<<"PLT-"<<std::hex<<std::setfill('0')<<std::setw(8)<<erl.offset;
+		    str+=oss.str();
 		   use_addend = true;
 		   break;
     case R_ARM_GLOB_DAT:  /* symbol */
@@ -1926,10 +1917,10 @@ bool Elf_Arm::build_refer_str(binary_stream& handle,std::string& str,
 		   break;
   }
   if(erl.addend && use_addend && ret &&
-     !(flags & Bin_Format::Try_Label)) /* <- it for readability */
-  {
-    str+="+";
-    str+=Get8Digit(erl.addend);
+    !(flags & Bin_Format::Try_Label)) { /* <- it for readability */
+    oss.str("");
+    oss<<"+"<<std::hex<<std::setfill('0')<<std::setw(8)<<erl.addend;
+    str+=oss.str();
   }
   return retval;
 }
@@ -1943,6 +1934,7 @@ bool Elf_i386::build_refer_str(binary_stream& handle,std::string& str,
   uint32_t r_type;
   bool ret=false, use_addend = false;
   std::string buff;
+  std::ostringstream oss;
   UNUSED(codelen);
   UNUSED(defval);
   r_type = reader().R_TYPE(erl.info);
@@ -1976,13 +1968,13 @@ bool Elf_i386::build_refer_str(binary_stream& handle,std::string& str,
 		   else retval = false;
 		   break;
     case R_386_GOT32: /* GOT[offset] + addendum - this */
-		   str+="GOT-";
-		   str+=Get8Digit(erl.offset);
+		    oss<<"GOT-"<<std::hex<<std::setfill('0')<<std::setw(8)<<erl.offset;
+		    str+=oss.str();
 		   use_addend = true;
 		   break;
     case R_386_PLT32: /* PLT[offset] + addendum - this */
-		   str+="PLT-";
-		   str+=Get8Digit(erl.offset);
+		    oss<<"PLT-"<<std::hex<<std::setfill('0')<<std::setw(8)<<erl.offset;
+		    str+=oss.str();
 		   use_addend = true;
 		   break;
     case R_386_GLOB_DAT:  /* symbol */
@@ -2005,10 +1997,10 @@ bool Elf_i386::build_refer_str(binary_stream& handle,std::string& str,
 		   break;
   }
   if(erl.addend && use_addend && ret &&
-     !(flags & Bin_Format::Try_Label)) /* <- it for readability */
-  {
-    str+="+";
-    str+=Get8Digit(erl.addend);
+     !(flags & Bin_Format::Try_Label)) { /* <- it for readability */
+     oss.str("");
+     oss<<"+"<<std::hex<<std::setfill('0')<<std::setw(8)<<erl.addend;
+     str+=oss.str();
   }
   return retval;
 }
@@ -2022,6 +2014,7 @@ bool Elf_x86_64::build_refer_str(binary_stream& handle,std::string& str,
   uint32_t r_type;
   bool ret=false, use_addend = false;
   std::string buff;
+  std::ostringstream oss;
   UNUSED(codelen);
   UNUSED(defval);
   r_type = reader().R_TYPE(erl.info);
@@ -2057,25 +2050,25 @@ bool Elf_x86_64::build_refer_str(binary_stream& handle,std::string& str,
 		   else retval = false;
 		   break;
     case R_X86_64_GOT32:
-		   str+="GOT-";
-		   str+=Get8Digit(erl.offset);
+		    oss<<"GOT-"<<std::hex<<std::setfill('0')<<std::setw(8)<<erl.offset;
+		    str+=oss.str();
 		   use_addend = true;
 		   break;
     case R_X86_64_GOT64:
     case R_X86_64_GOTPC64:
     case R_X86_64_GOTPLT64: /* GOT[offset] + addendum - this */
-		   str+="GOT-";
-		   str+=Get16Digit(erl.offset);
+		    oss<<"GOT-"<<std::hex<<std::setfill('0')<<std::setw(16)<<erl.offset;
+		    str+=oss.str();
 		   use_addend = true;
 		   break;
     case R_X86_64_PLT32:
-		   str+="PLT-";
-		   str+=Get8Digit(erl.offset);
+		    oss<<"PLT-"<<std::hex<<std::setfill('0')<<std::setw(8)<<erl.offset;
+		    str+=oss.str();
 		   use_addend = true;
 		   break;
     case R_X86_64_PLTOFF64: /* PLT[offset] + addendum - this */
-		   str+="PLT-";
-		   str+=Get16Digit(erl.offset);
+		    oss<<"PLT-"<<std::hex<<std::setfill('0')<<std::setw(16)<<erl.offset;
+		    str+=oss.str();
 		   use_addend = true;
 		   break;
     case R_X86_64_GLOB_DAT:  /* symbol */
@@ -2098,10 +2091,10 @@ bool Elf_x86_64::build_refer_str(binary_stream& handle,std::string& str,
 		   break;
   }
   if(erl.addend && use_addend && ret &&
-     !(flags & Bin_Format::Try_Label)) /* <- it for readability */
-  {
-    str+="+";
-    str+=Get8Digit(erl.addend);
+     !(flags & Bin_Format::Try_Label)) { /* <- it for readability */
+    oss.str("");
+    oss<<"+"<<std::hex<<std::setfill('0')<<std::setw(8)<<erl.addend;
+    str+=oss.str();
   }
   return retval;
 }
@@ -2115,6 +2108,7 @@ bool Elf_Ppc::build_refer_str(binary_stream& handle,std::string& str,
   uint32_t r_type;
   bool ret=false, use_addend = false;
   std::string buff;
+  std::ostringstream oss;
   UNUSED(codelen);
   UNUSED(defval);
   r_type = reader().R_TYPE(erl.info);
@@ -2166,21 +2160,21 @@ bool Elf_Ppc::build_refer_str(binary_stream& handle,std::string& str,
     case R_PPC_GOT16_LO:
     case R_PPC_GOT16_HI:
     case R_PPC_GOT16_HA:
-		   str+="GOT-";
-		    str+=Get8Digit(erl.offset);
+		    oss<<"GOT-"<<std::hex<<std::setfill('0')<<std::setw(8)<<erl.offset;
+		    str+=oss.str();
 		   use_addend = true;
 		   break;
     case R_PPC_PLT16_LO:
     case R_PPC_PLT16_HI:
     case R_PPC_PLT16_HA:
     case R_PPC_PLT32:
-		   str+="PLT-";
-		   str+=Get8Digit(erl.offset);
+		    oss<<"PLT-"<<std::hex<<std::setfill('0')<<std::setw(8)<<erl.offset;
+		    str+=oss.str();
 		   use_addend = true;
 		   break;
     case R_PPC64_PLT64: /* PLT[offset] + addendum - this */
-		   str+="PLT-";
-		   str+=Get16Digit(erl.offset);
+		    oss<<"PLT-"<<std::hex<<std::setfill('0')<<std::setw(16)<<erl.offset;
+		    str+=oss.str();
 		   use_addend = true;
 		   break;
     case R_PPC_GLOB_DAT:  /* symbol */
@@ -2190,10 +2184,10 @@ bool Elf_Ppc::build_refer_str(binary_stream& handle,std::string& str,
 		   break;
   }
   if(erl.addend && use_addend && ret &&
-     !(flags & Bin_Format::Try_Label)) /* <- it for readability */
-  {
-    str+="+";
-    str+=Get8Digit(erl.addend);
+     !(flags & Bin_Format::Try_Label)) {/* <- it for readability */
+    oss.str("");
+    oss<<"+"<<std::hex<<std::setfill('0')<<std::setw(8)<<erl.addend;
+    str+=oss.str();
   }
   return retval;
 }

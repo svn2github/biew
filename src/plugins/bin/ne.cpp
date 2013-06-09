@@ -19,6 +19,8 @@ using namespace	usr;
  * @note        Development, fixes and improvements
 **/
 #include <algorithm>
+#include <sstream>
+#include <iomanip>
 #include <set>
 
 #include <stdio.h>
@@ -200,11 +202,11 @@ void (NE_Parser::*NE_Parser::nephead[])(TWindow& w) const =
 
 void NE_Parser::PaintNewHeaderNE(TWindow& win,const std::vector<std::string>& ptr,unsigned tpage) const
 {
-    char text[80];
+    std::ostringstream oss;
     win.freeze();
     win.clear();
-    sprintf(text," New Executable Header [%d/%d] ",ptr.size() + 1,tpage);
-    win.set_title(text,TWindow::TMode_Center,dialog_cset.title);
+    oss<<" New Executable Header ["<<tpage<<"/"<<ptr.size()<<"] ";
+    win.set_title(oss.str(),TWindow::TMode_Center,dialog_cset.title);
     win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
     if(tpage < 2) {
 	win.goto_xy(1,1);
@@ -254,12 +256,12 @@ void NE_Parser::paintdummyentryNE(TWindow& w) const
 
 void NE_Parser::SegPaintNE(TWindow& win,const std::vector<SEGDEF>& names,unsigned start) const
 {
-    char buffer[81];
+    std::ostringstream oss;
     unsigned flags = names[start].sdFlags;
     win.freeze();
     win.clear();
-    sprintf(buffer," Segment Table [ %u / %u ] ",start + 1,names.size());
-    win.set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+    oss<<" Segment Table [ "<<(start + 1)<<" / "<<names.size()<<" ] ";
+    win.set_title(oss.str(),TWindow::TMode_Center,dialog_cset.title);
     win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
     win.goto_xy(1,1);
     if(names[start].sdOffset)
@@ -304,12 +306,12 @@ void NE_Parser::SegPaintNE(TWindow& win,const std::vector<SEGDEF>& names,unsigne
 
 void NE_Parser::EntPaintNE(TWindow& win,const std::vector<ENTRY>& names,unsigned start) const
 {
-    char buffer[81];
+    std::ostringstream oss;
     unsigned flags = names[start].eFlags;
     win.freeze();
     win.clear();
-    sprintf(buffer," Entry Point [ %u / %u ] ",start + 1,names.size());
-    win.set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+    oss<<" Entry Point [ "<<(start + 1)<<" / "<<names.size()<<" ] ";
+    win.set_title(oss.str(),TWindow::TMode_Center,dialog_cset.title);
     win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
     if(names[start].eFixed) entpaintNE(win,names[start],flags);
     else paintdummyentryNE(win);
@@ -381,6 +383,7 @@ std::vector<std::string> NE_Parser::__ReadProcListNE(binary_stream& handle,int m
     std::string buff;
     SEGDEF tsd;
     modno++;
+    std::ostringstream oss;
 
     handle.seek(headshift()+ne.neOffsetSegmentTable,binary_stream::Seek_Set);
     for(i = 0;i < ne.neSegmentTableCount;i++) {
@@ -396,9 +399,8 @@ std::vector<std::string> NE_Parser::__ReadProcListNE(binary_stream& handle,int m
 		handle.read(&rne,sizeof(RELOC_NE));
 		if((rne.Type & 3) && rne.idx == modno) {
 		    if((rne.Type & 3) == 1) {
-			char stmp[256];
-			sprintf(stmp,"< By ordinal >   @%hu",rne.ordinal);
-			buff=stmp;
+			oss<<"< By ordinal >   @"<<std::hex<<std::setfill('0')<<std::setw(4)<<rne.ordinal;
+			buff=oss.str();
 		    } else buff=rd_ImpName(rne.ordinal,true);
 		    if(!isPresent(rc,buff)) {
 			if(IsKbdTerminate()) goto exit;
@@ -416,18 +418,18 @@ exit:
 void NE_Parser::ShowProcListNE( int modno ) const
 {
     binary_stream& handle = *ne_cache;
-    char ptitle[80];
     std::string name;
     TWindow *w;
+    std::ostringstream oss;
     handle.seek(0L,binary_stream::Seek_Set);
     w = PleaseWaitWnd();
     std::vector<std::string> objs = __ReadProcListNE(handle,modno);
     delete w;
     if(objs.empty()) { bctx().NotifyBox(NOT_ENTRY,MOD_REFER); return; }
     name=rd_ImpName(modno+1,false);
-    sprintf(ptitle,"%s%s ",IMPPROC_TABLE,name.c_str());
+    oss<<IMPPROC_TABLE<<name<<" ";
     ListBox lb(bctx());
-    lb.run(objs,ptitle,ListBox::Sortable,-1);
+    lb.run(objs,oss.str(),ListBox::Sortable,-1);
 }
 
 std::vector<std::string> NE_Parser::RNamesReadItems(binary_stream& handle,size_t nnames,__filesize_t offset)
@@ -436,15 +438,16 @@ std::vector<std::string> NE_Parser::RNamesReadItems(binary_stream& handle,size_t
     unsigned char length;
     unsigned Ordinal;
     unsigned i;
-    char stmp[300]; /* max255 + @ordinal */
+    char stmp[300];
+    std::ostringstream oss; /* max255 + @ordinal */
     handle.seek(offset,binary_stream::Seek_Set);
     for(i = 0;i < nnames;i++) {
 	length = handle.read(type_byte);
 	if(IsKbdTerminate() || handle.eof()) break;
 	handle.read(stmp,length);
 	Ordinal = handle.read(type_word);
-	sprintf(&stmp[length],"%c%-5u",ListBox::Ord_Delimiter, Ordinal);
-	rc.push_back(stmp);
+	oss<<(char)ListBox::Ord_Delimiter<<std::left<<std::setw(5)<<Ordinal;
+	rc.push_back(std::string(stmp)+oss.str());
     }
     return rc;
 }
@@ -577,27 +580,21 @@ __filesize_t  NE_Parser::CalcEntryPointNE( unsigned segnum, unsigned offset ) co
 
 __filesize_t  NE_Parser::CalcEntryNE(unsigned ord,bool dispmsg) const
 {
-  ENTRY entr;
-  SEGDEF segd;
-  int segnum;
-  if(!ReadEntryNE(&entr,ord)) { if(dispmsg) bctx().ErrMessageBox(NOT_ENTRY,""); return 0L; }
-  if(entr.eFixed == 0xFE)
-  {
-    char outs[100];
-    if(dispmsg)
-    {
-      sprintf(outs,"This entry is constant : %04hXH",entr.eSegOff);
-      bctx().TMessageBox(outs,"Virtual entry");
-    }
+    ENTRY entr;
+    SEGDEF segd;
+    int segnum;
+    if(!ReadEntryNE(&entr,ord)) { if(dispmsg) bctx().ErrMessageBox(NOT_ENTRY,""); return 0L; }
+    if(entr.eFixed == 0xFE) {
+	std::ostringstream oss;
+	if(dispmsg) {
+	    oss<<"This entry is constant : "<<std::hex<<std::setfill('0')<<std::setw(4)<<entr.eSegOff<<"H";
+	    bctx().TMessageBox(oss.str(),"Virtual entry");
+	}
+	return 0L;
+    } else segnum = entr.eSegNum;
+    if(ReadSegDefNE(&segd,segnum)) return segd.sdOffset ? (((__filesize_t)segd.sdOffset)<<ne.neLogicalSectorShiftCount) + entr.eSegOff : 0L;
+    else if(dispmsg) bctx().ErrMessageBox(NO_ENTRY,BAD_ENTRY);
     return 0L;
-  }
-  else                    segnum = entr.eSegNum;
-  if(ReadSegDefNE(&segd,segnum))
-  {
-    return segd.sdOffset ? (((__filesize_t)segd.sdOffset)<<ne.neLogicalSectorShiftCount) + entr.eSegOff : 0L;
-  }
-  else if(dispmsg) bctx().ErrMessageBox(NO_ENTRY,BAD_ENTRY);
-  return 0L;
 }
 
 __filesize_t NE_Parser::action_F10()
@@ -700,26 +697,24 @@ const char * ResourceGrNames[] =
 
 std::string NE_Parser::GetResourceIDNE(binary_stream& handle,unsigned rid,__filesize_t BegResTab) const
 {
- char buff[80];
- unsigned char nByte;
- if(rid & 0x8000) sprintf(buff,"%hi",rid & 0x7FFF);
- else
- {
-   __filesize_t pos;
-   pos = handle.tell();
-   handle.seek(BegResTab + rid,binary_stream::Seek_Set);
-   nByte = handle.read(type_byte);
-   if(nByte > 26)
-   {
-     handle.read(buff,26);
-     strcat(buff,"...");
-     nByte = 29;
-   }
-   else if(nByte) handle.read(buff,nByte);
-   buff[nByte] = 0;
-   handle.seek(pos,binary_stream::Seek_Set);
- }
- return buff;
+    std::ostringstream oss;
+    char buff[81];
+    unsigned char nByte;
+    if(rid & 0x8000) { oss<<std::hex<<(rid & 0x7FFF); return oss.str(); }
+    else {
+	__filesize_t pos;
+	pos = handle.tell();
+	handle.seek(BegResTab + rid,binary_stream::Seek_Set);
+	nByte = handle.read(type_byte);
+	if(nByte > 26) {
+	    handle.read(buff,26);
+	    strcat(buff,"...");
+	    nByte = 29;
+	} else if(nByte) handle.read(buff,nByte);
+	buff[nByte] = 0;
+	handle.seek(pos,binary_stream::Seek_Set);
+    }
+    return buff;
 }
 
 std::vector<std::string> NE_Parser::__ReadResourceGroupNE(binary_stream& handle,size_t nitems,long * addr) const
@@ -728,9 +723,9 @@ std::vector<std::string> NE_Parser::__ReadResourceGroupNE(binary_stream& handle,
     unsigned i,j;
     uint_fast16_t rcAlign,rTypeID,rcount;
     unsigned long BegResTab;
-    char buff[81];
     BegResTab = handle.tell();
     rcAlign = handle.read(type_word);
+    std::ostringstream oss;
     for(i = 0;i < nitems;i++) {
 	addr[i++] = handle.tell();
 	rTypeID = handle.read(type_word);
@@ -739,25 +734,23 @@ std::vector<std::string> NE_Parser::__ReadResourceGroupNE(binary_stream& handle,
 	if(IsKbdTerminate() || handle.eof()) break;
 	if(rTypeID & 0x8000) {
 	    rTypeID &= 0x7FFF;
-	    if(rTypeID < 17) strcpy(buff,ResourceGrNames[rTypeID]);
-	    else             sprintf(buff,"< Ordinal type: %04hXH >",rTypeID);
+	    if(rTypeID < 17) oss<<ResourceGrNames[rTypeID];
+	    else             oss<<"< Ordinal type: "<<std::hex<<std::setfill('0')<<std::setw(8)<<rTypeID<<"H >";
 	}
-	else  sprintf(buff,"\"%s\"",GetResourceIDNE(handle,rTypeID,BegResTab).c_str());
-	rc.push_back(buff);
+	else  oss<<'"'<<GetResourceIDNE(handle,rTypeID,BegResTab)<<'"';
+	rc.push_back(oss.str());
 	for(j = 0;j < rcount;j++)  {
 	    NAMEINFO nam;
-	    char stmp[81];
+	    oss.str("");
 	    if(IsKbdTerminate() || handle.eof()) break;
 	    handle.read(&nam,sizeof(NAMEINFO));
 	    addr[i++] = ((unsigned long)nam.rnOffset)<<rcAlign;
-	    sprintf(stmp," %s <length: %04hXH> %s %s %s",
-		   GetResourceIDNE(handle,nam.rnID,BegResTab).c_str(),
-		   (unsigned)((unsigned long)nam.rnLength)<<rcAlign,
-		   ((nam.rnFlags & 0x0010) ? "MOVEABLE" : "FIXED"),
-		   ((nam.rnFlags & 0x0020) ? "PURE"     : "IMPURE"),
-		   ((nam.rnFlags & 0x0040) ? "PRELOAD"  : "LOADONCALL")
-		   );
-	    rc.push_back(stmp);
+	    oss<<" "<<GetResourceIDNE(handle,nam.rnID,BegResTab)
+		<<" <length: "<<std::hex<<std::setfill('0')<<std::setw(4)<<((unsigned)((unsigned long)nam.rnLength)<<rcAlign)
+		<<" "<<((nam.rnFlags & 0x0010) ? "MOVEABLE" : "FIXED")
+		<<" "<<((nam.rnFlags & 0x0020) ? "PURE"     : "IMPURE")
+		<<" "<<((nam.rnFlags & 0x0040) ? "PRELOAD"  : "LOADONCALL");
+	    rc.push_back(oss.str());
 	}
 	i--;
     }
@@ -999,18 +992,16 @@ std::string NE_Parser::rd_ImpName(unsigned idx,bool useasoff) const
   return rdImpNameNELX(idx,useasoff,headshift() + ne.neOffsetImportTable);
 }
 
-bool NE_Parser::BuildReferStrNE(const DisMode& parent,std::string& str,const RELOC_NE& rne,int flags,__filesize_t ulShift)
+std::string NE_Parser::BuildReferStrNE(const DisMode& parent,const RELOC_NE& rne,int flags,__filesize_t ulShift)
 {
-    std::string buff;
-    char stmp[4096];
+    std::string buff,str;
     const char *pref;
-    bool retrf;
     char reflen;
     bool need_virt;
     reflen = 0;
     pref = "";
-    retrf = false;
     need_virt = (flags & Bin_Format::Save_Virt);
+    std::ostringstream oss;
     if(PubNames.empty()) ne_ReadPubNameList(*ne_cache2);
     switch(rne.AddrType) {
 	case 0: reflen = 1; pref = "(b) "; break;
@@ -1023,11 +1014,11 @@ bool NE_Parser::BuildReferStrNE(const DisMode& parent,std::string& str,const REL
     }
     if(flags & Bin_Format::Use_Type) str+=pref;
     if((rne.Type & 3) == 1 || (rne.Type & 3) == 2) { /** imported type */
-	retrf = true;
 	buff=rd_ImpName(rne.idx,0);
-	sprintf(stmp,"<%s>.",buff.c_str());
-	str+=stmp;
-	if((rne.Type & 3) == 1) { sprintf(stmp,"@%hu",rne.ordinal); str+=stmp; }
+	oss<<"<"<<buff<<">.";
+	str+=oss.str();
+	oss.str("");
+	if((rne.Type & 3) == 1) { oss<<"@"<<std::hex<<std::setfill('0')<<std::setw(4)<<rne.ordinal; str+=oss.str(); }
 	else str+=rd_ImpName(rne.ordinal,true);
     } else if((rne.Type & 3) == 0) {
 	if(rne.idx == 0x00FF && rne.AddrType != 2) {
@@ -1036,9 +1027,9 @@ bool NE_Parser::BuildReferStrNE(const DisMode& parent,std::string& str,const REL
 	    Symbol_Info rc = FindPubName(ea);
 	    if(rc.pa!=Plugin::Bad_Address) str+=rc.name;
 	    else {
-		retrf = ea?true:false;
-		sprintf(stmp,"(*this).@%hu",rne.ordinal);
-		str+=stmp;
+		oss.str("");
+		oss<<"(*this).@"<<std::hex<<std::setfill('0')<<std::setw(4)<<rne.ordinal;
+		str+=oss.str();
 	    }
 	    if(!DumpMode && !EditMode && !(flags & Bin_Format::Use_Type)) code_guider().add_go_address(parent,str,ea);
 	} else {
@@ -1047,10 +1038,10 @@ bool NE_Parser::BuildReferStrNE(const DisMode& parent,std::string& str,const REL
 	    Symbol_Info rc = FindPubName(ep);
 	    if(rc.pa!=Plugin::Bad_Address) str+=rc.name;
 	    else {
-		if(need_virt) sprintf(stmp,".%08lX",(unsigned long)pa2va(ep));
-		else sprintf(stmp,"(*this).seg<#%hu>:%sH",rne.idx,Get4Digit(rne.ordinal).c_str());
-		str+=stmp;
-		retrf = ep?true:false;
+		oss.str("");
+		if(need_virt) oss<<"."<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)pa2va(ep);
+		else oss<<"(*this).seg<#"<<std::hex<<std::setfill('0')<<std::setw(4)<<rne.idx<<">:"<<std::hex<<std::setfill('0')<<std::setw(4)<<rne.ordinal;
+		str+=oss.str();
 	    }
 	    if(!DumpMode && !EditMode && !(flags & Bin_Format::Use_Type)) code_guider().add_go_address(parent,str,ep);
 	}
@@ -1061,19 +1052,20 @@ bool NE_Parser::BuildReferStrNE(const DisMode& parent,std::string& str,const REL
 	    str+="+";
 	    main_handle().seek(ulShift,binary_stream::Seek_Set);
 	    data = main_handle().read(type_dword);
-	    str+=(reflen == 1)? Get2Digit(data) : (reflen == 2) ? Get4Digit(data) : Get8Digit(data);
+	    oss.str("");
+	    oss<<std::hex<<std::setfill('0')<<std::setw((reflen == 1)?2:(reflen == 2)?4:8)<<data;
+	    str+=oss.str();
 	}
 	else str+=",<add>";
     }
-    return retrf;
+    return str;
 }
 
 std::string NE_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Format::bind_type flags,int codelen,__filesize_t r_sh)
 {
-    std::string str;
     unsigned i;
     __filesize_t segpos,slength;
-    std::string buff;
+    std::string str;
     if(flags & Bin_Format::Try_Pic) return "";
     if(ulShift >= CurrSegmentStart && ulShift <= CurrSegmentStart + CurrSegmentLength) {
 	i = CurrChainSegment - 1;
@@ -1104,7 +1096,7 @@ Direct:
 		if(rne.AddrType == 5) {
 		    rne.idx    = __findSpecType(CurrSegmentStart,CurrSegmentLength,i + 1,ulShift,codelen,2,rne.idx);
 		}
-		BuildReferStrNE(parent,str,rne,flags,ulShift);
+		str=BuildReferStrNE(parent,rne,flags,ulShift);
 		return str;
 	    } else {
 TryLabel:
@@ -1345,26 +1337,21 @@ Bin_Format::bitness NE_Parser::query_bitness(__filesize_t pa) const
 
 std::string NE_Parser::address_resolving(__filesize_t cfpos)
 {
-    std::string addr;
-    /* Since this function is used in references resolving of disassembler
-	it must be seriously optimized for speed. */
+ /* Since this function is used in references resolving of disassembler
+    it must be seriously optimized for speed. */
     uint32_t res;
-    if(cfpos >= headshift() && cfpos < headshift() + sizeof(NEHEADER)) {
-	addr="NEH :";
-	addr+=Get4Digit(cfpos - headshift());
-    } else if(cfpos >= headshift() + ne.neOffsetSegmentTable &&
-	    cfpos <  headshift() + ne.neOffsetSegmentTable + ne.neSegmentTableCount*sizeof(SEGDEF)) {
-	addr="NESD:";
-	addr+=Get4Digit(cfpos - headshift() - ne.neOffsetSegmentTable);
-    } else if(cfpos >= headshift() + ne.neOffsetEntryTable &&
-	    cfpos <  headshift() + ne.neOffsetEntryTable + ne.neLengthEntryTable) {
-	addr="NEET:";
-	addr+=Get4Digit(cfpos - headshift() - ne.neOffsetEntryTable);
-    } else if((res=pa2va(cfpos))!=0) {
-	addr = ".";
-	addr+=Get8Digit(res);
-    }
-    return addr;
+    std::ostringstream oss;
+    if(cfpos >= headshift() && cfpos < headshift() + sizeof(NEHEADER))
+	oss<<"NEH :"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos - headshift());
+    else if(cfpos >= headshift() + ne.neOffsetSegmentTable &&
+	cfpos <  headshift() + ne.neOffsetSegmentTable + ne.neSegmentTableCount*sizeof(SEGDEF))
+	oss<<"NESD:"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos - headshift() - ne.neOffsetSegmentTable);
+    else if(cfpos >= headshift() + ne.neOffsetEntryTable &&
+	cfpos <  headshift() + ne.neOffsetEntryTable + ne.neLengthEntryTable)
+	oss<<"NEET:"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos - headshift() - ne.neOffsetEntryTable);
+    else if((res=pa2va(cfpos))!=0)
+	oss<<"."<<std::hex<<std::setfill('0')<<std::setw(8)<<res;
+    return oss.str();
 }
 
 int NE_Parser::query_platform() const { return DISASM_CPU_IX86; }

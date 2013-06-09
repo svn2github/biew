@@ -18,6 +18,9 @@ using namespace	usr;
  * @since       1995
  * @note        Development, fixes and improvements
 **/
+#include <sstream>
+#include <iomanip>
+
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -245,19 +248,18 @@ void (LX_Parser::*LX_Parser::lxphead[])(TWindow&) const =
 
 void LX_Parser::PaintNewHeaderLX(TWindow& win,const std::vector<std::string>& ptr,unsigned npage) const
 {
-  char text[80];
-  UNUSED(ptr);
-  win.freeze();
-  win.clear();
-  sprintf(text," Linear eXecutable Header [%d/%d] ",npage + 1,ptr.size());
-  win.set_title(text,TWindow::TMode_Center,dialog_cset.title);
-  win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
-  if(npage < 3)
-  {
-    win.goto_xy(1,1);
-    (this->*lxphead[npage])(win);
-  }
-  win.refresh_full();
+    UNUSED(ptr);
+    win.freeze();
+    win.clear();
+    std::ostringstream oss;
+    oss<<" Linear eXecutable Header ["<<(npage+1)<<"/"<<ptr.size()<<"] ";
+    win.set_title(oss.str(),TWindow::TMode_Center,dialog_cset.title);
+    win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
+    if(npage < 3) {
+	win.goto_xy(1,1);
+	(this->*lxphead[npage])(win);
+    }
+    win.refresh_full();
 }
 
 __filesize_t LX_Parser::action_F8()
@@ -399,11 +401,11 @@ void LX_Parser::objpaintLX(TWindow& w,const LX_OBJECT& nam) const
 
 void LX_Parser::ObjPaintLX(TWindow& win,const std::vector<LX_OBJECT>& names,unsigned start) const
 {
-    char buffer[81];
     win.freeze();
     win.clear();
-    sprintf(buffer," Object Table [ %u / %u ] ",start + 1,names.size());
-    win.set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+    std::ostringstream oss;
+    oss<<" Object Table [ "<<start + 1<<" / "<<names.size()<<" ] ";
+    win.set_title(oss.str(),TWindow::TMode_Center,dialog_cset.title);
     win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
     objpaintLX(win,names[start]);
     win.refresh_full();
@@ -518,47 +520,49 @@ __filesize_t LX_Parser::CalcEntryPoint(unsigned long objnum,__filesize_t _offset
   return __calcPageEntry(&mt) + diff;
 }
 
-void LX_Parser::ReadLXLEImpMod(__filesize_t offtable,unsigned num,char *str) const
+std::string LX_Parser::ReadLXLEImpMod(__filesize_t offtable,unsigned num) const
 {
-  binary_stream* handle;
-  unsigned i;
-  unsigned char len;
-  char buff[256];
-  handle = lx_cache;
-  handle->seek(offtable,binary_stream::Seek_Set);
-  for(i = 1;i < num;i++)
-  {
+    binary_stream* handle;
+    unsigned i;
+    unsigned char len;
+    char buff[256];
+    handle = lx_cache;
+    handle->seek(offtable,binary_stream::Seek_Set);
+    for(i = 1;i < num;i++) {
+	len = handle->read(type_byte);
+	handle->seek(len,binary_stream::Seek_Cur);
+    }
     len = handle->read(type_byte);
-    handle->seek(len,binary_stream::Seek_Cur);
-  }
-  len = handle->read(type_byte);
-  handle->read((any_t*)buff,len);
-  buff[len] = 0;
-  strcat(str,buff);
+    handle->read((any_t*)buff,len);
+    buff[len] = 0;
+    return buff;
 }
 
-void LX_Parser::ReadLXLEImpName(__filesize_t offtable,unsigned num,char *str) const
+std::string LX_Parser::ReadLXLEImpName(__filesize_t offtable,unsigned num) const
 {
-  binary_stream* handle;
-  unsigned char len;
-  char buff[256];
-  handle = lx_cache;
-  handle->seek(offtable+num,binary_stream::Seek_Set);
-  len = handle->read(type_byte);
-  handle->read((any_t*)buff,len);
-  buff[len] = 0;
-  strcat(str,buff);
+    binary_stream* handle;
+    unsigned char len;
+    char buff[256];
+    handle = lx_cache;
+    handle->seek(offtable+num,binary_stream::Seek_Set);
+    len = handle->read(type_byte);
+    handle->read((any_t*)buff,len);
+    buff[len] = 0;
+    return buff;
 }
 
 void LX_Parser::ShowFwdModOrdLX(const LX_ENTRY& lxent) const
 {
-    char buff[513];
+    std::string buff;
     buff[0] = 0;
-    ReadLXLEImpMod(lxe.lx.lxImportModuleTableOffset + headshift(),lxent.entry.e32_variant.e32_fwd.modord,buff);
-    strcat(buff,".");
-    if((lxent.entry.e32_flags & 0x01) == 0x01)
-	sprintf(&buff[strlen(buff)],"@%u",(unsigned)lxent.entry.e32_variant.e32_fwd.value);
-    else ReadLXLEImpName(lxe.lx.lxImportProcedureTableOffset + headshift(),(unsigned)lxent.entry.e32_variant.e32_fwd.value,buff);
+    buff=ReadLXLEImpMod(lxe.lx.lxImportModuleTableOffset + headshift(),lxent.entry.e32_variant.e32_fwd.modord);
+    buff+=".";
+    if((lxent.entry.e32_flags & 0x01) == 0x01) {
+	std::ostringstream oss;
+	oss<<"@"<<(unsigned)lxent.entry.e32_variant.e32_fwd.value;
+	buff+=oss.str();
+    }
+    else buff+=ReadLXLEImpName(lxe.lx.lxImportProcedureTableOffset + headshift(),(unsigned)lxent.entry.e32_variant.e32_fwd.value);
     bctx().TMessageBox(buff," Forwarder entry point ");
 }
 
@@ -748,11 +752,11 @@ void LX_Parser::entrypaintLX(TWindow& w,const LX_ENTRY& nam) const
 
 void LX_Parser::PaintEntriesLX(TWindow& win,const std::vector<LX_ENTRY>& names,unsigned start) const
 {
-    char buffer[81];
+    std::ostringstream oss;
     win.freeze();
     win.clear();
-    sprintf(buffer," Entries Table [ %u / %u ] ",start + 1,names.size());
-    win.set_title(buffer,TWindow::TMode_Center,dialog_cset.title);
+    oss<<" Entries Table [ "<<(start + 1)<<" / "<<names.size()<<" ] ";
+    win.set_title(oss.str(),TWindow::TMode_Center,dialog_cset.title);
     win.set_footer(PAGEBOX_SUB,TWindow::TMode_Right,dialog_cset.selfooter);
     entrypaintLX(win,names[start]);
     win.refresh_full();
@@ -764,15 +768,14 @@ std::vector<std::string> LX_Parser::__ReadMapTblLX(binary_stream& handle,size_t 
     size_t i;
     for(i = 0;i < n;i++) {
 	LX_MAP_TABLE mt;
-	char stmp[80];
+	std::ostringstream oss;
 	if(IsKbdTerminate() || handle.eof()) break;
 	lxReadPageDesc(handle,&mt,i+1);
-	sprintf(stmp,"Off=%08lXH Siz=%04hXH Flg:%04hXH=%s",
-		(unsigned long)mt.o32_pagedataoffset,
-		mt.o32_pagesize,
-		mt.o32_pageflags,
-		lxeGetMapAttr(mt.o32_pageflags).c_str());
-	rc.push_back(stmp);
+	oss<<"off="<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)mt.o32_pagedataoffset
+	    <<"H Siz="<<std::hex<<std::setfill('0')<<std::setw(4)<<mt.o32_pagesize
+	    <<"H Flg:"<<std::hex<<std::setfill('0')<<std::setw(4)<<mt.o32_pageflags
+	    <<"H="<<lxeGetMapAttr(mt.o32_pageflags);
+	rc.push_back(oss.str());
     }
     return rc;
 }
@@ -844,18 +847,17 @@ std::vector<std::string> LX_Parser::__ReadResourceGroupLX(binary_stream& handle,
     std::vector<std::string> rc;
     unsigned i;
     LXResource lxr;
+    std::ostringstream oss;
     for(i = 0;i < nitems;i++) {
-	char stmp[81];
 	handle.read(&lxr,sizeof(LXResource));
 	addr[i] = lxr.offset;
 	if(IsKbdTerminate() || handle.eof()) break;
-	sprintf(stmp,"%6hu = ",lxr.nameID);
-	if(lxr.typeID < sizeof(ResourceGrNamesLX)/sizeof(char *)) strcat(stmp,ResourceGrNamesLX[lxr.typeID]);
-	else  sprintf(&stmp[strlen(stmp)],"Unknown < %04hXH >",lxr.typeID);
-	sprintf(&stmp[strlen(stmp)]," obj=%04hXH.%08lXH"
-			       ,lxr.object
-			       ,(unsigned long)lxr.offset);
-	rc.push_back(stmp);
+	oss.str("");
+	oss<<std::setw(6)<<lxr.nameID<<" = ";
+	if(lxr.typeID < sizeof(ResourceGrNamesLX)/sizeof(char *)) oss<<ResourceGrNamesLX[lxr.typeID];
+	else  oss<<"Unknown < "<<std::hex<<std::setfill('0')<<std::setw(4)<<lxr.typeID<<"H >";
+	oss<<" obj="<<std::hex<<std::setfill('0')<<std::setw(4)<<lxr.object<<"H."<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)lxr.offset<<"H";
+	rc.push_back(oss.str());
     }
     return rc;
 }
@@ -1096,27 +1098,19 @@ Bin_Format::bitness LX_Parser::query_bitness(__filesize_t pa) const
 
 std::string LX_Parser::address_resolving(__filesize_t cfpos)
 {
-    std::string addr;
-    /* Since this function is used in references resolving of disassembler
-	it must be seriously optimized for speed. */
+ /* Since this function is used in references resolving of disassembler
+    it must be seriously optimized for speed. */
     uint32_t res;
-    if(cfpos >= headshift() && cfpos < headshift() + sizeof(LXHEADER)) {
-	addr="LXH :";
-	addr+=Get4Digit(cfpos - headshift());
-    } else if(cfpos >= headshift() + lxe.lx.lxObjectTableOffset &&
-		cfpos <  headshift() + lxe.lx.lxObjectTableOffset + sizeof(LX_OBJECT)*lxe.lx.lxObjectCount) {
-	addr="LXOD:";
-	addr+=Get4Digit(cfpos - headshift() - lxe.lx.lxObjectTableOffset);
-    }
+    std::ostringstream oss;
+    if(cfpos >= headshift() && cfpos < headshift() + sizeof(LXHEADER)) oss<<"LXH :"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos - headshift());
+    else if(cfpos >= headshift() + lxe.lx.lxObjectTableOffset &&
+		cfpos <  headshift() + lxe.lx.lxObjectTableOffset + sizeof(LX_OBJECT)*lxe.lx.lxObjectCount)
+	    oss<<"LXOD:"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos - headshift() - lxe.lx.lxObjectTableOffset);
     else if(cfpos >= headshift() + lxe.lx.lxObjectPageTableOffset &&
-	    cfpos <  headshift() + lxe.lx.lxObjectPageTableOffset + sizeof(LX_MAP_TABLE)*lxe.lx.lxPageCount) {
-	addr="LXPD:";
-	addr+=Get4Digit(cfpos - headshift() - lxe.lx.lxObjectPageTableOffset);
-    } else if((res=pa2va(cfpos))!=0) {
-	addr = ".";
-	addr+=Get8Digit(res);
-    }
-    return addr;
+	    cfpos <  headshift() + lxe.lx.lxObjectPageTableOffset + sizeof(LX_MAP_TABLE)*lxe.lx.lxPageCount)
+	    oss<<"LXPD:"<<std::hex<<std::setfill('0')<<std::setw(4)<<(cfpos - headshift() - lxe.lx.lxObjectPageTableOffset);
+    else if((res=pa2va(cfpos))!=0) oss<<"."<<std::hex<<std::setfill('0')<<std::setw(8)<<res;
+    return oss.str();
 }
 
 int LX_Parser::query_platform() const { return DISASM_CPU_IX86; }
