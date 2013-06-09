@@ -210,7 +210,7 @@ plugin_position BinMode::paint( unsigned keycode,unsigned tshift )
 	    if(len) {
 		rc.lastbyte = _index + len;
 		main_handle.seek(_index,binary_stream::Seek_Set);
-		main_handle.read((any_t*)buffer,len);
+		binary_packet bp=main_handle.read(len); memcpy(buffer,bp.data(),bp.size());
 	    }
 	    if(bin_mode!=MOD_PLAIN) {
 		unsigned i,ii;
@@ -299,7 +299,7 @@ void BinMode::misckey_action() /* EditBin */
 	cfp = main_handle.tell();
 	size = (unsigned)((unsigned long)msize > (flen-cfp) ? (flen-cfp) : msize);
 	main_handle.seek(cfp,binary_stream::Seek_Set);
-	main_handle.read(buff,size*2);
+	binary_packet bp=main_handle.read(size*2); memcpy(buff,bp.data(),bp.size());
 	main_handle.seek(cfp,binary_stream::Seek_Set);
 	for(i=0;i<size;i++) buff[i]=bin_mode==MOD_BINARY?buff[i*2]:buff[i*2+1];
 	editor=new(zeromem) Bin_Editor(bctx,*ewin,*this,bin_mode,main_wnd.width()-virtWidthCorr,buff,size);

@@ -1266,6 +1266,7 @@ void ELF_Parser::displayELFdyninfo(__filesize_t f_off,unsigned nitems) const
     unsigned i;
     bool is_add;
     char stmp[80];
+    binary_packet bp(1);
     stroff = 0;
     stroff = va2pa(findPHDynEntry(DT_STRTAB,f_off,nitems));
     if(!stroff) { bctx.NotifyBox(" String information not found!",""); return; }
@@ -1274,7 +1275,7 @@ void ELF_Parser::displayELFdyninfo(__filesize_t f_off,unsigned nitems) const
     curroff = findPHEntry(PT_INTERP, i);
     if(curroff) {
 	main_handle.seek(curroff,binary_stream::Seek_Set);
-	main_handle.read(&stmp[strlen(S_INTERPRETER) - 1],sizeof(stmp)-strlen(S_INTERPRETER)-1);
+	bp=main_handle.read(sizeof(stmp)-strlen(S_INTERPRETER)-1); memcpy(&stmp[strlen(S_INTERPRETER) - 1],bp.data(),bp.size());
     }
     std::vector<std::string> objs;
     objs.push_back(stmp);
@@ -1290,21 +1291,21 @@ void ELF_Parser::displayELFdyninfo(__filesize_t f_off,unsigned nitems) const
 		    {
 		      strcpy(stmp,"Needed : ");
 			main_handle.seek(dyntab.d_un.d_ptr + stroff,binary_stream::Seek_Set);
-			main_handle.read(&stmp[strlen(stmp)],70);
+			bp=main_handle.read(70); memcpy(&stmp[strlen(stmp)],bp.data(),bp.size());
 		    }
 		    break;
 	    case DT_SONAME:
 		    {
 		      strcpy(stmp,"SO name: ");
 			main_handle.seek(dyntab.d_un.d_ptr + stroff,binary_stream::Seek_Set);
-			main_handle.read(&stmp[strlen(stmp)],70);
+			bp=main_handle.read(70); memcpy(&stmp[strlen(stmp)],bp.data(),bp.size());
 		    }
 		    break;
 	    case DT_RPATH:
 		    {
 		      strcpy(stmp,"LibPath: ");
 			main_handle.seek(dyntab.d_un.d_ptr + stroff,binary_stream::Seek_Set);
-			main_handle.read(&stmp[strlen(stmp)],70);
+			bp=main_handle.read(70); memcpy(&stmp[strlen(stmp)],bp.data(),bp.size());
 		    }
 		    break;
 	    default:     is_add = false; break;
@@ -1475,11 +1476,11 @@ ELF_Parser::ELF_Parser(BeyeContext& b,binary_stream& h,CodeGuider& _code_guider,
     uint8_t buf[16];
     char id[4];
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(id,sizeof id);
+    binary_packet bp=main_handle.read(sizeof id); memcpy(id,bp.data(),bp.size());
     if(!IS_ELF(id)) throw bad_format_exception();
 
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(buf,16);
+    bp=main_handle.read(16); memcpy(buf,bp.data(),bp.size());
     is_msbf = (buf[EI_DATA] == ELFDATA2MSB);
     is_64bit = (buf[EI_CLASS] == ELFCLASS64);
     if(is_64bit)

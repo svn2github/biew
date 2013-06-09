@@ -103,28 +103,27 @@ __filesize_t Sis_Parser::show_sis3_header() const
 
 __filesize_t Sis_Parser::show_header() const
 {
- unsigned keycode;
- TWindow * hwnd;
- const char *TypeName;
- struct SisHeader sis;
- __filesize_t fpos,fpos2;
- fpos2=fpos = bctx.tell();
+    unsigned keycode;
+    TWindow * hwnd;
+    const char *TypeName;
+    struct SisHeader sis;
+    __filesize_t fpos,fpos2;
+    fpos2=fpos = bctx.tell();
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(&sis,sizeof(sis));
- if(sis.UID1==0x10201A7A) return show_sis3_header();
- switch(sis.Type)
- {
-    case 0x0000: TypeName="APP"; break;
-    case 0x0001: TypeName="SYSTEM"; break;
-    case 0x0002: TypeName="OPTION"; break;
-    case 0x0003: TypeName="CONFIG"; break;
-    case 0x0004: TypeName="PATCH"; break;
-    case 0x0005: TypeName="UPGRADE"; break;
-    default:     TypeName="unknown"; break;
- }
- hwnd = CrtDlgWndnls(" Sis Header ",78,13);
- hwnd->goto_xy(1,1);
- hwnd->printf(
+    binary_packet bp=main_handle.read(sizeof(sis)); memcpy(&sis,bp.data(),bp.size());
+    if(sis.UID1==0x10201A7A) return show_sis3_header();
+    switch(sis.Type) {
+	case 0x0000: TypeName="APP"; break;
+	case 0x0001: TypeName="SYSTEM"; break;
+	case 0x0002: TypeName="OPTION"; break;
+	case 0x0003: TypeName="CONFIG"; break;
+	case 0x0004: TypeName="PATCH"; break;
+	case 0x0005: TypeName="UPGRADE"; break;
+	default:     TypeName="unknown"; break;
+    }
+    hwnd = CrtDlgWndnls(" Sis Header ",78,13);
+    hwnd->goto_xy(1,1);
+    hwnd->printf(
 	  "Number of Lang/Files/Req   = %u/%u/%u\n"
 	  "Installation Lang/Files/Drv= %u/%u/%u\n"
 	  "Number of capabilities     = %u\n"
@@ -156,15 +155,13 @@ __filesize_t Sis_Parser::show_header() const
 	  ,sis.SertificatePointer
 	  ,sis.ComponentNamePointer
 	  );
- while(1)
- {
-   keycode = GetEvent(drawEmptyPrompt,NULL,hwnd);
-   if(keycode == KE_F(5) || keycode == KE_ENTER) { fpos = fpos2; break; }
-   else
-     if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
- }
- delete hwnd;
- return fpos;
+    while(1) {
+	keycode = GetEvent(drawEmptyPrompt,NULL,hwnd);
+	if(keycode == KE_F(5) || keycode == KE_ENTER) { fpos = fpos2; break; }
+	else if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
+    }
+    delete hwnd;
+    return fpos;
 }
 
 static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) Sis_Parser(b,h,_parent,u); }

@@ -51,7 +51,7 @@ namespace	usr {
 
 	    virtual __filesize_t	show_header() const;
 	    virtual int			query_platform() const;
-	    virtual std::string		address_resolving(std::string&,__filesize_t);
+	    virtual std::string		address_resolving(__filesize_t);
 	private:
 	    std::vector<std::string>	archReadModList(size_t nnames,__filesize_t* addr);
 
@@ -121,7 +121,7 @@ std::vector<std::string> Arch_Parser::archReadModList(size_t nnames,__filesize_t
 	if(foff > flen)  foff = be2me_32(foff);
 	if(IsKbdTerminate()) break;
 	main_handle.seek(foff,binary_stream::Seek_Set);
-	main_handle.read(stmp,sizeof(ar_sub_hdr));
+	binary_packet bp=main_handle.read(sizeof(ar_sub_hdr)); memcpy(stmp,bp.data(),bp.size());
 	is_eof = main_handle.eof();
 	stmp[sizeof(ar_sub_hdr)-2] = 0;
 	rc.push_back(is_eof ? CORRUPT_BIN_MSG : stmp);
@@ -153,7 +153,7 @@ __filesize_t Arch_Parser::action_F3()
     if(!(nnames%4)) nnames/=sizeof(unsigned long);
     if(!(addr = new __filesize_t [nnames])) return fpos;
     main_handle.seek(sizeof(ar_hdr)+sizeof(unsigned long),binary_stream::Seek_Set);
-    main_handle.read(addr,sizeof(unsigned long)*nnames);
+    binary_packet bp=main_handle.read(sizeof(unsigned long)*nnames); memcpy(addr,bp.data(),bp.size());
     std::vector<std::string> objs = archReadModList(nnames,addr);
     if(!objs.empty()) {
 	int ret;
@@ -180,12 +180,12 @@ Arch_Parser::Arch_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider
 	    ,_udn(u)
 {
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(&arch,sizeof(arch));
+    binary_packet bp=main_handle.read(sizeof(arch)); memcpy(&arch,bp.data(),bp.size());
     if(strncmp((const char*)arch.ar_magic,"!<arch>\012",8) != 0) throw bad_format_exception();
 }
 Arch_Parser::~Arch_Parser(){}
 
-std::string Arch_Parser::address_resolving(std::string& addr,__filesize_t cfpos)
+std::string Arch_Parser::address_resolving(__filesize_t cfpos)
 {
     std::ostringstream oss;
     /* Since this function is used in references resolving of disassembler

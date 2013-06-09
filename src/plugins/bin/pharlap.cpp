@@ -163,7 +163,7 @@ std::vector<PLSegInfo> PharLap_Parser::__PLReadSegInfo(binary_stream& handle,siz
     for(i = 0;i < nnames;i++) {
 	PLSegInfo plsi;
 	if(IsKbdTerminate() || handle.eof()) break;
-	handle.read(&plsi,sizeof(PLSegInfo));
+	binary_packet bp=handle.read(sizeof(PLSegInfo)); memcpy(&plsi,bp.data(),bp.size());
 	rc.push_back(plsi);
     }
     return rc;
@@ -233,7 +233,7 @@ std::vector<PLRunTimeParms> PharLap_Parser::__PLReadRunTime(binary_stream& handl
     for(i = 0;i < nnames;i++) {
 	PLRunTimeParms plrtp;
 	if(IsKbdTerminate() || handle.eof()) break;
-	handle.read(&plrtp,sizeof(PLRunTimeParms));
+	binary_packet bp=handle.read(sizeof(PLRunTimeParms)); memcpy(&plrtp,bp.data(),bp.size());
 	rc.push_back(plrtp);
     }
     return rc;
@@ -266,11 +266,11 @@ PharLap_Parser::PharLap_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_
 {
     char sign[2];
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(sign,2);
+    binary_packet bp=main_handle.read(2); memcpy(sign,bp.data(),bp.size());
     if(!(sign[0] == 'P' && (sign[1] == '2' || sign[1] == '3'))) throw bad_format_exception();
 
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(&nph,sizeof(nph));
+    bp=main_handle.read(sizeof(nph)); memcpy(&nph,bp.data(),bp.size());
     pl_cache = main_handle.dup();
 }
 

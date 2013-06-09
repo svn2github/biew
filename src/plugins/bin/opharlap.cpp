@@ -109,11 +109,11 @@ oldPharLap_Parser::oldPharLap_Parser(BeyeContext& b,binary_stream& h,CodeGuider&
 {
     char sign[2];
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(sign,2);
+    binary_packet bp=main_handle.read(2); memcpy(sign,bp.data(),bp.size());
     if(!(sign[0] == 'M' && sign[1] == 'P')) throw bad_format_exception();
 
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(&oph,sizeof(oph));
+    bp=main_handle.read(sizeof(oph)); memcpy(&oph,bp.data(),bp.size());
 }
 
 oldPharLap_Parser::~oldPharLap_Parser(){}

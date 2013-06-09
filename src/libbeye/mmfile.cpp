@@ -24,10 +24,9 @@ bool MMFile::write(uint8_t bVal) { UNUSED(bVal); return false; }
 bool MMFile::write(uint16_t wVal) { UNUSED(wVal); return false; }
 bool MMFile::write(uint32_t dwVal) { UNUSED(dwVal); return false; }
 bool MMFile::write(uint64_t qwVal) { UNUSED(qwVal); return false; }
-bool MMFile::write(const any_t* _buffer,unsigned cbBuffer)
+bool MMFile::write(const binary_packet& _buffer)
 {
     UNUSED(_buffer);
-    UNUSED(cbBuffer);
     return false;
 }
 
@@ -77,7 +76,7 @@ uint8_t MMFile::read(const data_type_qualifier__byte_t&)
 uint16_t MMFile::read(const data_type_qualifier__word_t&)
 {
     uint16_t rval=-1;
-    read(&rval,sizeof(uint16_t));
+    binary_packet bp=read(sizeof(uint16_t)); memcpy(&rval,bp.data(),bp.size());
     if(chk_eof()) return -1;
     return rval;
 }
@@ -85,7 +84,7 @@ uint16_t MMFile::read(const data_type_qualifier__word_t&)
 uint32_t MMFile::read(const data_type_qualifier_dword_t&)
 {
     uint32_t rval=-1;
-    read(&rval,sizeof(uint32_t));
+    binary_packet bp=read(sizeof(uint32_t)); memcpy(&rval,bp.data(),bp.size());
     if(chk_eof()) return -1;
     return rval;
 }
@@ -93,21 +92,23 @@ uint32_t MMFile::read(const data_type_qualifier_dword_t&)
 uint64_t MMFile::read(const data_type_qualifier_qword_t&)
 {
     uint64_t rval=-1;
-    read(&rval,sizeof(uint64_t));
+    binary_packet bp=read(sizeof(uint64_t)); memcpy(&rval,bp.data(),bp.size());
     if(chk_eof()) return -1;
     return rval;
 }
 
-bool MMFile::read(any_t* _buffer,unsigned cbBuffer)
+binary_packet MMFile::read(size_t cbBuffer)
 {
+    binary_packet rc(cbBuffer);
     bool ret;
     size_t size = std::min(__filesize_t(cbBuffer),flength() - filepos);
     ret=chk_eof();
     if(size && !ret)  {
-	::memcpy(_buffer,((uint8_t *)addr) + filepos,size);
+	::memcpy(rc.data(),((uint8_t *)addr) + filepos,size);
+	if(size!=cbBuffer) rc.resize(size);
 	filepos += size;
-    }
-    return ret;
+    } else rc.clear();
+    return rc;
 }
 
 bool MMFile::reread()

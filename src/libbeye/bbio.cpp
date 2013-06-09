@@ -112,27 +112,30 @@ uint8_t BBio_File::read(const data_type_qualifier__byte_t&)
 uint16_t BBio_File::read(const data_type_qualifier__word_t&)
 {
     uint16_t ret;
-    vfb.read(reinterpret_cast<char*>(&ret),sizeof(uint16_t));
+    binary_packet bp=vfb.read(sizeof(uint16_t));
+    memcpy(&ret,bp.data(),bp.size());
     return ret;
 }
 
 uint32_t BBio_File::read(const data_type_qualifier_dword_t&)
 {
     uint32_t ret;
-    vfb.read(reinterpret_cast<char*>(&ret),sizeof(uint32_t));
+    binary_packet bp=vfb.read(sizeof(uint32_t));
+    memcpy(&ret,bp.data(),bp.size());
     return ret;
 }
 
 uint64_t BBio_File::read(const data_type_qualifier_qword_t&)
 {
     uint64_t ret;
-    vfb.read(reinterpret_cast<char*>(&ret),sizeof(uint64_t));
+    binary_packet bp=vfb.read(sizeof(uint64_t));
+    memcpy(&ret,bp.data(),bp.size());
     return ret;
 }
 
-bool BBio_File::read(any_t* _buffer,unsigned cbBuffer)
+binary_packet BBio_File::read(size_t cbBuffer)
 {
-    return vfb.read(reinterpret_cast<char*>(_buffer),cbBuffer);
+    return vfb.read(cbBuffer);
 }
 
 bool BBio_File::write(uint8_t bVal)
@@ -142,22 +145,25 @@ bool BBio_File::write(uint8_t bVal)
 
 bool BBio_File::write(uint16_t wVal)
 {
-    return vfb.write(reinterpret_cast<const char*>(&wVal),sizeof(uint16_t));
+    binary_packet bp(&wVal,sizeof(uint16_t));
+    return vfb.write(bp);
 }
 
 bool BBio_File::write(uint32_t dwVal)
 {
-  return vfb.write(reinterpret_cast<const char*>(&dwVal),sizeof(uint32_t));
+    binary_packet bp(&dwVal,sizeof(uint32_t));
+    return vfb.write(bp);
 }
 
 bool BBio_File::write(uint64_t dwVal)
 {
-    return vfb.write(reinterpret_cast<const char*>(&dwVal),sizeof(uint64_t));
+    binary_packet bp(&dwVal,sizeof(uint64_t));
+    return vfb.write(bp);
 }
 
-bool BBio_File::write(const any_t* _buffer,unsigned cbBuffer)
+bool BBio_File::write(const binary_packet& _buffer)
 {
-    return vfb.write(reinterpret_cast<const char*>(_buffer),cbBuffer);
+    return vfb.write(_buffer);
 }
 
 bool BBio_File::flush()
@@ -259,7 +265,8 @@ bool BBio_File::binary_cache::fill(__fileoff_t pos)
 	remaind = parent._flength - pos;
 	buflen = (__filesize_t)bufsize < remaind ? bufsize : (unsigned)remaind;
 	parent.seek(pos,Seek_Set);
-	ret = (unsigned)parent.read(mbuff,buflen) == buflen;
+	binary_packet bp = parent.read(buflen); memcpy(mbuff,bp.data(),bp.size());
+	ret = bp.size() == buflen;
     }
     return ret;
 }
@@ -272,7 +279,10 @@ bool BBio_File::binary_cache::flush()
     ret = true;
     if(!updated) {
 	parent.seek(f_start,Seek_Set);
-	if(buflen)	ret = (unsigned)parent.write(mbuff,buflen) == buflen;
+	if(buflen) {
+	    binary_packet bp(mbuff,buflen);
+	    ret = (unsigned)parent.write(bp) == buflen;
+	}
 	if(ret)		updated = true;
     }
     return ret;
@@ -354,12 +364,14 @@ bool BBio_File::binary_cache::write(unsigned char ch)
     return ret;
 }
 
-bool BBio_File::binary_cache::read(char* buff,unsigned cbBuff)
+binary_packet BBio_File::binary_cache::read(size_t cbBuff)
 {
-    unsigned diffsize;
-    unsigned MBufStart,MBufRem;
+    binary_packet rc(cbBuff);
+    size_t diffsize;
+    size_t MBufStart,MBufRem;
     int _optimize = parent.optimize;
     bool ret = true;
+    char* buff = rc.cdata();
 
     parent.optimize = (_optimize & ~Opt_DirMask) | Opt_Db;
     while(cbBuff) {
@@ -390,12 +402,14 @@ bool BBio_File::binary_cache::read(char* buff,unsigned cbBuff)
     return ret;
 }
 
-bool BBio_File::binary_cache::write(const char* buff,unsigned cbBuff)
+bool BBio_File::binary_cache::write(const binary_packet& bp)
 {
-    unsigned diffsize;
-    unsigned MBufStart,MBufRem;
+    size_t diffsize;
+    size_t MBufStart,MBufRem;
     int _optimize = parent.optimize;
     bool ret = true;
+    const char* buff = bp.cdata();
+    size_t cbBuff = bp.size();
     if(parent.is_writeable(parent.openmode)) {
 	parent.optimize = (_optimize & ~Opt_DirMask) | Opt_Db;
 	ret = true;

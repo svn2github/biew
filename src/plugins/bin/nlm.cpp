@@ -185,31 +185,32 @@ __filesize_t NLM_Parser::action_F8()
   unsigned char len;
   TWindow *w;
   unsigned keycode;
+  binary_packet bp(1);
   sharedEntry = sharedExit = 0;
   fpos = bctx.tell();
   w = CrtDlgWndnls(" NetWare Loadable Module ",74,23);
   w->goto_xy(1,1);
   main_handle.seek(sizeof(Nlm_Internal_Fixed_Header),binary_stream::Seek_Set);
   len = main_handle.read(type_byte);
-  main_handle.read(modName,len + 1);
+  bp=main_handle.read(len + 1); memcpy(modName,bp.data(),bp.size());
   ssize = main_handle.read(type_dword);
   main_handle.seek(4,binary_stream::Seek_Cur); /** skip reserved */
   w->printf("%s\n"
 	   "Stack size                    = %08lXH\n"
 	   ,modName
 	   ,ssize);
-  main_handle.read(modName,5);
+  bp=main_handle.read(5); memcpy(modName,bp.data(),bp.size());
   modName[5] = 0;
   w->printf("Old thread name               = %s\n",modName);
   len = main_handle.read(type_byte);
-  main_handle.read(modName,len + 1);
+  bp=main_handle.read(len + 1); memcpy(modName,bp.data(),bp.size());
   w->printf("Screen name                   = %s\n",modName);
   len = main_handle.read(type_byte);
-  main_handle.read(modName,len + 1);
+  bp=main_handle.read(len + 1); memcpy(modName,bp.data(),bp.size());
   w->printf("Thread name                   = %s",modName);
   while(1)
   {
-    main_handle.read(modName,9);
+    bp=main_handle.read(9); memcpy(modName,bp.data(),bp.size());
     if(main_handle.eof()) break;
     modName[9] = 0;
     if(memcmp(modName,"VeRsIoN#",8) == 0)
@@ -229,7 +230,7 @@ __filesize_t NLM_Parser::action_F8()
       {
 	main_handle.seek(1,binary_stream::Seek_Cur);
 	len = main_handle.read(type_byte);
-	main_handle.read(modName,len + 1);
+	bp=main_handle.read(len + 1); memcpy(modName,bp.data(),bp.size());
 	w->printf("\nCopyright = %s",modName);
       }
       else
@@ -284,7 +285,7 @@ __filesize_t NLM_Parser::action_F8()
 	    ssize = main_handle.read(type_dword);
 	    d = main_handle.read(type_dword);
 	    m = main_handle.read(type_dword);
-	    main_handle.read(modName,8);
+	    bp=main_handle.read(8); memcpy(modName,bp.data(),bp.size());
 	    modName[8] = 0;
 	    hdr = main_handle.read(type_dword);
 	    w->printf("\nCustHead (name/hdrOff/hdrLen/dataOff/dataLen) = %s/%08lXH/%08lXH/%08lXH/%08lHX",modName,hdr,ssize,d,m);
@@ -329,7 +330,7 @@ std::vector<std::string> NLM_Parser::__ReadExtRefNamesNLM(binary_stream& handle,
 	unsigned long nrefs;
 	length = handle.read(type_byte);
 	if(IsKbdTerminate() || handle.eof()) break;
-	handle.read(stmp,length);
+	binary_packet bp=handle.read(length); memcpy(stmp,bp.data(),bp.size());
 	stmp[length] = 0;
 	nrefs = handle.read(type_dword);
 	handle.seek(nrefs*4,binary_stream::Seek_Cur);
@@ -371,16 +372,17 @@ std::vector<std::string> NLM_Parser::NLMNamesReadItems(binary_stream& handle,siz
     std::vector<std::string> rc;
     unsigned char length;
     unsigned i;
+    binary_packet bp(1);
     handle.seek(nlm.nlm_publicsOffset,binary_stream::Seek_Set);
     for(i = 0;i < nnames;i++) {
 	char stmp[256];
 	length = handle.read(type_byte);
 	if(IsKbdTerminate() || handle.eof()) break;
 	if(length > 66) {
-	    handle.read(stmp,66);
+	    bp=handle.read(66); memcpy(stmp,bp.data(),bp.size());
 	    handle.seek(length - 66,binary_stream::Seek_Cur);
 	    strcat(stmp,">>>");
-	} else { handle.read(stmp,length); stmp[length] = 0; }
+	} else { bp=handle.read(length); memcpy(stmp,bp.data(),bp.size()); stmp[length] = 0; }
 	handle.seek(4L,binary_stream::Seek_Cur);
 	rc.push_back(stmp);
     }
@@ -407,17 +409,18 @@ std::vector<std::string> NLM_Parser::__ReadModRefNamesNLM(binary_stream& handle,
     std::vector<std::string> rc;
     unsigned char length;
     unsigned i;
+    binary_packet bp(1);
     handle.seek(nlm.nlm_moduleDependencyOffset,binary_stream::Seek_Set);
     for(i = 0;i < nnames;i++) {
 	char stmp[256];
 	length = handle.read(type_byte);
 	if(IsKbdTerminate() || handle.eof()) break;
 	if(length > 66) {
-	    handle.read(stmp,66);
+	    bp=handle.read(66); memcpy(stmp,bp.data(),bp.size());
 	    handle.seek(length - 66,binary_stream::Seek_Cur);
 	    strcat(stmp,">>>");
 	}
-	else { handle.read(stmp,length); stmp[length] = 0; }
+	else { bp=handle.read(length); memcpy(stmp,bp.data(),bp.size()); stmp[length] = 0; }
 	rc.push_back(stmp);
     }
     return rc;
@@ -521,7 +524,7 @@ std::string NLM_Parser::BuildReferStrNLM(const RELOC_NLM& rne,Bin_Format::bind_t
     if(rne.nameoff != 0xFFFFFFFFUL) {
 	len = b_cache->read(type_byte);
 	char stmp[len+1];
-	b_cache->read(stmp,len);
+	binary_packet bp=b_cache->read(len); memcpy(stmp,bp.data(),bp.size());
 	stmp[len] = 0;
 	str=stmp;
     } else {
@@ -573,11 +576,11 @@ NLM_Parser::NLM_Parser(BeyeContext& b,binary_stream& h,CodeGuider& _code_guider,
 {
     char ctrl[NLM_SIGNATURE_SIZE];
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(ctrl,NLM_SIGNATURE_SIZE);
+    binary_packet bp=main_handle.read(NLM_SIGNATURE_SIZE); memcpy(ctrl,bp.data(),bp.size());
     if(memcmp(ctrl,NLM_SIGNATURE,NLM_SIGNATURE_SIZE) != 0) throw bad_format_exception();
 
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(&nlm,sizeof(Nlm_Internal_Fixed_Header));
+    bp=main_handle.read(sizeof(Nlm_Internal_Fixed_Header)); memcpy(&nlm,bp.data(),bp.size());
     nlm_cache = main_handle.dup();
 }
 
@@ -619,7 +622,7 @@ std::string NLM_Parser::nlm_ReadPubName(binary_stream& b_cache,const symbolic_in
     b_cache.seek(it.nameoff,binary_stream::Seek_Set);
     length = b_cache.read(type_byte);
     char buff[length+1];
-    b_cache.read(buff,length);
+    binary_packet bp=b_cache.read(length); memcpy(buff,bp.data(),bp.size());
     buff[length] = 0;
     return buff;
 }

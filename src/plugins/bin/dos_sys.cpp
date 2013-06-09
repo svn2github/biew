@@ -115,10 +115,10 @@ DosSys_Parser::DosSys_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_gu
 {
     unsigned char id[4];
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(id,sizeof(id));
+    binary_packet bp=main_handle.read(sizeof(id)); memcpy(id,bp.data(),bp.size());
     if(id[0] == 0xFF && id[1] == 0xFF && id[2] == 0xFF && id[3] == 0xFF) {
 	main_handle.seek(4,binary_stream::Seek_Set);
-	main_handle.read((any_t*)&drv,sizeof(DOSDRIVER));
+	bp=main_handle.read(sizeof(DOSDRIVER)); memcpy(&drv,bp.data(),bp.size());
     } else throw bad_format_exception();
 }
 DosSys_Parser::~DosSys_Parser() {}

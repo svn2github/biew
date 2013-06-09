@@ -123,17 +123,13 @@ InsDelBlock::~InsDelBlock() {}
 
 bool InsDelBlock::InsBlock(binary_stream* bHandle,__filesize_t start,__fileoff_t psize) const
 {
-    char *buffer;
     __filesize_t tile,oflen,flen,crpos,cwpos;
     unsigned numtowrite;
     oflen = bHandle->flength();
     flen = oflen + psize;
     tile = oflen - start;
-    buffer = new char [51200U];
-    if(!buffer) return 0;
     if(!bHandle->chsize(oflen+psize)) {
 	bctx.ErrMessageBox(EXPAND_FAIL,"");
-	delete buffer;
 	return false;
     }
     crpos = oflen-std::min(tile,__filesize_t(51200U));
@@ -141,9 +137,9 @@ bool InsDelBlock::InsBlock(binary_stream* bHandle,__filesize_t start,__fileoff_t
     numtowrite = (unsigned)std::min(tile,__filesize_t(51200U));
     while(tile) {
 	bHandle->seek(crpos,binary_stream::Seek_Set);
-	bHandle->read(buffer,numtowrite);
+	binary_packet bp=bHandle->read(numtowrite);
 	bHandle->seek(cwpos,binary_stream::Seek_Set);
-	bHandle->write(buffer,numtowrite);
+	bHandle->write(bp);
 	tile -= numtowrite;
 	numtowrite = (unsigned)std::min(tile,__filesize_t(51200U));
 	crpos -= numtowrite;
@@ -151,44 +147,38 @@ bool InsDelBlock::InsBlock(binary_stream* bHandle,__filesize_t start,__fileoff_t
     }
     tile = oflen - start;
     cwpos = start;
-    memset(buffer,0,51200U);
+    binary_packet wbp(51200U);
+    memset(wbp.data(),0,51200U);
     while(psize) {
 	numtowrite = (unsigned)std::min(psize,__fileoff_t(51200U));
+	if(numtowrite!=51200U) wbp.resize(numtowrite);
 	bHandle->seek(cwpos,binary_stream::Seek_Set);
-	bHandle->write(buffer,numtowrite);
+	bHandle->write(wbp);
 	psize -= numtowrite;
 	cwpos += numtowrite;
     }
-    delete buffer;
     return true;
 }
 
 bool InsDelBlock::DelBlock(binary_stream* bHandle,__filesize_t start,__fileoff_t psize) const
 {
-    char *buffer;
     __filesize_t tile,oflen,crpos,cwpos;
     unsigned numtowrite;
     oflen = bHandle->flength();
     tile = oflen - start;
-    buffer = new char [51200U];
-    if(!buffer) return false;
     crpos = start-psize; /** psize is negative value */
     cwpos = start;
     while(tile) {
 	numtowrite = (unsigned)std::min(tile,__filesize_t(51200U));
 	bHandle->seek(crpos,binary_stream::Seek_Set);
-	bHandle->read(buffer,numtowrite);
+	binary_packet bp=bHandle->read(numtowrite);
 	bHandle->seek(cwpos,binary_stream::Seek_Set);
-	bHandle->write(buffer,numtowrite);
+	bHandle->write(bp);
 	tile -= numtowrite;
 	crpos += numtowrite;
 	cwpos += numtowrite;
     }
-    delete buffer;
-    if(!bHandle->chsize(oflen+psize)) {
-	bctx.ErrMessageBox(TRUNC_FAIL,"");
-	delete buffer;
-    }
+    if(!bHandle->chsize(oflen+psize)) bctx.ErrMessageBox(TRUNC_FAIL,"");
     return true;
 }
 
@@ -321,6 +311,7 @@ bool FStore::run()
     unsigned long flags;
     char *tmp_buff;
     __filesize_t endpos,cpos;
+    binary_packet bp(1);
     tmp_buff = new char [0x1000];
     flags = FSDLG_USEMODES | FSDLG_BINMODE | FSDLG_COMMENT;
     DumpMode = true;
@@ -357,7 +348,8 @@ bool FStore::run()
 		    unsigned real_size;
 		    rem = (unsigned)std::min(wsize,__filesize_t(4096));
 		    bctx.bm_file().seek(crpos,binary_stream::Seek_Set);
-		    if(!bctx.bm_file().read(tmp_buff,rem)) {
+		    bp=bctx.bm_file().read(rem); memcpy(tmp_buff,bp.data(),bp.size());
+		    if(bp.size()!=rem) {
 			bctx.errnoMessageBox(READ_FAIL,"",errno);
 			goto Exit;
 		    }
@@ -485,7 +477,7 @@ bool FStore::run()
 		    }
 		    memset(codebuff,0,MaxInsnLen);
 		    bctx.bm_file().seek(ff_startpos,binary_stream::Seek_Set);
-		    bctx.bm_file().read((any_t*)codebuff,MaxInsnLen);
+		    bp=bctx.bm_file().read(MaxInsnLen); memcpy(codebuff,bp.data(),bp.size());
 		    if(obj._class == Object_Info::Code) dret = dismode->disassembler(ff_startpos,codebuff,__DISF_NORMAL);
 		    else { /** Data object */
 			unsigned dis_data_len,ifreq,data_len;
@@ -664,7 +656,8 @@ err:
 	    if(fs.is_open()) {
 		while(wsize) {
 		    remaind = (unsigned)std::min(wsize,__filesize_t(4096));
-		    if(!h->read((any_t*)tmp_buff,remaind)) {
+		    binary_packet bp=h->read(remaind); memcpy(tmp_buff,bp.data(),bp.size());
+		    if(bp.size()!=remaind) {
 			bctx.errnoMessageBox(READ_FAIL,"",errno);
 			delete h;
 			ret = false;
@@ -985,14 +978,14 @@ bool XLatBlock::run()
 		delete xHandle;
 		return false;
 	    }
-	    xHandle->read(xlt, 16);
+	    binary_packet bp=xHandle->read(16); memcpy(xlt,bp.data(),bp.size());
 	    if(memcmp(xlt, "Beye Xlat Table.", 16) != 0) {
 		bctx.ErrMessageBox("It seems that xlat file is corrupt", "");
 		delete xHandle;
 		return false;
 	    }
 	    xHandle->seek(0x40, binary_stream::Seek_Set);
-	    xHandle->read(xlt, 256);
+	    bp=xHandle->read(256); memcpy(xlt,bp.data(),bp.size());
 	    delete xHandle;
 	    tmp_buff = new char [4096];
 	    std::fstream fs;

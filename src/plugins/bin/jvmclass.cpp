@@ -201,7 +201,7 @@ std::string JVM_Parser::get_utf8(binary_stream& handle,unsigned nidx) const
 	nidx=handle.read(type_word);
 	nidx=JVM_WORD((uint16_t*)&nidx,1);
 	char str[nidx+1];
-	handle.read(str,nidx);
+	binary_packet bp=handle.read(nidx); memcpy(str,bp.data(),bp.size());
 	str[nidx]=0;
 	return str;
     }
@@ -520,6 +520,7 @@ std::vector<std::string> JVM_Parser::jvm_read_pool(binary_stream& handle,size_t 
     unsigned char utag;
     std::ostringstream oss;
     std::string str,str2;
+    binary_packet bp(1);
     handle.seek(jvm_header.constants_offset,binary_stream::Seek_Set);
     for(i=0;i<nnames;i++) {
 	fpos=handle.tell();
@@ -576,7 +577,7 @@ std::vector<std::string> JVM_Parser::jvm_read_pool(binary_stream& handle,size_t 
 			slen=std::min(sizeof(str)-1,size_t(sval));
 			fpos=handle.tell();
 			char stmp[slen+1];
-			handle.read(stmp,slen);
+			bp=handle.read(slen); memcpy(stmp,bp.data(),bp.size());
 			handle.seek(fpos+sval,binary_stream::Seek_Set);
 			stmp[slen]='\0';
 			oss<<"UTF8: "<<stmp;
@@ -617,7 +618,7 @@ JVM_Parser::JVM_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider,u
     unsigned short sval;
     unsigned char id[4];
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(id,sizeof(id));
+    binary_packet bp=main_handle.read(sizeof(id)); memcpy(id,bp.data(),bp.size());
     /* Cafe babe !!! */
     if(!(id[0]==0xCA && id[1]==0xFE && id[2]==0xBA && id[3]==0xBE && main_handle.flength()>=16)) throw bad_format_exception();
 
@@ -912,6 +913,7 @@ std::string JVM_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Form
     UNUSED(parent);
     UNUSED(r_sh);
     std::ostringstream oss;
+    binary_packet bp(1);
     if((flags & Bin_Format::Try_Label)!=Bin_Format::Try_Label) {
 	__filesize_t fpos;
 	uint32_t lidx,lval,lval2;
@@ -978,7 +980,7 @@ std::string JVM_Parser::bind(const DisMode& parent,__filesize_t ulShift,Bin_Form
 			sval=JVM_WORD(&sval,1);
 			char stmp[sval+1];
 			fpos=pool_cache->tell();
-			pool_cache->read(stmp,sval);
+			bp=pool_cache->read(sval); memcpy(stmp,bp.data(),bp.size());
 			str=stmp;
 			break;
 	    default:	break;

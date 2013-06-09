@@ -5,6 +5,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "binary_packet.h"
+
 namespace	usr {
     class binary_stream : public Opaque {
 	public:
@@ -109,7 +111,7 @@ namespace	usr {
 		     * @note                  Function increments logical file
 		     *                        position by the number of bytes read.
 		    **/
-	    virtual bool		read(any_t* buffer,unsigned cbBuffer);
+	    virtual binary_packet	read(size_t cbBuffer);
 
 		   /** Positions logical file pointer at the specified position.
 		     * @return                true if operation was succesfully performed
@@ -162,7 +164,7 @@ namespace	usr {
 		     * @note                  Function increments logical file
 		     *                        position by the number of bytes writed.
 		    **/
-	    virtual bool		write(const any_t* buffer,unsigned cbBuffer);
+	    virtual bool		write(const binary_packet& buffer);
 
 		   /** Returns name of file associated with opened stream.
 		     * @return                name of file

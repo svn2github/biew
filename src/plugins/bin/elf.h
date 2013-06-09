@@ -1425,7 +1425,7 @@ enum {
 		uint32_t tmp32;
 		uint32_t tmp;
 		fs.seek(0,binary_stream::Seek_Set);
-		fs.read(_ehdr.e_ident,16);
+		binary_packet bp=fs.read(16); memcpy(_ehdr.e_ident,bp.data(),bp.size());
 		is_msbf = (_ehdr.e_ident[EI_DATA] == ELFDATA2MSB);
 
 		tmp16=fs.read(type_word); _ehdr.e_type=ELF_WORD(&tmp16,is_msbf);
@@ -1534,7 +1534,7 @@ enum {
 		uint32_t tmp32;
 		uint64_t tmp;
 		fs.seek(0,binary_stream::Seek_Set);
-		fs.read(_ehdr.e_ident,16);
+		binary_packet bp=fs.read(16); memcpy(_ehdr.e_ident,bp.data(),bp.size());
 		is_msbf = (_ehdr.e_ident[EI_DATA] == ELFDATA2MSB);
 		tmp16=fs.read(type_word); _ehdr.e_type=ELF_WORD(&tmp16,is_msbf);
 		tmp16=fs.read(type_word); _ehdr.e_machine=ELF_WORD(&tmp16,is_msbf);

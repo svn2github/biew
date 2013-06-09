@@ -90,7 +90,7 @@ std::string MZ_Parser::QueryAddInfo() const
 	__filesize_t fpos;
 	fpos = _main_handle.tell();
 	_main_handle.seek(0x1C,binary_stream::Seek_Set);
-	_main_handle.read(memmap,1000);
+	binary_packet bp=_main_handle.read(1000); memcpy(memmap,bp.data(),bp.size());
 	_main_handle.seek(fpos,binary_stream::Seek_Set);
 	ret = QueryAddInfo(memmap);
 	delete memmap;
@@ -239,11 +239,11 @@ MZ_Parser::MZ_Parser(BeyeContext& b,binary_stream& h,CodeGuider& __code_guider,u
 {
     unsigned char id[2];
     _main_handle.seek(0,binary_stream::Seek_Set);
-    _main_handle.read(id,sizeof(id));
+    binary_packet bp=_main_handle.read(sizeof(id)); memcpy(id,bp.data(),bp.size());
     if((id[0] == 'M' && id[1] == 'Z') ||
      (id[0] == 'Z' && id[1] == 'M')) {
 	_main_handle.seek(2,binary_stream::Seek_Set);
-	_main_handle.read((any_t*)&mz,sizeof(MZHEADER));
+	bp=_main_handle.read(sizeof(MZHEADER)); memcpy(&mz,bp.data(),bp.size());
 	HeadSize = ((unsigned long)mz.mzHeaderSize) << 4;
 	_headshift = is_new_exe(h);
     } else throw bad_format_exception();
@@ -275,7 +275,7 @@ __filesize_t MZ_Parser::is_new_exe(binary_stream& main_handle)
     __filesize_t ret;
     char id[2];
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(id,sizeof(id));
+    binary_packet bp=main_handle.read(sizeof(id)); memcpy(id,bp.data(),bp.size());
     main_handle.seek(0x3C,binary_stream::Seek_Set);
     ret=main_handle.read(type_dword);
     if(!( id[0] == 'M' && id[1] == 'Z' && ret > 0x02L)) ret = 0;

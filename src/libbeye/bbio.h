@@ -63,7 +63,7 @@ namespace	usr {
 	    virtual uint16_t		read(const data_type_qualifier__word_t&);
 	    virtual uint32_t		read(const data_type_qualifier_dword_t&);
 	    virtual uint64_t		read(const data_type_qualifier_qword_t&);
-	    virtual bool		read(any_t* buffer,unsigned cbBuffer);
+	    virtual binary_packet	read(size_t cbBuffer);
 	    virtual bool		reread();
 	    virtual bool		seek(__fileoff_t offset,e_seek origin);
 	    virtual unsigned		get_optimization() const;
@@ -73,7 +73,7 @@ namespace	usr {
 	    virtual bool		write(uint16_t wVal);
 	    virtual bool		write(uint32_t dwVal);
 	    virtual bool		write(uint64_t dwVal);
-	    virtual bool		write(const any_t* buffer,unsigned cbBuffer);
+	    virtual bool		write(const binary_packet& buff);
 	    virtual bool		dup(BBio_File&) const;
 	    virtual binary_stream*	dup();
     private:
@@ -93,8 +93,8 @@ namespace	usr {
 		    bool		seek(__fileoff_t pos,e_seek origin);
 		    unsigned char	read();
 		    bool		write(unsigned char ch);
-		    bool		read(char* buff,unsigned cbBuff);
-		    bool		write(const char* buff,unsigned cbBuff);
+		    binary_packet	read(size_t cbBuff);
+		    bool		write(const binary_packet& buff);
 		    void		chsize(__filesize_t newsize);
 
 		    unsigned		buflen;  /**< length data, actually contains in buffer */

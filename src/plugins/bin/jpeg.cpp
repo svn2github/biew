@@ -60,7 +60,7 @@ Jpeg_Parser::Jpeg_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider
     main_handle.seek(0,binary_stream::Seek_Set);
     val = main_handle.read(type_dword);
     main_handle.seek(6,binary_stream::Seek_Set);
-    main_handle.read(id,4);
+    binary_packet bp=main_handle.read(4); memcpy(id,bp.data(),bp.size());
     if(!(val==0xE0FFD8FF && memcmp(id,"JFIF",4)==0)) throw bad_format_exception();
 }
 Jpeg_Parser::~Jpeg_Parser() {}

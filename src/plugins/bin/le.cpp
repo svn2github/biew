@@ -50,7 +50,7 @@ std::vector<std::string> LE_Parser::__ReadMapTblLE(binary_stream& handle,size_t 
 	LE_PAGE lep;
 	std::ostringstream oss;
 	if(IsKbdTerminate() || handle.eof()) break;
-	handle.read(&lep,sizeof(LE_PAGE));
+	binary_packet bp=handle.read(sizeof(LE_PAGE)); memcpy(&lep,bp.data(),bp.size());
 	oss<<"#="<<std::hex<<std::setfill('0')<<std::setw(8)<<(long)lep.number<<"H Flags: "<<std::hex<<std::setfill('0')<<std::setw(4)<<lep.flags
 	    <<"h = "<<lxeGetMapAttr(lep.flags);
 	rc.push_back(oss.str());
@@ -82,7 +82,7 @@ __filesize_t LE_Parser::CalcPageEntry(unsigned long pageidx) const
   found = false;
   for(i = 0;i < lxe.le.lePageCount;i++)
   {
-    handle->read((any_t*)&mt,sizeof(LE_PAGE));
+    binary_packet bp=handle->read(sizeof(LE_PAGE)); memcpy(&mt,bp.data(),bp.size());
     if(handle->eof()) break;
     if(mt.number == pageidx)
     {
@@ -96,45 +96,43 @@ __filesize_t LE_Parser::CalcPageEntry(unsigned long pageidx) const
 
 __filesize_t LE_Parser::CalcEntryPoint(unsigned long objnum,__filesize_t _offset) const
 {
-  binary_stream* handle;
-  unsigned long i,start,pidx,j;
-  __filesize_t ret,pageoff;
-  LX_OBJECT lo;
-  LE_PAGE mt;
-  if(!objnum) return -1;
-  handle = lx_cache;
-  handle->seek(lxe.le.leObjectTableOffset + headshift(),binary_stream::Seek_Set);
-  handle->seek(sizeof(LX_OBJECT)*(objnum - 1),binary_stream::Seek_Cur);
-  handle->read((any_t*)&lo,sizeof(LX_OBJECT));
+    binary_stream* handle;
+    unsigned long i,start,pidx,j;
+    __filesize_t ret,pageoff;
+    LX_OBJECT lo;
+    LE_PAGE mt;
+    binary_packet bp(1);
+    if(!objnum) return -1;
+    handle = lx_cache;
+    handle->seek(lxe.le.leObjectTableOffset + headshift(),binary_stream::Seek_Set);
+    handle->seek(sizeof(LX_OBJECT)*(objnum - 1),binary_stream::Seek_Cur);
+    bp=handle->read(sizeof(LX_OBJECT)); memcpy(&lo,bp.data(),bp.size());
 /*  if((lo.o32_flags & 0x00002000L) == 0x00002000L) USE16 = 0;
   else                                            USE16 = 0xFF; */
-  pageoff = lxe.le.leObjectPageMapTableOffset + headshift();
-  start = 0;
-  ret = -1;
-  for(i = 0;i < lo.o32_mapsize;i++)
-  {
-    bool is_eof;
-    is_eof = false;
-    if(_offset >= start && _offset < start + lxe.le.lePageSize)
-    {
-      bool found;
-      handle->seek(pageoff,binary_stream::Seek_Set);
-      pidx = i + lo.o32_pagemap;
-      found = false;
-      for(j = 0;j < lxe.le.lePageCount;j++)
-      {
-	handle->read((any_t*)&mt,sizeof(LE_PAGE));
-	if((is_eof = handle->eof()) != 0) break;
-	if(mt.number == pidx) { found = true; break; }
-      }
-      if(found) ret = __calcPageEntryLE((LE_PAGE*)&mt,pidx - 1) + _offset - start;
-      else      ret = bctx().tell();
-      break;
+    pageoff = lxe.le.leObjectPageMapTableOffset + headshift();
+    start = 0;
+    ret = -1;
+    for(i = 0;i < lo.o32_mapsize;i++) {
+	bool is_eof;
+	is_eof = false;
+	if(_offset >= start && _offset < start + lxe.le.lePageSize) {
+	    bool found;
+	    handle->seek(pageoff,binary_stream::Seek_Set);
+	    pidx = i + lo.o32_pagemap;
+	    found = false;
+	    for(j = 0;j < lxe.le.lePageCount;j++) {
+		bp=handle->read(sizeof(LE_PAGE)); memcpy(&mt,bp.data(),bp.size());
+		if((is_eof = handle->eof()) != 0) break;
+		if(mt.number == pidx) { found = true; break; }
+	    }
+	    if(found) ret = __calcPageEntryLE((LE_PAGE*)&mt,pidx - 1) + _offset - start;
+	    else      ret = bctx().tell();
+	    break;
+	}
+	if(is_eof) break;
+	start += lxe.le.lePageSize;
     }
-    if(is_eof) break;
-    start += lxe.le.lePageSize;
-  }
-  return ret;
+    return ret;
 }
 
 __filesize_t LE_Parser::CalcEntryLE(const LX_ENTRY& lxent) const
@@ -157,59 +155,52 @@ __filesize_t LE_Parser::CalcEntryLE(const LX_ENTRY& lxent) const
 
 __filesize_t LE_Parser::CalcEntryBungleLE(unsigned ordinal,bool dispmsg) const
 {
-  binary_stream* handle;
-  bool found;
-  unsigned i;
-  unsigned char j;
-  unsigned char cnt,type;
-  uint_fast16_t numobj = 0;
-  LX_ENTRY lxent;
-  __filesize_t ret;
-  ret = bctx().tell();
-  handle = lx_cache;
-  handle->seek(lxe.le.leEntryTableOffset + headshift(),binary_stream::Seek_Set);
-  i = 0;
-  found = false;
-  while(1)
-  {
-   cnt = handle->read(type_byte);
-   type = handle->read(type_byte);
-   if(!cnt) break;
-   if(type) numobj = handle->read(type_word);
-   for(j = 0;j < cnt;j++,i++)
-   {
-     char size;
-     switch(type)
-     {
-       case 0: size = 0; break;
-       case 1: size = 2; break;
-       case 2:
-       case 0x80:
-       case 3: size = 4; break;
-       default:
-       case 4: size = 6; break;
-     }
-     if(i == ordinal - 1)
-     {
-       lxent.b32_type = type;
-       found = true;
-       if(size)
-       {
-	 lxent.b32_obj = numobj;
-	 lxent.entry.e32_flags = handle->read(type_byte);
-	 handle->read((any_t*)&lxent.entry.e32_variant,size);
-       }
-       break;
-     }
-     else
-       if(size) handle->seek(size + sizeof(char),binary_stream::Seek_Cur);
-     if(handle->eof()) break;
-   }
-   if(found) break;
- }
- if(found) ret = CalcEntryLE(lxent);
- else      if(dispmsg) bctx().ErrMessageBox(NOT_ENTRY,"");
- return ret;
+    binary_stream* handle;
+    bool found;
+    unsigned i;
+    unsigned char j;
+    unsigned char cnt,type;
+    uint_fast16_t numobj = 0;
+    LX_ENTRY lxent;
+    __filesize_t ret;
+     ret = bctx().tell();
+    handle = lx_cache;
+    handle->seek(lxe.le.leEntryTableOffset + headshift(),binary_stream::Seek_Set);
+    i = 0;
+    found = false;
+    while(1) {
+	cnt = handle->read(type_byte);
+	type = handle->read(type_byte);
+	if(!cnt) break;
+	if(type) numobj = handle->read(type_word);
+	for(j = 0;j < cnt;j++,i++) {
+	    char size;
+	    switch(type) {
+		case 0: size = 0; break;
+		case 1: size = 2; break;
+		case 2:
+		case 0x80:
+		case 3: size = 4; break;
+		default:
+		case 4: size = 6; break;
+	    }
+	    if(i == ordinal - 1) {
+		lxent.b32_type = type;
+		found = true;
+		if(size) {
+		    lxent.b32_obj = numobj;
+		    lxent.entry.e32_flags = handle->read(type_byte);
+		    binary_packet bp=handle->read(size); memcpy(&lxent.entry.e32_variant,bp.data(),bp.size());
+		}
+		break;
+	    } else if(size) handle->seek(size + sizeof(char),binary_stream::Seek_Cur);
+	    if(handle->eof()) break;
+	}
+	if(found) break;
+    }
+    if(found) ret = CalcEntryLE(lxent);
+    else      if(dispmsg) bctx().ErrMessageBox(NOT_ENTRY,"");
+    return ret;
 }
 
 __filesize_t LE_Parser::action_F10()
@@ -293,14 +284,15 @@ exit:
 LE_Parser::LE_Parser(BeyeContext& b,binary_stream& h,CodeGuider& __code_guider,udn& u)
 	:LX_Parser(b,h,__code_guider,u)
 {
+    binary_packet bp(1);
     if(headshift()) {
 	char id[2];
 	main_handle().seek(headshift(),binary_stream::Seek_Set);
-	main_handle().read(id,sizeof(id));
+	bp=main_handle().read(sizeof(id)); memcpy(id,bp.data(),bp.size());
 	if(!(id[0] == 'L' && id[1] == 'E')) throw bad_format_exception();
     } else throw bad_format_exception();
     main_handle().seek(headshift(),binary_stream::Seek_Set);
-    main_handle().read(&lxe.le,sizeof(LEHEADER));
+    bp=main_handle().read(sizeof(LEHEADER)); memcpy(&lxe.le,bp.data(),bp.size());
 }
 
 LE_Parser::~LE_Parser()

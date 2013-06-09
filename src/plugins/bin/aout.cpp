@@ -118,7 +118,7 @@ __filesize_t AOut_Parser::show_header() const
   TWindow *w;
   fpos = bctx.tell();
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(&aout,sizeof(struct external_exec));
+    binary_packet bp=main_handle.read(sizeof(struct external_exec)); memcpy(&aout,bp.data(),bp.size());
   uint32_t* p_info = (uint32_t*)&aout.e_info;
   w = CrtDlgWndnls(aout_encode_hdr(*p_info),54,7);
   w->goto_xy(1,1);
@@ -225,7 +225,7 @@ int AOut_Parser::query_platform() const {
     unsigned id;
     struct external_exec aout;
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(&aout,sizeof(struct external_exec));
+    binary_packet bp=main_handle.read(sizeof(struct external_exec)); memcpy(&aout,bp.data(),bp.size());
     aout_encode_machine(*((uint32_t *)aout.e_info),id);
     return id;
 }

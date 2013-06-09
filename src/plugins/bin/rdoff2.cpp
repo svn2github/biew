@@ -106,7 +106,7 @@ RDOff2_Parser::RDOff2_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_gu
 {
     char rbuff[6];
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(rbuff,sizeof(rbuff));
+    binary_packet bp=main_handle.read(sizeof(rbuff)); memcpy(rbuff,bp.data(),bp.size());
     if(!(memcmp(rbuff,"RDOFF2",sizeof(rbuff)) == 0 ||
 	 memcmp(rbuff,"RDOFF\x2",sizeof(rbuff)) == 0)) throw bad_format_exception();
 }

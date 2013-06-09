@@ -230,7 +230,7 @@ __filesize_t Wave_Parser::show_header() const
  if((__fileoff_t)fpos2==-1) { bctx.ErrMessageBox("Main WAV Header not found",""); return fpos; }
  main_handle.seek(fpos2,binary_stream::Seek_Set);
  main_handle.read(type_dword); /* skip section size */
- main_handle.read(&wavf,sizeof(WAVEFORMATEX));
+ binary_packet bp=main_handle.read(sizeof(WAVEFORMATEX)); memcpy(&wavf,bp.data(),bp.size());
  fpos2 = wav_find_chunk(12,mmioFOURCC('d','a','t','a'));
  if((__fileoff_t)fpos2!=-1) fpos2-=4;
  hwnd = CrtDlgWndnls(" WAV File Header ",43,5);

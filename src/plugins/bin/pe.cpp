@@ -144,7 +144,7 @@ namespace	usr {
 	    void			BuildPERefChain();
 	    std::vector<std::string>	PEReadRVAs() const;
 	    __filesize_t		CalcEntryPE(unsigned ordinal,bool dispmsg) const;
-	    unsigned			PEExportNumItems(binary_stream& handle) const;
+	    unsigned			PEExportNumItems(binary_stream& handle);
 	    std::vector<std::string>	PEExportReadItems(binary_stream& handle,size_t nnames) const;
 	    std::string			__peReadASCIIZName(binary_stream& handle,__filesize_t offset) const;
 	    __filesize_t		RVA2Phys(__filesize_t rva) const;
@@ -539,7 +539,7 @@ std::vector<PE_OBJECT> PE_Parser::__ReadObjectsPE(binary_stream& handle,size_t n
     for(i = 0;i < n;i++) {
 	PE_OBJECT po;
 	if(IsKbdTerminate() || handle.eof()) break;
-	handle.read(&po,sizeof(PE_OBJECT));
+	binary_packet bp=handle.read(sizeof(PE_OBJECT)); memcpy(&po,bp.data(),bp.size());
 	rc.push_back(po);
     }
     return rc;
@@ -735,7 +735,7 @@ __filesize_t PE_Parser::action_F2()
 	    if(i == -1) break;
 	    oss<<IMPPROC_TABLE<<objs[i]<<" ";
 	    handle.seek(phys + i*sizeof(ImportDirPE),binary_stream::Seek_Set);
-	    handle.read(&imp_pe,sizeof(ImportDirPE));
+	    binary_packet bp=handle.read(sizeof(ImportDirPE)); memcpy(&imp_pe,bp.data(),bp.size());
 	    if(handle.eof()) break;
 	    if(!(imp_pe.idMajVer == 0 && imp_pe.idMinVer == 0 && imp_pe.idDateTime != 0xFFFFFFFFUL))
 		magic = imp_pe.idFlags;
@@ -775,7 +775,7 @@ std::vector<std::string> PE_Parser::PEExportReadItems(binary_stream& handle,size
     expaddr = RVA2Phys(et.etOrdinalTableRVA);
     if(!(addr = new unsigned long[nnames])) return rc;
     handle.seek(RVA2Phys(et.etAddressTableRVA),binary_stream::Seek_Set);
-    handle.read(addr,sizeof(unsigned long)*nnames);
+    binary_packet bp=handle.read(sizeof(unsigned long)*nnames); memcpy(addr,bp.data(),bp.size());
 
     for(i = 0;i < et.etNumNamePtrs;i++) {
 	std::string stmp;
@@ -810,13 +810,13 @@ std::vector<std::string> PE_Parser::PEExportReadItems(binary_stream& handle,size
     return rc;
 }
 
-unsigned PE_Parser::PEExportNumItems(binary_stream& handle) const
+unsigned PE_Parser::PEExportNumItems(binary_stream& handle)
 {
   __filesize_t addr;
   if(!peDir[PE_EXPORT].rva) return 0;
   addr = RVA2Phys(peDir[PE_EXPORT].rva);
   handle.seek(addr,binary_stream::Seek_Set);
-  handle.read((any_t*)&et,sizeof(et));
+  binary_packet bp=handle.read(sizeof(et)); memcpy(&et,bp.data(),bp.size());
   return (unsigned)(et.etNumEATEntries);
 }
 
@@ -851,7 +851,7 @@ __filesize_t PE_Parser::action_F3()
     if(peDir[PE_EXPORT].rva) {
 	addr = RVA2Phys(peDir[PE_EXPORT].rva);
 	main_handle().seek(addr,binary_stream::Seek_Set);
-	main_handle().read((any_t*)&et,sizeof(et));
+	binary_packet bp=main_handle().read(sizeof(et)); memcpy(&et,bp.data(),bp.size());
 	if(et.etNameRVA) {
 	    char sftime[80];
 	    struct tm * tm;
@@ -979,7 +979,7 @@ void PE_Parser::BuildPERefChain()
   {
     unsigned long magic,Hint;
     handle.seek(phys + i*sizeof(ImportDirPE),binary_stream::Seek_Set);
-    handle.read(&ipe,sizeof(ImportDirPE));
+    binary_packet bp=handle.read(sizeof(ImportDirPE)); memcpy(&ipe,bp.data(),bp.size());
     if(!(ipe.idMajVer == 0 && ipe.idMinVer == 0 && ipe.idDateTime != 0xFFFFFFFFUL))
 				 magic = ipe.idLookupTableRVA;
     else                         magic = ipe.idFlags;
@@ -1056,6 +1056,7 @@ std::string PE_Parser::BuildReferStrPE(const RELOC_PE& rpe,int flags) const
     uint64_t Hint;
     ImportDirPE ipe;
     char buff[400];
+    binary_packet bp(1);
 
     phys = RVA2Phys(peDir[PE_IMPORT].rva);
     handle.seek(phys + 20L*rpe.modidx,binary_stream::Seek_Set);
@@ -1064,7 +1065,7 @@ std::string PE_Parser::BuildReferStrPE(const RELOC_PE& rpe,int flags) const
 	char *is_ext;
 	if(flags & Bin_Format::Use_Type) str+=" off32";
 	handle2.seek(RVA2Phys(rva),binary_stream::Seek_Set);
-	handle2.read(buff,400);
+	bp=handle2.read(400); memcpy(buff,bp.data(),bp.size());
 	buff[399] = 0;
 	/*
 	    Removing extension .dll from import name.
@@ -1082,7 +1083,7 @@ std::string PE_Parser::BuildReferStrPE(const RELOC_PE& rpe,int flags) const
 	    str+=oss.str();
 	}
 	handle3.seek(phys + rpe.modidx*sizeof(ImportDirPE),binary_stream::Seek_Set);
-	handle3.read(&ipe,sizeof(ImportDirPE));
+	bp=handle3.read(sizeof(ImportDirPE)); memcpy(&ipe,bp.data(),bp.size());
 	if(!(ipe.idMajVer == 0 && ipe.idMinVer == 0 && ipe.idDateTime != 0xFFFFFFFFUL))
 				  magic = ipe.idFlags;
 	else                         magic = ipe.idLookupTableRVA;
@@ -1108,7 +1109,7 @@ std::string PE_Parser::BuildReferStrPE(const RELOC_PE& rpe,int flags) const
 		if(phys > main_handle().flength()) str+="???";
 		else {
 		    handle2.seek(phys + 2,binary_stream::Seek_Set);
-		    handle2.read(buff,400);
+		    bp=handle2.read(400); memcpy(buff,bp.data(),bp.size());
 		    buff[399] = 0;
 		    str+=buff;
 		}
@@ -1201,9 +1202,10 @@ PE_Parser::PE_Parser(BeyeContext& b,binary_stream& h,CodeGuider& __code_guider,u
 	,pe_cache(&h)
 {
     char id[2];
+    binary_packet bp(1);
     if(headshift()) {
 	main_handle().seek(headshift(),binary_stream::Seek_Set);
-	main_handle().read(id,sizeof(id));
+	bp=main_handle().read(sizeof(id)); memcpy(id,bp.data(),bp.size());
 	if(!(id[0] == 'P' && id[1] == 'E')) throw bad_format_exception();
     }
     else throw bad_format_exception();
@@ -1211,14 +1213,14 @@ PE_Parser::PE_Parser(BeyeContext& b,binary_stream& h,CodeGuider& __code_guider,u
     int i;
 
     main_handle().seek(headshift(),binary_stream::Seek_Set);
-    main_handle().read(&pe,sizeof(PE_HEADER));
+    bp=main_handle().read(sizeof(PE_HEADER)); memcpy(&pe,bp.data(),bp.size());
     is_64bit = pe.peMagic==0x20B?1:0;
     if(is_64bit) reader = new(zeromem) PE64_Reader(h);
     else	 reader = new(zeromem) PE32_Reader(h);
     reader->init();
 
     peDir = new PERVA[reader->header().peDirSize];
-    main_handle().read(peDir, sizeof(PERVA)*reader->header().peDirSize);
+    bp=main_handle().read(sizeof(PERVA)*reader->header().peDirSize); memcpy(peDir,bp.data(),bp.size());
 
     peVA = new PE_ADDR[pe.peObjects];
 
@@ -1302,7 +1304,7 @@ __filesize_t PE_Parser::pa2va(__filesize_t pa) const
 	PE_OBJECT po;
 	__filesize_t obj_pa;
 	if(IsKbdTerminate() || main_handle().eof()) break;
-	main_handle().read(&po,sizeof(PE_OBJECT));
+	binary_packet bp=main_handle().read(sizeof(PE_OBJECT)); memcpy(&po,bp.data(),bp.size());
 	obj_pa = CalcPEObjectEntry(po.oPhysicalOffset);
 	if(pa >= obj_pa && pa < obj_pa + po.oPhysicalSize) {
 	    ret_addr = po.oRVA + (pa - obj_pa) + reader->header().peImageBase;
@@ -1381,7 +1383,7 @@ Object_Info PE_Parser::get_object_attribute(__filesize_t pa)
     for(i = 0;i < nitems;i++) {
 	PE_OBJECT po;
 	if(IsKbdTerminate() || main_handle().eof()) break;
-	main_handle().read(&po,sizeof(PE_OBJECT));
+	binary_packet bp=main_handle().read(sizeof(PE_OBJECT)); memcpy(&po,bp.data(),bp.size());
 	if(pa >= rc.start && pa < po.oPhysicalOffset) {
 	    /** means between two objects */
 	    rc.end = po.oPhysicalOffset;

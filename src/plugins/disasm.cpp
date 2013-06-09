@@ -166,7 +166,7 @@ void DisMode::fill_prev_asm_page(__filesize_t bound,unsigned predist)
 	DisasmRet dret;
 	addr = distin + totallen;
 	main_handle.seek(addr,binary_stream::Seek_Set);
-	main_handle.read(disCodeBuffer,disMaxCodeLen);
+	binary_packet bp=main_handle.read(disMaxCodeLen); memcpy(disCodeBuffer,bp.data(),bp.size());
 	dret = disassembler(distin,(unsigned char*)disCodeBuffer,__DISF_SIZEONLY);
 	if(addr >= bound) break;
 	totallen += dret.codelen;
@@ -249,7 +249,7 @@ plugin_position DisMode::paint( unsigned keycode, unsigned textshift )
 	addrdet = hexAddressResolv;
 	disNeedRef = Ref_None; hexAddressResolv = 0;
 	main_handle.seek(cfpos,binary_stream::Seek_Set);
-	main_handle.read(disCodeBuffer,disMaxCodeLen);
+	binary_packet bp=main_handle.read(disMaxCodeLen); memcpy(disCodeBuffer,bp.data(),bp.size());
 	DisasmPrepareMode = true;
 	dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_SIZEONLY);
 	if(cfpos + dret.codelen != amocpos && cfpos && amocpos) keycode = KE_SUPERKEY;
@@ -295,7 +295,7 @@ plugin_position DisMode::paint( unsigned keycode, unsigned textshift )
 		len = cfpos + disMaxCodeLen < flen ? disMaxCodeLen : (int)(flen - cfpos);
 		::memset(disCodeBuffer,0,disMaxCodeLen);
 		main_handle.seek(cfpos,binary_stream::Seek_Set);
-		main_handle.read((any_t*)disCodeBuffer,len);
+		binary_packet bp=main_handle.read(len); memcpy(disCodeBuffer,bp.data(),bp.size());
 		dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
 		if(i == 0) CurrStrLen = dret.codelen;
 		CurrStrLenBuff[i] = dret.codelen;
@@ -584,7 +584,7 @@ int DisMode::full_asm_edit(Editor& editor,TWindow& ewnd)
     rlen = (__filesize_t)edit_cp + max_buff_size < flen ? max_buff_size : (unsigned)(flen - edit_cp);
     main_handle.seek(edit_cp,binary_stream::Seek_Set);
     editor_mem& emem = editor.get_mem();
-    main_handle.read((any_t*)emem.buff,rlen);
+    binary_packet bp=main_handle.read(rlen); memcpy(emem.buff,bp.data(),bp.size());
     ::memcpy(emem.save,emem.buff,max_buff_size);
     ::memset(emem.alen,TWC_DEF_FILLER,height);
 
@@ -734,6 +734,7 @@ Plugin::search_result DisMode::search_engine(TWindow *pwnd, __filesize_t start,
     char *disSearchBuff;
     unsigned len, lw, proc, pproc, pmult;
     int cache[UCHAR_MAX+1];
+    binary_packet bp(1);
     cfpos = sfpos = main_handle.tell();
     flen = main_handle.flength();
     retval = FILESIZE_MAX;
@@ -764,7 +765,7 @@ Plugin::search_result DisMode::search_engine(TWindow *pwnd, __filesize_t start,
 		::memset(disCodeBuffer,0,disMaxCodeLen);
 		dfpos = cfpos;
 		main_handle.seek(cfpos,binary_stream::Seek_Set);
-		main_handle.read((any_t*)disCodeBuffer,len);
+		bp=main_handle.read(len); memcpy(disCodeBuffer,bp.data(),bp.size());
 		dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
 		cfpos -= lw;
 	    } else break;
@@ -773,7 +774,7 @@ Plugin::search_result DisMode::search_engine(TWindow *pwnd, __filesize_t start,
 	    ::memset(disCodeBuffer,0,disMaxCodeLen);
 	    dfpos = cfpos;
 	    main_handle.seek(cfpos,binary_stream::Seek_Set);
-	    main_handle.read((any_t*)disCodeBuffer,len);
+	    bp=main_handle.read(len); memcpy(disCodeBuffer,bp.data(),bp.size());
 	    dret = disassembler(cfpos,(unsigned char*)disCodeBuffer,__DISF_NORMAL);
 	    cfpos += dret.codelen;
 	    if(cfpos >= flen) break;
@@ -989,7 +990,7 @@ bool DisMode::append_faddr(binary_stream& handle,std::string& str,__fileoff_t ul
 	pointer where this field is referenced. */
 	memset(disCodeBufPredict,0,disMaxCodeLen*PREDICT_DEPTH);
 	handle.seek(r_sh, binary_stream::Seek_Set);
-	handle.read(disCodeBufPredict,disMaxCodeLen*PREDICT_DEPTH);
+	binary_packet bp=handle.read(disMaxCodeLen*PREDICT_DEPTH); memcpy(disCodeBufPredict,bp.data(),bp.size());
 	dret = disassembler(r_sh,(MBuffer)disCodeBufPredict,__DISF_GETTYPE);
     }
 #ifndef NDEBUG

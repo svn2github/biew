@@ -92,10 +92,14 @@ uint64_t binary_stream::read(const data_type_qualifier_qword_t&)
     return ret;
 }
 
-bool binary_stream::read(any_t* _buffer,unsigned cbBuffer)
+binary_packet binary_stream::read(size_t cbBuffer)
 {
+    int cb;
     int h = _handle ^ reinterpret_cast<long>(this);
-    return ::read(h,_buffer,cbBuffer)==cbBuffer;
+    binary_packet rc(cbBuffer);
+    cb=::read(h,rc.data(),cbBuffer);
+    if(cb>0 && size_t(cb)!=cbBuffer) rc.resize(cb);
+    return rc;
 }
 
 bool binary_stream::write(uint8_t bVal)
@@ -134,11 +138,11 @@ bool binary_stream::write(uint64_t qwVal)
     return rc;
 }
 
-bool binary_stream::write(const any_t* _buffer,unsigned cbBuffer)
+bool binary_stream::write(const binary_packet& _buffer)
 {
     bool rc;
     int h = _handle ^ reinterpret_cast<long>(this);
-    rc=::write(h,_buffer,cbBuffer)==cbBuffer;
+    rc=::write(h,_buffer.data(),_buffer.size())==int(_buffer.size());
     update_length();
     return rc;
 }

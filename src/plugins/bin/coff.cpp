@@ -206,7 +206,7 @@ std::vector<SCNHDR> Coff_Parser::__coffReadObjects(binary_stream& handle,size_t 
     for(i = 0;i < n;i++) {
 	SCNHDR po;
 	if(IsKbdTerminate() || handle.eof()) break;
-	handle.read(&po,sizeof(SCNHDR));
+	binary_packet bp=handle.read(sizeof(SCNHDR)); memcpy(&po,bp.data(),bp.size());
 	rc.push_back(po);
     }
     return rc;
@@ -373,7 +373,7 @@ std::vector<std::string> Coff_Parser::coffSymTabReadItems(binary_stream& handle,
     for(i = 0;i < nnames;i++) {
 	struct external_syment cse;
 	std::string stmp;
-	handle.read(&cse,sizeof(struct external_syment));
+	binary_packet bp=handle.read(sizeof(struct external_syment)); memcpy(&cse,bp.data(),bp.size());
 	if(COFF_DWORD(cse.e.e.e_zeroes) == 0L &&
 	    COFF_DWORD(cse.e.e.e_offset) >= 4)
 	    stmp=coffReadLongName(handle,COFF_DWORD(cse.e.e.e_offset));
@@ -393,26 +393,23 @@ std::vector<std::string> Coff_Parser::coffSymTabReadItems(binary_stream& handle,
 
 __filesize_t Coff_Parser::CalcEntryCoff(unsigned long idx,bool display_msg) const
 {
-  struct external_syment cse;
-  uint_fast16_t sec_num;
-  __filesize_t fpos;
-  fpos = 0L;
-  main_handle.seek(COFF_DWORD(coff386hdr.f_symptr)+idx*sizeof(struct external_syment),binary_stream::Seek_Set);
-  main_handle.read(&cse,sizeof(struct external_syment));
-  sec_num = COFF_WORD(cse.e_scnum);
-  if(sec_num && sec_num <= COFF_WORD(coff386hdr.f_nscns) &&
-    ((cse.e_sclass[0] == C_EXT ||
-      cse.e_sclass[0] == C_STAT ||
-      cse.e_sclass[0] == C_HIDDEN) ||
-     (cse.e_sclass[0] == C_LABEL &&
-      COFF_DWORD(cse.e_value))))
-  {
-    fpos = COFF_DWORD(coff386so[sec_num-1].s_scnptr)+COFF_DWORD(cse.e_value);
-  }
-  else
-    if(display_msg)
-      bctx.ErrMessageBox(NO_ENTRY,"");
-  return fpos;
+    struct external_syment cse;
+    uint_fast16_t sec_num;
+    __filesize_t fpos;
+    fpos = 0L;
+    main_handle.seek(COFF_DWORD(coff386hdr.f_symptr)+idx*sizeof(struct external_syment),binary_stream::Seek_Set);
+    binary_packet bp=main_handle.read(sizeof(struct external_syment)); memcpy(&cse,bp.data(),bp.size());
+    sec_num = COFF_WORD(cse.e_scnum);
+    if(sec_num && sec_num <= COFF_WORD(coff386hdr.f_nscns) &&
+	((cse.e_sclass[0] == C_EXT ||
+	  cse.e_sclass[0] == C_STAT ||
+	  cse.e_sclass[0] == C_HIDDEN) ||
+	(cse.e_sclass[0] == C_LABEL &&
+	 COFF_DWORD(cse.e_value)))) {
+	fpos = COFF_DWORD(coff386so[sec_num-1].s_scnptr)+COFF_DWORD(cse.e_value);
+    }
+    else if(display_msg) bctx.ErrMessageBox(NO_ENTRY,"");
+    return fpos;
 }
 
 __filesize_t Coff_Parser::action_F7()
@@ -440,32 +437,30 @@ exit:
 /***************************************************************************/
 void Coff_Parser::BuildRelocCoff386()
 {
-  TWindow * w;
-  size_t j,segcount, nr;
-  RELOC_COFF386 rel;
-  w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
-  if(PubNames.empty()) coff_ReadPubNameList(main_handle);
-  w->goto_xy(1,1);
-  w->puts(BUILD_REFS);
-  for(segcount = 0;segcount < COFF_WORD(coff386hdr.f_nscns);segcount++)
-  {
-    bool is_eof;
-    is_eof = false;
-    main_handle.seek(COFF_DWORD(coff386so[segcount].s_relptr),binary_stream::Seek_Set);
-    nr = COFF_WORD(coff386so[segcount].s_nreloc);
-    for(j = 0;j < nr;j++)
-    {
-      struct external_reloc er;
-      main_handle.read(&er,sizeof(struct external_reloc));
-      if((is_eof = main_handle.eof()) != 0) break;
-      rel.offset = er.r_vaddr + COFF_DWORD(coff386so[segcount].s_scnptr);
-      rel.nameoff = er.r_symndx;
-      rel.type = er.r_type;
-      RelocCoff386.insert(rel);
+    TWindow * w;
+    size_t j,segcount, nr;
+    RELOC_COFF386 rel;
+    w = CrtDlgWndnls(SYSTEM_BUSY,49,1);
+    if(PubNames.empty()) coff_ReadPubNameList(main_handle);
+    w->goto_xy(1,1);
+    w->puts(BUILD_REFS);
+    for(segcount = 0;segcount < COFF_WORD(coff386hdr.f_nscns);segcount++) {
+	bool is_eof;
+	is_eof = false;
+	main_handle.seek(COFF_DWORD(coff386so[segcount].s_relptr),binary_stream::Seek_Set);
+	nr = COFF_WORD(coff386so[segcount].s_nreloc);
+	for(j = 0;j < nr;j++) {
+	    struct external_reloc er;
+	    binary_packet bp=main_handle.read(sizeof(struct external_reloc)); memcpy(&er,bp.data(),bp.size());
+	    if((is_eof = main_handle.eof()) != 0) break;
+	    rel.offset = er.r_vaddr + COFF_DWORD(coff386so[segcount].s_scnptr);
+	    rel.nameoff = er.r_symndx;
+	    rel.type = er.r_type;
+	    RelocCoff386.insert(rel);
+	}
+	if(is_eof) break;
     }
-    if(is_eof) break;
-  }
-  delete w;
+    delete w;
 }
 
 bool Coff_Parser::coffSymTabReadItemsIdx(binary_stream& handle,unsigned long idx,
@@ -476,7 +471,7 @@ bool Coff_Parser::coffSymTabReadItemsIdx(binary_stream& handle,unsigned long idx
     struct external_syment cse;
     if(idx >= COFF_DWORD(coff386hdr.f_nsyms)) return false;
     handle.seek(COFF_DWORD(coff386hdr.f_symptr) + idx*sizeof(struct external_syment),binary_stream::Seek_Set);
-    handle.read(&cse,sizeof(struct external_syment));
+    binary_packet bp=handle.read(sizeof(struct external_syment)); memcpy(&cse,bp.data(),bp.size());
     if(COFF_DWORD(cse.e.e.e_zeroes) == 0L &&
 	COFF_DWORD(cse.e.e.e_offset) >= 4)
 	name=coffReadLongName(handle,COFF_DWORD(cse.e.e.e_offset));
@@ -565,19 +560,20 @@ Coff_Parser::Coff_Parser(BeyeContext& b,binary_stream& h,CodeGuider& _code_guide
 {
     __filesize_t s_off = sizeof(coff386hdr);
     uint_fast16_t i,id;
+    binary_packet bp(1);
     main_handle.seek(0,binary_stream::Seek_Set);
     id = main_handle.read(type_word);
     if((I386BADMAG(id))) throw bad_format_exception();
 
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(&coff386hdr,sizeof(struct external_filehdr));
-    if(COFF_WORD(coff386hdr.f_opthdr)) main_handle.read(&coff386ahdr,sizeof(AOUTHDR));
+    bp=main_handle.read(sizeof(struct external_filehdr)); memcpy(&coff386hdr,bp.data(),bp.size());
+    if(COFF_WORD(coff386hdr.f_opthdr)) { bp=main_handle.read(sizeof(AOUTHDR)); memcpy(&coff386ahdr,bp.data(),bp.size()); }
     nsections = COFF_WORD(coff386hdr.f_nscns);
     coff386so = new SCNHDR[nsections];
     coff_cache = main_handle.dup();
     if(COFF_WORD(coff386hdr.f_opthdr)) s_off += COFF_WORD(coff386hdr.f_opthdr);
     coff_cache->seek(s_off,binary_stream::Seek_Set);
-    for(i = 0;i < nsections;i++) coff_cache->read(&coff386so[i],sizeof(SCNHDR));
+    for(i = 0;i < nsections;i++) { bp=coff_cache->read(sizeof(SCNHDR)); memcpy(&coff386so[i],bp.data(),bp.size()); }
     strings_ptr = COFF_DWORD(coff386hdr.f_symptr)+COFF_DWORD(coff386hdr.f_nsyms)*sizeof(struct external_syment);
 }
 
@@ -621,7 +617,7 @@ std::string Coff_Parser::coff_ReadPubName(binary_stream& b_cache,const symbolic_
     else {
 	b_cache.seek(it.nameoff,binary_stream::Seek_Set);
 	char buff[it.addinfo+1];
-	b_cache.read(buff,it.addinfo);
+	binary_packet bp=b_cache.read(it.addinfo); memcpy(buff,bp.data(),bp.size());
 	buff[it.addinfo] = 0;
 	return buff;
     }
@@ -639,7 +635,7 @@ void Coff_Parser::coff_ReadPubNameList(binary_stream& handle)
    __filesize_t where;
    uint_fast16_t sec_num;
    where = handle.tell();
-   handle.read(&cse,sizeof(struct external_syment));
+   binary_packet bp=handle.read(sizeof(struct external_syment)); memcpy(&cse,bp.data(),bp.size());
    sec_num = COFF_WORD(cse.e_scnum);
    if(sec_num && sec_num <= COFF_WORD(coff386hdr.f_nscns) &&
      (cse.e_sclass[0] == C_EXT ||

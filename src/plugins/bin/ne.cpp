@@ -335,7 +335,7 @@ std::vector<std::string> NE_Parser::__ReadModRefNamesNE(binary_stream& handle) c
 	handle.seek(NameOff,binary_stream::Seek_Set);
 	length = handle.read(type_byte);
 	if(IsKbdTerminate() || handle.eof()) break;
-	handle.read(stmp,length);
+	binary_packet bp=handle.read(length); memcpy(stmp,bp.data(),bp.size());
 	stmp[length] = 0;
 	handle.seek(fp,binary_stream::Seek_Set);
 	rc.push_back(stmp);
@@ -384,10 +384,11 @@ std::vector<std::string> NE_Parser::__ReadProcListNE(binary_stream& handle,int m
     SEGDEF tsd;
     modno++;
     std::ostringstream oss;
+    binary_packet bp(1);
 
     handle.seek(headshift()+ne.neOffsetSegmentTable,binary_stream::Seek_Set);
     for(i = 0;i < ne.neSegmentTableCount;i++) {
-	handle.read(&tsd,sizeof(SEGDEF));
+	bp=handle.read(sizeof(SEGDEF)); memcpy(&tsd,bp.data(),bp.size());
 	if(tsd.sdLength && tsd.sdOffset && tsd.sdFlags & 0x0100) {
 	    __filesize_t spos;
 	    uint_fast16_t j,nrelocs;
@@ -396,7 +397,7 @@ std::vector<std::string> NE_Parser::__ReadProcListNE(binary_stream& handle,int m
 	    handle.seek(((__fileoff_t)(tsd.sdOffset) << ne.neLogicalSectorShiftCount) + tsd.sdLength,binary_stream::Seek_Set);
 	    nrelocs = handle.read(type_word);
 	    for(j = 0;j < nrelocs;j++) {
-		handle.read(&rne,sizeof(RELOC_NE));
+		bp=handle.read(sizeof(RELOC_NE)); memcpy(&rne,bp.data(),bp.size());
 		if((rne.Type & 3) && rne.idx == modno) {
 		    if((rne.Type & 3) == 1) {
 			oss<<"< By ordinal >   @"<<std::hex<<std::setfill('0')<<std::setw(4)<<rne.ordinal;
@@ -444,7 +445,7 @@ std::vector<std::string> NE_Parser::RNamesReadItems(binary_stream& handle,size_t
     for(i = 0;i < nnames;i++) {
 	length = handle.read(type_byte);
 	if(IsKbdTerminate() || handle.eof()) break;
-	handle.read(stmp,length);
+	binary_packet bp=handle.read(length); memcpy(stmp,bp.data(),bp.size());
 	Ordinal = handle.read(type_word);
 	oss<<(char)ListBox::Ord_Delimiter<<std::left<<std::setw(5)<<Ordinal;
 	rc.push_back(std::string(stmp)+oss.str());
@@ -469,7 +470,7 @@ std::vector<SEGDEF> NE_Parser::__ReadSegTableNE(binary_stream& handle,size_t nna
     for(i = 0;i < nnames;i++) {
 	SEGDEF sd;
 	if(IsKbdTerminate() || handle.eof()) break;
-	handle.read(&sd,sizeof(SEGDEF));
+	binary_packet bp=handle.read(sizeof(SEGDEF)); memcpy(&sd,bp.data(),bp.size());
 	rc.push_back(sd);
     }
     return rc;
@@ -561,12 +562,12 @@ bool NE_Parser::ReadEntryNE(ENTRY * obj,unsigned entnum) const
 
 bool NE_Parser::ReadSegDefNE(SEGDEF * obj,unsigned segnum) const
 {
- binary_stream* handle;
-  handle = ne_cache3;
-  if(segnum > ne.neSegmentTableCount || !segnum) return false;
-  handle->seek((__fileoff_t)headshift() + ne.neOffsetSegmentTable + (segnum - 1)*sizeof(SEGDEF),binary_stream::Seek_Set);
-  handle->read((any_t*)obj,sizeof(SEGDEF));
-  return true;
+    binary_stream* handle;
+    handle = ne_cache3;
+    if(segnum > ne.neSegmentTableCount || !segnum) return false;
+    handle->seek((__fileoff_t)headshift() + ne.neOffsetSegmentTable + (segnum - 1)*sizeof(SEGDEF),binary_stream::Seek_Set);
+    binary_packet bp=handle->read(sizeof(SEGDEF)); memcpy(obj,bp.data(),bp.size());
+    return true;
 }
 
 __filesize_t  NE_Parser::CalcEntryPointNE( unsigned segnum, unsigned offset ) const
@@ -700,6 +701,7 @@ std::string NE_Parser::GetResourceIDNE(binary_stream& handle,unsigned rid,__file
     std::ostringstream oss;
     char buff[81];
     unsigned char nByte;
+    binary_packet bp(1);
     if(rid & 0x8000) { oss<<std::hex<<(rid & 0x7FFF); return oss.str(); }
     else {
 	__filesize_t pos;
@@ -707,10 +709,10 @@ std::string NE_Parser::GetResourceIDNE(binary_stream& handle,unsigned rid,__file
 	handle.seek(BegResTab + rid,binary_stream::Seek_Set);
 	nByte = handle.read(type_byte);
 	if(nByte > 26) {
-	    handle.read(buff,26);
+	    bp=handle.read(26); memcpy(buff,bp.data(),bp.size());
 	    strcat(buff,"...");
 	    nByte = 29;
-	} else if(nByte) handle.read(buff,nByte);
+	} else if(nByte) { bp=handle.read(nByte); memcpy(buff,bp.data(),bp.size()); }
 	buff[nByte] = 0;
 	handle.seek(pos,binary_stream::Seek_Set);
     }
@@ -743,7 +745,7 @@ std::vector<std::string> NE_Parser::__ReadResourceGroupNE(binary_stream& handle,
 	    NAMEINFO nam;
 	    oss.str("");
 	    if(IsKbdTerminate() || handle.eof()) break;
-	    handle.read(&nam,sizeof(NAMEINFO));
+	    binary_packet bp=handle.read(sizeof(NAMEINFO)); memcpy(&nam,bp.data(),bp.size());
 	    addr[i++] = ((unsigned long)nam.rnOffset)<<rcAlign;
 	    oss<<" "<<GetResourceIDNE(handle,nam.rnID,BegResTab)
 		<<" <length: "<<std::hex<<std::setfill('0')<<std::setw(4)<<((unsigned)((unsigned long)nam.rnLength)<<rcAlign)
@@ -883,7 +885,7 @@ void NE_Parser::BuildNERefChain(__filesize_t segoff,__filesize_t slength)
      NERefChain nrc;
      this_reloc_off = reloc_off + i*sizeof(RELOC_NE);
      main_handle().seek(this_reloc_off,binary_stream::Seek_Set);
-     main_handle().read(&rne,sizeof(RELOC_NE));
+     binary_packet bp=main_handle().read(sizeof(RELOC_NE)); memcpy(&rne,bp.data(),bp.size());
      if(IsKbdTerminate() || main_handle().eof()) break;
      nrc.offset = rne.RefOff;
      nrc.number = i;
@@ -921,7 +923,7 @@ RELOC_NE NE_Parser::__found_RNE(__filesize_t segoff,__filesize_t slength,unsigne
     it = CurrNEChain.find(key);
     if(it!=CurrNEChain.end()) {
 	main_handle().seek(segoff + slength + 2 + sizeof(RELOC_NE)*(*it).number,binary_stream::Seek_Set);
-	main_handle().read(&rne,sizeof(rne));
+	binary_packet bp=main_handle().read(sizeof(rne)); memcpy(&rne,bp.data(),bp.size());
     }
     else rne.Type=0xFF;
     return rne;
@@ -945,7 +947,7 @@ RELOC_NE NE_Parser::__found_RNE_spec(__filesize_t segoff,__filesize_t slength,un
 	binary_stream* b_cache;
 	b_cache = ne_cache;
 	b_cache->seek(segoff + slength + 2 + sizeof(RELOC_NE)*(*it).number,binary_stream::Seek_Set);
-	b_cache->read(&rne,sizeof(rne));
+	binary_packet bp=b_cache->read(sizeof(rne)); memcpy(&rne,bp.data(),bp.size());
     }
     else rne.Type=0xFF;
     return rne;
@@ -982,7 +984,7 @@ std::string NE_Parser::rdImpNameNELX(unsigned idx,bool useasoff,__filesize_t Off
   b_cache->seek(name_off,binary_stream::Seek_Set);
   len = b_cache->read(type_byte);
   char buff[len+1];
-  b_cache->read(buff,len);
+  binary_packet bp=b_cache->read(len); memcpy(buff,bp.data(),bp.size());
   buff[len] = 0;
   return buff;
 }
@@ -1162,7 +1164,7 @@ std::string NE_Parser::ne_ReadPubName(binary_stream& b_cache,const symbolic_info
     b_cache.seek(it.nameoff,binary_stream::Seek_Set);
     rlen = b_cache.read(type_byte);
     char stmp[rlen+1];
-    b_cache.read(stmp,rlen);
+    binary_packet bp=b_cache.read(rlen); memcpy(stmp,bp.data(),bp.size());
     stmp[rlen] = 0;
     return stmp;
 }
@@ -1194,15 +1196,16 @@ NE_Parser::NE_Parser(BeyeContext& b,binary_stream& h,CodeGuider& __code_guider,u
 	,CurrSegmentHasReloc(-1)
 {
     char id[2];
+    binary_packet bp(1);
     if(headshift()) {
 	h.seek(headshift(),binary_stream::Seek_Set);
-	h.read(id,sizeof(id));
+	bp=h.read(sizeof(id)); memcpy(id,bp.data(),bp.size());
 	if(!(id[0] == 'N' && id[1] == 'E')) throw bad_format_exception();
     }
     else throw bad_format_exception();
 
     h.seek(headshift(),binary_stream::Seek_Set);
-    h.read(&ne,sizeof(NEHEADER));
+    bp=h.read(sizeof(NEHEADER)); memcpy(&ne,bp.data(),bp.size());
     ne_cache3 = h.dup();
     ne_cache1 = h.dup();
     ne_cache = h.dup();

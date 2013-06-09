@@ -65,7 +65,7 @@ ASF_Parser::ASF_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider,u
 /*    const unsigned char asf2hdrguid[16]={0xD1,0x29,0xE2,0xD6,0xDA,0x35,0xD1,0x11,0x90,0x34,0x00,0xA0,0xC9,0x03,0x49,0xBE}; */
     unsigned char buff[16];
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(buff,16);
+    binary_packet bp=main_handle.read(16); memcpy(buff,bp.data(),bp.size());
     if(memcmp(buff,asfhdrguid,16)!=0) throw bad_format_exception();
 }
 ASF_Parser::~ASF_Parser() {}

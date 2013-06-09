@@ -376,7 +376,7 @@ plugin_position HexMode::paint( unsigned keycode,unsigned textshift )
 		    if(hmode == 1) if(freq == 3) { freq = -1; len++; }
 		}
 		main_handle.seek(sindex,binary_stream::Seek_Set);
-		main_handle.read((any_t*)&outstr[width - scrHWidth],rwidth*__inc);
+		binary_packet bp=main_handle.read(rwidth*__inc); memcpy(&outstr[width - scrHWidth],bp.data(),bp.size());
 		xmin = main_wnd.width()-scrHWidth;
 		main_wnd.write(1,i + 1,outstr,xmin);
 		if(search.is_inline(sindex,scrHWidth)) search.hilight(main_wnd,sindex,xmin,width,i,(const char*)&outstr[xmin],Search::HL_Normal);

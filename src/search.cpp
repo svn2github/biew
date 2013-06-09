@@ -154,7 +154,7 @@ __filesize_t Search::lfind(const char *sfrom,
 	if(sfrom) ::memcpy(nbuff,&sfrom[start],symb_size);
 	else {
 	    bctx.bm_file().seek(start,binary_stream::Seek_Set);
-	    bctx.bm_file().read(nbuff,symb_size);
+	    binary_packet bp=bctx.bm_file().read(symb_size); memcpy(nbuff,bp.data(),bp.size());
 	}
 	if((bctx.active_mode().flags() & Plugin::Text) == Plugin::Text) bctx.active_mode().convert_cp(nbuff,symb_size,false);
 	ch = nbuff[0];
@@ -166,7 +166,7 @@ __filesize_t Search::lfind(const char *sfrom,
 		if(sfrom) ::memcpy(fbuff,&sfrom[findptr],pattern_size*symb_size);
 		else {
 		    bctx.bm_file().seek(findptr,binary_stream::Seek_Set);
-		    bctx.bm_file().read((any_t*)fbuff,pattern_size*symb_size);
+		    binary_packet bp=bctx.bm_file().read(pattern_size*symb_size); memcpy(fbuff,bp.data(),bp.size());
 		}
 		if((bctx.active_mode().flags() & Plugin::Text) == Plugin::Text)
 		    __search_len = bctx.active_mode().convert_cp((char *)fbuff,pattern_size*symb_size,false);
@@ -188,7 +188,7 @@ __filesize_t Search::lfind(const char *sfrom,
 		    if(sfrom) ::memcpy(nbuff,&sfrom[findptr-symb_size],symb_size);
 		    else {
 			bctx.bm_file().seek(findptr - symb_size,binary_stream::Seek_Set);
-			bctx.bm_file().read(nbuff,symb_size);
+			binary_packet bp=bctx.bm_file().read(symb_size); memcpy(nbuff,bp.data(),bp.size());
 		    }
 		    if((bctx.active_mode().flags() & Plugin::Text) == Plugin::Text) bctx.active_mode().convert_cp(nbuff,symb_size,false);
 		    ch = nbuff[0];
@@ -197,7 +197,7 @@ __filesize_t Search::lfind(const char *sfrom,
 		    if(sfrom) ::memcpy(nbuff,&sfrom[findptr + (pattern_size*symb_size)],symb_size);
 		    else {
 			bctx.bm_file().seek(findptr + (pattern_size*symb_size),binary_stream::Seek_Set);
-			bctx.bm_file().read(nbuff,symb_size);
+			binary_packet bp=bctx.bm_file().read(symb_size); memcpy(nbuff,bp.data(),bp.size());
 		    }
 		    if((bctx.active_mode().flags() & Plugin::Text) == Plugin::Text) bctx.active_mode().convert_cp(nbuff,symb_size,false);
 		    ch1 = nbuff[0];

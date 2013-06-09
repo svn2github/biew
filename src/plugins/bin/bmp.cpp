@@ -63,20 +63,20 @@ int BMP_Parser::query_platform() const { return DISASM_DEFAULT; }
 
 __filesize_t BMP_Parser::show_header() const
 {
- unsigned keycode;
- TWindow * hwnd;
- BITMAPINFOHEADER bmph;
- __filesize_t fpos,fpos2;
- fpos = bctx.tell();
- main_handle.seek(2,binary_stream::Seek_Set);
- /*filesize = */main_handle.read(type_dword);
- main_handle.seek(4,binary_stream::Seek_Cur);
- fpos2=main_handle.read(type_word); /* data offset */
- main_handle.seek(2,binary_stream::Seek_Cur);
- main_handle.read(&bmph,sizeof(BITMAPINFOHEADER));
- hwnd = CrtDlgWndnls(" BMP File Header ",43,6);
- hwnd->goto_xy(1,1);
- hwnd->printf(
+    unsigned keycode;
+    TWindow * hwnd;
+    BITMAPINFOHEADER bmph;
+    __filesize_t fpos,fpos2;
+    fpos = bctx.tell();
+    main_handle.seek(2,binary_stream::Seek_Set);
+    /*filesize = */main_handle.read(type_dword);
+    main_handle.seek(4,binary_stream::Seek_Cur);
+    fpos2=main_handle.read(type_word); /* data offset */
+    main_handle.seek(2,binary_stream::Seek_Cur);
+    binary_packet bp=main_handle.read(sizeof(BITMAPINFOHEADER)); memcpy(&bmph,bp.data(),bp.size());
+    hwnd = CrtDlgWndnls(" BMP File Header ",43,6);
+    hwnd->goto_xy(1,1);
+    hwnd->printf(
 	  "WxH                  = %lux%lu\n"
 	  "PlanesxBitCount      = %ux%u\n"
 	  "Compression          = %c%c%c%c\n"
@@ -89,15 +89,13 @@ __filesize_t BMP_Parser::show_header() const
 	  ,bmph.biSizeImage
 	  ,bmph.biXPelsPerMeter,bmph.biYPelsPerMeter
 	  ,bmph.biClrUsed,bmph.biClrImportant);
- while(1)
- {
-   keycode = GetEvent(drawEmptyPrompt,NULL,hwnd);
-   if(keycode == KE_F(5) || keycode == KE_ENTER) { fpos = fpos2; break; }
-   else
-     if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
- }
- delete hwnd;
- return fpos;
+    while(1) {
+	keycode = GetEvent(drawEmptyPrompt,NULL,hwnd);
+	if(keycode == KE_F(5) || keycode == KE_ENTER) { fpos = fpos2; break; }
+	else if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
+    }
+    delete hwnd;
+    return fpos;
 }
 
 static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) BMP_Parser(b,h,_parent,u); }

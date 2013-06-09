@@ -22,14 +22,14 @@ namespace	usr {
 	    virtual uint16_t		read(const data_type_qualifier__word_t&);
 	    virtual uint32_t		read(const data_type_qualifier_dword_t&);
 	    virtual uint64_t		read(const data_type_qualifier_qword_t&);
-	    virtual bool		read(any_t* buffer,unsigned cbBuffer);
+	    virtual binary_packet	read(size_t cbBuffer);
 	    virtual bool		seek(__fileoff_t offset,e_seek origin);
 	    virtual __filesize_t	tell() const;
 	    virtual bool		write(uint8_t bVal);
 	    virtual bool		write(uint16_t wVal);
 	    virtual bool		write(uint32_t dwVal);
 	    virtual bool		write(uint64_t dwVal);
-	    virtual bool		write(const any_t* buffer,unsigned cbBuffer);
+	    virtual bool		write(const binary_packet& buff);
 	    virtual bool		chsize(__filesize_t newsize);
 	    virtual bool		dup(MMFile&) const;
 	    virtual binary_stream*	dup();

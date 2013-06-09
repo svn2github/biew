@@ -179,7 +179,7 @@ bool TextMode::test_leading_escape(__fileoff_t cpos) const {
     spos=(cpos-1)-escl;
     if(escl && spos>=0) {
 	main_handle.seek(spos,binary_stream::Seek_Set);
-	main_handle.read(tmps,escl);
+	binary_packet bp=main_handle.read(escl); memcpy(tmps,bp.data(),bp.size());
 	main_handle.seek(epos,binary_stream::Seek_Set);
 	return ::memcmp(tmps,escape.c_str(),escl)==0;
     }
@@ -220,6 +220,8 @@ void TextMode::markup_ctx()
     char tmps[MAX_STRLEN],ktmps[MAX_STRLEN],ch,chn;
     const char *sseq,*eseq;
     TWindow *hwnd;
+    binary_packet bp(1);
+
     hwnd=PleaseWaitWnd();
     flen=main_handle.flength();
     fpos=main_handle.tell();
@@ -252,7 +254,7 @@ void TextMode::markup_ctx()
 		cpos=main_handle.tell();
 		found=0;
 		if(len>(ss_idx+1)) {
-		    main_handle.read(tmps,len-(ss_idx+1));
+		    bp=main_handle.read(len-(ss_idx+1)); memcpy(tmps,bp.data(),bp.size());
 		    if(::memcmp(tmps,&sseq[ss_idx+1],len-(ss_idx+1))==0) found=1;
 		}
 		else found=1;
@@ -266,7 +268,7 @@ void TextMode::markup_ctx()
 		    ::memcpy(&ktmps[1],tmps,len-(ss_idx+1));
 		    if(syntax_hl.maxkwd_len>(len-ss_idx)) {
 			ckpos=main_handle.tell();
-			main_handle.read(&ktmps[len],syntax_hl.maxkwd_len-(len-ss_idx));
+			bp=main_handle.read(syntax_hl.maxkwd_len-(len-ss_idx)); memcpy(&ktmps[len],bp.data(),bp.size());
 			main_handle.seek(ckpos,binary_stream::Seek_Set);
 		    }
 		    hl_find_kwd(ktmps,Color(0),&st_len);
@@ -289,7 +291,7 @@ void TextMode::markup_ctx()
 			    ecpos=main_handle.tell();
 			    found=0;
 			    if(len>1) {
-				main_handle.read(tmps,len-1);
+				bp=main_handle.read(len-1); memcpy(tmps,bp.data(),bp.size());
 				if(::memcmp(tmps,&eseq[1],len-1)==0) found=1;
 			    }
 			    else found=1;
@@ -645,7 +647,7 @@ unsigned char TextMode::nls_read_byte(__filesize_t cp) const
     unsigned sym_size;
     sym_size = activeNLS->get_symbol_size();
     txtHandle->seek(cp,binary_stream::Seek_Set);
-    txtHandle->read(nls_buff,sym_size);
+    binary_packet bp=txtHandle->read(sym_size); memcpy(nls_buff,bp.data(),bp.size());
     activeNLS->convert_buffer(nls_buff,sym_size,true);
     return (unsigned char)nls_buff[0];
 }
@@ -982,6 +984,7 @@ plugin_position TextMode::paint( unsigned keycode, unsigned shift )
     char chars[__TVIO_MAXSCREENWIDTH];
     ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
     plugin_position rc;
+    binary_packet bp(1);
 
     cp_symb_len = activeNLS->get_symbol_size();
     strmaxlen = 0;
@@ -1008,7 +1011,7 @@ plugin_position TextMode::paint( unsigned keycode, unsigned shift )
 		    unsigned n_tabs,b_ptr,b_lim;
 		    len = std::min(MAX_STRLEN,search.found_start() > tlines[i].st ? (int)(search.found_start()-tlines[i].st):unsigned(0));
 		    main_handle.seek(tlines[i].st,binary_stream::Seek_Set);
-		    main_handle.read((any_t*)buff,len);
+		    bp=main_handle.read(len); memcpy(buff,bp.data(),bp.size());
 		    len = convert_cp(buff,len,false);
 		    for(b_lim=len,b_ptr = 0;b_ptr < len;b_ptr+=2,b_lim-=2) {
 			shift = tab2space(NULL,NULL,UINT_MAX,&buff[b_ptr],b_lim,0,&n_tabs,0L);
@@ -1034,7 +1037,7 @@ plugin_position TextMode::paint( unsigned keycode, unsigned shift )
 	rsize = size = len - rshift;
 	if(len > rshift) {
 	    main_handle.seek(tlines[i].st + rshift,binary_stream::Seek_Set);
-	    main_handle.read((any_t*)buff,size);
+	    bp=main_handle.read(size); memcpy(buff,bp.data(),bp.size());
 	    rsize = size = convert_cp(buff,size,false);
 	    if(bin_mode != MOD_BINARY) {
 		rsize = size = tab2space(chars,attrs,__TVIO_MAXSCREENWIDTH,buff,size,shift,NULL,tlines[i].st);

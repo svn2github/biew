@@ -126,17 +126,20 @@ LMF_Parser::LMF_Parser(BeyeContext& b,binary_stream& _h,CodeGuider& code_guider,
     lmf_xdef _xdef;
     int32_t j,p=0;
     uint32_t i;
+    binary_packet bp(1);
 /*	lmf_data d;*/
     lmf_header h;
     main_handle.seek(0,binary_stream::Seek_Set);
-    if(!main_handle.read(&h,sizeof h)) throw bad_format_exception();
+    bp=main_handle.read(sizeof h); memcpy(&h,bp.data(),bp.size());
+    if(bp.size()!=sizeof(h)) throw bad_format_exception();
 	/* Test a first heder */
     if(h.rec_type!=_LMF_DEFINITION_REC||h.zero1!=0||/*h.spare!=0||*/
 		h.data_nbytes<DEFSIZE()+2*sizeof(long)||
 		(h.data_nbytes-DEFSIZE())%4!=0) throw bad_format_exception();
     i=j=(h.data_nbytes-DEFSIZE())/4;
     main_handle.seek(6,binary_stream::Seek_Set);
-    if(!main_handle.read(&_xdef,std::min(sizeof(lmf_xdef),size_t(h.data_nbytes)))) throw bad_format_exception();
+    bp=main_handle.read(std::min(sizeof(lmf_xdef),size_t(h.data_nbytes))); memcpy(&_xdef,bp.data(),bp.size());
+    if(!bp.size()!=std::min(sizeof(lmf_xdef),size_t(h.data_nbytes))) throw bad_format_exception();
 	/* Test a definition record */
     if(_xdef.def.version_no!=400||_xdef.def.code_index>i||_xdef.def.stack_index>i||
 		_xdef.def.heap_index>i||_xdef.def.argv_index>i||_xdef.def.zero2!=0)
@@ -150,23 +153,24 @@ LMF_Parser::LMF_Parser(BeyeContext& b,binary_stream& _h,CodeGuider& code_guider,
 	/* Test other headers */
 	p+=HDRSIZE()+h.data_nbytes;
 	main_handle.seek(p,binary_stream::Seek_Set);
-	if(!main_handle.read(&h,sizeof h)) throw bad_format_exception();
+	bp=main_handle.read(sizeof h); memcpy(&h,bp.data(),bp.size());
+	if(!bp.size()!=sizeof(h)) throw bad_format_exception();
 	if(h.rec_type==_LMF_DEFINITION_REC||h.data_nbytes==0||h.zero1!=0/*||h.spare!=0*/) throw bad_format_exception();
 	if(h.rec_type==_LMF_EOF_REC) break;
     }
 
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(&h,sizeof h);
+    bp=main_handle.read(sizeof h); memcpy(&h,bp.data(),bp.size());
 	/* Test a first heder */
     i=j=(h.data_nbytes-DEFSIZE())/4;
     xdef_len=h.data_nbytes;
     main_handle.seek(6,binary_stream::Seek_Set);
-    main_handle.read(&xdef,std::min(sizeof(lmf_xdef),size_t(h.data_nbytes)));
+    bp=main_handle.read(std::min(sizeof(lmf_xdef),size_t(h.data_nbytes))); memcpy(&xdef,bp.data(),bp.size());
     while(1) {
 	/* Test other headers */
 	p+=HDRSIZE()+h.data_nbytes;
 	main_handle.seek(p,binary_stream::Seek_Set);
-	main_handle.read(&h,sizeof h);
+	bp=main_handle.read(sizeof h); memcpy(&h,bp.data(),bp.size());
 	if(h.rec_type==_LMF_EOF_REC) break;
     }
 
@@ -183,11 +187,12 @@ LMF_Parser::LMF_Parser(BeyeContext& b,binary_stream& _h,CodeGuider& code_guider,
 		if((unsigned)i==recmax)
 		{
 			hl=(lmf_headers_list*)mp_realloc(hl,(recmax+=MINREC)*sizeof(lmf_headers_list));
-			if(hl==NULL) return;
+			if(hl==NULL) throw bad_format_exception();
 		}
 		main_handle.seek(pos,binary_stream::Seek_Set);
-		if(!main_handle.read(&hl[i].header,HDRSIZE()))
-			{ failed_lmf(); return; }
+		bp=main_handle.read(HDRSIZE()); memcpy(&hl[i].header,bp.data(),bp.size());
+		if(bp.size()!=HDRSIZE())
+			throw bad_format_exception();
 		hl[i].file_pos=pos;
 		switch(hl[i].header.rec_type)
 		{
@@ -195,16 +200,18 @@ LMF_Parser::LMF_Parser(BeyeContext& b,binary_stream& _h,CodeGuider& code_guider,
 		case _LMF_FIXUP_SEG_REC:
 		case _LMF_FIXUP_LINEAR_REC:
 			main_handle.seek(pos+HDRSIZE(),binary_stream::Seek_Set);
-			if(!main_handle.read(&hl[i].data,DATSIZE()))
-				{ failed_lmf(); return; }
+			bp=main_handle.read(DATSIZE()); memcpy(&hl[i].data,bp.data(),bp.size());
+			if(bp.size()!=DATSIZE())
+			    throw bad_format_exception();
 			l=hl[i].data.index;
 			if(l>=seg_num)
-				{ failed_lmf(); return; }
+			    throw bad_format_exception();
 			break;
 		case _LMF_RESOURCE_REC:
 			main_handle.seek(pos+HDRSIZE(),binary_stream::Seek_Set);
-			if(!main_handle.read(&hl[i].res,sizeof(lmf_resource)))
-				{ failed_lmf(); return; }
+			bp=main_handle.read(sizeof(lmf_resource)); memcpy(&hl[i].res,bp.data(),bp.size());
+			if(bp.size()!=sizeof(lmf_resource))
+			    throw bad_format_exception();
 			break;
 		case _LMF_EOF_REC:
 			reclast=i;
@@ -216,7 +223,7 @@ LMF_Parser::LMF_Parser(BeyeContext& b,binary_stream& _h,CodeGuider& code_guider,
 		case _LMF_PHRESOURCE:
 			break;				/* Ignore this records */
 		default:
-			{ failed_lmf(); return; }
+			throw bad_format_exception();
 		}
 		pos+=hl[i].header.data_nbytes+HDRSIZE();
 	}
@@ -228,8 +235,6 @@ outloop:
 			segbase[i]=(segbase[i-1]+
 				((xdef.seg[i-1]&0x0fffffff)+4095))&0xfffff000;
 	}
-
-	return;
 }
 
 LMF_Parser::~LMF_Parser()

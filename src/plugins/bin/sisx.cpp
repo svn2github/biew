@@ -101,19 +101,19 @@ SisX_Parser::SisX_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider
     main_handle.seek(0,binary_stream::Seek_Set);
     id=main_handle.read(type_dword);
     main_handle.seek(16L,binary_stream::Seek_Set);
-    main_handle.read(sign,sizeof(sign));
+    binary_packet bp=main_handle.read(sizeof(sign)); memcpy(sign,bp.data(),bp.size());
     if(!((id&0x10000000UL)==0x10000000UL && memcmp(sign,"EPOC",4)==0)) throw bad_format_exception();
 }
 SisX_Parser::~SisX_Parser() {}
 int  SisX_Parser::query_platform() const {
- unsigned id;
- struct E32ImageHeader img;
+    unsigned id;
+    struct E32ImageHeader img;
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(&img,sizeof(img));
- id=DISASM_DATA;
- if((img.iCpuIdentifier&0xF000)==0x1000) id=DISASM_CPU_IX86;
- else if((img.iCpuIdentifier&0xF000)==0x2000) id=DISASM_CPU_ARM;
- return id;
+    binary_packet bp=main_handle.read(sizeof(img)); memcpy(&img,bp.data(),bp.size());
+    id=DISASM_DATA;
+    if((img.iCpuIdentifier&0xF000)==0x1000) id=DISASM_CPU_IX86;
+    else if((img.iCpuIdentifier&0xF000)==0x2000) id=DISASM_CPU_ARM;
+    return id;
 }
 
 __filesize_t SisX_Parser::show_header() const
@@ -125,7 +125,7 @@ __filesize_t SisX_Parser::show_header() const
     __filesize_t fpos,fpos2;
     fpos2=fpos = bctx.tell();
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(&img,sizeof(img));
+    binary_packet bp=main_handle.read(sizeof(img)); memcpy(&img,bp.data(),bp.size());
     switch(img.iUid1) {
 	case 0x10000079: exetype="DLL"; break;
 	case 0x1000007A: exetype="EXE"; break;

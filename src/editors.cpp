@@ -95,7 +95,7 @@ void Editor::init(unsigned width,const unsigned char *buff,unsigned size)
     } else {
 	EditorMem.size = (unsigned)((__filesize_t)msize > (flen-cfp) ? (flen-cfp) : msize);
 	bctx.bm_file().seek(cfp,binary_stream::Seek_Set);
-	bctx.bm_file().read(EditorMem.buff,EditorMem.size);
+	binary_packet bp=bctx.bm_file().read(EditorMem.size); memcpy(EditorMem.buff,bp.data(),bp.size());
 	bctx.bm_file().seek(cfp,binary_stream::Seek_Set);
     }
     memcpy(EditorMem.save,EditorMem.buff,EditorMem.size);

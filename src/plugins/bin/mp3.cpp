@@ -192,10 +192,10 @@ int MP3_Parser::read_id3v22_tags(unsigned flags,unsigned hsize) const
 	unsigned long id;
 	unsigned len;
 	unsigned char buf[ID3V22_FRAME_HEADER_SIZE],data[4096];
-	main_handle.read(buf,ID3V22_FRAME_HEADER_SIZE);
+	binary_packet bp=main_handle.read(ID3V22_FRAME_HEADER_SIZE); memcpy(buf,bp.data(),bp.size());
 	id=(buf[2] << 16) + (buf[1] << 8) + buf[0];
 	len=(buf[3] << 14) + (buf[4] << 7) + buf[5];
-	main_handle.read(data,std::min(len,unsigned(4096)));
+	bp=main_handle.read(std::min(len,unsigned(4096))); memcpy(data,bp.data(),bp.size());
 	data[len]=0;
 	pos=main_handle.tell();
     }
@@ -230,7 +230,7 @@ int MP3_Parser::read_id3v23_tags(unsigned flags,unsigned hsize) const
     {
 	char buf[4];
 	unsigned ehsize;
-	main_handle.read(buf,4);
+	binary_packet bp=main_handle.read(4); memcpy(buf,bp.data(),bp.size());
 	ehsize=(buf[0] << 21) + (buf[1] << 14) + (buf[2] << 7) + buf[3];
 	main_handle.seek(ehsize,binary_stream::Seek_Cur);
     }
@@ -241,11 +241,11 @@ int MP3_Parser::read_id3v23_tags(unsigned flags,unsigned hsize) const
 	unsigned long id;
 	unsigned len;
 	unsigned char buf[ID3V23_FRAME_HEADER_SIZE],data[4096];
-	main_handle.read(buf,ID3V23_FRAME_HEADER_SIZE);
+	binary_packet bp=main_handle.read(ID3V23_FRAME_HEADER_SIZE); memcpy(buf,bp.data(),bp.size());
 	id=*((unsigned long *)buf);
 	len=(buf[4] << 21) + (buf[5] << 14) + (buf[6] << 7) + buf[7];
 	if((int)len <= 0) return 0;
-	main_handle.read(data,std::min(len,unsigned(4096)));
+	bp=main_handle.read(std::min(len,unsigned(4096))); memcpy(data,bp.data(),bp.size());
 	data[len]=0;
 	pos=main_handle.tell();
     }
@@ -283,7 +283,7 @@ int MP3_Parser::read_id3v24_tags(unsigned flags,unsigned hsize) const
     {
 	char buf[4];
 	unsigned ehsize;
-	main_handle.read(buf,4);
+	binary_packet bp=main_handle.read(4); memcpy(buf,bp.data(),bp.size());
 	ehsize=(buf[0] << 21) + (buf[1] << 14) + (buf[2] << 7) + buf[3];
 	main_handle.seek(ehsize,binary_stream::Seek_Cur);
     }
@@ -294,10 +294,10 @@ int MP3_Parser::read_id3v24_tags(unsigned flags,unsigned hsize) const
 	unsigned long id;
 	unsigned len;
 	unsigned char buf[ID3V23_FRAME_HEADER_SIZE],data[4096];
-	main_handle.read(buf,ID3V23_FRAME_HEADER_SIZE);
+	binary_packet bp=main_handle.read(ID3V23_FRAME_HEADER_SIZE); memcpy(buf,bp.data(),bp.size());
 	id=*((unsigned long *)buf);
 	len=(buf[4] << 21) + (buf[5] << 14) + (buf[6] << 7) + buf[7];
-	main_handle.read(data,std::min(len,unsigned(4096)));
+	bp=main_handle.read(std::min(len,unsigned(4096))); memcpy(data,bp.data(),bp.size());
 	data[len]=0;
 	pos=main_handle.tell();
     }
@@ -312,7 +312,7 @@ int MP3_Parser::read_id3v2_tags() const
     vers=main_handle.read(type_byte);
     rev=main_handle.read(type_byte);
     flags=main_handle.read(type_byte);
-    main_handle.read(buf,4);
+    binary_packet bp=main_handle.read(4); memcpy(buf,bp.data(),bp.size());
     hsize=(buf[0] << 21) + (buf[1] << 14) + (buf[2] << 7) + buf[3];
     if(vers==2) return read_id3v22_tags(flags,hsize);
     else
@@ -328,7 +328,7 @@ void MP3_Parser::find_next_mp3_hdr(unsigned char *hdr) const {
   __filesize_t spos;
   while(!main_handle.eof()) {
     spos=main_handle.tell();
-    main_handle.read(hdr,4);
+    binary_packet bp=main_handle.read(4); memcpy(hdr,bp.data(),bp.size());
     if(main_handle.eof()) break;
     len = mp_decode_mp3_header(hdr,NULL,NULL,NULL,NULL);
     if(len < 0) {
@@ -363,7 +363,7 @@ int MP3_Parser::Xing_test(char *hdr,int *scale,int *lsf,int *srate,long *nframes
     else	off=mode!=MPG_MD_MONO?17:9;/* mpeg2 */
     fpos = main_handle.tell();
     main_handle.seek(off,binary_stream::Seek_Cur);
-    main_handle.read(buf,4);
+    binary_packet bp=main_handle.read(4); memcpy(buf,bp.data(),bp.size());
     if(memcmp(buf,"Xing",4) == 0 || memcmp(buf,"Info",4) == 0)
     {
 	is_xing=1;
@@ -382,40 +382,38 @@ int MP3_Parser::Xing_test(char *hdr,int *scale,int *lsf,int *srate,long *nframes
 
 __filesize_t MP3_Parser::show_header() const
 {
- unsigned keycode;
- TWindow * hwnd;
- __filesize_t fpos,fpos2;
- int fmt = 0,mp3_brate,mp3_samplerate,mp3_channels;
- unsigned char hdr[4];
- int len;
- int scale,lsf,srate;
- long nframes,nbytes,ave_brate;
- int is_xing=0;
- fpos2 = fpos = bctx.tell();
- main_handle.seek(0,binary_stream::Seek_Set);
- main_handle.read(hdr,4);
- if( hdr[0] == 'I' && hdr[1] == 'D' && hdr[2] == '3' && (hdr[3] >= 2))
- {
+    unsigned keycode;
+    TWindow * hwnd;
+    __filesize_t fpos,fpos2;
+    int fmt = 0,mp3_brate,mp3_samplerate,mp3_channels;
+    unsigned char hdr[4];
+    int len;
+    int scale,lsf,srate;
+    long nframes,nbytes,ave_brate;
+    int is_xing=0;
+    fpos2 = fpos = bctx.tell();
+    main_handle.seek(0,binary_stream::Seek_Set);
+    binary_packet bp=main_handle.read(4); memcpy(hdr,bp.data(),bp.size());
+    if( hdr[0] == 'I' && hdr[1] == 'D' && hdr[2] == '3' && (hdr[3] >= 2)) {
 	main_handle.seek(2,binary_stream::Seek_Cur);
-	main_handle.read(hdr,4);
+	bp=main_handle.read(4); memcpy(hdr,bp.data(),bp.size());
 	len = (hdr[0]<<21) | (hdr[1]<<14) | (hdr[2]<<7) | hdr[3];
 	read_id3v2_tags();
 	main_handle.seek(len+10,binary_stream::Seek_Set);
 	find_next_mp3_hdr(hdr);
 	fpos2=main_handle.tell();
- }
- is_xing=Xing_test((char*)hdr,&scale,&lsf,&srate,&nframes,&nbytes);
- mp_decode_mp3_header(hdr,&fmt,&mp3_brate,&mp3_samplerate,&mp3_channels);
- ave_brate=mp3_brate*8;
- if(is_xing)
- {
-    ave_brate=(((float)(nbytes)/nframes)*(float)(srate<<lsf))/144.;
-    find_next_mp3_hdr(hdr);
-    fpos2=main_handle.tell();
- }
- hwnd = CrtDlgWndnls(" MP3 File Header ",43,4);
- hwnd->goto_xy(1,1);
- hwnd->printf(
+    }
+    is_xing=Xing_test((char*)hdr,&scale,&lsf,&srate,&nframes,&nbytes);
+    mp_decode_mp3_header(hdr,&fmt,&mp3_brate,&mp3_samplerate,&mp3_channels);
+    ave_brate=mp3_brate*8;
+    if(is_xing) {
+	ave_brate=(((float)(nbytes)/nframes)*(float)(srate<<lsf))/144.;
+	find_next_mp3_hdr(hdr);
+	fpos2=main_handle.tell();
+    }
+    hwnd = CrtDlgWndnls(" MP3 File Header ",43,4);
+    hwnd->goto_xy(1,1);
+    hwnd->printf(
 	  "Type                 = MP3v%u:%s\n"
 	  "Bitrate              = %u\n"
 	  "SampleRate           = %u\n"
@@ -426,15 +424,13 @@ __filesize_t MP3_Parser::show_header() const
 	  ,is_xing?srate:mp3_samplerate
 	  ,mp3_channels
 	  );
- while(1)
- {
-   keycode = GetEvent(drawEmptyPrompt,NULL,hwnd);
-   if(keycode == KE_F(5) || keycode == KE_ENTER) { fpos = fpos2; break; }
-   else
-     if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
- }
- delete hwnd;
- return fpos;
+    while(1) {
+	keycode = GetEvent(drawEmptyPrompt,NULL,hwnd);
+	if(keycode == KE_F(5) || keycode == KE_ENTER) { fpos = fpos2; break; }
+	else if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
+    }
+    delete hwnd;
+    return fpos;
 }
 
 MP3_Parser::MP3_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider,udn& u)
@@ -448,11 +444,11 @@ MP3_Parser::MP3_Parser(BeyeContext& b,binary_stream& h,CodeGuider& code_guider,u
     int fmt = 0,mp3_brate,mp3_samplerate,mp3_channels;
     unsigned char hdr[4];
     main_handle.seek(0,binary_stream::Seek_Set);
-    main_handle.read(hdr,4);
+    binary_packet bp=main_handle.read(4); memcpy(hdr,bp.data(),bp.size());
     if( hdr[0] == 'I' && hdr[1] == 'D' && hdr[2] == '3' && (hdr[3] >= 2)) {
 	int len;
 	main_handle.seek(2,binary_stream::Seek_Cur);
-	main_handle.read(hdr,4);
+	bp=main_handle.read(4); memcpy(hdr,bp.data(),bp.size());
 	len = (hdr[0]<<21) | (hdr[1]<<14) | (hdr[2]<<7) | hdr[3];
 	read_id3v2_tags();
 	main_handle.seek(len+10,binary_stream::Seek_Set);

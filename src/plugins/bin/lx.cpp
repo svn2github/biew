@@ -322,7 +322,7 @@ std::vector<std::string> LX_Parser::LXImpNamesReadItems(binary_stream& handle,si
 	char nam[256];
 	byte = handle.read(type_byte);
 	if(IsKbdTerminate() || handle.eof()) break;
-	handle.read(nam,byte);
+	binary_packet bp=handle.read(byte); memcpy(nam,bp.data(),bp.size());
 	nam[byte] = 0;
 	rc.push_back(nam);
     }
@@ -344,7 +344,7 @@ std::vector<std::string> LX_Parser::__ReadModRefNamesLX(binary_stream& handle,si
 	char nam[256];
 	byte = handle.read(type_byte);
 	if(IsKbdTerminate() || handle.eof()) break;
-	handle.read(nam,byte);
+	binary_packet bp=handle.read(byte); memcpy(nam,bp.data(),bp.size());
 	nam[byte] = 0;
 	rc.push_back(nam);
     }
@@ -418,7 +418,7 @@ std::vector<LX_OBJECT> LX_Parser::__ReadObjectsLX(binary_stream& handle,size_t n
     for(i = 0;i < n;i++) {
 	LX_OBJECT lxo;
 	if(IsKbdTerminate() || handle.eof()) break;
-	handle.read(&lxo,sizeof(LX_OBJECT));
+	binary_packet bp=handle.read(sizeof(LX_OBJECT)); memcpy(&lxo,bp.data(),bp.size());
 	rc.push_back(lxo);
     }
     return rc;
@@ -457,7 +457,7 @@ std::vector<LX_ENTRY> LX_Parser::__ReadEntriesLX(binary_stream& handle) const
 	    if(size) {
 		_lxe.b32_obj = numobj;
 		_lxe.entry.e32_flags = handle.read(type_byte);
-		handle.read(&_lxe.entry.e32_variant,size);
+		binary_packet bp=handle.read(size); memcpy(&_lxe.entry.e32_variant,bp.data(),bp.size());
 	    }
 	    rc.push_back(_lxe);
 	}
@@ -469,9 +469,9 @@ exit:
 
 void LX_Parser::lxReadPageDesc(binary_stream& handle,LX_MAP_TABLE *mt,unsigned long pageidx) const
 {
-  handle.seek(headshift()+lxe.lx.lxObjectPageTableOffset+
+    handle.seek(headshift()+lxe.lx.lxObjectPageTableOffset+
 	  sizeof(LX_MAP_TABLE)*(pageidx - 1),binary_stream::Seek_Set);
-  handle.read((any_t*)mt,sizeof(LX_MAP_TABLE));
+    binary_packet bp=handle.read(sizeof(LX_MAP_TABLE)); memcpy(mt,bp.data(),bp.size());
 }
 
 __filesize_t LX_Parser::__calcPageEntry(LX_MAP_TABLE *mt) const
@@ -513,7 +513,7 @@ __filesize_t LX_Parser::CalcEntryPoint(unsigned long objnum,__filesize_t _offset
   if(!objnum) return bctx().tell();
   handle.seek(lxe.lx.lxObjectTableOffset + headshift(),binary_stream::Seek_Set);
   handle.seek(sizeof(LX_OBJECT)*(objnum - 1),binary_stream::Seek_Cur);
-  handle.read((any_t*)&lo,sizeof(LX_OBJECT));
+  binary_packet bp=handle.read(sizeof(LX_OBJECT)); memcpy(&lo,bp.data(),bp.size());
   i = _offset / lxe.lx.lxPageSize;
   diff = _offset - i*lxe.lx.lxPageSize;
   lxReadPageDesc(handle,&mt,i+lo.o32_pagemap);
@@ -533,7 +533,7 @@ std::string LX_Parser::ReadLXLEImpMod(__filesize_t offtable,unsigned num) const
 	handle->seek(len,binary_stream::Seek_Cur);
     }
     len = handle->read(type_byte);
-    handle->read((any_t*)buff,len);
+    binary_packet bp=handle->read(len); memcpy(buff,bp.data(),bp.size());
     buff[len] = 0;
     return buff;
 }
@@ -546,7 +546,7 @@ std::string LX_Parser::ReadLXLEImpName(__filesize_t offtable,unsigned num) const
     handle = lx_cache;
     handle->seek(offtable+num,binary_stream::Seek_Set);
     len = handle->read(type_byte);
-    handle->read((any_t*)buff,len);
+    binary_packet bp=handle->read(len); memcpy(buff,bp.data(),bp.size());
     buff[len] = 0;
     return buff;
 }
@@ -629,7 +629,7 @@ __filesize_t LX_Parser::CalcEntryBungleLX(unsigned ordinal,bool dispmsg) const
        {
 	 lxent.b32_obj = numobj;
 	 lxent.entry.e32_flags = handle->read(type_byte);
-	 handle->read((any_t*)&lxent.entry.e32_variant,size);
+	 binary_packet bp=handle->read(size); memcpy(&lxent.entry.e32_variant,bp.data(),bp.size());
 	 is_eof = handle->eof();
        }
        break;
@@ -849,7 +849,7 @@ std::vector<std::string> LX_Parser::__ReadResourceGroupLX(binary_stream& handle,
     LXResource lxr;
     std::ostringstream oss;
     for(i = 0;i < nitems;i++) {
-	handle.read(&lxr,sizeof(LXResource));
+	binary_packet bp=handle.read(sizeof(LXResource)); memcpy(&lxr,bp.data(),bp.size());
 	addr[i] = lxr.offset;
 	if(IsKbdTerminate() || handle.eof()) break;
 	oss.str("");
@@ -975,11 +975,11 @@ LX_Parser::LX_Parser(BeyeContext& b,binary_stream& h,CodeGuider& __code_guider,u
 {
     char id[4];
     main_handle().seek(headshift(),binary_stream::Seek_Set);
-    main_handle().read(id,sizeof(id));
+    binary_packet bp=main_handle().read(sizeof id); memcpy(id,bp.data(),bp.size());
     if(!(id[0] == 'L' && id[1] == 'X' && id[2] == 0 && id[3] == 0)) throw bad_format_exception();
 
     main_handle().seek(headshift(),binary_stream::Seek_Set);
-    main_handle().read(&lxe.lx,sizeof(LXHEADER));
+    bp=main_handle().read(sizeof(LXHEADER)); memcpy(&lxe.lx,bp.data(),bp.size());
     lx_cache = main_handle().dup();
 }
 
@@ -1010,7 +1010,7 @@ __filesize_t LX_Parser::va2pa(__filesize_t va) const
     handle.seek(lxe.lx.lxObjectTableOffset + headshift(),binary_stream::Seek_Set);
     pa = oidx = 0; /* means: error */
     for(i = 0;i < lxe.lx.lxObjectCount;i++) {
-	handle.read((any_t*)&lo,sizeof(LX_OBJECT));
+	binary_packet bp=handle.read(sizeof(LX_OBJECT)); memcpy(&lo,bp.data(),bp.size());
 	if(lo.o32_base <= va && va < lo.o32_base + lo.o32_size)  {
 	    oidx = i+1;
 	    break;
@@ -1049,7 +1049,7 @@ __filesize_t LX_Parser::pa2va(__filesize_t pa) const
 	rva = pa - pagentry + (pidx-1)*lxe.lx.lxPageSize;
 	handle.seek(lxe.lx.lxObjectTableOffset + headshift(),binary_stream::Seek_Set);
 	for(i = 0;i < lxe.lx.lxObjectCount;i++) {
-	    handle.read((any_t*)&lo,sizeof(LX_OBJECT));
+	    binary_packet bp=handle.read(sizeof(LX_OBJECT)); memcpy(&lo,bp.data(),bp.size());
 	    if(lo.o32_pagemap <= pidx && pidx < lo.o32_pagemap + lo.o32_mapsize) {
 		va = lo.o32_base + rva;
 		break;
@@ -1085,7 +1085,7 @@ Bin_Format::bitness LX_Parser::query_bitness(__filesize_t pa) const
     handle.seek(lxe.lx.lxObjectTableOffset + headshift(),binary_stream::Seek_Set);
     for(i = 0;i < lxe.lx.lxObjectCount;i++)
     {
-      handle.read((any_t*)&lo,sizeof(LX_OBJECT));
+      binary_packet bp=handle.read(sizeof(LX_OBJECT)); memcpy(&lo,bp.data(),bp.size());
       if(lo.o32_pagemap <= pidx && pidx < lo.o32_pagemap + lo.o32_mapsize)
       {
 	ret = (lo.o32_flags & 0x00002000L) == 0x00002000L ? Bin_Format::Use32 : Bin_Format::Use16;

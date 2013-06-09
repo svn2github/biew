@@ -158,21 +158,21 @@ __filesize_t AVI_Parser::avi_find_chunk(__filesize_t off,unsigned long id) const
 
 __filesize_t AVI_Parser::show_header() const
 {
- unsigned keycode;
- TWindow * hwnd;
- MainAVIHeader avih;
- __filesize_t fpos,fpos2;
- fpos = bctx.tell();
- fpos2 = avi_find_chunk(12,mmioFOURCC('a','v','i','h'));
- if((__fileoff_t)fpos2==-1) { bctx.ErrMessageBox("Main AVI Header not found",""); return fpos; }
- main_handle.seek(fpos2,binary_stream::Seek_Set);
- main_handle.read(type_dword); /* skip section size */
- main_handle.read(&avih,sizeof(MainAVIHeader));
- fpos2 = avi_find_chunk(12,mmioFOURCC('m','o','v','i'));
- if((__fileoff_t)fpos2!=-1) fpos2-=4;
- hwnd = CrtDlgWndnls(" AVI File Header ",43,9);
- hwnd->goto_xy(1,1);
- hwnd->printf(
+    unsigned keycode;
+    TWindow * hwnd;
+    MainAVIHeader avih;
+    __filesize_t fpos,fpos2;
+    fpos = bctx.tell();
+    fpos2 = avi_find_chunk(12,mmioFOURCC('a','v','i','h'));
+    if((__fileoff_t)fpos2==-1) { bctx.ErrMessageBox("Main AVI Header not found",""); return fpos; }
+    main_handle.seek(fpos2,binary_stream::Seek_Set);
+    main_handle.read(type_dword); /* skip section size */
+    binary_packet bp=main_handle.read(sizeof(MainAVIHeader)); memcpy(&avih,bp.data(),bp.size());
+    fpos2 = avi_find_chunk(12,mmioFOURCC('m','o','v','i'));
+    if((__fileoff_t)fpos2!=-1) fpos2-=4;
+    hwnd = CrtDlgWndnls(" AVI File Header ",43,9);
+    hwnd->goto_xy(1,1);
+    hwnd->printf(
 	  "MicroSecond per Frame= %lu\n"
 	  "Max bytes per second = %lu\n"
 	  "Padding granularity  = %lu\n"
@@ -192,44 +192,40 @@ __filesize_t AVI_Parser::show_header() const
 	  ,avih.dwSuggestedBufferSize
 	  ,avih.dwWidth
 	  ,avih.dwHeight);
- while(1)
- {
-   keycode = GetEvent(drawEmptyPrompt,NULL,hwnd);
-   if(keycode == KE_F(5) || keycode == KE_ENTER) { fpos = fpos2; break; }
-   else
-     if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
- }
- delete hwnd;
- return fpos;
+    while(1) {
+	keycode = GetEvent(drawEmptyPrompt,NULL,hwnd);
+	if(keycode == KE_F(5) || keycode == KE_ENTER) { fpos = fpos2; break; }
+	else if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
+    }
+    delete hwnd;
+    return fpos;
 }
 
 __filesize_t AVI_Parser::action_F2()
 {
- unsigned keycode;
- TWindow * hwnd;
- AVIStreamHeader strh;
- WAVEFORMATEX wavf;
- __filesize_t newcpos,fpos,fpos2;
- fpos = bctx.tell();
- memset(&wavf,0,sizeof(wavf));
- fpos2=12;
- do
- {
-    fpos2 = avi_find_chunk(fpos2,mmioFOURCC('s','t','r','h'));
-    if((__fileoff_t)fpos2==-1) { bctx.ErrMessageBox("Audio Stream Header not found",""); return fpos; }
-    main_handle.seek(fpos2,binary_stream::Seek_Set);
-    newcpos=main_handle.read(type_dword);
-    main_handle.read(&strh,sizeof(AVIStreamHeader));
-    fpos2+=newcpos+4;
- }while(strh.fccType!=streamtypeAUDIO);
- if(main_handle.read(type_dword)==mmioFOURCC('s','t','r','f'))
- {
-    main_handle.read(type_dword); /* skip header size */
-    main_handle.read(&wavf,sizeof(WAVEFORMATEX));
- }
- hwnd = CrtDlgWndnls(" Stream File Header ",43,18);
- hwnd->goto_xy(1,1);
- hwnd->printf(
+    unsigned keycode;
+    TWindow * hwnd;
+    AVIStreamHeader strh;
+    WAVEFORMATEX wavf;
+    __filesize_t newcpos,fpos,fpos2;
+    fpos = bctx.tell();
+    memset(&wavf,0,sizeof(wavf));
+    fpos2=12;
+    do {
+	fpos2 = avi_find_chunk(fpos2,mmioFOURCC('s','t','r','h'));
+	if((__fileoff_t)fpos2==-1) { bctx.ErrMessageBox("Audio Stream Header not found",""); return fpos; }
+	main_handle.seek(fpos2,binary_stream::Seek_Set);
+	newcpos=main_handle.read(type_dword);
+	binary_packet bp=main_handle.read(sizeof(AVIStreamHeader)); memcpy(&strh,bp.data(),bp.size());
+	fpos2+=newcpos+4;
+    }while(strh.fccType!=streamtypeAUDIO);
+    if(main_handle.read(type_dword)==mmioFOURCC('s','t','r','f')) {
+	main_handle.read(type_dword); /* skip header size */
+	binary_packet bp=main_handle.read(sizeof(WAVEFORMATEX)); memcpy(&wavf,bp.data(),bp.size());
+    }
+    hwnd = CrtDlgWndnls(" Stream File Header ",43,18);
+    hwnd->goto_xy(1,1);
+    hwnd->printf(
 	  "Stream type          = %c%c%c%c\n"
 	  "FOURCC handler       = %c%c%c%c(%08Xh)\n"
 	  "Flags                = %lu\n"
@@ -267,42 +263,39 @@ __filesize_t AVI_Parser::action_F2()
 	 ,wavf.nAvgBytesPerSec
 	 ,wavf.nBlockAlign
 	 ,wavf.wBitsPerSample);
- while(1)
- {
-   keycode = GetEvent(drawEmptyPrompt,NULL,hwnd);
-   if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
- }
- delete hwnd;
- return fpos;
+    while(1) {
+	keycode = GetEvent(drawEmptyPrompt,NULL,hwnd);
+	if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
+    }
+    delete hwnd;
+    return fpos;
 }
 
 __filesize_t AVI_Parser::action_F3()
 {
- unsigned keycode;
- TWindow * hwnd;
- AVIStreamHeader strh;
- BITMAPINFOHEADER bmph;
- __filesize_t newcpos,fpos,fpos2;
- fpos = bctx.tell();
- memset(&bmph,0,sizeof(BITMAPINFOHEADER));
- fpos2=12;
- do
- {
-    fpos2 = avi_find_chunk(fpos2,mmioFOURCC('s','t','r','h'));
-    if((__fileoff_t)fpos2==-1) { bctx.ErrMessageBox("Video Stream Header not found",""); return fpos; }
-    main_handle.seek(fpos2,binary_stream::Seek_Set);
-    newcpos=main_handle.read(type_dword); /* skip section size */
-    main_handle.read(&strh,sizeof(AVIStreamHeader));
-    fpos2+=newcpos+4;
- }while(strh.fccType!=streamtypeVIDEO);
- if(main_handle.read(type_dword)==mmioFOURCC('s','t','r','f'))
- {
-    main_handle.read(type_dword); /* skip header size */
-    main_handle.read(&bmph,sizeof(BITMAPINFOHEADER));
- }
- hwnd = CrtDlgWndnls(" Stream File Header ",43,20);
- hwnd->goto_xy(1,1);
- hwnd->printf(
+    unsigned keycode;
+    TWindow * hwnd;
+    AVIStreamHeader strh;
+    BITMAPINFOHEADER bmph;
+    __filesize_t newcpos,fpos,fpos2;
+    fpos = bctx.tell();
+    memset(&bmph,0,sizeof(BITMAPINFOHEADER));
+    fpos2=12;
+    do {
+	fpos2 = avi_find_chunk(fpos2,mmioFOURCC('s','t','r','h'));
+	if((__fileoff_t)fpos2==-1) { bctx.ErrMessageBox("Video Stream Header not found",""); return fpos; }
+	main_handle.seek(fpos2,binary_stream::Seek_Set);
+	newcpos=main_handle.read(type_dword); /* skip section size */
+	binary_packet bp=main_handle.read(sizeof(AVIStreamHeader)); memcpy(&strh,bp.data(),bp.size());
+	fpos2+=newcpos+4;
+    }while(strh.fccType!=streamtypeVIDEO);
+    if(main_handle.read(type_dword)==mmioFOURCC('s','t','r','f')) {
+	main_handle.read(type_dword); /* skip header size */
+	binary_packet bp=main_handle.read(sizeof(BITMAPINFOHEADER)); memcpy(&bmph,bp.data(),bp.size());
+    }
+    hwnd = CrtDlgWndnls(" Stream File Header ",43,20);
+    hwnd->goto_xy(1,1);
+    hwnd->printf(
 	  "Stream type          = %c%c%c%c\n"
 	  "FOURCC handler       = %c%c%c%c(%08Xh)\n"
 	  "Flags                = %lu\n"
@@ -344,13 +337,12 @@ __filesize_t AVI_Parser::action_F3()
 	 ,bmph.biSizeImage
 	 ,bmph.biXPelsPerMeter,bmph.biYPelsPerMeter
 	 ,bmph.biClrUsed,bmph.biClrImportant);
- while(1)
- {
-   keycode = GetEvent(drawEmptyPrompt,NULL,hwnd);
-   if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
- }
- delete hwnd;
- return fpos;
+    while(1) {
+	keycode = GetEvent(drawEmptyPrompt,NULL,hwnd);
+	if(keycode == KE_ESCAPE || keycode == KE_F(10)) break;
+    }
+    delete hwnd;
+    return fpos;
 }
 
 static Binary_Parser* query_interface(BeyeContext& b,binary_stream& h,CodeGuider& _parent,udn& u) { return new(zeromem) AVI_Parser(b,h,_parent,u); }
