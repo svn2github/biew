@@ -378,13 +378,14 @@ std::vector<std::string> LMF_Parser::lmf_ReadSecHdr(binary_stream& handle,size_t
     for(i=0;i<=reclast;i++) {
 	switch(hl[i].header.rec_type) {
 	    case _LMF_DEFINITION_REC:
-		oss<<std::setw(2)<<(i+1)<<std::left<<std::setw(17)<<lmftypes[hl[i].header.rec_type]
+		oss<<std::setw(2)<<(i+1)<<std::left<<std::setw(17)<<lmftypes[hl[i].header.rec_type]<<std::right
 		    <<"<"<<seg_num<<"> "<<((xdef.def.cflags&_PCF_32BIT)?"32-bit":"16-bit")<<" "<<((xdef.def.cflags&_PCF_FLAT)?"flat model":"");
 			break;
 	    case _LMF_DATA_REC:
 	    case _LMF_FIXUP_SEG_REC:
 	    case _LMF_FIXUP_LINEAR_REC:
-		oss<<std::setw(2)<<(i+1)<<std::left<<std::setw(18)<<lmftypes[hl[i].header.rec_type]<<" ("<<(((xdef.seg[hl[i].data.index]>>28)==_LMF_CODE)?"code":"data")<<")"
+		oss<<std::setw(2)<<(i+1)<<std::left<<std::setw(18)<<lmftypes[hl[i].header.rec_type]<<std::right
+		    <<" ("<<(((xdef.seg[hl[i].data.index]>>28)==_LMF_CODE)?"code":"data")<<")"
 		    <<std::setw(2)<<hl[i].data.index<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)hl[i].data.offset;
 		if(xdef.def.cflags&_PCF_32BIT)
 		    oss<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)hl[i].data.offset+hl[i].header.data_nbytes-HDRSIZE()-DATSIZE();

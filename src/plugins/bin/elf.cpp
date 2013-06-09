@@ -706,7 +706,7 @@ std::vector<std::string> ELF_Parser::__elfReadPrgHdr(binary_stream& handle,size_
 	phdr=elf_reader->read_phdr(handle,fp);
 	handle.seek(fp+elf_reader->ehdr().e_phentsize,binary_stream::Seek_Set);
 	oss.str("");
-	oss<<std::left<<std::setw(15)<<std::setfill(' ')<<elf_encode_p_type(phdr.p_type)<<" "
+	oss<<std::left<<std::setw(15)<<std::setfill(' ')<<elf_encode_p_type(phdr.p_type)<<" "<<std::right
 	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)phdr.p_offset<<" "
 	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)phdr.p_vaddr<<" "
 	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)phdr.p_paddr<<" "
@@ -768,7 +768,7 @@ std::vector<std::string> ELF_Parser::__elfReadSecHdr(binary_stream& handle,size_
 	handle.seek(fp+elf_reader->ehdr().e_shentsize,binary_stream::Seek_Set);
 	oss.str("");
 	oss <<std::left<<std::setw(16)<<std::setfill(' ')<<tmp<<" "
-	    <<std::left<<std::setw(16)<<std::setfill(' ')<<elf_encode_sh_type(shdr.sh_type)<<" "
+	    <<std::left<<std::setw(16)<<std::setfill(' ')<<elf_encode_sh_type(shdr.sh_type)<<" "<<std::right
 	    <<((shdr.sh_flags & SHF_WRITE) == SHF_WRITE ? 'W' : ' ')<<" "
 	    <<((shdr.sh_flags & SHF_ALLOC) == SHF_ALLOC ? 'A' : ' ')<<" "
 	    <<((shdr.sh_flags & SHF_EXECINSTR) == SHF_EXECINSTR ? 'X' : ' ')<<" "
@@ -858,10 +858,10 @@ std::vector<std::string> ELF_Parser::__elfReadSymTab(binary_stream& handle,size_
 	text=elf_arch->read_nametableex(*namecache,sym.st_name,active_shtbl); // !!! HACK
 	oss.str("");
 	if(is_64bit)
-	    oss<<std::left<<std::setw(29)<<text<<" "
+	    oss<<std::left<<std::setw(29)<<text<<" "<<std::right
 		<<std::hex<<std::setfill('0')<<std::setw(16)<<(unsigned long long)sym.st_value<<" ";
 	else
-	    oss<<std::left<<std::setw(37)<<text<<" "
+	    oss<<std::left<<std::setw(37)<<text<<" "<<std::right
 		<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)sym.st_value<<" ";
 	oss<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned)sym.st_size<<" "
 	    <<std::hex<<std::setfill('0')<<std::setw(4)<<sym.st_other<<" "

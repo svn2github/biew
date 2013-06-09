@@ -180,7 +180,7 @@ __filesize_t RDOff_Parser::action_F3()
 	    abs_off = segno == 0 ? cs_start : segno == 1 ? ds_start : FILESIZE_MAX;
 	    if(abs_off < FILESIZE_MAX) abs_off += segoff;
 	    oss.str("");
-	    oss<<std::left<<std::setw(50)<<str<<" offset="<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)abs_off;
+	    oss<<std::left<<std::setw(50)<<str<<" offset="<<std::right<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)abs_off;
 	    rdoff_et.push_back(oss.str());
 	    if(is_eof) break;
 	} else {
