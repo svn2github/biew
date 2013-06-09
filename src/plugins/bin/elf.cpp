@@ -798,7 +798,7 @@ std::string ELF_Parser::elf_SymTabType(char type) const
 	default: break;
     }
     std::ostringstream oss;
-    oss<<"."<<std::hex<<std::setfill('0')<<std::setw(2)<<unsigned(ELF_ST_TYPE(type));
+    oss<<"."<<std::hex<<std::setfill('0')<<std::setw(5)<<unsigned(ELF_ST_TYPE(type));
     return oss.str();
 }
 
@@ -814,7 +814,7 @@ std::string ELF_Parser::elf_SymTabBind(char type) const
 	default: break;
     }
     std::ostringstream oss;
-    oss<<"."<<std::hex<<std::setfill('0')<<std::setw(2)<<unsigned(ELF_ST_BIND(type));
+    oss<<"."<<std::hex<<std::setfill('0')<<std::setw(5)<<unsigned(ELF_ST_BIND(type));
     return oss.str();
 }
 
@@ -830,7 +830,7 @@ std::string ELF_Parser::elf_SymTabShNdx(unsigned idx) const
 	default: break;
     }
     std::ostringstream oss;
-    oss<<std::hex<<std::setfill('0')<<std::setw(4)<<idx<<"H";
+    oss<<std::hex<<std::setfill('0')<<std::setw(5)<<idx<<"H";
     return oss.str();
 }
 
