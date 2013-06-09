@@ -380,41 +380,47 @@ __filesize_t ELF_Parser::pa2va(__filesize_t pa) const
 
 std::string ELF_Parser::elf_class(unsigned char id) const
 {
-  switch(id)
-  {
-    case ELFCLASSNONE:	return "Invalid";
-    case ELFCLASS32:	return "32-bit";
-    case ELFCLASS64:	return "64-bit";
-    default:		return "Unknown";
-  }
+    switch(id) {
+	case ELFCLASSNONE:	return "Invalid";
+	case ELFCLASS32:	return "32-bit";
+	case ELFCLASS64:	return "64-bit";
+	default:		break;
+    }
+    std::ostringstream oss;
+    oss<<"."<<std::hex<<std::setfill('0')<<std::setw(2)<<unsigned(id);
+    return oss.str();
 }
 
 std::string ELF_Parser::elf_data(unsigned char id) const
 {
-  switch(id)
-  {
-    case ELFDATANONE:	return "Invalid";
-    case ELFDATA2LSB:	return "LSB - little endian";
-    case ELFDATA2MSB:	return "MSB - big endian";
-    default:		return "Unknown";
-  }
+    switch(id) {
+	case ELFDATANONE:	return "Invalid";
+	case ELFDATA2LSB:	return "LSB - little endian";
+	case ELFDATA2MSB:	return "MSB - big endian";
+	default:		break;
+    }
+    std::ostringstream oss;
+    oss<<"."<<std::hex<<std::setfill('0')<<std::setw(2)<<unsigned(id);
+    return oss.str();
 }
 
 std::string ELF_Parser::elf_otype(unsigned id) const
 {
-  switch(id)
-  {
-    case ET_NONE:	return "none";
-    case ET_REL:	return "relocatable";
-    case ET_EXEC:	return "executable";
-    case ET_DYN:	return "shared object";
-    case ET_CORE:	return "core";
-    case ET_LOOS:	return "OS-specific low";
-    case ET_HIOS:	return "OS-specific high";
-    case ET_LOPROC:	return "processor-specific low";
-    case ET_HIPROC:	return "processor-specific high";
-    default:		return "Unknown";
-  }
+    switch(id) {
+	case ET_NONE:	return "none";
+	case ET_REL:	return "relocatable";
+	case ET_EXEC:	return "executable";
+	case ET_DYN:	return "shared object";
+	case ET_CORE:	return "core";
+	case ET_LOOS:	return "OS-specific low";
+	case ET_HIOS:	return "OS-specific high";
+	case ET_LOPROC:	return "processor-specific low";
+	case ET_HIPROC:	return "processor-specific high";
+	default:	break;
+    }
+    std::ostringstream oss;
+    oss<<"."<<std::hex<<std::setfill('0')<<std::setw(8)<<id;
+    return oss.str();
 }
 
 /*
@@ -544,41 +550,48 @@ std::string ELF_Parser::elf_machine(unsigned id,unsigned& disasm) const
 	case EM_MCST_ELBRUS:return "MCST Elbrus general purpose hardware architecture";
 	case EM_ECOG16:	return "Cyan Technology eCOG16 family";
 	case EM_CR16:	return "National Semiconductor CompactRISC 16-bit processor";
-	default:	return "Unknown";
+	default:	break;
     }
+    std::ostringstream oss;
+    oss<<"."<<std::hex<<std::setfill('0')<<std::setw(8)<<id;
+    return oss.str();
 }
 
 std::string ELF_Parser::elf_version(unsigned long id) const
 {
-  switch(id)
-  {
-    case EV_NONE:    return "Invalid";
-    case EV_CURRENT: return "Current";
-    default:         return "Unknown";
-  }
+    switch(id) {
+	case EV_NONE:    return "Invalid";
+	case EV_CURRENT: return "Current";
+	default:         break;
+    }
+    std::ostringstream oss;
+    oss<<"."<<std::hex<<std::setfill('0')<<std::setw(8)<<id;
+    return oss.str();
 }
 
 std::string ELF_Parser::elf_osabi(unsigned char id) const
 {
-  switch(id)
-  {
-    case ELFOSABI_SYSV:		return "UNIX System V";
-    case ELFOSABI_HPUX:		return "HP-UX";
-    case ELFOSABI_NETBSD:	return "NetBSD";
-    case ELFOSABI_LINUX:	return "GNU/Linux";
-    case ELFOSABI_HURD:		return "GNU/Hurd";
-    case ELFOSABI_86OPEN:	return "86Open";
-    case ELFOSABI_SOLARIS:	return "Solaris";
-    case ELFOSABI_MONTEREY:	return "Monterey";
-    case ELFOSABI_IRIX:		return "IRIX";
-    case ELFOSABI_FREEBSD:	return "FreeBSD";
-    case ELFOSABI_TRU64:	return "TRU64 UNIX";
-    case ELFOSABI_MODESTO:	return "Novell Modesto";
-    case ELFOSABI_OPENBSD:	return "OpenBSD";
-    case ELFOSABI_ARM:		return "ARM";
-    case ELFOSABI_STANDALONE:	return "Standalone (embedded) application";
-    default:			return "Unknown";
-  }
+    switch(id) {
+	case ELFOSABI_SYSV:		return "UNIX System V";
+	case ELFOSABI_HPUX:		return "HP-UX";
+	case ELFOSABI_NETBSD:		return "NetBSD";
+	case ELFOSABI_LINUX:		return "GNU/Linux";
+	case ELFOSABI_HURD:		return "GNU/Hurd";
+	case ELFOSABI_86OPEN:		return "86Open";
+	case ELFOSABI_SOLARIS:		return "Solaris";
+	case ELFOSABI_MONTEREY:		return "Monterey";
+	case ELFOSABI_IRIX:		return "IRIX";
+	case ELFOSABI_FREEBSD:		return "FreeBSD";
+	case ELFOSABI_TRU64:		return "TRU64 UNIX";
+	case ELFOSABI_MODESTO:		return "Novell Modesto";
+	case ELFOSABI_OPENBSD:		return "OpenBSD";
+	case ELFOSABI_ARM:		return "ARM";
+	case ELFOSABI_STANDALONE:	return "Standalone (embedded) application";
+        default:			break;
+    }
+    std::ostringstream oss;
+    oss<<"."<<std::hex<<std::setfill('0')<<std::setw(2)<<unsigned(id);
+    return oss.str();
 }
 
 __filesize_t ELF_Parser::show_header() const
@@ -661,20 +674,22 @@ __filesize_t ELF_Parser::show_header() const
 
 std::string ELF_Parser::elf_encode_p_type(long p_type) const
 {
-   switch(p_type)
-   {
-      case PT_NULL: return "Unusable";
-      case PT_LOAD: return "Loadable";
-      case PT_DYNAMIC: return "Dynalinking";
-      case PT_INTERP: return "Interpreter";
-      case PT_NOTE:  return "Auxiliary";
-      case PT_SHLIB: return "Unspecified";
-      case PT_PHDR:  return "header itself";
-      case PT_NUM: return "Number of types";
-      case PT_LOPROC: return "Low processor";
-      case PT_HIPROC: return "High processor";
-      default:  return "Unknown";
-   }
+    switch(p_type) {
+	case PT_NULL: return "Unusable";
+	case PT_LOAD: return "Loadable";
+	case PT_DYNAMIC: return "Dynalinking";
+	case PT_INTERP: return "Interpreter";
+	case PT_NOTE:  return "Auxiliary";
+	case PT_SHLIB: return "Unspecified";
+	case PT_PHDR:  return "header itself";
+	case PT_NUM: return "Number of types";
+	case PT_LOPROC: return "Low processor";
+	case PT_HIPROC: return "High processor";
+	default:  break;
+    }
+    std::ostringstream oss;
+    oss<<"."<<std::hex<<std::setfill('0')<<std::setw(8)<<p_type;
+    return oss.str();
 }
 
 std::vector<std::string> ELF_Parser::__elfReadPrgHdr(binary_stream& handle,size_t nnames) const
@@ -708,30 +723,32 @@ std::vector<std::string> ELF_Parser::__elfReadPrgHdr(binary_stream& handle,size_
 
 std::string ELF_Parser::elf_encode_sh_type(long sh_type) const
 {
-   switch(sh_type)
-   {
-      case SHT_NULL: return "NULL";
-      case SHT_PROGBITS: return "PRGBTS";
-      case SHT_SYMTAB: return "SYMTAB";
-      case SHT_STRTAB: return "STRTAB";
-      case SHT_RELA:  return "RELA";
-      case SHT_HASH: return "HSHTAB";
-      case SHT_DYNAMIC:  return "DYNLNK";
-      case SHT_NOTE: return "NOTES";
-      case SHT_NOBITS: return "NOBITS";
-      case SHT_REL:  return "REL";
-      case SHT_SHLIB: return "UNSPEC";
-      case SHT_DYNSYM: return "DYNSYM";
-      case SHT_NUM: return "NTYPES";
-      case SHT_GNU_verdef: return "VERDEF";
-      case SHT_GNU_verneed: return "VERNED";
-      case SHT_GNU_versym: return "SYMVER";
-      case SHT_LOPROC: return "LOPROC";
-      case SHT_HIPROC: return "HIPROC";
-      case SHT_LOUSER: return "LOUSER";
-      case SHT_HIUSER: return "HIUSER";
-      default:  return "UNK";
-   }
+    switch(sh_type) {
+	case SHT_NULL: return "NULL";
+	case SHT_PROGBITS: return "PRGBTS";
+	case SHT_SYMTAB: return "SYMTAB";
+	case SHT_STRTAB: return "STRTAB";
+	case SHT_RELA:  return "RELA";
+	case SHT_HASH: return "HSHTAB";
+	case SHT_DYNAMIC:  return "DYNLNK";
+	case SHT_NOTE: return "NOTES";
+	case SHT_NOBITS: return "NOBITS";
+	case SHT_REL:  return "REL";
+	case SHT_SHLIB: return "UNSPEC";
+	case SHT_DYNSYM: return "DYNSYM";
+	case SHT_NUM: return "NTYPES";
+	case SHT_GNU_verdef: return "VERDEF";
+	case SHT_GNU_verneed: return "VERNED";
+	case SHT_GNU_versym: return "SYMVER";
+	case SHT_LOPROC: return "LOPROC";
+	case SHT_HIPROC: return "HIPROC";
+	case SHT_LOUSER: return "LOUSER";
+	case SHT_HIUSER: return "HIUSER";
+	default: break;
+    }
+    std::ostringstream oss;
+    oss<<"."<<std::hex<<std::setfill('0')<<std::setw(8)<<sh_type;
+    return oss.str();
 }
 
 std::vector<std::string> ELF_Parser::__elfReadSecHdr(binary_stream& handle,size_t nnames) const
@@ -769,37 +786,40 @@ std::vector<std::string> ELF_Parser::__elfReadSecHdr(binary_stream& handle,size_
 
 std::string ELF_Parser::elf_SymTabType(char type) const
 {
-  switch(ELF_ST_TYPE(type))
-  {
-    case STT_NOTYPE:  return "NoType";
-    case STT_OBJECT:  return "Object";
-    case STT_FUNC:    return "Func. ";
-    case STT_SECTION: return "Sect. ";
-    case STT_FILE:    return "File  ";
-    case STT_NUM:     return "Number";
-    case STT_LOPROC:  return "LoProc";
-    case STT_HIPROC:  return "HiProc";
-    default: return "Unknwn";
-  }
+    switch(ELF_ST_TYPE(type)) {
+	case STT_NOTYPE:  return "NoType";
+	case STT_OBJECT:  return "Object";
+	case STT_FUNC:    return "Func. ";
+	case STT_SECTION: return "Sect. ";
+	case STT_FILE:    return "File  ";
+	case STT_NUM:     return "Number";
+	case STT_LOPROC:  return "LoProc";
+	case STT_HIPROC:  return "HiProc";
+	default: break;
+    }
+    std::ostringstream oss;
+    oss<<"."<<std::hex<<std::setfill('0')<<std::setw(2)<<unsigned(ELF_ST_TYPE(type));
+    return oss.str();
 }
 
 std::string ELF_Parser::elf_SymTabBind(char type) const
 {
-  switch(ELF_ST_BIND(type))
-  {
-    case STB_LOCAL:  return "Local ";
-    case STB_GLOBAL: return "Global";
-    case STB_WEAK:   return "Weak  ";
-    case STB_NUM:    return "Number";
-    case STB_LOPROC: return "LoProc";
-    case STB_HIPROC: return "HiProc";
-    default: return "Unknwn";
-  }
+    switch(ELF_ST_BIND(type)) {
+	case STB_LOCAL:  return "Local ";
+	case STB_GLOBAL: return "Global";
+	case STB_WEAK:   return "Weak  ";
+	case STB_NUM:    return "Number";
+	case STB_LOPROC: return "LoProc";
+	case STB_HIPROC: return "HiProc";
+	default: break;
+    }
+    std::ostringstream oss;
+    oss<<"."<<std::hex<<std::setfill('0')<<std::setw(2)<<unsigned(ELF_ST_BIND(type));
+    return oss.str();
 }
 
 std::string ELF_Parser::elf_SymTabShNdx(unsigned idx) const
 {
-    std::ostringstream oss;
     switch(idx) {
 	case SHN_UNDEF:  return "Undef ";
 	case SHN_LOPROC: return "LoProc";
@@ -807,15 +827,16 @@ std::string ELF_Parser::elf_SymTabShNdx(unsigned idx) const
 	case SHN_ABS:    return "Abs.  ";
 	case SHN_COMMON: return "Common";
 	case SHN_HIRESERVE: return "HiRes.";
-	default:
-		oss<<std::hex<<std::setfill('0')<<std::setw(4)<<idx<<"H";
-		return oss.str();
+	default: break;
     }
+    std::ostringstream oss;
+    oss<<std::hex<<std::setfill('0')<<std::setw(4)<<idx<<"H";
+    return oss.str();
 }
 
 bool ELF_Parser::ELF_IS_SECTION_PHYSICAL(unsigned sec_num) const
 {
-  return !(sec_num == SHN_UNDEF || sec_num == SHN_LOPROC ||
+    return !(sec_num == SHN_UNDEF || sec_num == SHN_LOPROC ||
 	   sec_num == SHN_HIPROC || sec_num == SHN_ABS ||
 	   sec_num == SHN_COMMON || sec_num == SHN_HIRESERVE);
 }
