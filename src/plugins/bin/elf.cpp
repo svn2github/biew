@@ -414,8 +414,8 @@ std::string ELF_Parser::elf_otype(unsigned id) const
 	case ET_CORE:	return "core";
 	case ET_LOOS:	return "OS-specific low";
 	case ET_HIOS:	return "OS-specific high";
-	case ET_LOPROC:	return "processor-specific low";
-	case ET_HIPROC:	return "processor-specific high";
+	case ET_LOPROC:	return "CPU-specific low";
+	case ET_HIPROC:	return "CPU-specific high";
 	default:	break;
     }
     std::ostringstream oss;
@@ -682,9 +682,11 @@ std::string ELF_Parser::elf_encode_p_type(long p_type) const
 	case PT_NOTE:  return "Auxiliary";
 	case PT_SHLIB: return "Unspecified";
 	case PT_PHDR:  return "header itself";
-	case PT_NUM: return "Number of types";
-	case PT_LOPROC: return "Low processor";
-	case PT_HIPROC: return "High processor";
+	case PT_TLS: return "TLS-segment";
+	case PT_LOOS: return "Low-OS";
+	case PT_HIOS: return "High-OS";
+	case PT_LOPROC: return "Low-CPU";
+	case PT_HIPROC: return "High-CPU";
 	default:  break;
     }
     std::ostringstream oss;
@@ -705,17 +707,18 @@ std::vector<std::string> ELF_Parser::__elfReadPrgHdr(binary_stream& handle,size_
 	fp = handle.tell();
 	phdr=elf_reader->read_phdr(handle,fp);
 	handle.seek(fp+elf_reader->ehdr().e_phentsize,binary_stream::Seek_Set);
+	unsigned w=is_64bit?16:8;
 	oss.str("");
 	oss<<std::left<<std::setw(15)<<std::setfill(' ')<<elf_encode_p_type(phdr.p_type)<<" "<<std::right
-	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)phdr.p_offset<<" "
-	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)phdr.p_vaddr<<" "
-	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)phdr.p_paddr<<" "
-	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)phdr.p_filesz<<" "
-	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)phdr.p_memsz<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(w)<<phdr.p_offset<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(w)<<phdr.p_vaddr<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(w)<<phdr.p_paddr<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(w)<<phdr.p_filesz<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(w)<<phdr.p_memsz<<" "
 	    <<((phdr.p_flags & PF_X) == PF_X ? 'X' : ' ')<<" "
 	    <<((phdr.p_flags & PF_W) == PF_W ? 'W' : ' ')<<" "
 	    <<((phdr.p_flags & PF_R) == PF_R ? 'R' : ' ')<<" "
-	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)phdr.p_align;
+	    <<std::hex<<std::setfill('0')<<std::setw(w)<<(unsigned long)phdr.p_align;
 	rc.push_back(oss.str());
     }
     return rc;
@@ -766,15 +769,16 @@ std::vector<std::string> ELF_Parser::__elfReadSecHdr(binary_stream& handle,size_
 	shdr=elf_reader->read_shdr(handle,fp);
 	tmp=elf_arch->read_nametable(*namecache,shdr.sh_name);
 	handle.seek(fp+elf_reader->ehdr().e_shentsize,binary_stream::Seek_Set);
+	unsigned w=is_64bit?16:8;
 	oss.str("");
 	oss <<std::left<<std::setw(16)<<std::setfill(' ')<<tmp<<" "
 	    <<std::left<<std::setw(16)<<std::setfill(' ')<<elf_encode_sh_type(shdr.sh_type)<<" "<<std::right
 	    <<((shdr.sh_flags & SHF_WRITE) == SHF_WRITE ? 'W' : ' ')<<" "
 	    <<((shdr.sh_flags & SHF_ALLOC) == SHF_ALLOC ? 'A' : ' ')<<" "
 	    <<((shdr.sh_flags & SHF_EXECINSTR) == SHF_EXECINSTR ? 'X' : ' ')<<" "
-	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)shdr.sh_addr<<" "
-	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)shdr.sh_offset<<" "
-	    <<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)shdr.sh_size<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(w)<<shdr.sh_addr<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(w)<<shdr.sh_offset<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(w)<<shdr.sh_size<<" "
 	    <<std::hex<<std::setfill('0')<<std::setw(4)<<(uint16_t)shdr.sh_link<<" "
 	    <<std::hex<<std::setfill('0')<<std::setw(4)<<(uint16_t)shdr.sh_info<<" "
 	    <<std::hex<<std::setfill('0')<<std::setw(4)<<(uint16_t)shdr.sh_addralign<<" "
@@ -792,7 +796,8 @@ std::string ELF_Parser::elf_SymTabType(char type) const
 	case STT_FUNC:    return "Func. ";
 	case STT_SECTION: return "Sect. ";
 	case STT_FILE:    return "File  ";
-	case STT_NUM:     return "Number";
+	case STT_COMMON:  return "Common";
+	case STT_TLS:     return "TSL   ";
 	case STT_LOPROC:  return "LoProc";
 	case STT_HIPROC:  return "HiProc";
 	default: break;
@@ -856,14 +861,14 @@ std::vector<std::string> ELF_Parser::__elfReadSymTab(binary_stream& handle,size_
 	sym=elf_reader->read_sym(handle,fp);
 	handle.seek(fp+__elfSymEntSize,binary_stream::Seek_Set);
 	text=elf_arch->read_nametableex(*namecache,sym.st_name,active_shtbl); // !!! HACK
+	unsigned w=is_64bit?16:8;
 	oss.str("");
 	if(is_64bit)
-	    oss<<std::left<<std::setw(29)<<text<<" "<<std::right
-		<<std::hex<<std::setfill('0')<<std::setw(16)<<(unsigned long long)sym.st_value<<" ";
+	    oss<<std::left<<std::setw(29)<<text<<" "<<std::right;
 	else
-	    oss<<std::left<<std::setw(37)<<text<<" "<<std::right
-		<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)sym.st_value<<" ";
-	oss<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned)sym.st_size<<" "
+	    oss<<std::left<<std::setw(37)<<text<<" "<<std::right;
+	oss<<std::hex<<std::setfill('0')<<std::setw(w)<<sym.st_value<<" "
+	    <<std::hex<<std::setfill('0')<<std::setw(w)<<sym.st_size<<" "
 	    <<std::hex<<std::setfill('0')<<std::setw(4)<<sym.st_other<<" "
 	    <<elf_SymTabType(sym.st_info)<<" "
 	    <<elf_SymTabBind(sym.st_info)<<" "
@@ -897,12 +902,10 @@ std::vector<std::string> ELF_Parser::__elfReadDynTab(binary_stream& handle,size_
 	stmp=sout;
 	if(len > rborder-4) stmp+="...";
 //   if(rlen < rborder) { memset(&stmp[rlen],' ',rborder-rlen); stmp[rborder] = 0; }
+	unsigned w=is_64bit?16:8;
 	oss.str("");
 	oss<<" vma=";
-	if(is_64bit)
-	    oss<<std::hex<<std::setfill('0')<<std::setw(16)<<(unsigned long long)pdyn.d_un.d_val<<"H";
-	else
-	    oss<<std::hex<<std::setfill('0')<<std::setw(8)<<(unsigned long)pdyn.d_un.d_val<<"H";
+	oss<<std::hex<<std::setfill('0')<<std::setw(w)<<pdyn.d_un.d_val<<"H";
 	stmp+=oss.str();
 	rc.push_back(stmp);
 	handle.seek(fp,binary_stream::Seek_Set);

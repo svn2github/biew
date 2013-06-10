@@ -92,7 +92,7 @@ namespace	usr {
 	    Bin_Editor(BeyeContext& bc,TWindow&,BinMode& parent,unsigned bin_mode,unsigned width,const unsigned char *buff,unsigned size);
 	    virtual ~Bin_Editor();
 
-	    virtual void	save_contest();
+	    virtual void	save_contest(__fileoff_t);
 	private:
 	    BinMode&	parent;
 	    unsigned	bin_mode;
@@ -112,9 +112,9 @@ Bin_Editor::Bin_Editor(BeyeContext& bc,TWindow& w,BinMode& _parent,unsigned bmod
 }
 Bin_Editor::~Bin_Editor() {}
 
-void Bin_Editor::save_contest() {
+void Bin_Editor::save_contest(__fileoff_t cp) {
     editor_mem emem = get_mem();
-    if(bin_mode==MOD_PLAIN) Editor::save_context();
+    if(bin_mode==MOD_PLAIN) Editor::save_context(cp);
     else parent.save_video(emem.buff,emem.size);
 }
 

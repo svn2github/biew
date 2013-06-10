@@ -44,7 +44,7 @@ void Editor::show_help() const
     }
 }
 
-void Editor::paint_title( int shift,bool use_shift ) const
+void Editor::paint_title( int shift,__fileoff_t cp,bool use_shift ) const
 {
     unsigned eidx;
     char byte,obyte;
@@ -52,7 +52,7 @@ void Editor::paint_title( int shift,bool use_shift ) const
     twnd.freeze();
     twnd.goto_xy(1,1);
     twnd.clreol();
-    twnd.printf("%08lX: ",edit_cp + shift);
+    twnd.printf("%08lX: ",cp + shift);
     eidx = use_shift ? (unsigned)shift : edit_y*EditorMem.width+edit_x;
     byte  = EditorMem.buff[eidx];
     obyte = EditorMem.save[eidx];
@@ -136,6 +136,7 @@ unsigned Editor::where_y() const { return edit_y; }
 const editor_mem& Editor::get_mem() const { return EditorMem; }
 editor_mem& Editor::get_mem() { return EditorMem; }
 uint8_t Editor::get_template() const { return edit_XX; }
+__fileoff_t Editor::tell() const { return edit_cp; }
 
 void Editor::CheckBounds()
 {
@@ -162,7 +163,7 @@ void Editor::CheckXYBounds()
    CheckYBounds();
 }
 
-void Editor::save_context()
+void Editor::save_context(__fileoff_t cp)
 {
   std::ofstream fs;
   std::string fname;
@@ -173,7 +174,7 @@ void Editor::save_context()
       bctx.errnoMessageBox(WRITE_FAIL,"",errno);
       return;
   }
-  fs.seekp(edit_cp,std::ios_base::beg);
+  fs.seekp(cp,std::ios_base::beg);
   fs.write((const char*)EditorMem.buff,EditorMem.size);
   if(!fs.good()) goto err;
   fs.close();
@@ -240,7 +241,7 @@ int Editor::run(TWindow* hexwnd)
 	}
     }
     bctx.tconsole().mouse_set_state(true);
-    paint_title(edit_y*EditorMem.width + edit_x,0);
+    paint_title(edit_y*EditorMem.width + edit_x,edit_cp,false);
     TWindow::set_cursor_type(TWindow::Cursor_Normal);
     redraw = true;
     if(hexwnd) {
@@ -271,7 +272,7 @@ int Editor::run(TWindow* hexwnd)
 				(unsigned *)&edit_x,flags,(char *)&EditorMem.save[eidx], NULL);
 	switch(_lastbyte) {
 	    case KE_F(1)   : show_help(); continue;
-	    case KE_F(2)   : save_context();
+	    case KE_F(2)   : save_context(edit_cp);
 	    case KE_F(10)  :
 	    case KE_ESCAPE :
 	    case KE_TAB : goto bye;
@@ -286,7 +287,7 @@ int Editor::run(TWindow* hexwnd)
 		hexwnd->write(11,edit_y + 1,(const uint8_t*)work,len);
 	    }
 	}
-	paint_title(edit_y*EditorMem.width + edit_x,0);
+	paint_title(edit_y*EditorMem.width + edit_x,edit_cp,false);
     }
 bye:
     TWindow::set_cursor_type(TWindow::Cursor_Off);

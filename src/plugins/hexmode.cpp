@@ -159,7 +159,7 @@ namespace	usr {
 	    virtual void		save_ini(Ini_Profile& );
 	private:
 	    void		check_width_corr();
-	    int			full_hex_edit(Editor&,TWindow * txtwnd,TWindow *hexwnd) const;
+	    int			full_hex_edit(Editor&,TWindow& txtwnd,TWindow *hexwnd) const;
 
 	    CodeGuider&		code_guider;
 	    unsigned		virtWidthCorr;
@@ -432,7 +432,7 @@ void HexMode::misckey_action () /* EditHex */
 	    oactive = active;
 	}
 	ewnd[active]->set_focus();
-	if(!active) _lastbyte = full_hex_edit(*editor,&main_wnd,ewnd[0]);
+	if(!active) _lastbyte = full_hex_edit(*editor,main_wnd,ewnd[0]);
 	else        _lastbyte = editor->run(&main_wnd);
 	has_show[active] = true;
 	if(_lastbyte == KE_TAB) active = active ? 0 : 1;
@@ -527,28 +527,28 @@ bool HexMode::action_F10() { return _udn.names(); }
 
 bool HexMode::detect() { return true; }
 
-int HexMode::full_hex_edit(Editor& editor,TWindow* txtwnd,TWindow* hexwnd) const
+int HexMode::full_hex_edit(Editor& editor,TWindow& txtwnd,TWindow* hexwnd) const
 {
     size_t i,j;
     unsigned mlen;
     unsigned int _lastbyte;
     unsigned flg;
-    tAbsCoord height = txtwnd->client_height();
-    tAbsCoord width = txtwnd->client_width();
+    tAbsCoord height = txtwnd.client_height();
+    tAbsCoord width = txtwnd.client_width();
     char work[__TVIO_MAXSCREENWIDTH],owork[__TVIO_MAXSCREENWIDTH];
     bool redraw;
 
-    txtwnd->set_focus();
-    txtwnd->set_color(browser_cset.main);
-    txtwnd->freeze();
+    txtwnd.set_focus();
+    txtwnd.set_color(browser_cset.main);
+    txtwnd.freeze();
     editor_mem& emem = editor.get_mem();
     for(i = 0;i < height;i++) {
-	txtwnd->write(width - emem.width + 1,i + 1,&emem.buff[i*emem.width],emem.alen[i]);
+	txtwnd.write(width - emem.width + 1,i + 1,&emem.buff[i*emem.width],emem.alen[i]);
 	if((unsigned)emem.alen[i] + 1 < emem.width) {
-	    txtwnd->goto_xy(width - emem.width + emem.alen[i] + 2,i + 1); txtwnd->clreol();
+	    txtwnd.goto_xy(width - emem.width + emem.alen[i] + 2,i + 1); txtwnd.clreol();
         }
     }
-    txtwnd->refresh();
+    txtwnd.refresh();
 
     hexwnd->set_color(browser_cset.edit.main);
     for(i = 0;i < height;i++) {
@@ -566,7 +566,7 @@ int HexMode::full_hex_edit(Editor& editor,TWindow* txtwnd,TWindow* hexwnd) const
 	}
     }
     redraw = true;
-    editor.paint_title(editor.where_y()*emem.width + editor.where_x(),0);
+    editor.paint_title(editor.where_y()*emem.width + editor.where_x(),editor.tell(),false);
     hexwnd->show();
     TWindow::set_cursor_type(TWindow::Cursor_Normal);
     while(1) {
@@ -586,15 +586,15 @@ int HexMode::full_hex_edit(Editor& editor,TWindow* txtwnd,TWindow* hexwnd) const
 	CompressHex(&emem.buff[eidx],work,mlen/3,true);
 	switch(_lastbyte) {
 	    case KE_F(1)   : editor.show_help(); continue;
-	    case KE_F(2)   : editor.save_context();
+	    case KE_F(2)   : editor.save_context(editor.tell());
 	    case KE_F(10)  :
 	    case KE_ESCAPE :
 	    case KE_TAB : goto bye;
 	    default     : redraw = editor.default_action(_lastbyte); break;
 	}
 	editor.CheckBounds();
-	if(redraw) txtwnd->write(width - emem.width + 1,editor.where_y() + 1,&emem.buff[eidx],mlen/3);
-	editor.paint_title(eidx + editor.where_x(),0);
+	if(redraw) txtwnd.write(width - emem.width + 1,editor.where_y() + 1,&emem.buff[eidx],mlen/3);
+	editor.paint_title(eidx + editor.where_x(),editor.tell(),false);
     }
     bye:
     TWindow::set_cursor_type(TWindow::Cursor_Off);

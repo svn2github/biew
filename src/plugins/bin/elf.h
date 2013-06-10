@@ -275,7 +275,9 @@ enum {
     PT_NOTE	=4,		/**< Auxiliary information */
     PT_SHLIB	=5,		/**< Reserved, unspecified semantics */
     PT_PHDR	=6,		/**< Entry for header table itself */
-    PT_NUM	=7,		/**< Number of defined types.  */
+    PT_TLS	=7,		/**< Thread local storage segment  */
+    PT_LOOS	=0x60000000,	/**< OS-specific */
+    PT_HIOS	=0x6fffffff,	/**< OS-specific */
     PT_LOPROC	=0x70000000UL,	/**< Processor-specific */
     PT_HIPROC	=0x7FFFFFFFUL	/**< Processor-specific */
 };
@@ -329,13 +331,37 @@ enum {
 };
 /** Values of note segment descriptor types for core files. */
 enum {
-    NT_PRSTATUS	=1,		/**< Contains copy of prstatus struct */
-    NT_FPREGSET	=2,		/**< Contains copy of fpregset struct */
-    NT_PRPSINFO	=3,		/**< Contains copy of prpsinfo struct */
-/** Values of note segment descriptor types for object files.
-   (Only for hppa right now.  Should this be moved elsewhere?)  */
-
-    NT_VERSION	=1		/**< Contains a version string.  */
+    NT_PRSTATUS		=1,		/**< Contains copy of prstatus struct */
+    NT_FPREGSET		=2,		/**< Contains copy of fpregset struct */
+    NT_PRPSINFO		=3,		/**< Contains copy of prpsinfo struct */
+    NT_TASKSTRUCT	=4,
+    NT_AUXV		=6,
+/*
+ * Note to userspace developers: size of NT_SIGINFO note may increase
+ * in the future to accomodate more fields, don't assume it is fixed!
+ */
+    NT_SIGINFO		=0x53494749,
+    NT_FILE		=0x46494c45,
+    NT_PRXFPREG		=0x46e62b7f,	/* copied from gdb5.1/include/elf/common.h */
+    NT_PPC_VMX		=0x100,		/* PowerPC Altivec/VMX registers */
+    NT_PPC_SPE		=0x101,		/* PowerPC SPE/EVR registers */
+    NT_PPC_VSX		=0x102,		/* PowerPC VSX registers */
+    NT_386_TLS		=0x200,		/* i386 TLS slots (struct user_desc) */
+    NT_386_IOPERM	=0x201,		/* x86 io permission bitmap (1=deny) */
+    NT_X86_XSTATE	=0x202,		/* x86 extended state using xsave */
+    NT_S390_HIGH_GPRS	=0x300,	/* s390 upper register halves */
+    NT_S390_TIMER	=0x301,		/* s390 timer register */
+    NT_S390_TODCMP	=0x302,		/* s390 TOD clock comparator register */
+    NT_S390_TODPREG	=0x303,		/* s390 TOD programmable register */
+    NT_S390_CTRS	=0x304,		/* s390 control registers */
+    NT_S390_PREFIX	=0x305,		/* s390 prefix register */
+    NT_S390_LAST_BREAK	=0x306,	/* s390 breaking event address */
+    NT_S390_SYSTEM_CALL	=0x307,	/* s390 system call restart data */
+    NT_S390_TDB		=0x308,		/* s390 transaction diagnostic block */
+    NT_ARM_VFP		=0x400,		/* ARM VFP/NEON registers */
+    NT_ARM_TLS		=0x401,		/* ARM TLS register */
+    NT_ARM_HW_BREAK	=0x402,		/* ARM hardware breakpoint registers */
+    NT_ARM_HW_WATCH	=0x403		/* ARM hardware watchpoint registers */
 };
 
 /** These three macros disassemble and assemble a symbol table st_info field,
@@ -363,7 +389,8 @@ enum {
     STT_FUNC	=2,		/**< Symbol is a code object */
     STT_SECTION	=3,		/**< Symbol associated with a section */
     STT_FILE	=4,		/**< Symbol gives a file name */
-    STT_NUM	=5,		/**< Number of defined types.  */
+    STT_COMMON	=5,
+    STT_TLS	=6,
     STT_LOPROC	=13,		/**< Application-specific semantics */
     STT_HIPROC	=15		/**< Application-specific semantics */
 };
@@ -406,21 +433,28 @@ enum {
     DT_DEBUG	=21,		/**< For debugging; unspecified */
     DT_TEXTREL	=22,		/**< Reloc might modify .text */
     DT_JMPREL	=23,		/**< Address of PLT relocs */
-    DT_NUM	=24,		/**< Number used */
+    DT_ENCODING	=32,		/**< Number used */
+
+    OLD_DT_LOOS		=0x60000000,
+    DT_LOOS		=0x6000000d,
+    DT_HIOS		=0x6ffff000,
+    DT_VALRNGLO		=0x6ffffd00,
+    DT_VALRNGHI		=0x6ffffdff,
+    DT_ADDRRNGLO	=0x6ffffe00,
+    DT_ADDRRNGHI	=0x6ffffeff,
+    DT_VERSYM		=0x6ffffff0,
+    DT_RELACOUNT	=0x6ffffff9,
+    DT_RELCOUNT		=0x6ffffffa,
+    DT_FLAGS_1		=0x6ffffffb,
+    DT_VERDEF		=0x6ffffffc,
+    DT_VERDEFNUM	=0x6ffffffd,
+    DT_VERNEED		=0x6ffffffe,
+    DT_VERNEEDNUM	=0x6fffffff,
+    OLD_DT_HIOS		=0x6fffffff,
+
     DT_LOPROC	=0x70000000UL,	/**< Start of processor-specific */
     DT_HIPROC	=0x7fffffffUL,	/**< End of processor-specific */
-//    DT_PROCNUM	=DT_MIPS_NUM,	/**< Most used by any processor */
-/** The versioning entry types.  The next are defined as part of the
-   GNU extension.  */
-    DT_VERSYM	=0x6ffffff0UL,
 
-/** These were chosen by Sun.  */
-    DT_VERDEF	=0x6ffffffcUL,	/**< Address of version definition
-					   table */
-    DT_VERDEFNUM=0x6ffffffdUL,	/**< Number of version definitions */
-    DT_VERNEED	=0x6ffffffeUL,	/**< Address of table with needed
-				   versions */
-    DT_VERNEEDNUM=0x6fffffffUL,	/**< Number of needed versions */
     DT_VERSIONTAGNUM=16,
 
 /** Sun added these machine-independent extensions in the "processor-specific"

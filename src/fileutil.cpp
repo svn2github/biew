@@ -387,6 +387,7 @@ bool FStore::run()
 		    dismode = static_cast<DisMode*>(disMode.query_interface(bctx,bctx.bin_format(),bctx.bm_file(),bctx.main_wnd(),bctx.codeguider(),bctx._udn(),bctx.search()));
 		else
 		    dismode = static_cast<DisMode*>(&bctx.active_mode());
+		unsigned disasm_type = dismode->query_type();
 		MaxInsnLen = dismode->get_max_symbol_size();
 		codebuff = new unsigned char [MaxInsnLen];
 		tmp_buff2 = new char [0x1000];
@@ -478,7 +479,7 @@ bool FStore::run()
 		    memset(codebuff,0,MaxInsnLen);
 		    bctx.bm_file().seek(ff_startpos,binary_stream::Seek_Set);
 		    bp=bctx.bm_file().read(MaxInsnLen); memcpy(codebuff,bp.data(),bp.size());
-		    if(obj._class == Object_Info::Code) dret = dismode->disassembler(ff_startpos,codebuff,__DISF_NORMAL);
+		    if(obj._class == Object_Info::Code||disasm_type==DISASM_DATA) dret = dismode->disassembler(ff_startpos,codebuff,__DISF_NORMAL);
 		    else { /** Data object */
 			unsigned dis_data_len,ifreq,data_len;
 			char coll_str[__TVIO_MAXSCREENWIDTH];

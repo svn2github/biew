@@ -44,11 +44,12 @@ namespace	usr {
 	    virtual const editor_mem&	get_mem() const;
 	    virtual editor_mem&	get_mem();
 	    virtual uint8_t	get_template() const;
+	    virtual __fileoff_t	tell() const;
 	    virtual void	CheckBounds();
 	    virtual void	CheckYBounds();
 	    virtual void	CheckXYBounds();
-	    virtual void	save_context();
-	    virtual void	paint_title(int shift,bool use_shift) const;
+	    virtual void	save_context(__fileoff_t cp);
+	    virtual void	paint_title(int shift,__fileoff_t cp,bool use_shift) const;
 	    virtual void	show_help() const;
 	private:
 	    void		init(unsigned width,const unsigned char *buff,unsigned size);

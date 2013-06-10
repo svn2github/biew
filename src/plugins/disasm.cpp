@@ -113,6 +113,8 @@ DisMode::~DisMode()
     if(second_handle!=&main_handle) delete second_handle;
 }
 
+unsigned DisMode::query_type() const { return list[DefDisasmSel]->type; }
+
 DisMode::e_flag DisMode::flags() const { return UseCodeGuide | Disasm | Has_SearchEngine; }
 
 static const char* txt[] = { "", "Disasm", "", "", "", "AResol", "PanMod", "ResRef", "HiLght", "UsrNam" };
@@ -589,7 +591,7 @@ int DisMode::full_asm_edit(Editor& editor,TWindow& ewnd)
     ::memset(emem.alen,TWC_DEF_FILLER,height);
 
     disasm_screen(editor,ewnd,edit_cp,flen,0,height,start);
-    editor.paint_title(0,true);
+    editor.paint_title(0,edit_cp,true);
     start = 0;
     ewnd.show();
     TWindow::set_cursor_type(TWindow::Cursor_Normal);
@@ -662,7 +664,7 @@ int DisMode::full_asm_edit(Editor& editor,TWindow& ewnd)
 	    emem.alen[editor.where_y()] = dret.codelen;
 	    disasm_screen(editor,ewnd,edit_cp,flen,0,height,0);
 	}
-	editor.paint_title(start + edit_x/2,true);
+	editor.paint_title(start + edit_x/2,edit_cp,true);
 	editor.CheckXYBounds();
 	start = editor.where_y() ? Summ(emem.alen,editor.where_y()) : 0;
     }
@@ -730,14 +732,13 @@ Plugin::search_result DisMode::search_engine(TWindow *pwnd, __filesize_t start,
 {
     Plugin::search_result rc = { 0, 0 };
     DisasmRet dret;
-    __filesize_t tsize, retval, flen, dfpos, cfpos, sfpos; /* If search have no result */
+    __filesize_t tsize, flen, dfpos, cfpos, sfpos; /* If search have no result */
     char *disSearchBuff;
     unsigned len, lw, proc, pproc, pmult;
     int cache[UCHAR_MAX+1];
     binary_packet bp(1);
     cfpos = sfpos = main_handle.tell();
     flen = main_handle.flength();
-    retval = FILESIZE_MAX;
     disSearchBuff  = new char [1002+Comm_Size];
     DumpMode = true;
     cfpos = start;
