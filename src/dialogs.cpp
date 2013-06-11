@@ -484,7 +484,7 @@ bool __FASTCALL__ GetFStoreDlg(const std::string& title,char* fname,unsigned lon
  wdlg->goto_xy(27,4); wdlg->puts(LENGTH_PRMT);
  ultoa(*start,startdig,16);
  ultoa(*end,enddig,16);
- FFStaticPaint(wdlg,fname,startdig,enddig,*flags);
+ FFStaticPaint(wdlg,fname?fname:"",startdig,enddig,*flags);
  active = 0;
  oactive = 1;
  redraw = true;
@@ -533,7 +533,7 @@ bool __FASTCALL__ GetFStoreDlg(const std::string& title,char* fname,unsigned lon
    }
    if(active < 0) active = neditors;
    if(active > neditors) active = 0;
-   if(redraw) FFStaticPaint(wdlg,fname,startdig,enddig,*flags);
+   if(redraw) FFStaticPaint(wdlg,fname?fname:"",startdig,enddig,*flags);
  }
  delete wdlg;
  for(i = 0;i < neditors+1;i++) delete ewnd[i];

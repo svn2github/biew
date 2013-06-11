@@ -23,6 +23,7 @@ using namespace	usr;
 #include <iostream>
 #include <vector>
 #include <string>
+#include <stdexcept>
 
 #include <string.h>
 #include <stdlib.h>
@@ -332,7 +333,7 @@ void Ini_Parser::Ini_Parser::aerror(int nError,int row,const std::string& addinf
 {
     int eret = 0;
     eret = error(nError,row,addinfo);
-    if(eret == __INI_EXITPROC) exit(255);
+    if(eret == __INI_EXITPROC) throw std::invalid_argument("Ini_Parser: user request");
 }
 
 static const char* list[] = {

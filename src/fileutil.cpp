@@ -863,7 +863,7 @@ bool EndianifyBlock::run()
     ff_startpos = bctx.tell();
     if(!ff_len) ff_len = bctx.flength() - ff_startpos;
     flags = FSDLG_USEBITNS;
-    if(GetFStoreDlg(" Endianify block of file ",NULL,&flags,&ff_startpos,&ff_len,NULL)) {
+    if(GetFStoreDlg(" Endianify block of file ",NULL,&flags,&ff_startpos,&ff_len,"")) {
 	__filesize_t flen,lval;
 	endpos = ff_startpos + ff_len;
 	flen = bctx.flength();

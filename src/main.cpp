@@ -310,12 +310,6 @@ void BeyeContext::PaintTitle() const
     priv.TitleWnd->refresh();
 }
 
-static void MyAtExit()
-{
-  delete BeyeCtx;
-  mp_uninit_malloc(malloc_debug?1:0);
-}
-
 bool BeyeContext::is_valid_ini_args( ) const
 {
     beye_priv& priv = static_cast<beye_priv&>(opaque);
@@ -518,7 +512,6 @@ show_usage:
 	return EXIT_FAILURE;
     }
     BeyeCtx->create_windows();
-    atexit(MyAtExit);
     retval = EXIT_SUCCESS;
     if(skin_err) {
 	char sout[256];
@@ -817,6 +810,7 @@ static bool test_antiviral_protection(int* verbose)
 
 int main(int argc,char* args[], char *envp[])
 {
+    int rc;
     try {
 	/* init malloc */
 	int do_av_test=0;
@@ -861,7 +855,6 @@ int main(int argc,char* args[], char *envp[])
 //	envp[j+1] = NULL;
 #ifdef HAVE_MPROTECT
 	/* init antiviral protection */
-	int rc;
 	rc=mp_mprotect((any_t*)antiviral_hole1,sizeof(antiviral_hole1),MP_DENY_ALL);
 	rc|=mp_mprotect((any_t*)antiviral_hole2,sizeof(antiviral_hole2),MP_DENY_ALL);
 	rc|=mp_mprotect((any_t*)antiviral_hole3,sizeof(antiviral_hole3),MP_DENY_ALL);
@@ -879,9 +872,22 @@ int main(int argc,char* args[], char *envp[])
 	    return EXIT_FAILURE;
 	}
 	/* call program */
-	return Beye(ArgVector,envm);
-    } catch(const std::string& what) {
-	std::cout<<"[main_module] Exception '"<<what<<"'caught in module: MPlayerXP"<<std::endl;
+	rc=Beye(ArgVector,envm);
+    } catch(const std::exception& e) {
+	delete BeyeCtx; BeyeCtx = NULL;
+	std::cerr<<"[main_module] Exception '"<<e.what()<<"' caught in module: Beye"<<std::endl;
+	rc=EXIT_FAILURE;
+    } catch(const std::string& e) {
+	delete BeyeCtx; BeyeCtx = NULL;
+	std::cerr<<"[main_module] thrown signal '"<<e<<"' caught in module: Beye"<<std::endl;
+	rc=EXIT_FAILURE;
+    } catch(...) {
+	delete BeyeCtx; BeyeCtx = NULL;
+	std::cerr<<"[main_module] unknown exception caught in module: Beye"<<std::endl;
+	rc=EXIT_FAILURE;
     }
-    return EXIT_FAILURE;
+    if(BeyeCtx) delete BeyeCtx;
+    BeyeCtx = NULL;
+    mp_uninit_malloc(malloc_debug?1:0);
+    return rc;
 }

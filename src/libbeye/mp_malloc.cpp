@@ -227,7 +227,7 @@ static void __prot_free_append(any_t*ptr) {
 	std::cerr<<"[__prot_free_slot] suspect call found! Can't find slot for address: "<<ptr<<" [aligned: "<<page_ptr<<"]"<<std::endl;
 	__prot_print_slots(&priv->mallocs);
 	__print_backtrace(Max_BackTraces);
-	exit(EXIT_FAILURE);
+	throw std::runtime_error("suspect call was found");
     }
     size_t fullsize=app_fullsize(slot->size);
     ::mprotect(prot_last_page(page_ptr,fullsize),__VM_PAGE_SIZE__,MP_PROT_READ|MP_PROT_WRITE);
@@ -243,7 +243,7 @@ static any_t* __prot_realloc_append(any_t*ptr,size_t size) {
 	    std::cerr<<"[__prot_realloc_append] suspect call found! Can't find slot for address: "<<ptr<<" [aligned: "<<prot_page_align(ptr)<<"]"<<std::endl;
 	    __prot_print_slots(&priv->mallocs);
 	    __print_backtrace(Max_BackTraces);
-	    exit(EXIT_FAILURE);
+	    throw std::runtime_error("suspect call was found");
 	}
 	::memcpy(rp,ptr,std::min(slot->size,size));
 	__prot_free_append(ptr);
@@ -277,7 +277,7 @@ static void __prot_free_prepend(any_t*ptr) {
 	std::cerr<<"[__prot_free_slot] suspect call found! Can't find slot for address: "<<ptr<<" [aligned: "<<page_ptr<<"]"<<std::endl;
 	__prot_print_slots(&priv->mallocs);
 	__print_backtrace(Max_BackTraces);
-	exit(EXIT_FAILURE);
+	throw std::runtime_error("suspect call was found");
     }
     ::mprotect(page_ptr,__VM_PAGE_SIZE__,MP_PROT_READ|MP_PROT_WRITE);
     ::free(page_ptr);
@@ -292,7 +292,7 @@ static any_t* __prot_realloc_prepend(any_t*ptr,size_t size) {
 	    std::cerr<<"[__prot_realloc_prepend] suspect call found! Can't find slot for address: "<<ptr<<" [aligned: "<<pre_page_align(ptr)<<"]"<<std::endl;
 	    __prot_print_slots(&priv->mallocs);
 	    __print_backtrace(Max_BackTraces);
-	    exit(EXIT_FAILURE);
+	    throw std::runtime_error("suspect call was found");
 	}
 	::memcpy(rp,ptr,std::min(slot->size,size));
 	__prot_free_prepend(ptr);
