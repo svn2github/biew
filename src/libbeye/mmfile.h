@@ -18,10 +18,10 @@ namespace	usr {
 	    virtual bool		close();
 	    virtual bool		eof() const;
 	    virtual bool		flush();
-	    virtual uint8_t		read(const data_type_qualifier__byte_t&);
-	    virtual uint16_t		read(const data_type_qualifier__word_t&);
-	    virtual uint32_t		read(const data_type_qualifier_dword_t&);
-	    virtual uint64_t		read(const data_type_qualifier_qword_t&);
+	    virtual uint8_t		read(const beye_aka_binary_eye_project_data_type_qualifier__byte_t&);
+	    virtual uint16_t		read(const beye_aka_binary_eye_project_data_type_qualifier__word_t&);
+	    virtual uint32_t		read(const beye_aka_binary_eye_project_data_type_qualifier_dword_t&);
+	    virtual uint64_t		read(const beye_aka_binary_eye_project_data_type_qualifier_qword_t&);
 	    virtual binary_packet	read(size_t cbBuffer);
 	    virtual bool		seek(__fileoff_t offset,e_seek origin);
 	    virtual __filesize_t	tell() const;

@@ -60,7 +60,7 @@ __filesize_t binary_stream::_tell() const
     return ::lseek(h,0L,SEEK_CUR);
 }
 
-uint8_t binary_stream::read(const data_type_qualifier__byte_t&)
+uint8_t binary_stream::read(const beye_aka_binary_eye_project_data_type_qualifier__byte_t&)
 {
     uint8_t ret;
     int h = _handle ^ reinterpret_cast<long>(this);
@@ -68,7 +68,7 @@ uint8_t binary_stream::read(const data_type_qualifier__byte_t&)
     return ret;
 }
 
-uint16_t binary_stream::read(const data_type_qualifier__word_t&)
+uint16_t binary_stream::read(const beye_aka_binary_eye_project_data_type_qualifier__word_t&)
 {
     uint16_t ret;
     int h = _handle ^ reinterpret_cast<long>(this);
@@ -76,7 +76,7 @@ uint16_t binary_stream::read(const data_type_qualifier__word_t&)
     return ret;
 }
 
-uint32_t binary_stream::read(const data_type_qualifier_dword_t&)
+uint32_t binary_stream::read(const beye_aka_binary_eye_project_data_type_qualifier_dword_t&)
 {
     uint32_t ret;
     int h = _handle ^ reinterpret_cast<long>(this);
@@ -84,7 +84,7 @@ uint32_t binary_stream::read(const data_type_qualifier_dword_t&)
     return ret;
 }
 
-uint64_t binary_stream::read(const data_type_qualifier_qword_t&)
+uint64_t binary_stream::read(const beye_aka_binary_eye_project_data_type_qualifier_qword_t&)
 {
     uint64_t ret;
     int h = _handle ^ reinterpret_cast<long>(this);

@@ -65,7 +65,7 @@ __filesize_t MMFile::tell() const
 
 bool MMFile::eof() const { return chk_eof(); }
 
-uint8_t MMFile::read(const data_type_qualifier__byte_t&)
+uint8_t MMFile::read(const beye_aka_binary_eye_project_data_type_qualifier__byte_t&)
 {
     uint8_t rval;
     rval = ((uint8_t*)addr)[filepos++];
@@ -73,7 +73,7 @@ uint8_t MMFile::read(const data_type_qualifier__byte_t&)
     return rval;
 }
 
-uint16_t MMFile::read(const data_type_qualifier__word_t&)
+uint16_t MMFile::read(const beye_aka_binary_eye_project_data_type_qualifier__word_t&)
 {
     uint16_t rval=-1;
     binary_packet bp=read(sizeof(uint16_t)); memcpy(&rval,bp.data(),bp.size());
@@ -81,7 +81,7 @@ uint16_t MMFile::read(const data_type_qualifier__word_t&)
     return rval;
 }
 
-uint32_t MMFile::read(const data_type_qualifier_dword_t&)
+uint32_t MMFile::read(const beye_aka_binary_eye_project_data_type_qualifier_dword_t&)
 {
     uint32_t rval=-1;
     binary_packet bp=read(sizeof(uint32_t)); memcpy(&rval,bp.data(),bp.size());
@@ -89,7 +89,7 @@ uint32_t MMFile::read(const data_type_qualifier_dword_t&)
     return rval;
 }
 
-uint64_t MMFile::read(const data_type_qualifier_qword_t&)
+uint64_t MMFile::read(const beye_aka_binary_eye_project_data_type_qualifier_qword_t&)
 {
     uint64_t rval=-1;
     binary_packet bp=read(sizeof(uint64_t)); memcpy(&rval,bp.data(),bp.size());

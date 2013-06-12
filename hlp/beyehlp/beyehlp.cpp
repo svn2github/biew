@@ -191,8 +191,8 @@ bool __FASTCALL__ MyCallOut(const IniInfo& ini,any_t* data)
 	do
 	{
 	   copysize = std::min((unsigned long)0x1000,litem);
-	   bIn->read(tmp_buff,copysize);
-	   ofs.write(tmp_buff,copysize);
+	   binary_packet bp=bIn->read(copysize); memcpy(tmp_buff,bp.data(),bp.size());
+	   ofs.write(bp.cdata(),bp.size());
 	   litem -= copysize;
 	} while(litem);
 	delete bIn;

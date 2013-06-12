@@ -81,28 +81,28 @@ namespace	usr {
 		     * @note                  Logical file position is
 		     *                        incremented after operation.
 		    **/
-	    virtual uint8_t		read(const data_type_qualifier__byte_t&);
+	    virtual uint8_t		read(const beye_aka_binary_eye_project_data_type_qualifier__byte_t&);
 
 		   /** Reads two bytes from stream.
 		     * @return                Readed word
 		     * @note                  Logical file position is
 		     *                        incremented after operation.
 		    **/
-	    virtual uint16_t		read(const data_type_qualifier__word_t&);
+	    virtual uint16_t		read(const beye_aka_binary_eye_project_data_type_qualifier__word_t&);
 
 		   /** Reads four bytes from stream.
 		     * @return                Readed double word
 		     * @note                  Logical file position is
 		     *                        incremented after operation.
 		    **/
-	    virtual uint32_t		read(const data_type_qualifier_dword_t&);
+	    virtual uint32_t		read(const beye_aka_binary_eye_project_data_type_qualifier_dword_t&);
 
 		   /** Reads 8 bytes from stream.
 		     * @return                Readed double word
 		     * @note                  Logical file position is
 		     *                        incremented after operation.
 		    **/
-	    virtual uint64_t		read(const data_type_qualifier_qword_t&);
+	    virtual uint64_t		read(const beye_aka_binary_eye_project_data_type_qualifier_qword_t&);
 
 		   /** Reads specified number of bytes from stream.
 		     * @return                true if operation was succesfully performed

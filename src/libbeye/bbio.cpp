@@ -104,12 +104,12 @@ __filesize_t BBio_File::tell() const
     return filepos;
 }
 
-uint8_t BBio_File::read(const data_type_qualifier__byte_t&)
+uint8_t BBio_File::read(const beye_aka_binary_eye_project_data_type_qualifier__byte_t&)
 {
     return vfb.read();
 }
 
-uint16_t BBio_File::read(const data_type_qualifier__word_t&)
+uint16_t BBio_File::read(const beye_aka_binary_eye_project_data_type_qualifier__word_t&)
 {
     uint16_t ret;
     binary_packet bp=vfb.read(sizeof(uint16_t));
@@ -117,7 +117,7 @@ uint16_t BBio_File::read(const data_type_qualifier__word_t&)
     return ret;
 }
 
-uint32_t BBio_File::read(const data_type_qualifier_dword_t&)
+uint32_t BBio_File::read(const beye_aka_binary_eye_project_data_type_qualifier_dword_t&)
 {
     uint32_t ret;
     binary_packet bp=vfb.read(sizeof(uint32_t));
@@ -125,7 +125,7 @@ uint32_t BBio_File::read(const data_type_qualifier_dword_t&)
     return ret;
 }
 
-uint64_t BBio_File::read(const data_type_qualifier_qword_t&)
+uint64_t BBio_File::read(const beye_aka_binary_eye_project_data_type_qualifier_qword_t&)
 {
     uint64_t ret;
     binary_packet bp=vfb.read(sizeof(uint64_t));
