@@ -17,6 +17,9 @@ using namespace	usr;
  * @since       1995
  * @note        Development, fixes and improvements
 **/
+#include <sstream>
+#include <iomanip>
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -91,23 +94,37 @@ int DigitalConverter_Addon::GetFullBin(uintmax_t value,char * buff) const
 
 int DigitalConverter_Addon::Dig2Str(uintmax_t value,char * buff,int action) const
 {
- if(action == 0) return strlen(ulltoa(value,buff,16));
- if(action == 1) return strlen(lltoa(value,buff,8));
- if(action == 2) return strlen(ulltoa(value,buff,10));
- if(action == 3) return strlen(lltoa(value,buff,10));
- if(action == 4) return GetFullBin(value,buff);
- if(action == 5) return strlen(ulltoa(value,buff,2));
- return 0;
+    std::ostringstream os;
+    switch(action) {
+	default:
+	case 0: os<<std::setbase(16)<<value; break;
+	case 1: os<<std::setbase(8)<<value; break;
+	case 2: os<<std::setbase(10)<<value; break;
+	case 3: os<<std::setbase(10)<<(long long)value; break;
+	case 4: return GetFullBin(value,buff);
+	case 5: os<<std::setbase(2)<<value;
+    }
+    strcpy(buff,os.str().c_str());
+    return strlen(buff);
 }
 
 uintmax_t DigitalConverter_Addon::Str2Dig(const char * buff,int action) const
 {
- if(action == 0) return strtoull(buff,NULL,16);
- if(action == 1) return strtoull(buff,NULL,8);
- if(action == 2) return strtoull(buff,NULL,10);
- if(action == 3) return strtoll(buff,NULL,10);
- if(action == 4) return strtoull(buff,NULL,2);
- return 0;
+    bool use_sign=false;
+    unsigned base;
+    switch(action) {
+	default:
+	case 0: base=16; break;
+	case 1: base=8; break;
+	case 2: base=10; break;
+	case 3: base=10; use_sign=true; break;
+	case 4: base=2;
+    }
+    std::istringstream is(buff);
+    if(use_sign) { long long int rc; is>>std::setbase(base)>>rc; return rc; }
+    unsigned long long rv;
+    is>>std::setbase(base)>>rv;
+    return rv;
 }
 
 void DigitalConverter_Addon::DCStaticPaint(TWindow * wdlg,char * wbuff,intmax_t digit,unsigned *mlen) const

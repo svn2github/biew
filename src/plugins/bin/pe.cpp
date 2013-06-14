@@ -880,11 +880,10 @@ __filesize_t PE_Parser::action_F3()
     ret = lb.run(objs,title,flags,-1);
     if(ret != -1) {
 	const char* cptr;
-	char buff[40];
 	cptr = strrchr(objs[ret].c_str(),ListBox::Ord_Delimiter);
 	cptr++;
-	strcpy(buff,cptr);
-	ordinal = atoi(buff);
+	std::istringstream iss(cptr);
+	iss>>ordinal;
     }
 exit:
     if(ret != -1) fpos = CalcEntryPE(ordinal,true);

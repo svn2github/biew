@@ -24,6 +24,7 @@ using namespace	usr;
 **/
 #include <stdexcept>
 #include <iostream>
+#include <sstream>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -119,11 +120,12 @@ void __FASTCALL__ __OsSetCBreak(bool state)
 
 static void cleanup(int sig)
 {
-    char tmp[256];
     __term_keyboard();
     __term_vio();
     __term_sys();
-    throw std::runtime_error(std::string("Terminated by signal")+ltoa(sig,tmp,10));
+    std::ostringstream os;
+    os<<sig;
+    throw std::runtime_error(std::string("Terminated by signal")+os.str();
 }
 
 /* static struct sigaction sa; */

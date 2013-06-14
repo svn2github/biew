@@ -17,6 +17,8 @@ using namespace	usr;
  * @since       1999
  * @note        Development, fixes and improvements
 **/
+#include <sstream>
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -173,19 +175,19 @@ Data_Disassembler::~Data_Disassembler()
 void Data_Disassembler::read_ini( Ini_Profile& ini )
 {
   std::string tmps;
-  if(bctx.is_valid_ini_args())
-  {
+  if(bctx.is_valid_ini_args()) {
     tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode3","1");
-    nulWidth = (int)strtoul(tmps.c_str(),NULL,10);
+    std::istringstream is(tmps);
+    is>>nulWidth;
     if(nulWidth > 3) nulWidth = 0;
   }
 }
 
 void Data_Disassembler::save_ini( Ini_Profile& ini )
 {
-  char tmps[10];
-  sprintf(tmps,"%i",nulWidth);
-  bctx.write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
+  std::ostringstream os;
+  os<<nulWidth;
+  bctx.write_profile_string(ini,"Beye","Browser","SubSubMode3",os.str());
 }
 
 const char* Data_Disassembler::prompt(unsigned idx) const {

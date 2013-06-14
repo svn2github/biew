@@ -44,6 +44,9 @@ using namespace	usr;
 /*  Requires RMALLWS.C, also in SNIPPETS.                               */
 /*                                                                      */
 /************************************************************************/
+#include <sstream>
+#include <iomanip>
+
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -181,7 +184,7 @@ char* Calculator_Addon::rmallws(char *str) const
 int Calculator_Addon::evaluate(char *line, intmax_t *val,int *result_base)
 {
       intmax_t arg;
-      char *ptr = line, *str, *endptr;
+      char *ptr = line, *str;
       int ercode;
       int retval;
       const struct Operator *op;
@@ -254,14 +257,9 @@ int Calculator_Addon::evaluate(char *line, intmax_t *val,int *result_base)
 				  base = 2;
 			      }
 			      else base = 10;
-			      if (0 == (arg = strtoll(e_num, &endptr,base)) &&
-				    NULL == strchr(num, '0'))
-			      {
-				    retval = O_ERROR;
-				    goto exit;
-			      }
-			      if(endptr != &e_num[strlen(e_num)])
-			      {
+			      std::istringstream is(e_num);
+			      is>>std::setbase(base)>>arg;
+			      if (!is.good()) {
 				    retval = O_ERROR;
 				    goto exit;
 			      }
@@ -592,7 +590,9 @@ void Calculator_Addon::run()
 	   case 8:  strcpy(sres,"0"); break;
 	   default: break;
 	 }
-	 lltoa(val,&sres[strlen(sres)],base);
+	 std::ostringstream os;
+	 os<<std::setbase(base)<<val;
+	 strcpy(&sres[strlen(sres)],os.str().c_str());
 	 switch(base)
 	 {
 	   case 2: strcat(sres,"b"); break;

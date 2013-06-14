@@ -3,6 +3,7 @@
 using namespace	usr;
 #include <algorithm>
 #include <functional>
+#include <sstream>
 #include <string>
 
 #include <errno.h>
@@ -152,8 +153,10 @@ bool ListBox::list_compare(const std::string& s1,const std::string& s2) const
 	    std::string buff1, buff2;
 	    buff1=s1.substr(o1+1,6);
 	    buff2=s2.substr(o2+1,6);
-	    ord1 = atol(buff1.c_str());
-	    ord2 = atol(buff2.c_str());
+	    std::istringstream is(buff1);
+	    is>>ord1;
+	    is.str(buff2);
+	    is>>ord2;
 	    ret = ord1<ord2;
 	}
 	else  ret = s1<s2;

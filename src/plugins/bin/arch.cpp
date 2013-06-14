@@ -79,7 +79,8 @@ __filesize_t Arch_Parser::show_header() const
   w->printf("Name           = %s\n",sout);
   strncpy(sout,(char *)arch.ar_date,12);
   sout[12] = 0;
-  ldat = atol(sout);
+  std::istringstream is(sout);
+  is>>ldat;
   tm = localtime(&ldat);
   strftime(sout,sizeof(sout),"%X %x",tm);
   w->printf("Date           = %s\n",sout);

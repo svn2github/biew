@@ -29,6 +29,7 @@ using namespace	usr;
     $Id: os_dep.c,v 1.10 2009/09/03 16:57:40 nickols_k Exp $
 */
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 
 #ifndef lint
@@ -156,11 +157,12 @@ void __FASTCALL__ __OsYield()
 
 static void cleanup(int sig)
 {
-    char tmp[256];
     __term_keyboard();
     __term_vio();
     __term_sys();
-    throw std::runtime_error(std::string("Terminated by signal ")+ltoa(sig,tmp,10));
+    std::ostringstream os;
+    os<<sig;
+    throw std::runtime_error(std::string("Terminated by signal ")+os.str());
 }
 
 /* static struct sigaction sa; */

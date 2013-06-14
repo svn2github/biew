@@ -17,6 +17,7 @@ using namespace	usr;
  * @since       1999
  * @note        Development, fixes and improvements
 **/
+#include <sstream>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -1643,29 +1644,34 @@ PPC_Disassembler::~PPC_Disassembler()
 void PPC_Disassembler::read_ini( Ini_Profile& ini )
 {
   std::string tmps;
-  if(bctx.is_valid_ini_args())
-  {
+  int tmpv;
+  if(bctx.is_valid_ini_args()) {
     tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode3","1");
-    ppcBitness = Bin_Format::bitness((int)strtoul(tmps.c_str(),NULL,10));
+    std::istringstream is(tmps);
+    is>>tmpv; ppcBitness = Bin_Format::bitness(tmpv);
     if(ppcBitness > 1 && ppcBitness != Bin_Format::Auto) ppcBitness = Bin_Format::Use16;
     tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode4","1");
-    ppcBigEndian = (int)strtoul(tmps.c_str(),NULL,10);
+    is.str(tmps);
+    is>>ppcBigEndian;
     if(ppcBigEndian > 1) ppcBigEndian = 0;
     tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode5","0");
-    ppcDialect = (int)strtoul(tmps.c_str(),NULL,10);
+    is.str(tmps);
+    is>>ppcDialect;
     if(ppcDialect > 1) ppcDialect = 0;
   }
 }
 
 void PPC_Disassembler::save_ini( Ini_Profile& ini )
 {
-  char tmps[10];
-  sprintf(tmps,"%i",ppcBitness);
-  bctx.write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
-  sprintf(tmps,"%i",ppcBigEndian);
-  bctx.write_profile_string(ini,"Beye","Browser","SubSubMode4",tmps);
-  sprintf(tmps,"%i",ppcDialect);
-  bctx.write_profile_string(ini,"Beye","Browser","SubSubMode5",tmps);
+  std::ostringstream os;
+  os<<ppcBitness;
+  bctx.write_profile_string(ini,"Beye","Browser","SubSubMode3",os.str());
+  os.str("");
+  os<<ppcBigEndian;
+  bctx.write_profile_string(ini,"Beye","Browser","SubSubMode4",os.str());
+  os.str("");
+  os<<ppcDialect;
+  bctx.write_profile_string(ini,"Beye","Browser","SubSubMode5",os.str());
 }
 
 const char* PPC_Disassembler::prompt(unsigned idx) const {

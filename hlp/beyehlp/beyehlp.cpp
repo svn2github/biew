@@ -18,6 +18,8 @@ using namespace	usr;
  * @note        Development, fixes and improvements
 **/
 #include <algorithm>
+#include <sstream>
+#include <iomanip>
 #include <stdexcept>
 
 #include <errno.h>
@@ -156,7 +158,8 @@ bool __FASTCALL__ MyCallOut(const IniInfo& ini,any_t* data)
 	int handle;
 	fpos = ofs.tellp();
 	printf("Processing: %s\n",ini.value);
-	litem = strtoul(ini.item,NULL,10);
+	std::istringstream is(ini.item);
+	is>>litem;
 	sprintf(bhi.item_id,"%08lX",litem);
 	hlpCompile(ini.value);
 	strcpy(tmp_buff,archiver);

@@ -51,27 +51,6 @@ inline void strupr(char* s) { memupr(s,::strlen(s)); } /**< C library of *nix sy
 inline void strlwr(char* s) { memlwr(s,::strlen(s)); } /**< C library of *nix systems lacks strlwr function */
 inline int stricmp(const char* s1,const char* s2) { return strcasecmp(s1,s2); } /**< Alias of stricmp for *nix systems */
 #endif
-#ifndef HAVE_LTOA
-extern char *        ltoa(long _value, char *_s, int _radix);
-#endif
-#ifndef HAVE_ATOLL
-extern long long int atoll(const char *s);
-#endif
-#ifndef HAVE_STRTOLL
-extern long long strtoll(const char *nptr, char **endptr, int base);
-#endif
-#ifndef HAVE_STRTOULL
-unsigned long long strtoull(const char *nptr, char **endptr, int base);
-#endif
-#ifndef HAVE_ULTOA
-extern char *        ultoa(unsigned long _value, char *_s, int _radix);
-#endif
-#ifndef HAVE_LLTOA
-extern char *        lltoa(long long int _value, char *_s, int _radix);
-#endif
-#ifndef HAVE_ULLTOA
-extern char *        ulltoa(unsigned long long int _value, char *_s, int _radix);
-#endif
 namespace	usr {
     typedef int64_t __fileoff_t;
     typedef uint64_t __filesize_t;

@@ -195,7 +195,7 @@ __filesize_t RDOff_Parser::action_F3()
 	if(ret != -1) {
 	    const char *rets;
 	    rets = strstr(rdoff_et[ret].c_str(),"offset=");
-	    if(rets) fpos = strtoul(&rets[7],NULL,16);
+	    if(rets) { std::istringstream is(&rets[7]); is>>std::hex>>fpos; }
 	}
     } else bctx.NotifyBox(NOT_ENTRY,EXP_TABLE);
 exit:

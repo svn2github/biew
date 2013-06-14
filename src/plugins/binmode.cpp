@@ -17,6 +17,7 @@ using namespace	usr;
  * @since       1995
  * @note        Development, fixes and improvements
 **/
+#include <sstream>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -317,22 +318,25 @@ void BinMode::read_ini(Ini_Profile& ini)
     std::string tmps;
     if(bctx.is_valid_ini_args()) {
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","LastSubMode","0");
-	bin_mode = (unsigned)::strtoul(tmps.c_str(),NULL,10);
+	std::istringstream is(tmps);
+	is>>bin_mode;
 	if(bin_mode > MOD_MAXMODE) bin_mode = MOD_MAXMODE;
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","VirtWidthCorr","0");
-	virtWidthCorr = (unsigned)::strtoul(tmps.c_str(),NULL,10);
+	is.str(tmps);
+	is>>virtWidthCorr;
 	if(virtWidthCorr>main_wnd.width()-1) virtWidthCorr=main_wnd.width()-1;
     }
 }
 
 void BinMode::save_ini(Ini_Profile& ini)
 {
-    char tmps[10];
+    std::ostringstream os;
     /** Nullify LastSubMode */
-    ::sprintf(tmps,"%i",bin_mode);
-    bctx.write_profile_string(ini,"Beye","Browser","LastSubMode",tmps);
-    ::sprintf(tmps,"%u",virtWidthCorr);
-    bctx.write_profile_string(ini,"Beye","Browser","VirtWidthCorr",tmps);
+    os<<bin_mode;
+    bctx.write_profile_string(ini,"Beye","Browser","LastSubMode",os.str());
+    os.str("");
+    os<<virtWidthCorr;
+    bctx.write_profile_string(ini,"Beye","Browser","VirtWidthCorr",os.str());
 }
 
 unsigned BinMode::get_symbol_size() const { return bin_mode==MOD_PLAIN?1:2; }

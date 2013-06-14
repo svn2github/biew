@@ -17,6 +17,9 @@ using namespace	usr;
  * @since       1999
  * @note        Development, fixes and improvements
 **/
+#include <sstream>
+#include <iomanip>
+
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -268,10 +271,12 @@ bool Beye_Help::find_item(unsigned long item_id)
     char sout[HLP_SLONG_LEN];
     fs.seekg(HLP_VER_LEN,std::ios_base::beg);
     fs.read(sout,sizeof(sout));
-    nsize = strtoul(sout,NULL,16);
+    std::istringstream is(sout);
+    is>>std::hex>>nsize;
     for(i = 0;i < nsize;i++) {
 	fs.read((char*)&bhi,sizeof(beye_help_item));
-	lval = strtoul(bhi.item_id,NULL,16);
+	is.str(bhi.item_id);
+	is>>std::setbase(16)>>lval;
 	if(lval == item_id) return true;
     }
     return false;
@@ -280,7 +285,8 @@ bool Beye_Help::find_item(unsigned long item_id)
 unsigned long Beye_Help::get_item_size(unsigned long item_id)
 {
     unsigned long ret = 0;
-    if(find_item(item_id)) ret = strtoul(bhi.item_decomp_size,NULL,16);
+    std::istringstream is;
+    if(find_item(item_id)) { is.str(bhi.item_decomp_size); is>>std::setbase(16)>>ret; }
     else                   bctx.ErrMessageBox("Find: Item not found","");
     return ret;
 }
@@ -293,8 +299,10 @@ binary_packet Beye_Help::load_item(unsigned long item_id)
     bool ret = false;
     if(fs.is_open()) {
 	if(find_item(item_id)) {
-	    hlp_off = strtoul(bhi.item_off,NULL,16);
-	    hlp_size = strtoul(bhi.item_length,NULL,16);
+	    std::istringstream is(bhi.item_off);
+	    is>>std::hex>>hlp_off;
+	    is.str(bhi.item_length);
+	    is>>std::hex>>hlp_size;
 	    uint8_t* inbuff = new uint8_t[hlp_size];
 	    fs.seekg(hlp_off,std::ios_base::beg);
 	    fs.read((char*)inbuff,hlp_size);

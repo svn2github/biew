@@ -23,6 +23,7 @@ using namespace	usr;
 #include <stack>
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <stdexcept>
 
@@ -500,9 +501,9 @@ void BeyeContext::WarnMessageBox(const std::string& text,const std::string& titl
 
 void BeyeContext::errnoMessageBox(const std::string& text,const std::string& title,int __errno__) const
 {
-    char stmp[256];
-    sprintf(stmp,"%s: %i (%s)",text.c_str(),__errno__,strerror(__errno__));
-    beye_context().ErrMessageBox(stmp,title);
+    std::ostringstream os;
+    os<<text<<": "<<__errno__<<" ("<<strerror(__errno__)<<")";
+    beye_context().ErrMessageBox(os.str(),title);
 }
 
 } // namespace	usr

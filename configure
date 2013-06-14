@@ -437,31 +437,6 @@ fi
 check_func2 malloc.h memalign
 print_config HAVE_ config.h config.mak memalign
 
-check_func2 stdlib.h atoi
-print_config HAVE_ config.h config.mak atoi
-
-check_func2 stdlib.h atoll
-print_config HAVE_ config.h config.mak atoll
-
-check_func2 stdlib.h ltoa
-print_config HAVE_ config.h config.mak ltoa
-
-check_func2 stdlib.h ultoa
-print_config HAVE_ config.h config.mak ultoa
-
-check_func2 stdlib.h lltoa
-print_config HAVE_ config.h config.mak lltoa
-
-check_func2 stdlib.h ulltoa
-print_config HAVE_ config.h config.mak ulltoa
-
-check_func2 stdlib.h strtoll
-print_config HAVE_ config.h config.mak strtoll
-
-check_func2 stdlib.h strtoull
-print_config HAVE_ config.h config.mak strtoull
-
-
 enabled mouse && require2 mouse gpm.h Gpm_GetEvent -lgpm
 print_config HAVE_ config.h config.mak mouse
 

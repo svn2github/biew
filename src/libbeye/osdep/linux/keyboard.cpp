@@ -26,6 +26,7 @@ using namespace	usr;
 */
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 
 #ifndef lint
@@ -599,8 +600,9 @@ void __FASTCALL__ __init_keyboard(const char *user_cp)
 #define _MODE_ O_NONBLOCK | O_ASYNC
 
     if (fcntl(in_fd, F_SETFL, fcntl(in_fd, F_GETFL) | _MODE_) < 0) {
-	char tmp[256];
-	throw std::runtime_error(std::string("Can't set ")+ltoa(_MODE_,tmp,16)+" for "+ltoa(in_fd,tmp,10)+": "+strerror(errno));
+	std::ostringstream os;
+	os<<"Can't set "<<std::hex<<(_MODE_)<<" for "<<in_fd<<": "<<strerror(errno);
+	throw std::runtime_error(os.str());
     }
 
     tcgetattr(in_fd, &tattr);

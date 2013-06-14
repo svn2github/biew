@@ -23,6 +23,7 @@ using namespace	usr;
 #include <stdexcept>
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 
 #include <string.h>
 #include <stdlib.h>
@@ -67,12 +68,11 @@ TConsole& __FASTCALL__ twInit(System& sys,const std::string& user_cp, unsigned l
   TWindow::msystem=&sys;
   nls_cp=!user_cp.empty()?user_cp.c_str():"IBM866";
   TWindow::tconsole = new(zeromem) TConsole(nls_cp,vio_flags);
-  if(TWindow::tconsole->vio_width() > __TVIO_MAXSCREENWIDTH)
-  {
-    char outs[256];
+  if(TWindow::tconsole->vio_width() > __TVIO_MAXSCREENWIDTH) {
+    std::ostringstream os;
     twDestroy();
-    sprintf(outs,"Size of video buffer is too large: %u (max = %u)",TWindow::tconsole->vio_width(),__TVIO_MAXSCREENWIDTH);
-    throw std::runtime_error(std::string("Internal twin library error: ")+outs);
+    os<<"Size of video buffer is too large: "<<TWindow::tconsole->vio_width()<<" (max = "<<__TVIO_MAXSCREENWIDTH<<")";
+    throw std::runtime_error(std::string("Internal twin library error: ")+os.str());
   }
   TWindow::set_cursor_type(TWindow::Cursor_Off);
   return *TWindow::tconsole;

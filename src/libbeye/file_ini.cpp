@@ -20,6 +20,7 @@ using namespace	usr;
  * @todo        Reentrance ini library
 **/
 #include <algorithm>
+#include <sstream>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -372,7 +373,7 @@ int Ini_Parser::error(int ne,int row,const std::string& addinfo)
 {
     std::fstream herr;
     std::string what;
-    char sout[4096];
+    std::ostringstream os;
     herr.open("fi_syserr.$$$",std::ios_base::out);
     herr<<"About : [.Ini] file run-time support library. Written by Nickols_K"<<std::endl<<"Detected ";
     if(ne != __INI_TOOMANY && ~file_info.empty()) {
@@ -381,9 +382,9 @@ int Ini_Parser::error(int ne,int row,const std::string& addinfo)
     herr<<std::endl;
     if(row) herr<<"At line : "<<row<<std::endl;
     what = decode_error(ne);
-    if(!addinfo.empty()) sprintf(sout,what.c_str(),addinfo.c_str());
-    else strncpy(sout,what.c_str(),sizeof(sout));
-    herr<<"Message : "<<sout<<std::endl;
+    if(!addinfo.empty()) os<<what<<" "<<addinfo;
+    else os<<what;
+    herr<<"Message : "<<os.str()<<std::endl;
     if(!user_message.empty()) herr<<"User message : "<<user_message<<std::endl;
     if(!debug_str.empty()) herr<<"Debug info: '"<<debug_str<<"'"<<std::endl;
     herr.close();

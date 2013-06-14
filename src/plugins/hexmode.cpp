@@ -605,7 +605,8 @@ unsigned __FASTCALL__ ReadIniAResolv(BeyeContext& bctx, Ini_Profile& ini )
 {
     std::string tmps;
     tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode6","0");
-    hexAddressResolv = (unsigned)::strtoul(tmps.c_str(),NULL,10);
+    std::istringstream is(tmps);
+    is>>hexAddressResolv;
     if(hexAddressResolv > 1) hexAddressResolv = 0;
     return hexAddressResolv;
 }
@@ -625,13 +626,15 @@ void HexMode::read_ini(Ini_Profile& ini)
     std::string tmps;
     if(bctx.is_valid_ini_args()) {
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","LastSubMode","2");
-	hmode = (unsigned)::strtoul(tmps.c_str(),NULL,10);
+	std::istringstream is(tmps);
+	is>>hmode;
 	if(hmode > 3) hmode = 1;
 	delete hex_viewer;
 	hex_viewer = xView_Info[hmode].query_interface(main_handle);
 	hexAddressResolv=ReadIniAResolv(bctx,ini);
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","VirtWidthCorr","0");
-	virtWidthCorr = (unsigned)::strtoul(tmps.c_str(),NULL,10);
+	is.str(tmps);
+	is>>virtWidthCorr;
 	check_width_corr();
     }
 }

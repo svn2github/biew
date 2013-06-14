@@ -681,19 +681,24 @@ void DisMode::help() const
 void DisMode::read_ini(Ini_Profile& ini)
 {
     std::string tmps;
+    int tmpv;
     if(bctx.is_valid_ini_args()) {
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","LastSubMode","0");
-	DefDisasmSel = (int)::strtoul(tmps.c_str(),NULL,10);
+	std::istringstream is(tmps);
+	is>>DefDisasmSel;
 	if(DefDisasmSel >= list.size()) DefDisasmSel = 0;
 	hexAddressResolv=ReadIniAResolv(bctx,ini);
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode7","0");
-	disPanelMode = e_panel((int)::strtoul(tmps.c_str(),NULL,10));
+	is.str(tmps);
+	is>>tmpv; disPanelMode=e_panel(tmpv);
 	if(disPanelMode > Panel_Full) disPanelMode = Panel_Wide;
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode8","0");
-	disNeedRef = e_ref((int)::strtoul(tmps.c_str(),NULL,10));
+	is.str(tmps);
+	is>>tmpv; disNeedRef=e_ref(tmpv);
 	if(disNeedRef > Ref_Predict) disNeedRef = Ref_None;
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode9","0");
-	HiLight = (int)strtoul(tmps.c_str(),NULL,10);
+	is.str(tmps);
+	is>>HiLight;
 	if(HiLight > 2) HiLight = 2;
 	if(activeDisasm) delete activeDisasm;
 	activeDisasm = list[DefDisasmSel]->query_interface(bctx,bin_format,*second_handle,*this);
@@ -704,16 +709,19 @@ void DisMode::read_ini(Ini_Profile& ini)
 
 void DisMode::save_ini(Ini_Profile& ini)
 {
-    char tmps[10];
-    ::sprintf(tmps,"%i",DefDisasmSel);
-    bctx.write_profile_string(ini,"Beye","Browser","LastSubMode",tmps);
+    std::ostringstream os;
+    os<<DefDisasmSel;
+    bctx.write_profile_string(ini,"Beye","Browser","LastSubMode",os.str());
     WriteIniAResolv(bctx,ini,hexAddressResolv,1);
-    ::sprintf(tmps,"%i",disPanelMode);
-    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode7",tmps);
-    ::sprintf(tmps,"%i",disNeedRef);
-    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode8",tmps);
-    ::sprintf(tmps,"%i",HiLight);
-    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode9",tmps);
+    os.str("");
+    os<<disPanelMode;
+    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode7",os.str());
+    os.str("");
+    os<<disNeedRef;
+    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode8",os.str());
+    os.str("");
+    os<<HiLight;
+    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode9",os.str());
     activeDisasm->save_ini(ini);
 }
 

@@ -21,6 +21,7 @@ using namespace	usr;
  * @note        Changing technology recognition of new-exe files
 **/
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <map>
@@ -249,30 +250,30 @@ int BeyeContext::queryKey(const std::string& arg)
 void BeyeContext::parse_cmdline( const std::vector<std::string>& ArgVector )
 {
     beye_priv& priv = static_cast<beye_priv&>(opaque);
-  unsigned i;
-  priv.ListFile.clear();
-  for(i = 1;i < ArgVector.size();i++)
-  {
-     int beye_key;
-     beye_key = queryKey(ArgVector[i]);
-     switch(beye_key)
-     {
-       case 0: priv.beye_mode = UINT_MAX; break;
-       case 1: priv.beye_mode = 1; break;
-       case 2: priv.beye_mode = 3; break;
-       case 3: priv.beye_mode = 2; break;
-       case 4: priv.beye_mode = 0; break;
-       case 5:
-		priv.new_file_size = strtoull(ArgVector[++i].c_str(),NULL,10);
+    unsigned i;
+    priv.ListFile.clear();
+    std::istringstream is;
+    for(i = 1;i < ArgVector.size();i++) {
+	int beye_key;
+	beye_key = queryKey(ArgVector[i]);
+	switch(beye_key) {
+	    case 0: priv.beye_mode = UINT_MAX; break;
+	    case 1: priv.beye_mode = 1; break;
+	    case 2: priv.beye_mode = 3; break;
+	    case 3: priv.beye_mode = 2; break;
+	    case 4: priv.beye_mode = 0; break;
+	    case 5:
+		is.str(ArgVector[++i]);
+		is>>priv.new_file_size;
 		break;
-       case 6: priv.UseIniFile = false; break;
-       case 7: i++; break; // parsed early
-       case 8: i++; break; // parsed early
-       case 9: priv.ListFile.clear(); return;
-       default: priv.ListFile.push_back(ArgVector[i]);
-     }
-  }
-  if(!priv.ListFile.empty()) ArgVector1 = priv.ListFile[0];
+	    case 6: priv.UseIniFile = false; break;
+	    case 7: i++; break; // parsed early
+	    case 8: i++; break; // parsed early
+	    case 9: priv.ListFile.clear(); return;
+	    default: priv.ListFile.push_back(ArgVector[i]);
+	}
+    }
+    if(!priv.ListFile.empty()) ArgVector1 = priv.ListFile[0];
 }
 
 bool BeyeContext::LoadInfo( )
@@ -324,7 +325,6 @@ Ini_Profile& BeyeContext::load_ini_info()
 {
     beye_priv& priv = static_cast<beye_priv&>(opaque);
     Search& s = *priv.search;
-    char buf[20];
     std::string tmp,stmp;
     Ini_Profile& ini = *new(zeromem) Ini_Profile;
     const char* iname;
@@ -340,11 +340,14 @@ Ini_Profile& BeyeContext::load_ini_info()
     s.read_ini(ini);
 
     priv.LastOpenFileName=read_profile_string(ini,"Beye","Browser","LastOpen","");
-    sprintf(buf,"%u",priv.LastMode); /* [dBorca] so that src and dst won't overlap for strncpy */
-    tmp=read_profile_string(ini,"Beye","Browser","LastMode",buf);
-    priv.LastMode = (size_t)strtoul(tmp.c_str(),NULL,10);
+    std::ostringstream os;
+    os<<priv.LastMode; /* [dBorca] so that src and dst won't overlap for strncpy */
+    tmp=read_profile_string(ini,"Beye","Browser","LastMode",os.str());
+    std::istringstream is(tmp);
+    is>>priv.LastMode;
     tmp=read_profile_string(ini,"Beye","Browser","Offset","0");
-    LastOffset = atoll(tmp.c_str());
+    is.str(tmp);
+    is>>LastOffset;
     ini_ver=read_profile_string(ini,"Beye","Setup","Version","");
     tmp=read_profile_string(ini,"Beye","Setup","DirectConsole","yes");
     if(stricmp(tmp.c_str(),"yes") == 0) vioIniFlags = __TVIO_FLG_DIRECT_CONSOLE_ACCESS;
@@ -372,39 +375,41 @@ void BeyeContext::save_ini_info() const
 {
     beye_priv& priv = static_cast<beye_priv&>(opaque);
     Search& s = *priv.search;
-    char tmp[20];
     unsigned char search_buff[MAX_SEARCH_SIZE];
     unsigned char search_len = s.length();
+    std::string tmp;
     ::memcpy(search_buff,s.buff(),search_len);
     search_buff[search_len] = 0;
     Ini_Profile& ini = *new(zeromem) Ini_Profile;
     ini.open(priv.ini_name);
-    write_profile_string(ini,"Beye","Setup","HelpName",help_name.c_str());
-    write_profile_string(ini,"Beye","Setup","SkinName",skin_name.c_str());
-    write_profile_string(ini,"Beye","Setup","SyntaxName",syntax_name.c_str());
+    write_profile_string(ini,"Beye","Setup","HelpName",help_name);
+    write_profile_string(ini,"Beye","Setup","SkinName",skin_name);
+    write_profile_string(ini,"Beye","Setup","SyntaxName",syntax_name);
     write_profile_string(ini,"Beye","Setup","Version",BEYE_VERSION);
-    write_profile_string(ini,"Beye","Browser","LastOpen",ArgVector1.c_str());
-    sprintf(tmp,"%u",priv.defMainModeSel);
-    write_profile_string(ini,"Beye","Browser","LastMode",tmp);
-    sprintf(tmp,"%llu",LastOffset);
-    write_profile_string(ini,"Beye","Browser","Offset",tmp);
-    strcpy(tmp,vioIniFlags & __TVIO_FLG_DIRECT_CONSOLE_ACCESS ? "yes" : "no");
+    write_profile_string(ini,"Beye","Browser","LastOpen",ArgVector1);
+    std::ostringstream os;
+    os<<priv.defMainModeSel;
+    write_profile_string(ini,"Beye","Browser","LastMode",os.str());
+    os.str("");
+    os<<LastOffset;
+    write_profile_string(ini,"Beye","Browser","Offset",os.str());
+    tmp=vioIniFlags & __TVIO_FLG_DIRECT_CONSOLE_ACCESS ? "yes" : "no";
     write_profile_string(ini,"Beye","Setup","DirectConsole",tmp);
-    strcpy(tmp,twinIniFlags & TWIF_FORCEMONO ? "yes" : "no");
+    tmp=twinIniFlags & TWIF_FORCEMONO ? "yes" : "no";
     write_profile_string(ini,"Beye","Setup","ForceMono",tmp);
-    strcpy(tmp,(vioIniFlags & __TVIO_FLG_USE_7BIT) == __TVIO_FLG_USE_7BIT ? "yes" : "no");
+    tmp=(vioIniFlags & __TVIO_FLG_USE_7BIT) == __TVIO_FLG_USE_7BIT ? "yes" : "no";
     write_profile_string(ini,"Beye","Setup","Force7Bit",tmp);
-    strcpy(tmp,kbdFlags & KBD_NONSTOP_ON_MOUSE_PRESS ? "yes" : "no");
+    tmp=kbdFlags & KBD_NONSTOP_ON_MOUSE_PRESS ? "yes" : "no";
     write_profile_string(ini,"Beye","Setup","MouseSens",tmp);
-    strcpy(tmp,iniSettingsAnywhere ? "yes" : "no");
+    tmp=iniSettingsAnywhere ? "yes" : "no";
     write_profile_string(ini,"Beye","Setup","IniSettingsAnywhere",tmp);
-    strcpy(tmp,fioUseMMF ? "yes" : "no");
+    tmp=fioUseMMF ? "yes" : "no";
     write_profile_string(ini,"Beye","Setup","FioUseMMF",tmp);
-    strcpy(tmp,iniPreserveTime ? "yes" : "no");
+    tmp=iniPreserveTime ? "yes" : "no";
     write_profile_string(ini,"Beye","Setup","PreserveTimeStamp",tmp);
-    strcpy(tmp,iniUseExtProgs ? "yes" : "no");
+    tmp=iniUseExtProgs ? "yes" : "no";
     write_profile_string(ini,"Beye","Setup","UseExternalProgs",tmp);
-    write_profile_string(ini,"Beye","Setup","Codepage",codepage.c_str());
+    write_profile_string(ini,"Beye","Setup","Codepage",codepage);
 
     s.save_ini(ini);
 
@@ -512,9 +517,9 @@ show_usage:
     BeyeCtx->create_windows();
     retval = EXIT_SUCCESS;
     if(skin_err) {
-	char sout[256];
-	sprintf(sout,"Error in skin file detected: '%s'",BeyeCtx->last_skin_error.c_str());
-	BeyeCtx->ErrMessageBox(sout,"");
+	std::ostringstream os;
+	os<<"Error in skin file detected: '"<<BeyeCtx->last_skin_error<<"'";
+	BeyeCtx->ErrMessageBox(os.str(),"");
     }
     /* We must do it before opening a file because of some RTL has bug
 	when are trying to open already open file with no sharing access */
@@ -818,7 +823,8 @@ int main(int argc,char* args[], char *envp[])
 	for(i=0;i<size_t(argc);i++) {
 	    if(strcmp(args[i],"-m")==0) {
 		i++;
-		malloc_debug=::atoi(args[i]);
+		std::istringstream is(args[i]);
+		is>>malloc_debug;
 		switch(malloc_debug) {
 		    default:
 		    case 0: flg=MPA_FLG_RANDOMIZER; break;

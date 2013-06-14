@@ -17,6 +17,7 @@ using namespace	usr;
  * @since       1999
  * @note        Development, fixes and improvements
 **/
+#include <sstream>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -158,24 +159,27 @@ ARM_Disassembler::~ARM_Disassembler()
 void ARM_Disassembler::read_ini( Ini_Profile& ini )
 {
   std::string tmps;
-  if(bctx.is_valid_ini_args())
-  {
+  int tmpv;
+  if(bctx.is_valid_ini_args()) {
     tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode3","1");
-    armBitness = Bin_Format::bitness((int)strtoul(tmps.c_str(),NULL,10));
+    std::istringstream is(tmps);
+    is>>tmpv; armBitness = Bin_Format::bitness(tmpv);
     if(armBitness > Bin_Format::Use32 && armBitness != Bin_Format::Auto) armBitness = Bin_Format::Use16;
     tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode4","1");
-    armBigEndian = (int)strtoul(tmps.c_str(),NULL,10);
+    is.str(tmps);
+    is>>armBigEndian;
     if(armBigEndian > 1) armBigEndian = 0;
   }
 }
 
 void ARM_Disassembler::save_ini(Ini_Profile& ini)
 {
-  char tmps[10];
-  sprintf(tmps,"%i",armBitness);
-  bctx.write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
-  sprintf(tmps,"%i",armBigEndian);
-  bctx.write_profile_string(ini,"Beye","Browser","SubSubMode4",tmps);
+    std::ostringstream os;
+    os<<armBitness;
+    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode3",os.str());
+    os.str("");
+    os<<armBigEndian;
+    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode4",os.str());
 }
 
 static const char *arm_bitness_names[] =

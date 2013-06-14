@@ -18,6 +18,8 @@ using namespace	usr;
  * @note        Development, fixes and improvements
 **/
 #include <algorithm>
+#include <sstream>
+#include <iomanip>
 #include <string>
 
 #include <string.h>
@@ -342,7 +344,8 @@ static void unfmt_str(unsigned char *str)
 		if(*src=='x' || *src=='X') { base=16; src++; while(isxdigit(*src)) temp[i++]=*src++; }
 		else { while(isdigit(*src)) temp[i++]=*src++; }
 		temp[i]=0;
-		result=strtol((char*)temp,NULL,base);
+		std::istringstream is((char*)temp);
+		is>>std::setbase(base)>>result;
 		ch=result;
 	    }
 	}
@@ -382,7 +385,8 @@ bool __FASTCALL__ TextMode::txtFiUserFunc1(const IniInfo& info,any_t* data)
 	long off,fpos;
 	unsigned i,ilen;
 	int found,softmode;
-	off = atol(info.item);
+	std::istringstream is(info.item);
+	is>>off;
 	char stmp[4096];
 	strncpy(stmp,info.value,sizeof(stmp));
 	char* value=strstr(stmp,"-->");
@@ -1183,33 +1187,39 @@ void TextMode::read_ini(Ini_Profile& ini)
     if(bctx.is_valid_ini_args()) {
 	int w_m;
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode4","0");
-	defNLSSet = (unsigned)::strtoul(tmps.c_str(),NULL,10);
+	std::istringstream is(tmps);
+	is>>defNLSSet;
 	if(defNLSSet > sizeof(nls_set)/sizeof(REGISTRY_NLS *)) defNLSSet = 0;
 	activeNLS = nls_set[defNLSSet];
 	if(activeNLS->init) activeNLS->init();
 	activeNLS->read_ini(ini);
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode3","0");
-	bin_mode = (unsigned)::strtoul(tmps.c_str(),NULL,10);
+	is.str(tmps);
+	is>>bin_mode;
 	if(bin_mode > MOD_MAXMODE) bin_mode = 0;
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","MiscMode","0");
-	w_m = (int)::strtoul(tmps.c_str(),NULL,10);
+	is.str(tmps);
+	is>>w_m ;
 	wmode = w_m ? true : false;
 	tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode9","0");
-	HiLight = (int)::strtoul(tmps.c_str(),NULL,10);
+	is.str(tmps);
+	is>>HiLight;
 	if(HiLight > 1) HiLight = 1;
     }
 }
 
 void TextMode::save_ini(Ini_Profile& ini)
 {
-    char tmps[10];
-    ::sprintf(tmps,"%i",bin_mode);
-    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
+    std::ostringstream os;
+    os<<bin_mode;
+    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode3",os.str());
     bctx.write_profile_string(ini,"Beye","Browser","MiscMode",wmode ? "1" : "0");
-    ::sprintf(tmps,"%i",defNLSSet);
-    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode4",tmps);
-    ::sprintf(tmps,"%i",HiLight);
-    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode9",tmps);
+    os.str("");
+    os<<defNLSSet;
+    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode4",os.str());
+    os.str("");
+    os<<HiLight;
+    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode9",os.str());
     activeNLS->save_ini(ini);
 }
 

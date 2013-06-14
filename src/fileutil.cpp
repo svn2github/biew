@@ -20,6 +20,7 @@ using namespace	usr;
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <fstream>
 
 #include <sys/stat.h>
@@ -239,7 +240,6 @@ void FStore::printObject(std::ofstream& fout,const Object_Info& obj) const
 {
     const char *btn;
     std::string name;
-    char onumname[30];
     switch(obj.bitness) {
 	case Bin_Format::Use16: btn = "USE16"; break;
 	case Bin_Format::Use32: btn = "USE32"; break;
@@ -252,7 +252,7 @@ void FStore::printObject(std::ofstream& fout,const Object_Info& obj) const
     name = !obj.name.empty() ? obj.name : obj._class == Object_Info::Data ? "DUMP_DATA" :
 			obj._class == Object_Info::Code ? "DUMP_TEXT" :
 			"Unknown";
-    if(obj.name.empty()) { sprintf(onumname,"%s%u",name.c_str(),obj.number); name = onumname; }
+    if(obj.name.empty()) { std::ostringstream os; os<<name<<obj.number; name = os.str(); }
     fout<<std::endl<<"SEGMENT "<<name<<" BYTE PUBLIC "<<btn<<" '"<<(obj._class == Object_Info::Data ? "DATA" : obj._class == Object_Info::Code ? "CODE" : "NoObject")<<"'"<<std::endl;
     fout<<"; size: "<<std::dec<<(obj.end-obj.start)<<" bytes"<<std::endl<<std::endl;
 }

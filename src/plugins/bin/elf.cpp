@@ -1038,7 +1038,8 @@ __filesize_t ELF_Parser::displayELFdyntab(__filesize_t dynptr,
 	    addr = strstr(objs[ret].c_str(),"vma=");
 	    if(addr) {
 		__filesize_t addr_probe;
-		addr_probe = is_64bit?strtoull(&addr[4],NULL,16):strtoul(&addr[4],NULL,16);
+		std::istringstream is(&addr[4]);
+		is>>std::hex>>addr_probe;
 		if(addr_probe && addr_probe >= elf_min_va) {
 		    addr_probe = va2pa(addr_probe);
 		    if(addr_probe && addr_probe < main_handle.flength()) fpos = addr_probe;

@@ -1,6 +1,8 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
 using namespace	usr;
+#include <sstream>
+
 #include "libbeye/osdep/__os_dep.h"
 /**
  * @namespace   libbeye
@@ -324,18 +326,18 @@ void __FASTCALL__ __init_vio(const char *user_cp,unsigned long flags)
 	on_console = ioctl(out_fd, VT_GETMODE, &vtmode) >= 0;
 
     if (on_console) {
-	char vcsa_name[0x10];
 	int len = strlen(tty);
 	int i = 0;
 
 	for (i = 0; i < len; i ++) if (isdigit((int)*(tty + i))) break;
 
-	if (i < len) sprintf(vcsa_name, "/dev/vcsa%d", atoi(tty + i));
+	std::ostringstream os;
+	if (i < len) os<<"/dev/vcsa"<<(tty + i);
 
-	if ((viohandle = open(vcsa_name, O_RDWR)) < 0) {
-	    sprintf(vcsa_name, "/dev/vcsa");
-	    if ((viohandle = open(vcsa_name, O_RDWR)) < 0) {
-		std::cerr<<"Can't open "<<vcsa_name<<": "<<strerror(errno)<<std::endl;
+	if ((viohandle = ::open(os.str().c_str(), O_RDWR)) < 0) {
+	    os.str("/dev/vcsa");
+	    if ((viohandle = ::open(os.str().c_str(), O_RDWR)) < 0) {
+		std::cerr<<"Can't open "<<os.str()<<": "<<strerror(errno)<<std::endl;
 		std::cerr<<"Direct console access disabled..."<<std::endl;
 		on_console = 0;
 	    }

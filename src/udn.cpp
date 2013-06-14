@@ -73,15 +73,14 @@ bool udn::add_item() {
 std::vector<std::string> udn::read_items(size_t nnames)
 {
     std::vector<std::string> rc;
-    char stmp[256];
+    std::ostringstream os;
     size_t i;
     std::set<udn_record>::iterator it=udn_list.begin();
     for(i=0;i<nnames;i++) {
-	sprintf(stmp,"%-40s %08lX"
-		,(*it).name
-		,(*it).offset);
+	os.str("");
+	os<<std::left<<std::setw(40)<<(*it).name<<std::right<<" "<<std::hex<<std::setfill('0')<<std::setw(16)<<(*it).offset;
 	it++;
-	rc.push_back(stmp);
+	rc.push_back(os.str());
     }
     return rc;
 }
@@ -164,9 +163,9 @@ bool udn::__save_list() {
 	    return true;
 	}
 	else {
-	    char stmp[256];
-	    sprintf(stmp,"Can't open file: %s\n",strerror(errno));
-	    bctx.ErrMessageBox(udn_fname,stmp);
+	    std::ostringstream os;
+	    os<<"Can't open file: "<<strerror(errno);
+	    bctx.ErrMessageBox(udn_fname,os.str());
 	}
     }
     return false;
@@ -199,9 +198,9 @@ bool udn::__load_list() {
 		if(buff[0]==';'||buff[0]=='\0') continue;
 		brk=strchr(buff,':');
 		if(!brk) {
-		    char stmp[256];
-		    sprintf(stmp,"Can't recognize line: %u",i);
-		    bctx.ErrMessageBox(stmp,"");
+		    std::ostringstream os;
+		    os<<"Can't recognize line: "<<i;
+		    bctx.ErrMessageBox(os.str(),"");
 		    return true;
 		}
 		*brk='\0';
@@ -220,9 +219,9 @@ bool udn::__load_list() {
 	    return true;
 	}
 	else {
-	    char stmp[256];
-	    sprintf(stmp,"Can't open file: %s\n",strerror(errno));
-	    bctx.ErrMessageBox(udn_fname,stmp);
+	    std::ostringstream os;
+	    os<<"Can't open file: "<<strerror(errno);
+	    bctx.ErrMessageBox(udn_fname,os.str());
     }
     return false;
 }

@@ -17,6 +17,8 @@ using namespace	usr;
  * @since       2000
  * @note        Development, fixes and improvements
 **/
+#include <sstream>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -97,13 +99,11 @@ static bool  __FASTCALL__ readColorPair(Ini_Profile& ini,const std::string& sect
 				   const std::string& item,
 				   ColorAttr *value)
 {
-  char cval[80];
+  std::ostringstream os;
   bool has_err;
   std::string cstr;
-  sprintf(cval,"%s:%s"
-	  ,named_color_def[BACK_COLOR(*value) & 0x0F].name
-	  ,named_color_def[FORE_COLOR(*value) & 0x0F].name);
-  cstr=ini.read(section,subsection,item,cval);
+  os<<named_color_def[BACK_COLOR(*value) & 0x0F].name<<":"<<named_color_def[FORE_COLOR(*value) & 0x0F].name;
+  cstr=ini.read(section,subsection,item,os.str());
   *value = getColorPairByName(cstr,*value,&has_err);
   return has_err;
 }
@@ -122,7 +122,6 @@ static bool  __FASTCALL__ readButton(Ini_Profile& ini,const std::string& section
 bool csetReadIniFile(const std::string& ini_name)
 {
   Ini_Profile& cset = *new Ini_Profile;
-  char cval[80],csec[80];
   std::string cstr,stmp;
   unsigned value,i,j;
   bool has_err,cur_err;
@@ -131,17 +130,20 @@ bool csetReadIniFile(const std::string& ini_name)
   if(has_err) { delete &cset; return false; } /** return no error, because ini_name was not found or unavailable */
   stmp=cset.read("Skin info","","Name","Unnamed");
   beye_context().scheme_name=stmp;
+  std::ostringstream os,os2;
   for(i = 0;i < 16;i++)
   {
-    sprintf(cval,"%i",named_color_def[i].color);
-    cstr=cset.read("Color map","",named_color_def[i].name,cval);
-    value = atoi(cstr.c_str());
+    os<<named_color_def[i].color;
+    cstr=cset.read("Color map","",named_color_def[i].name,os.str());
+    std::istringstream is(cstr);
+    is>>value;
     TWindow::remap_color(named_color_def[i].color,value);
   }
   for(i = 0;i < 8;i++)
   {
-    sprintf(cval,"Trans%i",i+1);
-    cstr=cset.read("Terminal","",cval,"");
+    os.str("");
+    os<<"Trans"<<(i+1);
+    cstr=cset.read("Terminal","",os.str(),"");
     if(!cstr.empty())
     {
       Color col;
@@ -179,22 +181,24 @@ bool csetReadIniFile(const std::string& ini_name)
   has_err |= readColorPair(cset,"Disasm","","Opcodes4",&disasm_cset.opcodes4);
   has_err |= readColorPair(cset,"Disasm","","Opcodes5",&disasm_cset.opcodes5);
   has_err |= readColorPair(cset,"Disasm","","Comments",&disasm_cset.comments);
-  for(j = 0;j < sizeof(disasm_cset.cpu_cset)/sizeof(CPUCSet);j++)
-  {
-    sprintf(csec,"Processor%i",j);
-    for(i = 0;i < sizeof(disasm_cset.cpu_cset[0])/sizeof(ColorAttr);i++)
-    {
-      sprintf(cval,"Clone%i",i+1);
-      has_err |= readColorPair(cset,"Disasm",csec,cval,&disasm_cset.cpu_cset[j].clone[i]);
+  for(j = 0;j < sizeof(disasm_cset.cpu_cset)/sizeof(CPUCSet);j++) {
+    os2.str("");
+    os2<<"Processor"<<j;
+    for(i = 0;i < sizeof(disasm_cset.cpu_cset[0])/sizeof(ColorAttr);i++) {
+      os.str("");
+      os<<"Clone"<<(i+1);
+      has_err |= readColorPair(cset,"Disasm",os2.str(),os.str(),&disasm_cset.cpu_cset[j].clone[i]);
     }
   }
-  strcpy(csec,"Engine");
-  for(j = 0;j < sizeof(disasm_cset.engine)/sizeof(EngineCSet);j++)
-  {
-    sprintf(cval,"Engine%i",j);
-    has_err |= readColorPair(cset,"Disasm",csec,cval,&disasm_cset.engine[j].engine);
-    sprintf(cval,"Engine%i_unopt",j);
-    has_err |= readColorPair(cset,"Disasm",csec,cval,&disasm_cset.engine[j].engine_unopt);
+  os2.str("");
+  os2<<"Engine";
+  for(j = 0;j < sizeof(disasm_cset.engine)/sizeof(EngineCSet);j++) {
+    os.str("");
+    os<<"Engine"<<j;
+    has_err |= readColorPair(cset,"Disasm",os2.str(),os.str(),&disasm_cset.engine[j].engine);
+    os.str("");
+    os<<"Engine"<<j<<"_unopt";
+    has_err |= readColorPair(cset,"Disasm",os2.str(),os.str(),&disasm_cset.engine[j].engine_unopt);
   }
   has_err |= readColorPair(cset,"Programming","","BadExpr",&prog_cset.bads);
   has_err |= readColorPair(cset,"Programming","Comments","base",&prog_cset.comments.base);

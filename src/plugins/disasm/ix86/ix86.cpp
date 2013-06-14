@@ -21,6 +21,7 @@ using namespace	usr;
  * @note        Implemented x86 inline assembler as a NASM/YASM wrapper
 **/
 #include <iostream>
+#include <sstream>
 #include <fstream>
 
 #include <string.h>
@@ -6309,10 +6310,12 @@ ix86_Disassembler::~ix86_Disassembler()
 void ix86_Disassembler::read_ini( Ini_Profile& ini )
 {
   std::string tmps;
-  if(bctx.is_valid_ini_args())
-  {
+  unsigned tmpv;
+  if(bctx.is_valid_ini_args()) {
     tmps=bctx.read_profile_string(ini,"Beye","Browser","SubSubMode3","1");
-    BITNESS = Bin_Format::bitness((unsigned)strtoul(tmps.c_str(),NULL,10));
+    std::istringstream is(tmps);
+    is>>tmpv;
+    BITNESS= Bin_Format::bitness(tmpv);
     if(BITNESS > 2 && BITNESS != Bin_Format::Auto) BITNESS = Bin_Format::Use16;
     x86_Bitness = BITNESS;
   }
@@ -6320,9 +6323,9 @@ void ix86_Disassembler::read_ini( Ini_Profile& ini )
 
 void ix86_Disassembler::save_ini( Ini_Profile& ini )
 {
-  char tmps[10];
-  sprintf(tmps,"%u",BITNESS);
-  bctx.write_profile_string(ini,"Beye","Browser","SubSubMode3",tmps);
+    std::ostringstream os;
+    os<<BITNESS;
+    bctx.write_profile_string(ini,"Beye","Browser","SubSubMode3",os.str());
 }
 
 const unsigned ix86_Disassembler::CODEBUFFER_LEN=64;
@@ -6344,7 +6347,8 @@ AsmRet ix86_Disassembler::assembler(const char *code)
   AsmRet result;
   std::ofstream asmf;
   std::ifstream bin, err;
-  int i,c;
+  int c;
+  unsigned i;
   char commandbuffer[FILENAME_MAX+1];
   std::string home;
 
@@ -6376,14 +6380,13 @@ AsmRet ix86_Disassembler::assembler(const char *code)
 
   //Build command line
   i=sprintf(commandbuffer, assemblers[active_assembler].run_command, home.c_str(), home.c_str(), home.c_str());
-  if ((i >= FILENAME_MAX) || (i < 0)) goto commandtoolongerror;
+  if ((i >= FILENAME_MAX) || (int(i) < 0)) goto commandtoolongerror;
 
   //Run external assembler
   //It happens way too often that system() fails with EAGAIN with
   //no apparent reason. So, don't give up immediately
   i=0;
-  do
-  {
+  do {
     errno=0;
     system(commandbuffer);
     i++;
@@ -6395,8 +6398,7 @@ AsmRet ix86_Disassembler::assembler(const char *code)
   bin.open(commandbuffer,std::ios_base::in);
   if (!bin) goto asmerror;
   i=0;
-  while (bin.good() && (i<CODEBUFFER_LEN))
-  {
+  while (bin.good() && (i<CODEBUFFER_LEN)) {
     c=bin.get();
     codebuffer[i++]=(char)c;
   }

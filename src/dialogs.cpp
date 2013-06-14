@@ -17,6 +17,8 @@ using namespace	usr;
  * @since       1995
  * @note        Development, fixes and improvements
 **/
+#include <sstream>
+#include <iomanip>
 #include <string>
 
 #include <string.h>
@@ -66,7 +68,7 @@ bool __FASTCALL__ Get2DigitDlg(const std::string& title,const std::string& text,
  }
  delete ewnd;
  delete hwnd;
- if(ret) *xx = (unsigned char)strtoul(str,NULL,16);
+ if(ret) { std::istringstream is(str); is>>std::hex>>(*xx); }
  return ret;
 }
 
@@ -108,11 +110,13 @@ bool __FASTCALL__ Get8DigitDlg(const std::string& title,const std::string& text,
  ewnd->set_focus();
  if(attr & DECIMAL) legals = attr & SIGN ? decleg : &decleg[2];
  else               legals = attr & SIGN ? legalchars : &legalchars[2];
- if(*xx)
- {
-   if(attr & SIGN) ltoa(*xx,str,base);
-   else            ultoa(*xx,str,base);
+ if(*xx) {
+    std::ostringstream os;
+    if(attr & SIGN) os<<std::setbase(base)<<(long)*xx;
+    else            os<<std::setbase(base)<<(unsigned long)*xx;
+    strcpy(str,os.str().c_str());
  }
+ std::istringstream is;
  while(1)
  {
    key = xeditstring(ewnd,str,legals,len,NULL);
@@ -122,7 +126,11 @@ bool __FASTCALL__ Get8DigitDlg(const std::string& title,const std::string& text,
  }
  delete ewnd;
  delete hwnd;
- if(ret) *xx = attr & SIGN ? (unsigned long)strtol(str,NULL,base) : strtoul(str,NULL,base);
+ if(ret) {
+    is.str(str);
+    if(attr&SIGN) { long tmpv; is>>std::setbase(base)>>tmpv; *xx=tmpv; }
+    else is>>std::setbase(base)>>*xx;
+ }
  return ret;
 }
 
@@ -160,9 +168,12 @@ bool        __FASTCALL__ Get16DigitDlg(const std::string& title,const std::strin
  else               legals = attr & SIGN ? legalchars : &legalchars[2];
  if(*xx)
  {
-   if(attr & SIGN) lltoa(*xx,str,base);
-   else            ulltoa(*xx,str,base);
+    std::ostringstream os;
+    if(attr & SIGN) os<<std::setbase(base)<<(long)*xx;
+    else            os<<std::setbase(base)<<(unsigned long)*xx;
+    strcpy(str,os.str().c_str());
  }
+ std::istringstream is;
  while(1)
  {
    key = xeditstring(ewnd,str,legals,len,NULL);
@@ -172,7 +183,11 @@ bool        __FASTCALL__ Get16DigitDlg(const std::string& title,const std::strin
  }
  delete ewnd;
  delete hwnd;
- if(ret) *xx = attr & SIGN ? (unsigned long long int)strtoll(str,NULL,base) : strtoull(str,NULL,base);
+ if(ret) {
+    is.str(str);
+    if(attr&SIGN) { long tmpv; is>>std::setbase(base)>>tmpv; *xx=tmpv; }
+    else is>>std::setbase(base)>>*xx;
+ }
  return ret;
 }
 
@@ -288,16 +303,17 @@ bool __FASTCALL__ GetJumpDlg( __filesize_t * addr,unsigned long *flags)
  }
  delete ewnd;
  delete hwnd;
- if(ret)
- {
- if(beye_context().is_file64())
-    *addr = (*flags) == GJDLG_RELATIVE ||
-	    (*flags) == GJDLG_REL_EOF ? (unsigned long long int)strtoll(str,NULL,(*flags)==GJDLG_PERCENTS?10:16):
-					strtoull(str,NULL,(*flags)==GJDLG_PERCENTS?10:16);
- else
-    *addr = (*flags) == GJDLG_RELATIVE ||
-	    (*flags) == GJDLG_REL_EOF ? (unsigned long)strtol(str,NULL,(*flags)==GJDLG_PERCENTS?10:16):
-	    strtoul(str,NULL,(*flags)==GJDLG_PERCENTS?10:16);
+ if(ret) {
+    std::istringstream is(str);
+    is>>std::setbase((*flags)==GJDLG_PERCENTS?10:16);
+    if((*flags) == GJDLG_RELATIVE ||
+	(*flags) == GJDLG_REL_EOF) {
+	__fileoff_t tmpv;
+	is>>tmpv; *addr=tmpv;
+    } else {
+	__filesize_t tmpv;
+	is>>tmpv; *addr=tmpv;
+    }
  }
  return ret;
 }
@@ -482,8 +498,12 @@ bool __FASTCALL__ GetFStoreDlg(const std::string& title,char* fname,unsigned lon
  if(!prompt.empty())  { wdlg->goto_xy(3,6);  wdlg->puts(prompt); }
  wdlg->goto_xy(1,4);  wdlg->puts(START_PRMT);
  wdlg->goto_xy(27,4); wdlg->puts(LENGTH_PRMT);
- ultoa(*start,startdig,16);
- ultoa(*end,enddig,16);
+ std::ostringstream os;
+ os<<std::hex<<*start;
+ strcpy(startdig,os.str().c_str());
+ os.str("");
+ os<<std::hex<<*end;
+ strcpy(enddig,os.str().c_str());
  FFStaticPaint(wdlg,fname?fname:"",startdig,enddig,*flags);
  active = 0;
  oactive = 1;
@@ -537,8 +557,10 @@ bool __FASTCALL__ GetFStoreDlg(const std::string& title,char* fname,unsigned lon
  }
  delete wdlg;
  for(i = 0;i < neditors+1;i++) delete ewnd[i];
- *start = strtoul(startdig,NULL,16);
- *end = strtoul(enddig,NULL,16);
+ std::istringstream is(startdig);
+ is>>std::hex>>(*start);
+ is.str(enddig);
+ is>>std::hex>>(*end);
  return !(_lastbyte == KE_ESCAPE || _lastbyte == KE_F(10));
 }
 
@@ -589,13 +611,16 @@ bool __FASTCALL__ GetInsDelBlkDlg(const std::string& title,__filesize_t * start,
  wdlg->goto_xy(55,2); wdlg->puts("Remarks:             ");
  wdlg->goto_xy(55,3); wdlg->puts("+(pos) - insert block");
  wdlg->goto_xy(55,4); wdlg->puts("-(neg) - delete block");
- ultoa(*start,startdig,16);
- if(*size < 0)
- {
-   ltoa(labs(*size),&enddig[1],16);
+ std::ostringstream os;
+ os<<std::hex<<*start;
+ strcpy(startdig,os.str().c_str());
+ if(*size < 0) {
+   os.str("");
+   os<<std::hex<<labs(*size);
+   strcpy(&enddig[1],os.str().c_str());
    enddig[0] = '-';
  }
- else ltoa(*size,enddig,16);
+ else { os<<std::hex<<*size; strcpy(enddig,os.str().c_str()); }
  FFStaticPaintInsDel(wdlg,startdig,enddig);
  active = 0;
  oactive = 1;
@@ -629,8 +654,10 @@ bool __FASTCALL__ GetInsDelBlkDlg(const std::string& title,__filesize_t * start,
  }
  delete wdlg;
  for(i = 0;i < 2;i++) delete ewnd[i];
- *start = strtoul(startdig,NULL,16);
- *size = strtol(enddig,NULL,16);
+ std::istringstream is(startdig);
+ is>>std::hex>>(*start);
+ is.str(enddig);
+ is>>std::hex>>(*size);
  return !(_lastbyte == KE_ESCAPE || _lastbyte == KE_F(10));
 }
 } // namespace	usr

@@ -17,6 +17,8 @@ using namespace	usr;
  * @since       1995
  * @note        Development, fixes and improvements
 **/
+#include <sstream>
+
 #include <ctype.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -434,7 +436,8 @@ static void __FASTCALL__ ru_read_ini( Ini_Profile& ini )
     std::string tmps;
     if(beye_context().is_valid_ini_args()) {
 	tmps=beye_context().read_profile_string(ini,"Beye","Browser","LastSubMode","0");
-	cp_mode = (unsigned)strtoul(tmps.c_str(),NULL,10);
+	std::istringstream is(tmps);
+	is>>cp_mode;
 	if(cp_mode > TXT_MAXMODE) cp_mode = 0;
     }
     if(cp_mode == TXT_UNICODE || cp_mode == TXT_BIG_UNICODE) cp_symb_len = 2;
@@ -443,9 +446,9 @@ static void __FASTCALL__ ru_read_ini( Ini_Profile& ini )
 
 static void __FASTCALL__ ru_save_ini( Ini_Profile& ini )
 {
-    char tmps[10];
-    sprintf(tmps,"%i",cp_mode);
-    beye_context().write_profile_string(ini,"Beye","Browser","LastSubMode",tmps);
+    std::ostringstream os;
+    os<<cp_mode;
+    beye_context().write_profile_string(ini,"Beye","Browser","LastSubMode",os.str());
 }
 
 extern const REGISTRY_NLS RussianNLS =
