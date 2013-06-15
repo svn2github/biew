@@ -58,6 +58,18 @@ int __FASTCALL__ szTrimTrailingSpace(char *str)
   return ret;
 }
 
+std::string __FASTCALL__ szTrimTrailingSpace(const std::string& str)
+{
+    unsigned len = str.length();
+    while(len) {
+	unsigned char ch;
+	ch = str[len-1];
+	if(isspace(ch)) --len;
+	else break;
+    }
+    return str.substr(0,len);
+}
+
 int __FASTCALL__ szTrimLeadingSpace(char *str)
 {
   unsigned i,freq,len;
@@ -79,12 +91,14 @@ int __FASTCALL__ szTrimLeadingSpace(char *str)
 
 static const unsigned TEXT_TAB=8;
 
-void __FASTCALL__ szSpace2Tab(char *dest,const char * src)
+std::string __FASTCALL__ szSpace2Tab(const std::string& src)
 {
   unsigned int i,len,limit,dest_idx;
   int j;
-  unsigned char buff[8],nspc;
-  len = strlen(src);
+  unsigned char nspc;
+  char buff[8];
+  std::string dest;
+  len = src.length();
   i = 0;
   dest_idx = 0;
   while(1)
@@ -101,46 +115,20 @@ void __FASTCALL__ szSpace2Tab(char *dest,const char * src)
 	  else nspc++;
 	}
 	limit = TEXT_TAB - nspc;
-	memcpy(&dest[dest_idx],buff,limit);
+	dest.insert(dest_idx,buff,limit);
 	dest_idx += limit;
-	if(nspc) dest[dest_idx++] = '\t';
+	if(nspc) dest.insert(dest_idx++,1,'\t');
      }
      else
      {
        limit = len - i;
-       memcpy(&dest[dest_idx],&src[i],limit);
+       dest.insert(dest_idx,&src[i],limit);
        dest_idx += limit;
        i += limit;
        break;
      }
   }
-  dest[dest_idx] = '\0';
-}
-
-int __FASTCALL__ szTab2Space(char * dest,const char * src)
-{
-  int i,k,len;
-  size_t size;
-  unsigned int freq;
-  unsigned char ch;
-  len = strlen(src);
-  for(freq = 0,i = k = 0;i < len;i++,freq++)
-  {
-    ch = src[i];
-    if(ch == '\t')
-    {
-       size = TEXT_TAB - (freq%TEXT_TAB);
-       memset(&dest[k],' ',size);
-       k += size;
-       freq += size-1;
-    }
-    else
-    {
-      dest[k] = ch;
-      k++;
-    }
-  }
-  return k;
+  return dest;
 }
 
 char * __FASTCALL__ szKillSpaceAround(char *str,char *place)

@@ -165,7 +165,8 @@ namespace	usr {
 		     * @param str             pointer to string to be trimmed
 		     * @see                   szTrimLeadingSpace szKillSpaceAround
 		    **/
-    int   __FASTCALL__ szTrimTrailingSpace(char *str);
+    int         __FASTCALL__ szTrimTrailingSpace(char *str);
+    std::string __FASTCALL__ szTrimTrailingSpace(const std::string& str);
 
 		   /** Removes all leading spaces from string
 		     * @return                number of removed spaces
@@ -175,20 +176,11 @@ namespace	usr {
     int   __FASTCALL__ szTrimLeadingSpace(char *str);
 
 		   /** Converts space into tabulation characters
-		     * @return                none
-		     * @param dest            pointer to string where will be placed result
+		     * @return                string with tabs.
 		     * @param src             pointer to source string
 		     * @see                   szTab2Space
 		    **/
-    void  __FASTCALL__ szSpace2Tab(char *dest,const char *src);
-
-		   /** Expands all tabulation characters with spaces
-		     * @return                length of new string
-		     * @param dest            pointer to string where will be placed result
-		     * @param src             pointer to source string
-		     * @see                   szSpace2Tab
-		    **/
-    int   __FASTCALL__ szTab2Space(char *dest,const char *src);
+    std::string  __FASTCALL__ szSpace2Tab(const std::string& src);
 
 		   /** Removes all spaces around given position
 		     * @return                pointer onto next non space character

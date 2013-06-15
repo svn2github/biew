@@ -229,8 +229,8 @@ FileUtilities*	InsDelBlock::query_interface(BeyeContext& b) { return new(zeromem
 	    void		printObject(std::ofstream& fout,const Object_Info& obj) const;
 	    void		printHdr(std::ofstream& fout,const Bin_Format& fmt) const;
 	    std::string		GET_FUNC_CLASS(Symbol_Info::symbol_class x) const { return x == Symbol_Info::Local ? "private" : "public"; }
-	    void		make_addr_column(std::string& buff,__filesize_t offset) const;
-	    unsigned		printHelpComment(char *buff,MBuffer codebuff,DisasmRet *dret,DisMode::e_severity dis_severity,const std::string& dis_comments) const;
+	    std::string		make_addr_column(__filesize_t offset) const;
+	    unsigned		printHelpComment(std::ostringstream& os,MBuffer codebuff,DisasmRet *dret,DisMode::e_severity dis_severity,const std::string& dis_comments) const;
     };
 
 FStore::FStore(BeyeContext& b):FileUtilities(b),ff_fname("beye.$$$") {}
@@ -272,30 +272,27 @@ void FStore::printHdr(std::ofstream& fout,const Bin_Format& fmt) const
     fout<<cptr2<<std::endl<<std::endl;
 }
 
-unsigned FStore::printHelpComment(char *buff,MBuffer codebuff,DisasmRet *dret,DisMode::e_severity dis_severity,const std::string& dis_comments) const
+unsigned FStore::printHelpComment(std::ostringstream& os,MBuffer codebuff,DisasmRet *dret,DisMode::e_severity dis_severity,const std::string& dis_comments) const
 {
-    unsigned len,j;
+    unsigned j;
     if(dis_severity > DisMode::CommSev_None) {
-	len = 3+dis_comments.length();
-	::strcat(buff,dis_comments.c_str());
-	::strcat(buff," ; ");
-    } else len = 0;
-    for(j = 0;j < dret->codelen;j++) {
-	::memcpy((char *)&buff[len],(char *)Get2Digit(codebuff[j]).c_str(),2);
-	len += 2;
-    }
-    buff[len] = 0;
-    return len;
+	os<<dis_comments;
+	os<<" ; ";
+    };
+    for(j = 0;j < dret->codelen;j++) os<<std::hex<<std::setfill('0')<<std::setw(2)<<unsigned(codebuff[j]);
+    return os.str().length();
 }
 
-void FStore::make_addr_column(std::string& buff,__filesize_t offset) const
+std::string FStore::make_addr_column(__filesize_t offset) const
 {
+    std::string buff;
     if(hexAddressResolv) buff=bctx.bin_format().address_resolving(offset);
     else {
 	buff="L";
 	buff+=Get8Digit(offset).c_str();
     }
     buff+=":";
+    return buff;
 }
 
 void FStore::__make_dump_name(const std::string& end)
@@ -312,6 +309,7 @@ bool FStore::run()
     char *tmp_buff;
     __filesize_t endpos,cpos;
     binary_packet bp(1);
+    std::ostringstream dos;
     tmp_buff = new char [0x1000];
     flags = FSDLG_USEMODES | FSDLG_BINMODE | FSDLG_COMMENT;
     DumpMode = true;
@@ -371,7 +369,6 @@ bool FStore::run()
 	    } else { /** Write in disassembler mode */
 		std::ofstream fout;
 		unsigned char *codebuff;
-		char *file_cache = NULL,*tmp_buff2 = NULL;
 		unsigned MaxInsnLen;
 		char data_dis[300];
 		__filesize_t stop;
@@ -390,15 +387,12 @@ bool FStore::run()
 		unsigned disasm_type = dismode->query_type();
 		MaxInsnLen = dismode->get_max_symbol_size();
 		codebuff = new unsigned char [MaxInsnLen];
-		tmp_buff2 = new char [0x1000];
-		file_cache = new char [BBIO_SMALL_CACHE_SIZE];
 		fout.open(ff_fname.c_str(),std::ios_base::out);
 		if(!fout.is_open()) {
 		    bctx.errnoMessageBox(WRITE_FAIL,"",errno);
 		    delete codebuff;
 		    goto Exit;
 		}
-//		if(file_cache) setvbuf(fout,file_cache,_IOFBF,BBIO_SMALL_CACHE_SIZE);
 		if(flags & FSDLG_COMMENT) {
 		    printHdr(fout,bctx.bin_format());
 		}
@@ -520,41 +514,34 @@ bool FStore::run()
 			dismode->dis_severity = DisMode::CommSev_None;
 		    }
 		    stop = psym.pa!=Plugin::Bad_Address ? std::min(psym.pa,obj.end) : obj.end;
+		    dos.str("");
+		    dos<<make_addr_column(ff_startpos);
 		    if(flags & FSDLG_STRUCTS) {
 			if(stop && stop > ff_startpos && ff_startpos + dret.codelen > stop) {
 			    unsigned lim,ii;
-			    std::string stmp=(char*)tmp_buff;
-			    make_addr_column(stmp,ff_startpos);
-			    strcpy(tmp_buff,stmp.c_str());
-			    strcat(tmp_buff," db ");
+			    dos<<" db ";
 			    lim = (unsigned)(stop-ff_startpos);
 			    if(lim > MaxInsnLen) lim = MaxInsnLen;
-			    for(ii = 0;ii < lim;ii++) sprintf(&tmp_buff[strlen(tmp_buff)],"%s ",Get2Digit(codebuff[ii]).c_str());
+			    for(ii = 0;ii < lim;ii++) dos<<std::hex<<std::setfill('0')<<std::setw(2)<<unsigned(codebuff[ii])<<" ";
 			    dret.codelen = lim;
 			} else goto normline;
 		    } else {
 			normline:
-			std::string stmp=(char*)tmp_buff;
-			make_addr_column(stmp,ff_startpos);
-			strcpy(tmp_buff,stmp.c_str());
-			sprintf(&tmp_buff[strlen(tmp_buff)]," %s",dret.str);
+			dos<<" "<<dret.str;
 		    }
-		    len = strlen(tmp_buff);
+		    len = dos.str().length();
 		    if(flags & FSDLG_COMMENT) {
 			if(len < 48) {
-			    memset(&tmp_buff[len],' ',48-len);
+			    std::string t;
+			    t.insert(0,48-len,' ');
 			    len = 48;
-			    tmp_buff[len] = 0;
+			    dos<<t;
 			}
-			strcat(tmp_buff,"; ");
+			dos<<"; ";
 			len += 2;
-			len += printHelpComment(&((char *)tmp_buff)[len],codebuff,&dret,dismode->dis_severity,dismode->dis_comments);
+			len += printHelpComment(dos,codebuff,&dret,dismode->dis_severity,dismode->dis_comments);
 		    }
-		    if(tmp_buff2) {
-			szSpace2Tab(tmp_buff2,tmp_buff);
-			szTrimTrailingSpace(tmp_buff2);
-		    }
-		    fout<<(tmp_buff2 ? tmp_buff2 : tmp_buff)<<std::endl;
+		    fout<<szSpace2Tab(dos.str())<<std::endl;
 		    if(!fout.good()) {
 			bctx.errnoMessageBox(WRITE_FAIL,"",errno);
 			goto dis_exit;
@@ -580,8 +567,6 @@ bool FStore::run()
 		dis_exit:
 		delete codebuff;
 		fout.close();
-		if(file_cache) delete file_cache;
-		if(tmp_buff2) delete tmp_buff2;
 		if(bctx.mode_info()!=&disMode)	delete dismode;
 	    } /** END: Write in disassembler mode */
 	    Exit:
