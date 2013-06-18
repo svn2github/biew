@@ -39,51 +39,6 @@ using namespace	usr;
 #include "libbeye/twindow.h"
 
 namespace	usr {
-TConsole* TWindow::tconsole = NULL;
-System*  TWindow::msystem = NULL;
-TWindow* TWindow::head = NULL;
-TWindow* TWindow::cursorwin = NULL;
-static unsigned long twin_flags = 0L;
-
-TWindow::e_cursor TWindow::c_type = Cursor_Unknown;
-void TWindow::set_cursor_type(TWindow::e_cursor type)
-{
-  if(type != c_type)
-  {
-    tconsole->vio_set_cursor_type(type);
-    c_type = type;
-  }
-}
-
-TWindow::e_cursor TWindow::get_cursor_type()
-{
-  if(c_type == Cursor_Unknown) c_type = e_cursor(tconsole->vio_get_cursor_type());
-  return c_type;
-}
-
-TConsole& __FASTCALL__ twInit(System& sys,const std::string& user_cp, unsigned long vio_flags, unsigned long twin_flgs )
-{
-  const char *nls_cp;
-  twin_flags = twin_flgs;
-  TWindow::msystem=&sys;
-  nls_cp=!user_cp.empty()?user_cp.c_str():"IBM866";
-  TWindow::tconsole = new(zeromem) TConsole(nls_cp,vio_flags);
-  if(TWindow::tconsole->vio_width() > __TVIO_MAXSCREENWIDTH) {
-    std::ostringstream os;
-    twDestroy();
-    os<<"Size of video buffer is too large: "<<TWindow::tconsole->vio_width()<<" (max = "<<__TVIO_MAXSCREENWIDTH<<")";
-    throw std::runtime_error(std::string("Internal twin library error: ")+os.str());
-  }
-  TWindow::set_cursor_type(TWindow::Cursor_Off);
-  return *TWindow::tconsole;
-}
-
-void __FASTCALL__ twDestroy()
-{
-  TWindow::set_cursor_type(TWindow::Cursor_Normal);
-  twcDestroyClassSet();
-  delete TWindow::tconsole;
-}
 /*
   Hypothesis:
     When 16-bits color is coded then weight of component is:
@@ -190,9 +145,9 @@ static inline void winInternalError() { (void)0xFFFFFFFF; };
 bool TWindow::test_win() const
 {
     bool ret;
-    ret = *((any_t**)(body.chars + wsize)) == body.chars &&
-	*((any_t**)(body.oem_pg + wsize)) == body.oem_pg &&
-	*((any_t**)(body.attrs + wsize)) == body.attrs &&
+    ret = *((any_t**)(surface.chars + wsize)) == surface.chars &&
+	*((any_t**)(surface.oem_pg + wsize)) == surface.oem_pg &&
+	*((any_t**)(surface.attrs + wsize)) == surface.attrs &&
 	*((any_t**)(saved.chars + wsize)) == saved.chars &&
 	*((any_t**)(saved.oem_pg + wsize)) == saved.oem_pg &&
 	*((any_t**)(saved.attrs + wsize)) == saved.attrs ? true : false;
@@ -209,121 +164,55 @@ enum {
     IFLG_CURSORBEENOFF=0x80000000UL
 };
 
-
-void TWindow::__athead() { if(head) next = head; head = this; }
-
-TWindow* TWindow::__find_over(tAbsCoord x,tAbsCoord y) const {
-    TWindow *iter,*ret;
-    tAbsCoord xx,yy;
-    iter = head;
-    ret = NULL;
-    xx = X1+x;
-    yy = Y1+y;
-    while(iter && iter != this) {
-	if((iter->iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
-	    if((yy >= iter->Y1) && (yy < iter->Y2) &&
-		(xx >= iter->X1) && (xx < iter->X2))
-		    ret = iter;
-	}
-	iter = iter->next;
-    }
-    return ret;
-}
-
-bool TWindow::is_overlapped() const
+void TWindow::create(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, twc_flag _flags)
 {
-    TWindow *iter;
-    bool ret = false;
-    iter = head;
-    while( iter && iter != this ) {
-	if((iter->iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
-	    if(!((iter->Y2 <= Y1) || (iter->Y1 >= Y2) ||
-		(iter->X2 <= X1) || (iter->X1 >= X2))) {
-		    ret = true;
-		    break;
-	    }
-	}
-	iter = iter->next;
-    }
-    return ret;
-}
+    TObject::create(x1,y1,_width,_height,_flags);
 
-/*
-   In most cases all output is being performed into non overlapped windows.
-   We should turn on special optimization for such windows, though overlapped
-   windows will seem relatively slower. There are additional possibilities to
-   accelerate all output by computing non overlapped lines of window or parts
-   of lines, but I don't want to do such complex task.
-*/
-TWindow* TWindow::__at_point(TWindow* iter,tAbsCoord x,tAbsCoord y) {
-  iter = head;
-  while( iter )
-  {
-    if((iter->iflags & IFLG_VISIBLE) == IFLG_VISIBLE)
-    {
-      if((y >= iter->Y1) && (y < iter->Y2) &&
-	 (x >= iter->X1) && (x < iter->X2))
-		       break;
-    }
-    iter = iter->next;
-  }
-  return iter;
-}
+    unsigned size = _width*_height;
+    surface.chars = new t_vchar[size];
+    surface.oem_pg = new t_vchar[size];
+    surface.attrs = new ColorAttr[size];
+    saved.chars = new t_vchar[size];
+    saved.oem_pg = new t_vchar[size];
+    saved.attrs = new ColorAttr[size];
 
-void TWindow::create(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, unsigned _flags)
-{
-    if((flags & Flag_Has_Frame) == Flag_Has_Frame) { _width ++; _height ++; }
-    makewin(x1-1,y1-1,_width,_height);
-    flags = _flags;
-    iflags = IFLG_ENABLED;
     ::memcpy(Frame,SINGLE_FRAME,8);
-    ::memset(body.chars,TWC_DEF_FILLER,wsize);
-    ::memset(body.oem_pg,0,wsize);
-    ::memset(body.attrs,text.system,wsize);
+    ::memset(surface.chars,TWC_DEF_FILLER,wsize);
+    ::memset(surface.oem_pg,0,wsize);
+    ::memset(surface.attrs,text.system,wsize);
     check_win();
     text=__set_color(LightGray,Black);
     frame=__set_color(LightGray,Black);
     title=__set_color(LightGray,Black);
     footer=__set_color(LightGray,Black);
-    cur_x = cur_y = 0;
-    set_focus();
+
     paint_internal();
 }
 
 TWindow::TWindow(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, twc_flag _flags)
+	:TObject(x1,y1,_width,_height,_flags)
 {
-    create(x1,y1,_width,_height,_flags);
+    TWindow::create(x1,y1,_width,_height,_flags);
 }
 
 TWindow::TWindow(tAbsCoord x1_, tAbsCoord y1_,
 		 tAbsCoord _width, tAbsCoord _height,
 		 twc_flag _flags, const std::string& classname)
+	:TObject(x1_,y1_,_width,_height,_flags,classname)
 {
-    create(x1_, y1_, _width, _height, _flags);
-    const TwClass* cls;
-    cls = twcFindClass(classname);
-    if(cls) {
-	method = reinterpret_cast<any_t*>(cls->method);
-	class_flags = cls->flags;
-    }
-    send_message(WM_CREATE,0L,NULL);
+    TWindow::create(x1_, y1_, _width, _height, _flags);
 }
 
 TWindow::~TWindow()
 {
-    send_message(WM_DESTROY,0L,NULL);
-    hide();
     if(Title) delete Title;
     if(Footer) delete Footer;
-    delete body.chars;
-    delete body.oem_pg;
-    delete body.attrs;
+    delete surface.chars;
+    delete surface.oem_pg;
+    delete surface.attrs;
     delete saved.chars;
     delete saved.oem_pg;
     delete saved.attrs;
-    __unlistwin();
-    if(cursorwin == this) cursorwin = __findcursorablewin();
-    if(cursorwin) cursorwin->paint_cursor();
 }
 
 ColorAttr TWindow::set_color(Color fore,Color back)
@@ -478,170 +367,6 @@ TWindow::title_mode TWindow::get_footer(char *_footer,unsigned cb_footer,Color& 
     return ret;
 }
 
-void TWindow::__unlistwin()
-{
-    if(head == this) head = next;
-    else {
-	TWindow *iter;
-	iter = head;
-	while(iter) {
-	    if(iter->next) if(iter->next == this) iter->next = next;
-	    iter = iter->next;
-	}
-    }
-}
-
-TWindow* TWindow::__prevwin()
-{
-    TWindow *ret = NULL;
-    if(head != this) {
-	TWindow* iter;
-	iter = head;
-	while(iter) {
-	     if(iter->next) if(iter->next == this) { ret = iter; break; }
-	    iter = iter->next;
-	}
-    }
-    return ret;
-}
-
-TWindow* TWindow::__findcursorablewin()
-{
-    TWindow *iter,*ret;
-    iter = head;
-    ret = NULL;
-    while(iter) {
-	if((iter->flags & Flag_Has_Cursor) == Flag_Has_Cursor) { ret = iter; break; }
-	iter = iter->next;
-    }
-    return ret;
-}
-
-TWindow* TWindow::at_pos(tAbsCoord x,tAbsCoord y)
-{
-    TWindow *ret=NULL;
-    tAbsCoord xx,yy;
-    xx = x-1;
-    yy = y-1;
-    ret = __at_point(ret,xx,yy);
-    return ret;
-}
-
-void TWindow::cvt_win_coords(tRelCoord x, tRelCoord y,tAbsCoord& xa,tAbsCoord& ya) const
-{
-    if(flags & Flag_Has_Frame) { x++; y++; }
-    xa = X1+x;
-    ya = Y1+y;
-}
-
-bool TWindow::cvt_screen_coords(tAbsCoord x, tAbsCoord y,tRelCoord& xr,tRelCoord& yr) const
-{
-    xr = x - X1;
-    yr = y - Y1;
-    if(flags & Flag_Has_Frame) { xr--; yr--; }
-    return is_valid_xy(xr,yr) ? true : false;
-}
-
-bool TWindow::is_piece_visible(tRelCoord x, tRelCoord y) const
-{
-    TWindow *over;
-    if(flags & Flag_Has_Frame) { x++; y++; }
-    over=__find_over(X1+x,Y1+y);
-    return over ? true : false;
-}
-
-void TWindow::igoto_xy(tRelCoord x,tRelCoord y)
-{
-    if(x && y) {
-	cur_x = x-1;
-	cur_y = y-1;
-	if(cur_x >= wwidth) cur_x = wwidth-1;
-	if(cur_y >= wheight) cur_y = wheight-1;
-    }
-}
-
-void TWindow::set_xy(tRelCoord x,tRelCoord y)
-{
-    tRelCoord _width,_height;
-    if(x && y) {
-	x--; y--;
-	cur_x = x;
-	cur_y = y;
-	_width = wwidth;
-	_height = wheight;
-	if((flags & Flag_Has_Frame) == Flag_Has_Frame) {
-	    _width--;
-	    _height--;
-	    cur_x++;
-	    cur_y++;
-	}
-	if(cur_x > _width) cur_x = _width-1;
-	if(cur_y > _height) cur_y = _height-1;
-    }
-}
-
-void TWindow::paint_cursor() const
-{
-    TWindow * top=NULL;
-    static tAbsCoord c_x = UCHAR_MAX, c_y = UCHAR_MAX;
-    e_cursor _c_type = Cursor_Unknown;
-    unsigned x,y;
-    e_cursor type;
-    if(cursorwin && (cursorwin->iflags & IFLG_ENABLED) == IFLG_ENABLED) {
-	top=cursorwin->__find_over(cursorwin->cur_x,cursorwin->cur_y-1);
-	if(!top && (cursorwin->iflags & IFLG_VISIBLE) == IFLG_VISIBLE && cursorwin == this) {
-	    type = get_cursor_type();
-	    if(type == Cursor_Off) {
-		set_cursor_type(_c_type == Cursor_Unknown ? Cursor_Normal : _c_type);
-		_c_type = _c_type == Cursor_Unknown ? Cursor_Normal : _c_type;
-	    }
-	    x = X1 + cur_x;
-	    y = Y1 + cur_y;
-	    if(!(x == c_x && y == c_y)) {
-		tconsole->vio_set_cursor_pos(x,y);
-		c_x = x;
-		c_y = y;
-	    }
-	}
-	else goto hide_cursor;
-    } else {
-	c_x = c_y = UCHAR_MAX;
-hide_cursor:
-	type = get_cursor_type();
-	if(type != Cursor_Off) {
-	    _c_type = type;
-	    set_cursor_type(Cursor_Off);
-	}
-    }
-}
-
-void TWindow::goto_xy(tRelCoord x,tRelCoord y)
-{
-    set_xy(x,y);
-    paint_cursor();
-}
-
-void TWindow::makewin(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height)
-{
-    unsigned size;
-
-    size = _width*_height;
-    wsize = size;
-    wwidth = _width;
-    wheight = _height;
-    body.chars = new t_vchar[size];
-    body.oem_pg = new t_vchar[size];
-    body.attrs = new ColorAttr[size];
-    saved.chars = new t_vchar[size];
-    saved.oem_pg = new t_vchar[size];
-    saved.attrs = new ColorAttr[size];
-    X1 = x1;
-    Y1 = y1;
-    X2 = x1+_width;
-    Y2 = y1+_height;
-    __athead();
-}
-
 /**
  *  Three basic functions for copying from buffer to screen:
  *  ========================================================
@@ -658,10 +383,9 @@ void TWindow::updatescreencharfrombuff(tRelCoord x,
     tvioBuff it;
     unsigned idx,aidx;
     if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
-	TWindow * top;
 	idx = y*wwidth+x;
 	aidx = x;
-	top=__find_over(x,y);
+	TWindow* top=static_cast<TWindow*>(__find_over(x,y));
 	if(top) {
 	    unsigned tidx;
 	    tAbsCoord tx,ty;
@@ -672,17 +396,17 @@ void TWindow::updatescreencharfrombuff(tRelCoord x,
 	    top->saved.oem_pg[tidx] = buff.oem_pg[idx];
 	    top->saved.attrs[tidx] = buff.attrs[idx];
 	    if(accel) {
-		TWindow *vis=NULL;
+		TWindow* vis=NULL;
 		tAbsCoord xx,yy;
 		xx = x+X1;
 		yy = y+Y1;
-		vis=__at_point(vis,xx,yy);
+		vis=static_cast<TWindow*>(__at_point(vis,xx,yy));
 		tx = xx - vis->X1;
 		ty = yy - vis->Y1;
 		tidx = tx + ty*vis->wwidth;
-		accel->chars[aidx] = vis->body.chars[tidx];
-		accel->oem_pg[aidx] = vis->body.oem_pg[tidx];
-		accel->attrs[aidx] = vis->body.attrs[tidx];
+		accel->chars[aidx] = vis->surface.chars[tidx];
+		accel->oem_pg[aidx] = vis->surface.oem_pg[tidx];
+		accel->attrs[aidx] = vis->surface.attrs[tidx];
 	    }
 	    top->check_win();
 	} else {
@@ -723,16 +447,15 @@ void TWindow::updatescreencharfrombuff(tRelCoord x,
  *  ========================================================
  *  updatewinmemcharfromscreen: correctly copied screen to window memory
  *  screen2win: quick implementation of copying screen to window memory
- *  snapshot:   snap shot of screen to win body
+ *  snapshot:   snap shot of screen to win surface
  */
 void TWindow::updatewinmemcharfromscreen(tRelCoord x,tRelCoord y,const tvioBuff& accel)
 {
     unsigned idx,aidx;
     if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
-	TWindow * top;
 	idx = y*wwidth+x;
 	aidx = x;
-	top=__find_over(x,y);
+	TWindow* top=static_cast<TWindow*>(__find_over(x,y));
 	if(top) {
 	    unsigned tidx;
 	    tAbsCoord tx,ty;
@@ -742,9 +465,9 @@ void TWindow::updatewinmemcharfromscreen(tRelCoord x,tRelCoord y,const tvioBuff&
 	    saved.chars[idx] = top->saved.chars[tidx];
 	    saved.oem_pg[idx] = top->saved.oem_pg[tidx];
 	    saved.attrs[idx] = top->saved.attrs[tidx];
-	    top->saved.chars[tidx] = body.chars[idx];
-	    top->saved.oem_pg[tidx] = body.oem_pg[idx];
-	    top->saved.attrs[tidx] = body.attrs[idx];
+	    top->saved.chars[tidx] = surface.chars[idx];
+	    top->saved.oem_pg[tidx] = surface.oem_pg[idx];
+	    top->saved.attrs[tidx] = surface.attrs[idx];
 	    top->check_win();
 	} else {
 	    saved.chars[idx] = accel.chars[aidx];
@@ -821,9 +544,9 @@ void TWindow::snapshot() /**< for snapshot */
 	    if(iny <= tconsole->vio_height()) {
 		idx = i*wwidth;
 		tvideo_buffer tmp=tconsole->vio_read_buff(inx,iny,lwidth);
-		::memcpy(&body.chars[idx],tmp.get_chars(),tmp.length());
-		::memcpy(&body.oem_pg[idx],tmp.get_oempg(),tmp.length());
-		::memcpy(&body.attrs[idx],tmp.get_attrs(),tmp.length());
+		::memcpy(&surface.chars[idx],tmp.get_chars(),tmp.length());
+		::memcpy(&surface.oem_pg[idx],tmp.get_oempg(),tmp.length());
+		::memcpy(&surface.attrs[idx],tmp.get_attrs(),tmp.length());
 	    }
 	    else break;
 	}
@@ -922,7 +645,7 @@ void TWindow::updatescreen(bool full_area)
 	is_top = __topmost();
 	if(is_top && full_area && wwidth == tconsole->vio_width() && !X1 && (iflags & IFLG_ENABLED) == IFLG_ENABLED) {
 	    /* Special case of redrawing window interior at one call */
-	    tconsole->vio_write_buff(0, Y1, tvideo_buffer(body.chars,body.oem_pg,body.attrs,wwidth*wheight));
+	    tconsole->vio_write_buff(0, Y1, tvideo_buffer(surface.chars,surface.oem_pg,surface.attrs,wwidth*wheight));
 	} else {
 	    xs = ys = 0;
 	    xe = wwidth;
@@ -943,9 +666,9 @@ void TWindow::updatescreen(bool full_area)
 		    if(cx + rw > tconsole->vio_width()) rw = tconsole->vio_width() > cx ? tconsole->vio_width() - cx : 0;
 		    if(outy <= tconsole->vio_height() && rw) {
 			tidx = i*wwidth+aoff;
-			it.chars = is_top ? &body.chars[tidx] : &accel.chars[aoff];
-			it.oem_pg = is_top ? &body.oem_pg[tidx] : &accel.oem_pg[aoff];
-			it.attrs = is_top ? &body.attrs[tidx] : &accel.attrs[aoff];
+			it.chars = is_top ? &surface.chars[tidx] : &accel.chars[aoff];
+			it.oem_pg = is_top ? &surface.oem_pg[tidx] : &accel.oem_pg[aoff];
+			it.attrs = is_top ? &surface.attrs[tidx] : &accel.attrs[aoff];
 			tconsole->vio_write_buff(cx,outy,tvideo_buffer(it.chars,it.oem_pg,it.attrs,rw));
 		    }
 		}
@@ -993,9 +716,9 @@ void TWindow::updatescreenpiece(tRelCoord stx,tRelCoord endx,tRelCoord y)
 	    if(outx + rw > tconsole->vio_width()) rw = tconsole->vio_width() > outx ? tconsole->vio_width() - outx : 0;
 	    if(line <= tconsole->vio_height() && rw) {
 		tidx = (y-1)*wwidth+_stx;
-		it.chars = is_top ? &body.chars[tidx] : &accel.chars[_stx];
-		it.oem_pg = is_top ? &body.oem_pg[tidx] : &accel.oem_pg[_stx];
-		it.attrs = is_top ? &body.attrs[tidx] : &accel.attrs[_stx];
+		it.chars = is_top ? &surface.chars[tidx] : &accel.chars[_stx];
+		it.oem_pg = is_top ? &surface.oem_pg[tidx] : &accel.oem_pg[_stx];
+		it.attrs = is_top ? &surface.attrs[tidx] : &accel.attrs[_stx];
 		tconsole->vio_write_buff(outx,line,tvideo_buffer(it.chars,it.oem_pg,it.attrs,rw));
 	    }
 	}
@@ -1214,90 +937,35 @@ void TWindow::show()
 {
     send_message(WM_SHOW,0L,NULL);
     if(!(iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
-	iflags |= IFLG_VISIBLE;
-	__unlistwin();
-	__athead();
+	TObject::show();
 	updatewinmem();
 	updatescreen(true);
-	if((flags & Flag_Has_Cursor) == Flag_Has_Cursor) {
-	    cursorwin = this;
-	}
-	paint_cursor();
     }
 }
 
 void TWindow::show_on_top()
 {
-    send_message(WM_TOPSHOW,0L,NULL);
-    if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) hide();
-    iflags |= IFLG_VISIBLE;
-    __unlistwin();
-    __athead();
+    TObject::show_on_top();
     screen2win();
     updatescreen(true);
-    if((flags & Flag_Has_Cursor) == Flag_Has_Cursor) {
-	cursorwin = this;
-    }
-    paint_cursor();
 }
 
 void TWindow::show_beneath(TWindow& prev)
 {
-    send_message(WM_SHOWBENEATH,0L,&prev);
-    if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) hide();
-    iflags |= IFLG_VISIBLE;
-    __unlistwin();
-    __atwin(&prev);
+    TObject::show_beneath(prev);
+
     updatewinmem();
     updatescreen(true);
 }
 
 void TWindow::hide()
 {
-    send_message(WM_HIDE,0L,NULL);
-    if(cursorwin == this) set_cursor_type(Cursor_Off);
+    TObject::hide();
     savedwin2screen();
-    iflags &= ~IFLG_VISIBLE;
-}
-
-void TWindow::get_pos(tAbsCoord& x1,tAbsCoord& y1,tAbsCoord& x2,tAbsCoord& y2)
-{
-    x1 = X1+1;
-    y1 = Y1+1;
-    x2 = X2;
-    y2 = Y2;
-    if((flags & Flag_Has_Frame) == Flag_Has_Frame) {
-	x2--;
-	y2--;
-    }
-}
-
-unsigned TWindow::width() const { return wwidth; }
-unsigned TWindow::height() const { return wheight; }
-unsigned TWindow::client_width() const { return flags & Flag_Has_Frame ? wwidth-2 : wwidth; }
-unsigned TWindow::client_height() const {  return flags & Flag_Has_Frame ? wheight-2 : wheight; }
-
-void TWindow::move(tAbsCoord dx,tAbsCoord dy)
-{
-    TWindow* prev;
-    tRelCoord x,y;
-    int vis;
-    vis = (iflags & IFLG_VISIBLE) == IFLG_VISIBLE;
-    x = where_x();
-    y = where_y();
-    prev = __prevwin();
-    if(vis) hide();
-    X1 += dx;
-    Y1 += dy;
-    X2 += dx;
-    Y2 += dy;
-    if(vis) show_beneath(*prev);
-    goto_xy(x,y);
 }
 
 void TWindow::resize(tAbsCoord _width,tAbsCoord _height)
 {
-    TWindow *prev;
     tvioBuff newbody;
     size_t ncopy,delta,fillsize;
     size_t from,to,size,i,loop,start,idx;
@@ -1307,7 +975,7 @@ void TWindow::resize(tAbsCoord _width,tAbsCoord _height)
     x = where_x();
     y = where_y();
     vis = (iflags & IFLG_VISIBLE) == IFLG_VISIBLE;
-    prev = __prevwin();
+    TWindow* prev = static_cast<TWindow*>(__prevwin());
     if(vis) hide();
     size = _width*_height;
     newbody.chars = new t_vchar[size];
@@ -1325,9 +993,9 @@ void TWindow::resize(tAbsCoord _width,tAbsCoord _height)
     ncopy = std::min(_width,oldw);
     fillsize = _width-oldw;
     for(i = start;i < loop;i++) {
-	::memcpy(&newbody.chars[to],&body.chars[from],ncopy);
-	::memcpy(&newbody.oem_pg[to],&body.oem_pg[from],ncopy);
-	::memcpy(&newbody.attrs[to],&body.attrs[from],ncopy);
+	::memcpy(&newbody.chars[to],&surface.chars[from],ncopy);
+	::memcpy(&newbody.oem_pg[to],&surface.oem_pg[from],ncopy);
+	::memcpy(&newbody.attrs[to],&surface.attrs[from],ncopy);
 	if(oldw < _width) {
 	    idx = to+ncopy-delta;
 	    ::memset(&newbody.chars[idx],TWC_DEF_FILLER,fillsize);
@@ -1355,10 +1023,10 @@ void TWindow::resize(tAbsCoord _width,tAbsCoord _height)
     saved.chars = new t_vchar[wsize];
     saved.oem_pg = new t_vchar[wsize];
     saved.attrs = new ColorAttr[wsize];
-    delete body.chars;
-    delete body.oem_pg;
-    delete body.attrs;
-    body = newbody;
+    delete surface.chars;
+    delete surface.oem_pg;
+    delete surface.attrs;
+    surface = newbody;
     X2 = X1 + _width;
     Y2 = Y1 + _height;
     check_win();
@@ -1366,25 +1034,6 @@ void TWindow::resize(tAbsCoord _width,tAbsCoord _height)
     if(vis) show_beneath(*prev);
     goto_xy(x,y);
 }
-
-void TWindow::into_center(tAbsCoord w,tAbsCoord h)
-{
-    tAbsCoord ww,wh,pww,pwh;
-    int vis = (iflags & IFLG_VISIBLE) == IFLG_VISIBLE;
-    if(vis) hide();
-    ww = wwidth;
-    wh = wheight;
-    pww = w;
-    pwh = h;
-    X1 = ( pww - ww )>>1;
-    X2 = ( pww + ww )>>1;
-    Y1 = ( pwh - wh )>>1;
-    Y2 = ( pwh + wh )>>1;
-    if(vis) show();
-}
-
-void TWindow::into_center(const TWindow& parent) { into_center(parent.wwidth,parent.wheight); }
-void TWindow::into_center() { into_center(tconsole->vio_width(),tconsole->vio_height()); }
 
 void TWindow::clear(unsigned char filler)
 {
@@ -1407,9 +1056,9 @@ void TWindow::clear(unsigned char filler)
     }
     for(i = start;i < loop;i++) {
 	idx = to+i*size;
-	::memset(&body.chars[idx],filler,fillsize);
-	::memset(&body.oem_pg[idx],((flags & Flag_NLS) == Flag_NLS ? NLS_IS_OEMPG(oempg) ? oempg : 0 : 0),fillsize);
-	::memset(&body.attrs[idx],text.system,fillsize);
+	::memset(&surface.chars[idx],filler,fillsize);
+	::memset(&surface.oem_pg[idx],((flags & Flag_NLS) == Flag_NLS ? NLS_IS_OEMPG(oempg) ? oempg : 0 : 0),fillsize);
+	::memset(&surface.attrs[idx],text.system,fillsize);
 	check_win();
 	updatescreenpiece(0,wwidth,i+1);
     }
@@ -1428,36 +1077,20 @@ void TWindow::clreol(unsigned char filler)
 	oempg = filler;
 	msystem->nls_oem2osdep(&filler,1);
     }
-    ::memset(&body.chars[idx],filler,size);
-    ::memset(&body.oem_pg[idx],((flags & Flag_NLS) == Flag_NLS ? NLS_IS_OEMPG(oempg) ? oempg : 0 : 0),size);
-    ::memset(&body.attrs[idx],text.system,size);
+    ::memset(&surface.chars[idx],filler,size);
+    ::memset(&surface.oem_pg[idx],((flags & Flag_NLS) == Flag_NLS ? NLS_IS_OEMPG(oempg) ? oempg : 0 : 0),size);
+    ::memset(&surface.attrs[idx],text.system,size);
     check_win();
     updatescreenpiece(cur_x,wwidth,cur_y+1);
 }
-
-TWindow* TWindow::set_focus()
-{
-    TWindow *ret;
-    ret = cursorwin;
-    if((flags & Flag_Has_Cursor) == Flag_Has_Cursor) {
-	cursorwin = this;
-    }
-    paint_cursor();
-    return ret;
-}
-
-TWindow* TWindow::get_focus() { return cursorwin; }
-
-tRelCoord TWindow::where_x() const { return (flags & Flag_Has_Frame) == Flag_Has_Frame ? cur_x : cur_x+1; }
-tRelCoord TWindow::where_y() const { return (flags & Flag_Has_Frame) == Flag_Has_Frame ? cur_y : cur_y+1; }
 
 void TWindow::wputc_oem(char ch,char oempg,char color,bool update)
 {
     unsigned idx;
     idx = cur_x + cur_y*wwidth;
-    body.chars[idx] = ch;
-    body.oem_pg[idx] = oempg;
-    body.attrs[idx] = color;
+    surface.chars[idx] = ch;
+    surface.oem_pg[idx] = oempg;
+    surface.attrs[idx] = color;
     check_win();
     if(update) updatescreenchar(cur_x+1,cur_y+1,NULL);
 }
@@ -1487,7 +1120,7 @@ char TWindow::getch() const
     cx = X1 + cur_x;
     cy = Y1 + cur_y;
     idx = cx + cy*wwidth;
-    return body.chars[idx];
+    return surface.chars[idx];
 }
 
 int TWindow::puts(const std::string& str)
@@ -1531,17 +1164,17 @@ int TWindow::puts(const std::string& str)
 	cx = cur_x;
 	cy = cur_y;
 	if(is_valid_xy(cx,cy)) {
-	    body.chars[vidx] = ch;
+	    surface.chars[vidx] = ch;
 	    if((flags & Flag_NLS) == Flag_NLS && NLS_IS_OEMPG(as_oem))
-		body.oem_pg[vidx] = as_oem;
-	    else body.oem_pg[vidx] = 0;
-	    body.attrs[vidx++] = text.system;
+		surface.oem_pg[vidx] = as_oem;
+	    else surface.oem_pg[vidx] = 0;
+	    surface.attrs[vidx++] = text.system;
 	    cur_x++;
 	    freq++;
 	}
     }
     updatescreenpiece(usx,cur_x,cur_y+1);
-    paint_cursor();
+    goto_xy(cur_x,cur_y);
     if(__nls_ptr) delete __nls_ptr;
     return freq;
 }
@@ -1609,9 +1242,9 @@ int TWindow::direct_write(tRelCoord x, tRelCoord y,const any_t*str,const ColorAt
 	adjustColor(fore,back);
 	__attr[i] = LOGFB_TO_PHYS(fore,back);
     }
-    ::memcpy(&body.chars[ioff],__nls,rlen);
-    ::memcpy(&body.oem_pg[ioff],__oem,rlen);
-    ::memcpy(&body.attrs[ioff],__attr,rlen);
+    ::memcpy(&surface.chars[ioff],__nls,rlen);
+    ::memcpy(&surface.oem_pg[ioff],__oem,rlen);
+    ::memcpy(&surface.attrs[ioff],__attr,rlen);
 //    text.system=attrs[len-1];
     check_win();
     updatescreenpiece(x,x+rlen,y+1);
@@ -1663,9 +1296,9 @@ int TWindow::write(tRelCoord x, tRelCoord y,const uint8_t* str,const ColorAttr* 
 	adjustColor(fore,back);
 	__attr[i] = LOGFB_TO_PHYS(fore,back);
     }
-    ::memcpy(&body.chars[ioff],__nls,rlen);
-    ::memcpy(&body.oem_pg[ioff],__oem,rlen);
-    ::memcpy(&body.attrs[ioff],__attr,rlen);
+    ::memcpy(&surface.chars[ioff],__nls,rlen);
+    ::memcpy(&surface.oem_pg[ioff],__oem,rlen);
+    ::memcpy(&surface.attrs[ioff],__attr,rlen);
 //    text.system=attrs[len-1];
     check_win();
     updatescreenpiece(x,x+rlen,y+1);
@@ -1678,9 +1311,9 @@ void TWindow::write(tRelCoord x,tRelCoord y,const tvideo_buffer& buff)
     rlen = (unsigned)x+buff.length() > wwidth ? wwidth-(unsigned)x+1 : buff.length();
     if((unsigned)y <= wheight) {
 	i = (x-1)+(y-1)*wwidth;
-	::memcpy(&body.chars[i],buff.get_chars(),rlen);
-	::memcpy(&body.oem_pg[i],buff.get_oempg(),rlen);
-	::memcpy(&body.attrs[i],buff.get_attrs(),rlen);
+	::memcpy(&surface.chars[i],buff.get_chars(),rlen);
+	::memcpy(&surface.oem_pg[i],buff.get_oempg(),rlen);
+	::memcpy(&surface.attrs[i],buff.get_attrs(),rlen);
 	check_win();
 	updatescreenpiece(x-1,x-1+rlen,y);
     }
@@ -1693,51 +1326,34 @@ tvideo_buffer TWindow::read(tRelCoord x,tRelCoord y,size_t len) const
     tvideo_buffer rc(rlen);
     if((unsigned)y <= wheight) {
 	idx = (x-1)+(y-1)*wwidth;
-	rc.assign(&body.chars[idx],&body.oem_pg[idx],&body.attrs[idx],rlen);
+	rc.assign(&surface.chars[idx],&surface.oem_pg[idx],&surface.attrs[idx],rlen);
 	check_win();
     }
     return rc;
 }
 
-void TWindow::freeze() { iflags &= ~IFLG_ENABLED; }
-
 void TWindow::refresh(tRelCoord y)
 {
-    iflags |= IFLG_ENABLED;
-    if((flags & Flag_Has_Frame) == Flag_Has_Frame) y++;
+    TObject::refresh(y);
     updatescreenpiece(0,wwidth,y);
-    paint_cursor();
 }
 
 void TWindow::refresh_piece(tRelCoord stx,tRelCoord endx,tRelCoord y)
 {
-    iflags |= IFLG_ENABLED;
-    if((flags & Flag_Has_Frame) == Flag_Has_Frame) { stx++; endx++; y++; }
+    TObject::refresh_piece(stx,endx,y);
     updatescreenpiece(stx-1,endx-1,y);
-    paint_cursor();
 }
 
 void TWindow::refresh()
 {
-    iflags |= IFLG_ENABLED;
+    TObject::refresh();
     updatescreen((flags & Flag_Has_Frame) == Flag_Has_Frame ? false : true);
-    paint_cursor();
 }
 
 void TWindow::refresh_full()
 {
-    iflags |= IFLG_ENABLED;
+    TObject::refresh_full();
     updatescreen(true);
-    paint_cursor();
-}
-
-any_t* TWindow::get_user_data() const { return usrData; }
-
-any_t* TWindow::set_user_data(any_t*data) {
-    any_t*ret;
-    ret = usrData;
-    usrData = data;
-    return ret;
 }
 
 void TWindow::scroll_up(tRelCoord ypos, unsigned npos)
@@ -1811,11 +1427,5 @@ void TWindow::scroll_right(tRelCoord xpos, unsigned npos)
 	    write(i,j,accel);
 	}
     }
-}
-
-long TWindow::send_message(unsigned event,unsigned long event_param,const any_t*event_data)
-{
-    if(method) return ((twClassFunc)(method))(this,event,event_param,event_data);
-    return 0L;
 }
 } // namespace	usr

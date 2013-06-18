@@ -18,15 +18,6 @@ std::string System::get_rc_dir(const std::string& progname) const { return __get
 unsigned System::set_timer_callback(unsigned ms,timer_callback *func) const { return __OsSetTimerCallBack(ms,func); }
 void System::restore_timer() const { __OsRestoreTimer(); }
 /* National Language Support */
-void System::nls_prepare_oem_for_vio(tvioBuff *it,unsigned size) const {
-    unsigned i;
-    unsigned char ch;
-    for(i = 0;i < size;i++) {
-	ch = it->chars[i];
-	it->oem_pg[i] = NLS_IS_OEMPG(ch) ? ch : 0;
-    }
-    nls_oem2osdep(it->chars,size);
-}
 void System::nls_oem2osdep(unsigned char *str,unsigned size) const { __nls_OemToOsdep(str,size); }
 void System::nls_cmdline2oem(unsigned char *str,unsigned size) const { __nls_CmdlineToOem(str,size); }
 void System::nls_oem2fs(unsigned char *str,unsigned size) const { __nls_OemToFs(str,size); }

@@ -16,6 +16,7 @@ SRCS= bbio.cpp \
       libbeye.cpp \
       mmfile.cpp \
       mp_malloc.cpp \
+      tobject.cpp \
       tw_class.cpp \
       twindow.cpp
 

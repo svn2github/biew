@@ -22,6 +22,8 @@
 #include "libbeye/libbeye.h"
 using namespace	usr;
 
+#include "libbeye/tobject.h"
+
 namespace	usr {
     class System;
     class TConsole;
@@ -162,9 +164,6 @@ namespace	usr {
 	TWC_BLACK_SQUARE=0xFE  /**< Black square */
     };
 
-    /** Describes window-related coordinate type */
-    typedef unsigned tRelCoord;
-
     /** Defines color pair that contains original user color and converted system color */
     struct DefColor {
 	ColorAttr user;        /**< Original user color value */
@@ -180,47 +179,9 @@ namespace	usr {
 		      /** Converts physical color attributes into logical foreground and background */
     inline void PHYS_TO_LOGFB(ColorAttr attr,Color& fore,Color& back) { fore = FORE_COLOR(attr); back = BACK_COLOR(attr); }
 
-    /* Below located list of window messages. Prefix WM_ was imported from
-	MSWindows SDK, but I hope it so understandable. */
-    enum {
-	WM_NULL		=0x0000, /**< Never to send */
-	WM_CREATE	=0x0001, /**< It sent when window is being created, has no parameters */
-	WM_DESTROY	=0x0002, /**< It sent when window is being destroyed, has no parameters*/
-	WM_SHOW		=0x0003, /**< It sent when window is being displayed, has no parameters*/
-	WM_TOPSHOW	=0x0004, /**< It sent when window is being displayed on top of all windows, has no parameters*/
-	WM_SHOWBENEATH	=0x0005, /**< It sent when window is being displayed beneath of other window, has handle of top window as event_data*/
-	WM_HIDE		=0x0006 /**< It sent when window is being hidded, has no parameters */
-    };
-
-    enum {
-	TWIF_FORCEMONO   =0x00000001L, /**< forces monochrome mode of video output @see twInit */
-    };
-		   /** Initialization of twin library and video subsystem
-		     * @param user_cp     indicates character's codepage or IBM866 if NULL
-		     * @param vio_flags   flags for _init_vio
-		     * @param twin_flgs   flags of twin library (see above)
-		     * @return            none
-		     * @note              Call this function before any other
-		     * @see               twDestroy
-		    **/
-    TConsole&	__FASTCALL__ twInit(System& system,const std::string& user_cp, unsigned long vio_flags, unsigned long twin_flgs );
-
-		   /** Terminates twin library and video subsystem
-		     * @return            none
-		     * @note              Call this function after all other
-		     * @see               twInit
-		    **/
-    void	__FASTCALL__ twDestroy();
-
     /** Internal structure of text window */
-    class TWindow : public Opaque {
+    class TWindow : public TObject {
 	public:
-	    enum twc_flag {
-		Flag_None	=0x0000, /**< Indicates no flags */
-		Flag_Has_Frame	=0x0001, /**< Indicates that window has frame border */
-		Flag_Has_Cursor	=0x0002, /**< Indicates that window has text cursor */
-		Flag_NLS	=0x0100  /**< Indicates that window works in OEM mode */
-	    };
 	    /** align modes for title and footer */
 	    enum title_mode {
 		TMode_Left = 0,	/**< left alignment */
@@ -255,14 +216,6 @@ namespace	usr {
 		    **/
 	    virtual ~TWindow();
 
-
-		   /** Calls window function with given arguments
-		     * @return                function answer
-		     * @param event           one of WM_* commands
-		     * @param event_param     command related parameter
-		     * @param event_data      command related data
-		    **/
-	    virtual long		send_message(unsigned event,unsigned long event_param,const any_t*event_data);
 
 		   /** Draws frame of given type in active window
 		     * @return                none
@@ -316,23 +269,6 @@ namespace	usr {
 		    **/
 	    virtual void		snapshot();
 
-		   /** Set cursor into the given window.
-		     * @param win          handle of window to be used
-		     * @return             focus of previous window or NULL if none
-		     * @note               \e win need not be the top window; not
-		     *                     does \e win even have to be visible on
-		     *                     the screen.
-		    **/
-	    virtual TWindow*		set_focus();
-
-		   /** Alters position of given window.
-		     * @param win          handle of window to be moved
-		     * @param dx,dy        specify relative change of x and y coordinates.
-		     * @return             none
-		     * @note               The contents of the window will be moved with it.
-		    **/
-	    virtual void		move(tAbsCoord dx, tAbsCoord dy);
-
 		   /** Alters size of given window.
 		     * @param win          handle of window to be resized
 		     * @param width,height specify new width and height of the window.
@@ -378,26 +314,6 @@ namespace	usr {
 		    **/
 	    virtual void		scroll_right(tRelCoord xpos, unsigned npos);
 
-		   /** Does centring of given window relatively other window or screen.
-		     * @param it           handle of window to be centred
-		     * @param parent       handle of parent window.
-		     * @return             none
-		     * @note               If \e parent is NULL, the window will
-		     *                     be centred for screen
-		    **/
-	    virtual void		into_center(const TWindow& parent);
-
-	    virtual void		into_center();
-
-		   /** Freezes redrawing of window.
-		     * @param parent       handle of centring window.
-		     * @return             none
-		     * @note               Freezed only redrawing of the window.
-		     *                     All output will be produced, but
-		     *                     screen will not be updated.
-		    **/
-	    virtual void		freeze();
-
 		   /** Updates the line of screen by line of buffer of given window.
 		     * @param win          handle of refreshing window.
 		     * @param y            specify relative y coordinate of line to be refreshed.
@@ -436,77 +352,6 @@ namespace	usr {
 		     *                     the screen.
 		    **/
 	    virtual void		refresh_full();
-
-		   /** Returns pointer to the user data that stored in window.
-		     * @param win          handle of window.
-		     * @return             pointer to user data
-		     * @note               If no user data previously stored
-		     *                     in window then NULL is returned.
-		    **/
-	    virtual any_t*		get_user_data() const __PURE_FUNC__;
-
-		   /** Saves pointer to the user data in window.
-		     * @param win          handle of window.
-		     * @param data         pointer to the user data to be stored.
-		     * @return             pointer to user data that previously stored in window
-		     * @note               Pointer to previously stored user
-		     *                     data is overwrited.
-		    **/
-	    virtual any_t*		set_user_data(any_t*data);
-
-		   /** Returns screen position of window.
-		     * @param win          handle of window.
-		     * @param x1_,y1_,x2_,y2_ pointers to coordinates where will be saved window position.
-		     * @return             none
-		    **/
-	    virtual void		get_pos(tAbsCoord& x1_,tAbsCoord& y1_,tAbsCoord& x2_,tAbsCoord& y2_);
-
-		   /** Returns width of window.
-		     * @param win          handle of window.
-		     * @return             width of window
-		    **/
-	    virtual unsigned		width() const __PURE_FUNC__;
-
-		   /** Returns width of height.
-		     * @param win          handle of window.
-		     * @return             height of window
-		    **/
-	    virtual unsigned		height() const __PURE_FUNC__;
-
-		   /** Returns width of window which is available for output.
-		     * @param win          handle of window.
-		     * @return             width of window which is available for output
-		    **/
-	    virtual unsigned		client_width() const __PURE_FUNC__;
-
-		   /** Returns height of window which is available for output.
-		     * @param win          handle of window.
-		     * @return             height of window which is available for output
-		    **/
-	    virtual unsigned		client_height() const __PURE_FUNC__;
-
-		   /** Checks visibility of window piece.
-		     * @param x,y          specify coordinates of the location.
-		     * @return             true if specified window is visible
-		     *                     in specified location (Is not obscured).
-		    **/
-	    virtual bool		is_piece_visible(tRelCoord x, tRelCoord y) const __PURE_FUNC__;
-
-		   /** Converts window-relative coordinates to screen coordinates
-		     * @param win          handle of window
-		     * @param x,y          specify the relative coordinates.
-		     * @param xs,ys        specify the screen coordinates.
-		     * @return             none
-		    **/
-	    virtual void		cvt_win_coords(tRelCoord x, tRelCoord y,tAbsCoord& xs,tAbsCoord& ys) const __PURE_FUNC__;
-
-		   /** Converts screen-relative coordinates to relative window coordinates
-		     * @param win          handle of window
-		     * @param x,y          specify screen coordinates.
-		     * @param xr,yr        specify pointers to the relative coordinates.
-		     * @return             true if successful, false otherwise.
-		    **/
-	    virtual bool		cvt_screen_coords(tAbsCoord x, tAbsCoord y,tRelCoord& xr,tRelCoord& yr) const __PURE_FUNC__;
 
 		   /** Clears the current window window with given filler.
 		     * @param filler       character for filling the window
@@ -680,28 +525,6 @@ namespace	usr {
 		    **/
 	    virtual void		set_footer(const std::string& footer,title_mode footermode,ColorAttr attr);
 
-		   /** Sets the cursor coordiantes relative to the used window
-		     * @param x,y         specify horizontal and vertical coordinates for the location
-		     * @return            none
-		     * @note              If X or Y are outside the window frame,
-		     *                    they will be clipped.
-		    **/
-	    virtual void		goto_xy(tRelCoord x,tRelCoord y);
-
-		   /** Returns the x coordinate of the current cursor position, within currently used window.
-		     * @return            none
-		     * @note              If X or Y are outside the window frame,
-		     *                    they will be clipped.
-		    **/
-	    virtual tRelCoord		where_x() const __PURE_FUNC__;
-
-		   /** Returns the y coordinate of the current cursor position, within currently used window.
-		     * @return            none
-		     * @note              If X or Y are outside the window frame,
-		     *                    they will be clipped.
-		    **/
-	    virtual tRelCoord		where_y() const __PURE_FUNC__;
-
 		   /** Outputs the character to the active window at current cursor position.
 		     * @param ch          character to be written
 		     * @return            none
@@ -760,49 +583,6 @@ namespace	usr {
 	    virtual int			write(tRelCoord x,tRelCoord y,const uint8_t* buff,unsigned len);
 	    virtual int			write(tRelCoord x,tRelCoord y,const uint8_t* chars,const ColorAttr* attrs,unsigned len);
 /* Static members */
-		   /** Returns the window currently being under focus.
-		     * @return             handle of window currently being used
-		     * @note               If no window has focus then return NULL
-		    **/
-	    static TWindow*		get_focus() __PURE_FUNC__;
-		   /** Returns handle of the window currently displayed at the screen position x and y.
-		     * @param x,y          specify coordinates of the location.
-		     * @return             Handle for the window displayed at the
-		     *                     specified position if a window is
-		     *                     displayed. If no window is displayed
-		     *                     at the this position, NULL is returned.
-		    **/
-	    static TWindow*		at_pos(tAbsCoord x, tAbsCoord y) __PURE_FUNC__;
-
-		enum e_cursor {
-		    Cursor_Unknown	=-1, /**< Defines that cursor in invisible state */
-		    Cursor_Off		=0, /**< Defines that cursor in invisible state */
-		    Cursor_Normal	=1, /**< Defines that cursor in normal state (filles 20% of the character cell) */
-		    Cursor_Solid	=2 /**< Defines that cursor in solid state (filles 100% of the character cell) */
-		};
-		   /** Sets the size and visibility of the cursor
-		     * @param  type       indicates type of cursor
-		     * @return            none
-		     * @note              The cursor in particular window is
-		     *                    visible only when the type of cursor
-		     *                    is normal or solid and window is
-		     *                    visible and has focus. Main difference
-		     *                    between twSetCursorType and __vioSetCursorType
-		     *                    is rememberring of cursor type and caching
-		     *                    every call to the OS.
-		    **/
-	    static void			set_cursor_type(e_cursor type);
-
-		   /** Retrieves information about the size and visibility of the cursor
-		     * @param             none
-		     * @return            Current type of the cursor
-		     * @note              Main difference between twGetCursorType
-		     *                    and __vioGetCursorType is rememberring
-		     *                    of cursor type and caching every call
-		     *                    to the OS.
-		    **/
-	    static e_cursor		get_cursor_type();
-
 		   /** Remaps logical color with new physical value.
 		     * @param color       lopical color to be remapped
 		     * @param value       specifies new physical value of logical color
@@ -823,8 +603,6 @@ namespace	usr {
 	    static const unsigned char THICK_FRAME[];     /**< Flat frame of full width (filles 100% of the character cells) */
 	    static const unsigned char UP3D_FRAME[];      /**< Emulates 3D-frame that similar unpressed button */
 	    static const unsigned char DN3D_FRAME[];      /**< Emulates 3D-frame that similar pressed button */
-	    static TConsole*	tconsole;
-	    static System*	msystem;
 	protected:
 		   /** Writes buffer directly to the active window at specified location.
 		     * @param x,y         specify location of output
@@ -865,19 +643,13 @@ namespace	usr {
 		    **/
 	    virtual void		write(tRelCoord x,tRelCoord y,const tvideo_buffer& buff);
 
-	    void		create(tAbsCoord x1_, tAbsCoord y1_, tAbsCoord width, tAbsCoord height, unsigned flags);
-	    void		makewin(tAbsCoord x1, tAbsCoord y1, tAbsCoord width, tAbsCoord height);
-	    void		__unlistwin();
-	    TWindow*		__prevwin();
+	    void		create(tAbsCoord x1_, tAbsCoord y1_, tAbsCoord width, tAbsCoord height, twc_flag flags);
+
 	    bool		test_win() const __PURE_FUNC__;
 	    void		check_win() const __PURE_FUNC__;
 	    void		savedwin2screen();
 	    void		updatescreen(bool full_area);
-	    TWindow*		__find_over(tAbsCoord x,tAbsCoord y) const __PURE_FUNC__;
-	    bool		is_overlapped() const __PURE_FUNC__;
-	    void		paint_cursor() const;
-	    void		set_xy(tRelCoord x,tRelCoord y);
-	    void		igoto_xy(tRelCoord x,tRelCoord y);
+
 	    void		wputc_oem(char ch,char oempg,char color,bool update);
 	    void		paint_internal();
 	    void		make_frame();
@@ -887,25 +659,14 @@ namespace	usr {
 	    void		screen2win();
 	    void		updatescreenpiece(tRelCoord stx,tRelCoord endx,tRelCoord y);
 	    void		updatewinmem();
-	    void		__athead();
-	    void		into_center(tAbsCoord w,tAbsCoord h);
 
 	    static inline bool NLS_IS_OEMPG(unsigned char ch) __CONST_FUNC__ { return ch >= 0xB0 && ch <= 0xDF; }
 	    inline char		do_oem_pg(char ch) const __CONST_FUNC__ { return ((flags & Flag_NLS) == Flag_NLS ? NLS_IS_OEMPG(ch) ? ch : 0 : 0); }
 	    inline void		wputc(char ch,char color,bool update) { wputc_oem(ch,0,color,update); }
-	    inline void		__atwin(TWindow* prev) { if(!prev) __athead(); else { next = prev->next; prev->next = this; }}
-	    inline bool		__topmost() const __PURE_FUNC__ { return !is_overlapped(); }
-	    inline bool		is_valid_xy(tAbsCoord x,tAbsCoord y) const __CONST_FUNC__ {
-					return ((flags & Flag_Has_Frame) == Flag_Has_Frame ?
-						x && x < wwidth-1 && y && y < wheight-1 :
-						x < wwidth && y < wheight); }
-	    inline bool		is_valid_x(tAbsCoord x) const { return ((flags & Flag_Has_Frame) == Flag_Has_Frame ? x && x < wwidth-1: x < wwidth); }
-	    inline bool		is_valid_y(tAbsCoord y) const { return ((flags & Flag_Has_Frame) == Flag_Has_Frame ? y && y < wheight-1:y < wheight); }
-	    inline void		updatescreenchar(tRelCoord x,tRelCoord y,tvioBuff* accel) const { updatescreencharfrombuff(x-1,y-1,body,accel); }
+
+	    inline void		updatescreenchar(tRelCoord x,tRelCoord y,tvioBuff* accel) const { updatescreencharfrombuff(x-1,y-1,surface,accel); }
 	    inline void		restorescreenchar(tRelCoord x,tRelCoord y,tvioBuff* accel) const { updatescreencharfrombuff(x-1,y-1,saved,accel); }
 
-	    static TWindow*	__findcursorablewin() __PURE_FUNC__;
-	    static TWindow*	__at_point(TWindow* iter,tAbsCoord x,tAbsCoord y) __PURE_FUNC__;
 	    static tRelCoord	calc_title_off(title_mode mode,unsigned w,unsigned slen) __CONST_FUNC__;
 	    static void		adjustColor(Color& fore,Color& back);
 	    static DefColor	__set_color(Color fore,Color back);
@@ -916,21 +677,10 @@ namespace	usr {
 					    /*                   4       5 */
 					    /*                   |       | */
 					    /*                   6---7---8 */
-	    unsigned long	iflags;      /**< contains internal flags of window state */
-	    TWindow*		next;        /**< pointer to next window in list */
-	    any_t*		usrData;     /**< user data pointer */
-	    tvioBuff		body;        /**< Buffer containing image of window frame */
+	    tvioBuff		surface;     /**< Buffer containing image of window frame */
 	    tvioBuff		saved;       /**< Buffer containing saved image under window */
 	    char*		Title;       /**< Caption of window */
 	    char*		Footer;      /**< Footer of window */
-	    any_t*		method;      /**< Class callback */
-	    unsigned		class_flags; /**< Class flags */
-	    unsigned		wsize;       /**< Size of buffers in bytes */
-	    unsigned		wwidth;      /**< width of window */
-	    unsigned		wheight;     /**< height of window */
-	    unsigned		flags;       /**< Window flags */
-	    tAbsCoord		X1,Y1,X2,Y2; /**< coordinates of window on the screen */
-	    tRelCoord		cur_x,cur_y; /**< coordinates of cursor position inside the window */
 	    title_mode		TitleMode;   /**< alignment mode of title */
 	    title_mode		FooterMode;  /**< alignment mode of footer */
 	    DefColor		text;        /**< default color of text */
@@ -938,21 +688,10 @@ namespace	usr {
 	    DefColor		title;       /**< default color of title */
 	    DefColor		footer;      /**< default color of footer text */
 
-	    static TWindow*	head;
-	    static TWindow*	cursorwin;
 	    static const unsigned char brightness[16];
 	    static uint8_t	color_map[16];
-	    static e_cursor	c_type;
     };
-    inline TWindow::twc_flag operator~(TWindow::twc_flag a) { return static_cast<TWindow::twc_flag>(~static_cast<unsigned>(a)); }
-    inline TWindow::twc_flag operator|(TWindow::twc_flag a, TWindow::twc_flag b) { return static_cast<TWindow::twc_flag>(static_cast<unsigned>(a)|static_cast<unsigned>(b)); }
-    inline TWindow::twc_flag operator&(TWindow::twc_flag a, TWindow::twc_flag b) { return static_cast<TWindow::twc_flag>(static_cast<unsigned>(a)&static_cast<unsigned>(b)); }
-    inline TWindow::twc_flag operator^(TWindow::twc_flag a, TWindow::twc_flag b) { return static_cast<TWindow::twc_flag>(static_cast<unsigned>(a)^static_cast<unsigned>(b)); }
-    inline TWindow::twc_flag operator|=(TWindow::twc_flag& a, TWindow::twc_flag b) { return (a=static_cast<TWindow::twc_flag>(static_cast<unsigned>(a)|static_cast<unsigned>(b))); }
-    inline TWindow::twc_flag operator&=(TWindow::twc_flag& a, TWindow::twc_flag b) { return (a=static_cast<TWindow::twc_flag>(static_cast<unsigned>(a)&static_cast<unsigned>(b))); }
-    inline TWindow::twc_flag operator^=(TWindow::twc_flag& a, TWindow::twc_flag b) { return (a=static_cast<TWindow::twc_flag>(static_cast<unsigned>(a)^static_cast<unsigned>(b))); }
 } // namespace	usr
-#include "libbeye/tw_class.h"
 
 #endif
 

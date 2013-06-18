@@ -320,7 +320,7 @@ struct percent_data
   bool    is_first;
 };
 
-static long PercentWndCallBack(TWindow *it,unsigned event, unsigned long param,const any_t*data)
+static long PercentWndCallBack(TObject *it,unsigned event, unsigned long param,const any_t*data)
 {
   struct percent_data *my_data;
   UNUSED(param);

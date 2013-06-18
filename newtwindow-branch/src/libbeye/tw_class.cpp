@@ -19,7 +19,7 @@ using namespace	usr;
 **/
 #include <string.h>
 #include <stdlib.h>
-#include "libbeye/twindow.h"
+#include "libbeye/tobject.h"
 
 static std::set<TwClass> class_set;
 

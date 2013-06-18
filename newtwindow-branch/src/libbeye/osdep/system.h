@@ -85,14 +85,6 @@ namespace	usr {
 	   /** Checks whether the specified character is OEM pseudographical symbol */
 	    static inline bool NLS_IS_OEMPG(unsigned char ch) __CONST_FUNC__ { return ch >= 0xB0 && ch <= 0xDF; }
 
-		   /** Prepares tvioBuff buffer from OEM codepage to currently used by OS.
-		     * @return                none
-		     * @param it              buffer to be converted
-		     * @param size            size of buffer elemets in bytes
-		     * @see                   __nls_OemToOsdep __nls_CmdlineToOem NLS_IS_OEMPG
-		    **/
-	    void		nls_prepare_oem_for_vio(tvioBuff *it,unsigned size) const;
-
 		   /** Converts buffer from OEM codepage to currently used by OS.
 		     * @return                none
 		     * @param str             buffer to be converted

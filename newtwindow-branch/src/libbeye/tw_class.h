@@ -17,8 +17,8 @@
 #ifndef __TW_CLASS_H
 #define __TW_CLASS_H 1
 
-#ifndef __TWINDOW_HPP_INCLUDED
-#error Never use this header file directly. Use twindow.h instead
+#ifndef __TOBJECT_HPP_INCLUDED
+#error Never use this header file directly. Use tobject.h instead
 #endif
 
 #include <set>
@@ -31,7 +31,7 @@
 		     * @param event_param     indicates parameters of event
 		     * @param event_data      indicates data of event
 		    **/
-typedef long (*twClassFunc)(TWindow* win,unsigned event,unsigned long event_param,const any_t*event_data);
+typedef long (*twClassFunc)(TObject* win,unsigned event,unsigned long event_param,const any_t*event_data);
 
 enum {
     __CS_ORDINAL=0x0000 /**< Indicates ordinal type of callback function */
