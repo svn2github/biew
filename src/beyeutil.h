@@ -64,7 +64,16 @@ namespace	usr {
     int    MainActionFromMenu();
     void   About();
 
-    __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos);
+    class BeyeContext;
+    class WhereAMI : public Opaque {
+	public:
+	    WhereAMI(BeyeContext&);
+	    virtual ~WhereAMI();
+
+	    virtual __filesize_t run(__filesize_t ctrl_pos);
+	private:
+	    BeyeContext& bctx;
+    };
 
     void  ShowSysInfo();
 } // namespace	usr

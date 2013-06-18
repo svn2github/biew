@@ -528,10 +528,18 @@ bye_help:
     delete hwnd;
 }
 
-__filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
+
+WhereAMI::WhereAMI(BeyeContext& b)
+	:bctx(b)
+{
+}
+
+WhereAMI::~WhereAMI() {}
+
+__filesize_t WhereAMI::run(__filesize_t ctrl_pos)
 {
     TWindow* hwnd,*wait_wnd;
-    std::ostringstream vaddr,os;
+    std::ostringstream vos,os;
     Symbol_Info prev,next;
     Object_Info obj;
     const char *btn;
@@ -540,17 +548,17 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
     hwnd->set_footer("[Enter] - Prev. entry [Ctrl-Enter | F5] - Next entry]",TWindow::TMode_Right,dialog_cset.selfooter);
     hwnd->goto_xy(1,1);
     wait_wnd = PleaseWaitWnd();
-    cfpos = beye_context().tell();
-    va = beye_context().bin_format().pa2va(ctrl_pos);
+    cfpos = bctx.tell();
+    va = bctx.bin_format().pa2va(ctrl_pos);
     if(va==Plugin::Bad_Address) va = ctrl_pos;
-    vaddr<<std::hex<<std::setfill('0')<<std::setw(16)<<va<<"H";
-    prev = beye_context().bin_format().get_public_symbol(ctrl_pos,true);
-    next = beye_context().bin_format().get_public_symbol(ctrl_pos,false);
-    obj  = beye_context().bin_format().get_object_attribute(ctrl_pos);
+    vos<<std::hex<<std::setfill('0')<<std::setw(16)<<va<<"H";
+    prev = bctx.bin_format().get_public_symbol(ctrl_pos,true);
+    next = bctx.bin_format().get_public_symbol(ctrl_pos,false);
+    obj  = bctx.bin_format().get_object_attribute(ctrl_pos);
     if(!obj.number) {
 	obj.name.clear();
 	obj.start = 0;
-	obj.end = beye_context().flength();
+	obj.end = bctx.flength();
 	obj._class = Object_Info::Code;
 	obj.bitness = Bin_Format::Use16;
     }
@@ -564,7 +572,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
 	default: btn = "";
     }
     os<<"File  offset : "<<std::hex<<std::setfill('0')<<std::setw(16)<<ctrl_pos<<"H"<<std::endl
-	<<"Virt. address: "<<vaddr<<std::endl
+	<<"Virt. address: "<<vos<<std::endl
 	<<(prev.pa == ctrl_pos ? "Curr." : "Prev.")<<" entry  : "<<prev.name<<std::endl
 	<<"Next  entry  : "<<next.name<<std::endl
 	<<"Curr. object : #"<<obj.number<<" "<<(obj._class == Object_Info::Code ? "CODE" : obj._class == Object_Info::Data ? "DATA" : "no obj.")
@@ -580,7 +588,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
 	    case KE_ESCAPE: goto exit;
 	    case KE_ENTER:
 		      if(prev.pa) ret_addr = prev.pa;
-		      else beye_context().ErrMessageBox(NOT_ENTRY,"");
+		      else bctx.ErrMessageBox(NOT_ENTRY,"");
 		    goto exit;
 	    case KE_F(4): { /** save content to disk */
 		char ofname[256];
@@ -595,20 +603,20 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
 			out<<os;
 			out.close();
 		    }
-		    else beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
+		    else bctx.errnoMessageBox(WRITE_FAIL,"",errno);
 		}
 	    }
 	    break;
 	    case KE_F(5):
 	    case KE_CTL_ENTER:
 		      if(next.pa) ret_addr = next.pa;
-		      else beye_context().ErrMessageBox(NOT_ENTRY,"");
+		      else bctx.ErrMessageBox(NOT_ENTRY,"");
 		    goto exit;
 	    default: break;
 	}
     }
 exit:
-    beye_context().bm_file().seek(cfpos,binary_stream::Seek_Set);
+    bctx.bm_file().seek(cfpos,binary_stream::Seek_Set);
     delete hwnd;
     return ret_addr;
 }
