@@ -161,7 +161,7 @@ void BeyeContext::main_loop()
 		    }
 	    }
 	    break;
-	    case KE_SHIFT_F(5): nfp = WhereAMI(nfp); break;
+	    case KE_SHIFT_F(5): { WhereAMI wami(beye_context()); nfp = wami.run(nfp); } break;
 	    case KE_F(6):
 		bm_file().reread();
 		s.reset();
