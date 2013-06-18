@@ -331,6 +331,7 @@ namespace	usr {
 
 /** Common disassembler utility */
     char * __FASTCALL__ TabSpace(char * str,unsigned nSpace);
+    std::string __FASTCALL__ TabSpace(const std::string& str,unsigned nSpace);
     void   __FASTCALL__ disSetModifier(char *str,const char *modf);
 } // namespace	usr
 #endif

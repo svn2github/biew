@@ -26,6 +26,7 @@ using namespace	usr;
 #include <algorithm>
 #include <sstream>
 #include <iomanip>
+#include <string>
 
 #include <string.h>
 #include <stdlib.h>
@@ -846,6 +847,17 @@ char * __FASTCALL__ TabSpace(char * str,unsigned nSpace)
     if(len >= nSpace) str[i++] = TWC_DEF_FILLER;
     str[i] = 0;
     return str;
+}
+
+std::string __FASTCALL__ TabSpace(const std::string& str,unsigned nSpace)
+{
+    std::string rc=str;
+    unsigned n,len;
+    len = rc.length();
+    if(len >= nSpace) n=1;
+    else n=nSpace-len;
+    rc.append(n,TWC_DEF_FILLER);
+    return rc;
 }
 
 void  __FASTCALL__ disSetModifier(char *str,const char *modf)

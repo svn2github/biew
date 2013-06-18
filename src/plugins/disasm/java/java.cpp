@@ -17,6 +17,8 @@ using namespace	usr;
  * @since       2004
  * @note        Development, fixes and improvements
 **/
+#include <sstream>
+#include <iomanip>
 
 #include <string.h>
 #include <stdlib.h>
@@ -75,7 +77,6 @@ namespace	usr {
 	    DisMode&		parent;
 	    binary_stream&	main_handle;
 	    const Bin_Format&	bin_format;
-	    char*		outstr;
 	    unsigned		vartail;
 	    __filesize_t	vartail_base, vartail_start, vartail_flags, vartail_idx;
 
@@ -360,155 +361,135 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 					MBuffer buffer,
 					unsigned flags)
 {
-  DisasmRet ret;
-  unsigned mult,idx,tail,npadds=0;
-  unsigned long jflags;
-  memset(&ret,0,sizeof(ret));
-  ret.str = outstr;
-  idx=0;
-  if(buffer[idx]==0xC4)
-  {
-    idx++;
-    mult=2;
-  }
-  else mult=1;
-  jflags=java_codes[buffer[idx]].flags;
-  tail=jflags & JVM_TAIL;
-  tail *= mult;
-  if(flags & __DISF_GETTYPE)
-  {
-    ret.pro_clone = __INSNT_ORDINAL;
-    ret.codelen=ret.field=0;
-    if(!(vartail && ulShift>=vartail_start && ulShift<vartail_start+vartail))
-    switch(buffer[idx])
-    {
-	case 0xA9:
-	case 0xAC:
-	case 0xAD:
-	case 0xAE:
-	case 0xAF:
-	case 0xB0:
-	case 0xB1:  ret.pro_clone = __INSNT_RET;
-		    ret.codelen = tail;
-		    ret.field = tail?idx+1:0;
-		    break;
-	default: break;
+    DisasmRet ret;
+    unsigned mult,idx,tail,npadds=0;
+    unsigned long jflags;
+    std::ostringstream os;
+
+    idx=0;
+    if(buffer[idx]==0xC4) {
+	idx++;
+	mult=2;
     }
-    return ret;
-  }
-  if(vartail && ulShift>=vartail_start && ulShift<vartail_start+vartail)
-  {
+    else mult=1;
+    jflags=java_codes[buffer[idx]].flags;
+    tail=jflags & JVM_TAIL;
+    tail *= mult;
+    if(flags & __DISF_GETTYPE) {
+	ret.pro_clone = __INSNT_ORDINAL;
+	ret.codelen=ret.field=0;
+	if(!(vartail && ulShift>=vartail_start && ulShift<vartail_start+vartail))
+	switch(buffer[idx]) {
+	    case 0xA9:
+	    case 0xAC:
+	    case 0xAD:
+	    case 0xAE:
+	    case 0xAF:
+	    case 0xB0:
+	    case 0xB1:  ret.pro_clone = __INSNT_RET;
+			ret.codelen = tail;
+			ret.field = tail?idx+1:0;
+			break;
+	    default: break;
+	}
+	return ret;
+    }
+    if(vartail && ulShift>=vartail_start && ulShift<vartail_start+vartail) {
 	/* we are in vartail */
 	ret.codelen=vartail_flags & JVM_TABLESWITCH ? 4 : 8;
-	if(!((flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
-	{
-		__filesize_t newpos;
-		unsigned long cval,lval;
-		if(vartail_flags & JVM_TABLESWITCH)
-		{
-			strcpy(outstr,"case ");
-			strcat(outstr,Get8Digit((ulShift-vartail_start)/4+vartail_idx).c_str());
-			strcat(outstr,":");
-			lval=JVM_DWORD((uint32_t*)buffer, 1);
-			newpos=vartail_base+lval;
-			if(lval!=newpos) {
-			    std::string stmp = outstr;
-				parent.append_faddr(main_handle,stmp,ulShift,lval,
-						newpos,DisMode::Near32,0,4);
-			    strcpy(outstr,stmp.c_str());
-			}else
-			    strcat(outstr,Get8Digit(newpos).c_str());
-		}
-		else
-		{
-			strcpy(outstr,"case ");
-			cval=JVM_DWORD((uint32_t*)buffer, 1);
-			strcat(outstr,Get8Digit(cval).c_str());
-			strcat(outstr,":");
-			lval=JVM_DWORD((uint32_t*)(&buffer[4]), 1);
-			newpos=vartail_base+lval;
-			if(lval!=newpos) {
-			    std::string stmp = outstr;
-				parent.append_faddr(main_handle,stmp,ulShift,lval,
-						newpos,DisMode::Near32,0,4);
-			    strcpy(outstr,stmp.c_str());
-			} else
-			    strcat(outstr,Get8Digit(newpos).c_str());
-		}
+	if(!((flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) {
+	    __filesize_t newpos;
+	    unsigned long cval,lval;
+	    if(vartail_flags & JVM_TABLESWITCH) {
+		os.str("case ");
+		os<<std::hex<<std::setfill('0')<<std::setw(8)<<((ulShift-vartail_start)/4+vartail_idx);
+		os<<":";
+		lval=JVM_DWORD((uint32_t*)buffer, 1);
+		newpos=vartail_base+lval;
+		if(lval!=newpos) {
+		    std::string stmp = os.str();
+			parent.append_faddr(main_handle,stmp,ulShift,lval,
+					newpos,DisMode::Near32,0,4);
+		    os.str(stmp);
+		}else
+		    os<<std::hex<<std::setfill('0')<<std::setw(8)<<newpos;
+	    } else {
+		os.str("case ");
+		cval=JVM_DWORD((uint32_t*)buffer, 1);
+		os<<std::hex<<std::setfill('0')<<std::setw(8)<<cval;
+		os<<":";
+		lval=JVM_DWORD((uint32_t*)(&buffer[4]), 1);
+		newpos=vartail_base+lval;
+		if(lval!=newpos) {
+		    std::string stmp = os.str();
+			parent.append_faddr(main_handle,stmp,ulShift,lval,
+					newpos,DisMode::Near32,0,4);
+		    os.str(stmp);
+		} else
+		    os<<std::hex<<std::setfill('0')<<std::setw(8)<<newpos;
+	    }
 	}
-     return ret;
-  }
-  if(jflags & JVM_LOOKUPSWITCH || jflags & JVM_TABLESWITCH)
-  {
-    Symbol_Info prev,next;
-    vartail_flags=jflags;
-    /* Sorry! We really need to know method offset to compute padding bytes */
-    prev = bin_format.get_public_symbol(ulShift,true);
-    next = bin_format.get_public_symbol(ulShift,false);
-    if(next.pa==Plugin::Bad_Address) next.pa=main_handle.flength();
-    if(prev.pa==Plugin::Bad_Address) prev.pa=0;
-    if(!(prev.pa%4)) npadds = (ulShift+1-prev.pa)%4; /* align only if method is aligned */
-    else npadds=0;
-    vartail_base=ulShift;
-    if(jflags & JVM_LOOKUPSWITCH)
-    {
-	tail=8+npadds;
-	vartail=JVM_DWORD((uint32_t*)(&buffer[idx+1+npadds+4]),1)*8;
-	vartail_start=tail+ulShift;
-	if(prev.pa && vartail_start+vartail<=next.pa);
-	else vartail=0;
+	return ret;
     }
-    else
-    {
-	unsigned long hi,lo;
-	tail=12+npadds;
-	lo=JVM_DWORD((uint32_t*)(&buffer[idx+1+npadds+4]),1);
-	hi=JVM_DWORD((uint32_t*)(&buffer[idx+1+npadds+8]),1);
-	vartail=(hi-lo+1)*4;
-	vartail_start=tail+ulShift;
-	vartail_idx=lo;
-	if(hi>lo && prev.pa && vartail_start+vartail<=next.pa);
-	else vartail=0;
+    if(jflags & JVM_LOOKUPSWITCH || jflags & JVM_TABLESWITCH) {
+	Symbol_Info prev,next;
+	vartail_flags=jflags;
+	/* Sorry! We really need to know method offset to compute padding bytes */
+	prev = bin_format.get_public_symbol(ulShift,true);
+	next = bin_format.get_public_symbol(ulShift,false);
+	if(next.pa==Plugin::Bad_Address) next.pa=main_handle.flength();
+	if(prev.pa==Plugin::Bad_Address) prev.pa=0;
+	if(!(prev.pa%4)) npadds = (ulShift+1-prev.pa)%4; /* align only if method is aligned */
+	else npadds=0;
+	vartail_base=ulShift;
+	if(jflags & JVM_LOOKUPSWITCH) {
+	    tail=8+npadds;
+	    vartail=JVM_DWORD((uint32_t*)(&buffer[idx+1+npadds+4]),1)*8;
+	    vartail_start=tail+ulShift;
+	    if(prev.pa && vartail_start+vartail<=next.pa);
+	    else vartail=0;
+	} else {
+	    unsigned long hi,lo;
+	    tail=12+npadds;
+	    lo=JVM_DWORD((uint32_t*)(&buffer[idx+1+npadds+4]),1);
+	    hi=JVM_DWORD((uint32_t*)(&buffer[idx+1+npadds+8]),1);
+	    vartail=(hi-lo+1)*4;
+	    vartail_start=tail+ulShift;
+	    vartail_idx=lo;
+	    if(hi>lo && prev.pa && vartail_start+vartail<=next.pa);
+	    else vartail=0;
+	}
     }
-  }
-  if(!((flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
-		    strcpy(outstr,java_codes[buffer[idx]].name);
-  if(mult==2 && !((flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
-  {
-    if((jflags & JVM_OBJREF1)==JVM_OBJREF1) { jflags &= ~JVM_OBJREF1; jflags |= JVM_OBJREF2; }
-    else
-    if((jflags & JVM_OBJREF2)==JVM_OBJREF2) { jflags &= ~JVM_OBJREF2; jflags |= JVM_OBJREF4; }
-    if((jflags & JVM_CONST1)==JVM_CONST1) { jflags &= ~JVM_CONST1; jflags |= JVM_CONST2; }
-    else
-    if((jflags & JVM_CONST2)==JVM_CONST2) { jflags &= ~JVM_CONST2; jflags |= JVM_CONST4; }
-  }
-  idx++;
-  if(tail)
-  {
-	if(!((flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
-		TabSpace(outstr,TAB_POS);
-	if(!((flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
-	{
-	    if(jflags & JVM_LOOKUPSWITCH)
-	    {
+    if(!((flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) os.str(java_codes[buffer[idx]].name);
+    if(mult==2 && !((flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) {
+	if((jflags & JVM_OBJREF1)==JVM_OBJREF1) { jflags &= ~JVM_OBJREF1; jflags |= JVM_OBJREF2; }
+	else if((jflags & JVM_OBJREF2)==JVM_OBJREF2) { jflags &= ~JVM_OBJREF2; jflags |= JVM_OBJREF4; }
+	if((jflags & JVM_CONST1)==JVM_CONST1) { jflags &= ~JVM_CONST1; jflags |= JVM_CONST2; }
+	else if((jflags & JVM_CONST2)==JVM_CONST2) { jflags &= ~JVM_CONST2; jflags |= JVM_CONST4; }
+    }
+    idx++;
+    if(tail) {
+	if(!((flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) os.str(TabSpace(os.str(),TAB_POS));
+	if(!((flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) {
+	    if(jflags & JVM_LOOKUPSWITCH) {
 		__filesize_t newpos;
 		unsigned long defval,npairs;
 		defval=JVM_DWORD((uint32_t*)(&buffer[idx+npadds]),1);
 		npairs=JVM_DWORD((uint32_t*)(&buffer[idx+npadds+4]),1);
-		if(!vartail) strcat(outstr,"???invalid???");
+		if(!vartail) os<<"???invalid???";
 		else
 		{
-			strcat(outstr,"L");
-			strcat(outstr,Get8Digit(npairs).c_str());
-			strcat(outstr,",default:");
+			os<<"L";
+			os<<std::hex<<std::setfill('0')<<std::setw(8)<<npairs;
+			os<<",default:";
 			newpos=ulShift+(__fileoff_t)defval;
 			if(defval) {
-			    std::string stmp = outstr;
+			    std::string stmp = os.str();
 				parent.append_faddr(main_handle,stmp,ulShift+idx+1+npadds,defval,
 						newpos,DisMode::Near32,0,4);
-			    strcpy(outstr,stmp.c_str());
+			    os.str(stmp);
 			} else
-				strcat(outstr,Get8Digit(newpos).c_str());
+			    os<<std::hex<<std::setfill('0')<<std::setw(8)<<newpos;
 		}
 	    }
 	    else
@@ -517,18 +498,18 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		__filesize_t newpos;
 		unsigned long defval;
 		defval=JVM_DWORD((uint32_t*)(&buffer[idx+npadds]),1);
-		if(!vartail) strcat(outstr,"???invalid???");
+		if(!vartail) os<<"???invalid???";
 		else
 		{
-			strcat(outstr," default:");
+			os<<" default:";
 			newpos=ulShift+(__fileoff_t)defval;
 			if(defval) {
-			    std::string stmp = outstr;
+			    std::string stmp = os.str();
 				parent.append_faddr(main_handle,stmp,ulShift+idx+1+npadds,defval,
 						newpos,DisMode::Near32,0,4);
-			    strcpy(outstr,stmp.c_str());
+			    os.str(stmp);
 			} else
-				strcat(outstr,Get8Digit(newpos).c_str());
+			    os<<std::hex<<std::setfill('0')<<std::setw(8)<<newpos;
 		}
 	    }
 	    else
@@ -537,7 +518,7 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		case 1:
 		{
 		    const char *p;
-		    if(jflags & JVM_OBJREFMASK) strcat(outstr,"#");
+		    if(jflags & JVM_OBJREFMASK) os<<"#";
 		    p=NULL;
 		    if(jflags & JVM_ATYPE)
 		    {
@@ -553,9 +534,8 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 			    case 11: p="T_LONG"; break;
 			}
 		    }
-		    if(p) strcat(outstr,p);
-		    else
-			strcat(outstr,Get2Digit(buffer[idx]).c_str());
+		    if(p) os<<p;
+		    else os<<std::hex<<std::setfill('0')<<std::setw(2)<<unsigned(buffer[idx]);
 		    break;
 		}
 		case 2:
@@ -566,26 +546,26 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		    if((jflags & JVM_CODEREF)==JVM_CODEREF && sval)
 		    {
 			newpos = ulShift + (signed short)sval;
-			std::string stmp = outstr;
+			std::string stmp = os.str();
 			parent.append_faddr(main_handle,stmp,ulShift + 1,sval,
 					newpos,DisMode::Near16,0,2);
-			strcpy(outstr,stmp.c_str());
+			os.str(stmp);
 		    }
 		    else
 		    if((jflags & JVM_OBJREF1)==JVM_OBJREF1)
 		    {
-			strcat(outstr,"#");
-			strcat(outstr,Get2Digit(buffer[idx]).c_str());
-			strcat(outstr,",");
-			strcat(outstr,Get2Digit(buffer[idx+1]).c_str());
+			os<<"#";
+			os<<std::hex<<std::setfill('0')<<std::setw(2)<<unsigned(buffer[idx]);
+			os<<",";
+			os<<std::hex<<std::setfill('0')<<std::setw(2)<<unsigned(buffer[idx+1]);
 		    }
 		    else
 		    if(jflags & JVM_OBJREFMASK) {
-		    std::string stmp = outstr;
+		    std::string stmp = os.str();
 		    parent.append_digits(main_handle,stmp,ulShift+idx,
 			Bin_Format::Use_Type,2,&sval,DisMode::Arg_Word);
-		    strcpy(outstr,stmp.c_str());
-		    } else strcat(outstr,Get4Digit(sval).c_str());
+		    os.str(stmp);
+		    } else os<<std::hex<<std::setfill('0')<<std::setw(4)<<sval;
 		    break;
 		}
 		default:
@@ -597,48 +577,49 @@ DisasmRet Java_Disassembler::disassembler(__filesize_t ulShift,
 		    if((jflags & JVM_CODEREF)==JVM_CODEREF && lval)
 		    {
 			newpos = ulShift + (__fileoff_t)lval;
-			std::string stmp = outstr;
+			std::string stmp = os.str();
 			parent.append_faddr(main_handle,stmp,ulShift + 1,lval,
 					newpos,DisMode::Near32,0,4);
-			strcpy(outstr,stmp.c_str());
+			os.str(stmp);
 		    }
 		    else
 		    if((jflags & JVM_OBJREF2)==JVM_OBJREF2)
 		    {
 			unsigned short sval;
 			sval=JVM_WORD((uint16_t*)(&buffer[idx]),1);
-			std::string stmp = outstr;
+			std::string stmp = os.str();
 			parent.append_digits(main_handle,stmp,ulShift,
 				    Bin_Format::Use_Type,2,&sval,DisMode::Arg_Word);
-			strcpy(outstr,stmp.c_str());
-			strcat(outstr,",");
-			if((jflags & JVM_CONST1)==JVM_CONST1) strcat(outstr,Get2Digit(buffer[idx+2]).c_str());
+			os.str(stmp);
+			os<<",";
+			if((jflags & JVM_CONST1)==JVM_CONST1) os<<std::hex<<std::setfill('0')<<std::setw(2)<<unsigned(buffer[idx+2]);
 			else
 			{
 			    sval=JVM_WORD((uint16_t*)(&buffer[idx+2]),1);
-			    strcat(outstr,Get4Digit(sval).c_str());
+			    os<<std::hex<<std::setfill('0')<<std::setw(4)<<sval;
 			}
 		    }
 		    else
 		    if(jflags & JVM_OBJREFMASK) {
-		    std::string stmp = outstr;
+		    std::string stmp = os.str();
 		    parent.append_digits(main_handle,stmp,ulShift+idx,
 			Bin_Format::Use_Type,4,&lval,DisMode::Arg_DWord);
-		    strcpy(outstr,stmp.c_str());
-		    } else strcat(outstr,Get8Digit(lval).c_str());
+		    os.str(stmp);
+		    } else os<<std::hex<<std::setfill('0')<<std::setw(8)<<lval;
 		    break;
 		}
 		case 8:
-		    std::string stmp = outstr;
+		    std::string stmp = os.str();
 		    parent.append_digits(main_handle,stmp,ulShift+idx,
 			Bin_Format::Use_Type,8,&buffer[idx],DisMode::Arg_QWord);
-		    strcpy(outstr,stmp.c_str());
+		    os.str(stmp);
 		    break;
 	    }
 	}
-  }
-  ret.codelen=tail+idx;
-  return ret;
+    }
+    ret.str = os.str();
+    ret.codelen=tail+idx;
+    return ret;
 }
 
 void Java_Disassembler::show_short_help() const
@@ -680,12 +661,10 @@ Java_Disassembler::Java_Disassembler(BeyeContext& bc,const Bin_Format& b,binary_
 		,main_handle(h)
 		,bin_format(b)
 {
-    outstr = new char [1000];
 }
 
 Java_Disassembler::~Java_Disassembler()
 {
-    delete outstr;
 }
 
 void Java_Disassembler::read_ini( Ini_Profile& ini ) { UNUSED(ini); }
