@@ -154,7 +154,7 @@ typedef struct tagix86Param
 extern char * SJump[];
 typedef void (ix86_Disassembler::*ix86_method)(char *encode_str,ix86Param&) const;
 
-typedef char* ( ix86_Disassembler::*FPUroutine)(char *,const char *,ix86Param&) const;
+typedef char* ( ix86_Disassembler::*FPUroutine)(char *,const std::string&,ix86Param&) const;
 struct FPUcall {
     FPUroutine	f;
     const char*	c;
@@ -305,7 +305,7 @@ enum {
 	    virtual bool	action_F3();
 
 	    virtual DisasmRet	disassembler(__filesize_t shift,MBuffer insn_buff,unsigned flags);
-	    virtual AsmRet	assembler(const char *str);
+	    virtual AsmRet	assembler(const std::string& str);
 
 	    virtual void	show_short_help() const;
 	    virtual int		max_insn_len() const;
@@ -333,30 +333,30 @@ enum {
 	    void			ix86_InOut(char *str,ix86Param& DisP) const;
 	/* ix86_fpu.cpp */
 	    void 			ix86_FPUCmd(char *str,ix86Param& DisP) const;
-	    char*			FPUstist0_2(char *str,const char *name1,const char *name2,char code) const;
-	    char*			FPUst0sti_2(char *str,const char *name1,const char *name2,char code) const;
-	    char*			FPUcmdsti_2(char *str,const char *name1,const char *name2,char code) const;
-	    char*			FPUcmdst0(char *str,const char *name) const;
-	    char*			FPUcmdsti(char *str,const char *name,char code) const;
-	    char*			FPUsttword(char *str,const char *cmd,ix86Param& DisP) const;
-	    char*			FPUldtword(char *str,const char *cmd,ix86Param& DisP) const;
-	    char*			FPUstist0(char *str,const char *cmd,char code1) const;
-	    char*			FPUst0sti(char *str,const char *cmd,char code1) const;
-	    char*			FPUstisti(char *str,const char *cmd,char code1,char code2) const;
-	    char*			FPUld(char *str,const char *cmd,ix86Param& DisP) const;
-	    char*			FPUstint32(char *str,const char *cmd,ix86Param& DisP) const;
-	    char*			FPUint64st(char *str,const char *cmd,ix86Param& DisP) const;
-	    char*			FPUint64(char *str,const char *cmd,ix86Param& DisP) const;
-	    char*			FPUint16int32st(char *str,const char *cmd,ix86Param& DisP) const;
-	    char*			FPUint16int32(char *str,const char *cmd,ix86Param& DisP) const;
-	    char*			FPUmem64mem32st(char *str,const char *cmd,ix86Param& DisP) const;
-	    char*			FPUmem64mem32(char *str,const char *cmd,ix86Param& DisP) const;
-	    char*			FPUmem(char *str,const char *cmd,ix86Param& DisP) const;
-	    char*			__MemFPUfunc(char *str,const char *cmd,char opsize,ix86Param& DisP) const;
-	    char*			__UniFPUfunc(char *str,const char *cmd,char opsize,char direct,ix86Param& DisP) const;
-	    char*			SetNameTabD(char *str,const char *name,unsigned char size,ix86Param& DisP) const;
-	    char*			SC(const char *name1,const char *name2) const;
-	    char*			SetNameTab(char *str,const char *name) const;
+	    char*			FPUstist0_2(char *str,const std::string& name1,const std::string& name2,char code) const;
+	    char*			FPUst0sti_2(char *str,const std::string& name1,const std::string& name2,char code) const;
+	    char*			FPUcmdsti_2(char *str,const std::string& name1,const std::string& name2,char code) const;
+	    char*			FPUcmdst0(char *str,const std::string& name) const;
+	    char*			FPUcmdsti(char *str,const std::string& name,char code) const;
+	    char*			FPUsttword(char *str,const std::string& cmd,ix86Param& DisP) const;
+	    char*			FPUldtword(char *str,const std::string& cmd,ix86Param& DisP) const;
+	    char*			FPUstist0(char *str,const std::string& cmd,char code1) const;
+	    char*			FPUst0sti(char *str,const std::string& cmd,char code1) const;
+	    char*			FPUstisti(char *str,const std::string& cmd,char code1,char code2) const;
+	    char*			FPUld(char *str,const std::string& cmd,ix86Param& DisP) const;
+	    char*			FPUstint32(char *str,const std::string& cmd,ix86Param& DisP) const;
+	    char*			FPUint64st(char *str,const std::string& cmd,ix86Param& DisP) const;
+	    char*			FPUint64(char *str,const std::string& cmd,ix86Param& DisP) const;
+	    char*			FPUint16int32st(char *str,const std::string& cmd,ix86Param& DisP) const;
+	    char*			FPUint16int32(char *str,const std::string& cmd,ix86Param& DisP) const;
+	    char*			FPUmem64mem32st(char *str,const std::string& cmd,ix86Param& DisP) const;
+	    char*			FPUmem64mem32(char *str,const std::string& cmd,ix86Param& DisP) const;
+	    char*			FPUmem(char *str,const std::string& cmd,ix86Param& DisP) const;
+	    char*			__MemFPUfunc(char *str,const std::string& cmd,char opsize,ix86Param& DisP) const;
+	    char*			__UniFPUfunc(char *str,const std::string& cmd,char opsize,char direct,ix86Param& DisP) const;
+	    char*			SetNameTabD(char *str,const std::string& name,unsigned char size,ix86Param& DisP) const;
+	    char*			SC(const std::string& name1,const std::string& name2) const;
+	    char*			SetNameTab(char *str,const std::string& name) const;
 	/* ix86_func.cpp */
 	    void			ix86_3DNowPrefetchGrp(char *str,ix86Param& DisP) const;
 	    void			ix86_3DNowOpCodes(char *str,ix86Param& DisP) const;
@@ -384,7 +384,7 @@ enum {
 	    void			ix86_ArgMMXGr3(char *str,ix86Param& DisP) const;
 	    void			ix86_ArgMMXGr2(char *str,ix86Param& DisP) const;
 	    void			ix86_ArgMMXGr1(char *str,ix86Param& DisP) const;
-	    void			ix86_ArgxMMXGroup(char *str,const char *name,ix86Param& DisP,bool as_xmmx) const;
+	    void			ix86_ArgxMMXGroup(char *str,const std::string& name,ix86Param& DisP,bool as_xmmx) const;
 	    void			arg_simd(char *str,ix86Param& DisP) const;
 	    void			arg_emms(char *str,ix86Param& DisP) const;
 	    void			bridge_sse_mmx(char *str,ix86Param& DisP) const;
@@ -426,7 +426,7 @@ enum {
 	    void			arg_cpu_modregrm(char *str,ix86Param& DisP) const;
 	    char*			__buildModRegRmReg(ix86Param& DisP,bool d,unsigned char wrex) const;
 	    char*			__buildModRegRm(ix86Param& DisP,bool w,bool d) const;
-	    char*			ix86_CStile(ix86Param& DisP,char *str,const char *arg2) const;
+	    char*			ix86_CStile(ix86Param& DisP,char *str,const std::string& arg2) const;
 	    char*			ix86_getModRM(bool w,unsigned char mod,unsigned char rm,ix86Param& DisP) const;
 	    char*			ix86_getModRM64(bool w,unsigned char mod,unsigned char rm,ix86Param& DisP) const;
 	    char*			ix86_getModRM32(bool w,unsigned char mod,unsigned char rm,ix86Param& DisP) const;

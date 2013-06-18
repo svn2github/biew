@@ -628,11 +628,11 @@ char * ix86_Disassembler::ix86_getModRM(bool w,unsigned char mod,unsigned char r
     return rval;
 }
 
-char * ix86_Disassembler::ix86_CStile(ix86Param& DisP,char *str,const char *arg2) const
+char * ix86_Disassembler::ix86_CStile(ix86Param& DisP,char *str,const std::string& arg2) const
 {
   if(!((DisP.flags & __DISF_SIZEONLY) == __DISF_SIZEONLY)) {
     strcat(str,",");
-    strcat(str,arg2);
+    strcat(str,arg2.c_str());
   }
   return str;
 }
@@ -1486,7 +1486,7 @@ void ix86_Disassembler::arg_simd(char *str,ix86Param& DisP) const
     DisP.mode=mode;
 }
 
-void  ix86_Disassembler::ix86_ArgxMMXGroup(char *str,const char *name,ix86Param& DisP,bool as_xmmx) const
+void  ix86_Disassembler::ix86_ArgxMMXGroup(char *str,const std::string& name,ix86Param& DisP,bool as_xmmx) const
 {
   unsigned long mode=DisP.mode;
   bool brex,wrex;
@@ -1494,7 +1494,7 @@ void  ix86_Disassembler::ix86_ArgxMMXGroup(char *str,const char *name,ix86Param&
   wrex = REX_W(K64_REX);
   if(brex && !as_xmmx) brex = 0; /* Note: there are only 8 mmx registers */
   DisP.codelen++;
-  strcpy(str,name);
+  strcpy(str,name.c_str());
   TabSpace(str,TAB_POS);
   if(as_xmmx) DisP.mode|=MOD_SSE;
   else        DisP.mode|=MOD_MMX;

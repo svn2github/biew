@@ -27,33 +27,33 @@ using namespace	usr;
 namespace	usr {
 extern char *ix86_appstr;
 
-char*  ix86_Disassembler::SetNameTab(char * str,const char * name) const
+char*  ix86_Disassembler::SetNameTab(char * str,const std::string&  name) const
 {
- strcpy(str,name);
- TabSpace(str,TAB_POS);
- return str;
+    strcpy(str,name.c_str());
+    TabSpace(str,TAB_POS);
+    return str;
 }
 
-char*  ix86_Disassembler::SC(const char * name1,const char * name2) const
+char*  ix86_Disassembler::SC(const std::string&  name1,const std::string&  name2) const
 {
- SetNameTab(ix86_appstr,name1);
- strcat(ix86_appstr,name2);
- return ix86_appstr;
+    SetNameTab(ix86_appstr,name1.c_str());
+    strcat(ix86_appstr,name2.c_str());
+    return ix86_appstr;
 }
 
-char*  ix86_Disassembler::SetNameTabD(char * str,const char * name,unsigned char size,ix86Param& DisP) const
+char*  ix86_Disassembler::SetNameTabD(char * str,const std::string&  name,unsigned char size,ix86Param& DisP) const
 {
- strcpy(str,name);
- strcat(str," ");
- if(size < 7 && ((DisP.RealCmd[1] >> 6) & 0x03) != 3) strcat(str,ix86_sizes[size]);
- TabSpace(str,TAB_POS);
- return str;
+    strcpy(str,name.c_str());
+    strcat(str," ");
+    if(size < 7 && ((DisP.RealCmd[1] >> 6) & 0x03) != 3) strcat(str,ix86_sizes[size]);
+    TabSpace(str,TAB_POS);
+    return str;
 }
 
 static char stx[] = "st(x)";
 #define MakeST(str,num) { stx[3] = (num)+'0'; strcat(str,stx); }
 
-char*  ix86_Disassembler::__UniFPUfunc(char * str,const char * cmd,char opsize,char direct,ix86Param& DisP) const
+char*  ix86_Disassembler::__UniFPUfunc(char * str,const std::string&  cmd,char opsize,char direct,ix86Param& DisP) const
 {
  char mod = ( DisP.RealCmd[1] & 0xC0 ) >> 6;
  char reg = DisP.RealCmd[1] & 0x07;
@@ -68,7 +68,7 @@ char*  ix86_Disassembler::__UniFPUfunc(char * str,const char * cmd,char opsize,c
  return str;
 }
 
-char*  ix86_Disassembler::__MemFPUfunc(char * str,const char * cmd,char opsize,ix86Param& DisP) const
+char*  ix86_Disassembler::__MemFPUfunc(char * str,const std::string&  cmd,char opsize,ix86Param& DisP) const
 {
  char mod = ( DisP.RealCmd[1] & 0xC0 ) >> 6;
  char reg = DisP.RealCmd[1] & 0x07;
@@ -79,52 +79,52 @@ char*  ix86_Disassembler::__MemFPUfunc(char * str,const char * cmd,char opsize,i
  return str;
 }
 
-char*  ix86_Disassembler::FPUmem(char * str,const char * cmd,ix86Param& DisP) const
+char*  ix86_Disassembler::FPUmem(char * str,const std::string&  cmd,ix86Param& DisP) const
 {
   return __MemFPUfunc(str,cmd,DUMMY_PTR,DisP);
 }
 
-char*  ix86_Disassembler::FPUmem64mem32(char * str,const char * cmd,ix86Param& DisP) const
+char*  ix86_Disassembler::FPUmem64mem32(char * str,const std::string&  cmd,ix86Param& DisP) const
 {
  return __UniFPUfunc(str,cmd,DisP.RealCmd[0] & 0x04 ? QWORD_PTR : DWORD_PTR,0,DisP);
 }
 
-char*  ix86_Disassembler::FPUmem64mem32st(char * str,const char * cmd,ix86Param& DisP) const
+char*  ix86_Disassembler::FPUmem64mem32st(char * str,const std::string&  cmd,ix86Param& DisP) const
 {
  return __UniFPUfunc(str,cmd,DisP.RealCmd[0] & 0x04 ? QWORD_PTR : DWORD_PTR,1,DisP);
 }
 
-char*  ix86_Disassembler::FPUint16int32(char * str,const char * cmd,ix86Param& DisP) const
+char*  ix86_Disassembler::FPUint16int32(char * str,const std::string&  cmd,ix86Param& DisP) const
 {
  return __UniFPUfunc(str,cmd,DisP.RealCmd[0] & 0x04 ? WORD_PTR : DWORD_PTR,0,DisP);
 }
 
-char*  ix86_Disassembler::FPUint16int32st(char * str,const char * cmd,ix86Param& DisP) const
+char*  ix86_Disassembler::FPUint16int32st(char * str,const std::string&  cmd,ix86Param& DisP) const
 {
  return __UniFPUfunc(str,cmd,DisP.RealCmd[0] & 0x04 ? WORD_PTR : DWORD_PTR,1,DisP);
 }
 
-char*  ix86_Disassembler::FPUint64(char * str,const char * cmd,ix86Param& DisP) const
+char*  ix86_Disassembler::FPUint64(char * str,const std::string&  cmd,ix86Param& DisP) const
 {
  return __UniFPUfunc(str,cmd,QWORD_PTR,0,DisP);
 }
 
-char*  ix86_Disassembler::FPUint64st(char * str,const char * cmd,ix86Param& DisP) const
+char*  ix86_Disassembler::FPUint64st(char * str,const std::string&  cmd,ix86Param& DisP) const
 {
  return __UniFPUfunc(str,cmd,QWORD_PTR,1,DisP);
 }
 
-char*  ix86_Disassembler::FPUstint32(char * str,const char * cmd,ix86Param& DisP) const
+char*  ix86_Disassembler::FPUstint32(char * str,const std::string&  cmd,ix86Param& DisP) const
 {
  return __UniFPUfunc(str,cmd,DWORD_PTR,0,DisP);
 }
 
-char*  ix86_Disassembler::FPUld(char * str,const char * cmd,ix86Param& DisP) const
+char*  ix86_Disassembler::FPUld(char * str,const std::string&  cmd,ix86Param& DisP) const
 {
  return __UniFPUfunc(str,cmd,DUMMY_PTR,0,DisP);
 }
 
-char*  ix86_Disassembler::FPUstisti(char * str,const char * cmd,char code1,char code2) const
+char*  ix86_Disassembler::FPUstisti(char * str,const std::string&  cmd,char code1,char code2) const
 {
  SetNameTab(str,cmd);
  MakeST(str,code1 & 0x07);
@@ -133,49 +133,49 @@ char*  ix86_Disassembler::FPUstisti(char * str,const char * cmd,char code1,char 
  return str;
 }
 
-char*  ix86_Disassembler::FPUst0sti(char * str,const char * cmd,char code1) const
+char*  ix86_Disassembler::FPUst0sti(char * str,const std::string&  cmd,char code1) const
 {
  return FPUstisti(str,cmd,0,code1);
 }
 
-char*  ix86_Disassembler::FPUstist0(char * str,const char * cmd,char code1) const
+char*  ix86_Disassembler::FPUstist0(char * str,const std::string&  cmd,char code1) const
 {
  return FPUstisti(str,cmd,code1,0);
 }
 
-char*  ix86_Disassembler::FPUldtword(char * str,const char * cmd,ix86Param& DisP) const
+char*  ix86_Disassembler::FPUldtword(char * str,const std::string&  cmd,ix86Param& DisP) const
 {
  return __UniFPUfunc(str,cmd,TWORD_PTR,0,DisP);
 }
 
-char*  ix86_Disassembler::FPUsttword(char * str,const char * cmd,ix86Param& DisP) const
+char*  ix86_Disassembler::FPUsttword(char * str,const std::string&  cmd,ix86Param& DisP) const
 {
   return __UniFPUfunc(str,cmd,TWORD_PTR,1,DisP);
 }
 
-char*  ix86_Disassembler::FPUcmdsti(char * str,const char * name,char code) const
+char*  ix86_Disassembler::FPUcmdsti(char * str,const std::string&  name,char code) const
 {
   SetNameTab(str,name);
   MakeST(str,code & 0x07);
   return str;
 }
 
-char*  ix86_Disassembler::FPUcmdst0(char * str,const char * name) const
+char*  ix86_Disassembler::FPUcmdst0(char * str,const std::string&  name) const
 {
   return FPUcmdsti(str,name,0);
 }
 
-char*  ix86_Disassembler::FPUcmdsti_2(char * str,const char * name1,const char * name2,char code) const
+char*  ix86_Disassembler::FPUcmdsti_2(char * str,const std::string&  name1,const std::string&  name2,char code) const
 {
   return FPUcmdsti(str,code & 0x08 ? name2 : name1,code);
 }
 
-char*  ix86_Disassembler::FPUst0sti_2(char * str,const char * name1,const char * name2,char code) const
+char*  ix86_Disassembler::FPUst0sti_2(char * str,const std::string&  name1,const std::string&  name2,char code) const
 {
  return FPUst0sti(str,code & 0x08 ? name2 : name1,code);
 }
 
-char*  ix86_Disassembler::FPUstist0_2(char * str,const char * name1,const char * name2,char code) const
+char*  ix86_Disassembler::FPUstist0_2(char * str,const std::string&  name1,const std::string&  name2,char code) const
 {
  return FPUstist0(str,code & 0x08 ? name2 : name1,code);
 }

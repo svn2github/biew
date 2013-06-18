@@ -6339,7 +6339,7 @@ const unsigned ix86_Disassembler::CODEBUFFER_LEN=64;
     .insn_len   = undefined
     .error_code = non-zero
 */
-AsmRet ix86_Disassembler::assembler(const char *code)
+AsmRet ix86_Disassembler::assembler(const std::string& code)
 {
   char codebuffer[CODEBUFFER_LEN];
   AsmRet result;

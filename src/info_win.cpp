@@ -20,8 +20,12 @@ using namespace	usr;
  * @date        02.11.2007
  * @note        Added ASSEMBle option to casmtext
 **/
+#include <sstream>
+#include <iomanip>
+
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 #include "beye.h"
 #include "colorset.h"
@@ -527,7 +531,7 @@ bye_help:
 __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
 {
     TWindow* hwnd,*wait_wnd;
-    char vaddr[64];
+    std::ostringstream vaddr,os;
     Symbol_Info prev,next;
     Object_Info obj;
     const char *btn;
@@ -539,8 +543,7 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
     cfpos = beye_context().tell();
     va = beye_context().bin_format().pa2va(ctrl_pos);
     if(va==Plugin::Bad_Address) va = ctrl_pos;
-    vaddr[0] = '\0';
-    sprintf(&vaddr[strlen(vaddr)],"%016llXH",va);
+    vaddr<<std::hex<<std::setfill('0')<<std::setw(16)<<va<<"H";
     prev = beye_context().bin_format().get_public_symbol(ctrl_pos,true);
     next = beye_context().bin_format().get_public_symbol(ctrl_pos,false);
     obj  = beye_context().bin_format().get_object_attribute(ctrl_pos);
@@ -560,28 +563,18 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
 	case Bin_Format::Use256:btn = "USE256"; break;
 	default: btn = "";
     }
-    hwnd->printf(
-	   "File  offset : %016llXH\n"
-	   "Virt. address: %s\n"
-	   "%s entry  : %s\n"
-	   "Next  entry  : %s\n"
-	   "Curr. object : #%u %s %s %016llXH=%016llXH %s"
-	   ,ctrl_pos
-	   ,vaddr
-	   ,prev.pa == ctrl_pos ? "Curr." : "Prev."
-	   ,prev.name.c_str()
-	   ,next.name.c_str()
-	   ,obj.number
-	   ,obj._class == Object_Info::Code ? "CODE" : obj._class == Object_Info::Data ? "DATA" : "no obj."
-	   ,btn
-	   ,obj.start
-	   ,obj.end
-	   ,obj.name.c_str()
-	   );
+    os<<"File  offset : "<<std::hex<<std::setfill('0')<<std::setw(16)<<ctrl_pos<<"H"<<std::endl
+	<<"Virt. address: "<<vaddr<<std::endl
+	<<(prev.pa == ctrl_pos ? "Curr." : "Prev.")<<" entry  : "<<prev.name<<std::endl
+	<<"Next  entry  : "<<next.name<<std::endl
+	<<"Curr. object : #"<<obj.number<<" "<<(obj._class == Object_Info::Code ? "CODE" : obj._class == Object_Info::Data ? "DATA" : "no obj.")
+	<<" "<<btn<<" "<<std::hex<<std::setfill('0')<<std::setw(16)<<obj.start<<"H="
+	<<std::hex<<std::setfill('0')<<std::setw(16)<<obj.end<<"H "<<obj.name;
+    hwnd->puts(os.str());
     ret_addr = ctrl_pos;
     while(1) {
 	int ch;
-	ch = GetEvent(drawEmptyPrompt,NULL,hwnd);
+	ch = GetEvent(drawEmptyListPrompt,NULL,hwnd);
 	switch(ch) {
 	    case KE_F(10):
 	    case KE_ESCAPE: goto exit;
@@ -589,6 +582,23 @@ __filesize_t __FASTCALL__ WhereAMI(__filesize_t ctrl_pos)
 		      if(prev.pa) ret_addr = prev.pa;
 		      else beye_context().ErrMessageBox(NOT_ENTRY,"");
 		    goto exit;
+	    case KE_F(4): { /** save content to disk */
+		char ofname[256];
+		ofname[0] = 0;
+		if(GetStringDlg(ofname," Save info to file : "," [ENTER] - Proceed ",NAME_MSG)) {
+		    std::ofstream out;
+		    out.open(ofname,std::ios_base::out);
+		    if(out.is_open()) {
+			strncpy(ofname,"WhereAMI",sizeof(ofname));
+			ofname[sizeof(ofname)-1] = '\0';
+			if(GetStringDlg(ofname," User comments : "," [ENTER] - Proceed "," Description : ")) out<<ofname<<std::endl<<std::endl;
+			out<<os;
+			out.close();
+		    }
+		    else beye_context().errnoMessageBox(WRITE_FAIL,"",errno);
+		}
+	    }
+	    break;
 	    case KE_F(5):
 	    case KE_CTL_ENTER:
 		      if(next.pa) ret_addr = next.pa;
