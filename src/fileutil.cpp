@@ -370,7 +370,7 @@ bool FStore::run()
 		std::ofstream fout;
 		unsigned char *codebuff;
 		unsigned MaxInsnLen;
-		char data_dis[300];
+		std::ostringstream ddos;
 		__filesize_t stop;
 		Symbol_Info psym;
 		__filesize_t awsize,pwsize;
@@ -494,22 +494,23 @@ bool FStore::run()
 			    default:         dis_data_len = 1; break;
 			}
 			data_len = 0;
-			sprintf(data_dis,"db  ");
+			ddos.str("");
+			ddos<<"db  ";
 			if(cstr_idx > 1) {
-			    sprintf(&data_dis[strlen(data_dis)],"'%s'",coll_str);
+			    ddos<<"'"<<coll_str<<"'";
 			    dret.codelen = cstr_idx;
 			    has_string = true;
 			} else {
 			    for(ifreq = 0;ifreq < dis_data_len;ifreq++) {
 				if(isprint(codebuff[ifreq]) && isprint(codebuff[ifreq+1])) break;
-				if(isprint(codebuff[ifreq]) && has_string) sprintf(&data_dis[strlen(data_dis)],"'%c',",codebuff[ifreq]);
-				else		sprintf(&data_dis[strlen(data_dis)],"%02Xh,",codebuff[ifreq]);
+				if(isprint(codebuff[ifreq]) && has_string) ddos<<"'"<<codebuff[ifreq]<<"',";
+				else		ddos<<std::hex<<std::setfill('0')<<std::setw(2)<<unsigned(codebuff[ifreq])<<"h,";
 				data_len++;
 				has_string = false;
 			    }
 			    dret.codelen = data_len;
 			}
-			dret.str = data_dis;
+			dret.str = ddos.str();
 			dret.pro_clone = 0;
 			dismode->dis_severity = DisMode::CommSev_None;
 		    }
