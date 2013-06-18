@@ -42,8 +42,6 @@ DisasmRet ARM_Disassembler::disassembler(__filesize_t ulShift,
   armBigEndian = bin_format.query_endian(ulShift)==Bin_Format::Big?1:0;
   if(flags == __DISF_NORMAL)
   {
-    memset(&ret,0,sizeof(ret));
-    ret.str = outstr;
     ret.codelen = armBitness==Bin_Format::Use32?4:2;
     if(armBitness==Bin_Format::Use32)
     {
@@ -57,6 +55,7 @@ DisasmRet ARM_Disassembler::disassembler(__filesize_t ulShift,
 	opcode16=armBigEndian?be2me_16(*((uint16_t *)buffer)):le2me_16(*((uint16_t *)buffer));
 	arm16Disassembler(&ret,ulShift,opcode16,flags);
     }
+    ret.str = outstr;
   }
   else
   {
@@ -86,10 +85,10 @@ void ARM_Disassembler::show_short_help() const
     Beye_Help bhelp(bctx);
     if(!bhelp.open(true)) return;
 
-    binary_packet msgAsmText = bhelp.load_item(20041);
+    objects_container<char> msgAsmText = bhelp.load_item(20041);
     if(!msgAsmText.empty()) goto armhlp_bye;
     strs = bhelp.point_strings(msgAsmText);
-    title = msgAsmText.cdata();
+    title = msgAsmText.tdata();
 
     hwnd = CrtHlpWndnls(title,73,14);
     sz=strs.size();

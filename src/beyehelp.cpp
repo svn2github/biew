@@ -291,10 +291,10 @@ unsigned long Beye_Help::get_item_size(unsigned long item_id)
     return ret;
 }
 
-binary_packet Beye_Help::load_item(unsigned long item_id)
+objects_container<char> Beye_Help::load_item(unsigned long item_id)
 {
     size_t isize=get_item_size(item_id);
-    binary_packet rc(isize+1);
+    objects_container<char> rc(isize+1);
     unsigned long hlp_off,hlp_size;
     bool ret = false;
     if(fs.is_open()) {
@@ -317,12 +317,12 @@ binary_packet Beye_Help::load_item(unsigned long item_id)
     return rc;
 }
 
-std::vector<std::string> Beye_Help::point_strings(binary_packet& data) const
+std::vector<std::string> Beye_Help::point_strings(objects_container<char>& data) const
 {
     std::vector<std::string> rc;
     size_t i,sz=data.size()-1;
     char ch,ch1;
-    char* p = data.cdata();
+    char* p = (char*)data.tdata();
     for(i = 0;i < sz;i++) {
 	ch = data[i];
 	if(ch == '\n' || ch == '\r') {
@@ -336,18 +336,18 @@ std::vector<std::string> Beye_Help::point_strings(binary_packet& data) const
     return rc;
 }
 
-bool Beye_Help::_lb_searchtext(const char *str,const char *tmpl,unsigned searchlen,const int *cache, Search::search_flags flg)
+bool Beye_Help::_lb_searchtext(const char *str,const char *tmpl,unsigned _searchlen,const int *cache, Search::search_flags flg)
 {
-    return search.strFind(str, strlen(str), tmpl, searchlen, cache, flg) ? true : false;
+    return search.strFind(str, strlen(str), tmpl, _searchlen, cache, flg) ? true : false;
 }
 
 void Beye_Help::run( unsigned long item_id )
 {
-    char* title;
-    binary_packet data=load_item(item_id);
+    const char* title;
+    objects_container<char> data=load_item(item_id);
     if(!data.empty()) {
 	const std::vector<std::string> strs = point_strings(data);
-	title = data.cdata();
+	title = (const char*)data.data();
 	ListBox(strs,title);
     }
 }

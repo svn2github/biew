@@ -59,6 +59,29 @@ namespace	usr {
     extern const Disassembler_Info ppc_disassembler_info;
     extern const Disassembler_Info java_disassembler_info;
 
+DisasmRet::DisasmRet()
+	:pro_clone(0)
+	,field(0)
+	,codelen(0)
+{
+}
+
+DisasmRet::DisasmRet(const DisasmRet& it)
+	:pro_clone(it.pro_clone)
+	,str(it.str)
+	,field(it.field)
+	,codelen(it.codelen)
+{
+}
+
+DisasmRet& DisasmRet::operator=(const DisasmRet& it) {
+    pro_clone=it.pro_clone;
+    str=it.str;
+    field=it.field;
+    codelen=it.codelen;
+    return *this;
+}
+
 DisMode::DisMode(BeyeContext& bc,const Bin_Format& b,binary_stream& h,TWindow& _main_wnd,CodeGuider& _code_guider,udn& u,Search& s)
 	:Plugin(bc,b,h,_main_wnd,_code_guider,u,s)
 	,DefDisasmSel(__DEFAULT_DISASM)
@@ -339,7 +362,7 @@ plugin_position DisMode::paint( unsigned keycode, unsigned textshift )
 			HiLight == 1 ?  activeDisasm->get_insn_color(dret.pro_clone) :
 					browser_cset.main;
 		main_wnd.set_color(cattr);
-		j = strlen(dret.str);
+		j = dret.str.length();
 		/* Here adding commentaries */
 		savstring[0] = 0;
 		orig_commoff = orig_commpos = 0;
@@ -354,13 +377,13 @@ plugin_position DisMode::paint( unsigned keycode, unsigned textshift )
 			    orig_commpos = new_idx = j-5;
 			    orig_commoff = len;
 			    ::strcpy((char*)savstring,&dret.str[new_idx]);
-			    dret.str[new_idx--] = 0;
+			    dret.str.resize(new_idx); new_idx--;
 			    while(dret.str[new_idx] == ' ' && new_idx) new_idx--;
 			    if(dret.str[new_idx] != ' ') new_idx++;
-			    dret.str[new_idx] = 0;
-			    j = ::strlen(dret.str);
+			    dret.str.resize(new_idx);
+			    j = dret.str.length();
 		    }
-		main_wnd.write(len,i+1,(const uint8_t*)dret.str,j); len += j;
+		main_wnd.write(len,i+1,(const uint8_t*)dret.str.c_str(),j); len += j;
 		if(dis_severity > DisMode::CommSev_None) {
 		    main_wnd.set_color(disasm_cset.comments);
 		    main_wnd.goto_xy(len,i+1);
@@ -549,9 +572,9 @@ void DisMode::disasm_screen(Editor& editor,TWindow& ewnd,__filesize_t cp,__files
 		ewnd.set_color(outstr[j] == outstr1[j] ? browser_cset.edit.main : browser_cset.edit.change);
 		ewnd.write(j + 1,i + 1,&outstr[j],1);
 	    }
-	    len = ::strlen(dret.str);
+	    len = dret.str.length();
 	    ::memset(outstr,TWC_DEF_FILLER,width);
-	    ::memcpy(outstr,dret.str,len);
+	    ::memcpy(outstr,dret.str.c_str(),len);
 	    main_wnd.set_color(browser_cset.main);
 	    lim = disMaxCodeLen*2+len_64+1;
 	    main_wnd.write(lim+1,i + 1,outstr,width-lim);
@@ -788,7 +811,7 @@ Plugin::search_result DisMode::search_engine(TWindow *pwnd, __filesize_t start,
 	    cfpos += dret.codelen;
 	    if(cfpos >= flen) break;
 	}
-	::strcpy(disSearchBuff, dret.str);
+	::strcpy(disSearchBuff, dret.str.c_str());
 	::strcat(disSearchBuff, dis_comments.c_str());
 	if(search.strFind(disSearchBuff, strlen(disSearchBuff), search.buff(), search.length(), cache, flg)) {
 	    rc.foff = dfpos;
@@ -992,7 +1015,7 @@ bool DisMode::append_faddr(binary_stream& handle,std::string& str,__fileoff_t ul
 
     Bin_Format::bind_type flg;
     fpos = handle.tell();
-    memset(&dret,0,sizeof(DisasmRet));
+
     /* Prepare insn type */
     if(disNeedRef > Ref_None) {
     /* Forward prediction: ulShift = offset of binded field but r_sh is

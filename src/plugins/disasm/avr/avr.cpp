@@ -405,7 +405,6 @@ DisasmRet AVR_Disassembler::disassembler( __filesize_t ulShift,
     if (*comment1) out += sprintf(outstr + out, "; %s", comment1);
     if (*comment2) out += sprintf(outstr + out, " %s", comment2);
 
-    memset(&Ret, 0, sizeof(Ret));
     Ret.str = outstr;
     Ret.codelen = cmd_len;
 
@@ -463,10 +462,10 @@ void AVR_Disassembler::show_short_help() const
 
     if(!bhelp.open(true)) return;
 
-    binary_packet msgAsmText = bhelp.load_item(20041);
+    objects_container<char> msgAsmText = bhelp.load_item(20041);
     if(!msgAsmText.empty()) goto avrhlp_bye;
     strs = bhelp.point_strings(msgAsmText);
-    title = msgAsmText.cdata();
+    title = msgAsmText.tdata();
 
     hwnd = CrtHlpWndnls(title, 73, 16);
     sz=strs.size();

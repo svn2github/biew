@@ -31,14 +31,19 @@ namespace	usr {
    This struct is ordered as it documented in Athlon manual
    Publication # 22007 Rev: D
 */
-typedef struct tagDisasmRet
-{
-  unsigned long pro_clone; /**< contains processor clone when normal disassembling; instruction type on __DISF_GETTYPE */
-  char         *str;       /**< contains disassembler output */
-  unsigned long field;     /**< on __DISF_GETTYPE contains offset to field for binding from begin of insn, if present. */
-  unsigned char codelen;   /**< contains length of instruction when normal disassembling; length of field for binding on __DISF_GETTYPE */
-}DisasmRet;
-typedef unsigned char * MBuffer;
+    struct DisasmRet {
+	DisasmRet();
+	DisasmRet(const DisasmRet&);
+
+	DisasmRet&	operator=(const DisasmRet&);
+
+	unsigned long	pro_clone; /**< contains processor clone when normal disassembling; instruction type on __DISF_GETTYPE */
+	std::string	str;       /**< contains disassembler output */
+	unsigned long	field;     /**< on __DISF_GETTYPE contains offset to field for binding from begin of insn, if present. */
+	unsigned char	codelen;   /**< contains length of instruction when normal disassembling; length of field for binding on __DISF_GETTYPE */
+    };
+
+    typedef unsigned char * MBuffer;
     struct Disassembler_Info;
     class Disassembler;
     class Editor;

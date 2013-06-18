@@ -5617,7 +5617,6 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
  bool has_vex,has_rex,has_xop;
 
  memset(&DisP,0,sizeof(DisP));
- memset(&Ret,0,sizeof(Ret));
  if(x86_Bitness == Bin_Format::Use64) DisP.pro_clone=K64_ATHLON;
  else DisP.pro_clone = IX86_CPU086;
  DisP.codelen = 1;
@@ -5652,8 +5651,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
     DisP.mode|=MOD_WIDE_ADDR;
  }
 
- Ret.str = ix86_voidstr;
- Ret.str[0] = 0;
+ ix86_str[0] = 0;
  RepeateByPrefix:
  code = DisP.RealCmd[0];
  if(x86_Bitness == Bin_Format::Use64)
@@ -5669,7 +5667,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
  {
    bad_prefixes:
    DisP.codelen = ud;
-   strcpy(ix86_voidstr,"???");
+   strcpy(ix86_str,"???");
    goto ExitDisAsm;
  }
  if(has_vex || has_xop) goto end_of_prefixes;
@@ -5801,7 +5799,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
 		DisP.pfx|=PFX_F3_REP;
 		if(DisP.RealCmd[1] == 0x90) {
 		/* this is pause insns */
-		    strcpy(Ret.str,x86_Bitness == Bin_Format::Use64?"pause":"pause");
+		    strcpy(ix86_str,x86_Bitness == Bin_Format::Use64?"pause":"pause");
 		    DisP.codelen++;
 		    DisP.pro_clone = Bin_Format::Use64?K64_ATHLON:IX86_P4;
 		    goto ExitDisAsm;
@@ -5863,10 +5861,10 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
 	     SSE2_ext==ix86_660F3A_Table
 	    )) DisP.mode|=MOD_WIDE_DATA;
 	if(DisP.pfx&PFX_VEX && nam[0]!='v') {
-	    strcpy(Ret.str,"v");
-	    strcat(Ret.str,nam);
+	    strcpy(ix86_str,"v");
+	    strcat(ix86_str,nam);
 	}
-	else strcpy(Ret.str,nam);
+	else strcpy(ix86_str,nam);
 	ix86_da_out[0]='\0'; /* disable rep; lock; prefixes */
 	if(!(DisP.pfx&PFX_VEX) && (DisP.pfx&(PFX_F2_REPNE|PFX_F3_REP|PFX_66))) {
 	    DisP.RealCmd = &DisP.RealCmd[1];
@@ -5876,8 +5874,8 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
 	else				DisP.insn_flags = SSE2_ext[ecode].pro_clone;
 	mthd=((x86_Bitness==Bin_Format::Use64)?SSE2_ext[ecode].method64:SSE2_ext[ecode].method);
 	if(mthd) {
-		TabSpace(Ret.str,TAB_POS);
-		(this->*mthd)(Ret.str,DisP);
+		TabSpace(ix86_str,TAB_POS);
+		(this->*mthd)(ix86_str,DisP);
 	}
 	goto ExitDisAsm;
     }
@@ -5887,19 +5885,19 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
  }
  if(DisP.pfx&PFX_XOP) {
     const ix86_ExOpcodes* _this = &K64_XOP_Table[code];
-    if(DisP.XOP_m==0x08)	strcpy(Ret.str,_this->name); /* emulate 8F.08 */
-    else			strcpy(Ret.str,_this->name64);
+    if(DisP.XOP_m==0x08)	strcpy(ix86_str,_this->name); /* emulate 8F.08 */
+    else			strcpy(ix86_str,_this->name64);
     if(DisP.XOP_m==0x08 && _this->method) { /* emulate 8F.08 */
 	ix86_method mtd = _this->method;
-	TabSpace(Ret.str,TAB_POS);
+	TabSpace(ix86_str,TAB_POS);
 	DisP.insn_flags = _this->flags64;
-	(this->*mtd)(Ret.str,DisP);
+	(this->*mtd)(ix86_str,DisP);
     }
     else if(DisP.XOP_m==0x09 &&_this->method64) {
 	ix86_method mtd = _this->method64;
-	TabSpace(Ret.str,TAB_POS);
+	TabSpace(ix86_str,TAB_POS);
 	DisP.insn_flags = _this->pro_clone;
-	(this->*mtd)(Ret.str,DisP);
+	(this->*mtd)(ix86_str,DisP);
     }
  }
  else {
@@ -5908,26 +5906,26 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
    if(REX_W(DisP.REX)) DisP.mode|=MOD_WIDE_DATA; /* 66h prefix is ignored if REX prefix is present*/
    if(ix86_table[code].flags64 & K64_DEF32)
    {
-     if(REX_W(DisP.REX)) strcpy(Ret.str,ix86_table[code].name64);
+     if(REX_W(DisP.REX)) strcpy(ix86_str,ix86_table[code].name64);
      else
-     if(!(DisP.mode&MOD_WIDE_DATA))	strcpy(Ret.str,ix86_table[code].name16);
-     else				strcpy(Ret.str,ix86_table[code].name32);
+     if(!(DisP.mode&MOD_WIDE_DATA))	strcpy(ix86_str,ix86_table[code].name16);
+     else				strcpy(ix86_str,ix86_table[code].name32);
    }
    else
    if((DisP.mode&MOD_WIDE_DATA) || (ix86_table[code].flags64 & K64_NOCOMPAT))
-		strcpy(Ret.str,ix86_table[code].name64);
-   else		strcpy(Ret.str,ix86_table[code].name32);
+		strcpy(ix86_str,ix86_table[code].name64);
+   else		strcpy(ix86_str,ix86_table[code].name32);
  }
  else
-   strcpy(Ret.str,(DisP.mode&MOD_WIDE_DATA) ? ix86_table[code].name32 : ix86_table[code].name16);
+   strcpy(ix86_str,(DisP.mode&MOD_WIDE_DATA) ? ix86_table[code].name32 : ix86_table[code].name16);
  if(x86_Bitness == Bin_Format::Use64)
  {
    if(ix86_table[code].method64)
    {
 	ix86_method mtd = ix86_table[code].method64;
 	DisP.insn_flags = ix86_table[code].flags64;
-	TabSpace(Ret.str,TAB_POS);
-	(this->*mtd)(Ret.str,DisP);
+	TabSpace(ix86_str,TAB_POS);
+	(this->*mtd)(ix86_str,DisP);
    }
  }
  else
@@ -5935,8 +5933,8 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
  {
 	ix86_method mtd = ix86_table[code].method;
 	DisP.insn_flags = ix86_table[code].pro_clone;
-	TabSpace(Ret.str,TAB_POS);
-	(this->*mtd)(Ret.str,DisP);
+	TabSpace(ix86_str,TAB_POS);
+	(this->*mtd)(ix86_str,DisP);
  }
  /** Special case for jmp call ret modify table name */
  switch(code)
@@ -5948,22 +5946,22 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
      case 0xCB:
      case 0xE9:
      case 0xEA:
-		if(!ud && !ua) Ret.str[4] = Ret.str[5] = ' ';
+		if(!ud && !ua) ix86_str[4] = ix86_str[5] = ' ';
 		break;
    /** popax, popfx case */
      case 0x61:
      case 0x9D:
-		if(!ud && !ua && x86_Bitness < Bin_Format::Use64) Ret.str[4] = 0;
+		if(!ud && !ua && x86_Bitness < Bin_Format::Use64) ix86_str[4] = 0;
 		break;
    /** callx case */
      case 0xE8:
      case 0x9A:
-		if(!ud && !ua) Ret.str[5] = Ret.str[6] = ' ';
+		if(!ud && !ua) ix86_str[5] = ix86_str[6] = ' ';
 		break;
    /** pushax, pushfx case */
      case 0x60:
      case 0x9C:
-		if(!ud && !ua && x86_Bitness < Bin_Format::Use64) Ret.str[5] = 0;
+		if(!ud && !ua && x86_Bitness < Bin_Format::Use64) ix86_str[5] = 0;
 		break;
      default:   break;
  }
@@ -5979,7 +5977,7 @@ DisasmRet ix86_Disassembler::disassembler(__filesize_t ulShift,
     strcat(ix86_da_out," ");
  }
  if(ix86_da_out[0]) TabSpace(ix86_da_out,TAB_POS);
- strncat(ix86_da_out,Ret.str,MAX_DISASM_OUTPUT);
+ strncat(ix86_da_out,ix86_str,MAX_DISASM_OUTPUT);
  Ret.str = ix86_da_out;
  if(x86_Bitness < Bin_Format::Use64)
  if((DisP.pfx&PFX_66) || (DisP.pfx&PFX_67) || x86_Bitness == Bin_Format::Use32)
@@ -6138,10 +6136,10 @@ void ix86_Disassembler::show_short_help() const
     Beye_Help bhelp(bctx);
 
     if(!bhelp.open(true)) return;
-    binary_packet msgAsmText = bhelp.load_item(20041);
+    objects_container<char> msgAsmText = bhelp.load_item(20041);
     if(!msgAsmText.empty()) goto ix86hlp_bye;
     strs = bhelp.point_strings(msgAsmText);
-    title = msgAsmText.cdata();
+    title = msgAsmText.tdata();
 
     hwnd = CrtHlpWndnls(title,73,22);
     sz=strs.size();
@@ -6263,7 +6261,7 @@ ix86_Disassembler::ix86_Disassembler(BeyeContext& bc,const Bin_Format& b,binary_
 		    ,x86_Bitness(Bin_Format::Auto)
 		    ,active_assembler(-1)
 {
-  ix86_voidstr = new char [MAX_DISASM_OUTPUT];
+  ix86_str = new char [MAX_DISASM_OUTPUT];
   ix86_da_out  = new char [MAX_DISASM_OUTPUT];
   ix86_Katmai_buff = new char [MAX_DISASM_OUTPUT];
   ix86_appstr = new char [MAX_DISASM_OUTPUT];
@@ -6297,7 +6295,7 @@ ix86_Disassembler::ix86_Disassembler(BeyeContext& bc,const Bin_Format& b,binary_
 
 ix86_Disassembler::~ix86_Disassembler()
 {
-   delete ix86_voidstr;
+   delete ix86_str;
    delete ix86_da_out;
    delete ix86_Katmai_buff;
    delete ix86_appstr;

@@ -1,7 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
 using namespace	usr;
-#include <stdexcept>
 
 #include "binary_packet.h"
 
@@ -57,6 +56,32 @@ binary_packet&	binary_packet::append(const any_t* _data,size_t sz) {
 
 binary_packet&	binary_packet::append(const binary_packet& it) { return append(it.buffer,it.len); }
 
+binary_packet&	binary_packet::insert(size_t pos,const any_t* sdata,size_t slen) {
+    resize(len+slen);
+    memmove(&((uint8_t*)buffer)[pos+slen],&((uint8_t*)buffer)[pos],slen);
+    memcpy(&((uint8_t*)buffer)[pos],sdata,slen);
+    return *this;
+}
+
+binary_packet&	binary_packet::insert(size_t pos,const binary_packet& it) { return insert(pos,it.buffer,it.len); }
+
+binary_packet&	binary_packet::replace(size_t pos,const any_t* sdata,size_t slen) {
+    if(pos+slen>len) throw std::out_of_range("binary_packet.replace");
+    memcpy(&((uint8_t*)buffer)[pos],sdata,slen);
+    return *this;
+}
+
+binary_packet&	binary_packet::replace(size_t pos,const binary_packet& it) { return replace(pos,it.buffer,it.len); }
+
+binary_packet&	binary_packet::remove(size_t pos,size_t n) {
+    if(pos+n==len) resize(len-n);
+    else if(pos+n<len){
+	memmove(&((uint8_t*)buffer)[pos],&((uint8_t*)buffer)[pos+n],n);
+	resize(len-n);
+    } else throw std::out_of_range("binary_packet.remove");
+    return *this;
+}
+
 binary_packet	binary_packet::operator+(const binary_packet& rhs) const {
     binary_packet rc(len+rhs.len);
     ::memcpy(rc.buffer,buffer,len);
@@ -74,9 +99,8 @@ binary_packet& binary_packet::resize(size_t newsz) {
     return *this;
 }
 
-char& binary_packet::operator[](size_t idx) { return at(idx); }
-const char& binary_packet::operator[](size_t idx) const { return at(idx); }
-
+uint8_t& binary_packet::operator[](size_t idx) { return at(idx); }
+const uint8_t& binary_packet::operator[](size_t idx) const { return at(idx); }
 
 bool binary_packet::operator==(const binary_packet& from) const {
     if(len==from.len) return ::memcmp(buffer,from.buffer,len)==0;
@@ -103,18 +127,18 @@ bool binary_packet::operator>=(const binary_packet& from) const {
     return len>from.len;
 }
 
-char&		binary_packet::front() { return ((char*)buffer)[0]; }
-const char&	binary_packet::front() const { return ((const char*)buffer)[0]; }
-char&		binary_packet::back() { return ((char*)buffer)[len-1]; }
-const char&	binary_packet::back() const { return ((const char*)buffer)[len-1]; }
+uint8_t&	binary_packet::front() { return ((uint8_t*)buffer)[0]; }
+const uint8_t&	binary_packet::front() const { return ((const uint8_t*)buffer)[0]; }
+uint8_t&	binary_packet::back() { return ((uint8_t*)buffer)[len-1]; }
+const uint8_t&	binary_packet::back() const { return ((const uint8_t*)buffer)[len-1]; }
 
-char& binary_packet::at(size_t idx) {
-    if(idx<len) return ((char*)buffer)[idx];
+uint8_t& binary_packet::at(size_t idx) {
+    if(idx<len) return ((uint8_t*)buffer)[idx];
     throw std::out_of_range("binary_packet.at");
 }
 
-const char& binary_packet::at(size_t idx) const {
-    if(idx<len) return ((const char*)buffer)[idx];
+const uint8_t& binary_packet::at(size_t idx) const {
+    if(idx<len) return ((const uint8_t*)buffer)[idx];
     throw std::out_of_range("binary_packet.at const");
 }
 
@@ -123,6 +147,17 @@ binary_packet binary_packet::subpacket(size_t start,size_t length) const {
     binary_packet rc(length);
     ::memcpy(rc.buffer,&((char*)buffer)[start],length);
     return rc;
+}
+
+std::ostream& operator<<(std::ostream& os,const binary_packet& bp) {
+    os.write((const char*)bp.data(),bp.size());
+    return os;
+}
+
+std::istream& operator>>(std::istream& is,binary_packet& bp) {
+    bp.resize(is.width());
+    is.read((char*)bp.data(),bp.size());
+    return is;
 }
 
 binary_packet::~binary_packet() { if(buffer) delete (char*)buffer; }

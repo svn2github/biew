@@ -93,8 +93,6 @@ DisasmRet Data_Disassembler::disassembler(__filesize_t ulShift,
   const char *preface;
   if(!((flags & __DISF_SIZEONLY) == __DISF_SIZEONLY))
   {
-    memset(&ret,0,sizeof(ret));
-    ret.str = outstr;
     switch(nulWidth)
     {
       case 0: preface = "db ";
@@ -120,6 +118,7 @@ DisasmRet Data_Disassembler::disassembler(__filesize_t ulShift,
     std::string stmp = outstr;
     parent.append_digits(main_handle,stmp,ulShift,Bin_Format::Use_Type,cl,buffer,type);
     strcpy(outstr,stmp.c_str());
+    ret.str = outstr;
   }
   else
     if(flags & __DISF_GETTYPE) ret.pro_clone = __INSNT_ORDINAL;

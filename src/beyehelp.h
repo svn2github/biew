@@ -74,11 +74,11 @@ namespace	usr {
 		       /** Return uncompressed size of help item
 			  0 - if error occured */
 	    virtual unsigned long	get_item_size(unsigned long item_id);
-	    virtual binary_packet	load_item(unsigned long item_id);
+	    virtual objects_container<char>	load_item(unsigned long item_id);
 
 		       /** Returns array of char pointers.
 			  Title always is data[0] */
-	    virtual std::vector<std::string> point_strings(binary_packet& data) const;
+	    virtual std::vector<std::string> point_strings(objects_container<char>& data) const;
 		       /** Filles buffer as video memory from string */
 	    virtual unsigned		fill_buffer(TWindow& win,tRelCoord x,tRelCoord y,
 						    const std::string& str,

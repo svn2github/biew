@@ -467,7 +467,7 @@ enum {
 	    const Bin_Format&		bin_format;
 
 	    Bin_Format::bitness		x86_Bitness;
-	    char*			ix86_voidstr;
+	    char*			ix86_str;
 	    char*			ix86_da_out;
 	    char*			ix86_Katmai_buff;
 	    char*			ix86_appstr;

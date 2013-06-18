@@ -343,12 +343,12 @@ const char* ARM_Disassembler::arm_wreg_name[] =
     p=strchr(msk,chr);\
     if(p) {\
 	READ_IMM32(chr);\
-	if(prev) strcat(dret->str,",");\
-	strcat(dret->str,"#");\
-	std::string stmp = dret->str; \
+	if(prev) strcat(outstr,",");\
+	strcat(outstr,"#");\
+	std::string stmp = outstr; \
 	parent.append_digits(main_handle,stmp,ulShift,Bin_Format::Use_Type,4,&val,chr=='-'?DisMode::Arg_Short:DisMode::Arg_Word);\
-	strcpy(dret->str,stmp.c_str()); \
-	if(smul) strcat(dret->str,smul);\
+	strcpy(outstr,stmp.c_str()); \
+	if(smul) strcat(outstr,smul);\
 	prev=1;\
     }
 
@@ -367,8 +367,8 @@ const char* ARM_Disassembler::arm_wreg_name[] =
     p=strchr(msk,ch);\
     if(p) {\
 	READ_IMM32(ch);\
-	if(prev) strcat(dret->str,","); prev=1;\
-	strcat(dret->str,arr[val&0xF]);\
+	if(prev) strcat(outstr,","); prev=1;\
+	strcat(outstr,arr[val&0xF]);\
     }\
 }
 
@@ -377,10 +377,10 @@ const char* ARM_Disassembler::arm_wreg_name[] =
     p=strchr(msk,ch);\
     if(p) {\
 	READ_IMM32(ch);\
-	if(prev) strcat(dret->str,","); prev=1;\
-	if(amode) strcat(dret->str,"[");\
-	strcat(dret->str,arm_reg_name[val&0xF]);\
-	if(has_W==true && a_W) strcat(dret->str,"!");\
+	if(prev) strcat(outstr,","); prev=1;\
+	if(amode) strcat(outstr,"[");\
+	strcat(outstr,arm_reg_name[val&0xF]);\
+	if(has_W==true && a_W) strcat(outstr,"!");\
     }\
 }
 
@@ -391,9 +391,9 @@ const char* ARM_Disassembler::arm_wreg_name[] =
 	unsigned val2;\
 	READ_IMM32(CH);\
 	val2=val;\
-	if(prev) strcat(dret->str,","); prev=1;\
+	if(prev) strcat(outstr,","); prev=1;\
 	READ_IMM32(ch);\
-	strcat(dret->str,arm_freg_name[(val2&0x1F<<1)|(val&1)]);\
+	strcat(outstr,arm_freg_name[(val2&0x1F<<1)|(val&1)]);\
     }\
 }
 
@@ -402,8 +402,8 @@ const char* ARM_Disassembler::arm_wreg_name[] =
     p=strchr(msk,ch);\
     if(p) {\
 	READ_IMM32(ch);\
-	if(prev) strcat(dret->str,","); prev=1;\
-	strcat(dret->str,Get2Digit(val&0xF).c_str());\
+	if(prev) strcat(outstr,","); prev=1;\
+	strcat(outstr,Get2Digit(val&0xF).c_str());\
     }\
 }
 
@@ -456,10 +456,10 @@ void ARM_Disassembler::arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
 	tbuff=tbuff<<2;
 	if(hh) tbuff|=0x2;
 	tbuff+=8;
-	if(prev) strcat(dret->str,",");
-	std::string stmp = dret->str;
+	if(prev) strcat(outstr,",");
+	std::string stmp = outstr;
 	parent.append_faddr(main_handle,stmp,ulShift+1,(long)tbuff,ulShift+tbuff,DisMode::Near32,0,3);
-	strcpy(dret->str,stmp.c_str());
+	strcpy(outstr,stmp.c_str());
 	prev=1;
     }
 
@@ -467,12 +467,12 @@ void ARM_Disassembler::arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
     p=strchr(msk,'<');
     if(p) {
 	READ_IMM32('<');
-	if(prev) strcat(dret->str,",");
+	if(prev) strcat(outstr,",");
 	if(has_I == true && a_I) {
-	    strcat(dret->str,"#");
-	    strcat(dret->str,Get2Digit(val&0xFF).c_str());
-	    strcat(dret->str,",");
-	    strcat(dret->str,Get2Digit((val>>8)&0xF).c_str());
+	    strcat(outstr,"#");
+	    strcat(outstr,Get2Digit(val&0xFF).c_str());
+	    strcat(outstr,",");
+	    strcat(outstr,Get2Digit((val>>8)&0xF).c_str());
 	}
 	else {
 	    idx=(val>>4)&0x07;
@@ -488,22 +488,22 @@ void ARM_Disassembler::arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
 		case 6:
 		case 7: pfx="ROR"; break;
 	    }
-	    strcat(dret->str,arm_reg_name[val&0xF]);
-	    strcat(dret->str,",");
-	    strcat(dret->str,pfx);
-	    strcat(dret->str," #");
+	    strcat(outstr,arm_reg_name[val&0xF]);
+	    strcat(outstr,",");
+	    strcat(outstr,pfx);
+	    strcat(outstr," #");
 	    switch(idx) {
 		case 6:
 		case 4:
 		case 2:
 		case 0:
-			strcat(dret->str,Get2Digit((val>>7)&0x1F).c_str());
+			strcat(outstr,Get2Digit((val>>7)&0x1F).c_str());
 			break;
 		case 7:
 		case 5:
 		case 3:
 		case 1:
-			strcat(dret->str,arm_reg_name[(val>>8)&0xF]);
+			strcat(outstr,arm_reg_name[(val>>8)&0xF]);
 			break;
 		default: break;
 	    }
@@ -528,50 +528,50 @@ void ARM_Disassembler::arm32EncodeTail(DisasmRet *dret,__filesize_t ulShift,
 		case 6:
 		case 7: pfx="ROR"; break;
 	    }
-	    if(prev) strcat(dret->str,has_U==true&&a_U?"+":"-");
-	    strcat(dret->str,arm_reg_name[val&0xF]);
-	    strcat(dret->str,",");
-	    strcat(dret->str,pfx);
-	    strcat(dret->str," #");
-	    strcat(dret->str,Get2Digit((val>>7)&0x1F).c_str());
+	    if(prev) strcat(outstr,has_U==true&&a_U?"+":"-");
+	    strcat(outstr,arm_reg_name[val&0xF]);
+	    strcat(outstr,",");
+	    strcat(outstr,pfx);
+	    strcat(outstr," #");
+	    strcat(outstr,Get2Digit((val>>7)&0x1F).c_str());
 	}
 	else {
-	    strcat(dret->str,Get4SignDig(val&0xFFF).c_str());
+	    strcat(outstr,Get4SignDig(val&0xFFF).c_str());
 	}
-	strcat(dret->str,"]");
+	strcat(outstr,"]");
     }
 
     /* Addressing Mode 3 - Miscellaneous Loads and Stores */
     p=strchr(msk,'A');
     if(p) {
 	READ_IMM32('A');
-	if(prev) strcat(dret->str,has_U==true&&a_U?"+":"-");
+	if(prev) strcat(outstr,has_U==true&&a_U?"+":"-");
 	if(has_N == true && a_N) {
-	    strcat(dret->str,Get2Digit(val&0xFF).c_str());
+	    strcat(outstr,Get2Digit(val&0xFF).c_str());
 	}
 	else {
-	    strcat(dret->str,arm_reg_name[val&0xF]);
+	    strcat(outstr,arm_reg_name[val&0xF]);
 	}
-	strcat(dret->str,"]");
+	strcat(outstr,"]");
     }
 
     /* Addressing Mode 4 - Load and Store Multiple */
     p=strchr(msk,'R');
     if(p) {
 	int prevv;
-	if(prev) strcat(dret->str,",{");
+	if(prev) strcat(outstr,",{");
 	READ_IMM32('R');
 	prevv=0;
 	for(i=0;i<32;i++)
 	{
 	    if(val&(1<<i))
 	    {
-		if(prevv) strcat(dret->str,",");
-		strcat(dret->str,arm_reg_name[i]);
+		if(prevv) strcat(outstr,",");
+		strcat(outstr,arm_reg_name[i]);
 		prevv=1;
 	    }
 	}
-	if(prev) strcat(dret->str,"}");
+	if(prev) strcat(outstr,"}");
     }
 
     /* Addressing Mode 5 - Load and Store Coprocessor */
@@ -596,60 +596,60 @@ void ARM_Disassembler::arm32Disassembler(DisasmRet *dret,__filesize_t ulShift,
     {
 	if((opcode & opcode32_table[ix].bmsk) == opcode32_table[ix].bits)
 	{
-	    strcpy(dret->str,opcode32_table[ix].name);
+	    strcpy(outstr,opcode32_table[ix].name);
 	    msk=opcode32_table[ix].mask;
 	    p=strchr(msk,'L');
 	    if(p)
 	    {
 		READ_IMM32('L');
-		if(val) strcat(dret->str,"L");
+		if(val) strcat(outstr,"L");
 	    }
 	    p=strchr(msk,'X');
 	    if(p)
 	    {
 		READ_IMM32('X');
-		strcat(dret->str,val?"T":"B");
+		strcat(outstr,val?"T":"B");
 	    }
 	    p=strchr(msk,'Y');
 	    if(p)
 	    {
 		READ_IMM32('Y');
-		strcat(dret->str,val?"T":"B");
+		strcat(outstr,val?"T":"B");
 	    }
 	    p=strchr(msk,'B');
 	    if(p)
 	    {
 		const char *X_sub_fields[4] = { "D", "W", "H", "B" };
 		READ_IMM32('B');
-		strcat(dret->str,X_sub_fields[val&3]);
+		strcat(outstr,X_sub_fields[val&3]);
 	    }
 	    p=strchr(msk,'9');
 	    if(p)
 	    {
 		const char *X_sub_fields[4] = { "SS", "C", "US", "" };
 		READ_IMM32('9');
-		strcat(dret->str,X_sub_fields[val&3]);
+		strcat(outstr,X_sub_fields[val&3]);
 	    }
 	    p=strchr(msk,'u');
 	    if(p)
 	    {
 		const char *X_sub_fields[4] = { "S", "U" };
 		READ_IMM32('u');
-		strcat(dret->str,X_sub_fields[val&1]);
+		strcat(outstr,X_sub_fields[val&1]);
 	    }
 	    p=strchr(msk,'c');
 	    if(p)
 	    {
 		READ_IMM32('c');
-		strcat(dret->str,armCCnames[val&0xF]);
+		strcat(outstr,armCCnames[val&0xF]);
 	    }
 	    p=strchr(msk,'S');
 	    if(p)
 	    {
 		READ_IMM32('S');
-		if(val) strcat(dret->str,"!");
+		if(val) strcat(outstr,"!");
 	    }
-	    TabSpace(dret->str,TAB_POS);
+	    TabSpace(outstr,TAB_POS);
 	    arm32EncodeTail(dret,ulShift,opcode,flags,ix);
 	    dret->pro_clone=opcode32_table[ix].flags;
 	    done=1;
@@ -659,11 +659,11 @@ void ARM_Disassembler::arm32Disassembler(DisasmRet *dret,__filesize_t ulShift,
     if(!done)
     {
 	    {
-		strcpy(dret->str,"???");
-		TabSpace(dret->str,TAB_POS);
-		std::string stmp = dret->str;
+		strcpy(outstr,"???");
+		TabSpace(outstr,TAB_POS);
+		std::string stmp = outstr;
 		parent.append_digits(main_handle,stmp,ulShift,Bin_Format::Use_Type,4,&opcode,DisMode::Arg_DWord);
-		strcpy(dret->str,stmp.c_str());
+		strcpy(outstr,stmp.c_str());
 	    }
     }
 }

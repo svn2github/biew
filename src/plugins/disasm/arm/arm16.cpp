@@ -146,12 +146,12 @@ const char* ARM_Disassembler::arm_reg_name[] =
     if(strchr(msk,chr))\
     {\
 	READ_IMM(chr);\
-	if(prev) strcat(dret->str,",");\
-	strcat(dret->str,"#");\
-	std::string stmp = dret->str; \
+	if(prev) strcat(outstr,",");\
+	strcat(outstr,"#");\
+	std::string stmp = outstr; \
 	parent.append_digits(main_handle,stmp,ulShift,Bin_Format::Use_Type,2,&val,DisMode::Arg_Word);\
-	strcpy(dret->str,stmp.c_str()); \
-	if(smul) strcat(dret->str,smul);\
+	strcpy(outstr,stmp.c_str()); \
+	if(smul) strcat(outstr,smul);\
 	prev=1;\
     }
 
@@ -171,45 +171,45 @@ void ARM_Disassembler::arm16EncodeTail(DisasmRet *dret,uint16_t opcode,__filesiz
     if(p)
     {
 	READ_IMM('d');
-	strcat(dret->str,arm_reg_name[(val&0xF)+(d?8:0)]);
+	strcat(outstr,arm_reg_name[(val&0xF)+(d?8:0)]);
 	prev=1;
     }
     p=strchr(msk,'s');
     if(p)
     {
 	READ_IMM('s');
-	if(prev) strcat(dret->str,","); prev=1;
-	strcat(dret->str,arm_reg_name[(val&0xF)+(s?8:0)]);
+	if(prev) strcat(outstr,","); prev=1;
+	strcat(outstr,arm_reg_name[(val&0xF)+(s?8:0)]);
     }
     p=strchr(msk,'n');
     if(p)
     {
 	READ_IMM('n');
-	if(prev) strcat(dret->str,",["); prev=1;
-	strcat(dret->str,arm_reg_name[(val&0xF)+(n?8:0)]);
+	if(prev) strcat(outstr,",["); prev=1;
+	strcat(outstr,arm_reg_name[(val&0xF)+(n?8:0)]);
 	bracket=1;
     }
     if(!bracket && (flags & ARM_HAS_RN))
     {
-	if(prev) strcat(dret->str,",["); prev=1;
+	if(prev) strcat(outstr,",["); prev=1;
 	bracket=1;
     }
     if(flags & ARM_USE_PC)
     {
-	if(prev && !bracket) strcat(dret->str,","); prev=1;
-	strcat(dret->str, "PC");
+	if(prev && !bracket) strcat(outstr,","); prev=1;
+	strcat(outstr, "PC");
     }
     if(flags & ARM_USE_SP)
     {
-	if(prev && !bracket) strcat(dret->str,","); prev=1;
-	strcat(dret->str, "SP");
+	if(prev && !bracket) strcat(outstr,","); prev=1;
+	strcat(outstr, "SP");
     }
     p=strchr(msk,'m');
     if(p)
     {
 	READ_IMM('m');
-	if(prev) strcat(dret->str,",");
-	strcat(dret->str,arm_reg_name[(val&0xF)+(m?8:0)]);
+	if(prev) strcat(outstr,",");
+	strcat(outstr,arm_reg_name[(val&0xF)+(m?8:0)]);
 	prev=1;
     }
     PARSE_IMM('i',"");
@@ -228,37 +228,37 @@ void ARM_Disassembler::arm16EncodeTail(DisasmRet *dret,uint16_t opcode,__filesiz
 	}
 	READ_IMM('o');
 	tbuff=val;
-	if(prev) strcat(dret->str,",");
+	if(prev) strcat(outstr,",");
 	if(hh==3)
 	    tbuff=tbuff<<1;
 	else if(hh==2)
 	    tbuff=tbuff<<12;
 	else if(hh==1)
 	    tbuff=(tbuff<<1)&0xfffffffc;
-	std::string stmp=dret->str;
+	std::string stmp=outstr;
 	parent.append_faddr(main_handle,stmp,ulShift+1,(long)tbuff,ulShift+tbuff,DisMode::Near32,0,2);
-	strcpy(dret->str,stmp.c_str());
+	strcpy(outstr,stmp.c_str());
 	prev=1;
     }
     p=strchr(msk,'R');
     if(p)
     {
 	int prevv;
-	if(prev) strcat(dret->str,"!,{");
+	if(prev) strcat(outstr,"!,{");
 	READ_IMM('R');
 	prevv=0;
 	for(i=0;i<16;i++)
 	{
 	    if(val&(1<<i))
 	    {
-		if(prevv) strcat(dret->str,",");
-		strcat(dret->str,arm_reg_name[i]);
+		if(prevv) strcat(outstr,",");
+		strcat(outstr,arm_reg_name[i]);
 		prevv=1;
 	    }
 	}
-	if(prev) strcat(dret->str,"}");
+	if(prev) strcat(outstr,"}");
     }
-    if(bracket) strcat(dret->str,"]");
+    if(bracket) strcat(outstr,"]");
 }
 
 void ARM_Disassembler::arm16Disassembler(DisasmRet *dret,__filesize_t ulShift,
@@ -275,15 +275,15 @@ void ARM_Disassembler::arm16Disassembler(DisasmRet *dret,__filesize_t ulShift,
 	{
 	    unsigned idx,val;
 	    const char *p;
-	    strcpy(dret->str,opcode_table[i].name);
+	    strcpy(outstr,opcode_table[i].name);
 	    p=strchr(opcode_table[i].mask,'c');
 	    if(p)
 	    {
 		idx=p-opcode_table[i].mask;
 		val=(opcode>>(11-idx))&0xF;
-		strcat(dret->str,armCCnames[val]);
+		strcat(outstr,armCCnames[val]);
 	    }
-	    TabSpace(dret->str,TAB_POS);
+	    TabSpace(outstr,TAB_POS);
 	    arm16EncodeTail(dret,opcode,ulShift,opcode_table[i].mask,opcode_table[i].flags);
 	    dret->pro_clone=opcode_table[i].flags;
 	    done=1;
@@ -292,11 +292,11 @@ void ARM_Disassembler::arm16Disassembler(DisasmRet *dret,__filesize_t ulShift,
     }
     if(!done)
     {
-	strcpy(dret->str,"???");
-	TabSpace(dret->str,TAB_POS);
-	std::string stmp = dret->str;
+	strcpy(outstr,"???");
+	TabSpace(outstr,TAB_POS);
+	std::string stmp = outstr;
 	parent.append_digits(main_handle,stmp,ulShift,Bin_Format::Use_Type,2,&opcode,DisMode::Arg_Word);
-	strcpy(dret->str,stmp.c_str());
+	strcpy(outstr,stmp.c_str());
     }
 }
 

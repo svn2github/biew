@@ -371,7 +371,7 @@ binary_packet BBio_File::binary_cache::read(size_t cbBuff)
     size_t MBufStart,MBufRem;
     int _optimize = parent.optimize;
     bool ret = true;
-    char* buff = rc.cdata();
+    uint8_t* buff = rc.cdata();
 
     parent.optimize = (_optimize & ~Opt_DirMask) | Opt_Db;
     while(cbBuff) {
@@ -408,7 +408,7 @@ bool BBio_File::binary_cache::write(const binary_packet& bp)
     size_t MBufStart,MBufRem;
     int _optimize = parent.optimize;
     bool ret = true;
-    const char* buff = bp.cdata();
+    const uint8_t* buff = bp.cdata();
     size_t cbBuff = bp.size();
     if(parent.is_writeable(parent.openmode)) {
 	parent.optimize = (_optimize & ~Opt_DirMask) | Opt_Db;

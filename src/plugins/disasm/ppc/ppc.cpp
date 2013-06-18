@@ -1453,43 +1453,37 @@ DisasmRet PPC_Disassembler::disassembler(__filesize_t ulShift,
     opcode=ppcBigEndian?be2me_32(*((uint32_t *)buffer)):le2me_32(*((uint32_t *)buffer));
     n = sizeof(ppc_table)/sizeof(ppc_opcode);
     done=0;
-    dret.str = outstr;
     dret.codelen = 4;
     if(flags == __DISF_NORMAL) {
-    uint32_t ppc_fmask;
-    ppc_fmask=ppcDialect?PPC_SPE:PPC_VEC;
-    for(ix=0;ix<n;ix++)
-    {
-	uint32_t mask,bits,ppc_flgs;
-	mask=ppc_table[ix].mask;
-	bits=ppc_table[ix].bits;
-	ppc_flgs=ppc_table[ix].flags;
-	if((opcode&mask)==bits)
-	{
-	    int legal_insn=0;
-	    if(!(ppc_flgs&PPC_DIALECT)) legal_insn=1;
-	    else if((ppc_flgs&PPC_DIALECT)==ppc_fmask) legal_insn=1;
-	    if( legal_insn ) {
-		strcpy(dret.str,ppc_table[ix].name);
-		ppc_Encode_args(dret.str,opcode,ulShift,ppc_table[ix].flags,ppc_table[ix].args);
-		done=1;
-		dret.pro_clone=ppc_table[ix].flags & PPC_CLONE_MSK;
+	uint32_t ppc_fmask;
+	ppc_fmask=ppcDialect?PPC_SPE:PPC_VEC;
+	for(ix=0;ix<n;ix++) {
+	    uint32_t mask,bits,ppc_flgs;
+	    mask=ppc_table[ix].mask;
+	    bits=ppc_table[ix].bits;
+	    ppc_flgs=ppc_table[ix].flags;
+	    if((opcode&mask)==bits) {
+		int legal_insn=0;
+		if(!(ppc_flgs&PPC_DIALECT)) legal_insn=1;
+		else if((ppc_flgs&PPC_DIALECT)==ppc_fmask) legal_insn=1;
+		if( legal_insn ) {
+		    strcpy(outstr,ppc_table[ix].name);
+		    ppc_Encode_args(outstr,opcode,ulShift,ppc_table[ix].flags,ppc_table[ix].args);
+		    done=1;
+		    dret.pro_clone=ppc_table[ix].flags & PPC_CLONE_MSK;
+		}
 	    }
 	}
-    }
-    if(!done)
-    {
-	{
-		strcpy(dret.str,"db");
-		TabSpace(dret.str,TAB_POS);
-		std::string stmp = dret.str;
-		parent.append_digits(main_handle,stmp,ulShift,Bin_Format::Use_Type,4,&opcode,DisMode::Arg_DWord);
-		strcpy(dret.str,stmp.c_str());
+	if(!done) {
+	    strcpy(outstr,"db");
+	    TabSpace(outstr,TAB_POS);
+	    std::string stmp = outstr;
+	    parent.append_digits(main_handle,stmp,ulShift,Bin_Format::Use_Type,4,&opcode,DisMode::Arg_DWord);
+	    strcpy(outstr,stmp.c_str());
+	    dret.pro_clone=0;
 	}
-	dret.pro_clone=0;
-    }
-    }
-    else {
+	dret.str=outstr;
+    } else {
 	if(flags & __DISF_GETTYPE) dret.pro_clone = __INSNT_ORDINAL;
 	else dret.codelen = 4;
     }
@@ -1516,10 +1510,10 @@ void PPC_Disassembler::show_short_help() const
     Beye_Help bhelp(bctx);
 
     if(!bhelp.open(true)) return;
-    binary_packet msgAsmText = bhelp.load_item(20041);
+    objects_container<char> msgAsmText = bhelp.load_item(20041);
     if(!msgAsmText.empty()) goto ppchlp_bye;
     strs = bhelp.point_strings(msgAsmText);
-    title = msgAsmText.cdata();
+    title = msgAsmText.tdata();
 
     hwnd = CrtHlpWndnls(title,73,16);
     sz=strs.size();
