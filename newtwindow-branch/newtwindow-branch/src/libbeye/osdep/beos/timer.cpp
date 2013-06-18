@@ -1,1 +1,0 @@
-/* BEOS lacks posix timers */
