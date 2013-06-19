@@ -283,10 +283,7 @@ void TWindow::hide()
 void TWindow::resize(tAbsCoord _width,tAbsCoord _height)
 {
     size_t size=_width*_height;
-    wsize = size;
-    wwidth = _width;
-    wheight = _height;
-    saved.resize(wsize);
+    saved.resize(size);
     TWidget::resize(_width,_height);
 }
 } // namespace	usr

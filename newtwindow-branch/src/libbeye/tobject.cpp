@@ -157,11 +157,6 @@ TObject* TObject::__at_point(TObject* iter,tAbsCoord x,tAbsCoord y) {
 
 void TObject::create(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, twc_flag _flags)
 {
-    if((flags & Flag_Has_Frame) == Flag_Has_Frame) { _width ++; _height ++; }
-
-    unsigned size = _width*_height;
-
-    wsize = size;
     wwidth = _width;
     wheight = _height;
 
@@ -431,17 +426,15 @@ void TObject::move(tAbsCoord dx,tAbsCoord dy)
 void TObject::resize(tAbsCoord _width,tAbsCoord _height)
 {
     TObject *prev;
-    size_t size;
     tRelCoord x,y;
     bool vis;
+
     x = where_x();
     y = where_y();
     vis = (iflags & IFLG_VISIBLE) == IFLG_VISIBLE;
     prev = __prevwin();
     if(vis) hide();
-    size = _width*_height;
 
-    wsize = size;
     wwidth = _width;
     wheight = _height;
 

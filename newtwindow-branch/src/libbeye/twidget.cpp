@@ -764,7 +764,6 @@ void TWidget::resize(tAbsCoord _width,tAbsCoord _height)
 	    to += _width;
 	}
     }
-    wsize = size;
     wwidth = _width;
     wheight = _height;
     surface = newbody;

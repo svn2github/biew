@@ -365,7 +365,6 @@ namespace	usr {
 
 	    twc_flag		flags;       /**< Window flags */
 	    unsigned long	iflags;      /**< contains internal flags of window state */
-	    unsigned		wsize;       /**< Size of buffers in bytes */
 	    unsigned		wwidth;      /**< width of window */
 	    unsigned		wheight;     /**< height of window */
 	    tAbsCoord		X1,Y1,X2,Y2; /**< coordinates of window on the screen */
