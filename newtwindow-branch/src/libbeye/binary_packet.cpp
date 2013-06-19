@@ -1,6 +1,7 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
 using namespace	usr;
+#include <sstream>
 
 #include "binary_packet.h"
 
@@ -66,7 +67,11 @@ binary_packet&	binary_packet::insert(size_t pos,const any_t* sdata,size_t slen) 
 binary_packet&	binary_packet::insert(size_t pos,const binary_packet& it) { return insert(pos,it.buffer,it.len); }
 
 binary_packet&	binary_packet::replace(size_t pos,const any_t* sdata,size_t slen) {
-    if(pos+slen>len) throw std::out_of_range("binary_packet.replace");
+    if(pos+slen>len) {
+	std::ostringstream os;
+	os<<"."<<get_caller_address()<<" => binary_packet::replace("<<pos<<","<<slen<<")";
+	throw std::out_of_range(os.str());
+    }
     memcpy(&((uint8_t*)buffer)[pos],sdata,slen);
     return *this;
 }
@@ -78,7 +83,11 @@ binary_packet&	binary_packet::remove(size_t pos,size_t n) {
     else if(pos+n<len){
 	memmove(&((uint8_t*)buffer)[pos],&((uint8_t*)buffer)[pos+n],n);
 	resize(len-n);
-    } else throw std::out_of_range("binary_packet.remove");
+    } else {
+	std::ostringstream os;
+	os<<"."<<get_caller_address()<<" => binary_packet::remove("<<pos<<","<<n<<")";
+	throw std::out_of_range(os.str());
+    }
     return *this;
 }
 
@@ -134,16 +143,24 @@ const uint8_t&	binary_packet::back() const { return ((const uint8_t*)buffer)[len
 
 uint8_t& binary_packet::at(size_t idx) {
     if(idx<len) return ((uint8_t*)buffer)[idx];
-    throw std::out_of_range("binary_packet.at");
+    std::ostringstream os;
+    os<<"."<<get_caller_address()<<" => binary_packet::at("<<idx<<")";
+    throw std::out_of_range(os.str());
 }
 
 const uint8_t& binary_packet::at(size_t idx) const {
     if(idx<len) return ((const uint8_t*)buffer)[idx];
-    throw std::out_of_range("binary_packet.at const");
+    std::ostringstream os;
+    os<<"."<<get_caller_address()<<" => binary_packet::at("<<idx<<")";
+    throw std::out_of_range(os.str());
 }
 
 binary_packet binary_packet::subpacket(size_t start,size_t length) const {
-    if(start+length>len) throw std::out_of_range("binary_packet.subpacket");
+    if(start+length>len) {
+	std::ostringstream os;
+	os<<"."<<get_caller_address()<<" => binary_packet::subpacket("<<start<<","<<length<<")";
+	throw std::out_of_range(os.str());
+    }
     binary_packet rc(length);
     ::memcpy(rc.buffer,&((char*)buffer)[start],length);
     return rc;

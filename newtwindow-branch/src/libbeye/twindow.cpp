@@ -39,16 +39,7 @@ using namespace	usr;
 #include "libbeye/twindow.h"
 
 namespace	usr {
-bool TWindow::test_win() const
-{
-    bool ret;
-    ret = TWidget::test_win() &&
-	*((any_t**)(saved.get_chars() + wsize)) == saved.get_chars() &&
-	*((any_t**)(saved.get_oempg() + wsize)) == saved.get_oempg() &&
-	*((any_t**)(saved.get_attrs() + wsize)) == saved.get_attrs() ? true : false;
-    return ret;
-}
-
+bool TWindow::test_win() const { return TWidget::test_win(); }
 enum {
     IFLG_VISIBLE      =0x00000001UL,
     IFLG_ENABLED      =0x00000002UL,
@@ -95,7 +86,7 @@ void TWindow::updatescreencharfrombuff(tRelCoord x,tRelCoord y,const tvideo_buff
 	    tx = X1 - top->X1 + x;
 	    ty = Y1 - top->Y1 + y;
 	    tidx = tx + ty*top->wwidth;
-	    top->saved.assign_at(tidx,&buff.get_chars()[idx],&buff.get_oempg()[idx],&buff.get_attrs()[idx],1);
+	    top->saved[tidx]=buff[idx];
 	}
     }
     TWidget::updatescreencharfrombuff(x,y,buff,accel);
@@ -121,11 +112,11 @@ void TWindow::updatewinmemcharfromscreen(tRelCoord x,tRelCoord y,const tvideo_bu
 	    tx = X1 - top->X1 + x;
 	    ty = Y1 - top->Y1 + y;
 	    tidx = tx + ty*top->wwidth;
-	    saved.assign_at(idx,&top->saved.get_chars()[tidx],&top->saved.get_oempg()[tidx],&top->saved.get_attrs()[tidx],1);
-	    top->saved.assign_at(tidx,&get_surface().get_chars()[idx],&get_surface().get_oempg()[idx],&get_surface().get_attrs()[idx],1);
+	    saved[idx]=top->saved[tidx];
+	    top->saved[tidx]=get_surface()[idx];
 	    top->check_win();
 	} else {
-	    saved.assign_at(idx,&accel.get_chars()[aidx],&accel.get_oempg()[aidx],&accel.get_attrs()[aidx],1);
+	    saved[idx]=accel[aidx];
 	}
     }
 }
@@ -195,7 +186,8 @@ void TWindow::savedwin2screen()
 	is_top = __topmost();
 	if(is_top && wwidth == tconsole->vio_width() && !X1) {
 	    /* Special case of redrawing window interior at one call */
-	    tconsole->vio_write_buff(0, Y1, tvideo_buffer(saved.get_chars(),saved.get_oempg(),saved.get_attrs(),wwidth*wheight));
+	    tvideo_buffer out=saved;
+	    tconsole->vio_write_buff(0, Y1, out);
 	} else {
 	    for(i = 0;i < wheight;i++) {
 		tAbsCoord outx,outy;
@@ -203,7 +195,7 @@ void TWindow::savedwin2screen()
 		if(!is_top) for(j = 0;j < wwidth;j++) restorescreenchar(j+1,i+1,&accel);
 		else {
 		    tidx = i*wwidth;
-		    accel.assign(&saved.get_chars()[tidx],&saved.get_oempg()[tidx],&saved.get_attrs()[tidx],saved.length()-tidx);
+		    accel=saved.sub_buffer(tidx,saved.size()-tidx);
 		}
 		outx = X1;
 		outy = Y1+i;
@@ -248,7 +240,7 @@ void TWindow::updatewinmem()
 		if(iny <= tconsole->vio_height() && lwidth) {
 		    if(is_top) {
 			tidx = i*wwidth;
-			accel.assign(&saved.get_chars()[tidx],&saved.get_oempg()[tidx],&saved.get_attrs()[tidx],saved.length());
+			accel=saved.sub_buffer(tidx);
 		    }
 		    tvideo_buffer tmp=tconsole->vio_read_buff(inx,iny,lwidth);
 		    accel=tmp;

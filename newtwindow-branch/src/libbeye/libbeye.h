@@ -20,6 +20,8 @@
 #include "config.h"
 
 #include <stdexcept>
+#include <vector>
+#include <string>
 
 #include <stdlib.h>
 #include <string.h>
@@ -126,37 +128,46 @@ namespace	usr {
 	    Opaque	opaque2;
     };
 
+    struct tvideo_symbol {
+	tvideo_symbol();
+	tvideo_symbol(t_vchar,t_vchar,ColorAttr);
+
+	t_vchar		symbol;
+	t_vchar		oempg;
+	ColorAttr	attr;
+    };
+
     class tvideo_buffer : public Opaque {
 	public:
 	    tvideo_buffer(size_t n);
-	    tvideo_buffer(const t_vchar* chars,const t_vchar* oempg,const ColorAttr* attrs,size_t n);
-	    tvideo_buffer(t_vchar chars,t_vchar oempg,ColorAttr attrs,size_t n);
+	    tvideo_buffer(const std::vector<tvideo_symbol>& v);
+	    tvideo_buffer(const tvideo_symbol* data,size_t n);
+	    tvideo_buffer(const tvideo_symbol& s,size_t n);
+	    tvideo_buffer(const tvideo_buffer& it);
 	    virtual ~tvideo_buffer();
 
-	    virtual void	resize(size_t newlen);
-	    tvideo_buffer&	operator=(const tvideo_buffer& it);
-	    tvideo_buffer	operator[](size_t idx) const;
+	    virtual void		resize(size_t newlen);
+	    tvideo_buffer&		operator=(const tvideo_buffer&);
+	    const tvideo_symbol&	operator[](size_t idx) const;
+	    tvideo_symbol&		operator[](size_t idx);
 
-	    virtual void	fill(t_vchar chars,t_vchar oempg,ColorAttr attrs);
-	    virtual void	fill_at(size_t idx,t_vchar chars,t_vchar oempg,ColorAttr attrs,size_t sz);
-	    virtual void	assign(const t_vchar* chars,const t_vchar* oempg,const ColorAttr* attrs,size_t len);
+	    virtual tvideo_buffer	sub_buffer(size_t idx) const;
+	    virtual tvideo_buffer	sub_buffer(size_t idx,size_t len) const;
+
+	    virtual void	fill(const tvideo_symbol& s);
+	    virtual void	fill_at(size_t idx,const tvideo_symbol& s,size_t sz);
+	    virtual void	assign(const tvideo_symbol* data,size_t len);
+	    virtual void	assign(const std::vector<tvideo_symbol>& v);
 	    virtual void	assign(const tvideo_buffer& from,size_t len);
 	    virtual void	assign_at(size_t idx,const tvideo_buffer&);
-	    virtual void	assign_at(size_t idx,const tvideo_buffer&,size_t rlen);
-	    virtual void	assign_at(size_t idx,const t_vchar* chars,const t_vchar* oempg,const ColorAttr* attrs,size_t len);
-	    virtual void	assign_at(size_t idx,t_vchar chars,t_vchar oempg,ColorAttr attrs);
+	    virtual void	assign_at(size_t idx,const tvideo_buffer& from,size_t rlen);
+	    virtual void	assign_at(size_t idx,const tvideo_symbol* data,size_t len);
+	    virtual void	assign_at(size_t idx,const std::vector<tvideo_symbol>& v);
+	    virtual void	assign_at(size_t idx,tvideo_symbol s);
 
-	    size_t		length() const { return len; }
-	    const t_vchar*	get_chars() const { return chars; }
-	    const t_vchar*	get_oempg() const { return oempg; }
-	    const ColorAttr*	get_attrs() const { return attrs; }
+	    size_t		size() const { return data.size(); }
 	private:
-	    void		_construct();
-
-	    size_t	len;
-	    t_vchar*	chars; /**< Pointer to video character array */
-	    t_vchar*	oempg; /**< Pointer to OEM pseudographics. It needed for *nix terminals */
-	    ColorAttr*	attrs; /**< Pointer to color attributes array */
+	    std::vector<tvideo_symbol> data;
     };
 
     inline bool __CONST_FUNC__ TESTFLAG(long x, long y) { return (x&y)==y; } /**< Test y bits in x */

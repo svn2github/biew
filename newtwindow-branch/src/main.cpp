@@ -428,7 +428,7 @@ void BeyeContext::show_usage() const {
     nln = sizeof(beyeArg)/sizeof(struct tagbeyeArg);
     h = nln+4;
     y = priv._tconsole->vio_height()/2-h/2;
-    win = new(zeromem) TWindow(2,y,priv._tconsole->vio_width()-2,h+1,TWindow::Flag_None | TWindow::Flag_NLS);
+    win = new(zeromem) TWindow(2,y,priv._tconsole->vio_width()-2,h+2,TWindow::Flag_None | TWindow::Flag_NLS);
 
     win->set_title(BEYE_VER_MSG,TWindow::TMode_Center,error_cset.border);
     win->into_center();

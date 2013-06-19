@@ -217,20 +217,21 @@ void vio_vt100::set_cursor_pos(tAbsCoord x,tAbsCoord y)
 tvideo_buffer vio_vt100::read_buffer(tAbsCoord x, tAbsCoord y, size_t len)
 {
     uint8_t *addr = _addr(x, y);
-    tvideo_buffer rc(addr + violen,addr + (violen << 1),addr,len);
+    tvideo_buffer rc(len);
+    for(size_t i=0;i<len;i++) rc[i]=tvideo_symbol(((t_vchar*)(addr+violen))[i],((t_vchar*)(addr+(violen<<1)))[i],((ColorAttr*)addr)[i]);
 
     return rc;
 }
 
 void vio_vt100::write_buffer(tAbsCoord x, tAbsCoord y, const tvideo_buffer& buff)
 {
-    unsigned i;
+    size_t i;
     uint8_t c;
     uint8_t *addr;
     tAbsCoord xx, yy;
     uint8_t mode = 0, old_mode = -1;
     uint8_t cache_pb[LEN(VMAX_X)];
-    size_t len = buff.length();
+    size_t len = buff.size();
     uint8_t *dpb,*pb = len > VMAX_X ? new uint8_t [LEN(len)] : cache_pb;
     unsigned slen;
 
@@ -241,21 +242,24 @@ void vio_vt100::write_buffer(tAbsCoord x, tAbsCoord y, const tvideo_buffer& buff
 /*    if (!len) return; */
 
     addr = _addr(x, y);
-    memcpy(addr, buff.get_attrs(), len);
-    memcpy(addr + violen, buff.get_chars(), len);
-    memcpy(addr + (violen << 1), buff.get_oempg(), len);
+    for(i=0;i<len;i++) {
+	tvideo_symbol s=buff[i];
+	addr[i]=s.attr;
+	*(addr+violen+i)=s.symbol;
+	*(addr+(violen<<1)+i)=s.oempg;
+    }
 
     get_cursor_pos(xx, yy);
     gotoxy(x, y);
 
     for (i = 0; i < len; i++) {
-	c = buff.get_chars()[i];
+	c = buff[i].symbol;
 
-	if (buff.get_oempg()[i] && buff.get_oempg()[i] >= _PSMIN && buff.get_oempg()[i] <= _PSMAX && !is_unicode) {
+	if (buff[i].oempg && buff[i].oempg >= _PSMIN && buff[i].oempg <= _PSMAX && !is_unicode) {
 		mode = 1;
 		c = output_7 ?
-		    frames_dumb[buff.get_oempg()[i] - _PSMIN] :
-		    frames_vt100[buff.get_oempg()[i] - _PSMIN];
+		    frames_dumb[buff[i].oempg - _PSMIN] :
+		    frames_vt100[buff[i].oempg - _PSMIN];
 	} else {
 	    mode = 0;
 	}
@@ -273,9 +277,9 @@ void vio_vt100::write_buffer(tAbsCoord x, tAbsCoord y, const tvideo_buffer& buff
 	if (!c) c = ' '; else if (!printable(c)) c = '.';
 
 	/* TODO: make sure that compiler produces right order of conditions! */
-	if ((i && buff.get_attrs()[i] != buff.get_attrs()[i - 1]) || i == len || !i)
+	if ((i && buff[i].attr != buff[i-1].attr) || i == len || !i)
 	{
-	    char *d = _2ansi(buff.get_attrs()[i]);
+	    char *d = _2ansi(buff[i].attr);
 	    strcpy((char*)dpb, d);
 	    dpb += strlen(d);
 	}

@@ -18,6 +18,8 @@ using namespace	usr;
  * @note        Development, fixes and improvements
  * @todo        Increase number of functions
 **/
+#include <sstream>
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -231,144 +233,158 @@ Opaque::Opaque() {
 
 Opaque::~Opaque() {}
 
-void tvideo_buffer::_construct() {
-    chars = new t_vchar[len];
-    oempg = new t_vchar[len];
-    attrs = new ColorAttr[len];
-}
+
+tvideo_symbol::tvideo_symbol():symbol(0),oempg(0),attr(0) {}
+tvideo_symbol::tvideo_symbol(t_vchar s,t_vchar o,ColorAttr a):symbol(s),oempg(o),attr(a) {}
 
 tvideo_buffer::tvideo_buffer(size_t n)
-	    :len(n)
+	    :data(n)
 {
-    _construct();
 }
 
-tvideo_buffer::tvideo_buffer(const t_vchar* _chars,const t_vchar* _oempg,const ColorAttr* _attrs,size_t n)
-	    :len(n) {
-    _construct();
-    ::memcpy(chars,_chars,len);
-    ::memcpy(oempg,_oempg,len);
-    ::memcpy(attrs,_attrs,len);
+tvideo_buffer::tvideo_buffer(const tvideo_symbol* s,size_t n)
+	    :data(n)
+{
+    for(size_t i=0;i<n;i++) data[i]=s[i];
 }
 
-tvideo_buffer::tvideo_buffer(t_vchar c,t_vchar o,ColorAttr a,size_t n)
-	    :len(n) {
-    _construct();
-    fill(c,o,a);
+tvideo_buffer::tvideo_buffer(const tvideo_symbol& s,size_t n)
+	    :data(n,s)
+{
 }
 
-tvideo_buffer::~tvideo_buffer() {
-    if(chars) delete chars;
-    if(oempg) delete oempg;
-    if(attrs) delete attrs;
+tvideo_buffer::tvideo_buffer(const std::vector<tvideo_symbol>& v)
+	    :data(v)
+{
 }
+
+tvideo_buffer::tvideo_buffer(const tvideo_buffer& it)
+	    :data(it.data)
+{
+}
+
+tvideo_buffer::~tvideo_buffer() {}
 
 tvideo_buffer& tvideo_buffer::operator=(const tvideo_buffer& it) {
-    if(chars) delete chars;
-    if(oempg) delete oempg;
-    if(attrs) delete attrs;
-    len = it.len;
-    chars = new t_vchar[len];
-    oempg = new t_vchar[len];
-    attrs = new ColorAttr[len];
-    ::memcpy(chars,it.chars,len);
-    ::memcpy(oempg,it.oempg,len);
-    ::memcpy(attrs,it.attrs,len);
+    data = it.data;
     return *this;
 }
 
-tvideo_buffer tvideo_buffer::operator[](size_t idx) const {
-    size_t sz=len-idx;
-    tvideo_buffer rc(sz);
-    rc.assign(&chars[idx],&oempg[idx],&attrs[idx],sz);
+tvideo_buffer tvideo_buffer::sub_buffer(size_t idx) const {
+    size_t len=data.size()-idx;
+    tvideo_buffer rc(len);
+    for(size_t i=0;i<len;i++) rc.data[i]=data[idx+i];
     return rc;
 }
 
+tvideo_buffer tvideo_buffer::sub_buffer(size_t idx,size_t len) const {
+    tvideo_buffer rc(len);
+    for(size_t i=0;i<len;i++) rc.data[i]=data[idx+i];
+    return rc;
+}
+
+const tvideo_symbol&	tvideo_buffer::operator[](size_t idx) const {
+    if(idx>=data.size()) {
+	std::ostringstream os;
+	os<<"."<<get_caller_address()<<" => tvideo_buffer::operator["<<idx<<"] const";
+	throw std::out_of_range(os.str());
+    }
+    return data[idx];
+}
+tvideo_symbol&		tvideo_buffer::operator[](size_t idx) {
+    if(idx>=data.size()) {
+	std::ostringstream os;
+	os<<"."<<get_caller_address()<<" => tvideo_buffer::operator["<<idx<<"]";
+	throw std::out_of_range(os.str());
+    }
+    return data[idx];
+}
+
 void tvideo_buffer::resize(size_t newlen) {
-    if(len!=newlen) {
-	if(newlen) {
-	    t_vchar*  c = new t_vchar[newlen];
-	    t_vchar*  o = new t_vchar[newlen];
-	    ColorAttr*a = new ColorAttr[newlen];
-	    ::memcpy(c,chars,newlen);
-	    ::memcpy(o,oempg,newlen);
-	    ::memcpy(a,attrs,newlen);
-	    delete chars;
-	    delete oempg;
-	    delete attrs;
-	    chars = c;
-	    oempg = o;
-	    attrs = a;
-	}
-	else {
-	    if(chars) { delete chars; chars=NULL; }
-	    if(oempg) { delete oempg; oempg=NULL; }
-	    if(attrs) { delete attrs; attrs=NULL; }
-	}
-	len=newlen;
+    if(data.size()!=newlen) {
+	if(newlen) data.resize(newlen,tvideo_symbol());
+	else data.clear();
     }
 }
 
-
-void tvideo_buffer::fill(t_vchar c,t_vchar o,ColorAttr a) {
-    ::memset(chars,c,len);
-    ::memset(oempg,o,len);
-    ::memset(attrs,a,len);
+void tvideo_buffer::fill(const tvideo_symbol& s) {
+    data.assign(data.size(),s);
 }
 
-void tvideo_buffer::fill_at(size_t idx,t_vchar c,t_vchar o,ColorAttr a,size_t sz) {
-    if(idx+sz < len) {
-	::memset(&chars[idx],c,sz);
-	::memset(&oempg[idx],o,sz);
-	::memset(&attrs[idx],a,sz);
+void tvideo_buffer::fill_at(size_t idx,const tvideo_symbol& s,size_t sz) {
+    if(idx+sz < data.size()) {
+	for(size_t i=0;i<sz;i++) data[idx+i] = s;
+    } else {
+	std::ostringstream os;
+	os<<"."<<get_caller_address()<<" => tvideo_buffer::fill_at("<<idx<<","<<sz<<")";
+	throw std::out_of_range(os.str());
     }
 }
 
-void tvideo_buffer::assign(const t_vchar* _chars,const t_vchar* _oempg,const ColorAttr* _attrs,size_t newlen) {
-    size_t rlen = std::min(newlen,len);
-    ::memcpy(chars,_chars,rlen);
-    ::memcpy(oempg,_oempg,rlen);
-    ::memcpy(attrs,_attrs,rlen);
+void tvideo_buffer::assign(const tvideo_symbol* s,size_t newlen) {
+    size_t rlen = std::min(newlen,data.size());
+    for(size_t i=0;i<rlen;i++) data[i] = s[i];
+}
+
+void tvideo_buffer::assign(const std::vector<tvideo_symbol>& v) {
+    size_t rlen = std::min(v.size(),data.size());
+    for(size_t i=0;i<rlen;i++) data[i] = v[i];
 }
 
 void tvideo_buffer::assign(const tvideo_buffer& from,size_t rlen) {
-    rlen = std::min(rlen,len);
-    ::memcpy(chars,from.chars,rlen);
-    ::memcpy(oempg,from.oempg,rlen);
-    ::memcpy(attrs,from.attrs,rlen);
+    rlen = std::min(rlen,data.size());
+    for(size_t i=0;i<rlen;i++) data[i] = from[i];
 }
 
 void tvideo_buffer::assign_at(size_t idx,const tvideo_buffer& from) {
-    size_t sz=from.length();
-    if(sz+idx<len) {
-	::memcpy(&chars[idx],from.chars,sz);
-	::memcpy(&oempg[idx],from.oempg,sz);
-	::memcpy(&attrs[idx],from.attrs,sz);
+    size_t sz=from.size();
+    if(sz+idx<data.size()) {
+	for(size_t i=0;i<sz;i++) data[idx+i] = from[i];
+    } else {
+	std::ostringstream os;
+	os<<"."<<get_caller_address()<<" => tvideo_buffer::assign_at("<<idx<<")";
+	throw std::out_of_range(os.str());
     }
 }
 
 void tvideo_buffer::assign_at(size_t idx,const tvideo_buffer& from,size_t rlen) {
     size_t sz=rlen;
-    if(sz+idx<len) {
-	::memcpy(&chars[idx],from.chars,sz);
-	::memcpy(&oempg[idx],from.oempg,sz);
-	::memcpy(&attrs[idx],from.attrs,sz);
+    if(sz+idx<data.size()) {
+	for(size_t i=0;i<sz;i++) data[idx+i] = from[i];
+    } else {
+	std::ostringstream os;
+	os<<"."<<get_caller_address()<<" => tvideo_buffer::assign_at("<<idx<<","<<rlen<<")";
+	throw std::out_of_range(os.str());
     }
 }
 
-void tvideo_buffer::assign_at(size_t idx,const t_vchar* _chars,const t_vchar* _oempg,const ColorAttr* _attrs,size_t newlen) {
-    if(idx+newlen < len) {
-	::memcpy(&chars[idx],_chars,newlen);
-	::memcpy(&oempg[idx],_oempg,newlen);
-	::memcpy(&attrs[idx],_attrs,newlen);
+void tvideo_buffer::assign_at(size_t idx,const std::vector<tvideo_symbol>& v) {
+    size_t newlen=v.size();
+    if(idx+newlen < data.size()) {
+	for(size_t i=0;i<newlen;i++) data[i+idx]=v[i];
+    } else {
+	std::ostringstream os;
+	os<<"."<<get_caller_address()<<" => tvideo_buffer::assign_at("<<idx<<")";
+	throw std::out_of_range(os.str());
     }
 }
 
-void tvideo_buffer::assign_at(size_t idx,t_vchar c,t_vchar o,ColorAttr a) {
-    if(idx<len) {
-	chars[idx]=c;
-	oempg[idx]=o;
-	attrs[idx]=a;
+void tvideo_buffer::assign_at(size_t idx,const tvideo_symbol* s,size_t newlen) {
+    if(idx+newlen < data.size()) {
+	for(size_t i=0;i<newlen;i++) data[i+idx]=s[i];
+    } else {
+	std::ostringstream os;
+	os<<"."<<get_caller_address()<<" => tvideo_buffer::assign_at("<<idx<<","<<newlen<<")";
+	throw std::out_of_range(os.str());
+    }
+}
+
+void tvideo_buffer::assign_at(size_t idx,tvideo_symbol s) {
+    if(idx<data.size()) data[idx] = s;
+    else {
+	std::ostringstream os;
+	os<<"."<<get_caller_address()<<" => tvideo_buffer::assign_at("<<idx<<")";
+	throw std::out_of_range(os.str());
     }
 }
 

@@ -217,7 +217,8 @@ void vio_vcsa::set_cursor_pos(tAbsCoord x, tAbsCoord y)
 tvideo_buffer vio_vcsa::read_buffer(tAbsCoord x, tAbsCoord y, size_t len)
 {
     uint8_t *addr = _addr(x, y);
-    tvideo_buffer rc(addr + violen,addr + (violen << 1),addr,len);
+    tvideo_buffer rc(len);
+    for(size_t i=0;i<len;i++) rc[i]=tvideo_symbol(((t_vchar*)(addr+violen))[i],((t_vchar*)(addr+(violen<<1)))[i],((ColorAttr*)addr)[i]);
 
     return rc;
 }
@@ -226,7 +227,7 @@ void vio_vcsa::write_buffer(tAbsCoord x, tAbsCoord y, const tvideo_buffer& buff)
 {
     uint8_t cache_pb[LEN(VMAX_X)];
     uint8_t *pb, *addr;
-    size_t len = buff.length();
+    size_t len = buff.size();
 
 /*    if (!len) return; */
 
@@ -234,11 +235,14 @@ void vio_vcsa::write_buffer(tAbsCoord x, tAbsCoord y, const tvideo_buffer& buff)
 
     addr = _addr(x, y);
 
-    memcpy(addr, buff.get_attrs(), len);
-    memcpy(addr + violen, buff.get_chars(), len);
-    memcpy(addr + (violen << 1), buff.get_oempg(), len);
+    for(size_t i=0;i<len;i++) {
+	tvideo_symbol s=buff[i];
+	addr[i]=s.attr;
+	*(addr+violen+i)=s.symbol;
+	*(addr+(violen<<1)+i)=s.oempg;
+    }
 
-    __INTERLEAVE_BUFFERS(len, pb, buff.get_chars(), buff.get_attrs());
+    __INTERLEAVE_BUFFERS(len, pb, addr+violen, addr);
 
     PWRITE(viohandle, pb, len << 1, 4 + ((x + y * tvioWidth) << 1));
 
