@@ -4,15 +4,38 @@ using namespace	usr;
 
 #include "tconsole.h"
 #include "__os_dep.h"
+#include "vio_interface.h"
 
 namespace	usr {
+extern const vio_interface_info vio_vcsa_info;
+extern const vio_interface_info vio_vt100_info;
+extern const vio_interface_info vio_null_info;
+
+static const vio_interface_info* vio_interfaces[] = {
+#ifdef TARGET_LINUX
+    &vio_vcsa_info,
+#endif
+    &vio_vt100_info,
+    &vio_null_info
+};
+
 TConsole::TConsole(const char *user_cp, unsigned long vio_flags) {
-    __init_vio(user_cp,vio_flags);
+    for(size_t i=0;vio_interfaces[i]!=&vio_null_info;i++) {
+	try {
+	    tvio = vio_interfaces[i]->query_interface(user_cp,vio_flags);
+	    vio_info = vio_interfaces[i];
+	} catch (const missing_device_exception& e) {
+	    delete tvio;
+	    tvio = NULL;
+	    continue;
+	}
+    }
+    if(!tvio) throw missing_driver_exception();
     __init_keyboard(user_cp);
 }
 TConsole::~TConsole() {
     __term_keyboard();
-    __term_vio();
+    delete tvio;
 }
 
 int TConsole::kbd_get_key( unsigned long flg ) const { return __kbdGetKey(flg); }
@@ -24,42 +47,22 @@ void TConsole::mouse_set_state( bool is_visible ) const { __MsSetState(is_visibl
 void TConsole::mouse_get_pos(tAbsCoord& x, tAbsCoord& y ) const { __MsGetPos(&x,&y); }
 int  TConsole::mouse_get_buttons() const { return __MsGetBtns(); }
 
-int TConsole::vio_get_cursor_type() const { return __vioGetCursorType(); }
-void TConsole::vio_set_cursor_type( int c_type ) const { __vioSetCursorType(c_type); }
-void TConsole::vio_get_cursor_pos(tAbsCoord& x,tAbsCoord& y) const { __vioGetCursorPos(&x,&y); }
-void TConsole::vio_set_cursor_pos(tAbsCoord x,tAbsCoord y) const { __vioSetCursorPos(x,y); }
+int TConsole::vio_get_cursor_type() const { return tvio->get_cursor_type(); }
+void TConsole::vio_set_cursor_type( int c_type ) const { tvio->set_cursor_type(c_type); }
+void TConsole::vio_get_cursor_pos(tAbsCoord& x,tAbsCoord& y) const { tvio->get_cursor_pos(x,y); }
+void TConsole::vio_set_cursor_pos(tAbsCoord x,tAbsCoord y) const { tvio->set_cursor_pos(x,y); }
 tvideo_buffer TConsole::vio_read_buff(tAbsCoord x,tAbsCoord y,size_t len) const {
-    tvioBuff tmp;
-    tmp.chars = new t_vchar[len];
-    tmp.oem_pg= new t_vchar[len];
-    tmp.attrs = new ColorAttr[len];
-    __vioReadBuff(x,y,&tmp,len);
-    tvideo_buffer rc(tmp.chars,tmp.oem_pg,tmp.attrs,len);
-    delete tmp.chars;
-    delete tmp.oem_pg;
-    delete tmp.attrs;
-    return rc;
+    return tvio->read_buffer(x,y,len);
 }
 void TConsole::vio_write_buff(tAbsCoord x,tAbsCoord y,const tvideo_buffer& buff) const {
-    size_t len=buff.length();
-    tvioBuff tmp;
-    tmp.chars = new t_vchar[len];
-    tmp.oem_pg= new t_vchar[len];
-    tmp.attrs = new ColorAttr[len];
-    ::memcpy(tmp.chars,buff.get_chars(),len);
-    ::memcpy(tmp.oem_pg,buff.get_oempg(),len);
-    ::memcpy(tmp.attrs,buff.get_attrs(),len);
-    __vioWriteBuff(x,y,&tmp,len);
-    delete tmp.chars;
-    delete tmp.oem_pg;
-    delete tmp.attrs;
+    tvio->write_buffer(x,y,buff);
 }
 
-tAbsCoord TConsole::vio_width() const { return tvioWidth; }
-tAbsCoord TConsole::vio_height() const { return tvioHeight; }
-unsigned  TConsole::vio_num_colors() const { return tvioNumColors; }
+tAbsCoord TConsole::vio_width() const { return tvio->get_width(); }
+tAbsCoord TConsole::vio_height() const { return tvio->get_height(); }
+unsigned  TConsole::vio_num_colors() const { return tvio->get_num_colors(); }
 
-void TConsole::vio_set_transparent_color(unsigned char value) const { __vioSetTransparentColor(value); }
+void TConsole::vio_set_transparent_color(unsigned char value) const { tvio->set_transparent_color(value); }
 int TConsole::input_raw_info(char *head, char *text) const { return __inputRawInfo(head,text); }
 
 } // namespace	usr

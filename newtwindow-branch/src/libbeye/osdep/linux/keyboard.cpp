@@ -76,6 +76,7 @@ int in_fd;
 
 static any_t*nls_handle;
 static int is_unicode=0;
+static int on_console=0;
 
 /**
     keyboard FIFO

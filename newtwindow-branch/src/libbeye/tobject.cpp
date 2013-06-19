@@ -61,21 +61,25 @@ TObject::e_cursor TObject::get_cursor_type()
   return c_type;
 }
 
-TConsole& __FASTCALL__ twInit(System& sys,const std::string& user_cp, unsigned long vio_flags, unsigned long twin_flgs )
+TConsole* __FASTCALL__ twInit(System& sys,const std::string& user_cp, unsigned long vio_flags, unsigned long twin_flgs )
 {
-  const char *nls_cp;
-  TObject::twin_flags = twin_flgs;
-  TObject::msystem=&sys;
-  nls_cp=!user_cp.empty()?user_cp.c_str():"IBM866";
-  TObject::tconsole = new(zeromem) TConsole(nls_cp,vio_flags);
-  if(TObject::tconsole->vio_width() > __TVIO_MAXSCREENWIDTH) {
-    std::ostringstream os;
-    twDestroy();
-    os<<"Size of video buffer is too large: "<<TObject::tconsole->vio_width()<<" (max = "<<__TVIO_MAXSCREENWIDTH<<")";
-    throw std::runtime_error(std::string("Internal twin library error: ")+os.str());
-  }
-  TObject::set_cursor_type(TObject::Cursor_Off);
-  return *TObject::tconsole;
+    const char *nls_cp;
+    TObject::twin_flags = twin_flgs;
+    TObject::msystem=&sys;
+    nls_cp=!user_cp.empty()?user_cp.c_str():"IBM866";
+    try {
+	TObject::tconsole = new(zeromem) TConsole(nls_cp,vio_flags);
+    } catch(const missing_driver_exception& e) {
+	throw std::runtime_error("Can't find working vio driver");
+    }
+    if(TObject::tconsole->vio_width() > __TVIO_MAXSCREENWIDTH) {
+	std::ostringstream os;
+	twDestroy();
+	os<<"Size of video buffer is too large: "<<TObject::tconsole->vio_width()<<" (max = "<<__TVIO_MAXSCREENWIDTH<<")";
+	throw std::runtime_error(std::string("Internal twin library error: ")+os.str());
+    }
+    TObject::set_cursor_type(TObject::Cursor_Off);
+    return TObject::tconsole;
 }
 
 void __FASTCALL__ twDestroy()

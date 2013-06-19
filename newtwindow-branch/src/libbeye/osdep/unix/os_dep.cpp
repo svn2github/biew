@@ -59,19 +59,6 @@ static const char rcs_id[] = "$Id: os_dep.c,v 1.10 2009/09/03 16:57:40 nickols_k
 
 bool break_status = false;	/**< CTRL+BREAK flag */
 
-const termdesc* terminal = NULL;
-
-static const termdesc termtab[] = {
-{ (unsigned char*)"linux",	TERM_LINUX },
-{ (unsigned char*)"console",	TERM_LINUX },
-{ (unsigned char*)"xterm",	TERM_XTERM },
-{ (unsigned char*)"xterm-color", TERM_XTERM},
-{ (unsigned char*)"color-xterm", TERM_XTERM},
-{ (unsigned char*)"beterm",	TERM_XTERM },
-{ (unsigned char*)"vt100",	TERM_VT100 },
-{ (unsigned char*)"ansi",	TERM_ANSI  },
-{ NULL,		TERM_UNKNOWN}};
-
 static char _ini_name[FILENAME_MAX + 1];
 static char _rc_dir_name[FILENAME_MAX + 1];
 static char _home_dir_name[FILENAME_MAX + 1];
@@ -157,8 +144,6 @@ void __FASTCALL__ __OsYield()
 
 static void cleanup(int sig)
 {
-    __term_keyboard();
-    __term_vio();
     __term_sys();
     std::ostringstream os;
     os<<sig;
@@ -169,22 +154,6 @@ static void cleanup(int sig)
 
 void __FASTCALL__ __init_sys()
 {
-    int i = 0;
-    const char *t = getenv("TERM");
-
-    if (t != NULL)
-	for (i = 0; termtab[i].name != NULL && strcasecmp(t, (const char*)termtab[i].name); i++);
-    terminal = &termtab[i];
-
-    if (terminal->type == TERM_UNKNOWN) throw std::runtime_error(std::string("Sorry, I can't handle terminal type '")+t);
-
-    if (i == 5) output_7 = 1;	/* beterm is (B)roken (E)vil (TERM)inal */
-
-    if (terminal->type == TERM_XTERM) {
-	t = getenv("COLORTERM");
-	if (t != NULL && !strcasecmp(t, "Eterm")) transparent = 1;
-    }
-
     _ini_name[0] = '\0';
     _rc_dir_name[0] = '\0';
     _home_dir_name[0] = '\0';

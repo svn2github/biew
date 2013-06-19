@@ -124,8 +124,6 @@ void __FASTCALL__ __OsSetCBreak(bool state)
 
 static void cleanup(int sig)
 {
-    __term_keyboard();
-    __term_vio();
     __term_sys();
     std::ostringstream os;
     os<<sig;

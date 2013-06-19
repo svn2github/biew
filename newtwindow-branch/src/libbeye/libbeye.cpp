@@ -371,4 +371,12 @@ void tvideo_buffer::assign_at(size_t idx,t_vchar c,t_vchar o,ColorAttr a) {
 	attrs[idx]=a;
     }
 }
+
+missing_device_exception::missing_device_exception() throw() {}
+missing_device_exception::~missing_device_exception() throw() {}
+const char* missing_device_exception::what() const throw() { return "missing device"; }
+
+missing_driver_exception::missing_driver_exception() throw() {}
+missing_driver_exception::~missing_driver_exception() throw() {}
+const char* missing_driver_exception::what() const throw() { return "missing driver"; }
 } // namespace	usr

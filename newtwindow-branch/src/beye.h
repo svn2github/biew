@@ -63,6 +63,9 @@ namespace	usr {
 	    void		show_usage() const;
 	    void		main_loop();
 
+	    void		init_tconsole( unsigned long vio_flg,unsigned long twin_flg );
+	    void		term_tconsole();
+
 	    void		select_tool() const;
 	    void		select_sysinfo() const;
 

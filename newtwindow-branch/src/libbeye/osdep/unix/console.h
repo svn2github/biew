@@ -114,14 +114,8 @@ typedef struct {
     int pressed;
 } mevent;
 
-typedef struct {
-    unsigned char *name;
-    unsigned char type;
-} termdesc;
-
-extern int on_console, output_7, transparent, do_nls;
+extern int do_nls;
 extern bool break_status;
-extern const termdesc* terminal;
 
 extern void __FASTCALL__ ReadNextEvent();
 

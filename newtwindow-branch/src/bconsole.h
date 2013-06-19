@@ -27,8 +27,6 @@
 #include "libbeye/twindow.h"
 
 namespace	usr {
-    void         __FASTCALL__ initBConsole( unsigned long vio_flg,unsigned long twin_flg );
-    void         __FASTCALL__ termBConsole();
     bool        __FASTCALL__ IsKbdTerminate();
     void         __FASTCALL__ CleanKbdTermSig();
 

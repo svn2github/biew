@@ -55,43 +55,6 @@ enum {
 
 static std::stack<int> KB_Buff;
 
-void __FASTCALL__ initBConsole( unsigned long vio_flg,unsigned long twin_flg )
-{
-  BeyeContext& bctx = beye_context();
-  twInit(bctx.system(),bctx.codepage,vio_flg,twin_flg);
-  if(bctx.tconsole().vio_width() < 80 || beye_context().tconsole().vio_height() < 3)
-  {
-    if(bctx.tconsole().vio_width()>16&&beye_context().tconsole().vio_height()>2) {
-	unsigned evt,x,y;
-	TWindow *win;
-	x = (bctx.tconsole().vio_width()-17)/2;
-	y = (bctx.tconsole().vio_height()-3)/2;
-	win = new(zeromem) TWindow(x,y,x+16,y+2,TWindow::Flag_None | TWindow::Flag_NLS);
-	if(!win) goto done;
-	win->set_title(" Error ",TWindow::TMode_Center,error_cset.border);
-	win->into_center();
-	win->set_color(error_cset.main);
-	win->set_frame(TWindow::DOUBLE_FRAME,error_cset.border);
-	win->goto_xy(1,1);
-	win->puts("Screensize<80x3");
-	win->show();
-	do {
-	    evt = GetEvent(NULL,NULL,win);
-	}while(!(evt == KE_ESCAPE || evt == KE_F(10) || evt == KE_ENTER));
-	delete win;
-    }
-    done:
-    twDestroy();
-    std::cerr<<"Current size of video buffer is: w="<<beye_context().tconsole().vio_width()<<" h="<<beye_context().tconsole().vio_height()<<std::endl;
-    throw std::runtime_error("Size of video buffer must be larger than 79x2");
-  }
-}
-
-void __FASTCALL__ termBConsole()
-{
-  twDestroy();
-}
-
 /**
    read the next keyboard character
 */

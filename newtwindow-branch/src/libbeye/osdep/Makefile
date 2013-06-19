@@ -12,8 +12,31 @@ SRCS= system.cpp \
       $(HOST)/misc.cpp \
       $(HOST)/nls.cpp \
       $(HOST)/os_dep.cpp \
-      $(HOST)/timer.cpp \
-      $(HOST)/vio.cpp
+      $(HOST)/timer.cpp
+
+ifeq ($(HOST),dos)
+SRCS+=vio_dos.cpp
+endif
+ifeq ($(HOST),dos4gw)
+SRCS+=vio_dos4gw.cpp
+endif
+ifeq ($(HOST),linux)
+SRCS+=vio_linux.cpp
+endif
+ifeq ($(HOST),os2)
+SRCS+=vio_os2.cpp
+endif
+ifeq ($(HOST),qnx)
+SRCS+=vio_qnx.cpp
+endif
+ifeq ($(HOST),qnxto)
+SRCS+=vio_qnxto.cpp
+endif
+ifeq ($(HOST),win32)
+SRCS+=vio_win32.cpp
+endif
+SRCS+=vio_vt100.cpp
+SRCS+=vio_null.cpp
 
 ifeq ($(HOST),qnx)
 ASMS = \

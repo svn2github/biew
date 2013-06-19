@@ -21,15 +21,15 @@ extern char rawkb_buf[];
 extern int  rawkb_escape;
 extern unsigned rawkb_len;
 extern unsigned rawkb_mode;
-extern int on_console;
+//extern int on_console;
 
 int __FASTCALL__ __inputRawInfo(char *head, char *text)
 {
     unsigned i;
     char appends[10];
     strcpy(head,"Name  Value");
-    if(on_console) strcpy(text,"Raw   ");
-    else 	   strcpy(text,"VT100 ");
+//    if(on_console) strcpy(text,"Raw   ");
+//    else 	   strcpy(text,"VT100 ");
     rawkb_escape=0;
     rawkb_len=0;
     rawkb_mode=1;

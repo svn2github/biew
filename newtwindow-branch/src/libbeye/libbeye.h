@@ -19,6 +19,8 @@
 #define __BEYELIB_H 1
 #include "config.h"
 
+#include <stdexcept>
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
@@ -87,6 +89,22 @@ namespace	usr {
 	t_vchar*   chars;       /**< Pointer to video character array */
 	t_vchar*   oem_pg;      /**< Pointer to OEM pseudographics. It needed for *nix terminals */
 	ColorAttr* attrs;       /**< Pointer to color attributes array */
+    };
+
+    class missing_device_exception : public std::exception {
+	public:
+	    missing_device_exception() throw();
+	    virtual ~missing_device_exception() throw();
+
+	    virtual const char*	what() const throw();
+    };
+
+    class missing_driver_exception : public std::exception {
+	public:
+	    missing_driver_exception() throw();
+	    virtual ~missing_driver_exception() throw();
+
+	    virtual const char*	what() const throw();
     };
 
     class Opaque {

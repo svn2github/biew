@@ -3,6 +3,15 @@
 #include "libbeye/libbeye.h"
 
 namespace	usr {
+    class vio_interface;
+    struct vio_interface_info;
+
+    enum {
+	__TVIO_CUR_OFF	=0, /** Defines that cursor in invisible state */
+	__TVIO_CUR_NORM	=1, /**< Defines that cursor in normal state (filles 20% of the character cell) */
+	__TVIO_CUR_SOLID=2  /**< Defines that cursor in solid state (filles 100% of the character cell) */
+    };
+
     class TConsole {
 	public:
 	    TConsole(const char *user_cp, unsigned long vio_flags);
@@ -115,9 +124,9 @@ namespace	usr {
 		    **/
 	    void		vio_write_buff(tAbsCoord x,tAbsCoord y,const tvideo_buffer& buff) const;
 
-	    tAbsCoord		vio_width() const __PURE_FUNC__;     /**< Contains actual width of console (or terminal) */
-	    tAbsCoord		vio_height() const __PURE_FUNC__;    /**< Contains actual height of console (or terminal) */
-	    unsigned		vio_num_colors() const __PURE_FUNC__;/**< Contains number of actual colors that used by console (or terminal) */
+	    tAbsCoord		vio_width() const;     /**< Contains actual width of console (or terminal) */
+	    tAbsCoord		vio_height() const;    /**< Contains actual height of console (or terminal) */
+	    unsigned		vio_num_colors() const;/**< Contains number of actual colors that used by console (or terminal) */
 
 		   /** Sets color to be transparented
 		     * @return                none
@@ -136,7 +145,9 @@ namespace	usr {
 					      -1 if functionality is not implemented(supported).
 		    **/
 	    int       __FASTCALL__ input_raw_info(char *head, char *text) const;
-
+	private:
+	    const vio_interface_info*	vio_info;
+	    vio_interface*		tvio;
     };
 } // namespace	usr
 #endif

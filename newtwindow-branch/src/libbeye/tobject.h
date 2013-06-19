@@ -34,7 +34,7 @@ namespace	usr {
 		     * @note              Call this function before any other
 		     * @see               twDestroy
 		    **/
-    TConsole&	__FASTCALL__ twInit(System& system,const std::string& user_cp, unsigned long vio_flags, unsigned long twin_flgs );
+    TConsole*	__FASTCALL__ twInit(System& system,const std::string& user_cp, unsigned long vio_flags, unsigned long twin_flgs );
 
 		   /** Terminates twin library and video subsystem
 		     * @return            none

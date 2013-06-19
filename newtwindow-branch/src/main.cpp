@@ -476,6 +476,43 @@ void	BeyeContext::create_windows() {
     priv.MainWnd->clear();
 }
 
+void BeyeContext::init_tconsole( unsigned long vio_flg,unsigned long twin_flg )
+{
+    beye_priv& priv = static_cast<beye_priv&>(opaque);
+    priv._tconsole=twInit(system(),codepage,vio_flg,twin_flg);
+    if(priv._tconsole->vio_width() < 80 || priv._tconsole->vio_height() < 3) {
+	if(priv._tconsole->vio_width()>16 && priv._tconsole->vio_height()>2) {
+	    unsigned evt,x,y;
+	    TWindow *win;
+	    x = (priv._tconsole->vio_width()-17)/2;
+	    y = (priv._tconsole->vio_height()-3)/2;
+	    win = new(zeromem) TWindow(x,y,x+16,y+2,TWindow::Flag_None | TWindow::Flag_NLS);
+	    if(!win) goto done;
+	    win->set_title(" Error ",TWindow::TMode_Center,error_cset.border);
+	    win->into_center();
+	    win->set_color(error_cset.main);
+	    win->set_frame(TWindow::DOUBLE_FRAME,error_cset.border);
+	    win->goto_xy(1,1);
+	    win->puts("Screensize<80x3");
+	    win->show();
+	    do {
+		evt = GetEvent(NULL,NULL,win);
+	    }while(!(evt == KE_ESCAPE || evt == KE_F(10) || evt == KE_ENTER));
+	    delete win;
+	}
+done:
+	twDestroy();
+	std::cerr<<"Current size of video buffer is: w="<<priv._tconsole->vio_width()<<" h="<<priv._tconsole->vio_height()<<std::endl;
+	throw std::runtime_error("Size of video buffer must be larger than 79x2");
+    }
+}
+
+void BeyeContext::term_tconsole()
+{
+    twDestroy();
+}
+
+
 int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::string>& envm)
 {
     bool skin_err;
@@ -498,9 +535,9 @@ int Beye(const std::vector<std::string>& argv, const std::map<std::string,std::s
     flg=MPA_FLG_BACKTRACE;
 */
     Ini_Profile& ini=BeyeCtx->load_ini_info();
-    skin_err = csetReadIniFile(BeyeCtx->skin_name.c_str());
-    initBConsole(BeyeCtx->vioIniFlags,BeyeCtx->twinIniFlags);
+    BeyeCtx->init_tconsole(BeyeCtx->vioIniFlags,BeyeCtx->twinIniFlags);
     if(argv.size() < 2) goto show_usage;
+    skin_err = csetReadIniFile(BeyeCtx->skin_name.c_str());
     BeyeCtx->parse_cmdline(argv);
     if(BeyeCtx->list_file().empty()) {
 	/** print usage message */
@@ -639,7 +676,7 @@ BeyeContext::BeyeContext(const std::vector<std::string>& _argv, const std::map<s
 
 BeyeContext::~BeyeContext() {
     BMClose();
-    termBConsole();
+    term_tconsole();
 }
 const std::vector<std::string>& BeyeContext::list_file() const {
     beye_priv& priv = static_cast<beye_priv&>(opaque);
