@@ -43,9 +43,9 @@ bool TWindow::test_win() const
 {
     bool ret;
     ret = TWidget::test_win() &&
-	*((any_t**)(saved.chars + wsize)) == saved.chars &&
-	*((any_t**)(saved.oem_pg + wsize)) == saved.oem_pg &&
-	*((any_t**)(saved.attrs + wsize)) == saved.attrs ? true : false;
+	*((any_t**)(saved.get_chars() + wsize)) == saved.get_chars() &&
+	*((any_t**)(saved.get_oempg() + wsize)) == saved.get_oempg() &&
+	*((any_t**)(saved.get_attrs() + wsize)) == saved.get_attrs() ? true : false;
     return ret;
 }
 
@@ -55,35 +55,24 @@ enum {
     IFLG_CURSORBEENOFF=0x80000000UL
 };
 
-void TWindow::create(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, twc_flag _flags)
-{
-    unsigned size = _width*_height;
-    saved.chars = new t_vchar[size];
-    saved.oem_pg = new t_vchar[size];
-    saved.attrs = new ColorAttr[size];
-
-    TWidget::create(x1,y1,_width,_height,_flags);
-}
-
 TWindow::TWindow(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, twc_flag _flags)
 	:TWidget(x1,y1,_width,_height,_flags)
+	,saved(_width*_height)
 {
-    TWindow::create(x1,y1,_width,_height,_flags);
+    TWidget::create(x1,y1,_width,_height,_flags);
 }
 
 TWindow::TWindow(tAbsCoord x1_, tAbsCoord y1_,
 		 tAbsCoord _width, tAbsCoord _height,
 		 twc_flag _flags, const std::string& classname)
 	:TWidget(x1_,y1_,_width,_height,_flags,classname)
+	,saved(_width*_height)
 {
-    TWindow::create(x1_, y1_, _width, _height, _flags);
+    TWidget::create(x1_, y1_, _width, _height, _flags);
 }
 
 TWindow::~TWindow()
 {
-    delete saved.chars;
-    delete saved.oem_pg;
-    delete saved.attrs;
 }
 
 /**
@@ -94,10 +83,7 @@ TWindow::~TWindow()
  *  restorescreenchar: correctly copyed window memory from win to screen
  */
 
-void TWindow::updatescreencharfrombuff(tRelCoord x,
-					tRelCoord y,
-					const tvioBuff& buff,
-					tvioBuff *accel) const
+void TWindow::updatescreencharfrombuff(tRelCoord x,tRelCoord y,const tvideo_buffer& buff,tvideo_buffer* accel) const
 {
     unsigned idx;
     if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
@@ -109,9 +95,7 @@ void TWindow::updatescreencharfrombuff(tRelCoord x,
 	    tx = X1 - top->X1 + x;
 	    ty = Y1 - top->Y1 + y;
 	    tidx = tx + ty*top->wwidth;
-	    top->saved.chars[tidx] = buff.chars[idx];
-	    top->saved.oem_pg[tidx] = buff.oem_pg[idx];
-	    top->saved.attrs[tidx] = buff.attrs[idx];
+	    top->saved.assign_at(tidx,&buff.get_chars()[idx],&buff.get_oempg()[idx],&buff.get_attrs()[idx],1);
 	}
     }
     TWidget::updatescreencharfrombuff(x,y,buff,accel);
@@ -124,7 +108,7 @@ void TWindow::updatescreencharfrombuff(tRelCoord x,
  *  screen2win: quick implementation of copying screen to window memory
  *  snapshot:   snap shot of screen to win surface
  */
-void TWindow::updatewinmemcharfromscreen(tRelCoord x,tRelCoord y,const tvioBuff& accel)
+void TWindow::updatewinmemcharfromscreen(tRelCoord x,tRelCoord y,const tvideo_buffer& accel)
 {
     unsigned idx,aidx;
     if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
@@ -137,17 +121,11 @@ void TWindow::updatewinmemcharfromscreen(tRelCoord x,tRelCoord y,const tvioBuff&
 	    tx = X1 - top->X1 + x;
 	    ty = Y1 - top->Y1 + y;
 	    tidx = tx + ty*top->wwidth;
-	    saved.chars[idx] = top->saved.chars[tidx];
-	    saved.oem_pg[idx] = top->saved.oem_pg[tidx];
-	    saved.attrs[idx] = top->saved.attrs[tidx];
-	    top->saved.chars[tidx] = get_surface().chars[idx];
-	    top->saved.oem_pg[tidx] = get_surface().oem_pg[idx];
-	    top->saved.attrs[tidx] = get_surface().attrs[idx];
+	    saved.assign_at(idx,&top->saved.get_chars()[tidx],&top->saved.get_oempg()[tidx],&top->saved.get_attrs()[tidx],1);
+	    top->saved.assign_at(tidx,&get_surface().get_chars()[idx],&get_surface().get_oempg()[idx],&get_surface().get_attrs()[idx],1);
 	    top->check_win();
 	} else {
-	    saved.chars[idx] = accel.chars[aidx];
-	    saved.oem_pg[idx] = accel.oem_pg[aidx];
-	    saved.attrs[idx] = accel.attrs[aidx];
+	    saved.assign_at(idx,&accel.get_chars()[aidx],&accel.get_oempg()[aidx],&accel.get_attrs()[aidx],1);
 	}
     }
 }
@@ -173,9 +151,7 @@ void TWindow::screen2win()
 	}
 	if(wwidth == tconsole->vio_width() && !X1) {
 	    tvideo_buffer tmp=tconsole->vio_read_buff(0, Y1, wwidth*wheight);
-	    ::memcpy(saved.chars,tmp.get_chars(),tmp.length());
-	    ::memcpy(saved.oem_pg,tmp.get_oempg(),tmp.length());
-	    ::memcpy(saved.attrs,tmp.get_attrs(),tmp.length());
+	    saved=tmp;
 	} else {
 	    for(i = 0;i < wheight;i++) {
 		tAbsCoord iny;
@@ -183,9 +159,7 @@ void TWindow::screen2win()
 		if(iny <= tconsole->vio_height()) {
 		    idx = i*wwidth;
 		    tvideo_buffer tmp=tconsole->vio_read_buff(inx,iny,lwidth);
-		    ::memcpy(&saved.chars[idx],tmp.get_chars(),tmp.length());
-		    ::memcpy(&saved.oem_pg[idx],tmp.get_oempg(),tmp.length());
-		    ::memcpy(&saved.attrs[idx],tmp.get_attrs(),tmp.length());
+		    saved.assign_at(idx,tmp);
 		} else break;
 	    }
 	}
@@ -206,14 +180,8 @@ void TWindow::screen2win()
 void TWindow::savedwin2screen()
 {
     unsigned i,j, tidx;
-    tvioBuff accel;
-    t_vchar chars[__TVIO_MAXSCREENWIDTH];
-    t_vchar oem_pg[__TVIO_MAXSCREENWIDTH];
-    ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
+    tvideo_buffer accel(__TVIO_MAXSCREENWIDTH);
     bool ms_vis, is_hidden = false, is_top;
-    accel.chars = chars;
-    accel.oem_pg = oem_pg;
-    accel.attrs = attrs;
     if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
 	tAbsCoord mx,my;
 	ms_vis = tconsole->mouse_get_state();
@@ -227,7 +195,7 @@ void TWindow::savedwin2screen()
 	is_top = __topmost();
 	if(is_top && wwidth == tconsole->vio_width() && !X1) {
 	    /* Special case of redrawing window interior at one call */
-	    tconsole->vio_write_buff(0, Y1, tvideo_buffer(saved.chars,saved.oem_pg,saved.attrs,wwidth*wheight));
+	    tconsole->vio_write_buff(0, Y1, tvideo_buffer(saved.get_chars(),saved.get_oempg(),saved.get_attrs(),wwidth*wheight));
 	} else {
 	    for(i = 0;i < wheight;i++) {
 		tAbsCoord outx,outy;
@@ -235,15 +203,13 @@ void TWindow::savedwin2screen()
 		if(!is_top) for(j = 0;j < wwidth;j++) restorescreenchar(j+1,i+1,&accel);
 		else {
 		    tidx = i*wwidth;
-		    accel.chars = &saved.chars[tidx];
-		    accel.attrs = &saved.attrs[tidx];
-		    accel.oem_pg = &saved.oem_pg[tidx];
+		    accel.assign(&saved.get_chars()[tidx],&saved.get_oempg()[tidx],&saved.get_attrs()[tidx],saved.length()-tidx);
 		}
 		outx = X1;
 		outy = Y1+i;
 		nwidth = wwidth;
 		if(outx + nwidth > tconsole->vio_width()) nwidth = tconsole->vio_width() > outx ? tconsole->vio_width() - outx : 0;
-		if(outy <= tconsole->vio_height() && nwidth) tconsole->vio_write_buff(outx,outy,tvideo_buffer(accel.chars,accel.oem_pg,accel.attrs,nwidth));
+		if(outy <= tconsole->vio_height() && nwidth) tconsole->vio_write_buff(outx,outy,accel);
 	    }
 	}
 	if(is_hidden) tconsole->mouse_set_state(true);
@@ -254,14 +220,8 @@ void TWindow::savedwin2screen()
 void TWindow::updatewinmem()
 {
     unsigned i,j,tidx;
-    tvioBuff accel;
-    t_vchar chars[__TVIO_MAXSCREENWIDTH];
-    t_vchar oem_pg[__TVIO_MAXSCREENWIDTH];
-    ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
+    tvideo_buffer accel(__TVIO_MAXSCREENWIDTH);
     bool ms_vis, is_hidden = false, is_top;
-    accel.chars = chars;
-    accel.oem_pg = oem_pg;
-    accel.attrs = attrs;
     if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
 	tAbsCoord mx,my;
 	ms_vis = tconsole->mouse_get_state();
@@ -276,9 +236,7 @@ void TWindow::updatewinmem()
 	if(is_top && wwidth == tconsole->vio_width() && !X1) {
 	    /* Special case of redrawing window interior at one call */
 	    tvideo_buffer tmp=tconsole->vio_read_buff(0, Y1, wwidth*wheight);
-	    ::memcpy(saved.chars,tmp.get_chars(),tmp.length());
-	    ::memcpy(saved.oem_pg,tmp.get_oempg(),tmp.length());
-	    ::memcpy(saved.attrs,tmp.get_attrs(),tmp.length());
+	    saved=tmp;
 	} else {
 	    for(i = 0;i < wheight;i++) {
 		tAbsCoord inx,iny;
@@ -290,14 +248,10 @@ void TWindow::updatewinmem()
 		if(iny <= tconsole->vio_height() && lwidth) {
 		    if(is_top) {
 			tidx = i*wwidth;
-			accel.chars = &saved.chars[tidx];
-			accel.attrs = &saved.attrs[tidx];
-			accel.oem_pg = &saved.oem_pg[tidx];
+			accel.assign(&saved.get_chars()[tidx],&saved.get_oempg()[tidx],&saved.get_attrs()[tidx],saved.length());
 		    }
 		    tvideo_buffer tmp=tconsole->vio_read_buff(inx,iny,lwidth);
-		    ::memcpy(accel.chars,tmp.get_chars(),tmp.length());
-		    ::memcpy(accel.oem_pg,tmp.get_oempg(),tmp.length());
-		    ::memcpy(accel.attrs,tmp.get_attrs(),tmp.length());
+		    accel=tmp;
 		}
 		if(!is_top)
 		    for(j = 0;j < wwidth;j++)
@@ -337,15 +291,10 @@ void TWindow::hide()
 void TWindow::resize(tAbsCoord _width,tAbsCoord _height)
 {
     size_t size=_width*_height;
-    delete saved.chars;
-    delete saved.oem_pg;
-    delete saved.attrs;
     wsize = size;
     wwidth = _width;
     wheight = _height;
-    saved.chars = new t_vchar[wsize];
-    saved.oem_pg = new t_vchar[wsize];
-    saved.attrs = new ColorAttr[wsize];
+    saved.resize(wsize);
     TWidget::resize(_width,_height);
 }
 } // namespace	usr

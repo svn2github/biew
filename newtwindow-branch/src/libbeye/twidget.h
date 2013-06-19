@@ -621,8 +621,8 @@ namespace	usr {
 	    virtual bool		test_win() const;
 	    virtual void		check_win() const;
 	    void			create(tAbsCoord x1_, tAbsCoord y1_, tAbsCoord width, tAbsCoord height, twc_flag flags);
-	    virtual void		updatescreencharfrombuff(tRelCoord x,tRelCoord y,const tvioBuff& buff,tvioBuff *accel) const;
-	    tvioBuff			get_surface() const { return surface; }
+	    virtual void		updatescreencharfrombuff(tRelCoord x,tRelCoord y,const tvideo_buffer& buff,tvideo_buffer *accel) const;
+	    tvideo_buffer		get_surface() const { return surface; }
 	private:
 		   /** Accesses to the active window directly, reading a single line.
 		     * @param win         handle of window
@@ -649,24 +649,19 @@ namespace	usr {
 		    **/
 	    virtual void		write(tRelCoord x,tRelCoord y,const tvideo_buffer& buff);
 
-//	    void		savedwin2screen();
 	    void		updatescreen(bool full_area);
 
 	    void		wputc_oem(char ch,char oempg,char color,bool update);
 	    void		paint_internal();
 	    void		make_frame();
 	    void		__draw_frame(tRelCoord xs, tRelCoord ys, tRelCoord xe, tRelCoord ye,const any_t*_frame, DefColor color);
-//	    void		updatewinmemcharfromscreen(tRelCoord x,tRelCoord y,const tvioBuff& accel);
-//	    void		screen2win();
 	    void		updatescreenpiece(tRelCoord stx,tRelCoord endx,tRelCoord y);
-//	    void		updatewinmem();
 
 	    static inline bool NLS_IS_OEMPG(unsigned char ch) __CONST_FUNC__ { return ch >= 0xB0 && ch <= 0xDF; }
 	    inline char		do_oem_pg(char ch) const __CONST_FUNC__ { return ((flags & Flag_NLS) == Flag_NLS ? NLS_IS_OEMPG(ch) ? ch : 0 : 0); }
 	    inline void		wputc(char ch,char color,bool update) { wputc_oem(ch,0,color,update); }
 
-	    inline void		updatescreenchar(tRelCoord x,tRelCoord y,tvioBuff* accel) const { updatescreencharfrombuff(x-1,y-1,surface,accel); }
-//	    inline void		restorescreenchar(tRelCoord x,tRelCoord y,tvioBuff* accel) const { updatescreencharfrombuff(x-1,y-1,saved,accel); }
+	    inline void		updatescreenchar(tRelCoord x,tRelCoord y,tvideo_buffer* accel) const { updatescreencharfrombuff(x-1,y-1,surface,accel); }
 
 	    static tRelCoord	calc_title_off(title_mode mode,unsigned w,unsigned slen) __CONST_FUNC__;
 	    static void		adjustColor(Color& fore,Color& back);
@@ -678,7 +673,7 @@ namespace	usr {
 					    /*                   4       5 */
 					    /*                   |       | */
 					    /*                   6---7---8 */
-	    tvioBuff		surface;     /**< Buffer containing image of window frame */
+	    tvideo_buffer	surface;     /**< Buffer containing image of window frame */
 	    char*		Title;       /**< Caption of window */
 	    char*		Footer;      /**< Footer of window */
 	    title_mode		TitleMode;   /**< alignment mode of title */

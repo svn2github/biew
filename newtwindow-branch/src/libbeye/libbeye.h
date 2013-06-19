@@ -84,13 +84,6 @@ namespace	usr {
     typedef uint8_t t_vchar;   /**< This is the data type used to represent video character */
     typedef unsigned tAbsCoord; /**< This is the data type used to represent screen-related coordinates */
 
-/** Internal structure of video buffer */
-    struct tvioBuff {
-	t_vchar*   chars;       /**< Pointer to video character array */
-	t_vchar*   oem_pg;      /**< Pointer to OEM pseudographics. It needed for *nix terminals */
-	ColorAttr* attrs;       /**< Pointer to color attributes array */
-    };
-
     class missing_device_exception : public std::exception {
 	public:
 	    missing_device_exception() throw();

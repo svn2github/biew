@@ -99,21 +99,19 @@ namespace	usr {
 
 	protected:
 	    virtual bool		test_win() const;
-	    virtual void		updatescreencharfrombuff(tRelCoord x,tRelCoord y,const tvioBuff& buff,tvioBuff *accel) const;
+	    virtual void		updatescreencharfrombuff(tRelCoord x,tRelCoord y,const tvideo_buffer& buff,tvideo_buffer *accel) const;
 	private:
-	    void		create(tAbsCoord x1_, tAbsCoord y1_, tAbsCoord width, tAbsCoord height, twc_flag flags);
-
 	    void		savedwin2screen();
 
 	    void		paint_internal();
 	    void		__draw_frame(tRelCoord xs, tRelCoord ys, tRelCoord xe, tRelCoord ye,const any_t*_frame, DefColor color);
-	    void		updatewinmemcharfromscreen(tRelCoord x,tRelCoord y,const tvioBuff& accel);
+	    void		updatewinmemcharfromscreen(tRelCoord x,tRelCoord y,const tvideo_buffer& accel);
 	    void		screen2win();
 	    void		updatewinmem();
 
-	    inline void		restorescreenchar(tRelCoord x,tRelCoord y,tvioBuff* accel) const { updatescreencharfrombuff(x-1,y-1,saved,accel); }
+	    void		restorescreenchar(tRelCoord x,tRelCoord y,tvideo_buffer* accel) const { updatescreencharfrombuff(x-1,y-1,saved,accel); }
 
-	    tvioBuff		saved;       /**< Buffer containing saved image under window */
+	    tvideo_buffer	saved;       /**< Buffer containing saved image under window */
     };
 } // namespace	usr
 

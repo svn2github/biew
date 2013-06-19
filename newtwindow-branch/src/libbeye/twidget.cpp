@@ -145,9 +145,9 @@ static inline void winInternalError() { (void)0xFFFFFFFF; };
 bool TWidget::test_win() const
 {
     bool ret;
-    ret = *((any_t**)(surface.chars + wsize)) == surface.chars &&
-	*((any_t**)(surface.oem_pg + wsize)) == surface.oem_pg &&
-	*((any_t**)(surface.attrs + wsize)) == surface.attrs ? true : false;
+    ret = *((any_t**)(surface.get_chars() + wsize)) == surface.get_chars() &&
+	*((any_t**)(surface.get_oempg() + wsize)) == surface.get_oempg() &&
+	*((any_t**)(surface.get_attrs() + wsize)) == surface.get_attrs() ? true : false;
     return ret;
 }
 void TWidget::check_win() const { if(!test_win()) winInternalError(); }
@@ -165,15 +165,8 @@ void TWidget::create(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _he
 {
     TObject::create(x1,y1,_width,_height,_flags);
 
-    unsigned size = _width*_height;
-    surface.chars = new t_vchar[size];
-    surface.oem_pg = new t_vchar[size];
-    surface.attrs = new ColorAttr[size];
-
     ::memcpy(Frame,SINGLE_FRAME,8);
-    ::memset(surface.chars,TWC_DEF_FILLER,wsize);
-    ::memset(surface.oem_pg,0,wsize);
-    ::memset(surface.attrs,text.system,wsize);
+    surface.fill(TWC_DEF_FILLER,0,text.system);
     check_win();
     text=__set_color(LightGray,Black);
     frame=__set_color(LightGray,Black);
@@ -185,6 +178,7 @@ void TWidget::create(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _he
 
 TWidget::TWidget(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, twc_flag _flags)
 	:TObject(x1,y1,_width,_height,_flags)
+	,surface(_width*_height)
 {
     TWidget::create(x1,y1,_width,_height,_flags);
 }
@@ -193,6 +187,7 @@ TWidget::TWidget(tAbsCoord x1_, tAbsCoord y1_,
 		 tAbsCoord _width, tAbsCoord _height,
 		 twc_flag _flags, const std::string& classname)
 	:TObject(x1_,y1_,_width,_height,_flags,classname)
+	,surface(_width*_height)
 {
     TWidget::create(x1_, y1_, _width, _height, _flags);
 }
@@ -201,9 +196,6 @@ TWidget::~TWidget()
 {
     if(Title) delete Title;
     if(Footer) delete Footer;
-    delete surface.chars;
-    delete surface.oem_pg;
-    delete surface.attrs;
 }
 
 ColorAttr TWidget::set_color(Color fore,Color back)
@@ -367,10 +359,9 @@ TWidget::title_mode TWidget::get_footer(char *_footer,unsigned cb_footer,Color& 
  */
 void TWidget::updatescreencharfrombuff(tRelCoord x,
 					tRelCoord y,
-					const tvioBuff& buff,
-					tvioBuff *accel) const
+					const tvideo_buffer& buff,
+					tvideo_buffer *accel) const
 {
-    tvioBuff it;
     unsigned idx,aidx;
     if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
 	idx = y*wwidth+x;
@@ -391,18 +382,14 @@ void TWidget::updatescreencharfrombuff(tRelCoord x,
 		tx = xx - vis->X1;
 		ty = yy - vis->Y1;
 		tidx = tx + ty*vis->wwidth;
-		accel->chars[aidx] = vis->surface.chars[tidx];
-		accel->oem_pg[aidx] = vis->surface.oem_pg[tidx];
-		accel->attrs[aidx] = vis->surface.attrs[tidx];
+		accel->fill_at(aidx,vis->surface.get_chars()[tidx],vis->surface.get_oempg()[tidx],vis->surface.get_attrs()[tidx],1);
 	    }
 	    top->check_win();
 	} else {
 	    bool ms_vis;
 	    bool is_hidden = false;
 	    if(accel) {
-		accel->chars[aidx] = buff.chars[idx];
-		accel->oem_pg[aidx] = buff.oem_pg[idx];
-		accel->attrs[aidx] = buff.attrs[idx];
+		accel->fill_at(aidx,buff.get_chars()[idx],buff.get_oempg()[idx],buff.get_attrs()[idx],1);
 	    } else if((iflags & IFLG_ENABLED) == IFLG_ENABLED) {
 		tAbsCoord outx,outy;
 		ms_vis = tconsole->mouse_get_state();
@@ -417,10 +404,8 @@ void TWidget::updatescreencharfrombuff(tRelCoord x,
 			    tconsole->mouse_set_state(false);
 			}
 		    }
-		    it.chars = &buff.chars[idx];
-		    it.oem_pg = &buff.oem_pg[idx];
-		    it.attrs = &buff.attrs[idx];
-		    tconsole->vio_write_buff(outx,outy,tvideo_buffer(it.chars,it.oem_pg,it.attrs,1));
+		    tvideo_buffer it(buff.get_chars()[idx],buff.get_oempg()[idx],buff.get_attrs()[idx],1);
+		    tconsole->vio_write_buff(outx,outy,it);
 		    if(is_hidden) tconsole->mouse_set_state(true);
 		}
 		check_win();
@@ -454,9 +439,7 @@ void TWidget::snapshot() /**< for snapshot */
 	    if(iny <= tconsole->vio_height()) {
 		idx = i*wwidth;
 		tvideo_buffer tmp=tconsole->vio_read_buff(inx,iny,lwidth);
-		::memcpy(&surface.chars[idx],tmp.get_chars(),tmp.length());
-		::memcpy(&surface.oem_pg[idx],tmp.get_oempg(),tmp.length());
-		::memcpy(&surface.attrs[idx],tmp.get_attrs(),tmp.length());
+		surface.assign_at(idx,tmp);
 	    }
 	    else break;
 	}
@@ -478,14 +461,8 @@ void TWidget::updatescreen(bool full_area)
     unsigned i,j, tidx;
     tAbsCoord xs,xe,ys,ye,cx,rw;
     unsigned aoff;
-    tvioBuff accel,it;
-    t_vchar chars[__TVIO_MAXSCREENWIDTH];
-    t_vchar oem_pg[__TVIO_MAXSCREENWIDTH];
-    ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
+    tvideo_buffer accel(__TVIO_MAXSCREENWIDTH);
     bool ms_vis, is_hidden = false, is_top;
-    accel.chars = chars;
-    accel.oem_pg = oem_pg;
-    accel.attrs = attrs;
     if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
 	tAbsCoord mx,my;
 	ms_vis = tconsole->mouse_get_state();
@@ -506,7 +483,7 @@ void TWidget::updatescreen(bool full_area)
 	is_top = __topmost();
 	if(is_top && full_area && wwidth == tconsole->vio_width() && !X1 && (iflags & IFLG_ENABLED) == IFLG_ENABLED) {
 	    /* Special case of redrawing window interior at one call */
-	    tconsole->vio_write_buff(0, Y1, tvideo_buffer(surface.chars,surface.oem_pg,surface.attrs,wwidth*wheight));
+	    tconsole->vio_write_buff(0, Y1, tvideo_buffer(surface.get_chars(),surface.get_oempg(),surface.get_attrs(),wwidth*wheight));
 	} else {
 	    xs = ys = 0;
 	    xe = wwidth;
@@ -527,10 +504,8 @@ void TWidget::updatescreen(bool full_area)
 		    if(cx + rw > tconsole->vio_width()) rw = tconsole->vio_width() > cx ? tconsole->vio_width() - cx : 0;
 		    if(outy <= tconsole->vio_height() && rw) {
 			tidx = i*wwidth+aoff;
-			it.chars = is_top ? &surface.chars[tidx] : &accel.chars[aoff];
-			it.oem_pg = is_top ? &surface.oem_pg[tidx] : &accel.oem_pg[aoff];
-			it.attrs = is_top ? &surface.attrs[tidx] : &accel.attrs[aoff];
-			tconsole->vio_write_buff(cx,outy,tvideo_buffer(it.chars,it.oem_pg,it.attrs,rw));
+			tvideo_buffer it(is_top?&surface.get_chars()[tidx]:&accel.get_chars()[aoff],is_top?&surface.get_oempg()[tidx]:&accel.get_oempg()[aoff],is_top?&surface.get_attrs()[tidx]:&accel.get_attrs()[aoff],rw);
+			tconsole->vio_write_buff(cx,outy,it);
 		    }
 		}
 	    }
@@ -544,14 +519,8 @@ void TWidget::updatescreenpiece(tRelCoord stx,tRelCoord endx,tRelCoord y)
 {
     unsigned i,line, tidx;
     tAbsCoord _stx,_endx;
-    tvioBuff accel,it;
-    t_vchar chars[__TVIO_MAXSCREENWIDTH];
-    t_vchar oem_pg[__TVIO_MAXSCREENWIDTH];
-    ColorAttr attrs[__TVIO_MAXSCREENWIDTH];
+    tvideo_buffer accel(__TVIO_MAXSCREENWIDTH);
     bool ms_vis, is_hidden = false, is_top;
-    accel.chars = chars;
-    accel.oem_pg = oem_pg;
-    accel.attrs = attrs;
     if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
 	tAbsCoord mx,my;
 	ms_vis = tconsole->mouse_get_state();
@@ -577,10 +546,8 @@ void TWidget::updatescreenpiece(tRelCoord stx,tRelCoord endx,tRelCoord y)
 	    if(outx + rw > tconsole->vio_width()) rw = tconsole->vio_width() > outx ? tconsole->vio_width() - outx : 0;
 	    if(line <= tconsole->vio_height() && rw) {
 		tidx = (y-1)*wwidth+_stx;
-		it.chars = is_top ? &surface.chars[tidx] : &accel.chars[_stx];
-		it.oem_pg = is_top ? &surface.oem_pg[tidx] : &accel.oem_pg[_stx];
-		it.attrs = is_top ? &surface.attrs[tidx] : &accel.attrs[_stx];
-		tconsole->vio_write_buff(outx,line,tvideo_buffer(it.chars,it.oem_pg,it.attrs,rw));
+		tvideo_buffer it(is_top?&surface.get_chars()[tidx]:&accel.get_chars()[_stx],is_top?&surface.get_oempg()[tidx]:&accel.get_oempg()[_stx],is_top?&surface.get_attrs()[tidx]:&accel.get_attrs()[_stx],rw);
+		tconsole->vio_write_buff(outx,line,it);
 	    }
 	}
 	if(is_hidden) tconsole->mouse_set_state(true);
@@ -764,7 +731,6 @@ void TWidget::hide()
 
 void TWidget::resize(tAbsCoord _width,tAbsCoord _height)
 {
-    tvioBuff newbody;
     size_t ncopy,delta,fillsize;
     size_t from,to,size,i,loop,start,idx;
     tAbsCoord oldw,oldh;
@@ -776,9 +742,7 @@ void TWidget::resize(tAbsCoord _width,tAbsCoord _height)
     TWidget* prev = static_cast<TWidget*>(__prevwin());
     if(vis) hide();
     size = _width*_height;
-    newbody.chars = new t_vchar[size];
-    newbody.oem_pg = new t_vchar[size];
-    newbody.attrs = new ColorAttr[size];
+    tvideo_buffer newbody(size);
     oldw = wwidth;
     oldh = wheight;
     /* --- Compute copy parameters --- */
@@ -791,14 +755,10 @@ void TWidget::resize(tAbsCoord _width,tAbsCoord _height)
     ncopy = std::min(_width,oldw);
     fillsize = _width-oldw;
     for(i = start;i < loop;i++) {
-	::memcpy(&newbody.chars[to],&surface.chars[from],ncopy);
-	::memcpy(&newbody.oem_pg[to],&surface.oem_pg[from],ncopy);
-	::memcpy(&newbody.attrs[to],&surface.attrs[from],ncopy);
+	newbody.assign_at(to,&surface.get_chars()[from],&surface.get_oempg()[from],&surface.get_attrs()[from],ncopy);
 	if(oldw < _width) {
 	    idx = to+ncopy-delta;
-	    ::memset(&newbody.chars[idx],TWC_DEF_FILLER,fillsize);
-	    ::memset(&newbody.oem_pg[idx],0,fillsize);
-	    ::memset(&newbody.attrs[idx],text.system,fillsize);
+	    newbody.fill_at(idx,TWC_DEF_FILLER,0,text.system,fillsize);
 	}
 	check_win();
 	to += _width;
@@ -806,18 +766,13 @@ void TWidget::resize(tAbsCoord _width,tAbsCoord _height)
     }
     if(oldh < _height) {
 	for(;i < _height;i++) {
-	    ::memset(&newbody.chars[to],TWC_DEF_FILLER,_width);
-	    ::memset(&newbody.oem_pg[to],0,_width);
-	    ::memset(&newbody.attrs[to],text.system,_width);
+	    newbody.fill_at(to,TWC_DEF_FILLER,0,text.system,_width);
 	    to += _width;
 	}
     }
     wsize = size;
     wwidth = _width;
     wheight = _height;
-    delete surface.chars;
-    delete surface.oem_pg;
-    delete surface.attrs;
     surface = newbody;
     X2 = X1 + _width;
     Y2 = Y1 + _height;
@@ -848,9 +803,8 @@ void TWidget::clear(unsigned char filler)
     }
     for(i = start;i < loop;i++) {
 	idx = to+i*size;
-	::memset(&surface.chars[idx],filler,fillsize);
-	::memset(&surface.oem_pg[idx],((flags & Flag_NLS) == Flag_NLS ? NLS_IS_OEMPG(oempg) ? oempg : 0 : 0),fillsize);
-	::memset(&surface.attrs[idx],text.system,fillsize);
+	oempg = ((flags & Flag_NLS) == Flag_NLS ? NLS_IS_OEMPG(oempg) ? oempg : 0 : 0);
+	surface.fill_at(idx,filler,oempg,text.system,fillsize);
 	check_win();
 	updatescreenpiece(0,wwidth,i+1);
     }
@@ -869,9 +823,8 @@ void TWidget::clreol(unsigned char filler)
 	oempg = filler;
 	msystem->nls_oem2osdep(&filler,1);
     }
-    ::memset(&surface.chars[idx],filler,size);
-    ::memset(&surface.oem_pg[idx],((flags & Flag_NLS) == Flag_NLS ? NLS_IS_OEMPG(oempg) ? oempg : 0 : 0),size);
-    ::memset(&surface.attrs[idx],text.system,size);
+    oempg = ((flags & Flag_NLS) == Flag_NLS ? NLS_IS_OEMPG(oempg) ? oempg : 0 : 0);
+    surface.fill_at(idx,filler,oempg,text.system,size);
     check_win();
     updatescreenpiece(cur_x,wwidth,cur_y+1);
 }
@@ -880,9 +833,7 @@ void TWidget::wputc_oem(char ch,char oempg,char color,bool update)
 {
     unsigned idx;
     idx = cur_x + cur_y*wwidth;
-    surface.chars[idx] = ch;
-    surface.oem_pg[idx] = oempg;
-    surface.attrs[idx] = color;
+    surface.fill_at(idx,ch,oempg,color,1);
     check_win();
     if(update) updatescreenchar(cur_x+1,cur_y+1,NULL);
 }
@@ -912,7 +863,7 @@ char TWidget::getch() const
     cx = X1 + cur_x;
     cy = Y1 + cur_y;
     idx = cx + cy*wwidth;
-    return surface.chars[idx];
+    return surface.get_chars()[idx];
 }
 
 int TWidget::puts(const std::string& str)
@@ -956,11 +907,11 @@ int TWidget::puts(const std::string& str)
 	cx = cur_x;
 	cy = cur_y;
 	if(is_valid_xy(cx,cy)) {
-	    surface.chars[vidx] = ch;
+	    t_vchar coem;
 	    if((flags & Flag_NLS) == Flag_NLS && NLS_IS_OEMPG(as_oem))
-		surface.oem_pg[vidx] = as_oem;
-	    else surface.oem_pg[vidx] = 0;
-	    surface.attrs[vidx++] = text.system;
+		coem = as_oem;
+	    else coem = 0;
+	    surface.fill_at(vidx++,ch,coem,text.system,1);
 	    cur_x++;
 	    freq++;
 	}
@@ -1002,9 +953,9 @@ int TWidget::direct_write(tRelCoord x, tRelCoord y,const any_t*str,unsigned len)
 int TWidget::direct_write(tRelCoord x, tRelCoord y,const any_t*str,const ColorAttr* attrs,unsigned len)
 {
     unsigned i,rlen,ioff;
-    const char *__nls = NULL,*__oem = NULL;
-    char nlsBuff[__TVIO_MAXSCREENWIDTH];
-    char oemBuff[__TVIO_MAXSCREENWIDTH];
+    const t_vchar *__nls = NULL,*__oem = NULL;
+    t_vchar nlsBuff[__TVIO_MAXSCREENWIDTH];
+    t_vchar oemBuff[__TVIO_MAXSCREENWIDTH];
     ColorAttr __attr[__TVIO_MAXSCREENWIDTH];
     if(!((flags & Flag_Has_Frame) == Flag_Has_Frame)) {
 	x--;  y--;
@@ -1034,9 +985,7 @@ int TWidget::direct_write(tRelCoord x, tRelCoord y,const any_t*str,const ColorAt
 	adjustColor(fore,back);
 	__attr[i] = LOGFB_TO_PHYS(fore,back);
     }
-    ::memcpy(&surface.chars[ioff],__nls,rlen);
-    ::memcpy(&surface.oem_pg[ioff],__oem,rlen);
-    ::memcpy(&surface.attrs[ioff],__attr,rlen);
+    surface.assign_at(ioff,__nls,__oem,__attr,rlen);
 //    text.system=attrs[len-1];
     check_win();
     updatescreenpiece(x,x+rlen,y+1);
@@ -1056,9 +1005,9 @@ int TWidget::write(tRelCoord x, tRelCoord y,const uint8_t* str,unsigned len)
 int TWidget::write(tRelCoord x, tRelCoord y,const uint8_t* str,const ColorAttr* attrs,unsigned len)
 {
     unsigned i,rlen,ioff;
-    const char *__nls = NULL,*__oem = NULL;
-    char nlsBuff[__TVIO_MAXSCREENWIDTH];
-    char oemBuff[__TVIO_MAXSCREENWIDTH];
+    const t_vchar *__nls = NULL,*__oem = NULL;
+    t_vchar nlsBuff[__TVIO_MAXSCREENWIDTH];
+    t_vchar oemBuff[__TVIO_MAXSCREENWIDTH];
     ColorAttr __attr[__TVIO_MAXSCREENWIDTH];
     if(!((flags & Flag_Has_Frame) == Flag_Has_Frame)) {
 	x--;  y--;
@@ -1088,9 +1037,7 @@ int TWidget::write(tRelCoord x, tRelCoord y,const uint8_t* str,const ColorAttr* 
 	adjustColor(fore,back);
 	__attr[i] = LOGFB_TO_PHYS(fore,back);
     }
-    ::memcpy(&surface.chars[ioff],__nls,rlen);
-    ::memcpy(&surface.oem_pg[ioff],__oem,rlen);
-    ::memcpy(&surface.attrs[ioff],__attr,rlen);
+    surface.assign_at(ioff,__nls,__oem,__attr,rlen);
 //    text.system=attrs[len-1];
     check_win();
     updatescreenpiece(x,x+rlen,y+1);
@@ -1103,9 +1050,7 @@ void TWidget::write(tRelCoord x,tRelCoord y,const tvideo_buffer& buff)
     rlen = (unsigned)x+buff.length() > wwidth ? wwidth-(unsigned)x+1 : buff.length();
     if((unsigned)y <= wheight) {
 	i = (x-1)+(y-1)*wwidth;
-	::memcpy(&surface.chars[i],buff.get_chars(),rlen);
-	::memcpy(&surface.oem_pg[i],buff.get_oempg(),rlen);
-	::memcpy(&surface.attrs[i],buff.get_attrs(),rlen);
+	surface.assign_at(i,buff,rlen);
 	check_win();
 	updatescreenpiece(x-1,x-1+rlen,y);
     }
@@ -1118,7 +1063,7 @@ tvideo_buffer TWidget::read(tRelCoord x,tRelCoord y,size_t len) const
     tvideo_buffer rc(rlen);
     if((unsigned)y <= wheight) {
 	idx = (x-1)+(y-1)*wwidth;
-	rc.assign(&surface.chars[idx],&surface.oem_pg[idx],&surface.attrs[idx],rlen);
+	rc.assign(&surface.get_chars()[idx],&surface.get_oempg()[idx],&surface.get_attrs()[idx],rlen);
 	check_win();
     }
     return rc;

@@ -215,14 +215,6 @@ extern void      __FASTCALL__ __OsRestoreTimer();
 	   /** Checks whether the specified character is OEM pseudographical symbol */
 inline bool NLS_IS_OEMPG(unsigned char ch) { return ch >= 0xB0 && ch <= 0xDF; }
 
-		   /** Prepares tvioBuff buffer from OEM codepage to currently used by OS.
-		     * @return                none
-		     * @param it              buffer to be converted
-		     * @param size            size of buffer elemets in bytes
-		     * @see                   __nls_OemToOsdep __nls_CmdlineToOem NLS_IS_OEMPG
-		    **/
-extern void      __FASTCALL__ __nls_PrepareOEMForTVio(tvioBuff *it,unsigned size);
-
 		   /** Converts buffer from OEM codepage to currently used by OS.
 		     * @return                none
 		     * @param str             buffer to be converted
