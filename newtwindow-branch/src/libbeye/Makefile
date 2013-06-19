@@ -18,6 +18,7 @@ SRCS= bbio.cpp \
       mp_malloc.cpp \
       tobject.cpp \
       tw_class.cpp \
+      twidget.cpp \
       twindow.cpp
 
 OBJS=$(SRCS:.cpp=.o)
