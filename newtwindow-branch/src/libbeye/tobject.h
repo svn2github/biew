@@ -53,6 +53,12 @@ namespace	usr {
 		Flag_NLS	=0x0100  /**< Indicates that window works in OEM mode */
 	    };
 
+	    enum twi_flag {
+		Visible		=0x00000001UL,
+		Enabled		=0x00000002UL,
+		CursorBeenOff	=0x80000000UL
+	    };
+
 		   /** Creates window
 		     * @param x1_,y1_      indicate upper-left cornen of window
 		     * @param width,height indicate width and height of window
@@ -364,7 +370,7 @@ namespace	usr {
 	    void		igoto_xy(tRelCoord x,tRelCoord y);
 
 	    twc_flag		flags;       /**< Window flags */
-	    unsigned long	iflags;      /**< contains internal flags of window state */
+	    twi_flag		iflags;      /**< contains internal flags of window state */
 	    unsigned		wwidth;      /**< width of window */
 	    unsigned		wheight;     /**< height of window */
 	    tAbsCoord		X1,Y1,X2,Y2; /**< coordinates of window on the screen */
@@ -394,6 +400,14 @@ namespace	usr {
     inline TObject::twc_flag operator|=(TObject::twc_flag& a, TObject::twc_flag b) { return (a=static_cast<TObject::twc_flag>(static_cast<unsigned>(a)|static_cast<unsigned>(b))); }
     inline TObject::twc_flag operator&=(TObject::twc_flag& a, TObject::twc_flag b) { return (a=static_cast<TObject::twc_flag>(static_cast<unsigned>(a)&static_cast<unsigned>(b))); }
     inline TObject::twc_flag operator^=(TObject::twc_flag& a, TObject::twc_flag b) { return (a=static_cast<TObject::twc_flag>(static_cast<unsigned>(a)^static_cast<unsigned>(b))); }
+
+    inline TObject::twi_flag operator~(TObject::twi_flag a) { return static_cast<TObject::twi_flag>(~static_cast<unsigned>(a)); }
+    inline TObject::twi_flag operator|(TObject::twi_flag a, TObject::twi_flag b) { return static_cast<TObject::twi_flag>(static_cast<unsigned>(a)|static_cast<unsigned>(b)); }
+    inline TObject::twi_flag operator&(TObject::twi_flag a, TObject::twi_flag b) { return static_cast<TObject::twi_flag>(static_cast<unsigned>(a)&static_cast<unsigned>(b)); }
+    inline TObject::twi_flag operator^(TObject::twi_flag a, TObject::twi_flag b) { return static_cast<TObject::twi_flag>(static_cast<unsigned>(a)^static_cast<unsigned>(b)); }
+    inline TObject::twi_flag operator|=(TObject::twi_flag& a, TObject::twi_flag b) { return (a=static_cast<TObject::twi_flag>(static_cast<unsigned>(a)|static_cast<unsigned>(b))); }
+    inline TObject::twi_flag operator&=(TObject::twi_flag& a, TObject::twi_flag b) { return (a=static_cast<TObject::twi_flag>(static_cast<unsigned>(a)&static_cast<unsigned>(b))); }
+    inline TObject::twi_flag operator^=(TObject::twi_flag& a, TObject::twi_flag b) { return (a=static_cast<TObject::twi_flag>(static_cast<unsigned>(a)^static_cast<unsigned>(b))); }
 } // namespace	usr
 #include "libbeye/tw_class.h"
 

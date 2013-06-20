@@ -244,22 +244,22 @@ void vio_vt100::write_buffer(tAbsCoord x, tAbsCoord y, const tvideo_buffer& buff
     addr = _addr(x, y);
     for(i=0;i<len;i++) {
 	tvideo_symbol s=buff[i];
-	addr[i]=s.attr;
-	*(addr+violen+i)=s.symbol;
-	*(addr+(violen<<1)+i)=s.oempg;
+	addr[i]=s.attr();
+	*(addr+violen+i)=s.symbol();
+	*(addr+(violen<<1)+i)=s.oempg();
     }
 
     get_cursor_pos(xx, yy);
     gotoxy(x, y);
 
     for (i = 0; i < len; i++) {
-	c = buff[i].symbol;
+	c = buff[i].symbol();
 
-	if (buff[i].oempg && buff[i].oempg >= _PSMIN && buff[i].oempg <= _PSMAX && !is_unicode) {
+	if (buff[i].oempg() && buff[i].oempg() >= _PSMIN && buff[i].oempg() <= _PSMAX && !is_unicode) {
 		mode = 1;
 		c = output_7 ?
-		    frames_dumb[buff[i].oempg - _PSMIN] :
-		    frames_vt100[buff[i].oempg - _PSMIN];
+		    frames_dumb[buff[i].oempg() - _PSMIN] :
+		    frames_vt100[buff[i].oempg() - _PSMIN];
 	} else {
 	    mode = 0;
 	}
@@ -277,9 +277,9 @@ void vio_vt100::write_buffer(tAbsCoord x, tAbsCoord y, const tvideo_buffer& buff
 	if (!c) c = ' '; else if (!printable(c)) c = '.';
 
 	/* TODO: make sure that compiler produces right order of conditions! */
-	if ((i && buff[i].attr != buff[i-1].attr) || i == len || !i)
+	if ((i && buff[i].attr() != buff[i-1].attr()) || i == len || !i)
 	{
-	    char *d = _2ansi(buff[i].attr);
+	    char *d = _2ansi(buff[i].attr());
 	    strcpy((char*)dpb, d);
 	    dpb += strlen(d);
 	}

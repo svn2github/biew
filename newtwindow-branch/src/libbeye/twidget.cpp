@@ -148,12 +148,6 @@ void TWidget::check_win() const { if(!test_win()) winInternalError(); }
 void TWidget::check_win() const {}
 #endif
 
-enum {
-    IFLG_VISIBLE      =0x00000001UL,
-    IFLG_ENABLED      =0x00000002UL,
-    IFLG_CURSORBEENOFF=0x80000000UL
-};
-
 void TWidget::create(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, twc_flag _flags)
 {
     TObject::create(x1,y1,_width,_height,_flags);
@@ -356,7 +350,7 @@ void TWidget::updatescreencharfrombuff(tRelCoord x,
 					tvideo_buffer *accel) const
 {
     unsigned idx,aidx;
-    if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
+    if((iflags & TObject::Visible) == TObject::Visible) {
 	idx = y*wwidth+x;
 	aidx = x;
 	TWidget* top=static_cast<TWidget*>(__find_over(x,y));
@@ -383,7 +377,7 @@ void TWidget::updatescreencharfrombuff(tRelCoord x,
 	    bool is_hidden = false;
 	    if(accel) {
 		(*accel)[aidx]=buff[idx];
-	    } else if((iflags & IFLG_ENABLED) == IFLG_ENABLED) {
+	    } else if((iflags & TObject::Enabled) == TObject::Enabled) {
 		tAbsCoord outx,outy;
 		ms_vis = tconsole->mouse_get_state();
 		outx = (unsigned)X1+x;
@@ -456,7 +450,7 @@ void TWidget::updatescreen(bool full_area)
     unsigned aoff;
     tvideo_buffer accel(__TVIO_MAXSCREENWIDTH);
     bool ms_vis, is_hidden = false, is_top;
-    if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
+    if((iflags & TObject::Visible) == TObject::Visible) {
 	tAbsCoord mx,my;
 	ms_vis = tconsole->mouse_get_state();
 	if(ms_vis) {
@@ -474,7 +468,7 @@ void TWidget::updatescreen(bool full_area)
 	    }
 	}
 	is_top = __topmost();
-	if(is_top && full_area && wwidth == tconsole->vio_width() && !X1 && (iflags & IFLG_ENABLED) == IFLG_ENABLED) {
+	if(is_top && full_area && wwidth == tconsole->vio_width() && !X1 && (iflags & TObject::Enabled) == TObject::Enabled) {
 	    /* Special case of redrawing window interior at one call */
 	    tvideo_buffer cp=surface;
 	    tconsole->vio_write_buff(0, Y1, cp);
@@ -493,7 +487,7 @@ void TWidget::updatescreen(bool full_area)
 	    for(i = ys;i < ye;i++) {
 		tAbsCoord outy;
 		if(!is_top) for(j = xs;j < xe;j++) updatescreenchar(j+1,i+1,&accel);
-		if((iflags & IFLG_ENABLED) == IFLG_ENABLED) {
+		if((iflags & TObject::Enabled) == TObject::Enabled) {
 		    outy = Y1+i;
 		    if(cx + rw > tconsole->vio_width()) rw = tconsole->vio_width() > cx ? tconsole->vio_width() - cx : 0;
 		    if(outy <= tconsole->vio_height() && rw) {
@@ -515,7 +509,7 @@ void TWidget::updatescreenpiece(tRelCoord stx,tRelCoord endx,tRelCoord y)
     tAbsCoord _stx,_endx;
     tvideo_buffer accel(__TVIO_MAXSCREENWIDTH);
     bool ms_vis, is_hidden = false, is_top;
-    if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
+    if((iflags & TObject::Visible) == TObject::Visible) {
 	tAbsCoord mx,my;
 	ms_vis = tconsole->mouse_get_state();
 	tconsole->mouse_get_pos(mx,my);
@@ -532,7 +526,7 @@ void TWidget::updatescreenpiece(tRelCoord stx,tRelCoord endx,tRelCoord y)
 		for(i = stx;i < endx;i++)
 		    updatescreenchar(i+1,y,&accel);
 	}
-	if((iflags & IFLG_ENABLED) == IFLG_ENABLED) {
+	if((iflags & TObject::Enabled) == TObject::Enabled) {
 	    tAbsCoord outx;
 	    unsigned rw;
 	    outx = X1+_stx;
@@ -700,7 +694,7 @@ void TWidget::draw_frame(tRelCoord x1, tRelCoord y1, tRelCoord x2, tRelCoord y2,
 
 void TWidget::show()
 {
-    if(!(iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
+    if(!(iflags & TObject::Visible) == TObject::Visible) {
 	TObject::show();
 	updatescreen(true);
     }
@@ -732,7 +726,7 @@ void TWidget::resize(tAbsCoord _width,tAbsCoord _height)
     bool vis;
     x = where_x();
     y = where_y();
-    vis = (iflags & IFLG_VISIBLE) == IFLG_VISIBLE;
+    vis = (iflags & TObject::Visible) == TObject::Visible;
     TWidget* prev = static_cast<TWidget*>(__prevwin());
     if(vis) hide();
     size = _width*_height;
@@ -856,7 +850,7 @@ char TWidget::getch() const
     cx = X1 + cur_x;
     cy = Y1 + cur_y;
     idx = cx + cy*wwidth;
-    return surface[idx].symbol;
+    return surface[idx].symbol();
 }
 
 int TWidget::puts(const std::string& str)

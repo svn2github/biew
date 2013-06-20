@@ -237,9 +237,9 @@ void vio_vcsa::write_buffer(tAbsCoord x, tAbsCoord y, const tvideo_buffer& buff)
 
     for(size_t i=0;i<len;i++) {
 	tvideo_symbol s=buff[i];
-	addr[i]=s.attr;
-	*(addr+violen+i)=s.symbol;
-	*(addr+(violen<<1)+i)=s.oempg;
+	addr[i]=s.attr();
+	*(addr+violen+i)=s.symbol();
+	*(addr+(violen<<1)+i)=s.oempg();
     }
 
     __INTERLEAVE_BUFFERS(len, pb, addr+violen, addr);

@@ -89,12 +89,6 @@ void __FASTCALL__ twDestroy()
   delete TObject::tconsole;
 }
 
-enum {
-    IFLG_VISIBLE      =0x00000001UL,
-    IFLG_ENABLED      =0x00000002UL,
-    IFLG_CURSORBEENOFF=0x80000000UL
-};
-
 void TObject::__athead() { if(head) next = head; head = this; }
 
 TObject* TObject::__find_over(tAbsCoord x,tAbsCoord y) const {
@@ -105,7 +99,7 @@ TObject* TObject::__find_over(tAbsCoord x,tAbsCoord y) const {
     xx = X1+x;
     yy = Y1+y;
     while(iter && iter != this) {
-	if((iter->iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
+	if((iter->iflags & TObject::Visible) == TObject::Visible) {
 	    if((yy >= iter->Y1) && (yy < iter->Y2) &&
 		(xx >= iter->X1) && (xx < iter->X2))
 		    ret = iter;
@@ -121,7 +115,7 @@ bool TObject::is_overlapped() const
     bool ret = false;
     iter = head;
     while( iter && iter != this ) {
-	if((iter->iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
+	if((iter->iflags & TObject::Visible) == TObject::Visible) {
 	    if(!((iter->Y2 <= Y1) || (iter->Y1 >= Y2) ||
 		(iter->X2 <= X1) || (iter->X1 >= X2))) {
 		    ret = true;
@@ -144,7 +138,7 @@ TObject* TObject::__at_point(TObject* iter,tAbsCoord x,tAbsCoord y) {
   iter = head;
   while( iter )
   {
-    if((iter->iflags & IFLG_VISIBLE) == IFLG_VISIBLE)
+    if((iter->iflags & TObject::Visible) == TObject::Visible)
     {
       if((y >= iter->Y1) && (y < iter->Y2) &&
 	 (x >= iter->X1) && (x < iter->X2))
@@ -167,7 +161,7 @@ void TObject::create(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _he
     __athead();
 
     flags = _flags;
-    iflags = IFLG_ENABLED;
+    iflags = TObject::Enabled;
 
     cur_x = cur_y = 0;
     set_focus();
@@ -311,9 +305,9 @@ void TObject::paint_cursor() const
     e_cursor _c_type = Cursor_Unknown;
     unsigned x,y;
     e_cursor type;
-    if(cursorwin && (cursorwin->iflags & IFLG_ENABLED) == IFLG_ENABLED) {
+    if(cursorwin && (cursorwin->iflags & TObject::Enabled) == TObject::Enabled) {
 	top=cursorwin->__find_over(cursorwin->cur_x,cursorwin->cur_y-1);
-	if(!top && (cursorwin->iflags & IFLG_VISIBLE) == IFLG_VISIBLE && cursorwin == this) {
+	if(!top && (cursorwin->iflags & TObject::Visible) == TObject::Visible && cursorwin == this) {
 	    type = get_cursor_type();
 	    if(type == Cursor_Off) {
 		set_cursor_type(_c_type == Cursor_Unknown ? Cursor_Normal : _c_type);
@@ -348,8 +342,8 @@ void TObject::goto_xy(tRelCoord x,tRelCoord y)
 void TObject::show()
 {
     send_message(WM_SHOW,0L,NULL);
-    if(!(iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
-	iflags |= IFLG_VISIBLE;
+    if(!(iflags & TObject::Visible) == TObject::Visible) {
+	iflags |= TObject::Visible;
 	__unlistwin();
 	__athead();
 	if((flags & Flag_Has_Cursor) == Flag_Has_Cursor) {
@@ -362,8 +356,8 @@ void TObject::show()
 void TObject::show_on_top()
 {
     send_message(WM_TOPSHOW,0L,NULL);
-    if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) hide();
-    iflags |= IFLG_VISIBLE;
+    if((iflags & TObject::Visible) == TObject::Visible) hide();
+    iflags |= TObject::Visible;
     __unlistwin();
     __athead();
     if((flags & Flag_Has_Cursor) == Flag_Has_Cursor) {
@@ -375,8 +369,8 @@ void TObject::show_on_top()
 void TObject::show_beneath(TObject& prev)
 {
     send_message(WM_SHOWBENEATH,0L,&prev);
-    if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) hide();
-    iflags |= IFLG_VISIBLE;
+    if((iflags & TObject::Visible) == TObject::Visible) hide();
+    iflags |= TObject::Visible;
     __unlistwin();
     __atwin(&prev);
 }
@@ -385,7 +379,7 @@ void TObject::hide()
 {
     send_message(WM_HIDE,0L,NULL);
     if(cursorwin == this) set_cursor_type(Cursor_Off);
-    iflags &= ~IFLG_VISIBLE;
+    iflags &= ~TObject::Visible;
 }
 
 void TObject::get_pos(tAbsCoord& x1,tAbsCoord& y1,tAbsCoord& x2,tAbsCoord& y2)
@@ -410,7 +404,7 @@ void TObject::move(tAbsCoord dx,tAbsCoord dy)
     TObject* prev;
     tRelCoord x,y;
     int vis;
-    vis = (iflags & IFLG_VISIBLE) == IFLG_VISIBLE;
+    vis = (iflags & TObject::Visible) == TObject::Visible;
     x = where_x();
     y = where_y();
     prev = __prevwin();
@@ -431,7 +425,7 @@ void TObject::resize(tAbsCoord _width,tAbsCoord _height)
 
     x = where_x();
     y = where_y();
-    vis = (iflags & IFLG_VISIBLE) == IFLG_VISIBLE;
+    vis = (iflags & TObject::Visible) == TObject::Visible;
     prev = __prevwin();
     if(vis) hide();
 
@@ -447,7 +441,7 @@ void TObject::resize(tAbsCoord _width,tAbsCoord _height)
 void TObject::into_center(tAbsCoord w,tAbsCoord h)
 {
     tAbsCoord ww,wh,pww,pwh;
-    int vis = (iflags & IFLG_VISIBLE) == IFLG_VISIBLE;
+    int vis = (iflags & TObject::Visible) == TObject::Visible;
     if(vis) hide();
     ww = wwidth;
     wh = wheight;
@@ -479,31 +473,31 @@ TObject* TObject::get_focus() { return cursorwin; }
 tRelCoord TObject::where_x() const { return (flags & Flag_Has_Frame) == Flag_Has_Frame ? cur_x : cur_x+1; }
 tRelCoord TObject::where_y() const { return (flags & Flag_Has_Frame) == Flag_Has_Frame ? cur_y : cur_y+1; }
 
-void TObject::freeze() { iflags &= ~IFLG_ENABLED; }
+void TObject::freeze() { iflags &= ~TObject::Enabled; }
 
 void TObject::refresh(tRelCoord y)
 {
-    iflags |= IFLG_ENABLED;
+    iflags |= TObject::Enabled;
     if((flags & Flag_Has_Frame) == Flag_Has_Frame) y++;
     paint_cursor();
 }
 
 void TObject::refresh_piece(tRelCoord stx,tRelCoord endx,tRelCoord y)
 {
-    iflags |= IFLG_ENABLED;
+    iflags |= TObject::Enabled;
     if((flags & Flag_Has_Frame) == Flag_Has_Frame) { stx++; endx++; y++; }
     paint_cursor();
 }
 
 void TObject::refresh()
 {
-    iflags |= IFLG_ENABLED;
+    iflags |= TObject::Enabled;
     paint_cursor();
 }
 
 void TObject::refresh_full()
 {
-    iflags |= IFLG_ENABLED;
+    iflags |= TObject::Enabled;
     paint_cursor();
 }
 

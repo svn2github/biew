@@ -40,11 +40,6 @@ using namespace	usr;
 
 namespace	usr {
 bool TWindow::test_win() const { return TWidget::test_win(); }
-enum {
-    IFLG_VISIBLE      =0x00000001UL,
-    IFLG_ENABLED      =0x00000002UL,
-    IFLG_CURSORBEENOFF=0x80000000UL
-};
 
 TWindow::TWindow(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, twc_flag _flags)
 	:TWidget(x1,y1,_width,_height,_flags)
@@ -77,7 +72,7 @@ TWindow::~TWindow()
 void TWindow::updatescreencharfrombuff(tRelCoord x,tRelCoord y,const tvideo_buffer& buff,tvideo_buffer* accel) const
 {
     unsigned idx;
-    if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
+    if((iflags & TObject::Visible) == TObject::Visible) {
 	idx = y*wwidth+x;
 	TWindow* top=static_cast<TWindow*>(__find_over(x,y));
 	if(top) {
@@ -102,7 +97,7 @@ void TWindow::updatescreencharfrombuff(tRelCoord x,tRelCoord y,const tvideo_buff
 void TWindow::updatewinmemcharfromscreen(tRelCoord x,tRelCoord y,const tvideo_buffer& accel)
 {
     unsigned idx,aidx;
-    if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
+    if((iflags & TObject::Visible) == TObject::Visible) {
 	idx = y*wwidth+x;
 	aidx = x;
 	TWindow* top=static_cast<TWindow*>(__find_over(x,y));
@@ -173,7 +168,7 @@ void TWindow::savedwin2screen()
     unsigned i,j, tidx;
     tvideo_buffer accel(__TVIO_MAXSCREENWIDTH);
     bool ms_vis, is_hidden = false, is_top;
-    if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
+    if((iflags & TObject::Visible) == TObject::Visible) {
 	tAbsCoord mx,my;
 	ms_vis = tconsole->mouse_get_state();
 	if(ms_vis) {
@@ -214,7 +209,7 @@ void TWindow::updatewinmem()
     unsigned i,j,tidx;
     tvideo_buffer accel(__TVIO_MAXSCREENWIDTH);
     bool ms_vis, is_hidden = false, is_top;
-    if((iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
+    if((iflags & TObject::Visible) == TObject::Visible) {
 	tAbsCoord mx,my;
 	ms_vis = tconsole->mouse_get_state();
 	if(ms_vis) {
@@ -256,7 +251,7 @@ void TWindow::updatewinmem()
 
 void TWindow::show()
 {
-    if(!(iflags & IFLG_VISIBLE) == IFLG_VISIBLE) {
+    if(!(iflags & TObject::Visible) == TObject::Visible) {
 	updatewinmem();
 	TWidget::show();
     }

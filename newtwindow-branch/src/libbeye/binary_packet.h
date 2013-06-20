@@ -2,6 +2,7 @@
 #define BINARY_PACKET_HPP_INCLUDED 1
 #include "libbeye/libbeye.h"
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
 
 namespace	usr {
@@ -68,12 +69,16 @@ namespace	usr {
 
 	    T& operator[](size_t idx) {
 		if((idx+1)*sizeof(T)<=size()) return ((T*)data())[idx];
-		throw std::out_of_range("objects_container.at");
+		std::ostringstream os;
+		os<<"."<<get_caller_address()<<" => object_container["<<idx<<"]";
+		throw std::out_of_range(os.str());
 	    }
 
 	    const T& operator[](size_t idx) const {
 		if((idx+1)*sizeof(T)<=size()) return ((const T*)data())[idx];
-		throw std::out_of_range("objects_container.at");
+		std::ostringstream os;
+		os<<"."<<get_caller_address()<<" => object_container["<<idx<<"] const";
+		throw std::out_of_range(os.str());
 	    }
 
 	    virtual T*		tdata() { return (T*)data(); }

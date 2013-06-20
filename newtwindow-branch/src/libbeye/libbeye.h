@@ -128,20 +128,25 @@ namespace	usr {
 	    Opaque	opaque2;
     };
 
-    struct tvideo_symbol {
-	tvideo_symbol();
-	tvideo_symbol(t_vchar,t_vchar,ColorAttr);
+    class tvideo_symbol {
+	public:
+	    tvideo_symbol();
+	    tvideo_symbol(t_vchar,t_vchar,ColorAttr);
+	    virtual ~tvideo_symbol();
 
-	t_vchar		symbol;
-	t_vchar		oempg;
-	ColorAttr	attr;
+	    virtual t_vchar	symbol() const;
+	    virtual t_vchar	oempg() const;
+	    virtual ColorAttr	attr() const;
+	private:
+	    t_vchar	_symbol;
+	    t_vchar	_oempg;
+	    ColorAttr	_attr;
     };
 
     class tvideo_buffer : public Opaque {
 	public:
 	    tvideo_buffer(size_t n);
 	    tvideo_buffer(const std::vector<tvideo_symbol>& v);
-	    tvideo_buffer(const tvideo_symbol* data,size_t n);
 	    tvideo_buffer(const tvideo_symbol& s,size_t n);
 	    tvideo_buffer(const tvideo_buffer& it);
 	    virtual ~tvideo_buffer();
@@ -156,12 +161,10 @@ namespace	usr {
 
 	    virtual void	fill(const tvideo_symbol& s);
 	    virtual void	fill_at(size_t idx,const tvideo_symbol& s,size_t sz);
-	    virtual void	assign(const tvideo_symbol* data,size_t len);
 	    virtual void	assign(const std::vector<tvideo_symbol>& v);
 	    virtual void	assign(const tvideo_buffer& from,size_t len);
 	    virtual void	assign_at(size_t idx,const tvideo_buffer&);
 	    virtual void	assign_at(size_t idx,const tvideo_buffer& from,size_t rlen);
-	    virtual void	assign_at(size_t idx,const tvideo_symbol* data,size_t len);
 	    virtual void	assign_at(size_t idx,const std::vector<tvideo_symbol>& v);
 	    virtual void	assign_at(size_t idx,tvideo_symbol s);
 

@@ -234,18 +234,17 @@ Opaque::Opaque() {
 Opaque::~Opaque() {}
 
 
-tvideo_symbol::tvideo_symbol():symbol(0),oempg(0),attr(0) {}
-tvideo_symbol::tvideo_symbol(t_vchar s,t_vchar o,ColorAttr a):symbol(s),oempg(o),attr(a) {}
+tvideo_symbol::tvideo_symbol():_symbol(0),_oempg(0),_attr(0) {}
+tvideo_symbol::tvideo_symbol(t_vchar s,t_vchar o,ColorAttr a):_symbol(s),_oempg(o),_attr(a) {}
+tvideo_symbol::~tvideo_symbol() {}
+
+t_vchar tvideo_symbol::symbol() const { return _symbol; }
+t_vchar tvideo_symbol::oempg() const { return _oempg; }
+ColorAttr tvideo_symbol::attr() const { return _attr; }
 
 tvideo_buffer::tvideo_buffer(size_t n)
 	    :data(n)
 {
-}
-
-tvideo_buffer::tvideo_buffer(const tvideo_symbol* s,size_t n)
-	    :data(n)
-{
-    for(size_t i=0;i<n;i++) data[i]=s[i];
 }
 
 tvideo_buffer::tvideo_buffer(const tvideo_symbol& s,size_t n)
@@ -321,11 +320,6 @@ void tvideo_buffer::fill_at(size_t idx,const tvideo_symbol& s,size_t sz) {
     }
 }
 
-void tvideo_buffer::assign(const tvideo_symbol* s,size_t newlen) {
-    size_t rlen = std::min(newlen,data.size());
-    for(size_t i=0;i<rlen;i++) data[i] = s[i];
-}
-
 void tvideo_buffer::assign(const std::vector<tvideo_symbol>& v) {
     size_t rlen = std::min(v.size(),data.size());
     for(size_t i=0;i<rlen;i++) data[i] = v[i];
@@ -365,16 +359,6 @@ void tvideo_buffer::assign_at(size_t idx,const std::vector<tvideo_symbol>& v) {
     } else {
 	std::ostringstream os;
 	os<<"."<<get_caller_address()<<" => tvideo_buffer::assign_at("<<idx<<")";
-	throw std::out_of_range(os.str());
-    }
-}
-
-void tvideo_buffer::assign_at(size_t idx,const tvideo_symbol* s,size_t newlen) {
-    if(idx+newlen < data.size()) {
-	for(size_t i=0;i<newlen;i++) data[i+idx]=s[i];
-    } else {
-	std::ostringstream os;
-	os<<"."<<get_caller_address()<<" => tvideo_buffer::assign_at("<<idx<<","<<newlen<<")";
 	throw std::out_of_range(os.str());
     }
 }
