@@ -1,6 +1,7 @@
 #ifndef BINARY_PACKET_HPP_INCLUDED
 #define BINARY_PACKET_HPP_INCLUDED 1
 #include "libbeye/libbeye.h"
+#include <typeinfo>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -70,14 +71,14 @@ namespace	usr {
 	    T& operator[](size_t idx) {
 		if((idx+1)*sizeof(T)<=size()) return ((T*)data())[idx];
 		std::ostringstream os;
-		os<<"."<<get_caller_address()<<" => object_container["<<idx<<"]";
+		os<<"."<<get_caller_address()<<" => objects_container<"<<typeid(T).name()<<">["<<idx<<"]";
 		throw std::out_of_range(os.str());
 	    }
 
 	    const T& operator[](size_t idx) const {
 		if((idx+1)*sizeof(T)<=size()) return ((const T*)data())[idx];
 		std::ostringstream os;
-		os<<"."<<get_caller_address()<<" => object_container["<<idx<<"] const";
+		os<<"."<<get_caller_address()<<" => objects_container"<<typeid(T).name()<<">["<<idx<<"] const";
 		throw std::out_of_range(os.str());
 	    }
 

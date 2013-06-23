@@ -618,8 +618,6 @@ namespace	usr {
 	    virtual int			direct_write(tRelCoord x,tRelCoord y,const any_t* buff,unsigned len);
 	    virtual int			direct_write(tRelCoord x,tRelCoord y,const any_t* chars,const ColorAttr* attrs,unsigned len);
 
-	    virtual bool		test_win() const;
-	    virtual void		check_win() const;
 	    void			create(tAbsCoord x1_, tAbsCoord y1_, tAbsCoord width, tAbsCoord height, twc_flag flags);
 	    virtual void		updatescreencharfrombuff(tRelCoord x,tRelCoord y,const tvideo_buffer& buff,tvideo_buffer *accel) const;
 	    tvideo_buffer		get_surface() const { return surface; }

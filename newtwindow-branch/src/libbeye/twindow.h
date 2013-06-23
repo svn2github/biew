@@ -98,7 +98,6 @@ namespace	usr {
 	    virtual void		resize(tAbsCoord width, tAbsCoord height);
 
 	protected:
-	    virtual bool		test_win() const;
 	    virtual void		updatescreencharfrombuff(tRelCoord x,tRelCoord y,const tvideo_buffer& buff,tvideo_buffer *accel) const;
 	private:
 	    void		savedwin2screen();

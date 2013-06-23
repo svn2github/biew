@@ -133,28 +133,12 @@ const unsigned char TWidget::THICK_FRAME[8] = { TWC_FL_BLK, TWC_FL_BLK, TWC_FL_B
 const unsigned char TWidget::UP3D_FRAME[8] = { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 };
 const unsigned char TWidget::DN3D_FRAME[8] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
-#ifndef NDEBUG
-#ifdef __TSC__
-#pragma save , call(inline=>on) /** GPF in protmode */
-static void winInternalError() = { 0xFF, 0xFF };
-#elif defined _MSC_VER
-static inline void winInternalError() {};
-#else
-static inline void winInternalError() { (void)0xFFFFFFFF; };
-#endif
-bool TWidget::test_win() const { return true; }
-void TWidget::check_win() const { if(!test_win()) winInternalError(); }
-#else
-void TWidget::check_win() const {}
-#endif
-
 void TWidget::create(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, twc_flag _flags)
 {
     TObject::create(x1,y1,_width,_height,_flags);
 
     ::memcpy(Frame,SINGLE_FRAME,8);
     surface.fill(tvideo_symbol(TWC_DEF_FILLER,0,text.system));
-    check_win();
     text=__set_color(LightGray,Black);
     frame=__set_color(LightGray,Black);
     title=__set_color(LightGray,Black);
@@ -371,7 +355,6 @@ void TWidget::updatescreencharfrombuff(tRelCoord x,
 		tidx = tx + ty*vis->wwidth;
 		(*accel)[aidx]=vis->surface[tidx];
 	    }
-	    top->check_win();
 	} else {
 	    bool ms_vis;
 	    bool is_hidden = false;
@@ -395,7 +378,6 @@ void TWidget::updatescreencharfrombuff(tRelCoord x,
 		    tconsole->vio_write_buff(outx,outy,it);
 		    if(is_hidden) tconsole->mouse_set_state(true);
 		}
-		check_win();
 	    }
 	}
     }
@@ -432,7 +414,6 @@ void TWidget::snapshot() /**< for snapshot */
 	}
 	if(is_hidden) tconsole->mouse_set_state(true);
     }
-    check_win();
 }
 
 /**
@@ -499,7 +480,6 @@ void TWidget::updatescreen(bool full_area)
 	    }
 	}
 	if(is_hidden) tconsole->mouse_set_state(true);
-	check_win();
     }
 }
 
@@ -539,7 +519,6 @@ void TWidget::updatescreenpiece(tRelCoord stx,tRelCoord endx,tRelCoord y)
 	    }
 	}
 	if(is_hidden) tconsole->mouse_set_state(true);
-	check_win();
     }
 }
 
@@ -748,7 +727,6 @@ void TWidget::resize(tAbsCoord _width,tAbsCoord _height)
 	    idx = to+ncopy-delta;
 	    newbody.fill_at(idx,tvideo_symbol(TWC_DEF_FILLER,0,text.system),fillsize);
 	}
-	check_win();
 	to += _width;
 	from += oldw;
     }
@@ -763,9 +741,8 @@ void TWidget::resize(tAbsCoord _width,tAbsCoord _height)
     surface = newbody;
     X2 = X1 + _width;
     Y2 = Y1 + _height;
-    check_win();
     paint_internal();
-    if(vis) show_beneath(*prev);
+    if(vis) { if(prev) show_beneath(*prev); else show(); }
     goto_xy(x,y);
 }
 
@@ -792,7 +769,6 @@ void TWidget::clear(unsigned char filler)
 	idx = to+i*wwidth;
 	oempg = ((flags & Flag_NLS) == Flag_NLS ? NLS_IS_OEMPG(oempg) ? oempg : 0 : 0);
 	surface.fill_at(idx,tvideo_symbol(filler,oempg,text.system),fillsize);
-	check_win();
 	updatescreenpiece(0,wwidth,i+1);
     }
     cur_x = cx;
@@ -812,7 +788,6 @@ void TWidget::clreol(unsigned char filler)
     }
     oempg = ((flags & Flag_NLS) == Flag_NLS ? NLS_IS_OEMPG(oempg) ? oempg : 0 : 0);
     surface.fill_at(idx,tvideo_symbol(filler,oempg,text.system),size);
-    check_win();
     updatescreenpiece(cur_x,wwidth,cur_y+1);
 }
 
@@ -821,7 +796,6 @@ void TWidget::wputc_oem(char ch,char oempg,char color,bool update)
     unsigned idx;
     idx = cur_x + cur_y*wwidth;
     surface[idx]=tvideo_symbol(ch,oempg,color);
-    check_win();
     if(update) updatescreenchar(cur_x+1,cur_y+1,NULL);
 }
 
@@ -976,7 +950,6 @@ int TWidget::direct_write(tRelCoord x, tRelCoord y,const any_t*str,const ColorAt
     for(i=0;i<rlen;i++) v[i]=tvideo_symbol(__nls[i],__oem[i],__attr[i]);
     surface.assign_at(ioff,v);
 //    text.system=attrs[len-1];
-    check_win();
     updatescreenpiece(x,x+rlen,y+1);
     return rlen;
 }
@@ -1030,7 +1003,6 @@ int TWidget::write(tRelCoord x, tRelCoord y,const uint8_t* str,const ColorAttr* 
     for(i=0;i<rlen;i++) v[i]=tvideo_symbol(__nls[i],__oem[i],__attr[i]);
     surface.assign_at(ioff,v);
 //    text.system=attrs[len-1];
-    check_win();
     updatescreenpiece(x,x+rlen,y+1);
     return rlen;
 }
@@ -1042,7 +1014,6 @@ void TWidget::write(tRelCoord x,tRelCoord y,const tvideo_buffer& buff)
     if((unsigned)y <= wheight) {
 	i = (x-1)+(y-1)*wwidth;
 	surface.assign_at(i,buff,rlen);
-	check_win();
 	updatescreenpiece(x-1,x-1+rlen,y);
     }
 }
@@ -1055,7 +1026,6 @@ tvideo_buffer TWidget::read(tRelCoord x,tRelCoord y,size_t len) const
     if((unsigned)y <= wheight) {
 	idx = (x-1)+(y-1)*wwidth;
 	rc=surface.sub_buffer(idx,rlen);
-	check_win();
     }
     return rc;
 }

@@ -39,8 +39,6 @@ using namespace	usr;
 #include "libbeye/twindow.h"
 
 namespace	usr {
-bool TWindow::test_win() const { return TWidget::test_win(); }
-
 TWindow::TWindow(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, twc_flag _flags)
 	:TWidget(x1,y1,_width,_height,_flags)
 	,saved(_width*_height)
@@ -109,7 +107,6 @@ void TWindow::updatewinmemcharfromscreen(tRelCoord x,tRelCoord y,const tvideo_bu
 	    tidx = tx + ty*top->wwidth;
 	    saved[idx]=top->saved[tidx];
 	    top->saved[tidx]=get_surface()[idx];
-	    top->check_win();
 	} else {
 	    saved[idx]=accel[aidx];
 	}
@@ -151,7 +148,6 @@ void TWindow::screen2win()
 	}
 	if(is_hidden) tconsole->mouse_set_state(true);
     }
-    check_win();
 }
 
 /**
@@ -200,7 +196,6 @@ void TWindow::savedwin2screen()
 	    }
 	}
 	if(is_hidden) tconsole->mouse_set_state(true);
-	check_win();
     }
 }
 

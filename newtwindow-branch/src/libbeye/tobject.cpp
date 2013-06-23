@@ -413,7 +413,7 @@ void TObject::move(tAbsCoord dx,tAbsCoord dy)
     Y1 += dy;
     X2 += dx;
     Y2 += dy;
-    if(vis) show_beneath(*prev);
+    if(vis) { if(prev) show_beneath(*prev); else show(); }
     goto_xy(x,y);
 }
 
@@ -434,7 +434,7 @@ void TObject::resize(tAbsCoord _width,tAbsCoord _height)
 
     X2 = X1 + _width;
     Y2 = Y1 + _height;
-    if(vis) show_beneath(*prev);
+    if(vis) { if(prev) show_beneath(*prev); else show(); }
     goto_xy(x,y);
 }
 
