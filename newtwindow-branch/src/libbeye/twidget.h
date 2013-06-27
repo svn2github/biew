@@ -27,6 +27,7 @@ using namespace	usr;
 namespace	usr {
     class System;
     class TConsole;
+    class tvideo_buffer;
     /** Enumerates all colors used in twin library */
     enum Color {
 	Black = 0,	/**< Equivalent of RGB: 0 0 0 */
@@ -606,7 +607,7 @@ namespace	usr {
 	    virtual int			direct_write(tRelCoord x,tRelCoord y,const any_t* chars,const ColorAttr* attrs,unsigned len);
 
 	    virtual void		updatescreencharfrombuff(tRelCoord x,tRelCoord y,const tvideo_buffer& buff,tvideo_buffer *accel) const;
-	    tvideo_buffer		get_surface() const { return surface; }
+	    tvideo_buffer&		get_surface() const { return surface; }
 	private:
 		   /** Accesses to the active window directly, reading a single line.
 		     * @param win         handle of window
@@ -657,7 +658,7 @@ namespace	usr {
 					    /*                   4       5 */
 					    /*                   |       | */
 					    /*                   6---7---8 */
-	    tvideo_buffer	surface;     /**< Buffer containing image of window frame */
+	    tvideo_buffer&	surface;     /**< Buffer containing image of window frame */
 	    char*		Title;       /**< Caption of window */
 	    char*		Footer;      /**< Footer of window */
 	    title_mode		TitleMode;   /**< alignment mode of title */

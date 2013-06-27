@@ -36,17 +36,19 @@ using namespace	usr;
 
 #include "libbeye/osdep/system.h"
 #include "libbeye/osdep/tconsole.h"
+#include "libbeye/tvideo_buffer.h"
 #include "libbeye/twindow.h"
 
 namespace	usr {
 TWindow::TWindow(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, twc_flag _flags)
 	:TWidget(x1,y1,_width,_height,_flags)
-	,saved(_width*_height)
+	,saved(*new(zeromem) tvideo_buffer(_width*_height))
 {
 }
 
 TWindow::~TWindow()
 {
+    delete &saved;
 }
 
 /**

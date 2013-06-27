@@ -36,6 +36,7 @@ using namespace	usr;
 
 #include "libbeye/osdep/system.h"
 #include "libbeye/osdep/tconsole.h"
+#include "libbeye/tvideo_buffer.h"
 #include "libbeye/twidget.h"
 
 namespace	usr {
@@ -135,7 +136,7 @@ const unsigned char TWidget::DN3D_FRAME[8] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xF
 
 TWidget::TWidget(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, twc_flag _flags)
 	:TObject(x1,y1,_width,_height,_flags)
-	,surface(_width*_height)
+	,surface(*new(zeromem) tvideo_buffer(_width*_height))
 {
     ::memcpy(Frame,SINGLE_FRAME,8);
     surface.fill(tvideo_symbol(TWC_DEF_FILLER,0,text.system));
@@ -151,6 +152,7 @@ TWidget::~TWidget()
 {
     if(Title) delete Title;
     if(Footer) delete Footer;
+    delete &surface;
 }
 
 ColorAttr TWidget::set_color(Color fore,Color back)

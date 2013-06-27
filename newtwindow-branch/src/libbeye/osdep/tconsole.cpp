@@ -5,6 +5,7 @@ using namespace	usr;
 #include "tconsole.h"
 #include "__os_dep.h"
 #include "vio_interface.h"
+#include "libbeye/tvideo_buffer.h"
 
 namespace	usr {
 extern const vio_interface_info vio_vcsa_info;

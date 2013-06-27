@@ -44,6 +44,7 @@ static const char rcs_id[] = "$Id: vio.c,v 1.16 2009/09/20 14:39:37 nickols_k Ex
 #include "vio_interface.h"
 #include "tconsole.h"
 #include "unix/console.h"
+#include "libbeye/tvideo_buffer.h"
 
 namespace	usr {
 

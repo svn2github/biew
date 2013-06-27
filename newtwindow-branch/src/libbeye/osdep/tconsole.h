@@ -3,6 +3,7 @@
 #include "libbeye/libbeye.h"
 
 namespace	usr {
+    class tvideo_buffer;
     class vio_interface;
     struct vio_interface_info;
 

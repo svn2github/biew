@@ -18,6 +18,7 @@ SRCS= bbio.cpp \
       mp_malloc.cpp \
       tobject.cpp \
       tobject_event.cpp \
+      tvideo_buffer.cpp \
       twidget.cpp \
       twindow.cpp
 

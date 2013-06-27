@@ -5,6 +5,7 @@
 #include <string>
 
 namespace	usr {
+    class tvideo_buffer;
     class vio_interface : public Opaque {
 	public:
 	    vio_interface(const std::string& user_cp,unsigned long flags) { UNUSED(user_cp); UNUSED(flags); }

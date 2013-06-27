@@ -97,7 +97,7 @@ namespace	usr {
 
 	    void		restorescreenchar(tRelCoord x,tRelCoord y,tvideo_buffer* accel) const { updatescreencharfrombuff(x-1,y-1,saved,accel); }
 
-	    tvideo_buffer	saved;       /**< Buffer containing saved image under window */
+	    tvideo_buffer&	saved;       /**< Buffer containing saved image under window */
     };
 } // namespace	usr
 

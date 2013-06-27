@@ -147,18 +147,18 @@ void Setup::paint(TWindow& twin)
   twin.printf(" [%c] - Force 7-bit output    "
 	   ,Gebool((bctx.vioIniFlags & __TVIO_FLG_USE_7BIT) == __TVIO_FLG_USE_7BIT));
   twin.goto_xy(32,9);
-  twin.printf(" [%c] - Apply plugin settings to all files     "
+  twin.printf(" [%c] - Apply plugin settings to all files    "
 	   ,Gebool(bctx.iniSettingsAnywhere));
   twin.goto_xy(32,10);
   if(!MMFile::has_mmio) twin.set_color(dialog_cset.group.disabled);
-  twin.printf(" [%c] - Use MMF                                "
+  twin.printf(" [%c] - Use MMF                               "
 	   ,Gebool(bctx.fioUseMMF));
   twin.set_color(dialog_cset.group.active);
   twin.goto_xy(32,11);
-  twin.printf(" [%c] - Preserve timestamp                     "
+  twin.printf(" [%c] - Preserve timestamp                    "
 	   ,Gebool(bctx.iniPreserveTime));
   twin.goto_xy(32,12);
-  twin.printf(" [%c] - Enable usage of external programs      "
+  twin.printf(" [%c] - Enable usage of external programs     "
 	   ,Gebool(bctx.iniUseExtProgs));
   twin.set_color(dialog_cset.main);
   twin.goto_xy(50,7); twin.puts(bctx.codepage);
@@ -175,16 +175,16 @@ void Setup::run()
   strcpy(estr[0],beyeGetHelpName().c_str());
   strcpy(estr[1],beyeGetColorSetName().c_str());
   strcpy(estr[2],beyeGetSyntaxName().c_str());
-  wdlg = CrtDlgWndnls(" Setup ",78,13);
+  wdlg = CrtDlgWndnls(" Setup ",78,14);
   wdlg->get_pos(x1,y1,x2,y2);
   X1 = x1;
   Y1 = y1;
   X2 = x2;
   Y2 = y2;
 
-  X1 += 2;
-  X2 -= 1;
-  Y1 += 2;
+  X1 += 1;
+  X2 -= 2;
+  Y1 += 1;
   Y2 = Y1;
   ewnd[0] = CreateEditor(X1,Y1,X2,Y2,TWindow::Flag_Has_Cursor | TWindow::Flag_NLS);
   ewnd[0]->show();
@@ -216,7 +216,7 @@ void Setup::run()
   wdlg->goto_xy(2,5); wdlg->puts("Enter syntax name (including full path):");
   wdlg->goto_xy(2,7); wdlg->puts("Enter OEM codepage (for utf-based terminals):");
   wdlg->set_footer(" [Enter] - Accept changes ",TWindow::TMode_Center,dialog_cset.footer);
-  wdlg->draw_frame(1,8,78,13,TWindow::UP3D_FRAME,dialog_cset.main);
+  wdlg->draw_frame(1,8,78,14,TWindow::UP3D_FRAME,dialog_cset.main);
 
   paint(*wdlg);
   active = 0;
