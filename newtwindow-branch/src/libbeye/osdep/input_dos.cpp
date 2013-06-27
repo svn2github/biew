@@ -132,3 +132,105 @@ int __FASTCALL__ __kbdGetKey ( unsigned long flg )
 	   key = __normalize_code(_bios_keybrd(_KEYBRD_READ));
   return key;
 }
+
+int __FASTCALL__ __inputRawInfo(char *head, char *text)
+{
+  int avail_kbd;
+  int rval, rval2;
+  const char *type;
+  avail_kbd = _bios_keybrd(9);
+  if(avail_kbd&0x40)
+  {
+    rval = _bios_keybrd(0x20);
+    rval2 = _bios_keybrd(0x22);
+    type = "122-kbd";
+  }
+  else
+  if(avail_kbd&0x20)
+  {
+    rval = _bios_keybrd(0x10);
+    rval2 = _bios_keybrd(0x12);
+    type = "enh-kbd";
+  }
+  else
+  {
+    rval = _bios_keybrd(0x0);
+    rval2 = _bios_keybrd(0x2);
+    type = "std-kbd";
+  }
+  strcpy(head,"Type    Keycode Shifts");
+  sprintf(text,"%s %04X      %04X", type, rval, rval2);
+  return rval==0x011B?0:1;
+}
+
+static bool ms_visible = false;
+static bool ms_inited = false;
+
+int __FASTCALL__ __init_mouse()
+{
+  int ret;
+  union REGS inreg,outreg;
+  memset(&inreg,0,sizeof(inreg));
+  inreg.x.ax = 0;
+  int86(0x33,&inreg,&outreg);
+  if(!outreg.x.ax) return INT_MAX;
+  if(!outreg.x.bx || outreg.x.bx == -1) ret = 2;
+  else                                  ret = outreg.x.bx;
+  inreg.x.ax = 4;
+  inreg.x.cx = tvioWidth / 2;
+  inreg.x.dx = tvioHeight / 2;
+  int86(0x33,&inreg,&outreg);
+  ms_inited = true;
+  return ret;
+}
+
+void __FASTCALL__ __term_mouse()
+{
+  if(ms_visible) __MsSetState(false);
+}
+
+bool __FASTCALL__ __MsGetState()
+{
+  return ms_visible;
+}
+
+void __FASTCALL__ __MsSetState( bool is_visible )
+{
+  union REGS inreg;
+  if(ms_inited)
+  {
+    memset(&inreg,0,sizeof(inreg));
+    inreg.x.ax = is_visible ? 1 : 2;
+    int86(0x33,&inreg,&inreg);
+    ms_visible = is_visible;
+  }
+}
+
+#define PIXEL_PER_CHAR 8
+
+void __FASTCALL__ __MsGetPos( tAbsCoord *mx, tAbsCoord *my )
+{
+  union REGS inreg,outreg;
+  *mx = *my = 0;
+  if(ms_inited)
+  {
+    memset(&inreg,0,sizeof(inreg));
+    inreg.x.ax = 3;
+    int86(0x33,&inreg,&outreg);
+    *mx = outreg.x.cx / PIXEL_PER_CHAR;
+    *my = outreg.x.dx / PIXEL_PER_CHAR;
+  }
+}
+
+int __FASTCALL__ __MsGetBtns()
+{
+  union REGS inreg,outreg;
+  if(ms_inited)
+  {
+    memset(&inreg,0,sizeof(inreg));
+    inreg.x.ax = 3;
+    int86(0x33,&inreg,&outreg);
+    return outreg.x.bx;
+  }
+  else return 0;
+}

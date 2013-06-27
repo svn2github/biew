@@ -69,6 +69,7 @@ void vio_null::write_buffer(tAbsCoord x, tAbsCoord y, const tvideo_buffer& buff)
 vio_null::vio_null(const std::string& user_cp,unsigned long flags)
 	    :vio_interface(user_cp,flags)
 {
+    throw missing_device_exception();
 }
 
 vio_null::~vio_null()

@@ -202,3 +202,126 @@ int __FASTCALL__ __kbdGetKey ( unsigned long flg )
   if(KB_freq) memmove(KB_Buff,&KB_Buff[1],KB_freq*sizeof(int));
   return ret;
 }
+
+static bool ms_visible = false;
+tAbsCoord win32_mx = 0,win32_my = 0;
+int win32_mbuttons = 0;
+extern bool hInputTrigger;
+extern void __FASTCALL__ win32_readNextMessage();
+
+int __FASTCALL__ __init_mouse()
+{
+  DWORD ret;
+  SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE),ENABLE_MOUSE_INPUT);
+  if(GetNumberOfConsoleMouseButtons(&ret)== 0) ret = INT_MAX;
+  return (int)ret; /* return number of mouse button */
+}
+
+void __FASTCALL__ __term_mouse()
+{
+  DWORD cmode;
+  GetConsoleMode(GetStdHandle(STD_INPUT_HANDLE),&cmode);
+  cmode &= ~ENABLE_MOUSE_INPUT;
+  SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE),ENABLE_MOUSE_INPUT);
+}
+
+bool __FASTCALL__ __MsGetState()
+{
+  return ms_visible;
+}
+
+void __FASTCALL__ __MsSetState( bool state )
+{
+  ms_visible = state;
+}
+
+void __FASTCALL__ __MsGetPos( tAbsCoord *mx, tAbsCoord *my )
+{
+  /*
+     Under win32 mouse cursor can not be overwritten by video output.
+     It not significant, that we do not have precision coordinate of
+     mouse, intsead we have serious speed up of video ouput.
+  */
+  if(hInputTrigger) win32_readNextMessage();
+  *mx = win32_mx;
+  *my = win32_my;
+}
+
+int __FASTCALL__ __MsGetBtns()
+{
+  int ret;
+  ret = 0;
+ /* if(hInputTrigger)    REM: only kbdGetKey calls OsYield function */
+  win32_readNextMessage();
+  if(win32_mbuttons & FROM_LEFT_1ST_BUTTON_PRESSED) ret |= MS_LEFTPRESS;
+  if(win32_mbuttons & RIGHTMOST_BUTTON_PRESSED) ret |= MS_RIGHTPRESS;
+  if(win32_mbuttons & FROM_LEFT_2ND_BUTTON_PRESSED &
+     !(win32_mbuttons & RIGHTMOST_BUTTON_PRESSED)) ret |= MS_MIDDLEPRESS;
+  return ret;
+}
+
+int __FASTCALL__ __inputRawInfo(char *head, char *text)
+{
+  int rval=1;
+  DWORD nread;
+  INPUT_RECORD ir;
+  ReadConsoleInput(hIn,&ir,1,&nread);
+    switch(ir.EventType)
+    {
+      case WINDOW_BUFFER_SIZE_EVENT:
+      {
+	strcpy(head,"Type dwSize");
+	sprintf(text,"Size %08lX"
+		,ir.Event.WindowBufferSizeEvent.dwSize
+		);
+      }
+      break;
+      case FOCUS_EVENT:
+      {
+	strcpy(head,"Type bSetFocus");
+	sprintf(text,"Focs %i"
+		,ir.Event.FocusEvent.bSetFocus
+		);
+      }
+      break;
+      case MENU_EVENT:
+      {
+	strcpy(head,"Type dwCommandId");
+	sprintf(text,"Menu %08lX"
+		,ir.Event.MenuEvent.dwCommandId
+		);
+      }
+      break;
+      case MOUSE_EVENT:
+      {
+	strcpy(head,"Type Position ButtonState ControlKeyState Flags");
+	sprintf(text,"Mous %08lX %-11lX %-15lX %-5lX"
+		,ir.Event.MouseEvent.dwMousePosition
+		,ir.Event.MouseEvent.dwButtonState
+		,ir.Event.MouseEvent.dwControlKeyState
+		,ir.Event.MouseEvent.dwEventFlags
+		);
+      }
+      break;
+      case KEY_EVENT:
+      {
+	strcpy(head,"Type KDown RepeatCnt KeyCode ScanCode Ascii ControlKeyState");
+	sprintf(text,"KEY  %-5i %-9i %-7X %-7X  %-5c %-15lX"
+		,ir.Event.KeyEvent.bKeyDown
+		,ir.Event.KeyEvent.wRepeatCount
+		,ir.Event.KeyEvent.wVirtualKeyCode
+		,ir.Event.KeyEvent.wVirtualScanCode
+		,ir.Event.KeyEvent.uChar.AsciiChar?ir.Event.KeyEvent.uChar.AsciiChar:' '
+		,ir.Event.KeyEvent.dwControlKeyState
+		);
+
+	if( ir.Event.KeyEvent.wVirtualKeyCode == 27 && ir.Event.KeyEvent.wVirtualScanCode == 1 &&
+	    !ir.Event.KeyEvent.uChar.AsciiChar )
+	    ir.Event.KeyEvent.uChar.AsciiChar = ir.Event.KeyEvent.wVirtualKeyCode;
+	rval=ir.Event.KeyEvent.wVirtualKeyCode==27&&!ir.Event.KeyEvent.bKeyDown?0:1;
+      }
+      break;
+      default: break;
+    }
+  return rval;
+}

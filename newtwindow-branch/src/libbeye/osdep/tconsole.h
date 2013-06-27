@@ -6,6 +6,8 @@ namespace	usr {
     class tvideo_buffer;
     class vio_interface;
     struct vio_interface_info;
+    class input_interface;
+    struct input_interface_info;
 
     enum {
 	__TVIO_CUR_OFF	=0, /** Defines that cursor in invisible state */
@@ -148,7 +150,9 @@ namespace	usr {
 	    int       __FASTCALL__ input_raw_info(char *head, char *text) const;
 	private:
 	    const vio_interface_info*	vio_info;
+	    const input_interface_info*	input_info;
 	    vio_interface*		tvio;
+	    input_interface*		input;
     };
 } // namespace	usr
 #endif

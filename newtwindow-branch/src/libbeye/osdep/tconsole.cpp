@@ -5,6 +5,7 @@ using namespace	usr;
 #include "tconsole.h"
 #include "__os_dep.h"
 #include "vio_interface.h"
+#include "input_interface.h"
 #include "libbeye/tvideo_buffer.h"
 
 namespace	usr {
@@ -20,6 +21,17 @@ static const vio_interface_info* vio_interfaces[] = {
     &vio_null_info
 };
 
+extern const input_interface_info input_linux_info;
+extern const input_interface_info input_unix_info;
+extern const input_interface_info input_null_info;
+static const input_interface_info* input_interfaces[] = {
+#ifdef TARGET_LINUX
+    &input_linux_info,
+#endif
+    &input_unix_info,
+    &input_null_info
+};
+
 TConsole::TConsole(const char *user_cp, unsigned long vio_flags) {
     for(size_t i=0;vio_interfaces[i]!=&vio_null_info;i++) {
 	try {
@@ -32,21 +44,31 @@ TConsole::TConsole(const char *user_cp, unsigned long vio_flags) {
 	}
     }
     if(!tvio) throw missing_driver_exception();
-    __init_keyboard(user_cp);
+    for(size_t i=0;input_interfaces[i]!=&input_null_info;i++) {
+	try {
+	    input = input_interfaces[i]->query_interface(user_cp);
+	    input_info = input_interfaces[i];
+	} catch (const missing_device_exception& e) {
+	    delete input;
+	    input = NULL;
+	    continue;
+	}
+    }
+    if(!input) throw missing_driver_exception();
 }
 TConsole::~TConsole() {
-    __term_keyboard();
+    delete input;
     delete tvio;
 }
 
-int TConsole::kbd_get_key( unsigned long flg ) const { return __kbdGetKey(flg); }
-int TConsole::kbd_test_key( unsigned long flg ) const { return __kbdTestKey(flg); }
-int TConsole::kbd_get_shifts() const { return __kbdGetShiftsKey(); }
+int TConsole::kbd_get_key( unsigned long flg ) const { return input->get_key(flg); }
+int TConsole::kbd_test_key( unsigned long flg ) const { return input->test_key(flg); }
+int TConsole::kbd_get_shifts() const { return input->get_shifts(); }
 
-bool TConsole::mouse_get_state() const { return __MsGetState(); }
-void TConsole::mouse_set_state( bool is_visible ) const { __MsSetState(is_visible); }
-void TConsole::mouse_get_pos(tAbsCoord& x, tAbsCoord& y ) const { __MsGetPos(&x,&y); }
-int  TConsole::mouse_get_buttons() const { return __MsGetBtns(); }
+bool TConsole::mouse_get_state() const { return input->ms_get_state(); }
+void TConsole::mouse_set_state( bool is_visible ) const { input->ms_set_state(is_visible); }
+void TConsole::mouse_get_pos(tAbsCoord& x, tAbsCoord& y ) const { input->ms_get_pos(x,y); }
+int  TConsole::mouse_get_buttons() const { return input->ms_get_btns(); }
 
 int TConsole::vio_get_cursor_type() const { return tvio->get_cursor_type(); }
 void TConsole::vio_set_cursor_type( int c_type ) const { tvio->set_cursor_type(c_type); }
@@ -64,6 +86,6 @@ tAbsCoord TConsole::vio_height() const { return tvio->get_height(); }
 unsigned  TConsole::vio_num_colors() const { return tvio->get_num_colors(); }
 
 void TConsole::vio_set_transparent_color(unsigned char value) const { tvio->set_transparent_color(value); }
-int TConsole::input_raw_info(char *head, char *text) const { return __inputRawInfo(head,text); }
+int TConsole::input_raw_info(char *head, char *text) const { return input->raw_info(head,text); }
 
 } // namespace	usr
