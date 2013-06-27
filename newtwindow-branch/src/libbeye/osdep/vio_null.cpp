@@ -28,7 +28,7 @@ namespace	usr {
 
     class vio_null : public vio_interface {
 	public:
-	    vio_null(const std::string& user_cp,unsigned long flags);
+	    vio_null(System& s,const std::string& user_cp,unsigned long flags);
 	    virtual ~vio_null();
 
 	    virtual void		set_transparent_color(uint8_t);
@@ -42,6 +42,8 @@ namespace	usr {
 	    virtual tAbsCoord		get_width() const;
 	    virtual tAbsCoord		get_height() const;
 	    virtual unsigned		get_num_colors() const;
+	private:
+	    System&			sys;
     };
 
 int vio_null::get_cursor_type() const { return 0; }
@@ -66,8 +68,9 @@ void vio_null::write_buffer(tAbsCoord x, tAbsCoord y, const tvideo_buffer& buff)
     throw std::logic_error("vio_null::write_buffer");
 }
 
-vio_null::vio_null(const std::string& user_cp,unsigned long flags)
-	    :vio_interface(user_cp,flags)
+vio_null::vio_null(System& s,const std::string& user_cp,unsigned long flags)
+	    :vio_interface(s,user_cp,flags)
+	    ,sys(s)
 {
     throw missing_device_exception();
 }
@@ -81,7 +84,7 @@ tAbsCoord vio_null::get_width() const { return 0; }
 tAbsCoord vio_null::get_height() const { return 0; }
 unsigned vio_null::get_num_colors() const { return 0; }
 
-static vio_interface* query_interface(const std::string& user_cp,unsigned long flags) { return new(zeromem) vio_null(user_cp,flags); }
+static vio_interface* query_interface(System& s,const std::string& user_cp,unsigned long flags) { return new(zeromem) vio_null(s,user_cp,flags); }
 
 extern const vio_interface_info vio_null_info = {
     "Null video interface",

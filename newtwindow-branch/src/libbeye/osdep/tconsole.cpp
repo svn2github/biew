@@ -2,6 +2,7 @@
 #include "libbeye/libbeye.h"
 using namespace	usr;
 
+#include "system.h"
 #include "tconsole.h"
 #include "__os_dep.h"
 #include "vio_interface.h"
@@ -32,10 +33,12 @@ static const input_interface_info* input_interfaces[] = {
     &input_null_info
 };
 
-TConsole::TConsole(const char *user_cp, unsigned long vio_flags) {
+TConsole::TConsole(System& s,const std::string& user_cp, unsigned long vio_flags)
+	:sys(s)
+{
     for(size_t i=0;vio_interfaces[i]!=&vio_null_info;i++) {
 	try {
-	    tvio = vio_interfaces[i]->query_interface(user_cp,vio_flags);
+	    tvio = vio_interfaces[i]->query_interface(sys,user_cp,vio_flags);
 	    vio_info = vio_interfaces[i];
 	} catch (const missing_device_exception& e) {
 	    delete tvio;
@@ -46,7 +49,7 @@ TConsole::TConsole(const char *user_cp, unsigned long vio_flags) {
     if(!tvio) throw missing_driver_exception();
     for(size_t i=0;input_interfaces[i]!=&input_null_info;i++) {
 	try {
-	    input = input_interfaces[i]->query_interface(user_cp);
+	    input = input_interfaces[i]->query_interface(sys,user_cp);
 	    input_info = input_interfaces[i];
 	} catch (const missing_device_exception& e) {
 	    delete input;

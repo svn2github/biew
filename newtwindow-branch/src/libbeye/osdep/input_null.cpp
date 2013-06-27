@@ -28,12 +28,13 @@ using namespace	usr;
 #include <iomanip>
 #include <stdexcept>
 
+#include "system.h"
 #include "input_interface.h"
 
 namespace	usr {
     class input_null : public input_interface {
 	public:
-	    input_null(const std::string& user_cp);
+	    input_null(System&,const std::string& user_cp);
 	    virtual ~input_null();
 
 	    virtual int			get_key( unsigned long flg);
@@ -45,6 +46,8 @@ namespace	usr {
 	    virtual void		ms_set_state(bool is_visible);
 	    virtual void		ms_get_pos(tAbsCoord& x, tAbsCoord& y) const;
 	    virtual int			ms_get_btns();
+	private:
+	    System&			sys;
     };
 
 int input_null::get_shifts()
@@ -95,8 +98,9 @@ int input_null::ms_get_btns()
 }
 
 
-input_null::input_null(const std::string& user_cp)
-		:input_interface(user_cp)
+input_null::input_null(System& s,const std::string& user_cp)
+		:input_interface(s,user_cp)
+		,sys(s)
 {
     throw missing_device_exception();
 }
@@ -105,7 +109,7 @@ input_null::~input_null()
 {
 }
 
-static input_interface* query_interface(const std::string& user_cp) { return new(zeromem) input_null(user_cp); }
+static input_interface* query_interface(System& s,const std::string& user_cp) { return new(zeromem) input_null(s,user_cp); }
 
 extern const input_interface_info input_null_info = {
     "null input",

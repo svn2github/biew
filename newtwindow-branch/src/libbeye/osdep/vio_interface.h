@@ -5,10 +5,11 @@
 #include <string>
 
 namespace	usr {
+    class System;
     class tvideo_buffer;
     class vio_interface : public Opaque {
 	public:
-	    vio_interface(const std::string& user_cp,unsigned long flags) { UNUSED(user_cp); UNUSED(flags); }
+	    vio_interface(System&,const std::string& user_cp,unsigned long flags) { UNUSED(user_cp); UNUSED(flags); }
 	    virtual ~vio_interface() {}
 
 	    virtual void		set_transparent_color(uint8_t) = 0;
@@ -27,7 +28,7 @@ namespace	usr {
 
     struct vio_interface_info {
 	const char*	name;
-	vio_interface*	(*query_interface)(const std::string& user_cp,unsigned long flags);
+	vio_interface*	(*query_interface)(System& s,const std::string& user_cp,unsigned long flags);
     };
 } // namespace	usr
 #endif

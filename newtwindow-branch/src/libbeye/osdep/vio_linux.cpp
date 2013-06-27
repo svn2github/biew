@@ -51,6 +51,8 @@ static const char rcs_id[] = "$Id: vio.c,v 1.18 2009/09/03 16:57:40 nickols_k Ex
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/vt.h>
+
+#include "system.h"
 #include "unix/console.h"
 #include "vio_interface.h"
 #include "tconsole.h"
@@ -69,7 +71,7 @@ namespace	usr {
 
     class vio_vcsa : public vio_interface {
 	public:
-	    vio_vcsa(const std::string& user_cp,unsigned long flags);
+	    vio_vcsa(System&,const std::string& user_cp,unsigned long flags);
 	    virtual ~vio_vcsa();
 
 	    virtual void		set_transparent_color(uint8_t);
@@ -115,10 +117,11 @@ namespace	usr {
 	    char*			vtmp;
 
 	    std::string			screen_cp;
-	    any_t*			nls_handle;
 	    const termdesc*		terminal;
 
 	    transparent_color		tp;
+
+	    System&			sys;
 
 	    static const unsigned	VMAX_X=__TVIO_MAXSCREENWIDTH;
 	    static const unsigned	VMAX_Y=0x400;
@@ -250,10 +253,11 @@ void vio_vcsa::write_buffer(tAbsCoord x, tAbsCoord y, const tvideo_buffer& buff)
     if (pb != cache_pb) delete pb;
 }
 
-vio_vcsa::vio_vcsa(const std::string& user_cp,unsigned long flags)
-	:vio_interface(user_cp,flags)
+vio_vcsa::vio_vcsa(System& s,const std::string& user_cp,unsigned long flags)
+	:vio_interface(s,user_cp,flags)
 	,tvioNumColors(16)
 	,cursor_type(__TVIO_CUR_NORM)
+	,sys(s)
 {
     size_t i;
     const char *t = getenv("TERM");
@@ -300,8 +304,6 @@ vio_vcsa::vio_vcsa(const std::string& user_cp,unsigned long flags)
     tvioHeight = b[0]; tvioWidth = b[1];
     firstX = b[2]; firstY = b[3];
 
-    nls_handle=nls_init(screen_cp.c_str(),user_cp.c_str());
-
     if (!output_7) output_7 = TESTFLAG(console_flags, __TVIO_FLG_USE_7BIT);
     if (tvioWidth <= 0) tvioWidth = 80;
     if (tvioHeight <= 0) tvioHeight = 25;
@@ -336,7 +338,6 @@ vio_vcsa::~vio_vcsa()
     set_cursor_type(__TVIO_CUR_NORM);
     set_cursor_pos(firstX, firstY);
 
-    nls_term(nls_handle);
     ::close(viohandle);
 
     delete vtmp;
@@ -361,7 +362,7 @@ tAbsCoord vio_vcsa::get_width() const { return tvioWidth; }
 tAbsCoord vio_vcsa::get_height() const { return tvioHeight; }
 unsigned vio_vcsa::get_num_colors() const { return tvioNumColors; }
 
-static vio_interface* query_interface(const std::string& user_cp,unsigned long flags) { return new(zeromem) vio_vcsa(user_cp,flags); }
+static vio_interface* query_interface(System& s,const std::string& user_cp,unsigned long flags) { return new(zeromem) vio_vcsa(s,user_cp,flags); }
 
 extern const vio_interface_info vio_vcsa_info = {
     "/dev/vcsa video interface",

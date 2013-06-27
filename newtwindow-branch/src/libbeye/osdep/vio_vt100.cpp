@@ -60,7 +60,7 @@ namespace	usr {
 
     class vio_vt100 : public vio_interface {
 	public:
-	    vio_vt100(const std::string& user_cp,unsigned long flags);
+	    vio_vt100(System& s,const std::string& user_cp,unsigned long flags);
 	    virtual ~vio_vt100();
 
 	    virtual void		set_transparent_color(uint8_t);
@@ -106,6 +106,8 @@ namespace	usr {
 	    unsigned			tvioNumColors;
 
 	    std::string			screen_cp;
+
+	    System&			sys;
 
 	    static const unsigned	VMAX_X=__TVIO_MAXSCREENWIDTH;
 	    static const unsigned	VMAX_Y=0x400;
@@ -308,12 +310,13 @@ void vio_vt100::write_buffer(tAbsCoord x, tAbsCoord y, const tvideo_buffer& buff
     if (pb != cache_pb) delete pb;
 }
 
-vio_vt100::vio_vt100(const std::string& user_cp,unsigned long flags)
-	    :vio_interface(user_cp,flags)
+vio_vt100::vio_vt100(System& s,const std::string& user_cp,unsigned long flags)
+	    :vio_interface(s,user_cp,flags)
 	    ,cursor_status(__TVIO_CUR_NORM)
 	    ,tvioWidth(80)
 	    ,tvioHeight(25)
 	    ,tvioNumColors(16)
+	    ,sys(s)
 {
     size_t i;
     const char *t = getenv("TERM");
@@ -405,7 +408,7 @@ tAbsCoord vio_vt100::get_width() const { return tvioWidth; }
 tAbsCoord vio_vt100::get_height() const { return tvioHeight; }
 unsigned vio_vt100::get_num_colors() const { return tvioNumColors; }
 
-static vio_interface* query_interface(const std::string& user_cp,unsigned long flags) { return new(zeromem) vio_vt100(user_cp,flags); }
+static vio_interface* query_interface(System& s,const std::string& user_cp,unsigned long flags) { return new(zeromem) vio_vt100(s,user_cp,flags); }
 
 extern const vio_interface_info vio_vt100_info = {
     "vt100 video interface",

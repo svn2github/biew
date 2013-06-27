@@ -68,7 +68,7 @@ TConsole* __FASTCALL__ twInit(System& sys,const std::string& user_cp, unsigned l
     TObject::msystem=&sys;
     nls_cp=!user_cp.empty()?user_cp.c_str():"IBM866";
     try {
-	TObject::tconsole = new(zeromem) TConsole(nls_cp,vio_flags);
+	TObject::tconsole = new(zeromem) TConsole(sys,nls_cp,vio_flags);
     } catch(const missing_driver_exception& e) {
 	throw std::runtime_error("Can't find working vio driver");
     }

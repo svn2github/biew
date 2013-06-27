@@ -44,6 +44,7 @@ static const char rcs_id[] = "$Id: keyboard.c,v 1.9 2009/09/20 13:43:37 nickols_
 #include <unistd.h>
 #include <sys/time.h>
 
+#include "system.h"
 #include "input_interface.h"
 #include "libbeye/kbd_code.h"
 #include "unix/console.h"
@@ -82,7 +83,7 @@ namespace	usr {
 
     class input_unix : public input_interface {
 	public:
-	    input_unix(const std::string& user_cp);
+	    input_unix(System&,const std::string& user_cp);
 	    virtual ~input_unix();
 
 	    virtual int			get_key( unsigned long flg);
@@ -126,6 +127,8 @@ namespace	usr {
 	    int				shift_status;		/**< status of shift keys */
 #endif
 	    bool			mouse_status;	/**< mouse state */
+
+	    System&			sys;
 
 	    static const unsigned	SEQ_LEN=10;	/**< max sequense length */
 	    static const unsigned	SEQ_NUM=9;	/**< number of sequence categories */
@@ -428,7 +431,7 @@ int input_unix::get_key(unsigned long flg)
 
     if (test_key(flg) == KE_MOUSE) return KE_MOUSE;
 
-    while (!keybuf.current) { __OsYield(); ReadNextEvent(); }
+    while (!keybuf.current) { sys.yield_timeslice(); ReadNextEvent(); }
     key = keybuf.pool[--keybuf.current];
     if (!(key == KE_MOUSE || key == KE_SHIFTKEYS)) {
 	if ((shift_status & KS_ALT) == KS_ALT)		s |= ADD_ALT;
@@ -491,8 +494,8 @@ int input_unix::ms_get_btns()
 }
 
 
-input_unix::input_unix(const std::string& user_cp)
-		:input_interface(user_cp)
+input_unix::input_unix(System& s,const std::string& user_cp)
+		:input_interface(s,user_cp)
 		,rawkb_size(sizeof(char))
 		,rawkb_method(1)
 #ifdef HAVE_MOUSE
@@ -500,6 +503,7 @@ input_unix::input_unix(const std::string& user_cp)
 #else
 		,mouse_status(false)
 #endif
+		,sys(s)
 {
     struct termios tattr;
 
@@ -565,7 +569,7 @@ input_unix::~input_unix()
 #endif
 }
 
-static input_interface* query_interface(const std::string& user_cp) { return new(zeromem) input_unix(user_cp); }
+static input_interface* query_interface(System& s,const std::string& user_cp) { return new(zeromem) input_unix(s,user_cp); }
 
 extern const input_interface_info input_unix_info = {
     "unix input",

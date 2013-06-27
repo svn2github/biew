@@ -3,9 +3,10 @@
 #include "libbeye/libbeye.h"
 
 namespace	usr {
+    class System;
     class input_interface : public Opaque {
 	public:
-	    input_interface(const std::string&) {}
+	    input_interface(System&,const std::string&) {}
 	    virtual ~input_interface() {}
 
 	    virtual int			get_key( unsigned long flg) = 0;
@@ -21,7 +22,7 @@ namespace	usr {
 
     struct input_interface_info {
 	const char*	name;
-	input_interface* (*query_interface)(const std::string& user_cp);
+	input_interface* (*query_interface)(System& s,const std::string& user_cp);
     };
 } // namespace	usr
 #endif

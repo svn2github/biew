@@ -3,6 +3,7 @@
 #include "libbeye/libbeye.h"
 
 namespace	usr {
+    class System;
     class tvideo_buffer;
     class vio_interface;
     struct vio_interface_info;
@@ -17,7 +18,7 @@ namespace	usr {
 
     class TConsole {
 	public:
-	    TConsole(const char *user_cp, unsigned long vio_flags);
+	    TConsole(System& s,const std::string& user_cp, unsigned long vio_flags);
 	    virtual ~TConsole();
 
 		   /** Receives next keyboard event or note about mouse event.
@@ -153,6 +154,7 @@ namespace	usr {
 	    const input_interface_info*	input_info;
 	    vio_interface*		tvio;
 	    input_interface*		input;
+	    System&			sys;
     };
 } // namespace	usr
 #endif

@@ -49,6 +49,7 @@ static const char rcs_id[] = "$Id: keyboard.c,v 1.14 2009/09/24 09:12:13 nickols
 #include "input_interface.h"
 #include "kbd_code.h"
 #include "linux/console.h"
+#include "system.h"
 
 #ifdef HAVE_MOUSE
 #include <gpm.h>
@@ -71,7 +72,7 @@ namespace	usr {
     };
     class input_linux : public input_interface {
 	public:
-	    input_linux(const std::string& user_cp);
+	    input_linux(System& s,const std::string& user_cp);
 	    virtual ~input_linux();
 
 	    virtual int			get_key( unsigned long flg);
@@ -108,7 +109,6 @@ namespace	usr {
 
 	    kbd_fifo		keybuf;
 
-	    any_t*		nls_handle;
 #ifdef HAVE_MOUSE
 	    int			gpmhandle;
 #endif
@@ -119,6 +119,8 @@ namespace	usr {
 	    int			rawkb_escape;
 
 	    mevent		mouse;
+
+	    System&		sys;
 
 	    static const unsigned	scancode_table[KSCANSIZE];
 	    static const unsigned	scancode_caps_table[KSCANSIZE];
@@ -288,7 +290,7 @@ void input_linux::ReadNextEvent()
 	if (vt.v_active != newvt) {
 	    if (ioctl(in_fd, VT_ACTIVATE, newvt) != 0) goto c_end;
 	    console_restart = 0;
-	    while (!console_restart) __OsYield();
+	    while (!console_restart) sys.yield_timeslice();
 	}
     }
 c_end:
@@ -324,7 +326,7 @@ int input_linux::get_key(unsigned long flg)
     if (ms_get_btns() && flg == KBD_NONSTOP_ON_MOUSE_PRESS) return KE_MOUSE;
 
     while (!keybuf.current) {
-	__OsYield();
+	sys.yield_timeslice();
 #ifdef	HAVE_MOUSE
 	if (gpmhandle) ReadNextEvent();
 #endif
@@ -386,9 +388,10 @@ int input_linux::raw_info(char *head, char *text)
     return rawkb_escape?0:1;
 }
 
-input_linux::input_linux(const std::string& user_cp)
-	    :input_interface(user_cp)
+input_linux::input_linux(System& s,const std::string& user_cp)
+	    :input_interface(s,user_cp)
 	    ,mouse_status(true)
+	    ,sys(s)
 {
     signal(SIGIO, &input_linux::dummy_handler);
     in_fd = ::open(ttyname(STDIN_FILENO), O_RDONLY);
@@ -439,9 +442,6 @@ input_linux::input_linux(const std::string& user_cp)
 
 input_linux::~input_linux()
 {
-#ifdef HAVE_ICONV
-    nls_term(nls_handle);
-#endif
     ::ioctl(in_fd, KDSKBMODE, K_XLATE);
     tcsetattr(in_fd, TCSANOW, &sattr);
     ::close(in_fd);
@@ -450,7 +450,7 @@ input_linux::~input_linux()
 #endif
 }
 
-static input_interface* query_interface(const std::string& user_cp) { return new(zeromem) input_linux(user_cp); }
+static input_interface* query_interface(System& s,const std::string& user_cp) { return new(zeromem) input_linux(s,user_cp); }
 
 extern const input_interface_info input_linux_info = {
     "linux input",
