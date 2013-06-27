@@ -759,7 +759,7 @@ DisasmRet DisMode::disassembler(__filesize_t ulShift,MBuffer buffer,unsigned flg
 unsigned DisMode::get_symbol_size() const { return 1; }
 unsigned DisMode::get_max_symbol_size() const { return activeDisasm->max_insn_len(); }
 
-Plugin::search_result DisMode::search_engine(TWindow *pwnd, __filesize_t start,
+Plugin::search_result DisMode::search_engine(PercentWindow& pwnd, __filesize_t start,
 					Search::search_flags flg, bool is_continue)
 {
     Plugin::search_result rc = { 0, 0 };
@@ -788,7 +788,7 @@ Plugin::search_result DisMode::search_engine(TWindow *pwnd, __filesize_t start,
     while(1) {
 	proc = (unsigned)((cfpos*pmult)/tsize);
 	if(proc != pproc) {
-	    if(!ShowPercentInWnd(pwnd,pproc=proc))  break;
+	    if(!pwnd.show_percents(pproc=proc))  break;
 	}
 	if(flg & Search::Reverse) {
 	    prepare_asm_lines(KE_UPARROW, cfpos);

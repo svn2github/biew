@@ -24,6 +24,7 @@ namespace	usr {
 
     typedef unsigned tRelCoord;
     class TWindow;
+    class PercentWindow;
     class BeyeContext;
     class Ini_Profile;
     class Search : public Opaque {
@@ -136,7 +137,7 @@ namespace	usr {
 	    __filesize_t	FoundTextEnd;/**< Indicates end of found text */
 	    bool		__found;
 
-	    TWindow*		prcntswnd;
+	    PercentWindow*	prcntswnd;
 	    BeyeContext&	bctx;
     };
     inline Search::search_flags operator~(Search::search_flags a) { return static_cast<Search::search_flags>(~static_cast<unsigned>(a)); }

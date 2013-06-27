@@ -108,11 +108,19 @@ enum {
 				     const std::string& prompt);
     bool        __FASTCALL__ GetInsDelBlkDlg(const std::string& title,__filesize_t *start,
 					__fileoff_t *size);
-    TWindow *    __FASTCALL__ PercentWnd(const std::string& text,const std::string& title);
+    class PercentWindow : public TWindow {
+	public:
+	    PercentWindow();
+	    virtual ~PercentWindow();
 
-			   /** return true - if can continue
-				     false -  if user want terminate process */
-    bool        __FASTCALL__ ShowPercentInWnd(TWindow *prcntwnd,unsigned n);
+	    virtual bool	show_percents(unsigned percents);
+	private:
+	    time_t		_time;
+	    time_t		prev_time;
+	    unsigned	_percents;
+	    bool		is_first;
+    };
+    PercentWindow*   __FASTCALL__ PercentWnd(const std::string& text,const std::string& title);
 
     int          __FASTCALL__ GetEvent(void (*)(),int (*)(),TWindow *);
     void         __FASTCALL__ PostEvent(int kbdcode);

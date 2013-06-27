@@ -43,16 +43,6 @@ TWindow::TWindow(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height
 	:TWidget(x1,y1,_width,_height,_flags)
 	,saved(_width*_height)
 {
-    TWidget::create(x1,y1,_width,_height,_flags);
-}
-
-TWindow::TWindow(tAbsCoord x1_, tAbsCoord y1_,
-		 tAbsCoord _width, tAbsCoord _height,
-		 twc_flag _flags, const std::string& classname)
-	:TWidget(x1_,y1_,_width,_height,_flags,classname)
-	,saved(_width*_height)
-{
-    TWidget::create(x1_, y1_, _width, _height, _flags);
 }
 
 TWindow::~TWindow()

@@ -197,19 +197,6 @@ namespace	usr {
 		    **/
 	    TWidget(tAbsCoord x1_, tAbsCoord y1_, tAbsCoord width, tAbsCoord height, twc_flag flags=Flag_None);
 
-		   /** Creates extended window
-		     * @param x1_,y1_      indicate upper-left cornen of window
-		     * @param width,height indicate width and height of window
-		     * @param flags        indicates TWS_* flags
-		     * @param classname    indicates name of class
-		     * @return             handle of window
-		     * @note               name of class must be registered before
-					   calling of this function
-		    **/
-	    TWidget(tAbsCoord x1_, tAbsCoord y1_,
-			tAbsCoord width, tAbsCoord height,
-			twc_flag flags, const std::string& classname);
-
 		   /** Destroys given window
 		     * @param              handle of window
 		     * @return             none
@@ -618,7 +605,6 @@ namespace	usr {
 	    virtual int			direct_write(tRelCoord x,tRelCoord y,const any_t* buff,unsigned len);
 	    virtual int			direct_write(tRelCoord x,tRelCoord y,const any_t* chars,const ColorAttr* attrs,unsigned len);
 
-	    void			create(tAbsCoord x1_, tAbsCoord y1_, tAbsCoord width, tAbsCoord height, twc_flag flags);
 	    virtual void		updatescreencharfrombuff(tRelCoord x,tRelCoord y,const tvideo_buffer& buff,tvideo_buffer *accel) const;
 	    tvideo_buffer		get_surface() const { return surface; }
 	private:

@@ -275,109 +275,71 @@ TWindow *__FASTCALL__ PleaseWaitWnd()
    return w;
 }
 
-struct percent_data
-{
-  time_t   _time;
-  time_t   prev_time;
-  unsigned _percents;
-  bool    is_first;
-};
 
-static long PercentWndCallBack(TObject *it,unsigned event, unsigned long param,const any_t*data)
+PercentWindow::PercentWindow()
+	    :TWindow(1,1,53,6,TWindow::Flag_Has_Frame | TWindow::Flag_NLS)
 {
-  struct percent_data *my_data;
-  UNUSED(param);
-  UNUSED(data);
-  switch(event)
-  {
-    case WM_CREATE:
-		     if((my_data=new percent_data) != NULL)
-		     {
-			it->set_user_data(my_data);
-		     }
-		     break;
-    case WM_DESTROY:
-		     my_data = (percent_data*)it->get_user_data();
-		     if(my_data) delete my_data;
-		     break;
-     default: break;
-  }
-  return 0L;
+    set_frame(TWindow::UP3D_FRAME,dialog_cset.main);
+    draw_frame(1,2,52,4,TWindow::DN3D_FRAME,dialog_cset.main);
+
+    time_t sttime;
+    time(&sttime);
+    _time = prev_time = sttime;
+    _percents = 0;
+    is_first = true;
 }
 
-TWindow *__FASTCALL__ PercentWnd(const std::string& text,const std::string& title)
+PercentWindow::~PercentWindow() {}
+
+bool PercentWindow::show_percents(unsigned percents)
 {
-  TWindow *ret;
-  static time_t sttime;
-  struct percent_data* my_data;
-  twcRegisterClass("PERCENT_WND", __CS_ORDINAL, PercentWndCallBack);
-  ret = new(zeromem) TWindow(1,1,53,6,TWindow::Flag_Has_Frame | TWindow::Flag_NLS,"PERCENT_WND");
-  ret->into_center();
-  ret->set_color(dialog_cset.main);
-  ret->set_frame(TWindow::UP3D_FRAME,dialog_cset.main);
-  ret->set_title(title,TWindow::TMode_Center,dialog_cset.title);
-  ret->set_footer(" [ Ctrl-Break ] - Abort ",TWindow::TMode_Right,dialog_cset.footer);
-  ret->clear();
-  ret->goto_xy(1,1); ret->puts(text);
-  ret->draw_frame(1,2,52,4,TWindow::DN3D_FRAME,dialog_cset.main);
-  ret->show();
-  time(&sttime);
-  my_data = (percent_data*)ret->get_user_data();
-  if(my_data)
-  {
-     my_data->_time = my_data->prev_time = sttime;
-     my_data->_percents = 0;
-     my_data->is_first = true;
-  }
-  return ret;
+    unsigned cells,remaind, prev_prcnt = 0;
+    time_t sttime =0,curtime,deltat;
+    struct tm* tm;
+    char outb[50];
+    bool ret;
+    prev_prcnt = _percents;
+    sttime = _time;
+
+    if(percents != prev_prcnt || is_first) {
+	if(percents > 100) percents = 100;
+	cells = percents/2;
+	remaind = percents%2;
+	memset(outb,TWC_FL_BLK,cells);
+	if(remaind) outb[cells++] = TWC_LF_HBLK;
+	if(cells < sizeof(outb)) memset(&outb[cells],TWC_DEF_FILLER,sizeof(outb)-cells);
+	write(2,3,(const uint8_t*)outb,sizeof(outb));
+    }
+    time(&curtime);
+    if(prev_time != curtime || is_first) {
+	deltat = curtime - sttime;
+	tm = gmtime(&deltat);
+	strftime(outb,sizeof(outb),"%X",tm);
+	goto_xy(1,5);
+	puts("Elapsed time: ");
+	puts(outb);
+    }
+    _percents = percents;
+    is_first = false;
+    prev_time = curtime;
+
+    ret = !IsKbdTerminate();
+    CleanKbdTermSig();
+    return ret;
 }
 
-bool __FASTCALL__ ShowPercentInWnd(TWindow *pw,unsigned percents)
+PercentWindow* __FASTCALL__ PercentWnd(const std::string& text,const std::string& title)
 {
-  unsigned cells,remaind, prev_prcnt = 0;
-  time_t sttime =0,curtime,deltat, prev_time = 0;
-  struct tm *tm;
-  struct percent_data* my_data;
-  bool is_first = true;
-  char outb[50];
-  bool ret;
-  my_data = (percent_data*)pw->get_user_data();
-  if(my_data)
-  {
-    prev_prcnt = my_data->_percents;
-    sttime = my_data->_time;
-    prev_time = my_data->prev_time;
-    is_first = my_data->is_first;
-  }
-  if(percents != prev_prcnt || is_first)
-  {
-    if(percents > 100) percents = 100;
-    cells = percents/2;
-    remaind = percents%2;
-    memset(outb,TWC_FL_BLK,cells);
-    if(remaind) outb[cells++] = TWC_LF_HBLK;
-    if(cells < sizeof(outb)) memset(&outb[cells],TWC_DEF_FILLER,sizeof(outb)-cells);
-    pw->write(2,3,(const uint8_t*)outb,sizeof(outb));
-  }
-  time(&curtime);
-  if(prev_time != curtime || is_first)
-  {
-    deltat = curtime - sttime;
-    tm = gmtime(&deltat);
-    strftime(outb,sizeof(outb),"%X",tm);
-    pw->goto_xy(1,5);
-    pw->puts("Elapsed time: ");
-    pw->puts(outb);
-  }
-  if(my_data)
-  {
-    my_data->_percents = percents;
-    my_data->is_first = false;
-    my_data->prev_time = curtime;
-  }
-  ret = !IsKbdTerminate();
-  CleanKbdTermSig();
-  return ret;
+    PercentWindow* ret = new(zeromem) PercentWindow();
+    ret->into_center();
+    ret->set_color(dialog_cset.main);
+    ret->set_title(title,TWindow::TMode_Center,dialog_cset.title);
+    ret->set_footer(" [ Ctrl-Break ] - Abort ",TWindow::TMode_Right,dialog_cset.footer);
+    ret->clear();
+    ret->goto_xy(1,1); ret->puts(text);
+    ret->show();
+
+    return ret;
 }
 
 TWindow * __FASTCALL__ CrtDlgWndnls(const std::string& title,tAbsCoord width,tAbsCoord height )

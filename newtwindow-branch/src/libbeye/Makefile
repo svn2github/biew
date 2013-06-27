@@ -17,7 +17,7 @@ SRCS= bbio.cpp \
       mmfile.cpp \
       mp_malloc.cpp \
       tobject.cpp \
-      tw_class.cpp \
+      tobject_event.cpp \
       twidget.cpp \
       twindow.cpp
 

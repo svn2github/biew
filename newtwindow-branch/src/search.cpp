@@ -149,7 +149,7 @@ __filesize_t Search::lfind(const char *sfrom,
 	}
 	proc = (unsigned)((cpos*pmult)/tsize);
 	if(proc != pproc && !(flags & __LF_HIDEPRCNT)) {
-	    if(!ShowPercentInWnd(prcntswnd,pproc=proc))  break;
+	    if(!prcntswnd->show_percents(pproc=proc))  break;
 	}
 	if(sfrom) ::memcpy(nbuff,&sfrom[start],symb_size);
 	else {

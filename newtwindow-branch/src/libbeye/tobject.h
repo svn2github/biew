@@ -4,24 +4,14 @@
 #include "libbeye/libbeye.h"
 using namespace	usr;
 
+#include "tobject_event.h"
+
 namespace	usr {
     class System;
     class TConsole;
 
     /** Describes window-related coordinate type */
     typedef unsigned tRelCoord;
-
-    /* Below located list of window messages. Prefix WM_ was imported from
-	MSWindows SDK, but I hope it so understandable. */
-    enum {
-	WM_NULL		=0x0000, /**< Never to send */
-	WM_CREATE	=0x0001, /**< It sent when window is being created, has no parameters */
-	WM_DESTROY	=0x0002, /**< It sent when window is being destroyed, has no parameters*/
-	WM_SHOW		=0x0003, /**< It sent when window is being displayed, has no parameters*/
-	WM_TOPSHOW	=0x0004, /**< It sent when window is being displayed on top of all windows, has no parameters*/
-	WM_SHOWBENEATH	=0x0005, /**< It sent when window is being displayed beneath of other window, has handle of top window as event_data*/
-	WM_HIDE		=0x0006 /**< It sent when window is being hidded, has no parameters */
-    };
 
     enum {
 	TWIF_FORCEMONO   =0x00000001L, /**< forces monochrome mode of video output @see twInit */
@@ -67,19 +57,6 @@ namespace	usr {
 		    **/
 	    TObject(tAbsCoord x1_, tAbsCoord y1_, tAbsCoord width, tAbsCoord height, twc_flag flags=Flag_None);
 
-		   /** Creates extended window
-		     * @param x1_,y1_      indicate upper-left cornen of window
-		     * @param width,height indicate width and height of window
-		     * @param flags        indicates TWS_* flags
-		     * @param classname    indicates name of class
-		     * @return             handle of window
-		     * @note               name of class must be registered before
-					   calling of this function
-		    **/
-	    TObject(tAbsCoord x1_, tAbsCoord y1_,
-			tAbsCoord width, tAbsCoord height,
-			twc_flag flags, const std::string& classname);
-
 		   /** Destroys given window
 		     * @param              handle of window
 		     * @return             none
@@ -87,13 +64,8 @@ namespace	usr {
 	    virtual ~TObject();
 
 
-		   /** Calls window function with given arguments
-		     * @return                function answer
-		     * @param event           one of WM_* commands
-		     * @param event_param     command related parameter
-		     * @param event_data      command related data
-		    **/
-	    virtual long		send_message(unsigned event,unsigned long event_param,const any_t*event_data);
+		   /** Accepts and parsers event **/
+	    virtual void		accept_event(const to_event& evt);
 
 		   /** Hides given window
 		     * @param win          handle of window
@@ -209,23 +181,6 @@ namespace	usr {
 		     *                     the screen.
 		    **/
 	    virtual void		refresh_full();
-
-		   /** Returns pointer to the user data that stored in window.
-		     * @param win          handle of window.
-		     * @return             pointer to user data
-		     * @note               If no user data previously stored
-		     *                     in window then NULL is returned.
-		    **/
-	    virtual any_t*		get_user_data() const __PURE_FUNC__;
-
-		   /** Saves pointer to the user data in window.
-		     * @param win          handle of window.
-		     * @param data         pointer to the user data to be stored.
-		     * @return             pointer to user data that previously stored in window
-		     * @note               Pointer to previously stored user
-		     *                     data is overwrited.
-		    **/
-	    virtual any_t*		set_user_data(any_t*data);
 
 		   /** Returns screen position of window.
 		     * @param win          handle of window.
@@ -351,8 +306,6 @@ namespace	usr {
 
 	    static unsigned long twin_flags;
 	protected:
-	    void		create(tAbsCoord x1_, tAbsCoord y1_, tAbsCoord width, tAbsCoord height, twc_flag flags);
-
 	    TObject*		__prevwin();
 	    TObject*		__find_over(tAbsCoord x,tAbsCoord y) const __PURE_FUNC__;
 	    static TObject*	__findcursorablewin() __PURE_FUNC__;
@@ -385,9 +338,6 @@ namespace	usr {
 	    inline void		__atwin(TObject* prev) { if(!prev) __athead(); else { next = prev->next; prev->next = this; }}
 
 	    TObject*		next;        /**< pointer to next window in list */
-	    any_t*		usrData;     /**< user data pointer */
-	    any_t*		method;      /**< Class callback */
-	    unsigned		class_flags; /**< Class flags */
 
 	    static TObject*	head;
 	    static TObject*	cursorwin;
@@ -409,8 +359,6 @@ namespace	usr {
     inline TObject::twi_flag operator&=(TObject::twi_flag& a, TObject::twi_flag b) { return (a=static_cast<TObject::twi_flag>(static_cast<unsigned>(a)&static_cast<unsigned>(b))); }
     inline TObject::twi_flag operator^=(TObject::twi_flag& a, TObject::twi_flag b) { return (a=static_cast<TObject::twi_flag>(static_cast<unsigned>(a)^static_cast<unsigned>(b))); }
 } // namespace	usr
-#include "libbeye/tw_class.h"
-
 #endif
 
 

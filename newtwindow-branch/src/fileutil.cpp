@@ -323,7 +323,7 @@ bool FStore::run()
 	endpos = ff_startpos + ff_len;
 	endpos = endpos > bctx.flength() ? bctx.flength() : endpos;
 	if(endpos > ff_startpos) {
-	    TWindow *progress_wnd;
+	    PercentWindow* progress_wnd;
 	    unsigned prcnt_counter,oprcnt_counter;
 	    cpos = bctx.tell();
 	    progress_wnd = PercentWnd("Saving ..."," Save block to file ");
@@ -363,7 +363,7 @@ bool FStore::run()
 		    prcnt_counter = (unsigned)((pwsize*100)/awsize);
 		    if(prcnt_counter != oprcnt_counter) {
 			oprcnt_counter = prcnt_counter;
-			if(!ShowPercentInWnd(progress_wnd,prcnt_counter)) break;
+			if(!progress_wnd->show_percents(prcnt_counter)) break;
 		    }
 		}
 	    } else { /** Write in disassembler mode */
@@ -562,7 +562,7 @@ bool FStore::run()
 		    prcnt_counter = (unsigned)((pwsize*100)/awsize);
 		    if(prcnt_counter != oprcnt_counter) {
 			oprcnt_counter = prcnt_counter;
-			if(!ShowPercentInWnd(progress_wnd,prcnt_counter)) break;
+			if(!progress_wnd->show_percents(prcnt_counter)) break;
 		    }
 		}
 		dis_exit:

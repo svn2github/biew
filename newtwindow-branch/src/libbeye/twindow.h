@@ -39,19 +39,6 @@ namespace	usr {
 		    **/
 	    TWindow(tAbsCoord x1_, tAbsCoord y1_, tAbsCoord width, tAbsCoord height, twc_flag flags=Flag_None);
 
-		   /** Creates extended window
-		     * @param x1_,y1_      indicate upper-left cornen of window
-		     * @param width,height indicate width and height of window
-		     * @param flags        indicates TWS_* flags
-		     * @param classname    indicates name of class
-		     * @return             handle of window
-		     * @note               name of class must be registered before
-					   calling of this function
-		    **/
-	    TWindow(tAbsCoord x1_, tAbsCoord y1_,
-			tAbsCoord width, tAbsCoord height,
-			twc_flag flags, const std::string& classname);
-
 		   /** Destroys given window
 		     * @param              handle of window
 		     * @return             none

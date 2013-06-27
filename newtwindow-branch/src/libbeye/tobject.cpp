@@ -85,7 +85,6 @@ TConsole* __FASTCALL__ twInit(System& sys,const std::string& user_cp, unsigned l
 void __FASTCALL__ twDestroy()
 {
   TObject::set_cursor_type(TObject::Cursor_Normal);
-  twcDestroyClassSet();
   delete TObject::tconsole;
 }
 
@@ -149,7 +148,7 @@ TObject* TObject::__at_point(TObject* iter,tAbsCoord x,tAbsCoord y) {
   return iter;
 }
 
-void TObject::create(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, twc_flag _flags)
+TObject::TObject(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, twc_flag _flags)
 {
     wwidth = _width;
     wheight = _height;
@@ -165,30 +164,13 @@ void TObject::create(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _he
 
     cur_x = cur_y = 0;
     set_focus();
-}
 
-TObject::TObject(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, twc_flag _flags)
-{
-    create(x1,y1,_width,_height,_flags);
-}
-
-TObject::TObject(tAbsCoord x1_, tAbsCoord y1_,
-		 tAbsCoord _width, tAbsCoord _height,
-		 twc_flag _flags, const std::string& classname)
-{
-    create(x1_, y1_, _width, _height, _flags);
-    const TwClass* cls;
-    cls = twcFindClass(classname);
-    if(cls) {
-	method = reinterpret_cast<any_t*>(cls->method);
-	class_flags = cls->flags;
-    }
-    send_message(WM_CREATE,0L,NULL);
+    accept_event(to_event(to_event::Create));
 }
 
 TObject::~TObject()
 {
-    send_message(WM_DESTROY,0L,NULL);
+    accept_event(to_event(to_event::Destroy));
     hide();
 
     __unlistwin();
@@ -341,7 +323,6 @@ void TObject::goto_xy(tRelCoord x,tRelCoord y)
 
 void TObject::show()
 {
-    send_message(WM_SHOW,0L,NULL);
     if(!(iflags & TObject::Visible) == TObject::Visible) {
 	iflags |= TObject::Visible;
 	__unlistwin();
@@ -351,11 +332,11 @@ void TObject::show()
 	}
 	paint_cursor();
     }
+    accept_event(to_event(to_event::Show));
 }
 
 void TObject::show_on_top()
 {
-    send_message(WM_TOPSHOW,0L,NULL);
     if((iflags & TObject::Visible) == TObject::Visible) hide();
     iflags |= TObject::Visible;
     __unlistwin();
@@ -364,22 +345,23 @@ void TObject::show_on_top()
 	cursorwin = this;
     }
     paint_cursor();
+    accept_event(to_event(to_event::Top_Show));
 }
 
 void TObject::show_beneath(TObject& prev)
 {
-    send_message(WM_SHOWBENEATH,0L,&prev);
     if((iflags & TObject::Visible) == TObject::Visible) hide();
     iflags |= TObject::Visible;
     __unlistwin();
     __atwin(&prev);
+    accept_event(to_event(to_event::Show_Beneath));
 }
 
 void TObject::hide()
 {
-    send_message(WM_HIDE,0L,NULL);
     if(cursorwin == this) set_cursor_type(Cursor_Off);
     iflags &= ~TObject::Visible;
+    accept_event(to_event(to_event::Hide));
 }
 
 void TObject::get_pos(tAbsCoord& x1,tAbsCoord& y1,tAbsCoord& x2,tAbsCoord& y2)
@@ -501,18 +483,8 @@ void TObject::refresh_full()
     paint_cursor();
 }
 
-any_t* TObject::get_user_data() const { return usrData; }
-
-any_t* TObject::set_user_data(any_t*data) {
-    any_t*ret;
-    ret = usrData;
-    usrData = data;
-    return ret;
-}
-
-long TObject::send_message(unsigned event,unsigned long event_param,const any_t*event_data)
+void TObject::accept_event(const to_event& event)
 {
-    if(method) return ((twClassFunc)(method))(this,event,event_param,event_data);
-    return 0L;
+    UNUSED(event);
 }
 } // namespace	usr

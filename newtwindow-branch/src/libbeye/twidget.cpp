@@ -133,10 +133,10 @@ const unsigned char TWidget::THICK_FRAME[8] = { TWC_FL_BLK, TWC_FL_BLK, TWC_FL_B
 const unsigned char TWidget::UP3D_FRAME[8] = { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 };
 const unsigned char TWidget::DN3D_FRAME[8] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 
-void TWidget::create(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, twc_flag _flags)
+TWidget::TWidget(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, twc_flag _flags)
+	:TObject(x1,y1,_width,_height,_flags)
+	,surface(_width*_height)
 {
-    TObject::create(x1,y1,_width,_height,_flags);
-
     ::memcpy(Frame,SINGLE_FRAME,8);
     surface.fill(tvideo_symbol(TWC_DEF_FILLER,0,text.system));
     text=__set_color(LightGray,Black);
@@ -145,22 +145,6 @@ void TWidget::create(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _he
     footer=__set_color(LightGray,Black);
 
     paint_internal();
-}
-
-TWidget::TWidget(tAbsCoord x1, tAbsCoord y1, tAbsCoord _width, tAbsCoord _height, twc_flag _flags)
-	:TObject(x1,y1,_width,_height,_flags)
-	,surface(_width*_height)
-{
-    TWidget::create(x1,y1,_width,_height,_flags);
-}
-
-TWidget::TWidget(tAbsCoord x1_, tAbsCoord y1_,
-		 tAbsCoord _width, tAbsCoord _height,
-		 twc_flag _flags, const std::string& classname)
-	:TObject(x1_,y1_,_width,_height,_flags,classname)
-	,surface(_width*_height)
-{
-    TWidget::create(x1_, y1_, _width, _height, _flags);
 }
 
 TWidget::~TWidget()

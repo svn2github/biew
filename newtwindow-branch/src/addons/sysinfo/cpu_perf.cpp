@@ -41,19 +41,22 @@ namespace	usr {
 	
 	    virtual void	run();
 	private:
-	    BeyeContext&	bctx;
+	    static void		paint_prcnt(int n_prcnt);
+
+	    static PercentWindow*	pwnd;
+	    BeyeContext&		bctx;
 	    std::vector<std::string>	cpuPointStrings(char* data,size_t data_size) const;
     };
 
-static TWindow*	pwnd;
+PercentWindow* CPUPerformance_Addon::pwnd=NULL;
 
 CPUPerformance_Addon::CPUPerformance_Addon(BeyeContext& bc):Addon(bc),bctx(bc) {}
 CPUPerformance_Addon::~CPUPerformance_Addon() {}
 
-static void paint_prcnt(int n_prcnt)
+void CPUPerformance_Addon::paint_prcnt(int n_prcnt)
 {
-  if(n_prcnt > 100) n_prcnt = 100;
-  ShowPercentInWnd(pwnd,n_prcnt);
+    if(n_prcnt > 100) n_prcnt = 100;
+    pwnd->show_percents(n_prcnt);
 }
 
 std::vector<std::string> CPUPerformance_Addon::cpuPointStrings(char* data,size_t data_size) const
