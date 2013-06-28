@@ -1,7 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
 using namespace	usr;
-#include "libbeye/osdep/__os_dep.h"
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/win32/os_dep.c
@@ -149,4 +148,117 @@ char * __FASTCALL__ __get_home_dir(const char *progname)
    last = p1[strlen(p1)-1];
    if(!(last == '\\' || last == '/')) strcat(_home_dir_name,"\\");
    return _home_dir_name;
+}
+
+#if defined(__GNUC__) && !defined(_MMSYSTEM_H) && __MACHINE__!=x86_64
+/****************************************************************\
+* Cygnus GNU C/C++ v0.20b does not have 'mmsystem.h' header file *
+\****************************************************************/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** timer device capabilities data structure */
+typedef struct timecaps_tag {
+    UINT    wPeriodMin;     /**< minimum period supported  */
+    UINT    wPeriodMax;     /**< maximum period supported  */
+    } TIMECAPS;
+typedef TIMECAPS       *PTIMECAPS;
+typedef TIMECAPS       *LPTIMECAPS;
+
+UINT WINAPI timeGetDevCaps(TIMECAPS FAR* lpTimeCaps, UINT uSize);
+
+/** timer data types */
+typedef void (CALLBACK TIMECALLBACK) (UINT uTimerID,
+				      UINT uMessage,
+				      DWORD dwUser,
+				      DWORD dw1,
+				      DWORD dw2);
+
+typedef TIMECALLBACK FAR *LPTIMECALLBACK;
+
+/* flags for wFlags parameter of timeSetEvent() function */
+#define TIME_ONESHOT    0   /**< program timer for single event */
+#define TIME_PERIODIC   1   /**< program for continuous periodic event */
+
+extern UINT WINAPI timeSetEvent( UINT uDelay,
+				 UINT uResolution,
+				 LPTIMECALLBACK lpTimeProc,
+				 DWORD dwUser,
+				 UINT fuEvent );
+
+extern UINT WINAPI timeKillEvent( UINT uTimerID );
+extern UINT WINAPI timeBeginPeriod(UINT uPeriod);
+extern UINT WINAPI timeEndPeriod(UINT uPeriod);
+
+#ifdef __cplusplus
+}
+#endif
+#endif
+
+static UINT uTimerID = 0;
+static UINT uPeriod = 0;
+static timer_callback *user_callback = NULL;
+
+static VOID CALLBACK my_callback( UINT _uTimerID, UINT uMessage, DWORD dwUser, DWORD dw1, DWORD dw2 )
+{
+  UNUSED(_uTimerID);
+  UNUSED(uMessage);
+  UNUSED(dwUser);
+  UNUSED(dw1);
+  UNUSED(dw2);
+  if(user_callback) (*user_callback)();
+}
+
+unsigned   __FASTCALL__ __OsSetTimerCallBack(unsigned ms,timer_callback *func)
+{
+  UINT cur_period;
+  TIMECAPS tc;
+   if(!uTimerID)
+   {
+     user_callback = func;
+     if(timeGetDevCaps(&tc,sizeof(TIMECAPS)) == 0)
+     {
+       cur_period = tc.wPeriodMin;
+       uPeriod = ms / cur_period;
+       if(uPeriod < ms) uPeriod += cur_period-1;
+       if(uPeriod > tc.wPeriodMax) uPeriod = tc.wPeriodMax-1;
+       if(timeBeginPeriod(uPeriod) == 0)
+       {
+	 uTimerID = timeSetEvent(uPeriod,0,my_callback,0L,TIME_PERIODIC);
+	 return uPeriod;
+       }
+     }
+   }
+   return 0;
+}
+			     /* Restore time callback function to original
+				state */
+void   __FASTCALL__ __OsRestoreTimer()
+{
+  if(uTimerID)
+  {
+    timeEndPeriod(uPeriod);
+    timeKillEvent(uTimerID);
+    uTimerID = 0;
+  }
+}
+
+bool win32_use_ansi;
+
+void __FASTCALL__ __nls_OemToOsdep(unsigned char *buff,unsigned len)
+{
+ if(win32_use_ansi)
+ {
+   OemToCharBuff((LPCSTR)buff,(LPSTR)buff,len);
+ }
+}
+
+void __FASTCALL__ __nls_OemToFs(unsigned char *buff,unsigned len)
+{
+}
+
+void __FASTCALL__ __nls_CmdlineToOem(unsigned char *buff,unsigned len)
+{
+   CharToOemBuff((LPCSTR)buff,(LPSTR)buff,len);
 }

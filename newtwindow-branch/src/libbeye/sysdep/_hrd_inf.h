@@ -17,12 +17,16 @@
 #ifndef __HRD_INF_H
 #define __HRD_INF_H 1
 
+namespace	usr {
+    class System;
+}
+using namespace	usr;
 		   /** Fills buffer with information about CPU in free form.
 		     * @return                none
 		     * @param buff            buffer to be filled
 		     * @param cbBuff          size of buffer
 		     * @param percents_callback pointer to the function that will be used to indicate execution progress
 		    **/
-extern void          __FillCPUInfo(char *buff,unsigned cbBuff,void (*percents_callback)(int));
+extern void          __FillCPUInfo(System& sys,char *buff,unsigned cbBuff,void (*percents_callback)(int));
 
 #endif

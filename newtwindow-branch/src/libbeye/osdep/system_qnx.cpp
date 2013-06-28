@@ -1,7 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
 using namespace	usr;
-#include "libbeye/osdep/__os_dep.h"
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/qnx/os_dep.c
@@ -155,5 +154,54 @@ void __FASTCALL__ __term_sys()
 {
 	if(t!=-1) timer_delete(t);
 	qnx_proxy_detach(proxy);
+}
+
+static timer_callback *user_func = NULL;
+static struct itimerval otimer;
+static void (*old_alrm)(int) = SIG_DFL;
+
+static void my_alarm_handler( int signo )
+{
+  if(user_func) (*user_func)();
+  UNUSED(signo);
+}
+
+unsigned  __FASTCALL__ __OsSetTimerCallBack(unsigned ms,timer_callback func)
+{
+   unsigned ret;
+   struct itimerval itimer;
+   user_func = func;
+   getitimer(ITIMER_REAL,&otimer);
+   old_alrm = signal(SIGALRM,my_alarm_handler);
+   signal(SIGALRM,my_alarm_handler);
+   itimer.it_interval.tv_sec = 0;
+   itimer.it_interval.tv_usec = ms*1000;
+   itimer.it_value.tv_sec = 0;
+   itimer.it_value.tv_usec = ms*1000;
+   setitimer(ITIMER_REAL,&itimer,NULL);
+   getitimer(ITIMER_REAL,&itimer);
+   ret = itimer.it_interval.tv_sec*1000 + itimer.it_interval.tv_usec/1000;
+   if(!ret) __OsRestoreTimer();
+   return ret;
+}
+
+			     /* Restore time callback function to original
+				state */
+void  __FASTCALL__ __OsRestoreTimer()
+{
+  signal(SIGALRM,old_alrm);
+  setitimer(ITIMER_REAL,&otimer,NULL);
+}
+
+void __FASTCALL__ __nls_OemToOsdep(unsigned char *buff,unsigned int len)
+{
+}
+
+void __FASTCALL__ __nls_OemToFs(unsigned char *buff,unsigned len)
+{
+}
+
+void __FASTCALL__ __nls_CmdlineToOem(unsigned char *buff,unsigned len)
+{
 }
 

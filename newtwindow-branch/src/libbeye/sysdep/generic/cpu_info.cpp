@@ -1,7 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
 using namespace	usr;
-#include "libbeye/osdep/__os_dep.h"
 /**
  * @namespace   libbeye
  * @file        libbeye/sysdep/generic/cpu_info.c
@@ -20,10 +19,12 @@ using namespace	usr;
  * @note        Development, fixes and improvements
 **/
 #include <stdio.h>
+#include "libbeye/osdep/system.h"
 
-void __FillCPUInfo(char *buff,unsigned cbBuff,void (*func)(int))
+void __FillCPUInfo(System& sys,char *buff,unsigned cbBuff,void (*func)(int))
 {
-  (*func)(100);
-  sprintf(buff,"\n\n\n\n\n\n    CPU information is not available in generic build\n");
-  buff[cbBuff-1] = '\0';
+    UNUSED(sys);
+    (*func)(100);
+    sprintf(buff,"\n\n\n\n\n\n    CPU information is not available in generic build\n");
+    buff[cbBuff-1] = '\0';
 }

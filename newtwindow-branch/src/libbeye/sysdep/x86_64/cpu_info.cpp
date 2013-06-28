@@ -1,7 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
 using namespace	usr;
-#include "libbeye/osdep/__os_dep.h"
 /**
  * @namespace   libbeye
  * @file        libbeye/sysdep/x86_64/cpu_info.c
@@ -27,6 +26,8 @@ using namespace	usr;
 **/
 #include <stdio.h>
 #include <string.h>
+
+#include "libbeye/osdep/system.h"
 
 #define CPU_CLONE     0x000F
 #define __HAVE_FPU    0x8000
@@ -116,20 +117,20 @@ static void  __FASTCALL__ __extended_name(char *buff)
       "eax","ebx","ecx","edx");
 }
 
-static unsigned long  __FASTCALL__ __cpuid_edx(unsigned long *__r_eax)
+static uint32_t  __FASTCALL__ __cpuid_edx(uint32_t* __r_eax)
 {
-  unsigned int p[4];
-  do_cpuid(*__r_eax,p);
-  *__r_eax=p[0];
-  return p[3];
+    uint32_t p[4];
+    do_cpuid(*__r_eax,p);
+    *__r_eax=p[0];
+    return p[3];
 }
 
-static unsigned long  __FASTCALL__ __cpuid_ebxecx(unsigned long *__r_eax)
+static uint32_t  __FASTCALL__ __cpuid_ebxecx(uint32_t* __r_eax)
 {
-  unsigned int p[4];
-  do_cpuid(*__r_eax,p);
-  *__r_eax=p[2];
-  return p[1];
+    uint32_t p[4];
+    do_cpuid(*__r_eax,p);
+    *__r_eax=p[2];
+    return p[1];
 }
 
 static unsigned  __FASTCALL__ __fpu_type()
@@ -350,11 +351,11 @@ static unsigned long  __FASTCALL__ __OPS_std(volatile unsigned *counter,char *ar
 
 static unsigned long  __FASTCALL__ __FOPS_nowait(volatile unsigned *counter,char *arr18bytes)
 {
-  register unsigned long retval,dummy;
-   retval=0;
-   while(*counter==0);
-   while(*counter!=0){
-   __asm __volatile(
+    unsigned long retval;
+    retval=0;
+    while(*counter==0);
+    while(*counter!=0){
+    __asm __volatile(
       "	fninit\n"
       "	fldt	8(%1)\n"
       "	fstpt	8(%1)\n"
@@ -447,15 +448,15 @@ static unsigned long  __FASTCALL__ __FOPS_nowait(volatile unsigned *counter,char
 
 static unsigned long  __FASTCALL__ __FOPS_w_wait(volatile unsigned *counter,char *arr14bytes)
 {
-  return __FOPS_nowait(counter,arr14bytes);
+    return __FOPS_nowait(counter,arr14bytes);
 }
 
-static unsigned long  __FASTCALL__ __MOPS_std(volatile unsigned *counter,char *arr)
+static unsigned long  __FASTCALL__ __MOPS_std(volatile unsigned *counter,char*)
 {
-  register unsigned long retval;
-   retval=0;
-   while(*counter==0);
-   while(*counter!=0){
+    unsigned long retval;
+    retval=0;
+    while(*counter==0);
+    while(*counter!=0){
     __asm __volatile(
 "movd	%0,%%mm0\n"
 "packssdw %%mm0,%%mm5 \n"
@@ -552,10 +553,10 @@ static unsigned long  __FASTCALL__ __MOPS_std(volatile unsigned *counter,char *a
 
 static unsigned long  __FASTCALL__ __SSEOPS_std(volatile unsigned *counter,char *arr)
 {
-  register unsigned long retval;
-   retval=0;
-   while(*counter==0);
-   while(*counter!=0){
+    unsigned long retval;
+    retval=0;
+    while(*counter==0);
+    while(*counter!=0){
     __asm __volatile(
 "movaps   (%0), %%xmm0 \n"
 "movhps   (%0),%%xmm1 \n"

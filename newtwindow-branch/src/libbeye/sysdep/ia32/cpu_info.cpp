@@ -1,7 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
 using namespace	usr;
-#include "libbeye/osdep/__os_dep.h"
 /**
  * @namespace   libbeye
  * @file        libbeye/sysdep/ia32/cpu_info.c
@@ -27,6 +26,8 @@ using namespace	usr;
 **/
 #include <stdio.h>
 #include <string.h>
+
+#include "libbeye/osdep/system.h"
 
 #define CPU_CLONE     0x000F
 #define __HAVE_FPU    0x8000
@@ -150,28 +151,28 @@ static void  __FASTCALL__ __extended_name(char *buff)
       "eax","ebx","ecx","edx");
 }
 
-static unsigned long  __FASTCALL__ __cpuid_edx(unsigned long *__r_eax)
+static uint32_t  __FASTCALL__ __cpuid_edx(uint32_t* __r_eax)
 {
-  register unsigned long r_eax,r_edx,r_ecx,r_ebx;
-  r_eax=*__r_eax;
-   __asm __volatile(
+    uint32_t r_eax,r_edx,r_ecx,r_ebx;
+    r_eax=*__r_eax;
+    __asm __volatile(
 	".short	0xA20F": /* cpuid */
 	"=a"(r_eax),"=d"(r_edx),"=b"(r_ebx),"=c"(r_ecx):
 	"0"(r_eax));
-  *__r_eax=r_eax;
-  return r_edx;
+    *__r_eax=r_eax;
+    return r_edx;
 }
 
-static unsigned long  __FASTCALL__ __cpuid_ebxecx(unsigned long *__r_eax)
+static uint32_t  __FASTCALL__ __cpuid_ebxecx(uint32_t* __r_eax)
 {
-  register unsigned long r_eax,r_edx,r_ecx,r_ebx;
-  r_eax=*__r_eax;
-   __asm __volatile(
+    uint32_t r_eax,r_edx,r_ecx,r_ebx;
+    r_eax=*__r_eax;
+    __asm __volatile(
 	".short	0xA20F": /* cpuid */
 	"=a"(r_eax),"=d"(r_edx),"=b"(r_ebx),"=c"(r_ecx):
 	"0"(r_eax));
-  *__r_eax=r_ecx;
-  return r_ebx;
+    *__r_eax=r_ecx;
+    return r_ebx;
 }
 
 static unsigned  __FASTCALL__ __fpu_type()
@@ -534,7 +535,7 @@ static unsigned long  __FASTCALL__ __FOPS_w_wait(volatile unsigned *counter,char
   return __FOPS_nowait(counter,arr14bytes);
 }
 
-static unsigned long  __FASTCALL__ __MOPS_std(volatile unsigned *counter,char *arr)
+static unsigned long  __FASTCALL__ __MOPS_std(volatile unsigned *counter,char*)
 {
   register unsigned long retval;
    retval=0;

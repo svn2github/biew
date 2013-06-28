@@ -21,6 +21,22 @@ namespace	usr {
 	    TConsole(System& s,const std::string& user_cp, unsigned long vio_flags);
 	    virtual ~TConsole();
 
+		   /** Gets ctrl-break signal
+		     * @return                true if occured; false - otherwise
+		     * @note                  Function does not differ soft and
+		     *                        hard c-break.
+		     * @warning               After getting signal by program
+					      semaphore is not being cleaned.
+		    **/
+	    bool		get_cbreak() const;
+		   /** Sets control-break signal
+		     * @return                none
+		     * @param state           indicates new state of
+					      control-break semaphore
+		     * @note                  Function does not differ soft and
+		     *                        hard c-break.
+		    **/
+	    void		set_cbreak( bool state ) const;
 		   /** Receives next keyboard event or note about mouse event.
 		     * @return                event. For detail see KE_* flag definitions in keycode.h file.
 		     * @param flg             Indicates how to react on mouse events. See KBD_* flag definitions.

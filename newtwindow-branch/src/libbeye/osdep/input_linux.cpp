@@ -1,7 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
 using namespace	usr;
-#include "libbeye/osdep/__os_dep.h"
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/linux/keyboard.c
@@ -75,6 +74,9 @@ namespace	usr {
 	    input_linux(System& s,const std::string& user_cp);
 	    virtual ~input_linux();
 
+	    virtual bool		get_cbreak() const;
+	    virtual void		set_cbreak( bool state );
+
 	    virtual int			get_key( unsigned long flg);
 	    virtual int			test_key( unsigned long flg );
 	    virtual int			get_shifts();
@@ -122,6 +124,8 @@ namespace	usr {
 
 	    System&		sys;
 
+	    bool			break_status;	/**< CTRL+BREAK flag */
+
 	    static const unsigned	scancode_table[KSCANSIZE];
 	    static const unsigned	scancode_caps_table[KSCANSIZE];
     };
@@ -159,6 +163,19 @@ const unsigned input_linux::scancode_caps_table[KSCANSIZE] =
     KE_PGUP,	'-',	KE_LEFTARROW,0,KE_RIGHTARROW,'+',KE_END,KE_DOWNARROW,
     KE_PGDN,	KE_INS,	KE_DEL,	KE_NONE
 };
+
+bool input_linux::get_cbreak() const
+{
+#ifndef	__ENABLE_SIGIO
+    ReadNextEvent();
+#endif
+    return break_status;
+}
+
+void input_linux::set_cbreak(bool state)
+{
+    break_status = state;
+}
 
 void input_linux::pushEvent(unsigned _event)
 {

@@ -1,7 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
 using namespace	usr;
-#include "libbeye/osdep/__os_dep.h"
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/unix/keyboard.c
@@ -86,6 +85,9 @@ namespace	usr {
 	    input_unix(System&,const std::string& user_cp);
 	    virtual ~input_unix();
 
+	    virtual bool		get_cbreak() const;
+	    virtual void		set_cbreak( bool state );
+
 	    virtual int			get_key( unsigned long flg);
 	    virtual int			test_key( unsigned long flg );
 	    virtual int			get_shifts();
@@ -129,6 +131,8 @@ namespace	usr {
 	    bool			mouse_status;	/**< mouse state */
 
 	    System&			sys;
+
+	    bool			break_status;	/**< CTRL+BREAK flag */
 
 	    static const unsigned	SEQ_LEN=10;	/**< max sequense length */
 	    static const unsigned	SEQ_NUM=9;	/**< number of sequence categories */
@@ -241,6 +245,19 @@ const eseq input_unix::S[SEQ_NUM] = {
 {'[', '1', '^', (p1seq *)seq7 },
 {'[', '2', '^', (p1seq *)seq8 }
 };
+
+bool input_unix::get_cbreak() const
+{
+#ifndef	__ENABLE_SIGIO
+    ReadNextEvent();
+#endif
+    return break_status;
+}
+
+void input_unix::set_cbreak(bool state)
+{
+    break_status = state;
+}
 
 /*
     mouse event

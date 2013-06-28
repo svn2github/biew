@@ -1,7 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
 using namespace	usr;
-#include "libbeye/osdep/__os_dep.h"
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/dos/os_dep.c
@@ -126,3 +125,47 @@ char * __FASTCALL__ __get_home_dir(const char *progname)
    return _home_dir_name;
 }
 
+static timer_callback *user_callback = NULL;
+
+static void timer_handler()
+{
+  if(user_callback) (*user_callback)();
+}
+
+unsigned __FASTCALL__ __OsSetTimerCallBack(unsigned ms,timer_callback func)
+{
+   _go32_dpmi_seginfo si;
+   si.pm_offset=(unsigned)&timer_handler;
+   user_callback = func;
+   _go32_dpmi_chain_protected_mode_interrupt_vector(0x1C,&si);
+   return 54;
+}
+
+			     /* Restore time callback function to original
+				state */
+void __FASTCALL__ __OsRestoreTimer()
+{
+  user_callback = NULL;
+}
+
+void __FASTCALL__ __nls_OemToOsdep(unsigned char *buff,unsigned len)
+{
+ UNUSED(buff);
+ UNUSED(len);
+ /* Nothing to do */
+}
+
+void __FASTCALL__ __nls_OemToFs(unsigned char *buff,unsigned len)
+{
+ UNUSED(buff);
+ UNUSED(len);
+ /* Nothing to do */
+}
+
+
+void __FASTCALL__ __nls_CmdlineToOem(unsigned char *buff,unsigned len)
+{
+ UNUSED(buff);
+ UNUSED(len);
+  /* Nothing to do */
+}

@@ -34,12 +34,12 @@ static std::queue<int> kb_queue;
 
 bool  __FASTCALL__ IsKbdTerminate()
 {
-  return beye_context().system().get_cbreak( );
+  return beye_context().tconsole().get_cbreak( );
 }
 
 void __FASTCALL__ CleanKbdTermSig()
 {
-  beye_context().system().set_cbreak(false);
+  beye_context().tconsole().set_cbreak(false);
 }
 
 static tAbsCoord mx,my;

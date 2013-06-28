@@ -9,6 +9,9 @@ namespace	usr {
 	    input_interface(System&,const std::string&) {}
 	    virtual ~input_interface() {}
 
+	    virtual bool		get_cbreak() const = 0;
+	    virtual void		set_cbreak( bool state ) = 0;
+
 	    virtual int			get_key( unsigned long flg) = 0;
 	    virtual int			test_key( unsigned long flg ) = 0;
 	    virtual int			get_shifts() = 0;

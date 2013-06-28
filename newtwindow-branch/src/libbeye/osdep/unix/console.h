@@ -114,11 +114,6 @@ typedef struct {
     int pressed;
 } mevent;
 
-extern int do_nls;
-extern bool break_status;
-
-extern void __FASTCALL__ ReadNextEvent();
-
 /*
     console plugin
 */
@@ -167,10 +162,11 @@ extern Console console;
 #define	__vioSetCursorType	console.SetCursorType
 */
 
+namespace	usr {
 extern any_t* nls_init(const char *to,const char *from);
 extern void  nls_term(any_t*);
 extern char *nls_get_screen_cp();
 extern char *nls_recode2screen_cp(any_t*,const char *srcb,unsigned* len);
 extern int   nls_test(any_t* ic,const char *srcb,unsigned* len);
-
+} // namespace	usr
 #endif	/* __CONSOLE_H */

@@ -1,7 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
 using namespace	usr;
-#include "libbeye/osdep/__os_dep.h"
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/unix/vio.c
@@ -345,8 +344,6 @@ vio_vt100::vio_vt100(System& s,const std::string& user_cp,unsigned long flags)
     console_flags = flags;
 
     if (!output_7) output_7 = TESTFLAG(console_flags, __TVIO_FLG_USE_7BIT);
-    do_nls = 1;
-
     vtmp = new char [VTMP_LEN];
     memset(vtmp, 0, VTMP_LEN);
 

@@ -4,7 +4,6 @@ using namespace	usr;
 
 #include "system.h"
 #include "tconsole.h"
-#include "__os_dep.h"
 #include "vio_interface.h"
 #include "input_interface.h"
 #include "libbeye/tvideo_buffer.h"
@@ -63,6 +62,9 @@ TConsole::~TConsole() {
     delete input;
     delete tvio;
 }
+
+bool TConsole::get_cbreak() const { return input->get_cbreak(); }
+void TConsole::set_cbreak( bool state ) const { input->set_cbreak(state); }
 
 int TConsole::kbd_get_key( unsigned long flg ) const { return input->get_key(flg); }
 int TConsole::kbd_test_key( unsigned long flg ) const { return input->test_key(flg); }

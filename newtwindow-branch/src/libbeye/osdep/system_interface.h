@@ -1,17 +1,13 @@
-#ifndef __SYSTEM_HPP_INCLUDED
-#define __SYSTEM_HPP_INCLUDED 1
+#ifndef SYSTEM_INTERFACE_HPP_INCLUDED
+#define SYSTEM_INTERFACE_HPP_INCLUDED 1
 #include "libbeye/libbeye.h"
-
-#include <string>
 
 namespace	usr {
     typedef void timer_callback(); /**< This is the code type used to represent user supplied function of timer callback */
-    class system_interface;
-    struct system_interface_info;
-    class System {
+    class system_interface : public Opaque {
 	public:
-	    System();
-		virtual ~System();
+	    system_interface() {}
+	    virtual ~system_interface() {}
 
 		   /** Realizes time slice between waiting of input events
 		     * @return                none
@@ -22,7 +18,7 @@ namespace	usr {
 		     *                        application must call SLEEP or it
 		     *                        analogs.
 		    **/
-	    void		yield_timeslice() const;
+	    virtual void		yield_timeslice() const = 0;
 
 		   /** Builds OS specific name of home directory
 		     * @return                Slash terminated path to home directory
@@ -31,7 +27,7 @@ namespace	usr {
 		     *                        argv[0] program argument.
 		     * @see                   __get_home_dir
 		    **/
-	    std::string		get_home_dir(const std::string& progname) const;
+	    virtual std::string		get_home_dir(const std::string& progname) = 0;
 
 		   /** Builds OS specific name of initializing file
 		     * @return                fully qualified name of .ini file
@@ -40,7 +36,7 @@ namespace	usr {
 		     *                        argv[0] program argument.
 		     * @see                   __get_rc_dir
 		    **/
-	    std::string		get_ini_name(const std::string& progname) const;
+	    virtual std::string		get_ini_name(const std::string& progname) = 0;
 
 		   /** Builds OS specific name of program resource directory
 		     * @return                Slash terminated path to program resource directory
@@ -49,7 +45,7 @@ namespace	usr {
 		     *                        argv[0] program argument.
 		     * @see                   __get_ini_name
 		    **/
-	    std::string		get_rc_dir(const std::string& progname) const;
+	    virtual std::string		get_rc_dir(const std::string& progname) = 0;
 
 		   /** Sets user defined function as timer callback with given time interval
 		     * @return                Real call back interval in milliseconds
@@ -57,18 +53,15 @@ namespace	usr {
 		     * @param func            indicates user supplied function to be used as timer callback
 		     * @see                   __OsRestoreTimer
 		    **/
-	    unsigned	set_timer_callback(unsigned ms,timer_callback *func) const;
+	    virtual unsigned		set_timer_callback(unsigned ms,timer_callback *func) = 0;
 
 		   /** Restores time callback function to original state
 		     * @return                none
 		     * @see                   __OsSetTimercallBack
 		    **/
-	    void		restore_timer() const;
+	    virtual void		restore_timer() const = 0;
 
 /* National Language Support */
-
-	   /** Checks whether the specified character is OEM pseudographical symbol */
-	    static inline bool NLS_IS_OEMPG(unsigned char ch) __CONST_FUNC__ { return ch >= 0xB0 && ch <= 0xDF; }
 
 		   /** Converts buffer from OEM codepage to currently used by OS.
 		     * @return                none
@@ -76,7 +69,7 @@ namespace	usr {
 		     * @param size            size of buffer in bytes
 		     * @see                   __nls_CmdlineToOem __nls_CmdlineToFs
 		    **/
-	    void		nls_oem2osdep(unsigned char *str,unsigned size) const;
+	    virtual void		nls_oem2osdep(unsigned char *str,unsigned size) const = 0;
 
 		   /** Converts buffer from codepage of command line to currently used by OS.
 		     * @return                none
@@ -87,7 +80,7 @@ namespace	usr {
 		     *                        line is differ.
 		     * @see                   __nls_OemToOsdep __nls_CmdlineToFs
 		    **/
-	    void		nls_cmdline2oem(unsigned char *str,unsigned size) const;
+	    virtual void		nls_cmdline2oem(unsigned char *str,unsigned size) const = 0;
 
 		   /** Converts buffer from OEM codepage to currently used by OS's file system.
 		     * @return                none
@@ -95,11 +88,12 @@ namespace	usr {
 		     * @param size            size of buffer in bytes
 		     * @see                   __nls_OemToOsdep __nls_CmdlineToOem
 		    **/
-	    void		nls_oem2fs(unsigned char *str,unsigned size) const;
-	private:
-	    system_interface*			sys;
-	    const system_interface_info*	sys_info;
+	    virtual void		nls_oem2fs(unsigned char *str,unsigned size) const = 0;
     };
-} // namespace 	usr
 
+    struct system_interface_info {
+	const char*		name;
+	system_interface*	(*query_interface)();
+    };
+} // namespace	usr
 #endif

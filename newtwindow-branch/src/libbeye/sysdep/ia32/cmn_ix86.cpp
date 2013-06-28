@@ -43,13 +43,12 @@ static unsigned long  __FASTCALL__ break_long(unsigned long lval,unsigned short 
  return lhi;
 }
 
-typedef unsigned long ( __FASTCALL__ *perf_func)(volatile unsigned *counter,char *ctrl_arr);
+typedef unsigned long ( __FASTCALL__ *perf_func)(volatile unsigned *counter,char *arr);
 
 static unsigned long  __FASTCALL__ __get_perf(perf_func fnc,unsigned n_insn)
 {
   unsigned long freq_count;
-  char c_arr[300], *ctrl_arr;
-  ctrl_arr = c_arr;
+  char c_arr[300], *ctrl_arr = c_arr;
   /* align pointer on 16-byte boundary */
 
   if((uint64_t)ctrl_arr & 15) ctrl_arr += 16-((uint64_t)ctrl_arr&15);
@@ -84,13 +83,13 @@ static const char *cpu_types[4] =
   "Reserved"
 };
 
-void __FillCPUInfo(char *buff,unsigned cbBuff,void (*percent_callback)(int))
+void __FillCPUInfo(System& sys,char *buff,unsigned cbBuff,void (*percent_callback)(int))
 {
   unsigned long freq_count,kilo_freq;
   const char *cpu_suffix, *cpu_suffix2;
   unsigned cpu_class,fpu_class;
   unsigned fulltype;
-  unsigned long int __eax,__ebx, __ecx, __edx, __highest_cpuid, __highest_excpuid;
+  uint32_t __eax,__ebx, __ecx, __edx, __highest_cpuid, __highest_excpuid;
   unsigned divisor = 1; /**< for 80286 processor. One nop instruction per CPU clock */
   unsigned char stepping = 0,model = 0,family = 0,type = 0;
   unsigned char extfamily = 0,extmodel = 0;
@@ -142,7 +141,7 @@ void __FillCPUInfo(char *buff,unsigned cbBuff,void (*percent_callback)(int))
      // more info at http://www.paradicesoftware.com/specs/cpuid/index.htm
   }
   percent_callback(1);
-  time_interval = __OsSetTimerCallBack(54,__timer_callback);
+  time_interval = sys.set_timer_callback(54,__timer_callback);
   if(time_interval)
   {
       timer_trigger = 1;
@@ -196,7 +195,7 @@ void __FillCPUInfo(char *buff,unsigned cbBuff,void (*percent_callback)(int))
 	  break;
 	case 6:
 	  {
-	    unsigned long __erx[4];
+	    uint32_t __erx[4];
 	    unsigned char L2_test;
 	    bool is_celeron = false,is_xeon = false;
 
@@ -302,8 +301,6 @@ void __FillCPUInfo(char *buff,unsigned cbBuff,void (*percent_callback)(int))
     }
     if(is_amd)
     {
-       int amd_family;
-
        __eax = 0x80000001;
        __edx = __cpuid_edx(&__eax);
        stepping = __eax          & 0x0000000FUL;
@@ -356,7 +353,6 @@ void __FillCPUInfo(char *buff,unsigned cbBuff,void (*percent_callback)(int))
 		 break;
 	  case 0xF:
 	    {
-	      int msb;
 	      unsigned _model;
 	      _model = model|(extmodel << 4);
 	      __eax = 1;
@@ -364,7 +360,6 @@ void __FillCPUInfo(char *buff,unsigned cbBuff,void (*percent_callback)(int))
 	      __ecx = 1;
 	      __ebx = __cpuid_ebxecx(&__ecx);
 	      brand_id = __ebx & 0x000000FFUL;
-	      msb = brand_id >> 3;
 	      if(is_htt) // HTT
 	      {
 		 __ecx = 0x80000001;
@@ -388,7 +383,6 @@ void __FillCPUInfo(char *buff,unsigned cbBuff,void (*percent_callback)(int))
 		  __ecx = 0x80000001;
 		  __ebx = __cpuid_ebxecx(&__ecx);
 		  brand_id = __ebx & 0x00000FFFUL;
-		  msb = brand_id >> 6;
 	      }
 	      switch(brand_id)
 	      {
@@ -777,7 +771,7 @@ void __FillCPUInfo(char *buff,unsigned cbBuff,void (*percent_callback)(int))
     /* determine cache info */
     if(__highest_cpuid > 1 && __highest_excpuid < 0x80000005LU)
     {
-	 unsigned long __erx[4];
+	uint32_t __erx[4];
 	 unsigned char cache_i;
 	 const char *ci;
 	 char l1i_info[20], l1d_info[20], l2_info[20], l3_info[20], tr_info[20];
@@ -929,7 +923,7 @@ void __FillCPUInfo(char *buff,unsigned cbBuff,void (*percent_callback)(int))
     strcat(buff,"Ser./Num.: ");
     if(__edx & 0x00040000L) /* serial number */
     {
-      unsigned long __erx[3]; /* eax (from cpuid=1), edx, ecx (from cpuid=3) */
+      uint32_t __erx[3]; /* eax (from cpuid=1), edx, ecx (from cpuid=3) */
       unsigned char cbyte;
       __erx[2] = 3;
       __cpuid_ebxecx(&__erx[2]);
@@ -955,27 +949,27 @@ void __FillCPUInfo(char *buff,unsigned cbBuff,void (*percent_callback)(int))
       __edx = __cpuid_edx(&__eax);
       __ecx = 0x80000002UL;
       __ebx = __cpuid_ebxecx(&__ecx);
-      *((unsigned long*)&extended_name[ 0]) = __eax;
-      *((unsigned long*)&extended_name[ 4]) = __ebx;
-      *((unsigned long*)&extended_name[ 8]) = __ecx;
-      *((unsigned long*)&extended_name[12]) = __edx;
+     memcpy(&extended_name[0],&__eax,sizeof(uint32_t));
+     memcpy(&extended_name[4],&__ebx,sizeof(uint32_t));
+     memcpy(&extended_name[8],&__ecx,sizeof(uint32_t));
+     memcpy(&extended_name[12],&__edx,sizeof(uint32_t));
       __eax = 0x80000003UL;
       __edx = __cpuid_edx(&__eax);
       __ecx = 0x80000003UL;
       __ebx = __cpuid_ebxecx(&__ecx);
-      *((unsigned long*)&extended_name[16]) = __eax;
-      *((unsigned long*)&extended_name[20]) = __ebx;
-      *((unsigned long*)&extended_name[24]) = __ecx;
-      *((unsigned long*)&extended_name[28]) = __edx;
+     memcpy(&extended_name[16],&__eax,sizeof(uint32_t));
+     memcpy(&extended_name[20],&__ebx,sizeof(uint32_t));
+     memcpy(&extended_name[24],&__ecx,sizeof(uint32_t));
+     memcpy(&extended_name[28],&__edx,sizeof(uint32_t));
       __eax = 0x80000004UL;
       __edx = __cpuid_edx(&__eax);
       __ecx = 0x80000004UL;
       __ebx = __cpuid_ebxecx(&__ecx);
-      *((unsigned long*)&extended_name[32]) = __eax;
-      *((unsigned long*)&extended_name[36]) = __ebx;
-      *((unsigned long*)&extended_name[40]) = __ecx;
-      *((unsigned long*)&extended_name[44]) = __edx;
-      *((unsigned long*)&extended_name[48]) = 0;
+     memcpy(&extended_name[32],&__eax,sizeof(uint32_t));
+     memcpy(&extended_name[36],&__ebx,sizeof(uint32_t));
+     memcpy(&extended_name[40],&__ecx,sizeof(uint32_t));
+     memcpy(&extended_name[44],&__edx,sizeof(uint32_t));
+     memset(&extended_name[48],0,sizeof(uint32_t));
       sprintf(&buff[strlen(buff)],"%s\n",extended_name);
       {
       __eax = 0x80000001UL;
@@ -1200,7 +1194,7 @@ void __FillCPUInfo(char *buff,unsigned cbBuff,void (*percent_callback)(int))
 	    ,long_mod);
   }
   else strcat(buff,"not present\n");
-  __OsRestoreTimer();
+  sys.restore_timer();
   percent_callback(100);
 
   buff[cbBuff-1] = '\0';

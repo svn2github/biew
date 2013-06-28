@@ -2,9 +2,10 @@
 #define __PROCESSOR_HPP_INCLUDED 1
 #include "libbeye/libbeye.h"
 namespace	usr {
+    class System;
     class Processor {
 	public:
-	    Processor();
+	    Processor(System&);
 	    virtual ~Processor();
 
 		   /** Fills buffer with information about CPU in free form.
@@ -14,6 +15,8 @@ namespace	usr {
 		     * @param percents_callback pointer to the function that will be used to indicate execution progress
 		    **/
 	    void		cpu_info(char *buff,unsigned cbBuff,void (*percents_callback)(int)) const;
+	private:
+	    System&	sys;
     };
 } // namespace	usr
 #endif

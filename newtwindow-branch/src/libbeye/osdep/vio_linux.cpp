@@ -3,7 +3,6 @@
 using namespace	usr;
 #include <sstream>
 
-#include "libbeye/osdep/__os_dep.h"
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/linux/vio.c
@@ -318,8 +317,6 @@ vio_vcsa::vio_vcsa(System& s,const std::string& user_cp,unsigned long flags)
 
     memset(viomem, 0, (violen << 1) + violen);
     memset(vtmp, 0, VTMP_LEN);
-
-    do_nls = 0;		/* disable nls convertion */
 
     uint8_t *buf = new uint8_t [violen << 1];
 

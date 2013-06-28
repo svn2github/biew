@@ -26,6 +26,7 @@ using namespace	usr;
 
 #include "addons/addon.h"
 
+#include "beye.h"
 #include "bconsole.h"
 #include "beyeutil.h"
 #include "listbox.h"
@@ -86,7 +87,7 @@ void CPUPerformance_Addon::run()
 
     cpu_info = new char [4096];
     pwnd = PercentWnd("Analyze:","");
-    Processor cpu;
+    Processor cpu(bctx.system());
     cpu.cpu_info(cpu_info,4096,paint_prcnt);
     delete pwnd;
     data_size = strlen(cpu_info);

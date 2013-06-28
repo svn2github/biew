@@ -1,7 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
 using namespace	usr;
-#include "libbeye/osdep/__os_dep.h"
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/unix/keyboard.c
@@ -37,6 +36,9 @@ namespace	usr {
 	    input_null(System&,const std::string& user_cp);
 	    virtual ~input_null();
 
+	    virtual bool		get_cbreak() const;
+	    virtual void		set_cbreak( bool state );
+
 	    virtual int			get_key( unsigned long flg);
 	    virtual int			test_key( unsigned long flg );
 	    virtual int			get_shifts();
@@ -49,6 +51,17 @@ namespace	usr {
 	private:
 	    System&			sys;
     };
+
+
+bool input_null::get_cbreak() const
+{
+    throw std::logic_error("input_null::get_cbreak");
+}
+
+void input_null::set_cbreak(bool state)
+{
+    throw std::logic_error("input_null::set_cbreak");
+}
 
 int input_null::get_shifts()
 {

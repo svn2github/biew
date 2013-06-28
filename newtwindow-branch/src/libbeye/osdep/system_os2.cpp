@@ -1,7 +1,6 @@
 #include "config.h"
 #include "libbeye/libbeye.h"
 using namespace	usr;
-#include "libbeye/osdep/__os_dep.h"
 /**
  * @namespace   libbeye
  * @file        libbeye/osdep/os2/os_dep.c
@@ -136,4 +135,75 @@ char * __FASTCALL__ __get_home_dir(const char *progname)
    last = p1[strlen(p1)-1];
    if(!(last == '\\' || last == '/')) strcat(_home_dir_name,"\\");
    return _home_dir_name;
+}
+
+extern HEV      beyeSem;
+static HTIMER   timerID = 0;
+static TID      timerThread = 0;
+static          timer_callback *user_callback = NULL;
+
+static VOID _Syscall thread_callback( ULONG threadMsg )
+{
+  ULONG recv;
+  UNUSED(threadMsg);
+  while(1)
+  {
+    DosResetEventSem(beyeSem,&recv);
+    DosWaitEventSem(beyeSem,SEM_INDEFINITE_WAIT);
+    if(user_callback) (*user_callback)();
+  }
+}
+
+unsigned    __FASTCALL__  __OsSetTimerCallBack(unsigned ms,timer_callback func)
+{
+   ULONG min_interval,max_interval,real_interval;
+   int rc;
+
+   DosQuerySysInfo(QSV_MIN_SLICE,QSV_MIN_SLICE,&min_interval,sizeof(ULONG));
+   DosQuerySysInfo(QSV_MAX_SLICE,QSV_MAX_SLICE,&max_interval,sizeof(ULONG));
+   real_interval = ms / min_interval;
+   real_interval *= min_interval;
+   if(real_interval < ms) real_interval += min_interval - 1;
+   if(real_interval > max_interval) real_interval = max_interval-1;
+   user_callback = func;
+   rc = DosCreateThread(&timerThread,&thread_callback,0,0,0x1000);
+   if(!rc) rc = DosSetPriority(PRTYS_THREAD,PRTYC_TIMECRITICAL,PRTYD_MINIMUM,timerThread);
+   if(!rc)
+   {
+       if(DosStartTimer(real_interval,(HSEM)beyeSem,&timerID) == 0)
+       {
+	  return real_interval;
+       }
+   }
+   return 0;
+}
+			     /* Restore time callback function to original
+				state */
+void   __FASTCALL__  __OsRestoreTimer()
+{
+  if(timerID) { DosStopTimer(timerID); timerID = 0; }
+  if(timerThread) { DosKillThread(timerThread); timerThread = 0; }
+  user_callback = 0;
+}
+
+void __FASTCALL__ __nls_OemToOsdep(unsigned char *buff,unsigned len)
+{
+ UNUSED(buff);
+ UNUSED(len);
+ /* Nothing to do */
+}
+
+void __FASTCALL__ __nls_OemToFs(unsigned char *buff,unsigned len)
+{
+ UNUSED(buff);
+ UNUSED(len);
+ /* Nothing to do */
+}
+
+
+void __FASTCALL__ __nls_CmdlineToOem(unsigned char *buff,unsigned len)
+{
+ UNUSED(buff);
+ UNUSED(len);
+  /* Nothing to do */
 }
