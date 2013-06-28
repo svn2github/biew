@@ -890,7 +890,7 @@ bool DisMode::append_digits(binary_stream& handle,std::string& str,__filesize_t 
 	    if(!strlen(sout)) strcpy(sout,"disAppendDigits");
 	    bctx.ErrMessageBox(sout," Internal disassembler error detected ");
 	    displayed = true;
-	    COREDUMP();
+	    throw std::logic_error(" Internal disassembler error detected ");
         }
     }
 #endif
@@ -1047,7 +1047,7 @@ bool DisMode::append_faddr(binary_stream& handle,std::string& str,__fileoff_t ul
 	    if(!strlen(sout)) strcpy(sout,"disAppendFAddr");
 	    bctx.ErrMessageBox(sout," Internal disassembler error detected ");
 	    displayed = true;
-	    COREDUMP();
+	    throw std::logic_error(" Internal disassembler error detected ");
 	}
     }
 #endif

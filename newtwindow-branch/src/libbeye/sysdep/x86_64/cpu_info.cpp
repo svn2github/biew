@@ -62,61 +62,6 @@ static void  __FASTCALL__ __cpu_name(char *buff)
     buff[12]='\0';
 }
 
-static void  __FASTCALL__ __extended_name(char *buff)
-{
-/*
-    unsigned int p[4];
-    do_cpuid(0x80000002,p);
-    memcpy(&buff[0], &p[0],4);
-    memcpy(&buff[4], &p[1],4);
-    memcpy(&buff[8], &p[2],4);
-    memcpy(&buff[12],&p[3],4);
-    do_cpuid(0x80000003,p);
-    memcpy(&buff[16],&p[0],4);
-    memcpy(&buff[20],&p[1],4);
-    memcpy(&buff[24],&p[2],4);
-    memcpy(&buff[28],&p[3],4);
-    do_cpuid(0x80000004,p);
-    memcpy(&buff[32],&p[0],4);
-    memcpy(&buff[36],&p[1],4);
-    memcpy(&buff[40],&p[2],4);
-    memcpy(&buff[44],&p[3],4);
-    buff[48]='\0';
-*/
-   __asm __volatile("movl	$0x80000002, %%eax\n"
-      "cpuid\n"
-      "	stosl\n"
-      "	movl	%%ebx, %%eax\n"
-      "	stosl\n"
-      "	movl	%%ecx, %%eax\n"
-      "	stosl\n"
-      "	movl	%%edx, %%eax\n"
-      "	stosl\n"
-      "	movl	$0x80000003, %%eax\n"
-      "cpuid\n"
-      "	stosl\n"
-      "	movl	%%ebx, %%eax\n"
-      "	stosl\n"
-      "	movl	%%ecx, %%eax\n"
-      "	stosl\n"
-      "	movl	%%edx, %%eax\n"
-      "	stosl\n"
-      "	movl	$0x80000004, %%eax\n"
-      "cpuid\n"
-      "	stosl\n"
-      "	movl	%%ebx, %%eax\n"
-      "	stosl\n"
-      "	movl	%%ecx, %%eax\n"
-      "	stosl\n"
-      "	movl	%%edx, %%eax\n"
-      "	stosl\n"
-      "	xorb	%%al, %%al\n"
-      "	stosb\n"	:
-			:
-      "D"(buff)		:
-      "eax","ebx","ecx","edx");
-}
-
 static uint32_t  __FASTCALL__ __cpuid_edx(uint32_t* __r_eax)
 {
     uint32_t p[4];

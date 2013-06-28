@@ -944,7 +944,6 @@ void __FillCPUInfo(System& sys,char *buff,unsigned cbBuff,void (*percent_callbac
     strcat(buff,"Ext.info : ");
     if(__eax >= 0x80000004UL) /* means: extended flags + processor name */
     {
-//      __extended_name(extended_name);
       __eax = 0x80000002UL;
       __edx = __cpuid_edx(&__eax);
       __ecx = 0x80000002UL;

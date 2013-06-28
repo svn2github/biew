@@ -17,14 +17,6 @@
 #ifndef __SYS_DEP_H
 #define __SYS_DEP_H 1
 
-#if defined(__i386__)
-#include "libbeye/sysdep/ia32/_inlines.h"
-#elif defined(__x86_64__)
-#include "libbeye/sysdep/x86_64/_inlines.h"
-#else
-#include "libbeye/sysdep/generic/_inlines.h"
-#endif
-
 		/** Performs interleaving of two buffers into destinition one.
 		  * @return         none
 		  * @param limit    specified size of evenbuffer and oddbuffer

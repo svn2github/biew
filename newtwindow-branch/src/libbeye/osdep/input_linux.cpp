@@ -47,7 +47,7 @@ static const char rcs_id[] = "$Id: keyboard.c,v 1.14 2009/09/24 09:12:13 nickols
 
 #include "input_interface.h"
 #include "kbd_code.h"
-#include "linux/console.h"
+#include "unix/console.h"
 #include "system.h"
 
 #ifdef HAVE_MOUSE
