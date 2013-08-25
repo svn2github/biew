@@ -1,4 +1,3 @@
-
 		    Notes for UNIX ports of BEYE
 
 	    Konstantin Boldyshev <konst@linuxassembly.org>
