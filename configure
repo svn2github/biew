@@ -5,6 +5,7 @@
 init_functions
 
 ENABLED_LIST=(
+    "static|use static linkage",
     "fastcall|use regparm method on x86 systems",
     "constfunc|use const modifier for some functions",
     "purefunc|use pure modifier for some functions",
@@ -13,6 +14,7 @@ ENABLED_LIST=(
 )
 
 DISABLED_LIST=(
+    "shared|use dynamic linkage",
     "gomp|use GNU OpenMP (requires gcc-4.3+)",
     "gcov|compile gnu coverage information into PROGRAM",
     "profile|compile profiling information into PROGRAM",
@@ -385,6 +387,8 @@ fi
 if linux ; then
 app_cflags=""
 fi
+enabled static && app_ldflags+="-static"
+enabled dynamic && app_ldflags+="-shared"
 add_cflags $app_cflags
 add_ldflags $app_ldflags
 add_extralibs $app_libs
